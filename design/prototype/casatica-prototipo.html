@@ -1,0 +1,821 @@
+<meta charset="utf-8">
+<title>CasaTica Prototipo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: prototype shell (role tabs + device toggle) wrapping one responsive app surface.
+   Phone = 390px frame with bottom tabs; Web = wide surface with top nav. Same screens, container queries. */
+:root{
+  --bg:#F7F5EF;          /* ground: warm paper */
+  --surface:#FFFFFF;
+  --surface-2:#EFEDE6;
+  --fg:#1B2420;
+  --muted:#5F6B64;
+  --line:#DDD9CE;
+  --jungle:#1E6B4A;      /* primary: selva */
+  --jungle-ink:#124634;
+  --jungle-soft:#DCEFE4;
+  --sun:#E8A33D;         /* accent: sol de Guanacaste, used sparingly */
+  --sun-soft:#FBEFD9;
+  --sun-ink:#7A4E07;
+  --wa:#25D366;          /* WhatsApp brand green, CTA only */
+  --wa-ink:#0B7A3B;
+  --ok:#2E8B57; --warn:#C97A12; --bad:#C2432F; --bad-soft:#FBE3DF;
+  --note-fg:#5B3A05; --note-line:#F0D7A8;
+  --shadow:0 1px 2px rgba(27,36,32,.06),0 8px 24px -12px rgba(27,36,32,.18);
+  --r:14px;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Nunito Sans",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917;--surface:#1C2320;--surface-2:#242D29;--fg:#EDEFEA;--muted:#A3ADA6;--line:#2F3934;
+  --jungle:#4FB07F;--jungle-ink:#8FD3B0;--jungle-soft:#1E3A2D;--sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;
+  --wa:#25D366;--wa-ink:#7BE3A6;--bad-soft:#4A2521;--note-fg:#F3D6A1;--note-line:#5a4318;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917;--surface:#1C2320;--surface-2:#242D29;--fg:#EDEFEA;--muted:#A3ADA6;--line:#2F3934;
+  --jungle:#4FB07F;--jungle-ink:#8FD3B0;--jungle-soft:#1E3A2D;--sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;
+  --wa:#25D366;--wa-ink:#7BE3A6;--bad-soft:#4A2521;--note-fg:#F3D6A1;--note-line:#5a4318;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;margin:0;padding-inline:16px;padding-block:16px 40px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.1}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+input,select,textarea{font:inherit;color:inherit}
+img{max-width:100%}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Prototype shell ---------- */
+.shell{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.shell-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.01em}
+.brand .mark{width:30px;height:30px;border-radius:9px;background:var(--jungle);display:grid;place-items:center;color:#fff;font-size:15px}
+.brand small{font-family:var(--body);font-weight:600;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-left:4px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:3px;gap:2px}
+.seg button{padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.shell-note{font-size:13px;color:var(--muted);max-width:68ch}
+.stage{display:flex;justify-content:center;align-items:flex-start}
+.screen{container-type:inline-size;background:var(--bg);position:relative;overflow:hidden}
+.stage.phone .screen{width:390px;max-width:100%;height:800px;border-radius:40px;border:10px solid #1b1f1d;box-shadow:0 30px 60px -30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.stage.web .screen{width:100%;min-height:760px;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.statusbar{display:none}
+.stage.phone .statusbar{display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:10px 22px 0;color:var(--fg)}
+.app{flex:1;display:flex;flex-direction:column;min-height:0}
+.view{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin}
+@container (min-width:800px){.view{padding:24px 32px 40px;gap:20px}}
+
+/* top nav (web) / bottom tabs (phone) */
+.topnav{display:none}
+.tabs{display:flex;justify-content:space-around;border-top:1px solid var(--line);background:var(--surface);padding:8px 6px 10px}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--muted);padding:4px 10px;border-radius:10px}
+.tabs button[aria-current="page"]{color:var(--jungle)}
+.tabs svg{width:22px;height:22px}
+@container (min-width:800px){
+  .tabs{display:none}
+  .topnav{display:flex;align-items:center;gap:22px;padding:14px 32px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+  .topnav .brand{margin-right:auto}
+  .topnav button.nav{font-weight:700;color:var(--muted);padding:6px 2px;border-bottom:2px solid transparent}
+  .topnav button.nav[aria-current="page"]{color:var(--fg);border-color:var(--jungle)}
+}
+
+/* ---------- Primitives ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:12px;font-weight:700;font-size:14px;border:1px solid transparent;transition:transform .08s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--jungle);color:#fff}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--fg)}
+.btn-wa{background:var(--wa);color:#063b1e;font-size:15px;padding:14px 18px;width:100%}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:10px}
+.btn-link{color:var(--jungle);padding:0 4px;text-decoration:underline;font-weight:700}
+.btn-danger{background:transparent;border-color:var(--bad);color:var(--bad)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--jungle);border-color:var(--jungle);color:#fff}
+.chiprow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+@container (min-width:800px){.chiprow{margin-inline:0;padding-inline:0;flex-wrap:wrap;overflow:visible}}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.badge-ok{background:var(--jungle-soft);color:var(--jungle-ink)}
+.badge-sun{background:var(--sun-soft);color:var(--sun-ink)}
+.badge-warn{background:var(--sun-soft);color:var(--warn)}
+.badge-bad{background:var(--bad-soft);color:var(--bad)}
+.badge-mute{background:var(--surface-2);color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.row{display:flex;align-items:center;gap:10px;min-width:0}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.xs{font-size:12px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:8px;min-width:0}
+.grid{display:grid;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:700}
+.field input,.field select,.field textarea{padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);width:100%}
+.field .hint{font-size:12px;color:var(--muted)}
+.search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 8px 8px 14px;box-shadow:var(--shadow)}
+.search input{border:0;background:none;flex:1;min-width:0;font-size:15px}
+.search input:focus{outline:none}
+.search svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--jungle-soft);color:var(--jungle-ink);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.divider{height:1px;background:var(--line)}
+.sheet{position:absolute;inset:0;background:rgba(10,14,12,.45);display:flex;align-items:flex-end;z-index:20}
+.sheet-body{background:var(--surface);width:100%;border-radius:22px 22px 0 0;padding:16px 16px 18px;display:flex;flex-direction:column;gap:14px;max-height:92%;overflow:auto}
+@container (min-width:800px){.sheet{align-items:center;justify-content:center}.sheet-body{width:520px;border-radius:20px;padding:24px}}
+.note{display:flex;gap:10px;padding:10px 12px;border-radius:12px;background:var(--sun-soft);color:var(--note-fg);font-size:13px;border:1px solid var(--note-line)}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:30;box-shadow:var(--shadow);white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.wa-bubble{background:#E7FFDB;color:#1b2420;border-radius:14px 14px 14px 4px;padding:10px 12px;font-size:14px;max-width:48ch}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details p{padding-top:6px}
+
+/* photos: generated placeholders */
+.photo{position:relative;border-radius:12px;overflow:hidden;background:var(--surface-2);aspect-ratio:4/3;max-width:100%}
+.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.35))}
+.photo span{position:absolute;left:10px;bottom:8px;color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;z-index:1;opacity:.85}
+.p-playa{background:linear-gradient(160deg,#7fcde0 0%,#2b8db0 45%,#e5cf9a 46%,#d2b77c 100%)}
+.p-selva{background:linear-gradient(160deg,#9bd27f 0%,#2f7a3a 55%,#1d4d28 100%)}
+.p-montana{background:linear-gradient(160deg,#cfe3ee 0%,#6f9aa8 40%,#3c5d4a 41%,#24402f 100%)}
+.p-ciudad{background:linear-gradient(160deg,#e9e1d4 0%,#b7a890 50%,#6d6a62 100%)}
+.p-volcan{background:linear-gradient(160deg,#f0c08a 0%,#b56a3c 45%,#3d4a3a 46%,#223226 100%)}
+.p-caribe{background:linear-gradient(160deg,#5fd3c9 0%,#1f8f98 50%,#2f6a3b 51%,#17442a 100%)}
+.p-piscina{background:linear-gradient(160deg,#8fdcf0 0%,#3aa6cc 50%,#c7c2ad 51%,#8e8a78 100%)}
+
+/* listing cards */
+.listing{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.listing .photo{border-radius:0;aspect-ratio:16/11}
+.listing .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.listing .fav{position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;color:#1b2420}
+.listing .fav svg{width:18px;height:18px}
+.listing .fav[aria-pressed="true"]{color:var(--bad)}
+.listing .price{font-weight:800;font-size:16px}
+.listing .price small{font-weight:600;color:var(--muted);font-size:12px}
+.listings{display:grid;gap:14px;grid-template-columns:1fr}
+@container (min-width:640px){.listings{grid-template-columns:repeat(2,1fr)}}
+@container (min-width:1000px){.listings{grid-template-columns:repeat(3,1fr)}}
+
+/* map */
+.map{position:relative;border-radius:16px;overflow:hidden;background:
+  radial-gradient(circle at 30% 40%,#cfe6d2 0,transparent 35%),
+  radial-gradient(circle at 70% 60%,#d9ead6 0,transparent 40%),
+  repeating-linear-gradient(0deg,transparent 0 23px,rgba(0,0,0,.05) 23px 24px),
+  repeating-linear-gradient(90deg,transparent 0 23px,rgba(0,0,0,.05) 23px 24px),#e4ecdf;min-height:220px;border:1px solid var(--line)}
+.map .water{position:absolute;inset:0;background:linear-gradient(200deg,transparent 55%,#bcd9e6 56%),linear-gradient(20deg,transparent 70%,#bcd9e6 71%)}
+.pin{position:absolute;transform:translate(-50%,-100%);background:#fff;color:#1b2420;border:1px solid #cfd6cc;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:800;box-shadow:var(--shadow);cursor:pointer;white-space:nowrap}
+.pin.active{background:#1E6B4A;color:#fff;border-color:#1E6B4A}
+.map .tag{position:absolute;left:10px;top:10px;background:#fff;color:#5F6B64}
+.home-layout{display:flex;flex-direction:column;gap:14px}
+@container (min-width:1000px){.home-layout{display:grid;grid-template-columns:1fr 420px;align-items:start}.home-layout .map{position:sticky;top:0;min-height:560px}}
+
+/* gallery (detail) */
+.gallery{display:grid;grid-template-columns:1fr;gap:6px}
+.gallery .photo:not(:first-child){display:none}
+@container (min-width:800px){.gallery{grid-template-columns:2fr 1fr 1fr;grid-template-rows:200px 200px}.gallery .photo{display:block;aspect-ratio:auto;height:100%}.gallery .photo:first-child{grid-row:span 2}}
+.detail-layout{display:flex;flex-direction:column;gap:16px}
+@container (min-width:800px){.detail-layout{display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start}.detail-side{position:sticky;top:0}}
+.amen{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@container (min-width:800px){.amen{grid-template-columns:repeat(3,1fr)}}
+.amen div{display:flex;gap:8px;align-items:center;font-size:14px}
+.cta-bar{position:sticky;bottom:-24px;margin:0 -16px -24px;padding:10px 16px 12px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:12px;align-items:center}
+@container (min-width:800px){.cta-bar{display:none}}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:12px;text-align:center}
+.cal .dow{font-weight:700;color:var(--muted);font-size:11px;padding:4px 0}
+.cal .d{padding:6px 2px;border-radius:8px;background:var(--surface-2);min-height:40px;display:flex;flex-direction:column;justify-content:center;gap:1px;cursor:pointer}
+.cal .d small{font-size:10px;color:var(--muted)}
+.cal .d.busy{background:repeating-linear-gradient(135deg,var(--line) 0 3px,transparent 3px 7px);color:var(--muted)}
+.cal .d.hi{background:var(--sun-soft);color:var(--sun-ink)}
+.cal .d.hi small{color:var(--sun-ink)}
+.cal .d.empty{background:transparent;cursor:default}
+.legend{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@container (min-width:800px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+.stat .v{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.02em}
+.stat .k{font-size:12px;color:var(--muted);font-weight:700}
+.stat .t{font-size:12px;font-weight:700}
+.up{color:var(--ok)}.down{color:var(--bad)}
+.spark{height:36px;width:100%;display:block}
+
+/* wizard */
+.steps{display:flex;gap:6px}
+.steps span{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.steps span.on{background:var(--jungle)}
+.opt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.opt{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:2px}
+.opt[aria-pressed="true"]{border-color:var(--jungle);background:var(--jungle-soft)}
+.opt b{font-size:14px}.opt span{font-size:12px;color:var(--muted)}
+.upload{border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);font-size:13px;background:var(--surface)}
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.summary-box{background:var(--jungle-soft);border-color:transparent}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.list > *{padding:12px 0;border-bottom:1px solid var(--line)}
+.list > *:last-child{border-bottom:0}
+.lead{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.score{display:inline-flex;align-items:center;gap:4px;font-weight:800;font-size:13px}
+.ratebtn{display:flex;gap:4px}
+.ratebtn button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);font-size:15px;color:var(--line)}
+.ratebtn button.on{color:var(--sun);border-color:var(--sun)}
+
+/* landing */
+.hero{display:grid;gap:18px;padding:8px 0}
+@container (min-width:800px){.hero{grid-template-columns:1.1fr 1fr;align-items:center;gap:40px;padding:30px 0}}
+.hero h1{font-size:32px;font-weight:800;letter-spacing:-.02em}
+@container (min-width:800px){.hero h1{font-size:50px}}
+.hero p{font-size:16px;color:var(--muted);max-width:52ch}
+.price-box{background:var(--jungle);color:#fff;border-radius:20px;padding:22px}
+.price-box .big{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.02em}
+.price-box .eyebrow{color:#CDE8D8}
+.btn-onjungle{background:#fff;color:#124634;align-self:flex-start}
+.how{display:grid;gap:12px}
+@container (min-width:800px){.how{grid-template-columns:repeat(3,1fr)}}
+.how .card b{font-family:var(--display);font-size:17px}
+.compare{width:100%;border-collapse:collapse;font-size:14px;min-width:460px}
+.compare th,.compare td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+.compare tr:last-child td{border-bottom:0}
+.compare th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.compare td:first-child{font-weight:700}
+.tbl-wrap{overflow-x:auto}
+
+/* admin */
+.queue{display:grid;gap:12px}
+@container (min-width:800px){.queue{grid-template-columns:repeat(2,1fr)}}
+.doc{aspect-ratio:1.6;border-radius:10px;background:repeating-linear-gradient(0deg,var(--surface-2) 0 10px,var(--surface) 10px 14px);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--muted);font-weight:700}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="shell">
+  <div class="shell-bar">
+    <div class="brand"><span class="mark">▲</span>CasaTica <small>prototipo v0.1</small></div>
+    <div class="row" style="gap:10px;flex-wrap:wrap">
+      <div class="seg" id="roleSeg" aria-label="Rol">
+        <button data-role="landing" aria-pressed="false">Landing</button>
+        <button data-role="guest" aria-pressed="true">Cliente</button>
+        <button data-role="owner" aria-pressed="false">Owner</button>
+        <button data-role="admin" aria-pressed="false">Admin</button>
+      </div>
+      <div class="seg" id="devSeg" aria-label="Dispositivo">
+        <button data-dev="phone" aria-pressed="true">Móvil</button>
+        <button data-dev="web" aria-pressed="false">Web</button>
+      </div>
+    </div>
+  </div>
+  <p class="shell-note" id="shellNote"></p>
+  <div class="stage phone" id="stage">
+    <div class="screen" id="screen"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Datos de ejemplo ---------------- */
+const HOUSES=[
+ {id:"CT-1042",t:"Villa Brisa frente al mar",loc:"Tamarindo, Guanacaste",prov:"Guanacaste",type:"vac",price:95000,cur:"₡",unit:"noche",ppl:6,beds:3,baths:2,pool:true,pets:true,ac:true,wifi:true,photo:"p-playa",owner:"Marcela R.",ownerV:true,views:412,contacts:23,x:14,y:28,
+  desc:"Casa de dos plantas a 150 m de Playa Tamarindo. Rancho con hamacas, piscina privada y parrilla. Ideal para familias; aceptamos mascotas pequeñas."},
+ {id:"CT-1088",t:"Cabina Nube, bosque nuboso",loc:"Monteverde, Puntarenas",prov:"Puntarenas",type:"vac",price:48000,cur:"₡",unit:"noche",ppl:2,beds:1,baths:1,pool:false,pets:false,ac:false,wifi:true,photo:"p-montana",owner:"Don Álvaro",ownerV:true,views:268,contacts:11,x:30,y:40,
+  desc:"Cabina de madera con vista al bosque, chimenea y desayuno tico incluido. A 10 min de la Reserva."},
+ {id:"CT-1101",t:"Casa Tucán con piscina",loc:"Jacó, Puntarenas",prov:"Puntarenas",type:"vac",price:120,cur:"$",unit:"noche",ppl:8,beds:4,baths:3,pool:true,pets:false,ac:true,wifi:true,photo:"p-piscina",owner:"Fam. Solano",ownerV:true,views:655,contacts:41,x:38,y:56,
+  desc:"Casa amplia en condominio con seguridad 24 h, a 5 min de la playa. Piscina compartida y rancho BBQ."},
+ {id:"CT-1133",t:"Loft Caribe",loc:"Puerto Viejo, Limón",prov:"Limón",type:"vac",price:35000,cur:"₡",unit:"noche",ppl:3,beds:1,baths:1,pool:false,pets:true,ac:true,wifi:true,photo:"p-caribe",owner:"Keisha B.",ownerV:false,views:140,contacts:6,x:88,y:62,
+  desc:"Loft a 3 cuadras de Playa Cocles, bicis incluidas. Ambiente tranquilo, ideal para parejas."},
+ {id:"CT-1150",t:"Quinta Los Robles",loc:"La Fortuna, Alajuela",prov:"Alajuela",type:"vac",price:150000,cur:"₡",unit:"noche",ppl:12,beds:5,baths:4,pool:true,pets:true,ac:true,wifi:true,photo:"p-volcan",owner:"Gerardo M.",ownerV:true,views:980,contacts:67,x:40,y:30,
+  desc:"Quinta para grupos grandes con vista al volcán Arenal, piscina temperada y salón de juegos."},
+ {id:"CT-1162",t:"Casita Selva Santa Teresa",loc:"Santa Teresa, Puntarenas",prov:"Puntarenas",type:"vac",price:80,cur:"$",unit:"noche",ppl:4,beds:2,baths:1,pool:false,pets:false,ac:true,wifi:true,photo:"p-selva",owner:"Nadia V.",ownerV:true,views:390,contacts:19,x:22,y:52,
+  desc:"Casita a 5 min caminando de la playa, jardín tropical con ducha exterior."},
+ {id:"CT-2007",t:"Apartamento amueblado Escazú",loc:"Escazú, San José",prov:"San José",type:"largo",price:650,cur:"$",unit:"mes",ppl:2,beds:2,baths:2,pool:true,pets:false,ac:false,wifi:true,photo:"p-ciudad",owner:"Inversiones Mora",ownerV:true,views:720,contacts:52,x:50,y:50,
+  desc:"Apartamento de 2 habitaciones en torre con gimnasio y piscina. Incluye agua y mantenimiento. Depósito: 1 mes."},
+ {id:"CT-2015",t:"Casa familiar en Heredia centro",loc:"Heredia, Heredia",prov:"Heredia",type:"largo",price:380000,cur:"₡",unit:"mes",ppl:5,beds:3,baths:2,pool:false,pets:true,ac:false,wifi:false,photo:"p-ciudad",owner:"Doña Flor",ownerV:true,views:301,contacts:28,x:52,y:44,
+  desc:"Casa de 3 habitaciones con patio y cochera para 2 carros. A 5 min de la UNA. Sin amueblar."},
+ {id:"CT-2021",t:"Estudio cerca del TEC",loc:"Cartago, Cartago",prov:"Cartago",type:"largo",price:220000,cur:"₡",unit:"mes",ppl:1,beds:1,baths:1,pool:false,pets:false,ac:false,wifi:true,photo:"p-montana",owner:"Luis Q.",ownerV:false,views:95,contacts:9,x:60,y:52,
+  desc:"Estudio independiente para estudiante, servicios incluidos, entrada independiente."},
+];
+const LEADS=[
+ {n:"Andrea Castro",h:"CT-1042",when:"hoy, 10:12",msg:"¿Disponible 12–15 dic, 4 personas?",score:4.8,count:6,rated:0},
+ {n:"Jorge Ulate",h:"CT-1042",when:"ayer",msg:"Precio para semana completa en enero",score:3.2,count:3,rated:0},
+ {n:"Familia Brenes",h:"CT-1150",when:"mié",msg:"12 personas, fin de semana largo",score:5.0,count:2,rated:5},
+ {n:"Melissa P.",h:"CT-1042",when:"lun",msg:"¿Aceptan perro mediano?",score:null,count:0,rated:0},
+];
+const QUEUE=[
+ {n:"Keisha Brown",ced:"7-0233-0876",phone:"+506 8xxx-xxxx (negocio)",house:"Loft Caribe · Puerto Viejo",sent:"hace 2 h",flags:[]},
+ {n:"Luis Quesada",ced:"3-0455-0120",phone:"+506 8xxx-xxxx (personal)",house:"Estudio cerca del TEC · Cartago",sent:"hace 5 h",flags:["Teléfono parece personal","Fachada coincide con anuncio en otra plataforma"]},
+ {n:"Rosa Chaves",ced:"1-1120-0433",phone:"+506 2xxx-xxxx",house:"Casa en Nosara",sent:"ayer",flags:["Solo 2 fotos"]},
+];
+/* cargador eléctrico (ev) por casa */
+const EV={"CT-1042":true,"CT-1101":true,"CT-1150":true,"CT-2007":true};
+HOUSES.forEach(h=>h.ev=!!EV[h.id]);
+const REQUESTS=[
+ {id:"S-301",client:"Andrea Castro",score:4.8,count:6,mode:"vac",ppl:3,dates:"20–23 nov",zone:"Guanacaste",budget:"₡300.000 en total",needs:["Piscina","Cargador eléctrico"],text:"Somos 3, queremos pasar unos días de vacaciones en esas fechas, con piscina y cargador para el carro eléctrico.",status:"open",offers:[
+   {owner:"Marcela R.",house:"CT-1042",price:"₡270.000 total · 3 noches",note:"Tenemos cargador tipo 2 y piscina privada. Les dejo precio especial por 3 noches."},
+   {owner:"Gerardo M.",house:"CT-1150",price:"₡420.000 total · 3 noches",note:"Queda en La Fortuna, no Guanacaste, pero cumple todo lo demás."}]},
+ {id:"S-298",client:"Jorge Ulate",score:3.2,count:3,mode:"vac",ppl:8,dates:"2–4 ene",zone:"Jacó / Pacífico central",budget:"$400 en total",needs:["Piscina","Mascotas"],text:"Grupo de 8 con un perro grande, buscamos casa con piscina cerca de la playa.",status:"open",offers:[]},
+ {id:"S-290",client:"Familia Brenes",score:5.0,count:2,mode:"largo",ppl:4,dates:"desde feb 2027",zone:"Heredia / San José oeste",budget:"₡450.000 por mes",needs:["Cochera","Mascotas"],text:"Nos mudamos a Heredia por trabajo, 4 personas y un gato. Mínimo 1 año.",status:"open",offers:[]},
+];
+const fmt=(h)=>h.cur==="₡"?`₡${h.price.toLocaleString("es-CR")}`:`$${h.price}`;
+const ini=(n)=>n.split(" ").map(w=>w[0]).join("").slice(0,2);
+
+/* ---------------- Estado ---------------- */
+const S={role:"guest",dev:"phone",screen:"home",params:{},mode:"vac",favs:new Set(["CT-1150"]),loggedIn:false,sheet:null,toast:null,
+  filters:{prov:"Todas",ppl:0,beds:0,pool:false,pets:false,ac:false,wifi:false,ev:false},wizStep:1,wizType:"vac",leads:LEADS.map(l=>({...l})),queue:QUEUE.map(q=>({...q,status:"pend"})),
+  req:{ppl:3,mode:"vac",zone:"Guanacaste",dates:"20–23 nov",needs:new Set(["Piscina","Cargador eléctrico"]),text:"Somos 3, queremos pasar unos días de vacaciones en esas fechas, con piscina y cargador para el carro eléctrico."},
+  requests:REQUESTS.map(r=>({...r,offers:r.offers.map(o=>({...o}))})),mySent:true};
+const NEEDS=["Piscina","Mascotas","Cargador eléctrico","Aire acondicionado","Wifi","Frente al mar","Cochera","Amueblado","Rancho / BBQ","Accesible"];
+const AMEN_KEY={"Piscina":"pool","Mascotas":"pets","Cargador eléctrico":"ev","Aire acondicionado":"ac","Wifi":"wifi"};
+function matches(r){return HOUSES.filter(h=>h.type===r.mode&&h.ppl>=r.ppl&&[...r.needs].every(n=>!AMEN_KEY[n]||h[AMEN_KEY[n]]))}
+const NOTES={
+ landing:"Página pública para captar owners: explica el modelo sin comisiones y el precio por casa.",
+ guest:"Flujo del cliente: buscar (lista, mapa, destinos), ver la ficha y contactar por WhatsApp. Tocá «Contactar» para ver el login y el mensaje prellenado.",
+ owner:"Panel del owner: casas, calendario de precios, clientes que te contactaron (podés valorarlos) y suscripción por casa.",
+ admin:"Back-office: cola de verificación de owners y casas antes de publicarse."};
+
+function go(screen,params={}){S.screen=screen;S.params=params;S.sheet=null;render();const v=document.querySelector(".view");if(v)v.scrollTop=0}
+let toastTimer;function toast(t){S.toast=t;render();clearTimeout(toastTimer);toastTimer=setTimeout(()=>{S.toast=null;render()},2000)}
+
+/* ---------------- Iconos ---------------- */
+const I={
+ search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+ heart:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.3-9A5.3 5.3 0 0 1 12 6.4 5.3 5.3 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>',
+ heartF:'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21s-7-4.6-9.3-9A5.3 5.3 0 0 1 12 6.4 5.3 5.3 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12z"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>',
+ wa:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 12 12 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>',
+ check:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg>',
+ back:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 5-7 7 7 7"/></svg>',
+ pin:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+ shield:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+};
+const verified=(v)=>v?`<span class="badge badge-ok">${I.shield} Verificado</span>`:`<span class="badge badge-mute">En revisión</span>`;
+const photo=(cls,label,extra="")=>`<div class="photo ${cls}" ${extra}><span>${label}</span></div>`;
+
+/* ---------------- Chrome ---------------- */
+const NAV={
+ guest:[["home","Explorar",I.search],["request","Pedir casa",I.chat],["favs","Favoritos",I.heart],["profile","Mi cuenta",I.user]],
+ owner:[["o-dash","Panel",I.home],["o-houses","Mis casas",I.pin],["o-cal","Calendario",I.cal],["o-leads","Contactos",I.chat],["o-profile","Cuenta",I.user]],
+ admin:[["a-queue","Verificación",I.shield],["a-houses","Casas",I.home],["a-owners","Owners",I.user]],
+ landing:[["landing","Inicio",I.home]],
+};
+const ROOT={guest:"home",owner:"o-dash",admin:"a-queue",landing:"landing"};
+function current(){const m={detail:"home",filters:"home",login:"home","my-requests":"request","o-new":"o-houses","o-sub":"o-profile","o-house":"o-houses","o-requests":"o-leads"};return m[S.screen]||S.screen}
+function chrome(inner){
+ const items=NAV[S.role];const cur=current();
+ const top=`<div class="topnav"><div class="brand"><span class="mark">▲</span>CasaTica</div>
+   ${items.map(([k,l])=>`<button class="nav" data-go="${k}" ${cur===k?'aria-current="page"':''}>${l}</button>`).join("")}
+   ${S.role==="guest"?(S.loggedIn?`<span class="avatar">AC</span>`:`<button class="btn btn-ghost btn-sm" data-go="login">Ingresar</button>`):""}
+   ${S.role==="owner"?`<button class="btn btn-primary btn-sm" data-go="o-new">${I.plus} Publicar casa</button>`:""}
+   ${S.role==="landing"?`<button class="btn btn-ghost btn-sm" data-role-switch="guest">Buscar casas</button><button class="btn btn-primary btn-sm" data-role-switch="owner">Publicar mi casa</button>`:""}
+ </div>`;
+ const tabs=items.length>1?`<nav class="tabs">${items.map(([k,l,ic])=>`<button data-go="${k}" ${cur===k?'aria-current="page"':''}>${ic}${l}</button>`).join("")}</nav>`:"";
+ return `<div class="statusbar"><span>9:41</span><span>●●● ▮</span></div><div class="app">${top}<div class="view">${inner}</div>${tabs}</div>
+   ${S.sheet?sheet():""}${S.toast?`<div class="toast">${S.toast}</div>`:""}`;
+}
+const header=(title,back,right="")=>`<div class="row between" style="flex-wrap:wrap"><div class="row">${back?`<button data-go="${back}" aria-label="Volver">${I.back}</button>`:""}<h2 style="font-size:22px">${title}</h2></div>${right}</div>`;
+
+/* ---------------- Cliente ---------------- */
+function listingCard(h){
+ const fav=S.favs.has(h.id);
+ return `<article class="listing" data-open="${h.id}">
+  <div class="photo ${h.photo}"><span>${h.loc.split(",")[0]}</span>
+   <button class="fav" data-fav="${h.id}" aria-pressed="${fav}" aria-label="Guardar">${fav?I.heartF:I.heart}</button></div>
+  <div class="body">
+   <div class="row between"><b style="font-size:15px">${h.t}</b>${verified(h.ownerV)}</div>
+   <div class="small muted">${h.loc} · ${h.ppl} personas · ${h.beds} hab</div>
+   <div class="price num">${fmt(h)} <small>/ ${h.unit} · orientativo</small></div>
+  </div></article>`;
+}
+function filtered(){const f=S.filters;return HOUSES.filter(h=>h.type===S.mode&&(f.prov==="Todas"||h.prov===f.prov)&&h.ppl>=f.ppl&&h.beds>=f.beds&&(!f.pool||h.pool)&&(!f.pets||h.pets)&&(!f.ac||h.ac)&&(!f.wifi||h.wifi)&&(!f.ev||h.ev))}
+function activeFilters(){const f=S.filters;return (f.prov!=="Todas")+(f.ppl>0)+(f.beds>0)+["pool","pets","ac","wifi","ev"].filter(k=>f[k]).length}
+const PROVS=["Todas","Guanacaste","Puntarenas","Limón","Alajuela","San José","Heredia","Cartago"];
+function home(){
+ const list=filtered();
+ const active=activeFilters();
+ return `
+  <div class="stack" style="gap:12px">
+   <div class="row between" style="flex-wrap:wrap"><h1 style="font-size:24px;font-weight:800">¿A dónde vas?</h1>
+     <div class="seg"><button data-mode="vac" aria-pressed="${S.mode==="vac"}">Vacacional</button><button data-mode="largo" aria-pressed="${S.mode==="largo"}">Largo plazo</button></div></div>
+   <div class="search">${I.search}<input id="q" placeholder="${S.mode==="vac"?"Playa, montaña, Jacó, Tamarindo…":"Escazú, Heredia, cerca de la UCR…"}" aria-label="Buscar">
+     <button class="chip" data-go="filters" style="padding:5px 10px">Filtros${active?` <span class="badge badge-ok">${active}</span>`:""}</button></div>
+   <div class="chiprow">${PROVS.map(d=>`<button class="chip" data-prov="${d}" aria-pressed="${S.filters.prov===d}">${d}</button>`).join("")}</div>
+  </div>
+  <div class="home-layout">
+   <div class="stack" style="gap:12px">
+    <span class="small muted"><b class="num">${list.length}</b> casas · precios orientativos, se negocian por WhatsApp</span>
+    <div class="listings">${list.map(listingCard).join("")||`<div class="card muted">Sin resultados con esos filtros.</div>`}</div>
+   </div>
+   <div class="map" style="order:-1"><div class="water"></div>
+     ${list.map(h=>`<button class="pin num" style="left:${h.x}%;top:${h.y}%" data-open="${h.id}">${fmt(h)}</button>`).join("")}
+     <span class="badge tag">Mapa · Costa Rica</span></div>
+  </div>`;
+}
+function filters(){
+ return header("Filtros","home")+`
+  <div class="card stack" style="gap:12px">
+   <div class="eyebrow">Provincia</div>
+   <div class="chiprow">${PROVS.map(d=>`<button class="chip" data-prov-stay="${d}" aria-pressed="${S.filters.prov===d}">${d}</button>`).join("")}</div>
+   <div class="divider"></div>
+   <div class="eyebrow">${S.mode==="vac"?"Para la estadía":"Para vivir"}</div>
+   <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="field"><label for="f-ppl">Personas</label><select id="f-ppl" data-sel="ppl">${[0,2,4,6,8,12].map(n=>`<option value="${n}" ${S.filters.ppl===n?"selected":""}>${n?n+"+ personas":"Cualquiera"}</option>`).join("")}</select></div>
+    <div class="field"><label for="f-beds">Habitaciones</label><select id="f-beds" data-sel="beds">${[0,1,2,3,4].map(n=>`<option value="${n}" ${S.filters.beds===n?"selected":""}>${n?n+"+":"Cualquiera"}</option>`).join("")}</select></div>
+   </div>
+   <div class="row" style="flex-wrap:wrap;gap:8px">
+    <button class="chip" data-tog="pool" aria-pressed="${S.filters.pool}">Piscina</button>
+    <button class="chip" data-tog="pets" aria-pressed="${S.filters.pets}">Mascotas</button>
+    <button class="chip" data-tog="ev" aria-pressed="${S.filters.ev}">⚡ Cargador eléctrico</button>
+    <button class="chip" data-tog="ac" aria-pressed="${S.filters.ac}">Aire acondicionado</button>
+    <button class="chip" data-tog="wifi" aria-pressed="${S.filters.wifi}">Wifi</button>
+    ${S.mode==="vac"?`<button class="chip">Frente al mar</button><button class="chip">Rancho / BBQ</button><button class="chip">Accesible</button>`:`<button class="chip">Amueblado</button><button class="chip">Cochera</button><button class="chip">Sin depósito</button>`}
+   </div>
+   <div class="note"><span>¿No encontrás lo que buscás? <button class="btn-link" data-go="request">Pedí una casa</button> y avisamos a los owners que cumplen tus requisitos.</span></div>
+   <div class="divider"></div>
+   <div class="eyebrow">Precio orientativo por ${S.mode==="vac"?"noche":"mes"}</div>
+   <div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><input id="f-min" placeholder="Mín ₡" aria-label="Precio mínimo"></div><div class="field"><input id="f-max" placeholder="Máx ₡" aria-label="Precio máximo"></div></div>
+   <div class="row"><button class="chip" aria-pressed="true">Solo owners verificados</button></div>
+  </div>
+  <div class="row between"><button class="btn btn-ghost" data-clear>Limpiar</button><button class="btn btn-primary" data-go="home">Ver ${filtered().length} casas</button></div>`;
+}
+function detail(backTo="home"){
+ const h=HOUSES.find(x=>x.id===S.params.id)||HOUSES[0];const fav=S.favs.has(h.id);
+ const amen=[[h.ppl+" personas",true],[h.beds+" habitaciones",true],[h.baths+" baños",true],["Piscina",h.pool],["Mascotas",h.pets],["Aire acondicionado",h.ac],["Wifi",h.wifi],["Cargador eléctrico",h.ev],[h.type==="vac"?"Parqueo":"Cochera",true]];
+ return `
+  ${header("",backTo,`<div class="row"><button class="chip" data-fav="${h.id}" aria-pressed="${fav}">${fav?I.heartF:I.heart} ${fav?"Guardada":"Guardar"}</button><button class="chip" data-toast="Enlace copiado">Compartir</button></div>`)}
+  <div class="gallery">${photo(h.photo,"Foto 1 / 12")}${photo("p-selva","Sala")}${photo("p-piscina","Piscina")}${photo("p-ciudad","Cocina")}${photo("p-montana","Vista")}</div>
+  <div class="detail-layout">
+   <div class="stack" style="gap:16px">
+    <div class="stack" style="gap:6px">
+     <div class="row" style="gap:8px;flex-wrap:wrap">${verified(h.ownerV)}<span class="badge badge-mute">${h.type==="vac"?"Vacacional":"Largo plazo"}</span><span class="badge badge-mute num">Ref ${h.id}</span></div>
+     <h1 style="font-size:26px;font-weight:800">${h.t}</h1>
+     <div class="row small muted">${I.pin} ${h.loc}</div>
+    </div>
+    <p style="max-width:65ch">${h.desc}</p>
+    <div class="stack"><div class="eyebrow">Lo que ofrece</div><div class="amen">${amen.map(([a,on])=>`<div style="${on?"":"opacity:.4;text-decoration:line-through"}"><span style="color:var(--jungle)">${I.check}</span>${a}</div>`).join("")}</div></div>
+    <div class="stack"><div class="eyebrow">Disponibilidad y precio orientativo</div>${calendar(false,h)}<div class="xs muted">El owner actualiza este calendario a mano. Confirmá fechas y precio final por WhatsApp.</div></div>
+    <div class="stack"><div class="eyebrow">Ubicación aproximada</div><div class="map" style="min-height:160px"><div class="water"></div><button class="pin active" style="left:50%;top:55%">${h.loc.split(",")[0]}</button></div><div class="xs muted">La dirección exacta la comparte el owner.</div></div>
+    <div class="card row"><span class="avatar">${ini(h.owner)}</span><div><b>${h.owner}</b><div class="xs muted">Owner ${h.ownerV?"verificado con cédula":"en revisión"} · responde en ~1 h · en CasaTica desde 2026</div></div></div>
+    <div class="note">⚠ CasaTica no procesa pagos. No transfieras dinero sin confirmar la casa; reportá cualquier anuncio sospechoso.</div>
+   </div>
+   <div class="detail-side stack" style="gap:12px">
+    <div class="card stack" style="gap:12px">
+     <div><span class="num" style="font-family:var(--display);font-size:28px;font-weight:800">${fmt(h)}</span> <span class="small muted">/ ${h.unit} · orientativo</span></div>
+     <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px"><div class="field"><label class="xs" for="d-in">Llegada</label><input value="12 dic" id="d-in"></div><div class="field"><label class="xs" for="d-out">Salida</label><input value="15 dic" id="d-out"></div></div>
+     <div class="field"><label class="xs" for="d-ppl">Personas</label><select id="d-ppl"><option>4 personas</option><option>2 personas</option><option>6 personas</option></select></div>
+     <button class="btn btn-wa" data-contact="${h.id}">${I.wa} Contactar por WhatsApp</button>
+     <div class="xs muted" style="text-align:center">Sin comisiones. Hablás directo con ${h.owner.split(" ")[0]}.</div>
+    </div>
+    <div class="card small stack"><b>¿Cómo funciona?</b><span class="muted">1. Elegís fechas. 2. Se abre WhatsApp con un mensaje listo. 3. Acordás precio y pago directamente con el owner.</span></div>
+   </div>
+  </div>
+  <div class="cta-bar"><div><div class="num" style="font-weight:800;font-size:17px">${fmt(h)}<span class="small muted" style="font-weight:600"> / ${h.unit}</span></div><div class="xs muted">orientativo</div></div><button class="btn btn-wa" style="flex:1" data-contact="${h.id}">${I.wa} Contactar</button></div>`;
+}
+function calendar(editable,h){
+ const dows=["L","K","M","J","V","S","D"];const busy=[5,6,12,13,14,19,20,21,27];const hi=[24,25,26,28,29,30,31];
+ const cells=[];for(let i=0;i<1;i++)cells.push(`<div class="d empty"></div>`);
+ for(let d=1;d<=31;d++){const b=busy.includes(d),x=hi.includes(d);const p=x?Math.round(h.price*1.3):h.price;
+  cells.push(`<div class="d num ${b?"busy":x?"hi":""}" ${editable?`data-day="${d}" role="button" tabindex="0"`:""}>${d}${b?"":`<small>${h.cur==="₡"?"₡"+Math.round(p/1000)+"k":"$"+p}</small>`}</div>`)}
+ return `<div class="card stack"><div class="row between" style="flex-wrap:wrap"><b>Diciembre 2026</b><div class="row xs muted" style="gap:6px"><span class="legend" style="background:repeating-linear-gradient(135deg,var(--line) 0 3px,transparent 3px 7px)"></span>ocupado <span class="legend" style="background:var(--sun-soft);margin-left:6px"></span>temporada alta</div></div>
+  <div class="cal">${dows.map(d=>`<div class="dow">${d}</div>`).join("")}${cells.join("")}</div></div>`;
+}
+function favs(){
+ const list=HOUSES.filter(h=>S.favs.has(h.id));
+ return header("Favoritos")+(list.length?`<div class="listings">${list.map(listingCard).join("")}</div>`:`<div class="card stack" style="align-items:center;text-align:center;padding:30px"><div style="color:var(--jungle)">${I.heart}</div><b>Todavía no guardaste casas</b><span class="small muted">Tocá el corazón en cualquier casa para compararlas después.</span><button class="btn btn-primary btn-sm" data-go="home">Explorar</button></div>`);
+}
+function login(){
+ return header("Ingresar","home")+`
+  <div class="card stack" style="gap:12px;max-width:440px">
+   <h3 style="font-size:20px">Creá tu cuenta para contactar owners</h3>
+   <p class="small muted">Los owners ven tu nombre y tu puntuación como cliente. Esto los ayuda a confiar en vos y responderte rápido.</p>
+   <div class="field"><label for="l-name">Nombre completo</label><input id="l-name" value="Andrea Castro"></div>
+   <div class="field"><label for="l-phone">Teléfono (WhatsApp)</label><input id="l-phone" value="+506 8712 3344"><span class="hint">Te enviamos un código por WhatsApp para verificarlo.</span></div>
+   <div class="field"><label for="l-mail">Correo</label><input id="l-mail" value="andrea@ejemplo.cr"></div>
+   <button class="btn btn-primary" data-login>Verificar y continuar</button>
+   <div class="xs muted" style="text-align:center">Al continuar aceptás los Términos. CasaTica nunca te pedirá pagos.</div>
+  </div>`;
+}
+function profile(){
+ if(!S.loggedIn)return login();
+ return header("Mi cuenta")+`
+  <div class="card row"><span class="avatar" style="width:48px;height:48px;font-size:16px">AC</span><div><b style="font-size:17px">Andrea Castro</b><div class="small muted">+506 8712 3344 · verificado</div></div></div>
+  <div class="card stack" style="gap:6px"><div class="row between"><b>Mi puntuación como cliente</b><span class="score">★ 4.8</span></div>
+   <div class="small muted">6 valoraciones de owners. Los owners te califican después de cada contacto: responder, cumplir lo acordado y cuidar la casa suben tu puntuación.</div>
+   <div class="row" style="gap:6px;flex-wrap:wrap"><span class="badge badge-ok">Responde rápido ×5</span><span class="badge badge-ok">Cumplió fechas ×4</span><span class="badge badge-ok">Cuidó la casa ×3</span></div></div>
+  <div class="card list">
+   <div class="row between"><span>Casas contactadas</span><span class="muted num">7</span></div>
+   <div class="row between"><span>Favoritos</span><span class="muted num">${S.favs.size}</span></div>
+   <div class="row between"><span>Alertas de nuevas casas</span><span class="badge badge-ok">Guanacaste, Jacó</span></div>
+   <div class="row between"><span>Idioma</span><span class="muted">Español</span></div>
+   <div class="row between"><span>¿Tenés una casa? Publicala</span><button class="btn btn-ghost btn-sm" data-role-switch="owner">Modo owner</button></div>
+  </div>`;
+}
+
+/* ---------------- Cliente: pedir casa ---------------- */
+function request(){
+ const r=S.req;const m=matches(r);
+ return `<div class="row between" style="flex-wrap:wrap;gap:8px"><div><div class="eyebrow">Al revés</div><h1 style="font-size:24px;font-weight:800">Contanos qué buscás</h1></div>${S.mySent?`<button class="btn btn-ghost btn-sm" data-go="my-requests">Mis solicitudes <span class="badge badge-sun">2 owners</span></button>`:""}</div>
+  <p class="small muted">Describí tu viaje o mudanza. Avisamos solo a los owners cuya casa cumple tus requisitos y ellos te escriben por WhatsApp, como siempre.</p>
+  <div class="card stack" style="gap:14px;max-width:640px">
+   <div class="seg" style="align-self:flex-start"><button data-rmode="vac" aria-pressed="${r.mode==="vac"}">Vacaciones</button><button data-rmode="largo" aria-pressed="${r.mode==="largo"}">Para vivir</button></div>
+   <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="field"><label for="r-ppl">¿Cuántos son?</label><div class="row" style="gap:6px"><button class="chip" data-rppl="-1" aria-label="Menos">−</button><input id="r-ppl" value="${r.ppl} personas" readonly style="text-align:center;padding:9px 6px"><button class="chip" data-rppl="1" aria-label="Más">+</button></div></div>
+    <div class="field"><label for="r-dates">${r.mode==="vac"?"Fechas":"Desde cuándo"}</label><input id="r-dates" value="${r.dates}"></div>
+   </div>
+   <div class="field"><label for="r-zone">Zona</label><select id="r-zone" data-rzone>${["Cualquier lugar","Guanacaste","Jacó / Pacífico central","Manuel Antonio","Caribe sur","Monteverde / La Fortuna","San José y alrededores","Heredia / San José oeste"].map(z=>`<option ${r.zone===z?"selected":""}>${z}</option>`).join("")}</select></div>
+   <div class="stack"><div class="eyebrow">Imprescindibles</div><div class="row" style="flex-wrap:wrap;gap:8px">${NEEDS.map(n=>`<button class="chip" data-need="${n}" aria-pressed="${r.needs.has(n)}">${n==="Cargador eléctrico"?"⚡ ":""}${n}</button>`).join("")}</div></div>
+   <div class="field"><label for="r-text">Contalo con tus palabras</label><textarea id="r-text" rows="3" data-rtext>${r.text}</textarea><span class="hint">Los owners leen esto tal cual. Detectamos requisitos automáticamente del texto (p. ej. «cargador eléctrico», «perro», «piscina»).</span></div>
+   <div class="field"><label for="r-budget">${r.mode==="vac"?"Presupuesto total para la estadía (opcional)":"Presupuesto mensual (opcional)"}</label><input id="r-budget" placeholder="${r.mode==="vac"?"₡ 300.000 en total":"₡ 400.000 por mes"}" class="num"><span class="hint">${r.mode==="vac"?"El total por todas las noches, para que los owners te den un precio cerrado.":"Lo que podés pagar al mes, sin contar depósito."}</span></div>
+   <div class="divider"></div>
+   <div class="row between" style="flex-wrap:wrap;gap:8px"><div><b class="num">${m.length}</b> <span class="small muted">casas cumplen hoy tus requisitos · sus owners recibirán tu solicitud</span></div><div class="row" style="gap:4px">${m.slice(0,4).map(h=>`<span class="avatar" style="width:28px;height:28px;font-size:11px" title="${h.owner}">${ini(h.owner)}</span>`).join("")}</div></div>
+   <label class="row small" style="align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" id="r-consent" checked style="margin-top:3px;accent-color:var(--jungle)"><span>Acepto que hasta <b>${Math.min(10,m.length)} owners verificados</b> que cumplan mis requisitos me escriban por WhatsApp. Puedo cerrar la solicitud cuando quiera.</span></label>
+   <button class="btn btn-primary" data-send-request ${m.length?"":"disabled style='opacity:.5'"}>${S.loggedIn?"Enviar a los owners":"Crear cuenta y enviar"}</button>
+   <div class="xs muted">Solo owners verificados con cédula reciben tu número. Máximo 3 solicitudes activas.</div>
+  </div>`;
+}
+function myRequests(){
+ const r=S.requests[0];const my=[r];
+ return header("Mis solicitudes","request")+my.map(r=>`
+  <div class="card stack" style="gap:12px">
+   <div class="row between" style="flex-wrap:wrap;gap:6px"><div><b>${r.ppl} personas · ${r.dates} · ${r.zone}</b><div class="xs muted">Enviada hace 2 h · ${matches(r).length} owners avisados</div></div><span class="badge badge-ok">Activa</span></div>
+   <div class="row" style="gap:6px;flex-wrap:wrap">${r.needs.map(n=>`<span class="badge badge-mute">${n}</span>`).join("")}${r.budget?`<span class="badge badge-sun num">Presupuesto ${r.budget}</span>`:""}</div>
+   <p class="small muted" style="font-style:italic">“${r.text}”</p>
+   <div class="divider"></div>
+   <div class="eyebrow">Owners que te escribieron por WhatsApp (${r.offers.length})</div>
+   ${r.offers.length?r.offers.map(o=>{const h=HOUSES.find(x=>x.id===o.house);return `<div class="row between" style="flex-wrap:wrap;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
+     <div class="row"><span class="avatar">${ini(o.owner)}</span><div><div class="row" style="gap:6px"><b>${o.owner}</b>${verified(h.ownerV)}</div><div class="xs muted">${h.t} · ${h.loc.split(",")[0]} · ofreció ${o.price}</div></div></div>
+     <div class="row" style="gap:6px"><button class="btn btn-ghost btn-sm" data-open="${h.id}">Ver casa</button><button class="btn btn-sm" style="background:var(--wa);color:#063b1e" data-toast="Abriendo el chat con ${o.owner}" aria-label="Abrir chat">${I.wa} Chat</button></div>
+    </div>`}).join(""):`<div class="small muted">Todavía nadie te escribió. Los owners avisados tienen tu solicitud en su panel; te llegan por WhatsApp directamente.</div>`}
+   <div class="xs muted">Revisá que el chat venga de un owner de esta lista: todos tienen cédula verificada. Si alguien te pide dinero antes de confirmar, reportalo.</div>
+   <button class="btn btn-ghost btn-sm" data-toast="Solicitud cerrada · ya no recibirás más mensajes" style="align-self:flex-start">Cerrar solicitud</button>
+  </div>`).join("");
+}
+
+/* ---------------- Owner ---------------- */
+const MY=HOUSES.filter(h=>["CT-1042","CT-1150"].includes(h.id));
+const spark=(pts,color)=>{const max=Math.max(...pts),w=100,h=36;const d=pts.map((p,i)=>`${i?"L":"M"}${(i/(pts.length-1))*w},${h-(p/max)*(h-4)-2}`).join(" ");return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d} L${w},${h} L0,${h}Z" fill="${color}" opacity=".15"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2"/></svg>`};
+function oDash(){
+ return `<div class="row between" style="flex-wrap:wrap;gap:8px"><div><div class="eyebrow">Hola, Marcela</div><h1 style="font-size:24px;font-weight:800">Tu panel</h1></div><button class="btn btn-primary btn-sm" data-go="o-new">${I.plus} Publicar casa</button></div>
+  <div class="stats">
+   <div class="stat"><div class="k">Vistas · 30 días</div><div class="v num">1.392</div>${spark([20,32,28,40,55,48,70,64,88],"var(--jungle)")}<div class="t up">▲ 18% vs mes anterior</div></div>
+   <div class="stat"><div class="k">Contactos por WhatsApp</div><div class="v num">90</div>${spark([3,5,4,8,6,9,12,10,14],"var(--sun)")}<div class="t up">▲ 11 esta semana</div></div>
+   <div class="stat"><div class="k">Casas activas</div><div class="v num">2</div><div class="t muted">1 en revisión</div></div>
+   <div class="stat"><div class="k">Suscripción</div><div class="v num" style="font-size:20px">₡19.800<span class="small muted" style="font-weight:600">/mes</span></div><div class="t muted">2 casas · renueva 15 oct</div></div>
+  </div>
+  <div class="note" style="background:var(--jungle-soft);border-color:transparent;color:var(--jungle-ink)"><span>🔔 <b>${S.requests.filter(r=>!r.replied).length} solicitudes nuevas</b> de clientes que buscan una casa como la tuya (piscina, cargador eléctrico…). <button class="btn-link" data-go="o-requests">Responder</button></span></div>
+  <div class="note"><span>💡 3 clientes te escribieron y aún no los valoraste. Valorar clientes ayuda a toda la comunidad de owners. <button class="btn-link" data-go="o-leads">Ver contactos</button></span></div>
+  <div class="stack"><div class="row between"><b>Mis casas</b><button class="btn-link" data-go="o-houses">Ver todas</button></div>
+   <div class="listings">${MY.map(ownerCard).join("")}</div></div>`;
+}
+function ownerCard(h){return `<article class="listing" data-go="o-house" data-id="${h.id}"><div class="photo ${h.photo}"><span>${h.loc.split(",")[0]}</span></div>
+ <div class="body"><div class="row between"><b>${h.t}</b><span class="badge badge-ok">Activa</span></div><div class="row small muted num" style="gap:6px;flex-wrap:wrap">${I.eye} ${h.views} vistas · ${I.chat} ${h.contacts} contactos · ${fmt(h)}/${h.unit}</div>
+ <div class="row" style="gap:8px;margin-top:6px"><button class="btn btn-ghost btn-sm" data-go="o-cal">Calendario</button><button class="btn btn-ghost btn-sm" data-go="o-new">Editar</button></div></div></article>`}
+function oHouses(){
+ return header("Mis casas",null,`<button class="btn btn-primary btn-sm" data-go="o-new">${I.plus} Nueva</button>`)+`
+  <div class="listings">${MY.map(ownerCard).join("")}
+   <article class="listing" style="opacity:.85"><div class="photo p-caribe"><span>Nosara</span></div><div class="body"><div class="row between"><b>Casa Nosara (borrador)</b><span class="badge badge-warn">En revisión</span></div><div class="small muted">Enviada hace 2 h · te avisamos por WhatsApp cuando se apruebe (máx. 24 h).</div></div></article>
+  </div>
+  <div class="card small"><b>Pago por casa</b><div class="muted">Cada casa activa cuesta ₡9.900/mes. Las casas en revisión o pausadas no se cobran. <button class="btn-link" data-go="o-sub">Ver suscripción</button></div></div>`;
+}
+function oNew(){
+ const s=S.wizStep;const steps=["Tipo","Ubicación","Detalles","Fotos","Precio"];
+ const body=[
+  ()=>`<h3>¿Qué tipo de alquiler es?</h3><div class="opt-grid">
+    <button class="opt" data-wtype="vac" aria-pressed="${S.wizType==="vac"}"><b>Vacacional</b><span>Por noche. Fines de semana, temporada.</span></button>
+    <button class="opt" data-wtype="largo" aria-pressed="${S.wizType==="largo"}"><b>Largo plazo</b><span>Por mes. Para vivir, 6+ meses.</span></button></div>
+    <h3 style="margin-top:8px">¿Qué es?</h3><div class="opt-grid"><button class="opt" aria-pressed="true"><b>Casa completa</b></button><button class="opt"><b>Apartamento</b></button><button class="opt"><b>Cabina</b></button><button class="opt"><b>Quinta / finca</b></button></div>`,
+  ()=>`<h3>¿Dónde está?</h3>
+    <div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><label for="w-prov">Provincia</label><select id="w-prov"><option>Guanacaste</option><option>Puntarenas</option><option>Limón</option><option>Alajuela</option><option>San José</option><option>Heredia</option><option>Cartago</option></select></div>
+    <div class="field"><label for="w-canton">Cantón</label><select id="w-canton"><option>Santa Cruz</option><option>Nicoya</option><option>Liberia</option></select></div></div>
+    <div class="field"><label for="w-zona">Zona / playa / barrio</label><input id="w-zona" value="Tamarindo, Playa Langosta"></div>
+    <div class="map" style="min-height:180px"><div class="water"></div><button class="pin active" style="left:48%;top:50%">Arrastrá el pin</button></div>
+    <div class="xs muted">Mostramos una zona aproximada (radio ~500 m). La dirección exacta solo la compartís vos por WhatsApp.</div>`,
+  ()=>`<h3>Detalles</h3>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr)"><div class="field"><label for="w-ppl">Personas</label><input id="w-ppl" value="6"></div><div class="field"><label for="w-beds">Habitaciones</label><input id="w-beds" value="3"></div><div class="field"><label for="w-baths">Baños</label><input id="w-baths" value="2"></div></div>
+    <div class="eyebrow">Amenidades</div><div class="row" style="flex-wrap:wrap;gap:8px">${["Piscina","Mascotas","Cargador eléctrico","Aire acondicionado","Wifi","Parqueo","Rancho / BBQ","Frente al mar","Cocina equipada","Lavadora","Seguridad 24 h","Accesible"].map((a,i)=>`<button class="chip" aria-pressed="${i<7}">${a}</button>`).join("")}</div>
+    <div class="xs muted">Marcá bien las amenidades: así te llegan las solicitudes de clientes que buscan exactamente eso.</div>
+    <div class="field"><label for="w-title">Título</label><input id="w-title" value="Villa Brisa frente al mar"><span class="hint">Nombre + lo mejor de la casa. Evitá MAYÚSCULAS.</span></div>
+    <div class="field"><label for="w-desc">Descripción</label><textarea id="w-desc" rows="4">Casa de dos plantas a 150 m de Playa Tamarindo. Rancho con hamacas, piscina privada y parrilla.</textarea></div>`,
+  ()=>`<h3>Fotos</h3><div class="upload">Arrastrá fotos aquí o tocá para subir<br><span class="xs">Mínimo 5 · horizontales · sin marcas de agua ni teléfonos</span></div>
+    <div class="photos-grid">${photo("p-playa","Portada")}${photo("p-piscina","")}${photo("p-selva","")}${photo("p-ciudad","")}${photo("p-montana","")}</div>
+    <div class="note">⚠ Las fotos con números de teléfono o enlaces se rechazan en la revisión. Los clientes te contactan con el botón de WhatsApp.</div>`,
+  ()=>`<h3>Precio orientativo</h3>
+    <div class="grid" style="grid-template-columns:2fr 1fr"><div class="field"><label for="w-price">Precio por ${S.wizType==="vac"?"noche":"mes"}</label><input id="w-price" value="${S.wizType==="vac"?"95.000":"380.000"}" class="num"></div><div class="field"><label for="w-cur">Moneda</label><select id="w-cur"><option>₡ colones</option><option>$ dólares</option></select></div></div>
+    <div class="xs muted">Se muestra como «desde». El precio final lo acordás por WhatsApp; CasaTica no cobra ni retiene pagos.</div>
+    <div class="field"><label for="w-wa">Número de WhatsApp para recibir contactos</label><input id="w-wa" value="+506 8xxx-xxxx"></div>
+    <div class="note">📱 Usá un número de negocio (WhatsApp Business), no tu número personal. No se muestra en la ficha: solo se abre al tocar «Contactar».</div>
+    <div class="card stack summary-box" style="gap:6px"><b>Resumen de la suscripción</b><div class="row between small"><span>Villa Brisa frente al mar</span><b class="num">₡9.900 / mes</b></div><div class="xs muted">Se cobra solo cuando la casa esté aprobada y activa. Podés pausarla cuando querrás.</div></div>`
+ ][s-1]();
+ return header("Publicar casa","o-houses",`<span class="xs muted num">Paso ${s} de 5 · ${steps[s-1]}</span>`)+`
+  <div class="steps">${steps.map((_,i)=>`<span class="${i<s?"on":""}"></span>`).join("")}</div>
+  <div class="card stack" style="gap:14px;max-width:640px">${body}</div>
+  <div class="row between" style="max-width:640px"><button class="btn btn-ghost" data-wiz="-1" ${s===1?"disabled style='opacity:.4'":""}>Atrás</button>${s<5?`<button class="btn btn-primary" data-wiz="1">Continuar</button>`:`<button class="btn btn-primary" data-submit-house>Enviar a revisión</button>`}</div>`;
+}
+function oCal(){
+ const h=MY[0];
+ return header("Calendario y precios",null,`<select id="c-house" class="chip" aria-label="Casa"><option>Villa Brisa frente al mar</option><option>Quinta Los Robles</option></select>`)+`
+  <div class="row" style="gap:8px;flex-wrap:wrap"><button class="chip" aria-pressed="true">Marcar ocupado</button><button class="chip">Precio especial</button><button class="chip">Temporada alta</button></div>
+  ${calendar(true,h)}
+  <div class="card stack" style="gap:10px"><b>Precio base</b><div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><label class="xs" for="c-base">Por noche</label><input value="95.000" class="num" id="c-base"></div><div class="field"><label class="xs" for="c-high">Temporada alta (24–31 dic)</label><input value="123.500" class="num" id="c-high"></div></div>
+   <div class="row between small"><span>Mínimo de noches</span><select id="c-min" class="chip" aria-label="Mínimo de noches"><option>2 noches</option><option>1 noche</option><option>3 noches</option></select></div>
+   <div class="xs muted">Tocá un día para marcarlo ocupado cuando cerrés una reserva por WhatsApp. Los clientes lo ven al instante.</div></div>`;
+}
+const leadsTabs=(cur)=>`<div class="seg" style="align-self:flex-start"><button data-go="o-leads" aria-pressed="${cur==="leads"}">Me contactaron</button><button data-go="o-requests" aria-pressed="${cur==="req"}">Solicitudes <span class="badge badge-sun num" style="margin-left:4px">${S.requests.filter(r=>!r.replied).length}</span></button></div>`;
+function oRequests(){
+ return header("Contactos")+leadsTabs("req")+`<p class="small muted">Clientes que pidieron una casa como la tuya. Solo te llegan si tu casa cumple lo que piden. Respondé por WhatsApp directamente al cliente, con un mensaje listo para enviar.</p>
+  <div class="stack" style="gap:12px">${S.requests.map((r,i)=>{const mine=matches(r).filter(h=>MY.some(m=>m.id===h.id));return `<div class="card stack" style="gap:10px;${r.replied?"opacity:.75":""}">
+    <div class="row between" style="flex-wrap:wrap;gap:6px"><div class="row"><span class="avatar">${ini(r.client)}</span><div><div class="row" style="gap:6px"><b>${r.client}</b><span class="score">★ ${r.score} <span class="xs muted" style="font-weight:600">(${r.count})</span></span></div><div class="xs muted">${r.mode==="vac"?"Vacaciones":"Para vivir"} · ${r.ppl} personas · ${r.dates} · ${r.zone}</div></div></div>${r.replied?`<span class="badge badge-ok">Respondiste</span>`:`<span class="badge badge-sun">Nueva</span>`}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${r.needs.map(n=>`<span class="badge badge-mute">${n==="Cargador eléctrico"?"⚡ ":""}${n}</span>`).join("")}${r.budget?`<span class="badge badge-sun num">Presupuesto ${r.budget}</span>`:""}</div>
+    <p class="small" style="font-style:italic">“${r.text}”</p>
+    <div class="xs muted">Coincide con: <b>${mine.map(h=>h.t).join(", ")||"tu casa en revisión"}</b></div>
+    ${r.replied?"":`<div class="row" style="gap:8px"><button class="btn btn-sm" style="background:var(--wa);color:#063b1e" data-reply-req="${i}">${I.wa} Responder por WhatsApp</button><button class="btn btn-ghost btn-sm" data-toast="Solicitud descartada">No me interesa</button></div>`}
+   </div>`}).join("")}</div>`;
+}
+function oLeads(){
+ const titleOf=id=>HOUSES.find(h=>h.id===id).t.split(" ").slice(0,2).join(" ");
+ return header("Contactos")+leadsTabs("leads")+`<p class="small muted">Clientes que tocaron «Contactar por WhatsApp». Valoralos después de hablar: tu valoración la ven otros owners.</p>
+  <div class="chiprow"><button class="chip" aria-pressed="true">Todos</button><button class="chip">Sin valorar</button><button class="chip">Villa Brisa</button><button class="chip">Los Robles</button></div>
+  <div class="card list">${S.leads.map((l,i)=>`<div class="lead">
+    <span class="avatar">${ini(l.n)}</span>
+    <div style="min-width:0"><div class="row" style="gap:8px;flex-wrap:wrap"><b>${l.n}</b>${l.score?`<span class="score">★ ${l.score} <span class="xs muted" style="font-weight:600">(${l.count})</span></span>`:`<span class="badge badge-mute">Cliente nuevo</span>`}</div>
+     <div class="xs muted">${titleOf(l.h)} · ${l.when} · “${l.msg}”</div>
+     <div class="row" style="gap:8px;margin-top:6px;flex-wrap:wrap"><div class="ratebtn" aria-label="Valorar cliente">${[1,2,3,4,5].map(n=>`<button class="${n<=l.rated?"on":""}" data-rate="${i}:${n}" aria-label="${n} estrellas">★</button>`).join("")}</div>${l.rated?`<span class="badge badge-ok">Valorado</span>`:`<span class="xs muted">Valorar</span>`}</div></div>
+    <button class="btn btn-ghost btn-sm" data-toast="Abriendo WhatsApp…" style="color:var(--wa-ink)" aria-label="Abrir WhatsApp">${I.wa}</button></div>`).join("")}</div>`;
+}
+function oProfile(){
+ return header("Cuenta")+`
+  <div class="card row"><span class="avatar" style="width:48px;height:48px;font-size:16px">MR</span><div><b style="font-size:17px">Marcela Rodríguez</b><div class="row small muted" style="gap:4px">Owner verificada ${I.shield} · cédula 5-0xxx-0xxx</div></div></div>
+  <div class="card list">
+   <div class="row between"><span>Suscripción</span><button class="btn-link" data-go="o-sub">2 casas · ₡19.800/mes</button></div>
+   <div class="row between"><span>WhatsApp de negocio</span><span class="muted num">+506 8xxx-xxxx</span></div>
+   <div class="row between"><span>Avisos de contactos</span><span class="badge badge-ok">WhatsApp + correo</span></div>
+   <div class="row between"><span>Métodos de pago</span><span class="muted">SINPE Móvil · Visa ••42</span></div>
+   <div class="row between"><span>Ayuda</span><span class="muted">Chat de soporte</span></div>
+  </div>`;
+}
+function oSub(){
+ return header("Suscripción","o-profile")+`
+  <div class="card stack" style="gap:12px;max-width:560px">
+   <div class="row between"><b>Plan por casa</b><span class="badge badge-ok">Activo</span></div>
+   <div class="list">
+    <div class="row between"><span>Villa Brisa frente al mar</span><b class="num">₡9.900</b></div>
+    <div class="row between"><span>Quinta Los Robles</span><b class="num">₡9.900</b></div>
+    <div class="row between muted"><span>Casa Nosara (en revisión)</span><span class="num">₡0 hasta aprobarse</span></div>
+    <div class="row between"><b>Total mensual</b><b class="num" style="font-size:18px">₡19.800</b></div>
+   </div>
+   <div class="xs muted">Próximo cobro 15 oct 2026 · SINPE Móvil. Sin comisiones por reserva, nunca.</div>
+   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm">Pagar anual (2 meses gratis)</button><button class="btn btn-ghost btn-sm">Pausar una casa</button></div>
+  </div>
+  <div class="card small stack" style="max-width:560px"><b>Próximamente: planes por nivel</b><span class="muted">Destacar casas en los primeros resultados, más fotos y estadísticas avanzadas. Fuera de alcance en v1.</span></div>`;
+}
+function oHouse(){return detail("o-houses")}
+
+/* ---------------- Admin ---------------- */
+function aQueue(){
+ const pend=S.queue.filter(q=>q.status==="pend");
+ return `<div class="row between" style="flex-wrap:wrap;gap:8px"><div><div class="eyebrow">Back-office</div><h1 style="font-size:24px;font-weight:800">Cola de verificación</h1></div><div class="row" style="gap:6px"><span class="badge badge-warn num">${pend.length} pendientes</span><span class="badge badge-mute">SLA 24 h</span></div></div>
+  <div class="chiprow"><button class="chip" aria-pressed="true">Owners + casa nueva</button><button class="chip">Solo casas</button><button class="chip">Reportes de clientes <span class="badge badge-bad">2</span></button></div>
+  <div class="queue">${S.queue.map((q,i)=>`<div class="card stack" style="gap:10px;${q.status!=="pend"?"opacity:.6":""}">
+    <div class="row between"><div class="row"><span class="avatar">${ini(q.n)}</span><div><b>${q.n}</b><div class="xs muted">Enviado ${q.sent}</div></div></div>${q.status==="ok"?`<span class="badge badge-ok">Aprobado</span>`:q.status==="no"?`<span class="badge badge-bad">Rechazado</span>`:`<span class="badge badge-warn">Pendiente</span>`}</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px"><div class="doc">Cédula (frente)</div><div class="doc">Selfie con cédula</div></div>
+    <div class="list small">
+     <div class="row between"><span class="muted">Cédula</span><span class="num">${q.ced}</span></div>
+     <div class="row between"><span class="muted">WhatsApp</span><span class="num">${q.phone}</span></div>
+     <div class="row between"><span class="muted">Casa</span><span>${q.house}</span></div>
+    </div>
+    ${q.flags.length?`<div class="stack" style="gap:4px">${q.flags.map(f=>`<span class="badge badge-bad" style="align-self:flex-start;white-space:normal">⚑ ${f}</span>`).join("")}</div>`:`<span class="badge badge-ok" style="align-self:flex-start">Sin alertas automáticas</span>`}
+    ${q.status==="pend"?`<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" data-approve="${i}">Aprobar</button><button class="btn btn-ghost btn-sm" data-toast="Solicitud enviada al owner">Pedir más info</button><button class="btn btn-danger btn-sm" data-reject="${i}">Rechazar</button></div>`:""}
+   </div>`).join("")}</div>`;
+}
+function aHouses(){
+ return header("Casas publicadas")+`<div class="stats"><div class="stat"><div class="k">Activas</div><div class="v num">184</div></div><div class="stat"><div class="k">Pausadas</div><div class="v num">21</div></div><div class="stat"><div class="k">Reportadas</div><div class="v num" style="color:var(--bad)">2</div></div><div class="stat"><div class="k">MRR</div><div class="v num">₡1,82M</div></div></div>
+  <div class="card tbl-wrap"><table class="compare"><thead><tr><th>Casa</th><th>Owner</th><th>Vistas 30 d</th><th>Contactos</th><th>Estado</th></tr></thead><tbody>
+  ${HOUSES.slice(0,6).map(h=>`<tr><td>${h.t}</td><td>${h.owner}</td><td class="num">${h.views}</td><td class="num">${h.contacts}</td><td>${h.ownerV?'<span class="badge badge-ok">Activa</span>':'<span class="badge badge-warn">Revisión</span>'}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function aOwners(){
+ return header("Owners")+`<div class="stats"><div class="stat"><div class="k">Owners activos</div><div class="v num">126</div></div><div class="stat"><div class="k">Pago vencido</div><div class="v num" style="color:var(--warn)">7</div></div><div class="stat"><div class="k">Churn mensual</div><div class="v num">3,1%</div></div><div class="stat"><div class="k">Nuevos esta semana</div><div class="v num">9</div></div></div>
+  <div class="card list small"><div class="row between"><b>Marcela Rodríguez</b><span>2 casas · al día</span></div><div class="row between"><b>Gerardo Mora</b><span>1 casa · al día</span></div><div class="row between"><b>Inversiones Mora</b><span class="badge badge-warn">pago vencido 5 días</span></div><div class="row between"><b>Fam. Solano</b><span>1 casa · al día</span></div></div>`;
+}
+
+/* ---------------- Landing ---------------- */
+function landing(){
+ return `<section class="hero">
+   <div class="stack" style="gap:16px">
+    <span class="badge badge-sun" style="align-self:flex-start">Hecho en Costa Rica</span>
+    <h1>Alquilá tu casa como siempre, por WhatsApp. Pero que te vea todo el país.</h1>
+    <p>CasaTica es el catálogo donde los owners publican su casa y los clientes los contactan directo por WhatsApp. Sin comisiones por reserva, sin intermediarios en el pago.</p>
+    <div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-role-switch="owner">Publicar mi casa</button><button class="btn btn-ghost" data-role-switch="guest">Buscar una casa</button></div>
+    <div class="row small muted" style="gap:14px;flex-wrap:wrap"><span class="row" style="gap:4px">${I.shield} Owners verificados con cédula</span><span class="row" style="gap:4px">${I.wa} Contacto directo</span></div>
+   </div>
+   ${photo("p-playa","Tamarindo, Guanacaste")}
+  </section>
+  <section class="how">
+   <div class="card stack"><span class="eyebrow">1 · Publicás</span><b>Subís fotos, zona y precio orientativo</b><span class="small muted">5 minutos desde el celular. Verificamos tu cédula para que los clientes confíen.</span></div>
+   <div class="card stack"><span class="eyebrow">2 · Te encuentran</span><b>Clientes de todo el país ven tu casa</b><span class="small muted">Buscan por playa, montaña o ciudad, con filtros y mapa. Y si un cliente pide «somos 3, con piscina y cargador eléctrico», te avisamos si tu casa cumple.</span></div>
+   <div class="card stack"><span class="eyebrow">3 · Cerrás por WhatsApp</span><b>Fechas, precio y pago, entre ustedes</b><span class="small muted">Como siempre lo hiciste. Nosotros no tocamos la plata.</span></div>
+  </section>
+  <section class="stack" style="gap:16px">
+   <div class="price-box stack" style="gap:8px"><span class="eyebrow">Precio simple</span><div class="big">₡9.900 <span style="font-size:16px;font-weight:600;opacity:.85">/ casa / mes</span></div><span style="opacity:.9">Una reserva de fin de semana lo paga. Cero comisiones aunque alquilés 30 noches. Sin permanencia ni contratos: cancelá o pausá una casa cuando quieras y dejás de pagar. Pagá con tarjeta (renovación automática) o SINPE Móvil.</span><button class="btn btn-onjungle" data-role-switch="owner">Empezar · primer mes gratis</button></div>
+   <div class="card tbl-wrap"><table class="compare"><thead><tr><th></th><th>CasaTica</th><th>Plataformas con comisión</th><th>Solo WhatsApp</th></tr></thead><tbody>
+    <tr><td>Comisión por reserva</td><td><b style="color:var(--jungle)">0%</b></td><td>12–18%</td><td>0%</td></tr>
+    <tr><td>Visibilidad</td><td>Todo el país</td><td>Mundial</td><td>Tus contactos</td></tr>
+    <tr><td>Quién fija precio y fechas</td><td>Vos</td><td>La plataforma</td><td>Vos</td></tr>
+    <tr><td>Cobro</td><td>Directo a vos</td><td>Retienen y pagan después</td><td>Directo a vos</td></tr>
+    <tr><td>Confianza</td><td>Owner verificado</td><td>Reseñas</td><td>Ninguna</td></tr>
+   </tbody></table></div>
+  </section>
+  <section class="stack"><div class="eyebrow">Casas recién publicadas</div><div class="listings">${HOUSES.slice(0,3).map(listingCard).join("")}</div></section>
+  <section class="card stack" style="gap:10px"><b>Preguntas frecuentes</b>
+   <details><summary><b>¿Por qué no hay reseñas de las casas?</b></summary><p class="small muted">Como la reserva se cierra fuera de la app, no podemos comprobar quién se hospedó de verdad. Preferimos no mostrar reseñas que no podemos verificar. En cambio verificamos la identidad de cada owner y los owners valoran a los clientes.</p></details>
+   <details><summary><b>¿Qué pasa si un owner me pide un adelanto?</b></summary><p class="small muted">Es común en Costa Rica. Confirmá que el anuncio tenga el sello «Verificado», hacé videollamada y pedí comprobante. CasaTica nunca pide pagos.</p></details>
+   <details><summary><b>¿Puedo publicar varias casas?</b></summary><p class="small muted">Sí, pagás ₡9.900 por cada casa activa. Pronto habrá planes con descuento por volumen.</p></details>
+  </section>`;
+}
+
+/* ---------------- Sheets ---------------- */
+function sheet(){
+ if(S.sheet.type==="contact"){const h=HOUSES.find(x=>x.id===S.sheet.id);
+  const msg=`Hola ${h.owner.split(" ")[0]}, vi tu casa «${h.t}» en CasaTica (ref ${h.id}). ¿Está disponible del 12 al 15 de diciembre para 4 personas? Gracias 🙂`;
+  return `<div class="sheet" data-close><div class="sheet-body" data-stop>
+   <div class="row between"><b style="font-size:17px">Se abrirá WhatsApp</b><button data-close-btn class="chip">Cerrar</button></div>
+   <div class="row"><span class="avatar">${ini(h.owner)}</span><div><b>${h.owner}</b> ${verified(h.ownerV)}<div class="xs muted">Número de negocio verificado</div></div></div>
+   <div class="wa-bubble">${msg}<div class="xs" style="text-align:right;opacity:.6;margin-top:4px">10:12 ✓</div></div>
+   <div class="field"><label class="xs" for="wa-msg">Podés editar el mensaje</label><textarea id="wa-msg" rows="2">${msg}</textarea></div>
+   <button class="btn btn-wa" data-toast="WhatsApp abierto · contacto registrado">${I.wa} Abrir WhatsApp</button>
+   <div class="xs muted">Registramos este contacto para que ${h.owner.split(" ")[0]} pueda valorarte después. Nunca compartimos tu número con terceros.</div>
+  </div></div>`}
+ if(S.sheet.type==="reply"){const r=S.requests[S.sheet.i];const h=MY[0];
+  const msg=`Hola ${r.client.split(" ")[0]}, soy ${h.owner} de CasaTica. Vi que buscan casa para ${r.ppl} personas (${r.dates}) con ${r.needs.join(" y ").toLowerCase()}. Mi casa «${h.t}» en ${h.loc.split(",")[0]} cumple todo: casatica.cr/c/${h.id}. Les puedo dejar las 3 noches en ₡270.000 en total. ¿Les sirve?`;
+  return `<div class="sheet" data-close><div class="sheet-body" data-stop>
+   <div class="row between"><b style="font-size:17px">Se abrirá WhatsApp con ${r.client.split(" ")[0]}</b><button data-close-btn class="chip">Cerrar</button></div>
+   <div class="row"><span class="avatar">${ini(r.client)}</span><div><b>${r.client}</b> <span class="score">★ ${r.score}</span><div class="xs muted">Aceptó recibir mensajes de owners que cumplan su búsqueda</div></div></div>
+   <div class="field"><label for="rp-house">Casa que ofrecés</label><select id="rp-house">${MY.map(x=>`<option>${x.t}</option>`).join("")}</select></div>
+   <div class="wa-bubble">${msg}<div class="xs" style="text-align:right;opacity:.6;margin-top:4px">10:14 ✓</div></div>
+   <div class="field"><label class="xs" for="rp-note">Podés editar el mensaje</label><textarea id="rp-note" rows="3">${msg}</textarea></div>
+   <button class="btn btn-wa" data-send-reply="${S.sheet.i}">${I.wa} Abrir WhatsApp</button>
+   <div class="xs muted">Registramos que respondiste; cuando terminen de hablar podrás valorar a ${r.client.split(" ")[0]} desde «Me contactaron».</div>
+  </div></div>`}
+ return "";
+}
+
+/* ---------------- Router ---------------- */
+const SCREENS={home,filters,detail:()=>detail("home"),favs,profile,login,request,"my-requests":myRequests,"o-requests":oRequests,"o-dash":oDash,"o-houses":oHouses,"o-new":oNew,"o-cal":oCal,"o-leads":oLeads,"o-profile":oProfile,"o-sub":oSub,"o-house":oHouse,"a-queue":aQueue,"a-houses":aHouses,"a-owners":aOwners,landing};
+function render(){
+ const fn=SCREENS[S.screen]||SCREENS[ROOT[S.role]];
+ document.getElementById("screen").innerHTML=chrome(fn());
+ document.getElementById("stage").className="stage "+S.dev;
+ document.getElementById("shellNote").textContent=NOTES[S.role];
+ document.querySelectorAll("#roleSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.role===S.role));
+ document.querySelectorAll("#devSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.dev===S.dev));
+}
+function setRole(r){S.role=r;go(ROOT[r])}
+document.addEventListener("click",e=>{
+ if(e.target.closest("[data-stop]")&&!e.target.closest("[data-close-btn],[data-toast]"))return;
+ const t=e.target.closest("[data-role],[data-dev],[data-go],[data-open],[data-fav],[data-mode],[data-prov],[data-prov-stay],[data-tog],[data-clear],[data-contact],[data-login],[data-close],[data-close-btn],[data-toast],[data-wiz],[data-wtype],[data-submit-house],[data-rate],[data-approve],[data-reject],[data-role-switch],[data-day],[data-rmode],[data-rppl],[data-need],[data-send-request],[data-reply-req],[data-send-reply]");
+ if(!t)return;const d=t.dataset;
+ if(d.rmode){S.req.mode=d.rmode;S.req.dates=d.rmode==="vac"?"20–23 nov":"desde feb 2027";render();return}
+ if(d.rppl){S.req.ppl=Math.max(1,S.req.ppl+Number(d.rppl));render();return}
+ if(d.need){S.req.needs.has(d.need)?S.req.needs.delete(d.need):S.req.needs.add(d.need);render();return}
+ if(d.sendRequest!==undefined){if(!S.loggedIn){S.params={after:"request"};S.screen="login";render();return}S.mySent=true;go("my-requests");toast(`Enviada a ${matches(S.req).length} owners · te avisamos cuando respondan`);return}
+ if(d.replyReq){S.sheet={type:"reply",i:Number(d.replyReq)};render();return}
+ if(d.sendReply){S.requests[Number(d.sendReply)].replied=true;S.sheet=null;render();toast("WhatsApp abierto · respuesta registrada");return}
+ if(d.role){setRole(d.role);return}
+ if(d.roleSwitch){setRole(d.roleSwitch);return}
+ if(d.dev){S.dev=d.dev;render();return}
+ if(d.fav!==undefined){e.stopPropagation();S.favs.has(d.fav)?S.favs.delete(d.fav):S.favs.add(d.fav);render();return}
+ if(d.open){go("detail",{id:d.open});return}
+ if(d.go){go(d.go,d.id?{id:d.id}:{});return}
+ if(d.mode){S.mode=d.mode;S.filters.prov="Todas";render();return}
+ if(d.prov){S.filters.prov=d.prov;render();return}
+ if(d.provStay){S.filters.prov=d.provStay;render();return}
+ if(d.tog){S.filters[d.tog]=!S.filters[d.tog];render();return}
+ if(d.clear!==undefined){S.filters={prov:"Todas",ppl:0,beds:0,pool:false,pets:false,ac:false,wifi:false,ev:false};render();return}
+ if(d.contact){if(!S.loggedIn){S.params={id:d.contact,after:"contact"};S.screen="login";render();return}S.sheet={type:"contact",id:d.contact};render();return}
+ if(d.login!==undefined){S.loggedIn=true;const id=S.params.id;if(S.params.after==="contact"&&id){S.screen="detail";S.params={id};S.sheet={type:"contact",id};render()}else if(S.params.after==="request"){S.mySent=true;go("my-requests")}else go("profile");toast("Cuenta verificada por WhatsApp ✓");return}
+ if(d.closeBtn!==undefined||(d.close!==undefined&&e.target===t)){S.sheet=null;render();return}
+ if(d.toast){S.sheet=null;toast(d.toast);return}
+ if(d.wiz){S.wizStep=Math.min(5,Math.max(1,S.wizStep+Number(d.wiz)));render();document.querySelector(".view").scrollTop=0;return}
+ if(d.wtype){S.wizType=d.wtype;render();return}
+ if(d.submitHouse!==undefined){S.wizStep=1;go("o-houses");toast("Enviada a revisión · te avisamos en menos de 24 h");return}
+ if(d.rate){const [i,n]=d.rate.split(":").map(Number);S.leads[i].rated=n;render();return}
+ if(d.approve){S.queue[d.approve].status="ok";toast("Owner aprobado · casa publicada");return}
+ if(d.reject){S.queue[d.reject].status="no";toast("Rechazado · se notificó al owner");return}
+ if(d.day){t.classList.toggle("busy");return}
+});
+document.addEventListener("change",e=>{
+ const t=e.target;
+ if(t.dataset.sel){S.filters[t.dataset.sel]=Number(t.value);render();return}
+ if(t.dataset.rzone!==undefined){S.req.zone=t.value;return}
+ if(t.dataset.rtext!==undefined){S.req.text=t.value;
+  /* detección simple de requisitos en el texto */
+  const txt=t.value.toLowerCase();const map={"piscina":"Piscina","cargador":"Cargador eléctrico","eléctrico":"Cargador eléctrico","electrico":"Cargador eléctrico","perro":"Mascotas","gato":"Mascotas","mascota":"Mascotas","aire":"Aire acondicionado","wifi":"Wifi","playa":"Frente al mar","cochera":"Cochera","amueblad":"Amueblado"};
+  let added=false;Object.entries(map).forEach(([k,v])=>{if(txt.includes(k)&&!S.req.needs.has(v)){S.req.needs.add(v);added=true}});
+  const n=txt.match(/somos\s+(\d+)/);if(n){S.req.ppl=Number(n[1]);added=true}
+  if(added){render();toast("Detectamos requisitos en tu texto")}
+  return}
+});
+render();
+</script>
