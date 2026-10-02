@@ -22,6 +22,26 @@ Un catálogo nacional de casas donde el owner publica y el cliente **lo contacta
 4. Precios siempre orientativos. El precio final es asunto de ellos.
 5. Dos modos desde el día uno: vacacional (por noche) y largo plazo (por mes).
 
+## Alcance decidido para v1 (sesión 2026-10-02)
+Respuestas al cuestionario inicial que fijan el alcance:
+
+| Pregunta | Decisión |
+|---|---|
+| Plataformas | **Web y app móvil desde el día 1** (monorepo con código compartido) |
+| Modelo de cobro | Owners pagan **por casa**; planes por nivel en el futuro |
+| Confianza | Verificación **manual** de owners (cédula) + verificación automática de teléfono y correo. **Sin reseñas de casas** |
+| Tipo de alquiler | **Vacacional y largo plazo** desde v1, como dos modos separados |
+| Contacto | WhatsApp con mensaje prellenado; **el cliente necesita cuenta**; aviso a owners de no usar teléfono personal |
+| Valoraciones | **Los owners valoran a los clientes** (son quienes pagan) |
+| Precio y fechas | Precio orientativo por noche en un calendario que el owner mantiene; el precio final se negocia por WhatsApp |
+| Búsqueda | Mapa + lista + destinos + filtros: **todos** |
+| Nombre | "CasaTica" gusta (también "Pura Casa"); pendiente comprobar dominio y búsquedas |
+| Estilo | Cálido y local, pero lo que más convierta clientes |
+| Idioma / moneda | Español; el owner decide en qué moneda cobra; la plataforma no gestiona cobros entre partes, así que el precio es orientativo |
+| Pantallas del prototipo | Cliente, owner, admin y landing: todas |
+
+Añadido después en la misma sesión: **solicitudes de casa** (el cliente describe lo que busca y la app avisa a los owners que cumplen; el owner responde por WhatsApp), filtros reales (personas, piscina, cargador eléctrico…), presupuestos **en total** para la estadía, y el copy "sin permanencia" en lugar de "pausá cuando querrás".
+
 ## Qué es éxito
 - A 6 meses: 150+ casas activas pagando, con owners en al menos 5 provincias.
 - Cada casa activa recibe de media 5+ contactos por WhatsApp al mes.

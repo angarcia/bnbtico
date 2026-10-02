@@ -23,6 +23,27 @@ El cliente describe lo que busca (estructurado + texto libre); la app notifica s
 ## 2026-10-02 · Presupuestos en total, no por noche
 En solicitudes vacacionales el cliente indica presupuesto total para la estadía y el owner responde con precio cerrado por las noches pedidas. En largo plazo, por mes. El catálogo sigue mostrando "desde ₡X / noche" porque ahí no hay fechas.
 
+## 2026-10-02 · Web y móvil desde el día 1
+Monorepo con `packages/ui` y `api-client` compartidos para no duplicar. Descartado: solo web responsive primero (el owner publica desde el teléfono y el cliente busca desde el teléfono; la app nativa importa para notificaciones y presencia en tiendas).
+
+## 2026-10-02 · Vacacional y largo plazo desde v1
+Dos modos con filtros, unidad de precio y copy propios. Descartado: empezar solo con vacacional.
+
+## 2026-10-02 · Búsqueda: mapa + lista + destinos + filtros
+Se pidió "todos". En escritorio el mapa va sticky al lado de la lista; en móvil la lista manda y el mapa es un bloque arriba.
+
+## 2026-10-02 · Filtros funcionales en v1
+Personas, habitaciones, precio y amenidades (incluido **cargador eléctrico**, pedido explícitamente). Las amenidades son un enum compartido entre filtros, ficha, wizard y solicitudes, porque el matching depende de ellas.
+
+## 2026-10-02 · Detección de requisitos en texto libre
+Reglas por palabras clave en v1 (barato, predecible, sin latencia); el cliente confirma los chips. LLM en v2 si el texto libre resulta ser el camino principal.
+
+## 2026-10-02 · Español con voseo; moneda la elige el owner
+UI solo en español en v1 (inglés v2). Cada casa en ₡ o $ según el owner; la plataforma no convierte ni cobra entre partes.
+
+## 2026-10-02 · Nombre provisional "CasaTica"
+Gusta junto con "Pura Casa". Se usa como provisional en código y prototipo; se cambia fácil (un token de marca). Pendiente dominio, redes y Registro Nacional.
+
 ## 2026-10-02 · Dirección aproximada
 La ficha muestra una zona (~500 m), nunca la dirección exacta; la comparte el owner por WhatsApp.
 

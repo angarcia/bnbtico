@@ -1,5 +1,13 @@
 # Roadmap
 
+## Hecho (sesión 2026-10-02, Cowork)
+- [x] Cuestionario de requisitos y alcance v1 (ver `vision.md`)
+- [x] Prototipo navegable con 21 pantallas (cliente, owner, admin, landing; móvil y web), publicado como artifact y guardado en `design/prototype/`
+- [x] Sistema de diseño y tokens
+- [x] Modelo de datos y migración inicial con función de matching
+- [x] Decisiones: pago por casa, sin reseñas, owners valoran clientes, WhatsApp en ambas direcciones, presupuestos en total, copy "sin permanencia"
+- [x] Investigación rápida de nombre (sin conflictos evidentes; falta dominio y marca)
+
 ## v1 — lanzamiento
 
 ### Base

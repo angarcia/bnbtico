@@ -44,6 +44,34 @@ Amenidades (enum): `pool, pets, ev_charger, ac, wifi, beachfront, bbq, parking, 
 8. **Caducidad de solicitudes:** 14 días (vacacional) / 30 (largo). Máx. 3 abiertas por cliente.
 9. **Extracción de requisitos del texto libre:** reglas por palabras clave en v1 (piscina, cargador/eléctrico, perro/gato/mascota, aire, wifi, playa, cochera, amueblad, "somos N"); el cliente confirma los chips antes de enviar.
 
+## Ciclos de vida
+
+### Casa (`listings.status`)
+`draft` → (owner envía) `review` → (admin aprueba y owner verificado) `active` ↔ `paused` (owner pausa, o suscripción `past_due` vence la gracia) · `review` → `rejected` (con motivo; el owner puede corregir y reenviar).
+
+### Suscripción (`subscriptions.status`)
+`trial` (primer mes gratis, empieza al aprobarse la casa) → `active` → `past_due` (cobro fallido o SINPE no recibido; recordatorio 3 días antes, 5 días de gracia) → `paused` (casa oculta, sin cobro) → `active` al pagar · `canceled` por el owner en cualquier momento (sin permanencia; efecto al final del ciclo pagado).
+
+### Solicitud (`requests.status`)
+`open` al crearse (caduca a 14 días vac / 30 largo) → `closed` por el cliente o `expired` por job. Al cerrar, los `request_matches` en `new` dejan de poder ver el número del cliente.
+
+## Notificaciones
+| Evento | Destinatario | Canal |
+|---|---|---|
+| Código OTP | cliente / owner | WhatsApp (SMS fallback) |
+| Casa aprobada / rechazada / más info | owner | WhatsApp + push |
+| Nuevo contacto (lead) | owner | push + WhatsApp (resumen diario opcional) |
+| Nueva solicitud que coincide | owner | push + WhatsApp |
+| Un owner te escribió (match → replied) | cliente | push |
+| Recordatorio de pago SINPE (D-3) / cobro fallido | owner | WhatsApp |
+| Recordatorio "valorá a tus clientes" | owner | push semanal |
+
+## Plantillas de WhatsApp
+Ver `docs/design.md › Flujos detallados`. Se generan en backend (para registrar el lead/match antes de devolver la URL) y el cliente puede editarlas antes de abrir `wa.me`. Codificar con `encodeURIComponent`; el emoji final es opcional.
+
+## Extracción de requisitos del texto libre (v1)
+Reglas por palabras clave, en minúsculas y sin tildes: `piscina→pool`, `cargador|electrico→ev_charger`, `perro|gato|mascota→pets`, `aire|a/c→ac`, `wifi→wifi`, `playa|frente al mar→beachfront`, `cochera|garaje→garage`, `amueblad→furnished`, `accesible|silla de ruedas→accessible`; `somos (\d+)` → personas. Nunca sobreescribe lo que el cliente desmarcó a mano. Candidato a LLM en v2.
+
 ## SEO web
 Fichas indexables con SSR, sitemap por provincia y destino, Open Graph con foto de portada, URLs `/c/CT-1042-villa-brisa-tamarindo`.
 

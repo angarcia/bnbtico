@@ -11,7 +11,10 @@ Catálogo de casas en alquiler en Costa Rica (vacacional y largo plazo). Los own
 - `docs/pitch.md` — pitch a owners, objeciones y respuestas
 - `docs/decisiones.md` — por qué se decidió cada cosa
 
-Referencias: prototipo navegable en `design/prototype/casatica-prototipo.html` (abrir en navegador; no es código de producción), tokens en `design/tokens/tokens.json`, esquema en `supabase/migrations/0001_init.sql`.
+Referencias: prototipo navegable en `design/prototype/casatica-prototipo.html` (abrir en navegador; no es código de producción; también publicado como artifact "CasaTica Prototipo" en claude.ai), tokens en `design/tokens/tokens.json`, esquema en `supabase/migrations/0001_init.sql`, seed en `supabase/seed/seed.sql`.
+
+## Estado actual
+Fase de definición terminada (2026-10-02): no hay código de aplicación todavía. `apps/` y `packages/` contienen solo READMEs. El siguiente paso es el scaffold (ver `docs/roadmap.md › v1 › Base`).
 
 ## Principios que no se negocian
 1. Todo contacto humano ocurre en WhatsApp (`wa.me`). Sin chat interno.

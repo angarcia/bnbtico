@@ -1,6 +1,45 @@
 # Diseño
 
-Referencia viva: `design/prototype/casatica-prototipo.html` (abrir en el navegador; selector Cliente / Owner / Admin / Landing y Móvil / Web). Tokens en `design/tokens/tokens.json`.
+Referencia viva: `design/prototype/casatica-prototipo.html` (abrir en el navegador; selector Cliente / Owner / Admin / Landing y Móvil / Web). También publicado como artifact privado en claude.ai (gallery → "CasaTica Prototipo"). Tokens en `design/tokens/tokens.json`.
+
+## Cómo usar el prototipo
+- Es un único HTML sin dependencias: datos de ejemplo en JS, pantallas renderizadas por función, navegación por `data-go`. Los selectores de arriba cambian rol y dispositivo; la misma pantalla se adapta con container queries (390 px en marco de teléfono, ancho completo en web).
+- Lo que **sí** funciona: cambiar modo, filtros reales (provincia, personas, habitaciones, piscina, mascotas, cargador eléctrico, A/C, wifi), favoritos, abrir ficha, flujo de contacto (login → sheet → toast), pedir casa con detección de requisitos, mis solicitudes, wizard de 5 pasos, calendario (tocar días), valorar clientes, solicitudes del owner con sheet de respuesta, aprobar/rechazar en admin.
+- Lo que **no**: buscador de texto, rango de precio, mapa real, subida de fotos, pagos. Son decorativos.
+- Las "fotos" son degradados con etiqueta; en producción van imágenes reales 16:11 en tarjeta y 4:3 en galería.
+
+## Flujos detallados
+
+### Contactar por WhatsApp (cliente)
+1. En la ficha elige llegada, salida y personas (vacacional) o "desde cuándo" (largo plazo) y toca **Contactar por WhatsApp**.
+2. Sin sesión → pantalla de registro (nombre, teléfono, OTP por WhatsApp, correo opcional). Al verificar vuelve a la ficha con el sheet abierto.
+3. Sheet "Se abrirá WhatsApp": avatar y nombre del owner con badge Verificado, burbuja con el mensaje prellenado, textarea editable, botón verde **Abrir WhatsApp**, nota "Registramos este contacto para que {owner} pueda valorarte".
+4. Se crea el lead y se abre `wa.me`. Toast: "WhatsApp abierto · contacto registrado".
+
+Mensaje prellenado (vacacional):
+> Hola {nombreOwner}, vi tu casa «{título}» en CasaTica (ref {CT-####}). ¿Está disponible del {llegada} al {salida} para {personas} personas? Gracias 🙂
+
+Largo plazo:
+> Hola {nombreOwner}, vi tu {tipo} «{título}» en CasaTica (ref {CT-####}). ¿Sigue disponible a partir de {mes}? Somos {personas} personas.
+
+### Pedir casa (cliente) → responder (owner)
+1. Cliente: elige Vacaciones / Para vivir, personas (stepper), fechas o "desde cuándo", zona, chips de imprescindibles, texto libre, presupuesto **total** (vacacional) o mensual (largo plazo).
+2. Al salir del texto libre, la app detecta requisitos ("piscina", "cargador", "perro", "somos 3") y marca chips; toast "Detectamos requisitos en tu texto". El cliente puede corregir.
+3. Vista previa: "N casas cumplen hoy tus requisitos · sus owners recibirán tu solicitud" con avatares.
+4. Checkbox de consentimiento: "Acepto que hasta {min(10, N)} owners verificados que cumplan mis requisitos me escriban por WhatsApp. Puedo cerrar la solicitud cuando quiera."
+5. Enviar (requiere cuenta). Toast "Enviada a N owners". → Mis solicitudes.
+6. Owner: recibe notificación; en Contactos → Solicitudes ve la tarjeta (cliente + ★, modo · personas · fechas · zona, chips, badge de presupuesto, texto, "Coincide con: {casa}"). Toca **Responder por WhatsApp**.
+7. Sheet: elige casa, ve el mensaje prellenado editable, **Abrir WhatsApp**. Se marca `replied`. Alternativa: "No me interesa".
+8. Cliente, en Mis solicitudes: lista de owners que escribieron (casa, verificado, precio ofrecido) con Ver casa / Chat; aviso "revisá que el chat venga de un owner de esta lista"; Cerrar solicitud.
+
+Mensaje prellenado del owner:
+> Hola {nombreCliente}, soy {owner} de CasaTica. Vi que buscan casa para {personas} personas ({fechas}) con {requisitos}. Mi casa «{título}» en {zona} cumple todo: {enlace ficha}. Les puedo dejar las {n} noches en {precio total} en total. ¿Les sirve?
+
+### Publicar casa (owner)
+Wizard de 5 pasos con barra de progreso: **Tipo** (vacacional/largo + casa/apto/cabina/quinta) → **Ubicación** (provincia, cantón, zona, pin aproximado; aviso de radio ~500 m) → **Detalles** (personas, habitaciones, baños, chips de amenidades con nota "marcá bien las amenidades: así te llegan solicitudes", título con hint "evitá MAYÚSCULAS", descripción) → **Fotos** (mín. 5, horizontales, sin marcas de agua ni teléfonos; aviso de que se rechazan) → **Precio y WhatsApp** (precio por noche/mes, moneda ₡/$, número de WhatsApp de negocio con aviso de no usar personal, resumen "₡9.900/mes, se cobra solo al aprobarse") → **Enviar a revisión**. Toast "te avisamos en menos de 24 h"; la casa aparece como "En revisión".
+
+### Verificación (admin)
+Tarjeta por owner pendiente: cédula (frente) y selfie con cédula, número de cédula, WhatsApp (marcado si parece personal), casa enviada, alertas automáticas en rojo ("Teléfono parece personal", "Fachada coincide con anuncio en otra plataforma", "Solo 2 fotos") o "Sin alertas automáticas". Acciones: Aprobar (publica), Pedir más info, Rechazar. Badge con pendientes y SLA 24 h.
 
 ## Dirección
 Cálida y local, con la claridad de un marketplace. Fotos grandes sobre papel cálido, un verde selva como primario, un dorado "sol de Guanacaste" como acento escaso, y el **verde de WhatsApp reservado exclusivamente al botón de contacto** para que se reconozca al instante. Español de Costa Rica con voseo.

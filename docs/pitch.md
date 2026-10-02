@@ -39,5 +39,16 @@ No es obligatorio. Si marcás los días ocupados evitás mensajes por fechas que
 **"¿Cómo pago?"**
 Tarjeta con renovación automática o SINPE Móvil cada mes. Sin contrato, sin permanencia.
 
+## Para el cliente (mensaje de la landing y redes)
+- "Casas de verdad, de owners verificados con cédula. Hablás directo con ellos por WhatsApp, sin comisiones escondidas en el precio."
+- "¿No encontrás lo que buscás? Contanos cuántos son, cuándo van y qué necesitan (piscina, mascotas, cargador eléctrico…) y te escriben los owners que lo tienen."
+- "Nunca te pedimos pagos. Si alguien lo hace en nuestro nombre, reportalo."
+
+## Primeros owners (plan de captación)
+1. Empezar por 3 zonas con demanda local clara: Guanacaste (Tamarindo/Flamingo), Jacó/Herradura y GAM para largo plazo.
+2. Onboarding a mano: visita o videollamada, fotos con el teléfono, publicación en 5 minutos, verificación el mismo día.
+3. Primer mes gratis y, mientras no haya masa crítica de clientes, sembrar solicitudes reales de conocidos para que los owners vean movimiento desde la primera semana.
+4. Pedir a cada owner que comparta su ficha en sus grupos de WhatsApp: trae clientes al catálogo sin coste.
+
 ## Cierre
 ¿Tenés 5 minutos y las fotos en el teléfono? Publicamos tu casa ahora y en menos de 24 horas está verificada y visible.

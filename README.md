@@ -16,7 +16,7 @@ Catálogo de casas en alquiler en Costa Rica donde los owners publican su casa y
 ## Cómo continuar en otro ordenador
 
 1. Clonar/copiar esta carpeta (es un repo git).
-2. Abrir el prototipo: `design/prototype/casatica-prototipo.html` en el navegador (no necesita servidor).
+2. Abrir el prototipo: `design/prototype/casatica-prototipo.html` en el navegador (no necesita servidor). También está publicado como artifact privado "CasaTica Prototipo" en claude.ai (gallery → claude.ai/code/artifacts).
 3. Leer `CLAUDE.md` y los documentos de `docs/`.
 4. Arrancar Claude Code en la raíz y pedirle, por ejemplo: *"Haz el scaffold del monorepo según CLAUDE.md y docs/architecture.md, empezando por apps/web"*.
 
