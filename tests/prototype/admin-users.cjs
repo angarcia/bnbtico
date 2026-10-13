@@ -6,6 +6,7 @@ const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatic
 for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g))run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);
 assert.equal(run('typeof adminUserChange'),'function','admin must manage account status');
 assert.equal(run("S.leads.some(l=>l.n==='Andrea Castro'&&l.h==='CT-1150')"),false,'a mass-search offer is not direct interest');
+run("S.role='owner';accountAccess.start('register','Marcela','+50680000001');accountAccess.verify('123456');accountAccess.verifyIdentity();");
 run("S.role='owner';var directLeadCount=S.leads.length;relayCreate(MY[0].id,'Consulta compartida',null,'request');");
 assert.equal(run('S.leads.length'),run('directLeadCount'),'responding to a shared request stays out of direct interest');
 run("S.role='admin';var ownerUser=adminUsers.items.find(u=>u.name===MY[0].owner);var guestUser=adminUsers.items.find(u=>u.name==='Andrea Castro');var houseId=MY[0].id;");

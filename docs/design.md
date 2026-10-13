@@ -1,5 +1,9 @@
 # Diseño
 
+## Registro y perfil · vigente 2026-10-13
+
+`account-access.js` se carga tras las extensiones de lanzamiento. Alta: nombre y WhatsApp → código → sugerencia opcional de correo de recuperación. Sin correo en registro, contraseña, huella ni Face ID. Sesión recordada en el navegador; al salir o acceder sin sesión, WhatsApp + código. Mi perfil añade foto local, descripción, correo con confirmación simulada, Cambiar WhatsApp y Cerrar otras sesiones. Recuperación con correo confirmado y nuevo WhatsApp; alternativa de ayuda manual sin prometer acceso automático. Veriff pendiente tras registrar: cliente antes de contactar, propietario antes de publicar; mensajes diferentes para cada rol. Volver del paso de identidad conserva el borrador/contexto. Detalles y límites de simulación: [identidad y seguridad](identidad-y-seguridad.md#registro-y-acceso-aprobado--2026-10-13). No se modifica la landing.
+
 ## Lanzamiento ligero · vigente 2026-10-13
 
 Admin → Usuarios → Ficha: «Preparar bienvenida» por rol y «Crear consulta en nombre del cliente». La bienvenida tiene texto editable, canal remitente, permiso, preparación simulada y confirmación manual de envío; no se marca enviada al abrir. La consulta exige fechas/personas, presenta casas compatibles para selección y recoge autorización con referencia privada. En Owner → Mis consultas se distinguen aperturas de ficha y consultas de bnbtico mediante el origen, con el mismo botón de WhatsApp. No hay otra bandeja para los propietarios. La ayuda muestra el canal correspondiente al rol; números reales pendientes.

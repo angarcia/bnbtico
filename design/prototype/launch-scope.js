@@ -23,7 +23,7 @@ function launchVerification(){
   const u=adminUsers.items.find(u=>u.name===adminSelfName());
   return `${u?.active===false?'<div class="note">Cuenta desactivada: no podés publicar ni iniciar o aceptar contactos. Tu historial, ayuda y reclamaciones siguen disponibles.</div>':''}<div class="card stack"><h3>Tu verificación</h3><span>Identidad (Veriff): ${u?.identity==='approved'?'verificada':'pendiente'}</span><span>WhatsApp: ${u?.whatsappVerified?'verificado':'pendiente'}</span><p class="small">Ambas verificaciones son necesarias para publicar o contactar, incluso con WhatsApp directo. Explorar, registrarse y preparar un borrador no las requieren.</p>${launchVerificationNote()}<p class="xs muted">Estados simulados. Esta demo no comprueba documentos ni envía códigos.</p></div>`;
 }
-function launchVerificationNote(){return '<div class="note small"><span><b>La misma verificación para ambas partes.</b> Los clientes pasan por las mismas comprobaciones que los propietarios: identidad con Veriff y verificación de WhatsApp. Vos las completás antes de publicar; ellos, antes de contactarte. Verificar la identidad no garantiza el comportamiento de la persona ni la seguridad de una reserva.</span></div>';}
+function launchVerificationNote(){return '<div class="note small"><span><b>La misma verificación para ambas partes.</b> Los clientes pasan por las mismas comprobaciones que los propietarios: identidad con Veriff y verificación de WhatsApp. Vos las completás antes de publicar; ellos, antes de contactarte.</span></div>';}
 const launchHelp=()=>'<button class="btn btn-ghost" data-go="claims">Reclamaciones y ayuda</button><button class="btn btn-ghost" data-go="support-info">WhatsApp de soporte bnbtico</button>';
 SCREENS.profile=()=>!S.loggedIn?SCREENS.login():header('Mi cuenta')+`<div class="card"><b>Andrea Castro</b></div>${launchVerification()}<button class="btn btn-primary" data-go="contacts">Mis contactos</button><button class="btn btn-ghost" data-role-switch="owner">¿Tenés una casa? Publicala</button>${launchHelp()}`;
 SCREENS['o-profile']=()=>header('Cuenta')+`<div class="card"><b>${safe(adminSelfName())}</b></div>${launchVerification()}<button class="btn btn-ghost" data-go="o-whatsapp">WhatsApp de mi cuenta</button><button class="btn btn-ghost" data-go="o-sub">Promoción y suscripción</button>${launchHelp()}`;
@@ -90,8 +90,46 @@ const launchHouseList=SCREENS['o-houses'];
 SCREENS['o-houses']=()=>launchHouseList().replace(/<p class="small muted">La preferencia general[\s\S]*?<\/p>/,'').replace(/<button[^>]*disabled>Contacto directo: (?:Sí|No)<\/button>/g,'');
 const launchPublicDetail=SCREENS.detail;
 SCREENS.detail=()=>launchPublicDetail().replaceAll('Solicitar contacto','Contactar por WhatsApp').replace(/value="2026-12-(?:12|15)"/g,'value=""').replace('>Llegada</label>','>Llegada (opcional)</label>').replace('>Salida</label>','>Salida (opcional)</label>').replace(/<select id="d-ppl">[\s\S]*?<\/select>/,'<input id="d-ppl" type="number" min="1" step="1" placeholder="Opcional">');
-const launchLanding=SCREENS.landing;
-SCREENS.landing=()=>launchLanding().replace('Elegí contacto directo o revisá cada consulta en bnbtico. En ambos casos el cliente debe estar verificado.','El cliente verificado inicia el chat en tu WhatsApp. Respondé allí, sin aceptar consultas en bnbtico.');
+SCREENS.landing=()=>`
+  <section class="hero">
+    <div class="stack" style="gap:16px">
+      <span class="badge badge-sun" style="align-self:flex-start">Hecho para alojamientos en Costa Rica</span>
+      <h1>Tu casa merece que la encuentren. El trato sigue siendo tuyo.</h1>
+      <p>Publicá tu alojamiento en bnbtico, compartí su ficha y recibí consultas de clientes con identidad y WhatsApp verificados. Acordá fechas, precio y condiciones directamente, sin comisiones por alquiler.</p>
+      <div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-role-switch="owner">Publicar mi casa</button><button class="btn btn-ghost" data-role-switch="guest">Buscar una casa</button></div>
+      <div class="row small muted" style="gap:14px;flex-wrap:wrap"><span>0% de comisión por alquiler</span><span>WhatsApp directo</span><span>Identidad y WhatsApp verificados</span></div>
+    </div>${photo('p-playa','Tamarindo, Guanacaste · imagen de ejemplo')}
+  </section>
+  <section class="stack"><span class="eyebrow">Más que pasar tu número</span><h2>Ya alquilás por WhatsApp. Ahora tenés una ficha para mostrar tu casa.</h2><p>Reuní fotos, descripción, características, ubicación aproximada, disponibilidad y precio orientativo en un solo lugar. Compartí ese enlace en tus redes o con tus clientes, y formá parte de un catálogo donde también puedan encontrarte otras personas.</p></section>
+  <section class="how" aria-label="Cómo funciona bnbtico">
+    <div class="card stack"><span class="eyebrow">1 · Publicás</span><h3>Prepará tu anuncio</h3><p>Agregá fotos, zona y precio orientativo. Podés registrarte y preparar el borrador sin verificarte; antes de publicar completás identidad y WhatsApp.</p></div>
+    <div class="card stack"><span class="eyebrow">2 · Te encuentran</span><h3>Compartí tu ficha</h3><p>Cualquiera puede explorar y ver tu casa. Para contactarte desde bnbtico, el cliente también debe verificar su identidad y su WhatsApp.</p></div>
+    <div class="card stack"><span class="eyebrow">3 · Hablás directo</span><h3>Los detalles, entre ustedes</h3><p>El cliente abre tu WhatsApp con un mensaje preparado. Respondés allí y acordás fechas, precio y condiciones. bnbtico no gestiona reservas ni pagos entre las partes.</p></div>
+  </section>
+  <section class="stack" style="gap:16px" aria-label="Precio y promoción">
+    <div class="price-box stack" style="gap:14px"><span class="eyebrow">Precio simple · después de la promoción</span><div class="big">₡9.900 <span style="font-size:16px;font-weight:600">/ casa / mes</span></div><h2>Una reserva de fin de semana puede pagar tu mensualidad.</h2><p>No pagás una comisión por cada alquiler. La cuota por casa es la misma aunque alquilés más noches.</p><div style="padding:16px;border:1px solid currentColor;border-radius:12px"><b>Un ejemplo sencillo, no una promesa</b><p class="small">Si un alquiler de fin de semana te deja ₡20.000 después de sus gastos y antes de la suscripción, alcanza para cubrir la cuota mensual prevista de ₡9.900 y quedan ₡10.100. El resultado depende de tus precios, gastos y alquileres reales.</p></div><p class="small">Tarifa prevista, sin permanencia. Condiciones de contratación y cobro por confirmar antes del lanzamiento. No garantizamos consultas, reservas ni ingresos.</p><button class="btn btn-onprimary" data-role-switch="owner">Quiero publicar mi casa</button></div>
+    ${launchPromotion()}
+  </section>
+  <section class="stack"><h2>El WhatsApp de siempre, con una presentación más completa.</h2><div class="card tbl-wrap"><table class="compare"><caption style="text-align:left;padding-bottom:12px">Qué aporta bnbtico al contacto directo</caption><thead><tr><th scope="col">Para tu alojamiento</th><th scope="col">bnbtico</th><th scope="col">Solo pasar tu WhatsApp</th></tr></thead><tbody>
+    <tr><th scope="row">Presentación</th><td>Ficha con fotos, detalles y precio orientativo</td><td>Compartís la información en la conversación</td></tr>
+    <tr><th scope="row">Visibilidad</th><td>Catálogo público y enlace para compartir</td><td>Personas a las que les llega tu número</td></tr>
+    <tr><th scope="row">Verificación</th><td>Identidad y WhatsApp de ambas partes antes del contacto</td><td>Sin la verificación de bnbtico</td></tr>
+    <tr><th scope="row">Precio y condiciones</th><td>Los acordás vos con el cliente</td><td>Los acordás vos con el cliente</td></tr>
+    <tr><th scope="row">Pagos del alojamiento</th><td>Directamente entre ustedes</td><td>Directamente entre ustedes</td></tr>
+    <tr><th scope="row">Comisión de bnbtico</th><td>0% por alquiler; suscripción por casa</td><td>No interviene bnbtico</td></tr>
+  </tbody></table></div></section>
+  <section class="how"><div class="card stack"><h3>Verificación para ambas partes</h3><p>Propietarios antes de publicar y clientes antes de contactar: identidad con Veriff y comprobación de acceso al WhatsApp. No es una verificación de titularidad ni una garantía contra fraudes.</p></div><div class="card stack"><h3>Una ficha que podés compartir</h3><p>Enviá el enlace en lugar de repetir toda la información. Quien contacte desde bnbtico tendrá que completar las verificaciones; los contactos por fuera de la app no quedan verificados automáticamente.</p></div><div class="card stack"><h3>Un equipo al que podés escribir</h3><p>Atención de bnbtico para propietarios y para quienes buscan alojamiento, con canales separados. Los reportes se revisan en la plataforma; los acuerdos y pagos siguen siendo entre ustedes.</p></div></section>
+  <section class="stack"><h2>Así se vería tu casa en el catálogo</h2><p class="small muted">Alojamientos de ejemplo del prototipo, no anuncios reales recién publicados.</p><div class="listings">${HOUSES.filter(h=>houseAvailable(h.id)).slice(0,3).map(listingCard).join('')}</div></section>
+  <section class="card stack" style="gap:14px"><h2>Preguntas frecuentes</h2>
+    <details><summary><b>¿Puedo seguir usando otras plataformas?</b></summary><p class="small">Sí. Podés usar bnbtico junto con tus otros canales. Mantené la disponibilidad actualizada manualmente; en esta versión no hay sincronización automática.</p></details>
+    <details><summary><b>¿Qué pasa si no recibo consultas?</b></summary><p class="small">No garantizamos un número de consultas ni reservas. El período promocional permite probar el servicio y valorar si te aporta; compartir tu ficha ayuda a que tus clientes conozcan el alojamiento.</p></details>
+    <details><summary><b>¿Se publica mi teléfono o la dirección exacta?</b></summary><p class="small">El teléfono no aparece al explorar la ficha. Se comparte al contactar por WhatsApp con un cliente verificado; ambos podrán verlo y guardarlo. La ficha muestra la zona aproximada, y vos compartís la dirección exacta cuando lo decidás.</p></details>
+    <details><summary><b>¿Qué significa estar verificado?</b></summary><p class="small">Comprobar identidad y acceso al WhatsApp, no la propiedad de la casa ni la fiabilidad de una persona. No garantiza que un alojamiento o una reserva sean seguros.</p></details>
+    <details><summary><b>¿bnbtico cobra la reserva o protege un adelanto?</b></summary><p class="small">No. Fechas, condiciones, pagos y devoluciones se acuerdan directamente entre cliente y propietario. bnbtico no retiene dinero ni garantiza reembolsos. Podés reportar un problema para que revisemos cuentas y anuncios.</p></details>
+    <details><summary><b>¿Puedo publicar varias casas?</b></summary><p class="small">Sí. La suscripción y las plazas de promoción se cuentan por casa, no por propietario.</p></details>
+    <details><summary><b>¿Es obligatorio aceptar largo plazo?</b></summary><p class="small">No. Al publicar elegís Sí o No. Si aceptás, podés indicar un precio mensual orientativo o pedir que te consulten.</p></details>
+  </section>
+  <section class="card stack" style="text-align:center;align-items:center;padding:28px"><h2>Tu próxima consulta puede empezar con una ficha compartida.</h2><p>Prepará tu anuncio y conocé la promoción de lanzamiento para las primeras 200 casas.</p><button class="btn btn-primary" data-role-switch="owner">Publicar mi casa</button><p class="xs muted">Prototipo: anuncios y contador de ejemplo, verificaciones y contactos simulados. No se realizan cobros ni publicaciones reales.</p></section>`;
 const launchRegistration=SCREENS.login;
 SCREENS.login=()=>launchRegistration().replace('Solo compartimos contacto cuando el cliente lo solicita y el owner acepta.','El cliente autoriza compartir su contacto al abrir WhatsApp desde la ficha.');
 const launchPublish=SCREENS['o-new'];
@@ -163,4 +201,6 @@ document.addEventListener('click',e=>{
   if(!t||relayActor(t)!=='owner'||!t.clientConsent||!houseContactAvailable(t.house,t.client)||!message)return;
   S.sheet={type:'launch-preview',message};render();
 },true);
+// La simplificación de la app conserva la landing comercial original.
+SCREENS.landing=landing;
 render();

@@ -1,5 +1,11 @@
 # Registro de decisiones
 
+## 2026-10-13 · Alta sencilla, sesión recordada y recuperación
+
+Se aprueba implementar en el prototipo el mismo registro para ambos roles: nombre y WhatsApp, con código para completar el alta. No correo inicial ni contraseña, huella o Face ID. La sesión se recuerda; un nuevo dispositivo/navegador requiere otro código. Foto, descripción y correo son opcionales en el perfil. Sugerir correo de recuperación y exigir su confirmación antes de usarlo. Cambio de WhatsApp: verificar nuevo destino antes de reemplazar el anterior, conservar cuenta/Veriff y revocar otras sesiones. Sin acceso: correo confirmado o revisión manual de soporte. No detectar automáticamente cambios externos de número.
+
+Veriff permanece pendiente tras registrar y se exige antes de publicar/contactar; copy dirigido al rol correspondiente. Implementación exclusivamente simulada en `account-access.js`, con almacenamiento local de datos ficticios y sin envíos ni seguridad de producción. No cambia la landing. Especificación y límites: [identidad y seguridad](identidad-y-seguridad.md#registro-y-acceso-aprobado--2026-10-13).
+
 ## 2026-10-13 · Atención manual y consultas creadas por administración
 
 Dos canales de WhatsApp de bnbtico, uno para propietarios y otro para buscadores. El admin prepara una bienvenida editable por rol y marca su envío manualmente; abrir/preparar no equivale a enviar. Se requiere autorización para recibir la bienvenida y usar la sesión remitente correcta. Números reales pendientes. Al aprobar un anuncio se ofrece el acceso a bienvenida; no se envía automáticamente.

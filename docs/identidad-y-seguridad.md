@@ -1,5 +1,17 @@
 # Identidad y seguridad de cuentas
 
+## Registro y acceso aprobado · 2026-10-13
+
+- Registro igual para clientes y propietarios: **nombre + WhatsApp + código recibido por WhatsApp**. No se pide correo, contraseña ni Veriff en el alta. WhatsApp queda verificado al completar el código; Veriff sigue pendiente hasta contactar o publicar.
+- Recordar la sesión en la instalación/navegador autorizado mientras sea válida. Otro dispositivo/navegador requiere WhatsApp + código, sin repetir el nombre. No se implementan huella ni Face ID. Una sesión web recordada no equivale a una credencial de hardware ni detecta cambios externos de SIM/número.
+- Mi perfil: foto, descripción y correo opcionales. Recomendar correo para recuperación; solo sirve después de confirmar su enlace. Cambiarlo invalida su confirmación anterior.
+- Cambiar WhatsApp desde una sesión abierta: comprobar el nuevo número antes de sustituir el anterior, conservar cuenta e identidad y revocar las demás sesiones. Los destinos propios de casas ya verificadas no cambian automáticamente. Sin sesión ni acceso al número: recuperación mediante correo previamente confirmado, seguida de verificación del nuevo WhatsApp; sin correo confirmado, revisión manual por soporte. No conceder acceso por conocer nombre y otro teléfono.
+- Copy por rol: el cliente verifica identidad antes de **contactar**; el propietario antes de **publicar**. Ambos verifican WhatsApp al registrarse. No presentar el OTP como aprobación de Veriff.
+
+**Prototipo:** `account-access.js` simula códigos `123456`, caducidad de 5 minutos, máximo 5 intentos y 30 segundos entre reenvíos pendientes; enlaces de correo simulados de 15 minutos. Perfil y sesión se guardan en localStorage por rol de demostración (cliente/owner son personajes separados con casas/consultas precargadas); sesión de ejemplo de 30 días, no política de producción aprobada. No hay envíos, Veriff, autenticación segura, autorización real de dispositivo, revocación remota ni recuperación real. Foto local de prueba PNG/JPG/WebP hasta 250 KB. No introducir datos reales. HTTP y `file://` no comparten necesariamente almacenamiento. Si el almacenamiento no está disponible se avisa y se conserva el flujo solo en memoria.
+
+Producción pendiente: proveedor, plantillas/costes, OTP y enlaces aleatorios validados en servidor, sesiones seguras y revocables, protección de cambios sensibles, límites antiabuso persistentes, unicidad de cuentas por número, recuperación y revisión jurídica. El estado local del prototipo nunca debe convertirse en autorización del backend. Lo siguiente conserva antecedentes; esta sección prevalece en registro/acceso.
+
 ## Alcance vigente · 2026-10-12
 
 La verificación de titularidad de la casa queda **fuera de v1**. Se mantiene la identidad obligatoria de propietarios y clientes mediante Veriff antes de publicar, responder o solicitar contacto. En v1 no se pedirán finca ni certificación literal, no habrá cola registral ni sello de «Propietario verificado». El diseño de la segunda comprobación descrito más abajo se conserva para evaluar después de v1, sin fecha comprometida. `property.js` conserva el recorrido histórico, pero el prototipo ya no lo carga ni muestra sus botones. Admin muestra moderación del anuncio e identidad simulada de solo lectura; se retiró la revisión manual de cédula/selfie.
@@ -17,13 +29,13 @@ Requisitos de identidad documentados, sin integración real: el prototipo simula
 No puede haber casas publicadas cuyo usuario no cumpla ambas condiciones, ni un cliente puede contactar a un propietario sin haber completado ambas. La regla se aplica en servidor al publicar/activar y habilitar contactos, no solo como aviso en pantalla. La publicación también sigue sujeta a moderación y al resto de requisitos. El cambio de teléfono no hereda verificación: un número pendiente no puede convertirse en el contacto activo verificado. El procedimiento concreto de cambio/recuperación queda pendiente de diseño.
 
 - Todos los propietarios y clientes deben completar **identidad mediante Veriff y acceso al número de WhatsApp mediante un código de un solo uso (OTP) recibido por WhatsApp**. Una comprobación no sustituye a la otra.
-- Se conserva el acceso progresivo: explorar sin cuenta; registrarse, iniciar sesión y preparar borradores sin completar estas comprobaciones. Ambas se exigen antes de solicitar contacto, enviar «Pedir casa», publicar la primera casa o responder a clientes. No repetirlas por cada casa o conversación mientras sigan vigentes.
+- Acceso progresivo: explorar sin cuenta; WhatsApp se verifica en el registro. Preparar borradores sin Veriff; completar identidad antes de contactar, publicar o responder. No repetir por cada casa o conversación mientras siga vigente.
 - Se verifica el número de contacto del usuario, compartido por todos sus anuncios, no un número por casa. El OTP comprueba acceso a ese WhatsApp, no identidad legal ni titularidad de una vivienda.
-- Esto no elige WhatsApp como método de login ni sustituye el consentimiento para compartir teléfono o recibir otros mensajes. La titularidad registral continúa fuera de v1: no confundirla con esta segunda verificación de usuario.
+- Desde el 2026-10-13 WhatsApp + código es el método de acceso aprobado. No sustituye el consentimiento para compartir teléfono o recibir otros mensajes. La titularidad registral continúa fuera de v1.
 
 Criterios para implementación: estados separados de identidad y WhatsApp; código vinculado a cuenta, número y finalidad, validado en servidor, con caducidad, uso único y límites de intentos/reenvíos. Enviar o entregar un mensaje no verifica el número. Un nuevo número requiere verificación antes de usarlo como contacto; no hereda el estado del anterior ni exige repetir Veriff automáticamente. No guardar códigos en claro en registros ni mostrarlos a admin. Recuperación segura y límites concretos pendientes de diseño; SMS por sí solo no acredita acceso a WhatsApp.
 
-Estado real: requisito aprobado, **sin pantalla OTP ni integración**. Se considera Meta WhatsApp Business Platform / Cloud API directa, sin necesidad de Twilio; configuración, plantillas de autenticación, costes e integración pendientes. La app móvil WhatsApp Business por sí sola no implementa este flujo. Veriff tampoco está contratado ni conectado.
+Estado real: **pantalla OTP simulada, sin integración**. Se considera Meta WhatsApp Business Platform / Cloud API directa, sin necesidad de Twilio; configuración, plantillas de autenticación, costes e integración pendientes. La app móvil WhatsApp Business por sí sola no implementa este flujo. Veriff tampoco está contratado ni conectado.
 
 ### Identidad y comprobación registral histórica
 
