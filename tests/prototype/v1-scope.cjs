@@ -1,0 +1,28 @@
+// Exercise the entry point: future modules must not register routes or leak into v1 screens.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'../../design/prototype'),noop=()=>{};
+const ctx=vm.createContext({console,setTimeout:()=>1,clearTimeout:noop,document:{addEventListener:noop,querySelector:()=>({scrollTop:0}),querySelectorAll:()=>[],getElementById:()=>({})}});
+const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatica-prototipo.html'),'utf8');
+for(const script of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g))run(script[1]?fs.readFileSync(path.join(root,script[1].split('?')[0]),'utf8'):script[2]);
+run("S.role='owner'");
+assert.doesNotMatch(run("SCREENS['o-houses']()"),/Verificar propiedad|data-property-start/,'v1 must not invite registry verification');
+assert.equal(run("typeof SCREENS['o-verify']"),'undefined','future flow must not be registered by v1 entry');
+assert.doesNotMatch(run("SCREENS['o-sub']()"),/Próximamente|planes por nivel|estadísticas avanzadas/);
+assert.doesNotMatch(run('landing()'),/Pronto habrá|descuento por volumen/);
+assert.equal(run('typeof SCREENS.assisted'),'undefined','AI search is an undecided exploration, not a v1 route');
+run("S.role='guest'");
+assert.doesNotMatch(run('SCREENS.home()'),/Búsqueda asistida|data-go="assisted"/);
+assert.doesNotMatch(run('SCREENS.home()'),/Pedir casa/);
+assert.equal(run('typeof SCREENS.request'),'undefined','shared searches are deferred');
+assert.equal(run("matches({mode:'vac',ppl:2,zone:'Guanacaste',needs:[]}).map(h=>h.id).join(',')"),'CT-1042','hiding AI must preserve form matching');
+assert.equal(run("typeof SCREENS.claims"),'function','claims stays in v1');
+run("S.role='admin'");
+assert.doesNotMatch(run("SCREENS['a-queue']()"),/Selfie con cédula|Cédula \(frente\)|Registro Nacional/);
+assert.match(run("SCREENS['a-queue']()"),/Veriff/);
+assert.equal(run("moderateListing(1,'ok')"),false,'manual moderation cannot bypass pending identity');
+run('adminOpenReview(0)');
+assert.equal(run("moderateListing(0,'ok')"),true,'first queue row must be actionable');
+assert.equal(run('S.queue[0].status'),'ok');
+assert.equal(run('S.queue[1].identityStatus'),'pending');
+run("S.role='owner'");assert.equal(run("moderateListing(2,'no')"),false,'only admin moderates');
+console.log('PASS: v1 entry hides registry/future plans, retains v1 services and separates identity from moderation.');

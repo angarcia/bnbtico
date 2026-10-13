@@ -1,0 +1,111 @@
+// Catch date-boundary mistakes, cross-house/private leaks and accidental calendar mutations.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'../../design/prototype'),noop=()=>{};
+const ctx=vm.createContext({console,setTimeout:()=>1,clearTimeout:noop,document:{addEventListener:noop,querySelector:()=>({scrollTop:0}),querySelectorAll:()=>[],getElementById:()=>null}});
+const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatica-prototipo.html'),'utf8');
+// Initial render needs the prototype's shell nodes, not a browser.
+run("document.getElementById=()=>({});");
+// Preserve tests of the deferred overlay; launch-scope.cjs tests the public entry.
+for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g)){if(s[1]?.startsWith('launch-scope.js'))continue;run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);}
+run("S.role='owner';S.screen='o-cal';S.params={id:MY[0].id};calendarOpenEditor(MY[0].id);");
+assert.equal(run('typeof calendarDirectConsultations'),'function');
+assert.equal(run("calendarDirectConsultations('CT-1042',12).some(x=>x.lead.n==='Andrea Castro')"),true);
+assert.equal(run("calendarDirectConsultations('CT-1042',14).some(x=>x.lead.n==='Andrea Castro')"),true);
+assert.equal(run("calendarDirectConsultations('CT-1042',15).some(x=>x.lead.n==='Andrea Castro')"),false,'checkout day is not a requested night');
+assert.equal(run("calendarDirectConsultations('CT-1150',12).some(x=>x.lead.n==='Andrea Castro')"),false);
+assert.equal(run("calendarDirectConsultations('CT-1042',13).length"),2,'overlapping enquiries are grouped');
+run("var unrelated={...S.leads[0],n:'Shared',threadId:relay.threads.find(t=>t.source==='request').id};S.leads.push(unrelated);");
+assert.equal(run("calendarDirectConsultations('CT-1042',12).length"),1,'shared search never becomes a direct consultation');
+assert.equal(run("calendarConsultationRange({arrival:'2026-02-30',departure:'2026-03-02'})"),null);
+assert.equal(run("calendarConsultationRange({arrival:'2026-12-15',departure:'2026-12-12'})"),null);
+assert.equal(run("calendarConsultationRange({arrival:'2026-12-12'})"),null);
+const before=run("JSON.stringify(calendarState('CT-1042'))");
+assert.equal(run('calendarSetConsultations(true)'),true);
+// Catch bars placed on checkout, overlap in one lane, or loss of continuation across weeks.
+assert.equal(run('typeof calendarConsultationLayout'),'function');
+const layout=JSON.parse(run("JSON.stringify(calendarConsultationLayout('CT-1042'))"));
+assert.deepEqual(layout.filter(x=>x.index===0).map(({week,column,span,lane})=>({week,column,span,lane})),[
+  {week:1,column:6,span:2,lane:0},{week:2,column:1,span:1,lane:0}
+]);
+assert.deepEqual(layout.filter(x=>x.index===3).map(({week,column,span,lane})=>({week,column,span,lane})),[
+  {week:1,column:7,span:1,lane:1},{week:2,column:1,span:2,lane:1}
+]);
+assert.match(run("calendarConsultationDates(S.leads[0])"),/3 noches/);
+const bars=[...run("SCREENS['o-cal']()").matchAll(/<button class="calendar-consultation-bar[^>]*>([\s\S]*?)<\/button>/g)].map(m=>m[1].replace(/<[^>]*>/g,''));
+assert.deepEqual(bars,['Andrea','Melissa','Andrea','Melissa'],'thin bars display only names; dates and nights stay in details');
+assert.match(run("SCREENS['o-cal']()"),/calendar-consultation-date" style="grid-column:6;grid-row:1 \/ span 3"/,'day backgrounds enclose both consultation lanes');
+assert.equal(run('calendarOpenConsultations(13,3)'),true);
+assert.match(run('sheet()'),/Melissa/);
+assert.doesNotMatch(run('sheet()'),/Andrea Castro/,'a bar opens only its own consultation');
+assert.match(run("SCREENS['o-cal']()"),/data-calendar-consultations-day="13"/);
+assert.equal(run('calendarOpenConsultations(13)'),true);
+assert.match(run('sheet()'),/Andrea Castro/);
+assert.match(run('sheet()'),/Melissa/);
+assert.match(run('sheet()'),/data-relay-lead=/);
+assert.equal(run("JSON.stringify(calendarState('CT-1042'))"),before);
+assert.equal(run('calendarEditor.selected.size'),0,'consultations do not select price-edit days');
+run("S.sheet=null;calendarOpenEditor('CT-1150');S.params={id:'CT-1150'};");
+assert.doesNotMatch(run("SCREENS['o-cal']()"),/data-calendar-consultations-day=/,'each house opts in separately');
+run("calendarSetConsultations(true);calendarOpenEditor('CT-1042');S.params={id:'CT-1042'};");
+assert.match(run("SCREENS['o-cal']()"),/data-calendar-consultations-day=/,'visibility is remembered for the first house');
+assert.equal(run('calendarSetConsultations(false)'),true);
+assert.doesNotMatch(run("SCREENS['o-cal']()"),/data-calendar-consultations-day=/);
+run("S.role='guest';");
+assert.equal(run("calendarDirectConsultations('CT-1042',12).length"),0);
+assert.equal(run('calendarOpenConsultations(12)'),false);
+assert.doesNotMatch(run('calendar(false,HOUSES[0])'),/Andrea|data-calendar-consultations-day=/);
+console.log('PASS: direct-only house-scoped consultations, overlap, checkout boundaries, toggle and calendar isolation.');
+// Dismissal hides only this inquiry; agreeing changes only its nights after confirmation.
+run("S.role='owner';calendarSetConsultations(true);calendarOpenConsultations(13,3);");
+assert.equal(run('typeof calendarDismissConsultation'),'function');
+const untouched=run("JSON.stringify(calendarState('CT-1042'))");
+assert.equal(run('calendarDismissConsultation(3)'),true);
+assert.equal(run('S.leads[3].dismissed'),true);
+assert.equal(run('S.leads.length'),5,'dismissal keeps history');
+assert.equal(run("calendarDirectConsultations('CT-1042',13).some(x=>x.index===3)"),false);
+assert.equal(run("JSON.stringify(calendarState('CT-1042'))"),untouched);
+run("S.leads[3].dismissed=false;calendarOpenConsultations(13,3);calendarApply('CT-1042',[13,14,15,16],'available');calendarApply('CT-1042',[15],'special',123456);");
+const pricesBefore=run("JSON.stringify([13,14,15,16].map(d=>calendarDay('CT-1042',d).price))");
+const consentBefore=run("JSON.stringify(relay.threads.find(t=>t.id===S.leads[3].threadId))");
+const otherHouse=run("JSON.stringify(calendarState('CT-1150'))");
+assert.equal(run('calendarConfirmStay(3,true)'),false,'cannot skip confirmation screen');
+assert.equal(run('calendarPrepareStay(3)'),true);
+assert.match(run('sheet()'),/¿Ya acordaste esta estancia por WhatsApp\?/);
+assert.equal(run("calendarDay('CT-1042',15).available"),true,'preview does not occupy days');
+assert.equal(run('calendarConfirmStay(3,false)'),false);
+assert.equal(run('calendarConfirmStay(0,true)'),false,'cannot confirm another inquiry');
+assert.equal(run('calendarConfirmStay(3,true)'),true);
+assert.equal(run('S.leads[3].stayAgreed'),true);
+assert.deepEqual(JSON.parse(run("JSON.stringify([13,14,15,16].map(d=>calendarDay('CT-1042',d).available))")),[false,false,false,true]);
+assert.equal(run("JSON.stringify([13,14,15,16].map(d=>calendarDay('CT-1042',d).price))"),pricesBefore);
+assert.equal(run("JSON.stringify(relay.threads.find(t=>t.id===S.leads[3].threadId))"),consentBefore,'agreement never grants contact consent');
+assert.equal(run("JSON.stringify(calendarState('CT-1150'))"),otherHouse);
+assert.match(run("SCREENS['o-cal']()"),/calendar-consultation-bar consultation-agreed/);
+assert.match(run('sheet()'),/Estancia acordada/);
+assert.equal(run("calendarDirectConsultations('CT-1042',13).some(x=>x.index===0)"),true,'other inquiries remain visible');
+assert.equal(run('calendarDismissConsultation(3)'),false,'agreed stays cannot be casually discarded');
+run("S.role='guest';");
+assert.equal(run('calendarDismissConsultation(0)'),false);
+assert.equal(run('calendarPrepareStay(0)'),false);
+run("S.role='owner';S.leads[0].departure='2027-01-02';");
+assert.equal(run('calendarPrepareStay(0)'),false,'no silent partial marking outside the demo month');
+run("S.leads[0].departure='2026-12-15';");
+console.log('PASS: dismissal, confirmation, agreed styling, exact nights, price/consent preservation and owner isolation.');
+run("S.role='guest';S.loggedIn=true;relay.threads=[];S.leads=[];S.screen='detail';S.params={id:'CT-1042'};var fields={'d-in':{value:'2026-12-22'},'d-out':{value:'2026-12-25'},'d-ppl':{value:'2 personas'}};document.getElementById=id=>fields[id]||{};");
+assert.equal(run("relayOpenHouse('CT-1042')"),true);
+assert.equal(run("relayRequest('CT-1042',false)"),false);
+assert.equal(run('S.leads.length'),0,'preview does not create a lead');
+run("calendarContactDrafts.get('CT-1042').message='¿Aceptan mascotas?';");
+assert.equal(run("relayRequest('CT-1042',true)"),true);
+assert.equal(run('S.leads[0].arrival'),'2026-12-22');
+assert.equal(run('S.leads[0].departure'),'2026-12-25');
+assert.equal(run('S.leads[0].people'),2);
+assert.equal(run('S.leads[0].msg'),'¿Aceptan mascotas?');
+run("calendarContactDrafts.get('CT-1042').arrival='2026-12-23';relayRequest('CT-1042',true);");
+assert.equal(run('S.leads.length'),1);
+assert.equal(run('S.leads[0].arrival'),'2026-12-22','retry does not rewrite an existing consultation');
+run("S.role='owner';");
+assert.equal(run("calendarDirectConsultations('CT-1042',22).length"),1);
+run("S.role='guest';fields['d-out'].value='2026-12-20';");
+assert.equal(run("relayOpenHouse('CT-1042')"),false,'invalid range cannot open contact');
+console.log('PASS: real contact flow stores explicit stay/message only after consent and preserves deduplication.');

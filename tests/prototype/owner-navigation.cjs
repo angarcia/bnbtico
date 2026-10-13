@@ -1,0 +1,27 @@
+// Catch shared active tabs, wrong pending counts and claims of delivered WhatsApp messages.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'../../design/prototype'),noop=()=>{};
+const ctx=vm.createContext({console,setTimeout:()=>1,clearTimeout:noop,document:{addEventListener:noop,querySelector:()=>({scrollTop:0}),querySelectorAll:()=>[],getElementById:()=>({})}});
+const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatica-prototipo.html'),'utf8');
+for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g))run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);
+run("S.role='owner';go('o-requests');");
+assert.equal(run('current()'),'o-dash','shared searches are deferred for launch');
+assert.doesNotMatch(run("chrome('')"),/data-go="o-requests"/);
+run("S.screen='o-leads';");
+assert.equal(run('current()'),'o-leads');
+assert.match(run("chrome('')"),/data-go="o-cal"/,'calendar stays accessible');
+run("S.leads=[];relay.threads=[];relayCreate(MY[0].id,'Andrea Castro');");
+assert.equal(run("ownerPending('o-leads')"),0,'launch has no acceptance queue');
+run('relayCurrent().ownerConsent=true;');
+assert.equal(run("ownerPending('o-leads')"),0,'accepted contact is not pending');
+run("relayCurrent().ownerConsent=false;S.leads[0].dismissed=true;");
+assert.equal(run("ownerPending('o-leads')"),0);
+run("S.role='guest';S.loggedIn=true;");
+assert.doesNotMatch(run('myRequests()'),/Propuestas recibidas|ofreció|ya no recibirás más mensajes/);
+assert.match(run('myRequests()'),/WhatsApp/);
+assert.equal(run("closeMyRequest(0)"),true);
+assert.equal(run('S.requests[0].status'),'closed');
+assert.equal(run('S.requests[0].contactConsent'),false);
+run("S.role='owner';");
+assert.equal(run('closeMyRequest(0)'),false,'owner cannot close customer searches');
+console.log('PASS: independent owner routes, pending contact counts, WhatsApp-only customer status and request closure.');
