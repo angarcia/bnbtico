@@ -43,7 +43,7 @@ if(typeof document!=='undefined')document.addEventListener('input',event=>{
   S.contactAuto=contactCompose(button.dataset.launchContact,{arrival:g('s-in'),departure:g('s-out'),people:g('s-ppl')});ta.value=S.contactAuto;
 });
 // El texto de la hoja es el mensaje completo: no se le antepone otro saludo.
-{const previous=launchClientMessage;launchClientMessage=(id,data={})=>data.composed?String(data.message||'').trim()||previous(id,data):previous(id,data);}
+if(typeof launchClientMessage==='function'){const previous=launchClientMessage;launchClientMessage=(id,data={})=>data.composed?String(data.message||'').trim()||previous(id,data):previous(id,data);}
 // Al pulsar Contactar en la hoja, se toman fechas, personas y mensaje de la propia hoja.
 (typeof window!=='undefined'?window:document).addEventListener('click',event=>{
   const button=event.target.closest('[data-launch-contact]');if(!button||typeof calendarContactDrafts==='undefined'||!document.getElementById('s-in'))return;
