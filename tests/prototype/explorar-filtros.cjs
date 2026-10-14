@@ -1,0 +1,36 @@
+// Explorar sin buscador de texto y con los filtros principales a la vista.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'../../design/prototype'),noop=()=>{},storage=new Map();
+const ctx=vm.createContext({console,setTimeout:()=>1,clearTimeout:noop,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{addEventListener:noop,querySelector:()=>({scrollTop:0}),querySelectorAll:()=>[],getElementById:()=>({})}});
+const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatica-prototipo.html'),'utf8');
+for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g))run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);
+run("S.role='guest';S.dev='web';");
+let home=run('SCREENS.home()');
+assert.doesNotMatch(home,/id="q"|class="search"/,'no free-text search box');
+for(const k of ['pool','pets','ac','wifi','ev'])assert.match(home,new RegExp(`data-tog="${k}"`),'inline toggle '+k);
+assert.match(home,/<select data-sel="ppl"/);
+assert.match(home,/<select data-sel="beds"/);
+// Web: todo a la vista, sin «Más filtros». Móvil: plegado tras el botón.
+run("S.dev='web';");home=run('SCREENS.home()');
+assert.doesNotMatch(home,/data-go="filters"|data-filters-toggle/,'web has no «Más filtros» button');
+const order=['>Zona<','data-prov=','>Para quiénes<','data-sel="ppl"','>Qué necesitan<','data-tog="pool"','>Precio por noche<','id="h-min"'].map(t=>home.indexOf(t));
+assert.ok(order.every((v,i)=>v>=0&&(i===0||v>order[i-1])),'sections appear in order: '+order.join(','));
+run("S.dev='phone';S.filtersOpen=false;");home=run('SCREENS.home()');
+assert.match(home,/data-filters-toggle[^>]*>Más filtros/);
+assert.doesNotMatch(home,/>Qué necesitan<|id="h-min"/,'phone collapses features and price');
+assert.doesNotMatch(home,/Más filtros<\/button>\s*<span class="badge/,'no badge when only the default province is set');
+run("S.filtersOpen=true;");home=run('SCREENS.home()');
+assert.match(home,/>Qué necesitan<[\s\S]*id="h-min"/,'phone expands in place');
+assert.match(home,/data-filters-toggle[^>]*>Menos filtros/);
+run("S.filtersOpen=false;S.filters.pool=true;");
+assert.match(run('SCREENS.home()'),/>Qué necesitan<[\s\S]*data-tog="pool" aria-pressed="true"/,'an active extra keeps the block open');
+run("S.filters.pool=false;S.dev='web';");home=run('SCREENS.home()');
+assert.equal((home.match(/data-prov="Limón"/g)||[]).length,1,'province chips appear once');
+assert.ok(home.indexOf('data-currency="CRC"')>home.indexOf('casas en Limón'),'currency toggle sits by the results line');
+run("S.filters.pool=true;");
+home=run('SCREENS.home()');
+assert.match(home,/data-tog="pool" aria-pressed="true"/);
+assert.match(home,/data-clear/,'Limpiar appears when a filter is active');
+run("S.filters.pool=false;S.dev='phone';");
+assert.match(run('SCREENS.filters()'),/data-tog="pool"/,'full filters screen still exists');
+console.log('explorar-filtros ok');

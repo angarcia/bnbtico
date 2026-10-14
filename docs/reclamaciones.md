@@ -1,3 +1,5 @@
+> **Histórico desde el 2026-10-13.** El único contacto con bnbtico es por WhatsApp, con un número para propietarios y otro para buscadores. El flujo de reclamaciones dentro de la app queda fuera de la v1 y oculto en el prototipo (`support-whatsapp.js`). Se conserva este documento como exploración; prevalece la entrada correspondiente de [decisiones.md](decisiones.md).
+
 # Reclamaciones y soporte · actualizado 2026-10-12
 
 ## Decisiones aprobadas

@@ -14,15 +14,15 @@ S.leads.push({h:busy.id,clientId:otherClient,n:'Melissa P.',arrival:'2026-12-23'
 S.req={...draft};`);
 assert.equal(run('submitHouseRequest(true)'),true);
 assert.equal(run('S.requests[0].recipients.includes("CT-1042")'),false,'busy owner waits');
-assert.equal(run('S.requests[0].deliveries.length'),4,'four quiet distinct owners receive first');
+assert.equal(run('S.requests[0].deliveries.length'),7,'quiet distinct owners receive first (4 + 3 casas de ejemplo del Caribe, 2026-10-13)');
 assert.equal(run('S.requests[0].nextWaveAt-S.requests[0].createdAt'),86400000);
 assert.equal(run("receivedRequestHouses(S.requests[0]).some(h=>h.id==='CT-1042')"),false,'not visible to unsent owner');
 run('relay.clockOffset+=86400000-1;requestProcessDue();');
-assert.equal(run('S.requests[0].deliveries.length'),4);
+assert.equal(run('S.requests[0].deliveries.length'),7);
 run('relay.clockOffset+=1;requestProcessDue();requestProcessDue();');
-assert.equal(run('S.requests[0].deliveries.length'),5,'second wave once only');
+assert.equal(run('S.requests[0].deliveries.length'),8,'second wave once only');
 assert.equal(run('S.requests[0].recipients.includes("CT-1042")'),true);
-assert.equal(run('new Set(S.requests[0].deliveries.map(d=>d.ownerId)).size'),5);
+assert.equal(run('new Set(S.requests[0].deliveries.map(d=>d.ownerId)).size'),8);
 run("relay.threads[0].expiresAt=relayNow()-1;");
 assert.equal(run("requestDispatchCandidates({...draft,clientId:'different-client'}).find(c=>c.ownerId===busy.ownerId).busy"),false,'expired inquiry does not lower priority');
 run("relay.threads[0].expiresAt=relayNow()+30*DAY_MS;");
@@ -40,25 +40,25 @@ assert.equal(run('requestDispatchCandidates(draft).find(c=>c.ownerId===busy.owne
 // Urgent <=48h sends to all compatible owners immediately, including busy ones.
 run("relay.clockOffset=Date.parse('2026-12-20T06:00:00Z')-Date.now();S.leads.push({h:busy.id,clientId:otherClient,arrival:'2026-12-23',departure:'2026-12-24',threadId:'busy'});S.req={...draft};");
 assert.equal(run('submitHouseRequest(true)'),true);
-assert.equal(run('S.requests[0].deliveries.length'),5);
+assert.equal(run('S.requests[0].deliveries.length'),8);
 assert.equal(run('S.requests[0].nextWaveAt'),null);
 // Recheck availability, new duplicate, consent and closure at second wave.
 run("S.requests=[];S.leads=[];relay.clockOffset=Date.parse('2026-12-01T12:00:00Z')-Date.now();S.leads.push({h:busy.id,clientId:otherClient,arrival:'2026-12-23',departure:'2026-12-24',threadId:'busy'});S.req={...draft};submitHouseRequest(true);calendarState(clone.id).days[22].available=false;relay.clockOffset+=86400000;requestProcessDue();");
-assert.equal(run('S.requests[0].deliveries.length'),4,'now-occupied owner is not sent');
+assert.equal(run('S.requests[0].deliveries.length'),7,'now-occupied owner is not sent');
 run("S.requests=[];calendarState(clone.id).days[22].available=true;S.req={...draft};submitHouseRequest(true);closeMyRequest(0);relay.clockOffset+=86400000;requestProcessDue();");
-assert.equal(run('S.requests[0].deliveries.length'),4);
+assert.equal(run('S.requests[0].deliveries.length'),7);
 assert.equal(run('S.requests[0].nextWaveAt'),null);
 run("S.requests=[];S.req={...draft};submitHouseRequest(true);S.requests[0].contactConsent=false;relay.clockOffset+=86400000;requestProcessDue();");
-assert.equal(run('S.requests[0].deliveries.length'),4);
+assert.equal(run('S.requests[0].deliveries.length'),7);
 // Cap and fairness at owner level.
 run("S.requests=[];S.req={...draft};submitHouseRequest(true);S.leads[0].clientId=requestDispatchClientId;S.leads[0].dismissed=true;relay.clockOffset+=86400000;requestProcessDue();");
-assert.equal(run('S.requests[0].deliveries.length'),4,'new same-client direct inquiry prevents second-wave delivery even if dismissed');
+assert.equal(run('S.requests[0].deliveries.length'),7,'new same-client direct inquiry prevents second-wave delivery even if dismissed');
 run("S.requests=[];S.leads=[];HOUSES.filter(h=>h.type==='vac'&&h.ownerV).forEach(h=>{const id='thread-'+h.id;relay.threads.push({id,source:'direct',expiresAt:relayNow()+30*DAY_MS});S.leads.push({h:h.id,clientId:otherClient,arrival:'2026-12-23',departure:'2026-12-24',threadId:id});});S.req={...draft};submitHouseRequest(true);");
-assert.equal(run('S.requests[0].deliveries.length'),5,'no quiet owners: do not delay everyone');
+assert.equal(run('S.requests[0].deliveries.length'),8,'no quiet owners: do not delay everyone');
 assert.equal(run('S.requests[0].nextWaveAt'),null);
 assert.equal(run("requestDispatchCandidates({...draft,arrival:'2027-01-02',departure:'2027-01-04'}).length"),0,'do not invent availability outside prototype month');
 run("S.requests=[];S.req={...draft,arrival:'',departure:'',dates:'Fechas flexibles'};submitHouseRequest(true);");
-assert.equal(run('S.requests[0].deliveries.length'),5,'no exact dates: no date-based priority');
+assert.equal(run('S.requests[0].deliveries.length'),8,'no exact dates: no date-based priority');
 assert.equal(run('S.requests[0].nextWaveAt'),null);
 run(`S.requests=[];S.leads=[];for(let i=0;i<12;i++){const u=adminUserSeed('Owner '+i,'owner');u.whatsappVerified=true;const h={...busy,id:'CT-X'+i,owner:u.name,ownerId:u.id};HOUSES.push(h);listingPhones.set(h.id,listingPhoneSeed('+506 80000001',true));Object.values(calendarState(h.id).days).forEach(d=>d.available=true);}
 requestDispatchLog.push({ownerId:HOUSES.find(h=>h.id==='CT-1088').ownerId,at:requestDispatchNow()});S.req={...draft};submitHouseRequest(true);`);

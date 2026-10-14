@@ -15,7 +15,7 @@ assert.doesNotMatch(run('SCREENS.home()'),/Búsqueda asistida|data-go="assisted"
 assert.doesNotMatch(run('SCREENS.home()'),/Pedir casa/);
 assert.equal(run('typeof SCREENS.request'),'undefined','shared searches are deferred');
 assert.equal(run("matches({mode:'vac',ppl:2,zone:'Guanacaste',needs:[]}).map(h=>h.id).join(',')"),'CT-1042','hiding AI must preserve form matching');
-assert.equal(run("typeof SCREENS.claims"),'function','claims stays in v1');
+assert.equal(run("typeof SCREENS.claims"),'function','claims code kept, hidden since 2026-10-13 (see support-whatsapp.cjs)');
 run("S.role='admin'");
 assert.doesNotMatch(run("SCREENS['a-queue']()"),/Selfie con cédula|Cédula \(frente\)|Registro Nacional/);
 assert.match(run("SCREENS['a-queue']()"),/Veriff/);

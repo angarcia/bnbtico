@@ -67,6 +67,7 @@ assert.equal(run('calendarDay(id,1).price'),95000);
 assert.equal(run('calendarDay(id,2).price'),140000);
 assert.match(run('calendar(false,MY[0])'),/Calendario cerrado/);
 assert.doesNotMatch(run('calendar(false,MY[0])'),/data-calendar-day|cal-free/);
+run("S.filters.prov='Todas';");
 assert.equal(run('filtered().some(h=>h.id===id)'),true,'unavailable listing stays visible');
 assert.equal(run('houseSettings(id).active'),true);
 assert.doesNotMatch(run('ownerCard(MY[0])'),/data-house-active=/);

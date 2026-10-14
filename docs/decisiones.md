@@ -1,4 +1,71 @@
+## 2026-10-13 · Ficha móvil: un solo botón de contacto; fechas y mensaje por defecto en la hoja
+
+- **Decisión.** En móvil (prioridad del producto: la gente lo usará desde el teléfono), la ficha deja de pedir fechas y personas en la tarjeta de precio y el único botón de contacto es la barra fija de abajo. Al pulsarlo, la hoja «Contactar por WhatsApp» trae Llegada, Salida y Personas (opcionales) y un mensaje por defecto editable («Me gustaría saber si está disponible. Gracias.»). El texto final lleva nombre de la casa, fechas y personas si se indicaron, y el mensaje.
+- **Web.** La ficha web no cambia (fechas y personas en la tarjeta de precio, hoja de siempre); se mantiene porque también puede existir, pero el diseño se optimiza para móvil y app.
+- **Owner.** Se retira «responde en ~1 h» de la tarjeta del owner en la ficha (móvil y web): no es un dato que conozcamos.
+- **Dónde.** `design/prototype/contacto-hoja.js` (condicionado a `S.dev==='phone'`), ajuste en `verificacion-opcional.js` (línea del owner en la hoja sin separador colgante). Prueba: `tests/prototype/contacto-hoja.cjs`.
+
 # Registro de decisiones
+
+## 2026-10-13 · Una sola lista de características al publicar y al filtrar
+
+Decisión del usuario: los filtros de búsqueda deben coincidir con las opciones que marca el propietario al publicar. Lista única: **Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis**. Se añaden al formulario «Niños pequeños gratis» y «Cargador para carro eléctrico» (este último ya existía como filtro); se añaden a los filtros «Parqueo» y «Niños pequeños gratis», que filtran de verdad; se retiran de los filtros Amueblado, Sin depósito y los chips decorativos (Frente al mar, Rancho/BBQ, Accesible, Cochera). La ficha muestra Parqueo real y Niños pequeños gratis en «Lo que ofrece»; admin las ve al revisar. Prototipo: `caracteristicas.js`; prueba `tests/prototype/caracteristicas.cjs`.
+
+Ampliación del mismo día: se añaden **Frente al mar** y **Rancho / BBQ** a la lista única (formulario, filtros, ficha y revisión), y el **precio por noche (mín./máx.)** pasa a verse en Explorar sin abrir «Más filtros» y a filtrar de verdad (antes era decorativo).
+
+## 2026-10-13 · «Mensual» en lugar de «Largo plazo»; Explorar sin buscador de texto y con filtros a la vista
+
+Decisiones del usuario: (1) en toda la interfaz «Largo plazo» pasa a «Mensual» («¿Aceptás alquiler mensual?», «Mensual: consultar precio…»); la landing comercial se conserva sin cambios (`copy-mensual.js`). (2) En Explorar se retira el campo de búsqueda por texto (era decorativo) y los filtros principales quedan a la vista: Personas, Habitaciones, Piscina, Mascotas, Aire acondicionado, Wifi, Cargador eléctrico, más el botón «Más filtros» y «Limpiar» cuando hay alguno activo (`explorar-filtros.js`). Pruebas: `copy-mensual.cjs`, `explorar-filtros.cjs`.
+
+## 2026-10-13 · Se retira «Uso de los baños» del formulario
+
+Decisión del usuario: el formulario de publicación ya no pregunta si los baños son privados, compartidos o mixtos; solo el número de baños. El dato queda fijo en «privados» por debajo y no se muestra en Mis casas ni en la revisión de admin. Prototipo: `formulario-simple.js`; prueba `tests/prototype/formulario-simple.cjs`. Sustituye el punto correspondiente de `publicacion.md` (10-12).
+
+## 2026-10-13 · Descartado: precio por persona por noche
+
+Se exploró e implementó en el prototipo un precio por persona por noche (con mínimo de personas y niños pequeños sin pagar) y el usuario pidió deshacerlo el mismo día. Queda **un único precio por noche de toda la casa, en colones**. El módulo `precio-persona.js` y su prueba se eliminaron; no hay rastro en la interfaz. Se conserva, por útil, la corrección de que al saltar la sugerencia de Veriff no se pierden las fechas y personas escritas en la ficha (`verificacion-opcional.js`).
+
+## 2026-10-13 · Colones como única moneda; dólares solo para visualizar
+
+Decisión del usuario: la app funciona en colones. Los propietarios ingresan todos los precios en colones (se retira el selector de moneda del formulario de publicación). El cliente ve todo en colones por defecto y puede cambiar a dólares, pero es solo visualización: conversión con un tipo de cambio de referencia (₡510 por US$1 en la demo), con aviso de que el propietario cobra en colones. El propietario siempre ve sus precios en colones. Sustituye «el owner decide en qué moneda cobra» (10-02) y el campo `currency CRC|USD` por anuncio; en producción el tipo de cambio debería tomarse de una fuente oficial y mostrarse la fecha. Prototipo: `moneda.js` (los anuncios de ejemplo en dólares pasan a colones); prueba `tests/prototype/moneda.cjs`. Único cambio en el HTML base: `fmt` pasa de `const` a `var` para poder redefinirla.
+
+## 2026-10-13 · Foco en el Caribe: Limón por defecto y provincias con casas
+
+Decisión del usuario: el lanzamiento se centra en el Caribe. En Explorar la provincia seleccionada por defecto es **Limón**. Un propietario de otra zona puede registrar su casa igual, y desde que se aprueba su provincia aparece automáticamente en los filtros aunque sea la única casa; las provincias sin casas visibles no aparecen. En el prototipo (`zona-caribe.js`) los chips se recalculan en cada vista según las casas visibles del modo actual; si la persona elige otra provincia o «Todas» se respeta su elección. Se añaden tres casas de ejemplo del Caribe (Manzanillo, Cahuita, Punta Uva) y, como consecuencia, **una casa aprobada por admin entra en el catálogo de la demo** (antes no se incorporaba). Prueba: `tests/prototype/zona-caribe.cjs`; ajustadas `admin-review`, `calendar` y `request-distribution`.
+
+## 2026-10-13 · Estados de la casa y avisos de fin de oferta por WhatsApp
+
+Decisión del usuario: una casa pasa por **Pendiente de revisión → Pendiente de pago → Activa**, y **Inactiva** si el propietario para su suscripción. Con la oferta de lanzamiento el paso Pendiente de pago se salta hasta que termina el período gratuito. Desde **3 meses antes** del fin de la oferta bnbtico le escribe por WhatsApp explicando que debe añadir un método de pago para que su casa siga saliendo; en el prototipo los avisos son a los 90, 30 y 7 días y el último día (simulados). Al terminar la oferta: con método de pago guardado, la suscripción empieza sola; sin él, la casa pasa a Pendiente de pago y deja de mostrarse hasta que lo añada. Parar la suscripción deja la casa Inactiva (oculta, sin cobro) y se puede reactivar.
+
+Esta decisión reintroduce un aviso automático por WhatsApp desde bnbtico (el de fin de oferta), que la decisión del 2026-10-12 había descartado en general; requiere plantillas de la API de WhatsApp Business, la misma integración prevista para el OTP. Prototipo: `estados-casa.js` (estados, acciones en Mis casas, resumen en Promoción y suscripción, botón «Simular fin de oferta · demo»); prueba `tests/prototype/estados-casa.cjs`. Reactivar una casa ya no exige Veriff.
+
+Añadido el mismo día: si la suscripción está parada (Inactiva) o la casa está Pendiente de pago, **el enlace de la ficha deja de funcionar**: muestra «Este enlace ya no está activo» con el motivo y un botón para explorar otras casas, sin precio ni contacto. Al reactivar, el mismo enlace vuelve a mostrar la ficha.
+
+## 2026-10-13 · Catálogo: identidad verificada primero
+
+Decisión del usuario: en el catálogo aparecen primero las casas de propietarios con identidad verificada con Veriff; dentro de cada grupo se conserva el orden anterior. La línea de resultados lo indica («Primero, las de propietarios con identidad verificada»). Es el incentivo para una verificación que es opcional. Prototipo: `verificacion-opcional.js` (orden en `filtered()`), con dos propietarios de ejemplo sin Veriff para que se vea; prueba en `tests/prototype/verificacion-opcional.cjs`.
+
+## 2026-10-13 · WhatsApp obligatorio, identidad con Veriff opcional
+
+Decisión del usuario: para publicar una casa o escribir a un propietario lo único necesario es tener el WhatsApp verificado. La verificación de identidad con Veriff pasa a ser **opcional**: al intentar contactar por primera vez y al enviar un anuncio se sugiere («Verificar ahora» / «Continuar sin verificar»), pero se puede saltar y no bloquea nada; tampoco el admin la exige para aprobar un anuncio. Hay dos sellos visibles para la otra parte: **WhatsApp verificado** (todos) e **Identidad verificada** (solo quien pasó Veriff). El cliente los ve en la ficha y en la hoja de contacto junto al propietario; el propietario los ve en cada consulta junto al cliente. Sustituye las decisiones del 10-02 y 10-12 que hacían obligatoria la identidad y el estado público único «Identidad verificada» que englobaba ambas comprobaciones.
+
+Prototipo: `verificacion-opcional.js` (cargado al final) relaja los requisitos, redefine la pantalla de identidad con opción de saltar y añade los sellos; pruebas actualizadas (`account-access`, `admin-review`, `admin-concierge`, `launch-scope`) y nueva `tests/prototype/verificacion-opcional.cjs`. La landing comercial se conserva sin cambios; su línea «Propietario y cliente con identidad verificada» queda pendiente de revisar junto con el resto de textos. Pendiente en documentos: `identidad-y-seguridad.md`, `architecture.md`, `roadmap.md` y CLAUDE.md siguen describiendo Veriff como obligatorio.
+
+## 2026-10-13 · Mis consultas abre WhatsApp directamente
+
+Decisión del usuario: el cliente ya abrió el chat con el propietario, así que responder no necesita plantilla ni pantalla intermedia. En Mis consultas el botón pasa a «Abrir WhatsApp» y abre el chat con ese cliente sin mensaje preparado. La plantilla se conserva solo para el primer mensaje del cliente desde la ficha. Prototipo: `consultas-directo.js`; prueba `tests/prototype/consultas-directo.cjs`.
+
+## 2026-10-13 · Cuenta simplificada
+
+Decisión del usuario: reducir botones y clics en Mi cuenta / Cuenta. Portada con nombre, teléfono y dos sellos (Identidad, WhatsApp); «Escribinos por WhatsApp» como acción principal; «Promoción y suscripción» (propietario) o «¿Tenés una casa? Publicala» (cliente); «Editar perfil» plegado, que contiene foto, descripción, correo de recuperación y Cambiar WhatsApp; «Cerrar sesión» como enlace. Se retiran «Cerrar otras sesiones» y «Mis contactos» (el registro de aperturas se consulta desde WhatsApp). Mientras falta Veriff se muestra el aviso por rol y «Verificar mi identidad».
+
+Prototipo: `account-simple.js`, cargado al final, sustituye la portada de `account-access.js` reutilizando sus acciones. Prueba: `tests/prototype/account-simple.cjs`.
+
+## 2026-10-13 · Contacto con bnbtico solo por WhatsApp, un número por rol
+
+Decisión del usuario: el único canal de atención de bnbtico para clientes y propietarios es WhatsApp, con un número para propietarios y otro para buscadores. Se retira de la v1 el flujo de reclamaciones dentro de la app: desaparecen «Reclamaciones y ayuda» de Mi cuenta / Cuenta, «Reportar un problema» de la ficha y la pestaña Reclamaciones de Admin. Cualquier problema se trata por el WhatsApp de soporte del rol; Admin conserva Usuarios, desactivar/reactivar con motivo e historial privado. En la cuenta queda un único botón «Escribinos por WhatsApp».
+
+Prototipo: módulo `support-whatsapp.js`, cargado al final, oculta esos accesos sin borrar `claims.js` (sus pantallas quedan sin ruta visible, conservadas como exploración). Números de ejemplo, sin apertura real. Prueba: `tests/prototype/support-whatsapp.cjs`. Sustituye las decisiones de reclamaciones del 2026-10-05 y 2026-10-12 en lo que toca a la interfaz; `reclamaciones.md` pasa a histórico.
 
 ## 2026-10-13 · Alta sencilla, sesión recordada y recuperación
 

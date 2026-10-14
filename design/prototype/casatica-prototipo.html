@@ -343,7 +343,7 @@ const REQUESTS=[
  {id:"S-298",client:"Jorge Ulate",score:3.2,count:3,mode:"vac",ppl:8,dates:"2–4 ene",zone:"Jacó / Pacífico central",budget:"$400 en total",needs:["Piscina","Mascotas"],text:"Grupo de 8 con un perro grande, buscamos casa con piscina cerca de la playa.",status:"open",offers:[]},
  {id:"S-290",client:"Familia Brenes",score:5.0,count:2,mode:"largo",ppl:4,dates:"desde feb 2027",zone:"Heredia / San José oeste",budget:"₡450.000 por mes",needs:["Cochera","Mascotas"],text:"Nos mudamos a Heredia por trabajo, 4 personas y un gato. Mínimo 1 año.",status:"open",offers:[]},
 ];
-const fmt=(h)=>h.cur==="₡"?`₡${h.price.toLocaleString("es-CR")}`:`$${h.price}`;
+var fmt=(h)=>h.cur==="₡"?`₡${h.price.toLocaleString("es-CR")}`:`$${h.price}`;
 const ini=(n)=>n.split(" ").map(w=>w[0]).join("").slice(0,2);
 
 /* ---------------- Estado ---------------- */
@@ -868,3 +868,15 @@ render();
 <script src="launch-scope.js?v=20261013-direct-2"></script>
 <script src="admin-concierge.js?v=20261013-1"></script>
 <script src="account-access.js?v=20261013-1"></script>
+<script src="support-whatsapp.js?v=20261013-1"></script>
+<script src="account-simple.js?v=20261013-1"></script>
+<script src="consultas-directo.js?v=20261013-1"></script>
+<script src="verificacion-opcional.js?v=20261013-1"></script>
+<script src="estados-casa.js?v=20261013-1"></script>
+<script src="zona-caribe.js?v=20261013-1"></script>
+<script src="moneda.js?v=20261013-1"></script>
+<script src="formulario-simple.js?v=20261013-1"></script>
+<script src="copy-mensual.js?v=20261013-1"></script>
+<script src="explorar-filtros.js?v=20261013-1"></script>
+<script src="caracteristicas.js?v=20261013-1"></script>
+<script src="contacto-hoja.js?v=20261013-1"></script>

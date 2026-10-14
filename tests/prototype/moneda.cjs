@@ -1,0 +1,31 @@
+// Colones como única moneda de los anuncios; dólares solo como visualización del cliente.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'../../design/prototype'),noop=()=>{},storage=new Map();
+const ctx=vm.createContext({console,setTimeout:()=>1,clearTimeout:noop,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document:{addEventListener:noop,querySelector:()=>({scrollTop:0}),querySelectorAll:()=>[],getElementById:()=>({})}});
+const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatica-prototipo.html'),'utf8');
+for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g))run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);
+assert.equal(run("HOUSES.every(h=>h.cur==='₡')"),true,'every listing is priced in colones');
+assert.equal(run('S.currency'),'CRC','colones by default');
+run("S.role='guest';S.filters.prov='Todas';");
+let home=run('SCREENS.home()');
+assert.match(home,/data-currency="USD"/);
+assert.doesNotMatch(home,/\$\d/,'no dollar amounts while in colones');
+assert.match(run("fmt(HOUSES.find(h=>h.id==='CT-1042'))"),/^₡95/);
+run("S.currency='USD';");
+assert.equal(run("fmt(HOUSES.find(h=>h.id==='CT-1042'))"),'$186','95 000 / 510 ≈ 186');
+home=run('SCREENS.home()');
+assert.match(home,/convertidos a dólares solo para orientarte/);
+run("S.params={id:'CT-1042'};");
+const detail=run('SCREENS.detail()');
+assert.match(detail,/<small>\$186<\/small>/,'calendar grid converts too');
+assert.match(detail,/El propietario cobra en colones/);
+// El propietario siempre ve colones y publica en colones.
+run("S.role='owner';accountAccess.start('register','Marcela','+506 80000002');accountAccess.verify('123456');");
+assert.match(run("fmt(HOUSES.find(h=>h.id==='CT-1042'))"),/^₡95/,'owner views are never converted');
+run("S.wizStep=5;");
+const form=run("SCREENS['o-new']()");
+assert.doesNotMatch(form,/id="pub-currency"/,'no currency selector in the wizard');
+assert.match(form,/Los precios se ingresan en colones/);
+run("publicationSet('currency','USD');");
+assert.equal(run('publication.draft.currency'),'CRC','currency is forced to CRC');
+console.log('moneda ok');
