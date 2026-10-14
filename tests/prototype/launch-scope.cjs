@@ -7,7 +7,7 @@ assert.equal(run('typeof SCREENS.request'),'undefined');
 assert.equal(run("NAV.owner.some(x=>x[0]==='o-requests')"),false);
 assert.doesNotMatch(run('SCREENS.home()'),/Pedir casa|Búsqueda asistida|class="map"/);
 assert.doesNotMatch(run('SCREENS.filters()'),/data-go="request"/);
-run("S.role='owner';S.params={id:'CT-1042'};");
+run("S.role='owner';S.dev='web';S.params={id:'CT-1042'};");// vista web: Mis casas conserva consejo y controles (móvil en mis-casas.cjs)
 assert.doesNotMatch(run("SCREENS['o-dash']()"),/Buscan casa|sin responder|valora|stats|Churn/);
 assert.match(run("SCREENS['o-houses']()"),/Compartir ficha/);
 assert.match(run("SCREENS['o-houses']()"),/Compartí tu ficha con tus clientes/);

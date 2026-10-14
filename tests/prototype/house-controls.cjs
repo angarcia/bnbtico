@@ -5,7 +5,7 @@ const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatic
 // Historical per-house channel exploration; launch-scope.cjs covers the launch policy.
 for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g)){if(s[1]?.startsWith('launch-scope.js'))continue;run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);}
 assert.equal(run('typeof houseSetDirect'),'function');
-run("S.role='owner';var h=MY[0],other=MY[1];");
+run("S.role='owner';S.dev='web';var h=MY[0],other=MY[1];");// vista web: la tarjeta conserva todos los controles (móvil en mis-casas.cjs)
 assert.equal(run('houseSettings(h.id).direct'),false);
 assert.equal(run('houseSetDirect(h.id,true)'),true);
 assert.equal(run('houseSettings(other.id).direct'),false,'preference is per house');

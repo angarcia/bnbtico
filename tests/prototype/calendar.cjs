@@ -6,7 +6,7 @@ const run=s=>vm.runInContext(s,ctx),html=fs.readFileSync(path.join(root,'casatic
 // Preserve tests of the advanced exploration; launch-scope.cjs tests the public entry.
 for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g)){if(s[1]?.startsWith('launch-scope.js'))continue;run(s[1]?fs.readFileSync(path.join(root,s[1].split('?')[0]),'utf8'):s[2]);}
 assert.equal(run('typeof calendarApply'),'function');
-run("S.role='owner';var rangeId=MY[0].id;calendarOpenEditor(rangeId);");
+run("S.role='owner';S.dev='web';var rangeId=MY[0].id;calendarOpenEditor(rangeId);");// vista web: la tarjeta de Mis casas conserva todos los controles (en móvil viven en el detalle, ver mis-casas.cjs)
 const untouched=run('JSON.stringify(calendarState(rangeId))');
 for(const fields of ["high:120000","low:60000","high:120000,highWeekend:140000","low:60000,lowWeekend:70000","highWeekend:140000","lowWeekend:70000","high:120000,highStart:'2026-12-09'","low:60000,lowEnd:'2026-12-17'"]){
   assert.equal(run(`calendarConfigure(rangeId,{base:95000,${fields}})`),false,'configured season requires both dates');
