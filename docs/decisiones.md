@@ -1,3 +1,10 @@
+## 2026-10-13 · Mis casas en móvil: tarjeta ligera, gestión en el detalle
+
+- **Decisión.** En móvil la tarjeta de cada casa queda con estado, precio, «Compartir ficha» y «Calendario» (más el aviso de la oferta gratuita cuando toca). Al tocar la casa se abre su detalle de gestión: estado y suscripción (parar, reactivar, simulador de demo), compartir ficha, y los controles de editar y disponible. El consejo «Compartí tu ficha» y el bloque de promoción de lanzamiento salen de Mis casas y viven en Inicio.
+- **Regla de producto (todas las vistas).** «Añadir método de pago» solo aparece mientras la casa no tiene método de pago y toca avisar: dentro de la ventana de recordatorio de la oferta gratuita (90 días antes) o en «Pendiente de pago». En cuanto se añade, desaparece. En «Promoción y suscripción» (Mi cuenta) se puede gestionar en cualquier momento.
+- **Web.** Mis casas y el detalle de la casa no cambian.
+- **Dónde.** `design/prototype/mis-casas.js`. Prueba: `tests/prototype/mis-casas.cjs`.
+
 ## 2026-10-13 · Ficha móvil más corta
 
 - **Decisión.** En móvil la ficha de una casa muestra el precio una sola vez (barra fija de abajo); desaparecen la tarjeta de precio repetida y «¿Cómo funciona?». El calendario solo pone cifra en los días con precio distinto al base (una nota debajo dice el precio base). «Lo que ofrece» lista solo lo que la casa sí tiene. Los dos avisos y la tarjeta de condiciones se funden en una sola nota al final (sin comisiones, bnbtico no procesa pagos, WhatsApp verificado obligatorio, Veriff opcional, números visibles). El selector ₡/$ va junto al título del calendario.
