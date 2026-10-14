@@ -15,10 +15,15 @@ run("S.currency='USD';");
 assert.equal(run("fmt(HOUSES.find(h=>h.id==='CT-1042'))"),'$186','95 000 / 510 ≈ 186');
 home=run('SCREENS.home()');
 assert.match(home,/convertidos a dólares solo para orientarte/);
-run("S.params={id:'CT-1042'};");
+run("S.params={id:'CT-1042'};S.dev='web';");
 const detail=run('SCREENS.detail()');
 assert.match(detail,/<small>\$186<\/small>/,'calendar grid converts too');
 assert.match(detail,/El propietario cobra en colones/);
+// En móvil el calendario omite el precio base en las celdas, pero la nota lo da convertido.
+run("S.dev='phone';");
+const detailPhone=run('SCREENS.detail()');
+assert.doesNotMatch(detailPhone,/<small>\$186<\/small>/);
+assert.match(detailPhone,/\$186 por noche, salvo los días marcados con otro precio/);
 // El propietario siempre ve colones y publica en colones.
 run("S.role='owner';accountAccess.start('register','Marcela','+506 80000002');accountAccess.verify('123456');");
 assert.match(run("fmt(HOUSES.find(h=>h.id==='CT-1042'))"),/^₡95/,'owner views are never converted');
