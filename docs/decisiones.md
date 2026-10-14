@@ -1,3 +1,9 @@
+## 2026-10-13 · Ficha móvil más corta
+
+- **Decisión.** En móvil la ficha de una casa muestra el precio una sola vez (barra fija de abajo); desaparecen la tarjeta de precio repetida y «¿Cómo funciona?». El calendario solo pone cifra en los días con precio distinto al base (una nota debajo dice el precio base). «Lo que ofrece» lista solo lo que la casa sí tiene. Los dos avisos y la tarjeta de condiciones se funden en una sola nota al final (sin comisiones, bnbtico no procesa pagos, WhatsApp verificado obligatorio, Veriff opcional, números visibles). El selector ₡/$ va junto al título del calendario.
+- **Web.** La ficha web no cambia.
+- **Dónde.** `design/prototype/ficha-movil.js` (solo `S.dev==='phone'`, clientes; no toca la ficha bloqueada). Prueba: `tests/prototype/ficha-movil.cjs`.
+
 ## 2026-10-13 · Ficha móvil: un solo botón de contacto; fechas y mensaje por defecto en la hoja
 
 - **Decisión.** En móvil (prioridad del producto: la gente lo usará desde el teléfono), la ficha deja de pedir fechas y personas en la tarjeta de precio y el único botón de contacto es la barra fija de abajo. Al pulsarlo, la hoja «Contactar por WhatsApp» trae Llegada, Salida y Personas (opcionales) y el mensaje completo ya redactado («Hola, vi {casa} en bnbtico y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.»), que se actualiza solo al cambiar fechas o personas mientras el usuario no lo haya editado a mano. Lo que va a WhatsApp es ese texto tal cual, sin otro saludo delante.
