@@ -1,11 +1,14 @@
 node_modules/
 .next/
-.expo/
 dist/
 build/
-.turbo/
 .env
 .env.*
 !.env.example
 supabase/.temp/
+supabase/.branches/
+test-results/
+playwright-report/
 .DS_Store
+Claude outputs/
+*.tsbuildinfo

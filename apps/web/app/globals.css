@@ -1,0 +1,58 @@
+/* Tokens de bnbtico · fuente: design/prototype/casatica-prototipo.html y design/tokens/tokens.json */
+:root{
+  --bg:#F7F5EF;--surface:#FFFFFF;--surface-2:#EFEDE6;--fg:#1B2420;--muted:#5F6B64;--line:#DDD9CE;
+  --coral:#FF385C;--primary:#D92349;--primary-ink:#A81736;--primary-soft:#FFF0F3;--primary-on:#FFFFFF;
+  --success-soft:#DCEFE4;--success-ink:#124634;
+  --sun:#E8A33D;--sun-soft:#FBEFD9;--sun-ink:#7A4E07;
+  --wa:#25D366;--wa-ink:#0B7A3B;
+  --ok:#2E8B57;--warn:#C97A12;--bad:#C2432F;--bad-soft:#FBE3DF;--note-fg:#5B3A05;--note-line:#F0D7A8;
+  --shadow:0 1px 2px rgba(27,36,32,.06),0 8px 24px -12px rgba(27,36,32,.18);
+  --r:14px;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Nunito Sans",ui-sans-serif,system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917;--surface:#1C2320;--surface-2:#242D29;--fg:#EDEFEA;--muted:#A3ADA6;--line:#2F3934;
+  --primary:#FF8097;--primary-ink:#FFADC0;--primary-soft:#44232D;--primary-on:#35101A;--success-soft:#1E3A2D;--success-ink:#8FD3B0;
+  --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--wa-ink:#7BE3A6;--bad-soft:#4A2521;--note-fg:#F3D6A1;--note-line:#5a4318;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917;--surface:#1C2320;--surface-2:#242D29;--fg:#EDEFEA;--muted:#A3ADA6;--line:#2F3934;
+  --primary:#FF8097;--primary-ink:#FFADC0;--primary-soft:#44232D;--primary-on:#35101A;--success-soft:#1E3A2D;--success-ink:#8FD3B0;
+  --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--wa-ink:#7BE3A6;--bad-soft:#4A2521;--note-fg:#F3D6A1;--note-line:#5a4318;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.1}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+input,select,textarea{font:inherit;color:inherit}
+img{max-width:100%;display:block}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+a{color:inherit}
+
+/* Botones (mismas clases que el prototipo para portar pantallas sin renombrar) */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:700;min-height:44px;text-decoration:none}
+.btn-primary{background:var(--primary);color:var(--primary-on)}
+.btn-ghost{background:var(--surface);border:1px solid var(--line)}
+.btn-wa{background:var(--wa);color:#07301A}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:8px}
+.between{justify-content:space-between}
+.small{font-size:13px}.xs{font-size:12px}.muted{color:var(--muted)}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:var(--surface-2)}
+.badge-ok{background:var(--success-soft);color:var(--success-ink)}
+.note{background:var(--sun-soft);color:var(--note-fg);border:1px solid var(--note-line);border-radius:12px;padding:10px 12px}
+
+/* Página «muy pronto» */
+.soon{min-height:100dvh;display:grid;place-items:center;padding:24px 16px}
+.soon-card{max-width:420px;width:100%;text-align:center;display:grid;gap:14px;justify-items:center}
+.soon-logo{width:174px;aspect-ratio:1360/355;overflow:hidden;position:relative;background:#fff;border-radius:6px}
+.soon-logo img{position:absolute;width:126.176471%;max-width:none;height:auto;left:-14.338235%;top:-143.661972%}

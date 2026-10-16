@@ -1,0 +1,31 @@
+# Supabase CLI · proyecto local. `supabase start` requiere Docker.
+project_id = "bnbtico"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+max_rows = 200
+
+[db]
+port = 54322
+major_version = 17
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://pruebas.bnbtico.com", "https://bnbtico.com"]
+enable_signup = true
+
+[auth.sms]
+# Fase 1: códigos por WhatsApp con Twilio Verify (canal whatsapp). Variables en .env, nunca aquí.
+enable_signup = true
+enable_confirmations = true
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"

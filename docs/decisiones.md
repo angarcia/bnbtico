@@ -1,3 +1,14 @@
+## 2026-10-15 · Fase 0 (parte técnica): scaffold de la web
+
+- **Repo:** una sola app `apps/web` (Next.js 16, App Router, TypeScript estricto) + `supabase/`. Fuera `apps/mobile`, `packages/*` y Turborepo; pnpm simple con workspace `apps/*`. Node 22.
+- **Tokens y marca:** `app/globals.css` lleva las variables del prototipo (claro/oscuro) y las clases base (`btn`, `card`, `badge`, `note`…) con los mismos nombres, para portar pantallas sin renombrar. Iconos PWA (192/512, apple-touch) recortados del logo original; `manifest.webmanifest` con `display: standalone`.
+- **Portada:** «Muy pronto» hasta el lanzamiento.
+- **Contraseña de pruebas:** `proxy.ts` (antes *middleware*) pide usuario/contraseña HTTP cuando existe `PREVIEW_PASSWORD`; sin la variable no hay barrera. Así `pruebas.bnbtico.com` queda cerrado y bnbtico.com/local abiertos con el mismo código.
+- **Pruebas:** Vitest (`tests/unit`, empieza con dinero: `₡95 000`, `$186`) y Playwright en viewport móvil (`tests/e2e/smoke`: portada, tokens, manifest). `CHROMIUM_PATH` permite usar un Chromium ya instalado.
+- **Base de datos:** `0001_init.sql` reescrita desde el prototipo: `profiles` (un WhatsApp verificado por cuenta, cliente y propietario a la vez), `listings` con estados review/changes/rejected/payment_due/active/inactive, características como enum de 9 valores, precio nocturno en colones y mensual importe/consultar, WhatsApp por casa, disponible/reapertura; `listing_photos`, `listing_rates` (habitual/alta/baja con fin de semana), `listing_days` (solo excepciones y ★ especial), `favorites`, `inquiries` (texto tal cual se abrió en WhatsApp), `subscriptions` + `subscription_reminders` (90/30/7/0), `requests` + `request_matches` (Buscan casa), `admin_actions`. RLS en todas las tablas y vista `listings_public` sin número ni dirección. Sin Veriff ni cobro.
+- **Verificado:** `pnpm build`, `pnpm typecheck`, `pnpm test` y `pnpm test:e2e` en verde; la contraseña devuelve 401 sin clave y 200 con ella.
+- **Pendiente de Daniel para cerrar la fase 0:** dominio bnbtico.com (DNS), cuentas de Vercel y Supabase, remoto de GitHub.
+
 ## 2026-10-15 · Plan de implementación y alcance de v1
 
 - **La v1 es el prototipo** (vista Móvil) sin Veriff y sin cobro real. Veriff pasa a v1.1; la pasarela de pago se conecta después del lanzamiento (con 12 meses gratis hay margen), pero la pantalla de método de pago guarda la tarjeta desde el principio.
