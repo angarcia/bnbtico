@@ -15,10 +15,9 @@ Guía paso a paso (2026-10-15). Todo lo que requiere crear cuentas, aceptar cond
 1. Entrá en <https://supabase.com/dashboard> y creá una organización si no tenés (plan Free).
 2. **New project**: nombre `bnbtico-pruebas`, región **East US (North Virginia)** o la más cercana a Costa Rica, y una **contraseña de base de datos** larga. Guardala en tu gestor de contraseñas: hace falta en el paso 3.
 3. Esperá a que el proyecto termine de aprovisionarse (1–2 minutos).
-4. Anotá, en **Project Settings → API**:
-   - **Project URL** (`https://<ref>.supabase.co`).
-   - **Publishable key** (`sb_publishable_…`). Es la que va en la app como `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Las claves `secret` no se usan en la app.
-   - El **project ref** son las 20 letras del URL.
+4. Anotá dos valores (el botón **Connect**, arriba del panel, pestaña «App Frameworks» → Next.js, los muestra juntos):
+   - **Project URL** (`https://<ref>.supabase.co`), en **Project Settings → Data API**. El **ref** son las 20 letras minúsculas que Supabase asigna al proyecto; también se ven en la barra de direcciones del panel (`…/dashboard/project/<ref>`).
+   - **Publishable key** (`sb_publishable_…`), en **Project Settings → API Keys**. Es la que va en la app como `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Las claves `secret` no se usan en la app.
 
 ## 2. Aplicar el esquema
 
