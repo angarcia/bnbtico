@@ -35,7 +35,7 @@ pnpm exec supabase db push
 
 ## 3. Twilio Verify
 
-1. Creá una cuenta en <https://www.twilio.com/try-twilio>. Para enviar a cualquier número hay que pasar de la cuenta de prueba a una de pago (basta cargar 20 USD).
+1. Creá una cuenta en <https://www.twilio.com/try-twilio>. La **cuenta de prueba** es gratis y trae saldo de regalo: Verify funciona de verdad (WhatsApp incluido), pero solo envía a números que hayas dado de alta en **Phone Numbers → Verified Caller IDs** (Twilio manda un código a cada uno). Alcanza para probar con tu móvil y los del equipo. Los tres números ficticios del paso 4 no pasan por Twilio y no gastan nada. Antes de que pruebe gente de fuera, y en todo caso antes de la fase 7, pasá a cuenta de pago (basta cargar 20 USD): quita la lista de números permitidos y el prefijo «Sent from your Twilio trial account» de los SMS.
 2. **Verify → Services → Create new**: nombre `bnbtico`. Anotá el **Service SID** (`VA…`).
 3. En el servicio, pestaña **Settings → Channels**, activá **WhatsApp** (además de SMS, que viene activo). Si Twilio pide registrar un remitente de WhatsApp propio en lugar de usar el suyo, seguí su asistente; mientras tanto el canal SMS funciona igual y el plan ya prevé esa alternativa.
 4. En **Verify → Settings** (o en el servicio) activá **Fraud Guard**: bloquea el envío masivo a números de pago. Es gratis.
