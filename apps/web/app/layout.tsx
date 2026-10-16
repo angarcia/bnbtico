@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "bnbtico", template: "%s · bnbtico" },
-  description: "Casas en alquiler en el Caribe de Costa Rica. Hablás directo con el propietario por WhatsApp.",
+  description: "Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.",
   applicationName: "bnbtico",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "bnbtico", statusBarStyle: "default" },
