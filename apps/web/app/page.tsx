@@ -10,7 +10,7 @@ export default function MuyPronto() {
         </div>
         <h1 style={{ fontSize: 28 }}>Muy pronto</h1>
         <p className="muted">
-          Casas en alquiler en el Caribe de Costa Rica. Hablás directo con el propietario por WhatsApp, sin comisiones.
+          Una nueva forma de descubrir y reservar alojamientos en Costa Rica. Más cerca de lo local.
         </p>
       </div>
     </main>
