@@ -1,3 +1,7 @@
+## 2026-10-15 · Sin coste de alojamiento: Vercel Hobby en pruebas, Cloudflare Pages al lanzar
+
+- Repo en `github.com/angarcia/bnbtico`. Vercel Hobby (equipo `bnbtico`) para `pruebas.bnbtico.com` hasta el lanzamiento; su licencia es solo para uso no comercial, así que en la fase 7 la web se mueve a Cloudflare Pages (gratis con uso comercial) vía OpenNext. Regla: no usar nada exclusivo de Vercel. Supabase Free. Único coste variable: códigos de WhatsApp.
+
 ## 2026-10-15 · Fase 0 (parte técnica): scaffold de la web
 
 - **Repo:** una sola app `apps/web` (Next.js 16, App Router, TypeScript estricto) + `supabase/`. Fuera `apps/mobile`, `packages/*` y Turborepo; pnpm simple con workspace `apps/*`. Node 22.

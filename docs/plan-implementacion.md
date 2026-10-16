@@ -20,7 +20,8 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ## Stack
 
-- `apps/web`: **Next.js** (App Router, TypeScript estricto), desplegado en **Vercel**. Fichas públicas con SSR para que el enlace se vea bien en WhatsApp y Google.
+- `apps/web`: **Next.js** (App Router, TypeScript estricto). Fichas públicas con SSR para que el enlace se vea bien en WhatsApp y Google.
+- **Alojamiento sin coste.** Hasta el lanzamiento, Vercel Hobby (gratis; su licencia es para uso no comercial, así que vale para pruebas privadas pero no para abrir al público). En la fase 7 la web pasa a **Cloudflare Pages** (plan gratuito con uso comercial permitido) con el adaptador OpenNext; por eso no se usa nada exclusivo de Vercel. Supabase Free (pausa tras 7 días sin uso en desarrollo; en producción no ocurre). El único coste variable son los códigos por WhatsApp (céntimos por registro).
 - `supabase/`: **Supabase** (Postgres con RLS, Storage para fotos, Edge Functions para lo que no pueda ir en el cliente). Proyecto local para desarrollar, uno de pruebas y uno de producción.
 - **Códigos por WhatsApp:** Twilio Verify (canal WhatsApp) para arrancar; cuenta de empresa de Meta tramitándose desde la fase 0 para pasar a la API oficial cuando esté aprobada. Los avisos de suscripción salen por el mismo canal.
 - **Pruebas:** Vitest para lógica (filtros, dinero, estados de casa, redacción de mensajes) y Playwright en viewport móvil para los flujos (publicar → aprobar → ver ficha → contactar). Las pruebas del prototipo (`tests/prototype/*.cjs`) siguen siendo la referencia de comportamiento.
@@ -71,7 +72,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ### Fase 7 · Lanzamiento
 **Objetivo:** abrir bnbtico.com.
-**Incluye:** borrar datos de prueba, cargar las primeras casas reales con sus propietarios (ellos publican; nosotros acompañamos), privacidad y condiciones de uso publicadas, números de WhatsApp de bnbtico reales, Meta aprobada o Twilio en producción, copias de seguridad de la base, un panel mínimo de salud (errores y registros), landing abierta.
+**Incluye:** mover la web de Vercel Hobby a Cloudflare Pages (gratuito, uso comercial permitido) y apuntar bnbtico.com allí; borrar datos de prueba, cargar las primeras casas reales con sus propietarios (ellos publican; nosotros acompañamos), privacidad y condiciones de uso publicadas, números de WhatsApp de bnbtico reales, Meta aprobada o Twilio en producción, copias de seguridad de la base, un panel mínimo de salud (errores y registros), landing abierta.
 **Hecho cuando:** un cliente que no conocemos escribe a un owner que no conocemos.
 
 ## Después del lanzamiento (en este orden salvo que cambie)
