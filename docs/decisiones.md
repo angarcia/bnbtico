@@ -1,3 +1,9 @@
+## 2026-10-15 · Alojamiento: se vuelve a Vercel (Hobby) para las pruebas
+
+- Cloudflare Workers funciona (probado con Next 16 + OpenNext), pero su panel resultó más complicado de configurar sin ayuda. Se revierte la configuración (commit `3c609b6`) y se sigue en Vercel Hobby, proyecto `bnbtico` sobre la rama `main`, con `bnbtico.vercel.app` ya desplegado.
+- Una sola rama de trabajo: `main`. Se abandona `develop`.
+- Para el lanzamiento (fase 7) sigue en pie la decisión de no pagar Vercel Pro: la configuración de Cloudflare queda en el historial de git por si se retoma, y Netlify Free (uso comercial permitido, Next.js nativo) es la alternativa sin adaptador. Se decide entonces.
+
 ## 2026-10-15 · Sin coste de alojamiento: Vercel Hobby en pruebas, Cloudflare Pages al lanzar
 
 - Repo en `github.com/angarcia/bnbtico`. Vercel Hobby (equipo `bnbtico`) para `pruebas.bnbtico.com` hasta el lanzamiento; su licencia es solo para uso no comercial, así que en la fase 7 la web se mueve a Cloudflare Pages (gratis con uso comercial) vía OpenNext. Regla: no usar nada exclusivo de Vercel. Supabase Free. Único coste variable: códigos de WhatsApp.
