@@ -35,11 +35,14 @@ pnpm exec supabase db push
 
 ## 3. Twilio Verify
 
-1. Creá una cuenta en <https://www.twilio.com/try-twilio>. La **cuenta de prueba** es gratis y trae saldo de regalo: Verify funciona de verdad (WhatsApp incluido), pero solo envía a números que hayas dado de alta en **Phone Numbers → Verified Caller IDs** (Twilio manda un código a cada uno). Alcanza para probar con tu móvil y los del equipo. Los tres números ficticios del paso 4 no pasan por Twilio y no gastan nada. Antes de que pruebe gente de fuera, y en todo caso antes de la fase 7, pasá a cuenta de pago (basta cargar 20 USD): quita la lista de números permitidos y el prefijo «Sent from your Twilio trial account» de los SMS.
-2. **Verify → Services → Create new**: nombre `bnbtico`. Anotá el **Service SID** (`VA…`).
-3. En el servicio, pestaña **Settings → Channels**, activá **WhatsApp** (además de SMS, que viene activo). Si Twilio pide registrar un remitente de WhatsApp propio en lugar de usar el suyo, seguí su asistente; mientras tanto el canal SMS funciona igual y el plan ya prevé esa alternativa.
-4. En **Verify → Settings** (o en el servicio) activá **Fraud Guard**: bloquea el envío masivo a números de pago. Es gratis.
-5. Anotá en **Account → API keys & tokens**: **Account SID** (`AC…`) y **Auth Token**.
+La **prueba gratuita** actual de Twilio es una experiencia guiada: números que asigna Twilio, hasta 5 destinatarios verificados, solo tu país de registro, caduca a los 30 días y **no permite crear un servicio de Verify propio** (al pulsar «Create new» pide upgrade). Supabase necesita el Service SID de un servicio tuyo, así que conectar Twilio a Supabase requiere pasar a cuenta de pago. Por eso el orden es:
+
+1. **Primero, gratis: comprobar que WhatsApp llega a Costa Rica.** Creá la cuenta en <https://www.twilio.com/try-twilio> (Limited trial). Verificá tu móvil en **Phone Numbers → Verified Caller IDs**. En el panel de Verify del trial, usá «Try it out» con el canal WhatsApp hacia tu número. Si el código llega, la pregunta del plan está respondida; si no, se usa SMS para los códigos (anotarlo en `decisiones.md`).
+2. **Mientras tanto, pruebas.bnbtico.com funciona con Supabase real sin Twilio** gracias a los números de prueba del paso 4 (código fijo 123456, no se envía nada). Twilio solo hace falta cuando alguien entra con su número real.
+3. **Cuando toque enviar a números reales: upgrade.** Tarjeta y recarga mínima de 20 USD (saldo que se gasta en códigos). Twilio pide entonces el **Primary Customer Profile** de Trust Hub: es un perfil de cumplimiento, no «crear bnbtico». Se puede rellenar como **Individual** (nombre y dirección propios); la opción individual/empresa no se puede cambiar después. Si más adelante existe la empresa en Costa Rica, se abre otra cuenta de Twilio a su nombre y se cambian las tres claves en Supabase.
+4. Con la cuenta de pago: **Verify → Services → Create new**, nombre `bnbtico`. Anotá el **Service SID** (`VA…`). En **Settings → Channels** activá **WhatsApp** además de SMS. Si Twilio pide registrar un remitente de WhatsApp propio, seguí su asistente; mientras tanto el canal SMS funciona igual.
+5. Activá **Fraud Guard** en los ajustes de Verify: bloquea envíos masivos a números de pago. Es gratis.
+6. Anotá en **Account → API keys & tokens**: **Account SID** (`AC…`) y **Auth Token**.
 
 ## 4. Login por teléfono en Supabase
 
