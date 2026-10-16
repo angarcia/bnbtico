@@ -44,6 +44,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - `docs/plan-implementacion.md` — fases de construcción, alcance de v1, stack. **Manda sobre `roadmap.md`.**
 - `docs/decisiones.md` — registro de decisiones con fecha, la más reciente arriba.
 - `docs/design.md` — pantallas, flujos, calendario, sistema de diseño.
+- `docs/configuracion-supabase.md` — cómo crear el proyecto de Supabase, Twilio Verify y las variables de Vercel para `pruebas.bnbtico.com`.
 - `docs/publicacion.md`, `docs/contacto-whatsapp.md`, `docs/busqueda-asistida.md` — reglas por área. Donde hablen de identidad obligatoria, solicitud/aceptación o reclamaciones, están superadas por las reglas de arriba.
 - `docs/architecture.md`, `docs/business-model.md`, `docs/vision.md`, `docs/pitch.md`, `docs/marketing.md` — contexto; revisar contra las reglas vigentes antes de citarlos.
 - `docs/identidad-y-seguridad.md`, `docs/privacidad-verificaciones.md`, `docs/guia-verificacion-finca.md` — Veriff y titularidad: v1.1 y después.
