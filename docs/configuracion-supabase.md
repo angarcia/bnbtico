@@ -64,7 +64,7 @@ Proyecto `bnbtico` → **Settings → Environment Variables**, entorno **Preview
 
 | Variable | Valor |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL del paso 1 |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL del paso 1, **sin ruta**: `https://<ref>.supabase.co` (no la URL de REST que termina en `/rest/v1`; la app la recorta si se pega por error, pero mejor evitarlo) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable key del paso 1 |
 | `SESSION_SECRET` | `openssl rand -base64 48` (mínimo 32 caracteres; sin él la app no arranca) |
 | `NEXT_PUBLIC_STAGE` | `pruebas` |

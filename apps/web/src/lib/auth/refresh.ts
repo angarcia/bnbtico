@@ -2,6 +2,7 @@
 // Sin esto, los Server Components renuevan el token pero no pueden guardarlo y la sesión se pierde al caducar (~1 h).
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { NextRequest, NextResponse } from "next/server";
+import { supabaseEnv } from "./supabase-env";
 
 type Cookie = { name: string; value: string; options?: CookieOptions };
 type ClientFactory = (url: string, key: string, options: { cookies: { getAll(): { name: string; value: string }[]; setAll(list: Cookie[]): void } }) => {
@@ -11,10 +12,10 @@ type ClientFactory = (url: string, key: string, options: { cookies: { getAll(): 
 export async function refreshSupabaseSession(
   request: NextRequest,
   response: NextResponse,
-  env: { url?: string; anonKey?: string } = { url: process.env.NEXT_PUBLIC_SUPABASE_URL, anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY },
+  env: { url?: string; anonKey?: string } | null = supabaseEnv(),
   factory: ClientFactory = createServerClient as unknown as ClientFactory,
 ): Promise<void> {
-  if (!env.url || !env.anonKey || process.env.AUTH_PROVIDER === "demo") return;
+  if (!env?.url || !env.anonKey) return;
   const client = factory(env.url, env.anonKey, {
     cookies: {
       getAll: () => request.cookies.getAll().map(({ name, value }) => ({ name, value })),

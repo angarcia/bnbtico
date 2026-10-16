@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createDemoAuth } from "./demo";
 import { sessionSecret } from "./secret";
 import { createSupabaseAuth } from "./supabase";
+import { supabaseEnv } from "./supabase-env";
 import type { AuthProvider, CookieJar } from "./types";
 
 async function jar(): Promise<CookieJar & { all(): { name: string; value: string }[] }> {
@@ -31,9 +32,8 @@ async function jar(): Promise<CookieJar & { all(): { name: string; value: string
 
 export async function auth(): Promise<AuthProvider> {
   const j = await jar();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (url && anonKey && process.env.AUTH_PROVIDER !== "demo") return createSupabaseAuth(j, { url, anonKey, secret: sessionSecret() });
+  const env = supabaseEnv();
+  if (env) return createSupabaseAuth(j, { ...env, secret: sessionSecret() });
   return createDemoAuth(j, sessionSecret());
 }
 
