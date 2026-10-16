@@ -10,7 +10,7 @@ export default function MuyPronto() {
         </div>
         <h1 style={{ fontSize: 28 }}>Muy pronto</h1>
         <p className="muted">
-          Una nueva forma de descubrir y reservar alojamientos en Costa Rica. Más cerca de lo local.
+          Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.
         </p>
       </div>
     </main>
