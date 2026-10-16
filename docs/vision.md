@@ -1,5 +1,8 @@
 # Visión
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 > Lanzamiento ligero aprobado 2026-10-13: primero captar propietarios con publicación sencilla, ficha compartible y consultas directas. Web móvil, calendario sencillo, identidad/WhatsApp obligatorios antes de publicar/contactar, moderación y soporte. Búsquedas compartidas, reparto, valoraciones, tarifas avanzadas y apps nativas se aplazan. Probar clientes con un catálogo pequeño en una zona sin esperar a v2. Alcance vigente en [roadmap.md](roadmap.md); sustituye las prioridades históricas inferiores, no elimina las exploraciones.
 
 > Alcance vigente 2026-10-12: catálogo de alquileres **vacacionales**, con atributo opcional Acepta largo plazo (respuesta Sí/No obligatoria al publicar). Ya no son dos modalidades excluyentes. Tipos: Casa, Apartamento, Habitación. Las referencias antiguas a dos modos quedan sustituidas por [publicacion.md](publicacion.md); adaptación de las búsquedas pendiente.

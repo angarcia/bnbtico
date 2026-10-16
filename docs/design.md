@@ -1,5 +1,8 @@
 # Diseño
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 ## Registro y perfil · vigente 2026-10-13
 
 `account-access.js` se carga tras las extensiones de lanzamiento. Alta: nombre y WhatsApp → código → sugerencia opcional de correo de recuperación. Sin correo en registro, contraseña, huella ni Face ID. Sesión recordada en el navegador; al salir o acceder sin sesión, WhatsApp + código. Mi perfil añade foto local, descripción, correo con confirmación simulada, Cambiar WhatsApp y Cerrar otras sesiones. Recuperación con correo confirmado y nuevo WhatsApp; alternativa de ayuda manual sin prometer acceso automático. Veriff pendiente tras registrar: cliente antes de contactar, propietario antes de publicar; mensajes diferentes para cada rol. Volver del paso de identidad conserva el borrador/contexto. Detalles y límites de simulación: [identidad y seguridad](identidad-y-seguridad.md#registro-y-acceso-aprobado--2026-10-13). No se modifica la landing.

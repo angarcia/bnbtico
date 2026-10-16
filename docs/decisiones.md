@@ -1,3 +1,11 @@
+## 2026-10-15 · Plan de implementación y alcance de v1
+
+- **La v1 es el prototipo** (vista Móvil) sin Veriff y sin cobro real. Veriff pasa a v1.1; la pasarela de pago se conecta después del lanzamiento (con 12 meses gratis hay margen), pero la pantalla de método de pago guarda la tarjeta desde el principio.
+- **Móvil primero:** web para el teléfono en **bnbtico.com** (PWA). La vista web es un derivado. App en tiendas (envoltorio de la misma web con Capacitor) después del lanzamiento.
+- **Fases de construcción, no de lanzamiento:** 0 base limpia · 1 cuenta con WhatsApp verificado · 2 publicar, aprobar y ver una casa · 3 contacto por WhatsApp · 4 calendario · 5 suscripción, estados y avisos · 6 búsqueda asistida · 7 lanzamiento. Todo se prueba en `pruebas.bnbtico.com`; bnbtico.com en «muy pronto» hasta que la v1 esté completa. Las casas las publican los propietarios; los datos de prueba se borran antes de abrir.
+- **Stack:** Next.js en Vercel + Supabase; Twilio Verify por WhatsApp para los códigos mientras se tramita la cuenta de empresa de Meta; Vitest + Playwright móvil.
+- **Docs:** `CLAUDE.md` reescrito corto y estable; el anterior en `docs/historico/CLAUDE-hasta-2026-10-12.md`. Banners de vigencia en los docs con partes superadas; `roadmap.md` pasa a histórico. Detalle en `docs/plan-implementacion.md`.
+
 ## 2026-10-13 · Mis casas en móvil: tarjeta ligera, gestión en el detalle
 
 - **Decisión.** En móvil la tarjeta de cada casa queda con estado, precio, «Compartir ficha» y «Calendario» (más el aviso de la oferta gratuita cuando toca). Al tocar la casa se abre su detalle de gestión: estado y suscripción (parar, reactivar, simulador de demo), compartir ficha, y los controles de editar y disponible. El consejo «Compartí tu ficha» y el bloque de promoción de lanzamiento salen de Mis casas y viven en Inicio.

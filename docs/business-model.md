@@ -1,5 +1,8 @@
 # Modelo de negocio
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 ## Quién paga
 El **owner**, por cada casa activa. El cliente puede explorar, filtrar y pedir casa gratis. Se contempla cobrar únicamente búsquedas asistidas adicionales opcionales, tras agotar las incluidas; tarifa y cupos pendientes de validación (ver `busqueda-asistida.md`). La plataforma no cobra comisión por reserva ni interviene en el pago entre owner y cliente.
 

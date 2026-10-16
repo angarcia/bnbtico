@@ -1,5 +1,8 @@
 # Roadmap
 
+> **Histórico (2026-10-15).** Sustituido por `docs/plan-implementacion.md`. Se conserva como referencia.
+
+
 ## Alcance vigente · 2026-10-13
 
 Lanzamiento orientado a captar propietarios: **publicar → compartir ficha → recibir consultas directas**. Web móvil primero; no es necesario construir toda la exploración del prototipo. Registro y borradores sin verificación; publicar/contactar exige identidad y WhatsApp verificados, también con contacto directo. Primeras pruebas de clientes con un catálogo pequeño y útil en una zona, sin esperar a v2.

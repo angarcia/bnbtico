@@ -1,5 +1,8 @@
 # Publicación de alojamientos · 2026-10-12
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 ## Decisiones vigentes
 
 - bnbtico se centra en **alquileres vacacionales**, no en dos modalidades excluyentes. Cada anuncio tiene precio por noche.

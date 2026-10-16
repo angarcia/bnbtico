@@ -1,5 +1,8 @@
 # Marketing de bnbtico · preparación del lanzamiento
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 Actualizado al 2026-10-12: estrategia en preparación. La app sigue en fase de prototipo. Los mensajes siguientes son borradores para cuando esté operativa, no anuncios de disponibilidad actual. Resumen de la conversación, presupuestos explorados y referencias: [resumen de marketing](resumen-marketing-2026-10-12.md).
 
 ## Decisiones de la usuaria

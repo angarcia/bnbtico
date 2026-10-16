@@ -1,5 +1,8 @@
 # Contacto por WhatsApp directo · vigente 2026-10-07
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 ## Decisión
 
 **Excepción manual aprobada · 2026-10-13:** administración puede crear consultas por casa a petición de un cliente activo y verificado, con autorización específica registrada para compartir el contacto con los destinatarios seleccionados. Aparecen en Mis consultas del propietario como enviadas por bnbtico, no como aperturas de WhatsApp. Máximo 10 propietarios y una casa por propietario en cada envío; controles de compatibilidad y duplicados. Bienvenidas separadas por rol y números de soporte diferentes, enviadas manualmente por administración. Ver `decisiones.md` y `admin-concierge.js`; no hay automatización, API ni WhatsApp real en la demo.

@@ -1,5 +1,8 @@
 # Verificaciones: alcance, datos y revisión jurídica
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 Actualización 2026-10-12: además de Veriff, se aprueba verificar WhatsApp de clientes y propietarios mediante OTP. Antes de integrar, incorporar al mapa de datos el número, finalidad del envío, proveedor Meta y evidencias mínimas de verificación; definir acceso, retención y avisos correspondientes. No confundir esta comprobación con consentimiento para marketing o para compartir el número entre usuarios. No se recogen datos nuevos mediante esta actualización documental. Fuente: [identidad-y-seguridad.md](identidad-y-seguridad.md).
 
 **Alcance actualizado 2026-10-12:** la titularidad registral queda fuera de v1. Las secciones sobre finca, certificación y datos registrales son preparación para una posible versión posterior. V1 mantiene identidad mediante Veriff y sus requisitos de privacidad/revisión jurídica; no recoge datos para verificar propiedad.

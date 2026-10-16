@@ -1,5 +1,8 @@
 # Identidad y seguridad de cuentas
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 ## Registro y acceso aprobado · 2026-10-13
 
 - Registro igual para clientes y propietarios: **nombre + WhatsApp + código recibido por WhatsApp**. No se pide correo, contraseña ni Veriff en el alta. WhatsApp queda verificado al completar el código; Veriff sigue pendiente hasta contactar o publicar.

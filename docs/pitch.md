@@ -1,5 +1,8 @@
 # Pitch a owners
 
+> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+
+
 ## En una frase
 Oferta de lanzamiento de bnbtico para 200 casas: las primeras 50 tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Después, la tarifa de referencia es ₡9.900 al mes por casa, cero comisiones por alquiler y sin permanencia.
 
