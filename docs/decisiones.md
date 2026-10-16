@@ -1,3 +1,13 @@
+## 2026-10-15 · Fase 1 construida en `develop`: cuenta con WhatsApp verificado
+
+- **Pantallas** (portadas del prototipo, sin nada de Veriff): registro con nombre y WhatsApp, iniciar sesión, código de 6 dígitos (5 intentos, 5 minutos), «Tu cuenta está lista» con correo de recuperación opcional, Mi cuenta con sello «WhatsApp verificado», editar perfil, cerrar sesión, recuperar cuenta, «Escribile a bnbtico por WhatsApp» con un canal por rol, cambio a modo propietario (sus pantallas son marcadores que indican la fase en que llegan).
+- **Envío del código, intercambiable:** `src/lib/auth/` define una interfaz con dos proveedores. `demo` (sin Supabase configurado): código fijo `123456`, cuentas y sesión en cookies firmadas del navegador. `supabase`: Supabase Auth por teléfono con canal WhatsApp (Twilio Verify) y perfil en `profiles`; se activa solo con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`, pendiente de probar con el proyecto real.
+- **Entornos:** `NEXT_PUBLIC_STAGE=pruebas` muestra la app (pruebas.bnbtico.com y local); sin ella, bnbtico.com sigue en «Muy pronto». `PREVIEW_PASSWORD` protege pruebas. Números de atención en `NEXT_PUBLIC_WA_OWNERS` / `NEXT_PUBLIC_WA_GUESTS`; sin ellos el botón «Abrir WhatsApp» aparece deshabilitado.
+- **Teléfonos:** E.164; 8 dígitos se asumen de Costa Rica (+506). Formato visible `+506 8888 1234`.
+- **Esquema:** `profiles` gana `email` y `description` y política de inserción propia.
+- **Pruebas:** Vitest (teléfono, cookies firmadas, auth demo, dinero) y Playwright móvil (registro → código → cuenta → editar → cerrar → entrar; número sin cuenta; modo propietario y ayuda por rol).
+- **Pendiente de Daniel:** Supabase (proyecto `bnbtico-pruebas`) y Twilio para pasar a envío real; variables en Vercel Preview: `NEXT_PUBLIC_STAGE=pruebas`, `PREVIEW_PASSWORD`, `SESSION_SECRET`.
+
 ## 2026-10-15 · Alojamiento: se vuelve a Vercel (Hobby) para las pruebas
 
 - Cloudflare Workers funciona (probado con Next 16 + OpenNext), pero su panel resultó más complicado de configurar sin ayuda. Se revierte la configuración (commit `3c609b6`) y se sigue en Vercel Hobby, proyecto `bnbtico` sobre la rama `main`, con `bnbtico.vercel.app` ya desplegado.

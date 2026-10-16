@@ -1,7 +1,10 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import logo from "../public/bnbtico-original.png";
+import { appEnabled } from "@/lib/stage";
 
-export default function MuyPronto() {
+export default function Portada() {
+  if (appEnabled()) redirect("/explorar");
   return (
     <main className="soon">
       <div className="soon-card">

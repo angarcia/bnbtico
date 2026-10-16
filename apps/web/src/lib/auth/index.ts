@@ -1,0 +1,41 @@
+// Punto único de acceso a la autenticación desde el servidor (páginas y acciones).
+import "server-only";
+import { cookies } from "next/headers";
+import { createDemoAuth } from "./demo";
+import { createSupabaseAuth } from "./supabase";
+import type { AuthProvider, CookieJar } from "./types";
+
+const secret = () => process.env.SESSION_SECRET || "bnbtico-dev-secret-cambiar-en-produccion";
+
+async function jar(): Promise<CookieJar & { all(): { name: string; value: string }[] }> {
+  const store = await cookies();
+  const base = { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/" };
+  return {
+    get: (name) => store.get(name)?.value ?? null,
+    set: (name, value, options) => {
+      try {
+        store.set(name, value, { ...base, maxAge: options?.maxAge });
+      } catch {
+        /* lectura en un Server Component: no se puede escribir, se ignora */
+      }
+    },
+    delete: (name) => {
+      try {
+        store.delete(name);
+      } catch {
+        /* idem */
+      }
+    },
+    all: () => store.getAll().map((c) => ({ name: c.name, value: c.value })),
+  };
+}
+
+export async function auth(): Promise<AuthProvider> {
+  const j = await jar();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && anonKey && process.env.AUTH_PROVIDER !== "demo") return createSupabaseAuth(j, { url, anonKey, secret: secret() });
+  return createDemoAuth(j, secret());
+}
+
+export type { Account, Role } from "./types";

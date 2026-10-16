@@ -56,3 +56,24 @@ a{color:inherit}
 .soon-card{max-width:420px;width:100%;text-align:center;display:grid;gap:14px;justify-items:center}
 .soon-logo{width:174px;aspect-ratio:1360/355;overflow:hidden;position:relative;background:#fff;border-radius:6px}
 .soon-logo img{position:absolute;width:126.176471%;max-width:none;height:auto;left:-14.338235%;top:-143.661972%}
+
+/* ---------- App móvil ---------- */
+.app{min-height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
+.topbar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;min-height:56px}
+.brand{display:inline-flex;text-decoration:none}
+.brand-logo{display:block;position:relative;width:132px;aspect-ratio:1360/355;overflow:hidden;background:#fff;border-radius:4px}
+.brand-logo img{position:absolute;width:126.176471%;max-width:none;height:auto;left:-14.338235%;top:-143.661972%}
+.view{flex:1;padding:16px 16px calc(84px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:6}
+.tabbar .nav{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:10px;min-width:56px}
+.tabbar .nav[aria-current="page"]{color:var(--primary)}
+.back{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;color:inherit}
+label{font-size:13px;font-weight:700;display:block}
+input:not([type=checkbox]):not([type=file]),select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-height:44px}
+textarea{resize:vertical}
+.btn-link{color:var(--primary);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:6px 0;text-align:left}
+.field-error{color:var(--bad);font-size:13px;font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px}
+.badge-mute{background:var(--surface-2);color:var(--muted)}
+.card hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.center{text-align:center}

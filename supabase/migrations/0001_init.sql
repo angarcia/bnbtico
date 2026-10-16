@@ -26,6 +26,8 @@ create table profiles (
   is_owner boolean not null default false,            -- se activa al publicar la primera casa
   is_admin boolean not null default false,
   is_active boolean not null default true,            -- desactivación por admin, con motivo en admin_actions
+  email text,                                         -- correo de recuperación, opcional
+  description text,                                   -- «contanos un poco sobre vos», opcional
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -225,6 +227,7 @@ $$;
 
 -- Perfil: cada quien el suyo; admin todos.
 create policy profiles_self_select on profiles for select using (id = auth.uid() or is_admin());
+create policy profiles_self_insert on profiles for insert with check (id = auth.uid());
 create policy profiles_self_update on profiles for update using (id = auth.uid()) with check (id = auth.uid());
 
 -- Casas: las activas son públicas (sin número: ver vista listings_public); el dueño ve y edita las suyas; admin todo.
