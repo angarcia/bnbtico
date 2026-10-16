@@ -7,8 +7,8 @@ export const FAKE_OTP = "654321";
 interface User { id: string; phone: string; full_name: string; confirmed: boolean }
 interface ProfileRow { id: string; full_name: string; phone: string; phone_verified_at: string | null; is_owner: boolean; email: string | null; description: string | null }
 
-export function fakeSupabase(options: { trigger?: boolean } = {}) {
-  const trigger = options.trigger ?? true;
+export function fakeSupabase(opts: { trigger?: boolean; rateLimited?: boolean } = {}) {
+  const trigger = opts.trigger ?? true;
   const users = new Map<string, User>(); // por teléfono E.164
   const profiles = new Map<string, ProfileRow>();
   let sessionUser: User | null = null;
@@ -22,6 +22,7 @@ export function fakeSupabase(options: { trigger?: boolean } = {}) {
   const client = {
     auth: {
       async signInWithOtp({ phone, options }: { phone: string; options?: { shouldCreateUser?: boolean; data?: Record<string, unknown> } }) {
+        if (opts.rateLimited) return { data: {}, error: { message: "For security purposes, you can only request this after 42 seconds.", code: "over_sms_send_rate_limit" } };
         let u = users.get(phone);
         if (!u) {
           if (!options?.shouldCreateUser) return { data: {}, error: { message: "Signups not allowed for otp" } };

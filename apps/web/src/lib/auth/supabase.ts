@@ -33,6 +33,8 @@ export function createSupabaseAuth(
     });
     if (error) {
       if (p.mode === "login" && /signups not allowed/i.test(error.message)) return { ok: false, error: "No hay una cuenta con ese WhatsApp. Creá una cuenta." };
+      const seconds = /after (\d+) seconds/i.exec(error.message)?.[1];
+      if (seconds || error.code === "over_sms_send_rate_limit") return { ok: false, error: `Esperá ${seconds ?? 60} segundos antes de pedir otro código.` };
       return { ok: false, error: "No pudimos enviar el código. Revisá el número e intentá de nuevo." };
     }
     await writePending(p);

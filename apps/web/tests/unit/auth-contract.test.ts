@@ -128,6 +128,14 @@ describe("proveedor Supabase", () => {
     expect([...fake.profiles.values()][0]?.full_name).toBe("Ana");
   });
 
+  it("traduce el límite de envíos de Supabase a un aviso con los segundos de espera", async () => {
+    const fake = fakeSupabase({ rateLimited: true });
+    const auth = createSupabaseAuth(memoryJar(), { url: "http://x", anonKey: "k", secret: "secreto" }, { client: fake.client });
+    const started = await auth.start({ mode: "register", name: "Ana", phone: PHONE });
+    expect(started.ok).toBe(false);
+    expect(started.error).toMatch(/42 segundos/);
+  });
+
   it("si el perfil no existe tras verificar, cierra la sesión y avisa", async () => {
     const fake = fakeSupabase({ trigger: false });
     const auth = createSupabaseAuth(memoryJar(), { url: "http://x", anonKey: "k", secret: "secreto" }, { client: fake.client });

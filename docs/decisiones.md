@@ -1,3 +1,10 @@
+## 2026-10-15 · Proveedor Supabase probado de punta a punta en local
+
+- Supabase local (CLI `supabase` como dependencia de desarrollo en la raíz; `pnpm db:start`, `pnpm db:reset`) con la migración `0001_init.sql` aplicada sin errores. Los triggers crean el perfil con el nombre enviado como metadato y marcan `phone_verified_at` al confirmar el teléfono: comprobado en la base tras los flujos.
+- Los cuatro flujos de Playwright pasan contra Supabase real además de contra el demo. Para ello `config.toml` lleva, **solo para local**, un proveedor Twilio Verify de relleno (GoTrue rechaza cualquier código sin proveedor activo), números de prueba con código fijo 123456 (`[auth.sms.test_otp]`) y `max_frequency = "1s"`. En el proyecto alojado se configura Twilio en el panel y se deja el límite por defecto de 60 s.
+- La app traduce el límite de envíos de Supabase («you can only request this after N seconds») a «Esperá N segundos antes de pedir otro código».
+- Pendiente para que sea real: proyecto `bnbtico-pruebas` en Supabase, cuenta de Twilio Verify con canal WhatsApp, variables en Vercel Preview, y la prueba desde un móvil de Costa Rica que decide WhatsApp o SMS.
+
 ## 2026-10-15 · Cierre de la fase 1: revisión de seguridad y robustez de la cuenta
 
 - **Sesión real estable:** `proxy.ts` refresca la sesión de Supabase en cada petición (`src/lib/auth/refresh.ts`); sin eso los Server Components renovaban el token sin poder guardarlo y la sesión caía al caducar (~1 h).

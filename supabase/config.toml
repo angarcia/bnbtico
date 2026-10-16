@@ -25,6 +25,23 @@ enable_signup = true
 # Fase 1: códigos por WhatsApp con Twilio Verify (canal whatsapp). Variables en .env, nunca aquí.
 enable_signup = true
 enable_confirmations = true
+# Solo local: en el proyecto alojado se deja el valor por defecto (60 s entre códigos al mismo número).
+# La app ya impone 30 s y, si Supabase responde con su límite, muestra los segundos que faltan.
+max_frequency = "1s"
+
+# Proveedor local de relleno: GoTrue rechaza cualquier código sin un proveedor activo, aunque el número sea de prueba.
+# No son credenciales reales; las del proyecto alojado se configuran en el panel (Authentication → Providers → Phone).
+[auth.sms.twilio_verify]
+enabled = true
+account_sid = "local-sin-envios"
+message_service_sid = "local-sin-envios"
+auth_token = "local-sin-envios"
+
+# Números de prueba (solo local): no se envía nada y el código siempre es 123456. Así se prueba el proveedor real sin Twilio.
+[auth.sms.test_otp]
+50688881234 = "123456"
+50687770001 = "123456"
+50688889999 = "123456"
 
 # Tope de códigos por hora en todo el proyecto (cada envío cuesta dinero; evita el «SMS pumping»).
 # En el proyecto alojado se ajusta en Authentication → Rate Limits.

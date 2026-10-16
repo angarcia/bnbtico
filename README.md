@@ -27,7 +27,10 @@ pnpm dev                 # http://127.0.0.1:3000
 pnpm test                # Vitest (lógica)
 pnpm test:e2e            # Playwright en viewport móvil (la primera vez: pnpm --filter web exec playwright install chromium)
 pnpm test:prototype      # pruebas del prototipo
+pnpm db:start            # Supabase local en Docker (aplica supabase/migrations); pnpm db:reset borra los datos
 ```
+
+Sin Supabase local la app corre en modo demo (código 123456, cuentas en cookies). Para usar el proveedor real en local, copiá en `apps/web/.env.local` la URL y la `ANON_KEY` que imprime `pnpm db:start`; los números `+506 8888 1234`, `+506 8777 0001` y `+506 8888 9999` son de prueba (`[auth.sms.test_otp]` en `supabase/config.toml`) y aceptan siempre el código 123456 sin enviar nada. Antes de `pnpm test:e2e` contra Supabase, `pnpm db:reset`.
 
 `PREVIEW_PASSWORD` activa la contraseña de `pruebas.bnbtico.com`; vacía en local y en producción.
 
