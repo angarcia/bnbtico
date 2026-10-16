@@ -70,7 +70,7 @@ Proyecto `bnbtico` → **Settings → Environment Variables**, entorno **Preview
 | `NEXT_PUBLIC_STAGE` | `pruebas` |
 | `PREVIEW_PASSWORD` | La contraseña de `pruebas.bnbtico.com` |
 | `NEXT_PUBLIC_WA_OWNERS` / `NEXT_PUBLIC_WA_GUESTS` | Números de atención en E.164, cuando existan |
-| `NEXT_PUBLIC_GA_ID` | vacío, para no ensuciar Analytics con pruebas |
+| `NEXT_PUBLIC_GA_ID` | `off`, para no ensuciar Analytics con pruebas (Vercel no admite valores vacíos; cualquier valor que no sea `G-…` lo desactiva) |
 
 Después, **Deployments → Redeploy** del último despliegue de `develop` (las variables `NEXT_PUBLIC_*` se fijan al compilar).
 
