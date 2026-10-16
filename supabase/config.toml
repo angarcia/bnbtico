@@ -26,6 +26,11 @@ enable_signup = true
 enable_signup = true
 enable_confirmations = true
 
+# Tope de códigos por hora en todo el proyecto (cada envío cuesta dinero; evita el «SMS pumping»).
+# En el proyecto alojado se ajusta en Authentication → Rate Limits.
+[auth.rate_limit]
+sms_sent = 30
+
 [storage]
 enabled = true
 file_size_limit = "10MiB"

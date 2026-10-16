@@ -11,9 +11,10 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar", a
 
   await expect(page).toHaveURL(/\/cuenta\/codigo/);
   await expect(page.getByText("Para +506 8888 1234")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Pedir otro código/ })).toBeDisabled();
   await page.getByLabel("Código de 6 dígitos").fill("000000");
   await page.getByRole("button", { name: "Verificar y continuar" }).click();
-  await expect(page.getByRole("alert")).toContainText("no es correcto");
+  await expect(page.locator(".field-error")).toContainText("no es correcto");
 
   await page.getByLabel("Código de 6 dígitos").fill("123456");
   await page.getByRole("button", { name: "Verificar y continuar" }).click();
@@ -49,7 +50,7 @@ test("iniciar sesión con un número sin cuenta avisa", async ({ page }) => {
   await page.goto("/cuenta?modo=entrar");
   await page.getByLabel("WhatsApp con código de país").fill("8888 9999");
   await page.getByRole("button", { name: "Recibir código" }).click();
-  await expect(page.getByRole("alert")).toContainText("No hay una cuenta");
+  await expect(page.locator(".field-error")).toContainText("No hay una cuenta");
 });
 
 test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol", async ({ page }) => {
@@ -59,6 +60,7 @@ test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol", asyn
   await page.getByRole("button", { name: "Crear cuenta" }).click();
   await page.getByLabel("Código de 6 dígitos").fill("123456");
   await page.getByRole("button", { name: "Verificar y continuar" }).click();
+  await expect(page).toHaveURL(/\/cuenta\/lista/);
   await page.goto("/cuenta");
 
   await page.getByRole("button", { name: "¿Tenés una casa? Publicala" }).click();
@@ -73,10 +75,13 @@ test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol", asyn
   await expect(page).toHaveURL(/\/explorar/);
   await page.goto("/ayuda");
   await expect(page.getByText("buscadores de alojamiento")).toBeVisible();
-});
 
-test("la portada de producción sigue siendo «Muy pronto» sin NEXT_PUBLIC_STAGE", async ({ page }) => {
-  test.skip(process.env.NODE_ENV !== "production", "solo aplica a una build de producción");
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Muy pronto" })).toBeVisible();
+  // Cerrar sesión en modo propietario deja la app en modo cliente para la siguiente persona.
+  await page.goto("/cuenta");
+  await page.getByRole("button", { name: "¿Tenés una casa? Publicala" }).click();
+  await page.getByRole("link", { name: "Cuenta", exact: true }).click();
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await expect(page.getByRole("heading", { name: "Creá tu cuenta" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Explorar" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Mis casas" })).toHaveCount(0);
 });

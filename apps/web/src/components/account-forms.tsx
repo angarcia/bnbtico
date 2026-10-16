@@ -1,8 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { resendAction, saveProfileAction, startAction, verifyAction, type ActionState } from "@/actions/account";
+import { RESEND_COOLDOWN_MS } from "@/lib/auth/cooldown";
 import type { Account } from "@/lib/auth/types";
+
+const RESEND_COOLDOWN_SECONDS = RESEND_COOLDOWN_MS / 1000;
 
 const initial: ActionState = {};
 
@@ -51,9 +54,17 @@ export function EntryForm({ demo, role, mode }: { demo: boolean; role: "guest" |
   );
 }
 
-export function CodeForm({ phone, demo, next }: { phone: string; demo: boolean; next?: string }) {
+export function CodeForm({ phone, demo, next, waitSeconds }: { phone: string; demo: boolean; next?: string; waitSeconds: number }) {
   const [state, action, pending] = useActionState(verifyAction, initial);
   const [resent, setResent] = useState<string | null>(null);
+  const [wait, setWait] = useState(waitSeconds);
+  const [resending, startResend] = useTransition();
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = setTimeout(() => setWait((w) => w - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+  const resendLabel = demo ? "Pedir otro código de ejemplo" : "Pedir otro código";
   return (
     <section className="card stack">
       <h3>Introducí el código</h3>
@@ -73,12 +84,16 @@ export function CodeForm({ phone, demo, next }: { phone: string; demo: boolean; 
       <button
         type="button"
         className="btn btn-ghost"
-        onClick={async () => {
-          const r = await resendAction();
-          setResent(r.ok ? (demo ? "Listo: el código de ejemplo sigue siendo 123456." : "Te enviamos otro código por WhatsApp.") : (r.error ?? "No se pudo reenviar."));
-        }}
+        disabled={wait > 0 || resending}
+        onClick={() =>
+          startResend(async () => {
+            const r = await resendAction();
+            if (r.ok) setWait(RESEND_COOLDOWN_SECONDS);
+            setResent(r.ok ? (demo ? "Listo: el código de ejemplo sigue siendo 123456." : "Te enviamos otro código por WhatsApp.") : (r.error ?? "No se pudo reenviar."));
+          })
+        }
       >
-        {demo ? "Pedir otro código de ejemplo" : "Pedir otro código"}
+        {wait > 0 ? `${resendLabel} (${wait} s)` : resending ? "Enviando…" : resendLabel}
       </button>
       {resent ? <p className="small" role="status">{resent}</p> : null}
     </section>

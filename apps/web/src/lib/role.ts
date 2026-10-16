@@ -13,3 +13,8 @@ export async function setRole(role: Role) {
   const store = await cookies();
   store.set(ROLE, role, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
 }
+
+export async function clearRole() {
+  const store = await cookies();
+  store.delete(ROLE);
+}

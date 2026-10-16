@@ -16,6 +16,8 @@ export interface Pending {
   mode: "register" | "login";
   name?: string;
   phone: string;
+  /** Momento del último envío (ms), para el enfriamiento de 30 s. */
+  sentAt: number;
 }
 
 export interface Result {

@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { normalizePhone } from "@/lib/phone";
-import { setRole } from "@/lib/role";
+import { safeNext } from "@/lib/safe-next";
+import { clearRole, setRole } from "@/lib/role";
 
 export type ActionState = { error?: string; ok?: boolean };
 
@@ -27,9 +28,9 @@ export async function verifyAction(_prev: ActionState, fd: FormData): Promise<Ac
   const pending = await a.pending();
   const result = await a.verify(code);
   if (!result.ok) return { error: result.error };
-  const next = str(fd, "next");
+  const next = safeNext(str(fd, "next"));
   if (pending?.mode === "register") redirect("/cuenta/lista" + (next ? `?next=${encodeURIComponent(next)}` : ""));
-  redirect(next && next.startsWith("/") ? next : "/cuenta");
+  redirect(next ?? "/cuenta");
 }
 
 export async function resendAction(): Promise<ActionState> {
@@ -44,6 +45,7 @@ export async function cancelCodeAction() {
 
 export async function logoutAction() {
   await (await auth()).logout();
+  await clearRole();
   redirect("/cuenta");
 }
 
@@ -59,10 +61,9 @@ export async function saveProfileAction(_prev: ActionState, fd: FormData): Promi
   return result.ok ? { ok: true } : { error: result.error };
 }
 
+/** Cambia el modo de la interfaz. `profiles.is_owner` no se toca aquí: se activa al publicar la primera casa (fase 2). */
 export async function switchRoleAction(fd: FormData) {
   const role = str(fd, "role") === "owner" ? "owner" : "guest";
-  const a = await auth();
-  if (role === "owner") await a.updateProfile({ isOwner: true });
   await setRole(role);
   redirect(role === "owner" ? "/propietario" : "/explorar");
 }

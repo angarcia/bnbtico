@@ -29,7 +29,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ## Estado (2026-10-16)
 
-Fase 0 hecha (falta confirmar DNS en verde y crear Supabase/Twilio). Fase 1 construida en `develop` con auth demo (código 123456) y proveedor Supabase listo para activar. **Siguiente: fase 2.** Google Analytics añadido en el layout raíz.
+Fase 0 hecha (falta confirmar DNS en verde y crear Supabase/Twilio). Fase 1 construida en `develop` con auth demo (código 123456) y proveedor Supabase listo para activar; revisada y endurecida el 2026-10-15 (ver `decisiones.md`: refresco de sesión, perfil por trigger, freno de códigos, `next` seguro). **Siguiente: fase 2.** Google Analytics añadido en el layout raíz.
 
 ## Fases
 

@@ -1,3 +1,16 @@
+## 2026-10-15 · Cierre de la fase 1: revisión de seguridad y robustez de la cuenta
+
+- **Sesión real estable:** `proxy.ts` refresca la sesión de Supabase en cada petición (`src/lib/auth/refresh.ts`); sin eso los Server Components renovaban el token sin poder guardarlo y la sesión caía al caducar (~1 h).
+- **Perfil por trigger:** `profiles` lo crea un trigger en `auth.users` con el nombre enviado como metadato (`full_name`), y otro trigger marca `phone_verified_at` cuando Supabase confirma el teléfono. La app ya no inserta el perfil; si tras verificar no existe, cierra la sesión y avisa.
+- **Códigos con freno:** 30 s entre códigos para el mismo número en los dos proveedores (como el prototipo), botón «Pedir otro código» con cuenta atrás y deshabilitado mientras envía; `sms_sent = 30` por hora en `supabase/config.toml` (en el proyecto alojado: Authentication → Rate Limits). Pendiente: activar Fraud Guard en Twilio Verify.
+- **Seguridad:** el destino `next` tras verificar solo admite rutas internas (`src/lib/safe-next.ts`), nada de `//otro.com`; `SESSION_SECRET` es obligatorio (≥ 32 caracteres) en producción, la app no arranca sin él.
+- **Teléfonos:** sin «+» solo se aceptan móviles de Costa Rica (8 dígitos que empiezan por 5–8, con o sin 506); cualquier otro país lleva su código con «+». Antes un número largo sin «+» se interpretaba con otro código de país.
+- **Demo en pruebas:** una cookie firmada por cuenta (`bnbtico_demo_acct_<número>`) en vez de una sola con todas; con tres cuentas y descripciones largas la cookie única superaba 4 KB y el navegador la descartaba.
+- **Rol:** cerrar sesión restablece el modo cliente; cambiar de modo ya no marca `is_owner` (se activa al publicar la primera casa, fase 2).
+- **PWA tras contraseña:** iconos 192/512, `apple-touch-icon` y manifest quedan fuera de la contraseña de pruebas; el manifest declara los dos iconos.
+- **Pruebas:** contrato de `AuthProvider` ejecutado contra demo y Supabase (cliente simulado en `tests/unit/helpers/fake-supabase.ts`), `proxy`, refresco de sesión, `appEnabled` (sustituye a una prueba e2e que nunca corría), `safeNext`, secreto. En local Playwright usa el Chrome instalado con `CHROMIUM_PATH`.
+- **Pendiente de Daniel:** `SESSION_SECRET` en Vercel Preview (la build de producción falla sin él), `NEXT_PUBLIC_GA_ID=""` en Preview para no ensuciar Analytics con las pruebas.
+
 ## 2026-10-15 · Fase 1 construida en `develop`: cuenta con WhatsApp verificado
 
 - **Pantallas** (portadas del prototipo, sin nada de Veriff): registro con nombre y WhatsApp, iniciar sesión, código de 6 dígitos (5 intentos, 5 minutos), «Tu cuenta está lista» con correo de recuperación opcional, Mi cuenta con sello «WhatsApp verificado», editar perfil, cerrar sesión, recuperar cuenta, «Escribile a bnbtico por WhatsApp» con un canal por rol, cambio a modo propietario (sus pantallas son marcadores que indican la fase en que llegan).

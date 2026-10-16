@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ScreenTitle } from "@/components/shell";
 import { auth } from "@/lib/auth";
+import { safeNext } from "@/lib/safe-next";
 
 export const metadata = { title: "Tu cuenta está lista" };
 
@@ -9,7 +10,7 @@ export default async function Lista({ searchParams }: { searchParams: Promise<{ 
   const account = await (await auth()).current();
   if (!account) redirect("/cuenta");
   const { next } = await searchParams;
-  const continueTo = next && next.startsWith("/") ? next : "/explorar";
+  const continueTo = safeNext(next) ?? "/explorar";
   return (
     <>
       <ScreenTitle title="Tu cuenta está lista" />

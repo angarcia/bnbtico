@@ -1,5 +1,7 @@
-// Números de WhatsApp en E.164. Costa Rica (+506) por defecto para números de 8 dígitos.
+// Números de WhatsApp en E.164. Sin «+» solo se aceptan móviles de Costa Rica (8 dígitos, con o sin 506 delante);
+// cualquier otro país debe llevar su código con «+», para no enviar el código a un número ajeno.
 const CR = "+506";
+const CR_MOBILE = /^[5-8]\d{7}$/;
 
 export function normalizePhone(input: string): string | null {
   const raw = String(input ?? "").trim();
@@ -7,15 +9,11 @@ export function normalizePhone(input: string): string | null {
   const hasPlus = raw.startsWith("+");
   const digits = raw.replace(/\D/g, "");
   if (!digits) return null;
-  if (hasPlus) {
-    if (digits.length < 8 || digits.length > 15) return null;
-    if (digits.startsWith("506") && digits.length !== 11) return null;
-    return "+" + digits;
-  }
-  if (digits.length === 8) return CR + digits;
-  if (digits.length === 11 && digits.startsWith("506")) return "+" + digits;
-  if (digits.length >= 10 && digits.length <= 15) return "+" + digits;
-  return null;
+  if (digits.startsWith("506") && digits.length === 11) return CR_MOBILE.test(digits.slice(3)) ? "+" + digits : null;
+  if (!hasPlus) return digits.length === 8 && CR_MOBILE.test(digits) ? CR + digits : null;
+  if (digits.startsWith("506")) return null;
+  if (digits.length < 8 || digits.length > 15) return null;
+  return "+" + digits;
 }
 
 export function formatPhone(e164: string): string {

@@ -2,10 +2,9 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createDemoAuth } from "./demo";
+import { sessionSecret } from "./secret";
 import { createSupabaseAuth } from "./supabase";
 import type { AuthProvider, CookieJar } from "./types";
-
-const secret = () => process.env.SESSION_SECRET || "bnbtico-dev-secret-cambiar-en-produccion";
 
 async function jar(): Promise<CookieJar & { all(): { name: string; value: string }[] }> {
   const store = await cookies();
@@ -34,8 +33,8 @@ export async function auth(): Promise<AuthProvider> {
   const j = await jar();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (url && anonKey && process.env.AUTH_PROVIDER !== "demo") return createSupabaseAuth(j, { url, anonKey, secret: secret() });
-  return createDemoAuth(j, secret());
+  if (url && anonKey && process.env.AUTH_PROVIDER !== "demo") return createSupabaseAuth(j, { url, anonKey, secret: sessionSecret() });
+  return createDemoAuth(j, sessionSecret());
 }
 
 export type { Account, Role } from "./types";

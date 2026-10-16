@@ -11,5 +11,7 @@ test("la portada carga en móvil con los tokens aplicados y el manifest de la PW
   expect(await ga.count()).toBeGreaterThan(0);
   const manifest = await page.request.get("/manifest.webmanifest");
   expect(manifest.ok()).toBeTruthy();
-  expect((await manifest.json()).display).toBe("standalone");
+  const json = await manifest.json();
+  expect(json.display).toBe("standalone");
+  expect(json.icons.map((i: { sizes: string }) => i.sizes).sort()).toEqual(["192x192", "512x512"]);
 });

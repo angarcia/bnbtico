@@ -67,3 +67,39 @@ describe("autenticación demo (sin envíos reales)", () => {
     expect(account?.email).toBe("ana@ejemplo.com");
   });
 });
+
+describe("cuentas demo en cookies (límite de 4 KB por cookie del navegador)", () => {
+  function browserJar(): CookieJar & { sizes(): number[] } {
+    const store = new Map<string, string>();
+    return {
+      get: (name) => store.get(name) ?? null,
+      set: (name, value) => {
+        if (name.length + value.length > 4096) return; // el navegador descarta la cookie entera
+        store.set(name, value);
+      },
+      delete: (name) => void store.delete(name),
+      sizes: () => [...store.values()].map((v) => v.length),
+    };
+  }
+
+  it("tres cuentas con descripciones largas siguen pudiendo entrar", async () => {
+    const jar = browserJar();
+    const auth = createDemoAuth(jar, "secreto");
+    const phones = ["+50688880001", "+50688880002", "+50688880003"];
+    for (const [i, phone] of phones.entries()) {
+      await auth.start({ mode: "register", name: `Persona ${i}`, phone });
+      await auth.verify(DEMO_CODE);
+      await auth.updateProfile({ description: "x".repeat(1000), email: `persona${i}@ejemplo.com` });
+      await auth.logout();
+    }
+    for (const [i, phone] of phones.entries()) {
+      expect((await auth.start({ mode: "login", phone })).ok).toBe(true);
+      await auth.verify(DEMO_CODE);
+      const account = await auth.current();
+      expect(account?.name).toBe(`Persona ${i}`);
+      expect(account?.description).toBe("x".repeat(1000));
+      await auth.logout();
+    }
+    expect(Math.max(...jar.sizes())).toBeLessThan(4096);
+  });
+});

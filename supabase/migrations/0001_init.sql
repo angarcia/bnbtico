@@ -184,6 +184,28 @@ create table admin_actions (
   created_at timestamptz not null default now()
 );
 
+-- ---------- Perfil automático ----------
+-- El perfil nace con el usuario de auth (la app manda el nombre como metadato al pedir el código) y se marca
+-- «WhatsApp verificado» cuando Supabase confirma el teléfono. Así nunca hay sesión sin perfil.
+create or replace function handle_new_user() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.phone is null then return new; end if;
+  insert into public.profiles (id, full_name, phone, phone_verified_at)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', ''), '+' || new.phone, new.phone_confirmed_at)
+  on conflict (id) do nothing;
+  return new;
+end $$;
+create trigger on_auth_user_created after insert on auth.users for each row execute function handle_new_user();
+
+create or replace function handle_phone_confirmed() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.phone is not null and new.phone_confirmed_at is not null and old.phone_confirmed_at is null then
+    update public.profiles set phone_verified_at = coalesce(phone_verified_at, new.phone_confirmed_at), phone = '+' || new.phone where id = new.id;
+  end if;
+  return new;
+end $$;
+create trigger on_auth_user_phone_confirmed after update of phone_confirmed_at on auth.users for each row execute function handle_phone_confirmed();
+
 -- ---------- updated_at ----------
 create or replace function set_updated_at() returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end $$;
