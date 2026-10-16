@@ -31,7 +31,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ### Fase 0 · Base limpia
 **Objetivo:** que exista un sitio donde desplegar y un repo que diga la verdad.
-**Incluye:** reescritura de `CLAUDE.md` y alineación de docs (hecho el 2026-10-15); limpieza del monorepo; scaffold de `apps/web` con tokens de `design/tokens/tokens.json`, fuentes y logo; Supabase local con la migración inicial reescrita según el prototipo (casas, fotos, usuarios, consultas, suscripciones, calendario); Vercel conectado al repo; dominio bnbtico.com con «muy pronto» y `pruebas.bnbtico.com` con contraseña; Vitest y Playwright configurados con una prueba de humo cada uno.
+**Incluye:** reescritura de `CLAUDE.md` y alineación de docs (hecho el 2026-10-15); limpieza del monorepo; scaffold de `apps/web` con tokens de `design/tokens/tokens.json`, fuentes y logo; Supabase local con la migración inicial reescrita según el prototipo (casas, fotos, usuarios, consultas, suscripciones, calendario); Vercel conectado al repo; dominio bnbtico.com con «muy pronto» y `pruebas.bnbtico.com` (rama `develop`) con contraseña y `pruebas.bnbtico.com` con contraseña; Vitest y Playwright configurados con una prueba de humo cada uno.
 **No incluye:** ninguna pantalla del producto.
 **Hecho cuando:** `pnpm dev` levanta la web vacía con los tokens aplicados, `pnpm test` pasa, bnbtico.com responde con «muy pronto» y pruebas.bnbtico.com pide contraseña y muestra la misma web.
 
