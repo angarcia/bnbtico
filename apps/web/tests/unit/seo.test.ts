@@ -10,8 +10,8 @@ describe("robots y sitemap", () => {
     expect(robotsFor({ NODE_ENV: "production", NEXT_PUBLIC_STAGE: "pruebas" }).rules).toEqual({ userAgent: "*", disallow: "/" });
     expect(robotsFor({ NODE_ENV: "development" }).rules).toEqual({ userAgent: "*", disallow: "/" });
   });
-  it("el sitemap incluye la portada con el dominio real", () => {
-    const urls = sitemap().map((e) => e.url);
+  it("el sitemap incluye la portada con el dominio real", async () => {
+    const urls = (await sitemap()).map((e) => e.url);
     expect(urls).toContain("https://bnbtico.com/");
   });
 });

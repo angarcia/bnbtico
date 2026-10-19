@@ -1,6 +1,6 @@
 import { devices, expect, test, type Browser, type Page } from "@playwright/test";
 import { registerAndEnter, switchToOwner } from "./helpers/session";
-import { hasSupabase, makeAdmin, resetListings } from "./helpers/supabase-admin";
+import { hasSupabase, makeAdmin, publicIdOf, resetListings } from "./helpers/supabase-admin";
 
 // Fase 2 · publicar una casa, aprobarla y verla. Contra Supabase local (pnpm db:start); se salta sin la clave de servicio.
 // El aviso del formulario (Next añade su propio role="alert" para anunciar rutas).
@@ -148,6 +148,44 @@ test("el admin revisa: pedir cambios exige motivo; aprobar activa la casa", asyn
   await page.goto("/admin");
   await expect(page.getByText("0 pendientes")).toBeVisible();
   await page.context().close();
+});
+
+test("la ficha pública abre sin sesión con metadatos para WhatsApp y moneda", async ({ browser }) => {
+  const ctx = await browser.newContext(devices["Pixel 7"]);
+  const page = await ctx.newPage();
+  const publicId = await publicIdOf("Casa Manzanillo, a pie de playa");
+  await page.goto(`/casa/${publicId.toLowerCase()}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
+  await expect(page.getByText("✓ WhatsApp verificado")).toBeVisible();
+  await expect(page.getByText(`Ref ${publicId}`)).toBeVisible();
+  await expect(page.getByText("Manzanillo, Talamanca, Limón")).toBeVisible();
+  // Lo que ofrece: solo lo que sí tiene.
+  await expect(page.getByText("5 personas")).toBeVisible();
+  await expect(page.getByText("Frente al mar")).toBeVisible();
+  await expect(page.getByText("Parqueo · gratuito")).toBeVisible();
+  await expect(page.getByText("Piscina")).toHaveCount(0);
+  // Precio una vez en la barra fija, mensual «consultar», contacto deshabilitado hasta la fase 3.
+  await expect(page.locator(".cta-bar")).toContainText("₡85 000");
+  await expect(page.getByText("Mensual: consultar precio con el propietario")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Contactar por WhatsApp/ })).toBeDisabled();
+  await expect(page.getByText("Disponible pronto")).toBeVisible();
+  await expect(page.getByText("Identidad")).toHaveCount(0);
+  await expect(page.locator(".note")).toHaveCount(1);
+  // Metadatos para la vista previa de WhatsApp.
+  expect(await page.locator('meta[property="og:title"]').getAttribute("content")).toContain("Casa Manzanillo, a pie de playa");
+  expect(await page.locator('meta[property="og:description"]').getAttribute("content")).toBe("Casa en Manzanillo, Limón · 5 personas · ₡85\u00a0000 por noche · orientativo");
+  expect(await page.locator('meta[property="og:image"]').getAttribute("content")).toMatch(/\/storage\/v1\/object\/public\/listings\//);
+  expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toBe(`https://bnbtico.com/casa/${publicId}`);
+  // Dólares solo como visualización.
+  await page.getByRole("button", { name: "$ Dólares" }).click();
+  await expect(page.locator(".cta-bar")).toContainText("$167");
+  await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
+  // Mapa aproximado.
+  await expect(page.locator(".leaflet-container")).toBeVisible();
+  // Enlace inválido → 404.
+  const r = await page.goto("/casa/CT-0001");
+  expect(r?.status()).toBe(404);
+  await ctx.close();
 });
 
 /** Contexto nuevo con la cuenta admin de prueba (8899 0001), marcada con seed_admin. */

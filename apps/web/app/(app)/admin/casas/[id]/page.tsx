@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReviewForm } from "@/components/admin/review-form";
+import { ApproxMap } from "@/components/listing/approx-map";
 import { Gallery } from "@/components/listing/gallery";
 import { StatusBadge } from "@/components/listing/status-badge";
 import { ScreenTitle } from "@/components/shell";
@@ -61,8 +62,8 @@ export default async function RevisarCasa({ params }: { params: Promise<{ id: st
           <Row label="Máximo de personas" value={l.capacity} />
           <Row label="Habitaciones" value={l.bedrooms} />
           <Row label="Baños" value={l.bathrooms} />
-          <Row label="Ubicación" value={l.lat !== null && l.lng !== null ? `${l.lat.toFixed(4)}, ${l.lng.toFixed(4)}` : null} />
         </dl>
+        {l.lat !== null && l.lng !== null ? <ApproxMap lat={l.lat} lng={l.lng} /> : <p className="note">Sin ubicación en el mapa.</p>}
         <p className="xs muted">Sin dirección exacta.</p>
       </section>
 

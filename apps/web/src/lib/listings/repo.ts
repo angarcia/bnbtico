@@ -3,7 +3,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Result } from "@/lib/auth/types";
 import { PHOTO_BUCKET, photoUrl } from "@/lib/supabase/storage";
-import { DEFAULT_PROVINCE, normalize, type Listing, type ListingDraft, type Photo } from "./schema";
+import { approximate } from "./geo";
+import { DEFAULT_PROVINCE, normalize, type Feature, type Kind, type Listing, type ListingDraft, type MonthlyMode, type Photo } from "./schema";
 
 type Row = Record<string, unknown>;
 
@@ -133,6 +134,88 @@ export async function deleteDraft(db: SupabaseClient, id: string): Promise<Resul
 export async function submit(db: SupabaseClient, id: string): Promise<Result> {
   const { error } = await db.rpc("submit_listing", { p_listing: id });
   return error ? fail(error.message, "No pudimos enviar el anuncio. Intentá de nuevo.") : { ok: true };
+}
+
+// ---------- Público (vista listings_public, legible con la clave anónima) ----------
+export interface PublicListing {
+  publicId: string;
+  kind: Kind;
+  title: string;
+  description: string;
+  province: string;
+  canton: string;
+  zone: string;
+  lat: number | null; // ya aproximados (~500 m), nunca el punto exacto
+  lng: number | null;
+  capacity: number;
+  bedrooms: number;
+  bathrooms: number;
+  features: Feature[];
+  parkingPaid: boolean | null;
+  nightlyPriceCrc: number;
+  minNights: number;
+  acceptsMonthly: boolean;
+  monthlyMode: MonthlyMode | null;
+  monthlyPriceCrc: number | null;
+  minMonths: number | null;
+  available: boolean;
+  ownerName: string;
+  ownerWhatsappVerified: boolean;
+  createdAt: string;
+  photos: Photo[];
+}
+
+const PUBLIC_COLUMNS =
+  "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, features, parking_paid, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, created_at, owner_name, owner_whatsapp_verified";
+
+async function publicFromRow(db: SupabaseClient, row: Row): Promise<PublicListing> {
+  const photos = await listPhotos(db, String(row.id));
+  const publicId = String(row.public_id);
+  const exact = row.lat !== null && row.lng !== null ? approximate(Number(row.lat), Number(row.lng), publicId) : null;
+  return {
+    publicId,
+    kind: (row.kind as Kind) ?? "casa",
+    title: String(row.title),
+    description: String(row.description ?? ""),
+    province: String(row.province),
+    canton: String(row.canton ?? ""),
+    zone: String(row.zone ?? ""),
+    lat: exact?.lat ?? null,
+    lng: exact?.lng ?? null,
+    capacity: Number(row.capacity),
+    bedrooms: Number(row.bedrooms),
+    bathrooms: Number(row.bathrooms),
+    features: (row.features as Feature[]) ?? [],
+    parkingPaid: (row.parking_paid as boolean | null) ?? null,
+    nightlyPriceCrc: Number(row.nightly_price_crc),
+    minNights: Number(row.min_nights ?? 1),
+    acceptsMonthly: row.accepts_monthly === true,
+    monthlyMode: (row.monthly_mode as MonthlyMode | null) ?? null,
+    monthlyPriceCrc: row.monthly_price_crc === null || row.monthly_price_crc === undefined ? null : Number(row.monthly_price_crc),
+    minMonths: row.min_months === null || row.min_months === undefined ? null : Number(row.min_months),
+    available: row.available !== false,
+    ownerName: String(row.owner_name ?? "Propietario"),
+    ownerWhatsappVerified: row.owner_whatsapp_verified === true,
+    createdAt: String(row.created_at),
+    photos,
+  };
+}
+
+/** Ficha pública por `CT-####`; null si no está activa. */
+export async function getPublic(db: SupabaseClient, publicId: string): Promise<PublicListing | null> {
+  const { data } = await db.from("listings_public").select(PUBLIC_COLUMNS).eq("public_id", publicId).maybeSingle();
+  return data ? publicFromRow(db, data as Row) : null;
+}
+
+/** 'active' | 'blocked' (existe pero no se muestra) | null (no existe). */
+export async function linkState(db: SupabaseClient, publicId: string): Promise<"active" | "blocked" | null> {
+  const { data } = await db.rpc("listing_link_state", { p_public_id: publicId });
+  return data === "active" || data === "blocked" ? data : null;
+}
+
+export async function listActivePublicIds(db: SupabaseClient): Promise<{ publicId: string; updatedAt: string }[]> {
+  const { data } = await db.from("listings_public").select("public_id, updated_at").order("updated_at", { ascending: false }).limit(1000);
+  return ((data as Row[] | null) ?? []).map((r) => ({ publicId: String(r.public_id), updatedAt: String(r.updated_at) }));
 }
 
 // ---------- Admin ----------
