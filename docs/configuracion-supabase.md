@@ -29,7 +29,7 @@ pnpm exec supabase link --project-ref <ref>
 pnpm exec supabase db push
 ```
 
-`login` abre el navegador para autorizar la CLI. `link` pide la contraseña de la base del paso 1. `db push` aplica `supabase/migrations/0001_init.sql` (tablas, RLS, triggers de perfil). Para comprobarlo: **Table Editor** debe mostrar `profiles`, `listings`, etc., y **Database → Triggers** los dos triggers `on_auth_user_*` sobre `auth.users`.
+`login` abre el navegador para autorizar la CLI. `link` pide la contraseña de la base del paso 1. `db push` aplica todas las migraciones de `supabase/migrations/` que falten (la inicial y las de cada fase). Para comprobarlo: **Table Editor** debe mostrar `profiles`, `listings`, etc., y **Database → Triggers** los dos triggers `on_auth_user_*` sobre `auth.users`.
 
 > **No ejecutes `supabase config push`.** El `config.toml` del repo tiene un Twilio de relleno, números de prueba y un límite de 1 s que son **solo para local**. El proyecto alojado se configura en el panel, como sigue.
 
@@ -88,3 +88,17 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 - Los cambios de esquema van en **migraciones nuevas** (`pnpm exec supabase migration new <nombre>`), nunca editando `0001_init.sql`.
 - Los datos de prueba se borran antes del lanzamiento (`docs/plan-implementacion.md`, fase 7).
 - El proyecto de producción se crea en la fase 7 repitiendo estos pasos con `bnbtico-prod`, variables en el entorno **Production** de Vercel y Twilio en modo producción o la API de Meta.
+
+## 8. Fase 2: casas, fotos y admin
+
+1. **Migraciones.** Desde la raíz: `pnpm exec supabase db push`. Aplica `…_fase2_casas.sql` (columnas, RPCs, trigger de protección, bucket y políticas de Storage, vista pública) y `…_fase2_tipo_sin_default.sql`. Comprobar en **Database → Functions** que existen `submit_listing`, `review_listing`, `listing_link_state` y `seed_admin`.
+2. **Bucket de fotos.** La migración inserta el bucket `listings` en `storage.buckets`. Si **Storage** no lo muestra, crearlo a mano: nombre `listings`, público, límite 10 MiB, tipos `image/jpeg` e `image/webp`. Las políticas ya están en la migración.
+3. **Tu cuenta como admin.** Creá tu cuenta en pruebas.bnbtico.com con tu WhatsApp y después, en **SQL Editor**:
+
+   ```sql
+   select seed_admin('+506XXXXXXXX');
+   ```
+
+   (el editor corre como `postgres`, así que puede llamarla; `anon` y `authenticated` no). Al volver a entrar, Mi cuenta muestra «Revisión de anuncios · admin» y `/admin` abre la cola.
+4. **Comprobar desde el móvil:** publicar una casa con fotos de la cámara → aprobarla desde tu cuenta admin → mandar el enlace `pruebas.bnbtico.com/casa/CT-####` por WhatsApp a otro teléfono y ver la vista previa y la ficha.
+

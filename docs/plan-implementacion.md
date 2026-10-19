@@ -29,21 +29,21 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ## Estado (2026-10-19)
 
-**Hecho.** Fase 0 y fase 1 construidas y revisadas en `develop`. **Siguiente: fase 2** (publicar una casa, aprobarla y verla).
+**Hecho.** Fases 0, 1 y 2 construidas y revisadas en `develop`. **Siguiente: fase 3** (contacto por WhatsApp).
 
-- **Cuenta con WhatsApp verificado** completa, con dos proveedores intercambiables en `apps/web/src/lib/auth/`: `demo` (código 123456, cookies firmadas, sin Supabase) y `supabase` (Supabase Auth por teléfono + `profiles`). Endurecida el 2026-10-15: refresco de sesión en `proxy.ts`, perfil creado por triggers en `auth.users`, 30 s entre códigos, `next` seguro, `SESSION_SECRET` obligatorio en producción, una cookie demo por cuenta (detalle en `decisiones.md`).
-- **Supabase de pruebas conectado.** Proyecto `bnbtico-pruebas` (ref `bpxiggdzgzolcazaaboj`) enlazado al repo (`pnpm exec supabase link` ya hecho; `pnpm exec supabase db push` para nuevas migraciones), migración `0001` aplicada, Phone con Twilio Verify y tres números de prueba (`8888 1234`, `8777 0001`, `8888 9999`, código 123456). Registro verificado desde pruebas.bnbtico.com el 2026-10-16. **Falta Twilio real** para números de verdad (`docs/configuracion-supabase.md`, paso 3): es lo único pendiente para dar la fase 1 por cerrada según su criterio de «hecho».
-- **Supabase local** en Docker: `pnpm db:start` / `pnpm db:reset`; `apps/web/.env.local` apunta a él. Playwright pasa contra demo y contra Supabase local.
-- **Portada de bnbtico.com** (rama `main`, commit `4cba80e`): foto de Playa Negra a pantalla completa, logo sin fondo (`public/bnbtico-logo.png`, derivado del original), título y H1 con palabras clave, tres párrafos de contenido, Open Graph/Twitter con `public/og.jpg`, canonical, `robots.ts` (indexa solo bnbtico.com), `sitemap.ts`, JSON-LD. En pruebas y local la raíz redirige a `/explorar`; `/?pronto=1` fuerza la portada. Pendiente de Daniel: alta en Google Search Console y envío del sitemap.
-- **Vercel**: `main` → bnbtico.com (solo portada), `develop` → pruebas.bnbtico.com con `PREVIEW_PASSWORD`, Supabase y `NEXT_PUBLIC_GA_ID=off`. Las ramas se mantienen alineadas trayendo `main` a `develop` tras cada cambio de portada.
-- **Para trabajar en local**: `.claude/launch.json` arranca `pnpm --filter web dev`; Playwright usa el Chrome instalado con `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`; `next dev` genera `apps/web/AGENTS.md`, que no se versiona.
+- **Cuenta con WhatsApp verificado** completa, con dos proveedores intercambiables en `apps/web/src/lib/auth/`: `demo` (código 123456, cookies firmadas, sin Supabase) y `supabase` (Supabase Auth por teléfono + `profiles`). Endurecida el 2026-10-15 (detalle en `decisiones.md`). **Falta Twilio real** para números de verdad (`docs/configuracion-supabase.md`, paso 3).
+- **Casas (fase 2):** formulario de publicación en cinco pasos con borrador en base de datos, fotos a Storage, admin en `/admin` (perfiles con `is_admin`), ficha pública `casa/CT-####` con vista previa para WhatsApp y mapa aproximado, Explorar con filtros en la URL y Limón por defecto, Mis casas con detalle de gestión. Módulo `apps/web/src/lib/listings/`; migraciones `fase2_casas` y `fase2_tipo_sin_default`. Decisiones y desvíos en `decisiones.md` (2026-10-19). Especificación y plan en `docs/superpowers/`.
+- **Supabase de pruebas** (`bnbtico-pruebas`, ref `bpxiggdzgzolcazaaboj`) enlazado al repo; migración `0001` aplicada. **Pendiente:** `pnpm exec supabase db push` con las migraciones de la fase 2, bucket `listings` y marcar la cuenta admin (`docs/configuracion-supabase.md`, paso 8).
+- **Supabase local** en Docker: `pnpm db:start` / `pnpm db:reset`; `apps/web/.env.local` apunta a él y lleva `SUPABASE_SERVICE_ROLE_KEY` (solo para las pruebas). Números de prueba `8888 1234`, `8777 0001`, `8888 9999` y `8899 0001` (admin) con código 123456. Tras tocar `config.toml`, `supabase stop && supabase start`.
+- **Portada de bnbtico.com** (rama `main`): foto de Playa Negra, SEO, sitemap (ahora también con las fichas activas), JSON-LD. Pendiente de Daniel: Search Console.
+- **Vercel**: `main` → bnbtico.com (solo portada), `develop` → pruebas.bnbtico.com con `PREVIEW_PASSWORD`, Supabase y `NEXT_PUBLIC_GA_ID=off`.
+- **Para trabajar en local**: `.claude/launch.json` arranca `pnpm --filter web dev`; Playwright usa el Chrome instalado con `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` y un solo worker; `next dev` genera `apps/web/AGENTS.md`, que no se versiona.
 
-### Fase 2 · por dónde empezar
+### Fase 3 · por dónde empezar
 
-1. Repasar en el prototipo (vista Móvil) `publication.js`, `formulario-simple.js`, `caracteristicas.js`, `admin-review.js`, `explorar-filtros.js`, `zona-caribe.js`, `ficha-movil.js`, `mis-casas.js`, `moneda.js` y sus pruebas en `tests/prototype/`.
-2. El esquema ya existe en `supabase/migrations/0001_init.sql` (`listings`, `listing_photos`, `listing_rates`, `listing_days`, vista `listings_public`, RLS). Cambios en **migraciones nuevas** (`pnpm exec supabase migration new <nombre>`), nunca editando `0001`.
-3. Orden sugerido: formulario de publicación (sin fotos) → fotos a Storage → admin mínimo (cola y aprobar/cambios/rechazar) → ficha pública `casa/CT-####` con vista previa para WhatsApp → Explorar con filtros y Limón por defecto → Mis casas. Cada paso con Vitest/Playwright primero y un commit.
-4. `is_owner` se activa al publicar la primera casa (hoy nadie lo pone). El rol de la interfaz es la cookie `bnbtico_role` (`src/lib/role.ts`).
+1. Repasar en el prototipo (vista Móvil) `contacto-hoja.js`, `consultas-directo.js`, `listing-whatsapp.js`, `house-controls.js` y sus pruebas en `tests/prototype/`; reglas en `docs/contacto-whatsapp.md` (donde hable de solicitud/aceptación, manda `CLAUDE.md`: WhatsApp directo).
+2. El botón «Contactar por WhatsApp» ya existe deshabilitado en la ficha (`app/(app)/casa/[publicId]/page.tsx`); la tabla `inquiries` está en `0001`. El número de la casa (`listings.whatsapp_phone`) se copia del perfil al crear; editarlo por casa con verificación propia entra en esta fase.
+3. Orden sugerido: hoja de contacto con fechas/personas y mensaje redactado → cuenta obligatoria para contactar (volver a la hoja con lo escrito) → registro de la consulta y apertura de `wa.me` → Mis consultas del propietario → favoritos → WhatsApp por casa.
 
 ## Fases
 
