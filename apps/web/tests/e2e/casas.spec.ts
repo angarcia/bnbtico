@@ -16,7 +16,7 @@ test.beforeAll(async () => {
 test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }) => {
   await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
   await switchToOwner(page);
-  await page.getByRole("link", { name: "Publicar casa" }).click();
+  await page.getByRole("button", { name: "Publicar casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   await expect(page.getByText("Paso 1 de 5")).toBeVisible();
 
@@ -63,9 +63,12 @@ test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }
   await expect(page.getByLabel("Tipo de alojamiento *")).toHaveValue("casa");
   await expect(page.getByLabel("¿Aceptás alquiler mensual? *")).toHaveValue("yes");
 
-  // Volver a /propietario/publicar ofrece seguir con el borrador.
-  await page.goto("/propietario/publicar");
+  // Volver a publicar ofrece seguir con el borrador; abrir la página no crea borradores.
+  await page.goto("/propietario");
+  await page.getByRole("button", { name: "Publicar casa" }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar$/);
   await expect(page.getByText("Tenés un borrador sin enviar")).toBeVisible();
+  await page.reload();
   await page.getByRole("button", { name: "Seguir con el borrador" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
 
@@ -109,18 +112,21 @@ test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }
   await expect(page.getByText("₡85 000")).toBeVisible();
   await expect(page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
 
-  // Un borrador nuevo se puede descartar.
-  await page.getByRole("link", { name: "Nueva" }).click();
+  // Un borrador nuevo se puede descartar (con confirmación).
+  await page.getByRole("button", { name: "Nueva" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   await page.goto("/propietario/casas");
   await expect(page.getByText("Borrador sin título")).toBeVisible();
+  page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Descartar" }).click();
   await expect(page.getByText("Borrador sin título")).toHaveCount(0);
 });
 
-test("un usuario normal no ve /admin", async ({ page }) => {
+test("un usuario con sesión pero sin is_admin no ve /admin", async ({ page }) => {
+  await registerAndEnter(page, "Ana Prueba", "8888 1234");
   const response = await page.goto("/admin");
   expect(response?.status()).toBe(404);
+  await expect(page.getByRole("link", { name: /Revisión de anuncios/ })).toHaveCount(0);
 });
 
 test("el admin revisa: pedir cambios exige motivo; aprobar activa la casa", async ({ browser }) => {
@@ -241,6 +247,13 @@ test("detalle del propietario: no disponible, compartir, editar y reenviar", asy
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Editar" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+  // El borrador de una casa que ya estuvo publicada no se puede descartar.
+  await page.goto("/propietario/casas");
+  await expect(page.getByText("Estuvo publicada")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descartar" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" }).click();
+  await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Seguir" }).click();
   await guest.goto(`/casa/${publicId}`);
   await expect(guest.getByText("Este enlace ya no está activo")).toBeVisible();
   await guest.context().close();

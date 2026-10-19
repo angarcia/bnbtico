@@ -1,6 +1,7 @@
 // Integración contra Supabase local (pnpm db:start). Se salta sin SUPABASE_SERVICE_ROLE_KEY en apps/web/.env.local.
 // Comprueba la migración de la fase 2: RLS, trigger de protección, RPCs de envío y revisión, vista pública y seed de admin.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { opts, signIn as signInWith } from "./helpers";
 import { beforeAll, describe, expect, it } from "vitest";
 
 try {
@@ -17,16 +18,7 @@ const OWNER = "+50687770001";
 const OTHER = "+50688881234";
 const ADMIN = "+50688990001";
 
-const opts = { auth: { persistSession: false, autoRefreshToken: false } };
-
-async function signIn(phone: string, name: string): Promise<SupabaseClient> {
-  const client = createClient(url!, anonKey!, opts);
-  const sent = await client.auth.signInWithOtp({ phone, options: { shouldCreateUser: true, data: { full_name: name } } });
-  if (sent.error) throw sent.error;
-  const verified = await client.auth.verifyOtp({ phone, token: "123456", type: "sms" });
-  if (verified.error) throw verified.error;
-  return client;
-}
+const signIn = (phone: string, name: string) => signInWith(url!, anonKey!, phone, name);
 
 describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
   let admin: SupabaseClient; // clave de servicio
@@ -61,7 +53,7 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
   async function newDraft(client: SupabaseClient, uid: string) {
     const { data, error } = await client
       .from("listings")
-      .insert({ owner_id: uid, title: "", province: "Limón", capacity: 1, bedrooms: 1, bathrooms: 1, nightly_price_crc: 1, whatsapp_phone: OWNER })
+      .insert({ owner_id: uid, title: "", description: "", province: "Limón", whatsapp_phone: OWNER })
       .select("id, public_id, status")
       .single();
     if (error) throw error;
@@ -180,8 +172,12 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
     expect((await owner.rpc("submit_listing", { p_listing: second.id })).data).toBe("review");
     const notDeleted = await owner.from("listings").delete().eq("id", second.id).select("id");
     expect(notDeleted.data).toEqual([]);
-    const deleted = await owner.from("listings").delete().eq("id", listingId).select("id");
-    expect(deleted.data).toEqual([{ id: listingId }]);
+    // El borrador que fue una casa publicada conserva su CT-####: tampoco se borra.
+    const wasPublished = await owner.from("listings").delete().eq("id", listingId).select("id");
+    expect(wasPublished.data).toEqual([]);
+    const fresh = await newDraft(owner, ownerId);
+    const deleted = await owner.from("listings").delete().eq("id", fresh.id).select("id");
+    expect(deleted.data).toEqual([{ id: fresh.id }]);
   });
 
   it("seed_admin no es ejecutable por un usuario normal", async () => {

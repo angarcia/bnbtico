@@ -21,6 +21,18 @@ describe("contraseña de pruebas.bnbtico.com", () => {
   });
 });
 
+describe("vista previa de WhatsApp en pruebas", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("el rastreador de WhatsApp lee /casa/* sin contraseña; el resto sigue cerrado", async () => {
+    vi.stubEnv("PREVIEW_PASSWORD", "clave");
+    const wa = { headers: { "user-agent": "WhatsApp/2.23.20.0 A" } };
+    expect((await proxy(new NextRequest("http://127.0.0.1/casa/CT-1001", wa))).status).toBe(200);
+    expect((await proxy(new NextRequest("http://127.0.0.1/casa/CT-1001", { headers: { "user-agent": "facebookexternalhit/1.1" } }))).status).toBe(200);
+    expect((await proxy(new NextRequest("http://127.0.0.1/explorar", wa))).status).toBe(401);
+    expect((await proxy(new NextRequest("http://127.0.0.1/casa/CT-1001", { headers: { "user-agent": "Mozilla/5.0" } }))).status).toBe(401);
+  });
+});
+
 describe("sondas de disponibilidad", () => {
   it("HEAD / responde 200 sin redirigir (panel de vista previa, monitores)", async () => {
     vi.stubEnv("PREVIEW_PASSWORD", "");

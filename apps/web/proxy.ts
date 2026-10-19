@@ -11,7 +11,7 @@ export async function proxy(request: NextRequest) {
   if (request.method === "HEAD" && request.nextUrl.pathname === "/") return new NextResponse(null, { status: 200 });
   if (PUBLIC_ASSETS.has(request.nextUrl.pathname)) return NextResponse.next();
   const password = process.env.PREVIEW_PASSWORD;
-  if (password && !authorized(request, password)) {
+  if (password && !authorized(request, password) && !linkPreviewCrawler(request)) {
     return new NextResponse("Acceso restringido", {
       status: 401,
       headers: { "WWW-Authenticate": 'Basic realm="bnbtico pruebas", charset="UTF-8"' },
@@ -20,6 +20,13 @@ export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request });
   await refreshSupabaseSession(request, response);
   return response;
+}
+
+// Solo las fichas públicas, y solo para los rastreadores que generan la vista previa del enlace (WhatsApp usa el de Facebook).
+// Así el enlace compartido desde pruebas.bnbtico.com muestra foto y título; el resto de la app sigue tras la contraseña.
+const PREVIEW_CRAWLER = /WhatsApp|facebookexternalhit|Twitterbot|TelegramBot/i;
+function linkPreviewCrawler(request: NextRequest): boolean {
+  return request.nextUrl.pathname.startsWith("/casa/") && PREVIEW_CRAWLER.test(request.headers.get("user-agent") ?? "");
 }
 
 function authorized(request: NextRequest, password: string): boolean {

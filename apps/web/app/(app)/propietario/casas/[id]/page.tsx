@@ -16,6 +16,7 @@ export const metadata = { title: "Mi casa" };
 const STATUS_TEXT: Record<string, string> = {
   draft: "Todavía no la enviaste a revisión.",
   review: "La estamos revisando. Te avisamos cuando esté lista.",
+  changes: "Revisá la nota de bnbtico, corregí y reenviá.",
   active: "Visible en bnbtico. Compartí el enlace con tus clientes.",
   rejected: "Este anuncio fue rechazado. Si querés, publicá uno nuevo.",
   payment_due: "Fuera del catálogo hasta regularizar la suscripción.",
@@ -50,7 +51,7 @@ export default async function CasaPropietario({ params }: { params: Promise<{ id
           <b className="num">{l.nightlyPriceCrc ? `${formatCRC(l.nightlyPriceCrc)} / noche` : "Sin precio"}</b>
           <StatusBadge status={l.status} available={l.available} />
         </div>
-        <p className="small muted">{STATUS_TEXT[l.status]}</p>
+        <p className="small muted">{l.status === "draft" && l.reviewedAt ? "Estuvo publicada. Estás editándola: al enviarla volverá a revisión." : STATUS_TEXT[l.status]}</p>
         {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <div className="note small">Nota de bnbtico: {l.reviewNote}</div> : null}
         <span className="xs muted num">{l.publicId}</span>
       </section>
@@ -87,10 +88,12 @@ export default async function CasaPropietario({ params }: { params: Promise<{ id
         {l.status === "draft" ? (
           <>
             <Link href={`/propietario/publicar/${l.id}/1`} className="btn btn-primary">Seguir</Link>
-            <form action={deleteDraftAction}>
-              <input type="hidden" name="id" value={l.id} />
-              <button className="btn btn-ghost" type="submit" style={{ width: "100%" }}>Descartar borrador</button>
-            </form>
+            {l.reviewedAt ? null : (
+              <ConfirmForm action={deleteDraftAction} message="¿Descartar este borrador? No se puede deshacer.">
+                <input type="hidden" name="id" value={l.id} />
+                <button className="btn btn-ghost" type="submit" style={{ width: "100%" }}>Descartar borrador</button>
+              </ConfirmForm>
+            )}
           </>
         ) : null}
         {l.status === "review" ? <p className="small muted">Mientras la revisamos no se puede editar.</p> : null}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { deleteDraftAction } from "@/actions/listings";
+import { ConfirmForm } from "@/components/confirm-form";
 import { formatCRC } from "@/lib/money";
 import type { Listing } from "@/lib/listings/schema";
 import { ShareButton } from "./share-button";
@@ -29,13 +30,16 @@ export function OwnerCard({ listing: l, shareBase }: { listing: Listing; shareBa
         {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? (
           <div className="note small">Nota de bnbtico: {l.reviewNote}</div>
         ) : null}
+        {l.status === "draft" && l.reviewedAt ? <span className="xs muted">Estuvo publicada: al enviarla volverá a revisión.</span> : null}
         {l.status === "draft" ? (
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
             <Link href={`/propietario/publicar/${l.id}/1`} className="btn btn-primary" style={{ flex: 1 }}>Seguir</Link>
-            <form action={deleteDraftAction}>
-              <input type="hidden" name="id" value={l.id} />
-              <button className="btn btn-ghost" type="submit">Descartar</button>
-            </form>
+            {l.reviewedAt ? null : (
+              <ConfirmForm action={deleteDraftAction} message="¿Descartar este borrador? No se puede deshacer.">
+                <input type="hidden" name="id" value={l.id} />
+                <button className="btn btn-ghost" type="submit">Descartar</button>
+              </ConfirmForm>
+            )}
           </div>
         ) : null}
         {l.status === "active" ? (

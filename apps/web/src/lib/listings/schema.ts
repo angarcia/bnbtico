@@ -2,6 +2,8 @@
 // Portado del prototipo (publication.js, formulario-simple.js, caracteristicas.js, moneda.js, copy-mensual.js).
 // Dinero en colones enteros. Sin uso de baños, sin selector de moneda, «mensual» en vez de «largo plazo».
 
+import { inCostaRica } from "./geo";
+
 export type Kind = "casa" | "apartamento" | "habitacion";
 export type Feature = "pool" | "pets" | "wifi" | "ac" | "parking" | "ev" | "kids_free" | "beachfront" | "bbq";
 export type MonthlyMode = "amount" | "contact";
@@ -79,6 +81,8 @@ export interface Listing extends ListingDraft {
   status: ListingStatus;
   available: boolean;
   reviewNote: string | null;
+  /** Momento de la última decisión del admin; un borrador con fecha fue una casa publicada o revisada (no se descarta). */
+  reviewedAt: string | null;
   whatsappPhone: string;
   createdAt: string;
   updatedAt: string;
@@ -197,6 +201,7 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
     case 2:
       if (!PROVINCES.includes(d.province) || !d.canton.trim() || !d.zone.trim()) return "Completá provincia, cantón y zona aproximada.";
       if (d.lat === null || d.lng === null) return "Marcá en el mapa la ubicación aproximada.";
+      if (!inCostaRica(d.lat, d.lng)) return "Marcá un punto dentro de Costa Rica.";
       return null;
     case 3:
       if (!isInt(d.capacity, 1)) return "Indicá cuántas personas pueden alojarse (mínimo 1).";

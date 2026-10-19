@@ -42,7 +42,7 @@ export function LocationPicker({ province, lat, lng }: { province: string; lat: 
       if (point) place(point);
       map.on("click", (e) => {
         place(e.latlng);
-        if (map!.getZoom() < 13) map!.setView(e.latlng, 13);
+        if (map!.getZoom() < 13) map!.setView(e.latlng, 13, { animate: false }); // sin animación: desmontar en mitad de un zoom rompe Leaflet
       });
     })();
     return () => {

@@ -91,6 +91,7 @@ describe("validateStep", () => {
     expect(validateStep(2, { ...d, canton: "  " })).toBe("Completá provincia, cantón y zona aproximada.");
     expect(validateStep(2, { ...d, zone: "" })).toBe("Completá provincia, cantón y zona aproximada.");
     expect(validateStep(2, { ...d, lat: null })).toBe("Marcá en el mapa la ubicación aproximada.");
+    expect(validateStep(2, { ...d, lat: 40.4, lng: -3.7 })).toBe("Marcá un punto dentro de Costa Rica.");
   });
 
   it("paso 3: estudio con 0 habitaciones pasa; casa con 0 falla", () => {

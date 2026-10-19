@@ -4,39 +4,36 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Result } from "@/lib/auth/types";
 import { PHOTO_BUCKET, photoUrl } from "@/lib/supabase/storage";
 import { ALL_PROVINCES, type Filters } from "./filters";
-import { approximate } from "./geo";
 import { DEFAULT_PROVINCE, normalize, type Feature, type Kind, type Listing, type ListingDraft, type MonthlyMode, type Photo } from "./schema";
 
 type Row = Record<string, unknown>;
 
 const LISTING_COLUMNS =
-  "id, public_id, owner_id, status, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, features, parking_paid, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, whatsapp_phone, available, review_note, created_at, updated_at, listing_photos(id, path, position)";
-
-/** Centinela de los `not null` del esquema mientras el borrador no tiene valor real. */
-const PLACEHOLDER = 1;
+  "id, public_id, owner_id, status, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, features, parking_paid, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, whatsapp_phone, available, review_note, reviewed_at, created_at, updated_at, listing_photos(id, path, position)";
 
 export function toRow(d: Partial<ListingDraft>): Row {
   const row: Row = {};
-  const num = (v: number | null | undefined, fallback: number) => (v === null || v === undefined || Number.isNaN(v) ? fallback : v);
+  // Vacío o inválido se guarda como null (la validación por paso ya impidió llegar aquí con NaN).
+  const num = (v: number | null | undefined) => (v === null || v === undefined || Number.isNaN(v) ? null : v);
   if ("kind" in d) row.kind = d.kind;
-  if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly === true;
+  if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly;
   if ("province" in d) row.province = d.province;
   if ("canton" in d) row.canton = d.canton;
   if ("zone" in d) row.zone = d.zone;
   if ("lat" in d) row.lat = d.lat;
   if ("lng" in d) row.lng = d.lng;
-  if ("capacity" in d) row.capacity = num(d.capacity, PLACEHOLDER);
-  if ("bedrooms" in d) row.bedrooms = num(d.bedrooms, PLACEHOLDER);
-  if ("bathrooms" in d) row.bathrooms = num(d.bathrooms, PLACEHOLDER);
+  if ("capacity" in d) row.capacity = num(d.capacity);
+  if ("bedrooms" in d) row.bedrooms = num(d.bedrooms);
+  if ("bathrooms" in d) row.bathrooms = num(d.bathrooms);
   if ("title" in d) row.title = d.title;
   if ("description" in d) row.description = d.description;
   if ("features" in d) row.features = d.features;
   if ("parkingPaid" in d) row.parking_paid = d.parkingPaid;
-  if ("nightlyPriceCrc" in d) row.nightly_price_crc = num(d.nightlyPriceCrc, PLACEHOLDER);
-  if ("minNights" in d) row.min_nights = num(d.minNights, PLACEHOLDER);
+  if ("nightlyPriceCrc" in d) row.nightly_price_crc = num(d.nightlyPriceCrc);
+  if ("minNights" in d) row.min_nights = num(d.minNights);
   if ("monthlyMode" in d) row.monthly_mode = d.monthlyMode;
-  if ("monthlyPriceCrc" in d) row.monthly_price_crc = num(d.monthlyPriceCrc, null as unknown as number);
-  if ("minMonths" in d) row.min_months = num(d.minMonths, null as unknown as number);
+  if ("monthlyPriceCrc" in d) row.monthly_price_crc = num(d.monthlyPriceCrc);
+  if ("minMonths" in d) row.min_months = num(d.minMonths);
   return row;
 }
 
@@ -44,7 +41,6 @@ export function fromRow(row: Row): Listing {
   const photos = ((row.listing_photos as Row[] | undefined) ?? [])
     .map((p) => ({ id: String(p.id), path: String(p.path), position: Number(p.position), url: photoUrl(String(p.path)) }))
     .sort((a, b) => a.position - b.position);
-  const untouched = row.title === "";
   const n = (v: unknown) => (v === null || v === undefined ? null : Number(v));
   return {
     id: String(row.id),
@@ -52,28 +48,28 @@ export function fromRow(row: Row): Listing {
     ownerId: String(row.owner_id),
     status: row.status as Listing["status"],
     kind: (row.kind as Listing["kind"]) ?? null,
-    acceptsMonthly: row.accepts_monthly === true ? true : untouched ? null : false,
+    acceptsMonthly: row.accepts_monthly === null || row.accepts_monthly === undefined ? null : row.accepts_monthly === true,
     province: String(row.province ?? DEFAULT_PROVINCE),
     canton: String(row.canton ?? ""),
     zone: String(row.zone ?? ""),
     lat: n(row.lat),
     lng: n(row.lng),
-    // Hasta que el dueño pasa por Detalles, los centinelas del esquema se muestran vacíos.
-    capacity: untouched && row.capacity === PLACEHOLDER ? null : n(row.capacity),
-    bedrooms: untouched && row.bedrooms === PLACEHOLDER ? null : n(row.bedrooms),
-    bathrooms: untouched && row.bathrooms === PLACEHOLDER ? null : n(row.bathrooms),
+    capacity: n(row.capacity),
+    bedrooms: n(row.bedrooms),
+    bathrooms: n(row.bathrooms),
     title: String(row.title ?? ""),
     description: String(row.description ?? ""),
     features: (row.features as Listing["features"]) ?? [],
     parkingPaid: (row.parking_paid as boolean | null) ?? null,
     photoCount: photos.length,
-    nightlyPriceCrc: row.nightly_price_crc === PLACEHOLDER ? null : n(row.nightly_price_crc), // ningún precio real es ₡1
+    nightlyPriceCrc: n(row.nightly_price_crc),
     minNights: n(row.min_nights),
     monthlyMode: (row.monthly_mode as Listing["monthlyMode"]) ?? null,
     monthlyPriceCrc: n(row.monthly_price_crc),
     minMonths: n(row.min_months),
     available: row.available !== false,
     reviewNote: (row.review_note as string | null) ?? null,
+    reviewedAt: (row.reviewed_at as string | null) ?? null,
     whatsappPhone: String(row.whatsapp_phone ?? ""),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
@@ -86,15 +82,18 @@ const fail = (message: string | undefined, fallback: string): Result => ({ ok: f
 export async function createDraft(db: SupabaseClient, ownerId: string, ownerPhone: string): Promise<{ id: string; publicId: string }> {
   const { data, error } = await db
     .from("listings")
-    .insert({ owner_id: ownerId, status: "draft", title: "", description: "", province: DEFAULT_PROVINCE, capacity: PLACEHOLDER, bedrooms: PLACEHOLDER, bathrooms: PLACEHOLDER, nightly_price_crc: PLACEHOLDER, whatsapp_phone: ownerPhone })
+    .insert({ owner_id: ownerId, status: "draft", title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: ownerPhone })
     .select("id, public_id")
     .single();
   if (error) throw error;
   return { id: String(data.id), publicId: String(data.public_id) };
 }
 
+/** Solo las del propietario con sesión (la RLS también deja leer a un admin; aquí no basta con que exista). */
 export async function getOwnListing(db: SupabaseClient, id: string): Promise<Listing | null> {
-  const { data } = await db.from("listings").select(LISTING_COLUMNS).eq("id", id).maybeSingle();
+  const { data: user } = await db.auth.getUser();
+  if (!user.user) return null;
+  const { data } = await db.from("listings").select(LISTING_COLUMNS).eq("id", id).eq("owner_id", user.user.id).maybeSingle();
   return data ? fromRow(data as Row) : null;
 }
 
@@ -172,7 +171,8 @@ const PUBLIC_COLUMNS =
 async function publicFromRow(db: SupabaseClient, row: Row, loaded?: Photo[]): Promise<PublicListing> {
   const photos = loaded ?? (await listPhotos(db, String(row.id)));
   const publicId = String(row.public_id);
-  const exact = row.lat !== null && row.lng !== null ? approximate(Number(row.lat), Number(row.lng), publicId) : null;
+  // lat/lng ya vienen desplazados ~500 m por la vista (approx_point); el punto exacto no sale de la tabla.
+  const exact = row.lat !== null && row.lng !== null && row.lat !== undefined ? { lat: Number(row.lat), lng: Number(row.lng) } : null;
   return {
     publicId,
     kind: (row.kind as Kind) ?? "casa",
@@ -286,8 +286,9 @@ export async function setAvailable(db: SupabaseClient, id: string, value: boolea
 export async function reopenForEdit(db: SupabaseClient, listing: Listing): Promise<Result> {
   if (listing.status === "changes" || listing.status === "draft") return { ok: true };
   if (listing.status !== "active") return { ok: false, error: "Este anuncio no se puede editar en su estado actual." };
-  const { error } = await db.from("listings").update({ status: "draft" }).eq("id", listing.id);
-  return error ? fail(error.message, "No pudimos abrir el anuncio para editarlo.") : { ok: true };
+  const { data, error } = await db.from("listings").update({ status: "draft" }).eq("id", listing.id).eq("owner_id", listing.ownerId).select("id");
+  if (error) return fail(error.message, "No pudimos abrir el anuncio para editarlo.");
+  return data && data.length > 0 ? { ok: true } : { ok: false, error: "No pudimos abrir el anuncio para editarlo." };
 }
 
 // ---------- Fotos ----------

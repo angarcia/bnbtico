@@ -91,7 +91,7 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 
 ## 8. Fase 2: casas, fotos y admin
 
-1. **Migraciones.** Desde la raíz: `pnpm exec supabase db push`. Aplica `…_fase2_casas.sql` (columnas, RPCs, trigger de protección, bucket y políticas de Storage, vista pública) y `…_fase2_tipo_sin_default.sql`. Comprobar en **Database → Functions** que existen `submit_listing`, `review_listing`, `listing_link_state` y `seed_admin`.
+1. **Migraciones.** Desde la raíz: `pnpm exec supabase db push`. Aplica `…_fase2_casas.sql` (columnas, RPCs, trigger de protección, bucket y políticas de Storage, vista pública), `…_fase2_tipo_sin_default.sql` y `…_fase2_permisos.sql` (privilegios por columna, tabla `listings` cerrada al público, coordenadas desplazadas en la vista). Comprobar en **Database → Functions** que existen `submit_listing`, `review_listing`, `listing_link_state` y `seed_admin`.
 2. **Bucket de fotos.** La migración inserta el bucket `listings` en `storage.buckets`. Si **Storage** no lo muestra, crearlo a mano: nombre `listings`, público, límite 10 MiB, tipos `image/jpeg` e `image/webp`. Las políticas ya están en la migración.
 3. **Tu cuenta como admin.** Creá tu cuenta en pruebas.bnbtico.com con tu WhatsApp y después, en **SQL Editor**:
 

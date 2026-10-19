@@ -1,20 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { JITTER_METERS, approximate, distanceMeters, inCostaRica } from "@/lib/listings/geo";
+import { JITTER_METERS, distanceMeters, inCostaRica } from "@/lib/listings/geo";
 
-describe("approximate", () => {
-  const origin = { lat: 9.63, lng: -82.65 };
-  it("es determinista y queda a menos de 500 m, nunca en el punto exacto", () => {
-    const a = approximate(origin.lat, origin.lng, "CT-1001");
-    const b = approximate(origin.lat, origin.lng, "CT-1001");
-    expect(a).toEqual(b);
-    const d = distanceMeters(origin, a);
-    expect(d).toBeGreaterThan(50);
-    expect(d).toBeLessThanOrEqual(JITTER_METERS);
-  });
-  it("seeds distintos dan puntos distintos", () => {
-    expect(approximate(origin.lat, origin.lng, "CT-1001")).not.toEqual(approximate(origin.lat, origin.lng, "CT-1002"));
-  });
-});
+it("el radio de la zona aproximada es 500 m", () => expect(JITTER_METERS).toBe(500));
 
 describe("distanceMeters", () => {
   it("un grado de latitud son ~111 km", () => {

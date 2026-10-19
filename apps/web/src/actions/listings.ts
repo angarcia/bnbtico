@@ -12,9 +12,11 @@ import { requireOwnerSession } from "@/lib/listings/session";
 const str = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 const stepOf = (v: string): Step | null => (/^[1-5]$/.test(v) ? (Number(v) as Step) : null);
 
-/** Crea un borrador y abre el paso 1. Si ya hay uno sin enviar, /propietario/publicar ofrece seguirlo. */
-export async function createDraftAction(): Promise<void> {
+/** Crea un borrador y abre el paso 1. Si ya hay uno sin enviar y no se fuerza, manda a /propietario/publicar a elegir. */
+export async function createDraftAction(fd?: FormData): Promise<void> {
   const { db, account } = await requireOwnerSession("/propietario/publicar");
+  const force = fd instanceof FormData && str(fd, "force") === "1";
+  if (!force && (await findResumableDraft(db))) redirect("/propietario/publicar");
   const { id } = await createDraft(db, account.id, account.phone);
   redirect(`/propietario/publicar/${id}/1`);
 }

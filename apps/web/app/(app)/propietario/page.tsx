@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createDraftAction } from "@/actions/listings";
 import { ScreenTitle } from "@/components/shell";
 import { auth } from "@/lib/auth";
 import { listOwnListings } from "@/lib/listings/repo";
@@ -18,7 +19,9 @@ export default async function Panel({ searchParams }: { searchParams: Promise<{ 
       {!db || params["sin-supabase"] ? (
         <div className="note">Esta pantalla necesita Supabase. En local: <code>pnpm db:start</code>.</div>
       ) : (
-        <Link href="/propietario/publicar" className="btn btn-primary">Publicar casa</Link>
+        <form action={createDraftAction}>
+          <button className="btn btn-primary" style={{ width: "100%" }} type="submit">Publicar casa</button>
+        </form>
       )}
       <section className="stack" style={{ gap: 10 }}>
         <div className="row between">
