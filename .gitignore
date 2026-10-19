@@ -12,3 +12,6 @@ playwright-report/
 .DS_Store
 Claude outputs/
 *.tsbuildinfo
+
+# Lo genera `next dev`
+apps/web/AGENTS.md

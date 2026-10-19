@@ -1,3 +1,12 @@
+## 2026-10-19 · Portada de bnbtico.com con foto, logo sin fondo y SEO
+
+- **Foto de fondo:** Playa Negra (Puerto Viejo de Talamanca), propia, a pantalla completa con degradado oscuro abajo y encuadre hacia la derecha en móvil (`public/portada-playa-negra.jpg`). Texto en blanco sobre la arena; línea «Playa Negra · Puerto Viejo de Talamanca».
+- **Logo sin recuadro blanco:** `public/bnbtico-logo.png` se deriva del original (recorte de la rana y blanco a transparencia, mismo trazo). El original no se toca y la barra de la app lo sigue usando con su recuadro.
+- **Copy:** frase del usuario «Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.» («alquilar», no «reservar»: bnbtico no gestiona reservas). H1 «Alquilá en el Caribe de Costa Rica, directo con quien te recibe»; «Muy pronto» como etiqueta. Tres bloques: qué es, dónde empezamos (Caribe sur de Limón), cómo funciona; cierre con la oferta de 12 meses gratis para las primeras 50 casas.
+- **SEO:** título «bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica», descripción, canonical `https://bnbtico.com`, Open Graph y Twitter con `public/og.jpg` (1200×630, foto + logo), JSON-LD Organization + WebSite, `robots.ts` (indexa solo bnbtico.com; pruebas y local piden no indexar), `sitemap.ts` con la portada (las fichas se añaden en la fase 2). Constantes en `src/lib/seo.ts`. Pendiente: alta en Search Console y envío del sitemap; versión en inglés con `hreflang` después del lanzamiento.
+- **Vista previa local:** `/?pronto=1` fuerza la portada donde la raíz redirige a la app. `HEAD /` responde 200 desde el proxy para las sondas de disponibilidad (el panel de vista previa apagaba el servidor al recibir el 307).
+- **Ramas:** la portada se cambia en `main` y se trae a `develop` con un merge, para que las dos sigan iguales.
+
 ## 2026-10-15 · Proveedor Supabase probado de punta a punta en local
 
 - Supabase local (CLI `supabase` como dependencia de desarrollo en la raíz; `pnpm db:start`, `pnpm db:reset`) con la migración `0001_init.sql` aplicada sin errores. Los triggers crean el perfil con el nombre enviado como metadato y marcan `phone_verified_at` al confirmar el teléfono: comprobado en la base tras los flujos.

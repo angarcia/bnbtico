@@ -32,6 +32,14 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - Pruebas: Vitest (lógica) y Playwright en viewport móvil (flujos). Primero la prueba, luego el código.
 - Commits en español, imperativo. Un commit por paso completo con pruebas en verde.
 
+## Entornos y herramientas (2026-10-19)
+
+- `main` → bnbtico.com (solo portada hasta el lanzamiento); `develop` → pruebas.bnbtico.com (contraseña, Supabase `bnbtico-pruebas`, GA apagado). Cambios de portada: en `main` y luego merge a `develop`.
+- Supabase local: `pnpm db:start` / `pnpm db:reset`; `apps/web/.env.local` (no versionado) apunta a él. Sin esas variables la app usa el proveedor demo (código 123456). Números de prueba `8888 1234`, `8777 0001`, `8888 9999` con código 123456, en local y en el proyecto de pruebas.
+- Esquema: nuevas migraciones con `pnpm exec supabase migration new <nombre>` y `pnpm exec supabase db push`; `0001_init.sql` no se edita más.
+- Local: `.claude/launch.json` arranca la web; Playwright con `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`; `/?pronto=1` muestra la portada. `apps/web/AGENTS.md` lo genera Next y no se versiona.
+- Commits sin línea de coautoría. No acceder a pruebas.bnbtico.com desde herramientas: las comprobaciones del despliegue las hace Daniel; los logs y datos del proyecto Supabase sí se consultan con la API de administración (sesión de la CLI).
+
 ## Convenciones del prototipo (mientras siga siendo la referencia)
 
 - Servirlo con `python3 -m http.server 8765 --bind 127.0.0.1 --directory design/prototype` y abrir `http://127.0.0.1:8765/casatica-prototipo.html`. Estado solo en memoria salvo lo guardado en `localStorage` (cuenta, estado de casas).

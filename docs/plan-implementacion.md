@@ -27,9 +27,23 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 - **Pruebas:** Vitest para lógica (filtros, dinero, estados de casa, redacción de mensajes) y Playwright en viewport móvil para los flujos (publicar → aprobar → ver ficha → contactar). Las pruebas del prototipo (`tests/prototype/*.cjs`) siguen siendo la referencia de comportamiento.
 - Se retiran del repo `apps/mobile`, `packages/*` y Turborepo: una sola app, pnpm simple.
 
-## Estado (2026-10-16)
+## Estado (2026-10-19)
 
-Fase 0 hecha (falta confirmar DNS en verde y crear Supabase/Twilio). Fase 1 construida en `develop` con auth demo (código 123456) y proveedor Supabase listo para activar; revisada y endurecida el 2026-10-15 (ver `decisiones.md`: refresco de sesión, perfil por trigger, freno de códigos, `next` seguro). Proyecto Supabase `bnbtico-pruebas` creado, migración aplicada y registro con número de prueba verificado desde pruebas.bnbtico.com el 2026-10-16. Falta Twilio para números reales (ver `configuracion-supabase.md`, paso 3). **Siguiente: fase 2.** Google Analytics añadido en el layout raíz.
+**Hecho.** Fase 0 y fase 1 construidas y revisadas en `develop`. **Siguiente: fase 2** (publicar una casa, aprobarla y verla).
+
+- **Cuenta con WhatsApp verificado** completa, con dos proveedores intercambiables en `apps/web/src/lib/auth/`: `demo` (código 123456, cookies firmadas, sin Supabase) y `supabase` (Supabase Auth por teléfono + `profiles`). Endurecida el 2026-10-15: refresco de sesión en `proxy.ts`, perfil creado por triggers en `auth.users`, 30 s entre códigos, `next` seguro, `SESSION_SECRET` obligatorio en producción, una cookie demo por cuenta (detalle en `decisiones.md`).
+- **Supabase de pruebas conectado.** Proyecto `bnbtico-pruebas` (ref `bpxiggdzgzolcazaaboj`) enlazado al repo (`pnpm exec supabase link` ya hecho; `pnpm exec supabase db push` para nuevas migraciones), migración `0001` aplicada, Phone con Twilio Verify y tres números de prueba (`8888 1234`, `8777 0001`, `8888 9999`, código 123456). Registro verificado desde pruebas.bnbtico.com el 2026-10-16. **Falta Twilio real** para números de verdad (`docs/configuracion-supabase.md`, paso 3): es lo único pendiente para dar la fase 1 por cerrada según su criterio de «hecho».
+- **Supabase local** en Docker: `pnpm db:start` / `pnpm db:reset`; `apps/web/.env.local` apunta a él. Playwright pasa contra demo y contra Supabase local.
+- **Portada de bnbtico.com** (rama `main`, commit `4cba80e`): foto de Playa Negra a pantalla completa, logo sin fondo (`public/bnbtico-logo.png`, derivado del original), título y H1 con palabras clave, tres párrafos de contenido, Open Graph/Twitter con `public/og.jpg`, canonical, `robots.ts` (indexa solo bnbtico.com), `sitemap.ts`, JSON-LD. En pruebas y local la raíz redirige a `/explorar`; `/?pronto=1` fuerza la portada. Pendiente de Daniel: alta en Google Search Console y envío del sitemap.
+- **Vercel**: `main` → bnbtico.com (solo portada), `develop` → pruebas.bnbtico.com con `PREVIEW_PASSWORD`, Supabase y `NEXT_PUBLIC_GA_ID=off`. Las ramas se mantienen alineadas trayendo `main` a `develop` tras cada cambio de portada.
+- **Para trabajar en local**: `.claude/launch.json` arranca `pnpm --filter web dev`; Playwright usa el Chrome instalado con `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`; `next dev` genera `apps/web/AGENTS.md`, que no se versiona.
+
+### Fase 2 · por dónde empezar
+
+1. Repasar en el prototipo (vista Móvil) `publication.js`, `formulario-simple.js`, `caracteristicas.js`, `admin-review.js`, `explorar-filtros.js`, `zona-caribe.js`, `ficha-movil.js`, `mis-casas.js`, `moneda.js` y sus pruebas en `tests/prototype/`.
+2. El esquema ya existe en `supabase/migrations/0001_init.sql` (`listings`, `listing_photos`, `listing_rates`, `listing_days`, vista `listings_public`, RLS). Cambios en **migraciones nuevas** (`pnpm exec supabase migration new <nombre>`), nunca editando `0001`.
+3. Orden sugerido: formulario de publicación (sin fotos) → fotos a Storage → admin mínimo (cola y aprobar/cambios/rechazar) → ficha pública `casa/CT-####` con vista previa para WhatsApp → Explorar con filtros y Limón por defecto → Mis casas. Cada paso con Vitest/Playwright primero y un commit.
+4. `is_owner` se activa al publicar la primera casa (hoy nadie lo pone). El rol de la interfaz es la cookie `bnbtico_role` (`src/lib/role.ts`).
 
 ## Fases
 
