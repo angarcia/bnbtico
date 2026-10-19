@@ -71,7 +71,7 @@
 
 ---
 
-### Tarea 1: Migración `0002` y pruebas de base de datos
+### Task 1: Migración `0002` y pruebas de base de datos
 
 **Files:**
 - Create: `supabase/migrations/<ts>_fase2_casas.sql` (vía `pnpm exec supabase migration new fase2_casas`)
@@ -158,7 +158,7 @@ git commit -m "Fase 2: migración de casas (columnas, Storage, protección de es
 
 ---
 
-### Tarea 2: Clientes de Supabase, `isAdmin` en la cuenta y módulo `schema.ts`
+### Task 2: Clientes de Supabase, `isAdmin` en la cuenta y módulo `schema.ts`
 
 **Files:**
 - Create: `apps/web/src/lib/supabase/server.ts`, `browser.ts`, `storage.ts`
@@ -282,7 +282,7 @@ git commit -m "Fase 2: tipos y validación del anuncio, clientes de Supabase par
 
 ---
 
-### Tarea 3: Repositorio, sesión y formulario de publicación (pasos 1, 2, 3 y 5)
+### Task 3: Repositorio, sesión y formulario de publicación (pasos 1, 2, 3 y 5)
 
 **Files:**
 - Create: `apps/web/src/lib/listings/repo.ts`, `apps/web/src/lib/listings/session.ts`
@@ -407,7 +407,7 @@ git commit -m "Fase 2: formulario de publicación con borrador persistente, mapa
 
 ---
 
-### Tarea 4: Fotos a Storage
+### Task 4: Fotos a Storage
 
 **Files:**
 - Create: `apps/web/src/lib/image.ts` (puro, probable con Vitest), `apps/web/src/components/publish/photo-uploader.tsx`
@@ -472,7 +472,7 @@ git commit -m "Fase 2: fotos del anuncio redimensionadas en el navegador y subid
 
 ---
 
-### Tarea 5: Enviar a revisión y Mis casas
+### Task 5: Enviar a revisión y Mis casas
 
 **Files:**
 - Modify: `apps/web/src/lib/listings/repo.ts` (`submit`), `apps/web/src/actions/listings.ts` (`saveStepAction` paso 5 → submit; `deleteDraftAction`)
@@ -518,7 +518,7 @@ git commit -m "Fase 2: envío a revisión y Mis casas con estados y notas del ad
 
 ---
 
-### Tarea 6: Admin · cola y revisión
+### Task 6: Admin · cola y revisión
 
 **Files:**
 - Modify: `apps/web/src/lib/listings/repo.ts` (`queue`, `getForAdmin`, `review`)
@@ -582,7 +582,7 @@ git commit -m "Fase 2: admin con cola de anuncios, revisión completa y decision
 
 ---
 
-### Tarea 7: Ficha pública con vista previa para WhatsApp
+### Task 7: Ficha pública con vista previa para WhatsApp
 
 **Files:**
 - Create: `apps/web/src/lib/listings/geo.ts`, `share.ts`, `apps/web/src/lib/currency.ts`, `apps/web/src/actions/currency.ts`
@@ -684,7 +684,7 @@ git commit -m "Fase 2: ficha pública con vista previa para WhatsApp, mapa aprox
 
 ---
 
-### Tarea 8: Explorar con filtros
+### Task 8: Explorar con filtros
 
 **Files:**
 - Create: `apps/web/src/lib/listings/filters.ts`, `apps/web/src/components/explore/filters.tsx`, `apps/web/src/components/listing/listing-card.tsx`
@@ -755,7 +755,7 @@ git commit -m "Fase 2: Explorar con filtros en la URL, Limón por defecto y prov
 
 ---
 
-### Tarea 9: Detalle de la casa del propietario · compartir, disponibilidad, editar
+### Task 9: Detalle de la casa del propietario · compartir, disponibilidad, editar
 
 **Files:**
 - Create: `apps/web/src/components/listing/share-button.tsx`, `apps/web/app/(app)/propietario/casas/[id]/page.tsx`
@@ -817,7 +817,7 @@ git commit -m "Fase 2: detalle de la casa del propietario con compartir, disponi
 
 ---
 
-### Tarea 10: Documentación, limpieza y cierre
+### Task 10: Documentación, limpieza y cierre
 
 **Files:**
 - Modify: `docs/decisiones.md` (entrada «2026-10-XX · Fase 2 construida en develop»), `docs/plan-implementacion.md` (sección Estado: fase 2 hecha, siguiente fase 3), `docs/configuracion-supabase.md` (paso 8 «Marcar tu cuenta como admin» + `db push` de la migración + bucket), `CLAUDE.md` (Entornos: número de prueba `8899 0001` como admin local; `SUPABASE_SERVICE_ROLE_KEY` solo pruebas)
