@@ -2,7 +2,7 @@
 // Devuelven objetos del dominio (schema.ts), nunca filas crudas.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Result } from "@/lib/auth/types";
-import { photoUrl } from "@/lib/supabase/storage";
+import { PHOTO_BUCKET, photoUrl } from "@/lib/supabase/storage";
 import { DEFAULT_PROVINCE, normalize, type Listing, type ListingDraft, type Photo } from "./schema";
 
 type Row = Record<string, unknown>;
@@ -127,6 +127,48 @@ export async function deleteDraft(db: SupabaseClient, id: string): Promise<Resul
   const { data, error } = await db.from("listings").delete().eq("id", id).eq("status", "draft").select("id");
   if (error) return fail(error.message, "No pudimos descartar el borrador.");
   return data && data.length > 0 ? { ok: true } : { ok: false, error: "Solo se pueden descartar borradores." };
+}
+
+// ---------- Fotos ----------
+const toPhoto = (p: Row): Photo => ({ id: String(p.id), path: String(p.path), position: Number(p.position), url: photoUrl(String(p.path)) });
+
+export async function listPhotos(db: SupabaseClient, listingId: string): Promise<Photo[]> {
+  const { data } = await db.from("listing_photos").select("id, path, position").eq("listing_id", listingId).order("position");
+  return ((data as Row[] | null) ?? []).map(toPhoto);
+}
+
+/** Registra una foto ya subida a Storage, al final de la lista. */
+export async function addPhoto(db: SupabaseClient, listingId: string, path: string): Promise<Photo> {
+  const current = await listPhotos(db, listingId);
+  const { data, error } = await db.from("listing_photos").insert({ listing_id: listingId, path, position: current.length }).select("id, path, position").single();
+  if (error) throw error;
+  return toPhoto(data as Row);
+}
+
+/** Borra el objeto de Storage y la fila, y recompacta las posiciones. */
+export async function removePhoto(db: SupabaseClient, listingId: string, photoId: string): Promise<Result> {
+  const photos = await listPhotos(db, listingId);
+  const photo = photos.find((p) => p.id === photoId);
+  if (!photo) return { ok: false, error: "Esa foto ya no existe." };
+  const { error } = await db.from("listing_photos").delete().eq("id", photoId);
+  if (error) return fail(error.message, "No pudimos quitar la foto.");
+  await db.storage.from(PHOTO_BUCKET).remove([photo.path]);
+  await reorder(db, photos.filter((p) => p.id !== photoId));
+  return { ok: true };
+}
+
+/** La foto elegida pasa a la posición 0 (portada); el resto conserva su orden. */
+export async function setCover(db: SupabaseClient, listingId: string, photoId: string): Promise<Result> {
+  const photos = await listPhotos(db, listingId);
+  const photo = photos.find((p) => p.id === photoId);
+  if (!photo) return { ok: false, error: "Esa foto ya no existe." };
+  await reorder(db, [photo, ...photos.filter((p) => p.id !== photoId)]);
+  return { ok: true };
+}
+
+async function reorder(db: SupabaseClient, ordered: Photo[]) {
+  // Dos pasadas para no chocar entre posiciones intermedias (no hay unique, pero deja el orden determinista).
+  for (const [i, p] of ordered.entries()) if (p.position !== i) await db.from("listing_photos").update({ position: i }).eq("id", p.id);
 }
 
 export type { Photo };

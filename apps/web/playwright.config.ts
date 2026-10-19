@@ -11,6 +11,8 @@ try {
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
+  // Un solo worker: las pruebas comparten la base local y los números de prueba (1 s entre códigos al mismo número).
+  workers: 1,
   use: {
     baseURL: process.env.BASE_URL ?? "http://127.0.0.1:3000",
     ...devices["Pixel 7"],

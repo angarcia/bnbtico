@@ -2,6 +2,7 @@ import { formatPhone } from "@/lib/phone";
 import { KINDS, KIND_LABELS, PROVINCES, type Listing, type Step } from "@/lib/listings/schema";
 import { FeaturesField, MonthlyField } from "./fields-client";
 import { LocationPicker } from "./location-picker";
+import { PhotoUploader } from "./photo-uploader";
 
 const v = (n: number | null) => (n === null || Number.isNaN(n) ? "" : String(n));
 
@@ -91,8 +92,7 @@ export function StepFields({ step, draft }: { step: Step; draft: Listing }) {
         <>
           <h3>Fotos del alojamiento</h3>
           <p className="small">Mínimo 5 fotos, con una portada. Sin teléfonos, enlaces ni publicidad de agencias.</p>
-          <div className="note">Las fotos llegan en el siguiente paso del plan.</div>
-          <input type="hidden" name="photoCount" value={draft.photoCount} />
+          <PhotoUploader listingId={draft.id} photos={draft.photos} />
         </>
       );
     case 5:

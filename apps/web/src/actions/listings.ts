@@ -2,7 +2,10 @@
 
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/actions/account";
-import { createDraft, deleteDraft, findResumableDraft, getOwnListing, saveStep } from "@/lib/listings/repo";
+import { addPhoto, createDraft, deleteDraft, findResumableDraft, getOwnListing, removePhoto, saveStep, setCover } from "@/lib/listings/repo";
+import { MAX_PHOTOS, type Photo } from "@/lib/listings/schema";
+import { photoPath } from "@/lib/image";
+import { PHOTO_BUCKET } from "@/lib/supabase/storage";
 import { parseStepForm, validateStep, type Step } from "@/lib/listings/schema";
 import { requireOwnerSession } from "@/lib/listings/session";
 
@@ -41,6 +44,55 @@ export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<
   }
   if (step < 5) redirect(`/propietario/publicar/${id}/${step + 1}`);
   redirect("/propietario/casas");
+}
+
+// ---------- Fotos (la subida a Storage la hace el navegador; aquí solo la fila) ----------
+// Sin revalidar la ruta: el componente mantiene su propio estado, y una recarga del servidor en mitad de otra acción
+// descartaba el envío del formulario.
+async function ownedEditable(id: string) {
+  const { db } = await requireOwnerSession(`/propietario/publicar/${id}/4`);
+  const listing = await getOwnListing(db, id);
+  if (!listing || (listing.status !== "draft" && listing.status !== "changes")) return null;
+  return { db, listing };
+}
+
+/** URL firmada para subir una foto desde el navegador. La sesión vive en cookies httpOnly, así que el navegador no
+ *  puede hablar con Storage por su cuenta; la firma se crea aquí con la sesión del dueño (Storage aplica la RLS al firmar). */
+export async function signPhotoUploadAction(listingId: string): Promise<ActionState & { path?: string; token?: string }> {
+  const ctx = await ownedEditable(listingId);
+  if (!ctx) return { error: "No encontramos ese anuncio." };
+  if (ctx.listing.photoCount >= MAX_PHOTOS) return { error: `Máximo ${MAX_PHOTOS} fotos.` };
+  const path = photoPath(listingId, crypto.randomUUID());
+  const { data, error } = await ctx.db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(path);
+  if (error || !data) return { error: "No pudimos preparar la subida. Intentá de nuevo." };
+  return { ok: true, path: data.path, token: data.token };
+}
+
+export async function addPhotoAction(listingId: string, path: string): Promise<ActionState & { photo?: Photo }> {
+  const ctx = await ownedEditable(listingId);
+  if (!ctx) return { error: "No encontramos ese anuncio." };
+  if (!path.startsWith(`${listingId}/`) || !/^[0-9a-f-]+\/[0-9a-f-]+\.jpg$/.test(path)) return { error: "Ruta de foto no válida." };
+  if (ctx.listing.photoCount >= MAX_PHOTOS) return { error: `Máximo ${MAX_PHOTOS} fotos.` };
+  try {
+    const photo = await addPhoto(ctx.db, listingId, path);
+    return { ok: true, photo };
+  } catch {
+    return { error: "No pudimos guardar la foto. Intentá de nuevo." };
+  }
+}
+
+export async function removePhotoAction(listingId: string, photoId: string): Promise<ActionState> {
+  const ctx = await ownedEditable(listingId);
+  if (!ctx) return { error: "No encontramos ese anuncio." };
+  const r = await removePhoto(ctx.db, listingId, photoId);
+  return r.ok ? { ok: true } : { error: r.error };
+}
+
+export async function setCoverAction(listingId: string, photoId: string): Promise<ActionState> {
+  const ctx = await ownedEditable(listingId);
+  if (!ctx) return { error: "No encontramos ese anuncio." };
+  const r = await setCover(ctx.db, listingId, photoId);
+  return r.ok ? { ok: true } : { error: r.error };
 }
 
 export async function deleteDraftAction(fd: FormData): Promise<void> {

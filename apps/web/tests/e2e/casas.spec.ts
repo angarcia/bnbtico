@@ -68,4 +68,46 @@ test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }
   await expect(page.getByText("Tenés un borrador sin enviar")).toBeVisible();
   await page.getByRole("button", { name: "Seguir con el borrador" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+
+  // Paso 3 completo.
+  await page.goto(page.url().replace(/\/1$/, "/3"));
+  await page.getByLabel("Máximo de personas *").fill("5");
+  await page.getByLabel("Número de habitaciones ofrecidas *").fill("2");
+  await page.getByLabel("Número de baños disponibles *").fill("2");
+  await page.getByLabel("Parqueo", { exact: true }).check();
+  await page.getByLabel("Tipo de parqueo *").selectOption("free");
+  await page.getByLabel("Frente al mar").check();
+  await page.getByLabel("Título *").fill("Casa Manzanillo, a pie de playa");
+  await page.getByLabel("Descripción *").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/4$/);
+
+  // Paso 4: fotos generadas en el navegador; con 4 no deja seguir, con 5 sí.
+  const files = await jpegFiles(page, 5);
+  await page.getByLabel("Agregar fotos").setInputFiles(files.slice(0, 4));
+  await expect(page.getByRole("status")).toHaveText("4 fotos");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(alert(page)).toContainText("Agregá al menos 5 fotos.");
+  await page.getByLabel("Agregar fotos").setInputFiles(files.slice(4));
+  await expect(page.getByRole("status")).toHaveText("5 fotos");
+  await expect(page.locator(".photos-grid .tag")).toHaveText("Portada");
+  await page.reload();
+  await expect(page.getByRole("status")).toHaveText("5 fotos");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/5$/);
 });
+
+/** JPEG de color plano dibujados con canvas en la página (sin archivos de prueba en el repo). */
+async function jpegFiles(page: Page, count: number) {
+  const base64 = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = 640;
+    c.height = 480;
+    const x = c.getContext("2d")!;
+    x.fillStyle = "#1f8a70";
+    x.fillRect(0, 0, 640, 480);
+    return c.toDataURL("image/jpeg", 0.8).split(",")[1];
+  });
+  const buffer = Buffer.from(base64, "base64");
+  return Array.from({ length: count }, (_, i) => ({ name: `foto-${i + 1}.jpg`, mimeType: "image/jpeg", buffer }));
+}
