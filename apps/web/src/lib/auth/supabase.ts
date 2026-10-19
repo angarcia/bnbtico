@@ -42,7 +42,7 @@ export function createSupabaseAuth(
   }
 
   async function profileFor(userId: string, phone: string): Promise<Account | null> {
-    const { data } = await supabase.from("profiles").select("full_name, phone, phone_verified_at, is_owner, email, description").eq("id", userId).maybeSingle();
+    const { data } = await supabase.from("profiles").select("full_name, phone, phone_verified_at, is_owner, is_admin, email, description").eq("id", userId).maybeSingle();
     if (!data) return null;
     return {
       id: userId,
@@ -50,6 +50,7 @@ export function createSupabaseAuth(
       phone: data.phone ?? phone,
       phoneVerified: !!data.phone_verified_at,
       isOwner: !!data.is_owner,
+      isAdmin: !!data.is_admin,
       email: data.email ?? undefined,
       description: data.description ?? undefined,
     };

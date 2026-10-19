@@ -74,6 +74,7 @@ export function createDemoAuth(jar: CookieJar, secret: string, deps: { now?: () 
           phone: p.phone,
           phoneVerified: true,
           isOwner: false,
+          isAdmin: false,
         },
       );
       await write(SESSION, { phone: p.phone });

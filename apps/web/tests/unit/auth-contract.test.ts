@@ -57,6 +57,7 @@ describe.each(providers)("contrato de AuthProvider · %s", (_name, make) => {
     expect(account?.phone).toBe(PHONE);
     expect(account?.phoneVerified).toBe(true);
     expect(account?.isOwner).toBe(false);
+    expect(account?.isAdmin).toBe(false);
     expect(await h.auth.pending()).toBeNull();
   });
 

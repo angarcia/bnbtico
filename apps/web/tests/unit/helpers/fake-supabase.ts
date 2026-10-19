@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const FAKE_OTP = "654321";
 
 interface User { id: string; phone: string; full_name: string; confirmed: boolean }
-interface ProfileRow { id: string; full_name: string; phone: string; phone_verified_at: string | null; is_owner: boolean; email: string | null; description: string | null }
+interface ProfileRow { id: string; full_name: string; phone: string; phone_verified_at: string | null; is_owner: boolean; is_admin: boolean; email: string | null; description: string | null }
 
 export function fakeSupabase(opts: { trigger?: boolean; rateLimited?: boolean } = {}) {
   const trigger = opts.trigger ?? true;
@@ -16,7 +16,7 @@ export function fakeSupabase(opts: { trigger?: boolean; rateLimited?: boolean } 
 
   function createProfile(u: User) {
     if (!trigger || profiles.has(u.id)) return;
-    profiles.set(u.id, { id: u.id, full_name: u.full_name, phone: u.phone, phone_verified_at: null, is_owner: false, email: null, description: null });
+    profiles.set(u.id, { id: u.id, full_name: u.full_name, phone: u.phone, phone_verified_at: null, is_owner: false, is_admin: false, email: null, description: null });
   }
 
   const client = {
@@ -79,7 +79,7 @@ export function fakeSupabase(opts: { trigger?: boolean; rateLimited?: boolean } 
         insert: async (row: ProfileRow) => {
           requireSession();
           if (profiles.has(row.id)) return { error: { message: "duplicate key" } };
-          profiles.set(row.id, { ...row, is_owner: false, email: null, description: null, phone_verified_at: row.phone_verified_at ?? null });
+          profiles.set(row.id, { ...row, is_owner: false, is_admin: false, email: null, description: null, phone_verified_at: row.phone_verified_at ?? null });
           return { error: null };
         },
       };

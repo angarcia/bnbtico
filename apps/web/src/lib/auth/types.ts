@@ -8,6 +8,8 @@ export interface Account {
   email?: string;
   description?: string;
   isOwner: boolean;
+  /** Revisa anuncios en /admin. Lo marca `seed_admin` (local/pruebas) o una sentencia SQL; nunca la app. */
+  isAdmin: boolean;
 }
 
 export type StartInput = { mode: "register"; name: string; phone: string } | { mode: "login"; phone: string };
