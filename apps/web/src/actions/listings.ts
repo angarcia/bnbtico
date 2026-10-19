@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/actions/account";
-import { addPhoto, createDraft, deleteDraft, findResumableDraft, getOwnListing, removePhoto, saveStep, setCover, submit } from "@/lib/listings/repo";
+import { addPhoto, createDraft, deleteDraft, findResumableDraft, getOwnListing, removePhoto, reopenForEdit, saveStep, setAvailable, setCover, submit } from "@/lib/listings/repo";
 import { MAX_PHOTOS, type Photo } from "@/lib/listings/schema";
 import { photoPath } from "@/lib/image";
 import { PHOTO_BUCKET } from "@/lib/supabase/storage";
@@ -102,6 +102,23 @@ export async function setCoverAction(listingId: string, photoId: string): Promis
   if (!ctx) return { error: "No encontramos ese anuncio." };
   const r = await setCover(ctx.db, listingId, photoId);
   return r.ok ? { ok: true } : { error: r.error };
+}
+
+export async function setAvailableAction(fd: FormData): Promise<void> {
+  const id = str(fd, "id");
+  const { db } = await requireOwnerSession(`/propietario/casas/${id}`);
+  await setAvailable(db, id, str(fd, "available") === "1");
+  redirect(`/propietario/casas/${id}`);
+}
+
+/** «Editar» / «Corregir y reenviar»: una casa activa pasa a borrador; luego abre el paso 1. */
+export async function startEditAction(fd: FormData): Promise<void> {
+  const id = str(fd, "id");
+  const { db } = await requireOwnerSession(`/propietario/casas/${id}`);
+  const listing = await getOwnListing(db, id);
+  if (!listing) redirect("/propietario/casas");
+  const r = await reopenForEdit(db, listing);
+  redirect(r.ok ? `/propietario/publicar/${id}/1` : `/propietario/casas/${id}`);
 }
 
 export async function deleteDraftAction(fd: FormData): Promise<void> {

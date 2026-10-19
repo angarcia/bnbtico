@@ -217,6 +217,65 @@ test("Explorar arranca en Limón, filtra, limpia y abre la ficha", async ({ page
   await expect(page).toHaveURL(/\/casa\/CT-\d+/);
 });
 
+test("detalle del propietario: no disponible, compartir, editar y reenviar", async ({ page, browser }) => {
+  await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
+  await switchToOwner(page);
+  await page.goto("/propietario/casas");
+  await page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas\/[0-9a-f-]+$/);
+  await expect(page.getByText("Visible en bnbtico")).toBeVisible();
+  const publicId = await publicIdOf("Casa Manzanillo, a pie de playa");
+  await expect(page.getByRole("button", { name: "Compartir ficha" })).toBeEnabled();
+  await expect(page.locator(`[data-share-url$="/casa/${publicId}"]`)).toHaveCount(1);
+
+  // No disponible: la ficha sigue abierta pero avisa.
+  await page.getByRole("button", { name: "Marcar no disponible" }).click();
+  await expect(page.getByText("No disponible", { exact: true })).toBeVisible();
+  const guest = await (await browser.newContext(devices["Pixel 7"])).newPage();
+  await guest.goto(`/casa/${publicId}`);
+  await expect(guest.getByText("No disponible por ahora")).toBeVisible();
+  await page.getByRole("button", { name: "Marcar disponible" }).click();
+  await expect(page.getByText("Activa", { exact: true })).toBeVisible();
+
+  // Editar una casa activa la oculta hasta la nueva aprobación.
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Editar" }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+  await guest.goto(`/casa/${publicId}`);
+  await expect(guest.getByText("Este enlace ya no está activo")).toBeVisible();
+  await guest.context().close();
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/5$/);
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas\?enviada=1/);
+  await expect(page.getByText("Pendiente de revisión")).toBeVisible();
+});
+
+test("pedir cambios: el propietario ve el motivo, corrige y reenvía", async ({ page, browser }) => {
+  const admin = await adminPage(browser);
+  await admin.goto("/admin");
+  await admin.getByRole("link", { name: "Revisar" }).click();
+  await admin.getByLabel("Motivo o indicaciones").fill("Necesitamos fotos de la cocina.");
+  await admin.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(admin.getByRole("status")).toContainText("Cambios solicitados");
+
+  await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
+  await switchToOwner(page);
+  await page.goto("/propietario/casas");
+  await expect(page.getByText("Cambios solicitados")).toBeVisible();
+  await expect(page.getByText("Nota de bnbtico: Necesitamos fotos de la cocina.")).toBeVisible();
+  await page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" }).click();
+  await page.getByRole("button", { name: "Corregir y reenviar" }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page.getByText("Pendiente de revisión")).toBeVisible();
+
+  await admin.goto("/admin");
+  await expect(admin.getByText("1 pendientes")).toBeVisible();
+  await admin.context().close();
+});
+
 /** Contexto nuevo con la cuenta admin de prueba (8899 0001), marcada con seed_admin. */
 async function adminPage(browser: Browser): Promise<Page> {
   const ctx = await browser.newContext(devices["Pixel 7"]);

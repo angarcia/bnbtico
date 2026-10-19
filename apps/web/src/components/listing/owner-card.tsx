@@ -2,10 +2,11 @@ import Link from "next/link";
 import { deleteDraftAction } from "@/actions/listings";
 import { formatCRC } from "@/lib/money";
 import type { Listing } from "@/lib/listings/schema";
+import { ShareButton } from "./share-button";
 import { StatusBadge } from "./status-badge";
 
 /** Tarjeta ligera de Mis casas (prototipo mis-casas.js, móvil): portada, título, estado, precio y la acción que toca. */
-export function OwnerCard({ listing: l }: { listing: Listing }) {
+export function OwnerCard({ listing: l, shareBase }: { listing: Listing; shareBase: string }) {
   const cover = l.photos[0];
   const place = [l.zone, l.province].filter(Boolean).join(", ");
   return (
@@ -38,7 +39,7 @@ export function OwnerCard({ listing: l }: { listing: Listing }) {
           </div>
         ) : null}
         {l.status === "active" ? (
-          <Link href={`/casa/${l.publicId}`} className="btn btn-primary" style={{ marginTop: 4 }}>Compartir ficha</Link>
+          <ShareButton url={`${shareBase}/casa/${l.publicId}`} title={l.title} text={l.title} />
         ) : null}
       </div>
     </article>

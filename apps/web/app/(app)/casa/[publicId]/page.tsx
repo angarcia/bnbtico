@@ -7,6 +7,7 @@ import { ApproxMap } from "@/components/listing/approx-map";
 import { CurrencyToggle } from "@/components/listing/currency-toggle";
 import { Gallery } from "@/components/listing/gallery";
 import { ReadonlyCalendar } from "@/components/listing/readonly-calendar";
+import { ShareButton } from "@/components/listing/share-button";
 import { ScreenTitle } from "@/components/shell";
 import { currentCurrency } from "@/lib/currency";
 import { getPublic, linkState, type PublicListing } from "@/lib/listings/repo";
@@ -75,7 +76,7 @@ export default async function Casa({ params }: { params: Params }) {
   ];
   return (
     <>
-      <ScreenTitle title="" back="/explorar" right={<span className="xs muted" data-share-url={url}>{KIND_LABELS[l.kind]}</span>} />
+      <ScreenTitle title={KIND_LABELS[l.kind]} back="/explorar" right={<ShareButton url={url} title={l.title} text={previewText(l)} label="Compartir" className="chip" />} />
       <Gallery photos={l.photos} title={l.title} />
       <div className="stack" style={{ gap: 6 }}>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>

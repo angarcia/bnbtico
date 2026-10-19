@@ -276,6 +276,20 @@ export async function review(db: SupabaseClient, id: string, decision: "approve"
   return error ? fail(error.message, "No pudimos guardar la decisión. Intentá de nuevo.") : { ok: true };
 }
 
+/** Disponible / no disponible (RPC set_listing_available; solo casas activas). */
+export async function setAvailable(db: SupabaseClient, id: string, value: boolean): Promise<Result> {
+  const { error } = await db.rpc("set_listing_available", { p_listing: id, p_available: value });
+  return error ? fail(error.message, "No pudimos cambiar la disponibilidad.") : { ok: true };
+}
+
+/** Editar una casa activa la devuelve a borrador (la ficha deja de verse hasta la nueva aprobación). `changes` se edita tal cual. */
+export async function reopenForEdit(db: SupabaseClient, listing: Listing): Promise<Result> {
+  if (listing.status === "changes" || listing.status === "draft") return { ok: true };
+  if (listing.status !== "active") return { ok: false, error: "Este anuncio no se puede editar en su estado actual." };
+  const { error } = await db.from("listings").update({ status: "draft" }).eq("id", listing.id);
+  return error ? fail(error.message, "No pudimos abrir el anuncio para editarlo.") : { ok: true };
+}
+
 // ---------- Fotos ----------
 const toPhoto = (p: Row): Photo => ({ id: String(p.id), path: String(p.path), position: Number(p.position), url: photoUrl(String(p.path)) });
 
