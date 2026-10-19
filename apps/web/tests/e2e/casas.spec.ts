@@ -1,6 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { devices, expect, test, type Browser, type Page } from "@playwright/test";
 import { registerAndEnter, switchToOwner } from "./helpers/session";
-import { hasSupabase, resetListings } from "./helpers/supabase-admin";
+import { hasSupabase, makeAdmin, resetListings } from "./helpers/supabase-admin";
 
 // Fase 2 · publicar una casa, aprobarla y verla. Contra Supabase local (pnpm db:start); se salta sin la clave de servicio.
 // El aviso del formulario (Next añade su propio role="alert" para anunciar rutas).
@@ -117,6 +117,47 @@ test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }
   await page.getByRole("button", { name: "Descartar" }).click();
   await expect(page.getByText("Borrador sin título")).toHaveCount(0);
 });
+
+test("un usuario normal no ve /admin", async ({ page }) => {
+  const response = await page.goto("/admin");
+  expect(response?.status()).toBe(404);
+});
+
+test("el admin revisa: pedir cambios exige motivo; aprobar activa la casa", async ({ browser }) => {
+  const page = await adminPage(browser);
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Revisión de anuncios" })).toBeVisible();
+  await expect(page.getByText("1 pendientes")).toBeVisible();
+  await page.getByRole("link", { name: "Revisar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
+  await expect(page.getByText("Publicado por Yorleny Prueba")).toBeVisible();
+  await expect(page.getByText("Fotos (5)")).toBeVisible();
+  await expect(page.getByText("Frente al mar")).toBeVisible();
+  await expect(page.getByText("Consultar con el propietario")).toBeVisible();
+  await expect(page.getByText("Gratuito")).toBeVisible();
+  await expect(page.getByText("Identidad")).toHaveCount(0);
+  await page.getByRole("button", { name: "Ampliar foto 1, portada" }).click();
+  await expect(page.getByText("Foto 1 de 5 · Portada")).toBeVisible();
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await expect(page.getByText("Foto 2 de 5")).toBeVisible();
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(page.locator(".field-error[role=\"alert\"]")).toContainText("Escribí un motivo");
+  await page.getByRole("button", { name: "Aprobar anuncio" }).click();
+  await expect(page.getByRole("status")).toContainText("Activa");
+  await expect(page.getByRole("button", { name: "Aprobar anuncio" })).toHaveCount(0);
+  await page.goto("/admin");
+  await expect(page.getByText("0 pendientes")).toBeVisible();
+  await page.context().close();
+});
+
+/** Contexto nuevo con la cuenta admin de prueba (8899 0001), marcada con seed_admin. */
+async function adminPage(browser: Browser): Promise<Page> {
+  const ctx = await browser.newContext(devices["Pixel 7"]);
+  const page = await ctx.newPage();
+  await registerAndEnter(page, "Admin Prueba", "8899 0001");
+  await makeAdmin("+50688990001");
+  return page;
+}
 
 /** JPEG de color plano dibujados con canvas en la página (sin archivos de prueba en el repo). */
 async function jpegFiles(page: Page, count: number) {

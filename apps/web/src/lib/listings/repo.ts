@@ -135,6 +135,35 @@ export async function submit(db: SupabaseClient, id: string): Promise<Result> {
   return error ? fail(error.message, "No pudimos enviar el anuncio. Intentá de nuevo.") : { ok: true };
 }
 
+// ---------- Admin ----------
+export interface QueueItem {
+  listing: Listing;
+  ownerName: string;
+}
+const ADMIN_COLUMNS = `${LISTING_COLUMNS}, profiles!owner_id(full_name)`;
+const toQueueItem = (row: Row): QueueItem => ({ listing: fromRow(row), ownerName: String((row.profiles as Row | null)?.full_name ?? "Propietario") });
+
+/** Cola del admin: en revisión primero (más antiguas arriba), luego decididas en los últimos 30 días. */
+export async function queue(db: SupabaseClient): Promise<QueueItem[]> {
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const [pending, decided] = await Promise.all([
+    db.from("listings").select(ADMIN_COLUMNS).eq("status", "review").order("updated_at", { ascending: true }),
+    db.from("listings").select(ADMIN_COLUMNS).in("status", ["active", "changes", "rejected"]).gte("reviewed_at", since).order("reviewed_at", { ascending: false }),
+  ]);
+  return [...((pending.data as Row[] | null) ?? []), ...((decided.data as Row[] | null) ?? [])].map(toQueueItem);
+}
+
+export async function getForAdmin(db: SupabaseClient, id: string): Promise<QueueItem | null> {
+  const { data } = await db.from("listings").select(ADMIN_COLUMNS).eq("id", id).maybeSingle();
+  return data ? toQueueItem(data as Row) : null;
+}
+
+/** Decisión del admin (RPC review_listing). */
+export async function review(db: SupabaseClient, id: string, decision: "approve" | "changes" | "reject", note: string): Promise<Result> {
+  const { error } = await db.rpc("review_listing", { p_listing: id, p_decision: decision, p_note: note });
+  return error ? fail(error.message, "No pudimos guardar la decisión. Intentá de nuevo.") : { ok: true };
+}
+
 // ---------- Fotos ----------
 const toPhoto = (p: Row): Photo => ({ id: String(p.id), path: String(p.path), position: Number(p.position), url: photoUrl(String(p.path)) });
 

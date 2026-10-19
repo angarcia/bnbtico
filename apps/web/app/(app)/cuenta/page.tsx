@@ -33,6 +33,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
         </p>
       </section>
 
+      {account.isAdmin ? <Link href="/admin" className="btn btn-ghost">Revisión de anuncios · admin</Link> : null}
       <Link href="/ayuda" className="btn btn-wa"><I.wa size={20} /> Escribile a bnbtico por WhatsApp</Link>
 
       <form action={switchRoleAction}>
