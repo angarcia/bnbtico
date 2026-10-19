@@ -1,6 +1,6 @@
 # Fase 2 · Publicar una casa, aprobarla y verla · diseño
 
-Fecha: 2026-10-19. Estado: aprobado en conversación; pendiente de plan de implementación.
+Fecha: 2026-10-19. Estado: aprobado; plan en `docs/superpowers/plans/2026-10-19-fase-2-publicar-aprobar-ver.md`.
 Manda sobre este documento el prototipo (vista Móvil) y, si se contradicen, `docs/plan-implementacion.md` por ser más reciente que `docs/publicacion.md`.
 
 ## 1. Objetivo y criterio de «hecho»
@@ -34,6 +34,11 @@ No se edita `0001_init.sql`.
 - `min_nights int not null default 1 check (min_nights >= 1)`.
 - `min_months int check (min_months is null or min_months >= 1)` (solo si acepta mensual; opcional).
 - `parking_paid boolean` (null cuando no hay parqueo; `true` de pago, `false` gratuito).
+- `monthly_mode text check (monthly_mode in ('amount','contact'))` (sin esta columna un borrador que aún no eligió y «consultar» eran indistinguibles).
+
+### Trigger de protección
+
+`listings_protect` (`before update`): si quien escribe no es admin y no viene de una RPC (`set_config('app.allow_status','on',true)`), `owner_id`, `public_id`, `reviewed_at`, `reviewed_by` y `review_note` no cambian, y `status` solo puede pasar a `draft` desde `active`, `changes` o `rejected`. Sin esto, la política de `update` de `0001` permitía al dueño activar su propia casa por REST.
 
 ### Storage
 
@@ -148,7 +153,7 @@ Todas en móvil primero, con las clases de `globals.css` (`card`, `stack`, `row`
 
 ### Público
 
-- `/casa/[publicId]` fuera del grupo `(app)` pero dentro del mismo `Shell` sin barra inferior si no hay sesión (o con la de cliente si la hay). SSR. `generateMetadata`: título «{título} · bnbtico», descripción `previewText`, `openGraph.images` con la portada, `canonical` a `publicUrl`. `robots` sigue indexando solo bnbtico.com.
+- `/casa/[publicId]` dentro del grupo `(app)` (hereda `Shell` y la barrera de etapa; la barra inferior es la de cliente). SSR. `generateMetadata`: título «{título} · bnbtico», descripción `previewText`, `openGraph.images` con la portada, `canonical` a `publicUrl`. `robots` sigue indexando solo bnbtico.com.
   - Activa: cabecera con «Volver» a Explorar y «Compartir»; galería; badges «WhatsApp verificado» y «Ref CT-####»; título; zona, cantón, provincia; descripción; «Lo que ofrece» solo con lo que sí tiene (personas, habitaciones, baños y las características marcadas); «Disponibilidad y precio orientativo» con selector ₡/$ y un calendario de solo lectura del mes actual sin cifras por día, con la nota «₡85 000 por noche, salvo los días marcados con otro precio. Precios orientativos.» (fase 4 pondrá los días); «Ubicación aproximada» con mapa Leaflet y círculo; tarjeta del dueño con inicial, nombre y «WhatsApp verificado · en bnbtico desde {año}»; una sola `note`: «Sin comisiones: fechas, precio y pago los acordás con {nombre} por WhatsApp. bnbtico no procesa pagos; no transfieras sin confirmar la casa. Para escribirle necesitás tu WhatsApp verificado.»; barra fija con precio una vez («₡85 000 / noche · orientativo») y botón «Contactar por WhatsApp» deshabilitado con «Disponible pronto» (fase 3). Si acepta mensual, línea «Mensual: ₡… / mes · orientativo» o «Mensual: consultar precio con el propietario». Si `available = false`: badge «No disponible por ahora».
   - No activa pero existe: «Ficha no disponible» con «Este enlace ya no está activo», texto «Este anuncio no está disponible en este momento.» y botón «Explorar otras casas». Devuelve 200 con `robots: noindex`.
   - No existe: 404 de Next.
@@ -171,7 +176,7 @@ Todas en móvil primero, con las clases de `globals.css` (`card`, `stack`, `row`
 - Sesión caducada en una Server Action: redirige a `/cuenta?next=…` conservando la ruta del paso.
 - Error de RLS o RPC: mensaje genérico «No pudimos guardar. Intentá de nuevo.» más el mensaje de la RPC cuando lo trae en español.
 - Subida de foto fallida: la foto no aparece y se muestra el error junto al botón; no queda fila huérfana (la fila se crea solo tras subir bien). Al quitar una foto se borra el objeto de Storage y la fila.
-- Editar una casa activa: los cambios se guardan sobre la misma fila; al enviar vuelve a `review` y la ficha deja de ser pública hasta la nueva aprobación. Esto se avisa antes de enviar: «Tu casa dejará de verse mientras la revisamos».
+- Editar una casa activa: al pulsar «Editar» se avisa «Tu casa dejará de verse mientras la revisamos» y, con confirmación, la casa pasa a `draft` (la ficha deja de ser pública en ese momento, así nunca se publica contenido sin revisar); al enviar vuelve a `review`. Una casa en `changes` se edita sin cambiar de estado.
 - `public_id` con formato inválido en la URL: 404 sin consultar.
 - Entradas HTML en título o descripción: React escapa por defecto; la descripción se muestra con `white-space: pre-wrap`.
 - Fotos mayores de 10 MiB tras redimensionar: no debería ocurrir; si Storage rechaza, se muestra el error.
