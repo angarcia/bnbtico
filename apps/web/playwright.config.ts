@@ -1,5 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Variables locales (Supabase local y clave de servicio para preparar datos). Sin el archivo, se sigue sin ellas.
+try {
+  process.loadEnvFile(`${__dirname}/.env.local`);
+} catch {
+  /* sin .env.local */
+}
+
 // Flujos siempre en viewport móvil: la v1 es móvil primero.
 export default defineConfig({
   testDir: "./tests/e2e",
