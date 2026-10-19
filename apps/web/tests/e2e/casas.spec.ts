@@ -95,6 +95,27 @@ test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }
   await expect(page.getByRole("status")).toHaveText("5 fotos");
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/5$/);
+
+  // Paso 5: precio en colones (acepta separadores), mensual «consultar», enviar a revisión.
+  await page.getByLabel("Precio por noche (₡) *").fill("85.000");
+  await page.getByLabel("Estancia mínima (noches) *").fill("2");
+  await page.getByLabel("Precio mensual *").selectOption("contact");
+  await expect(page.getByText("Se mostrará «Consultar precio mensual con el propietario».")).toBeVisible();
+  await expect(page.getByText("+506 8777 0001")).toBeVisible();
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas\?enviada=1/);
+  await expect(page.getByRole("status")).toContainText("Anuncio enviado a revisión");
+  await expect(page.getByText("Pendiente de revisión")).toBeVisible();
+  await expect(page.getByText("₡85 000")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
+
+  // Un borrador nuevo se puede descartar.
+  await page.getByRole("link", { name: "Nueva" }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+  await page.goto("/propietario/casas");
+  await expect(page.getByText("Borrador sin título")).toBeVisible();
+  await page.getByRole("button", { name: "Descartar" }).click();
+  await expect(page.getByText("Borrador sin título")).toHaveCount(0);
 });
 
 /** JPEG de color plano dibujados con canvas en la página (sin archivos de prueba en el repo). */

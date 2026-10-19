@@ -2,11 +2,11 @@
 
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/actions/account";
-import { addPhoto, createDraft, deleteDraft, findResumableDraft, getOwnListing, removePhoto, saveStep, setCover } from "@/lib/listings/repo";
+import { addPhoto, createDraft, deleteDraft, findResumableDraft, getOwnListing, removePhoto, saveStep, setCover, submit } from "@/lib/listings/repo";
 import { MAX_PHOTOS, type Photo } from "@/lib/listings/schema";
 import { photoPath } from "@/lib/image";
 import { PHOTO_BUCKET } from "@/lib/supabase/storage";
-import { parseStepForm, validateStep, type Step } from "@/lib/listings/schema";
+import { parseStepForm, validateAll, validateStep, type Step } from "@/lib/listings/schema";
 import { requireOwnerSession } from "@/lib/listings/session";
 
 const str = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
@@ -25,7 +25,7 @@ export async function resumeDraftAction(): Promise<void> {
   redirect(draft ? `/propietario/publicar/${draft.id}/1` : "/propietario/publicar");
 }
 
-/** Guarda el paso indicado y avanza. En el paso 5 envía a revisión (llega en la siguiente tarea del plan). */
+/** Guarda el paso indicado y avanza. En el paso 5, además, envía a revisión. */
 export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const id = str(fd, "id");
   const step = stepOf(str(fd, "step"));
@@ -43,7 +43,16 @@ export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<
     return { error: "No pudimos guardar. Intentá de nuevo." };
   }
   if (step < 5) redirect(`/propietario/publicar/${id}/${step + 1}`);
-  redirect("/propietario/casas");
+  // Enviar a revisión: todo el borrador válido y la RPC de la base de acuerdo.
+  const fresh = await getOwnListing(db, id);
+  const invalid = fresh ? validateAll(fresh) : { step: 1 as Step, error: "No encontramos ese anuncio." };
+  if (invalid) {
+    if (invalid.step === 5) return { error: invalid.error };
+    redirect(`/propietario/publicar/${id}/${invalid.step}?error=${encodeURIComponent(invalid.error)}`);
+  }
+  const sent = await submit(db, id);
+  if (!sent.ok) return { error: sent.error };
+  redirect("/propietario/casas?enviada=1");
 }
 
 // ---------- Fotos (la subida a Storage la hace el navegador; aquí solo la fila) ----------

@@ -129,6 +129,12 @@ export async function deleteDraft(db: SupabaseClient, id: string): Promise<Resul
   return data && data.length > 0 ? { ok: true } : { ok: false, error: "Solo se pueden descartar borradores." };
 }
 
+/** Envía a revisión (RPC submit_listing: valida en la base lo mismo que la UI). */
+export async function submit(db: SupabaseClient, id: string): Promise<Result> {
+  const { error } = await db.rpc("submit_listing", { p_listing: id });
+  return error ? fail(error.message, "No pudimos enviar el anuncio. Intentá de nuevo.") : { ok: true };
+}
+
 // ---------- Fotos ----------
 const toPhoto = (p: Row): Photo => ({ id: String(p.id), path: String(p.path), position: Number(p.position), url: photoUrl(String(p.path)) });
 

@@ -1,5 +1,32 @@
-import { Placeholder } from "@/components/placeholder";
+import Link from "next/link";
+import { OwnerCard } from "@/components/listing/owner-card";
+import { ScreenTitle } from "@/components/shell";
+import { listOwnListings } from "@/lib/listings/repo";
+import { requireOwnerSession } from "@/lib/listings/session";
+
 export const metadata = { title: "Mis casas" };
-export default function Casas() {
-  return <Placeholder title="Mis casas" phase={2} text="Tus casas, su estado y el botón para compartir la ficha." />;
+
+export default async function Casas({ searchParams }: { searchParams: Promise<{ enviada?: string }> }) {
+  const [{ db }, params] = await Promise.all([requireOwnerSession("/propietario/casas"), searchParams]);
+  const listings = await listOwnListings(db);
+  return (
+    <>
+      <ScreenTitle title="Mis casas" right={<Link href="/propietario/publicar" className="btn btn-primary" style={{ minHeight: 36, padding: "8px 12px" }}>Nueva</Link>} />
+      {params.enviada === "1" ? (
+        <div className="note" role="status">Anuncio enviado a revisión. Te avisamos cuando esté listo.</div>
+      ) : null}
+      {listings.length === 0 ? (
+        <section className="card stack">
+          <p>Todavía no publicaste ninguna casa.</p>
+          <Link href="/propietario/publicar" className="btn btn-primary">Publicar casa</Link>
+        </section>
+      ) : (
+        <div className="stack" style={{ gap: 12 }}>
+          {listings.map((l) => (
+            <OwnerCard key={l.id} listing={l} />
+          ))}
+        </div>
+      )}
+    </>
+  );
 }

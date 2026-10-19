@@ -8,8 +8,8 @@ import type { Step } from "@/lib/listings/schema";
 const initial: ActionState = {};
 
 /** Envoltorio del paso: el formulario, el error del servidor y los botones Atrás / Continuar. Los campos llegan como hijos. */
-export function StepForm({ listingId, step, children }: { listingId: string; step: Step; children: React.ReactNode }) {
-  const [state, action, pending] = useActionState(saveStepAction, initial);
+export function StepForm({ listingId, step, children, initialError }: { listingId: string; step: Step; children: React.ReactNode; initialError?: string }) {
+  const [state, action, pending] = useActionState(saveStepAction, initialError ? { error: initialError } : initial);
   // Con `action` a secas, React 19 vacía los campos no controlados al terminar la acción: tras un error de validación el
   // propietario perdería lo escrito. Enviando desde onSubmit se conserva; sin JavaScript sigue funcionando `action`.
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
