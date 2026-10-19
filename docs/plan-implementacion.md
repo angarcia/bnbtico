@@ -29,7 +29,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ## Estado (2026-10-19)
 
-**Hecho.** Fases 0, 1 y 2 construidas y revisadas en `develop`. **Siguiente: fase 3** (contacto por WhatsApp).
+**Hecho.** Fases 0 y 1 cerradas. **Fase 2 construida, revisada y desplegada en pruebas.bnbtico.com el 2026-10-19**; se da por cerrada cuando Daniel complete `docs/pruebas-manuales-fase-2.md` desde el móvil (lo que falle se corrige antes de seguir). **Siguiente: fase 3** (contacto por WhatsApp).
 
 - **Cuenta con WhatsApp verificado** completa, con dos proveedores intercambiables en `apps/web/src/lib/auth/`: `demo` (código 123456, cookies firmadas, sin Supabase) y `supabase` (Supabase Auth por teléfono + `profiles`). Endurecida el 2026-10-15 (detalle en `decisiones.md`). **Falta Twilio real** para números de verdad (`docs/configuracion-supabase.md`, paso 3).
 - **Casas (fase 2):** formulario de publicación en cinco pasos con borrador en base de datos, fotos a Storage, admin en `/admin` (perfiles con `is_admin`), ficha pública `casa/CT-####` con vista previa para WhatsApp y mapa aproximado, Explorar con filtros en la URL y Limón por defecto, Mis casas con detalle de gestión. Módulo `apps/web/src/lib/listings/`; migraciones `fase2_casas`, `fase2_tipo_sin_default` y `fase2_permisos`. Decisiones y desvíos en `decisiones.md` (2026-10-19). Especificación y plan en `docs/superpowers/`.
