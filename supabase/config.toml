@@ -42,6 +42,7 @@ auth_token = "local-sin-envios"
 50688881234 = "123456"
 50687770001 = "123456"
 50688889999 = "123456"
+50688990001 = "123456"  # admin local (fase 2): el seed lo marca is_admin
 
 # Tope de códigos por hora en todo el proyecto (cada envío cuesta dinero; evita el «SMS pumping»).
 # En el proyecto alojado se ajusta en Authentication → Rate Limits.
