@@ -20,3 +20,14 @@ describe("contraseña de pruebas.bnbtico.com", () => {
     expect(ok.status).toBe(200);
   });
 });
+
+describe("sondas de disponibilidad", () => {
+  it("HEAD / responde 200 sin redirigir (panel de vista previa, monitores)", async () => {
+    vi.stubEnv("PREVIEW_PASSWORD", "");
+    const res = await proxy(new NextRequest("http://127.0.0.1/", { method: "HEAD" }));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    // Debe responder el propio proxy, no dejar pasar la petición a la página (que redirige a /explorar en pruebas y local).
+    expect(res.headers.get("x-middleware-next")).toBeNull();
+  });
+});

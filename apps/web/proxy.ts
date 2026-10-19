@@ -7,6 +7,8 @@ import { refreshSupabaseSession } from "@/lib/auth/refresh";
 const PUBLIC_ASSETS = new Set(["/manifest.webmanifest", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"]);
 
 export async function proxy(request: NextRequest) {
+  // Sondas de disponibilidad (panel de vista previa, monitores): `HEAD /` responde 200 sin seguir la redirección a /explorar.
+  if (request.method === "HEAD" && request.nextUrl.pathname === "/") return new NextResponse(null, { status: 200 });
   if (PUBLIC_ASSETS.has(request.nextUrl.pathname)) return NextResponse.next();
   const password = process.env.PREVIEW_PASSWORD;
   if (password && !authorized(request, password)) {
