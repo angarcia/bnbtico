@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Result } from "@/lib/auth/types";
 import { PHOTO_BUCKET, photoUrl } from "@/lib/supabase/storage";
+import { ALL_PROVINCES, type Filters } from "./filters";
 import { approximate } from "./geo";
 import { DEFAULT_PROVINCE, normalize, type Feature, type Kind, type Listing, type ListingDraft, type MonthlyMode, type Photo } from "./schema";
 
@@ -168,8 +169,8 @@ export interface PublicListing {
 const PUBLIC_COLUMNS =
   "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, features, parking_paid, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, created_at, owner_name, owner_whatsapp_verified";
 
-async function publicFromRow(db: SupabaseClient, row: Row): Promise<PublicListing> {
-  const photos = await listPhotos(db, String(row.id));
+async function publicFromRow(db: SupabaseClient, row: Row, loaded?: Photo[]): Promise<PublicListing> {
+  const photos = loaded ?? (await listPhotos(db, String(row.id)));
   const publicId = String(row.public_id);
   const exact = row.lat !== null && row.lng !== null ? approximate(Number(row.lat), Number(row.lng), publicId) : null;
   return {
@@ -216,6 +217,34 @@ export async function linkState(db: SupabaseClient, publicId: string): Promise<"
 export async function listActivePublicIds(db: SupabaseClient): Promise<{ publicId: string; updatedAt: string }[]> {
   const { data } = await db.from("listings_public").select("public_id, updated_at").order("updated_at", { ascending: false }).limit(1000);
   return ((data as Row[] | null) ?? []).map((r) => ({ publicId: String(r.public_id), updatedAt: String(r.updated_at) }));
+}
+
+/** Catálogo con filtros (vista pública). Orden: más recientes primero. Las fotos se cargan en una sola consulta. */
+export async function search(db: SupabaseClient, f: Filters): Promise<PublicListing[]> {
+  let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(60);
+  if (f.prov !== ALL_PROVINCES) q = q.eq("province", f.prov);
+  if (f.ppl) q = q.gte("capacity", f.ppl);
+  if (f.beds) q = q.gte("bedrooms", f.beds);
+  if (f.features.length) q = q.contains("features", f.features);
+  if (f.min) q = q.gte("nightly_price_crc", f.min);
+  if (f.max) q = q.lte("nightly_price_crc", f.max);
+  const { data } = await q;
+  const rows = (data as Row[] | null) ?? [];
+  if (rows.length === 0) return [];
+  const ids = rows.map((r) => String(r.id));
+  const { data: photoRows } = await db.from("listing_photos").select("id, path, position, listing_id").in("listing_id", ids).order("position");
+  const byListing = new Map<string, Photo[]>();
+  for (const p of (photoRows as Row[] | null) ?? []) {
+    const key = String(p.listing_id);
+    byListing.set(key, [...(byListing.get(key) ?? []), toPhoto(p)]);
+  }
+  return Promise.all(rows.map((r) => publicFromRow(db, r, byListing.get(String(r.id)) ?? [])));
+}
+
+/** Provincias con al menos una casa activa, para los chips de Zona. */
+export async function provincesWithListings(db: SupabaseClient): Promise<string[]> {
+  const { data } = await db.from("listings_public").select("province");
+  return [...new Set(((data as Row[] | null) ?? []).map((r) => String(r.province)))];
 }
 
 // ---------- Admin ----------

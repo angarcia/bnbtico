@@ -188,6 +188,35 @@ test("la ficha pública abre sin sesión con metadatos para WhatsApp y moneda", 
   await ctx.close();
 });
 
+test("Explorar arranca en Limón, filtra, limpia y abre la ficha", async ({ page }) => {
+  await page.goto("/explorar");
+  await expect(page.getByRole("heading", { name: "¿A dónde vas?" })).toBeVisible();
+  await expect(page.getByText("1 casa en Limón")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Limón", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: "Cartago", exact: true })).toHaveCount(0);
+  // Qué necesitan y precio están plegados en móvil.
+  await expect(page.getByText("Qué necesitan")).toHaveCount(0);
+  await page.getByRole("link", { name: /Más filtros/ }).click();
+  await expect(page.getByText("Qué necesitan")).toBeVisible();
+  await page.getByLabel("Piscina").check();
+  await expect(page.getByText("Sin resultados con esos filtros.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Menos filtros/ })).toContainText("1");
+  await page.getByRole("link", { name: "Limpiar" }).click();
+  await expect(page.getByText("1 casa en Limón")).toBeVisible();
+  // Personas 6+ deja fuera la casa de 5; Cualquiera la devuelve.
+  await page.getByLabel("Personas").selectOption("6");
+  await expect(page.getByText("Sin resultados con esos filtros.")).toBeVisible();
+  await page.getByLabel("Personas").selectOption("0");
+  await expect(page.getByText("1 casa en Limón")).toBeVisible();
+  // Moneda junto a la línea de resultados.
+  await page.getByRole("button", { name: "$ Dólares" }).click();
+  await expect(page.getByText("$167")).toBeVisible();
+  await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
+  await page.getByRole("button", { name: "₡ Colones" }).click();
+  await page.getByRole("link", { name: /Casa Manzanillo, a pie de playa/ }).click();
+  await expect(page).toHaveURL(/\/casa\/CT-\d+/);
+});
+
 /** Contexto nuevo con la cuenta admin de prueba (8899 0001), marcada con seed_admin. */
 async function adminPage(browser: Browser): Promise<Page> {
   const ctx = await browser.newContext(devices["Pixel 7"]);

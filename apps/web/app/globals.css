@@ -123,4 +123,5 @@ textarea{resize:vertical}
 .cal .d{padding:8px 0;border-radius:8px;background:var(--surface-2)}
 .cal .d.empty{background:transparent}
 .chiprow{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+a.chip{text-decoration:none}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
