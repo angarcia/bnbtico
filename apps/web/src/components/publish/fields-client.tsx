@@ -53,7 +53,7 @@ export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; p
           </label>
         ))}
       </div>
-      <span className="xs muted">Son las mismas que usan los clientes para filtrar.</span>
+      <span className="xs muted">Las mismas que usan los clientes para filtrar.</span>
       {on.includes("parking") ? (
         <div className="field">
           <label htmlFor="pub-parkingPaid">Tipo de parqueo</label>
@@ -86,14 +86,16 @@ export function BathroomChoice({ shared }: { shared: boolean | null }) {
   );
 }
 
-/** Descripción con contador de caracteres. */
+/** Descripción con contador de caracteres; el área crece hasta llenar lo que queda de pantalla. */
 export function DescriptionField({ value, max = 2000 }: { value: string; max?: number }) {
   const [n, setN] = useState(value.length);
   return (
-    <div className="field">
-      <label htmlFor="pub-description">Descripción</label>
-      <textarea id="pub-description" name="description" rows={4} maxLength={max} defaultValue={value} onChange={(e) => setN(e.currentTarget.value.length)} />
-      <span className="xs muted num" style={{ alignSelf: "flex-end" }}>{n} / {max}</span>
+    <div className="field grow-col">
+      <div className="row between" style={{ alignItems: "baseline" }}>
+        <label htmlFor="pub-description">Descripción</label>
+        <span className="xs muted num">{n} / {max}</span>
+      </div>
+      <textarea id="pub-description" name="description" rows={3} maxLength={max} defaultValue={value} onChange={(e) => setN(e.currentTarget.value.length)} style={{ flex: 1 }} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   KIND_LABELS,
   PROVINCES,
   STATUS_LABELS,
+  STEP_NAMES,
   emptyDraft,
   normalize,
   parseColones,
@@ -15,8 +16,10 @@ import {
   type ListingDraft,
 } from "@/lib/listings/schema";
 
-// Modelo del diseño v1 (docs/diseno-v1.md, pantallas 11–15): Vacacional / Mensual (una o las dos), Alojamiento completo /
+// Modelo del diseño v1 (docs/diseno-v1.md, punto 11): Vacacional / Mensual (una o las dos), Alojamiento completo /
 // Habitación (con baño privado o compartido), contadores, un precio por modalidad. Copy en usted.
+// Desde 2026-10-21 el formulario va en 9 pantallas sin scroll: 1 alojamiento, 2 dónde está, 3 mapa, 4 capacidad,
+// 5 características, 6 nombre y descripción, 7 fotos, 8 precio, 9 enviar.
 
 const fd = (entries: [string, string][]) => {
   const f = new FormData();
@@ -62,6 +65,9 @@ describe("constantes", () => {
     expect(PROVINCES).toEqual(["Guanacaste", "Puntarenas", "Limón", "Alajuela", "San José", "Heredia", "Cartago"]);
     expect(DEFAULT_PROVINCE).toBe("Limón");
   });
+  it("los 9 pasos del formulario, en orden", () => {
+    expect(STEP_NAMES).toEqual(["Alojamiento", "Ubicación", "Mapa", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"]);
+  });
   it("etiquetas de estado con los colores del diseño", () => {
     expect(STATUS_LABELS.review).toEqual({ label: "En revisión", badge: "badge-review" });
     expect(STATUS_LABELS.active).toEqual({ label: "Activa", badge: "badge-ok" });
@@ -87,54 +93,79 @@ describe("validateStep", () => {
     expect(validateStep(1, d)).toBeNull();
   });
 
-  it("paso 2 exige provincia de la lista, cantón, zona y pin dentro de Costa Rica", () => {
+  it("paso 2 exige provincia de la lista, cantón de esa provincia y zona", () => {
     const d = validDraft();
     expect(validateStep(2, d)).toBeNull();
-    expect(validateStep(2, { ...d, province: "Marte" })).toBe("Complete provincia, cantón y zona aproximada.");
-    expect(validateStep(2, { ...d, canton: "  " })).toBe("Complete provincia, cantón y zona aproximada.");
-    expect(validateStep(2, { ...d, lat: null })).toBe("Marque en el mapa la ubicación aproximada.");
-    expect(validateStep(2, { ...d, lat: 40.4, lng: -3.7 })).toBe("Marque un punto dentro de Costa Rica.");
+    expect(validateStep(2, { ...d, province: "Marte" })).toBe("Elija la provincia.");
+    expect(validateStep(2, { ...d, canton: "  " })).toBe("Elija el cantón.");
+    expect(validateStep(2, { ...d, canton: "Nicoya" })).toBe("Elija un cantón de la provincia.");
+    expect(validateStep(2, { ...d, zone: " " })).toBe("Indique la zona, playa o barrio.");
+    expect(validateStep(2, { ...d, lat: null, lng: null })).toBeNull(); // el pin va en el paso 3
   });
 
-  it("paso 3: alojamiento completo admite 0 habitaciones (estudio); una habitación no", () => {
+  it("paso 3 exige el pin dentro de Costa Rica", () => {
     const d = validDraft();
-    expect(validateStep(3, { ...d, kind: "completo", bedrooms: 0 })).toBeNull();
-    expect(validateStep(3, { ...d, kind: "habitacion", bedrooms: 0, bathroomShared: false })).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
+    expect(validateStep(3, d)).toBeNull();
+    expect(validateStep(3, { ...d, lat: null })).toBe("Marque en el mapa la ubicación aproximada.");
+    expect(validateStep(3, { ...d, lat: 40.4, lng: -3.7 })).toBe("Marque un punto dentro de Costa Rica.");
   });
 
-  it("paso 3: habitaciones vacías o 1.5 fallan", () => {
+  it("paso 4: alojamiento completo admite 0 habitaciones (estudio); una habitación no", () => {
     const d = validDraft();
-    expect(validateStep(3, { ...d, bedrooms: null })).toMatch(/habitaciones/);
-    expect(validateStep(3, { ...d, bedrooms: 1.5 })).toMatch(/habitaciones/);
+    expect(validateStep(4, { ...d, kind: "completo", bedrooms: 0 })).toBeNull();
+    expect(validateStep(4, { ...d, kind: "habitacion", bedrooms: 0, bathroomShared: false })).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
   });
 
-  it("paso 3: personas y baños mínimo 1; habitación exige baño privado o compartido; parqueo exige tipo", () => {
+  it("paso 4: habitaciones vacías o 1.5 fallan", () => {
     const d = validDraft();
-    expect(validateStep(3, { ...d, capacity: 0 })).toBe("Indique cuántas personas pueden alojarse (mínimo 1).");
-    expect(validateStep(3, { ...d, bathrooms: 0 })).toBe("Indique el número de baños (mínimo 1).");
-    expect(validateStep(3, { ...d, kind: "habitacion", bedrooms: 1, bathroomShared: null })).toBe("Indique si el baño es privado o compartido.");
-    expect(validateStep(3, { ...d, kind: "habitacion", bedrooms: 1, bathroomShared: true })).toBeNull();
-    expect(validateStep(3, { ...d, title: " " })).toBe("Complete el nombre de la casa y la descripción.");
-    expect(validateStep(3, { ...d, features: ["parking"], parkingPaid: null })).toBe("Indique si el parqueo es gratuito o de pago.");
+    expect(validateStep(4, { ...d, bedrooms: null })).toMatch(/habitaciones/);
+    expect(validateStep(4, { ...d, bedrooms: 1.5 })).toMatch(/habitaciones/);
   });
 
-  it("paso 4: 4 fotos falla, 5 pasa, 16 falla", () => {
+  it("paso 4: personas y baños mínimo 1; habitación exige baño privado o compartido", () => {
     const d = validDraft();
-    expect(validateStep(4, { ...d, photoCount: 4 })).toBe("Agregue al menos 5 fotos.");
-    expect(validateStep(4, { ...d, photoCount: 5 })).toBeNull();
-    expect(validateStep(4, { ...d, photoCount: 16 })).toBe("Máximo 15 fotos.");
+    expect(validateStep(4, { ...d, capacity: 0 })).toBe("Indique cuántas personas pueden alojarse (mínimo 1).");
+    expect(validateStep(4, { ...d, bathrooms: 0 })).toBe("Indique el número de baños (mínimo 1).");
+    expect(validateStep(4, { ...d, kind: "habitacion", bedrooms: 1, bathroomShared: null })).toBe("Indique si el baño es privado o compartido.");
+    expect(validateStep(4, { ...d, kind: "habitacion", bedrooms: 1, bathroomShared: true })).toBeNull();
+    expect(validateStep(4, { ...d, title: " " })).toBeNull(); // el nombre va en el paso 6
   });
 
-  it("paso 5: un precio por modalidad", () => {
+  it("paso 5: parqueo exige tipo; sin características también vale", () => {
     const d = validDraft();
-    expect(validateStep(5, { ...d, nightlyPriceCrc: Number.NaN })).toBe("Indique el precio por noche en colones.");
-    expect(validateStep(5, { ...d, nightlyPriceCrc: 0 })).toBe("Indique el precio por noche en colones.");
-    expect(validateStep(5, d)).toBeNull();
+    expect(validateStep(5, { ...d, features: ["parking"], parkingPaid: null })).toBe("Indique si el parqueo es gratuito o de pago.");
+    expect(validateStep(5, { ...d, features: ["parking"], parkingPaid: false })).toBeNull();
+    expect(validateStep(5, { ...d, features: [] })).toBeNull();
+  });
+
+  it("paso 6: nombre y descripción", () => {
+    const d = validDraft();
+    expect(validateStep(6, d)).toBeNull();
+    expect(validateStep(6, { ...d, title: " " })).toBe("Póngale un nombre a la casa.");
+    expect(validateStep(6, { ...d, description: " " })).toBe("Escriba una descripción.");
+  });
+
+  it("paso 7: 4 fotos falla, 5 pasa, 16 falla", () => {
+    const d = validDraft();
+    expect(validateStep(7, { ...d, photoCount: 4 })).toBe("Agregue al menos 5 fotos.");
+    expect(validateStep(7, { ...d, photoCount: 5 })).toBeNull();
+    expect(validateStep(7, { ...d, photoCount: 16 })).toBe("Máximo 15 fotos.");
+  });
+
+  it("paso 8: un precio por modalidad", () => {
+    const d = validDraft();
+    expect(validateStep(8, { ...d, nightlyPriceCrc: Number.NaN })).toBe("Indique el precio por noche en colones.");
+    expect(validateStep(8, { ...d, nightlyPriceCrc: 0 })).toBe("Indique el precio por noche en colones.");
+    expect(validateStep(8, d)).toBeNull();
     const both = { ...d, acceptsMonthly: true };
-    expect(validateStep(5, both)).toBe("Indique el precio por mes en colones.");
-    expect(validateStep(5, { ...both, monthlyPriceCrc: 480000 })).toBeNull();
+    expect(validateStep(8, both)).toBe("Indique el precio por mes en colones.");
+    expect(validateStep(8, { ...both, monthlyPriceCrc: 480000 })).toBeNull();
     const monthlyOnly = { ...d, acceptsNightly: false, acceptsMonthly: true, nightlyPriceCrc: null, monthlyPriceCrc: 480000 };
-    expect(validateStep(5, monthlyOnly)).toBeNull();
+    expect(validateStep(8, monthlyOnly)).toBeNull();
+  });
+
+  it("paso 9 no pide nada nuevo: la comprobación completa la hace validateAll al enviar", () => {
+    expect(validateStep(9, emptyDraft())).toBeNull();
   });
 });
 
@@ -158,24 +189,40 @@ describe("parseStepForm", () => {
     expect(parseStepForm(1, fd([["kind", "completo"], ["modes", "nightly"], ["modes", "monthly"]]))).toEqual({ kind: "completo", acceptsNightly: true, acceptsMonthly: true });
     expect(parseStepForm(1, fd([["kind", "x"]]))).toEqual({ kind: null, acceptsNightly: false, acceptsMonthly: false });
   });
-  it("paso 3 lee contadores, baño y características", () => {
-    const base: [string, string][] = [["capacity", "4"], ["bedrooms", "2"], ["bathrooms", "1"], ["title", " Casa "], ["description", "Linda"]];
-    expect(parseStepForm(3, fd([...base, ["features", "wifi"], ["features", "parking"], ["parkingPaid", "paid"], ["bathroomShared", "shared"]]))).toMatchObject({
-      capacity: 4, bedrooms: 2, bathrooms: 1, title: "Casa", features: ["wifi", "parking"], parkingPaid: true, bathroomShared: true,
-    });
-    expect(parseStepForm(3, fd([...base, ["bathroomShared", "private"]]))).toMatchObject({ bathroomShared: false, parkingPaid: null });
-    expect(parseStepForm(3, fd(base))).toMatchObject({ bathroomShared: null });
+  it("paso 2 lee provincia, cantón y zona; paso 3 el pin", () => {
+    expect(parseStepForm(2, fd([["province", "Limón"], ["canton", "Talamanca"], ["zone", " Manzanillo "]]))).toEqual({ province: "Limón", canton: "Talamanca", zone: "Manzanillo" });
+    expect(parseStepForm(3, fd([["lat", "9.63"], ["lng", "-82.65"]]))).toEqual({ lat: 9.63, lng: -82.65 });
+    expect(parseStepForm(3, fd([["lat", ""], ["lng", "x"]]))).toEqual({ lat: null, lng: null });
   });
-  it("paso 5 usa parseColones para los dos precios", () => {
-    expect(parseStepForm(5, fd([["nightlyPriceCrc", "85.000"], ["monthlyPriceCrc", "₡480 000"]]))).toEqual({ nightlyPriceCrc: 85000, monthlyPriceCrc: 480000 });
-    expect(parseStepForm(5, fd([["nightlyPriceCrc", ""]]))).toEqual({ nightlyPriceCrc: null, monthlyPriceCrc: null });
+  it("paso 4 lee contadores y baño", () => {
+    const base: [string, string][] = [["capacity", "4"], ["bedrooms", "2"], ["bathrooms", "1"]];
+    expect(parseStepForm(4, fd([...base, ["bathroomShared", "shared"]]))).toEqual({ capacity: 4, bedrooms: 2, bathrooms: 1, bathroomShared: true });
+    expect(parseStepForm(4, fd([...base, ["bathroomShared", "private"]]))).toMatchObject({ bathroomShared: false });
+    expect(parseStepForm(4, fd(base))).toMatchObject({ bathroomShared: null });
+  });
+  it("paso 5 lee características y tipo de parqueo", () => {
+    expect(parseStepForm(5, fd([["features", "wifi"], ["features", "parking"], ["features", "nada"], ["parkingPaid", "paid"]]))).toEqual({ features: ["wifi", "parking"], parkingPaid: true });
+    expect(parseStepForm(5, fd([]))).toEqual({ features: [], parkingPaid: null });
+  });
+  it("paso 6 recorta nombre y descripción", () => {
+    expect(parseStepForm(6, fd([["title", " Casa "], ["description", " Linda "]]))).toEqual({ title: "Casa", description: "Linda" });
+    expect(parseStepForm(6, fd([["title", "x".repeat(120)], ["description", "y".repeat(2100)]]))).toEqual({ title: "x".repeat(100), description: "y".repeat(2000) });
+  });
+  it("paso 8 usa parseColones para los dos precios", () => {
+    expect(parseStepForm(8, fd([["nightlyPriceCrc", "85.000"], ["monthlyPriceCrc", "₡480 000"]]))).toEqual({ nightlyPriceCrc: 85000, monthlyPriceCrc: 480000 });
+    expect(parseStepForm(8, fd([["nightlyPriceCrc", ""]]))).toEqual({ nightlyPriceCrc: null, monthlyPriceCrc: null });
+  });
+  it("paso 9 no cambia nada", () => {
+    expect(parseStepForm(9, fd([["title", "no"]]))).toEqual({});
   });
 });
 
 describe("validateAll", () => {
   it("devuelve el primer paso con error", () => {
     expect(validateAll(emptyDraft())).toEqual({ step: 1, error: "Elija Alojamiento completo o Habitación." });
-    expect(validateAll({ ...validDraft(), photoCount: 2 })).toEqual({ step: 4, error: "Agregue al menos 5 fotos." });
+    expect(validateAll({ ...validDraft(), photoCount: 2 })).toEqual({ step: 7, error: "Agregue al menos 5 fotos." });
+    expect(validateAll({ ...validDraft(), canton: "Nicoya" })).toEqual({ step: 2, error: "Elija un cantón de la provincia." });
+    expect(validateAll({ ...validDraft(), lat: null })).toEqual({ step: 3, error: "Marque en el mapa la ubicación aproximada." });
     expect(validateAll(validDraft())).toBeNull();
   });
 });

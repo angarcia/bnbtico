@@ -7,7 +7,7 @@ import { MAX_PHOTOS, MIN_PHOTOS, type Photo } from "@/lib/listings/schema";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { PHOTO_BUCKET } from "@/lib/supabase/storage";
 
-/** Pantalla 14: portada grande, miniaturas y «Añadir». Redimensiona en el navegador y sube con URL firmada por el servidor. */
+/** Pantalla 7 del formulario: portada grande, miniaturas y «Añadir»; la rejilla hace scroll por dentro, la pantalla no. Redimensiona en el navegador y sube con URL firmada por el servidor. */
 export function PhotoUploader({ listingId, photos: initial }: { listingId: string; photos: Photo[] }) {
   const [photos, setPhotos] = useState<Photo[]>(initial);
   const [error, setError] = useState<string | null>(null);
@@ -71,12 +71,13 @@ export function PhotoUploader({ listingId, photos: initial }: { listingId: strin
     });
 
   return (
-    <div className="stack" style={{ gap: 14 }}>
+    <div className="stack grow-col" style={{ gap: 12 }}>
       <input type="hidden" name="photoCount" value={photos.length} />
       <div className="row between" style={{ alignItems: "baseline" }}>
         <h2>Fotos</h2>
         <span className="small primary num" role="status" style={{ fontWeight: 700 }}>{photos.length} de {MIN_PHOTOS}–{MAX_PHOTOS}</span>
       </div>
+      <div className="photos-scroll">
       <div className="photos-grid">
         {photos.map((p, i) => (
           <div key={p.id} className={`photo${i === 0 ? " cover" : ""}`}>
@@ -96,6 +97,7 @@ export function PhotoUploader({ listingId, photos: initial }: { listingId: strin
             {busy > 0 ? "Subiendo…" : "Añadir"}
           </label>
         ) : null}
+      </div>
       </div>
       {full ? <p className="xs muted">{MAX_PHOTOS_MESSAGE}</p> : null}
       {error ? <p className="field-error" role="alert">{error}</p> : null}

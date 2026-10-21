@@ -38,7 +38,7 @@ export function ReviewForm({ listingId, status, note, photoCount }: { listingId:
       </div>
       {state.error ? <p className="field-error" role="alert">{state.error}</p> : null}
       {photoCount < 5 ? <p className="note note-sun small">Faltan fotos: se requieren al menos 5 para aprobar.</p> : null}
-      <div className="sticky-spacer" aria-hidden="true" />
+      <div className="sticky-spacer" aria-hidden="true" style={{ height: 112 }} />
       <div className="sticky-actions" style={{ flexDirection: "column", gap: 8 }}>
         <button className="btn btn-primary btn-block" type="submit" name="decision" value="approve" disabled={pending || photoCount < 5} onClick={decide("approve")}>Aprobar y publicar</button>
         <div className="row" style={{ gap: 8 }}>

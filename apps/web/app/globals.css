@@ -141,7 +141,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .code-boxes span.filled{border-color:var(--primary)}
 .code-boxes span.active{border:2px solid var(--primary);background:var(--state-soft)}
 .sr-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.progress{display:flex;gap:6px}
+.progress{display:flex;gap:4px}
 .progress span{flex:1;height:6px;border-radius:999px;background:var(--line)}
 .progress span.on{background:var(--primary)}
 .switch{width:48px;height:28px;border-radius:999px;background:var(--line);position:relative;flex-shrink:0;transition:background .15s}
@@ -167,10 +167,19 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .tabbar.three .nav{font-size:12px}
 /* En pantallas de flujo con botones fijos (publicar, filtros, revisar, ficha) no hay barra de pestañas. */
 .app:has(.sticky-actions) .tabbar,.app:has(.cta-bar) .tabbar{display:none}
-.sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:12px 20px calc(28px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
-.sticky-actions .btn{min-height:52px;font-size:16px;font-family:var(--display)}
+.sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px 20px calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
+.sticky-actions .btn{min-height:48px;font-size:16px;font-family:var(--display)}
 .sticky-actions .grow{flex:1}
-.sticky-spacer{height:96px}
+.sticky-spacer{height:76px}
+/* Formulario de publicar: cada pantalla cabe sin scroll; lo que crece (mapa, descripción, fotos) llena el hueco. */
+.app:has(.publish-form){height:100dvh}
+.app:has(.publish-form) .view{min-height:0;padding-bottom:0}
+.publish-form{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:4px 0 calc(76px + env(safe-area-inset-bottom))}
+.publish-form h2{font-size:21px}
+.grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
+.map-wrap{position:relative;flex:1;min-height:200px;display:flex}
+.map-wrap .map-box{flex:1;height:auto}
+.photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
 .cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;padding:12px 20px calc(24px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
 .cta-bar .price{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .cta-bar .price small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}

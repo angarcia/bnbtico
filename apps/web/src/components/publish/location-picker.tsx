@@ -17,7 +17,7 @@ export const PROVINCE_CENTERS: Record<string, [number, number]> = {
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-/** Pantalla 12: pin terracota arrastrable con el círculo de ~500 m, píldora «Arrastre el pin» y «Usar mi ubicación». */
+/** Pantalla 3 del formulario: pin terracota arrastrable con el círculo de ~500 m, píldora «Arrastre el pin» y «Usar mi ubicación». */
 export function LocationPicker({ province, lat, lng }: { province: string; lat: number | null; lng: number | null }) {
   const box = useRef<HTMLDivElement>(null);
   const [point, setPoint] = useState<{ lat: number; lng: number } | null>(lat !== null && lng !== null ? { lat, lng } : null);
@@ -66,16 +66,15 @@ export function LocationPicker({ province, lat, lng }: { province: string; lat: 
   };
 
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <span className="eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 12 }}>Ubicación en el mapa</span>
-      <div style={{ position: "relative" }}>
+    <div className="stack grow-col" style={{ gap: 8 }}>
+      <div className="map-wrap">
         <div ref={box} className="map-box" role="application" aria-label="Mapa para marcar la ubicación aproximada" />
         <span className="pill pill-sm" style={{ left: 12, bottom: 12, zIndex: 500 }}>{point ? "Arrastre el pin" : "Toque el mapa"}</span>
         <button type="button" className="icon-btn overlay" aria-label="Usar mi ubicación" onClick={locate} style={{ position: "absolute", right: 10, bottom: 10, zIndex: 500, boxShadow: "var(--shadow)", color: "var(--primary)" }}><I.locate /></button>
       </div>
       <input type="hidden" name="lat" value={point?.lat ?? ""} />
       <input type="hidden" name="lng" value={point?.lng ?? ""} />
-      <span className="small muted">En la ficha mostramos solo una zona aproximada de unos 500 m. La dirección exacta la comparte usted por WhatsApp cuando quiera.</span>
+      <span className="small muted">En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.</span>
     </div>
   );
 }

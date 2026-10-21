@@ -6,11 +6,11 @@ import { addPhoto, createDraft, deleteDraft, findResumableDraft, getOwnListing, 
 import { MAX_PHOTOS, type Photo } from "@/lib/listings/schema";
 import { photoPath } from "@/lib/image";
 import { PHOTO_BUCKET } from "@/lib/supabase/storage";
-import { parseStepForm, validateAll, validateStep, type Step } from "@/lib/listings/schema";
+import { LAST_STEP, parseStepForm, validateAll, validateStep, type Step } from "@/lib/listings/schema";
 import { requireOwnerSession } from "@/lib/listings/session";
 
 const str = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
-const stepOf = (v: string): Step | null => (/^[1-5]$/.test(v) ? (Number(v) as Step) : null);
+const stepOf = (v: string): Step | null => (/^[1-9]$/.test(v) && Number(v) <= LAST_STEP ? (Number(v) as Step) : null);
 
 /** Crea un borrador y abre el paso 1. Si ya hay uno sin enviar y no se fuerza, manda a /propietario/publicar a elegir. */
 export async function createDraftAction(fd?: FormData): Promise<void> {
@@ -27,7 +27,7 @@ export async function resumeDraftAction(): Promise<void> {
   redirect(draft ? `/propietario/publicar/${draft.id}/1` : "/propietario/publicar");
 }
 
-/** Guarda el paso indicado y avanza. En el paso 5, además, envía a revisión. */
+/** Guarda el paso indicado y avanza. En el último, además, envía a revisión. */
 export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const id = str(fd, "id");
   const step = stepOf(str(fd, "step"));
@@ -44,12 +44,12 @@ export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<
   } catch {
     return { error: "No pudimos guardar. Intente de nuevo." };
   }
-  if (step < 5) redirect(`/propietario/publicar/${id}/${step + 1}`);
+  if (step < LAST_STEP) redirect(`/propietario/publicar/${id}/${step + 1}`);
   // Enviar a revisión: todo el borrador válido y la RPC de la base de acuerdo.
   const fresh = await getOwnListing(db, id);
   const invalid = fresh ? validateAll(fresh) : { step: 1 as Step, error: "No encontramos ese anuncio." };
   if (invalid) {
-    if (invalid.step === 5) return { error: invalid.error };
+    if (invalid.step === LAST_STEP) return { error: invalid.error };
     redirect(`/propietario/publicar/${id}/${invalid.step}?error=${encodeURIComponent(invalid.error)}`);
   }
   const sent = await submit(db, id);
@@ -61,7 +61,7 @@ export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<
 // Sin revalidar la ruta: el componente mantiene su propio estado, y una recarga del servidor en mitad de otra acción
 // descartaba el envío del formulario.
 async function ownedEditable(id: string) {
-  const { db } = await requireOwnerSession(`/propietario/publicar/${id}/4`);
+  const { db } = await requireOwnerSession(`/propietario/publicar/${id}/7`);
   const listing = await getOwnListing(db, id);
   if (!listing || (listing.status !== "draft" && listing.status !== "changes")) return null;
   return { db, listing };

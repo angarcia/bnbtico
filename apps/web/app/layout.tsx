@@ -32,6 +32,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // El teclado del móvil encoge la pantalla en vez de tapar el campo: la barra Atrás/Continuar queda sobre el teclado.
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FFFBF2" },
     { media: "(prefers-color-scheme: dark)", color: "#141917" },

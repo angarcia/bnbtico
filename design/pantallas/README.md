@@ -16,7 +16,7 @@ Es referencia visual, no código de producción: la implementación va en `apps/
 | 08-cliente-mi-cuenta | Mi cuenta (cliente) |
 | 09-prop-inicio | Inicio del propietario |
 | 10-prop-mis-casas | Mis casas |
-| 11…15-prop-publicar-N | Publicar casa, pasos 1–5 |
+| 11…15-prop-publicar-N | Publicar casa, pasos 1–5 (**superadas el 2026-10-21**: la app va en 9 pantallas cortas sin scroll, ver `docs/decisiones.md`; valen como referencia de estilo) |
 | 16-prop-enviada | Enviada a revisión |
 | 17-prop-calendario | Calendario y precios |
 | 18-prop-consultas | Mis consultas |

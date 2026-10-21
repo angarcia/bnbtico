@@ -47,23 +47,27 @@ Fecha: 2026-10-20 (diseño v1 «Sol y sal», copy en usted). Entorno: `https://p
 
 | # | Paso | Esperado |
 |---|---|---|
-| C1 | Mi cuenta → «Publicar mi casa» → en Inicio, **«Publicar casa»** | «Publicar casa · Paso 1 de 5», barra de progreso de 5 segmentos, botones fijos Atrás (apagado) y Continuar |
+| C1 | Mi cuenta → «Publicar mi casa» → en Inicio, **«Publicar casa»** | «Publicar casa · Paso 1 de 9», barra de progreso de 9 segmentos, botones fijos Atrás (apagado) y Continuar. **Ninguna pantalla del formulario debe necesitar scroll** (salvo la rejilla de fotos por dentro) |
 | C2 | «Continuar» sin tocar nada | Aviso «Elija Alojamiento completo o Habitación.» (nada viene preseleccionado) |
 | C3 | Tocar la tarjeta **Alojamiento completo** → Continuar | Aviso «Marque Vacacional, Mensual o las dos.» y la tarjeta **sigue** marcada |
 | C4 | Tocar **Vacacional** y **Mensual** → Continuar | Paso 2 «¿Dónde está?» |
-| C5 | Provincia Limón, cantón `Talamanca`, zona `Manzanillo` → Continuar sin tocar el mapa | Aviso «Marque en el mapa la ubicación aproximada.» |
+| C4b | Cantón: abrir la lista con Limón | Solo los 6 cantones de Limón; al cambiar la provincia a Puntarenas el cantón se vacía y la lista cambia |
+| C5 | Provincia Limón, cantón **Talamanca** (de la lista), zona `Manzanillo`; al escribir la zona el teclado no tapa el campo y la tecla dice «Listo» → tocarla | Pasa al paso 3 «Ubicación en el mapa» (el mapa ocupa toda la pantalla) → Continuar sin tocar el mapa: aviso «Marque en el mapa la ubicación aproximada.» |
 | C6 | Tocar el mapa cerca de la costa; arrastrar el pin con el dedo; probar «Usar mi ubicación» (botón redondo) | Pin terracota con un círculo verde alrededor; píldora «Arrastre el pin»; el arrastre va suave y no mueve toda la página |
-| C7 | Continuar | Paso 3 «Detalles del alojamiento» |
+| C7 | Continuar | Paso 4 «¿Cuántos caben?» |
 | C8 | Contadores: Personas +5, Habitaciones +2, Baños +2 | Los números suben y bajan con − / + |
+| C8b | Continuar | Paso 5 «Características» |
 | C9 | Chip **Parqueo** | Aparece «Tipo de parqueo»; al quitar el chip desaparece |
-| C10 | Parqueo → Gratuito; chips **Frente al mar** y **Wifi**; nombre `Casa Manzanillo, a pie de playa`; descripción de dos líneas (el contador «n / 2000» avanza) → Continuar | Paso 4 «Fotos» con «0 de 5–15» |
+| C10 | Parqueo → Gratuito; chips **Frente al mar** y **Wifi** → Continuar | Paso 6 «Nombre y descripción» |
+| C10b | Nombre `Casa Manzanillo, a pie de playa` → tecla «Siguiente» del teclado | El foco pasa a la descripción sin tocar la pantalla; el teclado no la tapa |
+| C10c | Descripción de dos líneas (el contador «n / 2000» avanza; Enter hace salto de línea) → Continuar | Paso 7 «Fotos» con «0 de 5–15» |
 | C11 | «Añadir» → **Cámara** → una foto | La foto aparece grande como «Portada»; «1 de 5–15» |
 | C12 | «Añadir» → **Galería** → elegir 4 de golpe (en iPhone, las HEIC se convierten; si una no entra, aviso «Ese formato no se puede subir. Use JPG o PNG.») | «5 de 5–15» en unos segundos, sin recargar |
 | C13 | «Quitar» una foto (la X); «Hacer portada» en otra | La cuadrícula se actualiza; la nueva portada queda grande |
 | C14 | Volver a dejar 5 fotos; **recargar la página** | Las 5 fotos siguen ahí |
 | C15 | Con 4 fotos, Continuar | Aviso «Agregue al menos 5 fotos.» |
-| C16 | Con 5, Continuar | Paso 5 «Precio por noche» y «Precio por mes» (eligió las dos modalidades) |
-| C17 | Por noche `85.000`, por mes `900.000`; tarjeta «WhatsApp de esta casa» con `+506 8777 0001 · Verificado · el de su cuenta»; tarjeta arena de la oferta «₡0 · 12 meses» | Teclado numérico en los precios |
+| C16 | Con 5, Continuar | Paso 8 «Precio» con «Por noche» y «Por mes» (eligió las dos modalidades) |
+| C17 | Por noche `85.000` → «Siguiente» → por mes `900.000` → «Listo» | Teclado numérico; «Siguiente» salta al mes y «Listo» pasa al paso 9 «Enviar a revisión»: tarjeta «WhatsApp de esta casa» con `+506 8777 0001 · Verificado · el de su cuenta» y tarjeta arena de la oferta «₡0 · 12 meses» |
 | C18 | «Enviar a revisión» | Pantalla **«¡Listo! Su casa está en revisión»** con la foto redonda y los tres pasos; botones «Marcar las noches ocupadas» e «Ir a Mis casas» |
 | C19 | «Ir a Mis casas» | Casillas «0 activa · 0 por pagar · 1 en revisión»; tarjeta con miniatura, «En revisión», nombre, «₡85 000 / noche», «Enviada hoy. Le avisamos por WhatsApp.» |
 | C20 | Cerrar la app y volver desde el icono → Mis casas | La casa sigue «En revisión» |
@@ -82,7 +86,7 @@ Fecha: 2026-10-20 (diseño v1 «Sol y sal», copy en usted). Entorno: `https://p
 | D5 | «Pedir cambios» sin mensaje | Error «Escriba un motivo de hasta 2000 caracteres…»; nada cambia |
 | D6 | Mensaje `Necesitamos una foto de la cocina.` → «Pedir cambios» | Tarjeta «Cambios pedidos» con el motivo; desaparecen los botones; en Anuncios, 0 por revisar |
 | D7 | **Propietaria:** Mis casas | «Cambios pedidos», «Nota de bnbtico: …», botón «Corregir y reenviar»; el detalle lo repite en una tarjeta ocre |
-| D8 | «Corregir y reenviar» → recorrer los 5 pasos con Continuar → «Enviar a revisión» | Pantalla «¡Listo!…» → Mis casas «En revisión» |
+| D8 | «Corregir y reenviar» → recorrer las 9 pantallas con Continuar → «Enviar a revisión» | Pantalla «¡Listo!…» → Mis casas «En revisión» |
 | D9 | **Admin:** Anuncios → tarjeta marcada «Corregida» → «Aprobar y publicar» | Tarjeta «Activa»; en Anuncios «No hay anuncios pendientes.» |
 | D10 | **Propietaria:** Inicio | «Su casa, en marcha»: tarjeta de la casa «Activa · Publicada hoy», «Comparta su ficha» con el enlace, botón **«Compartir ficha por WhatsApp»**, tarjeta «Oferta de lanzamiento · Quedan N de 50» con barra ocre |
 

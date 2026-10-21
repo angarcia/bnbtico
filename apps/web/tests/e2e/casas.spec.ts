@@ -19,114 +19,176 @@ async function count(page: Page, label: string, n: number) {
   for (let i = 0; i < n; i++) await page.getByRole("button", { name: `Más ${label}` }).click();
 }
 
-async function fillStep3(page: Page) {
-  await count(page, "personas", 5);
-  await count(page, "habitaciones", 2);
-  await count(page, "baños", 2);
-  await page.getByText("Parqueo", { exact: true }).click();
-  await page.getByLabel("Tipo de parqueo").selectOption("free");
-  await page.getByText("Frente al mar", { exact: true }).click();
-  await page.getByLabel("Nombre de la casa").fill(TITLE);
-  await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+/** Ninguna pantalla del formulario hace scroll: todo cabe en la ventana (viewport de iPhone SE, 375×667). */
+async function expectNoScroll(page: Page, what: string) {
+  await page.waitForLoadState("networkidle");
+  const [scrollH, innerH] = await page.evaluate(() => [document.documentElement.scrollHeight, window.innerHeight]);
+  expect(scrollH, `${what} hace scroll: ${scrollH} > ${innerH}`).toBeLessThanOrEqual(innerH);
 }
 
-test("el borrador se guarda paso a paso, con fotos, y se envía a revisión", async ({ page }) => {
-  await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
-  await switchToOwner(page);
-  await expect(page.getByRole("heading", { name: "Publique su casa", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Publicar casa" }).click();
-  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
-  await expect(page.getByText("Paso 1 de 5")).toBeVisible();
-
-  // Paso 1: tipo y modalidad explícitos, nada preseleccionado.
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
+async function continuar(page: Page) {
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Elija Alojamiento completo o Habitación.");
-  await page.getByText("Alojamiento completo", { exact: true }).click();
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Marque Vacacional, Mensual o las dos.");
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1); // el tipo elegido no se pierde
-  await page.getByText("Vacacional", { exact: true }).click();
-  await page.getByText("Mensual", { exact: true }).click();
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page).toHaveURL(/\/2$/);
+}
 
-  // Paso 2: ubicación con pin.
-  await page.getByLabel("Provincia").selectOption("Limón");
-  await page.getByLabel("Cantón").fill("Talamanca");
-  await page.getByLabel("Zona, playa o barrio").fill("Manzanillo");
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Marque en el mapa la ubicación aproximada.");
-  await page.locator(".leaflet-container").click({ position: { x: 150, y: 120 } });
-  await expect(page.locator('input[name="lat"]')).not.toHaveValue("");
-  await expect(page.getByText("Arrastre el pin")).toBeVisible();
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page).toHaveURL(/\/3$/);
+test.describe("publicar en pantallas cortas", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
 
-  // Paso 3: contadores, chips, tipo de parqueo al marcar Parqueo.
-  await expect(page.getByLabel("Tipo de parqueo")).toHaveCount(0);
-  await page.getByText("Parqueo", { exact: true }).click();
-  await expect(page.getByLabel("Tipo de parqueo")).toBeVisible();
-  await page.getByLabel("Nombre de la casa").fill("Se pierde al recargar");
+  test("el borrador se guarda pantalla a pantalla, sin scroll, con fotos, y se envía a revisión", async ({ page }) => {
+    await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
+    await switchToOwner(page);
+    await expect(page.getByRole("heading", { name: "Publique su casa", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Publicar casa" }).click();
+    await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+    await expect(page.getByText("Paso 1 de 9")).toBeVisible();
+    await expect(page.locator(".progress span")).toHaveCount(9);
+    await expectNoScroll(page, "paso 1");
 
-  // Recargar antes de guardar pierde lo no enviado; lo guardado en pasos anteriores sigue ahí.
-  await page.reload();
-  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("");
-  await page.goto(page.url().replace(/\/3$/, "/2"));
-  await expect(page.getByLabel("Cantón")).toHaveValue("Talamanca");
-  await page.goto(page.url().replace(/\/2$/, "/1"));
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(3);
+    // 1 Alojamiento: tipo y modalidad explícitos, nada preseleccionado.
+    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
+    await continuar(page);
+    await expect(alert(page)).toContainText("Elija Alojamiento completo o Habitación.");
+    await page.getByText("Alojamiento completo", { exact: true }).click();
+    await continuar(page);
+    await expect(alert(page)).toContainText("Marque Vacacional, Mensual o las dos.");
+    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1); // el tipo elegido no se pierde
+    await page.getByText("Vacacional", { exact: true }).click();
+    await page.getByText("Mensual", { exact: true }).click();
+    await continuar(page);
+    await expect(page).toHaveURL(/\/2$/);
+    await expect(page.getByText("Paso 2 de 9")).toBeVisible();
+    await expectNoScroll(page, "paso 2");
 
-  // «Nueva» con un borrador pendiente ofrece seguirlo; abrir esa página no crea borradores.
-  await page.goto("/propietario/casas");
-  await page.getByRole("button", { name: "Nueva" }).click();
-  await expect(page).toHaveURL(/\/propietario\/publicar$/);
-  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
-  await page.reload();
-  await page.getByRole("button", { name: "Seguir con el borrador" }).click();
-  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+    // 2 Dónde está: cantón de lista según la provincia; «Listo» en la zona envía el paso.
+    const canton = page.getByLabel("Cantón");
+    await expect(page.getByLabel("Provincia")).toHaveValue("Limón");
+    await expect(canton.locator("option")).toHaveCount(7); // «Seleccione el cantón» + 6
+    await expect(canton.locator("option").nth(4)).toHaveText("Talamanca");
+    await continuar(page);
+    await expect(alert(page)).toContainText("Elija el cantón.");
+    await canton.selectOption("Talamanca");
+    await page.getByLabel("Provincia").selectOption("Puntarenas");
+    await expect(canton).toHaveValue(""); // cambiar de provincia vacía el cantón
+    await expect(canton.locator("option")).toHaveCount(14);
+    await page.getByLabel("Provincia").selectOption("Limón");
+    await canton.selectOption("Talamanca");
+    const zone = page.getByLabel("Zona, playa o barrio");
+    await expect(zone).toHaveAttribute("enterkeyhint", "done");
+    await zone.fill("Manzanillo");
+    await zone.press("Enter");
+    await expect(page).toHaveURL(/\/3$/);
+    await expectNoScroll(page, "paso 3");
 
-  // Paso 3 completo.
-  await page.goto(page.url().replace(/\/1$/, "/3"));
-  await fillStep3(page);
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page).toHaveURL(/\/4$/);
+    // 3 Mapa: el pin es obligatorio y dentro del país.
+    await continuar(page);
+    await expect(alert(page)).toContainText("Marque en el mapa la ubicación aproximada.");
+    await page.locator(".leaflet-container").click({ position: { x: 150, y: 120 } });
+    await expect(page.locator('input[name="lat"]')).not.toHaveValue("");
+    await expect(page.getByText("Arrastre el pin")).toBeVisible();
+    await continuar(page);
+    await expect(page).toHaveURL(/\/4$/);
+    await expectNoScroll(page, "paso 4");
 
-  // Paso 4: fotos generadas en el navegador; con 4 no deja seguir, con 5 sí.
-  const files = await jpegFiles(page, 5);
-  await page.getByLabel("Agregar fotos").setInputFiles(files.slice(0, 4));
-  await expect(page.getByRole("status")).toHaveText("4 de 5–15");
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Agregue al menos 5 fotos.");
-  await page.getByLabel("Agregar fotos").setInputFiles(files.slice(4));
-  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
-  await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
-  await page.reload();
-  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page).toHaveURL(/\/5$/);
+    // 4 Capacidad.
+    await continuar(page);
+    await expect(alert(page)).toContainText("Indique cuántas personas");
+    await count(page, "personas", 5);
+    await count(page, "habitaciones", 2);
+    await count(page, "baños", 2);
+    await continuar(page);
+    await expect(page).toHaveURL(/\/5$/);
+    await expectNoScroll(page, "paso 5");
 
-  // Paso 5: un precio por modalidad (acepta separadores) y enviar.
-  await page.getByLabel("Por noche").fill("85.000");
-  await page.getByLabel("Por mes").fill("900.000");
-  await expect(page.getByText("+506 8777 0001")).toBeVisible();
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page).toHaveURL(/\/propietario\/casas\/[0-9a-f-]+\/enviada$/);
-  await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
-  await page.getByRole("link", { name: "Ir a Mis casas" }).click();
-  await expect(page).toHaveURL(/\/propietario\/casas$/);
-  await expect(page.getByText("En revisión", { exact: true })).toBeVisible();
-  await expect(page.getByText("₡85 000")).toBeVisible();
-  await expect(page.getByRole("link", { name: TITLE })).toBeVisible();
+    // 5 Características: tipo de parqueo al marcar Parqueo.
+    await expect(page.getByLabel("Tipo de parqueo")).toHaveCount(0);
+    await page.getByText("Parqueo", { exact: true }).click();
+    await expect(page.getByLabel("Tipo de parqueo")).toBeVisible();
+    await expectNoScroll(page, "paso 5 con parqueo");
+    await continuar(page);
+    await expect(alert(page)).toContainText("Indique si el parqueo es gratuito o de pago.");
+    await page.getByLabel("Tipo de parqueo").selectOption("free");
+    await page.getByText("Frente al mar", { exact: true }).click();
+    await continuar(page);
+    await expect(page).toHaveURL(/\/6$/);
+    await expectNoScroll(page, "paso 6");
 
-  // Un borrador nuevo se puede descartar (con confirmación).
-  await page.getByRole("button", { name: "Nueva" }).click();
-  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
-  await page.goto("/propietario/casas");
-  await expect(page.getByText("Borrador sin título")).toBeVisible();
-  page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Descartar" }).click();
-  await expect(page.getByText("Borrador sin título")).toHaveCount(0);
+    // 6 Nombre y descripción: «Siguiente» en el nombre enfoca la descripción.
+    const title = page.getByLabel("Nombre de la casa");
+    await expect(title).toHaveAttribute("enterkeyhint", "next");
+    await title.fill("Se pierde al recargar");
+    await title.press("Enter");
+    await expect(page.getByLabel("Descripción")).toBeFocused();
+    await expect(page).toHaveURL(/\/6$/); // Enter en el nombre no envía
+
+    // Recargar antes de guardar pierde lo no enviado; lo guardado en pasos anteriores sigue ahí.
+    await page.reload();
+    await expect(title).toHaveValue("");
+    await page.goto(page.url().replace(/\/6$/, "/2"));
+    await expect(page.getByLabel("Cantón")).toHaveValue("Talamanca");
+    await page.goto(page.url().replace(/\/2$/, "/1"));
+    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(3);
+
+    // «Nueva» con un borrador pendiente ofrece seguirlo; abrir esa página no crea borradores.
+    await page.goto("/propietario/casas");
+    await page.getByRole("button", { name: "Nueva" }).click();
+    await expect(page).toHaveURL(/\/propietario\/publicar$/);
+    await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
+    await page.reload();
+    await page.getByRole("button", { name: "Seguir con el borrador" }).click();
+    await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+
+    await page.goto(page.url().replace(/\/1$/, "/6"));
+    await title.fill(TITLE);
+    await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+    await continuar(page);
+    await expect(page).toHaveURL(/\/7$/);
+
+    // 7 Fotos generadas en el navegador; con 4 no deja seguir, con 5 sí. La rejilla hace scroll por dentro, la página no.
+    const files = await jpegFiles(page, 5);
+    await page.getByLabel("Agregar fotos").setInputFiles(files.slice(0, 4));
+    await expect(page.getByRole("status")).toHaveText("4 de 5–15");
+    await continuar(page);
+    await expect(alert(page)).toContainText("Agregue al menos 5 fotos.");
+    await page.getByLabel("Agregar fotos").setInputFiles(files.slice(4));
+    await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+    await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
+    await page.reload();
+    await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+    await expectNoScroll(page, "paso 7 con 5 fotos");
+    await continuar(page);
+    await expect(page).toHaveURL(/\/8$/);
+    await expectNoScroll(page, "paso 8");
+
+    // 8 Precio: un precio por modalidad (acepta separadores); «Listo» en el último envía.
+    await expect(page.getByLabel("Por noche")).toHaveAttribute("enterkeyhint", "next");
+    await expect(page.getByLabel("Por mes")).toHaveAttribute("enterkeyhint", "done");
+    await page.getByLabel("Por noche").fill("85.000");
+    await page.getByLabel("Por noche").press("Enter");
+    await expect(page.getByLabel("Por mes")).toBeFocused();
+    await page.getByLabel("Por mes").fill("900.000");
+    await page.getByLabel("Por mes").press("Enter");
+    await expect(page).toHaveURL(/\/9$/);
+    await expectNoScroll(page, "paso 9");
+
+    // 9 Enviar.
+    await expect(page.getByText("+506 8777 0001")).toBeVisible();
+    await page.getByRole("button", { name: "Enviar a revisión" }).click();
+    await expect(page).toHaveURL(/\/propietario\/casas\/[0-9a-f-]+\/enviada$/);
+    await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
+    await page.getByRole("link", { name: "Ir a Mis casas" }).click();
+    await expect(page).toHaveURL(/\/propietario\/casas$/);
+    await expect(page.getByText("En revisión", { exact: true })).toBeVisible();
+    await expect(page.getByText("₡85 000")).toBeVisible();
+    await expect(page.getByRole("link", { name: TITLE })).toBeVisible();
+
+    // Un borrador nuevo se puede descartar (con confirmación).
+    await page.getByRole("button", { name: "Nueva" }).click();
+    await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+    await page.goto("/propietario/casas");
+    await expect(page.getByText("Borrador sin título")).toBeVisible();
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Descartar" }).click();
+    await expect(page.getByText("Borrador sin título")).toHaveCount(0);
+  });
 });
 
 test("un usuario con sesión pero sin is_admin no ve /admin", async ({ page }) => {
@@ -263,8 +325,8 @@ test("detalle del propietario: disponible para consultas, compartir, editar y re
   await page.getByRole("link", { name: TITLE }).click();
   await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
   await page.getByRole("link", { name: /Seguir con el borrador/ }).click();
-  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page).toHaveURL(/\/5$/);
+  for (let i = 0; i < 8; i++) await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/9$/);
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(/\/enviada$/);
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
@@ -287,7 +349,7 @@ test("pedir cambios: el propietario ve el motivo, corrige y reenvía", async ({ 
   await page.getByRole("link", { name: TITLE }).click();
   await page.getByRole("button", { name: "Corregir y reenviar" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
-  for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continuar" }).click();
+  for (let i = 0; i < 8; i++) await page.getByRole("button", { name: "Continuar" }).click();
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(/\/enviada$/);
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
