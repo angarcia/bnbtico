@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { I } from "@/components/icons";
+import { I, type IconName } from "@/components/icons";
 import { ApproxMap } from "@/components/listing/approx-map";
-import { CurrencyToggle } from "@/components/listing/currency-toggle";
-import { Gallery } from "@/components/listing/gallery";
-import { ReadonlyCalendar } from "@/components/listing/readonly-calendar";
+import { ApproxToggle } from "@/components/listing/currency-toggle";
+import { HeroGallery } from "@/components/listing/hero-gallery";
 import { ShareButton } from "@/components/listing/share-button";
-import { ScreenTitle } from "@/components/shell";
+import { FlowHeader } from "@/components/shell";
 import { currentCurrency } from "@/lib/currency";
 import { getPublic, linkState, type PublicListing } from "@/lib/listings/repo";
-import { FEATURES, KIND_LABELS } from "@/lib/listings/schema";
-import { parsePublicId, previewText, publicUrl, shareBase } from "@/lib/listings/share";
-import { FX_CRC_PER_USD, formatMoney } from "@/lib/money";
+import { FEATURE_SHORT, KIND_LABELS, modesLabel, type Feature } from "@/lib/listings/schema";
+import { parsePublicId, previewText, publicUrl } from "@/lib/listings/share";
+import { requestShareBase } from "@/lib/listings/share-server";
+import { formatMoney } from "@/lib/money";
 import { SITE_URL } from "@/lib/seo";
 import { supabaseServer } from "@/lib/supabase/server";
 
 type Params = Promise<{ publicId: string }>;
+
+const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
 
 async function load(raw: string): Promise<{ id: string | null; listing: PublicListing | null; state: "active" | "blocked" | null }> {
   const id = parsePublicId(raw);
@@ -28,12 +29,17 @@ async function load(raw: string): Promise<{ id: string | null; listing: PublicLi
   return { id, listing: null, state: await linkState(db, id) };
 }
 
+const preview = (l: PublicListing) =>
+  l.acceptsNightly && l.nightlyPriceCrc
+    ? previewText({ kind: l.kind, zone: l.zone, province: l.province, capacity: l.capacity, nightlyPriceCrc: l.nightlyPriceCrc })
+    : `${KIND_LABELS[l.kind]} en ${l.zone}, ${l.province} · ${l.capacity} personas${l.monthlyPriceCrc ? ` · ${formatMoney(l.monthlyPriceCrc, "CRC")} por mes` : ""}`;
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { publicId } = await params;
   const { id, listing } = await load(publicId);
   if (!listing || !id) return { title: "Ficha no disponible", robots: { index: false } };
   const url = publicUrl(id, SITE_URL);
-  const description = previewText(listing);
+  const description = preview(listing);
   const cover = listing.photos[0]?.url;
   return {
     title: listing.title,
@@ -44,6 +50,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
+/** Ficha pública (pantalla 03): hero, etiquetas, nombre y zona, descripción, rejilla de características, zona aproximada y barra fija. */
 export default async function Casa({ params }: { params: Params }) {
   const { publicId } = await params;
   const { id, listing, state } = await load(publicId);
@@ -51,93 +58,80 @@ export default async function Casa({ params }: { params: Params }) {
   if (!listing) {
     return (
       <>
-        <ScreenTitle title="Ficha no disponible" back="/explorar" />
+        <FlowHeader title="Ficha no disponible" back="/explorar" />
         <section className="card stack">
           <h3>Este enlace ya no está activo</h3>
           <p>Este anuncio no está disponible en este momento.</p>
-          <p className="small muted">Si ya hablaste con el propietario por WhatsApp, podés seguir esa conversación por tu cuenta.</p>
+          <p className="small muted">Si ya habló con el propietario por WhatsApp, puede seguir esa conversación por su cuenta.</p>
           <Link href="/explorar" className="btn btn-primary">Explorar otras casas</Link>
         </section>
       </>
     );
   }
   const l = listing;
-  const [currency, headerList] = await Promise.all([currentCurrency(), headers()]);
-  const origin = headerList.get("host") ? `${headerList.get("x-forwarded-proto") ?? "http"}://${headerList.get("host")}` : null;
-  const url = publicUrl(id, shareBase({ NODE_ENV: process.env.NODE_ENV, NEXT_PUBLIC_STAGE: process.env.NEXT_PUBLIC_STAGE }, origin));
-  const price = formatMoney(l.nightlyPriceCrc, currency);
-  const firstName = l.ownerName.split(" ")[0];
+  const [currency, base] = await Promise.all([currentCurrency(), requestShareBase()]);
+  const url = publicUrl(id, base);
+  const mainCrc = l.acceptsNightly && l.nightlyPriceCrc ? l.nightlyPriceCrc : l.monthlyPriceCrc ?? 0;
+  const mainUnit = l.acceptsNightly && l.nightlyPriceCrc ? "noche" : "mes";
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-  const offers: string[] = [
-    plural(l.capacity, "persona", "personas"),
-    plural(l.bedrooms, "habitación", "habitaciones"),
-    plural(l.bathrooms, "baño", "baños"),
-    ...FEATURES.filter(([k]) => l.features.includes(k)).map(([k, label]) => (k === "parking" ? `Parqueo · ${l.parkingPaid ? "de pago" : "gratuito"}` : label)),
-  ];
   return (
     <>
-      <ScreenTitle title={KIND_LABELS[l.kind]} back="/explorar" right={<ShareButton url={url} title={l.title} text={previewText(l)} label="Compartir" className="chip" />} />
-      <Gallery photos={l.photos} title={l.title} />
-      <div className="stack" style={{ gap: 6 }}>
+      <HeroGallery photos={l.photos} title={l.title}>
+        <Link href="/explorar" aria-label="Volver a Explorar" className="icon-btn overlay"><I.back /></Link>
+        <ShareButton url={url} title={l.title} text={preview(l)} round />
+      </HeroGallery>
+
+      <div className="stack" style={{ gap: 16, paddingTop: 4 }}>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          {l.ownerWhatsappVerified ? <span className="badge badge-ok">✓ WhatsApp verificado</span> : null}
-          <span className="badge badge-mute num">Ref {id}</span>
-          {!l.available ? <span className="badge badge-warn">No disponible por ahora</span> : null}
+          {l.ownerWhatsappVerified ? <span className="badge badge-ok"><I.check size={14} /> WhatsApp verificado</span> : null}
+          <span className="badge">{modesLabel(l)}</span>
+          {l.kind === "habitacion" ? <span className="badge">Habitación{l.bathroomShared === null ? "" : l.bathroomShared ? " · baño compartido" : " · baño privado"}</span> : null}
+          {!l.available ? <span className="badge badge-sun">No disponible por ahora</span> : null}
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 800 }}>{l.title}</h1>
-        <div className="row small muted"><I.pin size={16} /> {l.zone}, {l.canton}, {l.province}</div>
-      </div>
-      <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", maxWidth: "65ch" }}>{l.description}</p>
+        <div className="stack" style={{ gap: 4 }}>
+          <h1 style={{ fontSize: 30 }}>{l.title}</h1>
+          <span className="row muted" style={{ gap: 6 }}><I.pin size={18} /> {l.zone}, {l.canton} · ubicación aproximada</span>
+          <span className="small muted">{plural(l.capacity, "persona", "personas")} · {plural(l.bedrooms, "habitación", "habitaciones")} · {plural(l.bathrooms, "baño", "baños")}</span>
+        </div>
+        <p style={{ fontSize: 16, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{l.description}</p>
 
-      <div className="stack">
-        <div className="eyebrow">Lo que ofrece</div>
-        <div className="amen">
-          {offers.map((o) => (
-            <div key={o}><span style={{ color: "var(--primary)" }}>✓</span>{o}</div>
-          ))}
-        </div>
-      </div>
-
-      <div className="stack">
-        <div className="row between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-          <div className="eyebrow">Disponibilidad y precio orientativo</div>
-          <CurrencyToggle currency={currency} next={`/casa/${id}`} />
-        </div>
-        <ReadonlyCalendar note={`${price} por noche, salvo los días marcados con otro precio. Precios orientativos.${l.minNights > 1 ? ` Estancia mínima: ${l.minNights} noches.` : ""}`} />
-        {currency === "USD" ? <p className="xs muted">Precios convertidos a dólares solo para orientarte (≈ ₡{FX_CRC_PER_USD} por US$1). El propietario cobra en colones.</p> : null}
-        {l.acceptsMonthly ? (
-          <p className="small"><b>{l.monthlyMode === "contact" || !l.monthlyPriceCrc ? "Mensual: consultar precio con el propietario" : `Mensual: ${formatMoney(l.monthlyPriceCrc, currency)} / mes · orientativo`}</b>{l.minMonths ? ` · mínimo ${plural(l.minMonths, "mes", "meses")}` : ""}</p>
+        {l.features.length ? (
+          <div className="feature-tiles">
+            {l.features.map((f) => {
+              const Icon = I[FEATURE_ICON[f]];
+              return (
+                <div key={f}>
+                  <Icon size={22} />
+                  {f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratis"}` : FEATURE_SHORT[f]}
+                </div>
+              );
+            })}
+          </div>
         ) : null}
-      </div>
 
-      {l.lat !== null && l.lng !== null ? (
-        <div className="stack">
-          <div className="eyebrow">Ubicación aproximada</div>
-          <ApproxMap lat={l.lat} lng={l.lng} />
-        </div>
-      ) : null}
+        {l.lat !== null && l.lng !== null ? (
+          <div className="stack" style={{ gap: 8 }}>
+            <span className="eyebrow">Zona aproximada</span>
+            <ApproxMap lat={l.lat} lng={l.lng} />
+          </div>
+        ) : null}
 
-      <div className="card row">
-        <span className="avatar">{l.ownerName.charAt(0).toUpperCase()}</span>
-        <div>
-          <b>{l.ownerName}</b>
-          <div className="xs muted">WhatsApp verificado · en bnbtico desde {new Date(l.createdAt).getFullYear()}</div>
-        </div>
-      </div>
-
-      <div className="note small">
-        Sin comisiones: fechas, precio y pago los acordás con {firstName} por WhatsApp. bnbtico no procesa pagos; no transfieras sin confirmar la casa. Para escribirle necesitás tu WhatsApp verificado.
+        <p className="small muted">Publicada por <b className="ink">{l.ownerName}</b> · WhatsApp verificado. Sin comisiones: fechas, precio y pago los acuerda directamente con el propietario. bnbtico no procesa pagos.</p>
       </div>
 
       <div className="cta-spacer" aria-hidden="true" />
       <div className="cta-bar">
-        <div>
-          <div className="num" style={{ fontWeight: 800, fontSize: 17 }}>{price}<span className="small muted" style={{ fontWeight: 600 }}> / noche</span></div>
-          <div className="xs muted">orientativo</div>
+        <div className="row between" style={{ alignItems: "baseline", flexWrap: "wrap", gap: 4 }}>
+          <span className="price">
+            {formatMoney(mainCrc, currency)} <small>/ {mainUnit}</small>
+          </span>
+          <span className="xs muted">
+            <ApproxToggle currency={currency} amountCrc={mainCrc} next={`/casa/${id}`} /> · el precio final lo acuerda con el propietario
+          </span>
         </div>
-        <button className="btn btn-primary" style={{ flex: 1, flexDirection: "column", gap: 0 }} disabled type="button">
-          <span className="row"><I.wa size={18} /> Contactar por WhatsApp</span>
-          <small style={{ fontWeight: 600, opacity: 0.85 }}>Disponible pronto</small>
+        {l.acceptsNightly && l.acceptsMonthly && l.monthlyPriceCrc ? <span className="xs muted">Mensual: <b className="ink num">{formatMoney(l.monthlyPriceCrc, currency)}</b> / mes</span> : null}
+        <button className="btn btn-wa" type="button" disabled>
+          <I.wa size={22} /> Contactar por WhatsApp <small style={{ fontFamily: "var(--body)", fontWeight: 600, fontSize: 12, opacity: 0.8 }}>· disponible pronto</small>
         </button>
       </div>
     </>

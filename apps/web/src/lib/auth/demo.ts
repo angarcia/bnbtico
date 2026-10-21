@@ -35,9 +35,9 @@ export function createDemoAuth(jar: CookieJar, secret: string, deps: { now?: () 
       const wait = previous?.phone === input.phone ? cooldownError(previous.sentAt, now()) : null;
       if (wait) return { ok: false, error: wait };
       const existing = await account(input.phone);
-      if (input.mode === "login" && !existing) return { ok: false, error: "No hay una cuenta con ese WhatsApp. Creá una cuenta." };
+      if (input.mode === "login" && !existing) return { ok: false, error: "No hay una cuenta con ese WhatsApp. Cree una cuenta." };
       if (input.mode === "register" && existing) return { ok: false, error: "Ya hay una cuenta con ese WhatsApp. Iniciá sesión." };
-      if (input.mode === "register" && !input.name.trim()) return { ok: false, error: "Escribí tu nombre." };
+      if (input.mode === "register" && !input.name.trim()) return { ok: false, error: "Escriba su nombre." };
       await issue({ mode: input.mode, phone: input.phone, name: input.mode === "register" ? input.name.trim() : undefined });
       return { ok: true };
     },
@@ -58,15 +58,15 @@ export function createDemoAuth(jar: CookieJar, secret: string, deps: { now?: () 
     },
     async verify(code: string): Promise<Result> {
       const p = await readPending();
-      if (!p) return { ok: false, error: "No hay ningún código pendiente. Volvé a empezar." };
-      if (now() > p.expiresAt) return { ok: false, error: "El código caducó. Pedí otro código." };
-      if (p.attempts >= MAX_ATTEMPTS) return { ok: false, error: "Demasiados intentos. Pedí otro código." };
+      if (!p) return { ok: false, error: "No hay ningún código pendiente. Vuelva a empezar." };
+      if (now() > p.expiresAt) return { ok: false, error: "El código caducó. Pida otro código." };
+      if (p.attempts >= MAX_ATTEMPTS) return { ok: false, error: "Demasiados intentos. Pida otro código." };
       if (code.trim() !== DEMO_CODE) {
         await write(PENDING, { ...p, attempts: p.attempts + 1 }, 600);
         return { ok: false, error: "Ese código no es correcto." };
       }
       const existing = await account(p.phone);
-      if (!existing && p.mode === "login") return { ok: false, error: "No hay una cuenta con ese WhatsApp. Creá una cuenta." };
+      if (!existing && p.mode === "login") return { ok: false, error: "No hay una cuenta con ese WhatsApp. Cree una cuenta." };
       await saveAccount(
         existing ?? {
           id: `demo-${p.phone.replace(/\D/g, "")}`,

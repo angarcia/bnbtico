@@ -1,12 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { StepFields } from "@/components/publish/step-fields";
 import { StepForm } from "@/components/publish/step-form";
-import { ScreenTitle } from "@/components/shell";
+import { FlowHeader } from "@/components/shell";
 import { getOwnListing } from "@/lib/listings/repo";
 import { STEP_NAMES, type Step } from "@/lib/listings/schema";
 import { requireOwnerSession } from "@/lib/listings/session";
 
-export const metadata = { title: "Publicar alojamiento" };
+export const metadata = { title: "Publicar casa" };
 
 export default async function PublicarPaso({ params, searchParams }: { params: Promise<{ id: string; paso: string }>; searchParams: Promise<{ error?: string }> }) {
   const [{ id, paso }, { error }] = await Promise.all([params, searchParams]);
@@ -18,8 +18,8 @@ export default async function PublicarPaso({ params, searchParams }: { params: P
   if (draft.status !== "draft" && draft.status !== "changes") redirect(`/propietario/casas/${id}`);
   return (
     <>
-      <ScreenTitle title="Publicar alojamiento" back="/propietario/casas" right={<span className="xs muted">Paso {step} de 5 · {STEP_NAMES[step - 1]}</span>} />
-      <div className="steps" aria-hidden="true">
+      <FlowHeader title="Publicar casa" back="/propietario/casas" right={<span>Paso {step} de 5{step > 1 ? ` · ${STEP_NAMES[step - 1]}` : ""}</span>} />
+      <div className="progress" aria-hidden="true">
         {STEP_NAMES.map((name, i) => (
           <span key={name} className={i < step ? "on" : ""} />
         ))}

@@ -5,12 +5,12 @@ export const SUPPORT = {
   owner: {
     label: "bnbtico · atención a propietarios",
     number: process.env.NEXT_PUBLIC_WA_OWNERS || "",
-    intro: "Para cualquier duda o problema con tu cuenta, tus casas o una consulta recibida, escribinos por WhatsApp. Es el único canal de atención de bnbtico.",
+    intro: "Para cualquier duda o problema con su cuenta, sus casas o una consulta recibida, escríbanos por WhatsApp. Es el único canal de atención de bnbtico.",
   },
   guest: {
-    label: "bnbtico · buscadores de alojamiento",
+    label: "bnbtico · atención a clientes",
     number: process.env.NEXT_PUBLIC_WA_GUESTS || "",
-    intro: "Para cualquier duda o problema con tu cuenta, una casa o un propietario, escribinos por WhatsApp. Es el único canal de atención de bnbtico. Si querés, contanos zona, fechas y personas y te ayudamos a encontrar casas compatibles.",
+    intro: "Para cualquier duda o problema con su cuenta, una casa o un propietario, escríbanos por WhatsApp. Es el único canal de atención de bnbtico. Si quiere, cuéntenos zona, fechas y personas y le ayudamos a encontrar casas compatibles.",
   },
 } as const;
 

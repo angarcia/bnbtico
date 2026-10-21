@@ -2,9 +2,10 @@ import { devices, expect, test, type Browser, type Page } from "@playwright/test
 import { registerAndEnter, switchToOwner } from "./helpers/session";
 import { hasSupabase, makeAdmin, publicIdOf, resetListings } from "./helpers/supabase-admin";
 
-// Fase 2 · publicar una casa, aprobarla y verla. Contra Supabase local (pnpm db:start); se salta sin la clave de servicio.
+// Fase 2 con el diseño v1 · publicar una casa, aprobarla y verla. Contra Supabase local; se salta sin la clave de servicio.
 // El aviso del formulario (Next añade su propio role="alert" para anunciar rutas).
 const alert = (page: Page) => page.locator(".note[role=\"alert\"]");
+const TITLE = "Casa Manzanillo, a pie de playa";
 
 test.describe.configure({ mode: "serial" });
 test.skip(!hasSupabase(), "Necesita Supabase local y SUPABASE_SERVICE_ROLE_KEY en apps/web/.env.local");
@@ -13,104 +14,110 @@ test.beforeAll(async () => {
   await resetListings();
 });
 
-test("el borrador se guarda paso a paso y sobrevive a recargar", async ({ page }) => {
+/** Pulsa «Más X» del contador n veces. */
+async function count(page: Page, label: string, n: number) {
+  for (let i = 0; i < n; i++) await page.getByRole("button", { name: `Más ${label}` }).click();
+}
+
+async function fillStep3(page: Page) {
+  await count(page, "personas", 5);
+  await count(page, "habitaciones", 2);
+  await count(page, "baños", 2);
+  await page.getByText("Parqueo", { exact: true }).click();
+  await page.getByLabel("Tipo de parqueo").selectOption("free");
+  await page.getByText("Frente al mar", { exact: true }).click();
+  await page.getByLabel("Nombre de la casa").fill(TITLE);
+  await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+}
+
+test("el borrador se guarda paso a paso, con fotos, y se envía a revisión", async ({ page }) => {
   await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
   await switchToOwner(page);
+  await expect(page.getByRole("heading", { name: "Publique su casa", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Publicar casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   await expect(page.getByText("Paso 1 de 5")).toBeVisible();
 
-  // Paso 1: la respuesta mensual es explícita.
+  // Paso 1: tipo y modalidad explícitos, nada preseleccionado.
+  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Elegí Casa, Apartamento o Habitación.");
-  await page.getByLabel("Tipo de alojamiento *").selectOption("casa");
+  await expect(alert(page)).toContainText("Elija Alojamiento completo o Habitación.");
+  await page.getByText("Alojamiento completo", { exact: true }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Respondé si aceptás alquiler mensual.");
-  await page.getByLabel("¿Aceptás alquiler mensual? *").selectOption("yes");
+  await expect(alert(page)).toContainText("Marque Vacacional, Mensual o las dos.");
+  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1); // el tipo elegido no se pierde
+  await page.getByText("Vacacional", { exact: true }).click();
+  await page.getByText("Mensual", { exact: true }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/2$/);
 
   // Paso 2: ubicación con pin.
-  await page.getByLabel("Provincia *").selectOption("Limón");
-  await page.getByLabel("Cantón *").fill("Talamanca");
-  await page.getByLabel("Zona / playa / barrio *").fill("Manzanillo");
+  await page.getByLabel("Provincia").selectOption("Limón");
+  await page.getByLabel("Cantón").fill("Talamanca");
+  await page.getByLabel("Zona, playa o barrio").fill("Manzanillo");
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Marcá en el mapa la ubicación aproximada.");
+  await expect(alert(page)).toContainText("Marque en el mapa la ubicación aproximada.");
   await page.locator(".leaflet-container").click({ position: { x: 150, y: 120 } });
   await expect(page.locator('input[name="lat"]')).not.toHaveValue("");
+  await expect(page.getByText("Arrastre el pin")).toBeVisible();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/3$/);
 
-  // Paso 3: campos del prototipo; el tipo de parqueo aparece al marcar Parqueo.
-  await expect(page.getByLabel("Tipo de parqueo *")).toBeHidden();
-  await page.getByLabel("Parqueo", { exact: true }).check();
-  await expect(page.getByLabel("Tipo de parqueo *")).toBeVisible();
-  await page.getByLabel("Máximo de personas *").fill("5");
-  await page.getByLabel("Número de habitaciones ofrecidas *").fill("2");
-  await page.getByLabel("Número de baños disponibles *").fill("2");
-  await page.getByLabel("Tipo de parqueo *").selectOption("free");
-  await page.getByLabel("Frente al mar").check();
-  await page.getByLabel("Título *").fill("Casa Manzanillo, a pie de playa");
-  await page.getByLabel("Descripción *").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+  // Paso 3: contadores, chips, tipo de parqueo al marcar Parqueo.
+  await expect(page.getByLabel("Tipo de parqueo")).toHaveCount(0);
+  await page.getByText("Parqueo", { exact: true }).click();
+  await expect(page.getByLabel("Tipo de parqueo")).toBeVisible();
+  await page.getByLabel("Nombre de la casa").fill("Se pierde al recargar");
 
   // Recargar antes de guardar pierde lo no enviado; lo guardado en pasos anteriores sigue ahí.
   await page.reload();
-  await expect(page.getByLabel("Título *")).toHaveValue("");
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("");
   await page.goto(page.url().replace(/\/3$/, "/2"));
-  await expect(page.getByLabel("Cantón *")).toHaveValue("Talamanca");
-  await expect(page.getByLabel("Zona / playa / barrio *")).toHaveValue("Manzanillo");
+  await expect(page.getByLabel("Cantón")).toHaveValue("Talamanca");
   await page.goto(page.url().replace(/\/2$/, "/1"));
-  await expect(page.getByLabel("Tipo de alojamiento *")).toHaveValue("casa");
-  await expect(page.getByLabel("¿Aceptás alquiler mensual? *")).toHaveValue("yes");
+  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(3);
 
-  // Volver a publicar ofrece seguir con el borrador; abrir la página no crea borradores.
-  await page.goto("/propietario");
-  await page.getByRole("button", { name: "Publicar casa" }).click();
+  // «Nueva» con un borrador pendiente ofrece seguirlo; abrir esa página no crea borradores.
+  await page.goto("/propietario/casas");
+  await page.getByRole("button", { name: "Nueva" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar$/);
-  await expect(page.getByText("Tenés un borrador sin enviar")).toBeVisible();
+  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Seguir con el borrador" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
 
   // Paso 3 completo.
   await page.goto(page.url().replace(/\/1$/, "/3"));
-  await page.getByLabel("Máximo de personas *").fill("5");
-  await page.getByLabel("Número de habitaciones ofrecidas *").fill("2");
-  await page.getByLabel("Número de baños disponibles *").fill("2");
-  await page.getByLabel("Parqueo", { exact: true }).check();
-  await page.getByLabel("Tipo de parqueo *").selectOption("free");
-  await page.getByLabel("Frente al mar").check();
-  await page.getByLabel("Título *").fill("Casa Manzanillo, a pie de playa");
-  await page.getByLabel("Descripción *").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+  await fillStep3(page);
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/4$/);
 
   // Paso 4: fotos generadas en el navegador; con 4 no deja seguir, con 5 sí.
   const files = await jpegFiles(page, 5);
   await page.getByLabel("Agregar fotos").setInputFiles(files.slice(0, 4));
-  await expect(page.getByRole("status")).toHaveText("4 fotos");
+  await expect(page.getByRole("status")).toHaveText("4 de 5–15");
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(alert(page)).toContainText("Agregá al menos 5 fotos.");
+  await expect(alert(page)).toContainText("Agregue al menos 5 fotos.");
   await page.getByLabel("Agregar fotos").setInputFiles(files.slice(4));
-  await expect(page.getByRole("status")).toHaveText("5 fotos");
-  await expect(page.locator(".photos-grid .tag")).toHaveText("Portada");
+  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+  await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
   await page.reload();
-  await expect(page.getByRole("status")).toHaveText("5 fotos");
+  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/5$/);
 
-  // Paso 5: precio en colones (acepta separadores), mensual «consultar», enviar a revisión.
-  await page.getByLabel("Precio por noche (₡) *").fill("85.000");
-  await page.getByLabel("Estancia mínima (noches) *").fill("2");
-  await page.getByLabel("Precio mensual *").selectOption("contact");
-  await expect(page.getByText("Se mostrará «Consultar precio mensual con el propietario».")).toBeVisible();
+  // Paso 5: un precio por modalidad (acepta separadores) y enviar.
+  await page.getByLabel("Por noche").fill("85.000");
+  await page.getByLabel("Por mes").fill("900.000");
   await expect(page.getByText("+506 8777 0001")).toBeVisible();
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page).toHaveURL(/\/propietario\/casas\?enviada=1/);
-  await expect(page.getByRole("status")).toContainText("Anuncio enviado a revisión");
-  await expect(page.getByText("Pendiente de revisión")).toBeVisible();
+  await expect(page).toHaveURL(/\/propietario\/casas\/[0-9a-f-]+\/enviada$/);
+  await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
+  await page.getByRole("link", { name: "Ir a Mis casas" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await expect(page.getByText("En revisión", { exact: true })).toBeVisible();
   await expect(page.getByText("₡85 000")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
+  await expect(page.getByRole("link", { name: TITLE })).toBeVisible();
 
   // Un borrador nuevo se puede descartar (con confirmación).
   await page.getByRole("button", { name: "Nueva" }).click();
@@ -129,163 +136,165 @@ test("un usuario con sesión pero sin is_admin no ve /admin", async ({ page }) =
   await expect(page.getByRole("link", { name: /Revisión de anuncios/ })).toHaveCount(0);
 });
 
-test("el admin revisa: pedir cambios exige motivo; aprobar activa la casa", async ({ browser }) => {
+test("el admin revisa: pedir cambios exige motivo; aprobar y publicar activa la casa", async ({ browser }) => {
   const page = await adminPage(browser);
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Revisión de anuncios" })).toBeVisible();
-  await expect(page.getByText("1 pendientes")).toBeVisible();
-  await page.getByRole("link", { name: "Revisar" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
-  await expect(page.getByText("Publicado por Yorleny Prueba")).toBeVisible();
-  await expect(page.getByText("Fotos (5)")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Anuncios" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Por revisar · 1" })).toBeVisible();
+  await page.getByRole("link", { name: new RegExp(TITLE) }).click();
+  await expect(page.getByRole("heading", { level: 2, name: TITLE })).toBeVisible();
+  await expect(page.getByText("Yorleny Prueba")).toBeVisible();
+  await expect(page.getByText("5 fotos")).toBeVisible();
+  await expect(page.getByText("Vacacional · Mensual · Alojamiento completo", { exact: false })).toBeVisible();
   await expect(page.getByText("Frente al mar")).toBeVisible();
-  await expect(page.getByText("Consultar con el propietario")).toBeVisible();
-  await expect(page.getByText("Gratuito")).toBeVisible();
   await expect(page.getByText("Identidad")).toHaveCount(0);
-  await page.getByRole("button", { name: "Ampliar foto 1, portada" }).click();
-  await expect(page.getByText("Foto 1 de 5 · Portada")).toBeVisible();
-  await page.getByRole("button", { name: "Siguiente" }).click();
-  await expect(page.getByText("Foto 2 de 5")).toBeVisible();
   await page.getByRole("button", { name: "Pedir cambios" }).click();
-  await expect(page.locator(".field-error[role=\"alert\"]")).toContainText("Escribí un motivo");
-  await page.getByRole("button", { name: "Aprobar anuncio" }).click();
+  await expect(page.locator(".field-error[role=\"alert\"]")).toContainText("Escriba un motivo");
+  await page.getByRole("button", { name: "Aprobar y publicar" }).click();
   await expect(page.getByRole("status")).toContainText("Activa");
-  await expect(page.getByRole("button", { name: "Aprobar anuncio" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toHaveCount(0);
   await page.goto("/admin");
-  await expect(page.getByText("0 pendientes")).toBeVisible();
+  await expect(page.getByText("No hay anuncios pendientes.")).toBeVisible();
   await page.context().close();
 });
 
 test("la ficha pública abre sin sesión con metadatos para WhatsApp y moneda", async ({ browser }) => {
   const ctx = await browser.newContext(devices["Pixel 7"]);
   const page = await ctx.newPage();
-  const publicId = await publicIdOf("Casa Manzanillo, a pie de playa");
+  const publicId = await publicIdOf(TITLE);
   await page.goto(`/casa/${publicId.toLowerCase()}`);
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo, a pie de playa" })).toBeVisible();
-  await expect(page.getByText("✓ WhatsApp verificado")).toBeVisible();
-  await expect(page.getByText(`Ref ${publicId}`)).toBeVisible();
-  await expect(page.getByText("Manzanillo, Talamanca, Limón")).toBeVisible();
-  // Lo que ofrece: solo lo que sí tiene.
-  await expect(page.getByText("5 personas")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
+  await expect(page.getByText("WhatsApp verificado", { exact: true })).toBeVisible();
+  await expect(page.getByText("Vacacional · Mensual", { exact: true })).toBeVisible();
+  await expect(page.getByText("Manzanillo, Talamanca · ubicación aproximada")).toBeVisible();
+  await expect(page.getByText("5 personas · 2 habitaciones · 2 baños")).toBeVisible();
   await expect(page.getByText("Frente al mar")).toBeVisible();
-  await expect(page.getByText("Parqueo · gratuito")).toBeVisible();
+  await expect(page.getByText("Parqueo gratis")).toBeVisible();
   await expect(page.getByText("Piscina")).toHaveCount(0);
-  // Precio una vez en la barra fija, mensual «consultar», contacto deshabilitado hasta la fase 3.
+  await expect(page.getByText(/Ref CT-/)).toHaveCount(0);
+  // Precio una vez en la barra fija, mensual debajo, contacto deshabilitado hasta la fase 3.
   await expect(page.locator(".cta-bar")).toContainText("₡85 000");
-  await expect(page.getByText("Mensual: consultar precio con el propietario")).toBeVisible();
+  await expect(page.locator(".cta-bar")).toContainText("₡900 000");
   await expect(page.getByRole("button", { name: /Contactar por WhatsApp/ })).toBeDisabled();
-  await expect(page.getByText("Disponible pronto")).toBeVisible();
-  await expect(page.getByText("Identidad")).toHaveCount(0);
-  await expect(page.locator(".note")).toHaveCount(1);
   // Metadatos para la vista previa de WhatsApp.
-  expect(await page.locator('meta[property="og:title"]').getAttribute("content")).toContain("Casa Manzanillo, a pie de playa");
-  expect(await page.locator('meta[property="og:description"]').getAttribute("content")).toBe("Casa en Manzanillo, Limón · 5 personas · ₡85\u00a0000 por noche · orientativo");
+  expect(await page.locator('meta[property="og:title"]').getAttribute("content")).toContain(TITLE);
+  expect(await page.locator('meta[property="og:description"]').getAttribute("content")).toBe("Alojamiento completo en Manzanillo, Limón · 5 personas · ₡85 000 por noche · orientativo");
   expect(await page.locator('meta[property="og:image"]').getAttribute("content")).toMatch(/\/storage\/v1\/object\/public\/listings\//);
   expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toBe(`https://bnbtico.com/casa/${publicId}`);
   // Dólares solo como visualización.
-  await page.getByRole("button", { name: "$ Dólares" }).click();
+  await page.getByRole("button", { name: "Ver en dólares" }).click();
   await expect(page.locator(".cta-bar")).toContainText("$167");
-  await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
-  // Mapa aproximado.
+  await expect(page.getByRole("button", { name: "Ver en colones" })).toContainText("≈ ₡85");
+  await page.getByRole("button", { name: "Ver en colones" }).click();
   await expect(page.locator(".leaflet-container")).toBeVisible();
-  // Enlace inválido → 404.
   const r = await page.goto("/casa/CT-0001");
   expect(r?.status()).toBe(404);
   await ctx.close();
 });
 
-test("Explorar arranca en Limón, filtra, limpia y abre la ficha", async ({ page }) => {
+test("Explorar arranca en Limón, filtra desde Filtros, limpia y abre la ficha", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(page.getByRole("heading", { name: "¿A dónde vas?" })).toBeVisible();
-  await expect(page.getByText("1 casa en Limón")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Limón", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("link", { name: "Cartago", exact: true })).toHaveCount(0);
-  // Qué necesitan y precio están plegados en móvil.
-  await expect(page.getByText("Qué necesitan")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "¿Para dónde va?" })).toBeVisible();
+  await expect(page.getByText("1 casa")).toBeVisible();
+  await expect(page.getByText("en Limón")).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Limón/ })).toBeVisible(); // buscador-resumen
   await page.getByRole("link", { name: /Más filtros/ }).click();
-  await expect(page.getByText("Qué necesitan")).toBeVisible();
-  await page.getByLabel("Piscina").check();
+  await expect(page).toHaveURL(/\/explorar\/filtros/);
+  await expect(page.getByRole("heading", { name: "Filtros" })).toBeVisible();
+  await expect(page.getByText("Cartago", { exact: true })).toHaveCount(0);
+  await page.getByText("Piscina", { exact: true }).click();
+  await page.getByRole("button", { name: /Ver 1 casa/ }).click();
+  await expect(page).toHaveURL(/pool=1/);
   await expect(page.getByText("Sin resultados con esos filtros.")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Menos filtros/ })).toContainText("1");
+  await page.getByRole("link", { name: /Más filtros/ }).click();
   await page.getByRole("link", { name: "Limpiar" }).click();
-  await expect(page.getByText("1 casa en Limón")).toBeVisible();
-  // Personas 6+ deja fuera la casa de 5; Cualquiera la devuelve.
+  await expect(page).toHaveURL(/\/explorar$/);
+  await expect(page.getByText("1 casa")).toBeVisible();
+  // Chip rápido Mensual: la casa acepta las dos modalidades.
+  await page.getByRole("link", { name: "Mensual", exact: true }).click();
+  await expect(page.getByText("1 casa")).toBeVisible();
+  // Personas 6+ deja fuera la casa de 5.
+  await page.goto("/explorar/filtros");
   await page.getByLabel("Personas").selectOption("6");
+  await page.getByRole("button", { name: /Ver/ }).click();
   await expect(page.getByText("Sin resultados con esos filtros.")).toBeVisible();
-  await page.getByLabel("Personas").selectOption("0");
-  await expect(page.getByText("1 casa en Limón")).toBeVisible();
+  await page.goto("/explorar");
   // Moneda junto a la línea de resultados.
   await page.getByRole("button", { name: "$ Dólares" }).click();
   await expect(page.getByText("$167")).toBeVisible();
-  await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
   await page.getByRole("button", { name: "₡ Colones" }).click();
-  await page.getByRole("link", { name: /Casa Manzanillo, a pie de playa/ }).click();
+  await page.getByRole("link", { name: new RegExp(TITLE) }).click();
   await expect(page).toHaveURL(/\/casa\/CT-\d+/);
 });
 
-test("detalle del propietario: no disponible, compartir, editar y reenviar", async ({ page, browser }) => {
+test("detalle del propietario: disponible para consultas, compartir, editar y reenviar", async ({ page, browser }) => {
   await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
   await switchToOwner(page);
+  await expect(page.getByRole("heading", { name: "Su casa, en marcha" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toBeVisible();
   await page.goto("/propietario/casas");
-  await page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" }).click();
+  await page.getByRole("link", { name: TITLE }).click();
   await expect(page).toHaveURL(/\/propietario\/casas\/[0-9a-f-]+$/);
-  await expect(page.getByText("Visible en bnbtico")).toBeVisible();
-  const publicId = await publicIdOf("Casa Manzanillo, a pie de playa");
-  await expect(page.getByRole("button", { name: "Compartir ficha" })).toBeEnabled();
+  await expect(page.getByRole("link", { name: "Ver ficha" })).toBeVisible();
+  const publicId = await publicIdOf(TITLE);
+  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeEnabled();
   await expect(page.locator(`[data-share-url$="/casa/${publicId}"]`)).toHaveCount(1);
 
-  // No disponible: la ficha sigue abierta pero avisa.
-  await page.getByRole("button", { name: "Marcar no disponible" }).click();
-  await expect(page.getByText("No disponible", { exact: true })).toBeVisible();
+  // Disponible para consultas: la ficha sigue abierta pero avisa.
+  await page.getByRole("switch", { name: "Marcar no disponible" }).click();
+  await expect(page.getByRole("switch", { name: "Marcar disponible" })).toBeVisible();
   const guest = await (await browser.newContext(devices["Pixel 7"])).newPage();
   await guest.goto(`/casa/${publicId}`);
   await expect(guest.getByText("No disponible por ahora")).toBeVisible();
-  await page.getByRole("button", { name: "Marcar disponible" }).click();
-  await expect(page.getByText("Activa", { exact: true })).toBeVisible();
+  await page.getByRole("switch", { name: "Marcar disponible" }).click();
+  await expect(page.getByRole("switch", { name: "Marcar no disponible" })).toBeVisible();
 
   // Editar una casa activa la oculta hasta la nueva aprobación.
   page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Editar" }).click();
+  await page.getByRole("button", { name: /Editar la ficha/ }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
-  // El borrador de una casa que ya estuvo publicada no se puede descartar.
-  await page.goto("/propietario/casas");
-  await expect(page.getByText("Estuvo publicada")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Descartar" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" }).click();
-  await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Seguir" }).click();
   await guest.goto(`/casa/${publicId}`);
   await expect(guest.getByText("Este enlace ya no está activo")).toBeVisible();
   await guest.context().close();
+  // El borrador de una casa que ya estuvo publicada no se puede descartar.
+  await page.goto("/propietario/casas");
+  await expect(page.getByText(/Estuvo publicada/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descartar" })).toHaveCount(0);
+  await page.getByRole("link", { name: TITLE }).click();
+  await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
+  await page.getByRole("link", { name: /Seguir con el borrador/ }).click();
   for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/5$/);
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page).toHaveURL(/\/propietario\/casas\?enviada=1/);
-  await expect(page.getByText("Pendiente de revisión")).toBeVisible();
+  await expect(page).toHaveURL(/\/enviada$/);
+  await page.getByRole("link", { name: "Ir a Mis casas" }).click();
+  await expect(page.getByText("En revisión", { exact: true })).toBeVisible();
 });
 
 test("pedir cambios: el propietario ve el motivo, corrige y reenvía", async ({ page, browser }) => {
   const admin = await adminPage(browser);
   await admin.goto("/admin");
-  await admin.getByRole("link", { name: "Revisar" }).click();
-  await admin.getByLabel("Motivo o indicaciones").fill("Necesitamos fotos de la cocina.");
+  await admin.getByRole("link", { name: new RegExp(TITLE) }).click();
+  await admin.getByLabel(/Mensaje para el propietario/).fill("Necesitamos una foto de la cocina.");
   await admin.getByRole("button", { name: "Pedir cambios" }).click();
-  await expect(admin.getByRole("status")).toContainText("Cambios solicitados");
+  await expect(admin.getByRole("status")).toContainText("Cambios pedidos");
 
   await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
   await switchToOwner(page);
   await page.goto("/propietario/casas");
-  await expect(page.getByText("Cambios solicitados")).toBeVisible();
-  await expect(page.getByText("Nota de bnbtico: Necesitamos fotos de la cocina.")).toBeVisible();
-  await page.getByRole("link", { name: "Casa Manzanillo, a pie de playa" }).click();
+  await expect(page.getByText("Cambios pedidos", { exact: true })).toBeVisible();
+  await expect(page.getByText("Nota de bnbtico: Necesitamos una foto de la cocina.")).toBeVisible();
+  await page.getByRole("link", { name: TITLE }).click();
   await page.getByRole("button", { name: "Corregir y reenviar" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continuar" }).click();
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page.getByText("Pendiente de revisión")).toBeVisible();
+  await expect(page).toHaveURL(/\/enviada$/);
+  await page.getByRole("link", { name: "Ir a Mis casas" }).click();
+  await expect(page.getByText("En revisión", { exact: true })).toBeVisible();
 
   await admin.goto("/admin");
-  await expect(admin.getByText("1 pendientes")).toBeVisible();
+  await expect(admin.getByRole("link", { name: "Por revisar · 1" })).toBeVisible();
   await admin.context().close();
 });
 
@@ -305,7 +314,7 @@ async function jpegFiles(page: Page, count: number) {
     c.width = 640;
     c.height = 480;
     const x = c.getContext("2d")!;
-    x.fillStyle = "#1f8a70";
+    x.fillStyle = "#2F5D45";
     x.fillRect(0, 0, 640, 480);
     return c.toDataURL("image/jpeg", 0.8).split(",")[1];
   });

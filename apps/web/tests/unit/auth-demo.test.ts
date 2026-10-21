@@ -54,7 +54,7 @@ describe("autenticación demo (sin envíos reales)", () => {
     for (let i = 0; i < 5; i++) expect((await auth.verify("111111")).ok).toBe(false);
     const last = await auth.verify(DEMO_CODE);
     expect(last.ok).toBe(false);
-    expect(last.error).toMatch(/pedí otro código/i);
+    expect(last.error).toMatch(/pida otro código/i);
   });
 
   it("guarda cambios de perfil", async () => {

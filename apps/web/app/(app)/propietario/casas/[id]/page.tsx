@@ -1,103 +1,92 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { deleteDraftAction, setAvailableAction, startEditAction } from "@/actions/listings";
 import { ConfirmForm } from "@/components/confirm-form";
+import { I } from "@/components/icons";
 import { ShareButton } from "@/components/listing/share-button";
 import { StatusBadge } from "@/components/listing/status-badge";
-import { ScreenTitle } from "@/components/shell";
+import { FlowHeader } from "@/components/shell";
+import { ListItem } from "@/components/ui";
 import { getOwnListing } from "@/lib/listings/repo";
 import { requireOwnerSession } from "@/lib/listings/session";
-import { previewText, publicUrl, shareBase } from "@/lib/listings/share";
+import { previewText, publicUrl } from "@/lib/listings/share";
+import { requestShareBase } from "@/lib/listings/share-server";
 import { formatCRC } from "@/lib/money";
+import { formatPhone } from "@/lib/phone";
 
 export const metadata = { title: "Mi casa" };
 
-const STATUS_TEXT: Record<string, string> = {
-  draft: "Todavía no la enviaste a revisión.",
-  review: "La estamos revisando. Te avisamos cuando esté lista.",
-  changes: "Revisá la nota de bnbtico, corregí y reenviá.",
-  active: "Visible en bnbtico. Compartí el enlace con tus clientes.",
-  rejected: "Este anuncio fue rechazado. Si querés, publicá uno nuevo.",
-  payment_due: "Fuera del catálogo hasta regularizar la suscripción.",
-  inactive: "Paraste la suscripción. La casa no se muestra.",
-};
-
-/** Detalle de gestión de una casa (prototipo mis-casas.js, móvil): estado, compartir, disponibilidad, editar. */
+/** Detalle de mi casa (pantalla 19): foto con estado, aviso si toca, y la lista de gestión. */
 export default async function CasaPropietario({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { db } = await requireOwnerSession(`/propietario/casas/${id}`);
   const l = await getOwnListing(db, id);
   if (!l) notFound();
-  const h = await headers();
-  const origin = h.get("host") ? `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}` : null;
-  const url = publicUrl(l.publicId, shareBase({ NODE_ENV: process.env.NODE_ENV, NEXT_PUBLIC_STAGE: process.env.NEXT_PUBLIC_STAGE }, origin));
+  const base = await requestShareBase();
+  const url = publicUrl(l.publicId, base);
   const active = l.status === "active";
   const cover = l.photos[0];
+  const price = l.acceptsNightly && l.nightlyPriceCrc ? [formatCRC(l.nightlyPriceCrc), "noche"] : l.acceptsMonthly && l.monthlyPriceCrc ? [formatCRC(l.monthlyPriceCrc), "mes"] : null;
   return (
     <>
-      <ScreenTitle title={l.title || "Borrador sin título"} back="/propietario/casas" />
-      <div className="photo" style={{ borderRadius: 12 }}>
-        {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover.url} alt="" />
-        ) : (
-          <span className="small">Sin fotos</span>
-        )}
+      <FlowHeader title={l.title || "Borrador sin título"} back="/propietario/casas" right={active ? <Link href={`/casa/${l.publicId}`} className="link">Ver ficha</Link> : undefined} />
+
+      <div className="photo" style={{ height: 170, borderRadius: 24 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {cover ? <img src={cover.url} alt="" /> : <span className="small">Sin fotos</span>}
+        <span style={{ position: "absolute", left: 12, top: 12 }}><StatusBadge status={l.status} available={l.available} /></span>
+        {price ? <span className="pill" style={{ left: 12, bottom: 12 }}>{price[0]} <span>/ {price[1]}</span></span> : null}
+        <span className="pill pill-sm" style={{ right: 12, bottom: 12 }}>{l.publicId}</span>
       </div>
 
-      <section className="card stack">
-        <div className="row between">
-          <b className="num">{l.nightlyPriceCrc ? `${formatCRC(l.nightlyPriceCrc)} / noche` : "Sin precio"}</b>
-          <StatusBadge status={l.status} available={l.available} />
-        </div>
-        <p className="small muted">{l.status === "draft" && l.reviewedAt ? "Estuvo publicada. Estás editándola: al enviarla volverá a revisión." : STATUS_TEXT[l.status]}</p>
-        {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <div className="note small">Nota de bnbtico: {l.reviewNote}</div> : null}
-        <span className="xs muted num">{l.publicId}</span>
-      </section>
+      {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
+      {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}
+      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? (
+        <section className="card-sun stack">
+          <b className="display" style={{ fontSize: 16 }}>{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
+          <span className="small ink">{l.reviewNote}</span>
+          {l.status === "changes" ? (
+            <form action={startEditAction}>
+              <input type="hidden" name="id" value={l.id} />
+              <button className="btn btn-sun btn-block" type="submit">Corregir y reenviar</button>
+            </form>
+          ) : null}
+        </section>
+      ) : null}
 
-      <section className="card stack">
-        <b>Ficha</b>
-        <ShareButton url={url} title={l.title} text={l.kind && l.nightlyPriceCrc ? previewText({ kind: l.kind, zone: l.zone, province: l.province, capacity: l.capacity ?? 1, nightlyPriceCrc: l.nightlyPriceCrc }) : l.title} disabled={!active} />
-        <p className="xs muted">{active ? "Enviá el enlace por WhatsApp o compartilo en tus redes." : "Podrás compartir la ficha cuando la casa esté activa."}</p>
-      </section>
-
-      <section className="card stack">
-        <b>Gestión</b>
+      <section className="list">
+        <ShareButton url={url} title={l.title} text={l.acceptsNightly && l.nightlyPriceCrc && l.kind ? previewText({ kind: l.kind, zone: l.zone, province: l.province, capacity: l.capacity ?? 1, nightlyPriceCrc: l.nightlyPriceCrc }) : l.title} disabled={!active} asListItem={{ detail: active ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa" }} />
+        <ListItem href="/propietario/calendario" icon={<I.calendar />} title="Calendario y precios" detail="Noches ocupadas y precios por fecha · llega en la fase 4" />
         {active ? (
-          <form action={setAvailableAction} className="stack">
+          <ConfirmForm action={startEditAction} message="Su casa dejará de verse mientras la revisamos. ¿Quiere editarla?" className="stack" >
+            <input type="hidden" name="id" value={l.id} />
+            <button type="submit" className="list-item">
+              <span style={{ color: "var(--muted)", display: "inline-flex" }}><I.edit /></span>
+              <span className="body">Editar la ficha<small>Fotos, descripción, características y precio · vuelve a revisión</small></span>
+              <span className="chev"><I.chevron /></span>
+            </button>
+          </ConfirmForm>
+        ) : l.status === "draft" ? (
+          <ListItem href={`/propietario/publicar/${l.id}/1`} icon={<I.edit />} title="Seguir con el borrador" detail="Fotos, descripción, características y precio" />
+        ) : null}
+        <ListItem icon={<I.phone />} title="WhatsApp de esta casa" detail={<span className="num">{formatPhone(l.whatsappPhone)} · verificado</span>} />
+        {active ? (
+          <form action={setAvailableAction} className="list-item" style={{ display: "flex" }}>
             <input type="hidden" name="id" value={l.id} />
             <input type="hidden" name="available" value={l.available ? "0" : "1"} />
-            <button className="btn btn-ghost" type="submit">{l.available ? "Marcar no disponible" : "Marcar disponible"}</button>
-            <p className="xs muted">No disponible cierra consultas nuevas sin ocultar la ficha.</p>
+            <span style={{ color: "var(--muted)", display: "inline-flex" }}><I.help /></span>
+            <span className="body">Disponible para consultas<small>Si la cierra, la ficha sigue visible pero sin botón de contacto</small></span>
+            <button type="submit" role="switch" aria-checked={l.available} aria-label={l.available ? "Marcar no disponible" : "Marcar disponible"} className="switch"><span /></button>
           </form>
         ) : null}
-        {active ? (
-          <ConfirmForm action={startEditAction} message="Tu casa dejará de verse mientras la revisamos. ¿Querés editarla?" className="stack">
-            <input type="hidden" name="id" value={l.id} />
-            <button className="btn btn-ghost" type="submit">Editar</button>
-            <p className="xs muted">Tu casa dejará de verse mientras la revisamos.</p>
-          </ConfirmForm>
-        ) : null}
-        {l.status === "changes" ? (
-          <form action={startEditAction}>
-            <input type="hidden" name="id" value={l.id} />
-            <button className="btn btn-primary" type="submit" style={{ width: "100%" }}>Corregir y reenviar</button>
-          </form>
-        ) : null}
-        {l.status === "draft" ? (
-          <>
-            <Link href={`/propietario/publicar/${l.id}/1`} className="btn btn-primary">Seguir</Link>
-            {l.reviewedAt ? null : (
-              <ConfirmForm action={deleteDraftAction} message="¿Descartar este borrador? No se puede deshacer.">
-                <input type="hidden" name="id" value={l.id} />
-                <button className="btn btn-ghost" type="submit" style={{ width: "100%" }}>Descartar borrador</button>
-              </ConfirmForm>
-            )}
-          </>
-        ) : null}
-        {l.status === "review" ? <p className="small muted">Mientras la revisamos no se puede editar.</p> : null}
       </section>
+
+      {l.status === "draft" && !l.reviewedAt ? (
+        <ConfirmForm action={deleteDraftAction} message="¿Descartar este borrador? No se puede deshacer." className="stack">
+          <input type="hidden" name="id" value={l.id} />
+          <button className="btn btn-outline-bad" type="submit">Descartar borrador</button>
+        </ConfirmForm>
+      ) : null}
     </>
   );
 }

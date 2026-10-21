@@ -13,9 +13,9 @@ const str = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 export async function startAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const mode = str(fd, "mode") === "login" ? "login" : "register";
   const phone = normalizePhone(str(fd, "phone"));
-  if (!phone) return { error: "Escribí un WhatsApp válido, con código de país si no es de Costa Rica." };
+  if (!phone) return { error: "Escriba un WhatsApp válido, con código de país si no es de Costa Rica." };
   const name = str(fd, "name");
-  if (mode === "register" && name.length < 2) return { error: "Escribí tu nombre." };
+  if (mode === "register" && name.length < 2) return { error: "Escriba su nombre." };
   const result = await (await auth()).start(mode === "register" ? { mode, name, phone } : { mode, phone });
   if (!result.ok) return { error: result.error };
   redirect("/cuenta/codigo");

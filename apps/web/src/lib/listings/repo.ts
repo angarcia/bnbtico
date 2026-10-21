@@ -9,13 +9,14 @@ import { DEFAULT_PROVINCE, normalize, type Feature, type Kind, type Listing, typ
 type Row = Record<string, unknown>;
 
 const LISTING_COLUMNS =
-  "id, public_id, owner_id, status, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, features, parking_paid, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, whatsapp_phone, available, review_note, reviewed_at, created_at, updated_at, listing_photos(id, path, position)";
+  "id, public_id, owner_id, status, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, whatsapp_phone, available, review_note, reviewed_at, created_at, updated_at, listing_photos(id, path, position)";
 
 export function toRow(d: Partial<ListingDraft>): Row {
   const row: Row = {};
   // Vacío o inválido se guarda como null (la validación por paso ya impidió llegar aquí con NaN).
   const num = (v: number | null | undefined) => (v === null || v === undefined || Number.isNaN(v) ? null : v);
   if ("kind" in d) row.kind = d.kind;
+  if ("acceptsNightly" in d) row.accepts_nightly = d.acceptsNightly === true;
   if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly;
   if ("province" in d) row.province = d.province;
   if ("canton" in d) row.canton = d.canton;
@@ -25,6 +26,7 @@ export function toRow(d: Partial<ListingDraft>): Row {
   if ("capacity" in d) row.capacity = num(d.capacity);
   if ("bedrooms" in d) row.bedrooms = num(d.bedrooms);
   if ("bathrooms" in d) row.bathrooms = num(d.bathrooms);
+  if ("bathroomShared" in d) row.bathroom_shared = d.bathroomShared;
   if ("title" in d) row.title = d.title;
   if ("description" in d) row.description = d.description;
   if ("features" in d) row.features = d.features;
@@ -48,6 +50,7 @@ export function fromRow(row: Row): Listing {
     ownerId: String(row.owner_id),
     status: row.status as Listing["status"],
     kind: (row.kind as Listing["kind"]) ?? null,
+    acceptsNightly: row.accepts_nightly === true,
     acceptsMonthly: row.accepts_monthly === null || row.accepts_monthly === undefined ? null : row.accepts_monthly === true,
     province: String(row.province ?? DEFAULT_PROVINCE),
     canton: String(row.canton ?? ""),
@@ -57,6 +60,7 @@ export function fromRow(row: Row): Listing {
     capacity: n(row.capacity),
     bedrooms: n(row.bedrooms),
     bathrooms: n(row.bathrooms),
+    bathroomShared: (row.bathroom_shared as boolean | null) ?? null,
     title: String(row.title ?? ""),
     description: String(row.description ?? ""),
     features: (row.features as Listing["features"]) ?? [],
@@ -82,7 +86,7 @@ const fail = (message: string | undefined, fallback: string): Result => ({ ok: f
 export async function createDraft(db: SupabaseClient, ownerId: string, ownerPhone: string): Promise<{ id: string; publicId: string }> {
   const { data, error } = await db
     .from("listings")
-    .insert({ owner_id: ownerId, status: "draft", title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: ownerPhone })
+    .insert({ owner_id: ownerId, status: "draft", title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: ownerPhone, accepts_nightly: false })
     .select("id, public_id")
     .single();
   if (error) throw error;
@@ -133,7 +137,7 @@ export async function deleteDraft(db: SupabaseClient, id: string): Promise<Resul
 /** Envía a revisión (RPC submit_listing: valida en la base lo mismo que la UI). */
 export async function submit(db: SupabaseClient, id: string): Promise<Result> {
   const { error } = await db.rpc("submit_listing", { p_listing: id });
-  return error ? fail(error.message, "No pudimos enviar el anuncio. Intentá de nuevo.") : { ok: true };
+  return error ? fail(error.message, "No pudimos enviar el anuncio. Intente de nuevo.") : { ok: true };
 }
 
 // ---------- Público (vista listings_public, legible con la clave anónima) ----------
@@ -150,10 +154,12 @@ export interface PublicListing {
   capacity: number;
   bedrooms: number;
   bathrooms: number;
+  bathroomShared: boolean | null;
   features: Feature[];
   parkingPaid: boolean | null;
-  nightlyPriceCrc: number;
-  minNights: number;
+  acceptsNightly: boolean;
+  nightlyPriceCrc: number | null;
+  minNights: number | null;
   acceptsMonthly: boolean;
   monthlyMode: MonthlyMode | null;
   monthlyPriceCrc: number | null;
@@ -166,7 +172,7 @@ export interface PublicListing {
 }
 
 const PUBLIC_COLUMNS =
-  "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, features, parking_paid, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, created_at, owner_name, owner_whatsapp_verified";
+  "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, created_at, owner_name, owner_whatsapp_verified";
 
 async function publicFromRow(db: SupabaseClient, row: Row, loaded?: Photo[]): Promise<PublicListing> {
   const photos = loaded ?? (await listPhotos(db, String(row.id)));
@@ -175,7 +181,7 @@ async function publicFromRow(db: SupabaseClient, row: Row, loaded?: Photo[]): Pr
   const exact = row.lat !== null && row.lng !== null && row.lat !== undefined ? { lat: Number(row.lat), lng: Number(row.lng) } : null;
   return {
     publicId,
-    kind: (row.kind as Kind) ?? "casa",
+    kind: (row.kind as Kind) ?? "completo",
     title: String(row.title),
     description: String(row.description ?? ""),
     province: String(row.province),
@@ -186,10 +192,12 @@ async function publicFromRow(db: SupabaseClient, row: Row, loaded?: Photo[]): Pr
     capacity: Number(row.capacity),
     bedrooms: Number(row.bedrooms),
     bathrooms: Number(row.bathrooms),
+    bathroomShared: (row.bathroom_shared as boolean | null) ?? null,
     features: (row.features as Feature[]) ?? [],
     parkingPaid: (row.parking_paid as boolean | null) ?? null,
-    nightlyPriceCrc: Number(row.nightly_price_crc),
-    minNights: Number(row.min_nights ?? 1),
+    acceptsNightly: row.accepts_nightly !== false,
+    nightlyPriceCrc: row.nightly_price_crc === null || row.nightly_price_crc === undefined ? null : Number(row.nightly_price_crc),
+    minNights: row.min_nights === null || row.min_nights === undefined ? null : Number(row.min_nights),
     acceptsMonthly: row.accepts_monthly === true,
     monthlyMode: (row.monthly_mode as MonthlyMode | null) ?? null,
     monthlyPriceCrc: row.monthly_price_crc === null || row.monthly_price_crc === undefined ? null : Number(row.monthly_price_crc),
@@ -223,6 +231,8 @@ export async function listActivePublicIds(db: SupabaseClient): Promise<{ publicI
 export async function search(db: SupabaseClient, f: Filters): Promise<PublicListing[]> {
   let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(60);
   if (f.prov !== ALL_PROVINCES) q = q.eq("province", f.prov);
+  if (f.mode === "nightly") q = q.eq("accepts_nightly", true);
+  if (f.mode === "monthly") q = q.eq("accepts_monthly", true);
   if (f.ppl) q = q.gte("capacity", f.ppl);
   if (f.beds) q = q.gte("bedrooms", f.beds);
   if (f.features.length) q = q.contains("features", f.features);
@@ -239,6 +249,12 @@ export async function search(db: SupabaseClient, f: Filters): Promise<PublicList
     byListing.set(key, [...(byListing.get(key) ?? []), toPhoto(p)]);
   }
   return Promise.all(rows.map((r) => publicFromRow(db, r, byListing.get(String(r.id)) ?? [])));
+}
+
+/** Casas activas en total: cuántas plazas de la oferta de lanzamiento van ocupadas. */
+export async function countActiveListings(db: SupabaseClient): Promise<number> {
+  const { count } = await db.from("listings_public").select("id", { count: "exact", head: true });
+  return count ?? 0;
 }
 
 /** Provincias con al menos una casa activa, para los chips de Zona. */
@@ -273,7 +289,7 @@ export async function getForAdmin(db: SupabaseClient, id: string): Promise<Queue
 /** Decisión del admin (RPC review_listing). */
 export async function review(db: SupabaseClient, id: string, decision: "approve" | "changes" | "reject", note: string): Promise<Result> {
   const { error } = await db.rpc("review_listing", { p_listing: id, p_decision: decision, p_note: note });
-  return error ? fail(error.message, "No pudimos guardar la decisión. Intentá de nuevo.") : { ok: true };
+  return error ? fail(error.message, "No pudimos guardar la decisión. Intente de nuevo.") : { ok: true };
 }
 
 /** Disponible / no disponible (RPC set_listing_available; solo casas activas). */

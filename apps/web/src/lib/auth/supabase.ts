@@ -32,10 +32,10 @@ export function createSupabaseAuth(
       options: { channel: "whatsapp", shouldCreateUser: p.mode === "register", data: p.mode === "register" ? { full_name: p.name } : undefined },
     });
     if (error) {
-      if (p.mode === "login" && /signups not allowed/i.test(error.message)) return { ok: false, error: "No hay una cuenta con ese WhatsApp. Creá una cuenta." };
+      if (p.mode === "login" && /signups not allowed/i.test(error.message)) return { ok: false, error: "No hay una cuenta con ese WhatsApp. Cree una cuenta." };
       const seconds = /after (\d+) seconds/i.exec(error.message)?.[1];
-      if (seconds || error.code === "over_sms_send_rate_limit") return { ok: false, error: `Esperá ${seconds ?? 60} segundos antes de pedir otro código.` };
-      return { ok: false, error: "No pudimos enviar el código. Revisá el número e intentá de nuevo." };
+      if (seconds || error.code === "over_sms_send_rate_limit") return { ok: false, error: `Espere ${seconds ?? 60} segundos antes de pedir otro código.` };
+      return { ok: false, error: "No pudimos enviar el código. Revise el número e intente de nuevo." };
     }
     await writePending(p);
     return { ok: true };
@@ -77,13 +77,13 @@ export function createSupabaseAuth(
     },
     async verify(code: string): Promise<Result> {
       const p = await readPending();
-      if (!p) return { ok: false, error: "No hay ningún código pendiente. Volvé a empezar." };
+      if (!p) return { ok: false, error: "No hay ningún código pendiente. Vuelva a empezar." };
       const { data, error } = await supabase.auth.verifyOtp({ phone: p.phone, token: code.trim(), type: "sms" });
       if (error || !data.user) return { ok: false, error: "Ese código no es correcto o caducó." };
       const profile = await profileFor(data.user.id, p.phone);
       if (!profile) {
         await supabase.auth.signOut();
-        return { ok: false, error: "No pudimos crear tu perfil. Escribile a bnbtico por WhatsApp." };
+        return { ok: false, error: "No pudimos crear su perfil. Escríbale a bnbtico por WhatsApp." };
       }
       jar.delete(PENDING);
       return { ok: true };

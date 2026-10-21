@@ -6,7 +6,7 @@ export function cooldownError(sentAt: number | undefined, now: number): string |
   if (sentAt === undefined) return null;
   const remaining = sentAt + RESEND_COOLDOWN_MS - now;
   if (remaining <= 0) return null;
-  return `Esperá ${Math.ceil(remaining / 1000)} segundos antes de pedir otro código.`;
+  return `Espere ${Math.ceil(remaining / 1000)} segundos antes de pedir otro código.`;
 }
 
 /** Segundos que faltan para poder pedir otro código (0 si ya se puede). Pensado para Server Components: se evalúa una vez por petición. */

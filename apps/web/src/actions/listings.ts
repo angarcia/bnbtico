@@ -42,7 +42,7 @@ export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<
   try {
     await saveStep(db, listing, patch);
   } catch {
-    return { error: "No pudimos guardar. Intentá de nuevo." };
+    return { error: "No pudimos guardar. Intente de nuevo." };
   }
   if (step < 5) redirect(`/propietario/publicar/${id}/${step + 1}`);
   // Enviar a revisión: todo el borrador válido y la RPC de la base de acuerdo.
@@ -54,7 +54,7 @@ export async function saveStepAction(_prev: ActionState, fd: FormData): Promise<
   }
   const sent = await submit(db, id);
   if (!sent.ok) return { error: sent.error };
-  redirect("/propietario/casas?enviada=1");
+  redirect(`/propietario/casas/${id}/enviada`);
 }
 
 // ---------- Fotos (la subida a Storage la hace el navegador; aquí solo la fila) ----------
@@ -75,7 +75,7 @@ export async function signPhotoUploadAction(listingId: string): Promise<ActionSt
   if (ctx.listing.photoCount >= MAX_PHOTOS) return { error: `Máximo ${MAX_PHOTOS} fotos.` };
   const path = photoPath(listingId, crypto.randomUUID());
   const { data, error } = await ctx.db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(path);
-  if (error || !data) return { error: "No pudimos preparar la subida. Intentá de nuevo." };
+  if (error || !data) return { error: "No pudimos preparar la subida. Intente de nuevo." };
   return { ok: true, path: data.path, token: data.token };
 }
 
@@ -88,7 +88,7 @@ export async function addPhotoAction(listingId: string, path: string): Promise<A
     const photo = await addPhoto(ctx.db, listingId, path);
     return { ok: true, photo };
   } catch {
-    return { error: "No pudimos guardar la foto. Intentá de nuevo." };
+    return { error: "No pudimos guardar la foto. Intente de nuevo." };
   }
 }
 

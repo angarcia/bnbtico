@@ -31,7 +31,8 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
   let publicId: string;
 
   const complete = {
-    kind: "casa",
+    kind: "completo",
+    accepts_nightly: true,
     title: "Casa Manzanillo, a pie de playa",
     description: "Casa de madera a 80 m de la playa.",
     province: "Limón",
@@ -45,9 +46,9 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
     features: ["parking", "beachfront"],
     parking_paid: false,
     nightly_price_crc: 85000,
-    min_nights: 2,
     accepts_monthly: true,
-    monthly_mode: "contact",
+    monthly_mode: "amount",
+    monthly_price_crc: 900000,
   };
 
   async function newDraft(client: SupabaseClient, uid: string) {
@@ -90,7 +91,7 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
     const { error: up } = await owner.from("listings").update(complete).eq("id", listingId);
     expect(up).toBeNull();
     const { error } = await owner.rpc("submit_listing", { p_listing: listingId });
-    expect(error?.message).toBe("Agregá al menos 5 fotos.");
+    expect(error?.message).toBe("Agregue al menos 5 fotos.");
   });
 
   it("submit_listing pasa a review con datos completos y falla al repetir", async () => {
@@ -114,9 +115,9 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
 
   it("review_listing exige motivo para cambios y rechazo", async () => {
     const changes = await reviewer.rpc("review_listing", { p_listing: listingId, p_decision: "changes", p_note: "   " });
-    expect(changes.error?.message).toContain("Escribí un motivo");
+    expect(changes.error?.message).toContain("Escriba un motivo");
     const reject = await reviewer.rpc("review_listing", { p_listing: listingId, p_decision: "reject", p_note: "" });
-    expect(reject.error?.message).toContain("Escribí un motivo");
+    expect(reject.error?.message).toContain("Escriba un motivo");
     const asOwner = await owner.rpc("review_listing", { p_listing: listingId, p_decision: "approve", p_note: "" });
     expect(asOwner.error?.message).toBe("Solo bnbtico puede revisar anuncios.");
   });
@@ -137,7 +138,7 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
   it("anon ve la casa activa en listings_public y listing_link_state devuelve active", async () => {
     const { data, error } = await anon.from("listings_public").select("public_id, canton, min_nights, monthly_mode, owner_whatsapp_verified").eq("public_id", publicId);
     expect(error).toBeNull();
-    expect(data).toEqual([{ public_id: publicId, canton: "Talamanca", min_nights: 2, monthly_mode: "contact", owner_whatsapp_verified: true }]);
+    expect(data).toEqual([{ public_id: publicId, canton: "Talamanca", min_nights: null, monthly_mode: "amount", owner_whatsapp_verified: true }]);
     const state = await anon.rpc("listing_link_state", { p_public_id: publicId });
     expect(state.data).toBe("active");
     expect((await anon.rpc("listing_link_state", { p_public_id: "CT-1" })).data).toBeNull();
@@ -145,7 +146,7 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
 
   it("set_listing_available oculta consultas sin sacar la ficha", async () => {
     const asOther = await other.rpc("set_listing_available", { p_listing: listingId, p_available: false });
-    expect(asOther.error?.message).toBe("Solo podés cambiar la disponibilidad de una casa activa.");
+    expect(asOther.error?.message).toBe("Solo puede cambiar la disponibilidad de una casa activa.");
     const { error } = await owner.rpc("set_listing_available", { p_listing: listingId, p_available: false });
     expect(error).toBeNull();
     const { data } = await anon.from("listings_public").select("available").eq("public_id", publicId).single();
@@ -162,7 +163,7 @@ describe.skipIf(!url || !anonKey || !serviceKey)("migración fase 2", () => {
 
   it("el dueño no puede cambiar datos protegidos", async () => {
     const { error } = await owner.from("listings").update({ review_note: "me apruebo" }).eq("id", listingId);
-    expect(error?.message).toContain("No podés cambiar ese dato");
+    expect(error?.message).toContain("No puede cambiar ese dato");
   });
 
   it("el dueño borra solo borradores", async () => {

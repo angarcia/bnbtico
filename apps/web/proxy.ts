@@ -4,7 +4,7 @@ import { refreshSupabaseSession } from "@/lib/auth/refresh";
 // 1) pruebas.bnbtico.com pide contraseña (PREVIEW_PASSWORD). Sin variable, no hay barrera (local, producción).
 //    Los iconos y el manifest de la PWA quedan fuera: el móvil los pide sin credenciales al añadir a la pantalla de inicio.
 // 2) Refresca la sesión de Supabase en cada petición (ver src/lib/auth/refresh.ts).
-const PUBLIC_ASSETS = new Set(["/manifest.webmanifest", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"]);
+const PUBLIC_ASSETS = new Set(["/manifest.webmanifest", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/icon-maskable-192.png", "/icon-maskable-512.png", "/apple-touch-icon.png"]);
 
 export async function proxy(request: NextRequest) {
   // Sondas de disponibilidad (panel de vista previa, monitores): `HEAD /` responde 200 sin seguir la redirección a /explorar.

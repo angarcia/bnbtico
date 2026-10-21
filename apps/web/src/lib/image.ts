@@ -3,7 +3,7 @@ export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const
 export const ACCEPTED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"] as const;
 export const MAX_SIDE = 1600;
 export const JPEG_QUALITY = 0.85;
-export const UNSUPPORTED_MESSAGE = "Ese formato no se puede subir. Usá JPG o PNG.";
+export const UNSUPPORTED_MESSAGE = "Ese formato no se puede subir. Use JPG o PNG.";
 export const MAX_PHOTOS_MESSAGE = "Máximo 15 fotos.";
 
 /** Por tipo MIME o, si el navegador no lo informa, por extensión. HEIC/HEIF de iPhone no se puede decodificar con canvas. */

@@ -6,8 +6,11 @@ export const PEOPLE_OPTIONS = [0, 2, 4, 6, 8, 12] as const;
 export const BEDS_OPTIONS = [0, 1, 2, 3, 4] as const;
 export const ALL_PROVINCES = "Todas";
 
+export type Mode = "nightly" | "monthly";
+
 export interface Filters {
   prov: string; // provincia o «Todas»
+  mode: Mode | null; // Vacacional / Mensual; null = las dos
   ppl: number;
   beds: number;
   features: Feature[];
@@ -33,8 +36,10 @@ export function parseFilters(params: Params, provinces: string[]): Filters {
   let min = money(first(params.min));
   let max = money(first(params.max));
   if (min && max && min > max) [min, max] = [max, min];
+  const mode = first(params.modo);
   return {
     prov: prov === ALL_PROVINCES || provinces.includes(prov) ? prov : defaultProvince(provinces),
+    mode: mode === "nightly" || mode === "monthly" ? mode : null,
     ppl: pick(first(params.ppl), PEOPLE_OPTIONS),
     beds: pick(first(params.beds), BEDS_OPTIONS),
     features: (Object.keys(FEATURE_LABEL) as Feature[]).filter((f) => first(params[f]) === "1"),
@@ -48,6 +53,7 @@ export function parseFilters(params: Params, provinces: string[]): Filters {
 export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearchParams {
   const p = new URLSearchParams();
   if (f.prov !== defaults.prov) p.set("prov", f.prov);
+  if (f.mode) p.set("modo", f.mode);
   if (f.ppl) p.set("ppl", String(f.ppl));
   if (f.beds) p.set("beds", String(f.beds));
   for (const feature of f.features) p.set(feature, "1");

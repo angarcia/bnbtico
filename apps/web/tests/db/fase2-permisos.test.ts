@@ -21,7 +21,8 @@ const ADMIN = "+50688990001";
 const signIn = (phone: string, name: string) => signInWith(url!, anonKey!, phone, name);
 
 const complete = {
-  kind: "casa",
+  kind: "completo",
+  accepts_nightly: true,
   title: "Cabina Cahuita",
   description: "Cabina frente al parque.",
   province: "Limón",
@@ -34,7 +35,6 @@ const complete = {
   bathrooms: 1,
   features: ["wifi"],
   nightly_price_crc: 42000,
-  min_nights: 1,
   accepts_monthly: false,
 };
 
@@ -49,7 +49,7 @@ describe.skipIf(!url || !anonKey || !serviceKey)("permisos fase 2", () => {
   let activePublicId: string;
 
   async function newDraft(): Promise<string> {
-    const { data, error } = await owner.from("listings").insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: OWNER }).select("id").single();
+    const { data, error } = await owner.from("listings").insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: OWNER, accepts_nightly: false }).select("id").single();
     if (error) throw error;
     return data.id as string;
   }
@@ -134,16 +134,27 @@ describe.skipIf(!url || !anonKey || !serviceKey)("permisos fase 2", () => {
 
   it("el borrador nace sin tipo, sin respuesta mensual y sin números inventados", async () => {
     const draft = await newDraft();
-    const { data } = await owner.from("listings").select("kind, accepts_monthly, capacity, bedrooms, bathrooms, nightly_price_crc, min_nights").eq("id", draft).single();
-    expect(data).toEqual({ kind: null, accepts_monthly: null, capacity: null, bedrooms: null, bathrooms: null, nightly_price_crc: null, min_nights: null });
+    const { data } = await owner.from("listings").select("kind, accepts_nightly, accepts_monthly, bathroom_shared, capacity, bedrooms, bathrooms, nightly_price_crc, min_nights").eq("id", draft).single();
+    expect(data).toEqual({ kind: null, accepts_nightly: false, accepts_monthly: null, bathroom_shared: null, capacity: null, bedrooms: null, bathrooms: null, nightly_price_crc: null, min_nights: null });
     const sent = await owner.rpc("submit_listing", { p_listing: draft });
-    expect(sent.error?.message).toBe("Elegí Casa, Apartamento o Habitación.");
-    await owner.from("listings").update({ kind: "casa" }).eq("id", draft);
-    expect((await owner.rpc("submit_listing", { p_listing: draft })).error?.message).toBe("Respondé si aceptás alquiler mensual.");
-    await owner.from("listings").update({ ...complete, lat: 40.4, lng: -3.7 }).eq("id", draft);
+    expect(sent.error?.message).toBe("Elija Alojamiento completo o Habitación.");
+    await owner.from("listings").update({ kind: "habitacion" }).eq("id", draft);
+    expect((await owner.rpc("submit_listing", { p_listing: draft })).error?.message).toBe("Marque Vacacional, Mensual o las dos.");
+    await owner.from("listings").update({ ...complete, kind: "habitacion", bedrooms: 1, lat: 40.4, lng: -3.7 }).eq("id", draft);
     await addPhotos(owner, draft);
-    expect((await owner.rpc("submit_listing", { p_listing: draft })).error?.message).toBe("Marcá un punto dentro de Costa Rica.");
-    await owner.from("listings").delete().eq("id", draft);
+    expect((await owner.rpc("submit_listing", { p_listing: draft })).error?.message).toBe("Marque un punto dentro de Costa Rica.");
+    await owner.from("listings").update({ lat: 9.7, lng: -82.8 }).eq("id", draft);
+    expect((await owner.rpc("submit_listing", { p_listing: draft })).error?.message).toBe("Indique si el baño es privado o compartido.");
+    await owner.from("listings").update({ bathroom_shared: false }).eq("id", draft);
+    expect((await owner.rpc("submit_listing", { p_listing: draft })).data).toBe("review");
+    // Solo mensual: exige precio por mes, no por noche.
+    const monthly = await newDraft();
+    await owner.from("listings").update({ ...complete, accepts_nightly: false, accepts_monthly: true, nightly_price_crc: null }).eq("id", monthly);
+    await addPhotos(owner, monthly);
+    expect((await owner.rpc("submit_listing", { p_listing: monthly })).error?.message).toBe("Indique el precio por mes en colones.");
+    await owner.from("listings").update({ monthly_price_crc: 480000, monthly_mode: "amount" }).eq("id", monthly);
+    expect((await owner.rpc("submit_listing", { p_listing: monthly })).data).toBe("review");
+    await admin.from("listings").delete().in("id", [draft, monthly]);
   });
 
   it("editar una casa activa la vuelve borrador, pero ese borrador no se puede borrar", async () => {

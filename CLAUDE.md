@@ -4,7 +4,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 ## Lo primero
 
-1. **El prototipo es la especificación de la v1.** `design/prototype/casatica-prototipo.html` + módulos JS, vista **Móvil**. Si el prototipo y un documento se contradicen, manda el prototipo; si dos documentos se contradicen, manda el más reciente. Las pruebas en `tests/prototype/*.cjs` describen el comportamiento esperado (`node tests/prototype/<x>.cjs`; todas deben pasar).
+1. **El diseño v1 manda** (desde 2026-10-20): `docs/diseno-v1.md` y las pantallas de `design/pantallas/` fijan aspecto, estructura y copy de cada pantalla; tokens en `design/tokens/tokens.json` 0.2.0 y logo en `design/logo/`. El prototipo (`design/prototype/casatica-prototipo.html` + módulos, vista **Móvil**) sigue siendo la referencia de comportamiento donde el diseño no diga otra cosa; sus pruebas en `tests/prototype/*.cjs` deben pasar. Si dos documentos se contradicen, manda el más reciente.
 2. **Móvil primero.** Web para el teléfono en bnbtico.com (PWA); la vista web es un derivado. App en tiendas después del lanzamiento, envolviendo la misma web.
 3. **El plan de construcción está en `docs/plan-implementacion.md`.** Fases 0–7, qué entra en v1 y qué no. No lanzar a trozos: todo se prueba en `pruebas.bnbtico.com` y bnbtico.com se abre cuando la v1 esté completa.
 4. **Las decisiones y su porqué están en `docs/decisiones.md`** (la más reciente arriba). Si cambias una decisión, anótala ahí el mismo día.
@@ -19,6 +19,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - **Precios en colones**, siempre orientativos; el cliente puede verlos convertidos a dólares (solo visualización). Nunca «total a pagar».
 - **Caribe por defecto:** Explorar arranca en Limón; en los filtros solo aparecen provincias con casas; una casa aprobada de otra zona añade su provincia.
 - **Características (una sola lista, igual al publicar y al filtrar):** Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis, Frente al mar, Rancho/BBQ.
+- **Modalidad y tipo (diseño v1):** una casa es Vacacional, Mensual o las dos, con un precio por modalidad; es Alojamiento completo o Habitación (con baño privado o compartido).
 - «Mensual» en vez de «Largo plazo» en toda la UI (la landing no se toca).
 - Los propietarios podrán valorar a los clientes; no hay reseñas de casas.
 - Promoción de lanzamiento: primeras 50 casas 12 meses gratis, siguientes 50 seis meses, siguientes 100 tres meses; después ₡9.900 al mes por casa, sin permanencia.
