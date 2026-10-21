@@ -172,11 +172,12 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .sticky-actions .grow{flex:1}
 .sticky-spacer{height:76px}
 /* Formulario de publicar: cada pantalla cabe sin scroll; lo que crece (mapa, descripción, fotos) llena el hueco. */
-/* `--kb`: hueco del teclado en iOS (lo pone step-form.tsx); en Android es 0 porque la pantalla ya encoge. */
+/* `--kb`: sitio extra mientras hay un campo de texto enfocado (lo pone step-form.tsx) para que el campo pueda subir por encima del teclado. */
 .app:has(.publish-form){height:calc(100dvh + var(--kb,0px))}
 .app:has(.publish-form) .view{min-height:0;padding-bottom:0}
 .publish-form{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:4px 0 calc(76px + var(--kb,0px) + env(safe-area-inset-bottom))}
 .publish-form h2{font-size:21px}
+.publish-form input,.publish-form textarea{scroll-margin-top:88px}
 .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
 .map-wrap{position:relative;flex:1;min-height:200px;display:flex}
 .map-wrap .map-box{flex:1;height:auto}

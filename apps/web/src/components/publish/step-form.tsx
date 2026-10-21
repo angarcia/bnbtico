@@ -4,12 +4,14 @@ import { startTransition, useActionState, useEffect, useRef } from "react";
 import { saveStepAction } from "@/actions/listings";
 import type { ActionState } from "@/actions/account";
 import { enterKeyHintFor, nextFieldIndex } from "@/lib/forms/enter-next";
-import { keyboardInset, scrollTopToCenter } from "@/lib/forms/keyboard-inset";
 import { LAST_STEP, type Step } from "@/lib/listings/schema";
 
 const initial: ActionState = {};
 /** Campos que recorre «Siguiente»: entradas de texto, listas y áreas de texto, en el orden del documento. */
 const FIELDS = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea';
+/** Sitio extra bajo el formulario mientras hay un campo de texto enfocado: más que el teclado más alto del iPhone. */
+const KEYBOARD_ROOM = "320px";
+const NO_KEYBOARD = new Set(["checkbox", "radio", "file", "hidden", "submit", "button", "range", "color"]);
 const fieldsOf = (form: HTMLFormElement) => Array.from(form.querySelectorAll<HTMLElement>(FIELDS)).filter((el) => !el.hidden);
 
 /** Envoltorio del paso: los campos, el error del servidor y los botones fijos Atrás (contorno) / Continuar (relleno).
@@ -51,40 +53,31 @@ export function StepForm({ listingId, step, children, initialError }: { listingI
     else fields[next]?.focus();
   };
 
-  // iOS no encoge la página con el teclado: cuando la ventana visible se hace más baja, `--kb` (en la raíz) alarga la
-  // pantalla de publicar justo lo que tapa el teclado, para que la página pueda desplazarse, y el campo enfocado se trae a la vista.
+  // El teclado del móvil no debe tapar el campo. En iPhone (Safari y Chrome) el teclado no encoge la página, así que al
+  // enfocar un campo de texto la pantalla gana `--kb` de sitio abajo y el campo se desplaza solo hasta debajo de la
+  // cabecera (scroll-margin-top en CSS), donde ningún teclado llega. Al salir del campo, la pantalla vuelve a su altura.
+  const isText = (el: EventTarget | null): el is HTMLInputElement | HTMLTextAreaElement =>
+    el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && !NO_KEYBOARD.has(el.type)); // chips y tarjetas son casillas: sin teclado
   useEffect(() => {
-    const form = ref.current;
-    const vv = window.visualViewport;
-    if (!form || !vv) return;
-    const root = document.documentElement;
-    const update = () => {
-      const inset = keyboardInset({ innerHeight: window.innerHeight, viewportHeight: vv.height });
-      root.style.setProperty("--kb", `${inset}px`);
-      const el = document.activeElement;
-      if (inset > 0 && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && form.contains(el)) {
-        const rect = el.getBoundingClientRect();
-        window.scrollTo({ top: scrollTopToCenter({ scrollY: window.scrollY, elementTop: rect.top, elementHeight: rect.height, viewportHeight: vv.height, viewportOffsetTop: vv.offsetTop }), behavior: "smooth" });
-      }
-    };
-    // Solo al cambiar de tamaño (abrir/cerrar el teclado); escuchar el scroll de la vista visible realimentaba la altura.
-    vv.addEventListener("resize", update);
     return () => {
-      vv.removeEventListener("resize", update);
-      root.style.removeProperty("--kb");
+      document.documentElement.style.removeProperty("--kb");
     };
-  }, [step]);
-
-  // Al enfocar, el campo se centra en lo que queda de pantalla (Android encoge la página; en iOS lo remata el efecto de arriba).
+  }, []);
   const onFocus = (e: React.FocusEvent<HTMLFormElement>) => {
     const el = e.target;
-    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-      setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
-    }
+    if (!isText(el)) return;
+    document.documentElement.style.setProperty("--kb", KEYBOARD_ROOM);
+    const lift = () => el.scrollIntoView({ block: "start", behavior: "smooth" });
+    requestAnimationFrame(lift);
+    setTimeout(lift, 350); // tras la animación del teclado, por si el navegador movió la vista por su cuenta
+  };
+  const onBlur = (e: React.FocusEvent<HTMLFormElement>) => {
+    if (isText(e.relatedTarget) && e.currentTarget.contains(e.relatedTarget)) return; // de un campo a otro
+    document.documentElement.style.removeProperty("--kb");
   };
 
   return (
-    <form ref={ref} action={action} onSubmit={submit} onKeyDown={onKeyDown} onFocus={onFocus} className="publish-form">
+    <form ref={ref} action={action} onSubmit={submit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} className="publish-form">
       <input type="hidden" name="id" value={listingId} />
       <input type="hidden" name="step" value={step} />
       {state.error ? <div className="note" role="alert">{state.error}</div> : null}

@@ -73,6 +73,17 @@ test.describe("publicar en pantallas cortas", () => {
     await canton.selectOption("Talamanca");
     const zone = page.getByLabel("Zona, playa o barrio");
     await expect(zone).toHaveAttribute("enterkeyhint", "done");
+    // Al tocar un campo de texto, la página gana sitio abajo y el campo sube solo hasta debajo de la cabecera: así se ve
+    // aunque el teclado tape la mitad de la pantalla (en iPhone el teclado no encoge la página). Al salir, todo vuelve.
+    const zoneTop = () => page.evaluate(() => Math.round(document.getElementById("pub-zone")!.getBoundingClientRect().top));
+    const extra = () => page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    expect(await zoneTop()).toBeGreaterThan(300);
+    await zone.focus();
+    await expect.poll(extra).toBeGreaterThanOrEqual(250);
+    await expect.poll(zoneTop).toBeLessThanOrEqual(130);
+    expect(await zoneTop()).toBeGreaterThanOrEqual(40);
+    await zone.blur();
+    await expect.poll(extra).toBe(0);
     await zone.fill("Manzanillo");
     await zone.press("Enter");
     await expect(page).toHaveURL(/\/3$/);
