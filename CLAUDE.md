@@ -8,7 +8,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 2. **Móvil primero.** Web para el teléfono en bnbtico.com (PWA); la vista web es un derivado. App en tiendas después del lanzamiento, envolviendo la misma web.
 3. **El plan de construcción está en `docs/plan-implementacion.md`.** Fases 0–7, qué entra en v1 y qué no. No lanzar a trozos: todo se prueba en `pruebas.bnbtico.com` y bnbtico.com se abre cuando la v1 esté completa.
 4. **Las decisiones y su porqué están en `docs/decisiones.md`** (la más reciente arriba). Si cambias una decisión, anótala ahí el mismo día.
-5. Trabajamos en español. UI en español de Costa Rica con voseo.
+5. Trabajamos en español. UI en español de Costa Rica tratando al usuario de **usted** («¿No encuentra lo que busca?», «Toque el corazón…», «Puede añadirlo después»): suena tico, respetuoso y de confianza. Sin voseo ni tuteo en la interfaz (decisión 2026-10-20).
 
 ## Reglas de producto vigentes (2026-10-15)
 

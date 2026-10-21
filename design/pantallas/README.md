@@ -22,3 +22,13 @@ Es referencia visual, no código de producción: la implementación va en `apps/
 | 18-prop-consultas | Mis consultas |
 | 19-prop-detalle-casa | Detalle de mi casa |
 | 20-prop-cuenta | Cuenta del propietario |
+| 21-admin-anuncios | Admin móvil · cola de anuncios |
+| 22-admin-revisar | Admin móvil · revisar anuncio |
+| 23-admin-casas | Admin móvil · casas |
+| 24-admin-usuarios | Admin móvil · usuarios |
+| 25-admin-ficha-propietario | Admin móvil · ficha de propietario |
+| 26…29-admin-web-* | Admin escritorio (1280): anuncios, revisar, casas, usuarios |
+| 30-home-clientes-movil / 31-…-escritorio | Home de bnbtico.com (clientes) |
+| 32-landing-propietarios-movil / 33-…-escritorio | Landing de propietarios (bnbtico.com/propietarios, enlace de promo) |
+
+Todo el copy trata al usuario de **usted** (decisión 2026-10-20).
