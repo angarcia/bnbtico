@@ -4,6 +4,7 @@ import { startTransition, useActionState, useEffect, useRef } from "react";
 import { saveStepAction } from "@/actions/listings";
 import type { ActionState } from "@/actions/account";
 import { enterKeyHintFor, nextFieldIndex } from "@/lib/forms/enter-next";
+import { keyboardInset, scrollTopToCenter } from "@/lib/forms/keyboard-inset";
 import { LAST_STEP, type Step } from "@/lib/listings/schema";
 
 const initial: ActionState = {};
@@ -50,11 +51,36 @@ export function StepForm({ listingId, step, children, initialError }: { listingI
     else fields[next]?.focus();
   };
 
-  // El campo enfocado se centra en lo que queda de pantalla cuando el teclado la encoge.
+  // iOS no encoge la página con el teclado: cuando la ventana visible se hace más baja, `--kb` (en la raíz) alarga la
+  // pantalla de publicar justo lo que tapa el teclado, para que la página pueda desplazarse, y el campo enfocado se trae a la vista.
+  useEffect(() => {
+    const form = ref.current;
+    const vv = window.visualViewport;
+    if (!form || !vv) return;
+    const root = document.documentElement;
+    const update = () => {
+      const inset = keyboardInset({ innerHeight: window.innerHeight, viewportHeight: vv.height, viewportOffsetTop: vv.offsetTop });
+      root.style.setProperty("--kb", `${inset}px`);
+      const el = document.activeElement;
+      if (inset > 0 && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && form.contains(el)) {
+        const rect = el.getBoundingClientRect();
+        window.scrollTo({ top: scrollTopToCenter({ scrollY: window.scrollY, elementTop: rect.top, elementHeight: rect.height, viewportHeight: vv.height, viewportOffsetTop: vv.offsetTop }), behavior: "smooth" });
+      }
+    };
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      root.style.removeProperty("--kb");
+    };
+  }, [step]);
+
+  // Al enfocar, el campo se centra en lo que queda de pantalla (Android encoge la página; en iOS lo remata el efecto de arriba).
   const onFocus = (e: React.FocusEvent<HTMLFormElement>) => {
     const el = e.target;
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-      setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 150);
+      setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
     }
   };
 
