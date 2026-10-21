@@ -9,12 +9,12 @@ describe("refresco de la sesión de Supabase en el proxy", () => {
     let called = 0;
     await refreshSupabaseSession(request, response, {}, () => {
       called++;
-      return { auth: { getUser: async () => ({ data: { user: null }, error: null }) } };
+      return { auth: { getClaims: async () => ({ data: null, error: null }) } };
     });
     expect(called).toBe(0);
   });
 
-  it("pide el usuario y guarda en la respuesta las cookies que Supabase renueva", async () => {
+  it("comprueba la sesión con getClaims (sin red con claves ES256) y guarda en la respuesta las cookies que Supabase renueva", async () => {
     const request = new NextRequest("http://127.0.0.1/cuenta", { headers: { cookie: "sb-x-auth-token=viejo" } });
     const response = NextResponse.next();
     let seen: { name: string; value: string }[] = [];
@@ -22,9 +22,9 @@ describe("refresco de la sesión de Supabase en el proxy", () => {
       seen = options.cookies.getAll();
       return {
         auth: {
-          async getUser() {
+          async getClaims() {
             options.cookies.setAll([{ name: "sb-x-auth-token", value: "nuevo", options: { maxAge: 3600 } }]);
-            return { data: { user: null }, error: null };
+            return { data: null, error: null };
           },
         },
       };

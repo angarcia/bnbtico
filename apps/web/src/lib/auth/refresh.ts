@@ -1,12 +1,14 @@
 // Refresco de la sesión de Supabase en el proxy (único sitio que puede escribir cookies en cada petición).
 // Sin esto, los Server Components renuevan el token pero no pueden guardarlo y la sesión se pierde al caducar (~1 h).
+// Se usa getClaims y no getUser: con las claves ES256 del proyecto verifica el token en el propio servidor (la clave pública
+// se guarda en memoria) y solo sale a la red para renovar un token caducado; con HS256 (Supabase local) cae a getUser.
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { NextRequest, NextResponse } from "next/server";
 import { supabaseEnv } from "./supabase-env";
 
 type Cookie = { name: string; value: string; options?: CookieOptions };
 type ClientFactory = (url: string, key: string, options: { cookies: { getAll(): { name: string; value: string }[]; setAll(list: Cookie[]): void } }) => {
-  auth: { getUser(): Promise<unknown> };
+  auth: { getClaims(): Promise<unknown> };
 };
 
 export async function refreshSupabaseSession(
@@ -27,5 +29,5 @@ export async function refreshSupabaseSession(
       },
     },
   });
-  await client.auth.getUser();
+  await client.auth.getClaims();
 }

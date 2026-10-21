@@ -89,9 +89,12 @@ export function createSupabaseAuth(
       return { ok: true };
     },
     async current() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return null;
-      return profileFor(data.user.id, data.user.phone ? "+" + data.user.phone : "");
+      // Token verificado en el servidor (ES256, sin red); el proxy ya renovó la cookie si hacía falta. Una sola consulta: el perfil.
+      const { data } = await supabase.auth.getClaims();
+      const claims = data?.claims;
+      if (!claims?.sub) return null;
+      const phone = typeof claims.phone === "string" && claims.phone ? "+" + claims.phone : "";
+      return profileFor(claims.sub, phone);
     },
     async updateProfile(patch): Promise<Result> {
       const { data } = await supabase.auth.getUser();

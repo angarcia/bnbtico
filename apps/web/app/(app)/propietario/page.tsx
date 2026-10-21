@@ -19,11 +19,10 @@ const PROMO_SLOTS = 50;
 export default async function Panel({ searchParams }: { searchParams: Promise<{ "sin-supabase"?: string }> }) {
   const params = await searchParams;
   const [db, account] = await Promise.all([supabaseServer(), (await auth()).current()]);
-  const listings = db && account ? await listOwnListings(db) : [];
+  // Las tres consultas no dependen entre sí: en paralelo, no en fila.
+  const [listings, taken, base] = await Promise.all([db && account ? listOwnListings(db) : [], db ? countActiveListings(db) : 0, requestShareBase()]);
   const active = listings.filter((l) => l.status === "active");
   const inReview = listings.filter((l) => l.status === "review");
-  const taken = db ? await countActiveListings(db) : 0;
-  const base = await requestShareBase();
   const title = active.length ? "Su casa, en marcha" : inReview.length ? "Su casa, en revisión" : "Publique su casa";
   const featured = active[0] ?? inReview[0] ?? listings.find((l) => l.status === "changes") ?? listings[0];
 

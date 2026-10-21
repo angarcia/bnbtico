@@ -47,6 +47,9 @@ export function fakeSupabase(opts: { trigger?: boolean; rateLimited?: boolean } 
       async getUser() {
         return { data: { user: sessionUser ? { id: sessionUser.id, phone: sessionUser.phone.replace(/\D/g, "") } : null }, error: null };
       },
+      async getClaims() {
+        return { data: sessionUser ? { claims: { sub: sessionUser.id, phone: sessionUser.phone.replace(/\D/g, "") } } : null, error: null };
+      },
       async signOut() {
         sessionUser = null;
         return { error: null };

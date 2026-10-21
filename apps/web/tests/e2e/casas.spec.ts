@@ -300,6 +300,26 @@ test("Explorar arranca en Limón, filtra desde Filtros, limpia y abre la ficha",
   await expect(page).toHaveURL(/\/casa\/CT-\d+/);
 });
 
+test("la barra de pestañas responde al instante: la pestaña se marca y aparece el esqueleto antes de que llegue la pantalla", async ({ page }) => {
+  await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
+  await switchToOwner(page);
+  // Retrasamos la respuesta del servidor para Mis casas: la interfaz no debe esperarla para reaccionar.
+  await page.route(/\/propietario\/casas\?_rsc=/, async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue();
+  });
+  const tab = page.getByRole("link", { name: "Mis casas" });
+  await expect(tab).not.toHaveAttribute("aria-current", "page");
+  const t0 = Date.now();
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-current", "page", { timeout: 700 });
+  await expect(page.getByRole("link", { name: "Inicio" })).not.toHaveAttribute("aria-current", "page");
+  expect(Date.now() - t0).toBeLessThan(1200);
+  // El esqueleto (app/(app)/loading.tsx) solo se precarga en producción; aquí comprobamos que al final llega la pantalla.
+  await expect(page.getByRole("heading", { name: "Mis casas" })).toBeVisible();
+  await expect(page.locator(".skeleton")).toHaveCount(0);
+});
+
 test("detalle del propietario: disponible para consultas, compartir, editar y reenviar", async ({ page, browser }) => {
   await registerAndEnter(page, "Yorleny Prueba", "8777 0001");
   await switchToOwner(page);

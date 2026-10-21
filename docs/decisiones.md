@@ -1,3 +1,10 @@
+## 2026-10-21 · Pestañas que responden al instante y una sola verificación de sesión
+
+- **Síntoma (pruebas, iPhone):** al tocar una pestaña «tardaba en seleccionarse». Medido en local la pantalla respondía en 30–75 ms: el problema era que no había ninguna reacción visible hasta que llegaba la respuesta entera del servidor (sin `loading.tsx`, la pestaña solo se marcaba al cambiar la ruta), y que cada navegación encadenaba 4–5 llamadas a Supabase (sesión en el proxy, sesión otra vez en la página, perfil, datos) más la red Costa Rica ↔ `us-east-1` y los arranques en frío de Vercel.
+- **Respuesta instantánea:** `BottomNav` marca la pestaña tocada de forma optimista (estado ligado a la ruta de origen, caduca al cambiar la ruta) y las carpetas de las pestañas (`explorar`, `favoritos`, `cuenta`, `propietario`) tienen un `loading.tsx` con esqueleto (`LoadingSkeleton`), que en producción se precarga desde la barra. **No** se pone en `(app)` entero: con streaming el código HTTP ya es 200 cuando la página llama a `notFound()`, y `/admin` y `/casa/[id]` deben seguir devolviendo 404.
+- **Una verificación de sesión, sin red:** el proyecto firma los tokens con **ES256** (clave `in_use`, la HS256 queda como `previously_used`), así que `proxy.ts` y `current()` usan `getClaims()` en vez de `getUser()`: el token se verifica en el propio servidor con la clave pública en memoria y solo se sale a la red para renovar uno caducado. En Supabase local (HS256) `getClaims` cae a `getUser` solo. Las mutaciones (`updateProfile`) siguen con `getUser`. Inicio lanza sus tres consultas en paralelo.
+- **Pendiente de medir en pruebas** (lo mira Daniel): la región de la función en Vercel y la duración de los arranques en frío.
+
 ## 2026-10-21 · Publicar casa en 9 pantallas cortas, sin scroll
 
 - **Por qué:** al probar la fase 2 en el teléfono, el formulario de 5 pasos obligaba a hacer scroll en casi todas las pantallas y el teclado tapaba la descripción. El objetivo pasa a ser **una pantalla, una pregunta, sin scroll** en un teléfono pequeño (375×667), con o sin teclado.
