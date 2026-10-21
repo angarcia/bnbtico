@@ -1,5 +1,7 @@
 # Diseño
 
+> **Dirección visual vigente (2026-10-20): «Sol y sal».** Paleta, tipografía y componentes en `design/tokens/tokens.json` (0.2.0); pantallas de la v1 en `design/pantallas/` y especificación en `docs/diseno-v1.md`; logo en `design/logo/`. Donde este documento diga otra cosa en lo visual, manda `diseno-v1.md`.
+
 > **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
 
 

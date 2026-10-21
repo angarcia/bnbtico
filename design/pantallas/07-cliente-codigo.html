@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>v1 · Código de WhatsApp</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#FFFBF2}
+a{color:#2F5D45}a:hover{color:#1F4231}
+</style>
+<div style="position:relative;width:390px;height:844px;margin:0 auto;box-sizing:border-box;overflow:hidden;background:#FFFBF2;color:#1C2B2A;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.45">
+
+  <div style="display:flex;align-items:center;gap:8px;padding:52px 12px 0 12px">
+    <a href="06-cliente-ingresar.html" aria-label="Volver" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1C2B2A"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 style="margin:0;font-family:'Outfit',sans-serif;font-weight:800;font-size:24px;letter-spacing:-0.02em">Ingresar</h1>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:24px;padding:28px 24px 0 24px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h2 style="margin:0;font-family:'Outfit',sans-serif;font-weight:800;font-size:32px;line-height:1.05;letter-spacing:-0.02em">Introducí el código</h2>
+      <p style="margin:0;color:#5C6B69">Te lo enviamos por WhatsApp al <b style="color:#1C2B2A;font-variant-numeric:tabular-nums">+506 8000 0001</b>. <a href="06-cliente-ingresar.html" style="font-weight:600">Cambiar número</a></p>
+    </div>
+
+    <form style="display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label for="codigo" style="font-size:13px;font-weight:600;color:#5C6B69">Código de 6 dígitos</label>
+        <div style="display:grid;grid-template-columns:repeat(6, minmax(0, 1fr));gap:8px" aria-hidden="true">
+          <span style="display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid #2F5D45;border-radius:16px;background:#FFFFFF;font-family:'Outfit',sans-serif;font-weight:800;font-size:26px;font-variant-numeric:tabular-nums">4</span>
+          <span style="display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid #2F5D45;border-radius:16px;background:#FFFFFF;font-family:'Outfit',sans-serif;font-weight:800;font-size:26px;font-variant-numeric:tabular-nums">8</span>
+          <span style="display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid #2F5D45;border-radius:16px;background:#FFFFFF;font-family:'Outfit',sans-serif;font-weight:800;font-size:26px;font-variant-numeric:tabular-nums">2</span>
+          <span style="display:flex;align-items:center;justify-content:center;height:60px;border:2px solid #2F5D45;border-radius:16px;background:#DCE8DF"></span>
+          <span style="display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid #E6DCC6;border-radius:16px;background:#FFFFFF"></span>
+          <span style="display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid #E6DCC6;border-radius:16px;background:#FFFFFF"></span>
+        </div>
+        <input id="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="482" aria-label="Código de 6 dígitos" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+      </div>
+      <button type="submit" style="display:flex;align-items:center;justify-content:center;min-height:56px;border:0;border-radius:18px;background:#2F5D45;color:#FFFBF2;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;cursor:pointer">Verificar y continuar</button>
+    </form>
+
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;color:#5C6B69">
+      <span>¿No llegó? Podés pedir otro en <b style="color:#1C2B2A;font-variant-numeric:tabular-nums">0:42</b>.</span>
+      <a href="#" style="font-weight:600">Abrir WhatsApp para buscar el mensaje</a>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:24px;right:24px;bottom:28px;display:flex;gap:12px;padding:14px 16px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6">
+    <span style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:999px;background:#DCE8DF;color:#2F5D45;flex-shrink:0"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.6 19L4 20z"></path></svg></span>
+    <span style="font-size:13px;color:#5C6B69">Después de verificar volvés a <b style="color:#1C2B2A">Crystal Jungle Villa</b> con tu consulta tal como la dejaste.</span>
+  </div>
+</div>
+</body>
+</html>
