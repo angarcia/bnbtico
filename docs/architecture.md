@@ -1,106 +1,50 @@
-# Arquitectura
+# Arquitectura de bnbtico (vigente desde el 2026-10-21)
 
-> **Nota 2026-10-15.** Partes de este documento están superadas. Reglas vigentes en `CLAUDE.md` y `docs/plan-implementacion.md`; el prototipo (vista Móvil) es la especificación de v1. En particular: WhatsApp verificado es lo único obligatorio (Veriff opcional, fuera de v1); contacto directo por WhatsApp sin solicitud/aceptación; sin reclamaciones en la app; colones con visualización en dólares; «Mensual» en vez de «Largo plazo».
+Resumen de la arquitectura decidida el 2026-10-21 tras la revisión de las fases 0–2. El porqué de cada decisión y las alternativas descartadas están en `docs/decisiones.md` (entrada 2026-10-21); el calendario de construcción, en `docs/plan-implementacion.md` (fase R); la especificación de la reescritura, en `.scratch/fase-r/spec.md`. La versión anterior de este documento (monorepo, Expo, MapLibre) está en `docs/historico/architecture-hasta-2026-10-21.md` y no está vigente.
 
+## La idea en una frase
 
-Calendario/cierre (2026-10-12): separar `Listing.active` (visibilidad), `acceptingInquiries` (cierre temporal) y `reopenAt` opcional, de los estados diarios `{date, available, tariff, specialPrice?}`. Tarifas compartidas por casa `{base, high?, low?, currency}` y precios opcionales de fin de semana `{base?, high?, low?}`; alta/baja opcionales, sin copiar sus precios a fechas. Importe derivado: especial si existe; en otro caso, viernes/sábado usan el precio de fin de semana de la tarifa asignada si está definido, o su precio por noche. Domingo usa precio por noche. Sin porcentajes, checks ni herencia entre tarifas. Al quitar una temporada sus fechas vuelven a base; excepciones especiales intactas. El cierre nunca reescribe los días; la reapertura cambia solo el cierre y no activa publicaciones. Tarifas y disponibilidad independientes, cambios atómicos y autorizados. Reapertura a medianoche `America/Costa_Rica`, validación de futuro y tarea idempotente de servidor pendiente. Anuncio cerrado no admite nuevas consultas/propuestas; historial previo no se borra. En la demo, `house-controls.js` y `calendar.js` mantienen todo en memoria (diciembre 2026); no migración ni scheduler de producción todavía.
+El navegador es el cliente de Postgres. La app es un shell estático que habla con PostgREST con el JWT del usuario; la autorización la hace la base de datos (RLS y grants por columna) y toda transición de estado es una RPC en plpgsql. El único código de servidor es un worker pequeño que renderiza la ficha pública, sirve el sitemap, recibe balizas y, en la fase 5, webhooks y un cron.
 
-Actualización 2026-10-12: añadir a `Listing` preferencia `directContactEnabled` (false inicial), estado de publicación/pausa y consentimiento previo del propietario auditable por anuncio. Cada anuncio tiene destino WhatsApp verificado (copia inicial del teléfono del usuario) y candidato pendiente independiente. Vincular verificación a cuenta, anuncio/finalidad, teléfono normalizado, vencimiento y uso único. Activar el candidato solo tras comprobación en servidor; mantener el destino anterior mientras tanto. Cambiar teléfono de cuenta no reescribe anuncios. Contacto requiere identidad del propietario y destino de casa verificado, cliente con identidad/WhatsApp verificados, cuentas activas y anuncio aprobado/activo; autorización explícita del cliente y aceptación individual del owner **o** preferencia directa vigente. Registrar origen/fecha de consentimiento e intento de apertura, no mensaje entregado. Cambiar a No no revoca contactos ya aceptados ni teléfonos conocidos. Deduplicación cliente/casa por 7 días y Solicitudes compartidas se conservan. Demo: `house-controls.js` y `listing-whatsapp.js`; esquema, OTP real y backend pendientes, sin nuevas integraciones externas.
+## Piezas
 
-> Decisión vigente 2026-10-07: WhatsApp directo, sin chat interno ni números intermediarios. Solicitud consentida por cliente y aceptación del owner; especificación en `contacto-whatsapp.md`. Demo en memoria; backend e identidad reales pendientes.
-
-## Stack
-- **Monorepo** pnpm + Turborepo.
-  - `apps/web`: Next.js (App Router, TypeScript). Fichas públicas con SSR para SEO; landing; checkout de suscripción.
-  - `apps/mobile`: Expo / React Native (expo-router). Mismas pantallas que web salvo checkout (enlace a web).
-  - `packages/ui`: componentes y tokens compartidos (Tamagui o NativeWind, por decidir). Tokens generados desde `design/tokens/tokens.json`.
-  - `packages/api-client`: tipos generados de la BD + funciones de acceso.
-  - `packages/config`: eslint, tsconfig, prettier.
-- **Backend:** Supabase. Postgres con RLS, autenticación pendiente de validar (passkeys propuestas; OTP no basta como identidad), Storage de fotos; preferir captura de documentos/biometría en el proveedor sin duplicarlos innecesariamente, Edge Functions o pg_cron para jobs.
-- **Mapa:** MapLibre + proveedor de tiles (web); react-native-maps (móvil). Ubicación con jitter/radio ~500 m.
-- **WhatsApp directo:** backend autoriza el contacto tras solicitud consentida y aceptación del owner y genera `https://wa.me/<E164>?text=<urlencoded>`. No hay relay ni almacenamiento de conversaciones entre usuarios. La demo no genera enlaces reales. El OTP de WhatsApp requiere una integración de mensajería separada, pendiente.
-- **Pagos de suscripción:** pasarela local (Tilopay / ONVO Pay / Greenpay) con tarjeta recurrente y SINPE Móvil; webhooks → `subscriptions.status`.
-- **Notificaciones:** push (Expo) como propuesta pendiente. Se descartan por ahora los avisos automáticos y botones de aceptación por WhatsApp Business (2026-10-12). El OTP de verificación del número es un flujo separado que se conserva; no añadir SMS como sustitución automática de los avisos descartados.
-
-## Roles y auth
-
-El estado público «Identidad verificada» se deriva de **Veriff aprobado Y WhatsApp actual verificado**, nunca de una sola comprobación. Los estados internos separados sirven para permisos/soporte y para explicar al propio usuario qué falta, no para dos sellos públicos. Publicar/activar un anuncio y habilitar contacto exigen ambas condiciones en servidor; no basta ocultar botones. Es una regla pendiente de implementar, no una garantía de la demo actual.
-
-Requisito 2026-10-12: propietarios y clientes necesitan **Veriff aprobado y WhatsApp verificado mediante OTP** antes de contactar/enviar solicitudes/publicar/responder. Registro, login y borradores siguen sin esa barrera inicial. Aplicar ambas condiciones en backend y mantener estados separados para identidad y número actual. Alcance: [identidad-y-seguridad.md](identidad-y-seguridad.md). Meta Cloud API directa es la vía considerada para OTP, pendiente de integrar; no supone intermediación en las conversaciones ni elige proveedor de login.
-Ver identidad-y-seguridad.md: identidad separada de autenticación, teléfono y titularidad registral opcional por casa. Veriff elegido como dirección de producto y Essential candidato de plan; contratación, integración y cambios de esquema pendientes. Mapa propuesto de datos y requisitos jurídicos: privacidad-verificaciones.md. Passkeys y recuperación reforzada son propuestas, no capacidades confirmadas del stack. La integración de WhatsApp para OTP sigue pendiente; no confundirla con el contacto directo por wa.me ni con las notificaciones automáticas descartadas.
-
-| Rol | Auth | Acceso |
+| Pieza | Qué es | Dónde corre |
 |---|---|---|
-| Visitante | ninguna | catálogo y fichas (sin número del owner) |
-| Cliente | Cuenta; identidad aprobada antes de contactar/enviar solicitud | explorar/favoritos sin verificación de identidad; contacto condicionado |
-| Owner | Cuenta; identidad aprobada antes de publicar/responder | borradores sin verificación inicial; titularidad por finca opcional, no requisito para publicar |
-| Admin | cuenta interna | cola de verificación, casas, owners, reportes |
+| App | Vite + React 19 + TanStack Router (rutas y parámetros tipados) + TanStack Query (caché persistida en IndexedDB) | Navegador; shell precacheado por un service worker |
+| Worker | Hono. SSR de `/casa/CT-####` con `renderToString`, `/sitemap.xml`, `/robots.txt`, `POST /vitals`, `/errors`, `/events`, purga de caché; fase 5: `POST /webhooks/pagos/:proveedor` y cron diario | Cloudflare Workers (plan gratuito hasta un disparador medido), assets estáticos en el mismo worker |
+| Base de datos | Postgres con RLS en todas las tablas, grants por columna, vista `listings_public`, RPCs (`submit_listing`, `review_listing`, `set_listing_available`, `listing_link_state`, RPCs de fotos), trigger `listings_protect`, `pg_cron`/`pg_net` | Supabase (`bnbtico-pruebas` ahora; `bnbtico-prod` en el lanzamiento), us-east-1 |
+| Auth | Supabase Auth por teléfono, canal WhatsApp (Twilio Verify); JWT ES256; MFA por teléfono para admin | Supabase |
+| Storage | Bucket `listings` público para leer, escritura del dueño por carpeta con RLS; tres variantes JPEG por foto | Supabase |
+| Despliegue | GitHub Actions: pruebas → build → `wrangler deploy`; `develop` → `nueva.bnbtico.com` (luego `pruebas.bnbtico.com`), `main` → `bnbtico.com` | GitHub + Cloudflare |
 
-## Modelo de datos
-Decisión 2026-10-12: [publicacion.md](publicacion.md) sustituye el modo vac/largo por alquiler vacacional con `acceptsLongTerm`, precio nocturno obligatorio y opción mensual importe/consultar. Tipos Casa/Apartamento/Habitación; cantidad de habitaciones/baños y uso privado/compartido/mixto. WhatsApp único del usuario, referenciado desde anuncios, no duplicado en ellos. Esquema y matching de abajo son históricos y requieren migración; solo el formulario de demo está adaptado.
+No hay API intermedia, ni server actions, ni cookies de sesión en el servidor, ni servicio propio. La service role key solo existe en el entorno del worker.
 
-Esquema inicial en `supabase/migrations/0001_init.sql`, pendiente de adaptar a identidad para ambos roles. No representa todavía los requisitos nuevos de `identidad-y-seguridad.md`. Entidades iniciales:
+## Cuatro caminos de petición
 
-- `profiles` (rol, teléfono verificado) · `owner_profiles` (cédula, documentos, estado de verificación, WhatsApp de negocio) · `client_scores` (media, conteo, etiquetas).
-- `listings` (public_id `CT-####`, modo vac/largo, tipo, ubicación aproximada, capacidad, amenidades enum[], fotos, moneda, precio base por noche o mes, mínimo de noches, estado draft/review/active/paused/rejected) · `availability` (día, ocupado, precio especial, etiqueta).
-- `leads` (casa, cliente, owner, origen listing/request, fechas, personas) · `ratings` (owner → cliente, 1–5 + etiquetas).
-- `requests` (modo, personas, fechas, zona, imprescindibles, presupuesto total o mensual, texto, consentimiento, máx. owners, caducidad) · `request_matches` (estado new/dismissed/replied, precio ofrecido).
-- `subscriptions` (por casa, estado trial/active/paused/past_due/canceled, proveedor, renovación).
-- `reports` · `admin_actions`.
+1. **Ficha pública desde WhatsApp** (`/casa/CT-1042`). El CDN de Cloudflare sirve el HTML cacheado (etiqueta `listing:CT-1042`). Si no está en caché, el worker lee `listings_public` con la anon key, renderiza la página con React en servidor, inyecta Open Graph, la precarga del hero y el JSON de la casa en un `<script type="application/json">`, y responde con `s-maxage` largo. El navegador pinta foto, título y precio con el HTML; el JavaScript hidrata después; el mapa y lo que depende de la sesión se montan tras hidratar en cajas de tamaño fijo. Una aprobación, una edición o un cambio de disponibilidad purgan la etiqueta. Es la **única ruta con SSR**.
+2. **Pantalla pública en la app** (Explorar, Filtros). Shell desde el service worker; datos de `listings_public` y `provinces_with_listings` por PostgREST con la anon key, cacheados por Query (60 s) y persistidos; la moneda es estado local.
+3. **Pantalla con sesión** (Mis casas, Publicar, Cuenta, Admin). Shell desde el service worker; la pantalla se pinta desde la caché de Query sin red y se refresca en segundo plano con el JWT; las escrituras son optimistas (navegar primero, guardar en segundo plano, deshacer con el mensaje de la base si falla). Cada pantalla tiene una función de consulta que devuelve el objeto de la pantalla.
+4. **Trabajo de servidor** (fase 5). El worker recibe el webhook de la pasarela, comprueba la firma, inserta en `payment_events` (clave única por proveedor y evento: idempotencia) y llama a la RPC `apply_payment_event`. `pg_cron` encola los avisos a 90/30/7/0 días en `subscription_reminders` (patrón outbox) y el cron diario del worker los envía por WhatsApp y marca `sent_at`. La reapertura a medianoche es una sentencia SQL en `pg_cron`.
 
-Amenidades (enum): `pool, pets, ev_charger, ac, wifi, beachfront, bbq, parking, furnished, garage, accessible, no_deposit`.
+## Sesión y seguridad
 
-## Reglas de negocio a implementar en backend
+- supabase-js guarda la sesión en localStorage detrás de un adaptador de almacenamiento (Capacitor la moverá a Keychain/Keystore). Token de acceso de 1 h, rotación del refresh con detección de reutilización, logout que revoca.
+- El riesgo asumido es XSS con robo de token. Contramedidas obligatorias: CSP estricta (`script-src 'self'`, sin inline ni terceros en la zona privada), prohibición de `dangerouslySetInnerHTML` por lint, Turnstile en el formulario del código, y **MFA por teléfono para admin exigida en SQL** (`auth.jwt()->>'aal' = 'aal2'` en políticas y RPCs de admin).
+- Lo que expone un token robado: las casas del propio usuario (con su dirección exacta), sus favoritos y consultas; nunca dinero. El de admin, además, los teléfonos de todos los perfiles y la cola de revisión: por eso el `aal2`.
+- El número de WhatsApp del propietario es público por diseño en una casa activa; la dirección exacta y las coordenadas exactas no salen de `listings` (la vista las desplaza 150–499 m).
 
-Actualización 2026-10-12: estado de cuenta activo/desactivado separado de identidad, anuncio y suscripción; cambios solo admin con motivo, confirmación e historial. En servidor, bloquear publicación/contactos/respuestas y ocultar anuncios de cuentas desactivadas; conservar acceso a ayuda, historial y reclamaciones. Demo en `admin-users.js` con identidad por nombre de ejemplo; producción requiere IDs persistentes, RLS, auditoría y permisos reales. Soporte por WhatsApp de bnbtico separado del contacto entre usuarios, sin captura automática de chats. Reportes sin campos ni ciclo de devoluciones; ver `reclamaciones.md`.
-1. **Contactar requiere cuenta e identidad aprobada**, también para el owner receptor. Enviar la solicitud con consentimiento crea/reutiliza un lead por cliente/casa durante 7 días. El owner acepta al contactar o marca «No me interesa» sin reiniciar el plazo. El enlace de WhatsApp exige ambas aceptaciones; abrirlo no acredita envío, entrega ni reserva. Ver `contacto-whatsapp.md`.
-2. **El número del owner nunca sale en la API pública**; se entrega al participante autorizado tras aceptar el contacto. No basta estar autenticado.
-3. **Valoraciones:** un owner solo puede valorar a un cliente con el que exista `lead`; una valoración por lead. `client_scores` se recalcula por trigger.
-4. **Publicación:** moderación del anuncio más identidad aprobada de la persona mediante proveedor. Separar estados de anuncio, identidad y titularidad registral opcional por casa; esta última no condiciona la publicación por defecto. No comprobar autorización de alquiler. Responder a clientes también exige identidad aprobada. El esquema de la comprobación por finca aún debe diseñarse; no emitir sellos por datos aportados solo por el navegador.
-5. **Matching de solicitudes:** función `match_listings_for_request()` (modo, capacidad ≥ personas, `amenities @> must_have`, zona). Job al crear la solicitud y diario para solicitudes abiertas vs. casas nuevas. Notifica como máximo `max_owners` (10) y máximo 10 solicitudes/día por owner.
-6. **Número del cliente:** compartir solo en la solicitud autorizada cuando el owner acepta. En Pedir casa, consentimiento específico para hasta 10 owners verificados compatibles. No prometer ocultar números en WhatsApp ni retirar datos ya compartidos.
-7. **Suscripción:** `listings.status = active` requiere `subscriptions.status in (trial, active)`. Webhooks de la pasarela actualizan estado; `past_due` tiene 5 días de gracia y luego `paused`.
-8. **Pedir casa:** requiere identidad aprobada. Su plazo inicial de 14 días (vacacional) / 30 (largo), máx. 3 abiertas, corresponde a búsquedas, no a avisos de contacto: estos caducan a los 7 días por cliente/casa.
-9. **Extracción de requisitos del texto libre:** reglas por palabras clave en v1 (piscina, cargador/eléctrico, perro/gato/mascota, aire, wifi, playa, cochera, amueblad, "somos N"); el cliente confirma los chips antes de enviar.
+## Módulo de dominio
 
-## Ciclos de vida
+Un módulo TypeScript sin imports de framework: tipos generados de la base (`supabase gen types`, versionados y comprobados en CI), esquemas zod y validación por paso, mapeo tipado de filas, `describe(listing)` (precio principal, unidad, situación, enlace para compartir) y `can(listing, acción)` que refleja las reglas SQL. Dos interfaces, `ListingsApi` y `AuthApi`, con dos adaptadores cada una: PostgREST (el único archivo que importa supabase-js y conoce las columnas) y un fake en memoria que aplica propiedad y estados. **Una sola suite de contrato** corre contra los dos, así el fake no puede desviarse de la RLS. Invariantes en SQL; flujos en TypeScript; sin nuevo plpgsql de flujo.
 
-### Casa (`listings.status`)
-`draft` → (owner envía) `review` → (admin aprueba y owner verificado) `active` ↔ `paused` (owner pausa, o suscripción `past_due` vence la gracia) · `review` → `rejected` (con motivo; el owner puede corregir y reenviar).
+## Rendimiento
 
-### Suscripción (`subscriptions.status`)
-`trial` (oferta de lanzamiento por casa: posiciones 1–50, 12 meses; 51–100, 6 meses; 101–200, 3 meses) → `active` al contratar la suscripción → `past_due` (cobro fallido o SINPE no recibido; recordatorio 3 días antes, 5 días de gracia) → `paused` (casa oculta, sin cobro) → `active` al pagar · `canceled` por el owner en cualquier momento (sin permanencia; efecto al final del ciclo pagado).
+Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 150 KB gz. Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
 
-Condiciones vigentes en [business-model.md](business-model.md). El cupo global es de 200 casas; cada casa ocupa una plaza, aunque el owner o agencia tenga varias. Propuesta de asignación: primera publicación aprobada, con cómputo desde ese momento; criterio definitivo y tratamiento de duplicados o republicaciones pendientes. El cálculo del período gratuito y su finalización están pendientes de implementación; no interpretar el diagrama como autorización automática de cobro. El alta sin tarjeta y el tratamiento al vencer sin contratación siguen pendientes de concretar. La casa 201 en adelante no tiene un período gratuito aprobado en esta promoción.
+## Costes y disparadores
 
-### Solicitud (`requests.status`)
-`open` al crearse (caduca a 14 días vac / 30 largo) → `closed` por el cliente o `expired` por job. Al cerrar, los `request_matches` en `new` dejan de poder ver el número del cliente.
+0 USD hasta el lanzamiento (Workers y Supabase gratuitos) más Twilio. Workers de pago (5 USD) ante un error de límite de CPU, p95 de `cpuTime` > 7 ms o > 50 000 peticiones/día. Supabase Pro (25 USD) a 800 MB de Storage, 4 GB de egreso al mes o 400 MB de base. Desde la primera semana: copia diaria con `pg_dump` a R2 desde GitHub Actions.
 
-## Notificaciones
-| Evento | Destinatario | Canal |
-|---|---|---|
-| Código OTP para verificar WhatsApp | cliente / owner | WhatsApp; SMS no sustituye esta comprobación |
-| Casa aprobada / rechazada / más info | owner | push propuesto; sin aviso automático por WhatsApp |
-| Nuevo contacto (lead) | owner | bnbtico; push propuesto; aceptar/descartar dentro de bnbtico |
-| Nueva solicitud que coincide | owner | bnbtico; push propuesto; sin aviso automático por WhatsApp |
-| Un owner te escribió (match → replied) | cliente | push |
-| Recordatorio de pago SINPE (D-3) / cobro fallido | owner | canal pendiente; no WhatsApp automático en el alcance actual |
-| Recordatorio "valorá a tus clientes" | owner | push semanal |
+## Lo que no está (a propósito)
 
-## Mensajes prellenados de WhatsApp directo (solo tras aceptación bilateral; no plantillas de API)
-Ver `docs/design.md › Flujos detallados`. Se generan en backend (para registrar el lead/match antes de devolver la URL) y el cliente puede editarlas antes de abrir `wa.me`. Codificar con `encodeURIComponent`; el emoji final es opcional.
-
-## Extracción de requisitos del texto libre (v1)
-Reglas por palabras clave, en minúsculas y sin tildes: `piscina→pool`, `cargador|electrico→ev_charger`, `perro|gato|mascota→pets`, `aire|a/c→ac`, `wifi→wifi`, `playa|frente al mar→beachfront`, `cochera|garaje→garage`, `amueblad→furnished`, `accesible|silla de ruedas→accessible`; `somos (\d+)` → personas. Nunca sobreescribe lo que el cliente desmarcó a mano. Candidato a LLM en v2.
-
-## SEO web
-Fichas indexables con SSR, sitemap por provincia y destino, Open Graph con foto de portada, URLs `/c/CT-1042-villa-brisa-tamarindo`.
-
-## Entornos
-Supabase local (CLI) para desarrollo; proyecto `staging` y `prod`. Secretos solo en variables de entorno; nunca en el repo.
-
-## Testing
-Vitest para matching, formateo de dinero y extracción de requisitos. Playwright para "buscar → ficha → contactar" y el wizard de publicación. Revisión manual del prototipo como referencia de aceptación visual.
-# 2026-10-07 · Búsqueda asistida separada
-
-La demo añade `design/prototype/assisted-search.js`: estado independiente del formulario Pedir casa, coincidencias estructuradas compartidas y conversación simulada sin API ni persistencia. No es chat entre cliente y owner. Producción requiere extracción/validación de filtros en backend, autorización, cuotas y contabilidad de uso; ver `busqueda-asistida.md`. La IA no debe decidir por sí sola a quién compartir contacto.
+API propia, servicio en Go (opción cuando el worker pase de ~1 500 líneas o un trabajo dure > 30 s), SSR fuera de la ficha, escrituras offline, Realtime, Sentry, WebP, transformaciones de imagen en servidor, páginas por provincia. Cada una tiene su disparador o su fase en `docs/decisiones.md`.

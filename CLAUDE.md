@@ -24,9 +24,18 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - Los propietarios podrán valorar a los clientes; no hay reseñas de casas.
 - Promoción de lanzamiento: primeras 50 casas 12 meses gratis, siguientes 50 seis meses, siguientes 100 tres meses; después ₡9.900 al mes por casa, sin permanencia.
 
+## Arquitectura vigente (decisión 2026-10-21; en construcción en la fase R)
+
+- **App client-first:** Vite + React 19 + TanStack Router + TanStack Query, TypeScript estricto. Se construye en `apps/app` y pasa a `apps/web` al cortar. La zona con sesión es un shell estático (service worker) que habla **directamente con PostgREST** con el JWT del usuario; la caché de Query se persiste en IndexedDB; escrituras optimistas. **Una sola ruta con SSR**: `/casa/CT-####`, renderizada por el worker (`renderToString`); el mapa y lo que dependa de la sesión se montan tras hidratar, en cajas de tamaño fijo; una prueba de CI falla ante avisos de hidratación. Portada = HTML estático; Explorar anónimo en cliente.
+- **Worker Hono en Cloudflare Workers** (`src/server`): SSR de la ficha, sitemap, `POST /vitals|/errors|/events`, purga de caché; en la fase 5, webhooks de pago y cron de avisos (outbox). La service role key solo vive en el worker. Despliegue con GitHub Actions (`wrangler-action`): `develop` → `nueva.bnbtico.com` (luego `pruebas.bnbtico.com`), `main` → bnbtico.com; las pruebas van delante del deploy. Planes gratuitos de Workers y Supabase hasta que salten sus disparadores (ver `docs/decisiones.md`).
+- **Postgres es el backend.** RLS + grants por columna = autorización; RPCs plpgsql = invariantes y transiciones (toda transición es una RPC, la llame el navegador, el worker o `pg_cron`). Reglas del dominio: módulo `src/domain` sin imports de framework; cadenas de PostgREST solo en el adaptador; una interfaz `ListingsApi` con adaptador PostgREST y fake en memoria y **una suite de contrato** contra ambos; tipos generados con `supabase gen types` versionados; una función de consulta por pantalla; invariantes en SQL, flujos en TypeScript. Toda tabla nueva lleva políticas y prueba de contrato **antes** de cualquier pantalla.
+- **Seguridad (condiciones aceptadas):** CSP estricta (`script-src 'self'`, sin inline ni terceros en la zona privada; GA fuera de ahí); prohibido `dangerouslySetInnerHTML` (lint); sesión de supabase-js en localStorage detrás de un adaptador de almacenamiento; Turnstile en el formulario del código; **admin con MFA por teléfono exigida en SQL** (`auth.jwt()->>'aal' = 'aal2'`).
+- **Presupuestos (p75 de usuarios reales en Costa Rica):** toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS privado < 150 KB gz. Puertas en CI: `size-limit`, hidratación, Lighthouse CI. Medición real con `web-vitals`. Daniel prueba desde Vancouver (latencia parecida a Costa Rica); para ancho de banda y CPU, DevTools «Slow 4G» + CPU 4×.
+- **Imágenes:** tres variantes JPEG 480/800/1600 generadas en el navegador al subir, `<casa>/<uuid>/<tamaño>.jpg`, caché de un año, `srcset` + `lazy`.
+
 ## Convenciones de código (aplicación real, desde la fase 0)
 
-- `apps/web`: Next.js (App Router) + TypeScript estricto, en Vercel. `supabase/`: Postgres con RLS, Storage, Edge Functions. Sin `apps/mobile`, sin `packages/*`, sin Turborepo.
+- `apps/web` **hasta el corte de la fase R**: Next.js (App Router) + TypeScript estricto, en Vercel; no recibe más cambios salvo los imprescindibles. `supabase/`: Postgres con RLS, Storage, `pg_cron`. Sin `apps/mobile`, sin `packages/*`, sin Turborepo.
 - Entidades en inglés (`Listing`, `Inquiry`, `Subscription`); copy en español.
 - Dinero como entero en colones + `currency`; formato `₡95 000`; cifras tabulares. Dólares solo al mostrar.
 - IDs públicos de casa `CT-####`. Enlaces `bnbtico.com/casa/CT-####`.
@@ -35,7 +44,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 ## Entornos y herramientas (2026-10-19)
 
-- `main` → bnbtico.com (solo portada hasta el lanzamiento); `develop` → pruebas.bnbtico.com (contraseña, Supabase `bnbtico-pruebas`, GA apagado). Cambios de portada: en `main` y luego merge a `develop`.
+- `main` → bnbtico.com (solo portada hasta el lanzamiento); `develop` → pruebas.bnbtico.com (contraseña, Supabase `bnbtico-pruebas`, GA apagado). Cambios de portada: en `main` y luego merge a `develop`. **Durante la fase R:** la app nueva (`apps/app`) se despliega desde `develop` a `nueva.bnbtico.com` en Cloudflare Workers con GitHub Actions, protegida con Cloudflare Access; Vercel sigue sirviendo la app vieja hasta el corte. Local de la app nueva: siempre con `supabase start` (no hay proveedor demo). El pendiente de ES256/`getClaims` ya no aplica: ningún servidor verifica JWT.
 - Supabase local: `pnpm db:start` / `pnpm db:reset`; `apps/web/.env.local` (no versionado) apunta a él y lleva `SUPABASE_SERVICE_ROLE_KEY` (clave de servicio local, solo para las pruebas `tests/db` y `casas.spec.ts`; la app nunca la usa). Sin variables la app usa el proveedor demo (código 123456) y las pantallas de casas avisan que necesitan Supabase. Números de prueba `8888 1234`, `8777 0001`, `8888 9999` y `8899 0001` (**admin**, en local y en pruebas, marcado por `seed_admin`) con código 123456. Tras tocar `config.toml`: `supabase stop && supabase start` (`db reset` no lo recarga). `supabase migration new` lee de stdin si no es terminal: en scripts, `< /dev/null`.
 - Esquema: nuevas migraciones con `pnpm exec supabase migration new <nombre>` y `pnpm exec supabase db push`; `0001_init.sql` no se edita más. Los cambios de estado de una casa pasan por las RPCs (`submit_listing`, `review_listing`); el trigger `listings_protect` bloquea cualquier otro camino y congela el contenido fuera de `draft`/`changes`. Admin = `profiles.is_admin`. Columnas sensibles: `revoke`/`grant` por columna o vista, además de RLS (la tabla `listings` solo la leen dueño y admin; el público usa `listings_public`).
 - Local: `.claude/launch.json` arranca la web; Playwright con `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`, un solo worker (comparte base y números de prueba) y en Playwright el aviso de los formularios se localiza con `.note[role="alert"]` (Next añade su propio `role="alert"`); `/?pronto=1` muestra la portada. `apps/web/AGENTS.md` lo genera Next y no se versiona.
@@ -56,10 +65,26 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - `docs/configuracion-supabase.md` — cómo crear el proyecto de Supabase, Twilio Verify y las variables de Vercel para `pruebas.bnbtico.com`; paso 8: migraciones de la fase 2 y cuenta admin.
 - `docs/pruebas-manuales-fase-2.md` — plan de pruebas manual desde el móvil en pruebas.bnbtico.com (fases 0–2), con los números de prueba y su papel.
 - `docs/publicacion.md`, `docs/contacto-whatsapp.md`, `docs/busqueda-asistida.md` — reglas por área. Donde hablen de identidad obligatoria, solicitud/aceptación o reclamaciones, están superadas por las reglas de arriba.
-- `docs/architecture.md`, `docs/business-model.md`, `docs/vision.md`, `docs/pitch.md`, `docs/marketing.md` — contexto; revisar contra las reglas vigentes antes de citarlos.
+- `docs/architecture.md` — arquitectura vigente (2026-10-21): piezas, los cuatro caminos de petición, sesión y seguridad, módulo de dominio, presupuestos, costes. La versión anterior está en `docs/historico/architecture-hasta-2026-10-21.md`.
+- `.scratch/fase-r/spec.md` — especificación de la fase R (reescritura client-first); `.scratch/` es el rastreador de issues local de las skills (ver «Agent skills» abajo).
+- `docs/business-model.md`, `docs/vision.md`, `docs/pitch.md`, `docs/marketing.md` — contexto; revisar contra las reglas vigentes antes de citarlos.
 - `docs/identidad-y-seguridad.md`, `docs/privacidad-verificaciones.md`, `docs/guia-verificacion-finca.md` — Veriff y titularidad: v1.1 y después.
 - `docs/reclamaciones.md`, `docs/chat-privado.md`, `docs/contacto-privado.md`, `docs/roadmap.md`, `docs/resumen-*.md`, `docs/historico/` — históricos. `docs/historico/CLAUDE-hasta-2026-10-12.md` es la versión anterior de este archivo, con todas las notas fechadas.
 
 ## Dirección de producto fuera del lanzamiento
 
 Veriff opcional (v1.1), cobro real con pasarela local (Tilopay / ONVO / Greenpay), app en tiendas, valoraciones de clientes, comunidad entre propietarios (idea, no requisito), titularidad registral opcional (exploración, no v1).
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as local markdown under `.scratch/<feature>/` in this repo (committed); no external tracker. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) as the `Status:` line of each issue file. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root, created lazily. See `docs/agents/domain.md`.
