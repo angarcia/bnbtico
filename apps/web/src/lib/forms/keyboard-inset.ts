@@ -3,8 +3,9 @@
 // añade como relleno al pie del formulario para que el campo enfocado se pueda desplazar por encima del teclado.
 const MIN_KEYBOARD = 100; // por debajo de esto son las barras del navegador al aparecer u ocultarse, no un teclado
 
-export function keyboardInset({ innerHeight, viewportHeight, viewportOffsetTop }: { innerHeight: number; viewportHeight: number; viewportOffsetTop: number }): number {
-  const inset = Math.round(innerHeight - viewportHeight - viewportOffsetTop);
+export function keyboardInset({ innerHeight, viewportHeight }: { innerHeight: number; viewportHeight: number; viewportOffsetTop?: number }): number {
+  // El desplazamiento de la vista visible (offsetTop) no entra: Safari la mueve al enfocar, pero el teclado mide lo mismo.
+  const inset = Math.round(innerHeight - viewportHeight);
   return inset >= MIN_KEYBOARD ? inset : 0;
 }
 

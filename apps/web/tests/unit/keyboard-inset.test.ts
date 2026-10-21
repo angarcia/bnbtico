@@ -11,8 +11,8 @@ describe("keyboardInset", () => {
   it("con el teclado de iOS abierto, la altura que tapa", () => {
     expect(keyboardInset({ innerHeight: 667, viewportHeight: 357, viewportOffsetTop: 0 })).toBe(310);
   });
-  it("si Safari ya desplazó la vista, descuenta ese desplazamiento", () => {
-    expect(keyboardInset({ innerHeight: 667, viewportHeight: 357, viewportOffsetTop: 100 })).toBe(210);
+  it("el desplazamiento de la vista visible (Safari la mueve al enfocar) no cambia la altura del teclado", () => {
+    expect(keyboardInset({ innerHeight: 667, viewportHeight: 357, viewportOffsetTop: 100 })).toBe(310);
   });
   it("barras del navegador que cambian de tamaño (menos de 100 px) no cuentan como teclado", () => {
     expect(keyboardInset({ innerHeight: 667, viewportHeight: 600, viewportOffsetTop: 0 })).toBe(0);

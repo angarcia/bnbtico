@@ -59,7 +59,7 @@ export function StepForm({ listingId, step, children, initialError }: { listingI
     if (!form || !vv) return;
     const root = document.documentElement;
     const update = () => {
-      const inset = keyboardInset({ innerHeight: window.innerHeight, viewportHeight: vv.height, viewportOffsetTop: vv.offsetTop });
+      const inset = keyboardInset({ innerHeight: window.innerHeight, viewportHeight: vv.height });
       root.style.setProperty("--kb", `${inset}px`);
       const el = document.activeElement;
       if (inset > 0 && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && form.contains(el)) {
@@ -67,11 +67,10 @@ export function StepForm({ listingId, step, children, initialError }: { listingI
         window.scrollTo({ top: scrollTopToCenter({ scrollY: window.scrollY, elementTop: rect.top, elementHeight: rect.height, viewportHeight: vv.height, viewportOffsetTop: vv.offsetTop }), behavior: "smooth" });
       }
     };
+    // Solo al cambiar de tamaño (abrir/cerrar el teclado); escuchar el scroll de la vista visible realimentaba la altura.
     vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
     return () => {
       vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
       root.style.removeProperty("--kb");
     };
   }, [step]);
