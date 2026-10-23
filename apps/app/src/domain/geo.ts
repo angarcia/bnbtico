@@ -19,3 +19,17 @@ export function distanceMeters(a: LatLng, b: LatLng): number {
 export function inCostaRica(lat: number, lng: number): boolean {
   return lat >= 8.0 && lat <= 11.3 && lng >= -86.0 && lng <= -82.5;
 }
+
+/** Centro del mapa del asistente por provincia, antes de marcar el pin. */
+export const PROVINCE_CENTERS: Readonly<Record<string, LatLng>> = {
+  Limón: { lat: 9.98, lng: -83.03 },
+  Guanacaste: { lat: 10.63, lng: -85.44 },
+  Puntarenas: { lat: 9.98, lng: -84.84 },
+  Alajuela: { lat: 10.02, lng: -84.21 },
+  "San José": { lat: 9.93, lng: -84.08 },
+  Heredia: { lat: 10.0, lng: -84.12 },
+  Cartago: { lat: 9.86, lng: -83.92 },
+};
+
+/** Punto con seis decimales (unos 10 cm): lo que se guarda del pin. */
+export const roundPoint = (p: LatLng): LatLng => ({ lat: Number(p.lat.toFixed(6)), lng: Number(p.lng.toFixed(6)) });

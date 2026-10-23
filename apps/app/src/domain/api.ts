@@ -2,7 +2,7 @@
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
 import type { Filters } from "./filters";
-import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry } from "./listing";
+import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry, Step } from "./listing";
 
 export interface PublicListingsApi {
   /** Catálogo con filtros; más recientes primero, como mucho 60. */
@@ -27,8 +27,21 @@ export interface OwnerListingsApi {
   listOwn(): Promise<Listing[]>;
   /** null si no existe o es de otro propietario. */
   getOwn(id: string): Promise<Listing | null>;
+  /** Borrador nuevo con su CT-####, el WhatsApp del perfil y todo lo demás vacío (nada preseleccionado). */
   createDraft(): Promise<{ id: string; publicId: string }>;
-  saveStep(id: string, patch: Partial<ListingDraft>): Promise<Listing>;
+  /** El borrador pendiente para retomar desde cualquier dispositivo: el más reciente que nunca se revisó; null si no hay. */
+  findResumable(): Promise<Listing | null>;
+  /**
+   * Guarda una pantalla del asistente: lee el borrador del servidor, mezcla el parche, valida esa pantalla (`planStep`,
+   * con el número de fotos del servidor) y escribe todas las columnas que cambian, también las que limpia `normalize`.
+   * Devuelve el borrador guardado. Fuera de borrador o cambios pedidos falla con el mensaje del trigger listings_protect.
+   * Con `known` (el borrador que ya tiene el navegador) no lo relee: el guardado es una sola petición, que con keepalive
+   * llega aunque la app se cierre justo después de «Continuar». La base sigue protegiendo estado y dueño, y submit_listing
+   * vuelve a comprobarlo todo al enviar.
+   * (Firma ampliada en el ticket 07: `step`, porque la validación depende de la pantalla, y `known`.)
+   */
+  saveStep(id: string, step: Step, patch: Partial<ListingDraft>, known?: Listing): Promise<Listing>;
+  /** Envía a revisión con la RPC submit_listing; sus mensajes en español pasan tal cual. */
   submit(id: string): Promise<void>;
   /** Activa, con cambios pedidos o rechazada → borrador (deja de verse hasta la nueva aprobación). */
   reopenForEdit(id: string): Promise<void>;
@@ -37,9 +50,6 @@ export interface OwnerListingsApi {
   /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
 }
-
-/** Lo que ya implementan los adaptadores (ticket 06); crear, guardar pasos y enviar llegan con el asistente (ticket 07). */
-export type OwnerManageApi = Pick<OwnerListingsApi, "listOwn" | "getOwn" | "reopenForEdit" | "setAvailable" | "deleteDraft">;
 
 export interface PhotosApi {
   upload(listingId: string, file: Blob): Promise<string>;

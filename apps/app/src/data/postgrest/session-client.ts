@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../domain/database.types";
 import { SESSION_STORAGE_KEY, type KeyValueStore, type SessionStorageAdapter } from "../storage";
 import { createPostgrestAuth, type OtpChannel } from "./auth";
+import { keepaliveFetch } from "./keepalive-fetch";
 import { createPostgrestListings } from "./listings";
 import { createPostgrestOwnerListings } from "./owner";
 
@@ -16,6 +17,8 @@ export interface DeviceStores {
 export function createSessionClient(supabaseUrl: string, anonKey: string, storage: SessionStorageAdapter) {
   return createClient<Database>(supabaseUrl, anonKey, {
     auth: { storage, storageKey: SESSION_STORAGE_KEY, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    // Escrituras con keepalive: un paso del asistente guardado justo antes de cerrar la app no se pierde.
+    global: { fetch: keepaliveFetch() },
   });
 }
 

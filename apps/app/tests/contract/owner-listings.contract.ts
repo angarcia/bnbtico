@@ -2,7 +2,7 @@
 // Mismas reglas y mensajes en el fake y en la base (RLS, trigger listings_protect, política listings_owner_delete,
 // RPC set_listing_available).
 import { beforeAll, describe, expect, it } from "vitest";
-import type { OwnerManageApi } from "../../src/domain/api";
+import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
 import type { ListingsHarness, SeedStatus, Seeded } from "./harness";
 
@@ -23,8 +23,8 @@ async function rejection(p: Promise<unknown>): Promise<DomainError> {
 export function ownerListingsContract(name: string, makeHarness: () => Promise<ListingsHarness>) {
   describe(`zona del propietario · ${name}`, () => {
     let h: ListingsHarness;
-    let me: OwnerManageApi;
-    let other: OwnerManageApi;
+    let me: OwnerListingsApi;
+    let other: OwnerListingsApi;
 
     describe("lectura", () => {
       const mine = {} as Record<SeedStatus, Seeded>;

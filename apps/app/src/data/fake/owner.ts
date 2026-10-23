@@ -1,15 +1,42 @@
 // Fake en memoria de las casas del propietario: mismas reglas y mensajes que la base (RLS de listings, trigger
-// listings_protect, política listings_owner_delete y RPC set_listing_available).
-import type { OwnerManageApi } from "../../domain/api";
+// listings_protect, política listings_owner_delete y RPCs set_listing_available y submit_listing). Guardar una pantalla
+// valida con planStep, como el adaptador PostgREST.
+import type { OwnerListingsApi } from "../../domain/api";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
-import type { Listing } from "../../domain/listing";
+import { inCostaRica } from "../../domain/geo";
+import { MAX_PHOTOS, MIN_PHOTOS, planStep, type Listing } from "../../domain/listing";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
+const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
 
-export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string; userId: () => string | null }): OwnerManageApi {
+/** Las comprobaciones de la RPC submit_listing, en su orden y con sus mensajes. */
+function submitRefusal(l: FakeListing, photos: number): string | null {
+  if (l.status === "review") return "Este anuncio ya está en revisión.";
+  if (l.status !== "draft" && l.status !== "changes") return "Este anuncio no se puede enviar en su estado actual.";
+  if (!l.kind) return "Elija Alojamiento completo o Habitación.";
+  if (!l.acceptsNightly && !l.acceptsMonthly) return "Marque Vacacional, Mensual o las dos.";
+  if (!l.province || !l.canton || !l.zone) return "Complete provincia, cantón y zona aproximada.";
+  if (l.lat === null || l.lng === null) return "Marque en el mapa la ubicación aproximada.";
+  if (!inCostaRica(l.lat, l.lng)) return "Marque un punto dentro de Costa Rica.";
+  if ((l.capacity ?? 0) < 1) return "Indique cuántas personas pueden alojarse (mínimo 1).";
+  if (l.bedrooms === null || (l.bedrooms < 1 && l.kind !== "completo" && l.kind !== "apartamento")) return "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
+  if ((l.bathrooms ?? 0) < 1) return "Indique el número de baños (mínimo 1).";
+  if (l.kind === "habitacion" && l.bathroomShared === null) return "Indique si el baño es privado o compartido.";
+  if (!l.title || !l.description) return "Complete el nombre de la casa y la descripción.";
+  if (l.features.includes("parking")) {
+    if (l.parkingPaid === null) return "Indique si el parqueo es gratuito o de pago.";
+  } else if (l.parkingPaid !== null) return "El tipo de parqueo solo aplica si el anuncio tiene parqueo.";
+  if (photos < MIN_PHOTOS) return `Agregue al menos ${MIN_PHOTOS} fotos.`;
+  if (photos > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
+  if (l.acceptsNightly && (l.nightlyPriceCrc ?? 0) <= 0) return "Indique el precio por noche en colones.";
+  if (l.acceptsMonthly && (l.monthlyPriceCrc ?? 0) <= 0) return "Indique el precio por mes en colones.";
+  return null;
+}
+
+export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string; userId: () => string | null }): OwnerListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
 
   function me(): string {
@@ -43,6 +70,40 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
     async getOwn(id) {
       const l = own(id);
       return l ? toListing(l) : null;
+    },
+
+    async findResumable() {
+      const owner = me();
+      const drafts = [...db.listings.values()].filter((l) => l.ownerId === owner && l.status === "draft" && l.reviewedAt === null);
+      const newest = drafts.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+      return newest ? toListing(newest) : null;
+    },
+
+    async createDraft() {
+      const l = db.insertListing(me(), { acceptsMonthly: null });
+      return { id: l.id, publicId: l.publicId };
+    },
+
+    async saveStep(id, step, patch, known) {
+      const l = own(id);
+      if (!l || (known && known.id !== id)) throw new DomainError(NOT_FOUND, "not_found");
+      const base = known ?? toListing(l);
+      if (base.status !== "draft" && base.status !== "changes") throw new DomainError(FROZEN, "validation");
+      const plan = planStep(base, step, patch);
+      if ("error" in plan) throw new DomainError(plan.error, "validation");
+      if (Object.keys(plan.changes).length === 0) return known ?? toListing(l);
+      if (l.status !== "draft" && l.status !== "changes") throw new DomainError(FROZEN, "validation"); // el trigger
+      const { photoCount: _notAColumn, ...changes } = plan.changes;
+      touch(l, changes);
+      return toListing(l);
+    },
+
+    async submit(id) {
+      const l = own(id);
+      if (!l) throw new DomainError(NOT_FOUND, "validation");
+      const refusal = submitRefusal(l, db.photosOf(id).length);
+      if (refusal) throw new DomainError(refusal, "validation");
+      touch(l, { status: "review", reviewNote: null });
     },
 
     async setAvailable(id, available) {

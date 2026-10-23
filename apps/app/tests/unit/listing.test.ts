@@ -10,8 +10,10 @@ import {
   emptyDraft,
   normalize,
   parseColones,
+  planStep,
   validateAll,
   validateStep,
+  type Feature,
   type ListingDraft,
 } from "../../src/domain/listing";
 import { formInput, parseStep } from "../../src/domain/step-forms";
@@ -226,5 +228,40 @@ describe("validateAll", () => {
     expect(validateAll({ ...validDraft(), canton: "Nicoya" })).toEqual({ step: 2, error: "Elija un cantón de la provincia." });
     expect(validateAll({ ...validDraft(), lat: null })).toEqual({ step: 3, error: "Marque en el mapa la ubicación aproximada." });
     expect(validateAll(validDraft())).toBeNull();
+  });
+});
+
+describe("planStep (guardar una pantalla)", () => {
+  it("valida la pantalla sobre el borrador mezclado y no devuelve cambios si falla", () => {
+    expect(planStep(emptyDraft(), 1, { kind: "completo" })).toEqual({ error: "Marque Vacacional, Mensual o las dos." });
+    expect(planStep({ ...validDraft(), kind: "habitacion", bathroomShared: null }, 4, { capacity: 2, bedrooms: 1, bathrooms: 1 })).toEqual({ error: "Indique si el baño es privado o compartido." });
+  });
+
+  it("devuelve solo las columnas que cambian, incluidas las que limpia normalize", () => {
+    const current = { ...validDraft(), kind: "habitacion" as const, bathroomShared: true, acceptsNightly: true, nightlyPriceCrc: 42000 };
+    const plan = planStep(current, 1, { kind: "completo", acceptsNightly: false, acceptsMonthly: true });
+    expect(plan).toEqual({
+      changes: { kind: "completo", acceptsNightly: false, acceptsMonthly: true, bathroomShared: null, nightlyPriceCrc: null, monthlyMode: "amount" },
+      next: expect.objectContaining({ kind: "completo", bathroomShared: null, nightlyPriceCrc: null, monthlyMode: "amount" }),
+    });
+  });
+
+  it("sin mensual se limpian modo y precio mensual; quitar parqueo limpia su tipo", () => {
+    const monthly = { ...validDraft(), acceptsMonthly: true, monthlyMode: "amount" as const, monthlyPriceCrc: 480000 };
+    expect(planStep(monthly, 1, { kind: "completo", acceptsNightly: true, acceptsMonthly: false })).toEqual({
+      changes: { acceptsMonthly: false, monthlyMode: null, monthlyPriceCrc: null },
+      next: expect.anything(),
+    });
+    const parking = { ...validDraft(), features: ["parking", "wifi"] as Feature[], parkingPaid: true };
+    expect(planStep(parking, 5, { features: ["wifi"], parkingPaid: true })).toEqual({ changes: { features: ["wifi"], parkingPaid: null }, next: expect.anything() });
+  });
+
+  it("nada que cambiar: cambios vacíos", () => {
+    expect(planStep(validDraft(), 2, { province: "Limón", canton: "Talamanca", zone: "Manzanillo" })).toEqual({ changes: {}, next: expect.anything() });
+  });
+
+  it("paso 7: el número de fotos es el del borrador (servidor), nunca el del parche", () => {
+    expect(planStep({ ...validDraft(), photoCount: 4 }, 7, { photoCount: 9 })).toEqual({ error: "Agregue al menos 5 fotos." });
+    expect(planStep({ ...validDraft(), photoCount: 5 }, 7, { photoCount: 0 })).toEqual({ changes: {}, next: expect.objectContaining({ photoCount: 5 }) });
   });
 });

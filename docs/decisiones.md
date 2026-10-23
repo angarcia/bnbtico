@@ -1,3 +1,8 @@
+## 2026-10-23 · Un anuncio nuevo solo nace como borrador (migración listings_alta_segura)
+
+- **Por qué:** con el asistente en el navegador (fase R, ticket 07) se revisó la creación por REST: la política de insert solo exigía `owner_id = auth.uid()` y `listings_protect` solo vigilaba updates, así que un propietario podía insertar una casa ya `active` (sin revisión) y con cualquier WhatsApp.
+- **Qué:** trigger `before insert` (no afecta al servicio ni al admin): estado `draft`, sin datos de revisión («Un anuncio nuevo empieza como borrador.») y `whatsapp_phone` copiado del perfil; `listings_protect` congela también `whatsapp_phone`. Guardar una pantalla del asistente es una sola petición con `keepalive` (el navegador manda el borrador que ya tiene; la base protege estado y dueño y `submit_listing` vuelve a validar todo).
+
 ## 2026-10-21 · Revisión de arquitectura tras las fases 0–2: app client-first con Vite + Hono en Cloudflare, Supabase directo desde el navegador
 
 Decisión de Daniel tras una entrevista de arquitectura (en inglés, registro completo en el plan de la sesión) en la que se desafiaron plataforma, framework, backend y lenguaje antes de que reescribir fuera caro. Cuatro agentes arquitectos propusieron cuatro diseños bajo restricciones opuestas (quedarse en Next, app shell en cliente, backend propio tipado, cambiar de framework/host); el consenso y las decisiones van abajo.

@@ -57,6 +57,14 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);
     },
     seed,
+    async addPhotos(listingId, n, as = "owner") {
+      const db = owners[as];
+      const { count } = await db.from("listing_photos").select("id", { count: "exact", head: true }).eq("listing_id", listingId);
+      const start = count ?? 0;
+      const paths = Array.from({ length: n }, (_, i) => `${listingId}/extra-${start + i}.jpg`);
+      fail("fotos", (await db.from("listing_photos").insert(paths.map((path, i) => ({ listing_id: listingId, path, position: start + i })))).error);
+      return paths;
+    },
     ownerName: (who) => names[who],
   };
 }

@@ -2,14 +2,15 @@
 // (clave privada, ver account.ts y persist.ts): Inicio y Mis casas se pintan al instante desde la caché y se refrescan
 // por detrás (30 s, al volver a la app y al recuperar la red). El detalle se siembra con la fila de la lista.
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { OwnerManageApi } from "../domain/api";
+import type { OwnerListingsApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
+import { allSavesSettled, savesSettled } from "./save-queue";
 import { authApi } from "./session";
 
 export const OWNER_STALE_MS = 30_000;
 
 /** Carga supabase-js con la sesión ya leída antes de pedir datos del propietario. */
-const api = async (): Promise<OwnerManageApi> => {
+export const api = async (): Promise<OwnerListingsApi> => {
   await authApi();
   return (await import("./supabase-data")).ownerListings();
 };
@@ -17,7 +18,10 @@ const api = async (): Promise<OwnerManageApi> => {
 export const ownListingsQuery = (userId: string) =>
   queryOptions({
     queryKey: ["own-listings", userId] as const,
-    queryFn: async () => (await api()).listOwn(),
+    queryFn: async () => {
+      await allSavesSettled(); // una lista leída a mitad de un guardado del asistente pisaría lo recién escrito
+      return (await api()).listOwn();
+    },
     staleTime: OWNER_STALE_MS,
   });
 
@@ -25,7 +29,10 @@ export const ownListingQuery = (userId: string, id: string, client: QueryClient)
   const list = client.getQueryState(ownListingsQuery(userId).queryKey);
   return queryOptions({
     queryKey: ["own-listing", userId, id] as const,
-    queryFn: async () => (await api()).getOwn(id),
+    queryFn: async () => {
+      await savesSettled(id);
+      return (await api()).getOwn(id);
+    },
     staleTime: OWNER_STALE_MS,
     initialData: () => (list?.data as Listing[] | undefined)?.find((l) => l.id === id),
     initialDataUpdatedAt: list?.dataUpdatedAt,
@@ -39,14 +46,25 @@ export const activeCountQuery = queryOptions({
   staleTime: 5 * 60_000,
 });
 
+/** El borrador pendiente para retomar (pantalla de entrada a publicar). Siempre se pide de nuevo: puede venir de otro dispositivo. */
+export const resumableQuery = (userId: string) =>
+  queryOptions({
+    queryKey: ["own-resumable", userId] as const,
+    queryFn: async () => {
+      await allSavesSettled();
+      return (await api()).findResumable();
+    },
+    staleTime: 0,
+  });
+
 /** Cambia una casa en la lista y en su detalle a la vez (escrituras optimistas). */
-function patchCached(client: QueryClient, userId: string, id: string, patch: Partial<Listing>) {
+export function patchCached(client: QueryClient, userId: string, id: string, patch: Partial<Listing>) {
   client.setQueryData<Listing[]>(ownListingsQuery(userId).queryKey, (list) => list?.map((l) => (l.id === id ? { ...l, ...patch } : l)));
   client.setQueryData<Listing | null>(["own-listing", userId, id], (l) => (l ? { ...l, ...patch } : l));
 }
 
 /** Tras cualquier cambio: la lista, el detalle y lo que el público ve de esa casa vuelven a pedirse. */
-function refresh(client: QueryClient, userId: string, l: Pick<Listing, "id" | "publicId">) {
+export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "id" | "publicId">) {
   void client.invalidateQueries({ queryKey: ["own-listings", userId] });
   void client.invalidateQueries({ queryKey: ["own-listing", userId, l.id] });
   void client.invalidateQueries({ queryKey: ["listing", l.publicId] });

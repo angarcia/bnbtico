@@ -1,18 +1,22 @@
 // Adaptador PostgREST de las casas del propietario. La tabla `listings` solo la leen dueño y admin (RLS); por eso
 // listOwn y getOwn filtran además por el usuario de la sesión. Las reglas de estado las aplica la base: aquí solo se
-// traduce lo que la base calla (un update o delete filtrado por RLS devuelve cero filas, sin error).
+// traduce lo que la base calla (un update o delete filtrado por RLS devuelve cero filas, sin error). Guardar una pantalla
+// valida en TypeScript (planStep, igual que el fake); enviar lo valida la RPC submit_listing.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { OwnerManageApi } from "../../domain/api";
+import type { OwnerListingsApi } from "../../domain/api";
 import { discardRefusal } from "../../domain/can";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
-import { fromListingRow, storagePhotoUrl } from "../../domain/rows";
+import { DEFAULT_PROVINCE, planStep } from "../../domain/listing";
+import { fromListingRow, storagePhotoUrl, toListingUpdate } from "../../domain/rows";
 
 const OWN_COLUMNS = "*, listing_photos(id, path, position)";
 const NOT_FOUND = "No encontramos ese anuncio.";
+/** El mensaje del trigger listings_protect; se adelanta aquí porque una pantalla sin cambios no llega a la base. */
+const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): OwnerManageApi {
+export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): OwnerListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
 
   async function me(): Promise<string> {
@@ -37,6 +41,55 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
     },
 
     getOwn,
+
+    async findResumable() {
+      const { data, error } = await db
+        .from("listings")
+        .select(OWN_COLUMNS)
+        .eq("owner_id", await me())
+        .eq("status", "draft")
+        .is("reviewed_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw toDomainError(error);
+      return data ? fromListingRow(data, data.listing_photos, url) : null;
+    },
+
+    async createDraft() {
+      const owner = await me();
+      const profile = await db.from("profiles").select("phone").eq("id", owner).single();
+      if (profile.error) throw toDomainError(profile.error);
+      // Nada preseleccionado: tipo, modalidades, números y precios nulos o vacíos hasta que el propietario los elige.
+      const { data, error } = await db
+        .from("listings")
+        .insert({ owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: profile.data.phone, accepts_nightly: false, accepts_monthly: null })
+        .select("id, public_id")
+        .single();
+      if (error) throw toDomainError(error);
+      return { id: data.id, publicId: data.public_id };
+    },
+
+    async saveStep(id, step, patch, known) {
+      if (!UUID.test(id) || (known && known.id !== id)) throw new DomainError(NOT_FOUND, "not_found");
+      const current = known ?? (await getOwn(id));
+      if (!current) throw new DomainError(NOT_FOUND, "not_found");
+      if (current.status !== "draft" && current.status !== "changes") throw new DomainError(FROZEN, "validation");
+      const plan = planStep(current, step, patch);
+      if ("error" in plan) throw new DomainError(plan.error, "validation");
+      const row = toListingUpdate(plan.changes);
+      if (Object.keys(row).length === 0) return current;
+      const { data, error } = await db.from("listings").update(row).eq("id", id).eq("owner_id", await me()).select(OWN_COLUMNS).maybeSingle();
+      if (error) throw toDomainError(error);
+      if (!data) throw new DomainError(NOT_FOUND, "not_found");
+      return fromListingRow(data, data.listing_photos, url);
+    },
+
+    async submit(id) {
+      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
+      const { error } = await db.rpc("submit_listing", { p_listing: id });
+      if (error) throw toDomainError(error);
+    },
 
     async setAvailable(id, available) {
       const { error } = await db.rpc("set_listing_available", { p_listing: id, p_available: available });

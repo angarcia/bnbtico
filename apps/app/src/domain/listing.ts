@@ -256,3 +256,25 @@ export interface SitemapEntry {
 
 /** Estado del enlace público: se muestra, «ya no está activo», o no existe (404). */
 export type LinkState = "active" | "blocked" | null;
+
+/** Columnas del borrador que se guardan (el número de fotos no es columna: sale de la lista de fotos). */
+const DRAFT_COLUMNS = Object.keys(emptyDraft()).filter((k) => k !== "photoCount") as (keyof ListingDraft)[];
+
+const same = (a: unknown, b: unknown) => (Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => x === b[i]) : Object.is(a, b));
+
+export type StepPlan = { error: string } | { changes: Partial<ListingDraft>; next: ListingDraft };
+
+/**
+ * Guardar una pantalla del asistente: mezcla el parche sobre el borrador actual (el del servidor), valida esa pantalla y
+ * devuelve todas las columnas que cambian, también las que limpia `normalize` (precio por noche sin vacacional, baño sin
+ * habitación, tipo de parqueo sin parqueo, datos mensuales sin mensual). El número de fotos es siempre el del borrador.
+ */
+export function planStep(current: ListingDraft, step: Step, patch: Partial<ListingDraft>): StepPlan {
+  const merged: ListingDraft = { ...current, ...patch, photoCount: current.photoCount };
+  const error = validateStep(step, merged);
+  if (error) return { error };
+  const next = normalize(merged);
+  const changes: Partial<ListingDraft> = {};
+  for (const key of DRAFT_COLUMNS) if (!same(next[key], current[key])) (changes as Record<string, unknown>)[key] = next[key];
+  return { changes, next };
+}

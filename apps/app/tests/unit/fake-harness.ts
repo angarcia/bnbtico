@@ -31,6 +31,12 @@ export function fakeHarness(db = new FakeDb()): ListingsHarness & { db: FakeDb }
       for (let i = n - 1; i >= 0; i--) db.photos.push({ id: db.newId(), listingId: listing.id, path: photoPaths[i]!, position: i });
       return { id: listing.id, publicId: listing.publicId, exact: { lat: draft.lat!, lng: draft.lng! }, photoPaths };
     },
+    async addPhotos(listingId, n) {
+      const start = db.photosOf(listingId).length;
+      const paths = Array.from({ length: n }, (_, i) => `${listingId}/extra-${start + i}.jpg`);
+      paths.forEach((path, i) => db.photos.push({ id: db.newId(), listingId, path, position: start + i }));
+      return paths;
+    },
     ownerName: (who) => db.profiles.get(owners[who])!.fullName,
   };
 }

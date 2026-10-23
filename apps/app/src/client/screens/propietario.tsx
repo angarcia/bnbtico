@@ -29,12 +29,12 @@ const shareOf = (l: Listing) => {
   return { url: d.shareUrl, title: titleOf(l), text: d.previewText };
 };
 
-function useUserId(): string {
+export function useUserId(): string {
   return useSession().session?.userId ?? "";
 }
 
 /** Entrar en la zona del propietario deja la interfaz en modo propietario (barra de cinco pestañas). */
-function useOwnerMode() {
+export function useOwnerMode() {
   useEffect(() => setRole("owner"), []);
 }
 
@@ -122,7 +122,7 @@ export function InicioScreen() {
   );
 }
 
-function SkeletonCard() {
+export function SkeletonCard() {
   return (
     <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando sus casas">
       <span className="sk thumb" />
@@ -344,14 +344,14 @@ function ShareButtonInline({ listing: l }: { listing: Listing }) {
 
 const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
 
-function useOwnListing(id: string) {
+export function useOwnListing(id: string) {
   const userId = useUserId();
   const client = useQueryClient();
   const [options] = useState(() => ownListingQuery(userId, id, client));
   return { userId, query: useQuery({ ...options, enabled: !!userId }) };
 }
 
-function NotFoundCard() {
+export function NotFoundCard() {
   return (
     <section className="card stack gap-12">
       <h3>No encontramos esta casa</h3>
@@ -607,19 +607,6 @@ export function EnviadaScreen() {
 }
 
 // ---------- Marcadores ----------
-
-/** El asistente de publicar llega en el ticket 07. */
-export function PublicarScreen() {
-  useOwnerMode();
-  return (
-    <>
-      <FlowHeader title="Publicar casa" back="/propietario/casas" />
-      <section className="card stack">
-        <p>El formulario para publicar y editar su casa llega muy pronto.</p>
-      </section>
-    </>
-  );
-}
 
 export const CalendarioScreen = () => <Placeholder title="Calendario" home="/propietario" text="Marque las noches ocupadas y los precios por fecha. Llega más adelante." />;
 export const ConsultasScreen = () => <Placeholder title="Consultas" home="/propietario" text="Los clientes que le escriban por WhatsApp desde su ficha aparecerán aquí. Llega más adelante." />;

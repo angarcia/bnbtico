@@ -1,7 +1,7 @@
 // Shell de la zona en el navegador: router (rutas por código) y caché de Query persistida en IndexedDB.
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, redirect, useLocation } from "@tanstack/react-router";
+import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
 import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
@@ -11,7 +11,7 @@ import { CasaScreen } from "./screens/casa";
 import { AyudaScreen, CodigoScreen, CuentaScreen, ListaScreen, RecuperarScreen, cuentaSearch, nextSearch } from "./screens/cuenta";
 import { ExplorarScreen } from "./screens/explorar";
 import { FiltrosScreen } from "./screens/filtros";
-import { CalendarioScreen, CasaPropietarioScreen, CasasScreen, ConsultasScreen, EnviadaScreen, InicioScreen, PublicarScreen } from "./screens/propietario";
+import { CalendarioScreen, CasaPropietarioScreen, CasasScreen, ConsultasScreen, EnviadaScreen, InicioScreen } from "./screens/propietario";
 import { currentSession, onSignedOut, useSession } from "./session";
 
 const rootRoute = createRootRoute({
@@ -83,8 +83,9 @@ const routeTree = rootRoute.addChildren([
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: CasaPropietarioScreen }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: EnviadaScreen }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: PublicarScreen }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: PublicarScreen }),
+      // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
     ]),
   ]),
   createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", component: CasaScreen }),
@@ -107,6 +108,10 @@ onSignedOut(() => {
   setRole("guest");
 });
 
+// La caché del dispositivo se guarda cada segundo como mucho: si la app se cerró justo después de un cambio, lo restaurado
+// puede ser anterior. Las consultas privadas restauradas se pintan al instante y se vuelven a pedir por detrás.
+const refreshPrivate = () => void queryClient.invalidateQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
@@ -115,7 +120,7 @@ declare module "@tanstack/react-router" {
 
 export function Shell() {
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions} onSuccess={refreshPrivate}>
       <RouterProvider router={router} />
     </PersistQueryClientProvider>
   );
