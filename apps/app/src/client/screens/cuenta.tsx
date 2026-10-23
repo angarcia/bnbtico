@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { RESEND_COOLDOWN_MS, resendWaitSeconds, safeNext } from "../../domain/account";
+import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
 import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
@@ -14,26 +14,6 @@ import { setRole, useRole } from "../role";
 import { authApi, pendingOtp, useSession } from "../session";
 import { SUPPORT, waLink } from "../support";
 import { useTurnstile } from "../turnstile";
-
-export interface CuentaSearch {
-  modo?: "entrar";
-  next?: string;
-  editar?: "1";
-}
-
-export function cuentaSearch(params: Record<string, unknown>): CuentaSearch {
-  const out: CuentaSearch = {};
-  if (params.modo === "entrar") out.modo = "entrar";
-  const next = safeNext(typeof params.next === "string" ? params.next : null);
-  if (next) out.next = next;
-  if (params.editar === "1") out.editar = "1";
-  return out;
-}
-
-export const nextSearch = (params: Record<string, unknown>): { next?: string } => {
-  const next = safeNext(typeof params.next === "string" ? params.next : null);
-  return next ? { next } : {};
-};
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");

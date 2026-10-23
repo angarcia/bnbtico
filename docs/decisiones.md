@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3, ticket 02: hoja de contacto y pantallas diferidas
+
+- **JS inicial:** solo Explorar, Filtros y la ficha van en el arranque del shell; cuenta, propietario y Favoritos se descargan al abrirlas, al apuntar o tocar su enlace y en reposo tras el primer pintado. La zona privada baja de 146,4 a 134,4 KB gz y deja sitio a la fase 3. Coste: la primera visita a una de esas pantallas sin el SW instalado pide un trozo de ~6 KB.
+- **Hoja de contacto:** trozo aparte (3,8 KB gz) que se pide al tocar el botón y en reposo tras hidratar la ficha; la ficha SSR solo crece 0,5 KB. Antes de hidratar, el botón es una caja apagada del mismo tamaño. Lo escrito dura 30 minutos en la pestaña. «Abrir WhatsApp» pasa por una sola función (`proceedToWhatsApp`) que los tickets 03 y 04 completan; hasta entonces dice «Disponible muy pronto».
+- **Teclado del iPhone en la hoja:** como en el asistente, 320 px de sitio mientras un campo con teclado tiene el foco; se quita con 400 ms de retraso para que el botón no se mueva bajo el dedo.
+
 ## 2026-10-23 · Fase 3: el WhatsApp de la casa solo se entrega al contactar; sin número distinto por casa todavía
 
 - **Número de la casa:** no está en la vista pública, ni en el HTML de la ficha, ni en ninguna caché. Lo devuelve la RPC `create_inquiry` solo a un cliente con sesión y WhatsApp verificado, en el mismo momento en que registra la consulta (que es lo que el propietario ve en Mis consultas). Así nadie puede recoger los números del catálogo sin cuenta. Tope de 20 casas distintas por cliente al día; una consulta por cliente y casa cada 7 días (repetir la actualiza). Decisión de Daniel.

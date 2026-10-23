@@ -20,6 +20,7 @@ export function CasaScreen() {
       base={window.location.origin}
       seed={seed}
       onBack={() => (canGoBack ? router.history.back() : router.navigate({ to: "/explorar" }))}
+      navigate={(href) => void router.navigate({ href })}
     />
   );
 }

@@ -140,11 +140,15 @@ test("antes de hidratar no hay botón de moneda, y ni hidratar ni cambiar de mon
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   expect(await page.locator("html").getAttribute("data-hydrated")).toBeNull();
   await expect(page.getByRole("button", { name: "Ver en dólares" })).toHaveCount(0);
+  // El botón de contacto tampoco es un botón todavía: una caja apagada del mismo tamaño.
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
+  await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
   const before = await barHeight(page);
 
   release();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByRole("button", { name: "Ver en dólares" })).toHaveText("≈ $186", { useInnerText: true });
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeEnabled();
   expect(await barHeight(page), "al hidratar").toBe(before);
   await page.getByRole("button", { name: "Ver en dólares" }).click();
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");

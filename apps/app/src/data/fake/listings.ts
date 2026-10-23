@@ -38,6 +38,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       monthlyPriceCrc: l.monthlyPriceCrc,
       minMonths: l.minMonths,
       available: l.available,
+      reopenAt: null,
       ownerName: owner?.fullName || "Propietario",
       ownerWhatsappVerified: owner?.phoneVerified === true,
       createdAt: l.createdAt,

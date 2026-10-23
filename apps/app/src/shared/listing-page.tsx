@@ -1,7 +1,8 @@
 // Ficha pública (pantalla 03 del diseño v1). La renderiza el worker y la hidrata el navegador: el mapa y la moneda
 // dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo.
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { reopenLabel } from "../domain/dates";
 import { describe } from "../domain/describe";
 import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
 import { formatCRC, formatMoney, formatUSD, FX_CRC_PER_USD } from "../domain/money";
@@ -10,6 +11,7 @@ import { setCurrency, useCurrency } from "./currency";
 import { HeroGallery } from "./hero-gallery";
 import { useHydrated } from "./hydration";
 import { I, type IconName } from "./icons";
+import { whenIdle } from "./idle";
 import { listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
 import { track } from "./beacon";
@@ -25,11 +27,84 @@ export interface ListingSeed {
 
 /** La ficha a partir de la caché de Query: sembrada por el worker (SSR) o, al abrirla desde una tarjeta, con la fila del
  *  listado (`seed`), que se pinta antes de que responda su propia petición. */
-export function ListingScreen({ publicId, base, seed, onBack }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void }) {
+export function ListingScreen({ publicId, base, seed, onBack, navigate }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void; navigate?: Navigate }) {
   const { data } = useQuery({ ...listingQuery(publicId), initialData: seed?.listing, initialDataUpdatedAt: seed?.updatedAt });
   if (data === null) return <BlockedPage />;
   if (!data) return null;
-  return <ListingPage listing={data} base={base} onBack={onBack} />;
+  return <ListingPage listing={data} base={base} onBack={onBack} navigate={navigate} />;
+}
+
+/** Ir a otra ruta: el router en la SPA; en la ficha del servidor (sin router), navegación completa. */
+type Navigate = (href: string) => void;
+const fullNavigation: Navigate = (href) => location.assign(href);
+
+// La hoja de contacto es un trozo aparte: se pide al tocar el botón y, en reposo, tras hidratar.
+const loadSheet = () => import("./contact-sheet");
+const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactSheet })));
+
+/** El botón de la barra. Mide lo mismo antes y después de hidratar: antes es una caja apagada que aún no responde. */
+function ContactButton({ listing, hydrated, navigate }: { listing: PublicListing; hydrated: boolean; navigate: Navigate }) {
+  const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef(false);
+  useEffect(() => {
+    if (hydrated && listing.available) whenIdle(() => void loadSheet());
+  }, [hydrated, listing.available]);
+  // El foco vuelve al botón cuando la hoja ya se desmontó y la página dejó de estar inerte.
+  useEffect(() => {
+    if (open || !returnFocus.current) return;
+    returnFocus.current = false;
+    button.current?.focus();
+  }, [open]);
+
+  if (!listing.available) {
+    const reopen = reopenLabel(listing.reopenAt);
+    return (
+      <>
+        <button className="btn btn-wa" type="button" disabled>
+          <I.wa size={22} /> No disponible para consultas
+        </button>
+        {reopen ? <span className="xs muted cta-note">{reopen}</span> : null}
+      </>
+    );
+  }
+  if (!hydrated) {
+    return (
+      <span className="btn btn-wa is-pending" aria-hidden="true">
+        <I.wa size={22} /> Contactar por WhatsApp
+      </span>
+    );
+  }
+  return (
+    <>
+      <button
+        ref={button}
+        className="btn btn-wa"
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => {
+          track("whatsapp_tap", listing.publicId);
+          setOpen(true);
+        }}
+      >
+        <I.wa size={22} /> Contactar por WhatsApp
+      </button>
+      {open ? (
+        // Mientras llega el trozo de la hoja, la página ya se atenúa: el toque responde al instante.
+        <Suspense fallback={<div className="sheet-backdrop" />}>
+          <ContactSheet
+            listing={listing}
+            navigate={navigate}
+            onClose={() => {
+              returnFocus.current = true;
+              setOpen(false);
+            }}
+          />
+        </Suspense>
+      ) : null}
+    </>
+  );
 }
 
 /** Cambio de moneda. Ocupa siempre lo mismo (las dos cifras apiladas, la que no se ve queda oculta debajo): cambiar de moneda
@@ -73,7 +148,7 @@ function useSpacerMatchingBar() {
   return { bar, spacer };
 }
 
-export function ListingPage({ listing: l, base, onBack }: { listing: PublicListing; base: string; onBack?: () => void }) {
+export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate }) {
   const hydrated = useHydrated();
   const currency = useCurrency();
   const d = describe(l, { base });
@@ -173,10 +248,7 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
               Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency)}</b> / mes
             </span>
           ) : null}
-          {/* Marcador: cuando el contacto funcione, este toque ya cuenta (evento whatsapp_tap). */}
-          <button className="btn btn-wa" type="button" disabled onClick={() => track("whatsapp_tap", l.publicId)}>
-            <I.wa size={22} /> Contactar por WhatsApp <small className="btn-note">· disponible pronto</small>
-          </button>
+          <ContactButton listing={l} hydrated={hydrated} navigate={navigate} />
         </div>
       </main>
     </div>

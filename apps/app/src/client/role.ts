@@ -7,7 +7,8 @@ export type Role = "guest" | "owner";
 const KEY = "bnbtico-role";
 const listeners = new Set<() => void>();
 
-function read(): Role {
+/** El modo guardado en el dispositivo (sin mirar la sesión). */
+export function storedRole(): Role {
   try {
     return localStorage.getItem(KEY) === "owner" ? "owner" : "guest";
   } catch {
@@ -31,7 +32,7 @@ function subscribe(listener: () => void) {
 }
 
 export function useRole(): Role {
-  const stored = useSyncExternalStore(subscribe, read, () => "guest" as Role);
+  const stored = useSyncExternalStore(subscribe, storedRole, () => "guest" as Role);
   const { status } = useSession();
   return status !== "signed-out" && stored === "owner" ? "owner" : "guest";
 }

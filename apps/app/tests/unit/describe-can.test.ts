@@ -55,6 +55,7 @@ const publicOf = (l: Listing): PublicListing => ({
   monthlyPriceCrc: l.monthlyPriceCrc,
   minMonths: null,
   available: l.available,
+  reopenAt: null,
   ownerName: "Yorleny",
   ownerWhatsappVerified: true,
   createdAt: l.createdAt,

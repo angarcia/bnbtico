@@ -237,6 +237,8 @@ export interface PublicListing {
   monthlyPriceCrc: number | null;
   minMonths: number | null;
   available: boolean;
+  /** Fecha (`YYYY-MM-DD`) en que vuelve a recibir consultas una casa no disponible; null = sin fecha. */
+  reopenAt: string | null;
   ownerName: string;
   ownerWhatsappVerified: boolean;
   createdAt: string;

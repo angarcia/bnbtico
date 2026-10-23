@@ -75,6 +75,21 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toContain("1 / 6");
   });
 
+  it("el botón de contacto llega como caja apagada sin interacción (se activa al hidratar) y nada de la hoja", async () => {
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    expect(html).toMatch(/<span class="btn btn-wa is-pending" aria-hidden="true">[\s\S]*?Contactar por WhatsApp<\/span>/);
+    expect(html).not.toMatch(/<button[^>]*>(?:(?!<\/button>)[\s\S])*Contactar por WhatsApp/);
+    expect(html).not.toContain("Escríbale a");
+    expect(html).not.toContain("disponible pronto");
+  });
+
+  it("una casa que no recibe consultas llega con el botón deshabilitado «No disponible para consultas»", async () => {
+    await t.h.owner("owner").setAvailable(casa.id, false);
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">[\s\S]*?No disponible para consultas<\/button>/);
+    expect(html).not.toContain("Contactar por WhatsApp");
+  });
+
   it("cabecera: título, descripción, Open Graph, Twitter, canónica de producción y precarga del hero", async () => {
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const cover = casa.photoPaths[0]!;

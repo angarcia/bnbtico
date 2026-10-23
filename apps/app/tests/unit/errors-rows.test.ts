@@ -87,6 +87,11 @@ describe("mapeo de filas", () => {
     expect(l.photoCount).toBe(2);
   });
 
+  it("la fecha de reapertura de la vista pública pasa tal cual (null si no hay)", () => {
+    expect(fromPublicRow({ reopen_at: "2026-11-15", photos: [] } as unknown as PublicRow, url).reopenAt).toBe("2026-11-15");
+    expect(fromPublicRow({ reopen_at: null, photos: [] } as unknown as PublicRow, url).reopenAt).toBeNull();
+  });
+
   it("las fotos de la vista pública son rutas en orden", () => {
     const l = fromPublicRow({ photos: ["l1/a.jpg", "l1/b.jpg", 3] } as unknown as PublicRow, url);
     expect(l.photos).toEqual([{ path: "l1/a.jpg", url: url("l1/a.jpg"), srcSet: null }, { path: "l1/b.jpg", url: url("l1/b.jpg"), srcSet: null }]);

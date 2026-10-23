@@ -8,14 +8,30 @@ import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
 import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
-import { setRole } from "./role";
+import { whenIdle } from "../shared/idle";
+import { cuentaSearch, nextSearch } from "./cuenta-search";
+import { setRole, storedRole } from "./role";
 import { CasaScreen } from "./screens/casa";
-import { AyudaScreen, CodigoScreen, CuentaScreen, ListaScreen, RecuperarScreen, cuentaSearch, nextSearch } from "./screens/cuenta";
 import { ExplorarScreen } from "./screens/explorar";
 import { FiltrosScreen } from "./screens/filtros";
-import { CalendarioScreen, CasaPropietarioScreen, CasasScreen, ConsultasScreen, EnviadaScreen, InicioScreen } from "./screens/propietario";
 import { currentSession, onSignedOut, useSession } from "./session";
 import { UpdateBanner } from "./update-banner";
+
+// En el JS inicial solo van Explorar, Filtros y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
+// su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
+const ownerScreens = () => import("./screens/propietario");
+const cuentaScreens = () => import("./screens/cuenta");
+const favoritosScreen = () => import("./screens/favoritos");
+type OwnerScreen = "InicioScreen" | "CasasScreen" | "CalendarioScreen" | "ConsultasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
+type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
+const ownerScreen = (name: OwnerScreen) => lazyRouteComponent(ownerScreens, name);
+const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreens, name);
+
+function prefetchTabs() {
+  void favoritosScreen();
+  void cuentaScreens();
+  if (storedRole() === "owner" || location.pathname.startsWith("/propietario")) void ownerScreens();
+}
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -97,12 +113,12 @@ const routeTree = rootRoute.addChildren([
   tabs.addChildren([
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: normalizeSearch, component: ExplorarScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: normalizeSearch, component: FiltrosScreen }),
-    createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: () => <Placeholder title="Favoritos" text="Toque el corazón en una casa para guardarla aquí. No necesita cuenta." /> }),
+    createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario", component: InicioScreen }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: CasasScreen }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", component: CalendarioScreen }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/consultas", component: ConsultasScreen }),
+      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario", component: ownerScreen("InicioScreen") }),
+      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
+      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", component: ownerScreen("CalendarioScreen") }),
+      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/consultas", component: ownerScreen("ConsultasScreen") }),
     ]),
     adminTabs.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),
@@ -111,15 +127,15 @@ const routeTree = rootRoute.addChildren([
     ]),
   ]),
   // Mi cuenta con sesión lleva la barra inferior; Ingresar (sin sesión) es una pantalla de flujo: la ruta elige el marco.
-  createRoute({ getParentRoute: () => rootRoute, path: "/cuenta", validateSearch: cuentaSearch, component: CuentaScreen }),
+  createRoute({ getParentRoute: () => rootRoute, path: "/cuenta", validateSearch: cuentaSearch, component: cuentaScreen("CuentaScreen") }),
   flow.addChildren([
-    createRoute({ getParentRoute: () => flow, path: "/cuenta/codigo", validateSearch: nextSearch, component: CodigoScreen }),
-    createRoute({ getParentRoute: () => flow, path: "/cuenta/lista", validateSearch: nextSearch, component: ListaScreen }),
-    createRoute({ getParentRoute: () => flow, path: "/cuenta/recuperar", component: RecuperarScreen }),
-    createRoute({ getParentRoute: () => flow, path: "/ayuda", component: AyudaScreen }),
+    createRoute({ getParentRoute: () => flow, path: "/cuenta/codigo", validateSearch: nextSearch, component: cuentaScreen("CodigoScreen") }),
+    createRoute({ getParentRoute: () => flow, path: "/cuenta/lista", validateSearch: nextSearch, component: cuentaScreen("ListaScreen") }),
+    createRoute({ getParentRoute: () => flow, path: "/cuenta/recuperar", component: cuentaScreen("RecuperarScreen") }),
+    createRoute({ getParentRoute: () => flow, path: "/ayuda", component: cuentaScreen("AyudaScreen") }),
     privateFlow.addChildren([
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: CasaPropietarioScreen }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: EnviadaScreen }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: ownerScreen("CasaPropietarioScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
@@ -159,6 +175,12 @@ const refreshPrivate = () => void queryClient.invalidateQueries({ predicate: (q)
 // actualización de la View Transition, después de pintar y de restaurar el scroll: la captura del estado nuevo ya ve la
 // tarjeta en su sitio.
 router.subscribe("onRendered", afterRender);
+
+// Las pantallas de las pestañas, en reposo tras el primer pintado: tocar una pestaña no espera a la red.
+const stopPrefetch = router.subscribe("onRendered", () => {
+  stopPrefetch();
+  whenIdle(prefetchTabs);
+});
 
 // Una vista de página por ruta resuelta (cambiar solo los filtros de la URL no cuenta).
 router.subscribe("onResolved", (e) => {

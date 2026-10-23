@@ -16,7 +16,7 @@
   --state-soft:#DCE8DF;--state-ink:#2F5D45;
   --sun:#F2B544;--sun-soft:#FBE8C2;--sun-ink:#7A4E07;--review-soft:#F0E6D2;
   --overlay:rgba(28,43,42,.86);--overlay-btn:#FFFBF2;
-  --wa:#25D366;--wa-ink:#063B1E;
+  --wa:#25D366;--wa-ink:#063B1E;--ochre:#A85A00;
   --ok:#2F5D45;--warn:#C97A12;--bad:#C2432F;--bad-soft:#FBE3DF;--busy:#F5DDD4;--busy-ink:#9E3D22;
   --shadow:0 2px 0 var(--line);--shadow-float:0 2px 0 var(--line),0 10px 24px -14px rgba(28,43,42,.35);
   --r:24px;--r-thumb:18px;--r-tile:20px;--r-input:16px;--r-cta:18px;--r-sheet:28px;
@@ -29,7 +29,7 @@
   --brand:#E8785A;--brand-ink:#F0A48C;--primary:#7FA98A;--primary-on:#16331F;--primary-ink:#B9D2BF;
   --selection:#3E6B52;--selection-ink:#DCE8DF;--state-soft:#1F3A2C;--state-ink:#B9D2BF;
   --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--review-soft:#2B2A22;--overlay:rgba(11,11,12,.86);--overlay-btn:#1C2320;
-  --bad:#E8785A;--bad-soft:#4A2521;--shadow:0 2px 0 var(--line);color-scheme:dark}}
+  --bad:#E8785A;--bad-soft:#4A2521;--ochre:#F0B24F;--shadow:0 2px 0 var(--line);color-scheme:dark}}
 
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -402,6 +402,37 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 
 /* Aviso de versión nueva (service worker): flota sobre la barra inferior. */
 .update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--r-input);background:var(--fg);color:var(--bg);font-size:14px;font-weight:600;box-shadow:var(--shadow-float);z-index:7}
+
+/* ---------- Hoja de contacto (pantalla 04): sobre la ficha atenuada, 28 px arriba ---------- */
+/* Antes de hidratar el botón es una caja del mismo tamaño que todavía no responde: se ve, pero apagado. */
+.btn-wa.is-pending{opacity:.6}
+.cta-note{text-align:center;margin-top:-4px}
+html.sheet-open,html.sheet-open body{overflow:hidden}
+.sheet-backdrop{position:fixed;inset:0;background:rgba(28,43,42,.35);z-index:30;animation:fade-in 200ms ease-out backwards}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:560px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;z-index:31;
+  display:flex;flex-direction:column;gap:14px;padding:10px 20px calc(26px + env(safe-area-inset-bottom));border-radius:var(--r-sheet) var(--r-sheet) 0 0;background:var(--bg);
+  box-shadow:0 -12px 30px -16px rgba(28,43,42,.45);animation:sheet-in 280ms var(--ease-drawer) backwards}
+.sheet:focus{outline:none}
+/* `.kb`: sitio extra mientras un campo con teclado tiene el foco (iPhone no encoge la vista): el campo sube por encima. */
+.sheet.kb{padding-bottom:calc(26px + 320px + env(safe-area-inset-bottom))}
+.sheet textarea,.sheet input{scroll-margin-top:16px}
+@keyframes sheet-in{from{transform:translate(-50%,100%)}}
+.sheet .grabber{align-self:center;width:40px;height:5px;border-radius:999px;background:var(--line);flex-shrink:0}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet-head > div{display:flex;flex-direction:column;gap:2px}
+.sheet-head .icon-btn{margin:-6px -8px 0 0;background:transparent;box-shadow:none}
+.sheet form{display:flex;flex-direction:column;gap:14px}
+.sheet label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.sheet input:not([type=checkbox]),.sheet textarea{min-height:48px;padding:0 12px;font-size:16px}
+.sheet textarea{padding:12px 14px;resize:none;min-height:0}
+.sheet input[type=date]{min-width:0;-webkit-appearance:none;appearance:none;display:flex;align-items:center}
+.sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sheet input.people:not([type=checkbox]):not([type=file]):not([type=radio]){width:120px}
+.sheet .hint{font-size:12px;color:var(--muted);margin-top:-8px}
+.sheet .consent{text-align:center;font-size:12px;color:var(--muted);margin-top:-6px}
+.sheet .safety{text-align:center;font-size:12px;font-weight:600;color:var(--ochre)}
+.sheet [aria-invalid="true"]{border-color:var(--bad)}
+@media (prefers-reduced-motion:reduce){.sheet{animation-name:fade-in}}
 
 /* ---------- Movimiento y respuesta al toque ---------- */
 /* Todo lo que se toca responde al instante: se encoge un poco al presionar y vuelve rápido. Solo transform y opacity. */

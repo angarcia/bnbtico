@@ -145,6 +145,20 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
       await expect(page.getByTestId("results-count")).toBeVisible();
     }
     report("Pantalla visitada sin red (Explorar → Filtros)", times, "< 100 ms");
+    // Pestaña con pantalla diferida (Favoritos), ya visitada: el trozo está cargado y no espera a la red.
+    await ctx.setOffline(false);
+    await page.getByRole("link", { name: "Favoritos" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("link", { name: "Explorar" }).click();
+    await expect(page.getByTestId("results-count")).toBeVisible();
+    await ctx.setOffline(true);
+    const tabs: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      tabs.push(await navTime(page, 'nav a[href="/favoritos"]', "h1", "Favoritos"));
+      await page.getByRole("link", { name: "Explorar" }).click();
+      await expect(page.getByTestId("results-count")).toBeVisible();
+    }
+    report("Pestaña visitada sin red (Explorar → Favoritos, pantalla diferida)", tabs, "< 100 ms");
     await ctx.close();
   }
 

@@ -9,7 +9,7 @@ import { PROVINCES, type LinkState, type PublicListing } from "../../domain/list
 import { fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 
 const PUBLIC_COLUMNS =
-  "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, created_at, updated_at, owner_name, owner_whatsapp_verified, photos";
+  "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, reopen_at, created_at, updated_at, owner_name, owner_whatsapp_verified, photos";
 
 export const SEARCH_LIMIT = 60;
 export const SITEMAP_LIMIT = 1000;

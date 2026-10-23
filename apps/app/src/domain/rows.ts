@@ -8,7 +8,7 @@ import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type MonthlyMode, ty
 export type ListingRow = Omit<Database["public"]["Tables"]["listings"]["Row"], "listing_is_public">;
 export type ListingUpdate = Database["public"]["Tables"]["listings"]["Update"];
 export type PhotoRow = Pick<Database["public"]["Tables"]["listing_photos"]["Row"], "id" | "path" | "position">;
-export type PublicRow = Omit<Database["public"]["Views"]["listings_public"]["Row"], "reopen_at">;
+export type PublicRow = Database["public"]["Views"]["listings_public"]["Row"];
 
 export type PhotoUrl = (path: string) => string;
 
@@ -119,6 +119,7 @@ export function fromPublicRow(row: PublicRow, url: PhotoUrl): PublicListing {
     monthlyPriceCrc: num(row.monthly_price_crc),
     minMonths: num(row.min_months),
     available: row.available !== false,
+    reopenAt: row.reopen_at ?? null,
     ownerName: row.owner_name || "Propietario",
     ownerWhatsappVerified: row.owner_whatsapp_verified === true,
     createdAt: row.created_at ?? "",

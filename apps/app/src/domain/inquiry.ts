@@ -149,6 +149,59 @@ export function redraft(s: ContactDraftState, action: ContactDraftAction, title:
   return { ...next, composed, message, edited: message !== composed };
 }
 
+/** Personas tal como llegan del campo numérico: vacío = sin indicar; el resto lo juzga `validateInquiryDraft`. */
+export function parsePeople(value: string): number | null {
+  const v = value.trim();
+  return v === "" ? null : Number(v);
+}
+
+/** «Escríbale a Daniel»: el nombre de pila del propietario. */
+export function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] || "el propietario";
+}
+
+// ---------- Borrador guardado en la pestaña ----------
+
+/** Lo escrito en la hoja dura 30 minutos en la pestaña (sessionStorage): cerrar, recargar o ir a Ingresar no lo pierde. */
+export const CONTACT_DRAFT_TTL_MS = 30 * 60_000;
+export const contactDraftKey = (publicId: string) => `bnbtico-contacto:${publicId}`;
+
+interface StoredContactDraft {
+  arrival: string | null;
+  departure: string | null;
+  people: number | null;
+  message: string;
+  edited: boolean;
+  open: boolean;
+  savedAt: number;
+}
+
+export function storeContactDraft(s: ContactDraftState, open: boolean, now: number): string {
+  const stored: StoredContactDraft = { arrival: s.arrival, departure: s.departure, people: s.people, message: s.message, edited: s.edited, open, savedAt: now };
+  return JSON.stringify(stored);
+}
+
+const isDateOrNull = (v: unknown) => v === null || typeof v === "string";
+
+/** El borrador guardado, o null si no hay, caducó o no se entiende. Sin editar, el mensaje se vuelve a redactar. */
+export function restoreContactDraft(raw: string | null, title: string, now: number): { state: ContactDraftState; open: boolean } | null {
+  if (!raw) return null;
+  let v: Partial<Record<keyof StoredContactDraft, unknown>>;
+  try {
+    v = JSON.parse(raw) as typeof v;
+  } catch {
+    return null;
+  }
+  if (!v || typeof v !== "object") return null;
+  if (typeof v.savedAt !== "number" || now - v.savedAt > CONTACT_DRAFT_TTL_MS) return null;
+  if (!isDateOrNull(v.arrival) || !isDateOrNull(v.departure) || !(v.people === null || typeof v.people === "number")) return null;
+  if (typeof v.message !== "string" || typeof v.edited !== "boolean") return null;
+  const fields = { arrival: v.arrival as string | null, departure: v.departure as string | null, people: v.people as number | null };
+  const fresh = startDraft(title, fields);
+  const state = v.edited ? { ...fresh, message: v.message, edited: v.message !== fresh.composed } : fresh;
+  return { state, open: v.open === true };
+}
+
 // ---------- Tarjeta del propietario ----------
 
 /** «20–27 dic», «28 dic – 2 ene», «sin fechas». */
