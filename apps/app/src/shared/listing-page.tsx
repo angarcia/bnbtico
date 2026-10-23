@@ -16,12 +16,18 @@ import { BlockedPage } from "./status-pages";
 const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-/** La ficha a partir de la caché de Query (sembrada por el worker en el servidor y desde el JSON en el navegador). */
-export function ListingScreen({ publicId, base }: { publicId: string; base: string }) {
-  const { data } = useQuery(listingQuery(publicId));
+export interface ListingSeed {
+  listing: PublicListing;
+  updatedAt: number;
+}
+
+/** La ficha a partir de la caché de Query: sembrada por el worker (SSR) o, al abrirla desde una tarjeta, con la fila del
+ *  listado (`seed`), que se pinta antes de que responda su propia petición. */
+export function ListingScreen({ publicId, base, seed, onBack }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void }) {
+  const { data } = useQuery({ ...listingQuery(publicId), initialData: seed?.listing, initialDataUpdatedAt: seed?.updatedAt });
   if (data === null) return <BlockedPage />;
   if (!data) return null;
-  return <ListingPage listing={data} base={base} />;
+  return <ListingPage listing={data} base={base} onBack={onBack} />;
 }
 
 function PriceToggle({ amountCrc }: { amountCrc: number }) {
@@ -34,7 +40,7 @@ function PriceToggle({ amountCrc }: { amountCrc: number }) {
   );
 }
 
-export function ListingPage({ listing: l, base }: { listing: PublicListing; base: string }) {
+export function ListingPage({ listing: l, base, onBack }: { listing: PublicListing; base: string; onBack?: () => void }) {
   const hydrated = useHydrated();
   const currency = useCurrency();
   const d = describe(l, { base });
@@ -43,7 +49,19 @@ export function ListingPage({ listing: l, base }: { listing: PublicListing; base
     <div className="app">
       <main className="view no-nav listing-view">
         <HeroGallery photos={l.photos} title={l.title}>
-          <a href="/explorar" aria-label="Volver a Explorar" className="icon-btn overlay">
+          <a
+            href="/explorar"
+            aria-label="Volver a Explorar"
+            className="icon-btn overlay"
+            onClick={
+              onBack
+                ? (e) => {
+                    e.preventDefault();
+                    onBack();
+                  }
+                : undefined
+            }
+          >
             <I.back />
           </a>
           {hydrated ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}

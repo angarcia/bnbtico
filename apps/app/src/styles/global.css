@@ -267,3 +267,19 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .btn-note{font-family:var(--body);font-weight:600;font-size:12px;opacity:.8}
 .status-title{font-size:24px}
 .map-box{isolation:isolate}
+
+/* ---------- Explorar y Filtros (pantallas 01 y 02, en el navegador) ---------- */
+.gap-0{gap:0}
+.btn-header{min-height:44px;font-size:14px}
+.explore-head{gap:16px}
+.search-pill{gap:12px;min-height:56px;padding:0 18px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-float);color:inherit;text-decoration:none}
+.search-pill .stack{line-height:1.15}
+.chip{border:0;cursor:pointer}
+.chip-strong{font-weight:700}
+.badge-tight{padding:2px 8px}
+.currency-switch button[aria-pressed="true"]{font-weight:800}
+.currency-switch button[aria-pressed="false"]{font-weight:500;opacity:.6}
+.pill-tl{left:10px;top:10px}.pill-tr{right:10px;top:10px}.pill-bl{left:10px;bottom:10px}
+.listing-card .sk.photo{height:168px;border-radius:var(--r)}
+.sk-line{height:18px;width:70%}
+.filters-form{gap:22px}

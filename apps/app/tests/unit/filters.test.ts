@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, PEOPLE_OPTIONS, extrasCount, parseFilters, provinceChips, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 
@@ -67,4 +67,28 @@ describe("toSearchParams", () => {
 it("provinceChips respeta el orden del prototipo", () => {
   expect(provinceChips(["Cartago", "Limón"])).toEqual(["Todas", "Limón", "Cartago"]);
   expect(provinceChips([])).toEqual(["Todas"]);
+});
+
+describe("búsqueda en la URL de Explorar", () => {
+  it("normalizeSearch deja solo claves conocidas, en texto y sin valores por defecto", () => {
+    expect(normalizeSearch({ prov: "Guanacaste", pool: "1", ppl: "4", min: "50.000", raro: "x", wifi: "0", modo: "otra" })).toEqual({ prov: "Guanacaste", ppl: "4", pool: "1", min: "50000" });
+    expect(normalizeSearch({ modo: "monthly", mas: "1", beds: 9 })).toEqual({ modo: "monthly", mas: "1" });
+    expect(normalizeSearch({})).toEqual({});
+  });
+  it("lo que deja normalizeSearch da los mismos filtros", () => {
+    const raw = { prov: "Todas", min: "50000", max: "44000", beach: "1", beachfront: "1" };
+    expect(parseFilters(normalizeSearch(raw), ["Limón"])).toEqual(parseFilters(raw, ["Limón"]));
+  });
+  it("searchToString y searchFromString usan una query string normal, en orden y sin vacíos", () => {
+    expect(searchToString({ prov: "Todas", min: "44000", max: "50000" })).toBe("?prov=Todas&min=44000&max=50000");
+    expect(searchToString({ prov: undefined, min: "" })).toBe("");
+    expect(searchToString({ prov: "Limón" })).toBe("?prov=Lim%C3%B3n");
+    expect(searchFromString("?prov=Lim%C3%B3n&pool=1")).toEqual({ prov: "Limón", pool: "1" });
+    expect(searchFromString("")).toEqual({});
+  });
+  it("searchFor da la búsqueda limpia de unos filtros", () => {
+    const f = parseFilters({ prov: "Todas", max: "50000", min: "44000" }, ["Limón"]);
+    expect(searchFor(f, ["Limón"])).toEqual({ prov: "Todas", min: "44000", max: "50000" });
+    expect(searchFor(parseFilters({}, ["Limón"]), ["Limón"])).toEqual({});
+  });
 });

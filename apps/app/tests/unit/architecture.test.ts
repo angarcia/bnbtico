@@ -22,8 +22,8 @@ describe("arquitectura", () => {
     expect(offenders.map((f) => relative(SRC, f))).toEqual([]);
   });
 
-  it("src/domain no importa frameworks: solo zod y sus propios módulos", () => {
-    const offenders = files(join(SRC, "domain")).flatMap((f) => imports(f).filter((i) => !i.startsWith("./") && i !== "zod").map((i) => `${relative(SRC, f)} → ${i}`));
+  it("src/domain no importa frameworks: solo zod (o zod/mini) y sus propios módulos", () => {
+    const offenders = files(join(SRC, "domain")).flatMap((f) => imports(f).filter((i) => !i.startsWith("./") && i !== "zod" && i !== "zod/mini").map((i) => `${relative(SRC, f)} → ${i}`));
     expect(offenders).toEqual([]);
   });
 

@@ -15,7 +15,7 @@ test("el shell muestra la barra inferior y cambia de pestaña sin recargar", asy
   await expect(page).toHaveURL(/\/explorar$/);
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
   await expect(nav.getByRole("link", { name: "Explorar" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("heading", { level: 1, name: "Explorar" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "¿Para dónde va?" })).toBeVisible();
 
   await page.evaluate(() => ((window as unknown as { __sinRecargar: boolean }).__sinRecargar = true));
   await nav.getByRole("link", { name: "Favoritos" }).click();
