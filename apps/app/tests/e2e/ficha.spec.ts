@@ -80,3 +80,44 @@ test("un enlace que no existe responde 404 y uno oculto 410", async ({ page }) =
   expect(hidden?.status()).toBe(410);
   await expect(page.getByRole("heading", { level: 1, name: "Este enlace ya no está activo" })).toBeVisible();
 });
+
+// Rendimiento (ticket 12): en Slow 4G el JS que hidrata (React y la ficha, ~88 KB gz) le quitaba la mitad del ancho de
+// banda a la portada, que es el LCP. La entrada solo pide ese JS cuando la portada ya cargó (o falló, o pasó un tope).
+test("la portada de la ficha baja sola: el JS que hidrata se pide cuando ya cargó", async ({ page }) => {
+  const seen = watch(page);
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route(`**/listings/${casa.photoPaths[0]}*`, async (route) => {
+    await held;
+    await route.continue();
+  });
+  const scripts: string[] = [];
+  const otherPhotos: string[] = [];
+  page.on("request", (req) => {
+    if (req.resourceType() === "script") scripts.push(new URL(req.url()).pathname);
+    if (casa.photoPaths.slice(1).some((p) => req.url().includes(p))) otherPhotos.push(req.url());
+  });
+
+  await page.goto(`/casa/${casa.publicId}`, { waitUntil: "domcontentloaded" });
+  // Comprobación negativa: se da un margen para que una petición indebida aparezca.
+  await page.waitForTimeout(600);
+  expect(await page.locator("html").getAttribute("data-hydrated")).toBeNull();
+  const whileHeld = [...scripts];
+  expect(whileHeld.length, whileHeld.join(", ")).toBeLessThanOrEqual(2);
+  expect(otherPhotos, "las demás fotos del carrusel esperan a la portada").toEqual([]);
+
+  release();
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  expect(scripts.length).toBeGreaterThan(whileHeld.length);
+  // Tras hidratar y cargar la página, el carrusel tiene sus cinco fotos (cajas del mismo tamaño mientras tanto).
+  await expect(page.locator(".hero .strip img")).toHaveCount(5);
+  expect(seen.problems, seen.problems.join("\n")).toEqual([]);
+});
+
+test("si la portada no carga, la ficha hidrata igual", async ({ page }) => {
+  await page.route(`**/listings/${casa.photoPaths[0]}*`, (route) => route.abort());
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await page.getByRole("button", { name: "Ver en dólares" }).click();
+  await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
+});

@@ -18,6 +18,20 @@ export const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, 
 /** JSON dentro de <script type="application/json">: sin «<» no puede cerrar la etiqueta ni abrir un comentario. */
 const jsonForScript = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
+/** Tamaño con que se muestra la portada: el mismo en la precarga (HTML y cabecera Link) y en el `<img>` del hero. */
+const HERO_SIZES = "100vw";
+
+/**
+ * Cabecera `Link` con la precarga de la portada. Cloudflare la convierte en 103 Early Hints: el navegador empieza a
+ * pedir la foto (otro origen, Supabase Storage) mientras el worker aún responde. Null si la casa no tiene fotos.
+ */
+export function heroLinkHeader(l: PublicListing): string | null {
+  const cover = l.photos[0];
+  if (!cover) return null;
+  const srcset = cover.srcSet ? `; imagesrcset="${cover.srcSet}"; imagesizes="${HERO_SIZES}"` : "";
+  return `<${cover.url}>; rel=preload; as=image; fetchpriority=high${srcset}`;
+}
+
 function listingHead(l: PublicListing): string[] {
   const d = describe(l, { base: SITE_URL });
   const canonical = escapeHtml(publicUrl(l.publicId, SITE_URL));
@@ -40,7 +54,7 @@ function listingHead(l: PublicListing): string[] {
     `<meta name="twitter:description" content="${description}" />`,
     ...(cover ? [`<meta name="twitter:image" content="${escapeHtml(cover.url)}" />`] : []),
     ...(cover
-      ? [`<link rel="preload" as="image" href="${escapeHtml(cover.url)}" fetchpriority="high"${cover.srcSet ? ` imagesrcset="${escapeHtml(cover.srcSet)}" imagesizes="100vw"` : ""} />`]
+      ? [`<link rel="preload" as="image" href="${escapeHtml(cover.url)}" fetchpriority="high"${cover.srcSet ? ` imagesrcset="${escapeHtml(cover.srcSet)}" imagesizes="${HERO_SIZES}"` : ""} />`]
       : []),
   ];
 }

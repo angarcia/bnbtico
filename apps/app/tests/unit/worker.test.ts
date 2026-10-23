@@ -101,6 +101,24 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toContain(`srcSet="${base}/480.jpg 480w, ${base}/800.jpg 800w"`);
   });
 
+  it("cabecera Link con la precarga del hero (Cloudflare la adelanta como 103 Early Hints), también desde la caché", async () => {
+    const folder = `${casa.id}/1c9e5d2f-3e4b-4c6d-9e0f-1a2b3c4d5e6f`;
+    t.h.db.photos.find((p) => p.listingId === casa.id && p.position === 0)!.path = folder;
+    const base = `http://supabase.test/storage/v1/object/public/listings/${folder}`;
+    const expected = `<${base}/800.jpg>; rel=preload; as=image; fetchpriority=high; imagesrcset="${base}/480.jpg 480w, ${base}/800.jpg 800w"; imagesizes="100vw"`;
+    const first = await t.request(`/casa/${casa.publicId}`);
+    expect(first.headers.get("link")).toBe(expected);
+    const cached = await t.request(`/casa/${casa.publicId}`);
+    expect(t.spy.getPublic).toHaveBeenCalledTimes(1);
+    expect(cached.headers.get("link")).toBe(expected);
+  });
+
+  it("sin fotos no hay cabecera Link; las páginas de estado tampoco la llevan", async () => {
+    const sinFotos = await t.h.seed({ status: "active", photos: 0 });
+    expect((await t.request(`/casa/${sinFotos.publicId}`)).headers.get("link")).toBeNull();
+    expect((await t.request("/casa/CT-999999")).headers.get("link")).toBeNull();
+  });
+
   it("incrusta la casa en un JSON no ejecutable y escapado", async () => {
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const raw = /<script type="application\/json" id="ssr-data">([\s\S]*?)<\/script>/.exec(html)![1]!;

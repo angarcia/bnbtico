@@ -55,15 +55,11 @@ jobs:
         run: pnpm test:e2e
       # Perfil móvil por defecto de Lighthouse (RTT 150 ms, 1,6 Mbit/s, CPU 4×) con throttling devtools, contra el mismo
       # build local y Supabase local; mediana de 3 ejecuciones. Ver tests/lighthouse/lighthouse.spec.ts.
-      # En develop mide y publica pero no bloquea (2026-10-23: la ficha rozaba los 2,0 s en el runner); en main y en
-      # pull requests sí bloquea. Volver a bloquear en develop cuando la ficha tenga margen.
+      # Bloquea en todas las ramas: si falla, no se despliega. (2026-10-23: en develop dejó de bloquear unas horas porque
+      # la ficha rozaba los 2,0 s en el runner; con la portada sin competencia mide 1,60 s en el Mac. Ticket 12.)
       - name: Puerta de Lighthouse (LCP ficha < 2,0 s, shell instalado < 2,5 s)
         id: lighthouse
-        continue-on-error: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
         run: CHROMIUM_PATH="$(command -v google-chrome)" pnpm lighthouse
-      - name: Aviso si Lighthouse falló en develop
-        if: steps.lighthouse.outcome == 'failure'
-        run: echo "::warning::La puerta de Lighthouse falló; en develop se despliega igual. Ver el artefacto «lighthouse»."
       - name: Informes de Lighthouse
         if: always() && (steps.lighthouse.outcome == 'success' || steps.lighthouse.outcome == 'failure')
         uses: actions/upload-artifact@v4

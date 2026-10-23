@@ -1,11 +1,7 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { StrictMode, useEffect, type ReactNode } from "react";
-import { createRoot, hydrateRoot } from "react-dom/client";
+// Entrada: un módulo pequeño que solo decide qué cargar. El CSS va aquí para que Vite lo enlace en el HTML (bloquea el
+// render, sin parpadeo sobre el HTML del servidor); React y las pantallas van en trozos que se importan después.
 import { installErrorBeacon, track } from "../shared/beacon";
-import { ListingScreen } from "../shared/listing-page";
-import { listingQuery } from "../shared/listing-query";
 import { SSR_DATA_ID, type SsrData } from "../shared/ssr-data";
-import { BlockedPage, ErrorPage, MissingPage } from "../shared/status-pages";
 import "../styles/global.css";
 
 installErrorBeacon();
@@ -14,32 +10,34 @@ const landingPath = location.pathname;
 const root = document.getElementById("root")!;
 const embedded = document.getElementById(SSR_DATA_ID)?.textContent;
 
-function Hydrated({ children }: { children: ReactNode }) {
-  useEffect(() => {
-    document.documentElement.dataset.hydrated = "true";
-  }, []);
-  return children;
-}
+/** Tope de espera por la portada: con una red muy lenta la ficha no se queda sin hidratar. */
+const HERO_WAIT_MS = 3000;
 
-function ssrPage(data: SsrData): ReactNode {
-  if (data.page !== "listing") return { missing: <MissingPage />, blocked: <BlockedPage />, error: <ErrorPage /> }[data.page];
-  // La caché de Query arranca con la casa del servidor: hidratar no vuelve a pedirla.
-  const client = new QueryClient();
-  client.setQueryData(listingQuery(data.listing.publicId).queryKey, data.listing);
-  return (
-    <QueryClientProvider client={client}>
-      <ListingScreen publicId={data.listing.publicId} base={data.base} />
-    </QueryClientProvider>
-  );
+/**
+ * Ejecuta `work` cuando la portada de la ficha (la foto con fetchpriority alta, que es el LCP) ya cargó o falló. En
+ * Slow 4G el JS que hidrata (~88 KB gz) bajaba a la vez que la portada y se quedaba con la mitad del ancho de banda
+ * (ticket 12). Los módulos corren tras analizar el documento: la imagen ya existe aquí.
+ */
+function afterHero(work: () => void) {
+  const hero = document.querySelector<HTMLImageElement>('img[fetchpriority="high"]');
+  if (!hero || hero.complete) return work();
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    work();
+  };
+  hero.addEventListener("load", start, { once: true });
+  hero.addEventListener("error", start, { once: true });
+  setTimeout(start, HERO_WAIT_MS);
 }
 
 if (embedded) {
   track("page_view");
-  hydrateRoot(root, <StrictMode><Hydrated>{ssrPage(JSON.parse(embedded) as SsrData)}</Hydrated></StrictMode>, {
-    onRecoverableError: (error) => console.error("Error de hidratación", error),
-  });
+  const data = JSON.parse(embedded) as SsrData;
+  afterHero(() => void import("./hydrate-listing").then((m) => m.hydrate(root, data)));
 } else {
-  import("./shell").then(({ Shell }) => createRoot(root).render(<StrictMode><Shell /></StrictMode>));
+  import("./start-shell").then((m) => m.startShell(root));
 }
 
 // Lo que no hace falta para pintar va cuando la página ya cargó: Web Vitals y, solo en el build, el service worker.

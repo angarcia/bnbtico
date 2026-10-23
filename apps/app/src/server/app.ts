@@ -6,7 +6,7 @@ import { BEACON_MAX_BYTES, BEACON_TABLE, parseBeacon, type BeaconKind, type Beac
 import { robotsTxt, shareBase, type Environment } from "../domain/seo";
 import { parsePublicId, publicPath, publicUrl } from "../domain/share";
 import type { SsrData } from "../shared/ssr-data";
-import { escapeHtml, renderDocument } from "./render";
+import { escapeHtml, heroLinkHeader, renderDocument } from "./render";
 import { securityHeaders } from "../shared/security";
 
 export type Env = {
@@ -73,7 +73,8 @@ export function createApp(deps: Deps) {
   async function page(c: Context<{ Bindings: Env }>, data: SsrData, status: 200 | 404 | 410 | 503, cacheControl: string) {
     // Las cabeceras van en la respuesta que se guarda en caché: un acierto las lleva igual.
     const security = deps.securityHeaders === false ? {} : securityHeaders({ supabaseUrl: c.env.SUPABASE_URL, turnstile: false });
-    return c.html(renderDocument(await template(c), data), status, { "cache-control": cacheControl, ...security });
+    const link = data.page === "listing" ? heroLinkHeader(data.listing) : null;
+    return c.html(renderDocument(await template(c), data), status, { "cache-control": cacheControl, ...security, ...(link ? { link } : {}) });
   }
 
   /** Ejecuta trabajo tras responder si hay ExecutionContext; en las pruebas en proceso, antes de responder. */
