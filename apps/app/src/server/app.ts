@@ -60,7 +60,13 @@ export function createApp(deps: Deps) {
 
   app.get("/sitemap.xml", async (c) => {
     const base = shareBase(c.env.ENVIRONMENT, new URL(c.req.url).origin);
-    const entries = await deps.listings(c.env).sitemap();
+    let entries;
+    try {
+      entries = await deps.listings(c.env).sitemap();
+    } catch (error) {
+      console.error("sitemap", error);
+      return c.text("No pudimos generar el sitemap.", 503, { "cache-control": "no-store" });
+    }
     const urls = [`<url><loc>${escapeHtml(`${base}/`)}</loc></url>`, ...entries.map((e) => `<url><loc>${escapeHtml(publicUrl(e.publicId, base))}</loc><lastmod>${escapeHtml(e.updatedAt.slice(0, 10))}</lastmod></url>`)];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>\n`;
     return c.body(xml, 200, { "content-type": "application/xml; charset=utf-8", "cache-control": SITEMAP_CACHE });
@@ -78,8 +84,8 @@ export function createApp(deps: Deps) {
     const hit = await cache?.match(key);
     if (hit) return hit;
 
-    const api = deps.listings(c.env);
     try {
+      const api = deps.listings(c.env);
       const listing = await api.getPublic(publicId);
       if (!listing) {
         const state = await api.linkState(publicId);
@@ -95,7 +101,8 @@ export function createApp(deps: Deps) {
         }
       }
       return res;
-    } catch {
+    } catch (error) {
+      console.error("ficha", publicId, error);
       return page(c, { page: "error" }, 503, "no-store");
     }
   });

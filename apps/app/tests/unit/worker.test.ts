@@ -165,6 +165,25 @@ describe("worker · enlaces que no se muestran", () => {
   });
 });
 
+describe("worker · sin configuración de Supabase", () => {
+  it("la ficha y el sitemap responden 503 con su página, no un 500 vacío", async () => {
+    const t = setup();
+    const app = createApp({
+      listings: () => {
+        throw new Error("supabaseKey is required.");
+      },
+      cache: () => null,
+      purgeFetch: fetch,
+    });
+    const ficha = await app.request(`${ORIGIN}/casa/CT-1000`, {}, t.env);
+    expect(ficha.status).toBe(503);
+    expect(await ficha.text()).toContain("No pudimos cargar esta casa");
+    const sitemap = await app.request(`${ORIGIN}/sitemap.xml`, {}, t.env);
+    expect(sitemap.status).toBe(503);
+    expect(sitemap.headers.get("cache-control")).toBe("no-store");
+  });
+});
+
 describe("worker · purga de la ficha", () => {
   it("rechaza sin secreto o con uno equivocado", async () => {
     const t = setup();
