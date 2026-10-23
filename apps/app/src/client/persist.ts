@@ -7,7 +7,7 @@ import { sessionState } from "./session";
 const DB = "bnbtico";
 const STORE = "query-cache";
 /** Lecturas públicas, siempre; las privadas (la cuenta), solo mientras haya sesión: al cerrarla se borran de la caché. */
-const PUBLIC_KEYS = new Set(["listings", "provinces", "listing", "active-count"]);
+const PUBLIC_KEYS = new Set(["listings", "provinces", "listing", "active-count", "favorite-listings"]);
 
 function persisted(q: Query): boolean {
   const key = String(q.queryKey[0]);

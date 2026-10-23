@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3, ticket 06: favoritos en el teléfono, corazón fuera del enlace
+
+- **Tarjeta de Explorar:** el corazón va encima de la foto (arriba a la derecha, diseño 01) pero fuera del enlace de la tarjeta (un botón dentro de un enlace no es HTML válido ni accesible). La píldora «No disponible», que ocupaba esa esquina, pasa a la izquierda debajo de «Mensual».
+- **Lista del teléfono:** `localStorage` `bnbtico-favoritos`, sin zod (`parseFavorites` a mano: el módulo entra en el JS que hidrata la ficha SSR y zod/mini sumaba ~7 KB gz allí). El toque cambia la lista al momento; con sesión guardada se escribe después en `favorites` y, si falla, se vuelve atrás con un aviso breve abajo. Sin sesión guardada nunca se toca la red. Cerrar sesión no borra la lista («guardadas en este teléfono»). Al ingresar y al abrir la app con sesión: `addMany(teléfono)` → `list()` → el teléfono se queda con la mezcla (lo quitado en el teléfono sin sesión vuelve si seguía en la cuenta).
+- **Pantalla Favoritos:** las tarjetas salen de `listings_public` con `public_id in (…)` en una sola consulta (`PublicListingsApi.getManyPublic`, nueva, con contrato), caché pública persistida (`favorite-listings`); los `CT-####` que no vuelven se quitan del teléfono sin avisar.
+
 ## 2026-10-23 · Fase 3: el WhatsApp de la casa solo se entrega al contactar; sin número distinto por casa todavía
 
 - **Número de la casa:** no está en la vista pública, ni en el HTML de la ficha, ni en ninguna caché. Lo devuelve la RPC `create_inquiry` solo a un cliente con sesión y WhatsApp verificado, en el mismo momento en que registra la consulta (que es lo que el propietario ve en Mis consultas). Así nadie puede recoger los números del catálogo sin cuenta. Tope de 20 casas distintas por cliente al día; una consulta por cliente y casa cada 7 días (repetir la actualiza). Decisión de Daniel.

@@ -224,6 +224,36 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .listing-card .photo{height:168px;border-radius:var(--r)}
 .listing-card h2,.listing-card h3{font-size:17px;font-weight:700;letter-spacing:-0.02em}
 .listing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.listing-cell{position:relative;min-width:0}
+.pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.pills-tl .pill{position:static}
+/* Corazón de favoritos (fase 3): blanco con sombra sobre la foto, crema en la ficha, terracota cuando está guardada. */
+.heart{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;padding:0;background:transparent;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:transform 160ms var(--ease-out)}
+.heart:active{transform:scale(0.9)}
+.heart[aria-pressed="true"] svg{fill:var(--brand);stroke:var(--brand)}
+.heart-card{position:absolute;right:6px;top:6px;color:#FFFFFF}
+.heart-card svg{filter:drop-shadow(0 1px 2px rgba(28,43,42,.45))}
+.heart-card[aria-pressed="true"] svg{filter:none}
+.heart-hero{border-radius:999px;background:var(--overlay-btn)}
+.heart-row{margin:-10px -10px 0 0;flex-shrink:0}
+/* Favoritos (pantalla 05): tarjeta horizontal; el enlace del título cubre la tarjeta y el corazón queda por encima. */
+.fav-list{gap:14px}
+.fav-card{position:relative;display:flex;gap:12px;padding:12px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow)}
+.fav-photo{width:116px;height:116px;flex-shrink:0;border-radius:var(--r-thumb)}
+.fav-body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.fav-title{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.fav-title h2{font-size:18px;font-weight:700;line-height:1.1}
+.fav-title .heart{position:relative;z-index:1}
+.stretched{color:inherit;text-decoration:none}
+.stretched::after{content:"";position:absolute;inset:0;border-radius:var(--r)}
+.fav-price{margin-top:auto;font-weight:700}
+.fav-price span{font-weight:400}
+.fav-tools{justify-content:flex-end;margin-top:-4px}
+.fav-empty{align-items:flex-start;gap:14px}
+.fav-card.sk-card,.skeleton .fav-card{align-items:center}
+.note-col{flex-direction:column;gap:8px}
+.note-col b{font-family:var(--display);font-weight:700}
+.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:600;box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
 .hero{position:relative;height:320px;border-radius:var(--r-sheet);overflow:hidden;background:var(--selection);margin:0 -8px}
 .hero .top{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between}
 .hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -433,12 +463,12 @@ img[data-fade][data-loaded]{opacity:1}
 @keyframes fade-in{from{opacity:0}}
 
 /* Explorar: las tarjetas que sustituyen a los esqueletos aparecen; en la primera carga, una tras otra (40 ms). */
-.listing-grid.reveal .listing-card{animation:rise-in 280ms var(--ease-out) backwards}
-.listing-grid.stagger .listing-card:nth-child(2){animation-delay:40ms}
-.listing-grid.stagger .listing-card:nth-child(3){animation-delay:80ms}
-.listing-grid.stagger .listing-card:nth-child(4){animation-delay:120ms}
-.listing-grid.stagger .listing-card:nth-child(5){animation-delay:160ms}
-.listing-grid.stagger .listing-card:nth-child(6){animation-delay:200ms}
+.listing-grid.reveal > *{animation:rise-in 280ms var(--ease-out) backwards}
+.listing-grid.stagger > :nth-child(2){animation-delay:40ms}
+.listing-grid.stagger > :nth-child(3){animation-delay:80ms}
+.listing-grid.stagger > :nth-child(4){animation-delay:120ms}
+.listing-grid.stagger > :nth-child(5){animation-delay:160ms}
+.listing-grid.stagger > :nth-child(6){animation-delay:200ms}
 
 /* Asistente de publicar: la pantalla nueva entra desde la dirección del paso. Se animan los hijos y no el <form>: un
    transform en el form haría que la barra fija de «Atrás / Continuar» se moviera con él. */
@@ -495,7 +525,8 @@ small.swap-in{display:block}
   .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove,.switch span{transition-property:background-color,color,opacity}
   .btn:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
   @starting-style{.update-banner{transform:translateX(-50%)}}
-  .listing-grid.reveal .listing-card,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in.changed,.hero-counter .tick.changed{animation-name:fade-in}
+  .heart:active{transform:none}
+  .listing-grid.reveal > *,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in.changed,.hero-counter .tick.changed{animation-name:fade-in}
   .sent-check path{animation:none;stroke-dashoffset:0}
   .progress span::after,.upload-bar span{transition-property:none}
 }

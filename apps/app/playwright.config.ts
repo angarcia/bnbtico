@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 4173;
+// E2E_PORT: otro puerto si el 4173 está ocupado (p. ej. dos copias del repo probando a la vez).
+const PORT = Number(process.env.E2E_PORT ?? 4173);
 const chromium = process.env.CHROMIUM_PATH;
 
 export default defineConfig({

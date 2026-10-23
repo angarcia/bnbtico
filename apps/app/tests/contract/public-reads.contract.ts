@@ -59,6 +59,16 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.getPublic("CT-999999")).toBeNull();
       });
 
+      it("getManyPublic (Favoritos): solo las activas de la lista, sin fallar por las demás", async () => {
+        const all = [draft, review, changes, rejected, reopened, active].map((s) => s.publicId);
+        const found = await h.anon.getManyPublic([...all, "CT-999999", active.publicId]);
+        expect(found.map((l) => l.publicId)).toEqual([active.publicId]);
+        expect(found[0]).toMatchObject({ title: "Casa Punta Uva", ownerName: h.ownerName("owner") });
+        expect(found[0]!.photos.map((p) => p.path)).toEqual(active.photoPaths);
+        expect(await h.anon.getManyPublic([])).toEqual([]);
+        expect(await h.anon.getManyPublic(["CT-999999"])).toEqual([]);
+      });
+
       it("countActive cuenta solo las casas activas", async () => {
         expect(await h.anon.countActive()).toBe(1);
       });

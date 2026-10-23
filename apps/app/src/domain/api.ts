@@ -15,6 +15,8 @@ export interface PublicListingsApi {
   searchPublic(filters: Filters): Promise<PublicListing[]>;
   /** Ficha pública por `CT-####`; null si no está activa. */
   getPublic(publicId: string): Promise<PublicListing | null>;
+  /** Las casas activas de una lista de `CT-####` en una sola consulta (Favoritos); las demás no vuelven. Sin orden. */
+  getManyPublic(publicIds: string[]): Promise<PublicListing[]>;
   linkState(publicId: string): Promise<LinkState>;
   /** Provincias con al menos una casa activa. */
   provincesWithListings(): Promise<string[]>;

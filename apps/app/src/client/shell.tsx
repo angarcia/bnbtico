@@ -97,7 +97,7 @@ const routeTree = rootRoute.addChildren([
   tabs.addChildren([
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: normalizeSearch, component: ExplorarScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: normalizeSearch, component: FiltrosScreen }),
-    createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: () => <Placeholder title="Favoritos" text="Toque el corazón en una casa para guardarla aquí. No necesita cuenta." /> }),
+    createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(() => import("./screens/favoritos"), "FavoritosScreen") }),
     privateRoutes.addChildren([
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario", component: InicioScreen }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: CasasScreen }),

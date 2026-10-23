@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, type Filters } from "../../domain/filters";
 import { FEATURE_LABEL, type Feature } from "../../domain/listing";
 import { FX_CRC_PER_USD } from "../../domain/money";
-import { setCurrency, useCurrency } from "../../shared/currency";
+import { useCurrency } from "../../shared/currency";
+import { CurrencySwitch } from "../currency-switch";
 import { I } from "../../shared/icons";
 import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
@@ -33,21 +34,6 @@ function Header() {
         ¿Para dónde <span className="primary">va</span>?
       </h1>
     </header>
-  );
-}
-
-function CurrencySwitch() {
-  const currency = useCurrency();
-  return (
-    <div className="row gap-4 currency-switch" role="group" aria-label="Moneda">
-      <button type="button" className="link small" aria-pressed={currency === "CRC"} onClick={() => setCurrency("CRC")}>
-        ₡ Colones
-      </button>
-      <span className="small muted">·</span>
-      <button type="button" className="link small" aria-pressed={currency === "USD"} onClick={() => setCurrency("USD")}>
-        $ Dólares
-      </button>
-    </div>
   );
 }
 

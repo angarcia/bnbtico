@@ -7,6 +7,7 @@ import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../
 import { formatCRC, formatMoney, formatUSD, FX_CRC_PER_USD } from "../domain/money";
 import { ApproxMap } from "./approx-map";
 import { setCurrency, useCurrency } from "./currency";
+import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
 import { useHydrated } from "./hydration";
 import { I, type IconName } from "./icons";
@@ -99,7 +100,11 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
           >
             <I.back />
           </a>
-          {hydrated ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
+          {/* Compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
+          <div className="row gap-8">
+            {hydrated ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
+            {hydrated ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
+          </div>
         </HeroGallery>
 
         <div className="stack listing-body">

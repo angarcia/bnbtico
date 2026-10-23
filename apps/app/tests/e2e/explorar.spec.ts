@@ -189,8 +189,12 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await page.goto("/explorar");
   await expect(results(page)).toHaveText("8 casas en Limón");
 
-  await page.route("**/*", (route) => route.abort());
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
+  // Favoritos es un trozo diferido: lo trae la precarga del router (o, instalada, el service worker) antes de quedarse sin red.
+  const chunk = page.waitForResponse(/\/assets\/favoritos-.*\.js$/);
+  await nav.getByRole("link", { name: "Favoritos" }).hover();
+  await chunk;
+  await page.route("**/*", (route) => route.abort());
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
   await nav.getByRole("link", { name: "Mi cuenta" }).click();

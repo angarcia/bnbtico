@@ -2,7 +2,8 @@ import { defineConfig } from "@playwright/test";
 
 // Puerta de Lighthouse (ticket 12): mismo build local y mismo `vite preview` que la e2e, contra Supabase local sembrado.
 // pnpm lighthouse (antes pnpm dev:vars y pnpm build). Chrome: CHROMIUM_PATH (en CI, el Google Chrome del runner).
-const PORT = 4173;
+// E2E_PORT: otro puerto si el 4173 está ocupado (p. ej. dos copias del repo probando a la vez).
+const PORT = Number(process.env.E2E_PORT ?? 4173);
 
 export default defineConfig({
   testDir: "tests/lighthouse",

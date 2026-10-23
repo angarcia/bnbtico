@@ -1,5 +1,6 @@
 import { expect, test } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
+import { localSupabase } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { deleteAccount, FREE_PHONE } from "../db/postgrest-auth-harness";
 
@@ -17,7 +18,7 @@ test("el shell y la ficha llevan la CSP; Turnstile solo en el shell", async ({ r
     const csp = (await request.get(path)).headers()["content-security-policy"];
     expect(csp, path).toContain("script-src 'self' https://challenges.cloudflare.com;");
     expect(csp, path).toContain("style-src 'self';");
-    expect(csp, path).toContain("connect-src 'self' http://127.0.0.1:54321 https://tile.openstreetmap.org");
+    expect(csp, path).toContain(`connect-src 'self' ${localSupabase().url} https://tile.openstreetmap.org`);
     expect(csp, path).not.toContain("unsafe-inline");
   }
   const ficha = (await request.get(`/casa/${casa.publicId}`)).headers()["content-security-policy"];

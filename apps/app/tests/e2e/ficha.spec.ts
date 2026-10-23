@@ -55,6 +55,12 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
+  // Compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño.
+  expect(source).toContain('<div class="row gap-8"><span class="icon-btn" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span></div>');
+  expect(source).not.toContain("favoritos");
+  const heart = page.getByRole("button", { name: "Guardar en favoritos" });
+  await expect(heart).toHaveAttribute("aria-pressed", "false");
+  expect(await heart.boundingBox()).toMatchObject({ width: 44, height: 44 });
   expect(seen.rest, "la hidratación no debe pedir datos").toEqual([]);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });

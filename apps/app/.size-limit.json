@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin y Web Vitals tras load)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Favoritos y Web Vitals tras load)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -12,7 +12,8 @@
       "!dist/client/assets/concurrency-*.js",
       "!dist/client/assets/admin-*.js",
       "!dist/client/assets/review-*.js",
-      "!dist/client/assets/vitals-*.js"
+      "!dist/client/assets/vitals-*.js",
+      "!dist/client/assets/favoritos-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -35,6 +36,14 @@
       "dist/client/assets/review-*.js"
     ],
     "limit": "12 KB",
+    "gzip": true
+  },
+  {
+    "name": "Favoritos · trozo diferido (la pantalla; el corazón y la lista del teléfono van en el JS inicial)",
+    "path": [
+      "dist/client/assets/favoritos-*.js"
+    ],
+    "limit": "4 KB",
     "gzip": true
   },
   {
