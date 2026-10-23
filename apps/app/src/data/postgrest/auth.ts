@@ -128,29 +128,31 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
       if (error) throw toDomainError(error);
       return toAccount(data);
     },
-    // Segundo factor: código por WhatsApp como factor MFA de teléfono (ticket 09). El nivel aal2 llega en el JWT nuevo.
+    // Segundo factor del admin: app de autenticación (TOTP). El nivel aal2 llega en el JWT nuevo.
     async enrolMfa() {
       const s = await currentSession();
       if (!s) throw NO_SESSION();
       const listed = await db.auth.mfa.listFactors();
       if (listed.error) throw toDomainError(listed.error);
-      const phones = listed.data.all.filter((f) => f.factor_type === "phone");
-      const existing = phones.find((f) => f.status === "verified") ?? phones[0];
-      if (existing) return { factorId: existing.id };
-      const phone = s.user.phone ? `+${s.user.phone.replace(/^\+/, "")}` : "";
-      const enrolled = await db.auth.mfa.enroll({ factorType: "phone", phone });
+      const verified = listed.data.totp.find((f) => f.status === "verified");
+      if (verified) return { factorId: verified.id, verified: true };
+      // Un factor sin verificar no vuelve a mostrar su secreto, y GoTrue no deja inscribir otro con el mismo nombre.
+      for (const f of listed.data.all) {
+        if (f.factor_type === "totp" && f.status === "unverified") {
+          const removed = await db.auth.mfa.unenroll({ factorId: f.id });
+          if (removed.error) throw toDomainError(removed.error);
+        }
+      }
+      const enrolled = await db.auth.mfa.enroll({ factorType: "totp", friendlyName: "bnbtico admin", issuer: "bnbtico" });
+      // Sin correo en auth.users GoTrue no puede rotular el factor y responde 500; seed_admin se lo pone al admin.
+      if (enrolled.error?.status === 500) throw new DomainError("El segundo código no está disponible para esta cuenta. Escríbale a bnbtico por WhatsApp.", "forbidden");
       if (enrolled.error) throw toDomainError(enrolled.error);
-      return { factorId: enrolled.data.id };
+      return { factorId: enrolled.data.id, verified: false, qrCode: enrolled.data.totp.qr_code, secret: enrolled.data.totp.secret };
     },
-    async challengeMfa(factorId) {
-      const { data, error } = await db.auth.mfa.challenge({ factorId, channel });
-      if (error) throw toDomainError(error);
-      return { challengeId: data.id };
-    },
-    async verifyMfa(factorId, challengeId, code) {
+    async verifyMfa(factorId, code) {
       const token = code.replace(/\D/g, "");
       if (token.length !== 6) throw new DomainError("El código tiene 6 dígitos.", "validation");
-      const { error } = await db.auth.mfa.verify({ factorId, challengeId, code: token });
+      const { error } = await db.auth.mfa.challengeAndVerify({ factorId, code: token });
       if (error) throw toDomainError(error);
     },
     async logout() {

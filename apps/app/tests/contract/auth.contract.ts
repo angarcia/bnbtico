@@ -136,45 +136,68 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
       expect(h.restart().pending()).toBeNull();
     });
 
-    describe("segundo factor", () => {
-      it("inscribe el teléfono de la cuenta, envía el código y la sesión pasa a aal2 (también tras reiniciar)", async () => {
+    describe("segundo factor (app de autenticación)", () => {
+      // Solo el admin tiene segundo factor: seed_admin le da el rótulo que GoTrue exige para inscribir un TOTP.
+      const registerAdmin = async () => {
         const account = await register();
+        await h.makeAdmin();
+        return account;
+      };
+      const pending = async () => {
+        const factor = await h.auth.enrolMfa();
+        if (factor.verified) throw new Error("se esperaba un factor sin verificar");
+        return factor;
+      };
+
+      it("la primera vez inscribe un factor con QR y secreto; un código de la app sube la sesión a aal2 (también tras reiniciar)", async () => {
+        const account = await registerAdmin();
         const seen: string[] = [];
         const stop = h.auth.onSessionChange((s) => s && seen.push(s.aal));
-        const { factorId } = await h.auth.enrolMfa();
-        expect((await h.auth.enrolMfa()).factorId).toBe(factorId);
-        const { challengeId } = await h.auth.challengeMfa(factorId);
-        expect((await failure(h.auth.verifyMfa(factorId, challengeId, "12345"))).message).toBe("El código tiene 6 dígitos.");
+        const factor = await pending();
+        expect(factor.qrCode).toMatch(/^data:image\/svg\+xml/);
+        expect(factor.secret).toMatch(/^[A-Z2-7]{16,}$/);
+        expect((await failure(h.auth.verifyMfa(factor.factorId, "12345"))).message).toBe("El código tiene 6 dígitos.");
         expect(await h.auth.session()).toEqual({ userId: account.id, aal: "aal1" });
-        await h.auth.verifyMfa(factorId, challengeId, h.mfaCode());
+        await h.auth.verifyMfa(factor.factorId, h.mfaCode(factor.secret));
         stop();
         expect(await h.auth.session()).toEqual({ userId: account.id, aal: "aal2" });
         expect(seen.at(-1)).toBe("aal2");
         expect(await h.restart().session()).toEqual({ userId: account.id, aal: "aal2" });
+        expect(await h.auth.enrolMfa()).toEqual({ factorId: factor.factorId, verified: true });
       });
 
-      it("un código equivocado no sube la sesión", async () => {
-        await register();
-        const { factorId } = await h.auth.enrolMfa();
-        const { challengeId } = await h.auth.challengeMfa(factorId);
-        const wrong = h.mfaCode() === "000000" ? "111111" : "000000";
-        expect((await failure(h.auth.verifyMfa(factorId, challengeId, wrong))).message).toBe("Ese código no es correcto o caducó.");
+      it("un código equivocado no sube la sesión ni verifica el factor", async () => {
+        await registerAdmin();
+        const factor = await pending();
+        const right = h.mfaCode(factor.secret);
+        const wrong = right === "000000" ? "111111" : "000000";
+        expect((await failure(h.auth.verifyMfa(factor.factorId, wrong))).message).toBe("Ese código no es correcto o caducó.");
         expect((await h.auth.session())?.aal).toBe("aal1");
       });
 
-      it("al volver a ingresar la sesión empieza en aal1 y el mismo factor sirve para subirla", async () => {
-        await register();
-        const first = await h.auth.enrolMfa();
-        await h.auth.verifyMfa(first.factorId, (await h.auth.challengeMfa(first.factorId)).challengeId, h.mfaCode());
+      it("si no se verificó, volver a entrar inscribe otro factor con otro secreto y el anterior deja de servir", async () => {
+        await registerAdmin();
+        const first = await pending();
+        const second = await pending();
+        expect(second.factorId).not.toBe(first.factorId);
+        expect(second.secret).not.toBe(first.secret);
+        expect((await h.auth.session())?.aal).toBe("aal1");
+        await h.auth.verifyMfa(second.factorId, h.mfaCode(second.secret));
+        expect((await h.auth.session())?.aal).toBe("aal2");
+      });
+
+      it("al volver a ingresar la sesión empieza en aal1 y el mismo factor, sin QR, sirve para subirla", async () => {
+        await registerAdmin();
+        const first = await pending();
+        await h.auth.verifyMfa(first.factorId, h.mfaCode(first.secret));
         await h.auth.logout();
         await h.advance(1000);
         await h.auth.start({ mode: "login", phone: h.phone });
         await h.auth.verify(h.code);
         expect((await h.auth.session())?.aal).toBe("aal1");
         const again = await h.auth.enrolMfa();
-        expect(again.factorId).toBe(first.factorId);
-        await h.advance(1000);
-        await h.auth.verifyMfa(again.factorId, (await h.auth.challengeMfa(again.factorId)).challengeId, h.mfaCode());
+        expect(again).toEqual({ factorId: first.factorId, verified: true });
+        await h.auth.verifyMfa(again.factorId, h.mfaCode(first.secret));
         expect((await h.auth.session())?.aal).toBe("aal2");
       });
     });

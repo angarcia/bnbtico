@@ -69,8 +69,10 @@ export interface AuthHarness {
   auth: AuthApi & MfaApi;
   /** La app se cierra y se vuelve a abrir: instancia nueva sobre el mismo almacenamiento del dispositivo. */
   restart(): AuthApi & MfaApi;
-  /** El último código del segundo factor enviado al número de prueba. */
-  mfaCode(): string;
+  /** Marca como admin la cuenta del número de prueba (seed_admin). */
+  makeAdmin(): Promise<void>;
+  /** El código que mostraría ahora la app de autenticación con ese secreto (TOTP con el reloj del servidor). */
+  mfaCode(secret: string): string;
   /** Adelanta el reloj del adaptador (el enfriamiento y la caducidad del número pendiente se miden con él). */
   advance(ms: number): Promise<void>;
   /** Código válido para los números de prueba. */

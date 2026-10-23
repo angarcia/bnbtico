@@ -13,7 +13,7 @@ El navegador es el cliente de Postgres. La app es un shell estático que habla c
 | App | Vite + React 19 + TanStack Router (rutas y parámetros tipados) + TanStack Query (caché persistida en IndexedDB) | Navegador; shell precacheado por un service worker |
 | Worker | Hono. SSR de `/casa/CT-####` con `renderToString`, `/sitemap.xml`, `/robots.txt`, `POST /vitals`, `/errors`, `/events`, purga de caché; fase 5: `POST /webhooks/pagos/:proveedor` y cron diario | Cloudflare Workers (plan gratuito hasta un disparador medido), assets estáticos en el mismo worker |
 | Base de datos | Postgres con RLS en todas las tablas, grants por columna, vista `listings_public`, RPCs (`submit_listing`, `review_listing`, `set_listing_available`, `listing_link_state`, RPCs de fotos), trigger `listings_protect`, `pg_cron`/`pg_net` | Supabase (`bnbtico-pruebas` ahora; `bnbtico-prod` en el lanzamiento), us-east-1 |
-| Auth | Supabase Auth por teléfono, canal WhatsApp (Twilio Verify); JWT ES256; MFA por teléfono para admin | Supabase |
+| Auth | Supabase Auth por teléfono, canal WhatsApp (Twilio Verify); JWT ES256; MFA por app de autenticación (TOTP) para admin | Supabase |
 | Storage | Bucket `listings` público para leer, escritura del dueño por carpeta con RLS; tres variantes JPEG por foto | Supabase |
 | Despliegue | GitHub Actions: pruebas → build → `wrangler deploy`; `develop` → `nueva.bnbtico.com` (luego `pruebas.bnbtico.com`), `main` → `bnbtico.com` | GitHub + Cloudflare |
 
@@ -29,7 +29,7 @@ No hay API intermedia, ni server actions, ni cookies de sesión en el servidor, 
 ## Sesión y seguridad
 
 - supabase-js guarda la sesión en localStorage detrás de un adaptador de almacenamiento (Capacitor la moverá a Keychain/Keystore). Token de acceso de 1 h, rotación del refresh con detección de reutilización, logout que revoca.
-- El riesgo asumido es XSS con robo de token. Contramedidas obligatorias: CSP estricta (`script-src 'self'`, sin inline ni terceros en la zona privada), prohibición de `dangerouslySetInnerHTML` por lint, Turnstile en el formulario del código, y **MFA por teléfono para admin exigida en SQL** (`auth.jwt()->>'aal' = 'aal2'` en políticas y RPCs de admin).
+- El riesgo asumido es XSS con robo de token. Contramedidas obligatorias: CSP estricta (`script-src 'self'`, sin inline ni terceros en la zona privada), prohibición de `dangerouslySetInnerHTML` por lint, Turnstile en el formulario del código, y **MFA por app de autenticación (TOTP) para admin exigida en SQL** (`auth.jwt()->>'aal' = 'aal2'` en políticas y RPCs de admin).
 - Lo que expone un token robado: las casas del propio usuario (con su dirección exacta), sus favoritos y consultas; nunca dinero. El de admin, además, los teléfonos de todos los perfiles y la cola de revisión: por eso el `aal2`.
 - El número de WhatsApp del propietario es público por diseño en una casa activa; la dirección exacta y las coordenadas exactas no salen de `listings` (la vista las desplaza 150–499 m).
 

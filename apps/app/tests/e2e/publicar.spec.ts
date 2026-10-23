@@ -162,6 +162,8 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
+  // La recarga de abajo no debe adelantarse al guardado del paso 6 (aún no salió la petición: ver el cierre del ticket 09).
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.title).toBe(TITLE);
 
   // 7 Fotos: el recuento sale de la base; con 4 no deja seguir, con 5 sí. La rejilla hace scroll por dentro, la página no.
   await expect(page.getByRole("status")).toHaveText("0 de 5–15");

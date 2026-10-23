@@ -296,6 +296,10 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .code-input{position:absolute;left:0;right:0;top:24px;height:60px;opacity:.01;border:0;background:transparent;font-size:16px}
 input.code-input:not([type=checkbox]){min-height:0;border:0;background:transparent}
 .avatar-ok{background:var(--primary);color:var(--primary-on)}
+/* Alta de la app de autenticación del admin: el QR siempre sobre blanco (también en modo oscuro) y la clave copiable. */
+.totp-enrol{align-items:center;background:var(--surface-2);border-radius:var(--r);padding:16px;text-align:center}
+.totp-qr{display:block;width:184px;height:184px;background:#fff;border-radius:12px;padding:8px}
+.totp-secret{font-size:15px;letter-spacing:.06em;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
 .account-card{gap:14px}
 .account-name{font-size:19px}
 .verified{gap:6px;font-weight:600;flex-wrap:wrap}

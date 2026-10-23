@@ -1,3 +1,12 @@
+## 2026-10-23 · Segundo factor del admin por app de autenticación (TOTP) en vez de WhatsApp
+
+- **Por qué:** en `bnbtico-pruebas` (plan gratuito) el MFA por teléfono de Supabase solo está disponible en el plan Pro. TOTP (Google Authenticator, 1Password…) está en todos los planes y no cuesta envíos. Decisión de Daniel. Solo el admin lo usa; clientes y propietarios siguen ingresando con el código por WhatsApp.
+- **Qué no cambia:** la exigencia `auth.jwt()->>'aal' = 'aal2'` en `is_admin()` y `review_listing` (no depende del tipo de factor).
+- **Flujo:** `/admin/codigo` la primera vez inscribe un factor TOTP y muestra el QR (`<img>` con el data URL SVG de Supabase; la CSP ya admite `img-src data:`) y la clave en texto; el primer código lo verifica. Después, solo el código de la app. Sin reenvíos ni esperas: se retira el reintento por límite de envío del ticket 12. `MfaApi` pasa a `enrolMfa()` → factor verificado o recién inscrito (QR + clave) y `verifyMfa(factorId, code)` (reto y verificación juntos).
+- **Hallazgo:** GoTrue rotula el factor TOTP con el correo del usuario de auth y, sin correo, falla («AccountName must be set»); las cuentas de bnbtico solo tienen teléfono. Migración `admin_totp_correo`: `seed_admin` le pone al admin `<número>@admin.bnbtico.invalid` (dominio reservado, sin confirmar, no abre otro ingreso). Una cuenta que no es admin no puede inscribir un factor.
+- **Local:** vuelve la configuración simple anterior al ticket 09 (`twilio_verify` de relleno, sin hook `send_sms` ni `local_test`); `[auth.mfa.totp]` activo y `[auth.mfa.phone]` apagado. Las pruebas calculan el TOTP (RFC 6238) con `node:crypto` a partir de la clave.
+- **Quién es admin en pruebas:** la cuenta real de Daniel. La de prueba `8899 0001` ingresa con un código conocido y quien escaneara el QR primero quedaría como admin; se le quita `is_admin` en el alojado.
+
 ## 2026-10-23 · Endurecimiento y telemetría de primera parte (fase R, ticket 11)
 
 - **CSP en dos sitios, una fuente** (`src/shared/security.ts`): el worker la pone en el HTML que genera (ficha y páginas de estado, también en caché) y el build la escribe en `dist/client/_headers` para el shell y los estáticos, con la URL de Supabase del build. No se pasa el shell por el worker: cada navegación sería una invocación más del plan gratuito. `script-src 'self'` y `style-src 'self'` sin `'unsafe-inline'`; la única excepción de terceros es Turnstile (`https://challenges.cloudflare.com` en `script-src` y `frame-src`), solo en el shell. Playwright falla ante cualquier violación.

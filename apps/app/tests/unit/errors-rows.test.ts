@@ -22,13 +22,17 @@ describe("toDomainError", () => {
     expect(toDomainError({ code, message: "new row violates row-level security policy" })).toMatchObject({ message, kind });
   });
 
-  it("el límite de códigos de GoTrue conserva cuántos segundos pide esperar", () => {
+  it("el límite de códigos de GoTrue dice cuántos segundos esperar", () => {
     const soon = toDomainError({ code: "over_sms_send_rate_limit", message: "For security purposes, you can only request this after 0 seconds." });
-    expect(soon).toMatchObject({ kind: "rate_limit", message: "Espere un momento antes de pedir otro código.", retryAfterSeconds: 0 });
+    expect(soon).toMatchObject({ kind: "rate_limit", message: "Espere un momento antes de pedir otro código." });
     const later = toDomainError({ code: "over_sms_send_rate_limit", message: "For security purposes, you can only request this after 27 seconds." });
-    expect(later).toMatchObject({ message: "Espere 27 segundos antes de pedir otro código.", retryAfterSeconds: 27 });
-    expect(toDomainError({ code: "over_sms_send_rate_limit", message: "SMS rate limit exceeded" }).retryAfterSeconds).toBeUndefined();
-    expect(toDomainError({ code: "P0001", message: "x" }).retryAfterSeconds).toBeUndefined();
+    expect(later).toMatchObject({ message: "Espere 27 segundos antes de pedir otro código." });
+  });
+
+  it("los errores del segundo factor (app de autenticación)", () => {
+    expect(toDomainError({ code: "mfa_verification_failed", message: "Invalid TOTP code entered" })).toMatchObject({ kind: "validation", message: "Ese código no es correcto o caducó." });
+    expect(toDomainError({ code: "mfa_factor_not_found" }).kind).toBe("conflict");
+    expect(toDomainError({ code: "mfa_totp_enroll_not_enabled" }).message).toBe("El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp.");
   });
 
   it("errores de red", () => {

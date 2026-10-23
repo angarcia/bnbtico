@@ -6,7 +6,8 @@ import { createPostgrestAuth } from "../../src/data/postgrest/auth";
 import { createSessionClient } from "../../src/data/postgrest/session-client";
 import { memoryStore, SESSION_STORAGE_KEY } from "../../src/data/storage";
 import type { AuthHarness } from "../contract/harness";
-import { lastMfaCode, localSupabase, serviceClient } from "./local";
+import { totp } from "../contract/totp";
+import { localSupabase, serviceClient } from "./local";
 
 export const FREE_PHONE = "+50688889999";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -34,7 +35,11 @@ export async function postgrestAuthHarness(): Promise<AuthHarness> {
       await sleep(1100);
     },
     code: "123456",
-    mfaCode: () => lastMfaCode(FREE_PHONE),
+    mfaCode: (secret) => totp(secret),
+    async makeAdmin() {
+      const { error } = await serviceClient().rpc("seed_admin", { p_phone: FREE_PHONE });
+      if (error) throw error;
+    },
     phone: FREE_PHONE,
     async captureSession() {
       const raw = stores.session.getItem(SESSION_STORAGE_KEY);

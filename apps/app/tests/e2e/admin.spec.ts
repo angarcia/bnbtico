@@ -1,11 +1,13 @@
 import { expect, test, type Page, type Route } from "./helpers/test";
 import type { ListingsHarness, Seeded } from "../contract/harness";
-import { TEST_PHONES, lastMfaCode, serviceClient } from "../db/local";
+import { totp } from "../contract/totp";
+import { TEST_PHONES, serviceClient, totpSecretOf } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 
 // Zona del admin (pantallas 21 y 22) contra Supabase local: el admin de prueba (8899 0001) ingresa con su sesión normal
-// (aal1, inyectada por localStorage), confirma el segundo código (lo guarda el hook de SMS local) y revisa.
+// (aal1, inyectada por localStorage), confirma el segundo código de su app de autenticación (TOTP, calculado aquí con el
+// secreto) y revisa.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 let h: ListingsHarness;
 let first: Seeded;
@@ -14,7 +16,7 @@ let second: Seeded;
 test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
-  h = await postgrestHarness(); // marca al admin con seed_admin y le deja el factor de teléfono verificado
+  h = await postgrestHarness(); // marca al admin con seed_admin y le deja un factor TOTP verificado
   await h.reset();
   first = await h.seed({
     status: "review",
@@ -28,30 +30,49 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/storage/v1/object/public/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
 });
 
+const userIdOf = async (phone: string) => (await serviceClient().from("profiles").select("id").eq("phone", phone).single()).data!.id;
+const factorsOf = async (phone: string) => (await serviceClient().auth.admin.mfa.listFactors({ userId: await userIdOf(phone) })).data?.factors ?? [];
+
+/** El código que mostraría ahora la app de autenticación del admin. */
+async function adminCode() {
+  const verified = (await factorsOf(TEST_PHONES.admin)).find((f) => f.status === "verified");
+  return totp(totpSecretOf(verified!.id));
+}
+
 async function secondCode(page: Page) {
   await expect(page).toHaveURL(/\/admin\/codigo/);
   await expect(page.getByRole("heading", { name: "Confirme que es usted" })).toBeVisible();
-  await expect(page.getByText("8899 0001")).toBeVisible();
+  await expect(page.getByText("Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Código QR para su app de autenticación" })).toHaveCount(0);
   const verify = page.getByRole("button", { name: "Verificar y entrar" });
   await expect(verify).toBeEnabled();
-  await page.getByLabel("Código de 6 dígitos").fill(lastMfaCode(TEST_PHONES.admin));
+  await page.getByLabel("Código de 6 dígitos").fill(await adminCode());
   await verify.click();
 }
 
 const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
 
-test("el admin pide el segundo código, ve la cola y aprueba: la casa sale de la cola al instante y se publica", async ({ page }) => {
+test("la primera vez el admin vincula su app con el QR, ve la cola y aprueba: la casa sale de la cola al instante y se publica", async ({ page }) => {
+  const adminId = await userIdOf(TEST_PHONES.admin);
+  for (const f of await factorsOf(TEST_PHONES.admin)) await serviceClient().auth.admin.mfa.deleteFactor({ userId: adminId, id: f.id });
   await injectSession(page, "admin");
   await page.goto("/cuenta");
   await page.getByRole("link", { name: /Revisión de anuncios · admin/ }).click();
 
   await expect(page).toHaveURL(/\/admin\/codigo/);
+  await expect(page.getByRole("heading", { name: "Vincule su app de autenticación" })).toBeVisible();
+  const qr = page.getByRole("img", { name: "Código QR para su app de autenticación" });
+  await expect(qr).toBeVisible();
+  expect(await qr.getAttribute("src")).toMatch(/^data:image\/svg\+xml/);
+  expect(await qr.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  const secret = (await page.getByLabel("Clave para la app de autenticación").textContent())!.replace(/\s/g, "");
+  expect(secret).toMatch(/^[A-Z2-7]{16,}$/);
   await expect(page.getByRole("button", { name: "Verificar y entrar" })).toBeEnabled();
-  const right = lastMfaCode(TEST_PHONES.admin);
+  const right = totp(secret);
   await page.getByLabel("Código de 6 dígitos").fill(right === "000000" ? "111111" : "000000");
   await page.getByRole("button", { name: "Verificar y entrar" }).click();
   await expect(page.locator('.field-error[role="alert"]')).toHaveText("Ese código no es correcto o caducó.");
-  await page.getByLabel("Código de 6 dígitos").fill(right);
+  await page.getByLabel("Código de 6 dígitos").fill(totp(secret));
   await page.getByRole("button", { name: "Verificar y entrar" }).click();
 
   await expect(page).toHaveURL(/\/admin$/);
@@ -141,33 +162,13 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toHaveCount(0);
 });
 
-// GoTrue admite un reto por factor y segundo (max_frequency): si la pantalla se abre justo después de otro envío
-// (otra pestaña, volver enseguida), responde 429 «after N seconds». La pantalla espera lo que dice y lo envía sola.
-test("si el código se pidió hace un instante, la pantalla espera lo que indica el servidor y lo envía", async ({ page }) => {
-  await injectSession(page, "admin");
-  let refused = 0;
-  await page.route("**/auth/v1/factors/*/challenge", async (route) => {
-    if (refused++ > 0) return route.continue();
-    await route.fulfill({
-      status: 429,
-      contentType: "application/json",
-      body: JSON.stringify({ code: 429, error_code: "over_sms_send_rate_limit", msg: "For security purposes, you can only request this after 1 seconds." }),
-    });
-  });
-  await page.goto("/admin");
-  await secondCode(page);
-  await expect(page).toHaveURL(/\/admin$/);
-  expect(refused).toBe(2);
-});
-
-test("quien no es admin no entra: no se le pide ni envía ningún código", async ({ page }) => {
+test("quien no es admin no entra: no se le pide código ni se le inscribe ningún factor", async ({ page }) => {
   await injectSession(page, "owner");
-  const before = lastMfaCode("+50687770001");
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/admin\/codigo/);
   await expect(page.getByRole("heading", { name: "Esta sección es solo para el equipo de bnbtico" })).toBeVisible();
   await expect(page.getByLabel("Código de 6 dígitos")).toHaveCount(0);
-  expect(lastMfaCode("+50687770001")).toBe(before);
+  expect(await factorsOf(TEST_PHONES.owner)).toEqual([]);
   await page.goto("/cuenta");
   await expect(page.getByRole("link", { name: /Revisión de anuncios/ })).toHaveCount(0);
 });

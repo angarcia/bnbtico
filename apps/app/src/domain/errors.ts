@@ -8,8 +8,6 @@ export class DomainError extends Error {
   constructor(
     message: string,
     readonly kind: DomainErrorKind,
-    /** Solo en el límite de códigos de GoTrue: los segundos que pide esperar («after N seconds»). */
-    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "DomainError";
@@ -47,10 +45,11 @@ const BY_CODE: Record<string, [DomainErrorKind, string]> = {
   refresh_token_not_found: ["session", "Su sesión venció. Ingrese de nuevo."],
   insufficient_aal: ["forbidden", "Confirme el segundo código para continuar."],
   mfa_verification_failed: ["validation", "Ese código no es correcto o caducó."],
-  mfa_challenge_expired: ["validation", "Ese código caducó. Pida otro."],
-  mfa_factor_not_found: ["validation", "Ese código caducó. Pida otro."],
-  mfa_phone_enroll_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
-  mfa_phone_verify_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
+  mfa_challenge_expired: ["validation", "Ese código no es correcto o caducó."],
+  mfa_factor_not_found: ["conflict", "Su app de autenticación ya no está vinculada. Vuelva a abrir esta pantalla para vincularla."],
+  mfa_totp_enroll_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
+  mfa_totp_verify_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
+  too_many_enrolled_mfa_factors: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
 };
 
 type RawError = { code?: unknown; message?: unknown; name?: unknown };
@@ -66,7 +65,7 @@ export function toDomainError(error: unknown): DomainError {
     const after = /after (\d+) seconds/i.exec(message)?.[1];
     const seconds = after === undefined ? undefined : Number(after);
     const text = seconds !== undefined && seconds > 1 ? `Espere ${seconds} segundos antes de pedir otro código.` : BY_CODE[code]![1];
-    return new DomainError(text, "rate_limit", seconds);
+    return new DomainError(text, "rate_limit");
   }
   const known = BY_CODE[code];
   if (known) return new DomainError(known[1], known[0]);

@@ -165,15 +165,22 @@ export interface AuthApi {
 }
 
 /**
- * Segundo factor del admin (ticket 09): un código por WhatsApp al número de la cuenta como factor MFA de teléfono. Tras
- * verificarlo la sesión pasa a aal2 (`Session.aal`) y lo avisa `onSessionChange`. Firma ampliada en el ticket 09: el
- * reto es un paso propio (`challengeMfa`), porque reenviar el código es pedir otro reto sin volver a inscribir.
+ * El factor del admin: ya verificado (basta un código de la app) o recién inscrito, con lo que necesita la app de
+ * autenticación para darlo de alta: el QR (`data:image/svg+xml`, para un `<img>`) y el mismo secreto en base32.
+ */
+export type MfaFactor = { factorId: string; verified: true } | { factorId: string; verified: false; qrCode: string; secret: string };
+
+/**
+ * Segundo factor del admin (ticket 09; app de autenticación TOTP desde el 2026-10-23, porque el MFA por teléfono de
+ * Supabase es solo del plan Pro). Tras verificar un código la sesión pasa a aal2 (`Session.aal`) y lo avisa
+ * `onSessionChange`. Clientes y propietarios no lo usan.
  */
 export interface MfaApi {
-  /** El factor de teléfono de la cuenta; lo inscribe con el número de la cuenta la primera vez. */
-  enrolMfa(): Promise<{ factorId: string }>;
-  /** Envía el código por WhatsApp. */
-  challengeMfa(factorId: string): Promise<{ challengeId: string }>;
-  /** Comprueba el código del reto; la sesión queda en aal2. */
-  verifyMfa(factorId: string, challengeId: string, code: string): Promise<void>;
+  /**
+   * El factor TOTP verificado de la cuenta; si no lo hay, inscribe uno nuevo (descartando los que quedaron sin verificar,
+   * cuyo secreto ya no se puede volver a mostrar).
+   */
+  enrolMfa(): Promise<MfaFactor>;
+  /** Comprueba un código de la app (reto y verificación); el factor queda verificado y la sesión en aal2. */
+  verifyMfa(factorId: string, code: string): Promise<void>;
 }

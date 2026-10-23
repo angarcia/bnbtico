@@ -2,6 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/domain/database.types";
+import { totp } from "../contract/totp";
 
 const repoRoot = new URL("../../../../", import.meta.url).pathname;
 
@@ -48,7 +49,7 @@ export async function signIn(who: keyof typeof TEST_PHONES): Promise<SupabaseCli
 
 /**
  * SQL directo como `postgres` en el contenedor de Supabase local (no hay psql en el equipo). Para lo que no expone la API:
- * Vault, la cola de pg_net, el código del segundo factor que guarda el hook de SMS local.
+ * Vault, la cola de pg_net, el secreto TOTP del segundo factor.
  */
 export function sql(query: string): string {
   return execFileSync("docker", ["exec", "-i", "supabase_db_bnbtico", "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-tAq"], {
@@ -58,40 +59,36 @@ export function sql(query: string): string {
   }).trim();
 }
 
-/** El último código del segundo factor enviado a ese número (supabase/seed/local-sms-hook.sql guarda los mensajes). */
-export function lastMfaCode(phone: string): string {
-  return sql(`select otp from local_test.sms where phone = '${phone.replace("+", "")}' order by id desc limit 1`);
-}
-
-/** Sube una sesión aal1 a aal2: inscribe el factor de teléfono si no lo tiene y verifica el reto con el código del hook. */
-export async function stepUp(client: SupabaseClient<Database>, phone: string): Promise<void> {
+/**
+ * Sube una sesión aal1 a aal2 con el factor TOTP de la cuenta, como haría la app de autenticación. Reutiliza el factor
+ * verificado (su secreto se lee de auth.mfa_factors: puede haberlo inscrito otro proceso, p. ej. Playwright por la
+ * interfaz) o inscribe uno.
+ */
+export async function stepUp(client: SupabaseClient<Database>): Promise<void> {
   const factors = await client.auth.mfa.listFactors();
   if (factors.error) throw factors.error;
-  let factorId = factors.data.all.find((f) => f.factor_type === "phone")?.id;
+  let factorId = factors.data.totp.find((f) => f.status === "verified")?.id;
+  let secret = factorId ? totpSecretOf(factorId) : "";
   if (!factorId) {
-    const enrolled = await client.auth.mfa.enroll({ factorType: "phone", phone });
+    for (const f of factors.data.all) if (f.status === "unverified") await client.auth.mfa.unenroll({ factorId: f.id });
+    const enrolled = await client.auth.mfa.enroll({ factorType: "totp", friendlyName: "bnbtico admin" });
     if (enrolled.error) throw enrolled.error;
     factorId = enrolled.data.id;
+    secret = enrolled.data.totp.secret;
   }
-  for (let attempt = 0; ; attempt++) {
-    const challenge = await client.auth.mfa.challenge({ factorId, channel: "whatsapp" });
-    if (challenge.error) {
-      if (attempt < 4 && /only request this after|frequency/i.test(challenge.error.message)) {
-        await new Promise((r) => setTimeout(r, 1200));
-        continue;
-      }
-      throw challenge.error;
-    }
-    const verified = await client.auth.mfa.verify({ factorId, challengeId: challenge.data.id, code: lastMfaCode(phone) });
-    if (verified.error) throw verified.error;
-    return;
-  }
+  const verified = await client.auth.mfa.challengeAndVerify({ factorId, code: totp(secret) });
+  if (verified.error) throw verified.error;
+}
+
+/** El secreto TOTP de un factor (en local GoTrue lo guarda sin cifrar). */
+export function totpSecretOf(factorId: string): string {
+  return sql(`select secret from auth.mfa_factors where id = '${factorId.replace(/[^0-9a-f-]/g, "")}'`);
 }
 
 /** Sesión del admin de prueba con el segundo factor (aal2), marcado como admin con seed_admin. */
 export async function signInAdmin(): Promise<SupabaseClient<Database>> {
   const client = await signIn("admin");
   await serviceClient().rpc("seed_admin", { p_phone: TEST_PHONES.admin });
-  await stepUp(client, TEST_PHONES.admin);
+  await stepUp(client);
   return client;
 }

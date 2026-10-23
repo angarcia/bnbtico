@@ -3,8 +3,8 @@
 // si la base se niega, vuelve con su mensaje. La purga de la ficha pública la encola la base (trigger con pg_net).
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
-import type { AdminListingsApi } from "../domain/api";
-import { DomainError, toDomainError } from "../domain/errors";
+import type { AdminListingsApi, MfaFactor } from "../domain/api";
+import { toDomainError } from "../domain/errors";
 import { DECISION_STATUS, applyDecision, type AdminQueue, type QueueItem, type ReviewDecision } from "../domain/review";
 import { authApi } from "./session";
 
@@ -96,49 +96,35 @@ export function useReview(userId: string) {
   });
 }
 
-// ---------- Segundo código ----------
-/** El reto abierto, para no enviar otro código al volver a la pantalla (o al montarla dos veces). */
-type Challenge = { userId: string; factorId: string; challengeId: string; sentAt: number };
-let challenge: Challenge | null = null;
-let sending: Promise<Challenge> | null = null;
-const CHALLENGE_REUSE_MS = 4 * 60_000;
+// ---------- Segundo factor (app de autenticación) ----------
+/** El factor de la cuenta: si la pantalla se monta dos veces no se inscribe otro (cambiaría el QR ya escaneado). */
+let factor: { userId: string; value: MfaFactor } | null = null;
+let loading: Promise<MfaFactor> | null = null;
 
-/** Envía el segundo código (inscribe el factor la primera vez); reutiliza el reto si es reciente salvo `again`. */
-export async function sendSecondCode(userId: string, again = false): Promise<Challenge> {
-  if (!again && challenge?.userId === userId && Date.now() - challenge.sentAt < CHALLENGE_REUSE_MS) return challenge;
-  if (sending) return sending;
-  sending = (async () => {
+/** El factor TOTP del admin: el verificado, o uno recién inscrito con su QR y su clave. */
+export async function loadSecondFactor(userId: string): Promise<MfaFactor> {
+  if (factor?.userId === userId) return factor.value;
+  if (loading) return loading;
+  loading = (async () => {
     try {
-      const auth = await authApi();
-      const factorId = challenge?.userId === userId ? challenge.factorId : (await auth.enrolMfa()).factorId;
-      const { challengeId } = await challengeHonouringWait(() => auth.challengeMfa(factorId));
-      const opened: Challenge = { userId, factorId, challengeId, sentAt: Date.now() };
-      challenge = opened;
-      return opened;
+      const value = await (await authApi()).enrolMfa();
+      factor = { userId, value };
+      return value;
     } finally {
-      sending = null;
+      loading = null;
     }
   })();
-  return sending;
+  return loading;
 }
 
-/** GoTrue admite un reto por factor cada `max_frequency` (1 s en local; unos segundos en el alojado). Si la pantalla se
- * abre justo después de otro envío (otra pestaña, volver enseguida), contesta «after N seconds»: se espera eso y se
- * reintenta una vez, en vez de dejar la pantalla sin código. Esperas largas (el tope por hora) se muestran tal cual. */
-const SHORT_WAIT_SECONDS = 5;
-async function challengeHonouringWait<T>(send: () => Promise<T>): Promise<T> {
+export async function verifySecondCode(userId: string, code: string) {
+  const { factorId } = await loadSecondFactor(userId);
   try {
-    return await send();
+    await (await authApi()).verifyMfa(factorId, code);
   } catch (error) {
-    const seconds = error instanceof DomainError ? error.retryAfterSeconds : undefined;
-    if (seconds === undefined || seconds > SHORT_WAIT_SECONDS) throw error;
-    await new Promise((resolve) => setTimeout(resolve, (seconds + 1) * 1000));
-    return send();
+    // El factor ya no existe (lo quitaron en otro sitio): la próxima vez se inscribe uno nuevo.
+    if (toDomainError(error).kind === "conflict") factor = null;
+    throw error;
   }
-}
-
-export async function verifySecondCode(code: string) {
-  if (!challenge) throw new Error("sin reto");
-  await (await authApi()).verifyMfa(challenge.factorId, challenge.challengeId, code);
-  challenge = null;
+  factor = { userId, value: { factorId, verified: true } };
 }

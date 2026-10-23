@@ -20,16 +20,17 @@ En el alojado están aplicadas hasta `20261023051419_cliente_directo`. Faltan, e
 2. `20261023073359_cliente_directo_fotos.sql` (RPCs de fotos, tope de 15 fotos y de 5 borradores, política de Storage)
 3. `20261023075549_admin_aal2_y_purga.sql` (admin solo con segundo código; `pg_net` y purga de la ficha)
 4. `20261023084120_telemetria.sql` (tablas `web_vitals`, `client_errors`, `events`)
+5. `20261023164211_admin_totp_correo.sql` (`seed_admin` le pone al admin el rótulo que exige la app de autenticación)
 
-Desde la raíz del repo, en `develop` al día: `pnpm exec supabase migration list` (comprobar que esas cuatro salen solo en «Local») y `pnpm exec supabase db push`.
+Desde la raíz del repo, en `develop` al día: `pnpm exec supabase migration list` (comprobar que esas cinco salen solo en «Local») y `pnpm exec supabase db push`.
 
 **Efecto sobre la app vieja (`pruebas.bnbtico.com`, Vercel):** desde la 3, **el admin de la app vieja ya no puede revisar** (no pide segundo código). Se revisa solo desde `nueva.bnbtico.com`. Lo demás de la app vieja sigue funcionando.
 
-### A2. Segundo código por teléfono (MFA) · bloquea: pruebas (admin)
+### A2. Segundo código del admin por app de autenticación (TOTP) · bloquea: pruebas (admin)
 
-Supabase → proyecto `bnbtico-pruebas` → **Authentication → Multi-Factor** (en algunos paneles: Sign In / Providers → Multi-Factor) → **Phone**: activar **«Enroll»** y **«Verify»** → Save. Usa el proveedor de teléfono ya configurado (Twilio Verify). La app pide el código por el canal `whatsapp`.
+Supabase → proyecto `bnbtico-pruebas` → **Authentication → Multi-Factor → App Authenticator (TOTP)**: comprobar que está activado (**«Enroll»** y **«Verify»**). Está activo por defecto en proyectos nuevos y es gratis (el MFA por teléfono es solo del plan Pro y no se usa). Nada que configurar en Twilio: el código lo genera la app del teléfono del admin (Google Authenticator, 1Password u otra).
 
-**Importante: el admin de prueba `8899 0001` no sirve en el alojado para el segundo código.** Los códigos fijos (`123456`) solo valen para ingresar; el segundo código lo genera Supabase y Twilio lo **envía de verdad** al número del admin, que no es suyo (y cuesta). Use como admin su propia cuenta con su WhatsApp real: créela en B6 y, justo después, en el SQL Editor `select seed_admin('+506XXXXXXXX');` (su número con `+506`, como en `profiles.phone`). Si su número no es de Costa Rica, ponga el prefijo que corresponda. Opcional: quitarle el admin a la cuenta de prueba con `update profiles set is_admin = false where phone = '+50688990001';`.
+**Quién es admin.** Con TOTP el segundo código no llega por WhatsApp: lo genera la app de **quien escanee el QR la primera vez**. La cuenta de prueba `8899 0001` ingresa con un código fijo conocido (`123456`), así que cualquiera que lo sepa y entre antes que usted podría vincular **su** app y quedar como admin en pruebas. Por eso: **el admin es su cuenta real** (créela en B6) y, después de A1, en el SQL Editor `select seed_admin('+506XXXXXXXX');` (su número con `+506`, como en `profiles.phone`; otro prefijo si no es de Costa Rica). `seed_admin` marca `is_admin` y, desde la migración 5, le pone a la cuenta el correo-rótulo `<número>@admin.bnbtico.invalid` sin el que Supabase no puede inscribir el factor (si marcó la cuenta antes de A1, vuelva a ejecutarlo). Luego quítele el admin a la cuenta de prueba: `update profiles set is_admin = false where phone = '+50688990001';`. Vincule su app enseguida (B12a): una vez vinculada, nadie más puede inscribir otra app en esa cuenta sin su código.
 
 ### A3. Secretos de Vault para la purga de la ficha · bloquea: pruebas (B12, ficha actualizada en segundos)
 
@@ -139,8 +140,9 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| B12a | Entrar con su WhatsApp real → Mi cuenta → «Revisión de anuncios · admin» | Pantalla «Confirme que es usted» con su número; llega un **segundo código por WhatsApp** (distinto del de ingresar) | ☐ |
-| B12b | Código bueno → «Verificar y entrar» | Cola «Anuncios»: la casa de B11e en «Por revisar» como «Nueva» | ☐ |
+| B12a | Entrar con su WhatsApp real → Mi cuenta → «Revisión de anuncios · admin» | La primera vez: «Vincule su app de autenticación» con un código QR y la clave en texto. Escanee el QR con su app (o escriba la clave); aparece «bnbtico». No llega nada por WhatsApp | ☐ |
+| B12b | Escribir un código equivocado y luego el de 6 dígitos que muestra la app → «Verificar y entrar» | Con el equivocado «Ese código no es correcto o caducó.»; con el bueno, cola «Anuncios»: la casa de B11e en «Por revisar» como «Nueva» | ☐ |
+| B12b2 | Cerrar sesión, volver a ingresar y entrar otra vez a la revisión | «Confirme que es usted» sin QR («Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.»); el código de la app abre la cola | ☐ |
 | B12c | Abrirla → «Aprobar y publicar» | Vuelve a la cola sin la casa al instante y «Aprobada y publicada». En otro teléfono, su ficha `/casa/CT-…` se ve activa | ☐ |
 | B12d | **Purga:** en el detalle de la propietaria, apagar «Disponible para consultas» de CT-1015; abrir la ficha en otro dispositivo a los pocos segundos | La ficha refleja el cambio en segundos (sin esperar 24 h). Si no: en el SQL Editor `select status_code, content from net._http_response order by id desc limit 5;` dice qué respondió el worker | ☐ |
 | B12e | Volver a encender «Disponible para consultas» | La ficha vuelve a estar disponible | ☐ |

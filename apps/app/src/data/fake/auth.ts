@@ -1,10 +1,11 @@
-// Fake en memoria de AuthApi: mismo comportamiento que GoTrue con los números de prueba (código 123456), los mismos
-// mensajes en español y la sesión guardada en el almacenamiento que se le pase (sobrevive a «reiniciar la app»).
+// Fake en memoria de AuthApi: mismo comportamiento que GoTrue con los números de prueba (código 123456) y el segundo
+// factor TOTP, los mismos mensajes en español y la sesión guardada en el almacenamiento que se le pase (sobrevive a «reiniciar la app»).
 import { cooldownError, validateProfilePatch, validateStart } from "../../domain/account";
 import type { Account, AuthApi, MfaApi, PendingOtp, Session } from "../../domain/api";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { pendingOtpStore, SESSION_STORAGE_KEY, type KeyValueStore } from "../storage";
 import type { FakeDb, FakeProfile } from "./db";
+import { newTotpSecret, totpMatches } from "./totp";
 
 export const FAKE_OTP = "123456";
 const SUPABASE_MIN_GAP_MS = 1000;
@@ -98,27 +99,22 @@ export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pendi
     async enrolMfa() {
       const p = current();
       if (!p) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
-      let factor = db.mfaFactors.get(p.id);
-      if (!factor) db.mfaFactors.set(p.id, (factor = { id: db.newId(), verified: false }));
-      return { factorId: factor.id };
+      const existing = db.mfaFactors.get(p.id);
+      if (existing?.verified) return { factorId: existing.id, verified: true };
+      const factor = { id: db.newId(), secret: newTotpSecret(), verified: false };
+      db.mfaFactors.set(p.id, factor);
+      const uri = `otpauth://totp/bnbtico:${p.phone}?secret=${factor.secret}&issuer=bnbtico`;
+      return { factorId: factor.id, verified: false, secret: factor.secret, qrCode: `data:image/svg+xml;utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg"><title>${uri}</title></svg>`)}` };
     },
-    async challengeMfa(factorId) {
-      const p = current();
-      if (!p) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
-      if (db.mfaFactors.get(p.id)?.id !== factorId) throw toDomainError({ code: "mfa_factor_not_found" });
-      const challengeId = db.newId();
-      db.mfaChallenges.set(challengeId, factorId);
-      return { challengeId };
-    },
-    async verifyMfa(factorId, challengeId, code) {
+    async verifyMfa(factorId, code) {
       const p = current();
       if (!p) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
       const digits = code.replace(/\D/g, "");
       if (digits.length !== 6) throw new DomainError("El código tiene 6 dígitos.", "validation");
-      if (db.mfaChallenges.get(challengeId) !== factorId) throw toDomainError({ code: "mfa_factor_not_found" });
-      if (digits !== FAKE_OTP) throw toDomainError({ code: "mfa_verification_failed" });
-      db.mfaChallenges.delete(challengeId);
-      db.mfaFactors.get(p.id)!.verified = true;
+      const factor = db.mfaFactors.get(p.id);
+      if (factor?.id !== factorId) throw toDomainError({ code: "mfa_factor_not_found" });
+      if (!(await totpMatches(factor.secret, digits, deps.now()))) throw toDomainError({ code: "mfa_verification_failed" });
+      factor.verified = true;
       db.aal2Sessions.add(token()!);
       emit(sessionOf(p));
     },

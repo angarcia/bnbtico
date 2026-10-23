@@ -3,8 +3,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { resendWaitSeconds } from "../../domain/account";
 import { relativeDate } from "../../domain/dates";
+import type { MfaFactor } from "../../domain/api";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
@@ -14,7 +14,7 @@ import { formatPhone } from "../../domain/phone";
 import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
-import { adminListingQuery, adminQueueQuery, clearReviewOutcome, sendSecondCode, useReview, useReviewOutcome, verifySecondCode } from "../admin";
+import { adminListingQuery, adminQueueQuery, clearReviewOutcome, loadSecondFactor, useReview, useReviewOutcome, verifySecondCode } from "../admin";
 import { FlowHeader, RootHeader } from "../chrome";
 import { useSession } from "../session";
 
@@ -409,32 +409,25 @@ export function SegundoCodigoScreen() {
   );
 }
 
+/** La clave en grupos de 4, para copiarla a mano en la app si no se puede escanear el QR. */
+const groupSecret = (secret: string) => secret.replace(/(.{4})/g, "$1 ").trim();
+
 function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
   const navigate = useNavigate();
-  const account = useQuery(accountQuery(userId));
+  const [factor, setFactor] = useState<MfaFactor | null>(null);
   const [code, setCode] = useState("");
-  const [sentAt, setSentAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
-  const wait = sentAt ? resendWaitSeconds(sentAt, now) : 0;
 
   useEffect(() => {
     let alive = true;
-    sendSecondCode(userId)
-      .then((c) => alive && setSentAt(c.sentAt))
+    loadSecondFactor(userId)
+      .then((f) => alive && setFactor(f))
       .catch((e: unknown) => alive && setError(message(e)));
     return () => {
       alive = false;
     };
   }, [userId]);
-
-  useEffect(() => {
-    if (wait <= 0) return;
-    const t = setTimeout(() => setNow(Date.now()), 1000);
-    return () => clearTimeout(t);
-  }, [wait, now]);
 
   async function verify(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -442,7 +435,7 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
     setBusy(true);
     setError(null);
     try {
-      await verifySecondCode(code);
+      await verifySecondCode(userId, code);
       await navigate({ to: next as "/admin", replace: true });
     } catch (err) {
       setError(message(err));
@@ -450,38 +443,32 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
     }
   }
 
-  async function resend() {
-    setNotice(null);
-    setError(null);
-    try {
-      const c = await sendSecondCode(userId, true);
-      setSentAt(c.sentAt);
-      setNow(Date.now());
-      setNotice("Le enviamos otro código por WhatsApp.");
-    } catch (err) {
-      setError(message(err));
-    }
-  }
-
-  const mmss = `${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}`;
+  const enrol = factor && !factor.verified ? factor : null;
   return (
     <div className="stack flow">
       <div className="stack gap-8">
         <span className="avatar avatar-ok" aria-hidden="true">
           <I.shield size={26} />
         </span>
-        <h2 className="flow-title">Confirme que es usted</h2>
-        <p className="muted">
-          Para revisar anuncios le pedimos un segundo código. Se lo enviamos por WhatsApp
-          {account.data ? (
-            <>
-              {" "}
-              al <b className="ink num">{formatPhone(account.data.phone)}</b>
-            </>
-          ) : null}
-          .
-        </p>
+        <h2 className="flow-title">{enrol ? "Vincule su app de autenticación" : "Confirme que es usted"}</h2>
+        {enrol ? (
+          <p className="muted">
+            Para revisar anuncios le pedimos un segundo código. Escanee este código QR con su app de autenticación (Google Authenticator, 1Password u otra) y
+            escriba abajo el código de 6 dígitos que le muestre.
+          </p>
+        ) : (
+          <p className="muted">Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.</p>
+        )}
       </div>
+      {enrol ? (
+        <div className="totp-enrol stack gap-8">
+          <img className="totp-qr" src={enrol.qrCode} alt="Código QR para su app de autenticación" width={184} height={184} />
+          <p className="small muted">¿No puede escanearlo? Escriba esta clave en la app:</p>
+          <code className="totp-secret num" aria-label="Clave para la app de autenticación">
+            {groupSecret(enrol.secret)}
+          </code>
+        </div>
+      ) : null}
       <form onSubmit={verify} className="stack gap-18" noValidate>
         <div className="field code-field">
           <label htmlFor="admin-code">Código de 6 dígitos</label>
@@ -510,26 +497,10 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
             {error}
           </p>
         ) : null}
-        <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy || sentAt === null}>
-          {busy ? "Verificando…" : sentAt === null && !error ? "Enviando el código…" : "Verificar y entrar"}
+        <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy || factor === null}>
+          {busy ? "Verificando…" : factor === null && !error ? "Preparando…" : "Verificar y entrar"}
         </button>
       </form>
-      <div className="stack small">
-        {sentAt !== null && wait > 0 ? (
-          <span className="muted">
-            ¿No llegó? Puede pedir otro en <b className="ink num">{mmss}</b>.
-          </span>
-        ) : sentAt !== null || error ? (
-          <button type="button" className="btn-link" onClick={resend}>
-            Pedir otro código
-          </button>
-        ) : null}
-        {notice ? (
-          <p className="small" role="status">
-            {notice}
-          </p>
-        ) : null}
-      </div>
     </div>
   );
 }

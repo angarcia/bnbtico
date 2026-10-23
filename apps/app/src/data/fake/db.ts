@@ -54,8 +54,8 @@ export class FakeDb {
   /** Sesiones que pasaron el segundo factor (token → aal2). */
   readonly aal2Sessions = new Set<string>();
   /** Factor de teléfono por usuario y retos abiertos (reto → factor). */
-  readonly mfaFactors = new Map<string, { id: string; verified: boolean }>();
-  readonly mfaChallenges = new Map<string, string>();
+  /** Factores TOTP por usuario (GoTrue admite varios; el fake guarda el último inscrito). */
+  readonly mfaFactors = new Map<string, { id: string; secret: string; verified: boolean }>();
   /** Último código pedido por número (reloj del adaptador), para el límite de un código por segundo de Supabase. */
   readonly otpSentAt = new Map<string, number>();
   private tick = Date.parse("2026-10-01T12:00:00Z");

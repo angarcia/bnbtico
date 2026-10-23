@@ -66,6 +66,17 @@ describe("admin con segundo factor exigido en SQL", () => {
     expect(error?.message).toBe("Solo bnbtico puede revisar anuncios.");
   });
 
+  it("el segundo factor es TOTP: seed_admin da al admin el rótulo que GoTrue exige; una cuenta sin él no puede inscribirlo", async () => {
+    const factors = await aal2.auth.mfa.listFactors();
+    expect(factors.data?.totp.filter((f) => f.status === "verified")).toHaveLength(1);
+    expect(factors.data?.all.some((f) => f.factor_type === "phone")).toBe(false);
+    const adminId = (await aal2.auth.getUser()).data.user!.id;
+    expect((await serviceClient().auth.admin.getUserById(adminId)).data.user?.email).toBe("50688990001@admin.bnbtico.invalid");
+    const owner = await signIn("owner");
+    const enrolled = await owner.auth.mfa.enroll({ factorType: "totp", friendlyName: "bnbtico admin" });
+    expect(enrolled.error?.status).toBe(500);
+  });
+
   it("en aal2 el admin ve la cola con fotos y perfiles, revisa y queda registrado", async () => {
     await h.reset();
     const { id } = await h.seed({ status: "review" });
