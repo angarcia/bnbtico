@@ -1,8 +1,26 @@
 # Plan de pruebas manual · fase R en nueva.bnbtico.com
 
-Fecha: 2026-10-23 (tickets 01–12). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
+Fecha: 2026-10-23 (tickets 01–12, la parte preparable del 13 y los arreglos posteriores: segundo factor por app de autenticación, WhatsApp de cualquier país, avisos del perfil). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
-La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo:
+La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo y su estado.
+
+**Estado de la parte A (2026-10-23):**
+
+| Paso | Estado |
+|---|---|
+| A1 Migraciones | ✅ hecho (las cinco aplicadas en `bnbtico-pruebas`) |
+| A2 Segundo factor por app de autenticación | ✅ hecho (TOTP activo; admins Daniel y Ana; falta que cada uno vincule su app, B12a0–B12b) |
+| A3 Secretos de Vault | ✅ hecho |
+| A4 Access sin PIN | ✅ `/casa/*` y `/_purge/*` hechos · ☐ opcional `/sw.js` y `/manifest.webmanifest` · ☐ `workers.dev` y vistas previas siguen públicas |
+| A5 Turnstile | ☐ pendiente (no bloquea) |
+| A6 Números de atención | ☐ pendiente (no bloquea; B9e los necesita) |
+| A7 Clave de servicio del worker | ✅ existe en GitHub |
+| A8 Max rows 200 | ✅ hecho |
+| A9 Alerta de gasto en Twilio | ☐ pendiente (no bloquea; ver `docs/antes-de-produccion.md`) |
+| A10 Copia a R2 | ☐ pendiente (no bloquea; B24 la necesita) |
+| A11 Desplegar | ✅ hecho (último despliegue verde en `develop`) |
+
+Cada acción dice si **bloquea** algo:
 
 - **despliegue**: sin ella el workflow no despliega o despliega algo roto.
 - **pruebas**: el despliegue sale, pero algún recorrido de B falla hasta hacerla.
@@ -116,23 +134,32 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B5b | «Más filtros» | Filtros: en Zona solo provincias con casas; «Ver N casas» cuenta en vivo al tocar Piscina, Personas o precio | ☐ |
 | B5c | Precio mínimo mayor que el máximo → «Ver N casas» | Se intercambian solos; vuelve a Explorar con chips y la URL lo refleja; «Limpiar» los quita | ☐ |
 | B5d | Cambiar a dólares en una tarjeta, entrar a la ficha | La ficha también en dólares (preferencia compartida) | ☐ |
+| B5f | En Explorar, bajar hasta las últimas tarjetas, abrir una ficha y volver atrás | Explorar vuelve al mismo punto del scroll, sin recargar | ☐ |
 | B5e | Abrir `https://nueva.bnbtico.com/?pronto=1` (añadido con el ticket 13) | La portada de bnbtico.com: foto de Playa Negra, logo, «Muy pronto», «Alquile en el Caribe de Costa Rica, directo con quien lo recibe» y debajo «Qué es bnbtico». Es lo que verá bnbtico.com tras el corte | ☐ |
 
 ### Cuenta
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| B6 | Mi cuenta → «Crear una cuenta»: elegir el país, nombre y un número de prueba libre → «Recibir código por WhatsApp» | No llega nada (número de prueba); pantalla «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare. Con Twilio de pago (antes de producción) aquí llegaría el WhatsApp | ☐ |
-| B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno (`123456`) «¡Listo! Su cuenta está creada» | ☐ |
+| B6 | Mi cuenta → «Crear una cuenta»: en «País de su WhatsApp» Costa Rica viene por defecto; abrir la lista (14 países y «Otro país») y volver a Costa Rica; nombre y un número de prueba libre → «Recibir código por WhatsApp» | No llega nada (número de prueba); pantalla «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare. Con Twilio de pago (antes de producción) aquí llegaría el WhatsApp | ☐ |
+| B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno (`123456`) «¡Listo! Su cuenta está creada» con «Añadir correo a mi perfil» y «Ahora no · continuar» | ☐ |
 | B8 | Cerrar la app/pestaña del todo y volver a abrir `nueva.bnbtico.com/cuenta` | Sigue con la sesión (Mi cuenta con su nombre) | ☐ |
 | B9 | «Cerrar sesión» | Vuelve a Ingresar («Su nombre y su WhatsApp. Nada más.») y la barra en modo cliente | ☐ |
+| B9a | Mi cuenta → «Editar» | «Guardar cambios» está desactivado hasta cambiar algo | ☐ |
+| B9b | Escribir un correo mal formado (`ana@`) → «Guardar cambios» | Aviso rojo «Ese correo no parece válido.» | ☐ |
+| B9c | Corregir el correo (`ana@ejemplo.com`) y una descripción → «Guardar cambios» | Mientras guarda: «Guardando…»; después aviso verde «Cambios guardados.» y el botón queda desactivado como «Guardado». Al volver a escribir, el aviso desaparece | ☐ |
+| B9d | Cerrar sesión y volver a «Crear una cuenta» con el **mismo** número (que ya tiene correo) | Tras el código **no** aparece «¡Listo! Su cuenta está creada» ni la invitación a añadir correo: entra directo | ☐ |
+| B9e | Mi cuenta → «Ayuda» | Texto según el rol y botón «Abrir WhatsApp». Deshabilitado hasta hacer A6 | ☐ |
+| B9f | Barra inferior → «Favoritos» sin sesión y con sesión | Pantalla de marcador («Toque el corazón en una casa…»), sin errores | ☐ |
 | B10 | «Ya tengo cuenta · entrar con mi WhatsApp» con `8888 9999` | Aviso de que no hay cuenta con ese número | ☐ |
+| B10b | «Ya tengo cuenta» eligiendo «Estados Unidos/Canadá (+1)» y un número de admin (`778 347 9837`), código `123456` | Entra; en Mi cuenta el número se ve como `+1 778 347 9837` | ☐ |
+| B10c | «Ya tengo cuenta» eligiendo «Otro país» y escribiendo `+1 778 347 9837` | Entra igual. Con «Otro país» y un número sin `+`, aviso de número no válido | ☐ |
 
 ### Propietaria: publicar (teléfono con `8777 0001`)
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| B11a | Entrar con `8777 0001` → «Publicar mi casa» | Modo propietario: barra Inicio, Mis casas, Calendario, Consultas, Cuenta; Inicio con su casa CT-1015 | ☐ |
+| B11a | Entrar con `8777 0001` → «Publicar mi casa» | Modo propietario: barra Inicio, Mis casas, Calendario, Consultas, Cuenta; Inicio con su casa CT-1015 y la tarjeta de la oferta de lanzamiento con las plazas que quedan | ☐ |
 | B11b | Inicio → «Publicar casa» (si ofrece «Tiene un borrador sin enviar», «Empezar otro») | «Paso 1 de 9». Recorra las nueve pantallas: tipo y modalidad, dónde, mapa (pin arrastrable, «Usar mi ubicación»), capacidad, características, nombre y descripción, fotos, precios, revisión. Ninguna pantalla necesita scroll con el teclado cerrado; con teclado, el campo activo queda visible | ☐ |
 | B11c | Paso 7: «Añadir fotos» con 5–6 fotos reales del carrete, **incluida una HEIC** si es iPhone | Cada foto muestra su progreso y aparece en la rejilla. La HEIC llega convertida (iPhone) o sale «Ese formato no se puede subir. Use JPG o PNG.» (Android con HEIC). Tocar una foto → «Hacer portada», «Después →», «Quitar foto n» funcionan | ☐ |
 | B11d | En el paso 5 o 6, cerrar la app del todo; volver a abrir → Inicio → «Publicar casa» | «Tiene un borrador sin enviar» → «Seguir con el borrador» retoma lo escrito y las fotos | ☐ |
@@ -150,6 +177,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B12c | Abrirla → «Aprobar y publicar» | Vuelve a la cola sin la casa al instante y «Aprobada y publicada». En otro teléfono, su ficha `/casa/CT-…` se ve activa | ☐ |
 | B12d | **Purga:** en el detalle de la propietaria, apagar «Disponible para consultas» de CT-1015; abrir la ficha en otro dispositivo a los pocos segundos | La ficha refleja el cambio en segundos (sin esperar 24 h). Si no: en el SQL Editor `select status_code, content from net._http_response order by id desc limit 5;` dice qué respondió el worker | ☐ |
 | B12e | Volver a encender «Disponible para consultas» | La ficha vuelve a estar disponible | ☐ |
+| B12f | Con un número que no es admin (`8888 1234`), abrir `https://nueva.bnbtico.com/admin` | «Solo para el equipo de bnbtico»; no pide código ni muestra QR | ☐ |
 
 ### Pedir cambios y corregir
 
@@ -158,6 +186,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B13 | Propietaria: enviar otra casa (o reutilizar el borrador). Admin: abrirla, escribir un motivo → «Pedir cambios» | Sin motivo: «Escriba un motivo de hasta 2000 caracteres…». Con motivo: pasa a «Cambios pedidos» | ☐ |
 | B14 | Propietaria: Mis casas | La casa con «Le pedimos cambios» y el motivo; «Corregir y reenviar» abre el asistente relleno; corregir y enviar | ☐ |
 | B15 | Admin: la cola | La casa vuelve como «Corregida» | ☐ |
+| B15b | Admin: otra casa en revisión → escribir un motivo → «Rechazar» | Sale de la cola y aparece en «Rechazados». La propietaria la ve «Rechazada» con el motivo y sin botón para reenviar | ☐ |
 | B16 | Propietaria: casa activa → editar | Confirma «Su casa dejará de verse mientras la revisamos. ¿Quiere editarla?»; al aceptar, la ficha pública deja de funcionar («Este enlace ya no está activo») | ☐ |
 
 ### App instalada y sin red
@@ -188,4 +217,4 @@ Mande por WhatsApp o en un issue de `.scratch/fase-r/` (uno por fallo):
 2. Captura de pantalla o grabación, con la hora.
 3. Teléfono y navegador (p. ej. «iPhone 15, Safari» o «Pixel 7, Chrome, app instalada»), y si tenía red.
 4. Para B12d: la salida de `net._http_response`. Para errores de la app: la consulta de B22. Para el despliegue: el enlace al run de GitHub Actions.
-5. Si el fallo es de un número que no recibe código: Twilio Console → Monitor → Logs → Verify, con el estado del envío.
+5. Si el fallo es de un número que no recibe código: en pruebas todos los números son de prueba (código `123456`, ver A2); compruebe que el número está en «Test Phone Numbers and OTPs» de Supabase. Twilio aún no envía códigos reales (`docs/antes-de-produccion.md`).
