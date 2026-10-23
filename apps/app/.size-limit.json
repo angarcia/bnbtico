@@ -35,5 +35,13 @@
     ],
     "limit": "12 KB",
     "gzip": true
+  },
+  {
+    "name": "Service worker · /sw.js (se descarga aparte, fuera de la zona privada)",
+    "path": [
+      "dist/client/sw.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
   }
 ]

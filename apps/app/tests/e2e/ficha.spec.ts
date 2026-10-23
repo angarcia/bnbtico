@@ -11,6 +11,8 @@ function watch(page: Page) {
   const problems: string[] = [];
   const rest: string[] = [];
   page.on("console", (msg) => {
+    // El aviso de Playwright por bloquear el service worker (playwright.config.ts) no es de la app.
+    if (msg.text().includes("Service Worker registration blocked by Playwright")) return;
     if (msg.type() === "error" || msg.type() === "warning") problems.push(`${msg.type()}: ${msg.text()}`);
   });
   page.on("pageerror", (err) => problems.push(`pageerror: ${err.message}`));

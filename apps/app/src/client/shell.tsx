@@ -13,9 +13,15 @@ import { ExplorarScreen } from "./screens/explorar";
 import { FiltrosScreen } from "./screens/filtros";
 import { CalendarioScreen, CasaPropietarioScreen, CasasScreen, ConsultasScreen, EnviadaScreen, InicioScreen } from "./screens/propietario";
 import { currentSession, onSignedOut, useSession } from "./session";
+import { UpdateBanner } from "./update-banner";
 
 const rootRoute = createRootRoute({
-  component: Outlet,
+  component: () => (
+    <>
+      <Outlet />
+      <UpdateBanner />
+    </>
+  ),
   notFoundComponent: () => (
     <TabsFrame>
       <Placeholder title="No encontramos esta página" text="Revise el enlace o vuelva a Explorar desde la barra de abajo." />
@@ -131,7 +137,9 @@ const router = createRouter({
   stringifySearch: searchToString,
 });
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: PERSIST_MAX_AGE } } });
+// Escrituras con networkMode "always": sin red fallan al momento con «Sin conexión» (toDomainError) en vez de quedar
+// en pausa hasta que vuelva la red. En la v1 no hay cola de escrituras.
+const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: PERSIST_MAX_AGE }, mutations: { networkMode: "always" } } });
 
 // Al cerrar sesión (aquí, en otra pestaña o porque el servidor la revocó): fuera la caché privada y de vuelta a modo cliente.
 onSignedOut(() => {

@@ -1,0 +1,11 @@
+# Workers Static Assets: cabeceras de los recursos estáticos.
+# El service worker y el manifiesto siempre se revalidan: un despliegue nuevo se detecta al momento.
+/sw.js
+  Cache-Control: no-cache
+  Content-Type: text/javascript; charset=utf-8
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+# Con hash en el nombre: no cambian nunca.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

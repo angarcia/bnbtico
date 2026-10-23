@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "bnbtico",
+  "short_name": "bnbtico",
+  "description": "Casas en alquiler en el Caribe de Costa Rica, contacto directo por WhatsApp.",
+  "lang": "es-CR",
+  "start_url": "/explorar",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFBF2",
+  "theme_color": "#FFFBF2",
+  "icons": [
+    { "src": "/icons/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icono-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

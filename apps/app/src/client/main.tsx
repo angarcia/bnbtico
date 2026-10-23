@@ -36,3 +36,10 @@ if (embedded) {
 } else {
   import("./shell").then(({ Shell }) => createRoot(root).render(<StrictMode><Shell /></StrictMode>));
 }
+
+// El service worker se registra cuando la página ya cargó (no compite con lo primero que se pinta) y solo en el build.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  const register = () => void import("./sw-register").then((m) => m.registerServiceWorker());
+  if (document.readyState === "complete") register();
+  else addEventListener("load", register, { once: true });
+}

@@ -17,5 +17,7 @@
     "skipLibCheck": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"]
+  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"],
+  // El service worker usa los tipos de WebWorker, incompatibles con los del DOM: va en tsconfig.sw.json.
+  "exclude": ["src/sw/sw.ts"]
 }

@@ -3,6 +3,8 @@ import { expect, test, type ConsoleMessage } from "@playwright/test";
 function watchConsole(page: import("@playwright/test").Page) {
   const problems: string[] = [];
   page.on("console", (msg: ConsoleMessage) => {
+    // El aviso de Playwright por bloquear el service worker (playwright.config.ts) no es de la app.
+    if (msg.text().includes("Service Worker registration blocked by Playwright")) return;
     if (msg.type() === "error" || msg.type() === "warning") problems.push(`${msg.type()}: ${msg.text()}`);
   });
   page.on("pageerror", (err) => problems.push(`pageerror: ${err.message}`));

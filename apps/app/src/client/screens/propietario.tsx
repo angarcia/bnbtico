@@ -7,7 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { can } from "../../domain/can";
 import { relativeDate } from "../../domain/dates";
 import { describe } from "../../domain/describe";
-import { DomainError } from "../../domain/errors";
+import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { STATUS_LABELS, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -22,7 +22,7 @@ import { setRole } from "../role";
 import { useSession } from "../session";
 
 const base = () => window.location.origin;
-const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
+const message = (e: unknown) => toDomainError(e).message;
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
 const shareOf = (l: Listing) => {
   const d = describe(l, { base: base() });
