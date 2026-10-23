@@ -30,7 +30,9 @@ Desde la raíz del repo, en `develop` al día: `pnpm exec supabase migration lis
 
 Supabase → proyecto `bnbtico-pruebas` → **Authentication → Multi-Factor → App Authenticator (TOTP)**: comprobar que está activado (**«Enroll»** y **«Verify»**). Está activo por defecto en proyectos nuevos y es gratis (el MFA por teléfono es solo del plan Pro y no se usa). Nada que configurar en Twilio: el código lo genera la app del teléfono del admin (Google Authenticator, 1Password u otra).
 
-**Quién es admin.** Con TOTP el segundo código no llega por WhatsApp: lo genera la app de **quien escanee el QR la primera vez**. La cuenta de prueba `8899 0001` ingresa con un código fijo conocido (`123456`), así que cualquiera que lo sepa y entre antes que usted podría vincular **su** app y quedar como admin en pruebas. Por eso: **el admin es su cuenta real** (créela en B6) y, después de A1, en el SQL Editor `select seed_admin('+506XXXXXXXX');` (su número con `+506`, como en `profiles.phone`; otro prefijo si no es de Costa Rica). `seed_admin` marca `is_admin` y, desde la migración 5, le pone a la cuenta el correo-rótulo `<número>@admin.bnbtico.invalid` sin el que Supabase no puede inscribir el factor (si marcó la cuenta antes de A1, vuelva a ejecutarlo). Luego quítele el admin a la cuenta de prueba: `update profiles set is_admin = false where phone = '+50688990001';`. Vincule su app enseguida (B12a): una vez vinculada, nadie más puede inscribir otra app en esa cuenta sin su código.
+**Quién es admin (hecho el 2026-10-23).** Los admins de pruebas son **Daniel (`+1 778 347 9837`)** y **Ana (`+1 778 347 8492`)**: sus cuentas existen, están marcadas con `seed_admin` (que además les pone el correo-rótulo `<número>@admin.bnbtico.invalid` sin el que Supabase no puede inscribir el factor) y la cuenta de prueba `8899 0001` ya no es admin. Con TOTP el segundo código lo genera la app de **quien escanee el QR la primera vez**, así que **cada admin debe vincular su app cuanto antes** (paso B12a0): hasta entonces, quien tenga su sesión abierta podría vincular otra app en su lugar. Para añadir otro admin: que cree su cuenta y, en el SQL Editor, `select seed_admin('+<código><número>');`.
+
+**Códigos de ingreso en pruebas (hecho el 2026-10-23).** Twilio Verify no envía códigos reales todavía (la prueba gratuita de Twilio no permite el servicio de Verify; pendiente en `docs/antes-de-produccion.md`). Los dos números de los admins están añadidos como números de prueba en Supabase → Authentication → Sign In / Providers → Phone → «Test Phone Numbers and OTPs», con el código fijo `123456`. Cualquier otra persona que vaya a probar necesita lo mismo: añadir `<número sin +>=123456` a esa lista (separado por comas, sin borrar los existentes).
 
 ### A3. Secretos de Vault para la purga de la ficha · bloquea: pruebas (B12, ficha actualizada en segundos)
 
@@ -93,7 +95,7 @@ Push a `develop` con todo lo anterior hecho (o «Re-run» del último workflow).
 
 ## B. Recorridos
 
-Números de prueba con código `123456` para ingresar (no se envía nada): `8888 1234` (cliente), `8777 0001` (propietaria «Yorleny Prueba», dueña de CT-1015), `8888 9999` (libre). Para el registro (B6) use **su propio WhatsApp**; esa cuenta será también el **admin** (ver A2). Conviene un segundo teléfono o una pestaña privada para separar propietaria y admin.
+Números de prueba con código `123456` para ingresar (no se envía nada): `8888 1234` (cliente), `8777 0001` (propietaria «Yorleny Prueba», dueña de CT-1015), `8888 9999` (libre). Los admins (Daniel y Ana, ver A2) también son números de prueba con `123456`. Para el registro (B6) use otro número de prueba libre (`8888 9999`) o añada uno a la lista de números de prueba. Conviene un segundo teléfono o una pestaña privada para separar propietaria y admin.
 
 Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 000`, nada de «Identidad», «Mensual» en vez de «Largo plazo».
 
@@ -119,8 +121,8 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| B6 | Mi cuenta → «Crear una cuenta»: su nombre y **su WhatsApp real** → «Recibir código por WhatsApp» | Llega un WhatsApp con el código (Twilio Verify, canal whatsapp). Pantalla «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare | ☐ |
-| B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno «¡Listo! Su cuenta está creada». Ahora márquela como admin (A2, `seed_admin`) | ☐ |
+| B6 | Mi cuenta → «Crear una cuenta»: elegir el país, nombre y un número de prueba libre → «Recibir código por WhatsApp» | No llega nada (número de prueba); pantalla «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare. Con Twilio de pago (antes de producción) aquí llegaría el WhatsApp | ☐ |
+| B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno (`123456`) «¡Listo! Su cuenta está creada» | ☐ |
 | B8 | Cerrar la app/pestaña del todo y volver a abrir `nueva.bnbtico.com/cuenta` | Sigue con la sesión (Mi cuenta con su nombre) | ☐ |
 | B9 | «Cerrar sesión» | Vuelve a Ingresar («Su nombre y su WhatsApp. Nada más.») y la barra en modo cliente | ☐ |
 | B10 | «Ya tengo cuenta · entrar con mi WhatsApp» con `8888 9999` | Aviso de que no hay cuenta con ese número | ☐ |
@@ -136,11 +138,12 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B11e | Terminar y «Enviar a revisión» | Pantalla «Enviada»; en Mis casas la casa «en revisión» | ☐ |
 | B11f | Empezar otra casa, rellenar el paso 1 y volver; en Mis casas, «Descartar» ese borrador | Confirma «¿Descartar este borrador? No se puede deshacer.» y desaparece | ☐ |
 
-### Admin (su cuenta real marcada como admin, en una pestaña privada o un segundo teléfono)
+### Admin (Daniel y Ana, cada uno en su teléfono)
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| B12a | Entrar con su WhatsApp real → Mi cuenta → «Revisión de anuncios · admin» | La primera vez: «Vincule su app de autenticación» con un código QR y la clave en texto. Escanee el QR con su app (o escriba la clave); aparece «bnbtico». No llega nada por WhatsApp | ☐ |
+| B12a0 | **Cada admin, primero y cuanto antes:** instalar una app de autenticación (Google Authenticator, Microsoft Authenticator o 1Password). Si la app de bnbtico estaba abierta, cerrar sesión y volver a entrar | La app de autenticación está lista | ☐ |
+| B12a | Entrar con su número (código `123456`) → Mi cuenta → «Revisión de anuncios · admin» | La primera vez: «Vincule su app de autenticación» con un código QR y la clave en texto. Escanee el QR con su app (o escriba la clave); aparece «bnbtico». No llega nada por WhatsApp | ☐ |
 | B12b | Escribir un código equivocado y luego el de 6 dígitos que muestra la app → «Verificar y entrar» | Con el equivocado «Ese código no es correcto o caducó.»; con el bueno, cola «Anuncios»: la casa de B11e en «Por revisar» como «Nueva» | ☐ |
 | B12b2 | Cerrar sesión, volver a ingresar y entrar otra vez a la revisión | «Confirme que es usted» sin QR («Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.»); el código de la app abre la cola | ☐ |
 | B12c | Abrirla → «Aprobar y publicar» | Vuelve a la cola sin la casa al instante y «Aprobada y publicada». En otro teléfono, su ficha `/casa/CT-…` se ve activa | ☐ |
