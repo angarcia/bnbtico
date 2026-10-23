@@ -11,6 +11,11 @@ max_rows = 200
 port = 54322
 major_version = 17
 
+# Solo el hook de SMS local (ticket 09); supabase/seed/seed.sql es un ejemplo comentado y no se carga.
+[db.seed]
+enabled = true
+sql_paths = ["./seed/local-sms-hook.sql"]
+
 [studio]
 enabled = true
 port = 54323
@@ -31,11 +36,20 @@ max_frequency = "1s"
 
 # Proveedor local de relleno: GoTrue rechaza cualquier código sin un proveedor activo, aunque el número sea de prueba.
 # No son credenciales reales; las del proyecto alojado se configuran en el panel (Authentication → Providers → Phone).
-[auth.sms.twilio_verify]
+# En local es `twilio` y no `twilio_verify` (el alojado sí usa Verify): con Verify, GoTrue comprueba el código del reto MFA
+# contra la API de Twilio y en local no hay. Con `twilio` lo compara con el que generó y envió por el hook de abajo.
+# Los números de prueba siguen igual (canal whatsapp incluido).
+[auth.sms.twilio]
 enabled = true
 account_sid = "local-sin-envios"
 message_service_sid = "local-sin-envios"
 auth_token = "local-sin-envios"
+
+# Solo local: cualquier SMS que no sea de un número de prueba (en la práctica, el código del segundo factor del admin)
+# se guarda en local_test.sms en vez de enviarse. Función en supabase/seed/local-sms-hook.sql.
+[auth.hook.send_sms]
+enabled = true
+uri = "pg-functions://postgres/local_test/send_sms"
 
 # Números de prueba (solo local): no se envía nada y el código siempre es 123456. Así se prueba el proveedor real sin Twilio.
 [auth.sms.test_otp]
@@ -48,6 +62,16 @@ auth_token = "local-sin-envios"
 # En el proyecto alojado se ajusta en Authentication → Rate Limits.
 [auth.rate_limit]
 sms_sent = 30
+
+# Segundo factor del admin (ticket 09): código por teléfono como factor MFA. Las políticas de admin exigen aal2 en SQL.
+# En local los números de prueba de arriba también valen para el reto MFA (código 123456, no se envía nada).
+# En el proyecto alojado se activa en Authentication → Multi-Factor → Phone (acción manual).
+[auth.mfa.phone]
+enroll_enabled = true
+verify_enabled = true
+otp_length = 6
+template = "Su código de bnbtico es {{ .Code }}"
+max_frequency = "1s"
 
 [storage]
 enabled = true

@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar y la subida de fotos)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos y la zona del admin)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -9,15 +9,31 @@
       "!dist/client/assets/supabase-data-*.js",
       "!dist/client/assets/publicar-*.js",
       "!dist/client/assets/resize-*.js",
-      "!dist/client/assets/concurrency-*.js"
+      "!dist/client/assets/concurrency-*.js",
+      "!dist/client/assets/admin-*.js",
+      "!dist/client/assets/review-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
   },
   {
     "name": "Asistente de publicar · trozo diferido (sin Leaflet), con la subida de fotos",
-    "path": ["dist/client/assets/publicar-*.js", "dist/client/assets/location-leaflet-*.js", "dist/client/assets/resize-*.js", "dist/client/assets/concurrency-*.js"],
+    "path": [
+      "dist/client/assets/publicar-*.js",
+      "dist/client/assets/location-leaflet-*.js",
+      "dist/client/assets/resize-*.js",
+      "dist/client/assets/concurrency-*.js"
+    ],
     "limit": "15 KB",
+    "gzip": true
+  },
+  {
+    "name": "Zona del admin · trozo diferido (cola, revisar y segundo código)",
+    "path": [
+      "dist/client/assets/admin-*.js",
+      "dist/client/assets/review-*.js"
+    ],
+    "limit": "12 KB",
     "gzip": true
   }
 ]

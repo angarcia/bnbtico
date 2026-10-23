@@ -45,3 +45,53 @@ export async function signIn(who: keyof typeof TEST_PHONES): Promise<SupabaseCli
   if (verified.error) throw verified.error;
   return client;
 }
+
+/**
+ * SQL directo como `postgres` en el contenedor de Supabase local (no hay psql en el equipo). Para lo que no expone la API:
+ * Vault, la cola de pg_net, el código del segundo factor que guarda el hook de SMS local.
+ */
+export function sql(query: string): string {
+  return execFileSync("docker", ["exec", "-i", "supabase_db_bnbtico", "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-tAq"], {
+    input: query,
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+  }).trim();
+}
+
+/** El último código del segundo factor enviado a ese número (supabase/seed/local-sms-hook.sql guarda los mensajes). */
+export function lastMfaCode(phone: string): string {
+  return sql(`select otp from local_test.sms where phone = '${phone.replace("+", "")}' order by id desc limit 1`);
+}
+
+/** Sube una sesión aal1 a aal2: inscribe el factor de teléfono si no lo tiene y verifica el reto con el código del hook. */
+export async function stepUp(client: SupabaseClient<Database>, phone: string): Promise<void> {
+  const factors = await client.auth.mfa.listFactors();
+  if (factors.error) throw factors.error;
+  let factorId = factors.data.all.find((f) => f.factor_type === "phone")?.id;
+  if (!factorId) {
+    const enrolled = await client.auth.mfa.enroll({ factorType: "phone", phone });
+    if (enrolled.error) throw enrolled.error;
+    factorId = enrolled.data.id;
+  }
+  for (let attempt = 0; ; attempt++) {
+    const challenge = await client.auth.mfa.challenge({ factorId, channel: "whatsapp" });
+    if (challenge.error) {
+      if (attempt < 4 && /only request this after|frequency/i.test(challenge.error.message)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        continue;
+      }
+      throw challenge.error;
+    }
+    const verified = await client.auth.mfa.verify({ factorId, challengeId: challenge.data.id, code: lastMfaCode(phone) });
+    if (verified.error) throw verified.error;
+    return;
+  }
+}
+
+/** Sesión del admin de prueba con el segundo factor (aal2), marcado como admin con seed_admin. */
+export async function signInAdmin(): Promise<SupabaseClient<Database>> {
+  const client = await signIn("admin");
+  await serviceClient().rpc("seed_admin", { p_phone: TEST_PHONES.admin });
+  await stepUp(client, TEST_PHONES.admin);
+  return client;
+}

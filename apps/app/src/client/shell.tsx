@@ -60,6 +60,30 @@ const flow = createRoute({
 /** Pantallas privadas sin barra inferior (detalle de una casa, «enviada», publicar). */
 const privateFlow = createRoute({ getParentRoute: () => flow, id: "_privateFlow", beforeLoad: requireSession, component: PrivateOutlet });
 
+/** Admin: sesión y segundo código (aal2). Solo UX: la base exige aal2 en cada política y en review_listing. */
+const requireAdmin = async ({ location }: { location: { href: string } }) => {
+  const session = await currentSession();
+  if (!session) throw redirect({ to: "/cuenta", search: { next: location.href }, replace: true });
+  if (session.aal !== "aal2") throw redirect({ to: "/admin/codigo", search: { next: location.href }, replace: true });
+};
+
+/** Si la sesión baja de nivel o termina estando aquí, de vuelta al segundo código o a Ingresar. */
+function AdminOutlet() {
+  const { status, session } = useSession();
+  const location = useLocation();
+  if (status === "signed-out") return <Navigate to="/cuenta" search={{ next: location.href }} replace />;
+  if (session && session.aal !== "aal2") return <Navigate to="/admin/codigo" search={{ next: location.href }} replace />;
+  return <Outlet />;
+}
+
+const adminTabs = createRoute({ getParentRoute: () => tabs, id: "_admin", beforeLoad: requireAdmin, component: AdminOutlet });
+const adminFlow = createRoute({ getParentRoute: () => flow, id: "_adminFlow", beforeLoad: requireAdmin, component: AdminOutlet });
+// La zona del admin se descarga al abrirla: no entra en el JS inicial.
+const adminScreen = (name: "AnunciosScreen" | "RevisarScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
+const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
+  params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
+const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
+
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/", beforeLoad: () => { throw redirect({ to: "/explorar", replace: true }); } }),
   tabs.addChildren([
@@ -71,6 +95,11 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: CasasScreen }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", component: CalendarioScreen }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/consultas", component: ConsultasScreen }),
+    ]),
+    adminTabs.addChildren([
+      createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),
+      createRoute({ getParentRoute: () => adminTabs, path: "/admin/casas", component: adminSoon("Casas") }),
+      createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon("Usuarios") }),
     ]),
   ]),
   // Mi cuenta con sesión lleva la barra inferior; Ingresar (sin sesión) es una pantalla de flujo: la ruta elige el marco.
@@ -86,7 +115,9 @@ const routeTree = rootRoute.addChildren([
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/admin/codigo", validateSearch: nextSearch, component: adminScreen("SegundoCodigoScreen") }),
     ]),
+    adminFlow.addChildren([createRoute({ getParentRoute: () => adminFlow, path: "/admin/anuncios/$id", component: adminScreen("RevisarScreen") })]),
   ]),
   createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", component: CasaScreen }),
 ]);

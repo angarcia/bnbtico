@@ -13,6 +13,7 @@ export function fakeAuthHarness(db = new FakeDb()): AuthHarness {
       t += ms;
     },
     code: FAKE_OTP,
+    mfaCode: () => FAKE_OTP,
     phone: "+50688889999",
     async captureSession() {
       const token = stores.session.getItem(SESSION_STORAGE_KEY);

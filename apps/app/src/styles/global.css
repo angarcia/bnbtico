@@ -105,7 +105,7 @@ a{color:var(--primary)}
 
 /* ---------- Chips, píldoras, etiquetas ---------- */
 .chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 16px;border-radius:999px;background:var(--surface-2);color:var(--fg);font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap}
-.chip[aria-pressed="true"],.chip[aria-current="true"]{background:var(--selection);color:var(--selection-ink);font-weight:700}
+.chip[aria-pressed="true"],.chip[aria-current="true"],.chip[aria-current="page"]{background:var(--selection);color:var(--selection-ink);font-weight:700}
 .chip-sm{min-height:36px;padding:0 14px;font-size:13px}
 .chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px}
 .chiprow::-webkit-scrollbar{display:none}
@@ -371,3 +371,17 @@ progress.upload-bar::-moz-progress-bar{background:var(--primary);border-radius:9
 .photo-actions .btn{flex:1 1 auto;padding:0 10px}
 .wa-card{gap:12px;padding:12px 14px;border-radius:var(--r-input)}
 .input-money input:not([type=checkbox]):not([type=file]):not([type=radio]){border:0;background:transparent;min-height:0;padding:0}
+
+/* Admin (ticket 09): cola de anuncios (21) y revisar (22) */
+.queue-card{padding:12px;align-items:flex-start;text-decoration:none;color:inherit}
+.queue-card .chev{align-self:center;color:var(--muted)}
+.queue-title{font-size:17px;line-height:1.1}
+.queue-foot{padding:0 4px}
+.review-photo{width:200px}
+.review-photo-sm{width:110px}
+.review-owner{padding:12px 14px;border-radius:20px}
+.review-spacer{height:124px}
+.review-actions{flex-direction:column;gap:8px}
+.review-actions .row .btn{min-height:44px;font-size:14px;font-family:var(--body)}
+.tabbar .nav{position:relative}
+.nav-count{position:absolute;top:2px;right:16px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:var(--bg);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}

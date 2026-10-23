@@ -395,6 +395,9 @@ isOneToOne: true
 "open_drafts":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"purge_listing_page":
+{ Args: { "p_public_id": string }; Returns: undefined
+                           },
 "remove_listing_photo":
 { Args: { "p_photo": string }; Returns: string
                            },

@@ -1,19 +1,21 @@
 // Arnés PostgREST: siembra por el camino real (dueño inserta y edita, sube fotos, envía con submit_listing; el admin
 // decide con review_listing; reabrir es el update a borrador que permite el trigger).
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
 import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
 import { createPostgrestPhotos } from "../../src/data/postgrest/photos";
 import type { Database } from "../../src/domain/database.types";
 import { toListingUpdate } from "../../src/domain/rows";
 import { COMPLETE, type ListingsHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
-import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn } from "./local";
+import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn, signInAdmin } from "./local";
 
 export async function postgrestHarness(): Promise<ListingsHarness> {
   const service = serviceClient();
   const owners: Record<SeedOwner, SupabaseClient<Database>> = { owner: await signIn("owner"), other: await signIn("other") };
-  const admin = await signIn("admin");
-  await service.rpc("seed_admin", { p_phone: TEST_PHONES.admin });
+  // El admin decide con el segundo factor (aal2): sin él, review_listing lo rechaza (migración admin_aal2_y_purga).
+  const admin = await signInAdmin();
+  const adminAal1 = await signIn("admin");
   const names = {} as Record<SeedOwner, string>;
   for (const who of ["owner", "other"] as const) {
     const id = (await owners[who].auth.getUser()).data.user!.id;
@@ -69,6 +71,11 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
     },
     ownerName: (who) => names[who],
     photos: (who) => createPostgrestPhotos(owners[who], { supabaseUrl: localSupabase().url }),
+    admin: (as) => createPostgrestAdmin(as === "aal2" ? admin : as === "aal1" ? adminAal1 : owners[as], { supabaseUrl: localSupabase().url }),
+    async dropPhoto(listingId) {
+      const { data } = await service.from("listing_photos").select("id").eq("listing_id", listingId).order("position", { ascending: false }).limit(1).single();
+      fail("quitar foto", (await service.from("listing_photos").delete().eq("id", data!.id)).error);
+    },
     async objects(listingId) {
       const found: { name: string; cacheControl: string | null }[] = [];
       const walk = async (prefix: string) => {

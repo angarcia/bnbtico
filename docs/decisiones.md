@@ -1,3 +1,9 @@
+## 2026-10-23 · Admin con segundo factor en SQL y purga de la ficha desde Postgres (fase R, ticket 09)
+
+- **aal2 en una sola función:** `is_admin()` exige ahora `auth.jwt()->>'aal' = 'aal2'` además de `profiles.is_admin`. Todas las políticas de admin, las excepciones de admin de los triggers y `review_listing` pasan por ella, así que un admin sin el segundo código se comporta como un usuario normal (y `review_listing` le dice «Confirme el segundo código para revisar anuncios.»). **Consecuencia:** al aplicar la migración en `bnbtico-pruebas`, la app vieja de Vercel deja de poder revisar (su admin entra en aal1); hasta el corte, se revisa desde `nueva.bnbtico.com`.
+- **Purga:** el navegador no puede llamar a `/_purge` (el secreto no puede estar en él). Un trigger `after update/delete` en `listings` (casa que es o fue activa y cambia algo) y en `listing_photos` encola con `pg_net` un `POST <worker_purge_url>/_purge/CT-####` con `Bearer <worker_purge_secret>`, ambos en Vault. Sin los secretos no hace nada; un fallo al encolar no rompe la transacción.
+- **Local:** el reto MFA por teléfono no admite los números de prueba de `test_otp` y, con Twilio Verify, GoTrue comprueba el código contra Twilio. En local el proveedor de relleno pasa a `twilio` y un hook `send_sms` (función en `supabase/seed/local-sms-hook.sql`, cargada solo por `[db.seed]`) guarda el código en `local_test.sms`, de donde lo leen las pruebas. El alojado sigue con Twilio Verify (canal whatsapp).
+
 ## 2026-10-23 · Un anuncio nuevo solo nace como borrador (migración listings_alta_segura)
 
 - **Por qué:** con el asistente en el navegador (fase R, ticket 07) se revisó la creación por REST: la política de insert solo exigía `owner_id = auth.uid()` y `listings_protect` solo vigilaba updates, así que un propietario podía insertar una casa ya `active` (sin revisión) y con cualquier WhatsApp.

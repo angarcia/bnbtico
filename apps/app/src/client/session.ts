@@ -2,7 +2,7 @@
 // dispositivo se sabe al instante («sin sesión») y supabase-js no se descarga; si la hay, el estado es «cargando» hasta
 // que supabase-js la lee (y la refresca si caducó). Después lo mantiene al día `onSessionChange`.
 import { useSyncExternalStore } from "react";
-import type { AuthApi, PendingOtp, Session } from "../domain/api";
+import type { AuthApi, MfaApi, PendingOtp, Session } from "../domain/api";
 import { pendingOtpStore, SESSION_STORAGE_KEY, webStore } from "../data/storage";
 
 export type SessionStatus = "loading" | "signed-in" | "signed-out";
@@ -22,7 +22,7 @@ function storedSession(): boolean {
 let state: SessionState = { status: typeof window !== "undefined" && storedSession() ? "loading" : "signed-out", session: null };
 const listeners = new Set<() => void>();
 const signedOutHandlers = new Set<() => void>();
-let api: Promise<AuthApi> | null = null;
+let api: Promise<AuthApi & MfaApi> | null = null;
 
 function update(session: Session | null) {
   const wasIn = state.status === "signed-in";
@@ -34,7 +34,7 @@ function update(session: Session | null) {
 }
 
 /** La cuenta (carga supabase-js la primera vez). */
-export function authApi(): Promise<AuthApi> {
+export function authApi(): Promise<AuthApi & MfaApi> {
   return (api ??= import("./supabase-data").then(async (m) => {
     const a = m.authApi();
     a.onSessionChange(update);

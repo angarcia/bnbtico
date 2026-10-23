@@ -41,6 +41,11 @@ const BY_CODE: Record<string, [DomainErrorKind, string]> = {
   session_expired: ["session", "Su sesión venció. Ingrese de nuevo."],
   refresh_token_not_found: ["session", "Su sesión venció. Ingrese de nuevo."],
   insufficient_aal: ["forbidden", "Confirme el segundo código para continuar."],
+  mfa_verification_failed: ["validation", "Ese código no es correcto o caducó."],
+  mfa_challenge_expired: ["validation", "Ese código caducó. Pida otro."],
+  mfa_factor_not_found: ["validation", "Ese código caducó. Pida otro."],
+  mfa_phone_enroll_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
+  mfa_phone_verify_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
 };
 
 type RawError = { code?: unknown; message?: unknown; name?: unknown };

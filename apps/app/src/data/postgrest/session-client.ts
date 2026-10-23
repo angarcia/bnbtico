@@ -4,6 +4,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../domain/database.types";
 import { SESSION_STORAGE_KEY, type KeyValueStore, type SessionStorageAdapter } from "../storage";
+import { createPostgrestAdmin } from "./admin";
 import { createPostgrestAuth, type OtpChannel } from "./auth";
 import { keepaliveFetch } from "./keepalive-fetch";
 import { createPostgrestListings } from "./listings";
@@ -30,5 +31,6 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     listings: createPostgrestListings(db, { supabaseUrl }),
     owner: createPostgrestOwnerListings(db, { supabaseUrl }),
     photos: createPostgrestPhotos(db, { supabaseUrl }),
+    admin: createPostgrestAdmin(db, { supabaseUrl }),
   };
 }

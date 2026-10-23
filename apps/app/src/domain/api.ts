@@ -4,6 +4,9 @@
 import type { Filters } from "./filters";
 import type { VariantSize } from "./image";
 import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry, Step } from "./listing";
+import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
+
+export type { AdminQueue, QueueItem, ReviewDecision } from "./review";
 
 export interface PublicListingsApi {
   /** Catálogo con filtros; más recientes primero, como mucho 60. */
@@ -80,15 +83,17 @@ export interface PhotosApi {
   reorder(listingId: string, photoIds: string[]): Promise<void>;
 }
 
-export type ReviewDecision = "approve" | "changes" | "reject";
-export interface QueueItem {
-  listing: Listing;
-  ownerName: string;
-}
-
+/**
+ * Revisión del admin (ticket 09). Solo un admin con el segundo factor (sesión aal2) ve y decide: lo exige la base (RLS y
+ * review_listing). Firma decidida en el ticket 09: `queue` devuelve la cola ya separada por estado. Sin ser admin no se
+ * obtiene nada (cola vacía, `get` null, `review` con el mensaje de la base); un admin en aal1 recibe
+ * REVIEW_MESSAGES.mfaRequired en las tres.
+ */
 export interface AdminListingsApi {
-  queue(): Promise<QueueItem[]>;
+  queue(): Promise<AdminQueue>;
+  /** Una casa en cualquier estado, con su propietario; null si no existe. */
   get(id: string): Promise<QueueItem | null>;
+  /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
 }
 
@@ -156,8 +161,16 @@ export interface AuthApi {
   logout(): Promise<void>;
 }
 
-/** Segundo factor del admin (ticket 09). */
+/**
+ * Segundo factor del admin (ticket 09): un código por WhatsApp al número de la cuenta como factor MFA de teléfono. Tras
+ * verificarlo la sesión pasa a aal2 (`Session.aal`) y lo avisa `onSessionChange`. Firma ampliada en el ticket 09: el
+ * reto es un paso propio (`challengeMfa`), porque reenviar el código es pedir otro reto sin volver a inscribir.
+ */
 export interface MfaApi {
+  /** El factor de teléfono de la cuenta; lo inscribe con el número de la cuenta la primera vez. */
   enrolMfa(): Promise<{ factorId: string }>;
-  verifyMfa(factorId: string, code: string): Promise<void>;
+  /** Envía el código por WhatsApp. */
+  challengeMfa(factorId: string): Promise<{ challengeId: string }>;
+  /** Comprueba el código del reto; la sesión queda en aal2. */
+  verifyMfa(factorId: string, challengeId: string, code: string): Promise<void>;
 }

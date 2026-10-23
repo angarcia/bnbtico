@@ -1,7 +1,7 @@
 // Fake en memoria de AuthApi: mismo comportamiento que GoTrue con los números de prueba (código 123456), los mismos
 // mensajes en español y la sesión guardada en el almacenamiento que se le pase (sobrevive a «reiniciar la app»).
 import { cooldownError, validateProfilePatch, validateStart } from "../../domain/account";
-import type { Account, AuthApi, PendingOtp, Session } from "../../domain/api";
+import type { Account, AuthApi, MfaApi, PendingOtp, Session } from "../../domain/api";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { pendingOtpStore, SESSION_STORAGE_KEY, type KeyValueStore } from "../storage";
 import type { FakeDb, FakeProfile } from "./db";
@@ -9,7 +9,7 @@ import type { FakeDb, FakeProfile } from "./db";
 export const FAKE_OTP = "123456";
 const SUPABASE_MIN_GAP_MS = 1000;
 
-export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pending: KeyValueStore; now: () => number }): AuthApi {
+export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pending: KeyValueStore; now: () => number }): AuthApi & MfaApi {
   const pending = pendingOtpStore(deps.pending, deps.now);
   const listeners = new Set<(s: Session | null) => void>();
   const emit = (s: Session | null) => listeners.forEach((l) => l(s));
@@ -24,6 +24,9 @@ export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pendi
     isOwner: p.isOwner,
     isAdmin: p.isAdmin,
   });
+
+  const token = () => deps.session.getItem(SESSION_STORAGE_KEY);
+  const sessionOf = (p: FakeProfile): Session => ({ userId: p.id, aal: db.aal2Sessions.has(token() ?? "") ? "aal2" : "aal1" });
 
   function current(): FakeProfile | null {
     const token = deps.session.getItem(SESSION_STORAGE_KEY);
@@ -73,7 +76,7 @@ export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pendi
     },
     async session() {
       const p = current();
-      return p ? { userId: p.id, aal: "aal1" } : null;
+      return p ? sessionOf(p) : null;
     },
     onSessionChange(listener) {
       listeners.add(listener);
@@ -91,6 +94,33 @@ export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pendi
       if (v.email !== undefined) p.email = v.email;
       if (v.description !== undefined) p.description = v.description;
       return toAccount(p);
+    },
+    async enrolMfa() {
+      const p = current();
+      if (!p) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
+      let factor = db.mfaFactors.get(p.id);
+      if (!factor) db.mfaFactors.set(p.id, (factor = { id: db.newId(), verified: false }));
+      return { factorId: factor.id };
+    },
+    async challengeMfa(factorId) {
+      const p = current();
+      if (!p) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
+      if (db.mfaFactors.get(p.id)?.id !== factorId) throw toDomainError({ code: "mfa_factor_not_found" });
+      const challengeId = db.newId();
+      db.mfaChallenges.set(challengeId, factorId);
+      return { challengeId };
+    },
+    async verifyMfa(factorId, challengeId, code) {
+      const p = current();
+      if (!p) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
+      const digits = code.replace(/\D/g, "");
+      if (digits.length !== 6) throw new DomainError("El código tiene 6 dígitos.", "validation");
+      if (db.mfaChallenges.get(challengeId) !== factorId) throw toDomainError({ code: "mfa_factor_not_found" });
+      if (digits !== FAKE_OTP) throw toDomainError({ code: "mfa_verification_failed" });
+      db.mfaChallenges.delete(challengeId);
+      db.mfaFactors.get(p.id)!.verified = true;
+      db.aal2Sessions.add(token()!);
+      emit(sessionOf(p));
     },
     async logout() {
       const p = current();

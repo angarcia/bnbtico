@@ -4,7 +4,7 @@
 // recibió el cliente (ver session-client.ts).
 import type { Session as SupabaseSession, SupabaseClient } from "@supabase/supabase-js";
 import { cooldownError, validateProfilePatch, validateStart } from "../../domain/account";
-import type { Account, AuthApi, PendingOtp, Session } from "../../domain/api";
+import type { Account, AuthApi, MfaApi, PendingOtp, Session } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { pendingOtpStore, type KeyValueStore } from "../storage";
@@ -26,7 +26,7 @@ const toAccount = (r: ProfileRow): Account => ({
 });
 
 /** El nivel (aal1/aal2) va en el JWT; se lee sin red. */
-function aalOf(accessToken: string): Session["aal"] {
+export function aalOf(accessToken: string): Session["aal"] {
   try {
     const payload = accessToken.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/");
     return (JSON.parse(atob(payload)) as { aal?: string }).aal === "aal2" ? "aal2" : "aal1";
@@ -38,7 +38,7 @@ function aalOf(accessToken: string): Session["aal"] {
 const toSession = (s: SupabaseSession): Session => ({ userId: s.user.id, aal: aalOf(s.access_token) });
 const NO_SESSION = () => new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
 
-export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pending: KeyValueStore; now?: () => number; channel?: OtpChannel }): AuthApi {
+export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pending: KeyValueStore; now?: () => number; channel?: OtpChannel }): AuthApi & MfaApi {
   const now = deps.now ?? Date.now;
   const channel = deps.channel ?? "whatsapp";
   const pending = pendingOtpStore(deps.pending, now);
@@ -121,6 +121,31 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
       const { data, error } = await db.from("profiles").update(row).eq("id", s.user.id).select(PROFILE_COLUMNS).single();
       if (error) throw toDomainError(error);
       return toAccount(data);
+    },
+    // Segundo factor: código por WhatsApp como factor MFA de teléfono (ticket 09). El nivel aal2 llega en el JWT nuevo.
+    async enrolMfa() {
+      const s = await currentSession();
+      if (!s) throw NO_SESSION();
+      const listed = await db.auth.mfa.listFactors();
+      if (listed.error) throw toDomainError(listed.error);
+      const phones = listed.data.all.filter((f) => f.factor_type === "phone");
+      const existing = phones.find((f) => f.status === "verified") ?? phones[0];
+      if (existing) return { factorId: existing.id };
+      const phone = s.user.phone ? `+${s.user.phone.replace(/^\+/, "")}` : "";
+      const enrolled = await db.auth.mfa.enroll({ factorType: "phone", phone });
+      if (enrolled.error) throw toDomainError(enrolled.error);
+      return { factorId: enrolled.data.id };
+    },
+    async challengeMfa(factorId) {
+      const { data, error } = await db.auth.mfa.challenge({ factorId, channel });
+      if (error) throw toDomainError(error);
+      return { challengeId: data.id };
+    },
+    async verifyMfa(factorId, challengeId, code) {
+      const token = code.replace(/\D/g, "");
+      if (token.length !== 6) throw new DomainError("El código tiene 6 dígitos.", "validation");
+      const { error } = await db.auth.mfa.verify({ factorId, challengeId, code: token });
+      if (error) throw toDomainError(error);
     },
     async logout() {
       pending.clear();

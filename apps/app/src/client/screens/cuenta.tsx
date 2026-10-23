@@ -393,6 +393,17 @@ function MyAccount({ editing }: { editing: boolean }) {
             </span>
           </Link>
         ) : null}
+        {a?.isAdmin ? (
+          <Link to="/admin" className="list-item">
+            <I.inbox />
+            <span className="body">
+              Revisión de anuncios · admin<small>Cola de casas por revisar (pide un segundo código)</small>
+            </span>
+            <span className="chev">
+              <I.chevron />
+            </span>
+          </Link>
+        ) : null}
         <Link to="/ayuda" className="list-item">
           <I.help />
           <span className="body">

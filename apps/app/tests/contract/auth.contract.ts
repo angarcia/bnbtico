@@ -135,5 +135,48 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
       await h.advance(PENDING_TTL_MS);
       expect(h.restart().pending()).toBeNull();
     });
+
+    describe("segundo factor", () => {
+      it("inscribe el teléfono de la cuenta, envía el código y la sesión pasa a aal2 (también tras reiniciar)", async () => {
+        const account = await register();
+        const seen: string[] = [];
+        const stop = h.auth.onSessionChange((s) => s && seen.push(s.aal));
+        const { factorId } = await h.auth.enrolMfa();
+        expect((await h.auth.enrolMfa()).factorId).toBe(factorId);
+        const { challengeId } = await h.auth.challengeMfa(factorId);
+        expect((await failure(h.auth.verifyMfa(factorId, challengeId, "12345"))).message).toBe("El código tiene 6 dígitos.");
+        expect(await h.auth.session()).toEqual({ userId: account.id, aal: "aal1" });
+        await h.auth.verifyMfa(factorId, challengeId, h.mfaCode());
+        stop();
+        expect(await h.auth.session()).toEqual({ userId: account.id, aal: "aal2" });
+        expect(seen.at(-1)).toBe("aal2");
+        expect(await h.restart().session()).toEqual({ userId: account.id, aal: "aal2" });
+      });
+
+      it("un código equivocado no sube la sesión", async () => {
+        await register();
+        const { factorId } = await h.auth.enrolMfa();
+        const { challengeId } = await h.auth.challengeMfa(factorId);
+        const wrong = h.mfaCode() === "000000" ? "111111" : "000000";
+        expect((await failure(h.auth.verifyMfa(factorId, challengeId, wrong))).message).toBe("Ese código no es correcto o caducó.");
+        expect((await h.auth.session())?.aal).toBe("aal1");
+      });
+
+      it("al volver a ingresar la sesión empieza en aal1 y el mismo factor sirve para subirla", async () => {
+        await register();
+        const first = await h.auth.enrolMfa();
+        await h.auth.verifyMfa(first.factorId, (await h.auth.challengeMfa(first.factorId)).challengeId, h.mfaCode());
+        await h.auth.logout();
+        await h.advance(1000);
+        await h.auth.start({ mode: "login", phone: h.phone });
+        await h.auth.verify(h.code);
+        expect((await h.auth.session())?.aal).toBe("aal1");
+        const again = await h.auth.enrolMfa();
+        expect(again.factorId).toBe(first.factorId);
+        await h.advance(1000);
+        await h.auth.verifyMfa(again.factorId, (await h.auth.challengeMfa(again.factorId)).challengeId, h.mfaCode());
+        expect((await h.auth.session())?.aal).toBe("aal2");
+      });
+    });
   });
 }

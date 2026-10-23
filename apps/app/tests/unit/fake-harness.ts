@@ -1,4 +1,5 @@
 import { FakeDb } from "../../src/data/fake/db";
+import { createFakeAdmin } from "../../src/data/fake/admin";
 import { createFakeListings } from "../../src/data/fake/listings";
 import { createFakeOwnerListings } from "../../src/data/fake/owner";
 import { createFakePhotos } from "../../src/data/fake/photos";
@@ -11,6 +12,7 @@ export function fakeHarness(db = new FakeDb()): ListingsHarness & { db: FakeDb }
     owner: db.addProfile({ fullName: "Yorleny Prueba", phone: "+50687770001", phoneVerified: true, isAdmin: false }).id,
     other: db.addProfile({ fullName: "Ana Prueba", phone: "+50688881234", phoneVerified: true, isAdmin: false }).id,
   };
+  const adminId = db.addProfile({ fullName: "Admin Prueba", phone: "+50688990001", phoneVerified: true, isAdmin: true }).id;
   return {
     db,
     anon: createFakeListings(db, { supabaseUrl: FAKE_SUPABASE_URL }),
@@ -40,6 +42,15 @@ export function fakeHarness(db = new FakeDb()): ListingsHarness & { db: FakeDb }
     },
     ownerName: (who) => db.profiles.get(owners[who])!.fullName,
     photos: (who) => createFakePhotos(db, { supabaseUrl: FAKE_SUPABASE_URL, userId: () => owners[who] }),
+    admin: (as) =>
+      createFakeAdmin(db, {
+        supabaseUrl: FAKE_SUPABASE_URL,
+        session: () => (as === "aal2" || as === "aal1" ? { userId: adminId, aal: as } : { userId: owners[as], aal: "aal1" }),
+      }),
+    async dropPhoto(listingId) {
+      const last = db.photosOf(listingId).at(-1);
+      db.photos = db.photos.filter((p) => p !== last);
+    },
     async objects(listingId) {
       return [...db.objects.entries()]
         .filter(([name]) => name.startsWith(`${listingId}/`))

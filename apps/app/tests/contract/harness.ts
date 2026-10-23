@@ -1,6 +1,6 @@
 // Arnés de la suite de contrato: el mismo archivo de pruebas corre contra el fake (unitarias) y contra PostgREST
 // (proyecto de base). Cada arnés sabe sembrar casas en un estado concreto siguiendo el camino real de ese adaptador.
-import type { OwnerListingsApi, PhotosApi, PublicListingsApi } from "../../src/domain/api";
+import type { AdminListingsApi, OwnerListingsApi, PhotosApi, PublicListingsApi } from "../../src/domain/api";
 import type { LatLng } from "../../src/domain/geo";
 import type { ListingDraft } from "../../src/domain/listing";
 
@@ -36,6 +36,10 @@ export interface ListingsHarness {
   photos(who: SeedOwner): PhotosApi;
   /** Objetos de Storage bajo la carpeta de una casa, ordenados por nombre, con su cabecera de caché. */
   objects(listingId: string): Promise<{ name: string; cacheControl: string | null }[]>;
+  /** Revisión vista por el admin de prueba con el segundo factor (aal2), sin él (aal1) o por un usuario que no es admin. */
+  admin(as: "aal2" | "aal1" | SeedOwner): AdminListingsApi;
+  /** Quita la última foto de una casa saltándose las reglas (como el servicio), para aprobar con menos de 5. */
+  dropPhoto(listingId: string): Promise<void>;
 }
 
 /** Borrador completo y válido (Cahuita, Limón), base de cada siembra. */
@@ -58,13 +62,15 @@ export const COMPLETE: Partial<ListingDraft> = {
 };
 
 // ---------- Cuenta ----------
-import type { AuthApi } from "../../src/domain/api";
+import type { AuthApi, MfaApi } from "../../src/domain/api";
 
 export interface AuthHarness {
   /** Instancia recién abierta, sin sesión. */
-  auth: AuthApi;
+  auth: AuthApi & MfaApi;
   /** La app se cierra y se vuelve a abrir: instancia nueva sobre el mismo almacenamiento del dispositivo. */
-  restart(): AuthApi;
+  restart(): AuthApi & MfaApi;
+  /** El último código del segundo factor enviado al número de prueba. */
+  mfaCode(): string;
   /** Adelanta el reloj del adaptador (el enfriamiento y la caducidad del número pendiente se miden con él). */
   advance(ms: number): Promise<void>;
   /** Código válido para los números de prueba. */

@@ -51,6 +51,11 @@ export class FakeDb {
   readonly objects = new Map<string, FakeObject>();
   /** Sesiones abiertas (token → usuario), como auth.sessions: cerrar sesión las borra. */
   readonly authSessions = new Map<string, string>();
+  /** Sesiones que pasaron el segundo factor (token → aal2). */
+  readonly aal2Sessions = new Set<string>();
+  /** Factor de teléfono por usuario y retos abiertos (reto → factor). */
+  readonly mfaFactors = new Map<string, { id: string; verified: boolean }>();
+  readonly mfaChallenges = new Map<string, string>();
   /** Último código pedido por número (reloj del adaptador), para el límite de un código por segundo de Supabase. */
   readonly otpSentAt = new Map<string, number>();
   private tick = Date.parse("2026-10-01T12:00:00Z");
