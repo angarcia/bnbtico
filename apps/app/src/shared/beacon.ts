@@ -17,7 +17,7 @@ export function sendBeacon(kind: BeaconKind, payload: Record<string, unknown>, p
   void fetch(`/${kind}`, { method: "POST", body, keepalive: true }).catch(() => undefined);
 }
 
-export type EventName = "page_view" | "listing_view" | "whatsapp_tap";
+export type EventName = "page_view" | "listing_view" | "whatsapp_tap" | "inquiry_created";
 
 export function track(name: EventName, listing?: string): void {
   if (typeof window === "undefined") return;

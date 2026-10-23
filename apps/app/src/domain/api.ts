@@ -1,9 +1,11 @@
 // Interfaces de datos de la app. Dos implementaciones: el adaptador PostgREST (único módulo que importa supabase-js)
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
+import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { VariantSize } from "./image";
 import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry, Step } from "./listing";
+import type { InquiryDraft, OwnerInquiry } from "./inquiry";
 import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
 
 export type { AdminQueue, QueueItem, ReviewDecision } from "./review";
@@ -100,6 +102,42 @@ export interface AdminListingsApi {
 export interface ListingsApi extends PublicListingsApi, OwnerListingsApi {
   photos: PhotosApi;
   admin: AdminListingsApi;
+}
+
+// ---------- Consultas y favoritos (fase 3) ----------
+
+/**
+ * Consultas por WhatsApp. Las reglas las pone la base (RPCs create_inquiry, mark_inquiry_opened y owner_inquiries; la
+ * tabla no se escribe por REST); el fake las repite con los mismos mensajes (INQUIRY_MESSAGES). Sin sesión, todas fallan
+ * con «Su sesión venció. Ingrese de nuevo.» (kind `session`) antes de llegar a la red.
+ */
+export interface InquiriesApi {
+  /**
+   * Registra (o renueva, si el mismo cliente escribió a esa casa en los últimos 7 días) la consulta y devuelve el WhatsApp
+   * de la casa: es el único camino por el que un cliente obtiene ese número. Valida en la base (casa publicada y
+   * disponible, no propia, fechas, personas, mensaje, 20 casas distintas por día).
+   */
+  create(publicId: string, draft: InquiryDraft): Promise<{ inquiryId: string; whatsappPhone: string }>;
+  /** Mis consultas: las de las casas del propietario de la sesión, con nombre y WhatsApp del cliente; la más reciente primero. */
+  listForOwner(): Promise<OwnerInquiry[]>;
+  /** El propietario abrió el chat: la consulta deja de ser «Nueva». Solo el dueño; si no, «No encontramos esa consulta.». */
+  markOpened(id: string): Promise<void>;
+}
+
+/**
+ * Favoritos sincronizados de la cuenta (solo con sesión; los anónimos viven en el teléfono y nunca tocan la red).
+ * Solo se guardan casas publicadas; las que dejan de estarlo no vuelven en `list`.
+ * (Desviación del spec: `list` devuelve también la fecha de guardado, para mezclar con los del teléfono por fecha.)
+ */
+export interface FavoritesApi {
+  /** Los de la cuenta, el más reciente primero. */
+  list(): Promise<FavoriteEntry[]>;
+  /** Idempotente. Una casa no publicada: «Esta casa ya no está publicada.». */
+  add(publicId: string): Promise<void>;
+  /** Idempotente. */
+  remove(publicId: string): Promise<void>;
+  /** Para la mezcla al ingresar: añade los que estén publicados e ignora el resto, sin fallar por ellos. */
+  addMany(publicIds: string[]): Promise<void>;
 }
 
 // ---------- Cuenta ----------

@@ -1,20 +1,38 @@
 import { FakeDb } from "../../src/data/fake/db";
 import { createFakeAdmin } from "../../src/data/fake/admin";
+import { createFakeFavorites, createFakeInquiries } from "../../src/data/fake/inquiries";
 import { createFakeListings } from "../../src/data/fake/listings";
 import { createFakeOwnerListings } from "../../src/data/fake/owner";
 import { createFakePhotos } from "../../src/data/fake/photos";
-import { COMPLETE, type ListingsHarness, type SeedOwner } from "../contract/harness";
+import { COMPLETE, type InquiriesHarness, type SeedOwner } from "../contract/harness";
 
 export const FAKE_SUPABASE_URL = "http://supabase.test";
 
-export function fakeHarness(db = new FakeDb()): ListingsHarness & { db: FakeDb } {
+export function fakeHarness(db = new FakeDb()): InquiriesHarness & { db: FakeDb } {
   const owners: Record<SeedOwner, string> = {
     owner: db.addProfile({ fullName: "Yorleny Prueba", phone: "+50687770001", phoneVerified: true, isAdmin: false }).id,
     other: db.addProfile({ fullName: "Ana Prueba", phone: "+50688881234", phoneVerified: true, isAdmin: false }).id,
   };
   const adminId = db.addProfile({ fullName: "Admin Prueba", phone: "+50688990001", phoneVerified: true, isAdmin: true }).id;
+  const as = (who: SeedOwner | "anon") => ({ userId: () => (who === "anon" ? null : owners[who]) });
   return {
     db,
+    inquiries: (who) => createFakeInquiries(db, as(who)),
+    favorites: (who) => createFakeFavorites(db, as(who)),
+    phone: (who) => db.profiles.get(owners[who])!.phone,
+    async backdateInquiry(id, days) {
+      const i = db.inquiries.find((x) => x.id === id)!;
+      const back = (iso: string) => new Date(Date.parse(iso) - days * 86_400_000).toISOString();
+      Object.assign(i, { createdAt: back(i.createdAt), updatedAt: back(i.updatedAt) });
+    },
+    async seedContacts(who, n) {
+      const other = who === "owner" ? "other" : "owner";
+      for (let k = 0; k < n; k++) {
+        const l = db.insertListing(owners[other], { ...COMPLETE, status: "active", reviewedAt: db.now(), title: `Contactada ${k}` });
+        const at = new Date(Date.now() - 3_600_000).toISOString();
+        db.inquiries.push({ id: db.newId(), listingId: l.id, clientId: owners[who], ownerId: owners[other], arrival: null, departure: null, people: null, message: "Hola", whatsappPhone: l.whatsappPhone, createdAt: at, updatedAt: at, ownerOpenedAt: null, source: "listing" });
+      }
+    },
     anon: createFakeListings(db, { supabaseUrl: FAKE_SUPABASE_URL }),
     owner: (who) => createFakeOwnerListings(db, { supabaseUrl: FAKE_SUPABASE_URL, userId: () => owners[who] }),
     async reset() {

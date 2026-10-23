@@ -48,13 +48,18 @@ describe("telemetría · validación de balizas", () => {
     }
   });
 
-  it("acepta los tres eventos de primera parte y exige casa válida en los de ficha", () => {
+  it("acepta los eventos de primera parte y exige casa válida en los de ficha", () => {
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "page_view" })).ok).toBe(true);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "listing_view", listing: "CT-1015" }))).toEqual({
       ok: true,
       row: { name: "listing_view", listing_public_id: "CT-1015", page: "ficha", path: "/casa/CT-1015", build: "abc123" },
     });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "whatsapp_tap", listing: "CT-1015" })).ok).toBe(true);
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "inquiry_created", listing: "CT-1015" }))).toEqual({
+      ok: true,
+      row: { name: "inquiry_created", listing_public_id: "CT-1015", page: "ficha", path: "/casa/CT-1015", build: "abc123" },
+    });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "inquiry_created" })).ok).toBe(false);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "listing_view", listing: "drop table" })).ok).toBe(false);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "signup" })).ok).toBe(false);
   });

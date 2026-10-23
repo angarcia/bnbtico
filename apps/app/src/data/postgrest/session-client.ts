@@ -6,6 +6,7 @@ import type { Database } from "../../domain/database.types";
 import { SESSION_STORAGE_KEY, type KeyValueStore, type SessionStorageAdapter } from "../storage";
 import { createPostgrestAdmin } from "./admin";
 import { createPostgrestAuth, type OtpChannel } from "./auth";
+import { createPostgrestFavorites, createPostgrestInquiries } from "./inquiries";
 import { keepaliveFetch } from "./keepalive-fetch";
 import { createPostgrestListings } from "./listings";
 import { createPostgrestOwnerListings, type QuickWrite } from "./owner";
@@ -64,5 +65,7 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     owner: createPostgrestOwnerListings(db, { supabaseUrl, quickWrite: quickWriter(supabaseUrl, anonKey, stores.session) }),
     photos: createPostgrestPhotos(db, { supabaseUrl }),
     admin: createPostgrestAdmin(db, { supabaseUrl }),
+    inquiries: createPostgrestInquiries(db),
+    favorites: createPostgrestFavorites(db),
   };
 }

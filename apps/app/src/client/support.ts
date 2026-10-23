@@ -1,4 +1,5 @@
 // Contacto con bnbtico: solo WhatsApp, un número por rol (variables VITE_WA_OWNERS y VITE_WA_GUESTS del build).
+import { waUrl } from "../domain/whatsapp";
 
 export const SUPPORT = {
   owner: {
@@ -18,5 +19,5 @@ export const SUPPORT = {
 } as const;
 
 export function waLink(number: string, text: string): string {
-  return `https://wa.me/${number.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+  return waUrl(number, text);
 }

@@ -84,3 +84,20 @@ export interface AuthHarness {
   /** Guarda la sesión actual del dispositivo; la función dice si el servidor todavía la acepta. */
   captureSession(): Promise<() => Promise<boolean>>;
 }
+
+// ---------- Consultas y favoritos (fase 3) ----------
+import type { FavoritesApi, InquiriesApi } from "../../src/domain/api";
+
+export type Persona = SeedOwner | "anon";
+
+export interface InquiriesHarness extends ListingsHarness {
+  /** Consultas con la sesión de esa persona (o sin sesión). */
+  inquiries(who: Persona): InquiriesApi;
+  favorites(who: Persona): FavoritesApi;
+  /** El WhatsApp de la cuenta de esa persona (el que se copia a sus casas). */
+  phone(who: SeedOwner): string;
+  /** Lleva una consulta `days` días atrás (created_at y updated_at), saltándose las reglas como el servicio. */
+  backdateInquiry(id: string, days: number): Promise<void>;
+  /** `n` consultas de `who` hechas en las últimas horas a `n` casas activas nuevas del otro propietario (como el servicio). */
+  seedContacts(who: SeedOwner, n: number): Promise<void>;
+}

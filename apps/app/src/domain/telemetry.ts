@@ -63,7 +63,7 @@ const errors = z.object({
 const PUBLIC_ID = /^CT-\d{4,}$/;
 const events = z.object({
   ...common,
-  name: z.enum(["page_view", "listing_view", "whatsapp_tap"]),
+  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created"]),
   listing: z.optional(z.string().check(z.regex(PUBLIC_ID))),
 });
 

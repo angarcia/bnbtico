@@ -13,9 +13,12 @@ export interface FakeProfile {
   isOwner: boolean;
   email: string | null;
   description: string | null;
+  /** profiles.is_active: el admin puede desactivar una cuenta. */
+  isActive: boolean;
 }
 
-type NewProfile = Omit<FakeProfile, "id" | "isOwner" | "email" | "description"> & Partial<Pick<FakeProfile, "id" | "isOwner" | "email" | "description">>;
+type NewProfile = Omit<FakeProfile, "id" | "isOwner" | "email" | "description" | "isActive"> &
+  Partial<Pick<FakeProfile, "id" | "isOwner" | "email" | "description" | "isActive">>;
 
 export interface FakeListing extends Omit<ListingDraft, "photoCount"> {
   id: string;
@@ -37,6 +40,29 @@ export interface FakePhoto {
   position: number;
 }
 
+export interface FakeInquiry {
+  id: string;
+  listingId: string;
+  clientId: string;
+  ownerId: string;
+  arrival: string | null;
+  departure: string | null;
+  people: number | null;
+  message: string;
+  /** El WhatsApp de la casa entregado al cliente (copia; nunca se lee por REST). */
+  whatsappPhone: string;
+  createdAt: string;
+  updatedAt: string;
+  ownerOpenedAt: string | null;
+  source: "listing" | "bnbtico";
+}
+
+export interface FakeFavorite {
+  userId: string;
+  listingId: string;
+  createdAt: string;
+}
+
 export interface FakeObject {
   cacheControl: string;
   contentType: string;
@@ -47,6 +73,8 @@ export class FakeDb {
   readonly profiles = new Map<string, FakeProfile>();
   readonly listings = new Map<string, FakeListing>();
   photos: FakePhoto[] = [];
+  inquiries: FakeInquiry[] = [];
+  favorites: FakeFavorite[] = [];
   /** Storage en memoria: bucket `listings`, nombre del objeto → metadatos. */
   readonly objects = new Map<string, FakeObject>();
   /** Sesiones abiertas (token → usuario), como auth.sessions: cerrar sesión las borra. */
@@ -73,7 +101,7 @@ export class FakeDb {
   }
 
   addProfile(p: NewProfile): FakeProfile {
-    const profile: FakeProfile = { isOwner: false, email: null, description: null, ...p, id: p.id ?? this.newId() };
+    const profile: FakeProfile = { isOwner: false, email: null, description: null, isActive: true, ...p, id: p.id ?? this.newId() };
     this.profiles.set(profile.id, profile);
     return profile;
   }
@@ -117,6 +145,8 @@ export class FakeDb {
     this.listings.clear();
     this.photos = [];
     this.objects.clear();
+    this.inquiries = [];
+    this.favorites = [];
   }
 }
 

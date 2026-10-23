@@ -2,6 +2,7 @@
 // decide con review_listing; reabrir es el update a borrador que permite el trigger).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
+import { createPostgrestFavorites, createPostgrestInquiries } from "../../src/data/postgrest/inquiries";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
 import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
 import { createPostgrestPhotos } from "../../src/data/postgrest/photos";
@@ -9,10 +10,10 @@ import { quickWriter } from "../../src/data/postgrest/session-client";
 import { SESSION_STORAGE_KEY, memoryStore } from "../../src/data/storage";
 import type { Database } from "../../src/domain/database.types";
 import { toListingUpdate } from "../../src/domain/rows";
-import { COMPLETE, type ListingsHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
+import { COMPLETE, type InquiriesHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
 import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn, signInAdmin } from "./local";
 
-export async function postgrestHarness(): Promise<ListingsHarness> {
+export async function postgrestHarness(): Promise<InquiriesHarness> {
   const service = serviceClient();
   const owners: Record<SeedOwner, SupabaseClient<Database>> = { owner: await signIn("owner"), other: await signIn("other") };
   // El admin decide con el segundo factor (aal2): sin él, review_listing lo rechaza (migración admin_aal2_y_purga).
@@ -64,8 +65,29 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
     return { id, publicId, exact: { lat: draft.lat!, lng: draft.lng! }, photoPaths };
   }
 
+  const ids = {} as Record<SeedOwner, string>;
+  for (const who of ["owner", "other"] as const) ids[who] = (await owners[who].auth.getUser()).data.user!.id;
+  const anon = anonClient();
+
   return {
-    anon: createPostgrestListings(anonClient(), { supabaseUrl: localSupabase().url }),
+    inquiries: (who) => createPostgrestInquiries(who === "anon" ? anon : owners[who]),
+    favorites: (who) => createPostgrestFavorites(who === "anon" ? anon : owners[who]),
+    phone: (who) => TEST_PHONES[who],
+    async backdateInquiry(id, days) {
+      const { data } = await service.from("inquiries").select("created_at, updated_at").eq("id", id).single();
+      const back = (iso: string) => new Date(Date.parse(iso) - days * 86_400_000).toISOString();
+      fail("atrasar consulta", (await service.from("inquiries").update({ created_at: back(data!.created_at), updated_at: back(data!.updated_at) }).eq("id", id)).error);
+    },
+    async seedContacts(who, n) {
+      const other = who === "owner" ? "other" : "owner";
+      const base = { owner_id: ids[other], status: "active" as const, title: "Contactada", description: "x", province: "Limón", whatsapp_phone: TEST_PHONES[other], capacity: 2, bedrooms: 1, bathrooms: 1, accepts_nightly: true, nightly_price_crc: 30000 };
+      const created = await service.from("listings").insert(Array.from({ length: n }, (_, k) => ({ ...base, title: `Contactada ${k}` }))).select("id");
+      fail("sembrar casas contactadas", created.error);
+      const at = new Date(Date.now() - 3_600_000).toISOString();
+      const rows = created.data!.map((l) => ({ listing_id: l.id, client_id: ids[who], owner_id: ids[other], message: "Hola", whatsapp_phone: TEST_PHONES[other], created_at: at, updated_at: at }));
+      fail("sembrar consultas", (await service.from("inquiries").insert(rows)).error);
+    },
+    anon: createPostgrestListings(anon, { supabaseUrl: localSupabase().url }),
     owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url, quickWrite: quick[who] }),
     async reset() {
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);

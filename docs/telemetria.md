@@ -9,7 +9,7 @@ terceros salvo Turnstile en Ingresar.
 |---|---|---|
 | `POST /vitals` | LCP, INP y CLS de `web-vitals` (trozo `vitals-*.js` que se importa tras `load`), con la ruta de aterrizaje | `web_vitals` |
 | `POST /errors` | errores no capturados y promesas rechazadas (como mucho 5 por carga), con mensaje, pila, ruta y build | `client_errors` |
-| `POST /events` | `page_view` (una por ruta resuelta en el shell; una al hidratar la ficha SSR), `listing_view` (ficha montada), `whatsapp_tap` (marcador en el botón «Contactar por WhatsApp», que hoy está deshabilitado) | `events` |
+| `POST /events` | `page_view` (una por ruta resuelta en el shell; una al hidratar la ficha SSR), `listing_view` (ficha montada), `whatsapp_tap` (marcador en el botón «Contactar por WhatsApp», que hoy está deshabilitado), `inquiry_created` (fase 3: consulta registrada con `create_inquiry`; solo la casa, nada personal; la base lo acepta desde la migración `fase3_consultas`) | `events` |
 
 - El navegador usa `navigator.sendBeacon` (o `fetch` con `keepalive`): sobrevive a cerrar la pestaña o a salir hacia WhatsApp. Código en `src/shared/beacon.ts` y `src/client/vitals.ts`.
 - Solo se guarda la **ruta** (sin consulta ni fragmento y con los uuid cambiados por `:id`), el tipo de página (`pageType` en `src/domain/telemetry.ts`: `inicio`, `explorar`, `filtros`, `ficha`, `favoritos`, `cuenta`, `ayuda`, `publicar`, `propietario`, `admin`, `otra`), el build (`__BUILD_ID__` = los 12 primeros caracteres del commit) y el **país**, que añade el worker desde `request.cf.country` (o la cabecera `CF-IPCountry`). Los errores llevan además el user agent (recortado a 300).

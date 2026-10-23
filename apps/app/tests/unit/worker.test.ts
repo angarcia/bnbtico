@@ -348,6 +348,13 @@ describe("worker · balizas /vitals, /errors y /events", () => {
     });
   }
 
+  it("/events: inquiry_created (fase 3) se escribe con la casa y nada personal", async () => {
+    const b = beacons();
+    const res = await b.post("/events", JSON.stringify({ name: "inquiry_created", listing: "CT-1015", path: "/casa/CT-1015?contacto=1", build: "abc" }), { origin: ORIGIN });
+    expect(res.status).toBe(204);
+    expect(b.written).toEqual([{ table: "events", row: { name: "inquiry_created", listing_public_id: "CT-1015", page: "ficha", path: "/casa/CT-1015", build: "abc", country: "CR" } }]);
+  });
+
   it("rechaza balizas de otro origen", async () => {
     const b = beacons();
     expect((await b.post("/events", JSON.stringify(valid["/events"]), { origin: "https://malo.example" })).status).toBe(403);

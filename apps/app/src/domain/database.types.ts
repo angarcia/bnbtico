@@ -77,7 +77,7 @@ isOneToOne: false
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"listing_id": string,"user_id": string
+                    "created_at"?: string,"listing_id": string,"user_id"?: string
                   }
                   Update: {
                     "created_at"?: string,"listing_id"?: string,"user_id"?: string
@@ -105,14 +105,14 @@ isOneToOne: false
                   ]
                 },"inquiries": {
                   Row: {
-                    "arrival": string | null,"client_id": string,"consent_share_phone": boolean,"created_at": string,"departure": string | null,"id": string,"listing_id": string,"message": string,"owner_id": string,"people": number | null
+                    "arrival": string | null,"client_id": string,"consent_share_phone": boolean,"created_at": string,"departure": string | null,"id": string,"listing_id": string,"message": string,"owner_id": string,"owner_opened_at": string | null,"people": number | null,"source": string,"updated_at": string,"whatsapp_phone": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "arrival"?: string | null,"client_id": string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id": string,"message"?: string,"owner_id": string,"people"?: number | null
+                    "arrival"?: string | null,"client_id": string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id": string,"message"?: string,"owner_id": string,"owner_opened_at"?: string | null,"people"?: number | null,"source"?: string,"updated_at"?: string,"whatsapp_phone": string
                   }
                   Update: {
-                    "arrival"?: string | null,"client_id"?: string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id"?: string,"message"?: string,"owner_id"?: string,"people"?: number | null
+                    "arrival"?: string | null,"client_id"?: string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id"?: string,"message"?: string,"owner_id"?: string,"owner_opened_at"?: string | null,"people"?: number | null,"source"?: string,"updated_at"?: string,"whatsapp_phone"?: string
                   }
                   Relationships: [
                     {
@@ -413,6 +413,11 @@ isOneToOne: true
 "approx_point":
 { Args: { "p_lat": number,"p_lng": number,"p_seed": string }; Returns: unknown
                            },
+"create_inquiry":
+{ Args: { "p_arrival": string,"p_departure": string,"p_message": string,"p_people": number,"p_public_id": string }; Returns: {
+              "inquiry_id": string,"whatsapp_phone": string
+            }[]
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -425,6 +430,9 @@ isOneToOne: true
 "listing_is_public":
 { Args: { "l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']> }; Returns: boolean
                            },
+"listing_is_published":
+{ Args: { "p_listing": string }; Returns: boolean
+                           },
 "listing_link_state":
 { Args: { "p_public_id": string }; Returns: string
                            },
@@ -434,8 +442,16 @@ isOneToOne: true
 "listing_visible":
 { Args: { "p_listing": string }; Returns: boolean
                            },
+"mark_inquiry_opened":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "open_drafts":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"owner_inquiries":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"message": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
+            }[]
                            },
 "purge_listing_page":
 { Args: { "p_public_id": string }; Returns: undefined
