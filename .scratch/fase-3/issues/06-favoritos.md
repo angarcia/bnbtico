@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (can run after 05; independent of 02–05 in code)
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Heart: `aria-pressed`, labels «Guardar en favoritos» / «Quitar de favoritos», terracotta when on, tap response < 50 ms, never navigates the card. On the SSR listing a placeholder of the same size until hydration (hydration test extended); anonymous → no network.
 - [ ] Favoritos (`/favoritos`, lazy): header per design, count line («guardadas en este teléfono» signed out), horizontal cards with price toggle, sage note, empty state with «Explorar casas»; cards from `listings_public` by `public_id in (…)` (one query, public cache); missing ids pruned silently.

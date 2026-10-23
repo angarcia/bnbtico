@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Room first: statically imported screens in `shell.tsx` (owner screens, Favoritos placeholder, Ayuda…) move behind `lazyRouteComponent` with prefetch on touchstart/hover of the tab and on idle; visited tab still < 100 ms without network (`medicion` test), tap feedback < 50 ms. Private initial JS measured before/after in the closure; target ≤ 140 KB gz. New `size-limit` entry for the sheet chunk.
 - [ ] Button in `.cta-bar`: same box before and after hydration; enabled «Contactar por WhatsApp» when `available`, disabled «No disponible para consultas» (+ «Vuelve a estar disponible el …» with `reopen_at`) otherwise. No hydration warnings (existing test stays green, extended to cover the button). SSR hydration chunk grows ≤ 3 KB gz.
