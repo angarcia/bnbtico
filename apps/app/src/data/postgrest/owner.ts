@@ -16,7 +16,14 @@ const NOT_FOUND = "No encontramos ese anuncio.";
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): OwnerListingsApi {
+/**
+ * Escritura sin esperas: un cliente de supabase-js sin sesión propia y el token tal como está guardado, leído sin
+ * esperar. Con él, la petición de un guardado sale en el mismo tick que el envío del formulario (antes de que la app
+ * pueda cerrarse). `null` si no hay token vigente a mano: entonces se usa el camino normal, que espera a la sesión.
+ */
+export type QuickWrite = () => { db: SupabaseClient<Database>; accessToken: string; userId: string } | null;
+
+export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts: { supabaseUrl: string; quickWrite?: QuickWrite }): OwnerListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
 
   async function me(): Promise<string> {
@@ -79,7 +86,12 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       if ("error" in plan) throw new DomainError(plan.error, "validation");
       const row = toListingUpdate(plan.changes);
       if (Object.keys(row).length === 0) return current;
-      const { data, error } = await db.from("listings").update(row).eq("id", id).eq("owner_id", await me()).select(OWN_COLUMNS).maybeSingle();
+      // Con `known` no hay ninguna espera antes de la petición: con keepalive llega aunque la app se cierre justo después.
+      const quick = known ? opts.quickWrite?.() : null;
+      const query = quick
+        ? quick.db.from("listings").update(row).eq("id", id).eq("owner_id", quick.userId).select(OWN_COLUMNS).setHeader("Authorization", `Bearer ${quick.accessToken}`)
+        : db.from("listings").update(row).eq("id", id).eq("owner_id", await me()).select(OWN_COLUMNS);
+      const { data, error } = await query.maybeSingle();
       if (error) throw toDomainError(error);
       if (!data) throw new DomainError(NOT_FOUND, "not_found");
       return fromListingRow(data, data.listing_photos, url);

@@ -2,7 +2,9 @@
 // - «Continuar» valida la pantalla en el navegador (planStep, con las fotos del servidor), escribe el borrador en la caché
 //   al instante (escritura optimista), navega a la pantalla siguiente y guarda por detrás (cola por casa, save-queue.ts).
 // - Si el guardado falla, vuelve a esa pantalla con el mensaje de la base y lo que el propietario había escrito.
-// - El guardado sale con `keepalive` (fetch propio de supabase-js, data/postgrest/keepalive-fetch.ts).
+// - El guardado sale con `keepalive` (fetch propio de supabase-js, data/postgrest/keepalive-fetch.ts) y en el mismo tick
+//   del envío: se lanza desde onSubmit (no desde la mutación, que arranca tras varias esperas) con el adaptador ya cargado
+//   y el token guardado, así que recargar o cerrar la app justo después de «Continuar» no pierde el paso.
 // - Teclado del iPhone: al enfocar un campo de texto la pantalla gana 320 px abajo (`--kb`) y el campo sube hasta debajo de
 //   la cabecera (scroll-margin-top en CSS); al salir, vuelve. enterKeyHint «Siguiente»/«Listo» por posición del campo.
 // - React 19 vacía los campos no controlados de un <form action={fn}> al terminar la acción: aquí se envía desde onSubmit
@@ -13,7 +15,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type FocusEvent, typ
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, normalize, planStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { formInput, parseStep } from "../../domain/step-forms";
-import { api, patchCached, refresh } from "../owner";
+import { api, loadedApi, patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
 
@@ -58,8 +60,16 @@ interface SaveVars {
   step: Step;
   patch: Partial<ListingDraft>;
   seq: number;
-  /** El borrador tal como lo ve el navegador al tocar «Continuar»: el guardado es una sola petición (keepalive). */
-  known: Listing;
+  /** El guardado ya lanzado (cola por casa) en el mismo tick de «Continuar». */
+  request: Promise<Listing>;
+}
+
+/** Encola el guardado y, si la cola está libre, lanza ya la petición (sin esperar a cargar nada si el adaptador está). */
+function startSave(listingId: string, step: Step, patch: Partial<ListingDraft>, known: Listing): Promise<Listing> {
+  return enqueueSave(listingId, () => {
+    const ready = loadedApi();
+    return ready ? ready.saveStep(listingId, step, patch, known) : api().then((a) => a.saveStep(listingId, step, patch, known));
+  });
 }
 
 let saveSeq = 0;
@@ -73,7 +83,7 @@ export function useSaveStep(userId: string, listingId: string) {
   const client = useQueryClient();
   const router = useRouter();
   return useMutation({
-    mutationFn: ({ step, patch, known }: SaveVars) => enqueueSave(listingId, async () => (await api()).saveStep(listingId, step, patch, known)),
+    mutationFn: ({ request }: SaveVars) => request,
     onMutate: async ({ patch, seq }) => {
       latestSave.set(listingId, seq);
       await client.cancelQueries({ queryKey: detailKey(userId, listingId) });
@@ -180,7 +190,9 @@ export function StepForm({ userId, listing, step, children }: { userId: string; 
     if ("error" in plan) return setError(plan.error);
     setError(null);
     clearFailure(listing.id);
-    save.mutate({ step, patch, seq: ++saveSeq, known: listing });
+    const request = startSave(listing.id, step, patch, listing);
+    request.catch(() => undefined); // el error lo recoge la mutación
+    save.mutate({ step, patch, seq: ++saveSeq, request });
     void toStep(router, listing.id, (step + 1) as Step);
   }
 

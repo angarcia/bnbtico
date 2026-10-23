@@ -5,6 +5,8 @@ import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
 import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
 import { createPostgrestPhotos } from "../../src/data/postgrest/photos";
+import { quickWriter } from "../../src/data/postgrest/session-client";
+import { SESSION_STORAGE_KEY, memoryStore } from "../../src/data/storage";
 import type { Database } from "../../src/domain/database.types";
 import { toListingUpdate } from "../../src/domain/rows";
 import { COMPLETE, type ListingsHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
@@ -16,6 +18,13 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
   // El admin decide con el segundo factor (aal2): sin él, review_listing lo rechaza (migración admin_aal2_y_purga).
   const admin = await signInAdmin();
   const adminAal1 = await signIn("admin");
+  // Las escrituras con `known` van por el camino sin esperas del navegador (token guardado y segundo cliente).
+  const quick = {} as Record<SeedOwner, ReturnType<typeof quickWriter>>;
+  for (const who of ["owner", "other"] as const) {
+    const store = memoryStore();
+    store.setItem(SESSION_STORAGE_KEY, JSON.stringify((await owners[who].auth.getSession()).data.session));
+    quick[who] = quickWriter(localSupabase().url, localSupabase().anonKey, store);
+  }
   const names = {} as Record<SeedOwner, string>;
   for (const who of ["owner", "other"] as const) {
     const id = (await owners[who].auth.getUser()).data.user!.id;
@@ -55,7 +64,7 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
 
   return {
     anon: createPostgrestListings(anonClient(), { supabaseUrl: localSupabase().url }),
-    owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url }),
+    owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url, quickWrite: quick[who] }),
     async reset() {
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);
       await emptyBucket(service);

@@ -10,10 +10,13 @@ import { authApi } from "./session";
 export const OWNER_STALE_MS = 30_000;
 
 /** Carga supabase-js con la sesión ya leída antes de pedir datos del propietario. */
+let loaded: OwnerListingsApi | null = null;
 export const api = async (): Promise<OwnerListingsApi> => {
   await authApi();
-  return (await import("./supabase-data")).ownerListings();
+  return (loaded = (await import("./supabase-data")).ownerListings());
 };
+/** El adaptador si ya está cargado (sin esperar): el asistente lo usa para que un guardado salga en el mismo tick. */
+export const loadedApi = (): OwnerListingsApi | null => loaded;
 
 /** Fotos (subida directa a Storage y RPCs), con la misma sesión. */
 export const photosApi = async (): Promise<PhotosApi> => {

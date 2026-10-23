@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { ListingsHarness } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { SESSION_STORAGE_KEY } from "../../src/data/storage";
 import { injectSession } from "./helpers/session";
 
 // Asistente de publicar en nueve pantallas (decisión 2026-10-21) contra Supabase local, con la sesión inyectada.
@@ -162,8 +163,6 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
-  // La recarga de abajo no debe adelantarse al guardado del paso 6 (aún no salió la petición: ver el cierre del ticket 09).
-  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.title).toBe(TITLE);
 
   // 7 Fotos: el recuento sale de la base; con 4 no deja seguir, con 5 sí. La rejilla hace scroll por dentro, la página no.
   await expect(page.getByRole("status")).toHaveText("0 de 5–15");
@@ -233,6 +232,53 @@ test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo 
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
   await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina renovada");
+});
+
+test("cerrar o recargar la app justo al tocar «Continuar» no pierde el paso", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 5 });
+  const submitAndReload = () =>
+    page.evaluate(() => {
+      // Envío y recarga en la misma tarea: la petición tiene que salir antes de que la página se vaya.
+      document.querySelector<HTMLFormElement>("form.publish-form")!.requestSubmit();
+      location.reload();
+    });
+
+  // 1. supabase-js está renovando el token (red lenta): el guardado no lo espera, sale con el token vigente.
+  await page.goto(`/propietario/publicar/${draft.id}/6`);
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina Cahuita");
+  await page.route("**/auth/v1/token**", () => undefined); // la renovación no vuelve nunca
+  await page.evaluate((key) => {
+    const s = JSON.parse(localStorage.getItem(key)!);
+    localStorage.setItem(key, JSON.stringify({ ...s, expires_at: Math.floor(Date.now() / 1000) + 60 }));
+  }, SESSION_STORAGE_KEY);
+  await page.getByLabel("Nombre de la casa").fill("Cabina recién guardada");
+  await submitAndReload();
+  await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina recién guardada");
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await injectSession(page, "owner");
+
+  // 2. Con un guardado aún en vuelo, el siguiente espera su turno; si la página se va, sale ya, con keepalive.
+  await page.goto(`/propietario/publicar/${draft.id}/6`);
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina recién guardada");
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  let patches = 0;
+  await page.route("**/rest/v1/listings?**", async (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback();
+    if (++patches === 1) await held;
+    await route.fallback();
+  });
+  await page.getByLabel("Nombre de la casa").fill("Cabina en vuelo");
+  await continuar(page);
+  await expect(page).toHaveURL(/\/7$/);
+  await expect.poll(() => patches).toBe(1);
+  await page.getByRole("link", { name: "Atrás" }).click();
+  await expect(page).toHaveURL(/\/6$/);
+  await page.getByLabel("Descripción").fill("Descripción que no espera.");
+  await submitAndReload();
+  await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.description).toBe("Descripción que no espera.");
+  release();
+  await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina en vuelo");
 });
 
 test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar» abre el asistente con todo relleno", async ({ page }) => {
