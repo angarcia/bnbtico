@@ -61,6 +61,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 - `docs/plan-implementacion.md` — fases de construcción, alcance de v1, stack. **Manda sobre `roadmap.md`.**
 - `docs/decisiones.md` — registro de decisiones con fecha, la más reciente arriba.
+- `docs/antes-de-produccion.md` — lo decidido que se deja para antes del lanzamiento (p. ej. protección contra el abuso del envío de códigos). Revisar al cortar a producción.
 - `docs/design.md` — pantallas, flujos, calendario, sistema de diseño.
 - `docs/configuracion-supabase.md` — cómo crear el proyecto de Supabase, Twilio Verify y las variables de Vercel para `pruebas.bnbtico.com`; paso 8: migraciones de la fase 2 y cuenta admin.
 - `docs/pruebas-manuales-fase-2.md` — plan de pruebas manual desde el móvil en pruebas.bnbtico.com (fases 0–2), con los números de prueba y su papel.
