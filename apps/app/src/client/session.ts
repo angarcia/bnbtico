@@ -3,7 +3,7 @@
 // que supabase-js la lee (y la refresca si caducó). Después lo mantiene al día `onSessionChange`.
 import { useSyncExternalStore } from "react";
 import type { AuthApi, MfaApi, PendingOtp, Session } from "../domain/api";
-import { pendingOtpStore, SESSION_STORAGE_KEY, webStore } from "../data/storage";
+import { hasStoredSession, pendingOtpStore, webStore } from "../data/storage";
 
 export type SessionStatus = "loading" | "signed-in" | "signed-out";
 export interface SessionState {
@@ -11,15 +11,7 @@ export interface SessionState {
   session: Session | null;
 }
 
-function storedSession(): boolean {
-  try {
-    return !!localStorage.getItem(SESSION_STORAGE_KEY);
-  } catch {
-    return false;
-  }
-}
-
-let state: SessionState = { status: typeof window !== "undefined" && storedSession() ? "loading" : "signed-out", session: null };
+let state: SessionState = { status: typeof window !== "undefined" && hasStoredSession() ? "loading" : "signed-out", session: null };
 const listeners = new Set<() => void>();
 const signedOutHandlers = new Set<() => void>();
 let api: Promise<AuthApi & MfaApi> | null = null;

@@ -1,6 +1,7 @@
 // Hoja de contacto (pantalla 04 del diseño v1). Trozo diferido: se descarga al tocar «Contactar por WhatsApp» (y en reposo
 // tras hidratar la ficha). Funciona igual en la ficha del servidor (sin router) y en la ruta de la SPA.
-// - Lo escrito se guarda en la pestaña 30 minutos (`bnbtico-contacto:<CT-####>`): cerrar, recargar o ir a Ingresar no lo pierde.
+// - Lo escrito se guarda en la pestaña 30 minutos (`bnbtico-contacto:<CT-####>`): cerrar, recargar o ir a Ingresar no lo pierde
+//   (sin sesión, «Abrir WhatsApp» lleva a Ingresar y la ficha de la SPA reabre la hoja al volver: `contact-flow.ts`).
 // - El mensaje se redacta solo con fechas y personas hasta que el cliente lo edita (reductor `redraft` del dominio).
 // - Diálogo modal: el resto de la página queda `inert`, el foco no sale de la hoja, Escape / fondo / «Cerrar» la cierran y el
 //   foco vuelve al botón. Sin scroll de fondo.
@@ -23,7 +24,7 @@ import {
   type InquiryField,
 } from "../domain/inquiry";
 import type { PublicListing } from "../domain/listing";
-import { webStore } from "../data/storage";
+import { hasStoredSession, webStore } from "../data/storage";
 import { proceedToWhatsApp } from "./contact-flow";
 import { I } from "./icons";
 
@@ -59,6 +60,8 @@ export function ContactSheet({ listing, onClose, navigate }: { listing: PublicLi
   );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
+  // Sin sesión guardada, «Abrir WhatsApp» lleva primero a verificar el número (y vuelve aquí con lo escrito).
+  const [signedOut] = useState(() => !hasStoredSession());
   const sheet = useRef<HTMLElement>(null);
   const name = firstName(listing.ownerName);
   const today = costaRicaToday(Date.now());
@@ -229,6 +232,7 @@ export function ContactSheet({ listing, onClose, navigate }: { listing: PublicLi
           <button className="btn btn-wa" type="submit" aria-disabled={status.kind === "sending" || undefined}>
             <I.wa size={20} /> Abrir WhatsApp
           </button>
+          {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}
           <span className="consent">{name} verá su nombre y su WhatsApp.</span>
           <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. bnbtico no procesa ni pide pagos.</span>
         </form>

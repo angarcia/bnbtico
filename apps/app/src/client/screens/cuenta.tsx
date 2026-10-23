@@ -4,10 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
+import { listingInNext } from "../../domain/contact-return";
 import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
 import { I } from "../../shared/icons";
+import { listingQuery } from "../../shared/listing-query";
+import { Picture } from "../../shared/picture";
 import { accountQuery } from "../account";
 import { FlowFrame, FlowHeader, RootHeader, TabsFrame } from "../chrome";
 import { setRole, useRole } from "../role";
@@ -21,6 +24,46 @@ const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
 function useGoTo() {
   const router = useRouter();
   return (href: string) => router.navigate({ href, replace: true });
+}
+
+/** Como `<Navigate replace>`, pero con una ruta que ya trae su búsqueda. */
+function Replace({ href }: { href: string }) {
+  const goTo = useGoTo();
+  useEffect(() => void goTo(href), [href]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
+/** Adónde lleva «Volver» desde Ingresar: a la ficha si se venía de escribirle al propietario (sin reabrir la hoja). */
+const backFrom = (next?: string) => {
+  const publicId = listingInNext(next);
+  return publicId ? `/casa/${publicId}` : "/explorar";
+};
+
+/** Tarjeta «recordando a qué casa vuelve» (diseño 07) cuando `next` es una ficha: foto y nombre de la casa. */
+function ReturnCard({ next }: { next?: string }) {
+  const publicId = listingInNext(next);
+  const listing = useQuery({ ...listingQuery(publicId ?? ""), enabled: !!publicId });
+  if (!next) return null;
+  if (!publicId) {
+    return (
+      <div className="card row gap-12">
+        <span className="avatar avatar-sm">
+          <I.chevron size={18} />
+        </span>
+        <span className="small muted">Después de verificar vuelve adonde estaba.</span>
+      </div>
+    );
+  }
+  const l = listing.data;
+  const photo = l?.photos[0];
+  return (
+    <div className="card row gap-12 return-card" data-testid="return-card">
+      <span className="return-thumb">{photo ? <Picture photo={photo} alt="" sizes="56px" width={56} height={56} /> : null}</span>
+      <span className="small muted">
+        Después de verificar vuelve a <b className="ink">{l?.title ?? "la casa"}</b> con su consulta tal como la dejó.
+      </span>
+    </div>
+  );
 }
 
 // ---------- /cuenta ----------
@@ -71,7 +114,7 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
 
   return (
     <>
-      <FlowHeader title="Ingresar" back="/explorar" />
+      <FlowHeader title="Ingresar" back={backFrom(next)} />
       <div className="stack flow">
         <div className="stack gap-8">
           <h2 className="flow-title">{register ? "Su nombre y su WhatsApp. Nada más." : "Entre con su WhatsApp"}</h2>
@@ -136,6 +179,7 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
           <I.shield size={22} />
           <span>Su número solo se comparte con el propietario cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
         </div>
+        {listingInNext(next) ? <ReturnCard next={next} /> : null}
         <p className="xs muted center">Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.</p>
       </div>
     </>
@@ -266,14 +310,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
             Cambiar número
           </button>
         </div>
-        {next ? (
-          <div className="card row gap-12">
-            <span className="avatar avatar-sm">
-              <I.chevron size={18} />
-            </span>
-            <span className="small muted">Después de verificar vuelve adonde estaba.</span>
-          </div>
-        ) : null}
+        <ReturnCard next={next} />
       </div>
     </>
   );
@@ -286,8 +323,11 @@ export function ListaScreen() {
   const { next } = listaRoute.useSearch();
   const { status, session } = useSession();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
+  const router = useRouter();
+  // `next` puede llevar su propia búsqueda (`/casa/CT-####?contacto=1`): se navega con `href`, no con `to`.
+  const target = next ?? "/explorar";
   if (status === "signed-out") return <Navigate to="/cuenta" replace />;
-  if (account.data?.email) return <Navigate to={(next ?? "/explorar") as "/explorar"} replace />;
+  if (account.data?.email) return <Replace href={target} />;
   return (
     <>
       <FlowHeader title="Ingresar" back="/explorar" />
@@ -302,9 +342,16 @@ export function ListaScreen() {
         <Link to="/cuenta" search={{ editar: "1" }} className="btn btn-primary btn-xl">
           Añadir correo a mi perfil
         </Link>
-        <Link to={(next ?? "/explorar") as "/explorar"} className="btn btn-ghost btn-lg">
+        <a
+          href={target}
+          className="btn btn-ghost btn-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            void router.navigate({ href: target });
+          }}
+        >
           Ahora no · continuar
-        </Link>
+        </a>
       </div>
     </>
   );

@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3, ticket 03: cuenta obligatoria para contactar, con vuelta a la hoja
+
+- **Ida:** sin sesión, «Abrir WhatsApp» guarda lo escrito (30 min en la pestaña) y lleva a `/cuenta?next=/casa/CT-####?contacto=1` (Crear cuenta por defecto, con «Ya tengo cuenta» al lado). Saber que no hay sesión no descarga supabase-js: basta con no tener `bnbtico-auth` guardado; si lo hay, lo confirma el mismo cliente de supabase-js que usará el ticket 04. La hoja lo avisa bajo el botón: «Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.».
+- **Vuelta:** solo la ficha de la SPA reabre la hoja (tras el código siempre se llega por el router); con `contacto=1` y un borrador de esa casa la abre y quita el parámetro con `replace`. Borrador caducado → la hoja con el mensaje por defecto; sin borrador → solo la ficha.
+- **Tarjeta «vuelve a <casa>»** (diseño 07, foto y nombre) en Código y también en Ingresar; «Volver» en Ingresar lleva a la ficha. La cuenta nueva pasa por «¡Listo!» y «Ahora no · continuar» vuelve a la ficha (antes un `next` con búsqueda propia se rompía en ese enlace).
+
 ## 2026-10-23 · Fase 3, ticket 02: hoja de contacto y pantallas diferidas
 
 - **JS inicial:** solo Explorar, Filtros y la ficha van en el arranque del shell; cuenta, propietario y Favoritos se descargan al abrirlas, al apuntar o tocar su enlace y en reposo tras el primer pintado. La zona privada baja de 146,4 a 134,4 KB gz y deja sitio a la fase 3. Coste: la primera visita a una de esas pantallas sin el SW instalado pide un trozo de ~6 KB.

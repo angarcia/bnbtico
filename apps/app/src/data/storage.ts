@@ -21,6 +21,15 @@ export interface KeyValueStore extends SessionStorageAdapter {
 export const SESSION_STORAGE_KEY = "bnbtico-auth";
 export const PENDING_OTP_KEY = "bnbtico-otp";
 
+/** ¿Hay una sesión guardada en el dispositivo? Se sabe al instante, sin supabase-js (puede haber caducado: eso lo dice él). */
+export function hasStoredSession(): boolean {
+  try {
+    return !!globalThis.localStorage?.getItem(SESSION_STORAGE_KEY);
+  } catch {
+    return false;
+  }
+}
+
 export function memoryStore(): KeyValueStore {
   const map = new Map<string, string>();
   return {

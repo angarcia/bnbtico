@@ -27,11 +27,11 @@ export interface ListingSeed {
 
 /** La ficha a partir de la caché de Query: sembrada por el worker (SSR) o, al abrirla desde una tarjeta, con la fila del
  *  listado (`seed`), que se pinta antes de que responda su propia petición. */
-export function ListingScreen({ publicId, base, seed, onBack, navigate }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void; navigate?: Navigate }) {
+export function ListingScreen({ publicId, base, seed, onBack, navigate, openContact }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void; navigate?: Navigate; openContact?: boolean }) {
   const { data } = useQuery({ ...listingQuery(publicId), initialData: seed?.listing, initialDataUpdatedAt: seed?.updatedAt });
   if (data === null) return <BlockedPage />;
   if (!data) return null;
-  return <ListingPage listing={data} base={base} onBack={onBack} navigate={navigate} />;
+  return <ListingPage listing={data} base={base} onBack={onBack} navigate={navigate} openContact={openContact} />;
 }
 
 /** Ir a otra ruta: el router en la SPA; en la ficha del servidor (sin router), navegación completa. */
@@ -42,9 +42,10 @@ const fullNavigation: Navigate = (href) => location.assign(href);
 const loadSheet = () => import("./contact-sheet");
 const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactSheet })));
 
-/** El botón de la barra. Mide lo mismo antes y después de hidratar: antes es una caja apagada que aún no responde. */
-function ContactButton({ listing, hydrated, navigate }: { listing: PublicListing; hydrated: boolean; navigate: Navigate }) {
-  const [open, setOpen] = useState(false);
+/** El botón de la barra. Mide lo mismo antes y después de hidratar: antes es una caja apagada que aún no responde.
+ *  `openOnMount`: la ficha de la SPA al volver de Ingresar con lo escrito (`?contacto=1`). */
+function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: PublicListing; hydrated: boolean; navigate: Navigate; openOnMount?: boolean }) {
+  const [open, setOpen] = useState(!!openOnMount);
   const button = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
   useEffect(() => {
@@ -148,7 +149,7 @@ function useSpacerMatchingBar() {
   return { bar, spacer };
 }
 
-export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate }) {
+export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation, openContact }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate; openContact?: boolean }) {
   const hydrated = useHydrated();
   const currency = useCurrency();
   const d = describe(l, { base });
@@ -248,7 +249,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency)}</b> / mes
             </span>
           ) : null}
-          <ContactButton listing={l} hydrated={hydrated} navigate={navigate} />
+          <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openContact} />
         </div>
       </main>
     </div>

@@ -108,6 +108,9 @@ const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "reje
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
+/** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
+const casaSearch = (params: Record<string, unknown>): { contacto?: "1" } => (params.contacto === "1" ? { contacto: "1" } : {});
+
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/", beforeLoad: () => { throw redirect({ to: "/explorar", replace: true }); } }),
   tabs.addChildren([
@@ -143,7 +146,7 @@ const routeTree = rootRoute.addChildren([
     ]),
     adminFlow.addChildren([createRoute({ getParentRoute: () => adminFlow, path: "/admin/anuncios/$id", component: adminScreen("RevisarScreen") })]),
   ]),
-  createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", component: CasaScreen }),
+  createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", validateSearch: casaSearch, component: CasaScreen }),
 ]);
 
 const router = createRouter({

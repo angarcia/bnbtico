@@ -164,7 +164,7 @@ export function firstName(name: string): string {
 
 /** Lo escrito en la hoja dura 30 minutos en la pestaña (sessionStorage): cerrar, recargar o ir a Ingresar no lo pierde. */
 export const CONTACT_DRAFT_TTL_MS = 30 * 60_000;
-export const contactDraftKey = (publicId: string) => `bnbtico-contacto:${publicId}`;
+export { contactDraftKey } from "./contact-return";
 
 interface StoredContactDraft {
   arrival: string | null;

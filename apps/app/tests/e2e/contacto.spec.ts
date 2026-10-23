@@ -2,9 +2,10 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { injectSession } from "./helpers/session";
 
-// Hoja de contacto (fase 3, ticket 02) en la ficha del servidor y en la de la SPA. «Abrir WhatsApp» valida y guarda; hasta
-// los tickets 03 y 04 responde «Disponible muy pronto».
+// Hoja de contacto (fase 3, ticket 02) en la ficha del servidor y en la de la SPA. «Abrir WhatsApp» valida y guarda; con
+// sesión, hasta el ticket 04, responde «Disponible muy pronto» (sin sesión lleva a Ingresar: contacto-cuenta.spec.ts).
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 const TITLE = "Casa Playa Negra";
 let casa: Seeded;
@@ -48,6 +49,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas, resp
     if (m.text().includes("Service Worker registration blocked by Playwright")) return;
     if (m.type() === "error" || m.type() === "warning") problems.push(m.text());
   });
+  await injectSession(page, "other");
   await openListing(page, casa.publicId);
   const cta = page.getByRole("button", { name: "Contactar por WhatsApp" });
   await expect(cta).toBeEnabled();
@@ -59,6 +61,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas, resp
   await expect(s.getByText(`Propietario de ${TITLE} · WhatsApp verificado`)).toBeVisible();
   await expect(message(page)).toHaveValue(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
   await expect(s.getByText(`${owner} verá su nombre y su WhatsApp.`)).toBeVisible();
+  await expect(s.getByText(/Para escribirle necesita verificar/)).toHaveCount(0); // con sesión
   await expect(s.getByText("Por su seguridad, nunca envíe dinero antes de confirmar la casa. bnbtico no procesa ni pide pagos.")).toBeVisible();
   await expect(page.locator("html")).toHaveClass(/sheet-open/);
 
@@ -91,7 +94,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas, resp
   await s.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect(s.locator('.note[role="alert"]')).toHaveText("Indique la llegada y la salida, o deje las dos vacías.");
 
-  // Válido: hasta los tickets 03/04, «Disponible muy pronto» y lo escrito queda guardado.
+  // Válido, con sesión: hasta el ticket 04, «Disponible muy pronto» y lo escrito queda guardado.
   await s.getByLabel("Salida (opcional)").fill(b);
   await expect(s.locator('.note[role="alert"]')).toHaveCount(0);
   await s.getByRole("button", { name: "Abrir WhatsApp" }).click();
@@ -176,6 +179,7 @@ test("una casa que no recibe consultas muestra el botón deshabilitado", async (
 });
 
 test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page }) => {
+  await injectSession(page, "other");
   await page.goto("/explorar");
   await page.getByRole("link", { name: new RegExp(TITLE) }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
