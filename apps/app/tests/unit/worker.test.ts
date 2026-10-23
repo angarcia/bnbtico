@@ -84,6 +84,6 @@ describe("worker · resto de rutas", () => {
 
   it("robots.txt permite indexar en producción", async () => {
     const res = await get("/robots.txt", env({ ENVIRONMENT: "production" }));
-    expect(await res.text()).toBe("User-agent: *\nAllow: /\n");
+    expect(await res.text()).toBe("User-agent: *\nAllow: /\nSitemap: https://bnbtico.com/sitemap.xml\n");
   });
 });

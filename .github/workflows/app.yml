@@ -16,7 +16,7 @@ permissions:
 jobs:
   verificar-y-desplegar:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: apps/app
@@ -36,6 +36,15 @@ jobs:
         run: pnpm typecheck
       - name: Pruebas unitarias
         run: pnpm test
+      - name: Supabase local (Docker del runner)
+        working-directory: .
+        run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime
+      - name: Tipos de la base al día con las migraciones
+        run: |
+          pnpm db:types
+          git diff --exit-code -- src/domain/database.types.ts || { echo "::error::database.types.ts no coincide con las migraciones: ejecute pnpm --filter app db:types y confirme el resultado."; exit 1; }
+      - name: Pruebas de base (contrato contra PostgREST)
+        run: pnpm test:db
       - name: Build (navegador y worker)
         run: pnpm build
       - name: Puerta de tamaño (zona privada < 150 KB gz)
