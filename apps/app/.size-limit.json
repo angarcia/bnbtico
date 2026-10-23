@@ -1,7 +1,7 @@
 [
   {
-    "name": "Zona privada · JS inicial",
-    "path": "dist/client/assets/*.js",
+    "name": "Zona privada · JS inicial (entrada + shell)",
+    "path": ["dist/client/assets/index-*.js", "dist/client/assets/shell-*.js", "dist/client/assets/rolldown-runtime-*.js"],
     "limit": "150 KB",
     "gzip": true
   }

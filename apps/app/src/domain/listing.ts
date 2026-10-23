@@ -244,7 +244,14 @@ export interface PublicListing {
 
 export interface PublicPhoto {
   path: string;
+  /** Variante de 800 px (o la foto anterior): hero y Open Graph. */
   url: string;
+  srcSet: string | null;
+}
+
+export interface SitemapEntry {
+  publicId: string;
+  updatedAt: string;
 }
 
 /** Estado del enlace público: se muestra, «ya no está activo», o no existe (404). */

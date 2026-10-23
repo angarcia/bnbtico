@@ -2,10 +2,11 @@
 import type { PublicListingsApi } from "../../domain/api";
 import { ALL_PROVINCES, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
-import { storagePhotoUrl } from "../../domain/rows";
+import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { approxPoint, type FakeDb, type FakeListing } from "./db";
 
 export const SEARCH_LIMIT = 60;
+export const SITEMAP_LIMIT = 1000;
 
 export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): PublicListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
@@ -41,7 +42,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       ownerWhatsappVerified: owner?.phoneVerified === true,
       createdAt: l.createdAt,
       updatedAt: l.updatedAt,
-      photos: db.photosOf(l.id).map((p) => ({ path: p.path, url: url(p.path) })),
+      photos: db.photosOf(l.id).map((p) => publicPhoto(p.path, url)),
     };
   }
 
@@ -80,6 +81,13 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
     async provincesWithListings() {
       const found = new Set(active().map((l) => l.province));
       return PROVINCES.filter((p) => found.has(p));
+    },
+
+    async sitemap() {
+      return active()
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+        .slice(0, SITEMAP_LIMIT)
+        .map((l) => ({ publicId: l.publicId, updatedAt: l.updatedAt }));
     },
   };
 }

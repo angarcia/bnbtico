@@ -2,7 +2,7 @@
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
 import type { Filters } from "./filters";
-import type { LinkState, Listing, ListingDraft, Photo, PublicListing } from "./listing";
+import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry } from "./listing";
 
 export interface PublicListingsApi {
   /** Catálogo con filtros; más recientes primero, como mucho 60. */
@@ -12,6 +12,8 @@ export interface PublicListingsApi {
   linkState(publicId: string): Promise<LinkState>;
   /** Provincias con al menos una casa activa. */
   provincesWithListings(): Promise<string[]>;
+  /** Casas activas para el sitemap, la más reciente primero. */
+  sitemap(): Promise<SitemapEntry[]>;
 }
 
 export interface OwnerListingsApi {

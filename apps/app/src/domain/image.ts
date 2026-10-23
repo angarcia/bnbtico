@@ -23,3 +23,20 @@ export function targetSize(w: number, h: number, maxSide = MAX_SIDE): { w: numbe
 export function photoPath(listingId: string, uuid: string): string {
   return `${listingId}/${uuid}.jpg`;
 }
+
+/** Variantes que genera el navegador al subir (ticket 08): lado mayor 480, 800 y 1600 px. */
+export const VARIANT_SIZES = [480, 800, 1600] as const;
+export type VariantSize = (typeof VARIANT_SIZES)[number];
+
+/** Las fotos anteriores son un único archivo (`<casa>/<uuid>.jpg`); las nuevas, una carpeta con las tres variantes. */
+export const isLegacyPhotoPath = (path: string) => /\.(jpe?g|png|webp)$/i.test(path);
+
+export function variantPath(path: string, size: VariantSize): string {
+  return isLegacyPhotoPath(path) ? path : `${path}/${size}.jpg`;
+}
+
+/** `srcset` de 480 y 800 para tarjetas y hero; null para una foto anterior (un solo tamaño). */
+export function photoSrcSet(path: string, url: (path: string) => string): string | null {
+  if (isLegacyPhotoPath(path)) return null;
+  return `${url(variantPath(path, 480))} 480w, ${url(variantPath(path, 800))} 800w`;
+}

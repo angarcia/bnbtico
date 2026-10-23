@@ -1,24 +1,10 @@
-import { Hono } from "hono";
-import { robotsTxt, type Environment } from "../domain/seo";
-import { FIXTURE_LISTING } from "../shared/fixture";
-import { renderListingDocument } from "./render";
+import { createAnonListings } from "../data/postgrest/client";
+import { createApp, type CacheLike } from "./app";
 
-export type Env = {
-  ENVIRONMENT: Environment;
-  ASSETS: { fetch(input: Request | URL | string): Promise<Response> };
-};
+export type { Env } from "./app";
 
-const app = new Hono<{ Bindings: Env }>();
-
-app.get("/robots.txt", (c) => c.text(robotsTxt(c.env.ENVIRONMENT)));
-
-app.get("/casa/:publicId", async (c) => {
-  if (c.req.param("publicId") !== FIXTURE_LISTING.publicId) return c.env.ASSETS.fetch(c.req.raw);
-  const url = new URL(c.req.url);
-  const template = await (await c.env.ASSETS.fetch(new URL("/", url))).text();
-  return c.html(renderListingDocument(template, FIXTURE_LISTING, url.origin));
+export default createApp({
+  listings: (env) => createAnonListings(env.SUPABASE_URL, env.SUPABASE_ANON_KEY),
+  cache: () => (typeof caches === "undefined" ? null : ((caches as unknown as { default: CacheLike }).default ?? null)),
+  purgeFetch: (input, init) => fetch(input, init),
 });
-
-app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
-
-export default app;

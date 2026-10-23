@@ -76,7 +76,7 @@ describe("mapeo de filas", () => {
 
   it("las fotos de la vista pública son rutas en orden", () => {
     const l = fromPublicRow({ photos: ["l1/a.jpg", "l1/b.jpg", 3] } as unknown as PublicRow, url);
-    expect(l.photos).toEqual([{ path: "l1/a.jpg", url: url("l1/a.jpg") }, { path: "l1/b.jpg", url: url("l1/b.jpg") }]);
+    expect(l.photos).toEqual([{ path: "l1/a.jpg", url: url("l1/a.jpg"), srcSet: null }, { path: "l1/b.jpg", url: url("l1/b.jpg"), srcSet: null }]);
   });
 
   it("toListingUpdate solo escribe lo que viene en el parche; NaN y vacío son null", () => {

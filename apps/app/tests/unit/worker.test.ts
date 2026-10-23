@@ -1,89 +1,221 @@
+// Costura HTTP del worker: peticiones en proceso a la app Hono, con el fake en lugar de PostgREST.
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import app, { type Env } from "../../src/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createApp, type CacheLike, type Env } from "../../src/server/app";
+import type { Seeded } from "../contract/harness";
+import { fakeHarness } from "./fake-harness";
 
 const template = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
 const SHELL = "<!doctype html><title>shell</title>";
+const ORIGIN = "https://nueva.bnbtico.com";
 
-function env(overrides: Partial<Env> = {}): Env {
+function memoryCache(): CacheLike & { store: Map<string, Response> } {
+  const store = new Map<string, Response>();
   return {
-    ENVIRONMENT: "pruebas",
-    ASSETS: {
-      async fetch(input: RequestInfo | URL) {
-        const url = new URL(input instanceof Request ? input.url : input);
-        return url.pathname === "/" ? new Response(template, { headers: { "content-type": "text/html" } }) : new Response(SHELL, { headers: { "content-type": "text/html" } });
-      },
+    store,
+    async match(key) {
+      return store.get(key)?.clone();
     },
-    ...overrides,
+    async put(key, res) {
+      store.set(key, res.clone());
+    },
+    async delete(key) {
+      return store.delete(key);
+    },
   };
 }
 
-async function get(path: string, e = env()) {
-  return app.request(`https://nueva.bnbtico.com${path}`, {}, e);
+function setup(over: Partial<Env> = {}) {
+  const h = fakeHarness();
+  const cache = memoryCache();
+  const purgeFetch = vi.fn(async (_url: string, _init?: RequestInit) => Response.json({ success: true }));
+  const api = h.anon;
+  const spy = { getPublic: vi.spyOn(api, "getPublic") };
+  const app = createApp({ listings: () => api, cache: () => cache, purgeFetch: purgeFetch as unknown as typeof fetch });
+  const env: Env = {
+    ENVIRONMENT: "pruebas",
+    SUPABASE_URL: "http://supabase.test",
+    SUPABASE_ANON_KEY: "anon",
+    PURGE_SECRET: "s3creto",
+    CF_ZONE_ID: "zona",
+    CF_PURGE_TOKEN: "token",
+    CF_VERSION_METADATA: { id: "v1" },
+    ASSETS: {
+      async fetch(input: Request | URL | string) {
+        const url = new URL(input instanceof Request ? input.url : input);
+        return new Response(url.pathname === "/" ? template : SHELL, { headers: { "content-type": "text/html" } });
+      },
+    },
+    ...over,
+  };
+  const request = (path: string, init?: RequestInit) => app.request(`${ORIGIN}${path}`, init, env);
+  return { h, cache, purgeFetch, request, spy, env };
 }
 
-describe("worker · ficha de prueba /casa/CT-0000", () => {
-  it("responde HTML renderizado en servidor con la casa dentro de #root", async () => {
-    const res = await get("/casa/CT-0000");
+const ssrData = (html: string) => JSON.parse(/<script type="application\/json" id="ssr-data">([\s\S]*?)<\/script>/.exec(html)![1]!);
+
+describe("worker · ficha /casa/CT-####", () => {
+  let t: ReturnType<typeof setup>;
+  let casa: Seeded;
+
+  beforeEach(async () => {
+    t = setup();
+    casa = await t.h.seed({ status: "active", photos: 6, draft: { title: 'Casa "Sol" <y> Mar', zone: "Playa Negra", canton: "Talamanca", capacity: 4, nightlyPriceCrc: 95000 } });
+  });
+
+  it("responde la ficha renderizada en servidor", async () => {
+    const res = await t.request(`/casa/${casa.publicId}`);
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toMatch(/text\/html/);
     const html = await res.text();
-    expect(html).toMatch(/<div id="root">[\s\S]*<main class="listing">[\s\S]*<h1>Casa de prueba frente a Playa Negra<\/h1>/);
+    expect(html).toMatch(/<div id="root">[\s\S]*<h1[^>]*>Casa &quot;Sol&quot; &lt;y&gt; Mar<\/h1>/);
     expect(html).toContain("₡95\u00a0000");
-    expect(html).not.toContain("<!--app-html-->");
+    expect(html).toContain("el precio final lo acuerda con el propietario");
+    expect(html).toContain("Contactar por WhatsApp");
+    expect(html).toContain("1 / 6");
   });
 
-  it("inyecta título, descripción, Open Graph, Twitter y canónica", async () => {
-    const html = await (await get("/casa/CT-0000")).text();
-    expect(html).toContain("<title>Casa de prueba frente a Playa Negra · bnbtico</title>");
+  it("cabecera: título, descripción, Open Graph, Twitter, canónica de producción y precarga del hero", async () => {
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    const cover = casa.photoPaths[0]!;
+    const desc = "Alojamiento completo en Playa Negra, Limón · 4 personas · ₡95\u00a0000 por noche · orientativo";
+    expect(html).toContain("<title>Casa &quot;Sol&quot; &lt;y&gt; Mar · bnbtico</title>");
+    expect(html).toContain(`<meta name="description" content="${desc}" />`);
+    expect(html).toContain(`<link rel="canonical" href="https://bnbtico.com/casa/${casa.publicId}" />`);
+    expect(html).toContain(`<meta property="og:url" content="https://bnbtico.com/casa/${casa.publicId}" />`);
+    expect(html).toContain('<meta property="og:title" content="Casa &quot;Sol&quot; &lt;y&gt; Mar" />');
+    expect(html).toContain(`<meta property="og:description" content="${desc}" />`);
+    expect(html).toContain(`<meta property="og:image" content="http://supabase.test/storage/v1/object/public/listings/${cover}" />`);
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />');
+    expect(html).toContain(`<link rel="preload" as="image" href="http://supabase.test/storage/v1/object/public/listings/${cover}" fetchpriority="high" />`);
     expect(html).not.toContain("<title>bnbtico</title>");
-    expect(html).toMatch(/<meta name="description" content="[^"]+"/);
-    expect(html).toContain('<meta property="og:title" content="Casa de prueba frente a Playa Negra"');
-    expect(html).toContain('<meta property="og:type" content="website"');
-    expect(html).toContain('<meta property="og:url" content="https://nueva.bnbtico.com/casa/CT-0000"');
-    expect(html).toContain('<meta property="og:image" content="https://nueva.bnbtico.com/fixture/ct-0000.jpg"');
-    expect(html).toContain('<meta property="og:locale" content="es_CR"');
-    expect(html).toContain('<meta name="twitter:card" content="summary_large_image"');
-    expect(html).toContain('<link rel="canonical" href="https://nueva.bnbtico.com/casa/CT-0000"');
   });
 
-  it("precarga la foto principal con prioridad alta", async () => {
-    const html = await (await get("/casa/CT-0000")).text();
-    expect(html).toContain('<link rel="preload" as="image" href="/fixture/ct-0000.jpg" fetchpriority="high"');
+  it("incrusta la casa en un JSON no ejecutable y escapado", async () => {
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    const raw = /<script type="application\/json" id="ssr-data">([\s\S]*?)<\/script>/.exec(html)![1]!;
+    expect(raw).not.toContain("<");
+    const data = ssrData(html);
+    expect(data.page).toBe("listing");
+    expect(data.listing).toMatchObject({ publicId: casa.publicId, title: 'Casa "Sol" <y> Mar', nightlyPriceCrc: 95000 });
+    expect(data.listing).not.toHaveProperty("whatsappPhone");
+    expect(data.base).toBe(ORIGIN);
   });
 
-  it("incrusta la casa en un script JSON no ejecutable y escapado", async () => {
-    const html = await (await get("/casa/CT-0000")).text();
-    const match = html.match(/<script type="application\/json" id="listing-data">([\s\S]*?)<\/script>/);
-    expect(match).not.toBeNull();
-    const json = match![1]!;
-    expect(json).not.toContain("<");
-    const listing = JSON.parse(json);
-    expect(listing).toMatchObject({ publicId: "CT-0000", title: "Casa de prueba frente a Playa Negra", nightlyPrice: 95000, currency: "CRC" });
+  it("cabeceras de caché largas en el CDN y la siguiente petición sale de la caché", async () => {
+    const res = await t.request(`/casa/${casa.publicId}`);
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=86400, stale-while-revalidate=604800");
+    expect([...t.cache.store.keys()]).toEqual([`${ORIGIN}/casa/${casa.publicId}?__v=v1`]);
+    await t.request(`/casa/${casa.publicId}?utm_source=whatsapp`);
+    expect(t.spy.getPublic).toHaveBeenCalledTimes(1);
   });
 
-  it("escapa el texto de la casa en las etiquetas", async () => {
-    const { renderListingDocument } = await import("../../src/server/render");
-    const html = renderListingDocument(template, { ...(await import("../../src/shared/fixture")).FIXTURE_LISTING, title: 'Casa "Sol" <b>&</b>' }, "https://nueva.bnbtico.com");
-    expect(html).toContain('content="Casa &quot;Sol&quot; &lt;b&gt;&amp;&lt;/b&gt;"');
-    expect(html).not.toContain("<b>&</b>");
+  it("un id en minúsculas redirige a la URL canónica", async () => {
+    const res = await t.request(`/casa/${casa.publicId.toLowerCase()}`);
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe(`/casa/${casa.publicId}`);
   });
 });
 
-describe("worker · resto de rutas", () => {
-  it("sirve el shell de la SPA para cualquier ruta desconocida", async () => {
-    const res = await get("/explorar");
-    expect(await res.text()).toBe(SHELL);
+describe("worker · enlaces que no se muestran", () => {
+  it("una casa que no existe responde 404 con su página y sin indexar", async () => {
+    const t = setup();
+    const res = await t.request("/casa/CT-999999");
+    expect(res.status).toBe(404);
+    const html = await res.text();
+    expect(html).toContain("Este enlace no existe");
+    expect(html).toContain('<meta name="robots" content="noindex" />');
+    expect(ssrData(html)).toEqual({ page: "missing" });
+  });
+
+  it("un id mal formado responde 404 sin consultar", async () => {
+    const t = setup();
+    const res = await t.request("/casa/no-es-un-id");
+    expect(res.status).toBe(404);
+    expect(t.spy.getPublic).not.toHaveBeenCalled();
+  });
+
+  it("un borrador nunca enviado no existe para el público", async () => {
+    const t = setup();
+    const draft = await t.h.seed({ status: "draft" });
+    expect((await t.request(`/casa/${draft.publicId}`)).status).toBe(404);
+  });
+
+  it("una casa revisada y luego oculta responde 410 «Este enlace ya no está activo»", async () => {
+    const t = setup();
+    for (const status of ["reopened", "changes", "rejected", "review"] as const) {
+      const s = await t.h.seed({ status });
+      const res = await t.request(`/casa/${s.publicId}`);
+      expect(res.status).toBe(410);
+      const html = await res.text();
+      expect(html).toContain("Este enlace ya no está activo");
+      expect(ssrData(html)).toEqual({ page: "blocked" });
+    }
+  });
+
+  it("si la base falla, 503 sin guardar en caché", async () => {
+    const t = setup();
+    const casa = await t.h.seed({ status: "active" });
+    t.spy.getPublic.mockRejectedValueOnce(new Error("caída"));
+    const res = await t.request(`/casa/${casa.publicId}`);
+    expect(res.status).toBe(503);
+    expect(await res.text()).toContain("No pudimos cargar esta casa");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(t.cache.store.size).toBe(0);
+  });
+});
+
+describe("worker · purga de la ficha", () => {
+  it("rechaza sin secreto o con uno equivocado", async () => {
+    const t = setup();
+    expect((await t.request("/_purge/CT-1000", { method: "POST" })).status).toBe(401);
+    expect((await t.request("/_purge/CT-1000", { method: "POST", headers: { authorization: "Bearer otro" } })).status).toBe(401);
+    expect(t.purgeFetch).not.toHaveBeenCalled();
+  });
+
+  it("purga la URL de la ficha por la API de la zona y la borra de la caché local", async () => {
+    const t = setup();
+    const casa = await t.h.seed({ status: "active" });
+    await t.request(`/casa/${casa.publicId}`);
+    const res = await t.request(`/_purge/${casa.publicId}`, { method: "POST", headers: { authorization: "Bearer s3creto" } });
+    expect(res.status).toBe(200);
+    const key = `${ORIGIN}/casa/${casa.publicId}?__v=v1`;
+    expect(t.purgeFetch).toHaveBeenCalledWith("https://api.cloudflare.com/client/v4/zones/zona/purge_cache", expect.objectContaining({ method: "POST", body: JSON.stringify({ files: [key] }) }));
+    expect((t.purgeFetch.mock.calls[0]![1]!.headers as Record<string, string>).authorization).toBe("Bearer token");
+    expect(t.cache.store.has(key)).toBe(false);
+  });
+
+  it("sin configuración de purga responde 503", async () => {
+    const t = setup({ CF_PURGE_TOKEN: undefined });
+    expect((await t.request("/_purge/CT-1000", { method: "POST", headers: { authorization: "Bearer s3creto" } })).status).toBe(503);
+  });
+
+  it("un id mal formado es 400", async () => {
+    const t = setup();
+    expect((await t.request("/_purge/nada", { method: "POST", headers: { authorization: "Bearer s3creto" } })).status).toBe(400);
+  });
+});
+
+describe("worker · sitemap, robots y shell", () => {
+  it("el sitemap lista solo las casas activas con el dominio de producción y se cachea una hora", async () => {
+    const t = setup({ ENVIRONMENT: "production" });
+    const a = await t.h.seed({ status: "active" });
+    await t.h.seed({ status: "draft" });
+    const res = await t.request("/sitemap.xml");
+    expect(res.headers.get("content-type")).toMatch(/application\/xml/);
+    expect(res.headers.get("cache-control")).toBe("public, max-age=3600, s-maxage=3600");
+    const xml = await res.text();
+    expect(xml.match(/<loc>/g)).toHaveLength(2);
+    expect(xml).toContain("<loc>https://bnbtico.com/</loc>");
+    expect(xml).toContain(`<loc>https://bnbtico.com/casa/${a.publicId}</loc>`);
   });
 
   it("robots.txt bloquea todo fuera de producción", async () => {
-    const res = await get("/robots.txt");
-    expect(res.status).toBe(200);
-    expect(await res.text()).toBe("User-agent: *\nDisallow: /\n");
+    expect(await (await setup().request("/robots.txt")).text()).toBe("User-agent: *\nDisallow: /\n");
+    expect(await (await setup({ ENVIRONMENT: "production" }).request("/robots.txt")).text()).toContain("Allow: /");
   });
 
-  it("robots.txt permite indexar en producción", async () => {
-    const res = await get("/robots.txt", env({ ENVIRONMENT: "production" }));
-    expect(await res.text()).toBe("User-agent: *\nAllow: /\nSitemap: https://bnbtico.com/sitemap.xml\n");
+  it("cualquier otra ruta recibe el shell de la SPA", async () => {
+    expect(await (await setup().request("/explorar")).text()).toBe(SHELL);
   });
 });

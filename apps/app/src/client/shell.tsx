@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Link, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, redirect } from "@tanstack/react-router";
-import { I } from "./icons";
+import { I } from "../shared/icons";
 
 const TABS = [
   { to: "/explorar", label: "Explorar", icon: I.search },

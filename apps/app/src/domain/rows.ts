@@ -1,6 +1,7 @@
 // Mapeo tipado entre filas de la base y objetos del dominio, en un solo sitio.
 // `acceptsNightly` se lee igual en las dos vistas: la columna es not null, y solo `true` cuenta como vacacional.
 import type { Database, Json } from "./database.types";
+import { photoSrcSet, variantPath } from "./image";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type MonthlyMode, type Photo, type PublicListing } from "./listing";
 
 export type ListingRow = Database["public"]["Tables"]["listings"]["Row"];
@@ -88,6 +89,8 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
   };
 }
 
+export const publicPhoto = (path: string, url: PhotoUrl) => ({ path, url: url(variantPath(path, 800)), srcSet: photoSrcSet(path, url) });
+
 const photoPaths = (value: Json | null): string[] => (Array.isArray(value) ? value.filter((p): p is string => typeof p === "string") : []);
 
 export function fromPublicRow(row: PublicRow, url: PhotoUrl): PublicListing {
@@ -119,7 +122,7 @@ export function fromPublicRow(row: PublicRow, url: PhotoUrl): PublicListing {
     ownerWhatsappVerified: row.owner_whatsapp_verified === true,
     createdAt: row.created_at ?? "",
     updatedAt: row.updated_at ?? "",
-    photos: photoPaths(row.photos).map((path) => ({ path, url: url(path) })),
+    photos: photoPaths(row.photos).map((path) => publicPhoto(path, url)),
   };
 }
 

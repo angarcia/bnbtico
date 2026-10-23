@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACCEPTED_TYPES, MAX_SIDE, acceptsImage, photoPath, targetSize } from "../../src/domain/image";
+import { ACCEPTED_TYPES, MAX_SIDE, VARIANT_SIZES, acceptsImage, photoPath, photoSrcSet, targetSize, variantPath } from "../../src/domain/image";
 
 describe("acceptsImage", () => {
   it("acepta jpg/png/webp por tipo o por extensión", () => {
@@ -30,3 +30,16 @@ describe("targetSize", () => {
 });
 
 it("photoPath", () => expect(photoPath("abc", "u1")).toBe("abc/u1.jpg"));
+
+describe("variantes", () => {
+  const url = (p: string) => `https://s/${p}`;
+  it("tres tamaños", () => expect(VARIANT_SIZES).toEqual([480, 800, 1600]));
+  it("una foto anterior se usa tal cual en cualquier tamaño", () => {
+    expect(variantPath("l1/u1.jpg", 800)).toBe("l1/u1.jpg");
+    expect(photoSrcSet("l1/u1.jpg", url)).toBeNull();
+  });
+  it("una foto nueva es una carpeta con 480/800/1600", () => {
+    expect(variantPath("l1/u1", 800)).toBe("l1/u1/800.jpg");
+    expect(photoSrcSet("l1/u1", url)).toBe("https://s/l1/u1/480.jpg 480w, https://s/l1/u1/800.jpg 800w");
+  });
+});

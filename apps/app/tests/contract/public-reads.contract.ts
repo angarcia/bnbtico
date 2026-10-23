@@ -59,6 +59,12 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.getPublic("CT-999999")).toBeNull();
       });
 
+      it("sitemap: solo casas activas, con su fecha de actualización", async () => {
+        const entries = await h.anon.sitemap();
+        expect(entries.map((e) => e.publicId)).toEqual([active.publicId]);
+        expect(Number.isNaN(Date.parse(entries[0]!.updatedAt))).toBe(false);
+      });
+
       it("linkState: activa, bloqueada si alguna vez se envió, no existe si es un borrador nunca enviado", async () => {
         expect(await h.anon.linkState(active.publicId)).toBe("active");
         expect(await h.anon.linkState(draft.publicId)).toBeNull();

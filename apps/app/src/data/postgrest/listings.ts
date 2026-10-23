@@ -12,6 +12,7 @@ const PUBLIC_COLUMNS =
   "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, created_at, updated_at, owner_name, owner_whatsapp_verified, photos";
 
 export const SEARCH_LIMIT = 60;
+export const SITEMAP_LIMIT = 1000;
 
 export function createPostgrestListings(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): PublicListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
@@ -50,6 +51,12 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       if (error) throw toDomainError(error);
       const found = new Set(data.map((r) => r.province));
       return PROVINCES.filter((p) => found.has(p));
+    },
+
+    async sitemap() {
+      const { data, error } = await db.from("listings_public").select("public_id, updated_at").order("updated_at", { ascending: false }).limit(SITEMAP_LIMIT);
+      if (error) throw toDomainError(error);
+      return data.map((r) => ({ publicId: r.public_id ?? "", updatedAt: r.updated_at ?? "" }));
     },
   };
 }
