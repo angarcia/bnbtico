@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import logo from "../public/bnbtico-logo.png";
+import logo from "../public/logo-horizontal-crema.png";
 import playa from "../public/portada-playa-negra.jpg";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { appEnabled } from "@/lib/stage";
@@ -26,7 +26,7 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
         <div className="soon-card">
           <Image className="soon-logo" src={logo} alt="bnbtico" priority />
           <span className="soon-eyebrow">Muy pronto</span>
-          <h1 className="soon-title">Alquilá en el Caribe de Costa Rica, directo con quien te recibe</h1>
+          <h1 className="soon-title">Alquile en el Caribe de Costa Rica, directo con quien lo recibe</h1>
           <p className="soon-text">{SITE_DESCRIPTION}</p>
           <p className="soon-place">Playa Negra · Puerto Viejo de Talamanca</p>
         </div>
@@ -34,7 +34,7 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
       <section className="soon-more" aria-labelledby="que-es">
         <h2 id="que-es">Qué es bnbtico</h2>
         <p>
-          Un catálogo de casas, apartamentos y habitaciones en alquiler en Costa Rica, publicados por quienes los alquilan. Ves la casa, el precio orientativo por noche o por mes y el calendario, y le escribís al propietario por WhatsApp. Sin intermediarios, sin comisiones por reserva.
+          Un catálogo de casas, apartamentos y habitaciones en alquiler en Costa Rica, publicados por quienes los alquilan. Usted ve la casa, el precio por noche o por mes y le escribe al propietario por WhatsApp. Sin intermediarios, sin comisiones por reserva.
         </p>
         <h2>Dónde empezamos</h2>
         <p>
@@ -44,7 +44,7 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
         <p>
           Quien tiene una casa la publica con sus fotos, su precio en colones y su WhatsApp verificado; bnbtico la revisa antes de mostrarla. Quien busca, explora sin registrarse, guarda favoritos y contacta directo con un mensaje ya redactado con fechas y personas. El acuerdo es entre las dos personas; nosotros solo las ponemos en contacto.
         </p>
-        <p className="small muted">¿Tenés una casa en el Caribe? Las primeras 50 casas publicadas tendrán 12 meses gratis.</p>
+        <p className="small muted">¿Tiene una casa en el Caribe? Las primeras 50 casas publicadas tendrán 12 meses gratis.</p>
       </section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
