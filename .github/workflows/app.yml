@@ -58,6 +58,9 @@ jobs:
           CLOUDFLARE_ENV: ${{ env.DEPLOY_ENV }}
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          # Números de atención por WhatsApp (Ayuda); sin ellos el botón sale deshabilitado.
+          VITE_WA_OWNERS: ${{ vars.WA_OWNERS }}
+          VITE_WA_GUESTS: ${{ vars.WA_GUESTS }}
         run: |
           rm -f .dev.vars .env.local
           test -n "$VITE_SUPABASE_URL" -a -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Faltan SUPABASE_URL o SUPABASE_ANON_KEY en GitHub (variables o secretos)."; exit 1; }

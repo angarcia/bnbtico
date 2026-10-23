@@ -1,11 +1,18 @@
 // Caché de Query en IndexedDB: una pantalla visitada se pinta sin red al volver a abrir la app.
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { Query } from "@tanstack/react-query";
+import { PRIVATE_KEYS } from "./account";
+import { sessionState } from "./session";
 
 const DB = "bnbtico";
 const STORE = "query-cache";
-/** Solo lecturas públicas: nada que dependa de la sesión se guarda en el dispositivo. */
-const PERSISTED = new Set(["listings", "provinces", "listing"]);
+/** Lecturas públicas, siempre; las privadas (la cuenta), solo mientras haya sesión: al cerrarla se borran de la caché. */
+const PUBLIC_KEYS = new Set(["listings", "provinces", "listing"]);
+
+function persisted(q: Query): boolean {
+  const key = String(q.queryKey[0]);
+  return PUBLIC_KEYS.has(key) || (PRIVATE_KEYS.has(key) && sessionState().status === "signed-in");
+}
 export const PERSIST_MAX_AGE = 24 * 60 * 60_000;
 
 function openDb(): Promise<IDBDatabase> {
@@ -42,6 +49,6 @@ export const persistOptions = {
   // Cada despliegue empieza con la caché vacía: la forma de los datos puede haber cambiado.
   buster: __BUILD_ID__,
   dehydrateOptions: {
-    shouldDehydrateQuery: (q: Query) => q.state.status === "success" && PERSISTED.has(String(q.queryKey[0])),
+    shouldDehydrateQuery: (q: Query) => q.state.status === "success" && persisted(q),
   },
 };

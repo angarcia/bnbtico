@@ -3,7 +3,7 @@ import { keepPreviousData, queryOptions, type QueryClient } from "@tanstack/reac
 import type { Filters } from "../domain/filters";
 import type { PublicListing } from "../domain/listing";
 
-const api = async () => (await import("./public-data")).publicListings();
+const api = async () => (await import("./supabase-data")).publicListings();
 
 export const listingsQuery = (f: Filters) => {
   const { open: _open, ...key } = f; // «Más filtros» abierto no cambia los resultados

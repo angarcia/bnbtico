@@ -1,7 +1,7 @@
 [
   {
     "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet y supabase-js)",
-    "path": ["dist/client/assets/*.js", "!dist/client/assets/approx-map-leaflet-*.js", "!dist/client/assets/public-data-*.js"],
+    "path": ["dist/client/assets/*.js", "!dist/client/assets/approx-map-leaflet-*.js", "!dist/client/assets/supabase-data-*.js"],
     "limit": "150 KB",
     "gzip": true
   }

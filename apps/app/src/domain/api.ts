@@ -59,6 +59,7 @@ export interface Account {
   phoneVerified: boolean;
   email: string | null;
   description: string | null;
+  /** Lo pone la base al aprobar la primera casa (review_listing); la app solo lo lee. */
   isOwner: boolean;
   /** Lo marca `seed_admin` (local/pruebas) o una sentencia SQL; nunca la app. */
   isAdmin: boolean;
@@ -70,7 +71,7 @@ export interface PendingOtp {
   mode: "register" | "login";
   name?: string;
   phone: string;
-  /** Momento del último envío (ms), para el enfriamiento de 30 s. */
+  /** Momento del último envío (ms), para el enfriamiento de 30 s y la caducidad de 10 min. */
   sentAt: number;
 }
 
@@ -80,18 +81,37 @@ export interface Session {
   aal: "aal1" | "aal2";
 }
 
-export type ProfilePatch = Partial<Pick<Account, "name" | "email" | "description" | "isOwner">>;
+/** Solo lo que el usuario puede cambiar de su perfil: la base concede update en estas tres columnas y nada más. */
+export type ProfilePatch = Partial<Pick<Account, "name" | "email" | "description">>;
 
+/**
+ * Cuenta y sesión. La sesión vive en el dispositivo (detrás de un adaptador de almacenamiento) y sobrevive a reinicios
+ * hasta `logout`, que la revoca en el servidor. El número pendiente de verificar vive diez minutos en el almacenamiento
+ * de la pestaña.
+ *
+ * Cambios respecto a la declaración del ticket 02 (ticket 05):
+ * - `ProfilePatch` ya no incluye `isOwner`: la columna no se puede actualizar desde la app (grant por columna) y la marca
+ *   la base al aprobar una casa. El modo propietario de la interfaz es estado del cliente.
+ * - `onSessionChange`: la sesión puede terminar sola (refresco rechazado, cierre en otra pestaña) y la interfaz debe enterarse.
+ * - `enrolMfa`/`verifyMfa` pasan a `MfaApi` (ticket 09), para que los adaptadores de este ticket no lleven métodos vacíos.
+ */
 export interface AuthApi {
+  /** Valida nombre y número y pide el código por WhatsApp. Falla si no pasaron 30 s desde el último envío a ese número. */
   start(input: StartInput): Promise<void>;
   pending(): PendingOtp | null;
+  /** Comprueba el código del número pendiente y abre sesión. */
   verify(code: string): Promise<Account>;
   resend(): Promise<void>;
   cancel(): void;
   session(): Promise<Session | null>;
+  onSessionChange(listener: (session: Session | null) => void): () => void;
   profile(): Promise<Account | null>;
   updateProfile(patch: ProfilePatch): Promise<Account>;
   logout(): Promise<void>;
+}
+
+/** Segundo factor del admin (ticket 09). */
+export interface MfaApi {
   enrolMfa(): Promise<{ factorId: string }>;
   verifyMfa(factorId: string, code: string): Promise<void>;
 }

@@ -4,13 +4,25 @@
 
 **Blocked by:** 02 (Domain foundation and public reads).
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-22)
 
-- [ ] supabase-js client with session persistence behind a storage adapter (localStorage now; swappable later); a session store exposed to the router and screens; token refresh automatic.
-- [ ] `AuthApi` contract on the fake and on local Supabase with the test numbers: start (register and sign-in modes, WhatsApp channel), verify, resend with the 30 s cooldown and the Supabase rate-limit message, cancel, profile read and update (name, email, description only), logout that revokes the session.
-- [ ] Screens ported to design v1 and usted copy: register/sign-in, code entry (pending number and name kept for ten minutes in session storage), profile, list of accounts, recover; Ayuda per role with the two WhatsApp numbers; Favoritos placeholder.
-- [ ] Pathless private layout: no session redirects to the account flow with the intended destination; after sign-in the user lands there.
-- [ ] Role (client/owner) switch is client state plus profile flag; the tab bar reflects it.
-- [ ] Error mapping shows the Spanish messages for wrong code, expired code, too many attempts, rate limit.
-- [ ] Playwright: the `cuenta` suite ported (register, code, profile, logout, role switch, help) with session injected through storage for tests that start signed in.
-- [ ] No cookie of any kind is set by the app.
+- [x] supabase-js client with session persistence behind a storage adapter (localStorage now; swappable later); a session store exposed to the router and screens; token refresh automatic.
+- [x] `AuthApi` contract on the fake and on local Supabase with the test numbers: start (register and sign-in modes, WhatsApp channel), verify, resend with the 30 s cooldown and the Supabase rate-limit message, cancel, profile read and update (name, email, description only), logout that revokes the session.
+- [x] Screens ported to design v1 and usted copy: register/sign-in, code entry (pending number and name kept for ten minutes in session storage), profile, list of accounts, recover; Ayuda per role with the two WhatsApp numbers; Favoritos placeholder.
+- [x] Pathless private layout: no session redirects to the account flow with the intended destination; after sign-in the user lands there.
+- [x] Role (client/owner) switch is client state plus profile flag; the tab bar reflects it.
+- [x] Error mapping shows the Spanish messages for wrong code, expired code, too many attempts, rate limit.
+- [x] Playwright: the `cuenta` suite ported (register, code, profile, logout, role switch, help) with session injected through storage for tests that start signed in.
+- [x] No cookie of any kind is set by the app.
+
+## Cierre (2026-10-22)
+
+- **Dominio:** `src/domain/account.ts` (enfriamiento 30 s, número pendiente 10 min, validación de registro y perfil, `safeNext`). `AuthApi` ajustada en `src/domain/api.ts`, con el porqué en el comentario: `ProfilePatch` sin `isOwner` (la columna no tiene grant de update; la marca `review_listing`), `onSessionChange` nuevo (la sesión puede terminar sola) y `enrolMfa`/`verifyMfa` movidos a `MfaApi` para el ticket 09. `toDomainError` traduce «after N seconds» de GoTrue a «Espere N segundos antes de pedir otro código.».
+- **Adaptadores:** `src/data/postgrest/auth.ts` (GoTrue + `profiles`, canal `whatsapp`) y `session-client.ts` (un solo cliente de supabase-js para lecturas públicas y cuenta, sesión en `storage` = `SessionStorageAdapter`, `autoRefreshToken`, clave `bnbtico-auth`); fake en `src/data/fake/auth.ts`. `src/data/storage.ts`: adaptador de almacenamiento (localStorage/sessionStorage con respaldo en memoria; admite uno asíncrono para Capacitor) y el número pendiente.
+- **Canal WhatsApp en local:** GoTrue local con el proveedor de relleno `twilio_verify` acepta `channel: "whatsapp"` con los números de prueba (comprobado con curl y en el contrato), así que no hizo falta un canal distinto en local. El canal queda como opción del adaptador (`channel`), por defecto `whatsapp`.
+- **Navegador:** `src/client/session.ts` (estado de sesión sin supabase-js: si no hay `bnbtico-auth` guardado se sabe al instante y no se descarga nada; si lo hay, «cargando» hasta leerla), `role.ts` (modo propietario = localStorage + `is_owner` al ingresar; sin sesión siempre cliente), `account.ts` (consulta privada `["account", id]`), `support.ts` (`VITE_WA_OWNERS`/`VITE_WA_GUESTS`). La caché privada solo se persiste con sesión y se borra al cerrarla (`persist.ts`, `onSignedOut` en `shell.tsx`). Rutas: `/cuenta` (Ingresar sin sesión, como pantalla de flujo sin barra según el diseño 06; Mi cuenta/Cuenta con sesión), `/cuenta/codigo`, `/cuenta/lista`, `/cuenta/recuperar`, `/ayuda`, `/favoritos` y un layout privado sin ruta (`_private`) con `/propietario`, `/propietario/casas`, `/calendario`, `/consultas` (marcadores hasta el 06). «Ingresar» en Explorar ocupa su caja aunque haya sesión (invisible), sin saltos.
+- **Pruebas:** unitarias 228/228 (nuevas: `account.test.ts` con el mapeo de código incorrecto, caducado, demasiados intentos y límite de Supabase; contrato de cuenta contra el fake, 12). Base 28/28 (contrato de cuenta contra Supabase local, 12: registro, número sin cuenta, validación, sesión que sobrevive al reinicio y se revoca en el servidor al cerrar, perfil, número existente no se renombra, enfriamiento, límite de Supabase, cancelar, número pendiente 10 min). Playwright 17/17 (5 nuevas de cuenta: registro → código → lista → Mi cuenta → editar → recargar → cerrar sesión → volver a entrar; número sin cuenta; ruta privada → Ingresar → vuelve; modo propietario/cliente y ayuda con sesión inyectada por localStorage; recuperar y Favoritos). `document.cookie` vacío y `context.cookies()` sin nada tras ingresar y cerrar sesión. `typecheck` y `build` en verde.
+- **Tamaño:** 128,45 KB gz de JS inicial de la zona privada (antes 121,27). supabase-js sigue en el trozo diferido `supabase-data` (renombrado desde `public-data`; `.size-limit.json` actualizado). La ficha SSR no carga nada de la sesión.
+- **Desviaciones:** Ingresar y Código van sin barra inferior (diseño 06/07; la suite vieja la esperaba): se ajustaron `shell.spec.ts` y `explorar.spec.ts`. El fake no limita intentos ni caduca códigos (GoTrue local con números de prueba tampoco lo hace); esos mensajes se prueban en el mapeo. En Playwright, volver a pedir código al mismo número espera 1,1 s (Supabase: un código por segundo y número).
+- Sin migraciones. CI: el build de despliegue pasa `vars.WA_OWNERS`/`vars.WA_GUESTS` como `VITE_WA_*` (opcionales).
+- **Para Daniel:** crear las variables de GitHub `WA_OWNERS` y `WA_GUESTS` cuando existan los números (sin ellas, «Abrir WhatsApp» sale deshabilitado). Probar en `nueva.bnbtico.com` el registro con un WhatsApp real (canal whatsapp de Twilio Verify en el proyecto alojado).

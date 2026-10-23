@@ -23,6 +23,13 @@ export const I = {
   kids: (p: P) => <svg {...S(p)}><circle cx="12" cy="7" r="3" /><path d="M6 21v-5a6 6 0 0 1 12 0v5" /></svg>,
   beach: (p: P) => <svg {...S(p)}><circle cx="17" cy="7" r="3" /><path d="M2 19c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M3 14c3-3 6-3 9 0" /></svg>,
   bbq: (p: P) => <svg {...S(p)}><path d="M4 10h16a8 8 0 0 1-16 0z" /><path d="M8 18l-2 4M16 18l2 4M9 3c0 1.5 1 1.5 1 3M13 3c0 1.5 1 1.5 1 3" /></svg>,
+  home: (p: P) => <svg {...S(p)}><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z" /></svg>,
+  house: (p: P) => <svg {...S(p)}><path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z" /><circle cx="12" cy="10" r="2.2" /></svg>,
+  calendar: (p: P) => <svg {...S(p)}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>,
+  chat: (p: P) => <svg {...S(p)}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12z" /></svg>,
+  chevron: (p: P) => <svg {...S(p, 18)}><path d="m9 6 6 6-6 6" /></svg>,
+  shield: (p: P) => <svg {...S(p)}><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></svg>,
+  help: (p: P) => <svg {...S(p)}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5M12 17h.01" /></svg>,
 };
 
 export type IconName = keyof typeof I;

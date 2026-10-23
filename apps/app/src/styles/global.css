@@ -283,3 +283,24 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .listing-card .sk.photo{height:168px;border-radius:var(--r)}
 .sk-line{height:18px;width:70%}
 .filters-form{gap:22px}
+
+/* ---------- Cuenta (pantallas 06, 07, 08 y 20, en el navegador) ---------- */
+.gap-12{gap:12px}.gap-14{gap:14px}.gap-18{gap:18px}
+.flow{gap:22px;padding:8px 4px 0}
+.flow-title{font-size:32px;line-height:1.05}
+/* El campo real del código va encima de las seis casillas, casi invisible pero enfocable al tocarlas. */
+.code-field{position:relative}
+.code-input{position:absolute;left:0;right:0;top:24px;height:60px;opacity:.01;border:0;background:transparent;font-size:16px}
+input.code-input:not([type=checkbox]){min-height:0;border:0;background:transparent}
+.avatar-ok{background:var(--primary);color:var(--primary-on)}
+.account-card{gap:14px}
+.account-name{font-size:19px}
+.verified{gap:6px;font-weight:600;flex-wrap:wrap}
+.account-skeleton{min-height:84px;display:flex;align-items:center}
+.account-skeleton .sk-line{width:60%}
+.foot-row{padding:0 4px}
+.is-hidden{visibility:hidden}
+.account-card .grow-col{min-width:0}
+.note svg{flex-shrink:0}
+.code-input{color:transparent;caret-color:transparent}
+.card-arena .btn{align-self:flex-start}

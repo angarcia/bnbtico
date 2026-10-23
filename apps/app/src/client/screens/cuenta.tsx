@@ -1,0 +1,540 @@
+// Cuenta en el navegador: Ingresar (pantalla 06), código (07), Mi cuenta (08) y Cuenta del propietario (20), cuenta lista,
+// recuperar y ayuda. Todo contra AuthApi; supabase-js se carga al enviar el primer formulario o si ya hay sesión.
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, Navigate, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { RESEND_COOLDOWN_MS, resendWaitSeconds, safeNext } from "../../domain/account";
+import type { Account } from "../../domain/api";
+import { toDomainError } from "../../domain/errors";
+import { formatPhone } from "../../domain/phone";
+import { I } from "../../shared/icons";
+import { accountQuery } from "../account";
+import { FlowFrame, FlowHeader, RootHeader, TabsFrame } from "../chrome";
+import { setRole, useRole } from "../role";
+import { authApi, pendingOtp, useSession } from "../session";
+import { SUPPORT, waLink } from "../support";
+
+export interface CuentaSearch {
+  modo?: "entrar";
+  next?: string;
+  editar?: "1";
+}
+
+export function cuentaSearch(params: Record<string, unknown>): CuentaSearch {
+  const out: CuentaSearch = {};
+  if (params.modo === "entrar") out.modo = "entrar";
+  const next = safeNext(typeof params.next === "string" ? params.next : null);
+  if (next) out.next = next;
+  if (params.editar === "1") out.editar = "1";
+  return out;
+}
+
+export const nextSearch = (params: Record<string, unknown>): { next?: string } => {
+  const next = safeNext(typeof params.next === "string" ? params.next : null);
+  return next ? { next } : {};
+};
+
+const message = (e: unknown) => toDomainError(e).message;
+const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
+
+function useGoTo() {
+  const router = useRouter();
+  return (href: string) => router.navigate({ href, replace: true });
+}
+
+// ---------- /cuenta ----------
+const cuentaRoute = getRouteApi("/cuenta");
+
+export function CuentaScreen() {
+  const { status } = useSession();
+  const search = cuentaRoute.useSearch();
+  if (status === "signed-out") {
+    return (
+      <FlowFrame>
+        <EntryForm mode={search.modo === "entrar" ? "login" : "register"} next={search.next} />
+      </FlowFrame>
+    );
+  }
+  return (
+    <TabsFrame>
+      <MyAccount editing={search.editar === "1"} />
+    </TabsFrame>
+  );
+}
+
+function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }) {
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const register = mode === "register";
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    setBusy(true);
+    setError(null);
+    try {
+      const phone = field(fd, "phone");
+      await (await authApi()).start(register ? { mode, name: field(fd, "name"), phone } : { mode, phone });
+      await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
+    } catch (err) {
+      setError(message(err));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <FlowHeader title="Ingresar" back="/explorar" />
+      <div className="stack flow">
+        <div className="stack gap-8">
+          <h2 className="flow-title">{register ? "Su nombre y su WhatsApp. Nada más." : "Entre con su WhatsApp"}</h2>
+          <p className="muted">{register ? "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Sin contraseña ni correo." : "Le mandamos un código por WhatsApp para autorizar este teléfono."}</p>
+        </div>
+        <form onSubmit={submit} className="stack gap-14" noValidate>
+          {register ? (
+            <div className="field">
+              <label htmlFor="account-name">Nombre</label>
+              <input id="account-name" name="name" autoComplete="name" maxLength={80} placeholder="Su nombre" required />
+            </div>
+          ) : null}
+          <div className="field">
+            <label htmlFor="account-phone">WhatsApp con código de país</label>
+            <div className="input-prefix">
+              <span className="prefix" aria-hidden="true">+506</span>
+              <input id="account-phone" name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="8000 0001" required />
+            </div>
+            <span className="xs muted">Si su número no es de Costa Rica, escríbalo completo con «+» y su código de país.</span>
+          </div>
+          {error ? <p className="field-error" role="alert">{error}</p> : null}
+          <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
+            <I.wa size={20} /> {busy ? "Un momento…" : "Recibir código por WhatsApp"}
+          </button>
+        </form>
+        <div className="stack small">
+          <Link to="/cuenta" search={{ ...(register ? { modo: "entrar" as const } : {}), ...(next ? { next } : {}) }} className="link" replace>
+            {register ? "Ya tengo cuenta · entrar con mi WhatsApp" : "Crear una cuenta"}
+          </Link>
+          <Link to="/cuenta/recuperar" className="link muted">
+            No tengo acceso a mi WhatsApp
+          </Link>
+        </div>
+        <div className="note">
+          <I.shield size={22} />
+          <span>Su número solo se comparte con el propietario cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
+        </div>
+        <p className="xs muted center">Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.</p>
+      </div>
+    </>
+  );
+}
+
+// ---------- /cuenta/codigo ----------
+const codigoRoute = getRouteApi("/_flow/cuenta/codigo");
+
+export function CodigoScreen() {
+  const { next } = codigoRoute.useSearch();
+  const pending = pendingOtp();
+  if (!pending) return <Navigate to="/cuenta" search={next ? { next } : {}} replace />;
+  return <CodeForm phone={pending.phone} mode={pending.mode} sentAt={pending.sentAt} next={next} />;
+}
+
+function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "register" | "login"; sentAt: number; next?: string }) {
+  const navigate = useNavigate();
+  const goTo = useGoTo();
+  const queryClient = useQueryClient();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [resent, setResent] = useState<string | null>(null);
+  const [wait, setWait] = useState(() => resendWaitSeconds(sentAt, Date.now()));
+
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = setTimeout(() => setWait((w) => w - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+
+  async function verify(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (code.length !== 6) return setError("El código tiene 6 dígitos.");
+    setBusy(true);
+    setError(null);
+    try {
+      const account = await (await authApi()).verify(code);
+      queryClient.setQueryData(accountQuery(account.id).queryKey, account);
+      if (account.isOwner) setRole("owner");
+      if (mode === "register") await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
+      else await goTo(next ?? "/cuenta");
+    } catch (err) {
+      setError(message(err));
+      setBusy(false);
+    }
+  }
+
+  async function resend() {
+    setResent(null);
+    try {
+      await (await authApi()).resend();
+      setWait(RESEND_COOLDOWN_MS / 1000);
+      setResent("Le enviamos otro código por WhatsApp.");
+    } catch (err) {
+      setResent(message(err));
+    }
+  }
+
+  async function changeNumber() {
+    (await authApi()).cancel();
+    await navigate({ to: "/cuenta", search: next ? { next } : {}, replace: true });
+  }
+
+  const mmss = `${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}`;
+  return (
+    <>
+      <FlowHeader title="Ingresar" back="/cuenta" search={next ? { next } : {}} />
+      <div className="stack flow">
+        <div className="stack gap-8">
+          <h2 className="flow-title">Introduzca el código</h2>
+          <p className="muted">
+            Se lo enviamos por WhatsApp al <b className="ink num">{formatPhone(phone)}</b>.
+          </p>
+        </div>
+        <form onSubmit={verify} className="stack gap-18" noValidate>
+          <div className="field code-field">
+            <label htmlFor="account-code">Código de 6 dígitos</label>
+            <div className="code-boxes" aria-hidden="true">
+              {Array.from({ length: 6 }, (_, i) => (
+                <span key={i} className={i < code.length ? "filled" : i === code.length ? "active" : ""}>
+                  {code[i] ?? ""}
+                </span>
+              ))}
+            </div>
+            <input
+              id="account-code"
+              className="code-input"
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              pattern="[0-9]*"
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, "").slice(0, 6))}
+            />
+          </div>
+          {error ? <p className="field-error" role="alert">{error}</p> : null}
+          <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
+            {busy ? "Verificando…" : "Verificar y continuar"}
+          </button>
+        </form>
+        <div className="stack small">
+          {wait > 0 ? (
+            <span className="muted">
+              ¿No llegó? Puede pedir otro en <b className="ink num">{mmss}</b>.
+            </span>
+          ) : (
+            <button type="button" className="btn-link" onClick={resend}>
+              Pedir otro código
+            </button>
+          )}
+          {resent ? (
+            <p className="small" role="status">
+              {resent}
+            </p>
+          ) : null}
+          <a className="link" href="https://wa.me/" target="_blank" rel="noopener">
+            Abrir WhatsApp para buscar el mensaje
+          </a>
+          <button type="button" className="btn-link" onClick={changeNumber}>
+            Cambiar número
+          </button>
+        </div>
+        {next ? (
+          <div className="card row gap-12">
+            <span className="avatar avatar-sm">
+              <I.chevron size={18} />
+            </span>
+            <span className="small muted">Después de verificar vuelve adonde estaba.</span>
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+// ---------- /cuenta/lista ----------
+const listaRoute = getRouteApi("/_flow/cuenta/lista");
+
+export function ListaScreen() {
+  const { next } = listaRoute.useSearch();
+  const { status } = useSession();
+  if (status === "signed-out") return <Navigate to="/cuenta" replace />;
+  return (
+    <>
+      <FlowHeader title="Ingresar" back="/explorar" />
+      <div className="stack flow">
+        <div className="stack gap-8">
+          <span className="avatar avatar-ok">
+            <I.check size={26} />
+          </span>
+          <h2 className="flow-title">¡Listo! Su cuenta está creada</h2>
+          <p className="muted">Su WhatsApp ya está verificado. Si quiere, añada un correo para recuperar la cuenta si pierde el acceso a ese número. Puede añadirlo después en Mi cuenta.</p>
+        </div>
+        <Link to="/cuenta" search={{ editar: "1" }} className="btn btn-primary btn-xl">
+          Añadir correo a mi perfil
+        </Link>
+        <Link to={(next ?? "/explorar") as "/explorar"} className="btn btn-ghost btn-lg">
+          Ahora no · continuar
+        </Link>
+      </div>
+    </>
+  );
+}
+
+// ---------- Mi cuenta / Cuenta ----------
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
+}
+
+function MyAccount({ editing }: { editing: boolean }) {
+  const { session } = useSession();
+  const owner = useRole() === "owner";
+  const navigate = useNavigate();
+  const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
+  const [leaving, setLeaving] = useState(false);
+
+  async function logout() {
+    setLeaving(true);
+    await (await authApi()).logout();
+    setRole("guest");
+    await navigate({ to: "/cuenta", replace: true });
+  }
+
+  async function switchRole(role: "guest" | "owner") {
+    setRole(role);
+    await navigate({ to: role === "owner" ? "/propietario" : "/explorar" });
+  }
+
+  const a = account.data;
+  return (
+    <>
+      <RootHeader title={owner ? "Cuenta" : "Mi cuenta"} home={owner ? "/propietario" : "/explorar"} />
+      {a ? (
+        <section className="card row account-card">
+          <span className="avatar" aria-hidden="true">
+            {initials(a.name)}
+          </span>
+          <div className="stack gap-4 grow-col">
+            <h3 className="account-name">{a.name}</h3>
+            <span className="row small primary verified">
+              <I.check size={16} /> WhatsApp verificado · <span className="num">{formatPhone(a.phone)}</span>
+            </span>
+          </div>
+          {editing ? (
+            <Link to="/cuenta" className="link small">
+              Listo
+            </Link>
+          ) : (
+            <Link to="/cuenta" search={{ editar: "1" }} className="link small">
+              Editar
+            </Link>
+          )}
+        </section>
+      ) : (
+        <section className="card skeleton account-skeleton" aria-busy="true" aria-label="Cargando su cuenta">
+          <span className="sk sk-line" />
+        </section>
+      )}
+
+      {a && editing ? (
+        <section className="card stack">
+          <h3>Mi perfil</h3>
+          <ProfileForm account={a} />
+        </section>
+      ) : null}
+
+      {owner ? (
+        <section className="card stack">
+          <div className="row between">
+            <b>Suscripción</b>
+            <span className="xs muted">Oferta de lanzamiento</span>
+          </div>
+          <p className="small muted">Cuando publique una casa, aquí verá su suscripción. Las primeras 50 casas tienen 12 meses gratis.</p>
+          <hr className="divider" />
+          <div className="row between baseline">
+            <span className="small muted">Próximo cobro</span>
+            <b className="num">₡0 · sin método de pago</b>
+          </div>
+          <span className="xs muted">₡9 900 al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
+        </section>
+      ) : null}
+
+      <section className="list">
+        {!owner ? (
+          <Link to="/cuenta" search={{ editar: "1" }} className="list-item">
+            <I.user />
+            <span className="body">
+              Mi perfil<small>Descripción y correo de recuperación (opcionales)</small>
+            </span>
+            <span className="chev">
+              <I.chevron />
+            </span>
+          </Link>
+        ) : null}
+        {!owner ? (
+          <Link to="/favoritos" className="list-item">
+            <I.heart />
+            <span className="body">
+              Favoritos<small>Las casas que guarde</small>
+            </span>
+            <span className="chev">
+              <I.chevron />
+            </span>
+          </Link>
+        ) : null}
+        <Link to="/ayuda" className="list-item">
+          <I.help />
+          <span className="body">
+            Ayuda por WhatsApp<small>{owner ? "Línea de bnbtico para propietarios" : "Línea de bnbtico para clientes"}</small>
+          </span>
+          <span className="chev">
+            <I.chevron />
+          </span>
+        </Link>
+        {owner ? (
+          <button type="button" className="list-item" onClick={() => switchRole("guest")}>
+            <I.search />
+            <span className="body">
+              Buscar una casa<small>Pasar al modo cliente</small>
+            </span>
+            <span className="chev">
+              <I.chevron />
+            </span>
+          </button>
+        ) : null}
+      </section>
+
+      {!owner ? (
+        <section className="card-arena stack">
+          <b className="display">¿Tiene una casa en el Caribe?</b>
+          <span className="small">Publíquela gratis durante 12 meses si está entre las primeras 50. Sin comisiones: los clientes le escriben por WhatsApp.</span>
+          <button type="button" className="btn btn-ghost" onClick={() => switchRole("owner")}>
+            Publicar mi casa
+          </button>
+        </section>
+      ) : null}
+
+      <div className="row between foot-row">
+        <button type="button" className="btn-link muted" onClick={logout} disabled={leaving}>
+          Cerrar sesión
+        </button>
+        <span className="xs muted">Términos y privacidad</span>
+      </div>
+    </>
+  );
+}
+
+function ProfileForm({ account }: { account: Account }) {
+  const queryClient = useQueryClient();
+  const [state, setState] = useState<{ error?: string; ok?: boolean; busy?: boolean }>({});
+
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    setState({ busy: true });
+    try {
+      const updated = await (await authApi()).updateProfile({ name: field(fd, "name"), email: field(fd, "email"), description: field(fd, "description") });
+      queryClient.setQueryData(accountQuery(updated.id).queryKey, updated);
+      setState({ ok: true });
+    } catch (err) {
+      setState({ error: message(err) });
+    }
+  }
+
+  return (
+    <form onSubmit={save} className="stack gap-14" noValidate>
+      <div className="field">
+        <label htmlFor="account-name">Nombre</label>
+        <input id="account-name" name="name" defaultValue={account.name} maxLength={80} autoComplete="name" />
+      </div>
+      <div className="field">
+        <label htmlFor="account-description">Descripción (opcional)</label>
+        <textarea id="account-description" name="description" rows={3} maxLength={1000} defaultValue={account.description ?? ""} placeholder="Cuéntenos un poco sobre usted" />
+      </div>
+      <div className="field">
+        <label htmlFor="account-email">Correo de recuperación (opcional)</label>
+        <input id="account-email" name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder="nombre@ejemplo.com" />
+        <span className="xs muted">Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.</span>
+      </div>
+      {state.error ? <p className="field-error" role="alert">{state.error}</p> : null}
+      {state.ok ? (
+        <p className="small primary" role="status">
+          Guardado.
+        </p>
+      ) : null}
+      <button className="btn btn-primary btn-lg" type="submit" disabled={state.busy}>
+        {state.busy ? "Guardando…" : "Guardar"}
+      </button>
+    </form>
+  );
+}
+
+// ---------- /cuenta/recuperar ----------
+export function RecuperarScreen() {
+  return (
+    <>
+      <FlowHeader title="Recuperar mi cuenta" back="/cuenta" />
+      <section className="card stack gap-14">
+        <p>Use el correo que añadió y confirmó en su perfil. Después podrá verificar su nuevo WhatsApp para recuperar el acceso.</p>
+        <div className="field">
+          <label htmlFor="recovery-email">Correo confirmado</label>
+          <input id="recovery-email" type="email" placeholder="nombre@ejemplo.com" disabled />
+        </div>
+        <button className="btn btn-primary btn-lg" type="button" disabled>
+          Recuperar con mi correo
+        </button>
+        <p className="xs muted">La recuperación por correo se activa cuando confirme uno en su perfil.</p>
+      </section>
+      <section className="card stack">
+        <h3>¿No tiene un correo confirmado?</h3>
+        <p className="small">Pida ayuda a bnbtico para revisar la recuperación. Indicar su nombre y otro número no basta para recuperar una cuenta. No mande documentos ni códigos por este formulario.</p>
+        <Link to="/ayuda" className="btn btn-wa">
+          <I.wa size={20} /> Escribir a bnbtico por WhatsApp
+        </Link>
+      </section>
+    </>
+  );
+}
+
+// ---------- /ayuda ----------
+export function AyudaScreen() {
+  const role = useRole();
+  const s = SUPPORT[role];
+  return (
+    <>
+      <FlowHeader title="Ayuda por WhatsApp" back="/cuenta" />
+      <section className="card stack gap-14">
+        <span className="eyebrow">{s.label}</span>
+        <p>{s.intro}</p>
+        {s.number ? (
+          <>
+            <p className="small muted">
+              <span className="num">{s.number}</span> · canal separado del de {s.other}.
+            </p>
+            <a className="btn btn-wa" href={waLink(s.number, s.greeting)} target="_blank" rel="noopener">
+              <I.wa size={20} /> Abrir WhatsApp
+            </a>
+          </>
+        ) : (
+          <>
+            <p className="small muted">Número pendiente de configurar. Canal separado del de {s.other}.</p>
+            <button className="btn btn-wa" type="button" disabled>
+              <I.wa size={20} /> Abrir WhatsApp
+            </button>
+          </>
+        )}
+      </section>
+    </>
+  );
+}

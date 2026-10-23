@@ -10,7 +10,12 @@ export interface FakeProfile {
   phone: string;
   phoneVerified: boolean;
   isAdmin: boolean;
+  isOwner: boolean;
+  email: string | null;
+  description: string | null;
 }
+
+type NewProfile = Omit<FakeProfile, "id" | "isOwner" | "email" | "description"> & Partial<Pick<FakeProfile, "id" | "isOwner" | "email" | "description">>;
 
 export interface FakeListing extends Omit<ListingDraft, "photoCount"> {
   id: string;
@@ -36,6 +41,10 @@ export class FakeDb {
   readonly profiles = new Map<string, FakeProfile>();
   readonly listings = new Map<string, FakeListing>();
   photos: FakePhoto[] = [];
+  /** Sesiones abiertas (token → usuario), como auth.sessions: cerrar sesión las borra. */
+  readonly authSessions = new Map<string, string>();
+  /** Último código pedido por número (reloj del adaptador), para el límite de un código por segundo de Supabase. */
+  readonly otpSentAt = new Map<string, number>();
   private tick = Date.parse("2026-10-01T12:00:00Z");
   private seq = 1000;
   private ids = 0;
@@ -50,8 +59,8 @@ export class FakeDb {
     return `00000000-0000-4000-8000-${String(this.ids).padStart(12, "0")}`;
   }
 
-  addProfile(p: Omit<FakeProfile, "id"> & { id?: string }): FakeProfile {
-    const profile = { ...p, id: p.id ?? this.newId() };
+  addProfile(p: NewProfile): FakeProfile {
+    const profile: FakeProfile = { isOwner: false, email: null, description: null, ...p, id: p.id ?? this.newId() };
     this.profiles.set(profile.id, profile);
     return profile;
   }
@@ -79,6 +88,11 @@ export class FakeDb {
 
   photosOf(listingId: string): FakePhoto[] {
     return this.photos.filter((p) => p.listingId === listingId).sort((a, b) => a.position - b.position);
+  }
+
+  profileByPhone(phone: string): FakeProfile | undefined {
+    for (const p of this.profiles.values()) if (p.phone === phone) return p;
+    return undefined;
   }
 
   byPublicId(publicId: string): FakeListing | undefined {

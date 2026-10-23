@@ -8,19 +8,22 @@ import { setCurrency, useCurrency } from "../../shared/currency";
 import { I } from "../../shared/icons";
 import { ListingCard } from "../listing-card";
 import { listingsQuery, provincesQuery } from "../queries";
+import { useSession } from "../session";
 
 const route = getRouteApi("/_tabs/explorar");
 const QUICK: Feature[] = ["pool", "pets", "beachfront"];
 const casas = (n: number) => `${n} ${n === 1 ? "casa" : "casas"}`;
 
 function Header() {
+  // Caja de tamaño fijo: con sesión (o mientras se lee la guardada) el botón ocupa su sitio sin verse, y nada salta.
+  const signedOut = useSession().status === "signed-out";
   return (
     <header className="header-root">
       <div className="top">
         <Link to="/explorar" aria-label="bnbtico, inicio">
           <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
         </Link>
-        <Link to="/cuenta" className="btn btn-ghost btn-header">
+        <Link to="/cuenta" className={`btn btn-ghost btn-header${signedOut ? "" : " is-hidden"}`} aria-hidden={!signedOut} tabIndex={signedOut ? undefined : -1}>
           Ingresar
         </Link>
       </div>

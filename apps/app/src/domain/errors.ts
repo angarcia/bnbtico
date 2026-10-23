@@ -52,6 +52,10 @@ export function toDomainError(error: unknown): DomainError {
   const code = typeof e.code === "string" ? e.code : "";
   const message = typeof e.message === "string" ? e.message : "";
   if (code === "P0001" && message) return new DomainError(message, "validation");
+  if (code === "over_sms_send_rate_limit") {
+    const seconds = Number(/after (\d+) seconds/i.exec(message)?.[1] ?? 0);
+    if (seconds > 1) return new DomainError(`Espere ${seconds} segundos antes de pedir otro código.`, "rate_limit");
+  }
   const known = BY_CODE[code];
   if (known) return new DomainError(known[1], known[0]);
   if (e.name === "TypeError" || e.name === "AuthRetryableFetchError" || /fetch failed|failed to fetch|network|load failed/i.test(message)) {
