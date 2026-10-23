@@ -1,7 +1,7 @@
 // Consultas y acciones de la zona del admin (ticket 09). La cola se persiste con la sesión (clave privada) y se pide de
 // nuevo siempre al abrirla o volver a la app (staleTime 0). Revisar es optimista: la casa sale de la cola al instante y,
 // si la base se niega, vuelve con su mensaje. La purga de la ficha pública la encola la base (trigger con pg_net).
-import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useMutationState, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import type { AdminListingsApi, MfaFactor } from "../domain/api";
 import { toDomainError } from "../domain/errors";
@@ -62,12 +62,28 @@ export interface ReviewInput {
   note: string;
 }
 
+const reviewKey = (userId: string) => ["admin-review", userId] as const;
+
+/**
+ * La cola tal como debe verse: lo que dice la base más las decisiones aún en curso. Sin esto, una lectura de la cola que
+ * llegue antes de que la base guarde la decisión (la cola se pide al abrirla, staleTime 0) devolvería la casa a la cola.
+ */
+export function useQueueWithPending(userId: string, queue: AdminQueue | undefined): AdminQueue | undefined {
+  const pending = useMutationState({
+    filters: { mutationKey: reviewKey(userId), status: "pending" },
+    select: (m) => ({ input: m.state.variables as ReviewInput, at: new Date(m.state.submittedAt).toISOString() }),
+  });
+  if (!queue) return queue;
+  return pending.reduce((q, { input, at }) => applyDecision(q, input.item.listing.id, input.decision, input.note, at), queue);
+}
+
 /** Decisión optimista. Los callbacks van en el hook: corren aunque la pantalla de detalle ya no esté. */
 export function useReview(userId: string) {
   const client = useQueryClient();
   const queueKey = adminQueueQuery(userId).queryKey;
   const itemKey = (id: string) => ["admin-listing", userId, id] as const;
   return useMutation({
+    mutationKey: reviewKey(userId),
     mutationFn: async ({ item, decision, note }: ReviewInput) => (await adminApi()).review(item.listing.id, decision, note),
     onMutate: async ({ item, decision, note }) => {
       const id = item.listing.id;

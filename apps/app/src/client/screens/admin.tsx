@@ -14,7 +14,7 @@ import { formatPhone } from "../../domain/phone";
 import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
-import { adminListingQuery, adminQueueQuery, clearReviewOutcome, loadSecondFactor, useReview, useReviewOutcome, verifySecondCode } from "../admin";
+import { adminListingQuery, adminQueueQuery, clearReviewOutcome, loadSecondFactor, useQueueWithPending, useReview, useReviewOutcome, verifySecondCode } from "../admin";
 import { FlowHeader, RootHeader } from "../chrome";
 import { useSession } from "../session";
 
@@ -68,7 +68,7 @@ export function AnunciosScreen() {
   const isAdmin = useIsAdmin();
   const queue = useQuery({ ...adminQueueQuery(userId), enabled: !!userId && isAdmin !== false });
   const outcome = useReviewOutcome();
-  const q = queue.data;
+  const q = useQueueWithPending(userId, queue.data);
 
   useEffect(() => () => clearReviewOutcome(), []);
 
