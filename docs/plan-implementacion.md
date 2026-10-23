@@ -81,8 +81,9 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ### Fase 3 · Contacto por WhatsApp
 **Objetivo:** que un cliente escriba a un propietario y el propietario lo vea.
-**Incluye:** botón «Contactar por WhatsApp» (único, en la barra fija), hoja con llegada/salida/personas y el mensaje redactado solo que se actualiza al cambiar datos, consentimiento, apertura de `wa.me` con el número del owner; registro de la consulta; Mis consultas del owner (abre WhatsApp directo con el cliente); favoritos; contacto directo por casa según el prototipo; cuenta obligatoria para contactar (si no hay sesión, se registra y vuelve a la hoja con lo que había escrito).
-**No incluye:** Veriff y su sugerencia, valoraciones de clientes.
+**Incluye:** botón «Contactar por WhatsApp» (único, en la barra fija), hoja con llegada/salida/personas y el mensaje redactado solo que se actualiza al cambiar datos, consentimiento, apertura de `wa.me` con el número del owner; registro de la consulta; Mis consultas del owner (abre WhatsApp directo con el cliente); favoritos; cuenta obligatoria para contactar (si no hay sesión, se registra y vuelve a la hoja con lo que había escrito).
+**No incluye:** Veriff y su sugerencia, valoraciones de clientes; **WhatsApp distinto por casa con verificación propia** (aplazado por Daniel el 2026-10-23: necesita enviar códigos con Twilio Verify desde el worker; mientras, cada casa usa el WhatsApp de la cuenta; diseño guardado en `.scratch/fase-3/issues/07-whatsapp-por-casa.md`).
+**Especificación y tickets:** `.scratch/fase-3/`.
 **Hecho cuando:** desde un móvil con sesión se abre WhatsApp con el mensaje correcto y el owner ve la consulta en su lista.
 
 ### Fase 4 · Calendario del propietario

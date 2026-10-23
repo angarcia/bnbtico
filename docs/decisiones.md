@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3: el WhatsApp de la casa solo se entrega al contactar; sin número distinto por casa todavía
+
+- **Número de la casa:** no está en la vista pública, ni en el HTML de la ficha, ni en ninguna caché. Lo devuelve la RPC `create_inquiry` solo a un cliente con sesión y WhatsApp verificado, en el mismo momento en que registra la consulta (que es lo que el propietario ve en Mis consultas). Así nadie puede recoger los números del catálogo sin cuenta. Tope de 20 casas distintas por cliente al día; una consulta por cliente y casa cada 7 días (repetir la actualiza). Decisión de Daniel.
+- **WhatsApp distinto por casa, aplazado:** verificar un segundo número exige mandar un código con Twilio Verify desde el worker (Supabase Auth solo verifica el número de la cuenta). Daniel no quiere meter Twilio todavía: en la fase 3 cada casa usa el WhatsApp de la cuenta, como hoy. Diseño guardado en `.scratch/fase-3/issues/07-whatsapp-por-casa.md`.
+- **Otras decisiones de la especificación** (`.scratch/fase-3/spec.md`): consentimiento sin casilla (diseño 04), con la línea «<Nombre> verá su nombre y su WhatsApp.»; `wa.me` en la misma pestaña tras registrar la consulta (iPhone bloquea ventanas abiertas tras una espera); «Nueva» = consulta que el propietario aún no abrió; favoritos en el teléfono sin cuenta y sincronizados con `favorites` con sesión; el interruptor «Contacto directo Sí/No» del prototipo no entra (dependía de solicitud/aceptación, descartada en `CLAUDE.md`).
+
 ## 2026-10-23 · Portada estática en la app nueva y producción «solo portada» hasta el lanzamiento (fase R, ticket 13, parte preparada)
 
 - **Portada:** `apps/app/public/portada.html` (+ `public/portada/`, `public/og.jpg`), HTML estático sin JavaScript con las mismas etiquetas SEO, JSON-LD, imagen OG y copy que la de Next. El worker la sirve en `/` (`"/"` en `run_worker_first`) con una CSP propia más estricta que la del shell (sin Supabase ni Turnstile).
