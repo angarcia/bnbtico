@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import logo from "../public/logo-horizontal-crema.png";
+import logo from "../public/logo-horizontal-terracota.png";
 import playa from "../public/portada-playa-negra.jpg";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { appEnabled } from "@/lib/stage";
