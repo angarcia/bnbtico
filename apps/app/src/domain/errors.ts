@@ -8,6 +8,8 @@ export class DomainError extends Error {
   constructor(
     message: string,
     readonly kind: DomainErrorKind,
+    /** Solo en el límite de códigos de GoTrue: los segundos que pide esperar («after N seconds»). */
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "DomainError";
@@ -61,8 +63,10 @@ export function toDomainError(error: unknown): DomainError {
   const message = typeof e.message === "string" ? e.message : "";
   if (code === "P0001" && message) return new DomainError(message, "validation");
   if (code === "over_sms_send_rate_limit") {
-    const seconds = Number(/after (\d+) seconds/i.exec(message)?.[1] ?? 0);
-    if (seconds > 1) return new DomainError(`Espere ${seconds} segundos antes de pedir otro código.`, "rate_limit");
+    const after = /after (\d+) seconds/i.exec(message)?.[1];
+    const seconds = after === undefined ? undefined : Number(after);
+    const text = seconds !== undefined && seconds > 1 ? `Espere ${seconds} segundos antes de pedir otro código.` : BY_CODE[code]![1];
+    return new DomainError(text, "rate_limit", seconds);
   }
   const known = BY_CODE[code];
   if (known) return new DomainError(known[1], known[0]);

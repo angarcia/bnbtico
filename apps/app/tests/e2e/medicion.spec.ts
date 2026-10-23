@@ -1,4 +1,4 @@
-import { expect, test } from "./helpers/test";
+import { devices, expect, test } from "./helpers/test";
 import { postgrestHarness } from "../db/postgrest-harness";
 
 // Medición (no es una puerta): apertura con el SW instalado hasta Explorar interactivo, con «Slow 4G» y CPU 4× de DevTools.
@@ -51,4 +51,121 @@ test("apertura instalada hasta Explorar interactivo", async ({ context }) => {
   const sorted = [...times].sort((a, b) => a - b);
   const p = (q: number) => sorted[Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1)]!;
   console.log(`Apertura instalada → Explorar interactivo (Slow 4G + CPU 4×, ${RUNS} aperturas): ${times.join(", ")} ms · mediana ${p(0.5)} ms · p75 ${p(0.75)} ms`);
+});
+
+// Los presupuestos de CLAUDE.md con «Slow 4G» + CPU 4× por CDP, contra el preview detrás del proxy que comprime como
+// Cloudflare. Toque: Event Timing (entrada → siguiente fotograma). Pantallas: del toque al fotograma con la pantalla nueva.
+test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
+  test.setTimeout(600_000);
+  const { realPhotos } = await import("./helpers/real-photos");
+  const { gzipProxy } = await import("../lighthouse/gzip-proxy");
+  const { signIn } = await import("../db/local");
+  const { SESSION_STORAGE_KEY } = await import("../../src/data/storage");
+  const h = await postgrestHarness();
+  await h.reset();
+  const casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000 } });
+  await realPhotos(casa.id);
+  for (let i = 1; i <= 5; i++) await realPhotos((await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles" } })).id);
+  const proxy = await gzipProxy("http://127.0.0.1:4173");
+  const base = proxy.url;
+  const p = (xs: number[], q: number) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.ceil(q * xs.length) - 1)]!;
+  const report = (name: string, xs: number[], budget: string) =>
+    console.log(`${name}: ${xs.map(Math.round).join(", ")} ms · mediana ${Math.round(p(xs, 0.5))} · p75 ${Math.round(p(xs, 0.75))} (presupuesto ${budget})`);
+
+  async function throttled(ctx: import("@playwright/test").BrowserContext) {
+    const page = await ctx.newPage();
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send("Network.enable");
+    await cdp.send("Network.emulateNetworkConditions", SLOW_4G);
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+    return { page, cdp };
+  }
+  // Del clic (programático, en la página) al fotograma en que aparece `selector`.
+  const navTime = (page: import("@playwright/test").Page, click: string, selector: string, text = "") =>
+    page.evaluate(
+      ([click, selector, text]) =>
+        new Promise<number>((resolve) => {
+          const t0 = performance.now();
+          (document.querySelector(click) as HTMLElement).click();
+          const there = () => [...document.querySelectorAll(selector)].some((el) => (el.textContent ?? "").includes(text));
+          const check = () => (there() ? requestAnimationFrame(() => resolve(performance.now() - t0)) : requestAnimationFrame(check));
+          check();
+        }),
+      [click, selector, text] as const,
+    );
+
+  // 1) Ficha en frío: LCP.
+  const lcps: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    const ctx = await browser.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" as const });
+    const { page } = await throttled(ctx);
+    await page.addInitScript(() => {
+      const w = window as unknown as { lcp?: number };
+      new PerformanceObserver((l) => (w.lcp = l.getEntries().at(-1)!.startTime)).observe({ type: "largest-contentful-paint", buffered: true });
+    });
+    await page.goto(`${base}/casa/${casa.publicId}`, { waitUntil: "load" });
+    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true", { timeout: 30_000 });
+    lcps.push(await page.evaluate(() => (window as unknown as { lcp: number }).lcp));
+
+    // 2) Toque: «Ver en dólares» (con la ficha ya hidratada).
+    if (i === 0) {
+      const taps: number[] = [];
+      await page.evaluate(() => {
+        const w = window as unknown as { taps: number[] };
+        w.taps = [];
+        new PerformanceObserver((l) => l.getEntries().forEach((e) => e.name === "click" && w.taps.push(e.duration))).observe({ type: "event", durationThreshold: 16 } as PerformanceObserverInit);
+      });
+      for (let t = 0; t < 6; t++) {
+        await page.locator('button[aria-label^="Ver en"]').click();
+        await page.waitForTimeout(300);
+      }
+      taps.push(...(await page.evaluate(() => (window as unknown as { taps: number[] }).taps)));
+      console.log(`Toque «Ver en dólares» (Event Timing, solo se registran ≥ 16 ms): ${taps.length ? taps.join(", ") + " ms" : "todos < 16 ms"} (presupuesto < 50 ms)`);
+    }
+    await ctx.close();
+  }
+  report("Ficha en frío, LCP", lcps, "< 1,5 s p75 real; puerta Lighthouse < 2,0 s");
+
+  // 3) Pantalla ya visitada, sin red: Explorar ⇄ Filtros.
+  {
+    const ctx = await browser.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" as const });
+    const { page } = await throttled(ctx);
+    await page.goto(`${base}/explorar`);
+    await expect(page.getByTestId("results-count")).toHaveText("6 casas en Limón", { timeout: 30_000 });
+    await page.getByRole("link", { name: /Más filtros/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible({ timeout: 30_000 });
+    await page.goBack();
+    await expect(page.getByTestId("results-count")).toBeVisible();
+    await ctx.setOffline(true);
+    const times: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      times.push(await navTime(page, 'a[href^="/explorar/filtros"]', "h1", "Filtros"));
+      await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible();
+      await page.goBack();
+      await expect(page.getByTestId("results-count")).toBeVisible();
+    }
+    report("Pantalla visitada sin red (Explorar → Filtros)", times, "< 100 ms");
+    await ctx.close();
+  }
+
+  // 4) Pantalla nueva con sesión: Mi cuenta → Mis casas por primera vez (datos de la red).
+  {
+    const client = await signIn("owner");
+    const { data } = await client.auth.getSession();
+    const times: number[] = [];
+    for (let i = 0; i < 3; i++) {
+      const ctx = await browser.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" as const });
+      const setup = await ctx.newPage();
+      await setup.goto(`${base}/robots.txt`);
+      await setup.evaluate(([k, v]) => localStorage.setItem(k!, v!), [SESSION_STORAGE_KEY, JSON.stringify(data.session)]);
+      await setup.close();
+      const { page } = await throttled(ctx);
+      await page.goto(`${base}/propietario`);
+      await expect(page.getByText("Hola, Yorleny")).toBeVisible({ timeout: 30_000 });
+      times.push(await navTime(page, 'a[href="/propietario/casas"]', "article h2, article h3", "Casa Cocles"));
+      await ctx.close();
+    }
+    report("Pantalla nueva con sesión (Inicio → Mis casas, con red)", times, "< 300 ms");
+  }
+  await proxy.close();
 });

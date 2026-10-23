@@ -141,6 +141,25 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toHaveCount(0);
 });
 
+// GoTrue admite un reto por factor y segundo (max_frequency): si la pantalla se abre justo después de otro envío
+// (otra pestaña, volver enseguida), responde 429 «after N seconds». La pantalla espera lo que dice y lo envía sola.
+test("si el código se pidió hace un instante, la pantalla espera lo que indica el servidor y lo envía", async ({ page }) => {
+  await injectSession(page, "admin");
+  let refused = 0;
+  await page.route("**/auth/v1/factors/*/challenge", async (route) => {
+    if (refused++ > 0) return route.continue();
+    await route.fulfill({
+      status: 429,
+      contentType: "application/json",
+      body: JSON.stringify({ code: 429, error_code: "over_sms_send_rate_limit", msg: "For security purposes, you can only request this after 1 seconds." }),
+    });
+  });
+  await page.goto("/admin");
+  await secondCode(page);
+  await expect(page).toHaveURL(/\/admin$/);
+  expect(refused).toBe(2);
+});
+
 test("quien no es admin no entra: no se le pide ni envía ningún código", async ({ page }) => {
   await injectSession(page, "owner");
   const before = lastMfaCode("+50687770001");

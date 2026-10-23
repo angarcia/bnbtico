@@ -511,7 +511,7 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
           </p>
         ) : null}
         <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy || sentAt === null}>
-          {busy ? "Verificando…" : sentAt === null ? "Enviando el código…" : "Verificar y entrar"}
+          {busy ? "Verificando…" : sentAt === null && !error ? "Enviando el código…" : "Verificar y entrar"}
         </button>
       </form>
       <div className="stack small">

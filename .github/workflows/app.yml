@@ -53,16 +53,37 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Ficha real, hidratación y shell (Pixel 7)
         run: pnpm test:e2e
+      # Perfil móvil por defecto de Lighthouse (RTT 150 ms, 1,6 Mbit/s, CPU 4×) con throttling devtools, contra el mismo
+      # build local y Supabase local; mediana de 3 ejecuciones. Ver tests/lighthouse/lighthouse.spec.ts.
+      - name: Puerta de Lighthouse (LCP ficha < 2,0 s, shell instalado < 2,5 s)
+        id: lighthouse
+        run: CHROMIUM_PATH="$(command -v google-chrome)" pnpm lighthouse
+      - name: Informes de Lighthouse
+        if: always() && (steps.lighthouse.outcome == 'success' || steps.lighthouse.outcome == 'failure')
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: apps/app/lighthouse-results/
+          retention-days: 14
+      - name: Publicar Lighthouse en el pull request
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && hashFiles('apps/app/lighthouse-results/resumen.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          marker='<!-- bnbtico:lighthouse -->'
+          body="$(printf '%s\n' "$marker"; cat lighthouse-results/resumen.md; printf '\nCommit `%s` · informes completos en el artefacto «lighthouse».\n' "${{ github.sha }}")"
+          id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
+          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
       - name: Build para desplegar (navegador y worker)
         env:
           CLOUDFLARE_ENV: ${{ env.DEPLOY_ENV }}
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
           # Números de atención por WhatsApp (Ayuda); sin ellos el botón sale deshabilitado.
-          VITE_WA_OWNERS: ${{ vars.WA_OWNERS }}
-          VITE_WA_GUESTS: ${{ vars.WA_GUESTS }}
+          VITE_WA_OWNERS: ${{ vars.WA_OWNERS || secrets.WA_OWNERS }}
+          VITE_WA_GUESTS: ${{ vars.WA_GUESTS || secrets.WA_GUESTS }}
           # Sitekey de Turnstile (pública); sin ella el código se pide sin token (y falla si Supabase Auth exige captcha).
-          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY || secrets.TURNSTILE_SITE_KEY }}
         run: |
           rm -f .dev.vars .env.local
           test -n "$VITE_SUPABASE_URL" -a -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Faltan SUPABASE_URL o SUPABASE_ANON_KEY en GitHub (variables o secretos)."; exit 1; }
@@ -115,7 +136,11 @@ jobs:
           URL: ${{ steps.preview.outputs.deployment-url }}
         run: |
           alias_url=$(printf '%s' "$OUTPUT" | grep -oE 'https://pr-[a-z0-9-]+\.[a-z0-9.-]+\.workers\.dev' | head -1)
-          gh pr comment ${{ github.event.number }} --edit-last --create-if-none --body "Vista previa de \`${{ github.sha }}\`: ${alias_url:-$URL}"
+          # Comentario propio con marca (no --edit-last: el último comentario del bot puede ser el de Lighthouse).
+          marker='<!-- bnbtico:vista-previa -->'
+          body="$(printf '%s\nVista previa de `%s`: %s' "$marker" "${{ github.sha }}" "${alias_url:-$URL}")"
+          id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
+          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
 
       - name: Borrar los secretos del disco
         if: always()

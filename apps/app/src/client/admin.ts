@@ -4,7 +4,7 @@
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import type { AdminListingsApi } from "../domain/api";
-import { toDomainError } from "../domain/errors";
+import { DomainError, toDomainError } from "../domain/errors";
 import { DECISION_STATUS, applyDecision, type AdminQueue, type QueueItem, type ReviewDecision } from "../domain/review";
 import { authApi } from "./session";
 
@@ -111,7 +111,7 @@ export async function sendSecondCode(userId: string, again = false): Promise<Cha
     try {
       const auth = await authApi();
       const factorId = challenge?.userId === userId ? challenge.factorId : (await auth.enrolMfa()).factorId;
-      const { challengeId } = await auth.challengeMfa(factorId);
+      const { challengeId } = await challengeHonouringWait(() => auth.challengeMfa(factorId));
       const opened: Challenge = { userId, factorId, challengeId, sentAt: Date.now() };
       challenge = opened;
       return opened;
@@ -120,6 +120,21 @@ export async function sendSecondCode(userId: string, again = false): Promise<Cha
     }
   })();
   return sending;
+}
+
+/** GoTrue admite un reto por factor cada `max_frequency` (1 s en local; unos segundos en el alojado). Si la pantalla se
+ * abre justo después de otro envío (otra pestaña, volver enseguida), contesta «after N seconds»: se espera eso y se
+ * reintenta una vez, en vez de dejar la pantalla sin código. Esperas largas (el tope por hora) se muestran tal cual. */
+const SHORT_WAIT_SECONDS = 5;
+async function challengeHonouringWait<T>(send: () => Promise<T>): Promise<T> {
+  try {
+    return await send();
+  } catch (error) {
+    const seconds = error instanceof DomainError ? error.retryAfterSeconds : undefined;
+    if (seconds === undefined || seconds > SHORT_WAIT_SECONDS) throw error;
+    await new Promise((resolve) => setTimeout(resolve, (seconds + 1) * 1000));
+    return send();
+  }
 }
 
 export async function verifySecondCode(code: string) {

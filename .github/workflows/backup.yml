@@ -29,8 +29,8 @@ jobs:
       # R2 no admite todas las sumas de comprobación que la CLI de AWS manda por defecto desde la 2.23.
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-      R2_BUCKET: ${{ vars.R2_BUCKET || 'bnbtico-copias' }}
-      PREFIX: ${{ vars.BACKUP_PREFIX || 'bnbtico-pruebas' }}
+      R2_BUCKET: ${{ vars.R2_BUCKET || secrets.R2_BUCKET || 'bnbtico-copias' }}
+      PREFIX: ${{ vars.BACKUP_PREFIX || secrets.BACKUP_PREFIX || 'bnbtico-pruebas' }}
       RETENTION_DAYS: "30"
     steps:
       - name: ¿Están los secretos?

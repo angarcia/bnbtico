@@ -22,6 +22,15 @@ describe("toDomainError", () => {
     expect(toDomainError({ code, message: "new row violates row-level security policy" })).toMatchObject({ message, kind });
   });
 
+  it("el límite de códigos de GoTrue conserva cuántos segundos pide esperar", () => {
+    const soon = toDomainError({ code: "over_sms_send_rate_limit", message: "For security purposes, you can only request this after 0 seconds." });
+    expect(soon).toMatchObject({ kind: "rate_limit", message: "Espere un momento antes de pedir otro código.", retryAfterSeconds: 0 });
+    const later = toDomainError({ code: "over_sms_send_rate_limit", message: "For security purposes, you can only request this after 27 seconds." });
+    expect(later).toMatchObject({ message: "Espere 27 segundos antes de pedir otro código.", retryAfterSeconds: 27 });
+    expect(toDomainError({ code: "over_sms_send_rate_limit", message: "SMS rate limit exceeded" }).retryAfterSeconds).toBeUndefined();
+    expect(toDomainError({ code: "P0001", message: "x" }).retryAfterSeconds).toBeUndefined();
+  });
+
   it("errores de red", () => {
     expect(toDomainError(new TypeError("Failed to fetch")).kind).toBe("network");
     expect(toDomainError({ name: "AuthRetryableFetchError", message: "{}" }).message).toBe("Sin conexión. Revise su internet e intente de nuevo.");
