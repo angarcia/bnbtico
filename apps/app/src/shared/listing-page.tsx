@@ -1,7 +1,7 @@
 // Ficha pública (pantalla 03 del diseño v1). La renderiza el worker y la hidrata el navegador: el mapa y la moneda
 // dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo.
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { describe } from "../domain/describe";
 import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
 import { formatCRC, formatMoney, formatUSD, FX_CRC_PER_USD } from "../domain/money";
@@ -32,14 +32,45 @@ export function ListingScreen({ publicId, base, seed, onBack }: { publicId: stri
   return <ListingPage listing={data} base={base} onBack={onBack} />;
 }
 
-function PriceToggle({ amountCrc }: { amountCrc: number }) {
+/** Cambio de moneda. Ocupa siempre lo mismo (las dos cifras apiladas, la que no se ve queda oculta debajo): cambiar de moneda
+ *  o hidratar no mueve la barra. Antes de hidratar no es un botón (no haría nada): solo el hueco. */
+function PriceToggle({ amountCrc, hydrated }: { amountCrc: number; hydrated: boolean }) {
   const currency = useCurrency();
   const other = currency === "CRC" ? "USD" : "CRC";
+  const usd = `≈ ${formatUSD(amountCrc)}`;
+  const crc = `≈ ${formatCRC(amountCrc)}`;
+  if (!hydrated) {
+    return (
+      <span className="link xs both" aria-hidden="true">
+        <span className="ghost">{usd}</span>
+        <span className="ghost">{crc}</span>
+      </span>
+    );
+  }
   return (
-    <button type="button" className="link xs" onClick={() => setCurrency(other)} aria-label={other === "USD" ? "Ver en dólares" : "Ver en colones"} title={`≈ ₡${FX_CRC_PER_USD} por US$1`}>
-      ≈ {other === "USD" ? formatUSD(amountCrc) : formatCRC(amountCrc)}
+    <button type="button" className="link xs both" onClick={() => setCurrency(other)} aria-label={other === "USD" ? "Ver en dólares" : "Ver en colones"} title={`≈ ₡${FX_CRC_PER_USD} por US$1`}>
+      <span>{other === "USD" ? usd : crc}</span>
+      <span className="ghost" aria-hidden="true">
+        {other === "USD" ? crc : usd}
+      </span>
     </button>
   );
+}
+
+/** La barra fija tapa el final de la página: el espaciador mide lo mismo que ella (menos el margen inferior de la vista). */
+function useSpacerMatchingBar() {
+  const bar = useRef<HTMLDivElement>(null);
+  const spacer = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const b = bar.current;
+    const s = spacer.current;
+    if (!b || !s || typeof ResizeObserver === "undefined") return;
+    const fit = () => (s.style.height = `calc(${b.offsetHeight}px - 16px - env(safe-area-inset-bottom))`);
+    const observer = new ResizeObserver(fit);
+    observer.observe(b);
+    return () => observer.disconnect();
+  }, []);
+  return { bar, spacer };
 }
 
 export function ListingPage({ listing: l, base, onBack }: { listing: PublicListing; base: string; onBack?: () => void }) {
@@ -48,6 +79,7 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
   const d = describe(l, { base });
   useEffect(() => track("listing_view", l.publicId), [l.publicId]);
   const main = d.mainPrice;
+  const { bar, spacer } = useSpacerMatchingBar();
   return (
     <div className="app">
       <main className="view no-nav listing-view">
@@ -119,15 +151,20 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
           </p>
         </div>
 
-        <div className="cta-spacer" aria-hidden="true" />
-        <div className="cta-bar">
+        <div className="cta-spacer" aria-hidden="true" ref={spacer} />
+        <div className="cta-bar" ref={bar}>
           {main ? (
             <div className="row between wrap baseline gap-4">
-              <span className="price" data-testid="main-price">
-                {formatMoney(main.amount, currency)} <small>/ {main.unit}</small>
+              <span className="price both">
+                <span data-testid="main-price">
+                  {formatMoney(main.amount, currency)} <small>/ {main.unit}</small>
+                </span>
+                <span className="ghost" aria-hidden="true">
+                  {formatMoney(main.amount, currency === "CRC" ? "USD" : "CRC")} <small>/ {main.unit}</small>
+                </span>
               </span>
-              <span className="xs muted">
-                <PriceToggle amountCrc={main.amount} /> · el precio final lo acuerda con el propietario
+              <span className="xs muted price-note">
+                <PriceToggle amountCrc={main.amount} hydrated={hydrated} /> · el precio final lo acuerda con el propietario
               </span>
             </div>
           ) : null}

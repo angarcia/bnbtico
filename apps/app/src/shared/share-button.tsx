@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { I } from "./icons";
+import { useChanged } from "./use-changed";
 
 export interface ShareTarget {
   url: string;
@@ -26,15 +27,17 @@ export function useShare(target: ShareTarget) {
       /* el usuario canceló la hoja de compartir o no hay portapapeles */
     }
   }
-  return { share, copied };
+  // Clase del contenido que cambia con «Enlace copiado»: se anima al cambiar, no al montar.
+  const swap = useChanged(copied) ? "swap-in changed" : "swap-in";
+  return { share, copied, swap };
 }
 
 /** Botón redondo sobre la foto (ficha pública). */
 export function ShareButton(target: ShareTarget) {
-  const { share, copied } = useShare(target);
+  const { share, copied, swap } = useShare(target);
   return (
     <button type="button" className="icon-btn overlay" aria-label={copied ? "Enlace copiado" : "Compartir ficha"} onClick={share}>
-      <span key={copied ? "copied" : "share"} className="swap-in">
+      <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? <I.check /> : <I.share />}
       </span>
     </button>

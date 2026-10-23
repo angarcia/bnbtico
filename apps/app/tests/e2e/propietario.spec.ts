@@ -77,6 +77,9 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveAttribute("href", `/casa/${active.publicId}`);
   await expect(page.getByText(active.publicId, { exact: true })).toBeVisible();
   await expect(page.getByText("+506 8777 0001 · verificado")).toBeVisible();
+  // Los textos de compartir no se animan al abrir el detalle; solo al cambiar a «Enlace copiado».
+  expect(await page.locator(".swap-in").evaluateAll((els) => els.reduce((n, el) => n + el.getAnimations().length, 0))).toBe(0);
+  await expect(page.locator(".swap-in.changed")).toHaveCount(0);
 
   await page.getByRole("button", { name: /Compartir ficha/ }).click();
   const shared = await page.evaluate(() => (window as unknown as { shared: { url: string; title: string }[] }).shared);
@@ -85,6 +88,7 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await page.evaluate(() => Object.defineProperty(navigator, "share", { configurable: true, value: undefined }));
   await page.getByRole("button", { name: /Compartir ficha/ }).click();
   await expect(page.getByText("Enlace copiado")).toBeVisible();
+  await expect(page.locator(".swap-in.changed").first()).toHaveText("Enlace copiado");
   expect(await page.evaluate(() => (window as unknown as { copied: string[] }).copied)).toEqual([`http://127.0.0.1:4173/casa/${active.publicId}`]);
 
   // Una casa que no está activa no se comparte: su enlace no funcionaría.

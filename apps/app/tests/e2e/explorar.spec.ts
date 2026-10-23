@@ -100,6 +100,73 @@ test("volver de una ficha deja Explorar en el mismo punto del scroll", async ({ 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before - 40);
 });
 
+// Revisión del movimiento (View Transitions reales de Chrome): el router restaura el scroll dentro de la actualización de la
+// transición, así que la captura del estado nuevo ya ve Explorar en su sitio y nada salta al terminar. La foto vuela solo
+// hacia la tarjeta de la casa de la que se vuelve.
+test("Explorar ↔ ficha con View Transition: al volver, el scroll ya está restaurado cuando se captura y no salta después", async ({ page }) => {
+  await page.addInitScript(() => {
+    type Rec = { types: string[]; namedAtStart: string | null; namedAtUpdate: string | null; atUpdate: number; atFinish: number; after: number[] };
+    const w = window as unknown as { vt: Rec[] };
+    w.vt = [];
+    const original = document.startViewTransition?.bind(document);
+    if (!original) return;
+    const named = () => [...document.querySelectorAll<HTMLElement>(".listing-card .photo")].find((el) => el.style.viewTransitionName === "listing-photo")?.closest("a")?.getAttribute("href") ?? null;
+    document.startViewTransition = ((arg: StartViewTransitionOptions) => {
+      const rec: Rec = { types: [...((typeof arg === "object" && arg?.types) || [])], namedAtStart: named(), namedAtUpdate: null, atUpdate: -1, atFinish: -1, after: [] };
+      w.vt.push(rec);
+      const t = original(arg);
+      void t.updateCallbackDone.then(() => {
+        rec.atUpdate = scrollY;
+        rec.namedAtUpdate = named();
+      });
+      void t.finished.then(async () => {
+        rec.atFinish = scrollY;
+        for (let i = 0; i < 20; i++) {
+          await new Promise(requestAnimationFrame);
+          rec.after.push(scrollY);
+        }
+      });
+      return t;
+    }) as typeof document.startViewTransition;
+  });
+  const vt = () => page.evaluate(() => (window as unknown as { vt: { types: string[]; namedAtStart: string | null; namedAtUpdate: string | null; atUpdate: number; atFinish: number; after: number[] }[] }).vt);
+
+  await page.goto("/explorar");
+  const card = page.getByRole("link", { name: /Casa Cocles 7/ });
+  await card.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const before = await page.evaluate(() => window.scrollY);
+  const top = () => card.evaluate((el) => Math.round(el.getBoundingClientRect().top));
+  const cardTop = await top();
+  expect(before).toBeGreaterThan(200);
+
+  await card.click();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles 7" })).toBeVisible();
+  await expect.poll(async () => (await vt())[0]?.atFinish ?? -1).toBeGreaterThanOrEqual(0);
+  const open = (await vt())[0]!;
+  expect(open.types).toEqual(["listing-open"]);
+  expect(open.namedAtStart, "al abrir vuela la foto de la tarjeta tocada").toBe(`/casa/${ultima.publicId}`);
+
+  await page.getByRole("link", { name: "Volver a Explorar" }).click();
+  await expect(card).toBeVisible();
+  await expect.poll(async () => (await vt())[1]?.after.length ?? 0).toBe(20);
+  const close = (await vt())[1]!;
+  expect(close.types).toEqual(["listing-close"]);
+  expect(close.namedAtUpdate, "la foto vuelve a su tarjeta").toBe(`/casa/${ultima.publicId}`);
+  expect(Math.abs(close.atUpdate - before), `scroll al capturar ${close.atUpdate}, antes ${before}`).toBeLessThanOrEqual(1);
+  expect(close.atFinish).toBe(close.atUpdate);
+  expect(new Set(close.after), "sin saltos después de la transición").toEqual(new Set([close.atUpdate]));
+  expect(Math.abs((await top()) - cardTop)).toBeLessThanOrEqual(1);
+
+  // Otra casa: solo su tarjeta lleva el nombre al abrir; la de antes ya no.
+  const other = page.getByRole("link", { name: /Casa Cocles 6/ });
+  await other.click();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles 6" })).toBeVisible();
+  await expect.poll(async () => (await vt()).length).toBe(3);
+  expect((await vt())[2]!.namedAtStart).not.toBe(`/casa/${ultima.publicId}`);
+  expect((await vt())[2]!.namedAtStart).toMatch(/^\/casa\/CT-/);
+});
+
 test("la segunda visita pinta desde la caché sin red, y la ficha se pinta desde la tarjeta", async ({ page }) => {
   await page.goto("/explorar");
   await expect(results(page)).toHaveText("8 casas en Limón");

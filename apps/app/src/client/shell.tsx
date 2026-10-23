@@ -6,7 +6,7 @@ import { normalizeSearch, searchFromString, searchToString } from "../domain/fil
 import { track } from "../shared/beacon";
 import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
-import { viewTransitions } from "./motion";
+import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { setRole } from "./role";
 import { CasaScreen } from "./screens/casa";
@@ -154,6 +154,11 @@ onSignedOut(() => {
 // La caché del dispositivo se guarda cada segundo como mucho: si la app se cerró justo después de un cambio, lo restaurado
 // puede ser anterior. Las consultas privadas restauradas se pintan al instante y se vuelven a pedir por detrás.
 const refreshPrivate = () => void queryClient.invalidateQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
+
+// La foto de la tarjeta a la que se vuelve desde la ficha (client/motion.ts). El router emite onRendered dentro de la
+// actualización de la View Transition, después de pintar y de restaurar el scroll: la captura del estado nuevo ya ve la
+// tarjeta en su sitio.
+router.subscribe("onRendered", afterRender);
 
 // Una vista de página por ruta resuelta (cambiar solo los filtros de la URL no cuenta).
 router.subscribe("onResolved", (e) => {

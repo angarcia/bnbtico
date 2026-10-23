@@ -22,12 +22,14 @@ function watch(page: Page) {
 
 let casa: Seeded;
 let oculta: Seeded;
+let cara: Seeded;
 
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
   oculta = await h.seed({ status: "reopened" });
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
+  cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 2500000 } });
   const storage = serviceClient().storage.from("listings");
   for (const path of casa.photoPaths) {
     const { error } = await storage.upload(path, PHOTO, { contentType: "image/jpeg", upsert: true });
@@ -63,7 +65,7 @@ test("el precio se ve en dólares al tocar y la preferencia se recuerda", async 
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await page.getByRole("button", { name: "Ver en dólares" }).click();
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
-  await expect(page.getByRole("button", { name: "Ver en colones" })).toHaveText("≈ ₡95 000");
+  await expect(page.getByRole("button", { name: "Ver en colones" })).toHaveText("≈ ₡95 000", { useInnerText: true });
 
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
@@ -120,4 +122,89 @@ test("si la portada no carga, la ficha hidrata igual", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await page.getByRole("button", { name: "Ver en dólares" }).click();
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
+});
+
+const barHeight = (page: Page) => page.evaluate(() => document.querySelector(".cta-bar")!.getBoundingClientRect().height);
+
+// Revisión del movimiento: la ficha hidrata cuando la portada cargó (o a los 3 s). Hasta entonces el cambio de moneda no
+// haría nada: no se ofrece como botón. Su hueco ya mide lo que el botón, así que nada se mueve al hidratar ni al cambiar.
+test("antes de hidratar no hay botón de moneda, y ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route(`**/listings/${casa.photoPaths[0]}*`, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(`/casa/${casa.publicId}`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  expect(await page.locator("html").getAttribute("data-hydrated")).toBeNull();
+  await expect(page.getByRole("button", { name: "Ver en dólares" })).toHaveCount(0);
+  const before = await barHeight(page);
+
+  release();
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByRole("button", { name: "Ver en dólares" })).toHaveText("≈ $186", { useInnerText: true });
+  expect(await barHeight(page), "al hidratar").toBe(before);
+  await page.getByRole("button", { name: "Ver en dólares" }).click();
+  await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
+  expect(await barHeight(page), "en dólares").toBe(before);
+});
+
+test("a 320 px la barra mide lo mismo en colones y en dólares y no tapa el final de la ficha", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  for (const publicId of [casa.publicId, cara.publicId]) {
+    await page.goto(`/casa/${publicId}`);
+    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const toggle = page.getByRole("button", { name: /Ver en (dólares|colones)/ });
+    const first = await barHeight(page);
+    await toggle.click();
+    await expect(page.getByTestId("main-price")).not.toHaveText(/^₡/);
+    expect(await barHeight(page), `${publicId} en dólares`).toBe(first);
+    await toggle.click();
+    await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
+    expect(await barHeight(page), `${publicId} de vuelta en colones`).toBe(first);
+
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    const [textBottom, barTop] = await page.evaluate(() => [
+      [...document.querySelectorAll(".listing-body > p")].at(-1)!.getBoundingClientRect().bottom,
+      document.querySelector(".cta-bar")!.getBoundingClientRect().top,
+    ]);
+    expect(textBottom, "el último párrafo queda por encima de la barra").toBeLessThanOrEqual(barTop!);
+  }
+});
+
+// «Enlace copiado» y el contador del hero se animan al cambiar, no al pintarse por primera vez.
+test("compartir y el contador de fotos no se animan al abrir la ficha, solo al cambiar", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => undefined } });
+  });
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.locator(".hero .strip img")).toHaveCount(5);
+  const running = (selector: string) => page.locator(selector).evaluateAll((els) => els.reduce((n, el) => n + el.getAnimations().length, 0));
+  expect(await running(".hero-counter .tick")).toBe(0);
+  expect(await running(".icon-btn .swap-in")).toBe(0);
+
+  // El cambio se mide en el mismo frame en que aparece: la animación dura 200 ms.
+  const animatedAfter = (action: string, selector: string) =>
+    page.evaluate(
+      async ({ action, selector }) => {
+        const was = document.querySelector(selector);
+        if (action === "share") document.querySelector<HTMLButtonElement>('button[aria-label="Compartir ficha"]')!.click();
+        else document.querySelector(".hero .strip")!.scrollTo({ left: document.querySelector(".hero .strip")!.clientWidth });
+        for (let i = 0; i < 60; i++) {
+          await new Promise(requestAnimationFrame);
+          const now = document.querySelector(selector);
+          if (now && now !== was) return now.getAnimations().length;
+        }
+        return -1;
+      },
+      { action, selector },
+    );
+  expect(await animatedAfter("share", ".icon-btn .swap-in"), "«Enlace copiado»").toBeGreaterThan(0);
+  expect(await animatedAfter("scroll", ".hero-counter .tick"), "contador 2 / 5").toBeGreaterThan(0);
+  await expect(page.locator(".hero-counter")).toHaveText("2 / 5");
 });

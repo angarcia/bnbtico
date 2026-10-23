@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { PublicPhoto } from "../domain/listing";
 import { fadeIn } from "./picture";
+import { useChanged } from "./use-changed";
 
 /** Hero de la ficha (pantalla 03): fotos deslizables con contador «1 / 14»; los botones van encima como hijos.
  *  Del servidor solo llega la portada (el LCP); las demás fotos son cajas del mismo tamaño hasta que la página cargó o
@@ -10,6 +11,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
   const strip = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [allPhotos, setAllPhotos] = useState(false);
+  const moved = useChanged(index);
   useEffect(() => {
     if (allPhotos) return;
     const show = () => setAllPhotos(true);
@@ -49,7 +51,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
       <div className="top">{children}</div>
       {photos.length > 1 ? (
         <span className="pill pill-sm hero-counter" aria-live="polite">
-          <span key={index} className="tick">{`${index + 1} / ${photos.length}`}</span>
+          <span key={index} className={moved ? "tick changed" : "tick"}>{`${index + 1} / ${photos.length}`}</span>
         </span>
       ) : null}
     </div>

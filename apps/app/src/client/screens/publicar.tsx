@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, STEPS, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
+import { stepEnter } from "../motion";
 import { api, ownListingQuery, resumableQuery } from "../owner";
 import { StepFields } from "../publish/fields";
 import { StepForm } from "../publish/step-form";
@@ -89,7 +90,7 @@ export function PasoScreen() {
   const l = query.data;
   // Dirección del cambio de pantalla: la nueva entra desde la derecha al avanzar y desde la izquierda al volver.
   const previous = useRef<Step | null>(null);
-  const enter = !step || previous.current === null || previous.current === step ? undefined : step > previous.current ? "forward" : "back";
+  const enter = stepEnter(previous.current, step);
   useEffect(() => {
     previous.current = step;
   }, [step]);

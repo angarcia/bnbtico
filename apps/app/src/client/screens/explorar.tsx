@@ -7,6 +7,7 @@ import { FEATURE_LABEL, type Feature } from "../../domain/listing";
 import { FX_CRC_PER_USD } from "../../domain/money";
 import { setCurrency, useCurrency } from "../../shared/currency";
 import { I } from "../../shared/icons";
+import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
 import { listingsQuery, provincesQuery } from "../queries";
 import { useSession } from "../session";
@@ -63,16 +64,13 @@ function SkeletonGrid() {
   );
 }
 
-/** Las tarjetas que sustituyen a los esqueletos aparecen con un fundido; en la primera carga, una tras otra. Si las casas
- *  ya estaban en la caché (pantalla visitada), salen al instante, sin animación. */
 function useReveal(loading: boolean, filtersKey: string): string {
   const [firstKey] = useState(filtersKey);
   const waited = useRef(false);
   useEffect(() => {
     if (loading) waited.current = true;
   }, [loading]);
-  if (loading || !waited.current) return "";
-  return filtersKey === firstKey ? " reveal stagger" : " reveal";
+  return revealClass({ loading, waited: waited.current, firstFilters: filtersKey === firstKey });
 }
 
 function Results({ filters: f, provinces }: { filters: Filters; provinces: string[] }) {

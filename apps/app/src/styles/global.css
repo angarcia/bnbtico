@@ -204,7 +204,16 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;padding:12px 20px calc(24px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
 .cta-bar .price{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .cta-bar .price small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
-.cta-spacer{height:130px}
+.cta-spacer{height:141px}
+/* Dos contenidos apilados en la misma celda; el oculto reserva su ancho (precio en colones y en dólares). */
+.both{display:inline-grid}
+.both > *{grid-area:1/1}
+.both > .ghost{visibility:hidden}
+.both{justify-items:start;text-align:start}
+/* La nota del precio va a la derecha (como en el diseño) y su cifra se alinea al final del hueco: lo que sobra queda a la
+   izquierda, donde no se nota, también cuando la nota baja a otra línea. */
+.price-note{margin-left:auto;text-align:right}
+.price-note .both{justify-items:end}
 
 /* ---------- Fotos y tarjetas de casa ---------- */
 .photo{position:relative;background:var(--state-soft);overflow:hidden;display:grid;place-items:center;color:var(--state-ink)}
@@ -437,6 +446,9 @@ img[data-fade][data-loaded]{opacity:1}
 .publish-form[data-enter="forward"]{--step-dx:16px}
 .publish-form[data-enter="back"]{--step-dx:-16px}
 .publish-form[data-enter] > :not(.sticky-actions){animation:step-in 220ms var(--ease-out) backwards}
+/* Lo que entra de lado no ensancha la página. clip y no hidden: hidden haría de la vista un contenedor de scroll y
+   rompería lo pegajoso y el scroll del teclado; la barra fija escapa del recorte. */
+.app:has(.publish-form) .view{overflow-x:clip}
 
 /* «Enviada»: una pequeña celebración, una vez por casa. Foto, sello con el check que se dibuja, y el texto detrás. */
 @keyframes sent-pop{from{opacity:0;transform:scale(.9)}}
@@ -452,10 +464,13 @@ img[data-fade][data-loaded]{opacity:1}
 
 /* Cambios pequeños de contenido (icono o texto de «Enlace copiado», contador de fotos): el nuevo aparece en su sitio. */
 @keyframes swap-in{from{opacity:0;transform:scale(.8);filter:blur(2px)}}
-.swap-in{display:inline-flex;animation:swap-in 200ms var(--ease-out) backwards}
+/* Solo al cambiar (`.changed`, useChanged): al montar el contenido ya está en su sitio. */
+.swap-in{display:inline-flex}
 small.swap-in{display:block}
+.swap-in.changed{animation:swap-in 200ms var(--ease-out) backwards}
 @keyframes tick-in{from{opacity:0;transform:translateY(4px)}}
-.hero-counter .tick{display:inline-block;animation:tick-in 180ms var(--ease-out) backwards}
+.hero-counter .tick{display:inline-block}
+.hero-counter .tick.changed{animation:tick-in 180ms var(--ease-out) backwards}
 
 /* Explorar ↔ ficha (View Transitions con tipos, client/motion.ts): la foto de la tarjeta se convierte en el hero, los
    botones de la foto y la barra de contacto llegan por su cuenta y el resto de la página se funde. */
@@ -480,7 +495,7 @@ small.swap-in{display:block}
   .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove,.switch span{transition-property:background-color,color,opacity}
   .btn:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
   @starting-style{.update-banner{transform:translateX(-50%)}}
-  .listing-grid.reveal .listing-card,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in,.hero-counter .tick{animation-name:fade-in}
+  .listing-grid.reveal .listing-card,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in.changed,.hero-counter .tick.changed{animation-name:fade-in}
   .sent-check path{animation:none;stroke-dashoffset:0}
   .progress span::after,.upload-bar span{transition-property:none}
 }

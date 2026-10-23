@@ -173,7 +173,7 @@ function FeaturedAction({ listing: l }: { listing: Listing }) {
 
 function ShareBlock({ listing: l }: { listing: Listing }) {
   const target = shareOf(l);
-  const { share, copied } = useShare(target);
+  const { share, copied, swap } = useShare(target);
   return (
     <>
       <div className="share-box stack gap-6">
@@ -183,7 +183,7 @@ function ShareBlock({ listing: l }: { listing: Listing }) {
       </div>
       <button type="button" className="btn btn-primary btn-lg btn-block" onClick={share} data-share-url={target.url}>
         <I.wa size={20} />{" "}
-        <span key={copied ? "copied" : "share"} className="swap-in">
+        <span key={copied ? "copied" : "share"} className={swap}>
           {copied ? "Enlace copiado" : "Compartir ficha por WhatsApp"}
         </span>
       </button>
@@ -336,10 +336,10 @@ function OwnerCard({ listing: l, userId }: { listing: Listing; userId: string })
 
 function ShareButtonInline({ listing: l }: { listing: Listing }) {
   const target = shareOf(l);
-  const { share, copied } = useShare(target);
+  const { share, copied, swap } = useShare(target);
   return (
     <button type="button" className="btn btn-primary grow" onClick={share} data-share-url={target.url}>
-      <span key={copied ? "copied" : "share"} className="swap-in">
+      <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? "Enlace copiado" : "Compartir ficha"}
       </span>
     </button>
@@ -532,7 +532,7 @@ function ListItem({ to, icon, title, detail }: { to: "/propietario/calendario"; 
 
 function ShareListItem({ listing: l }: { listing: Listing }) {
   const target = shareOf(l);
-  const { share, copied } = useShare(target);
+  const { share, copied, swap } = useShare(target);
   const enabled = can(l, "share");
   return (
     <button type="button" className="list-item" onClick={share} disabled={!enabled} aria-disabled={!enabled || undefined} data-share-url={target.url}>
@@ -541,7 +541,7 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
       </span>
       <span className="body">
         Compartir ficha
-        <small key={copied ? "copied" : "share"} className="swap-in">{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
+        <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
       </span>
       <span className="chev">
         <I.chevron />

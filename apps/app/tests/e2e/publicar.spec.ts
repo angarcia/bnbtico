@@ -318,3 +318,42 @@ test("enviar con un dato que falta lleva a la pantalla que lo pide", async ({ pa
   await expect(alert(page)).toHaveText("Indique cuántas personas pueden alojarse (mínimo 1).");
   expect((await h.owner("owner").getOwn(draft.id))?.status).toBe("draft");
 });
+
+// Revisión del movimiento: la pantalla nueva entra de lado (±16 px) y no debe ensanchar la página mientras entra.
+test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrás / Continuar» sigue fija abajo", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 5 });
+  await page.goto(`/propietario/publicar/${draft.id}/4`);
+  await expect(page.getByText("Paso 4 de 9")).toBeVisible();
+  const sample = () =>
+    page.evaluate(() => {
+      const w = window as unknown as { maxScrollWidth: number };
+      w.maxScrollWidth = 0;
+      const t0 = performance.now();
+      const tick = () => {
+        w.maxScrollWidth = Math.max(w.maxScrollWidth, document.documentElement.scrollWidth);
+        if (performance.now() - t0 < 600) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  const widest = async () => {
+    await page.waitForTimeout(700);
+    return page.evaluate(() => [(window as unknown as { maxScrollWidth: number }).maxScrollWidth, window.innerWidth]);
+  };
+  const barAtBottom = () => page.evaluate(() => Math.round(document.querySelector(".sticky-actions")!.getBoundingClientRect().bottom) === window.innerHeight);
+
+  await sample();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/5$/);
+  await expect(page.locator('.publish-form[data-enter="forward"]')).toBeVisible();
+  const [forward, width] = await widest();
+  expect(forward, "al avanzar").toBeLessThanOrEqual(width!);
+  expect(await barAtBottom()).toBe(true);
+
+  await sample();
+  await page.getByRole("link", { name: "Atrás" }).click();
+  await expect(page).toHaveURL(/\/4$/);
+  await expect(page.locator('.publish-form[data-enter="back"]')).toBeVisible();
+  const [back] = await widest();
+  expect(back, "al volver").toBeLessThanOrEqual(width!);
+  expect(await barAtBottom()).toBe(true);
+});
