@@ -248,3 +248,104 @@ describe("worker · sitemap, robots y shell", () => {
     expect(await (await setup().request("/explorar")).text()).toBe(SHELL);
   });
 });
+
+describe("worker · cabeceras de seguridad del HTML", () => {
+  it("la ficha lleva CSP estricta con el Supabase del entorno y sin Turnstile; también cuando sale de la caché", async () => {
+    const t = setup();
+    const casa = await t.h.seed({ status: "active" });
+    for (let i = 0; i < 2; i++) {
+      const res = await t.request(`/casa/${casa.publicId}`);
+      const csp = res.headers.get("content-security-policy")!;
+      expect(csp).toContain("script-src 'self';");
+      expect(csp).toContain("style-src 'self';");
+      expect(csp).toContain("connect-src 'self' http://supabase.test https://tile.openstreetmap.org");
+      expect(csp).toContain("img-src 'self' data: blob: http://supabase.test https://tile.openstreetmap.org");
+      expect(csp).toContain("frame-ancestors 'none'");
+      expect(csp).not.toContain("challenges.cloudflare.com");
+      expect(csp).not.toContain("unsafe-inline");
+      expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    }
+  });
+
+  it("las páginas de estado también la llevan", async () => {
+    const res = await setup().request("/casa/CT-9999");
+    expect(res.status).toBe(404);
+    expect(res.headers.get("content-security-policy")).toContain("script-src 'self'");
+  });
+
+  it("en desarrollo (Vite inyecta scripts en línea) no se envía", async () => {
+    const t = setup();
+    const app = createApp({ listings: () => t.h.anon, cache: () => null, purgeFetch: fetch, securityHeaders: false });
+    const res = await app.request(`${ORIGIN}/casa/CT-9999`, {}, t.env);
+    expect(res.headers.get("content-security-policy")).toBeNull();
+  });
+});
+
+describe("worker · balizas /vitals, /errors y /events", () => {
+  type Written = { table: string; row: Record<string, unknown> };
+  function beacons(writer: "ok" | "none" = "ok") {
+    const t = setup();
+    const written: Written[] = [];
+    const app = createApp({
+      listings: () => t.h.anon,
+      cache: () => null,
+      purgeFetch: fetch,
+      telemetry: () => (writer === "none" ? null : { insert: async (table, row) => void written.push({ table, row: row as Record<string, unknown> }) }),
+    });
+    const post = (path: string, body: string, headers: Record<string, string> = {}) =>
+      app.request(`${ORIGIN}${path}`, { method: "POST", body, headers: { "content-type": "text/plain", "cf-ipcountry": "CR", ...headers } }, t.env);
+    return { post, written };
+  }
+
+  const valid = {
+    "/vitals": { name: "LCP", value: 1234, rating: "good", id: "v5-1", path: "/casa/CT-1015", build: "abc" },
+    "/errors": { kind: "error", message: "Boom", stack: "at x", path: "/explorar", build: "abc" },
+    "/events": { name: "whatsapp_tap", listing: "CT-1015", path: "/casa/CT-1015", build: "abc" },
+  } as const;
+  const tables = { "/vitals": "web_vitals", "/errors": "client_errors", "/events": "events" } as const;
+
+  for (const path of ["/vitals", "/errors", "/events"] as const) {
+    it(`${path}: acepta una baliza válida y la escribe con el país`, async () => {
+      const b = beacons();
+      const res = await b.post(path, JSON.stringify(valid[path]), { origin: ORIGIN });
+      expect(res.status).toBe(204);
+      expect(b.written).toHaveLength(1);
+      expect(b.written[0]!.table).toBe(tables[path]);
+      expect(b.written[0]!.row).toMatchObject({ country: "CR", build: "abc", path: valid[path].path });
+    });
+
+    it(`${path}: rechaza una baliza malformada sin escribir`, async () => {
+      const b = beacons();
+      expect((await b.post(path, "{rota")).status).toBe(400);
+      expect((await b.post(path, JSON.stringify({ ...valid[path], path: 7 }))).status).toBe(400);
+      expect(b.written).toHaveLength(0);
+    });
+
+    it(`${path}: rechaza una baliza demasiado grande sin escribir`, async () => {
+      const b = beacons();
+      const big = JSON.stringify({ ...valid[path], pad: "x".repeat(9000) });
+      expect((await b.post(path, big)).status).toBe(413);
+      expect((await b.post(path, "{}", { "content-length": "999999" })).status).toBe(413);
+      expect(b.written).toHaveLength(0);
+    });
+  }
+
+  it("rechaza balizas de otro origen", async () => {
+    const b = beacons();
+    expect((await b.post("/events", JSON.stringify(valid["/events"]), { origin: "https://malo.example" })).status).toBe(403);
+    expect(b.written).toHaveLength(0);
+  });
+
+  it("sin país conocido guarda null; un país raro también es null", async () => {
+    const b = beacons();
+    await b.post("/events", JSON.stringify(valid["/events"]), { "cf-ipcountry": "" });
+    await b.post("/events", JSON.stringify(valid["/events"]), { "cf-ipcountry": "<script>" });
+    expect(b.written.map((w) => w.row.country)).toEqual([null, null]);
+  });
+
+  it("sin clave de servicio responde 204 y descarta (el navegador no reintenta)", async () => {
+    const b = beacons("none");
+    expect((await b.post("/events", JSON.stringify(valid["/events"]))).status).toBe(204);
+  });
+
+});

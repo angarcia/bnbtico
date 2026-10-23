@@ -1,0 +1,87 @@
+name: copia
+
+# Copia diaria de la base alojada fuera de Supabase (el plan gratuito no tiene copias): pg_dump → Cloudflare R2, 30 días.
+# Restauración y prueba mensual: docs/copias-de-seguridad.md. Sin los secretos, el job se salta con un aviso (no falla).
+
+on:
+  schedule:
+    - cron: "23 8 * * *" # 02:23 en Costa Rica
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copia
+  cancel-in-progress: false
+
+jobs:
+  copia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Cadena del «Session pooler» de Supabase (IPv4; la conexión directa es solo IPv6 y los runners no la alcanzan).
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # R2 no admite todas las sumas de comprobación que la CLI de AWS manda por defecto desde la 2.23.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      R2_BUCKET: ${{ vars.R2_BUCKET || 'bnbtico-copias' }}
+      PREFIX: ${{ vars.BACKUP_PREFIX || 'bnbtico-pruebas' }}
+      RETENTION_DAYS: "30"
+    steps:
+      - name: ¿Están los secretos?
+        id: config
+        run: |
+          missing=""
+          [ -n "$SUPABASE_DB_URL" ] || missing="$missing SUPABASE_DB_URL"
+          [ -n "$R2_ACCOUNT_ID" ] || missing="$missing R2_ACCOUNT_ID"
+          [ -n "$AWS_ACCESS_KEY_ID" ] || missing="$missing R2_ACCESS_KEY_ID"
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || missing="$missing R2_SECRET_ACCESS_KEY"
+          if [ -n "$missing" ]; then
+            echo "::warning title=Copia omitida::Faltan secretos de GitHub:${missing}. No se hizo la copia de hoy (ver docs/copias-de-seguridad.md)."
+            echo "### Copia omitida: faltan secretos (${missing# })" >> "$GITHUB_STEP_SUMMARY"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "R2_ENDPOINT=https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" >> "$GITHUB_ENV"
+            echo "FILE=${PREFIX}-$(date -u +%F).dump" >> "$GITHUB_ENV"
+          fi
+
+      - name: pg_dump (Postgres 17, como el proyecto)
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          docker run --rm -v "$PWD:/out" -e DB_URL="$SUPABASE_DB_URL" postgres:17 \
+            sh -c 'pg_dump "$DB_URL" --format=custom --no-owner --schema=public --schema=auth --schema=storage --file="/out/$0"' "$FILE"
+          tables=$(docker run --rm -v "$PWD:/out" postgres:17 pg_restore --list "/out/$FILE" | grep -c "TABLE DATA" || true)
+          size=$(stat -c %s "$FILE")
+          echo "Copia: $FILE, $size bytes, $tables tablas con datos"
+          [ "$tables" -gt 10 ] || { echo "::error::La copia tiene solo $tables tablas con datos."; exit 1; }
+          echo "TABLES=$tables" >> "$GITHUB_ENV"
+          echo "SIZE=$size" >> "$GITHUB_ENV"
+
+      - name: Subir a R2
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          aws s3 cp "$FILE" "s3://$R2_BUCKET/$PREFIX/$FILE" --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          remote=$(aws s3api head-object --bucket "$R2_BUCKET" --key "$PREFIX/$FILE" --endpoint-url "$R2_ENDPOINT" --query ContentLength --output text)
+          [ "$remote" = "$SIZE" ] || { echo "::error::En R2 hay $remote bytes y la copia tiene $SIZE."; exit 1; }
+          rm -f "$FILE"
+
+      - name: Borrar copias de más de 30 días
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          cutoff=$(date -u -d "-${RETENTION_DAYS} days" +%F)
+          kept=0
+          for key in $(aws s3api list-objects-v2 --bucket "$R2_BUCKET" --prefix "$PREFIX/" --query 'Contents[].Key' --output text --endpoint-url "$R2_ENDPOINT"); do
+            day=$(printf '%s' "$key" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | tail -1)
+            if [ -n "$day" ] && [[ "$day" < "$cutoff" ]]; then
+              aws s3 rm "s3://$R2_BUCKET/$key" --endpoint-url "$R2_ENDPOINT" --only-show-errors && echo "Borrada $key"
+            elif [ "$key" != "None" ]; then
+              kept=$((kept + 1))
+            fi
+          done
+          echo "### Copia $FILE: $SIZE bytes, $TABLES tablas con datos; $kept copias guardadas en r2://$R2_BUCKET/$PREFIX/" >> "$GITHUB_STEP_SUMMARY"

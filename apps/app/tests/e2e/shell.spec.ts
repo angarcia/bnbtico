@@ -1,4 +1,4 @@
-import { expect, test, type ConsoleMessage } from "@playwright/test";
+import { expect, test, type ConsoleMessage } from "./helpers/test";
 
 function watchConsole(page: import("@playwright/test").Page) {
   const problems: string[] = [];

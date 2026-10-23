@@ -1,11 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode, useEffect, type ReactNode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
+import { installErrorBeacon, track } from "../shared/beacon";
 import { ListingScreen } from "../shared/listing-page";
 import { listingQuery } from "../shared/listing-query";
 import { SSR_DATA_ID, type SsrData } from "../shared/ssr-data";
 import { BlockedPage, ErrorPage, MissingPage } from "../shared/status-pages";
 import "../styles/global.css";
+
+installErrorBeacon();
+const landingPath = location.pathname;
 
 const root = document.getElementById("root")!;
 const embedded = document.getElementById(SSR_DATA_ID)?.textContent;
@@ -30,6 +34,7 @@ function ssrPage(data: SsrData): ReactNode {
 }
 
 if (embedded) {
+  track("page_view");
   hydrateRoot(root, <StrictMode><Hydrated>{ssrPage(JSON.parse(embedded) as SsrData)}</Hydrated></StrictMode>, {
     onRecoverableError: (error) => console.error("Error de hidratación", error),
   });
@@ -37,9 +42,10 @@ if (embedded) {
   import("./shell").then(({ Shell }) => createRoot(root).render(<StrictMode><Shell /></StrictMode>));
 }
 
-// El service worker se registra cuando la página ya cargó (no compite con lo primero que se pinta) y solo en el build.
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
-  const register = () => void import("./sw-register").then((m) => m.registerServiceWorker());
-  if (document.readyState === "complete") register();
-  else addEventListener("load", register, { once: true });
+// Lo que no hace falta para pintar va cuando la página ya cargó: Web Vitals y, solo en el build, el service worker.
+function afterLoad(work: () => void) {
+  if (document.readyState === "complete") work();
+  else addEventListener("load", work, { once: true });
 }
+afterLoad(() => void import("./vitals").then((m) => m.startVitals(landingPath)));
+if (import.meta.env.PROD && "serviceWorker" in navigator) afterLoad(() => void import("./sw-register").then((m) => m.registerServiceWorker()));

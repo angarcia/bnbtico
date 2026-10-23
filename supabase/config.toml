@@ -63,6 +63,11 @@ uri = "pg-functions://postgres/local_test/send_sms"
 [auth.rate_limit]
 sms_sent = 30
 
+# Protección de bots (Turnstile, ticket 11): APAGADA en local a propósito. Encendida, cada código pediría un token que
+# GoTrue comprueba con Cloudflare, y las pruebas de base y los arneses no lo mandan. La app manda el token igual (sitekey
+# de prueba). Para probarla: [auth.captcha] enabled = true, provider = "turnstile",
+# secret = "1x0000000000000000000000000000000AA" y `supabase stop && supabase start`. Alojado: docs/configuracion-supabase.md, paso 9.
+
 # Segundo factor del admin (ticket 09): código por teléfono como factor MFA. Las políticas de admin exigen aal2 en SQL.
 # En local los números de prueba de arriba también valen para el reto MFA (código 123456, no se envía nada).
 # En el proyecto alojado se activa en Authentication → Multi-Factor → Phone (acción manual).

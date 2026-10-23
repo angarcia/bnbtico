@@ -1,6 +1,7 @@
 // Ficha pública (pantalla 03 del diseño v1). La renderiza el worker y la hidrata el navegador: el mapa y la moneda
 // dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo.
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { describe } from "../domain/describe";
 import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
 import { formatCRC, formatMoney, formatUSD, FX_CRC_PER_USD } from "../domain/money";
@@ -11,6 +12,7 @@ import { useHydrated } from "./hydration";
 import { I, type IconName } from "./icons";
 import { listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
+import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
 
 const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
@@ -44,6 +46,7 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
   const hydrated = useHydrated();
   const currency = useCurrency();
   const d = describe(l, { base });
+  useEffect(() => track("listing_view", l.publicId), [l.publicId]);
   const main = d.mainPrice;
   return (
     <div className="app">
@@ -133,7 +136,8 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
               Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency)}</b> / mes
             </span>
           ) : null}
-          <button className="btn btn-wa" type="button" disabled>
+          {/* Marcador: cuando el contacto funcione, este toque ya cuenta (evento whatsapp_tap). */}
+          <button className="btn btn-wa" type="button" disabled onClick={() => track("whatsapp_tap", l.publicId)}>
             <I.wa size={22} /> Contactar por WhatsApp <small className="btn-note">· disponible pronto</small>
           </button>
         </div>

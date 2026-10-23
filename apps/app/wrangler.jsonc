@@ -7,17 +7,21 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     // Sin esto, las navegaciones a estas rutas recibirían el index.html de la SPA sin pasar por el worker.
-    "run_worker_first": ["/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*"]
+    "run_worker_first": ["/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/vitals", "/errors", "/events"]
   },
   // Las vinculaciones no se heredan: cada entorno repite version_metadata.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "observability": { "enabled": true },
+  // Cron diario (src/server/cron.ts): keep-alive a PostgREST y recorte de la telemetría. Los triggers no se heredan: cada
+  // entorno los repite. 09:17 UTC = 03:17 en Costa Rica.
+  "triggers": { "crons": ["17 9 * * *"] },
   // Local: SUPABASE_URL y SUPABASE_ANON_KEY salen de .dev.vars (pnpm dev:vars, desde `supabase status`).
   "vars": { "ENVIRONMENT": "local" },
   "env": {
     "pruebas": {
       "vars": { "ENVIRONMENT": "pruebas", "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co" },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "triggers": { "crons": ["17 9 * * *"] },
       "routes": [{ "pattern": "nueva.bnbtico.com", "custom_domain": true }],
       "workers_dev": true,
       "preview_urls": true
@@ -25,6 +29,7 @@
     "production": {
       "vars": { "ENVIRONMENT": "production" },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "triggers": { "crons": ["17 9 * * *"] },
       "workers_dev": false,
       "preview_urls": false
     }

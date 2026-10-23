@@ -27,8 +27,27 @@ describe("arquitectura", () => {
     expect(offenders).toEqual([]);
   });
 
+  // Hace de regla de lint (ticket 11): corre en `pnpm test` y antes de `pnpm build`, que falla si alguna aparece.
   it("nadie usa dangerouslySetInnerHTML", () => {
     const offenders = files(SRC).filter((f) => readFileSync(f, "utf8").includes("dangerouslySetInnerHTML"));
     expect(offenders.map((f) => relative(SRC, f))).toEqual([]);
+  });
+
+  it("sin HTML crudo ni código desde texto: innerHTML, outerHTML, insertAdjacentHTML, document.write, eval, new Function", () => {
+    const RAW = /\.(innerHTML|outerHTML)\s*=|insertAdjacentHTML|document\.write|\beval\(|new Function\(/;
+    const offenders = files(SRC).filter((f) => RAW.test(readFileSync(f, "utf8")));
+    expect(offenders.map((f) => relative(SRC, f))).toEqual([]);
+  });
+
+  it("sin atributos style en JSX: la CSP no lleva 'unsafe-inline' para estilos (el SSR los escribiría en el HTML)", () => {
+    const offenders = files(SRC).filter((f) => /\bstyle=\{/.test(readFileSync(f, "utf8")));
+    expect(offenders.map((f) => relative(SRC, f))).toEqual([]);
+  });
+
+  it("index.html sin scripts en línea ni estilos en línea (CSP script-src/style-src 'self')", () => {
+    const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+    const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
+    expect(scripts.filter(([, attrs, body]) => !/\bsrc=/.test(attrs!) || body!.trim() !== "").map(([tag]) => tag)).toEqual([]);
+    expect(html).not.toMatch(/<style\b|\sstyle=/);
   });
 });

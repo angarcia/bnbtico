@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./helpers/test";
 import { postgrestHarness } from "../db/postgrest-harness";
 
 // Medición (no es una puerta): apertura con el SW instalado hasta Explorar interactivo, con «Slow 4G» y CPU 4× de DevTools.

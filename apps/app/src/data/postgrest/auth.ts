@@ -43,10 +43,16 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
   const channel = deps.channel ?? "whatsapp";
   const pending = pendingOtpStore(deps.pending, now);
 
-  async function send(p: Omit<PendingOtp, "sentAt">) {
+  async function send(p: Omit<PendingOtp, "sentAt">, captchaToken?: string) {
     const { error } = await db.auth.signInWithOtp({
       phone: p.phone,
-      options: { channel, shouldCreateUser: p.mode === "register", data: p.mode === "register" ? { full_name: p.name } : undefined },
+      options: {
+        channel,
+        shouldCreateUser: p.mode === "register",
+        data: p.mode === "register" ? { full_name: p.name } : undefined,
+        // Protección de bots de Supabase Auth (Turnstile): cada envío gasta un token.
+        ...(captchaToken ? { captchaToken } : {}),
+      },
     });
     if (error) throw toDomainError(error);
     pending.write(p);
@@ -65,21 +71,21 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
   }
 
   return {
-    async start(input) {
+    async start(input, captchaToken) {
       const v = validateStart(input);
       const previous = pending.read();
       const wait = previous?.phone === v.phone ? cooldownError(previous.sentAt, now()) : null;
       if (wait) throw wait;
-      await send(v.mode === "register" ? { mode: "register", name: v.name, phone: v.phone } : { mode: "login", phone: v.phone });
+      await send(v.mode === "register" ? { mode: "register", name: v.name, phone: v.phone } : { mode: "login", phone: v.phone }, captchaToken);
     },
     pending: () => pending.read(),
-    async resend() {
+    async resend(captchaToken) {
       const p = pending.read();
       if (!p) throw new DomainError("No hay ningún número pendiente. Vuelva a empezar.", "validation");
       const wait = cooldownError(p.sentAt, now());
       if (wait) throw wait;
       const { sentAt: _sentAt, ...rest } = p;
-      await send(rest);
+      await send(rest, captchaToken);
     },
     cancel: () => pending.clear(),
     async verify(code) {

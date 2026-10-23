@@ -1,4 +1,4 @@
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "./helpers/test";
 import { readFileSync, writeFileSync } from "node:fs";
 import type { ListingsHarness, Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";

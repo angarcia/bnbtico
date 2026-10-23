@@ -54,6 +54,9 @@ a{color:var(--primary)}
 .btn-link{color:var(--primary);font-weight:600;text-decoration:none;padding:6px 0;text-align:left;min-height:44px;display:inline-flex;align-items:center}
 .btn-link.muted{color:var(--muted)}
 .field-error{color:var(--bad);font-size:13px;font-weight:600}
+/* Turnstile: invisible salvo que Cloudflare pida interacción. */
+.captcha{display:flex;justify-content:center}
+.captcha:empty{display:none}
 
 /* ---------- Layout ---------- */
 .stack{display:flex;flex-direction:column;gap:10px}

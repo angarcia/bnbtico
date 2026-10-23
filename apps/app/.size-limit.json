@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos y la zona del admin)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin y Web Vitals tras load)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -11,7 +11,8 @@
       "!dist/client/assets/resize-*.js",
       "!dist/client/assets/concurrency-*.js",
       "!dist/client/assets/admin-*.js",
-      "!dist/client/assets/review-*.js"
+      "!dist/client/assets/review-*.js",
+      "!dist/client/assets/vitals-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -34,6 +35,14 @@
       "dist/client/assets/review-*.js"
     ],
     "limit": "12 KB",
+    "gzip": true
+  },
+  {
+    "name": "Web Vitals · trozo que se importa tras load (web-vitals y su baliza)",
+    "path": [
+      "dist/client/assets/vitals-*.js"
+    ],
+    "limit": "5 KB",
     "gzip": true
   },
   {

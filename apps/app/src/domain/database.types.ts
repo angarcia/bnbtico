@@ -43,6 +43,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"client_errors": {
+                  Row: {
+                    "build": string,"col": number | null,"country": string | null,"created_at": string,"id": number,"kind": string,"line": number | null,"message": string,"page": string,"path": string,"source": string | null,"stack": string | null,"user_agent": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "build": string,"col"?: number | null,"country"?: string | null,"created_at"?: string,"id"?: never,"kind": string,"line"?: number | null,"message": string,"page": string,"path": string,"source"?: string | null,"stack"?: string | null,"user_agent"?: string | null
+                  }
+                  Update: {
+                    "build"?: string,"col"?: number | null,"country"?: string | null,"created_at"?: string,"id"?: never,"kind"?: string,"line"?: number | null,"message"?: string,"page"?: string,"path"?: string,"source"?: string | null,"stack"?: string | null,"user_agent"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"events": {
+                  Row: {
+                    "build": string,"country": string | null,"created_at": string,"id": number,"listing_public_id": string | null,"name": string,"page": string,"path": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "build": string,"country"?: string | null,"created_at"?: string,"id"?: never,"listing_public_id"?: string | null,"name": string,"page": string,"path": string
+                  }
+                  Update: {
+                    "build"?: string,"country"?: string | null,"created_at"?: string,"id"?: never,"listing_public_id"?: string | null,"name"?: string,"page"?: string,"path"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"favorites": {
                   Row: {
                     "created_at": string,"listing_id": string,"user_id": string
@@ -340,6 +368,20 @@ isOneToOne: true
       referencedRelation: "listings_public"
       referencedColumns: ["id"]
     }
+                  ]
+                },"web_vitals": {
+                  Row: {
+                    "build": string,"country": string | null,"created_at": string,"id": number,"metric_id": string,"name": string,"navigation_type": string | null,"page": string,"path": string,"rating": string | null,"value": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "build": string,"country"?: string | null,"created_at"?: string,"id"?: never,"metric_id": string,"name": string,"navigation_type"?: string | null,"page": string,"path": string,"rating"?: string | null,"value": number
+                  }
+                  Update: {
+                    "build"?: string,"country"?: string | null,"created_at"?: string,"id"?: never,"metric_id"?: string,"name"?: string,"navigation_type"?: string | null,"page"?: string,"path"?: string,"rating"?: string | null,"value"?: number
+                  }
+                  Relationships: [
+                    
                   ]
                 }
           }

@@ -1,10 +1,13 @@
-// Worker Hono: la única ruta con SSR (/casa/CT-####), sitemap, robots, purga de la ficha y el shell para lo demás.
+// Worker Hono: la única ruta con SSR (/casa/CT-####), sitemap, robots, purga de la ficha, balizas de telemetría y el
+// shell para lo demás.
 import { Hono, type Context } from "hono";
 import type { PublicListingsApi } from "../domain/api";
+import { BEACON_MAX_BYTES, BEACON_TABLE, parseBeacon, type BeaconKind, type BeaconRow, type BeaconTable } from "../domain/telemetry";
 import { robotsTxt, shareBase, type Environment } from "../domain/seo";
 import { parsePublicId, publicPath, publicUrl } from "../domain/share";
 import type { SsrData } from "../shared/ssr-data";
 import { escapeHtml, renderDocument } from "./render";
+import { securityHeaders } from "../shared/security";
 
 export type Env = {
   ENVIRONMENT: Environment;
@@ -24,10 +27,19 @@ export interface CacheLike {
   delete(key: string): Promise<boolean>;
 }
 
+/** Escritura de las balizas con la service role (adaptador en src/data/postgrest/telemetry.ts). */
+export interface TelemetryWriter {
+  insert(table: BeaconTable, row: BeaconRow & { country: string | null }): Promise<void>;
+}
+
 export interface Deps {
   listings(env: Env): PublicListingsApi;
   cache(): CacheLike | null;
   purgeFetch: typeof fetch;
+  /** null sin clave de servicio: las balizas se aceptan y se descartan. */
+  telemetry?(env: Env): TelemetryWriter | null;
+  /** CSP y demás cabeceras en el HTML del worker; apagado solo en `vite dev` (inyecta scripts en línea). */
+  securityHeaders?: boolean;
 }
 
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
@@ -45,6 +57,12 @@ function sameSecret(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/** País de Cloudflare (request.cf o la cabecera CF-IPCountry); solo dos letras, si no null. */
+function countryOf(req: Request, header: string | undefined): string | null {
+  const value = (req as Request & { cf?: { country?: unknown } }).cf?.country ?? header;
+  return typeof value === "string" && /^[A-Z][A-Z0-9]$/.test(value) ? value : null;
+}
+
 export function createApp(deps: Deps) {
   const app = new Hono<{ Bindings: Env }>();
 
@@ -53,7 +71,41 @@ export function createApp(deps: Deps) {
   }
 
   async function page(c: Context<{ Bindings: Env }>, data: SsrData, status: 200 | 404 | 410 | 503, cacheControl: string) {
-    return c.html(renderDocument(await template(c), data), status, { "cache-control": cacheControl });
+    // Las cabeceras van en la respuesta que se guarda en caché: un acierto las lleva igual.
+    const security = deps.securityHeaders === false ? {} : securityHeaders({ supabaseUrl: c.env.SUPABASE_URL, turnstile: false });
+    return c.html(renderDocument(await template(c), data), status, { "cache-control": cacheControl, ...security });
+  }
+
+  /** Ejecuta trabajo tras responder si hay ExecutionContext; en las pruebas en proceso, antes de responder. */
+  async function later(c: Context<{ Bindings: Env }>, work: Promise<unknown>) {
+    try {
+      c.executionCtx.waitUntil(work);
+    } catch {
+      await work;
+    }
+  }
+
+  let warnedNoWriter = false;
+  for (const kind of ["vitals", "errors", "events"] as const satisfies readonly BeaconKind[]) {
+    app.post(`/${kind}`, async (c) => {
+      const origin = c.req.header("origin");
+      if (origin && origin !== new URL(c.req.url).origin) return c.body(null, 403);
+      if (Number(c.req.header("content-length") ?? 0) > BEACON_MAX_BYTES) return c.body(null, 413);
+      const parsed = parseBeacon(kind, await c.req.text());
+      if (!parsed.ok) return c.body(null, parsed.status);
+      const writer = deps.telemetry?.(c.env) ?? null;
+      if (!writer) {
+        if (!warnedNoWriter) console.warn(JSON.stringify({ event: "beacon_discarded", reason: "sin SUPABASE_SERVICE_ROLE_KEY" }));
+        warnedNoWriter = true;
+        return c.body(null, 204);
+      }
+      const row = { ...parsed.row, country: countryOf(c.req.raw, c.req.header("cf-ipcountry")) };
+      await later(
+        c,
+        writer.insert(BEACON_TABLE[kind], row).catch((error: unknown) => console.error(JSON.stringify({ event: "beacon_write_failed", kind, error: String(error) }))),
+      );
+      return c.body(null, 204);
+    });
   }
 
   app.get("/robots.txt", (c) => c.text(robotsTxt(c.env.ENVIRONMENT)));
@@ -92,14 +144,7 @@ export function createApp(deps: Deps) {
         return state === "blocked" ? page(c, { page: "blocked" }, 410, STATUS_CACHE) : page(c, { page: "missing" }, 404, STATUS_CACHE);
       }
       const res = await page(c, { page: "listing", listing, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, LISTING_CACHE);
-      if (cache) {
-        const stored = cache.put(key, res.clone());
-        try {
-          c.executionCtx.waitUntil(stored);
-        } catch {
-          await stored; // sin ExecutionContext (pruebas en proceso)
-        }
-      }
+      if (cache) await later(c, cache.put(key, res.clone()));
       return res;
     } catch (error) {
       console.error("ficha", publicId, error);

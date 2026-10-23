@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";

@@ -61,6 +61,8 @@ jobs:
           # Números de atención por WhatsApp (Ayuda); sin ellos el botón sale deshabilitado.
           VITE_WA_OWNERS: ${{ vars.WA_OWNERS }}
           VITE_WA_GUESTS: ${{ vars.WA_GUESTS }}
+          # Sitekey de Turnstile (pública); sin ella el código se pide sin token (y falla si Supabase Auth exige captcha).
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
         run: |
           rm -f .dev.vars .env.local
           test -n "$VITE_SUPABASE_URL" -a -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Faltan SUPABASE_URL o SUPABASE_ANON_KEY en GitHub (variables o secretos)."; exit 1; }

@@ -3,6 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
+import { track } from "../shared/beacon";
 import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
@@ -150,6 +151,11 @@ onSignedOut(() => {
 // La caché del dispositivo se guarda cada segundo como mucho: si la app se cerró justo después de un cambio, lo restaurado
 // puede ser anterior. Las consultas privadas restauradas se pintan al instante y se vuelven a pedir por detrás.
 const refreshPrivate = () => void queryClient.invalidateQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
+
+// Una vista de página por ruta resuelta (cambiar solo los filtros de la URL no cuenta).
+router.subscribe("onResolved", (e) => {
+  if (e.pathChanged || !e.fromLocation) track("page_view");
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

@@ -13,6 +13,7 @@ import { FlowFrame, FlowHeader, RootHeader, TabsFrame } from "../chrome";
 import { setRole, useRole } from "../role";
 import { authApi, pendingOtp, useSession } from "../session";
 import { SUPPORT, waLink } from "../support";
+import { useTurnstile } from "../turnstile";
 
 export interface CuentaSearch {
   modo?: "entrar";
@@ -67,6 +68,7 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const register = mode === "register";
+  const captcha = useTurnstile();
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -75,7 +77,8 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
     setError(null);
     try {
       const phone = field(fd, "phone");
-      await (await authApi()).start(register ? { mode, name: field(fd, "name"), phone } : { mode, phone });
+      const [api, token] = await Promise.all([authApi(), captcha.token()]);
+      await api.start(register ? { mode, name: field(fd, "name"), phone } : { mode, phone }, token);
       await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
     } catch (err) {
       setError(message(err));
@@ -106,6 +109,7 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
             </div>
             <span className="xs muted">Si su número no es de Costa Rica, escríbalo completo con «+» y su código de país.</span>
           </div>
+          <div ref={captcha.container} className="captcha" />
           {error ? <p className="field-error" role="alert">{error}</p> : null}
           <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
             <I.wa size={20} /> {busy ? "Un momento…" : "Recibir código por WhatsApp"}
@@ -148,6 +152,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
   const [busy, setBusy] = useState(false);
   const [resent, setResent] = useState<string | null>(null);
   const [wait, setWait] = useState(() => resendWaitSeconds(sentAt, Date.now()));
+  const captcha = useTurnstile();
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -175,7 +180,8 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
   async function resend() {
     setResent(null);
     try {
-      await (await authApi()).resend();
+      const [api, token] = await Promise.all([authApi(), captcha.token()]);
+      await api.resend(token);
       setWait(RESEND_COOLDOWN_MS / 1000);
       setResent("Le enviamos otro código por WhatsApp.");
     } catch (err) {
@@ -237,6 +243,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
               Pedir otro código
             </button>
           )}
+          <div ref={captcha.container} className="captcha" />
           {resent ? (
             <p className="small" role="status">
               {resent}

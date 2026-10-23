@@ -147,12 +147,15 @@ export type ProfilePatch = Partial<Pick<Account, "name" | "email" | "description
  * - `enrolMfa`/`verifyMfa` pasan a `MfaApi` (ticket 09), para que los adaptadores de este ticket no lleven métodos vacíos.
  */
 export interface AuthApi {
-  /** Valida nombre y número y pide el código por WhatsApp. Falla si no pasaron 30 s desde el último envío a ese número. */
-  start(input: StartInput): Promise<void>;
+  /**
+   * Valida nombre y número y pide el código por WhatsApp. Falla si no pasaron 30 s desde el último envío a ese número.
+   * `captchaToken` (ticket 11): token de Turnstile para la protección de bots de Supabase Auth; sin él si no está configurada.
+   */
+  start(input: StartInput, captchaToken?: string): Promise<void>;
   pending(): PendingOtp | null;
   /** Comprueba el código del número pendiente y abre sesión. */
   verify(code: string): Promise<Account>;
-  resend(): Promise<void>;
+  resend(captchaToken?: string): Promise<void>;
   cancel(): void;
   session(): Promise<Session | null>;
   onSessionChange(listener: (session: Session | null) => void): () => void;

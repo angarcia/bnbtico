@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./helpers/test";
 import { deleteAccount, FREE_PHONE } from "../db/postgrest-auth-harness";
 import { enterCode, expectNoCookies, injectSession } from "./helpers/session";
 

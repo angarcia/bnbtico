@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from "@playwright/test";
+import { expect, test, type Page, type Route } from "./helpers/test";
 import type { ListingsHarness, Seeded } from "../contract/harness";
 import { TEST_PHONES, lastMfaCode, serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";

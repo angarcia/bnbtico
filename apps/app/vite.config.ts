@@ -1,8 +1,9 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { readdirSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { build, defineConfig, type Plugin } from "vite";
+import { build, defineConfig, loadEnv, type Plugin } from "vite";
+import { staticHeadersBlock } from "./src/shared/security";
 import { precacheList } from "./src/sw/routes";
 
 const buildId = process.env.GITHUB_SHA?.slice(0, 12) ?? Date.now().toString(36);
@@ -49,7 +50,28 @@ function serviceWorker(): Plugin {
   };
 }
 
+/**
+ * CSP del shell y de los estáticos: se añade a dist/client/_headers (copiado de public/) con la URL de Supabase del build
+ * (la misma VITE_SUPABASE_URL que usa el navegador). Solo en el build: `vite dev` inyecta scripts en línea.
+ */
+function securityHeadersFile(): Plugin {
+  let supabaseUrl: string | undefined;
+  return {
+    name: "bnbtico:security-headers",
+    apply: "build",
+    applyToEnvironment: (env) => env.name === "client",
+    configResolved(config) {
+      supabaseUrl = loadEnv(config.mode, root, "VITE_").VITE_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+    },
+    writeBundle(options) {
+      const file = join(options.dir!, "_headers");
+      if (!existsSync(file)) throw new Error("Falta dist/client/_headers (public/_headers).");
+      appendFileSync(file, `\n${staticHeadersBlock({ supabaseUrl, turnstile: true })}`);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), cloudflare(), serviceWorker()],
+  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile()],
   define: { __BUILD_ID__: JSON.stringify(buildId) },
 });

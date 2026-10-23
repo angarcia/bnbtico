@@ -15,6 +15,8 @@ export class DomainError extends Error {
 }
 
 export const GENERIC_MESSAGE = "Algo salió mal. Intente de nuevo en un momento.";
+/** Turnstile no dio token o la protección de bots de Supabase Auth lo rechazó. */
+export const CAPTCHA_FAILED = "No pudimos comprobar que usted es una persona. Recargue la página e intente de nuevo.";
 
 const BY_CODE: Record<string, [DomainErrorKind, string]> = {
   // Postgres
@@ -37,6 +39,7 @@ const BY_CODE: Record<string, [DomainErrorKind, string]> = {
   otp_disabled: ["not_found", "No hay una cuenta con ese WhatsApp. Cree una cuenta."],
   sms_send_failed: ["unknown", "No pudimos enviar el código. Revise el número e intente de nuevo."],
   validation_failed: ["validation", "Revise el número e intente de nuevo."],
+  captcha_failed: ["validation", CAPTCHA_FAILED],
   session_not_found: ["session", "Su sesión venció. Ingrese de nuevo."],
   session_expired: ["session", "Su sesión venció. Ingrese de nuevo."],
   refresh_token_not_found: ["session", "Su sesión venció. Ingrese de nuevo."],
