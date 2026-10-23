@@ -1,0 +1,93 @@
+name: app
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+concurrency:
+  group: app-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verificar-y-desplegar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/app
+    env:
+      # main → producción (sin ruta todavía); develop y pull requests → pruebas (nueva.bnbtico.com).
+      CLOUDFLARE_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'pruebas' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tipos
+        run: pnpm typecheck
+      - name: Pruebas unitarias
+        run: pnpm test
+      - name: Build (navegador y worker)
+        run: pnpm build
+      - name: Puerta de tamaño (zona privada < 150 KB gz)
+        run: pnpm size
+      - name: Navegador de Playwright
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Prueba de hidratación y shell (Pixel 7)
+        run: pnpm test:e2e
+
+      - name: Secretos del worker
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+        working-directory: .
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          jq -n --arg k "$SUPABASE_SERVICE_ROLE_KEY" '{SUPABASE_SERVICE_ROLE_KEY: $k}' > "$RUNNER_TEMP/worker-secrets.json"
+
+      - name: Desplegar
+        id: deploy
+        if: github.event_name == 'push'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/app
+          packageManager: pnpm
+          wranglerVersion: "4.152.0"
+          command: deploy --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
+
+      - name: Versión de vista previa
+        id: preview
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/app
+          packageManager: pnpm
+          wranglerVersion: "4.152.0"
+          command: versions upload --preview-alias pr-${{ github.event.number }} --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
+
+      - name: Publicar la URL de vista previa en el pull request
+        if: steps.preview.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTPUT: ${{ steps.preview.outputs.command-output }}
+          URL: ${{ steps.preview.outputs.deployment-url }}
+        run: |
+          alias_url=$(printf '%s' "$OUTPUT" | grep -oE 'https://pr-[a-z0-9-]+\.[a-z0-9.-]+\.workers\.dev' | head -1)
+          gh pr comment ${{ github.event.number }} --edit-last --create-if-none --body "Vista previa de \`${{ github.sha }}\`: ${alias_url:-$URL}"
+
+      - name: Borrar los secretos del disco
+        if: always()
+        working-directory: .
+        run: rm -f "$RUNNER_TEMP/worker-secrets.json"
