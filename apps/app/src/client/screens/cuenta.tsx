@@ -6,7 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds, safeNext } from "../../domain/account";
 import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
-import { formatPhone } from "../../domain/phone";
+import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
 import { FlowFrame, FlowHeader, RootHeader, TabsFrame } from "../chrome";
@@ -67,16 +67,19 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
   const register = mode === "register";
   const captcha = useTurnstile();
+  const other = country === OTHER_COUNTRY;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const phone = composePhone(country, field(fd, "phone"));
+    if (!phone) return setError(other ? "Escriba el número completo con «+» y el código de su país." : "Ese número no parece válido para el país elegido.");
     setBusy(true);
     setError(null);
     try {
-      const phone = field(fd, "phone");
       const [api, token] = await Promise.all([authApi(), captcha.token()]);
       await api.start(register ? { mode, name: field(fd, "name"), phone } : { mode, phone }, token);
       await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
@@ -102,12 +105,38 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
             </div>
           ) : null}
           <div className="field">
-            <label htmlFor="account-phone">WhatsApp con código de país</label>
+            <label htmlFor="account-country">País de su WhatsApp</label>
+            <select id="account-country" name="country" autoComplete="tel-country-code" value={country} onChange={(e) => setCountry(e.currentTarget.value)}>
+              {PHONE_COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name} (+{c.code})
+                </option>
+              ))}
+              <option value={OTHER_COUNTRY}>Otro país</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="account-phone">Número de WhatsApp</label>
             <div className="input-prefix">
-              <span className="prefix" aria-hidden="true">+506</span>
-              <input id="account-phone" name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="8000 0001" required />
+              {other ? null : (
+                <span className="prefix" aria-hidden="true">
+                  +{country}
+                </span>
+              )}
+              <input
+                id="account-phone"
+                name="phone"
+                type="tel"
+                autoComplete={other ? "tel" : "tel-national"}
+                inputMode="tel"
+                placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
+                aria-describedby="account-phone-help"
+                required
+              />
             </div>
-            <span className="xs muted">Si su número no es de Costa Rica, escríbalo completo con «+» y su código de país.</span>
+            <span id="account-phone-help" className="xs muted">
+              {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Elija su país arriba." : "Escriba su número sin el código de país."}
+            </span>
           </div>
           <div ref={captcha.container} className="captcha" />
           {error ? <p className="field-error" role="alert">{error}</p> : null}

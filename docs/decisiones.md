@@ -1,3 +1,11 @@
+## 2026-10-23 · Números de WhatsApp de cualquier país; selector con Costa Rica por defecto
+
+- **Por qué:** muchos clientes (y algunos propietarios) del Caribe tico tienen número de fuera. Decisión de Daniel. Antes la pantalla de ingresar mostraba un `+506` fijo; el dominio ya aceptaba otros países con «+».
+- **Pantalla de ingresar y de crear cuenta:** `<select>` nativo «País de su WhatsApp» delante del número: Costa Rica (+506) por defecto y primero, después Estados Unidos/Canadá, Nicaragua, Panamá, México, Colombia, Venezuela, Argentina, España, Alemania, Francia, Italia, Reino Unido, Países Bajos y Suiza, y «Otro país», que pide el número completo con «+» y código. Si se escribe con «+», manda lo escrito sobre el país elegido.
+- **Dominio (`src/domain/phone.ts`):** `composePhone(país, número)` → E.164 o null. Costa Rica mantiene la regla de móviles `[5-8]\d{7}`; +1 exige 10 dígitos (acepta el 1 delante); el resto, 6–14 dígitos nacionales sin el 0 de marcación interna (Italia lo conserva). `formatPhone` separa el código de país (tabla de prefijos de 1, 2 y 3 cifras) y agrupa el resto: `+1 415 555 0100`, `+34 600 112 233`, `+505 8123 4567`. A Supabase sigue llegando E.164; `wa.me` usa solo dígitos.
+- **Local:** número de prueba `14155550100` (código 123456) en `[auth.sms.test_otp]`. En el alojado no se añade nada.
+- **Riesgo:** los códigos a números internacionales cuestan más y abren la puerta al «SMS pumping». Mitigan Turnstile, el tope de envíos por hora y los 30 s entre códigos; además conviene limitar en Twilio Verify los países permitidos (Geo Permissions) a los de la lista.
+
 ## 2026-10-23 · Segundo factor del admin por app de autenticación (TOTP) en vez de WhatsApp
 
 - **Por qué:** en `bnbtico-pruebas` (plan gratuito) el MFA por teléfono de Supabase solo está disponible en el plan Pro. TOTP (Google Authenticator, 1Password…) está en todos los planes y no cuesta envíos. Decisión de Daniel. Solo el admin lo usa; clientes y propietarios siguen ingresando con el código por WhatsApp.

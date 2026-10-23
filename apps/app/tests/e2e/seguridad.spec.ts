@@ -54,7 +54,7 @@ test("Turnstile se carga solo en Ingresar y su token llega a Supabase Auth al pe
   await deleteAccount(FREE_PHONE);
   await page.goto("/cuenta");
   await page.getByLabel("Nombre").fill("Ana Prueba");
-  await page.getByLabel("WhatsApp con código de país").fill("8888 9999");
+  await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   const otp = page.waitForRequest((r) => r.url().includes("/auth/v1/otp") && r.method() === "POST");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   // La sitekey de prueba de Cloudflare (1x00000000000000000000AA) siempre pasa y da este token.

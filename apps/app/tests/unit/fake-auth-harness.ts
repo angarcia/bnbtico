@@ -19,6 +19,7 @@ export function fakeAuthHarness(db = new FakeDb()): AuthHarness {
       db.profileByPhone("+50688889999")!.isAdmin = true;
     },
     phone: "+50688889999",
+    intlPhone: "+14155550100",
     async captureSession() {
       const token = stores.session.getItem(SESSION_STORAGE_KEY);
       return async () => !!token && db.authSessions.has(token);

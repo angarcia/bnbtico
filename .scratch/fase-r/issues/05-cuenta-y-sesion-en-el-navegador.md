@@ -26,3 +26,7 @@
 - **Desviaciones:** Ingresar y Código van sin barra inferior (diseño 06/07; la suite vieja la esperaba): se ajustaron `shell.spec.ts` y `explorar.spec.ts`. El fake no limita intentos ni caduca códigos (GoTrue local con números de prueba tampoco lo hace); esos mensajes se prueban en el mapeo. En Playwright, volver a pedir código al mismo número espera 1,1 s (Supabase: un código por segundo y número).
 - Sin migraciones. CI: el build de despliegue pasa `vars.WA_OWNERS`/`vars.WA_GUESTS` como `VITE_WA_*` (opcionales).
 - **Para Daniel:** crear las variables de GitHub `WA_OWNERS` y `WA_GUESTS` cuando existan los números (sin ellas, «Abrir WhatsApp» sale deshabilitado). Probar en `nueva.bnbtico.com` el registro con un WhatsApp real (canal whatsapp de Twilio Verify en el proyecto alojado).
+
+## Avance (2026-10-23) · WhatsApp de cualquier país
+
+Selector de país en Ingresar/Crear cuenta (Costa Rica por defecto, lista corta y «Otro país»), `composePhone` y `formatPhone` internacional en `src/domain/phone.ts`, caso internacional en el contrato de auth (fake y Supabase local con el número de prueba `14155550100`) y recorrido Playwright con +1 y «Otro país». Ver `docs/decisiones.md` (2026-10-23). Pendiente manual de Daniel: revisar los permisos geográficos de Twilio Verify.

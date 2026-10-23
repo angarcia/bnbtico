@@ -40,6 +40,20 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
       expect(await h.auth.profile()).toEqual(account);
     });
 
+    it("registra y vuelve a entrar con un WhatsApp de otro país; el número pendiente y el reenvío lo conservan", async () => {
+      await h.auth.start({ mode: "register", name: "John Test", phone: "+1 (415) 555-0100" });
+      expect(h.auth.pending()).toMatchObject({ mode: "register", phone: h.intlPhone });
+      expect(h.restart().pending()?.phone).toBe(h.intlPhone);
+      await h.advance(RESEND_COOLDOWN_MS);
+      await h.auth.resend();
+      const account = await h.auth.verify(h.code);
+      expect(account).toMatchObject({ name: "John Test", phone: h.intlPhone, phoneVerified: true });
+      await h.auth.logout();
+      await h.advance(RESEND_COOLDOWN_MS);
+      await h.auth.start({ mode: "login", phone: h.intlPhone });
+      expect((await h.auth.verify(h.code)).id).toBe(account.id);
+    });
+
     it("avisa a quien escucha cuando la sesión se abre y se cierra", async () => {
       const seen: (string | null)[] = [];
       const stop = h.auth.onSessionChange((s) => seen.push(s?.userId ?? null));

@@ -10,6 +10,8 @@ import { totp } from "../contract/totp";
 import { localSupabase, serviceClient } from "./local";
 
 export const FREE_PHONE = "+50688889999";
+/** Número de prueba de Estados Unidos (config.toml, [auth.sms.test_otp]); solo local. */
+export const INTL_PHONE = "+14155550100";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Borra la cuenta de ese número (y en cascada su perfil y sus casas). */
@@ -22,6 +24,7 @@ export async function deleteAccount(phone: string) {
 
 export async function postgrestAuthHarness(): Promise<AuthHarness> {
   await deleteAccount(FREE_PHONE);
+  await deleteAccount(INTL_PHONE);
   await sleep(1100);
   const { url, anonKey } = localSupabase();
   let skew = 0;
@@ -41,6 +44,7 @@ export async function postgrestAuthHarness(): Promise<AuthHarness> {
       if (error) throw error;
     },
     phone: FREE_PHONE,
+    intlPhone: INTL_PHONE,
     async captureSession() {
       const raw = stores.session.getItem(SESSION_STORAGE_KEY);
       const token = raw ? (JSON.parse(raw) as { access_token: string }).access_token : "";

@@ -1,5 +1,5 @@
 import { expect, test } from "./helpers/test";
-import { deleteAccount, FREE_PHONE } from "../db/postgrest-auth-harness";
+import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
 import { enterCode, expectNoCookies, injectSession } from "./helpers/session";
 
 // Cuenta con WhatsApp verificado por código (pantallas 06, 07, 08 y 20), en el navegador contra Supabase local.
@@ -16,7 +16,7 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(page.getByRole("navigation", { name: "Navegación principal" })).toHaveCount(0);
 
   await page.getByLabel("Nombre").fill("Ana Prueba");
-  await page.getByLabel("WhatsApp con código de país").fill("8888 9999");
+  await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
 
   await expect(page).toHaveURL(/\/cuenta\/codigo/);
@@ -62,7 +62,7 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
 
   await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
   await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
-  await page.getByLabel("WhatsApp con código de país").fill("+506 8888 9999");
+  await page.getByLabel("Número de WhatsApp").fill("+506 8888 9999");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
 
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -78,19 +78,55 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
 test("ingresar con un número sin cuenta avisa", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   await page.goto("/cuenta?modo=entrar");
-  await page.getByLabel("WhatsApp con código de país").fill("8888 9999");
+  await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.locator(".field-error")).toHaveText("No hay una cuenta con ese WhatsApp. Cree una cuenta.");
-  await page.getByLabel("WhatsApp con código de país").fill("123");
+  await page.getByLabel("Número de WhatsApp").fill("123");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.locator(".field-error")).toHaveText("Escriba un WhatsApp válido, con código de país si no es de Costa Rica.");
+  await expect(page.locator(".field-error")).toHaveText("Ese número no parece válido para el país elegido.");
+});
+
+test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro país»", async ({ page }) => {
+  await deleteAccount(INTL_PHONE);
+  await page.goto("/cuenta");
+  const country = page.getByLabel("País de su WhatsApp");
+  await expect(country).toHaveValue("506");
+  await expect(page.locator(".input-prefix .prefix")).toHaveText("+506");
+  await page.getByLabel("Nombre").fill("John Test");
+  await country.selectOption({ label: "Estados Unidos / Canadá (+1)" });
+  await expect(page.locator(".input-prefix .prefix")).toHaveText("+1");
+  await page.getByLabel("Número de WhatsApp").fill("(415) 555-01");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.locator(".field-error")).toHaveText("Ese número no parece válido para el país elegido.");
+  await page.getByLabel("Número de WhatsApp").fill("(415) 555-0100");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+
+  await expect(page.getByText("+1 415 555 0100")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("+1 415 555 0100")).toBeVisible();
+  await enterCode(page);
+  await expect(page).toHaveURL(/\/cuenta\/lista/);
+  await page.goto("/cuenta");
+  await expect(page.getByText("WhatsApp verificado · +1 415 555 0100")).toBeVisible();
+
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
+  await page.getByLabel("País de su WhatsApp").selectOption("other");
+  await expect(page.locator(".input-prefix .prefix")).toHaveCount(0);
+  await page.getByLabel("Número de WhatsApp").fill("1 415 555 0100");
+  await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.getByText("+1 415 555 0100")).toBeVisible();
+  await enterCode(page);
+  await expect(page.getByRole("heading", { name: "John Test" })).toBeVisible();
+  await deleteAccount(INTL_PHONE);
 });
 
 test("una ruta privada sin sesión lleva a Ingresar y, tras el código, vuelve a ella", async ({ page }) => {
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
   await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
-  await page.getByLabel("WhatsApp con código de país").fill("8777 0001");
+  await page.getByLabel("Número de WhatsApp").fill("8777 0001");
   await page.waitForTimeout(1100); // otro archivo pudo pedir un código para este número hace un instante
 
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();

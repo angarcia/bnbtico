@@ -79,6 +79,8 @@ export interface AuthHarness {
   code: string;
   /** Número de prueba sin cuenta al empezar cada prueba. */
   phone: string;
+  /** Número de prueba de otro país (Estados Unidos), también sin cuenta al empezar. */
+  intlPhone: string;
   /** Guarda la sesión actual del dispositivo; la función dice si el servidor todavía la acepta. */
   captureSession(): Promise<() => Promise<boolean>>;
 }
