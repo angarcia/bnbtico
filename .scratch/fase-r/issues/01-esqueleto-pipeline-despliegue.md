@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-human (falta el primer push a `develop` y la comprobación de Daniel en `nueva.bnbtico.com`)
+**Status:** done (2026-10-22)
 
 **Manual steps (Daniel), before the first deploy:**
 - Create one Cloudflare API token (Workers Scripts edit, Account settings read, Zone DNS edit, Cache Purge) and add it with the account id as GitHub repository secrets.
@@ -21,7 +21,7 @@
 - [x] `wrangler.jsonc` with assets binding, observability, environments `pruebas` (custom domain `nueva.bnbtico.com`) and `production` (not routed yet).
 - [x] GitHub Actions workflow: on push to `develop`/`main` and on pull requests: install, typecheck, unit tests, build, size gate, then deploy to the branch's environment (pull requests upload a preview version and post the URL). Worker secrets are set from GitHub secrets inside the workflow.
 - [x] Old app untouched; root scripts gain `dev:app`, `test:app`, `build:app` without breaking the existing ones.
-- [ ] `nueva.bnbtico.com` answers with the shell behind Access; `/casa/CT-0000` shows the fixture with OG tags visible in the page source.
+- [x] `nueva.bnbtico.com` answers with the shell behind Access; `/casa/CT-0000` shows the fixture with OG tags visible in the page source.
 
 ## Avance (2026-10-22)
 
@@ -30,4 +30,13 @@
 - size-limit, zona privada (`dist/client/assets/*.js`): **101,75 KB gz** de 150 KB.
 - `wrangler deploy --dry-run` con `CLOUDFLARE_ENV=pruebas`: worker `bnbtico-pruebas`, dominio `nueva.bnbtico.com`, 536,5 KiB (108,7 KiB gz).
 - Zona `bnbtico.com` ya en los nameservers de Cloudflare; `nueva.bnbtico.com` aún sin registro (lo crea el primer deploy).
+
+## Cierre (2026-10-22)
+
+- Push a `develop` (`68fa95f`); GitHub Actions en verde: tipos, unitarias, build, size-limit, Playwright y despliegue.
+- `nueva.bnbtico.com` responde detrás de Cloudflare Access (PIN por correo, comprobado por Daniel). Dominio personalizado y certificados activos en Cloudflare.
+- `/casa/CT-0000` sirve la ficha con las etiquetas OG en el código fuente (comprobado con curl sobre el mismo despliegue en `bnbtico-pruebas.ana-garcia-saiz.workers.dev`).
+- **Tamaño gzip de la zona privada: 101,75 KB de 150 KB.**
+- Desde la red corporativa de Rivian, `nueva.bnbtico.com` no resuelve y el proxy devuelve 503; fuera de esa red funciona. No es un fallo del despliegue.
+- Pendiente fuera de la lista de aceptación: la URL de workers.dev y las de vista previa son públicas (no pasan por Access). Opciones: «Enable Access» en el panel del worker o `workers_dev`/`preview_urls` en `false`.
 
