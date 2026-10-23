@@ -1,6 +1,6 @@
 // Arnés de la suite de contrato: el mismo archivo de pruebas corre contra el fake (unitarias) y contra PostgREST
 // (proyecto de base). Cada arnés sabe sembrar casas en un estado concreto siguiendo el camino real de ese adaptador.
-import type { PublicListingsApi } from "../../src/domain/api";
+import type { OwnerManageApi, PublicListingsApi } from "../../src/domain/api";
 import type { LatLng } from "../../src/domain/geo";
 import type { ListingDraft } from "../../src/domain/listing";
 
@@ -25,6 +25,8 @@ export interface Seeded {
 export interface ListingsHarness {
   /** API vista por un visitante sin sesión. */
   anon: PublicListingsApi;
+  /** Casas propias vistas con la sesión de ese propietario. */
+  owner(who: SeedOwner): OwnerManageApi;
   reset(): Promise<void>;
   seed(spec: SeedSpec): Promise<Seeded>;
   ownerName(who: SeedOwner): string;

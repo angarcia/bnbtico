@@ -43,3 +43,11 @@ describe("variantes", () => {
     expect(photoSrcSet("l1/u1", url)).toBe("https://s/l1/u1/480.jpg 480w, https://s/l1/u1/800.jpg 800w");
   });
 });
+
+describe("variantUrl", () => {
+  it("una foto con variantes apunta a su tamaño; una anterior, al único archivo", async () => {
+    const { variantUrl } = await import("../../src/domain/image");
+    expect(variantUrl({ path: "casa/abc", url: "https://s/listings/casa/abc" }, 480)).toBe("https://s/listings/casa/abc/480.jpg");
+    expect(variantUrl({ path: "casa/abc.jpg", url: "https://s/listings/casa/abc.jpg" }, 480)).toBe("https://s/listings/casa/abc.jpg");
+  });
+});

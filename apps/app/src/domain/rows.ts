@@ -4,7 +4,8 @@ import type { Database, Json } from "./database.types";
 import { photoSrcSet, variantPath } from "./image";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type MonthlyMode, type Photo, type PublicListing } from "./listing";
 
-export type ListingRow = Database["public"]["Tables"]["listings"]["Row"];
+/** Sin `listing_is_public`: es una columna calculada (función SQL) que solo llega si se pide por nombre. */
+export type ListingRow = Omit<Database["public"]["Tables"]["listings"]["Row"], "listing_is_public">;
 export type ListingUpdate = Database["public"]["Tables"]["listings"]["Update"];
 export type PhotoRow = Pick<Database["public"]["Tables"]["listing_photos"]["Row"], "id" | "path" | "position">;
 export type PublicRow = Omit<Database["public"]["Views"]["listings_public"]["Row"], "reopen_at">;

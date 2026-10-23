@@ -126,6 +126,8 @@ group("can", () => {
     submit: ["draft", "changes"],
     reopen: ["active", "changes", "rejected"],
     discard: ["draft"],
+    available: ["active"],
+    share: ["active"],
   };
   for (const action of Object.keys(allowed) as ListingAction[]) {
     it.each(STATUSES)(`${action} en %s`, (status) => {

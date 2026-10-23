@@ -1,6 +1,6 @@
 // Marcos de pantalla del diseño v1: pantallas raíz con barra inferior (3 pestañas del cliente, 5 del propietario) y
 // pantallas de flujo sin barra (Ingresar, código, ayuda…), con su cabecera.
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { I } from "../shared/icons";
 import { useRole } from "./role";
@@ -19,7 +19,9 @@ const OWNER = [
 ] as const;
 
 export function TabsFrame({ children }: { children: ReactNode }) {
-  const tabs = useRole() === "owner" ? OWNER : GUEST;
+  // En /propietario/* la barra es la del propietario desde el primer pintado (la pantalla fija además el modo).
+  const inOwnerZone = useLocation({ select: (l) => l.pathname.startsWith("/propietario") });
+  const tabs = useRole() === "owner" || inOwnerZone ? OWNER : GUEST;
   return (
     <div className="app">
       <main className="view">{children}</main>
@@ -60,13 +62,14 @@ export function RootHeader({ title, home = "/explorar", action, greeting }: { ti
   );
 }
 
-export function FlowHeader({ title, back, search }: { title: string; back: string; search?: Record<string, string> }) {
+export function FlowHeader({ title, back, search, action }: { title: string; back: string; search?: Record<string, string>; action?: ReactNode }) {
   return (
     <header className="header-flow">
       <Link to={back} search={search} aria-label="Volver" className="icon-btn">
         <I.back />
       </Link>
       <h1>{title}</h1>
+      {action}
     </header>
   );
 }

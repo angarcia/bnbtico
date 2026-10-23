@@ -2,6 +2,7 @@
 // decide con review_listing; reabrir es el update a borrador que permite el trigger).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
+import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
 import type { Database } from "../../src/domain/database.types";
 import { toListingUpdate } from "../../src/domain/rows";
 import { COMPLETE, type ListingsHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
@@ -51,6 +52,7 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
 
   return {
     anon: createPostgrestListings(anonClient(), { supabaseUrl: localSupabase().url }),
+    owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url }),
     async reset() {
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);
     },

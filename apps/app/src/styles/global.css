@@ -304,3 +304,47 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .note svg{flex-shrink:0}
 .code-input{color:transparent;caret-color:transparent}
 .card-arena .btn{align-self:flex-start}
+
+/* ---------- Zona del propietario (pantallas 09, 10, 16 y 19, en el navegador) ---------- */
+.gap-10{gap:10px}.grow{flex:1}.block{display:block}.align-top{align-items:flex-start}
+.btn-header svg{margin-left:-4px}
+.round-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:999px;flex-shrink:0}
+.round-icon-sun{background:var(--sun-soft);color:var(--sun-ink)}
+.inquiries-card{text-decoration:none;color:inherit;padding:14px 16px}
+.inquiries-title{font-size:17px}
+.featured-title{font-weight:700;font-size:18px;line-height:1.1;color:inherit;text-decoration:none}
+.share-box{padding:12px 14px;border-radius:var(--r-input);background:var(--surface-2)}
+.share-url{font-weight:700;overflow-wrap:anywhere}
+.offer-card{color:var(--sun-ink);padding:14px 16px}
+.offer-title{font-size:16px}
+.offer-left{font-weight:700}
+progress.offer-bar{display:block;width:100%;border:0;appearance:none;-webkit-appearance:none;color:var(--sun)}
+progress.offer-bar::-webkit-progress-bar{background:var(--sun-soft);border-radius:999px}
+progress.offer-bar::-webkit-progress-value{background:var(--sun);border-radius:999px}
+progress.offer-bar::-moz-progress-bar{background:var(--sun);border-radius:999px}
+.offer-card .link{align-self:flex-start;min-height:36px;display:flex;align-items:center}
+.price-line{font-weight:600}
+.price-line .muted{font-weight:400}
+.owner-card{padding:12px}
+.owner-card-title{font-size:19px;font-weight:700}
+.owner-card-title a{color:inherit;text-decoration:none}
+.owner-skeleton{display:flex;gap:12px;align-items:center}
+.owner-skeleton .sk-line{flex:1}
+.header-action{margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:14px;font-weight:700;white-space:nowrap}
+.detail-photo{height:170px;border-radius:var(--r)}
+.detail-badge{position:absolute;display:flex}
+.pill-br{right:12px;bottom:12px}
+.detail-photo .pill-bl{left:12px;bottom:12px}
+.detail-photo .pill-tl{left:12px;top:12px}
+.muted-icon{color:var(--muted);display:inline-flex;flex-shrink:0}
+button.list-item{cursor:pointer}
+button.list-item:disabled{color:#A3ADA6;cursor:not-allowed}
+button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inherit}
+.sent{gap:18px;align-items:center;padding-top:48px}
+.sent-photo{position:relative;width:132px;height:132px}
+.sent-circle{width:132px;height:132px;border-radius:999px}
+.sent-check{position:absolute;right:-2px;bottom:-2px;width:44px;height:44px;border-radius:999px;background:var(--primary);border:4px solid var(--bg);color:var(--primary-on);display:inline-flex;align-items:center;justify-content:center}
+.sent-title{font-size:30px}
+.sent .steps-list,.sent-actions{width:100%}
+.sent-actions{padding-top:8px}
+.sent-link{justify-content:center;width:100%}

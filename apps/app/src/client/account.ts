@@ -3,7 +3,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import { authApi } from "./session";
 
-export const PRIVATE_KEYS = new Set(["account"]);
+/** Claves de consultas privadas (cuenta y casas del propietario): solo se persisten con sesión y se borran al cerrarla. */
+export const PRIVATE_KEYS = new Set(["account", "own-listings", "own-listing"]);
 
 export const accountQuery = (userId: string) =>
   queryOptions({

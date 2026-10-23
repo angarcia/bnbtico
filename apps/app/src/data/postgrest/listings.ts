@@ -53,6 +53,12 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       return PROVINCES.filter((p) => found.has(p));
     },
 
+    async countActive() {
+      const { count, error } = await db.from("listings_public").select("id", { count: "exact", head: true });
+      if (error) throw toDomainError(error);
+      return count ?? 0;
+    },
+
     async sitemap() {
       const { data, error } = await db.from("listings_public").select("public_id, updated_at").order("updated_at", { ascending: false }).limit(SITEMAP_LIMIT);
       if (error) throw toDomainError(error);

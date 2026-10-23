@@ -59,6 +59,10 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.getPublic("CT-999999")).toBeNull();
       });
 
+      it("countActive cuenta solo las casas activas", async () => {
+        expect(await h.anon.countActive()).toBe(1);
+      });
+
       it("sitemap: solo casas activas, con su fecha de actualización", async () => {
         const entries = await h.anon.sitemap();
         expect(entries.map((e) => e.publicId)).toEqual([active.publicId]);
@@ -124,6 +128,10 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
 
       it("provincias con casas activas, en el orden de la lista", async () => {
         expect(await h.anon.provincesWithListings()).toEqual(["Guanacaste", "Limón"]);
+      });
+
+      it("countActive: las cuatro casas activas, de cualquier propietario", async () => {
+        expect(await h.anon.countActive()).toBe(4);
       });
     });
   });

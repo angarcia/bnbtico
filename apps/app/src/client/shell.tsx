@@ -11,7 +11,7 @@ import { CasaScreen } from "./screens/casa";
 import { AyudaScreen, CodigoScreen, CuentaScreen, ListaScreen, RecuperarScreen, cuentaSearch, nextSearch } from "./screens/cuenta";
 import { ExplorarScreen } from "./screens/explorar";
 import { FiltrosScreen } from "./screens/filtros";
-import { CalendarioScreen, CasasScreen, ConsultasScreen, InicioScreen } from "./screens/propietario";
+import { CalendarioScreen, CasaPropietarioScreen, CasasScreen, ConsultasScreen, EnviadaScreen, InicioScreen, PublicarScreen } from "./screens/propietario";
 import { currentSession, onSignedOut, useSession } from "./session";
 
 const rootRoute = createRootRoute({
@@ -41,14 +41,11 @@ function PrivateOutlet() {
   return <Outlet />;
 }
 
-const privateRoutes = createRoute({
-  getParentRoute: () => tabs,
-  id: "_private",
-  beforeLoad: async ({ location }) => {
-    if (!(await currentSession())) throw redirect({ to: "/cuenta", search: { next: location.href }, replace: true });
-  },
-  component: PrivateOutlet,
-});
+const requireSession = async ({ location }: { location: { href: string } }) => {
+  if (!(await currentSession())) throw redirect({ to: "/cuenta", search: { next: location.href }, replace: true });
+};
+
+const privateRoutes = createRoute({ getParentRoute: () => tabs, id: "_private", beforeLoad: requireSession, component: PrivateOutlet });
 
 const flow = createRoute({
   getParentRoute: () => rootRoute,
@@ -59,6 +56,9 @@ const flow = createRoute({
     </FlowFrame>
   ),
 });
+
+/** Pantallas privadas sin barra inferior (detalle de una casa, «enviada», publicar). */
+const privateFlow = createRoute({ getParentRoute: () => flow, id: "_privateFlow", beforeLoad: requireSession, component: PrivateOutlet });
 
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/", beforeLoad: () => { throw redirect({ to: "/explorar", replace: true }); } }),
@@ -80,6 +80,12 @@ const routeTree = rootRoute.addChildren([
     createRoute({ getParentRoute: () => flow, path: "/cuenta/lista", validateSearch: nextSearch, component: ListaScreen }),
     createRoute({ getParentRoute: () => flow, path: "/cuenta/recuperar", component: RecuperarScreen }),
     createRoute({ getParentRoute: () => flow, path: "/ayuda", component: AyudaScreen }),
+    privateFlow.addChildren([
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: CasaPropietarioScreen }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: EnviadaScreen }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: PublicarScreen }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: PublicarScreen }),
+    ]),
   ]),
   createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", component: CasaScreen }),
 ]);

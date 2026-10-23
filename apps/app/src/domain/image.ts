@@ -40,3 +40,8 @@ export function photoSrcSet(path: string, url: (path: string) => string): string
   if (isLegacyPhotoPath(path)) return null;
   return `${url(variantPath(path, 480))} 480w, ${url(variantPath(path, 800))} 800w`;
 }
+
+/** URL de una variante a partir de la URL del objeto (las fotos del propietario llegan con la ruta tal cual). */
+export function variantUrl(photo: { path: string; url: string }, size: VariantSize): string {
+  return isLegacyPhotoPath(photo.path) ? photo.url : `${photo.url}/${size}.jpg`;
+}

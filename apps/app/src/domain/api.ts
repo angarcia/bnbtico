@@ -14,18 +14,32 @@ export interface PublicListingsApi {
   provincesWithListings(): Promise<string[]>;
   /** Casas activas para el sitemap, la más reciente primero. */
   sitemap(): Promise<SitemapEntry[]>;
+  /** Cuántas casas hay activas (plazas ocupadas de la oferta de lanzamiento). */
+  countActive(): Promise<number>;
 }
 
+/**
+ * Casas del propietario con sesión. Las reglas las pone la base (RLS, trigger listings_protect, política
+ * listings_owner_delete, RPC set_listing_available); el fake las repite con los mismos mensajes.
+ */
 export interface OwnerListingsApi {
+  /** Las casas propias en cualquier estado, la más reciente primero (el admin tampoco ve aquí las ajenas). */
   listOwn(): Promise<Listing[]>;
+  /** null si no existe o es de otro propietario. */
   getOwn(id: string): Promise<Listing | null>;
   createDraft(): Promise<{ id: string; publicId: string }>;
   saveStep(id: string, patch: Partial<ListingDraft>): Promise<Listing>;
   submit(id: string): Promise<void>;
+  /** Activa, con cambios pedidos o rechazada → borrador (deja de verse hasta la nueva aprobación). */
   reopenForEdit(id: string): Promise<void>;
+  /** Solo con la casa activa. */
   setAvailable(id: string, available: boolean): Promise<void>;
+  /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
 }
+
+/** Lo que ya implementan los adaptadores (ticket 06); crear, guardar pasos y enviar llegan con el asistente (ticket 07). */
+export type OwnerManageApi = Pick<OwnerListingsApi, "listOwn" | "getOwn" | "reopenForEdit" | "setAvailable" | "deleteDraft">;
 
 export interface PhotosApi {
   upload(listingId: string, file: Blob): Promise<string>;

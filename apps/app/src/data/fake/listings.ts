@@ -83,6 +83,10 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       return PROVINCES.filter((p) => found.has(p));
     },
 
+    async countActive() {
+      return active().length;
+    },
+
     async sitemap() {
       return active()
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))

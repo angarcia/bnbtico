@@ -1,5 +1,6 @@
 import { FakeDb } from "../../src/data/fake/db";
 import { createFakeListings } from "../../src/data/fake/listings";
+import { createFakeOwnerListings } from "../../src/data/fake/owner";
 import { COMPLETE, type ListingsHarness, type SeedOwner } from "../contract/harness";
 
 export const FAKE_SUPABASE_URL = "http://supabase.test";
@@ -12,6 +13,7 @@ export function fakeHarness(db = new FakeDb()): ListingsHarness & { db: FakeDb }
   return {
     db,
     anon: createFakeListings(db, { supabaseUrl: FAKE_SUPABASE_URL }),
+    owner: (who) => createFakeOwnerListings(db, { supabaseUrl: FAKE_SUPABASE_URL, userId: () => owners[who] }),
     async reset() {
       db.clear();
     },
