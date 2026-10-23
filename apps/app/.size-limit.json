@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Zona privada · JS inicial",
+    "path": "dist/client/assets/*.js",
+    "limit": "150 KB",
+    "gzip": true
+  }
+]
