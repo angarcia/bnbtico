@@ -8,6 +8,7 @@ import { createPostgrestAuth, type OtpChannel } from "./auth";
 import { keepaliveFetch } from "./keepalive-fetch";
 import { createPostgrestListings } from "./listings";
 import { createPostgrestOwnerListings } from "./owner";
+import { createPostgrestPhotos } from "./photos";
 
 export interface DeviceStores {
   session: SessionStorageAdapter;
@@ -28,5 +29,6 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     auth: createPostgrestAuth(db, { pending: stores.pending, channel: opts.channel }),
     listings: createPostgrestListings(db, { supabaseUrl }),
     owner: createPostgrestOwnerListings(db, { supabaseUrl }),
+    photos: createPostgrestPhotos(db, { supabaseUrl }),
   };
 }

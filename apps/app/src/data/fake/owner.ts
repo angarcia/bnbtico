@@ -10,6 +10,8 @@ import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
+/** Política listings_owner_insert y trigger listings_insert_guard (ticket 08). */
+const MAX_OPEN_DRAFTS = 5;
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
 
 /** Las comprobaciones de la RPC submit_listing, en su orden y con sus mensajes. */
@@ -80,7 +82,10 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
     },
 
     async createDraft() {
-      const l = db.insertListing(me(), { acceptsMonthly: null });
+      const owner = me();
+      const open = [...db.listings.values()].filter((l) => l.ownerId === owner && l.status === "draft" && l.reviewedAt === null).length;
+      if (open >= MAX_OPEN_DRAFTS) throw new DomainError(`Ya tiene ${MAX_OPEN_DRAFTS} borradores sin enviar. Termine o descarte uno antes de empezar otro.`, "validation");
+      const l = db.insertListing(owner, { acceptsMonthly: null });
       return { id: l.id, publicId: l.publicId };
     },
 

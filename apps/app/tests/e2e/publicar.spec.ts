@@ -4,7 +4,7 @@ import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 
 // Asistente de publicar en nueve pantallas (decisión 2026-10-21) contra Supabase local, con la sesión inyectada.
-// iPhone SE (375×667): ninguna pantalla hace scroll, con o sin teclado. Las fotos se siembran en la base (la subida es el 08).
+// iPhone SE (375×667): ninguna pantalla hace scroll, con o sin teclado. Aquí las fotos se siembran en la base; la subida real está en fotos.spec.ts.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 const TITLE = "Casa Manzanillo, a pie de playa";
 const alert = (page: Page) => page.locator('.note[role="alert"]');

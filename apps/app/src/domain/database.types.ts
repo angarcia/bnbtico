@@ -363,7 +363,12 @@ isOneToOne: true
                 }
           }
           Functions: {
-            "approx_point":
+            "add_listing_photo":
+{ Args: { "p_listing": string,"p_path": string }; Returns: {
+              "id": string,"path": string,"position": number
+            }[]
+                           },
+"approx_point":
 { Args: { "p_lat": number,"p_lng": number,"p_seed": string }; Returns: unknown
                            },
 "is_admin":
@@ -372,14 +377,29 @@ isOneToOne: true
 "listing_editable":
 { Args: { "p_listing": string }; Returns: boolean
                            },
+"listing_folder_objects":
+{ Args: { "p_listing": string }; Returns: number
+                           },
 "listing_is_public":
 { Args: { "l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']> }; Returns: boolean
                            },
 "listing_link_state":
 { Args: { "p_public_id": string }; Returns: string
                            },
+"listing_photos_guard":
+{ Args: { "p_listing": string }; Returns: undefined
+                           },
 "listing_visible":
 { Args: { "p_listing": string }; Returns: boolean
+                           },
+"open_drafts":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"remove_listing_photo":
+{ Args: { "p_photo": string }; Returns: string
+                           },
+"reorder_listing_photos":
+{ Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
                            },
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]

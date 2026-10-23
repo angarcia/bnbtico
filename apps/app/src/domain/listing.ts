@@ -82,8 +82,10 @@ export interface ListingDraft {
 
 export interface Photo {
   id: string;
+  /** Carpeta `<casa>/<uuid>` con las tres variantes, o el único archivo `<casa>/<uuid>.jpg` de una foto anterior. */
   path: string;
   position: number;
+  /** La variante de 800 (o el archivo de una foto anterior); otras con `variantUrl`. */
   url: string;
 }
 

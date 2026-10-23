@@ -2,7 +2,7 @@
 // (clave privada, ver account.ts y persist.ts): Inicio y Mis casas se pintan al instante desde la caché y se refrescan
 // por detrás (30 s, al volver a la app y al recuperar la red). El detalle se siembra con la fila de la lista.
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { OwnerListingsApi } from "../domain/api";
+import type { OwnerListingsApi, PhotosApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
 import { allSavesSettled, savesSettled } from "./save-queue";
 import { authApi } from "./session";
@@ -13,6 +13,12 @@ export const OWNER_STALE_MS = 30_000;
 export const api = async (): Promise<OwnerListingsApi> => {
   await authApi();
   return (await import("./supabase-data")).ownerListings();
+};
+
+/** Fotos (subida directa a Storage y RPCs), con la misma sesión. */
+export const photosApi = async (): Promise<PhotosApi> => {
+  await authApi();
+  return (await import("./supabase-data")).photosApi();
 };
 
 export const ownListingsQuery = (userId: string) =>

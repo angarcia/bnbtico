@@ -1,6 +1,6 @@
 // Arnés de la suite de contrato: el mismo archivo de pruebas corre contra el fake (unitarias) y contra PostgREST
 // (proyecto de base). Cada arnés sabe sembrar casas en un estado concreto siguiendo el camino real de ese adaptador.
-import type { OwnerListingsApi, PublicListingsApi } from "../../src/domain/api";
+import type { OwnerListingsApi, PhotosApi, PublicListingsApi } from "../../src/domain/api";
 import type { LatLng } from "../../src/domain/geo";
 import type { ListingDraft } from "../../src/domain/listing";
 
@@ -32,6 +32,10 @@ export interface ListingsHarness {
   /** Registra `n` fotos más al final de una casa del propietario (la subida real llega en el ticket 08). */
   addPhotos(listingId: string, n: number, as?: SeedOwner): Promise<string[]>;
   ownerName(who: SeedOwner): string;
+  /** Fotos con la sesión de ese propietario (subida directa a Storage y RPCs). */
+  photos(who: SeedOwner): PhotosApi;
+  /** Objetos de Storage bajo la carpeta de una casa, ordenados por nombre, con su cabecera de caché. */
+  objects(listingId: string): Promise<{ name: string; cacheControl: string | null }[]>;
 }
 
 /** Borrador completo y válido (Cahuita, Limón), base de cada siembra. */

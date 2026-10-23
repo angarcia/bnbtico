@@ -2,6 +2,7 @@
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
 import type { Filters } from "./filters";
+import type { VariantSize } from "./image";
 import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry, Step } from "./listing";
 
 export interface PublicListingsApi {
@@ -51,10 +52,31 @@ export interface OwnerListingsApi {
   deleteDraft(id: string): Promise<void>;
 }
 
+/** Las tres variantes JPEG de una foto, ya generadas en el navegador. */
+export type PhotoVariants = Record<VariantSize, Blob>;
+
+export const UPLOAD_FAILED_MESSAGE = "No pudimos subir esa foto. Intente de nuevo.";
+
+/**
+ * Fotos de una casa en borrador o con cambios pedidos (ticket 08). Los objetos van directo del navegador a Storage con la
+ * sesión del dueño; la base registra, ordena y pone los topes (RPCs add/remove/reorder_listing_photo(s), máximo 15 fotos,
+ * 45 objetos por carpeta de casa). Firma decidida en el ticket 08: `upload` recibe las tres variantes de una foto (no un
+ * archivo) y `discard` limpia lo subido que no llegó a registrarse.
+ */
 export interface PhotosApi {
-  upload(listingId: string, file: Blob): Promise<string>;
-  add(listingId: string, path: string): Promise<Photo>;
+  /**
+   * Sube las tres variantes a `<casa>/<uuid>/{480,800,1600}.jpg` con caché de un año y devuelve la carpeta `<casa>/<uuid>`.
+   * Como mucho tres objetos a la vez entre todas las fotos que suba esta instancia; `onUploaded` avisa de cada objeto.
+   * Si alguno falla, borra los que sí subió y falla con UPLOAD_FAILED_MESSAGE.
+   */
+  upload(listingId: string, variants: PhotoVariants, onUploaded?: () => void): Promise<string>;
+  /** Registra la carpeta como una foto al final (posición calculada en la base). Más de 15: «Máximo 15 fotos.». */
+  add(listingId: string, folder: string): Promise<Photo>;
+  /** Borra los objetos de una carpeta subida que no se registró (por ejemplo, porque se llegó al tope). */
+  discard(folder: string): Promise<void>;
+  /** Quita la fila (las demás se recompactan) y después sus objetos: las tres variantes o el archivo de una foto anterior. */
   remove(photoId: string): Promise<void>;
+  /** El orden completo de una vez; la primera es la portada. Una lista que no es la de la casa falla sin cambiar nada. */
   reorder(listingId: string, photoIds: string[]): Promise<void>;
 }
 

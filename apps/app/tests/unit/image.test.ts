@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { ACCEPTED_TYPES, MAX_SIDE, VARIANT_SIZES, acceptsImage, photoPath, photoSrcSet, targetSize, variantPath } from "../../src/domain/image";
+import {
+  ACCEPTED_TYPES,
+  MAX_SIDE,
+  PHOTO_CACHE_SECONDS,
+  VARIANT_QUALITY,
+  VARIANT_SIZES,
+  acceptsImage,
+  isPhotoFolder,
+  photoFolder,
+  photoObjectPaths,
+  photoPath,
+  photoSrcSet,
+  targetSize,
+  variantPath,
+  variantTargets,
+  variantUrl,
+} from "../../src/domain/image";
 
 describe("acceptsImage", () => {
   it("acepta jpg/png/webp por tipo o por extensión", () => {
@@ -45,9 +61,46 @@ describe("variantes", () => {
 });
 
 describe("variantUrl", () => {
-  it("una foto con variantes apunta a su tamaño; una anterior, al único archivo", async () => {
-    const { variantUrl } = await import("../../src/domain/image");
-    expect(variantUrl({ path: "casa/abc", url: "https://s/listings/casa/abc" }, 480)).toBe("https://s/listings/casa/abc/480.jpg");
+  it("la URL de una foto nueva es la de 800; variantUrl pasa a otro tamaño; una anterior se queda en su único archivo", () => {
+    expect(variantUrl({ path: "casa/abc", url: "https://s/listings/casa/abc/800.jpg" }, 480)).toBe("https://s/listings/casa/abc/480.jpg");
+    expect(variantUrl({ path: "casa/abc", url: "https://s/listings/casa/abc/800.jpg" }, 800)).toBe("https://s/listings/casa/abc/800.jpg");
     expect(variantUrl({ path: "casa/abc.jpg", url: "https://s/listings/casa/abc.jpg" }, 480)).toBe("https://s/listings/casa/abc.jpg");
   });
+});
+
+describe("subida en tres variantes (ticket 08)", () => {
+  const L = "0b8f4c1e-2d3a-4b5c-8d9e-0f1a2b3c4d5e";
+  const U = "1c9e5d2f-3e4b-4c6d-9e0f-1a2b3c4d5e6f";
+  it("JPEG calidad 0,8 y caché de un año", () => {
+    expect(VARIANT_QUALITY).toBe(0.8);
+    expect(PHOTO_CACHE_SECONDS).toBe(31_536_000);
+  });
+  it("lado mayor 480/800/1600 manteniendo la proporción", () => {
+    expect(variantTargets(4000, 3000)).toEqual([
+      { size: 480, w: 480, h: 360 },
+      { size: 800, w: 800, h: 600 },
+      { size: 1600, w: 1600, h: 1200 },
+    ]);
+    expect(variantTargets(3000, 4000).map((t) => [t.w, t.h])).toEqual([
+      [360, 480],
+      [600, 800],
+      [1200, 1600],
+    ]);
+  });
+  it("nunca agranda: una foto pequeña se queda en su tamaño en las variantes mayores", () => {
+    expect(variantTargets(640, 480).map((t) => [t.size, t.w, t.h])).toEqual([
+      [480, 480, 360],
+      [800, 640, 480],
+      [1600, 640, 480],
+    ]);
+  });
+  it("carpeta <casa>/<uuid> con los tres objetos dentro", () => {
+    expect(photoFolder(L, U)).toBe(`${L}/${U}`);
+    expect(isPhotoFolder(L, `${L}/${U}`)).toBe(true);
+    expect(isPhotoFolder(L, `${L}/${U}.jpg`)).toBe(false);
+    expect(isPhotoFolder(L, `${U}/${U}`)).toBe(false);
+    expect(isPhotoFolder(L, `${L}/${U}/800.jpg`)).toBe(false);
+    expect(photoObjectPaths(`${L}/${U}`)).toEqual([`${L}/${U}/480.jpg`, `${L}/${U}/800.jpg`, `${L}/${U}/1600.jpg`]);
+  });
+  it("borrar una foto anterior quita su único archivo", () => expect(photoObjectPaths(`${L}/${U}.jpg`)).toEqual([`${L}/${U}.jpg`]));
 });

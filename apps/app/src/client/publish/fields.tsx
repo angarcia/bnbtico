@@ -3,14 +3,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { cantonesDe } from "../../domain/cantones";
-import { FEATURES, KIND_HINTS, KIND_LABELS, MAX_PHOTOS, MIN_PHOTOS, PROVINCES, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { FEATURES, KIND_HINTS, KIND_LABELS, PROVINCES, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
-import { variantUrl } from "../../domain/image";
 import { I } from "../../shared/icons";
 import { activeCountQuery } from "../owner";
 import { LocationPicker } from "./location-picker";
+import { PhotoUploader } from "./photos";
 
 /** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
 function ChoiceCards({ name, type, options, selected }: { name: string; type: "checkbox" | "radio"; options: { value: string; label: string; hint: string }[]; selected: string[] }) {
@@ -164,37 +164,6 @@ function PlaceFields({ province: initialProvince, canton: initialCanton, zone }:
   );
 }
 
-/** Pantalla 7: la rejilla y el recuento salen de la lista de fotos del servidor (la subida llega en el ticket 08). */
-function PhotoGrid({ listing }: { listing: Listing }) {
-  const photos = listing.photos;
-  return (
-    <div className="stack grow-col gap-12">
-      <div className="row between baseline">
-        <h2>Fotos</h2>
-        <span className="small primary num photos-count" role="status">
-          {photos.length} de {MIN_PHOTOS}–{MAX_PHOTOS}
-        </span>
-      </div>
-      <div className="photos-scroll">
-        <div className="photos-grid">
-          {photos.map((p, i) => (
-            <div key={p.id} className={`photo${i === 0 ? " cover" : ""}`}>
-              <img src={variantUrl(p, i === 0 ? 800 : 480)} alt={i === 0 ? "Portada" : `Foto ${i + 1}`} loading="lazy" decoding="async" />
-              {i === 0 ? <span className="tag">Portada</span> : null}
-            </div>
-          ))}
-          {photos.length < MAX_PHOTOS ? (
-            <span className="add is-soon" aria-disabled="true">
-              <I.plus />
-              Muy pronto
-            </span>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function SendSummary({ draft, listing }: { draft: ListingDraft; listing: Listing }) {
   const count = useQuery(activeCountQuery);
   const offer = count.data === undefined ? undefined : launchOffer(count.data);
@@ -232,7 +201,7 @@ function SendSummary({ draft, listing }: { draft: ListingDraft; listing: Listing
 }
 
 /** Campos de cada pantalla. `draft` trae los valores a mostrar; `listing`, lo que solo da el servidor (fotos, WhatsApp). */
-export function StepFields({ step, draft, listing }: { step: Step; draft: ListingDraft; listing: Listing }) {
+export function StepFields({ step, draft, listing, userId }: { step: Step; draft: ListingDraft; listing: Listing; userId: string }) {
   switch (step) {
     case 1:
       return (
@@ -313,8 +282,8 @@ export function StepFields({ step, draft, listing }: { step: Step; draft: Listin
     case 7:
       return (
         <>
-          <PhotoGrid listing={listing} />
-          <span className="xs muted">La primera es la portada. Horizontales, sin teléfonos ni marcas de agua.</span>
+          <PhotoUploader listing={listing} userId={userId} />
+          <span className="xs muted">Toque una foto para moverla o hacerla portada; la primera es la portada. Horizontales, sin teléfonos ni marcas de agua.</span>
         </>
       );
     case 8:

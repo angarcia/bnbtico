@@ -48,7 +48,7 @@ export function toListingUpdate(d: Partial<ListingDraft>): ListingUpdate {
 }
 
 export function fromPhotoRows(rows: readonly PhotoRow[], url: PhotoUrl): Photo[] {
-  return rows.map((p) => ({ id: p.id, path: p.path, position: p.position, url: url(p.path) })).sort((a, b) => a.position - b.position);
+  return rows.map((p) => ({ id: p.id, path: p.path, position: p.position, url: url(variantPath(p.path, 800)) })).sort((a, b) => a.position - b.position);
 }
 
 export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], url: PhotoUrl): Listing {

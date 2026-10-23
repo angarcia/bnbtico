@@ -1,20 +1,22 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js y el asistente de publicar)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar y la subida de fotos)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
       "!dist/client/assets/location-leaflet-*.js",
       "!dist/client/assets/leaflet-*.js",
       "!dist/client/assets/supabase-data-*.js",
-      "!dist/client/assets/publicar-*.js"
+      "!dist/client/assets/publicar-*.js",
+      "!dist/client/assets/resize-*.js",
+      "!dist/client/assets/concurrency-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
   },
   {
-    "name": "Asistente de publicar · trozo diferido (sin Leaflet)",
-    "path": ["dist/client/assets/publicar-*.js", "dist/client/assets/location-leaflet-*.js"],
+    "name": "Asistente de publicar · trozo diferido (sin Leaflet), con la subida de fotos",
+    "path": ["dist/client/assets/publicar-*.js", "dist/client/assets/location-leaflet-*.js", "dist/client/assets/resize-*.js", "dist/client/assets/concurrency-*.js"],
     "limit": "15 KB",
     "gzip": true
   }

@@ -30,6 +30,7 @@ export const I = {
   edit: (p: P) => <svg {...S(p)}><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" /><path d="m13.5 6.5 4 4" /></svg>,
   phone: (p: P) => <svg {...S(p)}><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>,
   plus: (p: P) => <svg {...S(p)}><path d="M12 5v14M5 12h14" /></svg>,
+  x: (p: P) => <svg {...S(p)}><path d="M6 6l12 12M18 6 6 18" /></svg>,
   chevron: (p: P) => <svg {...S(p, 18)}><path d="m9 6 6 6-6 6" /></svg>,
   shield: (p: P) => <svg {...S(p)}><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></svg>,
   help: (p: P) => <svg {...S(p)}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5M12 17h.01" /></svg>,

@@ -128,7 +128,7 @@ export function PasoScreen() {
         ))}
       </div>
       <StepForm key={step} userId={userId} listing={l} step={step}>
-        {(values) => <StepFields step={step} draft={values} listing={l} />}
+        {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>
     </>
   );

@@ -91,6 +91,16 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).not.toContain("<title>bnbtico</title>");
   });
 
+  it("con fotos subidas en tres variantes: Open Graph y precarga con la de 800, hero con srcset 480/800", async () => {
+    const folder = `${casa.id}/1c9e5d2f-3e4b-4c6d-9e0f-1a2b3c4d5e6f`;
+    t.h.db.photos.find((p) => p.listingId === casa.id && p.position === 0)!.path = folder;
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    const base = `http://supabase.test/storage/v1/object/public/listings/${folder}`;
+    expect(html).toContain(`<meta property="og:image" content="${base}/800.jpg" />`);
+    expect(html).toContain(`<link rel="preload" as="image" href="${base}/800.jpg"`);
+    expect(html).toContain(`srcSet="${base}/480.jpg 480w, ${base}/800.jpg 800w"`);
+  });
+
   it("incrusta la casa en un JSON no ejecutable y escapado", async () => {
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const raw = /<script type="application\/json" id="ssr-data">([\s\S]*?)<\/script>/.exec(html)![1]!;

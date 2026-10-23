@@ -37,10 +37,18 @@ export interface FakePhoto {
   position: number;
 }
 
+export interface FakeObject {
+  cacheControl: string;
+  contentType: string;
+  size: number;
+}
+
 export class FakeDb {
   readonly profiles = new Map<string, FakeProfile>();
   readonly listings = new Map<string, FakeListing>();
   photos: FakePhoto[] = [];
+  /** Storage en memoria: bucket `listings`, nombre del objeto → metadatos. */
+  readonly objects = new Map<string, FakeObject>();
   /** Sesiones abiertas (token → usuario), como auth.sessions: cerrar sesión las borra. */
   readonly authSessions = new Map<string, string>();
   /** Último código pedido por número (reloj del adaptador), para el límite de un código por segundo de Supabase. */
@@ -103,6 +111,7 @@ export class FakeDb {
   clear(): void {
     this.listings.clear();
     this.photos = [];
+    this.objects.clear();
   }
 }
 

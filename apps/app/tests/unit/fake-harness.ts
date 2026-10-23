@@ -1,6 +1,7 @@
 import { FakeDb } from "../../src/data/fake/db";
 import { createFakeListings } from "../../src/data/fake/listings";
 import { createFakeOwnerListings } from "../../src/data/fake/owner";
+import { createFakePhotos } from "../../src/data/fake/photos";
 import { COMPLETE, type ListingsHarness, type SeedOwner } from "../contract/harness";
 
 export const FAKE_SUPABASE_URL = "http://supabase.test";
@@ -38,5 +39,12 @@ export function fakeHarness(db = new FakeDb()): ListingsHarness & { db: FakeDb }
       return paths;
     },
     ownerName: (who) => db.profiles.get(owners[who])!.fullName,
+    photos: (who) => createFakePhotos(db, { supabaseUrl: FAKE_SUPABASE_URL, userId: () => owners[who] }),
+    async objects(listingId) {
+      return [...db.objects.entries()]
+        .filter(([name]) => name.startsWith(`${listingId}/`))
+        .map(([name, o]) => ({ name, cacheControl: o.cacheControl }))
+        .sort((a, b) => (a.name < b.name ? -1 : 1));
+    },
   };
 }

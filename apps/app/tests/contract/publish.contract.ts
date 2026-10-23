@@ -148,6 +148,19 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         expect((await other.findResumable())?.title).toBe("De Ana");
       });
 
+      it("como mucho cinco borradores sin enviar; las casas enviadas o reabiertas no cuentan", async () => {
+        await h.reset();
+        await h.seed({ status: "reopened" });
+        await h.seed({ status: "review" });
+        for (let i = 0; i < 5; i++) await me.createDraft();
+        expect((await rejection(me.createDraft())).message).toBe("Ya tiene 5 borradores sin enviar. Termine o descarte uno antes de empezar otro.");
+        await other.createDraft(); // los borradores de otro propietario no cuentan
+        const drafts = (await me.listOwn()).filter((l) => l.status === "draft" && l.reviewedAt === null);
+        expect(drafts).toHaveLength(5);
+        await me.deleteDraft(drafts[0]!.id);
+        await me.createDraft();
+      });
+
       it("con solo casas revisadas o enviadas no hay borrador pendiente", async () => {
         await h.reset();
         await h.seed({ status: "reopened" });

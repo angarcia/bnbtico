@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
 import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
+import { createPostgrestPhotos } from "../../src/data/postgrest/photos";
 import type { Database } from "../../src/domain/database.types";
 import { toListingUpdate } from "../../src/domain/rows";
 import { COMPLETE, type ListingsHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
@@ -55,6 +56,7 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
     owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url }),
     async reset() {
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);
+      await emptyBucket(service);
     },
     seed,
     async addPhotos(listingId, n, as = "owner") {
@@ -66,5 +68,36 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
       return paths;
     },
     ownerName: (who) => names[who],
+    photos: (who) => createPostgrestPhotos(owners[who], { supabaseUrl: localSupabase().url }),
+    async objects(listingId) {
+      const found: { name: string; cacheControl: string | null }[] = [];
+      const walk = async (prefix: string) => {
+        const { data, error } = await service.storage.from("listings").list(prefix, { limit: 1000 });
+        fail("listar Storage", error);
+        for (const entry of data ?? []) {
+          const name = `${prefix}/${entry.name}`;
+          if (entry.id === null) await walk(name);
+          else found.push({ name, cacheControl: (entry.metadata?.cacheControl as string | undefined) ?? null });
+        }
+      };
+      await walk(listingId);
+      return found.sort((a, b) => (a.name < b.name ? -1 : 1));
+    },
   };
+}
+
+/** Storage no se vacía con las filas: se recorre el bucket (casa → foto → variantes) y se borra todo. */
+async function emptyBucket(service: SupabaseClient<Database>) {
+  const bucket = service.storage.from("listings");
+  const names: string[] = [];
+  const walk = async (prefix: string, depth: number) => {
+    const { data } = await bucket.list(prefix, { limit: 1000 });
+    for (const entry of data ?? []) {
+      const name = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.id === null && depth < 3) await walk(name, depth + 1);
+      else if (entry.id !== null) names.push(name);
+    }
+  };
+  await walk("", 0);
+  for (let i = 0; i < names.length; i += 500) await bucket.remove(names.slice(i, i + 500));
 }
