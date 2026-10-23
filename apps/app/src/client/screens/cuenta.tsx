@@ -198,7 +198,8 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
       const account = await (await authApi()).verify(code);
       queryClient.setQueryData(accountQuery(account.id).queryKey, account);
       if (account.isOwner) setRole("owner");
-      if (mode === "register") await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
+      // La pantalla «¡Listo!» invita a añadir un correo: no tiene sentido si la cuenta ya tiene uno.
+      if (mode === "register" && !account.email) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
       else await goTo(next ?? "/cuenta");
     } catch (err) {
       setError(message(err));
@@ -303,8 +304,10 @@ const listaRoute = getRouteApi("/_flow/cuenta/lista");
 
 export function ListaScreen() {
   const { next } = listaRoute.useSearch();
-  const { status } = useSession();
+  const { status, session } = useSession();
+  const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   if (status === "signed-out") return <Navigate to="/cuenta" replace />;
+  if (account.data?.email) return <Navigate to={(next ?? "/explorar") as "/explorar"} replace />;
   return (
     <>
       <FlowHeader title="Ingresar" back="/explorar" />
@@ -482,17 +485,36 @@ function MyAccount({ editing }: { editing: boolean }) {
   );
 }
 
+type ProfileValues = { name: string; description: string; email: string };
+const profileValues = (a: Pick<Account, "name" | "description" | "email">): ProfileValues => ({ name: a.name, description: a.description ?? "", email: a.email ?? "" });
+const formValues = (form: HTMLFormElement): ProfileValues => {
+  const fd = new FormData(form);
+  return { name: field(fd, "name").trim(), description: field(fd, "description").trim(), email: field(fd, "email").trim() };
+};
+const sameValues = (a: ProfileValues, b: ProfileValues) => a.name === b.name && a.description === b.description && a.email === b.email;
+
+/** «Guardar» solo se activa con cambios; al guardar, el botón se desactiva y un aviso confirma o explica el fallo. */
 function ProfileForm({ account }: { account: Account }) {
   const queryClient = useQueryClient();
+  const [saved, setSaved] = useState<ProfileValues>(() => profileValues(account));
+  const [dirty, setDirty] = useState(false);
   const [state, setState] = useState<{ error?: string; ok?: boolean; busy?: boolean }>({});
+
+  function onInput(e: FormEvent<HTMLFormElement>) {
+    setDirty(!sameValues(formValues(e.currentTarget), saved));
+    if (state.ok || state.error) setState({});
+  }
 
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!dirty || state.busy) return;
     const fd = new FormData(e.currentTarget);
     setState({ busy: true });
     try {
       const updated = await (await authApi()).updateProfile({ name: field(fd, "name"), email: field(fd, "email"), description: field(fd, "description") });
       queryClient.setQueryData(accountQuery(updated.id).queryKey, updated);
+      setSaved(profileValues(updated));
+      setDirty(false);
       setState({ ok: true });
     } catch (err) {
       setState({ error: message(err) });
@@ -500,7 +522,7 @@ function ProfileForm({ account }: { account: Account }) {
   }
 
   return (
-    <form onSubmit={save} className="stack gap-14" noValidate>
+    <form onSubmit={save} onInput={onInput} className="stack gap-14" noValidate>
       <div className="field">
         <label htmlFor="account-name">Nombre</label>
         <input id="account-name" name="name" defaultValue={account.name} maxLength={80} autoComplete="name" />
@@ -514,14 +536,18 @@ function ProfileForm({ account }: { account: Account }) {
         <input id="account-email" name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder="nombre@ejemplo.com" />
         <span className="xs muted">Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.</span>
       </div>
-      {state.error ? <p className="field-error" role="alert">{state.error}</p> : null}
-      {state.ok ? (
-        <p className="small primary" role="status">
-          Guardado.
+      {state.error ? (
+        <p className="note" role="alert">
+          {state.error}
         </p>
       ) : null}
-      <button className="btn btn-primary btn-lg" type="submit" disabled={state.busy}>
-        {state.busy ? "Guardando…" : "Guardar"}
+      {state.ok ? (
+        <p className="note" role="status">
+          <I.check size={18} /> Cambios guardados.
+        </p>
+      ) : null}
+      <button className="btn btn-primary btn-lg" type="submit" disabled={!dirty || state.busy}>
+        {state.busy ? "Guardando…" : state.ok ? "Guardado" : "Guardar cambios"}
       </button>
     </form>
   );

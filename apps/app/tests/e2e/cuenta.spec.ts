@@ -43,13 +43,22 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(page.getByText("Identidad", { exact: false })).toHaveCount(0);
 
   await page.getByRole("link", { name: "Editar", exact: true }).click();
+  // «Guardar cambios» solo se activa con cambios y, al guardar, se desactiva con un aviso visible.
+  const save = page.getByRole("button", { name: "Guardar cambios" });
+  await expect(save).toBeDisabled();
   await page.getByLabel("Descripción (opcional)").fill("Viajo con mi familia");
+  await expect(save).toBeEnabled();
   await page.getByLabel("Correo de recuperación (opcional)").fill("ana@");
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.locator(".field-error")).toHaveText("Ese correo no parece válido.");
+  await save.click();
+  await expect(page.getByRole("alert").filter({ hasText: "Ese correo no parece válido." })).toBeVisible();
   await page.getByLabel("Correo de recuperación (opcional)").fill("ana@ejemplo.com");
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Guardado" })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await save.click();
+  await expect(page.getByRole("status").filter({ hasText: "Cambios guardados." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Guardado" })).toBeDisabled();
+  await page.getByLabel("Nombre").fill("Ana Prueba ");
+  await expect(save).toBeDisabled(); // solo espacios: sin cambios
+  await page.getByLabel("Nombre").fill("Ana Prueba");
 
   // La sesión sigue tras cerrar y abrir la app.
   await page.reload();
@@ -73,6 +82,17 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await page.getByRole("link", { name: "Editar", exact: true }).click();
   await expect(page.getByLabel("Descripción (opcional)")).toHaveValue("Viajo con mi familia");
   await expectNoCookies(page);
+
+  // Volver a «Crear cuenta» con un número que ya tiene correo no vuelve a ofrecer añadirlo.
+  await page.goto("/cuenta");
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await page.getByLabel("Nombre").fill("Ana Prueba");
+  await page.getByLabel("Número de WhatsApp").fill("8888 9999");
+  await page.waitForTimeout(1100);
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await enterCode(page);
+  await expect(page).not.toHaveURL(/\/cuenta\/lista/);
+  await expect(page.getByRole("heading", { name: "¡Listo! Su cuenta está creada" })).toHaveCount(0);
 });
 
 test("ingresar con un número sin cuenta avisa", async ({ page }) => {
