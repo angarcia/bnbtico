@@ -9,6 +9,7 @@ import { variantUrl } from "../../domain/image";
 import { MAX_PHOTOS, MIN_PHOTOS, type Listing } from "../../domain/listing";
 import { asCover, moveBy } from "../../domain/photo-order";
 import { I } from "../../shared/icons";
+import { fadeIn } from "../../shared/picture";
 import { photosApi } from "../owner";
 import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type UploadQueue } from "./photo-queue";
 
@@ -77,7 +78,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
           {photos.map((p, i) => (
             <div key={p.id} className={`photo${i === 0 ? " cover" : ""}${p.id === current ? " is-selected" : ""}`}>
               <button type="button" className="photo-pick" aria-pressed={p.id === current} aria-label={i === 0 ? "Portada" : `Foto ${i + 1}`} onClick={() => setSelected(p.id === current ? null : p.id)}>
-                <img src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" />
+                <img src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
               </button>
               {i === 0 ? <span className="tag">Portada</span> : null}
               <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy} onClick={() => change.mutate((api) => api.remove(p.id))}>
@@ -88,7 +89,17 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
           {uploads.map((u) => (
             <div key={`u${u.key}`} className="photo uploading">
               <span className="xs strong">{PHASE[u.phase]}</span>
-              <progress className="upload-bar" max={UPLOAD_STEPS} value={progressOf(u)} aria-label={`Subiendo ${u.name}`} />
+              <div
+                className="upload-bar"
+                role="progressbar"
+                aria-label={`Subiendo ${u.name}`}
+                aria-valuemin={0}
+                aria-valuemax={UPLOAD_STEPS}
+                aria-valuenow={progressOf(u)}
+                data-step={progressOf(u)}
+              >
+                <span />
+              </div>
             </div>
           ))}
           {room ? (

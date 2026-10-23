@@ -49,7 +49,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
       <div className="top">{children}</div>
       {photos.length > 1 ? (
         <span className="pill pill-sm hero-counter" aria-live="polite">
-          {`${index + 1} / ${photos.length}`}
+          <span key={index} className="tick">{`${index + 1} / ${photos.length}`}</span>
         </span>
       ) : null}
     </div>

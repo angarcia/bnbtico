@@ -14,6 +14,7 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
+import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { accountQuery } from "../account";
 import { FlowHeader, Placeholder, RootHeader } from "../chrome";
@@ -181,7 +182,10 @@ function ShareBlock({ listing: l }: { listing: Listing }) {
         <span className="small num primary share-url">{target.url.replace(/^https?:\/\//, "")}</span>
       </div>
       <button type="button" className="btn btn-primary btn-lg btn-block" onClick={share} data-share-url={target.url}>
-        <I.wa size={20} /> {copied ? "Enlace copiado" : "Compartir ficha por WhatsApp"}
+        <I.wa size={20} />{" "}
+        <span key={copied ? "copied" : "share"} className="swap-in">
+          {copied ? "Enlace copiado" : "Compartir ficha por WhatsApp"}
+        </span>
       </button>
     </>
   );
@@ -335,7 +339,9 @@ function ShareButtonInline({ listing: l }: { listing: Listing }) {
   const { share, copied } = useShare(target);
   return (
     <button type="button" className="btn btn-primary grow" onClick={share} data-share-url={target.url}>
-      {copied ? "Enlace copiado" : "Compartir ficha"}
+      <span key={copied ? "copied" : "share"} className="swap-in">
+        {copied ? "Enlace copiado" : "Compartir ficha"}
+      </span>
     </button>
   );
 }
@@ -535,7 +541,7 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
       </span>
       <span className="body">
         Compartir ficha
-        <small>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
+        <small key={copied ? "copied" : "share"} className="swap-in">{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
       </span>
       <span className="chev">
         <I.chevron />
@@ -558,7 +564,7 @@ export function EnviadaScreen() {
   return (
     <div className="stack center sent">
       <div className="sent-photo">
-        <div className="photo sent-circle">{cover ? <img src={variantUrl(cover, 480)} alt="" width={132} height={132} /> : null}</div>
+        <div className="photo sent-circle">{cover ? <img src={variantUrl(cover, 480)} alt="" width={132} height={132} {...fadeIn} /> : null}</div>
         <span className="sent-check">
           <I.check size={22} />
         </span>

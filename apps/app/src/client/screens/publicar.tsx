@@ -2,7 +2,7 @@
 // cortas sin scroll. Se carga bajo demanda al abrir /propietario/publicar: no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, STEPS, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
@@ -87,6 +87,12 @@ export function PasoScreen() {
   const { userId, query } = useOwnListing(id);
   const client = useQueryClient();
   const l = query.data;
+  // Dirección del cambio de pantalla: la nueva entra desde la derecha al avanzar y desde la izquierda al volver.
+  const previous = useRef<Step | null>(null);
+  const enter = !step || previous.current === null || previous.current === step ? undefined : step > previous.current ? "forward" : "back";
+  useEffect(() => {
+    previous.current = step;
+  }, [step]);
 
   // Fotos: siempre las del servidor al llegar a esa pantalla (la lectura espera a los guardados en curso).
   useEffect(() => {
@@ -127,7 +133,7 @@ export function PasoScreen() {
           <span key={s} className={s <= step ? "on" : ""} />
         ))}
       </div>
-      <StepForm key={step} userId={userId} listing={l} step={step}>
+      <StepForm key={step} userId={userId} listing={l} step={step} enter={enter}>
         {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>
     </>

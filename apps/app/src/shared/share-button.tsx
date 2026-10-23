@@ -34,7 +34,9 @@ export function ShareButton(target: ShareTarget) {
   const { share, copied } = useShare(target);
   return (
     <button type="button" className="icon-btn overlay" aria-label={copied ? "Enlace copiado" : "Compartir ficha"} onClick={share}>
-      {copied ? <I.check /> : <I.share />}
+      <span key={copied ? "copied" : "share"} className="swap-in">
+        {copied ? <I.check /> : <I.share />}
+      </span>
     </button>
   );
 }

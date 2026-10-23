@@ -1,7 +1,8 @@
 // Explorar (pantalla 01): Limón por defecto, solo provincias con casas, filtros en la URL, rejilla de dos columnas.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, type Filters } from "../../domain/filters";
+import { useEffect, useRef, useState } from "react";
+import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, type Filters } from "../../domain/filters";
 import { FEATURE_LABEL, type Feature } from "../../domain/listing";
 import { FX_CRC_PER_USD } from "../../domain/money";
 import { setCurrency, useCurrency } from "../../shared/currency";
@@ -62,10 +63,23 @@ function SkeletonGrid() {
   );
 }
 
+/** Las tarjetas que sustituyen a los esqueletos aparecen con un fundido; en la primera carga, una tras otra. Si las casas
+ *  ya estaban en la caché (pantalla visitada), salen al instante, sin animación. */
+function useReveal(loading: boolean, filtersKey: string): string {
+  const [firstKey] = useState(filtersKey);
+  const waited = useRef(false);
+  useEffect(() => {
+    if (loading) waited.current = true;
+  }, [loading]);
+  if (loading || !waited.current) return "";
+  return filtersKey === firstKey ? " reveal stagger" : " reveal";
+}
+
 function Results({ filters: f, provinces }: { filters: Filters; provinces: string[] }) {
   const navigate = useNavigate();
   const currency = useCurrency();
   const { data: listings, isError } = useQuery(listingsQuery(f));
+  const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
   const toggleFeature = (key: Feature) => go({ ...f, features: f.features.includes(key) ? f.features.filter((x) => x !== key) : [...f.features, key] });
   const extras = extrasCount(f);
@@ -110,7 +124,7 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
       ) : listings.length === 0 ? (
         <div className="card muted">Sin resultados con esos filtros.</div>
       ) : (
-        <div className="listing-grid">
+        <div className={`listing-grid${reveal}`}>
           {listings.map((l) => (
             <ListingCard key={l.publicId} listing={l} />
           ))}

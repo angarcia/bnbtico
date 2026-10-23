@@ -160,7 +160,9 @@ function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
 
 // ---------- El formulario ----------
 
-export function StepForm({ userId, listing, step, children }: { userId: string; listing: Listing; step: Step; children: (values: ListingDraft) => ReactNode }) {
+export function StepForm({ userId, listing, step, enter, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; children: (values: ListingDraft) => ReactNode }) {
+  // La dirección de entrada se fija al montar esta pantalla: los repintados posteriores no cortan la animación.
+  const [entering] = useState(enter);
   const client = useQueryClient();
   const router = useRouter();
   const save = useSaveStep(userId, listing.id);
@@ -222,7 +224,7 @@ export function StepForm({ userId, listing, step, children }: { userId: string; 
 
   const shown = error ?? failed?.message ?? null;
   return (
-    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} className="publish-form" noValidate>
+    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} className="publish-form" data-enter={entering} noValidate>
       {shown ? (
         <div className="note" role="alert">
           {shown}

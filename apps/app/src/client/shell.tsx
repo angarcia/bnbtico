@@ -6,6 +6,7 @@ import { normalizeSearch, searchFromString, searchToString } from "../domain/fil
 import { track } from "../shared/beacon";
 import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
+import { viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { setRole } from "./role";
 import { CasaScreen } from "./screens/casa";
@@ -133,6 +134,8 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   scrollRestoration: true,
+  // Explorar ↔ ficha con View Transitions (client/motion.ts); el resto, instantáneo.
+  defaultViewTransition: viewTransitions(),
   // URL legible y compartible (`?prov=Todas&min=44000`) en vez del JSON por defecto de TanStack.
   parseSearch: searchFromString,
   stringifySearch: searchToString,
