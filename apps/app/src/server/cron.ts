@@ -1,5 +1,6 @@
 // Cron diario del worker (triggers.crons en wrangler.jsonc). Hoy: una lectura a PostgREST para que el proyecto gratuito
 // de Supabase no se pause por inactividad, y el recorte de la telemetría vieja. En la fase 5, el envío de avisos (outbox).
+import { landingOnly } from "../domain/seo";
 import type { Env } from "./app";
 
 export const TELEMETRY_RETENTION_DAYS = 90;
@@ -13,6 +14,11 @@ export interface CronDeps {
 }
 
 export async function runDaily(env: Env, deps: CronDeps, cron: string): Promise<void> {
+  // Producción antes del lanzamiento no tiene Supabase propio todavía: nada que mantener despierto.
+  if (landingOnly(env)) {
+    deps.log(JSON.stringify({ event: "keepalive", skipped: "solo portada", cron, environment: env.ENVIRONMENT }));
+    return;
+  }
   const started = deps.now();
   let status = 0;
   let error: string | undefined;

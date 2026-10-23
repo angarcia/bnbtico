@@ -66,3 +66,10 @@ describe("lista de precache del build", () => {
     ]);
   });
 });
+
+describe("portada estática fuera del service worker", () => {
+  it("sus ficheros no entran en el precache (no son de la app)", () => {
+    const list = precacheList(["assets/index-abc.js"], ["portada.html", "portada/portada.css", "portada/logo-crema.png", "og.jpg", "icons/icono-192.png"]);
+    expect(list).toEqual(["/", "/assets/index-abc.js", "/icons/icono-192.png"]);
+  });
+});

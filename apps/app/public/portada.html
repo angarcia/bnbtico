@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Portada de bnbtico.com hasta el lanzamiento (ticket 13). HTML estático, sin JavaScript: el worker la sirve en `/` en
+     producción mientras LAUNCHED no sea "true", y con `/?pronto=1` en cualquier entorno (src/server/app.ts). Los textos
+     de título y descripción son los de src/domain/seo.ts (lo comprueba tests/unit/portada.test.ts). Sin Google Analytics:
+     queda pendiente de decidir (docs/corte-fase-r.md). -->
+<html lang="es-CR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica</title>
+    <meta name="description" content="Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local." />
+    <link rel="canonical" href="https://bnbtico.com/" />
+    <meta name="application-name" content="bnbtico" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_CR" />
+    <meta property="og:url" content="https://bnbtico.com/" />
+    <meta property="og:site_name" content="bnbtico" />
+    <meta property="og:title" content="bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica" />
+    <meta property="og:description" content="Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local." />
+    <meta property="og:image" content="https://bnbtico.com/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="bnbtico · Playa Negra, Puerto Viejo de Talamanca" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica" />
+    <meta name="twitter:description" content="Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local." />
+    <meta name="twitter:image" content="https://bnbtico.com/og.jpg" />
+    <meta name="theme-color" content="#1C2B2A" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/portada/portada.css" />
+  </head>
+  <body>
+    <main class="soon">
+      <div class="soon-bg">
+        <img src="/portada/playa-negra-1592.jpg" srcset="/portada/playa-negra-800.jpg 800w, /portada/playa-negra-1592.jpg 1592w" sizes="100vw" width="1592" height="896" fetchpriority="high" decoding="async" alt="Playa Negra, en Puerto Viejo de Talamanca, Limón: arena oscura, mar Caribe y selva hasta la orilla" />
+        <div class="soon-shade" aria-hidden="true"></div>
+      </div>
+      <div class="soon-card">
+        <img class="soon-logo" src="/portada/logo-crema.png" width="210" height="53" alt="bnbtico" />
+        <span class="soon-eyebrow">Muy pronto</span>
+        <h1 class="soon-title">Alquile en el Caribe de Costa Rica, directo con quien lo recibe</h1>
+        <p class="soon-text">Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.</p>
+        <p class="soon-place">Playa Negra · Puerto Viejo de Talamanca</p>
+      </div>
+    </main>
+    <section class="soon-more" aria-labelledby="que-es">
+      <h2 id="que-es">Qué es bnbtico</h2>
+      <p>Un catálogo de casas, apartamentos y habitaciones en alquiler en Costa Rica, publicados por quienes los alquilan. Usted ve la casa, el precio por noche o por mes y le escribe al propietario por WhatsApp. Sin intermediarios, sin comisiones por reserva.</p>
+      <h2>Dónde empezamos</h2>
+      <p>En el Caribe sur de Limón: Puerto Viejo de Talamanca, Playa Negra, Cocles, Playa Chiquita, Punta Uva, Manzanillo y Cahuita. Casas frente al mar, en la selva o en el pueblo, para un fin de semana, unas vacaciones o una temporada completa.</p>
+      <h2>Cómo funciona</h2>
+      <p>Quien tiene una casa la publica con sus fotos, su precio en colones y su WhatsApp verificado; bnbtico la revisa antes de mostrarla. Quien busca, explora sin registrarse, guarda favoritos y contacta directo con un mensaje ya redactado con fechas y personas. El acuerdo es entre las dos personas; nosotros solo las ponemos en contacto.</p>
+      <p class="small muted">¿Tiene una casa en el Caribe? Las primeras 50 casas publicadas tendrán 12 meses gratis.</p>
+    </section>
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://bnbtico.com/#org","name":"bnbtico","url":"https://bnbtico.com","logo":"https://bnbtico.com/icons/icono-512.png","areaServed":"Costa Rica"},{"@type":"WebSite","@id":"https://bnbtico.com/#web","name":"bnbtico","url":"https://bnbtico.com","description":"Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.","inLanguage":"es-CR","publisher":{"@id":"https://bnbtico.com/#org"}}]}</script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { robotsTxt, shareBase } from "../../src/domain/seo";
+import { landingOnly, robotsTxt, shareBase } from "../../src/domain/seo";
 import { parsePublicId, publicPath, publicUrl } from "../../src/domain/share";
 
 describe("parsePublicId", () => {
@@ -34,5 +34,18 @@ describe("robots.txt", () => {
   it("en pruebas y en local pide no indexar", () => {
     expect(robotsTxt("pruebas")).toBe("User-agent: *\nDisallow: /\n");
     expect(robotsTxt("local")).toBe("User-agent: *\nDisallow: /\n");
+  });
+});
+
+describe("landingOnly", () => {
+  it("producción sirve solo la portada hasta que LAUNCHED sea exactamente «true»", () => {
+    expect(landingOnly({ ENVIRONMENT: "production" })).toBe(true);
+    expect(landingOnly({ ENVIRONMENT: "production", LAUNCHED: "false" })).toBe(true);
+    expect(landingOnly({ ENVIRONMENT: "production", LAUNCHED: "1" })).toBe(true);
+    expect(landingOnly({ ENVIRONMENT: "production", LAUNCHED: "true" })).toBe(false);
+  });
+  it("pruebas y local siempre tienen la app entera", () => {
+    expect(landingOnly({ ENVIRONMENT: "pruebas" })).toBe(false);
+    expect(landingOnly({ ENVIRONMENT: "local", LAUNCHED: "false" })).toBe(false);
   });
 });

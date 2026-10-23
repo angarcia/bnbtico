@@ -6,8 +6,9 @@
   "assets": {
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // Sin esto, las navegaciones a estas rutas recibirían el index.html de la SPA sin pasar por el worker.
-    "run_worker_first": ["/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/vitals", "/errors", "/events"]
+    // Sin esto, las navegaciones a estas rutas recibirían el index.html de la SPA sin pasar por el worker. `/` pasa por el
+    // worker para la portada estática (`/?pronto=1`, y producción antes del lanzamiento).
+    "run_worker_first": ["/", "/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/vitals", "/errors", "/events"]
   },
   // Las vinculaciones no se heredan: cada entorno repite version_metadata.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
@@ -22,12 +23,25 @@
       "vars": { "ENVIRONMENT": "pruebas", "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co" },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "triggers": { "crons": ["17 9 * * *"] },
+      // Día del corte (docs/corte-fase-r.md, paso 3): pasa a
+      //   "routes": [{ "pattern": "pruebas.bnbtico.com", "custom_domain": true }],
+      // y nueva.bnbtico.com se retira una vez comprobado pruebas.
       "routes": [{ "pattern": "nueva.bnbtico.com", "custom_domain": true }],
       "workers_dev": true,
       "preview_urls": true
     },
+    // bnbtico.com. Hasta el lanzamiento sirve SOLO la portada (LAUNCHED distinto de "true", src/domain/seo.ts
+    // landingOnly): por eso todas las peticiones pasan por el worker (run_worker_first: true), que deja salir la portada,
+    // robots, sitemap y sus ficheros y responde 404 con la portada a todo lo demás. Al lanzar: LAUNCHED "true",
+    // SUPABASE_URL del proyecto de producción y el mismo run_worker_first en lista que el nivel superior.
+    // Sin rutas todavía: el día del corte (docs/corte-fase-r.md, paso 5) se añade
+    //   "routes": [{ "pattern": "bnbtico.com", "custom_domain": true }],
+    // (y www.bnbtico.com si se decide servirlo aquí en vez de redirigirlo) cuando el registro A de Vercel se haya quitado:
+    // un dominio personalizado no convive con un registro DNS existente.
     "production": {
-      "vars": { "ENVIRONMENT": "production" },
+      "vars": { "ENVIRONMENT": "production", "LAUNCHED": "false" },
+      // assets no se hereda por partes: si el entorno lo define, se repite entero.
+      "assets": { "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": true },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "triggers": { "crons": ["17 9 * * *"] },
       "workers_dev": false,

@@ -245,7 +245,7 @@ describe("worker · purga de la ficha", () => {
 
 describe("worker · sitemap, robots y shell", () => {
   it("el sitemap lista solo las casas activas con el dominio de producción y se cachea una hora", async () => {
-    const t = setup({ ENVIRONMENT: "production" });
+    const t = setup({ ENVIRONMENT: "production", LAUNCHED: "true" });
     const a = await t.h.seed({ status: "active" });
     await t.h.seed({ status: "draft" });
     const res = await t.request("/sitemap.xml");

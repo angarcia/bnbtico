@@ -48,4 +48,18 @@ describe("cron diario", () => {
     await runDaily(env, { ...x.d, telemetry: null }, "17 9 * * *");
     expect(JSON.parse(x.lines[0]!)).toMatchObject({ ok: true, pruned: null });
   });
+
+  it("en producción antes del lanzamiento (aún sin Supabase) no consulta nada y no falla", async () => {
+    const x = deps(async () => Response.json([]));
+    await runDaily({ ENVIRONMENT: "production" } as Env, x.d, "17 9 * * *");
+    expect(x.fetch).not.toHaveBeenCalled();
+    expect(x.prune).not.toHaveBeenCalled();
+    expect(JSON.parse(x.lines[0]!)).toEqual({ event: "keepalive", skipped: "solo portada", cron: "17 9 * * *", environment: "production" });
+  });
+
+  it("en producción lanzada hace el keep-alive", async () => {
+    const x = deps(async () => Response.json([]));
+    await runDaily({ ...env, ENVIRONMENT: "production", LAUNCHED: "true" } as Env, x.d, "17 9 * * *");
+    expect(x.fetch).toHaveBeenCalledOnce();
+  });
 });

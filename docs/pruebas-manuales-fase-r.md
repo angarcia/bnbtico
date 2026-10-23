@@ -116,6 +116,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B5b | «Más filtros» | Filtros: en Zona solo provincias con casas; «Ver N casas» cuenta en vivo al tocar Piscina, Personas o precio | ☐ |
 | B5c | Precio mínimo mayor que el máximo → «Ver N casas» | Se intercambian solos; vuelve a Explorar con chips y la URL lo refleja; «Limpiar» los quita | ☐ |
 | B5d | Cambiar a dólares en una tarjeta, entrar a la ficha | La ficha también en dólares (preferencia compartida) | ☐ |
+| B5e | Abrir `https://nueva.bnbtico.com/?pronto=1` (añadido con el ticket 13) | La portada de bnbtico.com: foto de Playa Negra, logo, «Muy pronto», «Alquile en el Caribe de Costa Rica, directo con quien lo recibe» y debajo «Qué es bnbtico». Es lo que verá bnbtico.com tras el corte | ☐ |
 
 ### Cuenta
 

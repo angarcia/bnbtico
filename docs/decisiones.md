@@ -1,3 +1,10 @@
+## 2026-10-23 · Portada estática en la app nueva y producción «solo portada» hasta el lanzamiento (fase R, ticket 13, parte preparada)
+
+- **Portada:** `apps/app/public/portada.html` (+ `public/portada/`, `public/og.jpg`), HTML estático sin JavaScript con las mismas etiquetas SEO, JSON-LD, imagen OG y copy que la de Next. El worker la sirve en `/` (`"/"` en `run_worker_first`) con una CSP propia más estricta que la del shell (sin Supabase ni Turnstile).
+- **Convivencia con la SPA:** en pruebas y local `/` sigue llevando a Explorar y `/?pronto=1` muestra la portada (como en la app vieja). En producción, mientras la variable `LAUNCHED` no sea `"true"`, el worker sirve solo la portada, `robots.txt` (indexable), un `sitemap.xml` con solo `/` y los ficheros que enlaza la portada; todo lo demás es 404 con la portada, y el cron no consulta nada. Para que la SPA no se cuele por el respaldo de Static Assets, el entorno `production` pasa todas las peticiones por el worker (`run_worker_first: true`); al lanzar vuelve a la lista. Elegido frente a un worker o un despliegue aparte para la portada: un solo build, una sola variable que cambiar.
+- **Sin Google Analytics en la portada nueva:** rompería la CSP estricta; decisión de Daniel pendiente (opciones en `docs/corte-fase-r.md`). Al cortar, bnbtico.com deja de medir con GA hasta que se decida.
+- **El corte en sí** (DNS, Access, Vault, borrar `apps/web`, renombrar, merge a `main`, Vercel fuera) no se ha hecho: espera la aprobación del plan de pruebas. Guion en `docs/corte-fase-r.md`; la migración que deja las fotos solo por RPC espera en `supabase/migrations-pendientes/`.
+
 ## 2026-10-23 · Números de WhatsApp de cualquier país; selector con Costa Rica por defecto
 
 - **Por qué:** muchos clientes (y algunos propietarios) del Caribe tico tienen número de fuera. Decisión de Daniel. Antes la pantalla de ingresar mostraba un `+506` fijo; el dominio ya aceptaba otros países con «+».

@@ -1,9 +1,9 @@
-// Worker Hono: la única ruta con SSR (/casa/CT-####), sitemap, robots, purga de la ficha, balizas de telemetría y el
-// shell para lo demás.
+// Worker Hono: la única ruta con SSR (/casa/CT-####), la portada estática, sitemap, robots, purga de la ficha, balizas
+// de telemetría y el shell para lo demás.
 import { Hono, type Context } from "hono";
 import type { PublicListingsApi } from "../domain/api";
 import { BEACON_MAX_BYTES, BEACON_TABLE, parseBeacon, type BeaconKind, type BeaconRow, type BeaconTable } from "../domain/telemetry";
-import { robotsTxt, shareBase, type Environment } from "../domain/seo";
+import { landingOnly, robotsTxt, shareBase, type Environment } from "../domain/seo";
 import { parsePublicId, publicPath, publicUrl } from "../domain/share";
 import type { SsrData } from "../shared/ssr-data";
 import { escapeHtml, heroLinkHeader, renderDocument } from "./render";
@@ -11,6 +11,8 @@ import { securityHeaders } from "../shared/security";
 
 export type Env = {
   ENVIRONMENT: Environment;
+  /** Solo producción: "true" abre la app entera; cualquier otro valor (o nada) sirve solo la portada. */
+  LAUNCHED?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
@@ -45,6 +47,10 @@ export interface Deps {
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
 const STATUS_CACHE = "public, max-age=0, s-maxage=60";
 const SITEMAP_CACHE = "public, max-age=3600, s-maxage=3600";
+const LANDING_CACHE = "public, max-age=300, s-maxage=3600";
+
+/** Lo único que responde producción antes del lanzamiento, además de `/`: la portada y lo que ella enlaza. */
+const LANDING_FILES = /^\/(robots\.txt|sitemap\.xml|favicon\.ico|og\.jpg|portada\/[\w.-]+|fonts\/[\w.-]+\.woff2|icons\/[\w.-]+\.png)$/;
 
 /** La clave de caché lleva la versión del despliegue: un HTML cacheado nunca apunta a JS de otro despliegue. */
 const cacheKey = (origin: string, publicId: string, env: Env) => `${origin}${publicPath(publicId)}?__v=${env.CF_VERSION_METADATA?.id ?? "dev"}`;
@@ -76,6 +82,25 @@ export function createApp(deps: Deps) {
     const link = data.page === "listing" ? heroLinkHeader(data.listing) : null;
     return c.html(renderDocument(await template(c), data), status, { "cache-control": cacheControl, ...security, ...(link ? { link } : {}) });
   }
+
+  /**
+   * Portada estática (public/portada.html; Workers Static Assets la sirve en /portada). CSP propia, más estricta que la del
+   * shell: sin Supabase ni Turnstile.
+   */
+  async function landing(c: Context<{ Bindings: Env }>, status: 200 | 404) {
+    const html = await (await c.env.ASSETS.fetch(new URL("/portada", c.req.url))).text();
+    const security = deps.securityHeaders === false ? {} : securityHeaders({ turnstile: false });
+    return c.html(html, status, { "cache-control": status === 200 ? LANDING_CACHE : STATUS_CACHE, ...security });
+  }
+
+  // Producción antes del lanzamiento: todo lo que no sea la portada, robots, sitemap o sus ficheros es 404 con la portada.
+  app.use("*", async (c, next) => {
+    if (!landingOnly(c.env)) return next();
+    const path = new URL(c.req.url).pathname;
+    const read = c.req.method === "GET" || c.req.method === "HEAD";
+    if (read && (path === "/" || LANDING_FILES.test(path))) return next();
+    return landing(c, 404);
+  });
 
   /** Ejecuta trabajo tras responder si hay ExecutionContext; en las pruebas en proceso, antes de responder. */
   async function later(c: Context<{ Bindings: Env }>, work: Promise<unknown>) {
@@ -111,11 +136,15 @@ export function createApp(deps: Deps) {
 
   app.get("/robots.txt", (c) => c.text(robotsTxt(c.env.ENVIRONMENT)));
 
+  // `/` es la portada en producción antes del lanzamiento y con `?pronto=1` en cualquier entorno; si no, el shell de la SPA
+  // (el router lleva a /explorar).
+  app.get("/", (c) => (landingOnly(c.env) || c.req.query("pronto") ? landing(c, 200) : c.env.ASSETS.fetch(c.req.raw)));
+
   app.get("/sitemap.xml", async (c) => {
     const base = shareBase(c.env.ENVIRONMENT, new URL(c.req.url).origin);
     let entries;
     try {
-      entries = await deps.listings(c.env).sitemap();
+      entries = landingOnly(c.env) ? [] : await deps.listings(c.env).sitemap();
     } catch (error) {
       console.error("sitemap", error);
       return c.text("No pudimos generar el sitemap.", 503, { "cache-control": "no-store" });

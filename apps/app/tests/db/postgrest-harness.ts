@@ -50,7 +50,9 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
     const photoPaths = Array.from({ length: n }, (_, i) => `${id}/foto-${i}.jpg`);
     if (n > 0) {
       const rows = photoPaths.map((path, position) => ({ listing_id: id, path, position })).reverse();
-      fail("fotos", (await db.from("listing_photos").insert(rows)).error);
+      // Con la service role: tras el corte, authenticated ya no inserta en listing_photos (solo las RPCs; ver
+      // supabase/migrations-pendientes/). Los nombres antiguos sin objeto no pasarían por add_listing_photo.
+      fail("fotos", (await service.from("listing_photos").insert(rows)).error);
     }
     if (spec.status !== "draft") fail("enviar", (await db.rpc("submit_listing", { p_listing: id })).error);
     const decision = { active: "approve", reopened: "approve", changes: "changes", rejected: "reject" } as const;
@@ -75,7 +77,7 @@ export async function postgrestHarness(): Promise<ListingsHarness> {
       const { count } = await db.from("listing_photos").select("id", { count: "exact", head: true }).eq("listing_id", listingId);
       const start = count ?? 0;
       const paths = Array.from({ length: n }, (_, i) => `${listingId}/extra-${start + i}.jpg`);
-      fail("fotos", (await db.from("listing_photos").insert(paths.map((path, i) => ({ listing_id: listingId, path, position: start + i })))).error);
+      fail("fotos", (await service.from("listing_photos").insert(paths.map((path, i) => ({ listing_id: listingId, path, position: start + i })))).error);
       return paths;
     },
     ownerName: (who) => names[who],

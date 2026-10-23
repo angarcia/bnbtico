@@ -16,3 +16,11 @@ export function robotsTxt(environment: Environment): string {
 export function shareBase(environment: Environment, origin: string | null): string {
   return environment === "production" || !origin ? SITE_URL : origin.replace(/\/$/, "");
 }
+
+/**
+ * Producción antes del lanzamiento: bnbtico.com sirve solo la portada (con robots y sitemap). Se levanta con la variable
+ * LAUNCHED="true" del entorno `production` en wrangler.jsonc (ver docs/corte-fase-r.md). Pruebas y local, siempre la app.
+ */
+export function landingOnly(env: { ENVIRONMENT: Environment; LAUNCHED?: string }): boolean {
+  return env.ENVIRONMENT === "production" && env.LAUNCHED !== "true";
+}

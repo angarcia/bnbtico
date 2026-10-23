@@ -1,5 +1,7 @@
 # Configurar Supabase y Twilio para `pruebas.bnbtico.com`
 
+> **App nueva (fase R, 2026-10-23):** se despliega con GitHub Actions a Cloudflare Workers; sus variables y secretos están en la sección 10. Las secciones 5 y 6 (Vercel, contraseña de pruebas, proxy) valen **solo para la app vieja y hasta el corte** (`docs/corte-fase-r.md`).
+
 Guía paso a paso (2026-10-15). Todo lo que requiere crear cuentas, aceptar condiciones o pegar claves lo hace una persona; la CLI del repo solo aplica la migración. El proyecto de **producción** se crea igual en la fase 7, con otro nombre.
 
 ## 0. Qué vas a crear
@@ -8,7 +10,8 @@ Guía paso a paso (2026-10-15). Todo lo que requiere crear cuentas, aceptar cond
 |---|---|---|
 | Proyecto Supabase `bnbtico-pruebas` | Base de datos, login por teléfono, fotos | Plan Free |
 | Servicio Twilio Verify | Enviar el código por WhatsApp (o SMS) | Céntimos por código |
-| Variables en Vercel (entorno Preview) | Que `pruebas.bnbtico.com` use lo anterior | — |
+| Variables y secretos de GitHub (sección 10) | Que el worker de Cloudflare y el navegador usen lo anterior | — |
+| Variables en Vercel (entorno Preview), hasta el corte | Que la app vieja de `pruebas.bnbtico.com` use lo anterior | — |
 
 ## 1. Proyecto en Supabase
 
@@ -58,7 +61,7 @@ Luego **Authentication → Rate Limits**: dejá el envío de SMS en 30 por hora 
 
 En **Authentication → URL Configuration**: Site URL `https://pruebas.bnbtico.com`. No hace falta nada más para OTP por teléfono.
 
-## 5. Variables en Vercel
+## 5. Variables en Vercel (app vieja, hasta el corte)
 
 Proyecto `bnbtico` → **Settings → Environment Variables**, entorno **Preview** (rama `develop`):
 
@@ -74,7 +77,9 @@ Proyecto `bnbtico` → **Settings → Environment Variables**, entorno **Preview
 
 Después, **Deployments → Redeploy** del último despliegue de `develop` (las variables `NEXT_PUBLIC_*` se fijan al compilar).
 
-## 6. Comprobar desde un móvil
+## 6. Comprobar desde un móvil (app vieja, hasta el corte)
+
+Para la app nueva manda `docs/pruebas-manuales-fase-r.md`.
 
 1. Abrí `https://pruebas.bnbtico.com/cuenta` en el teléfono, con la contraseña de pruebas.
 2. Creá una cuenta con **tu número real de Costa Rica**. Debe llegar el código por WhatsApp en segundos. Si llega por SMS o no llega, mirá **Authentication → Logs** en Supabase y **Monitor → Logs** en Twilio.
@@ -104,3 +109,28 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 3. **Filas por petición.** Project Settings → **Data API** → «Max rows» = `200` → Save (equivale a `db-max-rows`; local: `[api] max_rows = 200`). Comprobar: `curl "$SUPABASE_URL/rest/v1/listings_public?select=public_id" -H "apikey: $ANON" -I` no devuelve más de 200 filas (cabecera `Content-Range` con `Prefer: count=exact`).
 4. **Twilio:** Console → Billing → Usage triggers / alertas de gasto (p. ej. 20 USD al mes) para que un abuso de códigos no salga caro.
 5. **Copias:** secretos de GitHub de `docs/copias-de-seguridad.md` (`SUPABASE_DB_URL` del Session pooler, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`), ejecutar el workflow «copia» a mano una vez y comprobar el archivo en R2.
+
+## 10. App nueva: GitHub y Cloudflare en lugar de Vercel
+
+El workflow `.github/workflows/app.yml` construye, prueba y despliega `apps/app` (rama `develop` → entorno `pruebas`, worker `bnbtico-pruebas`; `main` → entorno `production`, worker `bnbtico-production`). `.github/workflows/backup.yml` hace la copia diaria. Nombres exactos en GitHub → Settings → Secrets and variables → Actions. Donde dice «variable o secreto», el workflow lee `vars.X || secrets.X`: vale cualquiera de las dos pestañas.
+
+| Nombre | Dónde | Para qué |
+|---|---|---|
+| `CLOUDFLARE_API_TOKEN` | secreto | `wrangler deploy` y versiones de vista previa. Permisos: Workers Scripts edit, Account Settings read, Workers Routes edit, DNS edit, Cache Purge (guía del ticket 01). |
+| `CLOUDFLARE_ACCOUNT_ID` | secreto | Cuenta de Cloudflare del despliegue. |
+| `SUPABASE_URL` | variable o secreto | `VITE_SUPABASE_URL` del build (navegador y CSP). El worker de pruebas lleva la suya en `wrangler.jsonc` (`env.pruebas.vars`). |
+| `SUPABASE_ANON_KEY` | variable o secreto | `VITE_SUPABASE_ANON_KEY` del build y secreto `SUPABASE_ANON_KEY` del worker (ficha, sitemap, cron). |
+| `SUPABASE_SERVICE_ROLE_KEY` | secreto | Solo el worker: escritura de la telemetría y recorte en el cron. Nunca llega al navegador. |
+| `PURGE_SECRET` | secreto | Secreto del worker para `POST /_purge/CT-####`; el mismo valor va en Vault como `worker_purge_secret`. |
+| `CLOUDFLARE_ZONE_ID` | secreto | Se sube al worker como `CF_ZONE_ID` (purga por URL en la zona `bnbtico.com`). |
+| `CLOUDFLARE_PURGE_TOKEN` | secreto | Se sube como `CF_PURGE_TOKEN` (token con Cache Purge de la zona). |
+| `TURNSTILE_SITE_KEY` | variable o secreto | `VITE_TURNSTILE_SITE_KEY` (pública). La secret key de Turnstile va en Supabase Auth, no en GitHub. |
+| `WA_OWNERS`, `WA_GUESTS` | variable o secreto | `VITE_WA_OWNERS` / `VITE_WA_GUESTS`: números de atención de Ayuda en E.164. |
+| `SUPABASE_DB_URL` | secreto | Copia diaria: cadena del Session pooler. |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | secretos | Copia diaria a R2. |
+| `R2_BUCKET`, `BACKUP_PREFIX` | variable o secreto (opcionales) | Por defecto `bnbtico-copias` y `bnbtico-pruebas`. |
+
+Los secretos que falten no se suben al worker (la purga responde 503 y las balizas se descartan sin la service role). Hoy los secretos son de repositorio y valen para los dos entornos: antes del primer push a `main` conviene pasarlos a GitHub Environments (`docs/corte-fase-r.md`, paso 9).
+
+**En Cloudflare** (panel, no en el repo): zona `bnbtico.com`; worker `bnbtico-pruebas` con el dominio personalizado `nueva.bnbtico.com` (`pruebas.bnbtico.com` tras el corte); Zero Trust → Access con la aplicación de `nueva.bnbtico.com` y sus bypass `/casa/*` y `/_purge/*`; widget de Turnstile con los hostnames donde se ingresa. **En Supabase** (`bnbtico-pruebas`): los secretos de Vault `worker_purge_url` (hoy `https://nueva.bnbtico.com`; al cortar, `https://pruebas.bnbtico.com`) y `worker_purge_secret`; protección de bots con la secret key de Turnstile; MFA TOTP activo; «Max rows» 200.
+

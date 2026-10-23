@@ -38,6 +38,7 @@ const PRECACHE_EXT = /\.(js|css|woff2|png|ico|svg|webmanifest)$/;
 
 /** Lista de precache a partir de los ficheros del build (con hash) y de `public/`. */
 export function precacheList(bundleFiles: readonly string[], publicFiles: readonly string[]): string[] {
-  const files = [...bundleFiles, ...publicFiles].filter((f) => PRECACHE_EXT.test(f) && !f.startsWith(".") && !f.includes("/.") && f !== "sw.js");
+  // La portada estática (portada.html y portada/) no es de la app: no se precachea.
+  const files = [...bundleFiles, ...publicFiles].filter((f) => PRECACHE_EXT.test(f) && !f.startsWith(".") && !f.includes("/.") && f !== "sw.js" && !f.startsWith("portada"));
   return [SHELL_URL, ...[...new Set(files)].sort().map((f) => `/${f}`)];
 }
