@@ -127,7 +127,7 @@ export function ListingPage({ listing: l, base, onBack }: { listing: PublicListi
                 {formatMoney(main.amount, currency)} <small>/ {main.unit}</small>
               </span>
               <span className="xs muted">
-                <span className="currency-slot">{hydrated ? <PriceToggle amountCrc={main.amount} /> : null}</span> · el precio final lo acuerda con el propietario
+                <PriceToggle amountCrc={main.amount} /> · el precio final lo acuerda con el propietario
               </span>
             </div>
           ) : null}

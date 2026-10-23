@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { PublicPhoto } from "../domain/listing";
+import { fadeIn } from "./picture";
 
 /** Hero de la ficha (pantalla 03): fotos deslizables con contador «1 / 14»; los botones van encima como hijos.
  *  Del servidor solo llega la portada (el LCP); las demás fotos son cajas del mismo tamaño hasta que la página cargó o
@@ -39,6 +40,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
                 loading={i === 0 ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "auto"}
                 decoding={i === 0 ? "sync" : "async"}
+                {...(i === 0 ? {} : fadeIn)}
               />
             ),
           )}
