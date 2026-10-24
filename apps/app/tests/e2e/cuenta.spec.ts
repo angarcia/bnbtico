@@ -164,7 +164,8 @@ test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol (sesi�
 
   await page.getByRole("button", { name: "Publicar mi casa" }).click();
   await expect(page).toHaveURL(/\/propietario$/);
-  await expect(nav.getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", "Consultas", "Cuenta"]);
+  // «Consultas» lleva el contador de nuevas si otra prueba dejó consultas a este propietario (el orden no es fijo).
+  await expect(nav.getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", /^Consultas\d*$/, "Cuenta"]);
   await expect(nav.getByRole("link", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
   await nav.getByRole("link", { name: "Cuenta", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
