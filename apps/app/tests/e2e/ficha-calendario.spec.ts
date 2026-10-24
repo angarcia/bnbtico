@@ -180,3 +180,23 @@ test("ficha dentro de la SPA: pide los días una vez y muestra el calendario", a
   await expect(cell(page, on(20))).toHaveText("20 ★150k");
   expect(days).toHaveLength(1);
 });
+
+test("ficha dentro de la SPA: si fallan los días, la ficha se ve sin «Disponibilidad» (ni caja ni error)", async ({ page }) => {
+  const casa = await seedWithDays("Casa Sin Dias SPA");
+  const seen = watch(page);
+  let calls = 0;
+  await page.route("**/rest/v1/rpc/public_listing_days*", (route) => {
+    calls++;
+    return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ message: "caída" }) });
+  });
+  await page.goto("/explorar");
+  await page.getByRole("link", { name: /Casa Sin Dias SPA/ }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Sin Dias SPA" })).toBeVisible();
+  await expect.poll(() => calls).toBeGreaterThanOrEqual(2); // la consulta y su único reintento
+  await expect(page.getByText("Disponibilidad")).toHaveCount(0);
+  await expect(section(page)).toHaveCount(0);
+  await expect(page.getByText(/No pudimos cargar/)).toHaveCount(0);
+  await expect(page.getByText("Zona aproximada")).toBeVisible();
+  expect(seen.problems.filter((p) => !/500|Failed to load resource/.test(p)), seen.problems.join("\n")).toEqual([]);
+});

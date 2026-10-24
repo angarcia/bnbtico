@@ -1,8 +1,10 @@
 // El botón de la barra tal como lo pinta el servidor (antes de hidratar): mismo HTML que el primer render del navegador.
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { PublicListing } from "../../src/domain/listing";
 import { ListingPage } from "../../src/shared/listing-page";
+import { seedListing } from "../../src/shared/listing-query";
 
 const listing = (over: Partial<PublicListing> = {}): PublicListing => ({
   id: "l1",
@@ -38,7 +40,14 @@ const listing = (over: Partial<PublicListing> = {}): PublicListing => ({
 });
 
 const bar = (l: PublicListing) => {
-  const html = renderToString(<ListingPage listing={l} base="https://bnbtico.com" />);
+  // Como en el worker: la caché de Query sembrada con la casa y sus días.
+  const client = new QueryClient();
+  seedListing(client, l, []);
+  const html = renderToString(
+    <QueryClientProvider client={client}>
+      <ListingPage listing={l} base="https://bnbtico.com" />
+    </QueryClientProvider>,
+  );
   return html.slice(html.indexOf('class="cta-bar"'));
 };
 

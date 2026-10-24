@@ -14,16 +14,19 @@ export const listingQuery = (publicId: string) =>
     staleTime: LISTING_STALE_MS,
   });
 
-/** Ocupados y precios especiales de la ficha (hoy … +365). El calendario del propietario la invalida al guardar. */
+/** Ocupados y precios especiales de la ficha (hoy … +365). El calendario del propietario la invalida al guardar. null =
+ *  no se pudieron leer en el servidor: la ficha no muestra «Disponibilidad». Un solo reintento: si falla, la sección se
+ *  quita pronto en vez de quedarse como caja vacía. */
 export const listingDaysQuery = (publicId: string) =>
   queryOptions({
     queryKey: ["listing-days", publicId] as const,
-    queryFn: async (): Promise<CalendarDay[]> => (await api()).getPublicDays(publicId),
+    queryFn: async (): Promise<CalendarDay[] | null> => (await api()).getPublicDays(publicId),
     staleTime: LISTING_DAYS_STALE_MS,
+    retry: 1,
   });
 
 /** La caché de Query con lo que trajo el worker: hidratar no vuelve a pedir la casa ni sus días. */
-export function seedListing(client: QueryClient, listing: PublicListing, days: CalendarDay[]): void {
+export function seedListing(client: QueryClient, listing: PublicListing, days: CalendarDay[] | null): void {
   client.setQueryData(listingQuery(listing.publicId).queryKey, listing);
   client.setQueryData(listingDaysQuery(listing.publicId).queryKey, days);
 }

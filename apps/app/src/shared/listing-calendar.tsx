@@ -19,7 +19,7 @@ export function ListingCalendar({ listing: l, currency }: { listing: PublicListi
   const today = costaRicaToday(Date.now());
   const win = calendarWindow(today);
   const [month, setMonth] = useState(win.firstMonth);
-  const { data: days, isError } = useQuery(listingDaysQuery(l.publicId));
+  const { data: days } = useQuery(listingDaysQuery(l.publicId));
   const base = l.acceptsNightly ? l.nightlyPriceCrc : null;
   const title = monthTitle(month);
   return (
@@ -41,8 +41,6 @@ export function ListingCalendar({ listing: l, currency }: { listing: PublicListi
           <MonthLegend special={base !== null} />
           {base !== null ? <p className="xs muted">Precio base {formatMoney(base, currency)} por noche; los días con ★ tienen otro precio.</p> : null}
         </>
-      ) : isError ? (
-        <p className="small muted">No pudimos cargar el calendario.</p>
       ) : null}
     </>
   );

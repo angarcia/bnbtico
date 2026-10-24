@@ -14,7 +14,7 @@ import { HeroGallery } from "./hero-gallery";
 import { useHydrated } from "./hydration";
 import { I, type IconName } from "./icons";
 import { whenIdle } from "./idle";
-import { listingQuery } from "./listing-query";
+import { listingDaysQuery, listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
@@ -119,8 +119,11 @@ const ListingCalendar = lazy(() => loadCalendar().then((m) => ({ default: m.List
 function Availability({ listing, currency }: { listing: PublicListing; currency: Currency }) {
   const box = useRef<HTMLDivElement>(null);
   const [load, setLoad] = useState(false);
+  // Días que no se pudieron leer (null del servidor, o la consulta de la SPA falló): sin sección, ni caja ni error.
+  const days = useQuery({ ...listingDaysQuery(listing.publicId), enabled: listing.available });
+  const missing = days.data === null || days.isError;
   useEffect(() => {
-    if (!listing.available) return;
+    if (!listing.available || missing) return;
     const el = box.current;
     const start = () => setLoad(true);
     whenIdle(start);
@@ -128,7 +131,8 @@ function Availability({ listing, currency }: { listing: PublicListing; currency:
     const observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && start(), { rootMargin: "600px 0px" });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [listing.available]);
+  }, [listing.available, missing]);
+  if (listing.available && missing) return null;
   const reopen = listing.available ? null : reopenLabel(listing.reopenAt);
   return (
     <div className="stack gap-8">

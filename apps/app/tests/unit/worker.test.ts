@@ -208,8 +208,29 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(body).not.toContain('class="listing-calendar"');
   });
 
-  it("si fallan los días, 503 sin guardar en caché", async () => {
-    t.spy.getPublicDays.mockRejectedValueOnce(new Error("caída"));
+  it("si fallan los días, la ficha sale igual (200) sin «Disponibilidad», con days null, sin caché y con no-store", async () => {
+    t.spy.getPublicDays.mockRejectedValueOnce(new Error("public_listing_days no existe"));
+    const put = vi.spyOn(t.cache, "put");
+    const res = await t.request(`/casa/${casa.publicId}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    const html = await res.text();
+    const body = html.slice(html.indexOf('<div id="root">'));
+    expect(body).toMatch(/<h1[^>]*>Casa &quot;Sol&quot;/);
+    expect(body).not.toContain("Disponibilidad");
+    expect(body).not.toContain("listing-calendar");
+    expect(ssrData(html).days).toBeNull();
+    expect(put).not.toHaveBeenCalled();
+    expect(t.cache.store.size).toBe(0);
+    // La siguiente visita lo vuelve a intentar y, con los días, ya se guarda.
+    const again = await t.request(`/casa/${casa.publicId}`);
+    expect(again.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=86400, stale-while-revalidate=604800");
+    expect(await again.text()).toContain("Disponibilidad");
+    expect(t.cache.store.size).toBe(1);
+  });
+
+  it("si falla la casa, 503 sin caché aunque los días respondan", async () => {
+    t.spy.getPublic.mockRejectedValueOnce(new Error("caída"));
     const res = await t.request(`/casa/${casa.publicId}`);
     expect(res.status).toBe(503);
     expect(res.headers.get("cache-control")).toBe("no-store");

@@ -168,14 +168,15 @@ export function createApp(deps: Deps) {
 
     try {
       const api = deps.listings(c.env);
-      // A la vez: el calendario de la ficha no suma una vuelta a la base.
-      const [listing, days] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId)]);
+      // A la vez: el calendario de la ficha no suma una vuelta a la base. Si fallan solo los días (un error pasajero, o
+      // una base sin la migración del calendario), la ficha sale sin «Disponibilidad» y sin caché: la próxima lo reintenta.
+      const [listing, days] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId).catch(() => null)]);
       if (!listing) {
         const state = await api.linkState(publicId);
         return state === "blocked" ? page(c, { page: "blocked" }, 410, STATUS_CACHE) : page(c, { page: "missing" }, 404, STATUS_CACHE);
       }
-      const res = await page(c, { page: "listing", listing, days, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, LISTING_CACHE);
-      if (cache) await later(c, cache.put(key, res.clone()));
+      const res = await page(c, { page: "listing", listing, days, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, days ? LISTING_CACHE : "no-store");
+      if (cache && days) await later(c, cache.put(key, res.clone()));
       return res;
     } catch (error) {
       console.error("ficha", publicId, error);
