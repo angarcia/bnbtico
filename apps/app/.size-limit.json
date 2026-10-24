@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y las pantallas que se abren desde las pestañas)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Mis consultas y las pantallas que se abren desde las pestañas)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -18,6 +18,8 @@
       "!dist/client/assets/cuenta-*.js",
       "!dist/client/assets/propietario-*.js",
       "!dist/client/assets/favoritos-*.js",
+      "!dist/client/assets/consultas-*.js",
+      "!dist/client/assets/owner-*.js",
       "!dist/client/assets/can-*.js",
       "!dist/client/assets/image-*.js",
       "!dist/client/assets/useMutation-*.js"
@@ -35,16 +37,18 @@
     "gzip": true
   },
   {
-    "name": "Pantallas de las pestañas · trozos diferidos (cuenta, propietario, favoritos; se precargan al apuntar o tocar la pestaña y en reposo)",
+    "name": "Pantallas de las pestañas · trozos diferidos (cuenta, propietario, consultas, favoritos; se precargan al apuntar o tocar la pestaña y en reposo)",
     "path": [
       "dist/client/assets/cuenta-*.js",
       "dist/client/assets/propietario-*.js",
       "dist/client/assets/favoritos-*.js",
+      "dist/client/assets/consultas-*.js",
+      "dist/client/assets/owner-*.js",
       "dist/client/assets/can-*.js",
       "dist/client/assets/image-*.js",
       "dist/client/assets/useMutation-*.js"
     ],
-    "limit": "18 KB",
+    "limit": "20 KB",
     "gzip": true
   },
   {
@@ -71,6 +75,14 @@
     "name": "Favoritos · trozo diferido (la pantalla; el corazón y la lista del teléfono van en el JS inicial)",
     "path": [
       "dist/client/assets/favoritos-*.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mis consultas · trozo diferido (la pantalla del propietario; la consulta y el contador de la pestaña van en el JS inicial)",
+    "path": [
+      "dist/client/assets/consultas-*.js"
     ],
     "limit": "4 KB",
     "gzip": true

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { I } from "../shared/icons";
+import { countNew, inquiriesQuery } from "./inquiries";
 import { useRole } from "./role";
 import { useSession } from "./session";
 
@@ -34,21 +35,44 @@ function useReviewCount(enabled: boolean): number {
   return enabled ? (data ?? 0) : 0;
 }
 
+/**
+ * Contador terracota de Consultas: las nuevas de `["inquiries", uid]`, la misma consulta de Mis consultas e Inicio. Dentro
+ * de /propietario la pide si no está en la caché o está vieja (30 s); fuera (Cuenta en modo propietario) solo la lee.
+ */
+function useNewInquiries(show: boolean, fetch: boolean): number {
+  const userId = useSession().session?.userId ?? "";
+  const { data } = useQuery({ ...inquiriesQuery(userId), enabled: show && fetch && !!userId, select: countNew });
+  return show ? (data ?? 0) : 0;
+}
+
 export function TabsFrame({ children }: { children: ReactNode }) {
   // En /propietario/* la barra es la del propietario desde el primer pintado (la pantalla fija además el modo).
   const zone = useLocation({ select: (l) => (l.pathname.startsWith("/propietario") ? "owner" : l.pathname.startsWith("/admin") ? "admin" : null) });
   const role = useRole();
   const tabs = zone === "admin" ? ADMIN : role === "owner" || zone === "owner" ? OWNER : GUEST;
   const pending = useReviewCount(zone === "admin");
+  const fresh = useNewInquiries(tabs === OWNER, zone === "owner");
   return (
     <div className="app">
       <main className="view">{children}</main>
       <nav className={`tabbar${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon: Icon, exact }) => (
-          <Link key={to} to={to} className="nav" activeOptions={{ exact, includeSearch: false }} activeProps={{ "aria-current": "page" }}>
+          <Link
+            key={to}
+            to={to}
+            className="nav"
+            activeOptions={{ exact, includeSearch: false }}
+            activeProps={{ "aria-current": "page" }}
+            aria-label={to === "/propietario/consultas" && fresh > 0 ? `${label}, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : undefined}
+          >
             <Icon size={22} />
             <span>{label}</span>
             {to === "/admin" && pending > 0 ? <b className="nav-count num">{pending}</b> : null}
+            {to === "/propietario/consultas" && fresh > 0 ? (
+              <b className="nav-count num" data-testid="inquiries-badge">
+                {fresh}
+              </b>
+            ) : null}
           </Link>
         ))}
       </nav>

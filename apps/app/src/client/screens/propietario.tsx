@@ -18,6 +18,7 @@ import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { accountQuery } from "../account";
 import { FlowHeader, Placeholder, RootHeader } from "../chrome";
+import { countNew, inquiriesQuery } from "../inquiries";
 import { activeCountQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
 import { setRole } from "../role";
 import { useSession } from "../session";
@@ -84,15 +85,7 @@ export function InicioScreen() {
       {!list && !listings.isError ? <SkeletonCard /> : null}
 
       {list && list.length > 0 ? (
-        <Link to="/propietario/consultas" className="card row gap-14 inquiries-card">
-          <span className="round-icon round-icon-sun">
-            <I.chat size={22} />
-          </span>
-          <span className="stack gap-4 grow-col">
-            <b className="display inquiries-title">Consultas</b>
-            <span className="small muted">Aquí verá los clientes que le escriban por WhatsApp desde su ficha. Llega más adelante.</span>
-          </span>
-        </Link>
+        <InquiriesCard userId={userId} />
       ) : null}
 
       {list && !featured ? (
@@ -120,6 +113,29 @@ export function InicioScreen() {
         </Link>
       ) : null}
     </>
+  );
+}
+
+/** «N consultas nuevas» → Mis consultas. Lee la misma consulta que la pantalla y el contador de la pestaña. */
+function InquiriesCard({ userId }: { userId: string }) {
+  const { data } = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
+  const fresh = countNew(data);
+  const title = !data ? "Consultas" : fresh ? `${fresh} ${fresh === 1 ? "consulta nueva" : "consultas nuevas"}` : "Sin consultas nuevas";
+  return (
+    <Link to="/propietario/consultas" className="card row gap-14 inquiries-card">
+      <span className="round-icon round-icon-sun">
+        <I.chat size={22} />
+      </span>
+      <span className="stack gap-4 grow-col">
+        <b className="display inquiries-title" data-testid="inquiries-title">
+          {title}
+        </b>
+        <span className="small muted">Clientes que le escribieron por WhatsApp desde su ficha</span>
+      </span>
+      <span className="chev">
+        <I.chevron />
+      </span>
+    </Link>
   );
 }
 
@@ -615,4 +631,3 @@ export function EnviadaScreen() {
 // ---------- Marcadores ----------
 
 export const CalendarioScreen = () => <Placeholder title="Calendario" home="/propietario" text="Marque las noches ocupadas y los precios por fecha. Llega más adelante." />;
-export const ConsultasScreen = () => <Placeholder title="Consultas" home="/propietario" text="Los clientes que le escriban por WhatsApp desde su ficha aparecerán aquí. Llega más adelante." />;

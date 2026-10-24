@@ -5,11 +5,14 @@ import {
   costaRicaToday,
   formatInquiryDates,
   initials,
+  inquiryHouses,
+  inquirySummary,
   redraft,
   relativeTime,
   startDraft,
   validateInquiryDraft,
   waUrl,
+  type OwnerInquiry,
 } from "../../src/domain/inquiry";
 import { waLink } from "../../src/client/support";
 
@@ -140,5 +143,47 @@ describe("waUrl", () => {
   it("waLink de soporte la reutiliza sin cambiar lo que hacía", () => {
     expect(waLink("+506 6000-0000", "Hola: ")).toBe("https://wa.me/50660000000?text=Hola%3A%20");
     expect(waLink("", "x")).toBe("https://wa.me/?text=x");
+  });
+});
+
+const inquiry = (o: Partial<OwnerInquiry>): OwnerInquiry => ({
+  id: "i",
+  listingId: "l",
+  publicId: "CT-1001",
+  listingTitle: "Casa Cocles",
+  clientName: "Ana Prueba",
+  clientPhone: "+50688881234",
+  arrival: null,
+  departure: null,
+  people: null,
+  message: "Hola",
+  createdAt: "2026-10-23T12:00:00Z",
+  updatedAt: "2026-10-23T12:00:00Z",
+  openedAt: null,
+  source: "listing",
+  ...o,
+});
+
+describe("inquirySummary: casa · fechas · personas", () => {
+  it("con fechas y personas, sin fechas, una persona, sin personas", () => {
+    expect(inquirySummary(inquiry({ arrival: "2026-12-20", departure: "2026-12-27", people: 4 }))).toBe("Casa Cocles · 20–27 dic · 4 personas");
+    expect(inquirySummary(inquiry({ people: 2 }))).toBe("Casa Cocles · sin fechas · 2 personas");
+    expect(inquirySummary(inquiry({ people: 1 }))).toBe("Casa Cocles · sin fechas · 1 persona");
+    expect(inquirySummary(inquiry({}))).toBe("Casa Cocles · sin fechas");
+  });
+});
+
+describe("inquiryHouses: un filtro por casa con consultas", () => {
+  it("en el orden de la lista (la más reciente primero), sin repetir, con cuántas tiene cada una", () => {
+    const list = [
+      inquiry({ id: "1", publicId: "CT-1002", listingTitle: "Cabina Cocles" }),
+      inquiry({ id: "2", publicId: "CT-1001" }),
+      inquiry({ id: "3", publicId: "CT-1002", listingTitle: "Cabina Cocles" }),
+    ];
+    expect(inquiryHouses(list)).toEqual([
+      { publicId: "CT-1002", title: "Cabina Cocles", count: 2 },
+      { publicId: "CT-1001", title: "Casa Cocles", count: 1 },
+    ]);
+    expect(inquiryHouses([])).toEqual([]);
   });
 });

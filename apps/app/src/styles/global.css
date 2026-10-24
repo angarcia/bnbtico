@@ -363,6 +363,19 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .round-icon-sun{background:var(--sun-soft);color:var(--sun-ink)}
 .inquiries-card{text-decoration:none;color:inherit;padding:14px 16px}
 .inquiries-title{font-size:17px}
+.inquiries-card .chev{color:var(--muted);flex-shrink:0}
+/* Mis consultas (pantalla 18) */
+.inquiries-intro{margin:-4px 0 0}
+.inquiry-card{padding:14px}
+.inquiry-avatar{width:44px;height:44px;border-radius:999px;font-size:15px}
+.inquiry-avatar.is-read{background:var(--line-soft);color:var(--muted)}
+.inquiry-body{gap:2px;min-width:0}
+.inquiry-name{margin:0;font-family:var(--display);font-weight:700;font-size:17px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
+.inquiry-message{margin:4px 0 0;font-size:14px;overflow-wrap:anywhere}
+.badge-new{background:var(--brand);color:var(--bg);padding:2px 8px;font-size:11px}
+.nowrap{white-space:nowrap;flex-shrink:0}
+.btn-wa.inquiry-wa{min-height:44px;border-radius:999px;font-family:inherit;font-weight:700;font-size:14px;gap:8px}
+.inquiries-foot{margin:0;padding:0 4px}
 .featured-title{font-weight:700;font-size:18px;line-height:1.1;color:inherit;text-decoration:none}
 .share-box{padding:12px 14px;border-radius:var(--r-input);background:var(--surface-2)}
 .share-url{font-weight:700;overflow-wrap:anywhere}

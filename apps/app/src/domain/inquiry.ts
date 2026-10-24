@@ -234,3 +234,21 @@ export function initials(name: string): string {
   const last = words.length > 1 ? words[words.length - 1]!.charAt(0) : "";
   return (first + last).toLocaleUpperCase("es");
 }
+
+/** Línea de la tarjeta de Mis consultas: «Casa Cocles · 20–27 dic · 4 personas» (sin personas, solo casa y fechas). */
+export function inquirySummary(i: Pick<OwnerInquiry, "listingTitle" | "arrival" | "departure" | "people">): string {
+  const parts = [i.listingTitle, formatInquiryDates(i.arrival, i.departure)];
+  if (i.people) parts.push(i.people === 1 ? "1 persona" : `${i.people} personas`);
+  return parts.join(" · ");
+}
+
+/** Filtros de Mis consultas: una entrada por casa con consultas, en el orden de la lista, con cuántas tiene. */
+export function inquiryHouses(list: readonly Pick<OwnerInquiry, "publicId" | "listingTitle">[]): { publicId: string; title: string; count: number }[] {
+  const houses = new Map<string, { publicId: string; title: string; count: number }>();
+  for (const i of list) {
+    const h = houses.get(i.publicId);
+    if (h) h.count++;
+    else houses.set(i.publicId, { publicId: i.publicId, title: i.listingTitle, count: 1 });
+  }
+  return [...houses.values()];
+}

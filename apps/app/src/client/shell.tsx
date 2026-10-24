@@ -22,7 +22,8 @@ import { UpdateBanner } from "./update-banner";
 const ownerScreens = () => import("./screens/propietario");
 const cuentaScreens = () => import("./screens/cuenta");
 const favoritosScreen = () => import("./screens/favoritos");
-type OwnerScreen = "InicioScreen" | "CasasScreen" | "CalendarioScreen" | "ConsultasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
+const consultasScreen = () => import("./screens/consultas");
+type OwnerScreen = "InicioScreen" | "CasasScreen" | "CalendarioScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 const ownerScreen = (name: OwnerScreen) => lazyRouteComponent(ownerScreens, name);
 const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreens, name);
@@ -30,7 +31,10 @@ const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreen
 function prefetchTabs() {
   void favoritosScreen();
   void cuentaScreens();
-  if (storedRole() === "owner" || location.pathname.startsWith("/propietario")) void ownerScreens();
+  if (storedRole() === "owner" || location.pathname.startsWith("/propietario")) {
+    void ownerScreens();
+    void consultasScreen();
+  }
 }
 
 const rootRoute = createRootRoute({
@@ -121,7 +125,7 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario", component: ownerScreen("InicioScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", component: ownerScreen("CalendarioScreen") }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/consultas", component: ownerScreen("ConsultasScreen") }),
+      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/consultas", component: lazyRouteComponent(consultasScreen, "ConsultasScreen") }),
     ]),
     adminTabs.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),

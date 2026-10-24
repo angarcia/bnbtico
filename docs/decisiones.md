@@ -1,3 +1,10 @@
+## 2026-10-23 · Fase 3, ticket 05: Mis consultas del propietario
+
+- **«Abrir WhatsApp» en una consulta:** la consulta deja de ser «Nueva» en la caché al momento y se pide `mark_inquiry_opened` (con keepalive); se espera a la base como mucho 400 ms y luego se abre `wa.me/<cliente>` sin texto en la misma pestaña. Si la base falla no se deshace en pantalla: la próxima lectura la vuelve a mostrar como «Nueva» y se marca al tocarla otra vez.
+- **Una sola consulta `["inquiries", uid]`** (privada, 30 s) para la pantalla, la tarjeta «N consultas nuevas» de Inicio y el contador terracota de la pestaña. La barra la pide solo dentro de `/propietario/*`; en Cuenta (modo propietario) solo lee la caché. Inicio sin consultas nuevas dice «Sin consultas nuevas».
+- **Pantalla en su propio trozo** (`consultas-*.js`, 4 KB), precargado en reposo con las del propietario. El límite de «pantallas de las pestañas» sube de 18 a 20 KB: ahora incluye Mis consultas y el módulo de consultas del propietario (`owner-*.js`), que Rolldown separa al compartirlo dos pantallas diferidas.
+- Las consultas creadas por bnbtico (`source = 'bnbtico'`, v1.1) solo llevan la etiqueta «Creada por bnbtico»; sin tarjeta especial.
+
 ## 2026-10-23 · Fase 3, ticket 04: registrar la consulta y abrir WhatsApp
 
 - **Un toque, una consulta:** con sesión guardada, «Abrir WhatsApp» llama directamente a `create_inquiry` (sin comprobar antes la sesión aparte: una petición menos); si la base pide ingresar o la sesión venció, a Ingresar con lo escrito guardado y la vuelta a la hoja. Al responder, `wa.me` en la misma pestaña.
