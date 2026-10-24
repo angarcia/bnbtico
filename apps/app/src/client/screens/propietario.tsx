@@ -4,11 +4,13 @@
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { occupiedNightsLabel } from "../../domain/calendar";
 import { can } from "../../domain/can";
-import { relativeDate } from "../../domain/dates";
+import { longDate, relativeDate } from "../../domain/dates";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
+import { costaRicaToday } from "../../domain/inquiry";
 import { variantUrl } from "../../domain/image";
 import { STATUS_LABELS, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -18,6 +20,8 @@ import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { accountQuery } from "../account";
+import { calendarQuery } from "../calendar-days";
+import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
 import { countNew, inquiriesQuery } from "../inquiries";
 import { activeCountQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
@@ -419,6 +423,19 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   const discard = useDeleteDraft(userId);
   const price = describe(l, { base: "" }).mainPrice;
   const cover = l.photos[0];
+  const [closing, setClosing] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef(false);
+  // El foco vuelve al interruptor cuando la hoja ya se desmontó y la página dejó de estar inerte.
+  useEffect(() => {
+    if (closing || !returnFocus.current) return;
+    returnFocus.current = false;
+    toggle.current?.focus();
+  }, [closing]);
+  const endClosing = () => {
+    returnFocus.current = true;
+    setClosing(false);
+  };
   const toWizard = () => navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } });
 
   function edit() {
@@ -464,7 +481,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
       <section className="list">
         <ShareListItem listing={l} />
-        {l.status !== "rejected" ? <ListItem to="/propietario/calendario" casa={l.id} icon={<I.calendar />} title="Calendario y precios" detail="Noches ocupadas y precios por fecha" /> : null}
+        {l.status !== "rejected" ? <CalendarRow listing={l} userId={userId} /> : null}
         {l.status === "active" ? (
           <button type="button" className="list-item" onClick={edit} disabled={reopen.isPending}>
             <span className="muted-icon">
@@ -504,16 +521,18 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             <span className="muted-icon">
               <I.chat />
             </span>
-            <span className="body" id="available-label">
-              Disponible para consultas<small>Si la cierra, la ficha sigue visible pero sin botón de contacto</small>
+            <span className="body">
+              <span id="available-label">Disponible para consultas</span>
+              <small>{l.available ? "Si la cierra, la ficha sigue visible pero sin botón de contacto" : l.reopenAt ? `Cerrada hasta el ${longDate(l.reopenAt)}` : "Cerrada a consultas"}</small>
             </span>
             <button
+              ref={toggle}
               type="button"
               role="switch"
               className="switch"
               aria-checked={l.available}
               aria-labelledby="available-label"
-              onClick={() => available.mutate(!l.available)}
+              onClick={() => (l.available ? setClosing(true) : available.mutate({ available: true }))}
             >
               <span />
             </button>
@@ -522,6 +541,15 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       </section>
 
       {error ? <p className="note" role="alert">{message(error)}</p> : null}
+      {closing ? (
+        <CloseSheet
+          onClose={endClosing}
+          onConfirm={(reopenAt) => {
+            endClosing();
+            available.mutate({ available: false, reopenAt });
+          }}
+        />
+      ) : null}
 
       {can(l, "discard") ? (
         <button type="button" className="btn btn-outline-bad" onClick={remove} disabled={discard.isPending}>
@@ -532,13 +560,18 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   );
 }
 
-function ListItem({ to, casa, icon, title, detail }: { to: "/propietario/calendario"; casa: string; icon: ReactNode; title: string; detail: string }) {
+/** «Calendario y precios» con las noches ocupadas de este mes, de la misma consulta que la pantalla del calendario. */
+function CalendarRow({ listing: l, userId }: { listing: Listing; userId: string }) {
+  const days = useQuery({ ...calendarQuery(userId, l.id), enabled: !!userId }).data;
+  const month = costaRicaToday(Date.now()).slice(0, 7);
   return (
-    <Link to={to} search={{ casa }} className="list-item">
-      <span className="muted-icon">{icon}</span>
+    <Link to="/propietario/calendario" search={{ casa: l.id }} className="list-item">
+      <span className="muted-icon">
+        <I.calendar />
+      </span>
       <span className="body">
-        {title}
-        <small>{detail}</small>
+        Calendario y precios
+        <small>{days ? occupiedNightsLabel(days, month) : "Noches ocupadas y precios por fecha"}</small>
       </span>
       <span className="chev">
         <I.chevron />

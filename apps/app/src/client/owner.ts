@@ -81,19 +81,23 @@ export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "i
   void client.invalidateQueries({ queryKey: ["active-count"] });
 }
 
+/** Abrir (borra la fecha de reapertura) o cerrar a consultas con una fecha opcional. */
+export type AvailabilityChange = { available: true } | { available: false; reopenAt: string | null };
+
 /** «Disponible para consultas»: responde al instante y vuelve atrás si la base lo rechaza. */
 export function useSetAvailable(userId: string, listing: Pick<Listing, "id" | "publicId">) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async (available: boolean) => (await api()).setAvailable(listing.id, available),
-    onMutate: async (available) => {
+    mutationFn: async (c: AvailabilityChange) => (await api()).setAvailable(listing.id, c.available, c.available ? null : c.reopenAt),
+    onMutate: async (c) => {
       await client.cancelQueries({ queryKey: ["own-listings", userId] });
       await client.cancelQueries({ queryKey: ["own-listing", userId, listing.id] });
-      patchCached(client, userId, listing.id, { available });
-      return { previous: !available };
+      const before = client.getQueryData<Listing | null>(["own-listing", userId, listing.id]);
+      patchCached(client, userId, listing.id, { available: c.available, reopenAt: c.available ? null : c.reopenAt });
+      return { previous: { available: !c.available, reopenAt: before?.reopenAt ?? null } };
     },
-    onError: (_error, _available, context) => {
-      if (context) patchCached(client, userId, listing.id, { available: context.previous });
+    onError: (_error, _c, context) => {
+      if (context) patchCached(client, userId, listing.id, context.previous);
     },
     onSettled: () => refresh(client, userId, listing),
   });

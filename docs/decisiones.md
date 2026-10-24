@@ -1,3 +1,11 @@
+## 2026-10-23 · Fase 4, ticket 04: «No disponible» con fecha de reapertura y fila del calendario en el detalle
+
+- **Apagar el interruptor abre la hoja «Cerrar a consultas»** (fecha opcional de mañana a +365 con `validateReopenDate`, ayuda «Sin fecha, queda cerrada hasta que usted la abra.»); el cierre se aplica al confirmar, optimista con vuelta atrás y el mensaje de la base. **Encender es un toque** y borra la fecha. Escape, el fondo y «Cancelar» cierran sin cambiar nada; el foco vuelve al interruptor.
+- La hoja es un módulo propio (`src/client/close-sheet.tsx`) que solo importa el detalle: va en el trozo `propietario`, con la misma semántica de diálogo que la hoja de contacto pero sin importarla (no arrastra su trozo).
+- Bajo el interruptor: «Cerrada hasta el 2 de noviembre» / «Cerrada a consultas» cuando está cerrada. La fila «Calendario y precios» muestra «<Mes>: N noches ocupadas» / «Sin noches ocupadas este mes» desde la consulta `["calendar", uid, casa]` (la misma que la pantalla del calendario; mientras llega, el texto de antes).
+- `useSetAvailable` recibe `{ available: true } | { available: false, reopenAt }` y parchea también `reopenAt` en la caché.
+- Tamaños: pestañas 18,59 → 19,55 / 20 KB (no hizo falta subir el límite); zona privada inicial 139,06 → 139,07 / 150 KB.
+
 ## 2026-10-23 · Fase 4, ticket 03: pantalla del calendario del propietario
 
 - **Trozo propio** `calendario-*.js` (4,1 KB gz) más las reglas del dominio `calendar-*.js` (2,2 KB gz, que Rolldown separa al compartirlas con el adaptador de datos): entrada de `size-limit` nueva de 8 KB (6,25 KB). Fuera de la zona privada inicial y de las pantallas de las pestañas; se precarga en reposo con las del propietario y al apuntar a su enlace.

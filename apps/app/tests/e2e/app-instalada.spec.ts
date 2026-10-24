@@ -85,6 +85,7 @@ test("una escritura sin red muestra «Sin conexión», vuelve atrás y no se enc
 
   await goOffline(context, page);
   await toggle.click();
+  await page.getByRole("dialog", { name: "Cerrar a consultas" }).getByRole("button", { name: "Cerrar a consultas" }).click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
   await expect(toggle).toHaveAttribute("aria-checked", "true");
 

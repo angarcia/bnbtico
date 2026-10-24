@@ -221,7 +221,7 @@ function Calendar({ listing: l, userId, month, onMonth }: { listing: Listing; us
           <span>
             Esta casa está cerrada a consultas{l.reopenAt ? ` hasta el ${longDate(l.reopenAt)}` : ""}. Ábrala para cambiar el calendario; sus noches y precios se conservan.
           </span>
-          <button type="button" className="btn btn-ghost btn-sm cal-open" disabled={reopen.isPending} onClick={() => reopen.mutate(true)}>
+          <button type="button" className="btn btn-ghost btn-sm cal-open" disabled={reopen.isPending} onClick={() => reopen.mutate({ available: true })}>
             Abrir a consultas
           </button>
         </section>

@@ -113,7 +113,9 @@ test("disponible para consultas responde al instante y vuelve atrás con el mens
     await held;
     await route.continue();
   });
+  // Apagar pide la fecha opcional en una hoja (ticket 04 de la fase 4); sin fecha, «Cerrar a consultas».
   await toggle.click();
+  await page.getByRole("dialog", { name: "Cerrar a consultas" }).getByRole("button", { name: "Cerrar a consultas" }).click();
   await expect(toggle).toHaveAttribute("aria-checked", "false");
   await expect(page.getByText("No disponible", { exact: true })).toBeVisible();
   release();
