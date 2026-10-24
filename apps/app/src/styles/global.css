@@ -496,6 +496,7 @@ a.list-item:active,button.list-item:active:not(:disabled),.listing-card:active{t
    Una foto que no carga se queda oculta y se ve el fondo de su caja; el texto alternativo no se pinta encima. */
 img[data-fade]{opacity:0;transition:opacity 240ms var(--ease-out)}
 img[data-fade][data-loaded]{opacity:1}
+img[data-fade][data-instant]{transition:none}
 .photo img,.hero img{color:transparent}
 .update-banner{transition:opacity 200ms ease-out,transform 240ms var(--ease-out)}
 @starting-style{.update-banner{opacity:0;transform:translate(-50%,8px)}}

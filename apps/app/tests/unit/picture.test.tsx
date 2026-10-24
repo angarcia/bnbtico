@@ -1,6 +1,7 @@
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
-import { Picture } from "../../src/shared/picture";
+import type { SyntheticEvent } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fadeIn, Picture } from "../../src/shared/picture";
 
 const attrs = (html: string) => Object.fromEntries([...html.matchAll(/([a-zA-Z]+)="([^"]*)"/g)].map((m) => [m[1]!.toLowerCase(), m[2]!]));
 
@@ -21,5 +22,34 @@ describe("Picture", () => {
     expect(a.srcset).toBeUndefined();
     expect(a.sizes).toBeUndefined();
     expect(a.loading).toBe("lazy");
+  });
+});
+
+describe("fadeIn", () => {
+  afterEach(() => vi.restoreAllMocks());
+  const img = (complete = false) => ({ complete, naturalWidth: complete ? 480 : 0, dataset: {} as DOMStringMap }) as unknown as HTMLImageElement;
+  const load = (el: HTMLImageElement) => fadeIn.onLoad({ currentTarget: el } as SyntheticEvent<HTMLImageElement>);
+  const at = (ms: number) => vi.spyOn(performance, "now").mockReturnValue(ms);
+
+  it("ya en caché al montarla: visible sin esperar al load", () => {
+    const el = img(true);
+    fadeIn.ref(el);
+    expect(el.dataset).toEqual({ loaded: "" });
+  });
+  it("llega casi al montarla (caché del service worker): aparece sin fundido, para no retrasar el LCP", () => {
+    const el = img();
+    at(1000);
+    fadeIn.ref(el);
+    at(1060);
+    load(el);
+    expect(el.dataset).toEqual({ loaded: "", instant: "" });
+  });
+  it("llega de la red: con fundido", () => {
+    const el = img();
+    at(1000);
+    fadeIn.ref(el);
+    at(1400);
+    load(el);
+    expect(el.dataset).toEqual({ loaded: "" });
   });
 });
