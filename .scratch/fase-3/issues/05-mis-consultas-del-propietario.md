@@ -4,7 +4,7 @@
 
 **Blocked by:** 04
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Lazy route `/propietario/consultas` with its own `size-limit` entry; query `["inquiries", uid]` (30 s stale, persisted with the private keys, removed on sign-out, refetch on focus/resume); visited screen renders from cache without network.
 - [ ] Cards: initials, name, relative date, «<casa> · <fechas> · N personas» («sin fechas» when none), message in quotes, «Abrir WhatsApp» (WhatsApp green). Chips «Todas · N» + per house (only houses with inquiries). Empty state with «Compartir ficha» when there's an active house. Closing note.
