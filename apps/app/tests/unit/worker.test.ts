@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp, type CacheLike, type Env } from "../../src/server/app";
 import type { Seeded } from "../contract/harness";
+import { addDays } from "../../src/domain/calendar";
+import { costaRicaToday } from "../../src/domain/inquiry";
 import { fakeHarness } from "./fake-harness";
 
 const template = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
@@ -30,7 +32,7 @@ function setup(over: Partial<Env> = {}) {
   const cache = memoryCache();
   const purgeFetch = vi.fn(async (_url: string, _init?: RequestInit) => Response.json({ success: true }));
   const api = h.anon;
-  const spy = { getPublic: vi.spyOn(api, "getPublic") };
+  const spy = { getPublic: vi.spyOn(api, "getPublic"), getPublicDays: vi.spyOn(api, "getPublicDays") };
   const app = createApp({ listings: () => api, cache: () => cache, purgeFetch: purgeFetch as unknown as typeof fetch });
   const env: Env = {
     ENVIRONMENT: "pruebas",
@@ -153,6 +155,67 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(t.spy.getPublic).toHaveBeenCalledTimes(1);
   });
 
+  it("ssr-data lleva los días de la casa (ocupados y precios especiales) para el calendario de la ficha", async () => {
+    const today = costaRicaToday(Date.now());
+    await t.h.putDay(casa.id, { day: addDays(today, 3), available: false, specialPriceCrc: null });
+    await t.h.putDay(casa.id, { day: addDays(today, 5), available: true, specialPriceCrc: 120000 });
+    const data = ssrData(await (await t.request(`/casa/${casa.publicId}`)).text());
+    expect(data.days).toEqual([
+      { day: addDays(today, 3), available: false, specialPriceCrc: null },
+      { day: addDays(today, 5), available: true, specialPriceCrc: 120000 },
+    ]);
+  });
+
+  it("la casa y sus días se piden a la vez, no uno tras otro", async () => {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    // La primera llamada espera; dentro, la segunda llega al fake de verdad.
+    t.spy.getPublic.mockImplementationOnce(async (id) => {
+      await held;
+      return t.h.anon.getPublic(id);
+    });
+    const pending = t.request(`/casa/${casa.publicId}`);
+    await vi.waitFor(() => expect(t.spy.getPublicDays).toHaveBeenCalledWith(casa.publicId));
+    release();
+    expect((await pending).status).toBe(200);
+  });
+
+  it("la ficha en la caché no vuelve a pedir los días; la clave de caché no cambia", async () => {
+    await t.request(`/casa/${casa.publicId}`);
+    await t.request(`/casa/${casa.publicId}`);
+    expect(t.spy.getPublicDays).toHaveBeenCalledTimes(1);
+    expect([...t.cache.store.keys()]).toEqual([`${ORIGIN}/casa/${casa.publicId}?__v=v1`]);
+  });
+
+  it("el HTML trae la sección «Disponibilidad» como caja vacía, sin la rejilla del calendario", async () => {
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    const body = html.slice(html.indexOf('<div id="root">'));
+    expect(body).toMatch(/<span class="eyebrow">Disponibilidad<\/span><div class="listing-calendar" aria-hidden="true"><\/div>/);
+    expect(body).not.toContain("month-grid");
+    expect(body).not.toContain("gridcell");
+    // Va tras las características y antes de la zona aproximada.
+    expect(body.indexOf("Disponibilidad")).toBeGreaterThan(body.indexOf("feature-tiles"));
+    expect(body.indexOf("Disponibilidad")).toBeLessThan(body.indexOf("Zona aproximada"));
+  });
+
+  it("una casa cerrada a consultas trae «Calendario cerrado» y su reapertura, sin caja del calendario", async () => {
+    const reopen = addDays(costaRicaToday(Date.now()), 20);
+    await t.h.owner("owner").setAvailable(casa.id, false, reopen);
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    const body = html.slice(html.indexOf('<div id="root">'));
+    expect(body).toContain("Calendario cerrado");
+    expect(body).toMatch(/Calendario cerrado[\s\S]*Vuelve a estar disponible el/);
+    expect(body).not.toContain('class="listing-calendar"');
+  });
+
+  it("si fallan los días, 503 sin guardar en caché", async () => {
+    t.spy.getPublicDays.mockRejectedValueOnce(new Error("caída"));
+    const res = await t.request(`/casa/${casa.publicId}`);
+    expect(res.status).toBe(503);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(t.cache.store.size).toBe(0);
+  });
+
   it("un id en minúsculas redirige a la URL canónica", async () => {
     const res = await t.request(`/casa/${casa.publicId.toLowerCase()}`);
     expect(res.status).toBe(301);
@@ -247,9 +310,22 @@ describe("worker · purga de la ficha", () => {
     expect(t.cache.store.has(key)).toBe(false);
   });
 
-  it("sin configuración de purga responde 503", async () => {
+  it("sin configuración de purga responde 503 y no toca la caché", async () => {
     const t = setup({ CF_PURGE_TOKEN: undefined });
-    expect((await t.request("/_purge/CT-1000", { method: "POST", headers: { authorization: "Bearer s3creto" } })).status).toBe(503);
+    const casa = await t.h.seed({ status: "active" });
+    await t.request(`/casa/${casa.publicId}`);
+    expect((await t.request(`/_purge/${casa.publicId}`, { method: "POST", headers: { authorization: "Bearer s3creto" } })).status).toBe(503);
+    expect(t.cache.store.size).toBe(1);
+  });
+
+  it("en local (sin zona de Cloudflare) borra la copia de la caché del worker y responde 200", async () => {
+    const t = setup({ ENVIRONMENT: "local", CF_ZONE_ID: undefined, CF_PURGE_TOKEN: undefined });
+    const casa = await t.h.seed({ status: "active" });
+    await t.request(`/casa/${casa.publicId}`);
+    const res = await t.request(`/_purge/${casa.publicId}`, { method: "POST", headers: { authorization: "Bearer s3creto" } });
+    expect(res.status).toBe(200);
+    expect(t.cache.store.size).toBe(0);
+    expect(t.purgeFetch).not.toHaveBeenCalled();
   });
 
   it("un id mal formado es 400", async () => {

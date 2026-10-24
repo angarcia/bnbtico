@@ -95,7 +95,7 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
 
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.getByRole("button", { name: "No disponible para consultas" })).toBeDisabled();
-  await expect(page.getByText(`Vuelve a estar disponible el ${longDate(reopen)}`)).toBeVisible();
+  await expect(page.locator(".cta-bar").getByText(`Vuelve a estar disponible el ${longDate(reopen)}`)).toBeVisible();
 
   // La reapertura de las 00:00 de Costa Rica (el job de pg_cron llama a esta función).
   expect(reopenDue(reopen)).toBeGreaterThanOrEqual(1);

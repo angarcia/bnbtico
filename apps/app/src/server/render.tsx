@@ -6,7 +6,7 @@ import type { PublicListing } from "../domain/listing";
 import { SITE_URL } from "../domain/seo";
 import { publicUrl } from "../domain/share";
 import { ListingScreen } from "../shared/listing-page";
-import { listingQuery } from "../shared/listing-query";
+import { seedListing } from "../shared/listing-query";
 import { SSR_DATA_ID, type SsrData } from "../shared/ssr-data";
 import { BlockedPage, ErrorPage, MissingPage } from "../shared/status-pages";
 
@@ -68,7 +68,7 @@ const STATUS_HEAD: Record<Exclude<SsrData["page"], "listing">, string> = {
 function body(data: SsrData): string {
   if (data.page === "listing") {
     const client = new QueryClient();
-    client.setQueryData(listingQuery(data.listing.publicId).queryKey, data.listing);
+    seedListing(client, data.listing, data.days);
     return renderToString(
       <QueryClientProvider client={client}>
         <ListingScreen publicId={data.listing.publicId} base={data.base} />

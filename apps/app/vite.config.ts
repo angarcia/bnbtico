@@ -74,4 +74,6 @@ function securityHeadersFile(): Plugin {
 export default defineConfig({
   plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile()],
   define: { __BUILD_ID__: JSON.stringify(buildId) },
+  // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).
+  preview: { allowedHosts: ["host.docker.internal"] },
 });

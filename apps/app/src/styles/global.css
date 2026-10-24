@@ -589,6 +589,12 @@ small.swap-in{display:block}
 .month-legend span{display:inline-flex;align-items:center;gap:6px}
 .month-legend .swatch{width:12px;height:12px;border-radius:4px;background:var(--state-soft)}
 .month-legend .swatch.is-busy{background:var(--busy)}
+/* Ficha: «Disponibilidad». Caja de alto fijo (mes + 6 semanas + leyenda + línea del precio base): mide lo mismo vacía en
+   el HTML del servidor que con la rejilla montada tras hidratar. Disponible en blanco; ocupado en terracota claro. */
+.listing-calendar{display:flex;flex-direction:column;gap:8px;height:432px;overflow:hidden}
+.listing-calendar .cal-month{margin:-6px 0 0 -10px}
+.listing-calendar .day:not(.is-busy){background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.listing-calendar .month-legend .swatch:not(.is-busy){background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
 .header-root > div:has(> .house-picker){align-items:center;flex-wrap:nowrap;gap:10px}
 .header-root:has(.house-picker) h1{font-size:28px}
 .house-picker{position:relative;min-width:0}

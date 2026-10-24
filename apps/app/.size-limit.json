@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Mis consultas, el calendario y las pantallas que se abren desde las pestañas)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Mis consultas, el calendario, el de la ficha y las pantallas que se abren desde las pestañas)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -24,7 +24,9 @@
       "!dist/client/assets/image-*.js",
       "!dist/client/assets/useMutation-*.js",
       "!dist/client/assets/calendario-*.js",
-      "!dist/client/assets/calendar-*.js"
+      "!dist/client/assets/calendar-*.js",
+      "!dist/client/assets/month-grid-*.js",
+      "!dist/client/assets/listing-calendar-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -90,12 +92,22 @@
     "gzip": true
   },
   {
-    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, y su consulta, que también usa el detalle de la casa; se precarga con las pantallas del propietario)",
+    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, la rejilla del mes, que comparte con la ficha, y su consulta, que también usa el detalle de la casa; se precarga con las pantallas del propietario)",
     "path": [
       "dist/client/assets/calendario-*.js",
-      "dist/client/assets/calendar-*.js"
+      "dist/client/assets/calendar-*.js",
+      "dist/client/assets/month-grid-*.js"
     ],
     "limit": "8 KB",
+    "gzip": true
+  },
+  {
+    "name": "Calendario de la ficha · trozo diferido (se pide tras hidratar, en reposo o al acercarse la sección: la sección y la rejilla del mes; las reglas del calendario, calendar-*, ~2,2 KB, las comparte con el del propietario y las mide su entrada)",
+    "path": [
+      "dist/client/assets/listing-calendar-*.js",
+      "dist/client/assets/month-grid-*.js"
+    ],
+    "limit": "4 KB",
     "gzip": true
   },
   {

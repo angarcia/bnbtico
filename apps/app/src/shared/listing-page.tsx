@@ -2,6 +2,7 @@
 // dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo.
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
 import { describe } from "../domain/describe";
 import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
@@ -106,6 +107,47 @@ function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: 
         </Suspense>
       ) : null}
     </>
+  );
+}
+
+// El calendario de la ficha es un trozo aparte: se pide tras hidratar, en reposo o al acercarse la sección a la vista.
+const loadCalendar = () => import("./listing-calendar");
+const ListingCalendar = lazy(() => loadCalendar().then((m) => ({ default: m.ListingCalendar })));
+
+/** «Disponibilidad». En el HTML del servidor solo la caja, de alto fijo (sin la rejilla: los días van en ssr-data); la
+ *  rejilla se monta dentro tras hidratar. Una casa cerrada a consultas muestra «Calendario cerrado» ya en el servidor. */
+function Availability({ listing, currency }: { listing: PublicListing; currency: Currency }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [load, setLoad] = useState(false);
+  useEffect(() => {
+    if (!listing.available) return;
+    const el = box.current;
+    const start = () => setLoad(true);
+    whenIdle(start);
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && start(), { rootMargin: "600px 0px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [listing.available]);
+  const reopen = listing.available ? null : reopenLabel(listing.reopenAt);
+  return (
+    <div className="stack gap-8">
+      <span className="eyebrow">Disponibilidad</span>
+      {listing.available ? (
+        <div className="listing-calendar" ref={box} aria-hidden={load ? undefined : "true"}>
+          {load ? (
+            <Suspense fallback={null}>
+              <ListingCalendar listing={listing} currency={currency} />
+            </Suspense>
+          ) : null}
+        </div>
+      ) : (
+        <div className="note note-arena note-col">
+          <b>Calendario cerrado</b>
+          {reopen ? <span className="small">{reopen}</span> : null}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -218,6 +260,8 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               })}
             </div>
           ) : null}
+
+          <Availability listing={l} currency={currency} />
 
           {l.approx ? (
             <div className="stack gap-8">

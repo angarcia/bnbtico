@@ -168,12 +168,13 @@ export function createApp(deps: Deps) {
 
     try {
       const api = deps.listings(c.env);
-      const listing = await api.getPublic(publicId);
+      // A la vez: el calendario de la ficha no suma una vuelta a la base.
+      const [listing, days] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId)]);
       if (!listing) {
         const state = await api.linkState(publicId);
         return state === "blocked" ? page(c, { page: "blocked" }, 410, STATUS_CACHE) : page(c, { page: "missing" }, 404, STATUS_CACHE);
       }
-      const res = await page(c, { page: "listing", listing, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, LISTING_CACHE);
+      const res = await page(c, { page: "listing", listing, days, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, LISTING_CACHE);
       if (cache) await later(c, cache.put(key, res.clone()));
       return res;
     } catch (error) {
@@ -188,9 +189,12 @@ export function createApp(deps: Deps) {
     if (!secret || !sameSecret(given, secret)) return c.json({ error: "No autorizado." }, 401);
     const publicId = parsePublicId(c.req.param("publicId"));
     if (!publicId) return c.json({ error: "Id de casa no válido." }, 400);
-    if (!c.env.CF_ZONE_ID || !c.env.CF_PURGE_TOKEN) return c.json({ error: "La purga no está configurada." }, 503);
+    const zoned = !!c.env.CF_ZONE_ID && !!c.env.CF_PURGE_TOKEN;
+    // En local (vite preview) no hay zona: basta con la caché del worker, y así la base local puede probar la purga.
+    if (!zoned && c.env.ENVIRONMENT !== "local") return c.json({ error: "La purga no está configurada." }, 503);
     const key = cacheKey(new URL(c.req.url).origin, publicId, c.env);
     await deps.cache()?.delete(key);
+    if (!zoned) return c.json({ purged: key });
     const res = await deps.purgeFetch(`https://api.cloudflare.com/client/v4/zones/${c.env.CF_ZONE_ID}/purge_cache`, {
       method: "POST",
       headers: { authorization: `Bearer ${c.env.CF_PURGE_TOKEN}`, "content-type": "application/json" },
