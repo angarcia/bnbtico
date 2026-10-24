@@ -1,6 +1,6 @@
 # Plan de pruebas manual · fase 3 (contacto por WhatsApp) en nueva.bnbtico.com
 
-Fecha: 2026-10-23 (tickets 01–06 y 08 de `.scratch/fase-3/`; el 07, WhatsApp distinto por casa, está aplazado y no se prueba: cada casa usa el WhatsApp de la cuenta de su propietario). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Desde la red corporativa, donde `nueva.bnbtico.com` no carga, use `https://bnbtico-pruebas.ana-garcia-saiz.workers.dev` (mismo worker y misma base; no pasa por Access). Se ejecuta **desde el teléfono**, con un iPhone y un Android si es posible, después de desplegar. Complementa a `docs/pruebas-manuales-fase-r.md` (lo de la fase R no se repite aquí). Marque cada casilla y, si algo falla, anote el número del paso (ver C).
+Fecha: 2026-10-23, revisado el 2026-10-24 tras aplicar la migración y subir `develop` (tickets 01–06 y 08 de `.scratch/fase-3/`; el 07, WhatsApp distinto por casa, está aplazado y no se prueba: cada casa usa el WhatsApp de la cuenta de su propietario). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Desde la red corporativa, donde `nueva.bnbtico.com` no carga, use `https://bnbtico-pruebas.ana-garcia-saiz.workers.dev` (mismo worker y misma base; no pasa por Access). Se ejecuta **desde el teléfono**, con un iPhone y un Android si es posible, después de desplegar. Complementa a `docs/pruebas-manuales-fase-r.md` (lo de la fase R no se repite aquí). Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
 La parte A va antes, **una acción cada vez y en este orden**.
 
@@ -8,7 +8,7 @@ La parte A va antes, **una acción cada vez y en este orden**.
 
 ## A. Acciones previas (Daniel)
 
-### A1. Migración `fase3_consultas` en `bnbtico-pruebas` · bloquea: pruebas
+### A1. Migración `fase3_consultas` en `bnbtico-pruebas` · bloquea: pruebas · ✅ hecho el 2026-10-24
 
 En el alojado están aplicadas hasta `20261023164211_admin_totp_correo` (fase R). Falta una, aditiva:
 
@@ -23,7 +23,7 @@ Desde la raíz del repo, en `develop` al día:
 **Efecto sobre la app vieja (`pruebas.bnbtico.com`):** ninguno (no usa `inquiries` ni `favorites`).
 **Si se despliega sin ella:** la ficha y los favoritos sin cuenta funcionan, pero con sesión «Abrir WhatsApp» falla y Mis consultas no carga.
 
-### A2. Desplegar · bloquea: despliegue
+### A2. Desplegar · bloquea: despliegue · ✅ `develop` subido el 2026-10-24 (falta ver el run del workflow `app` en verde)
 
 Después de A1: `git push origin develop` (la rama lleva los commits de la fase 3). El workflow `app` pasa las pruebas y la puerta de Lighthouse y despliega en `nueva.bnbtico.com`. Comprobar que el run está verde en GitHub → Actions.
 
@@ -55,9 +55,14 @@ Copy que debe verse: trato de usted, nada de «Identidad», fechas como «del 20
 | B1 | En una pestaña privada (sin sesión de bnbtico), abrir el enlace de la casa de Ana | Ficha; el botón verde «Contactar por WhatsApp» aparece un instante apagado y enseguida activo, sin que la barra de abajo salte | ☐ |
 | B2 | Tocar «Contactar por WhatsApp» | Sube la hoja «Escríbale a Ana» con Llegada, Salida, Personas, «Su mensaje» ya escrito («Hola, vi <casa> en bnbtico y me interesa. ¿Está disponible? Gracias.»), la nota ocre, «Ana verá su nombre y su WhatsApp.» y «Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.» | ☐ |
 | B2a | Elegir llegada y salida y escribir 4 personas | El mensaje se reescribe solo: «¿Está disponible del … al … para 4 personas?» | ☐ |
+| B2a2 | Cambiar a llegada 28 de diciembre y salida 2 de enero | «¿Está disponible del 28 de diciembre al 2 de enero para 4 personas?» | ☐ |
+| B2a3 | Borrar las fechas y poner 1 persona | «¿Está disponible para 1 persona?» (singular) | ☐ |
 | B2b | Tocar el mensaje y cambiar una palabra; luego cambiar la salida | El texto editado se queda (ya no se reescribe) | ☐ |
 | B2c | Con el teclado abierto en el mensaje o en Personas (iPhone y Android) | El campo queda visible encima del teclado; «Abrir WhatsApp» no se mueve bajo el dedo al cerrar el teclado | ☐ |
 | B2d | Poner una salida anterior a la llegada → «Abrir WhatsApp» | «La salida tiene que ser después de la llegada.» y no sale de la hoja | ☐ |
+| B2d2 | Poner solo la llegada, sin salida → «Abrir WhatsApp» | «Indique la llegada y la salida, o deje las dos vacías.» | ☐ |
+| B2d3 | Poner una llegada anterior a hoy → «Abrir WhatsApp» | «La llegada no puede ser antes de hoy.» | ☐ |
+| B2d4 | Borrar todo el mensaje → «Abrir WhatsApp» | «Escriba un mensaje para el propietario.» | ☐ |
 | B2e | Cerrar la hoja (fondo, «Cerrar» o atrás en Android) y volver a abrirla | Lo escrito sigue ahí (dura 30 minutos en la pestaña) | ☐ |
 
 ### Cuenta obligatoria y vuelta a la hoja
@@ -107,6 +112,7 @@ Copy que debe verse: trato de usted, nada de «Identidad», fechas como «del 20
 | B7d | En Favoritos → «Ingresar» → entrar con su número | Vuelve a Favoritos: «N casas guardadas» (ya en la cuenta) | ☐ |
 | B7e | **En el otro teléfono** (o en el navegador del ordenador) entrar con la misma cuenta → Favoritos | Las mismas casas | ☐ |
 | B7f | Añadir una en el segundo teléfono; volver al primero y abrir la app | Aparece también en el primero | ☐ |
+| B7f2 | Con sesión: Mi cuenta → «Favoritos» | Abre la misma pantalla de Favoritos | ☐ |
 | B7g | Cerrar sesión en el primero → Favoritos | La lista se queda («guardadas en este teléfono») | ☐ |
 | B7h | Con la casa de Ana en favoritos: Ana apaga «Disponible para consultas»; después Ana la edita (deja de verse mientras se revisa) | No disponible: sigue en Favoritos. En revisión: desaparece de Favoritos sin aviso (vuelve si se aprueba y se guarda otra vez) | ☐ |
 
@@ -124,10 +130,22 @@ Copy que debe verse: trato de usted, nada de «Identidad», fechas como «del 20
 
 ### Telemetría
 
+No se prueba a mano el tope de 20 casas distintas por cliente al día: lo cubren las pruebas automáticas (contrato contra la base).
+
+
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | B9 | Supabase → SQL Editor: `select name, count(*) from events where name in ('whatsapp_tap', 'inquiry_created') group by 1;` | Filas de los dos, aproximadamente un `whatsapp_tap` por toque del botón verde y un `inquiry_created` por WhatsApp abierto | ☐ |
 | B9a | `select l.public_id, i.people, i.arrival, i.departure, i.owner_opened_at is not null as abierta from inquiries i join listings l on l.id = i.listing_id order by i.updated_at desc limit 5;` | Las consultas de B4–B8 con sus datos | ☐ |
+
+### El número de la casa no es público
+
+Decisión del 2026-10-23: el WhatsApp de la casa solo se entrega a un cliente con sesión al tocar «Abrir WhatsApp».
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| B10 | En el ordenador, sin sesión: abrir la ficha de la casa de Ana y ver el código fuente (Ver → Código fuente, o `curl -s <enlace> \| grep -c 3478492`) | El número de Ana no aparece (0 coincidencias); sí aparece su nombre | ☐ |
+| B10a | En el teléfono, compartir el enlace de la casa en un chat de WhatsApp | La vista previa (foto, título y precio) se ve como en la fase R; ningún número en ella | ☐ |
 
 ---
 
