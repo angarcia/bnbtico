@@ -1,3 +1,7 @@
+## 2026-10-23 · Portada «Muy pronto»: logo claro sobre la foto
+
+- Decisión de Daniel: en la portada «Muy pronto» (`apps/web` en `main` y `apps/app/public/portada.html`) el logo va en su versión **clara (crema)**, no en la terracota que usa el resto del diseño v1. Sobre la foto de Playa Negra con la franja oscura se lee mejor; es el caso «crema sobre verde/oscuro» que prevé `design/logo/README.md`. En el resto de pantallas (fondos claros) sigue el terracota.
+
 ## 2026-10-23 · Fase 3, cierre: recorrido completo, plan de pruebas y fotos en caché sin fundido
 
 - **Fotos que ya están en el teléfono aparecen sin fundido.** El fundido de 240 ms al cargar (commit `16d0204`, «Pulir el tacto») retrasaba el LCP del shell instalado de 0,24 s a 0,51 s en Lighthouse: la foto de la primera tarjeta de Explorar llega del service worker en unos milisegundos, pero Chrome no la cuenta como pintada hasta que termina de aparecer (retraso de render de 279 ms en el informe). Ahora, si la foto carga en menos de 100 ms desde que se monta, se muestra de golpe (`data-instant`); las que llegan de la red siguen con fundido. Shell instalado: 0,51 → 0,28 s. Encontrado con `git bisect` manual entre el cierre del ticket 12 y `64665a4` (`c96dbcd` 0,24 s, `16d0204` 0,54 s).
