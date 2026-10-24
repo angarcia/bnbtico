@@ -2,6 +2,13 @@
 
 Lista de cosas decididas que **no** se hacen todavía en pruebas, pero deben estar hechas antes del lanzamiento. Se revisa al cortar (ticket 13 de la fase R y lanzamiento de la v1). La más reciente arriba.
 
+## Contacto por WhatsApp: límites, privacidad y conservación de las consultas (2026-10-23, fase 3)
+
+1. **Límites de `create_inquiry`, revisar con datos reales.** Hoy: como mucho 20 casas distintas por cliente en 24 h, y una consulta por cliente y casa cada 7 días (repetir dentro de esos 7 días la renueva y la vuelve a poner como «Nueva»). Antes de lanzar, y otra vez al mes de lanzar, mirar en `inquiries` y en `events` (`inquiry_created`) cuántas casas contacta un cliente normal al día y cada cuánto repite; si el tope de 20 frena a gente real o se queda corto ante quien recoge números, ajustarlo en una migración (y en `INQUIRY_MESSAGES` si cambia el mensaje).
+2. **Texto de privacidad.** La política de privacidad (y el aviso de la cuenta, si lo hay) debe decir, en usted: que al contactar una casa el propietario ve el **nombre y el WhatsApp** del cliente, además de las fechas, las personas y el mensaje; que bnbtico **guarda un registro de cada consulta** (quién, qué casa, cuándo, el mensaje y el número al que se le dirigió) y durante cuánto tiempo; y que los favoritos se guardan en el teléfono y, con sesión, en la cuenta. Hoy en la hoja solo dice «<Nombre> verá su nombre y su WhatsApp.».
+3. **Conservación de las consultas, por decidir.** Hoy no se borra nada. Propuesta: 24 meses desde la última renovación (`updated_at`), con un trabajo de `pg_cron` que borre las más viejas, y borrado inmediato si el cliente o el propietario cierra su cuenta (hoy ya cae en cascada con la casa y con la cuenta del cliente). Decidirlo antes de escribir el texto de privacidad del punto 2.
+4. **WhatsApp distinto por casa (aplazado en la fase 3).** Necesita enviar y comprobar un código con Twilio Verify desde el worker (diseño en `.scratch/fase-3/issues/07-whatsapp-por-casa.md`). Cuando se retome: Twilio de pago (sección siguiente), los secretos de Twilio en el worker, Geo Permissions también para esos códigos y revisar sus topes (5 envíos por casa y hora, 10 por propietario y día) con datos reales.
+
 ## Envío real de códigos con Twilio Verify (2026-10-23)
 
 En pruebas no se envía ningún código real: todas las cuentas (incluidos los dos admins, `+1 778 347 9837` y `+1 778 347 8492`) entran como números de prueba con el código fijo `123456` (Supabase → Authentication → Sign In / Providers → Phone → «Test Phone Numbers and OTPs»). La prueba gratuita de Twilio no permite crear un servicio de Verify propio, que es lo que necesita Supabase (`docs/configuracion-supabase.md`, sección 3). Antes de producción:

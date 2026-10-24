@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3, cierre: recorrido completo, plan de pruebas y fotos en caché sin fundido
+
+- **Fotos que ya están en el teléfono aparecen sin fundido.** El fundido de 240 ms al cargar (commit `16d0204`, «Pulir el tacto») retrasaba el LCP del shell instalado de 0,24 s a 0,51 s en Lighthouse: la foto de la primera tarjeta de Explorar llega del service worker en unos milisegundos, pero Chrome no la cuenta como pintada hasta que termina de aparecer (retraso de render de 279 ms en el informe). Ahora, si la foto carga en menos de 100 ms desde que se monta, se muestra de golpe (`data-instant`); las que llegan de la red siguen con fundido. Shell instalado: 0,51 → 0,28 s. Encontrado con `git bisect` manual entre el cierre del ticket 12 y `64665a4` (`c96dbcd` 0,24 s, `16d0204` 0,54 s).
+- **Plan de pruebas manual de la fase 3** en `docs/pruebas-manuales-fase-3.md` (aparte del de la fase R): para ver WhatsApp abrirse con un chat de verdad, Ana publica una casa con su número real y Daniel la contacta con el suyo (+1, que sirve además de número de otro país).
+- **Pendiente antes de producción** (en `docs/antes-de-produccion.md`): revisar con datos reales el tope de 20 casas al día y la renovación en 7 días; texto de privacidad (el propietario ve nombre y WhatsApp del cliente; las consultas se guardan); conservación de las consultas (propuesta: 24 meses); WhatsApp por casa con Twilio Verify.
+
 ## 2026-10-23 · Fase 3, ticket 05: Mis consultas del propietario
 
 - **«Abrir WhatsApp» en una consulta:** la consulta deja de ser «Nueva» en la caché al momento y se pide `mark_inquiry_opened` (con keepalive); se espera a la base como mucho 400 ms y luego se abre `wa.me/<cliente>` sin texto en la misma pestaña. Si la base falla no se deshace en pantalla: la próxima lectura la vuelve a mostrar como «Nueva» y se marca al tocarla otra vez.
