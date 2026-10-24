@@ -4,7 +4,7 @@
 
 **Blocked by:** 05, 06
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] `tests/e2e/fase3.spec.ts`: owner publishes, admin (aal2) approves, client saves it as favorite, contacts without account (creates it), WhatsApp URL correct, owner sees «Nueva» and opens WhatsApp with the client; three full runs in a row green.
 - [ ] `docs/pruebas-manuales-fase-3.md`: previous actions for Daniel (migration `fase3_consultas` on `bnbtico-pruebas`), journeys from the phone with checkboxes (real WhatsApp opening on iPhone and Android, installed PWA, returning from WhatsApp to the app, foreign numbers), what to report.
