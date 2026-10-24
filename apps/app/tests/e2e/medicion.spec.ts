@@ -66,7 +66,7 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
   const casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000 } });
   await realPhotos(casa.id);
   for (let i = 1; i <= 5; i++) await realPhotos((await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles" } })).id);
-  const proxy = await gzipProxy("http://127.0.0.1:4173");
+  const proxy = await gzipProxy(`http://127.0.0.1:${process.env.E2E_PORT ?? 4173}`);
   const base = proxy.url;
   const p = (xs: number[], q: number) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.ceil(q * xs.length) - 1)]!;
   const report = (name: string, xs: number[], budget: string) =>

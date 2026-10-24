@@ -64,7 +64,7 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-export function RootHeader({ title, home = "/explorar", action, greeting }: { title: ReactNode; home?: string; action?: ReactNode; greeting?: string }) {
+export function RootHeader({ title, home = "/explorar", action, greeting, aside }: { title: ReactNode; home?: string; action?: ReactNode; greeting?: string; aside?: ReactNode }) {
   return (
     <header className="header-root">
       <div className="top">
@@ -73,9 +73,10 @@ export function RootHeader({ title, home = "/explorar", action, greeting }: { ti
         </Link>
         {action}
       </div>
-      <div>
+      <div className={aside ? "row between baseline wrap gap-4" : undefined}>
         {greeting ? <span className="greeting">{greeting}</span> : null}
         <h1>{title}</h1>
+        {aside}
       </div>
     </header>
   );

@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3, ticket 06: favoritos en el teléfono, corazón fuera del enlace
+
+- **Tarjeta de Explorar:** el corazón va encima de la foto (arriba a la derecha, diseño 01) pero fuera del enlace de la tarjeta (un botón dentro de un enlace no es HTML válido ni accesible). La píldora «No disponible», que ocupaba esa esquina, pasa a la izquierda debajo de «Mensual».
+- **Lista del teléfono:** `localStorage` `bnbtico-favoritos`, sin zod (`parseFavorites` a mano: el módulo entra en el JS que hidrata la ficha SSR y zod/mini sumaba ~7 KB gz allí). El toque cambia la lista al momento; con sesión guardada se escribe después en `favorites` y, si falla, se vuelve atrás con un aviso breve abajo. Sin sesión guardada nunca se toca la red. Cerrar sesión no borra la lista («guardadas en este teléfono»). Al ingresar y al abrir la app con sesión: `addMany(teléfono)` → `list()` → el teléfono se queda con la mezcla (lo quitado en el teléfono sin sesión vuelve si seguía en la cuenta).
+- **Pantalla Favoritos:** las tarjetas salen de `listings_public` con `public_id in (…)` en una sola consulta (`PublicListingsApi.getManyPublic`, nueva, con contrato), caché pública persistida (`favorite-listings`); los `CT-####` que no vuelven se quitan del teléfono sin avisar.
+
 ## 2026-10-23 · Fase 3, ticket 03: cuenta obligatoria para contactar, con vuelta a la hoja
 
 - **Ida:** sin sesión, «Abrir WhatsApp» guarda lo escrito (30 min en la pestaña) y lleva a `/cuenta?next=/casa/CT-####?contacto=1` (Crear cuenta por defecto, con «Ya tengo cuenta» al lado). Saber que no hay sesión no descarga supabase-js: basta con no tener `bnbtico-auth` guardado; si lo hay, lo confirma el mismo cliente de supabase-js que usará el ticket 04. La hoja lo avisa bajo el botón: «Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.».

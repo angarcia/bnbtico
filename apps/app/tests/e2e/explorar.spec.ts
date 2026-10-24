@@ -189,8 +189,15 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await page.goto("/explorar");
   await expect(results(page)).toHaveText("8 casas en Limón");
 
-  await page.route("**/*", (route) => route.abort());
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
+  // Favoritos y Mi cuenta son trozos diferidos: los trae la precarga (en reposo o al apuntar a la pestaña; instalada, el
+  // service worker) antes de quedarse sin red. Puede que ya estén descargados al llegar aquí, así que se mira lo cargado.
+  await nav.getByRole("link", { name: "Favoritos" }).hover();
+  await page.waitForFunction(() => {
+    const names = performance.getEntriesByType("resource").map((e) => e.name);
+    return ["favoritos-", "cuenta-"].every((chunk) => names.some((n) => n.includes(`/assets/${chunk}`) && n.endsWith(".js")));
+  });
+  await page.route("**/*", (route) => route.abort());
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
   await nav.getByRole("link", { name: "Mi cuenta" }).click();

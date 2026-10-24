@@ -68,6 +68,14 @@
     "gzip": true
   },
   {
+    "name": "Favoritos · trozo diferido (la pantalla; el corazón y la lista del teléfono van en el JS inicial)",
+    "path": [
+      "dist/client/assets/favoritos-*.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
+  },
+  {
     "name": "Web Vitals · trozo que se importa tras load (web-vitals y su baliza)",
     "path": [
       "dist/client/assets/vitals-*.js"

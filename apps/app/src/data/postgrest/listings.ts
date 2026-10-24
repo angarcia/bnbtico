@@ -40,6 +40,13 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       return data ? toPublic(data) : null;
     },
 
+    async getManyPublic(publicIds) {
+      if (publicIds.length === 0) return [];
+      const { data, error } = await db.from("listings_public").select(PUBLIC_COLUMNS).in("public_id", [...new Set(publicIds)]);
+      if (error) throw toDomainError(error);
+      return data.map(toPublic);
+    },
+
     async linkState(publicId): Promise<LinkState> {
       const { data, error } = await db.rpc("listing_link_state", { p_public_id: publicId });
       if (error) throw toDomainError(error);

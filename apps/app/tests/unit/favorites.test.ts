@@ -36,6 +36,9 @@ describe("favoritos en el teléfono", () => {
     expect(parseFavorites(JSON.stringify({ a: 1 }))).toEqual([]);
     const raw = JSON.stringify([{ publicId: "CT-1000", savedAt: at(1) }, { publicId: "drop table", savedAt: at(2) }, { publicId: "CT-1001" }, 7]);
     expect(parseFavorites(raw)).toEqual([{ publicId: "CT-1000", savedAt: at(1) }]);
+    const odd = JSON.stringify([null, "CT-1003", { publicId: 1003, savedAt: at(1) }, { publicId: "CT-1004", savedAt: "ayer" }, { publicId: "CT-1005", savedAt: at(3), extra: true }]);
+    expect(parseFavorites(odd)).toEqual([{ publicId: "CT-1005", savedAt: at(3) }]);
+    expect(parseFavorites("null")).toEqual([]);
     expect(parseFavorites(serializeFavorites([{ publicId: "CT-1002", savedAt: at(2) }]))).toEqual([{ publicId: "CT-1002", savedAt: at(2) }]);
   });
 

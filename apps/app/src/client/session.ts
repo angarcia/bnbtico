@@ -14,6 +14,7 @@ export interface SessionState {
 let state: SessionState = { status: typeof window !== "undefined" && hasStoredSession() ? "loading" : "signed-out", session: null };
 const listeners = new Set<() => void>();
 const signedOutHandlers = new Set<() => void>();
+const signedInHandlers = new Set<() => void>();
 let api: Promise<AuthApi & MfaApi> | null = null;
 
 function update(session: Session | null) {
@@ -23,6 +24,7 @@ function update(session: Session | null) {
   state = session ? { status: "signed-in", session } : { status: "signed-out", session: null };
   listeners.forEach((l) => l());
   if (wasIn && !session) signedOutHandlers.forEach((h) => h());
+  if (!wasIn && session) signedInHandlers.forEach((h) => h());
 }
 
 /** La cuenta (carga supabase-js la primera vez). */
@@ -50,6 +52,12 @@ export function sessionState(): SessionState {
 export function onSignedOut(handler: () => void): () => void {
   signedOutHandlers.add(handler);
   return () => void signedOutHandlers.delete(handler);
+}
+
+/** Se llama al ingresar y al abrir la app con una sesión guardada (una vez leída). */
+export function onSignedIn(handler: () => void): () => void {
+  signedInHandlers.add(handler);
+  return () => void signedInHandlers.delete(handler);
 }
 
 function subscribe(listener: () => void) {

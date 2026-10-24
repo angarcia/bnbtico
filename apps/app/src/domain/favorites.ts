@@ -1,6 +1,6 @@
 // Favoritos (fase 3): se guardan en el teléfono sin cuenta; con sesión se sincronizan con la tabla `favorites`.
-// Aquí solo la forma de lo guardado y las operaciones puras (añadir, quitar, mezclar).
-import * as z from "zod/mini";
+// Aquí solo la forma de lo guardado y las operaciones puras (añadir, quitar, mezclar). Sin zod: este módulo entra en el
+// JS que hidrata la ficha SSR (el corazón) y zod/mini sumaba ~7 KB gz allí.
 
 export const FAVORITES_KEY = "bnbtico-favoritos";
 export const MAX_FAVORITES = 100;
@@ -12,7 +12,6 @@ export interface FavoriteEntry {
 }
 
 const PUBLIC_ID = /^CT-\d{4,}$/;
-const entry = z.object({ publicId: z.string().check(z.regex(PUBLIC_ID)), savedAt: z.string() });
 
 const newestFirst = (list: FavoriteEntry[]) => [...list].sort((a, b) => (a.savedAt < b.savedAt ? 1 : a.savedAt > b.savedAt ? -1 : 0)).slice(0, MAX_FAVORITES);
 
@@ -25,9 +24,9 @@ export function parseFavorites(raw: string | null): FavoriteEntry[] {
     return [];
   }
   if (!Array.isArray(json)) return [];
-  const valid = json.flatMap((item) => {
-    const r = entry.safeParse(item);
-    return r.success && !Number.isNaN(Date.parse(r.data.savedAt)) ? [{ publicId: r.data.publicId, savedAt: r.data.savedAt }] : [];
+  const valid = json.flatMap((item: unknown) => {
+    const { publicId, savedAt } = (item ?? {}) as Record<string, unknown>;
+    return typeof publicId === "string" && PUBLIC_ID.test(publicId) && typeof savedAt === "string" && !Number.isNaN(Date.parse(savedAt)) ? [{ publicId, savedAt }] : [];
   });
   return mergeFavorites(valid, []);
 }

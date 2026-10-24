@@ -1,5 +1,6 @@
 // Supabase local para las pruebas de base: URL y claves salen de `supabase status` (o de variables si ya están puestas).
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/domain/database.types";
 import { totp } from "../contract/totp";
@@ -47,12 +48,19 @@ export async function signIn(who: keyof typeof TEST_PHONES): Promise<SupabaseCli
   return client;
 }
 
+/** Contenedor de la base de este proyecto local (`project_id` de supabase/config.toml): otra copia del repo puede tener
+ *  el suyo arrancado a la vez con otro project_id y otros puertos. */
+function dbContainer(): string {
+  const id = /^project_id\s*=\s*"([^"]+)"/m.exec(readFileSync(`${repoRoot}supabase/config.toml`, "utf8"))?.[1] ?? "bnbtico";
+  return `supabase_db_${id}`;
+}
+
 /**
  * SQL directo como `postgres` en el contenedor de Supabase local (no hay psql en el equipo). Para lo que no expone la API:
  * Vault, la cola de pg_net, el secreto TOTP del segundo factor.
  */
 export function sql(query: string): string {
-  return execFileSync("docker", ["exec", "-i", "supabase_db_bnbtico", "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-tAq"], {
+  return execFileSync("docker", ["exec", "-i", dbContainer(), "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-tAq"], {
     input: query,
     encoding: "utf8",
     stdio: ["pipe", "pipe", "pipe"],

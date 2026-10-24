@@ -3,6 +3,8 @@ import type { ListingsHarness, Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 
+const HOST = `127.0.0.1:${process.env.E2E_PORT ?? 4173}`;
+
 // Zona del propietario (pantallas 09, 10, 16 y 19) contra Supabase local, con la sesión inyectada por localStorage.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 let h: ListingsHarness;
@@ -39,7 +41,7 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", "Consultas", "Cuenta"]);
   await expect(page.getByRole("link", { name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
-  await expect(page.getByText(`127.0.0.1:4173/casa/${active.publicId}`)).toBeVisible();
+  await expect(page.getByText(`${HOST}/casa/${active.publicId}`)).toBeVisible();
   await expect(page.getByTestId("offer-left")).toHaveText("Quedan 48 de 50");
   await expect(page.getByText("5 en total")).toBeVisible();
 
@@ -83,13 +85,13 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
 
   await page.getByRole("button", { name: /Compartir ficha/ }).click();
   const shared = await page.evaluate(() => (window as unknown as { shared: { url: string; title: string }[] }).shared);
-  expect(shared).toEqual([expect.objectContaining({ url: `http://127.0.0.1:4173/casa/${active.publicId}`, title: "Casa Cocles" })]);
+  expect(shared).toEqual([expect.objectContaining({ url: `http://${HOST}/casa/${active.publicId}`, title: "Casa Cocles" })]);
 
   await page.evaluate(() => Object.defineProperty(navigator, "share", { configurable: true, value: undefined }));
   await page.getByRole("button", { name: /Compartir ficha/ }).click();
   await expect(page.getByText("Enlace copiado")).toBeVisible();
   await expect(page.locator(".swap-in.changed").first()).toHaveText("Enlace copiado");
-  expect(await page.evaluate(() => (window as unknown as { copied: string[] }).copied)).toEqual([`http://127.0.0.1:4173/casa/${active.publicId}`]);
+  expect(await page.evaluate(() => (window as unknown as { copied: string[] }).copied)).toEqual([`http://${HOST}/casa/${active.publicId}`]);
 
   // Una casa que no está activa no se comparte: su enlace no funcionaría.
   await page.goto(`/propietario/casas/${review.id}`);

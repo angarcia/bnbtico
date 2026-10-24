@@ -71,6 +71,11 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       return l && l.status === "active" ? toPublic(l) : null;
     },
 
+    async getManyPublic(publicIds) {
+      const wanted = new Set(publicIds);
+      return active().filter((l) => wanted.has(l.publicId)).map(toPublic);
+    },
+
     async linkState(publicId): Promise<LinkState> {
       const l = db.byPublicId(publicId);
       if (!l) return null;
