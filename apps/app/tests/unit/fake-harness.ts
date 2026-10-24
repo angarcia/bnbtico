@@ -1,14 +1,16 @@
 import { FakeDb } from "../../src/data/fake/db";
 import { createFakeAdmin } from "../../src/data/fake/admin";
+import { createFakeCalendar } from "../../src/data/fake/calendar";
 import { createFakeFavorites, createFakeInquiries } from "../../src/data/fake/inquiries";
 import { createFakeListings } from "../../src/data/fake/listings";
 import { createFakeOwnerListings } from "../../src/data/fake/owner";
 import { createFakePhotos } from "../../src/data/fake/photos";
-import { COMPLETE, type InquiriesHarness, type SeedOwner } from "../contract/harness";
+import { applyChange } from "../../src/domain/calendar";
+import { COMPLETE, type CalendarHarness, type SeedOwner } from "../contract/harness";
 
 export const FAKE_SUPABASE_URL = "http://supabase.test";
 
-export function fakeHarness(db = new FakeDb()): InquiriesHarness & { db: FakeDb } {
+export function fakeHarness(db = new FakeDb()): CalendarHarness & { db: FakeDb } {
   const owners: Record<SeedOwner, string> = {
     owner: db.addProfile({ fullName: "Yorleny Prueba", phone: "+50687770001", phoneVerified: true, isAdmin: false }).id,
     other: db.addProfile({ fullName: "Ana Prueba", phone: "+50688881234", phoneVerified: true, isAdmin: false }).id,
@@ -19,6 +21,13 @@ export function fakeHarness(db = new FakeDb()): InquiriesHarness & { db: FakeDb 
     db,
     inquiries: (who) => createFakeInquiries(db, as(who)),
     favorites: (who) => createFakeFavorites(db, as(who)),
+    calendar: (who) => createFakeCalendar(db, as(who)),
+    async reopenDue(today) {
+      return db.reopenDue(today);
+    },
+    async putDay(listingId, row) {
+      db.days.set(listingId, applyChange(db.days.get(listingId) ?? [], null, { days: [row.day], available: row.available, ...(row.specialPriceCrc === null ? {} : { priceCrc: row.specialPriceCrc }) }));
+    },
     phone: (who) => db.profiles.get(owners[who])!.phone,
     async backdateInquiry(id, days) {
       const i = db.inquiries.find((x) => x.id === id)!;

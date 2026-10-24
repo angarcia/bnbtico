@@ -2,6 +2,7 @@
 // listings_protect, política listings_owner_delete y RPCs set_listing_available y submit_listing). Guardar una pantalla
 // valida con planStep, como el adaptador PostgREST.
 import type { OwnerListingsApi } from "../../domain/api";
+import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import { inCostaRica } from "../../domain/geo";
@@ -111,10 +112,12 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       touch(l, { status: "review", reviewNote: null });
     },
 
-    async setAvailable(id, available) {
+    async setAvailable(id, available, reopenAt = null) {
       const l = own(id);
-      if (!l || l.status !== "active") throw new DomainError("Solo puede cambiar la disponibilidad de una casa activa.", "validation");
-      touch(l, { available });
+      if (!l) throw new DomainError(CALENDAR_MESSAGES.notActive, "validation");
+      const next = availabilityUpdate(l, available, reopenAt, db.today());
+      if ("error" in next) throw new DomainError(next.error, "validation");
+      touch(l, next);
     },
 
     async reopenForEdit(id) {
@@ -133,6 +136,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       if (refusal) throw new DomainError(refusal, l ? "validation" : "not_found");
       db.listings.delete(id);
       db.photos = db.photos.filter((p) => p.listingId !== id);
+      db.days.delete(id);
     },
   };
 }

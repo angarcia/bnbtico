@@ -6,7 +6,7 @@ import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { ALL_PROVINCES, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
-import { fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
+import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 
 const PUBLIC_COLUMNS =
   "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, reopen_at, created_at, updated_at, owner_name, owner_whatsapp_verified, photos";
@@ -64,6 +64,12 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       const { count, error } = await db.from("listings_public").select("id", { count: "exact", head: true });
       if (error) throw toDomainError(error);
       return count ?? 0;
+    },
+
+    async getPublicDays(publicId) {
+      const { data, error } = await db.rpc("public_listing_days", { p_public_id: publicId });
+      if (error) throw toDomainError(error);
+      return data.map(fromDayRow);
     },
 
     async sitemap() {

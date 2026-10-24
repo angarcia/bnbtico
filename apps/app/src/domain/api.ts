@@ -1,6 +1,7 @@
 // Interfaces de datos de la app. Dos implementaciones: el adaptador PostgREST (único módulo que importa supabase-js)
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
+import type { CalendarChange, CalendarDay } from "./calendar";
 import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { VariantSize } from "./image";
@@ -24,6 +25,9 @@ export interface PublicListingsApi {
   sitemap(): Promise<SitemapEntry[]>;
   /** Cuántas casas hay activas (plazas ocupadas de la oferta de lanzamiento). */
   countActive(): Promise<number>;
+  /** Días que difieren del habitual (ocupados o con ★) de una casa activa, de hoy (Costa Rica) a hoy + 365, en orden.
+   *  `[]` si la casa no está publicada. RPC public_listing_days. */
+  getPublicDays(publicId: string): Promise<CalendarDay[]>;
 }
 
 /**
@@ -53,8 +57,12 @@ export interface OwnerListingsApi {
   submit(id: string): Promise<void>;
   /** Activa, con cambios pedidos o rechazada → borrador (deja de verse hasta la nueva aprobación). */
   reopenForEdit(id: string): Promise<void>;
-  /** Solo con la casa activa. */
-  setAvailable(id: string, available: boolean): Promise<void>;
+  /**
+   * «Disponible para consultas», solo con la casa activa (RPC set_listing_available). Al cerrar, `reopenAt` opcional
+   * (`YYYY-MM-DD`, de mañana a hoy + 365): esa noche la base la abre sola. Abrir a mano borra la fecha; una fecha al abrir
+   * se rechaza. Ninguna de las dos cosas cambia el estado de la casa.
+   */
+  setAvailable(id: string, available: boolean, reopenAt?: string | null): Promise<void>;
   /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
 }
@@ -99,6 +107,18 @@ export interface AdminListingsApi {
   get(id: string): Promise<QueueItem | null>;
   /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
+}
+
+/**
+ * Calendario del propietario (fase 4). Las filas de listing_days solo se escriben con la RPC save_listing_days, que
+ * valida y guarda todo o nada (mismos mensajes que CALENDAR_MESSAGES y validateChange); el fake aplica applyChange.
+ * Sin sesión, las dos fallan con «Su sesión venció. Ingrese de nuevo.» (kind `session`) antes de llegar a la red.
+ */
+export interface OwnerCalendarApi {
+  /** Los días guardados de una casa propia, de hoy (Costa Rica) a hoy + 365, en orden; `[]` si no es del usuario. */
+  days(listingId: string): Promise<CalendarDay[]>;
+  /** Guarda el cambio en todos los días a la vez o en ninguno; si la casa está activa, la ficha pública se refresca. */
+  save(listingId: string, change: CalendarChange): Promise<void>;
 }
 
 export interface ListingsApi extends PublicListingsApi, OwnerListingsApi {

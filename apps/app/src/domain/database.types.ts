@@ -453,11 +453,19 @@ isOneToOne: true
               "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"message": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
             }[]
                            },
+"public_listing_days":
+{ Args: { "p_public_id": string }; Returns: {
+              "available": boolean,"day": string,"special_price_crc": number
+            }[]
+                           },
 "purge_listing_page":
 { Args: { "p_public_id": string }; Returns: undefined
                            },
 "remove_listing_photo":
 { Args: { "p_photo": string }; Returns: string
+                           },
+"reopen_due_listings":
+{ Args: { "p_today"?: string }; Returns: number
                            },
 "reorder_listing_photos":
 { Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
@@ -465,11 +473,14 @@ isOneToOne: true
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"save_listing_days":
+{ Args: { "p_available"?: boolean,"p_days": (string)[],"p_listing": string,"p_price_crc"?: number }; Returns: undefined
+                           },
 "seed_admin":
 { Args: { "p_phone": string }; Returns: undefined
                            },
 "set_listing_available":
-{ Args: { "p_available": boolean,"p_listing": string }; Returns: undefined
+{ Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined
                            },
 "submit_listing":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]

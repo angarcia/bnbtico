@@ -1,5 +1,6 @@
 // Fake en memoria de ListingsApi. Aplica las reglas de la base que cubre la suite de contrato.
 import type { PublicListingsApi } from "../../domain/api";
+import { calendarWindow } from "../../domain/calendar";
 import { ALL_PROVINCES, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
@@ -38,7 +39,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       monthlyPriceCrc: l.monthlyPriceCrc,
       minMonths: l.minMonths,
       available: l.available,
-      reopenAt: null,
+      reopenAt: l.reopenAt,
       ownerName: owner?.fullName || "Propietario",
       ownerWhatsappVerified: owner?.phoneVerified === true,
       createdAt: l.createdAt,
@@ -91,6 +92,13 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
 
     async countActive() {
       return active().length;
+    },
+
+    async getPublicDays(publicId) {
+      const l = db.byPublicId(publicId);
+      if (!l || l.status !== "active") return [];
+      const { first, last } = calendarWindow(db.today());
+      return (db.days.get(l.id) ?? []).filter((d) => d.day >= first && d.day <= last).map((d) => ({ ...d }));
     },
 
     async sitemap() {

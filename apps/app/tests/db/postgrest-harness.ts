@@ -2,6 +2,7 @@
 // decide con review_listing; reabrir es el update a borrador que permite el trigger).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
+import { createPostgrestCalendar } from "../../src/data/postgrest/calendar";
 import { createPostgrestFavorites, createPostgrestInquiries } from "../../src/data/postgrest/inquiries";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
 import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
@@ -10,10 +11,10 @@ import { quickWriter } from "../../src/data/postgrest/session-client";
 import { SESSION_STORAGE_KEY, memoryStore } from "../../src/data/storage";
 import type { Database } from "../../src/domain/database.types";
 import { toListingUpdate } from "../../src/domain/rows";
-import { COMPLETE, type InquiriesHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
+import { COMPLETE, type CalendarHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
 import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn, signInAdmin } from "./local";
 
-export async function postgrestHarness(): Promise<InquiriesHarness> {
+export async function postgrestHarness(): Promise<CalendarHarness> {
   const service = serviceClient();
   const owners: Record<SeedOwner, SupabaseClient<Database>> = { owner: await signIn("owner"), other: await signIn("other") };
   // El admin decide con el segundo factor (aal2): sin él, review_listing lo rechaza (migración admin_aal2_y_purga).
@@ -72,6 +73,16 @@ export async function postgrestHarness(): Promise<InquiriesHarness> {
   return {
     inquiries: (who) => createPostgrestInquiries(who === "anon" ? anon : owners[who]),
     favorites: (who) => createPostgrestFavorites(who === "anon" ? anon : owners[who]),
+    calendar: (who) => createPostgrestCalendar(who === "anon" ? anon : owners[who]),
+    async reopenDue(today) {
+      const { data, error } = await service.rpc("reopen_due_listings", { p_today: today });
+      fail("reabrir casas", error);
+      return data!;
+    },
+    async putDay(listingId, row) {
+      const { error } = await service.from("listing_days").upsert({ listing_id: listingId, day: row.day, available: row.available, special_price_crc: row.specialPriceCrc });
+      fail("escribir día", error);
+    },
     phone: (who) => TEST_PHONES[who],
     async backdateInquiry(id, days) {
       const { data } = await service.from("inquiries").select("created_at, updated_at").eq("id", id).single();

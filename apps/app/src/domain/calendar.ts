@@ -62,6 +62,9 @@ function toUtc(date: string): number | null {
   return check.getUTCMonth() === mo - 1 && check.getUTCDate() === d ? t : null;
 }
 
+/** `YYYY-MM-DD` de una fecha que existe. */
+export const isIsoDate = (date: string): boolean => toUtc(date) !== null;
+
 const fromUtc = (t: number) => new Date(t).toISOString().slice(0, 10);
 
 /** La fecha `n` días después (o antes) de `date`, que debe ser válida. */

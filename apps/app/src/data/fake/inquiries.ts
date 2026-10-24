@@ -38,7 +38,7 @@ const published = (db: FakeDb, publicId: string): FakeListing | undefined => {
 };
 
 export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
-  const tick = clock(db, opts.now ?? Date.now);
+  const tick = clock(db, opts.now ?? (() => db.clock()));
 
   return {
     async create(publicId, draft) {
@@ -111,7 +111,7 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
 }
 
 export function createFakeFavorites(db: FakeDb, opts: Opts): FavoritesApi {
-  const tick = clock(db, opts.now ?? Date.now);
+  const tick = clock(db, opts.now ?? (() => db.clock()));
 
   function insert(uid: string, publicId: string): boolean {
     const l = published(db, publicId);

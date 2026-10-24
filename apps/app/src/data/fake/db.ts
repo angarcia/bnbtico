@@ -1,7 +1,9 @@
 // Base en memoria del fake: mismas tablas que importan a la app y las mismas reglas de visibilidad que la vista
 // listings_public y la función listing_link_state. Sirve a las pruebas unitarias, a la prueba HTTP del worker y a
 // la suite de contrato (que lo compara con PostgREST).
+import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/geo";
+import { costaRicaToday } from "../../domain/inquiry";
 import { emptyDraft, type ListingDraft, type ListingStatus } from "../../domain/listing";
 
 export interface FakeProfile {
@@ -26,6 +28,7 @@ export interface FakeListing extends Omit<ListingDraft, "photoCount"> {
   ownerId: string;
   status: ListingStatus;
   available: boolean;
+  reopenAt: string | null;
   reviewNote: string | null;
   reviewedAt: string | null;
   whatsappPhone: string;
@@ -75,6 +78,10 @@ export class FakeDb {
   photos: FakePhoto[] = [];
   inquiries: FakeInquiry[] = [];
   favorites: FakeFavorite[] = [];
+  /** listing_days: por casa, solo los días que difieren del habitual, en orden. */
+  readonly days = new Map<string, CalendarDay[]>();
+  /** Reloj de las reglas con fecha (consultas, calendario, reapertura); «hoy» es el de Costa Rica con este reloj. */
+  clock: () => number = () => Date.now();
   /** Storage en memoria: bucket `listings`, nombre del objeto → metadatos. */
   readonly objects = new Map<string, FakeObject>();
   /** Sesiones abiertas (token → usuario), como auth.sessions: cerrar sesión las borra. */
@@ -116,6 +123,7 @@ export class FakeDb {
       ownerId,
       status: "draft",
       available: true,
+      reopenAt: null,
       reviewNote: null,
       reviewedAt: null,
       whatsappPhone: this.profiles.get(ownerId)?.phone ?? "",
@@ -125,6 +133,23 @@ export class FakeDb {
     };
     this.listings.set(listing.id, listing);
     return listing;
+  }
+
+  today(): string {
+    return costaRicaToday(this.clock());
+  }
+
+  /** reopen_due_listings: abre a consultas las casas cuya fecha de reapertura llegó, sin tocar su estado ni sus días. */
+  reopenDue(today: string = this.today()): number {
+    let n = 0;
+    for (const l of this.listings.values()) {
+      const next = reopenIfDue(l, today);
+      if (next !== l) {
+        Object.assign(l, { available: next.available, reopenAt: next.reopenAt, updatedAt: this.now() });
+        n += 1;
+      }
+    }
+    return n;
   }
 
   photosOf(listingId: string): FakePhoto[] {
@@ -147,6 +172,7 @@ export class FakeDb {
     this.objects.clear();
     this.inquiries = [];
     this.favorites = [];
+    this.days.clear();
   }
 }
 

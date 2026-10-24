@@ -1,5 +1,6 @@
 // Mapeo tipado entre filas de la base y objetos del dominio, en un solo sitio.
 // `acceptsNightly` se lee igual en las dos vistas: la columna es not null, y solo `true` cuenta como vacacional.
+import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
 import { photoSrcSet, variantPath } from "./image";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type MonthlyMode, type Photo, type PublicListing } from "./listing";
@@ -81,6 +82,7 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
     monthlyPriceCrc: num(row.monthly_price_crc),
     minMonths: num(row.min_months),
     available: row.available !== false,
+    reopenAt: row.reopen_at ?? null,
     reviewNote: row.review_note ?? null,
     reviewedAt: row.reviewed_at ?? null,
     whatsappPhone: row.whatsapp_phone ?? "",
@@ -128,3 +130,10 @@ export function fromPublicRow(row: PublicRow, url: PhotoUrl): PublicListing {
   };
 }
 
+
+/** Una fila de listing_days (o de public_listing_days). */
+export const fromDayRow = (r: { day: string; available: boolean; special_price_crc: number | null }): CalendarDay => ({
+  day: r.day,
+  available: r.available,
+  specialPriceCrc: r.special_price_crc,
+});

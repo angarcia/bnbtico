@@ -101,3 +101,16 @@ export interface InquiriesHarness extends ListingsHarness {
   /** `n` consultas de `who` hechas en las últimas horas a `n` casas activas nuevas del otro propietario (como el servicio). */
   seedContacts(who: SeedOwner, n: number): Promise<void>;
 }
+
+// ---------- Calendario (fase 4) ----------
+import type { OwnerCalendarApi } from "../../src/domain/api";
+import type { CalendarDay } from "../../src/domain/calendar";
+
+export interface CalendarHarness extends InquiriesHarness {
+  /** Calendario con la sesión de esa persona (o sin sesión). */
+  calendar(who: Persona): OwnerCalendarApi;
+  /** La reapertura nocturna (reopen_due_listings) con ese «hoy»; devuelve cuántas casas abrió (en toda la base). */
+  reopenDue(today: string): Promise<number>;
+  /** Escribe una fila de listing_days saltándose las reglas (como el servicio), p. ej. fuera de la ventana. */
+  putDay(listingId: string, day: CalendarDay): Promise<void>;
+}

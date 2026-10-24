@@ -4,7 +4,7 @@ import { REVIEW_MESSAGES, applyDecision, queueBadge, reviewNoteRefusal, splitQue
 
 const item = (id: string, patch: Partial<Listing>): QueueItem => ({
   ownerName: "Ana",
-  listing: { ...emptyDraft(), id, publicId: `CT-${id}`, ownerId: "o", status: "review", available: true, reviewNote: null, reviewedAt: null, whatsappPhone: "", createdAt: "2026-10-01", updatedAt: "2026-10-01", photos: [], ...patch },
+  listing: { ...emptyDraft(), id, publicId: `CT-${id}`, ownerId: "o", status: "review", available: true, reopenAt: null, reviewNote: null, reviewedAt: null, whatsappPhone: "", createdAt: "2026-10-01", updatedAt: "2026-10-01", photos: [], ...patch },
 });
 
 describe("revisión del admin", () => {

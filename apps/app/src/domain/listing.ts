@@ -95,6 +95,8 @@ export interface Listing extends ListingDraft {
   ownerId: string;
   status: ListingStatus;
   available: boolean;
+  /** Fecha de reapertura automática (`YYYY-MM-DD`) de una casa cerrada a consultas; null = sin fecha o abierta. */
+  reopenAt: string | null;
   reviewNote: string | null;
   /** Momento de la última decisión del admin; un borrador con fecha fue una casa publicada o revisada (no se descarta). */
   reviewedAt: string | null;

@@ -1,3 +1,11 @@
+## 2026-10-23 · Fase 4, ticket 02: calendario y reapertura en la base y la API
+
+- **Días y tarifas solo con RPCs.** Fuera las políticas `days_owner_write` y `rates_owner_write` y los grants de escritura (insert, update, delete, truncate) de `listing_days` **y también de `listing_rates`**, aunque las tarifas no se usan en v1: nadie escribe por REST filas sin validar. Los días se guardan con `save_listing_days` (todo o nada, ventana hoy CR … +365, precio de 1 a 100 000 000, solo diferencias). La lectura del propietario filtra por dueño con un join a `listings` (la RLS deja leer a cualquiera los días de una casa activa); la pública es `public_listing_days`.
+- **Mensajes nuevos**, ya en `CALENDAR_MESSAGES` desde el ticket 01 y copiados tal cual en la migración: «Esta casa se alquila solo por mes: no lleva precio por noche.» (precio en una casa solo mensual) y «La fecha de reapertura solo se pone al cerrar la casa.» (fecha con `p_available = true`).
+- **Una purga por guardado:** `save_listing_days` llama a `purge_listing_page` una vez al final si la casa está activa; sin trigger por fila en `listing_days` (30 días = una petición). Cerrar o abrir purga por el trigger de `listings`, como antes.
+- **`pg_cron`** (`create extension if not exists pg_cron with schema pg_catalog`): el trabajo `bnbtico-reabrir-casas` a las `0 6 * * *` (00:00 en Costa Rica) llama a `reopen_due_listings()`, que solo puede ejecutar `service_role`. **La reapertura nunca toca el estado:** una casa oculta o en revisión sigue igual, solo deja de estar cerrada a consultas. `set_listing_available` pasa a tres argumentos (`p_reopen_at` opcional, de mañana a +365; abrir a mano borra la fecha).
+- `Listing` (propietario) gana `reopenAt`, para que el detalle pueda decir «Cerrada hasta el …» (ticket 05).
+
 ## 2026-10-23 · Portada «Muy pronto»: logo claro sobre la foto
 
 - Decisión de Daniel: en la portada «Muy pronto» (`apps/web` en `main` y `apps/app/public/portada.html`) el logo va en su versión **clara (crema)**, no en la terracota que usa el resto del diseño v1. Sobre la foto de Playa Negra con la franja oscura se lee mejor; es el caso «crema sobre verde/oscuro» que prevé `design/logo/README.md`. En el resto de pantallas (fondos claros) sigue el terracota.
