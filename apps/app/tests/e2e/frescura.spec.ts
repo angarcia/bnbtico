@@ -113,7 +113,8 @@ test("el worker local cachea la ficha; guardar el calendario, cerrar y la reaper
   await panel.getByRole("button", { name: "Ocupado" }).click();
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
   await expect.poll(() => freshHtml(casa.publicId), { timeout: 5000, intervals: [250] }).toContain(dayJson(on(12), false));
-  expect(statusesAfter(from), "la purga de pg_net llegó al worker con 200").toContain("200");
+  // pg_net escribe la respuesta cuando la procesa, a veces después de que la ficha nueva ya se vea: se espera.
+  await expect.poll(() => statusesAfter(from), { message: "la purga de pg_net llegó al worker con 200" }).toContain("200");
 
   // 3. Cerrar a consultas con fecha (trigger de listings) → «Calendario cerrado» en el HTML.
   const reopen = addDays(today(), 9);

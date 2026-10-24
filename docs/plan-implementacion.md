@@ -31,6 +31,10 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ## Estado (2026-10-23, noche)
 
+**Fase 4 construida** sobre la app nueva (tickets 01–06 en `.scratch/fase-4/issues/`, solo en local y en `develop` sin desplegar): calendario del propietario (pestaña Calendario, selección primero, noches ocupadas y precio ★ por día, guardado todo o nada por la RPC `save_listing_days`, también con la casa en revisión), «Disponible para consultas» con fecha de reapertura opcional y reapertura nocturna con `pg_cron` (`bnbtico-reabrir-casas`, 00:00 de Costa Rica), y la sección «Disponibilidad» en la ficha pública (ocupados, cifra solo en los ★, «Calendario cerrado» con la fecha), que se monta tras hidratar y se refresca en segundos con la purga de cada cambio. Reglas de `tests/prototype/calendar.cjs` portadas a Vitest (sin temporadas, fin de semana ni «Configurar tarifas»). Recorrido completo en Playwright (`tests/e2e/fase4.spec.ts`). **Pendiente:** (1) aplicar la migración `20261024024441_fase4_calendario` en `bnbtico-pruebas` (habilita `pg_cron`) y comprobar el trabajo en Database → Cron; (2) comprobar los secretos de Vault de la purga; (3) desplegar `develop`; (4) que Daniel pase `docs/pruebas-manuales-fase-4.md` desde el teléfono (iPhone y Android), incluida la reapertura a medianoche. Lo de las fases 3 y R sigue pendiente igual (abajo).
+
+### Estado de la fase 3 (2026-10-23)
+
 **Fase 3 construida** sobre la app nueva (tickets 01–06 y el cierre 08 en `.scratch/fase-3/issues/`, solo en local y en `develop` sin desplegar): hoja de contacto en la ficha con el mensaje redactado, cuenta obligatoria para contactar con vuelta a la hoja, consulta registrada por la RPC `create_inquiry` (que es lo único que entrega el número de la casa) y `wa.me` con el mensaje, Mis consultas del propietario con «Nueva», filtro por casa y contador en Inicio y en la pestaña, y favoritos sin cuenta sincronizados con la cuenta al ingresar. Recorrido completo en Playwright (`tests/e2e/fase3.spec.ts`). **WhatsApp distinto por casa aplazado** (ticket 07, decisión de Daniel): cada casa usa el WhatsApp de la cuenta. **Pendiente:** (1) aplicar la migración `20261023230813_fase3_consultas` en `bnbtico-pruebas` y desplegar `develop`; (2) que Daniel pase `docs/pruebas-manuales-fase-3.md` desde el teléfono (iPhone y Android). Lo de la fase R sigue pendiente igual (abajo).
 
 ### Estado de la fase R (2026-10-23)
@@ -93,6 +97,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 ### Fase 4 · Calendario del propietario
 **Objetivo:** que el owner mantenga disponibilidad y precios y la ficha lo refleje.
 **Incluye:** el calendario simple decidido el 2026-10-20 (`decisiones.md`): marcar noches ocupadas y cambiar el precio de fechas concretas, no disponible con fecha de reapertura; la ficha pública muestra solo los días con precio distinto al base. Temporadas, fin de semana y «Configurar tarifas» del prototipo (`docs/design.md`) quedan fuera de v1.
+**Especificación y tickets:** `.scratch/fase-4/` (construida el 2026-10-23; plan manual en `docs/pruebas-manuales-fase-4.md`).
 **Hecho cuando:** un cambio hecho en el móvil del owner se ve en la ficha pública al instante y las reglas del prototipo (`tests/prototype/calendar.cjs`) pasan portadas a Vitest.
 
 ### Fase 5 · Suscripción, estados y avisos
