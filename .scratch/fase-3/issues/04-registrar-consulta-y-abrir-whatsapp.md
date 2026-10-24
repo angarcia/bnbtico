@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Immediate pressed/loading state (< 50 ms), single flight (double tap does not create two calls), DB message in the sheet on error («Esta es su propia casa.», not available, rate limit, offline «Sin conexión…»).
 - [ ] `location.assign(waUrl(phone, message))` after the RPC; the draft is cleared on success; returning to the app (back) shows the listing with the sheet closed.
