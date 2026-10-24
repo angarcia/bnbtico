@@ -34,7 +34,7 @@ const withKeyboard = (el: EventTarget | null) => el instanceof HTMLTextAreaEleme
 
 const KB_RELEASE_MS = 400;
 
-type Status = { kind: "idle" } | { kind: "sending" } | { kind: "soon" } | { kind: "error"; message: string; field?: InquiryField };
+type Status = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message: string; field?: InquiryField };
 
 /** Bloquea el scroll y deja inerte la página mientras la hoja está abierta. */
 function useModal() {
@@ -121,17 +121,26 @@ export function ContactSheet({ listing, onClose, navigate }: { listing: PublicLi
     kbTimer.current = setTimeout(() => setKb(false), KB_RELEASE_MS);
   }
 
+  // Un solo vuelo: el estado de React llega en el siguiente render y un doble toque lo adelantaría.
+  const inFlight = useRef(false);
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (status.kind === "sending") return;
+    if (inFlight.current) return;
     const fields = { arrival: draft.arrival, departure: draft.departure, people: draft.people, message: draft.message };
     const problem = validateInquiryDraft(fields, today);
     if (problem) return setStatus({ kind: "error", message: problem.message, field: problem.field });
+    inFlight.current = true;
     store.setItem(key, storeContactDraft(draft, true, Date.now()));
     setStatus({ kind: "sending" });
     const outcome = await proceedToWhatsApp({ publicId: listing.publicId, draft: fields, navigate });
-    if (outcome.kind === "soon") setStatus({ kind: "soon" });
-    else if (outcome.kind === "error") setStatus({ kind: "error", message: outcome.message });
+    inFlight.current = false;
+    if (outcome.kind === "error") setStatus({ kind: "error", message: outcome.message });
+    else if (outcome.kind === "sent") {
+      // Consulta registrada y WhatsApp abriéndose: lo escrito ya no hace falta y, al volver (atrás o desde la app de
+      // WhatsApp), la ficha se ve con la hoja cerrada.
+      store.removeItem(key);
+      onClose();
+    }
   }
 
   const invalid = (f: InquiryField) => (status.kind === "error" && status.field === f ? true : undefined);
@@ -224,13 +233,13 @@ export function ContactSheet({ listing, onClose, navigate }: { listing: PublicLi
               {status.message}
             </p>
           ) : null}
-          {status.kind === "soon" ? (
-            <p className="note note-sun" role="status">
-              Disponible muy pronto. Lo que escribió queda guardado.
-            </p>
-          ) : null}
-          <button className="btn btn-wa" type="submit" aria-disabled={status.kind === "sending" || undefined}>
-            <I.wa size={20} /> Abrir WhatsApp
+          <button
+            className={`btn btn-wa${status.kind === "sending" ? " is-sending" : ""}`}
+            type="submit"
+            aria-disabled={status.kind === "sending" || undefined}
+            aria-busy={status.kind === "sending" || undefined}
+          >
+            <I.wa size={20} /> {status.kind === "sending" ? "Abriendo WhatsApp…" : "Abrir WhatsApp"}
           </button>
           {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}
           <span className="consent">{name} verá su nombre y su WhatsApp.</span>

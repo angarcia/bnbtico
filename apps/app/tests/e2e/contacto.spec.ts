@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
-import { sql } from "../db/local";
+import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
+import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
 
 // Hoja de contacto (fase 3, ticket 02) en la ficha del servidor y en la de la SPA. «Abrir WhatsApp» valida y guarda; con
-// sesión, hasta el ticket 04, responde «Disponible muy pronto» (sin sesión lleva a Ingresar: contacto-cuenta.spec.ts).
+// sesión registra la consulta y abre WhatsApp (contacto-whatsapp.spec.ts); sin sesión lleva a Ingresar (contacto-cuenta.spec.ts).
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 const TITLE = "Casa Playa Negra";
 let casa: Seeded;
@@ -94,12 +95,9 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas, resp
   await s.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect(s.locator('.note[role="alert"]')).toHaveText("Indique la llegada y la salida, o deje las dos vacías.");
 
-  // Válido, con sesión: hasta el ticket 04, «Disponible muy pronto» y lo escrito queda guardado.
+  // Al corregir, el aviso se va.
   await s.getByLabel("Salida (opcional)").fill(b);
   await expect(s.locator('.note[role="alert"]')).toHaveCount(0);
-  await s.getByRole("button", { name: "Abrir WhatsApp" }).click();
-  await expect(s.getByRole("status")).toHaveText("Disponible muy pronto. Lo que escribió queda guardado.");
-  await page.screenshot({ path: "test-results/contacto-pronto.png" });
 
   // Escape cierra y el foco vuelve al botón; al volver a abrir, lo escrito sigue.
   await page.keyboard.press("Escape");
@@ -187,7 +185,8 @@ test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page }) => {
   await expect(message(page)).toHaveValue(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
   await sheet(page).getByLabel("Personas (opcional)").fill("2");
   await expect(message(page)).toHaveValue(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`);
-  await sheet(page).getByRole("button", { name: "Abrir WhatsApp" }).click();
-  await expect(sheet(page).getByRole("status")).toHaveText("Disponible muy pronto. Lo que escribió queda guardado.");
   await page.screenshot({ path: "test-results/contacto-spa.png" });
+  const wa = await catchWhatsApp(page);
+  await sheet(page).getByRole("button", { name: "Abrir WhatsApp" }).click();
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`)]);
 });

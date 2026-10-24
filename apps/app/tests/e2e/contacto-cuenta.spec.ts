@@ -5,6 +5,7 @@ import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
 import { enterCode, injectSession } from "./helpers/session";
+import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
 
 // Fase 3, ticket 03: sin sesión, «Abrir WhatsApp» guarda lo escrito, pasa por Ingresar / Crear cuenta y vuelve a la ficha
 // con la hoja abierta y lo mismo escrito. Contra Supabase local con los números de prueba (código 123456).
@@ -91,12 +92,14 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   await expect(s.getByLabel("Personas (opcional)")).toHaveValue("4");
   await expect(s.getByText(SIGNED_OUT)).toHaveCount(0);
   await page.screenshot({ path: "test-results/contacto-vuelta.png" });
-  // Con sesión, hasta el ticket 04: «muy pronto», sin salir de la ficha.
+  // Ya con sesión (ticket 04): registra la consulta y abre WhatsApp con el número de la casa y lo escrito.
+  const wa = await catchWhatsApp(page);
   await s.getByRole("button", { name: "Abrir WhatsApp" }).click();
-  await expect(s.getByRole("status")).toHaveText("Disponible muy pronto. Lo que escribió queda guardado.");
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, "Hola, ¿aceptan perros pequeños?")]);
+  // Volver atrás desde WhatsApp: la ficha con la hoja cerrada (el parámetro se quitó con replace y lo escrito se borró).
+  await page.goBack();
   await expect(page).toHaveURL(listingUrl());
-  // Cerrar y volver atrás no reabre la hoja (el parámetro se quitó con replace).
-  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(s).toHaveCount(0);
 });
 

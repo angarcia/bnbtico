@@ -1,3 +1,9 @@
+## 2026-10-23 · Fase 3, ticket 04: registrar la consulta y abrir WhatsApp
+
+- **Un toque, una consulta:** con sesión guardada, «Abrir WhatsApp» llama directamente a `create_inquiry` (sin comprobar antes la sesión aparte: una petición menos); si la base pide ingresar o la sesión venció, a Ingresar con lo escrito guardado y la vuelta a la hoja. Al responder, `wa.me` en la misma pestaña.
+- **Al salir hacia WhatsApp la hoja se cierra y lo escrito se borra:** quien vuelve (atrás o desde la app) ve la ficha, no una hoja «enviando». Repetir en 7 días renueva la misma consulta.
+- **Errores:** el mensaje de la base tal cual; si no hay respuesta de la base (sin red o sin poder bajar el trozo de datos), «Sin conexión. Revise su internet e intente de nuevo.».
+
 ## 2026-10-23 · Fase 3, ticket 06: favoritos en el teléfono, corazón fuera del enlace
 
 - **Tarjeta de Explorar:** el corazón va encima de la foto (arriba a la derecha, diseño 01) pero fuera del enlace de la tarjeta (un botón dentro de un enlace no es HTML válido ni accesible). La píldora «No disponible», que ocupaba esa esquina, pasa a la izquierda debajo de «Mensual».

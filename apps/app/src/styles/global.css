@@ -439,6 +439,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 /* ---------- Hoja de contacto (pantalla 04): sobre la ficha atenuada, 28 px arriba ---------- */
 /* Antes de hidratar el botón es una caja del mismo tamaño que todavía no responde: se ve, pero apagado. */
 .btn-wa.is-pending{opacity:.6}
+/* «Abriendo WhatsApp…»: la consulta se está registrando; el toque se nota al momento y no admite otro. */
+.btn-wa.is-sending{opacity:.8;cursor:progress}
 .cta-note{text-align:center;margin-top:-4px}
 html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet-backdrop{position:fixed;inset:0;background:rgba(28,43,42,.35);z-index:30;animation:fade-in 200ms ease-out backwards}

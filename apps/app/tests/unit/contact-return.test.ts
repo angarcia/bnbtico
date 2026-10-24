@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { contactDraftKey, contactNext, listingInNext, shouldReopenContact, signInToContact } from "../../src/domain/contact-return";
 import { memoryStore } from "../../src/data/storage";
 import { proceedToWhatsApp } from "../../src/shared/contact-flow";
-import type { InquiryDraft } from "../../src/domain/inquiry";
+import { INQUIRY_MESSAGES, type InquiryDraft } from "../../src/domain/inquiry";
+import { DomainError } from "../../src/domain/errors";
 
 describe("vuelta a la hoja de contacto tras ingresar", () => {
   it("la ficha con la hoja abierta y el enlace a Ingresar que vuelve a ella (pasando por safeNext)", () => {
@@ -29,13 +30,16 @@ describe("vuelta a la hoja de contacto tras ingresar", () => {
 });
 
 describe("«Abrir WhatsApp» con un borrador válido", () => {
-  const draft: InquiryDraft = { arrival: null, departure: null, people: 2, message: "Hola" };
+  const draft: InquiryDraft = { arrival: "2026-12-20", departure: "2026-12-27", people: 2, message: "Hola, ¿tienen parqueo? Gracias & saludos" };
+  const signedIn = () => true;
 
-  it("sin sesión: va a Ingresar con la vuelta a la hoja y deja la página", async () => {
+  it("sin sesión: va a Ingresar con la vuelta a la hoja y deja la página, sin registrar nada", async () => {
     const navigate = vi.fn();
-    const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, signedIn: async () => false });
+    const create = vi.fn();
+    const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, hasSession: () => false, create });
     expect(outcome).toEqual({ kind: "leaving" });
     expect(navigate).toHaveBeenCalledExactlyOnceWith("/cuenta?next=%2Fcasa%2FCT-1042%3Fcontacto%3D1");
+    expect(create).not.toHaveBeenCalled();
   });
 
   it("sin sesión guardada en el dispositivo lo sabe sin cargar supabase-js", async () => {
@@ -44,9 +48,51 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
     expect(navigate).toHaveBeenCalledOnce();
   });
 
-  it("con sesión: sigue «muy pronto» hasta el ticket 04, sin navegar", async () => {
+  it("con sesión: registra la consulta y abre wa.me con el número de la casa (solo dígitos) y el texto codificado", async () => {
     const navigate = vi.fn();
-    expect(await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, signedIn: async () => true })).toEqual({ kind: "soon" });
+    const open = vi.fn();
+    const created = vi.fn();
+    const create = vi.fn(async () => ({ inquiryId: "i1", whatsappPhone: "+506 6000-1234" }));
+    const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, hasSession: signedIn, create, open, created });
+    expect(outcome).toEqual({ kind: "sent" });
+    expect(create).toHaveBeenCalledExactlyOnceWith("CT-1042", draft);
+    expect(open).toHaveBeenCalledExactlyOnceWith(`https://wa.me/50660001234?text=${encodeURIComponent(draft.message)}`);
+    expect(created).toHaveBeenCalledExactlyOnceWith("CT-1042");
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("si la base dice que no: su mensaje, y nada se abre", async () => {
+    const open = vi.fn();
+    const created = vi.fn();
+    const create = vi.fn(async () => {
+      throw new DomainError(INQUIRY_MESSAGES.ownHouse, "validation");
+    });
+    expect(await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate: vi.fn(), hasSession: signedIn, create, open, created })).toEqual({
+      kind: "error",
+      message: "Esta es su propia casa.",
+    });
+    expect(open).not.toHaveBeenCalled();
+    expect(created).not.toHaveBeenCalled();
+  });
+
+  it("sin red (o sin poder bajar el trozo de datos): «Sin conexión…»", async () => {
+    const create = vi.fn(async () => {
+      throw new TypeError("Failed to fetch dynamically imported module");
+    });
+    expect(await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate: vi.fn(), hasSession: signedIn, create, open: vi.fn() })).toEqual({
+      kind: "error",
+      message: "Sin conexión. Revise su internet e intente de nuevo.",
+    });
+  });
+
+  it("sesión vencida o revocada (la base pide ingresar): a Ingresar con la vuelta a la hoja", async () => {
+    for (const err of [new DomainError(INQUIRY_MESSAGES.signIn, "validation"), new DomainError("Su sesión venció. Ingrese de nuevo.", "session")]) {
+      const navigate = vi.fn();
+      const open = vi.fn();
+      const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, hasSession: signedIn, open, create: async () => Promise.reject(err) });
+      expect(outcome).toEqual({ kind: "leaving" });
+      expect(navigate).toHaveBeenCalledExactlyOnceWith("/cuenta?next=%2Fcasa%2FCT-1042%3Fcontacto%3D1");
+      expect(open).not.toHaveBeenCalled();
+    }
   });
 });
