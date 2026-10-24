@@ -27,6 +27,12 @@ describe("arquitectura", () => {
     expect(offenders).toEqual([]);
   });
 
+  // La ficha pública la monta en su propio trozo (fase 4, ticket 05): sin router, Query, supabase ni la zona privada.
+  it("src/shared/month-grid.tsx solo importa React y el dominio", () => {
+    const own = imports(join(SRC, "shared/month-grid.tsx"));
+    expect(own.filter((i) => i !== "react" && !i.startsWith("../domain/"))).toEqual([]);
+  });
+
   // Hace de regla de lint (ticket 11): corre en `pnpm test` y antes de `pnpm build`, que falla si alguna aparece.
   it("nadie usa dangerouslySetInnerHTML", () => {
     const offenders = files(SRC).filter((f) => readFileSync(f, "utf8").includes("dangerouslySetInnerHTML"));

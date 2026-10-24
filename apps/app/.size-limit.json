@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Mis consultas y las pantallas que se abren desde las pestañas)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Mis consultas, el calendario y las pantallas que se abren desde las pestañas)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -22,7 +22,9 @@
       "!dist/client/assets/owner-*.js",
       "!dist/client/assets/can-*.js",
       "!dist/client/assets/image-*.js",
-      "!dist/client/assets/useMutation-*.js"
+      "!dist/client/assets/useMutation-*.js",
+      "!dist/client/assets/calendario-*.js",
+      "!dist/client/assets/calendar-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -85,6 +87,15 @@
       "dist/client/assets/consultas-*.js"
     ],
     "limit": "4 KB",
+    "gzip": true
+  },
+  {
+    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos; se precarga con las pantallas del propietario)",
+    "path": [
+      "dist/client/assets/calendario-*.js",
+      "dist/client/assets/calendar-*.js"
+    ],
+    "limit": "8 KB",
     "gzip": true
   },
   {

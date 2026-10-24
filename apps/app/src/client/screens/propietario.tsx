@@ -1,4 +1,5 @@
 // Zona del propietario (pantallas 09, 10, 16 y 19 del diseño v1): Inicio, Mis casas, detalle de una casa y «enviada».
+// El calendario (17) va en su propio trozo (screens/calendario.tsx).
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { accountQuery } from "../account";
-import { FlowHeader, Placeholder, RootHeader } from "../chrome";
+import { FlowHeader, RootHeader } from "../chrome";
 import { countNew, inquiriesQuery } from "../inquiries";
 import { activeCountQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
 import { setRole } from "../role";
@@ -318,7 +319,7 @@ function OwnerCard({ listing: l, userId }: { listing: Listing; userId: string })
       {can(l, "share") ? (
         <div className="row gap-8">
           <ShareButtonInline listing={l} />
-          <Link to="/propietario/calendario" className="btn btn-ghost grow">
+          <Link to="/propietario/calendario" search={{ casa: l.id }} className="btn btn-ghost grow">
             Calendario
           </Link>
         </div>
@@ -463,7 +464,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
       <section className="list">
         <ShareListItem listing={l} />
-        <ListItem to="/propietario/calendario" icon={<I.calendar />} title="Calendario y precios" detail="Noches ocupadas y precios por fecha · llega más adelante" />
+        {l.status !== "rejected" ? <ListItem to="/propietario/calendario" casa={l.id} icon={<I.calendar />} title="Calendario y precios" detail="Noches ocupadas y precios por fecha" /> : null}
         {l.status === "active" ? (
           <button type="button" className="list-item" onClick={edit} disabled={reopen.isPending}>
             <span className="muted-icon">
@@ -531,9 +532,9 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   );
 }
 
-function ListItem({ to, icon, title, detail }: { to: "/propietario/calendario"; icon: ReactNode; title: string; detail: string }) {
+function ListItem({ to, casa, icon, title, detail }: { to: "/propietario/calendario"; casa: string; icon: ReactNode; title: string; detail: string }) {
   return (
-    <Link to={to} className="list-item">
+    <Link to={to} search={{ casa }} className="list-item">
       <span className="muted-icon">{icon}</span>
       <span className="body">
         {title}
@@ -617,7 +618,7 @@ export function EnviadaScreen() {
         </div>
       </div>
       <div className="stack gap-10 sent-actions">
-        <Link to="/propietario/calendario" className="btn btn-primary btn-lg">
+        <Link to="/propietario/calendario" search={{ casa: id }} className="btn btn-primary btn-lg">
           Marcar las noches ocupadas
         </Link>
         <Link to="/propietario/casas" className="btn-link sent-link">
@@ -627,7 +628,3 @@ export function EnviadaScreen() {
     </div>
   );
 }
-
-// ---------- Marcadores ----------
-
-export const CalendarioScreen = () => <Placeholder title="Calendario" home="/propietario" text="Marque las noches ocupadas y los precios por fecha. Llega más adelante." />;

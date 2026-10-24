@@ -571,6 +571,56 @@ small.swap-in{display:block}
 ::view-transition-new(listing-cta){animation:vt-cta-in 340ms var(--ease-drawer) both}
 ::view-transition-old(listing-cta){animation:vt-cta-out 200ms var(--ease-out) both}
 
+/* ---------- Calendario (pantalla 17) y rejilla del mes (también la de la ficha, ticket 05) ---------- */
+.month-grid{display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+.month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.month-head{font-size:11px;font-weight:700;color:var(--muted);text-align:center}
+.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:46px;border:2px solid transparent;border-radius:12px;background:var(--state-soft);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
+.month-grid .day b{font-size:13px;font-weight:700;line-height:1.1}
+.month-grid .day-sub{font-size:9px;line-height:1.1;min-height:10px;color:var(--state-ink)}
+.month-grid .day.is-busy{background:var(--busy);color:var(--busy-ink)}
+.month-grid .day.is-busy .day-sub{color:var(--busy-ink)}
+.month-grid .day[aria-pressed="true"]{border-color:var(--brand-ink)}
+.month-grid .day.is-past{opacity:.4}
+.month-grid button.day:disabled{cursor:default}
+.month-grid button.day:active:not(:disabled){transform:scale(0.94)}
+.month-grid.is-dimmed{opacity:.6}
+.month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);padding-top:4px}
+.month-legend span{display:inline-flex;align-items:center;gap:6px}
+.month-legend .swatch{width:12px;height:12px;border-radius:4px;background:var(--state-soft)}
+.month-legend .swatch.is-busy{background:var(--busy)}
+.header-root > div:has(> .house-picker){align-items:center;flex-wrap:nowrap;gap:10px}
+.header-root:has(.house-picker) h1{font-size:28px}
+.house-picker{position:relative;min-width:0}
+.picker-pill{display:flex;align-items:center;gap:6px;min-height:40px;max-width:200px;padding:0 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);font-weight:700;font-size:13px}
+.picker-pill .ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-pill svg{transform:rotate(90deg);flex-shrink:0}
+.picker-pill[aria-expanded="true"] svg{transform:rotate(-90deg)}
+.picker-list{position:absolute;right:0;top:calc(100% + 6px);z-index:8;min-width:200px;max-width:280px;margin:0;padding:6px;list-style:none;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float);animation:fade-in 140ms var(--ease-out)}
+.picker-list li{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
+.picker-list li[aria-selected="true"]{color:var(--primary);font-weight:700;background:var(--state-soft)}
+.cal-month{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 0 -10px}
+.cal-arrow{width:40px;height:40px;color:var(--muted)}
+.cal-arrow:disabled{opacity:.3;cursor:default}
+.cal-title{font-weight:700;font-size:17px;white-space:nowrap}
+.cal-month > .small{text-align:right;font-size:12px;line-height:1.25}
+.cal-open{align-self:flex-start}
+.cal-skeleton{height:320px}
+.view:has(.cal-panel){padding-bottom:calc(var(--nav-h) + 240px + env(safe-area-inset-bottom))}
+.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));width:100%;max-width:560px;z-index:7;display:flex;flex-direction:column;gap:10px;padding:14px 20px;background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
+/* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
+.cal-panel.kb{padding-bottom:calc(14px + 320px)}
+.cal-cancel{font-size:13px;font-weight:600;color:var(--muted);min-height:32px}
+.seg{display:flex;flex:1;padding:3px;border-radius:999px;background:var(--surface-2)}
+.seg button{flex:1;min-height:38px;border-radius:999px;font-size:13px;font-weight:600;transition:background-color 120ms ease,color 120ms ease}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--primary-on);font-weight:700}
+.cal-price{display:flex;align-items:center;gap:4px;min-height:44px;padding:0 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);font-size:13px;color:var(--muted);font-weight:500}
+/* 16 px y no los 14 del diseño: con menos, el iPhone amplía la página al enfocar el campo. */
+.cal-price input:not([type=checkbox]):not([type=file]):not([type=radio]){width:104px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fg)}
+.cal-price input::placeholder{font-size:14px;font-weight:600;color:var(--muted)}
+.cal-base{min-height:32px;padding:0;font-size:13px;align-self:flex-start}
+.cal-panel .btn-lg{min-height:48px;font-size:15px}
+
 @media (prefers-reduced-motion:reduce){
   .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove,.switch span{transition-property:background-color,color,opacity}
   .btn:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}

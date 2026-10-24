@@ -23,7 +23,8 @@ const ownerScreens = () => import("./screens/propietario");
 const cuentaScreens = () => import("./screens/cuenta");
 const favoritosScreen = () => import("./screens/favoritos");
 const consultasScreen = () => import("./screens/consultas");
-type OwnerScreen = "InicioScreen" | "CasasScreen" | "CalendarioScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
+const calendarioScreen = () => import("./screens/calendario");
+type OwnerScreen = "InicioScreen" | "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 const ownerScreen = (name: OwnerScreen) => lazyRouteComponent(ownerScreens, name);
 const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreens, name);
@@ -34,6 +35,7 @@ function prefetchTabs() {
   if (storedRole() === "owner" || location.pathname.startsWith("/propietario")) {
     void ownerScreens();
     void consultasScreen();
+    void calendarioScreen();
   }
 }
 
@@ -112,6 +114,13 @@ const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "reje
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
+/** Calendario: `casa` (id de una casa propia) y `mes` (`YYYY-MM`); la pantalla elige la casa y acota el mes a la ventana. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const calendarioSearch = (params: Record<string, unknown>): { casa?: string; mes?: string } => ({
+  ...(typeof params.casa === "string" && UUID.test(params.casa) ? { casa: params.casa } : {}),
+  ...(typeof params.mes === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(params.mes) ? { mes: params.mes } : {}),
+});
+
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
 const casaSearch = (params: Record<string, unknown>): { contacto?: "1" } => (params.contacto === "1" ? { contacto: "1" } : {});
 
@@ -124,7 +133,7 @@ const routeTree = rootRoute.addChildren([
     privateRoutes.addChildren([
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario", component: ownerScreen("InicioScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", component: ownerScreen("CalendarioScreen") }),
+      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", validateSearch: calendarioSearch, component: lazyRouteComponent(calendarioScreen, "CalendarioScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/consultas", component: lazyRouteComponent(consultasScreen, "ConsultasScreen") }),
     ]),
     adminTabs.addChildren([

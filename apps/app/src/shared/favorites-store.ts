@@ -4,6 +4,7 @@
 import { useSyncExternalStore } from "react";
 import type { FavoritesApi } from "../domain/api";
 import { FAVORITES_KEY, addFavorite, isFavorite, mergeFavorites, parseFavorites, removeFavorite, serializeFavorites, type FavoriteEntry } from "../domain/favorites";
+import { toast } from "./toast";
 
 /** = SESSION_STORAGE_KEY (data/storage): ese módulo no se importa aquí para no arrastrarlo al JS de la ficha SSR. */
 export const STORED_SESSION_KEY = "bnbtico-auth";
@@ -81,16 +82,6 @@ function hasStoredSession(): boolean {
   } catch {
     return false;
   }
-}
-
-/** Aviso breve abajo (sin React: lo usan la ficha SSR y el shell). */
-function toast(message: string) {
-  const el = document.createElement("div");
-  el.className = "toast";
-  el.setAttribute("role", "status");
-  el.textContent = message;
-  document.body.append(el);
-  setTimeout(() => el.remove(), 4000);
 }
 
 /** Los adaptadores ya fallan con DomainError (mensaje en español); lo demás (no se pudo ni descargar el adaptador) es la
