@@ -145,9 +145,26 @@ function DescriptionField({ value }: { value: string }) {
     <div className="field grow-col">
       <div className="row between baseline">
         <label htmlFor="pub-description">Descripción</label>
-        <CharCount id="pub-description-count" n={n} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} hint={`mínimo ${DESCRIPTION_MIN}`} />
+        {/* Por debajo del mínimo, cuántos faltan en ocre (revisión UX N3); después, el contador normal. */}
+        {n < DESCRIPTION_MIN ? (
+          <span id="pub-description-count" className="xs num description-short" aria-live="polite">
+            {DESCRIPTION_MIN - n === 1 ? "Falta 1 carácter" : `Faltan ${DESCRIPTION_MIN - n} caracteres`}
+          </span>
+        ) : (
+          <CharCount id="pub-description-count" n={n} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} />
+        )}
       </div>
-      <textarea id="pub-description" name="description" rows={3} maxLength={DESCRIPTION_MAX} defaultValue={value} aria-describedby="pub-description-count" onChange={(e) => setN(charCount(e.currentTarget.value))} />
+      {/* Tres preguntas guía que se van al escribir; sin texto de ejemplo, que acabaría copiado en todas las fichas. */}
+      <textarea
+        id="pub-description"
+        name="description"
+        rows={3}
+        maxLength={DESCRIPTION_MAX}
+        defaultValue={value}
+        placeholder="¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?"
+        aria-describedby="pub-description-count"
+        onChange={(e) => setN(charCount(e.currentTarget.value))}
+      />
     </div>
   );
 }

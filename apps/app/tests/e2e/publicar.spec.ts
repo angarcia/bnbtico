@@ -164,7 +164,10 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   // Ticket 19: nombre de 5 a 60 y descripción de 80 a 2000, con contador.
   await title.fill("Casa");
   await expect(page.locator("#pub-title-count")).toHaveText("4 / 60 · mínimo 5");
+  // Revisión UX N3: tres preguntas guía (sin texto para copiar) y, por debajo de 80, cuántos caracteres faltan.
+  await expect(page.getByLabel("Descripción")).toHaveAttribute("placeholder", "¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa.");
+  await expect(page.locator("#pub-description-count")).toHaveText("Faltan 46 caracteres");
   await continuar(page);
   await expect(alert(page)).toHaveText("El nombre de la casa debe tener entre 5 y 60 caracteres.");
   await expect(page).toHaveURL(/\/6$/);
@@ -172,7 +175,7 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await continuar(page);
   await expect(alert(page)).toHaveText("La descripción debe tener entre 80 y 2000 caracteres.");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.");
-  await expect(page.locator("#pub-description-count")).toHaveText("93 / 2000 · mínimo 80");
+  await expect(page.locator("#pub-description-count")).toHaveText("93 / 2000");
   await expect(page.getByLabel("Nombre de la casa")).toHaveAttribute("maxlength", "60");
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
