@@ -133,6 +133,8 @@ export function CuentaScreen() {
 function EntryForm({ next }: { next?: string }) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  // Error de un campo (revisión UX A6): debajo de ese campo y con el foco en él.
+  const [fieldError, setFieldError] = useState<{ field: "phone" | "name"; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [country, setCountry] = useState(DEFAULT_COUNTRY);
   // Número sin cuenta: se pide el nombre para crearla.
@@ -141,13 +143,23 @@ function EntryForm({ next }: { next?: string }) {
   const other = country === OTHER_COUNTRY;
   const { contact, header, owner } = useContactMode(next);
 
+  function invalid(fieldName: "phone" | "name", text: string) {
+    setError(null);
+    setFieldError({ field: fieldName, message: text });
+    document.getElementById(fieldName === "phone" ? "account-phone" : "account-name")?.focus();
+  }
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const phone = newPhone ?? composePhone(country, field(fd, "phone"));
-    if (!phone) return setError(other ? "Escriba el número completo con «+» y el código de su país." : "Ese número no parece válido para el país elegido.");
+    if (newPhone && !field(fd, "name").trim()) return invalid("name", "Escriba su nombre.");
+    const typed = field(fd, "phone").trim();
+    if (!newPhone && !typed) return invalid("phone", "Escriba su número de WhatsApp.");
+    const phone = newPhone ?? composePhone(country, typed);
+    if (!phone) return invalid("phone", other ? "Escriba el número completo con «+» y el código de su país." : "Ese número no parece válido para el país elegido.");
     setBusy(true);
     setError(null);
+    setFieldError(null);
     try {
       const [api, token] = await Promise.all([authApi(), captcha.token()]);
       const result = await api.start(newPhone ? { phone, name: field(fd, "name") } : { phone }, token);
@@ -158,7 +170,10 @@ function EntryForm({ next }: { next?: string }) {
       }
       await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
     } catch (err) {
-      setError(message(err));
+      // Lo que la base dice de un campo (nombre corto, número que no vale) va junto a ese campo.
+      const e = toDomainError(err);
+      if (e.kind === "validation") invalid(newPhone ? "name" : "phone", e.message);
+      else setError(message(err));
       setBusy(false);
     }
   }
@@ -166,7 +181,9 @@ function EntryForm({ next }: { next?: string }) {
   function changeNumber() {
     setNewPhone(null);
     setError(null);
+    setFieldError(null);
   }
+  const errorOf = (f: "phone" | "name") => (fieldError?.field === f ? fieldError.message : null);
 
   return (
     <>
@@ -190,29 +207,54 @@ function EntryForm({ next }: { next?: string }) {
           {newPhone ? (
             <div className="field">
               <label htmlFor="account-name">Nombre</label>
-              <input id="account-name" name="name" autoComplete="name" maxLength={80} placeholder="Su nombre" required autoFocus />
+              <input
+                id="account-name"
+                name="name"
+                autoComplete="name"
+                maxLength={80}
+                placeholder="Su nombre"
+                required
+                autoFocus
+                aria-invalid={errorOf("name") ? true : undefined}
+                aria-describedby={errorOf("name") ? "account-name-error" : undefined}
+              />
+              {errorOf("name") ? (
+                <p className="field-error" id="account-name-error" role="alert">
+                  {errorOf("name")}
+                </p>
+              ) : null}
             </div>
           ) : (
             <>
               <div className="field">
-                <label htmlFor="account-country">País de su WhatsApp</label>
-                <select id="account-country" name="country" autoComplete="tel-country-code" value={country} onChange={(e) => setCountry(e.currentTarget.value)}>
-                  {PHONE_COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name} (+{c.code})
-                    </option>
-                  ))}
-                  <option value={OTHER_COUNTRY}>Otro país</option>
-                </select>
-              </div>
-              <div className="field">
                 <label htmlFor="account-phone">Número de WhatsApp</label>
                 <div className="input-prefix">
-                  {other ? null : (
-                    <span className="prefix" aria-hidden="true">
-                      +{country}
+                  {/* Un solo control de país (revisión UX A6): la caja del prefijo es el selector; al abrirlo se ven los
+                      países con su código. El select invisible ocupa toda la caja, así que tocar «+506 ▾» lo abre. */}
+                  <span className="prefix prefix-select">
+                    <span className="prefix-value" aria-hidden="true">
+                      {other ? "Otro" : `+${country}`}
                     </span>
-                  )}
+                    <I.chevronDown size={16} />
+                    <select
+                      id="account-country"
+                      name="country"
+                      aria-label="País de su WhatsApp"
+                      autoComplete="tel-country-code"
+                      value={country}
+                      onChange={(e) => {
+                        setCountry(e.currentTarget.value);
+                        setFieldError(null);
+                      }}
+                    >
+                      {PHONE_COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.name} (+{c.code})
+                        </option>
+                      ))}
+                      <option value={OTHER_COUNTRY}>Otro país</option>
+                    </select>
+                  </span>
                   <input
                     id="account-phone"
                     name="phone"
@@ -220,12 +262,18 @@ function EntryForm({ next }: { next?: string }) {
                     autoComplete={other ? "tel" : "tel-national"}
                     inputMode="tel"
                     placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
-                    aria-describedby="account-phone-help"
+                    aria-describedby={errorOf("phone") ? "account-phone-error account-phone-help" : "account-phone-help"}
+                    aria-invalid={errorOf("phone") ? true : undefined}
                     required
                   />
                 </div>
+                {errorOf("phone") ? (
+                  <p className="field-error" id="account-phone-error" role="alert">
+                    {errorOf("phone")}
+                  </p>
+                ) : null}
                 <span id="account-phone-help" className="xs muted">
-                  {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Elija su país arriba." : "Escriba su número sin el código de país."}
+                  {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
                 </span>
               </div>
             </>

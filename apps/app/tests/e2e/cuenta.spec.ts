@@ -20,12 +20,23 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   // Un único flujo (ticket 18): primero el número; sin cuenta, el nombre y entonces el código.
   await expect(page.getByRole("link", { name: /Ya tengo cuenta/ })).toHaveCount(0);
   await expect(page.getByLabel("Nombre")).toHaveCount(0);
+  // Revisión UX A6: un solo control de país (la caja «+506» es el selector) y errores en su campo.
+  await expect(page.locator(".field > label", { hasText: "País de su WhatsApp" })).toHaveCount(0);
+  await expect(page.getByLabel("País de su WhatsApp")).toHaveValue("506");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.locator("#account-phone-error")).toHaveText("Escriba su número de WhatsApp.");
+  await expect(page.getByLabel("Número de WhatsApp")).toBeFocused();
+  await expect(page.getByLabel("Número de WhatsApp")).toHaveAttribute("aria-invalid", "true");
+  await page.getByLabel("Número de WhatsApp").fill("123");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.locator("#account-phone-error")).toHaveText("Ese número no parece válido para el país elegido.");
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
   await expect(page.getByText("+506 8888 9999")).toBeVisible();
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.locator(".field-error")).toHaveText("Escriba su nombre.");
+  await expect(page.locator("#account-name-error")).toHaveText("Escriba su nombre.");
+  await expect(page.getByLabel("Nombre")).toBeFocused();
   await page.getByLabel("Nombre").fill("Ana Prueba");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
 
@@ -124,12 +135,12 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await page.goto("/cuenta");
   const country = page.getByLabel("País de su WhatsApp");
   await expect(country).toHaveValue("506");
-  await expect(page.locator(".input-prefix .prefix")).toHaveText("+506");
+  await expect(page.locator(".input-prefix .prefix-value")).toHaveText("+506");
   await country.selectOption({ label: "Estados Unidos / Canadá (+1)" });
-  await expect(page.locator(".input-prefix .prefix")).toHaveText("+1");
+  await expect(page.locator(".input-prefix .prefix-value")).toHaveText("+1");
   await page.getByLabel("Número de WhatsApp").fill("(415) 555-01");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.locator(".field-error")).toHaveText("Ese número no parece válido para el país elegido.");
+  await expect(page.locator("#account-phone-error")).toHaveText("Ese número no parece válido para el país elegido.");
   await page.getByLabel("Número de WhatsApp").fill("(415) 555-0100");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await page.getByLabel("Nombre").fill("John Test");
@@ -146,7 +157,8 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
 
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await page.getByLabel("País de su WhatsApp").selectOption("other");
-  await expect(page.locator(".input-prefix .prefix")).toHaveCount(0);
+  // El selector sigue a la vista (para volver a otro país) y dice «Otro».
+  await expect(page.locator(".input-prefix .prefix-value")).toHaveText("Otro");
   await page.getByLabel("Número de WhatsApp").fill("1 415 555 0100");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
