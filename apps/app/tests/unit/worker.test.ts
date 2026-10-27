@@ -229,6 +229,35 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(t.cache.store.size).toBe(1);
   });
 
+  it("la ficha usa el tipo de cambio vigente y ssr-data lleva el que usó (ticket 21)", async () => {
+    t.h.db.putFxRate({ crcPerUsd: 400, day: "2026-10-28", source: "fawazahmed0" });
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    expect(ssrData(html).fx).toEqual({ crcPerUsd: 400, day: "2026-10-28", source: "fawazahmed0" });
+    const body = html.slice(html.indexOf('<div id="root">'));
+    // ₡95 000 / 400 = $238 (con la constante de antes, $186).
+    expect(body).toContain("≈ $238");
+    expect(body).not.toContain("$186");
+    expect(body).toContain("tipo de referencia del 28 oct.");
+    // Nada de atribución en la ficha, venga de donde venga el tipo.
+    expect(body).not.toContain("Exchange Rate API");
+  });
+
+  it("sin tipos del cron, el inicial (510)", async () => {
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    expect(ssrData(html).fx).toEqual({ crcPerUsd: 510, day: "2026-10-26", source: "constante" });
+    expect(html).toContain("≈ $186");
+  });
+
+  it("si falla la lectura del tipo, la ficha sale con el inicial, sin caché y con no-store", async () => {
+    vi.spyOn(t.h.anon, "fxRate").mockRejectedValueOnce(new Error("fx_rates no existe"));
+    const res = await t.request(`/casa/${casa.publicId}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    const html = await res.text();
+    expect(ssrData(html).fx).toMatchObject({ crcPerUsd: 510, source: "constante" });
+    expect(t.cache.store.size).toBe(0);
+  });
+
   it("si falla la casa, 503 sin caché aunque los días respondan", async () => {
     t.spy.getPublic.mockRejectedValueOnce(new Error("caída"));
     const res = await t.request(`/casa/${casa.publicId}`);

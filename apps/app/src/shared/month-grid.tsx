@@ -5,6 +5,7 @@
 import { compactPrice, effectiveDay, monthGrid, type CalendarDays } from "../domain/calendar";
 import type { Currency } from "../domain/currency";
 import { longDate } from "../domain/dates";
+import { FX_INITIAL } from "../domain/fx";
 import { formatMoney } from "../domain/money";
 
 const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
@@ -20,6 +21,8 @@ export interface MonthGridProps {
   /** Qué cifra lleva cada casilla: todas (propietario), solo las ★ (ficha) o ninguna. */
   prices: "all" | "special" | "none";
   currency?: Currency;
+  /** Colones por dólar (tipo vigente); solo cuenta en dólares. */
+  fx?: number;
   selected?: readonly string[];
   /** Con él, cada día es un botón; sin él, solo lectura. */
   onSelect?: (day: string) => void;
@@ -29,7 +32,7 @@ export interface MonthGridProps {
   label: string;
 }
 
-export function MonthGrid({ month, today, days, base, prices, currency = "CRC", selected = [], onSelect, dimmed, label }: MonthGridProps) {
+export function MonthGrid({ month, today, days, base, prices, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], onSelect, dimmed, label }: MonthGridProps) {
   const { weeks } = monthGrid(month, today);
   const year = month.slice(0, 4);
   const interactive = !!onSelect && !dimmed;
@@ -54,7 +57,7 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
             const name = [
               `${longDate(g.day)} de ${year}`,
               s.available ? "disponible" : "ocupado",
-              (prices === "all" || mark) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency) : null,
+              (prices === "all" || mark) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
               mark ? "precio distinto" : null,
             ]
               .filter(Boolean)
@@ -62,7 +65,7 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
             const body = (
               <>
                 <b>{`${g.date}${mark}`}</b>
-                <span className="day-sub">{!s.available ? "ocupado" : showPrice ? compactPrice(s.priceCrc!, currency) : ""}</span>
+                <span className="day-sub">{!s.available ? "ocupado" : showPrice ? compactPrice(s.priceCrc!, currency, fx) : ""}</span>
               </>
             );
             return interactive ? (

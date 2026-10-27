@@ -1,4 +1,5 @@
 // El botón de la barra tal como lo pinta el servidor (antes de hidratar): mismo HTML que el primer render del navegador.
+import { FX_INITIAL } from "../../src/domain/fx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -42,7 +43,7 @@ const listing = (over: Partial<PublicListing> = {}): PublicListing => ({
 const bar = (l: PublicListing) => {
   // Como en el worker: la caché de Query sembrada con la casa y sus días.
   const client = new QueryClient();
-  seedListing(client, l, []);
+  seedListing(client, l, [], FX_INITIAL);
   const html = renderToString(
     <QueryClientProvider client={client}>
       <ListingPage listing={l} base="https://bnbtico.com" />

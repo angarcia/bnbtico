@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, toggleMode, MODE_CHIPS, type Filters } from "../../domain/filters";
-import { FX_CRC_PER_USD } from "../../domain/money";
+import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
+import { useFx } from "../../shared/fx";
 import { CurrencySwitch } from "../currency-switch";
 import { I } from "../../shared/icons";
 import { revealClass } from "../motion";
@@ -94,7 +95,7 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
           </span>
           <CurrencySwitch />
         </div>
-        {currency === "USD" ? <p className="xs muted">Precios convertidos a dólares solo para orientarle (≈ ₡{FX_CRC_PER_USD} por US$1). Los propietarios fijan sus precios en colones.</p> : null}
+        {currency === "USD" ? <UsdNote /> : null}
       </div>
       {!listings ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonGrid />
@@ -128,5 +129,24 @@ export function ExplorarScreen() {
         <Results filters={parseFilters(search, provinces)} provinces={provinces} />
       )}
     </>
+  );
+}
+
+/** Nota de Explorar en dólares: tipo y día de referencia y, si la fuente del tipo la exige, su atribución al final. */
+function UsdNote() {
+  const fx = useFx();
+  const credit = FX_ATTRIBUTION[fx.source];
+  return (
+    <p className="xs muted" data-testid="usd-note">
+      Dólares solo para orientarle: ≈ {fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del {fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.
+      {credit ? (
+        <>
+          {" · "}
+          <a href={credit.href} target="_blank" rel="noopener">
+            {credit.text}
+          </a>
+        </>
+      ) : null}
+    </p>
   );
 }

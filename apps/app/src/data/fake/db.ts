@@ -3,6 +3,7 @@
 // la suite de contrato (que lo compara con PostgREST).
 import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/geo";
+import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { costaRicaToday } from "../../domain/inquiry";
 import { emptyDraft, type ListingDraft, type ListingStatus } from "../../domain/listing";
 
@@ -93,6 +94,8 @@ export class FakeDb {
   readonly mfaFactors = new Map<string, { id: string; secret: string; verified: boolean }>();
   /** Último código pedido por número (reloj del adaptador), para el límite de un código por segundo de Supabase. */
   readonly otpSentAt = new Map<string, number>();
+  /** fx_rates: un tipo por día, con la fila inicial de la migración. */
+  readonly fxRates = new Map<string, FxRate>([[FX_INITIAL.day, { ...FX_INITIAL }]]);
   private tick = Date.parse("2026-10-01T12:00:00Z");
   private seq = 1000;
   private ids = 0;
@@ -164,6 +167,16 @@ export class FakeDb {
   byPublicId(publicId: string): FakeListing | undefined {
     for (const l of this.listings.values()) if (l.publicId === publicId) return l;
     return undefined;
+  }
+
+  /** Como el upsert del cron: un tipo por día. */
+  putFxRate(rate: FxRate): void {
+    this.fxRates.set(rate.day, { ...rate });
+  }
+
+  resetFxRates(): void {
+    this.fxRates.clear();
+    this.fxRates.set(FX_INITIAL.day, { ...FX_INITIAL });
   }
 
   clear(): void {

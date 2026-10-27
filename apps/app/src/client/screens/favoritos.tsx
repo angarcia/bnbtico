@@ -7,6 +7,7 @@ import { describe } from "../../domain/describe";
 import { FEATURE_SHORT, type PublicListing } from "../../domain/listing";
 import { formatMoney } from "../../domain/money";
 import { useCurrency } from "../../shared/currency";
+import { useFx } from "../../shared/fx";
 import { FavoriteButton } from "../../shared/favorite-button";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
 import { Picture } from "../../shared/picture";
@@ -29,6 +30,7 @@ function countLine(n: number, signedIn: boolean): string {
 
 function FavoriteCard({ listing: l }: { listing: PublicListing }) {
   const currency = useCurrency();
+  const fx = useFx(currency === "USD");
   const cover = l.photos[0];
   const price = describe(l, { base: "" }).mainPrice;
   return (
@@ -47,7 +49,7 @@ function FavoriteCard({ listing: l }: { listing: PublicListing }) {
         {l.features.length ? <span className="small muted">{l.features.slice(0, 3).map((f) => FEATURE_SHORT[f]).join(" · ")}</span> : null}
         {price ? (
           <span className="fav-price num">
-            {formatMoney(price.amount, currency)} <span className="muted">/ {price.unit}</span>
+            {formatMoney(price.amount, currency, fx.crcPerUsd)} <span className="muted">/ {price.unit}</span>
           </span>
         ) : null}
       </div>

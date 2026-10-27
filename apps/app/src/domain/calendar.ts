@@ -136,8 +136,8 @@ export function monthGrid(month: string, today: string): { month: string; title:
 }
 
 /** El precio dentro de la casilla: «95k», «180k», «1,2M»; en dólares, el redondeo de la ficha («$186»). */
-export function compactPrice(crc: number, currency: Currency = "CRC"): string {
-  if (currency === "USD") return formatUSD(crc);
+export function compactPrice(crc: number, currency: Currency, fx: number): string {
+  if (currency === "USD") return formatUSD(crc, fx);
   if (crc < 1000) return String(Math.round(crc));
   const thousands = Math.round(crc / 1000);
   if (thousands < 1000) return `${thousands}k`;

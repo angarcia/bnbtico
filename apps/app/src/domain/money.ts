@@ -1,5 +1,5 @@
-// Dinero: enteros en colones. Dólares solo al mostrar (referencia, no cobro).
-export const FX_CRC_PER_USD = 510; // referencia de la demo; en producción vendrá de configuración
+// Dinero: enteros en colones. Dólares solo al mostrar (referencia, no cobro), con el tipo de cambio vigente
+// (`fx`: colones por dólar, domain/fx.ts; ticket 21).
 
 const nbsp = "\u00a0";
 
@@ -10,10 +10,10 @@ export function formatCRC(amount: number): string {
 }
 
 /** $186 — conversión orientativa redondeada al dólar. */
-export function formatUSD(amountCRC: number, fx: number = FX_CRC_PER_USD): string {
+export function formatUSD(amountCRC: number, fx: number): string {
   return "$" + Math.round(amountCRC / fx).toLocaleString("en-US");
 }
 
-export function formatMoney(amountCRC: number, currency: "CRC" | "USD"): string {
-  return currency === "USD" ? formatUSD(amountCRC) : formatCRC(amountCRC);
+export function formatMoney(amountCRC: number, currency: "CRC" | "USD", fx: number): string {
+  return currency === "USD" ? formatUSD(amountCRC, fx) : formatCRC(amountCRC);
 }

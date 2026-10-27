@@ -4,23 +4,24 @@ import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { BEDS_OPTIONS, MODE_CHIPS, PEOPLE_OPTIONS, colonesToPriceInput, modeParam, toggleMode, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
 import { FEATURES } from "../../domain/listing";
-import { FX_CRC_PER_USD } from "../../domain/money";
+import { FX_INITIAL, fxDayLabel, fxRateLabel, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
+import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
 import { listingsQuery, provincesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 
-function FiltrosForm({ provinces, initial }: { provinces: string[]; initial: ExploreSearch }) {
+function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial: ExploreSearch; fx: FxRate }) {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<ExploreSearch>(initial);
   const set = (key: SearchKey, value: string | undefined) => setDraft((d) => ({ ...d, [key]: value }));
   const currency = useCurrency();
   // Los precios se escriben en la moneda elegida; la búsqueda guarda colones enteros (ticket 15).
-  const [prices, setPrices] = useState(() => ({ min: colonesToPriceInput(Number(initial.min ?? 0), currency), max: colonesToPriceInput(Number(initial.max ?? 0), currency) }));
+  const [prices, setPrices] = useState(() => ({ min: colonesToPriceInput(Number(initial.min ?? 0), currency, fx.crcPerUsd), max: colonesToPriceInput(Number(initial.max ?? 0), currency, fx.crcPerUsd) }));
   const setPrice = (key: "min" | "max", text: string) => {
     setPrices((p) => ({ ...p, [key]: text }));
-    const crc = priceInputToColones(text, currency);
+    const crc = priceInputToColones(text, currency, fx.crcPerUsd);
     set(key, crc ? String(crc) : undefined);
   };
   const f = parseFilters(draft, provinces);
@@ -123,7 +124,7 @@ function FiltrosForm({ provinces, initial }: { provinces: string[]; initial: Exp
             </div>
           </div>
           <span className="xs muted" id="f-price-help">
-            {currency === "USD" ? `En dólares (${symbol}), solo para orientarle: ≈ ₡${FX_CRC_PER_USD} por US$1. Los propietarios fijan sus precios en colones.` : `En colones (${symbol}). Puede verlos en dólares desde Explorar o Cuenta.`}
+            {currency === "USD" ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.` : `En colones (${symbol}). Puede verlos en dólares desde Explorar o Cuenta.`}
           </span>
           {badRange ? (
             <p className="field-error" role="alert">
@@ -145,6 +146,9 @@ function FiltrosForm({ provinces, initial }: { provinces: string[]; initial: Exp
 export function FiltrosScreen() {
   const search = route.useSearch();
   const { data: provinces } = useQuery(provincesQuery);
-  if (!provinces) return null;
-  return <FiltrosForm provinces={provinces} initial={search} />;
+  // En dólares, los campos se rellenan con el tipo vigente: se espera a tenerlo (si falla la lectura, el inicial).
+  const usd = useCurrency() === "USD";
+  const fx = useQuery({ ...fxQuery, enabled: usd });
+  if (!provinces || (usd && fx.isPending)) return null;
+  return <FiltrosForm provinces={provinces} initial={search} fx={fx.data ?? FX_INITIAL} />;
 }

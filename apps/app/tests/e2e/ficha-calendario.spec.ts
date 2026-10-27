@@ -113,8 +113,8 @@ test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base
     localStorage.setItem("bnbtico_currency", "USD");
     dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
   });
-  await expect(cell(page, on(20))).toHaveText(`20 ★${formatUSD(150000)}`);
-  await expect(section(page).getByText(`Precio base ${formatUSD(95000)} por noche; los días con ★ tienen otro precio.`)).toBeVisible();
+  await expect(cell(page, on(20))).toHaveText(`20 ★${formatUSD(150000, 510)}`);
+  await expect(section(page).getByText(`Precio base ${formatUSD(95000, 510)} por noche; los días con ★ tienen otro precio.`)).toBeVisible();
   expect(await boxHeight(page), "en dólares, el mismo alto").toBe(before);
 
   expect(seen.rest, "ni la hidratación ni el calendario piden datos").toEqual([]);

@@ -1,6 +1,8 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import type { CalendarDay } from "../domain/calendar";
+import type { FxRate } from "../domain/fx";
 import type { PublicListing } from "../domain/listing";
+import { seedFx } from "./fx";
 
 export const LISTING_STALE_MS = 5 * 60_000;
 export const LISTING_DAYS_STALE_MS = 60_000;
@@ -25,8 +27,9 @@ export const listingDaysQuery = (publicId: string) =>
     retry: 1,
   });
 
-/** La caché de Query con lo que trajo el worker: hidratar no vuelve a pedir la casa ni sus días. */
-export function seedListing(client: QueryClient, listing: PublicListing, days: CalendarDay[] | null): void {
+/** La caché de Query con lo que trajo el worker: hidratar no vuelve a pedir la casa, sus días ni el tipo de cambio. */
+export function seedListing(client: QueryClient, listing: PublicListing, days: CalendarDay[] | null, fx: FxRate): void {
+  seedFx(client, fx);
   client.setQueryData(listingQuery(listing.publicId).queryKey, listing);
   client.setQueryData(listingDaysQuery(listing.publicId).queryKey, days);
 }

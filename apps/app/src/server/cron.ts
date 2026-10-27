@@ -1,5 +1,7 @@
 // Cron diario del worker (triggers.crons en wrangler.jsonc). Hoy: una lectura a PostgREST para que el proyecto gratuito
-// de Supabase no se pause por inactividad, y el recorte de la telemetría vieja. En la fase 5, el envío de avisos (outbox).
+// de Supabase no se pause por inactividad, el recorte de la telemetría vieja y el tipo de cambio del día (ticket 21). En
+// la fase 5, el envío de avisos (outbox).
+import { fetchFxRate, type FxRate } from "../domain/fx";
 import { landingOnly } from "../domain/seo";
 import type { Env } from "./app";
 
@@ -11,6 +13,21 @@ export interface CronDeps {
   now(): number;
   /** Borra la telemetría anterior a `before` y devuelve cuántas filas; null sin clave de servicio. */
   telemetry: { prune(before: string): Promise<number> } | null;
+  /** Guarda el tipo de cambio del día con la service role; null (o ausente) sin clave de servicio: no se pide. */
+  fx?: { save(rate: FxRate): Promise<void> } | null;
+}
+
+/** Pide el tipo a las fuentes (principal y respaldo) y lo guarda. Si fallan todas, no escribe: queda el último guardado.
+ *  Nunca lanza: un fallo aquí no debe tapar el keep-alive. */
+async function refreshFx(deps: CronDeps): Promise<Record<string, unknown>> {
+  const { rate, failures } = await fetchFxRate(deps.fetch);
+  if (!rate) return { event: "fx", ok: false, kept: "último guardado", failures };
+  try {
+    await deps.fx!.save(rate);
+  } catch (e) {
+    return { event: "fx", ok: false, ...rate, failures, error: String(e) };
+  }
+  return { event: "fx", ok: true, ...rate, failures };
 }
 
 export async function runDaily(env: Env, deps: CronDeps, cron: string): Promise<void> {
@@ -43,6 +60,9 @@ export async function runDaily(env: Env, deps: CronDeps, cron: string): Promise<
     }
   }
 
+  const fx = deps.fx ? await refreshFx(deps) : null;
+
   deps.log(JSON.stringify({ event: "keepalive", ok, status, ms, cron, environment: env.ENVIRONMENT, pruned, ...(error ? { error } : {}) }));
+  if (fx) deps.log(JSON.stringify(fx));
   if (!ok) throw new Error(`keep-alive a PostgREST falló (${status || error})`);
 }

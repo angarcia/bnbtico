@@ -4,6 +4,7 @@
 import type { CalendarChange, CalendarDay } from "./calendar";
 import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
+import type { FxRate } from "./fx";
 import type { VariantSize } from "./image";
 import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry, Step } from "./listing";
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
@@ -28,6 +29,8 @@ export interface PublicListingsApi {
   /** Días que difieren del habitual (ocupados o con ★) de una casa activa, de hoy (Costa Rica) a hoy + 365, en orden.
    *  `[]` si la casa no está publicada. RPC public_listing_days. */
   getPublicDays(publicId: string): Promise<CalendarDay[]>;
+  /** Tipo de cambio vigente (el del día más reciente de fx_rates; el inicial si no hay otro). Ticket 21. */
+  fxRate(): Promise<FxRate>;
 }
 
 /**

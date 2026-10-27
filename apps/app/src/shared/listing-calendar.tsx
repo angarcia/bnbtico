@@ -15,7 +15,7 @@ import { MonthGrid, MonthLegend } from "./month-grid";
  *  privada y en la hoja). */
 const costaRicaToday = (nowMs: number) => new Date(nowMs - 6 * 3_600_000).toISOString().slice(0, 10);
 
-export function ListingCalendar({ listing: l, currency }: { listing: PublicListing; currency: Currency }) {
+export function ListingCalendar({ listing: l, currency, fx }: { listing: PublicListing; currency: Currency; fx: number }) {
   const today = costaRicaToday(Date.now());
   const win = calendarWindow(today);
   const [month, setMonth] = useState(win.firstMonth);
@@ -37,9 +37,9 @@ export function ListingCalendar({ listing: l, currency }: { listing: PublicListi
       </div>
       {days ? (
         <>
-          <MonthGrid month={month} today={today} days={days} base={base} prices={base === null ? "none" : "special"} currency={currency} label={title} />
+          <MonthGrid month={month} today={today} days={days} base={base} prices={base === null ? "none" : "special"} currency={currency} fx={fx} label={title} />
           <MonthLegend special={base !== null} />
-          {base !== null ? <p className="xs muted">Precio base {formatMoney(base, currency)} por noche; los días con ★ tienen otro precio.</p> : null}
+          {base !== null ? <p className="xs muted">Precio base {formatMoney(base, currency, fx)} por noche; los días con ★ tienen otro precio.</p> : null}
         </>
       ) : null}
     </>

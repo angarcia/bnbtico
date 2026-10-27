@@ -6,9 +6,11 @@ import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
 import { describe } from "../domain/describe";
 import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
-import { formatCRC, formatMoney, formatUSD, FX_CRC_PER_USD } from "../domain/money";
+import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
+import { formatCRC, formatMoney, formatUSD } from "../domain/money";
 import { ApproxMap } from "./approx-map";
 import { useCurrency } from "./currency";
+import { useFx } from "./fx";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
 import { useHydrated } from "./hydration";
@@ -116,7 +118,7 @@ const ListingCalendar = lazy(() => loadCalendar().then((m) => ({ default: m.List
 
 /** «Disponibilidad». En el HTML del servidor solo la caja, de alto fijo (sin la rejilla: los días van en ssr-data); la
  *  rejilla se monta dentro tras hidratar. Una casa cerrada a consultas muestra «Calendario cerrado» ya en el servidor. */
-function Availability({ listing, currency }: { listing: PublicListing; currency: Currency }) {
+function Availability({ listing, currency, fx }: { listing: PublicListing; currency: Currency; fx: number }) {
   const box = useRef<HTMLDivElement>(null);
   const [load, setLoad] = useState(false);
   // Días que no se pudieron leer (null del servidor, o la consulta de la SPA falló): sin sección, ni caja ni error.
@@ -141,7 +143,7 @@ function Availability({ listing, currency }: { listing: PublicListing; currency:
         <div className="listing-calendar" ref={box} aria-hidden={load ? undefined : "true"}>
           {load ? (
             <Suspense fallback={null}>
-              <ListingCalendar listing={listing} currency={currency} />
+              <ListingCalendar listing={listing} currency={currency} fx={fx} />
             </Suspense>
           ) : null}
         </div>
@@ -157,11 +159,11 @@ function Availability({ listing, currency }: { listing: PublicListing; currency:
 
 /** La otra moneda como referencia, sin botón (ticket 15: la moneda se elige en Explorar o en Cuenta). Ocupa siempre lo
  *  mismo (las dos cifras apiladas, la que no se ve queda oculta debajo): hidratar o cambiar de moneda no mueve la barra. */
-function PriceReference({ amountCrc, currency }: { amountCrc: number; currency: Currency }) {
-  const usd = `≈ ${formatUSD(amountCrc)}`;
+function PriceReference({ amountCrc, currency, fx }: { amountCrc: number; currency: Currency; fx: FxRate }) {
+  const usd = `≈ ${formatUSD(amountCrc, fx.crcPerUsd)}`;
   const crc = `≈ ${formatCRC(amountCrc)}`;
   return (
-    <span className="xs both price-ref" data-testid="price-reference" title={`Orientativo: ≈ ₡${FX_CRC_PER_USD} por US$1`}>
+    <span className="xs both price-ref" data-testid="price-reference" title={`Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`}>
       <span>{currency === "CRC" ? usd : crc}</span>
       <span className="ghost" aria-hidden="true">
         {currency === "CRC" ? crc : usd}
@@ -189,6 +191,7 @@ function useSpacerMatchingBar() {
 export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation, openContact }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate; openContact?: boolean }) {
   const hydrated = useHydrated();
   const currency = useCurrency();
+  const fx = useFx();
   const d = describe(l, { base });
   useEffect(() => track("listing_view", l.publicId), [l.publicId]);
   const main = d.mainPrice;
@@ -255,7 +258,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             </div>
           ) : null}
 
-          <Availability listing={l} currency={currency} />
+          <Availability listing={l} currency={currency} fx={fx.crcPerUsd} />
 
           {l.approx ? (
             <div className="stack gap-8">
@@ -276,20 +279,20 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             <div className="row between wrap baseline gap-4">
               <span className="price both">
                 <span data-testid="main-price">
-                  {formatMoney(main.amount, currency)} <small>/ {main.unit}</small>
+                  {formatMoney(main.amount, currency, fx.crcPerUsd)} <small>/ {main.unit}</small>
                 </span>
                 <span className="ghost" aria-hidden="true">
-                  {formatMoney(main.amount, currency === "CRC" ? "USD" : "CRC")} <small>/ {main.unit}</small>
+                  {formatMoney(main.amount, currency === "CRC" ? "USD" : "CRC", fx.crcPerUsd)} <small>/ {main.unit}</small>
                 </span>
               </span>
               <span className="xs muted price-note">
-                <PriceReference amountCrc={main.amount} currency={currency} /> · orientativo; el precio final lo acuerda con el propietario
+                <PriceReference amountCrc={main.amount} currency={currency} fx={fx} /> · orientativo; el precio final lo acuerda con el propietario
               </span>
             </div>
           ) : null}
           {d.secondaryPrice ? (
             <span className="xs muted">
-              Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency)}</b> / mes
+              Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency, fx.crcPerUsd)}</b> / mes
             </span>
           ) : null}
           <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openContact} />

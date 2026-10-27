@@ -103,6 +103,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"fx_rates": {
+                  Row: {
+                    "crc_per_usd": number,"day": string,"fetched_at": string,"source": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "crc_per_usd": number,"day": string,"fetched_at"?: string,"source": string
+                  }
+                  Update: {
+                    "crc_per_usd"?: number,"day"?: string,"fetched_at"?: string,"source"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"inquiries": {
                   Row: {
                     "arrival": string | null,"client_id": string,"consent_share_phone": boolean,"created_at": string,"departure": string | null,"id": string,"listing_id": string,"message": string,"owner_id": string,"owner_opened_at": string | null,"people": number | null,"source": string,"updated_at": string,"whatsapp_phone": string

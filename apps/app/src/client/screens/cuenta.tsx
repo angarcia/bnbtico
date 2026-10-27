@@ -9,7 +9,8 @@ import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
 import { I } from "../../shared/icons";
-import { FX_CRC_PER_USD } from "../../domain/money";
+import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
+import { useFx } from "../../shared/fx";
 import { CurrencySwitch } from "../currency-switch";
 import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
@@ -404,6 +405,8 @@ function MyAccount({ editing }: { editing: boolean }) {
   const navigate = useNavigate();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const [leaving, setLeaving] = useState(false);
+  const fx = useFx();
+  const fxCredit = FX_ATTRIBUTION[fx.source];
 
   async function logout() {
     setLeaving(true);
@@ -510,10 +513,18 @@ function MyAccount({ editing }: { editing: boolean }) {
             ₡
           </span>
           <span className="body" id="currency-label">
-            Moneda<small>Dólares solo de referencia: ≈ ₡{FX_CRC_PER_USD} por US$1</small>
+            Moneda<small>Dólares solo de referencia: ≈ {fxRateLabel(fx.crcPerUsd)} por US$1 ({fxDayLabel(fx.day)})</small>
           </span>
           <CurrencySwitch />
         </div>
+        {fxCredit ? (
+          <p className="xs muted fx-credit" data-testid="fx-credit">
+            Tipo de referencia del {fxDayLabel(fx.day)} ·{" "}
+            <a href={fxCredit.href} target="_blank" rel="noopener">
+              {fxCredit.text}
+            </a>
+          </p>
+        ) : null}
         <Link to="/ayuda" className="list-item">
           <I.help />
           <span className="body">

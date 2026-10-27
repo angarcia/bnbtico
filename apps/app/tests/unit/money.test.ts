@@ -8,8 +8,8 @@ describe("dinero", () => {
     expect(formatCRC(150000)).toBe("₡150\u00a0000");
   });
   it("convierte a dólares solo como referencia", () => {
-    expect(formatUSD(95000)).toBe("$186");
-    expect(formatMoney(85000, "USD")).toBe("$167");
-    expect(formatMoney(85000, "CRC")).toBe("₡85\u00a0000");
+    expect(formatUSD(95000, 510)).toBe("$186");
+    expect(formatMoney(85000, "USD", 510)).toBe("$167");
+    expect(formatMoney(85000, "CRC", 510)).toBe("₡85\u00a0000");
   });
 });

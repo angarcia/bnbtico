@@ -96,20 +96,21 @@ describe("búsqueda en la URL de Explorar", () => {
 
 describe("precio en la moneda elegida (ticket 15)", () => {
   it("en colones, la entrada es la cifra en colones", () => {
-    expect(priceInputToColones("30.000", "CRC")).toBe(30000);
-    expect(priceInputToColones("", "CRC")).toBeNull();
-    expect(priceInputToColones("abc", "CRC")).toBeNull();
+    expect(priceInputToColones("30.000", "CRC", 510)).toBe(30000);
+    expect(priceInputToColones("", "CRC", 510)).toBeNull();
+    expect(priceInputToColones("abc", "CRC", 510)).toBeNull();
   });
   it("en dólares se convierte a colones enteros con el tipo vigente", () => {
-    expect(priceInputToColones("100", "USD")).toBe(51000);
-    expect(priceInputToColones("$ 1,000", "USD")).toBe(510000);
-    expect(priceInputToColones("12.5", "USD")).toBe(6375);
-    expect(priceInputToColones("-3", "USD")).toBeNull();
+    expect(priceInputToColones("100", "USD", 510)).toBe(51000);
+    expect(priceInputToColones("$ 1,000", "USD", 510)).toBe(510000);
+    expect(priceInputToColones("12.5", "USD", 510)).toBe(6375);
+    expect(priceInputToColones("-3", "USD", 510)).toBeNull();
+    expect(priceInputToColones("100", "USD", 455.07)).toBe(45507);
   });
   it("y vuelve a mostrarse en la moneda elegida", () => {
-    expect(colonesToPriceInput(51000, "USD")).toBe("100");
-    expect(colonesToPriceInput(30000, "CRC")).toBe("30000");
-    expect(colonesToPriceInput(0, "USD")).toBe("");
+    expect(colonesToPriceInput(51000, "USD", 510)).toBe("100");
+    expect(colonesToPriceInput(30000, "CRC", 510)).toBe("30000");
+    expect(colonesToPriceInput(0, "USD", 510)).toBe("");
   });
   it("rango inválido solo con los dos límites y mínimo > máximo", () => {
     expect(priceRangeInvalid(90000, 30000)).toBe(true);

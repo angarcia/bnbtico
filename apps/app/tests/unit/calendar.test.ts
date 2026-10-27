@@ -382,16 +382,16 @@ describe("rejilla del mes (lunes primero, días pasados) y ventana de 12 meses",
 
 describe("precio compacto de la rejilla", () => {
   it("«95k», «180k», «1,2M», «1M»", () => {
-    expect(compactPrice(95_000)).toBe("95k");
-    expect(compactPrice(180_000)).toBe("180k");
-    expect(compactPrice(1_200_000)).toBe("1,2M");
-    expect(compactPrice(1_000_000)).toBe("1M");
-    expect(compactPrice(999_600)).toBe("1M");
-    expect(compactPrice(95_400)).toBe("95k");
-    expect(compactPrice(500)).toBe("500");
+    expect(compactPrice(95_000, "CRC", 510)).toBe("95k");
+    expect(compactPrice(180_000, "CRC", 510)).toBe("180k");
+    expect(compactPrice(1_200_000, "CRC", 510)).toBe("1,2M");
+    expect(compactPrice(1_000_000, "CRC", 510)).toBe("1M");
+    expect(compactPrice(999_600, "CRC", 510)).toBe("1M");
+    expect(compactPrice(95_400, "CRC", 510)).toBe("95k");
+    expect(compactPrice(500, "CRC", 510)).toBe("500");
   });
   it("en dólares (solo visualización, ficha pública): el redondeo de money.ts", () => {
-    expect(compactPrice(95_000, "USD")).toBe("$186");
+    expect(compactPrice(95_000, "USD", 510)).toBe("$186");
   });
 });
 

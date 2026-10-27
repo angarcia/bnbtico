@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CURRENCY_STORAGE_KEY, parseCurrency } from "../../src/domain/currency";
-import { FX_CRC_PER_USD, formatMoney } from "../../src/domain/money";
+import { formatMoney } from "../../src/domain/money";
 
 describe("parseCurrency", () => {
   it("USD solo con 'USD'; cualquier otra cosa es colones", () => {
@@ -15,8 +15,8 @@ describe("parseCurrency", () => {
 
 describe("formatMoney en dólares", () => {
   it("redondea al dólar con el tipo de referencia", () => {
-    expect(FX_CRC_PER_USD).toBe(510);
-    expect(formatMoney(85000, "USD")).toBe("$167");
-    expect(formatMoney(85000, "CRC")).toBe("₡85 000");
+    expect(formatMoney(85000, "USD", 510)).toBe("$167");
+    expect(formatMoney(85000, "USD", 455.07)).toBe("$187");
+    expect(formatMoney(85000, "CRC", 455.07)).toBe("₡85 000");
   });
 });

@@ -68,7 +68,7 @@ const STATUS_HEAD: Record<Exclude<SsrData["page"], "listing">, string> = {
 function body(data: SsrData): string {
   if (data.page === "listing") {
     const client = new QueryClient();
-    seedListing(client, data.listing, data.days);
+    seedListing(client, data.listing, data.days, data.fx);
     return renderToString(
       <QueryClientProvider client={client}>
         <ListingScreen publicId={data.listing.publicId} base={data.base} />

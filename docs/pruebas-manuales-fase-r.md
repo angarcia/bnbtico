@@ -1,6 +1,6 @@
 # Plan de pruebas manual · fase R en nueva.bnbtico.com
 
-Fecha: 2026-10-23 (tickets 01–12, la parte preparable del 13 y los arreglos posteriores: segundo factor por app de autenticación, WhatsApp de cualquier país, avisos del perfil). **Actualizado el 2026-10-26** con los arreglos de los tickets 14–20 (pasos marcados «actualizado 2026-10-26»). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
+Fecha: 2026-10-23 (tickets 01–12, la parte preparable del 13 y los arreglos posteriores: segundo factor por app de autenticación, WhatsApp de cualquier país, avisos del perfil). **Actualizado el 2026-10-26** con los arreglos de los tickets 14–20 y la mejora 21 (pasos marcados «actualizado 2026-10-26» o «añadido 2026-10-26»). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
 La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo y su estado.
 
@@ -8,7 +8,7 @@ La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo 
 
 | Paso | Estado |
 |---|---|
-| A1 Migraciones | ✅ las cinco de la fase R aplicadas · ☐ **nueva (2026-10-26):** `20261027040909_nombre_y_descripcion` (`pnpm exec supabase db push`; sin ella el asistente exige los límites pero la base no) |
+| A1 Migraciones | ✅ las cinco de la fase R aplicadas · ☐ **nueva (2026-10-26):** `20261027040909_nombre_y_descripcion` (`pnpm exec supabase db push`; sin ella el asistente exige los límites pero la base no) · ☐ **nueva (2026-10-26, ticket 21):** `20261027044539_tipo_de_cambio` (sin ella la ficha sale con el tipo inicial ₡510 y sin caché del borde, y Explorar en dólares también usa ₡510) |
 | A2 Segundo factor por app de autenticación | ✅ hecho (TOTP activo; admins Daniel y Ana; falta que cada uno vincule su app, B12a0–B12b) |
 | A3 Secretos de Vault | ✅ hecho |
 | A4 Access sin PIN | ✅ `/casa/*` y `/_purge/*` hechos · ☐ opcional `/sw.js` y `/manifest.webmanifest` · ☐ `workers.dev` y vistas previas siguen públicas |
@@ -134,6 +134,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B5b | En Explorar, tocar Vacacional y después Mensual; luego «Más filtros» (actualizado 2026-10-26) | Los chips (Vacacional, Mensual, Más filtros) caben en una fila sin deslizar; los dos quedan marcados a la vez (= todas las casas), uno solo filtra esa modalidad. Filtros: «Modalidad» con los mismos chips; en Zona solo provincias con casas; «Ver N casas» cuenta en vivo al tocar Piscina, Personas o precio | ☐ |
 | B5c | Precio mínimo mayor que el máximo (actualizado 2026-10-26) | Aviso «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» desactivado; al corregirlo se activa, vuelve a Explorar y la URL lo refleja; «Limpiar» los quita | ☐ |
 | B5d | En Explorar, selector «₡ \| $» junto al número de casas → «$»; entrar a una ficha, a Favoritos y a «Más filtros» (actualizado 2026-10-26) | Todo en dólares: tarjetas, ficha (con «≈ ₡…» debajo), Favoritos y los precios de Filtros (se escriben en $). Mi cuenta → «Moneda» cambia lo mismo. Al recargar recuerda la elección | ☐ |
+| B5g | Con «$» elegido (ticket 21, añadido 2026-10-26): leer la nota bajo el número de casas en Explorar, la ayuda del precio en «Más filtros» y «Moneda» en Mi cuenta. Después, en el SQL Editor: `select * from fx_rates order by day desc limit 3;` | La nota dice «≈ ₡4xx por US$1 (tipo de referencia del <día>)» con el tipo de la primera fila (redondeado), igual en Filtros y en Mi cuenta («(<día>)»); las tarjetas y la ficha convierten con él. Antes del primer cron la fila es `510 · constante`. Si la primera fila es de `exchangerate-api`, al final de la nota de Explorar y bajo el selector de Mi cuenta aparece «Rates By Exchange Rate API» enlazado; con `fawazahmed0` no aparece en ningún sitio. Nunca en la ficha | ☐ |
 | B5f | En Explorar, bajar hasta las últimas tarjetas, abrir una ficha y volver atrás | Explorar vuelve al mismo punto del scroll, sin recargar. **Pendiente (2026-10-26): con una sola casa no se puede probar; repetir cuando haya más casas** | ☐ |
 | B5e | Abrir `https://nueva.bnbtico.com/?pronto=1` (añadido con el ticket 13) | La portada de bnbtico.com: foto de Playa Negra, logo, «Muy pronto», «Alquile en el Caribe de Costa Rica, directo con quien lo recibe» y debajo «Qué es bnbtico». Es lo que verá bnbtico.com tras el corte | ☐ |
 
@@ -206,7 +207,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 |---|---|---|---|
 | B21 | Tras navegar un rato, SQL Editor: `select name, count(*) from web_vitals group by 1; select name, count(*) from events group by 1;` | Filas de LCP/INP/CLS/FCP/TTFB y de `page_view`/`listing_view` con `country = 'CA'` (o el país desde el que pruebe) | ☐ |
 | B22 | `select build, message, count(*) from client_errors group by 1, 2 order by 3 desc limit 10;` | Vacío o errores conocidos; anote los que salgan | ☐ |
-| B23 | Al día siguiente (el cron corre a las 03:17 de Costa Rica): Cloudflare → Workers → `bnbtico-pruebas` → Logs | Una línea `{"event":"keepalive","ok":true,...}` | ☐ |
+| B23 | Al día siguiente (el cron corre a las 03:17 de Costa Rica): Cloudflare → Workers → `bnbtico-pruebas` → Logs | Una línea `{"event":"keepalive","ok":true,...}` y otra `{"event":"fx","ok":true,"crcPerUsd":…,"day":"…","source":"fawazahmed0",…}` (ticket 21); en `fx_rates` una fila de ese día. Si dice `"ok":false,"kept":"último guardado"`, las dos fuentes fallaron: anote los `failures` | ☐ |
 | B24 | GitHub → Actions → **copia** → «Run workflow» (rama `develop`) | Job verde; resumen «Copia bnbtico-pruebas-AAAA-MM-DD.dump: … bytes, N tablas con datos»; el archivo está en R2 → `bnbtico-copias/bnbtico-pruebas/` | ☐ |
 
 ---

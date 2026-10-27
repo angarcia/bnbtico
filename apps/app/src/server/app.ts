@@ -2,6 +2,7 @@
 // de telemetría y el shell para lo demás.
 import { Hono, type Context } from "hono";
 import type { PublicListingsApi } from "../domain/api";
+import { FX_INITIAL } from "../domain/fx";
 import { BEACON_MAX_BYTES, BEACON_TABLE, parseBeacon, type BeaconKind, type BeaconRow, type BeaconTable } from "../domain/telemetry";
 import { landingOnly, robotsTxt, shareBase, type Environment } from "../domain/seo";
 import { parsePublicId, publicPath, publicUrl } from "../domain/share";
@@ -168,15 +169,17 @@ export function createApp(deps: Deps) {
 
     try {
       const api = deps.listings(c.env);
-      // A la vez: el calendario de la ficha no suma una vuelta a la base. Si fallan solo los días (un error pasajero, o
-      // una base sin la migración del calendario), la ficha sale sin «Disponibilidad» y sin caché: la próxima lo reintenta.
-      const [listing, days] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId).catch(() => null)]);
+      // A la vez: el calendario y el tipo de cambio no suman vueltas a la base. Si fallan solo los días (un error pasajero,
+      // o una base sin la migración del calendario), la ficha sale sin «Disponibilidad»; si falla el tipo, con el inicial.
+      // En los dos casos sin caché del borde: la próxima visita lo reintenta.
+      const [listing, days, fx] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId).catch(() => null), api.fxRate().catch(() => null)]);
       if (!listing) {
         const state = await api.linkState(publicId);
         return state === "blocked" ? page(c, { page: "blocked" }, 410, STATUS_CACHE) : page(c, { page: "missing" }, 404, STATUS_CACHE);
       }
-      const res = await page(c, { page: "listing", listing, days, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, days ? LISTING_CACHE : "no-store");
-      if (cache && days) await later(c, cache.put(key, res.clone()));
+      const complete = days !== null && fx !== null;
+      const res = await page(c, { page: "listing", listing, days, fx: fx ?? FX_INITIAL, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, complete ? LISTING_CACHE : "no-store");
+      if (cache && complete) await later(c, cache.put(key, res.clone()));
       return res;
     } catch (error) {
       console.error("ficha", publicId, error);

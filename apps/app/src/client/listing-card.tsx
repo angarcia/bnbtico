@@ -3,6 +3,7 @@ import { describe } from "../domain/describe";
 import { FEATURE_SHORT, type PublicListing } from "../domain/listing";
 import { formatMoney } from "../domain/money";
 import { useCurrency } from "../shared/currency";
+import { useFx } from "../shared/fx";
 import { FavoriteButton } from "../shared/favorite-button";
 import { Picture } from "../shared/picture";
 
@@ -10,6 +11,7 @@ import { Picture } from "../shared/picture";
  *  característica». El corazón va fuera del enlace (un botón dentro de un enlace no es válido) y encima de la foto. */
 export function ListingCard({ listing: l }: { listing: PublicListing }) {
   const currency = useCurrency();
+  const fx = useFx(currency === "USD");
   const cover = l.photos[0];
   const price = describe(l, { base: "" }).mainPrice;
   const firstFeature = l.features[0] ? FEATURE_SHORT[l.features[0]] : null;
@@ -26,7 +28,7 @@ export function ListingCard({ listing: l }: { listing: PublicListing }) {
           ) : null}
           {price ? (
             <span className="pill pill-bl">
-              {formatMoney(price.amount, currency)} <span>/ {price.unit}</span>
+              {formatMoney(price.amount, currency, fx.crcPerUsd)} <span>/ {price.unit}</span>
             </span>
           ) : null}
         </div>

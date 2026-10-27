@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
+import { FX_INITIAL, fromFxRow } from "../../domain/fx";
 import { ALL_PROVINCES, modeFilter, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
@@ -73,6 +74,12 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       const { data, error } = await db.rpc("public_listing_days", { p_public_id: publicId });
       if (error) throw toDomainError(error);
       return data.map(fromDayRow);
+    },
+
+    async fxRate() {
+      const { data, error } = await db.from("fx_rates").select("day, crc_per_usd, source").order("day", { ascending: false }).limit(1).maybeSingle();
+      if (error) throw toDomainError(error);
+      return data ? fromFxRow(data) : { ...FX_INITIAL };
     },
 
     async sitemap() {
