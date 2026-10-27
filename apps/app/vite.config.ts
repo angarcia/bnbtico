@@ -1,9 +1,10 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import ts from "typescript";
 import { build, defineConfig, loadEnv, type Plugin } from "vite";
+import { withOwnerCta } from "./src/domain/portada";
 import { launchedFor, supportNumbersCheck } from "./src/domain/support";
 import { staticHeadersBlock } from "./src/shared/security";
 import { precacheList } from "./src/sw/routes";
@@ -77,6 +78,26 @@ function securityHeadersFile(): Plugin {
  * Números de WhatsApp de Ayuda (revisión UX A12): con LAUNCHED "true" en el entorno de wrangler que se construye
  * (`CLOUDFLARE_ENV`) el build falla sin ellos; si no, en CI deja un aviso visible en el log de GitHub Actions.
  */
+/**
+ * Botón de propietarios de la portada (revisión UX C1): con `VITE_WA_OWNERS`, el build cambia en dist/client/portada.html la
+ * frase «Abrimos pronto…» por el enlace a WhatsApp. Sin número, la portada se queda como está (sin botón muerto).
+ */
+function portadaOwnerCta(): Plugin {
+  let owners: string | undefined;
+  return {
+    name: "bnbtico:portada-cta",
+    apply: "build",
+    applyToEnvironment: (env) => env.name === "client",
+    configResolved(config) {
+      owners = loadEnv(config.mode, root, "VITE_").VITE_WA_OWNERS ?? process.env.VITE_WA_OWNERS;
+    },
+    writeBundle(options) {
+      const file = join(options.dir!, "portada.html");
+      if (existsSync(file)) writeFileSync(file, withOwnerCta(readFileSync(file, "utf8"), owners));
+    },
+  };
+}
+
 function supportNumbers(): Plugin {
   return {
     name: "bnbtico:support-numbers",
@@ -96,7 +117,7 @@ function supportNumbers(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers()],
+  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers(), portadaOwnerCta()],
   define: { __BUILD_ID__: JSON.stringify(buildId) },
   // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).
   preview: { allowedHosts: ["host.docker.internal"] },

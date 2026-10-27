@@ -9,6 +9,13 @@ test("`/?pronto=1` muestra la portada sin JavaScript, con su imagen, su CSP y su
   expect(res!.headers()["content-security-policy"]).toContain("script-src 'self';");
   await expect(page.getByRole("heading", { level: 1, name: "Alquile en el Caribe de Costa Rica, directo con quien lo recibe" })).toBeVisible();
   await expect(page.getByText("Muy pronto")).toBeVisible();
+  // Revisión UX C1: la oferta en su tarjeta bajo la foto y «Cómo funciona» en tres pasos. Sin número de WhatsApp de
+  // propietarios (como aquí), la frase de «abrimos pronto» en vez de un botón.
+  await expect(page.getByRole("heading", { level: 2, name: "¿Tiene una casa en el Caribe?" })).toBeVisible();
+  await expect(page.getByText("Las primeras 50 casas: 12 meses gratis.")).toBeVisible();
+  await expect(page.getByText("Abrimos pronto en el Caribe sur.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Quiero publicar mi casa gratis" })).toHaveCount(0);
+  await expect(page.locator(".soon-steps li")).toHaveCount(3);
   await expect(page).toHaveTitle("bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://bnbtico.com/");
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", "https://bnbtico.com/og.jpg");
