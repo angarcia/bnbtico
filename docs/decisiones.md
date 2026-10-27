@@ -1,3 +1,13 @@
+## 2026-10-27 · Fase 5: suscripción, estados y avisos (especificación aprobada)
+
+Aprobado por Daniel. Especificación y tickets en `.scratch/fase-5/`.
+
+- **Pasarela en modo de pruebas: Stripe**, con las claves de prueba de la cuenta de Ana (personal, en euros). El propietario guarda la tarjeta en la página de Stripe en modo «guardar sin cobrar» (Checkout `mode=setup`) y vuelve: ningún dato de tarjeta pasa por bnbtico, sin scripts de terceros en nuestras páginas y sin cambios en la CSP. Detrás de una interfaz `PaymentProvider` con un proveedor falso en local, CI y Playwright. La pasarela del cobro real se decide cuando haya empresa en Costa Rica (Stripe no abre cuentas a empresas ticas y no tiene SINPE Móvil); la cuenta personal de Ana nunca se usa para cobrar de verdad, y las tarjetas guardadas en Stripe no pasan a otra pasarela.
+- **Avisos por WhatsApp en pruebas: sandbox de Twilio.** El número de prueba se une mandando «join <código>» (dura 3 días; el texto libre vale durante 24 h desde el último mensaje del número). Remitente `WhatsAppSender` con un falso en local y CI; en pruebas solo se escribe a los números de una lista (`WHATSAPP_ALLOWLIST`). Producción necesitará una plantilla aprobada por Meta.
+- **Reloj de pruebas: se acerca el fin de oferta de una casa**, no se mueve el reloj. Una RPC solo de servicio (`test_set_offer_days_left`) que exige un secreto de Vault que solo existe en pruebas y local, llamada por una ruta del worker que responde 404 en producción. Las pantallas, el enlace bloqueado y los avisos usan la fecha real.
+- **La oferta sigue corriendo con la casa parada o en edición** (como el prototipo). La plaza se asigna en la primera aprobación, por orden, y es de la casa para siempre; «Quedan N de 50» cuenta plazas asignadas.
+- **Otras de la especificación:** un método de pago por propietario (vale para todas sus casas); «Añadir método de pago» solo sin método y dentro de los 90 días o con la casa pendiente de pago, en todas las pantallas; el último día de la oferta es gratis y la casa se oculta al día siguiente; avisos enviados solo de 8:00 a 18:00 de Costa Rica y nunca dos veces (un envío de resultado dudoso no se repite: queda para una alerta); el cron del worker pasa a cada hora para no gastar más tareas programadas del plan gratuito; «Parar» y «Reactivar» viven en «Promoción y suscripción».
+
 ## 2026-10-26 · Zonas con sugerencias de Photon y zoom del mapa (ticket 22; E1 y E2)
 
 Aprobado por Daniel.
