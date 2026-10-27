@@ -4,6 +4,8 @@
 export { waUrl } from "./whatsapp";
 
 export const INQUIRY_MAX_PEOPLE = 50;
+/** Mensaje cuando se piden más personas de las que admite la casa. */
+export const tooManyPeople = (capacity: number) => `Esta casa es para ${capacity} ${capacity === 1 ? "persona" : "personas"} como máximo.`;
 export const INQUIRY_MAX_MESSAGE = 1000;
 
 /** Mensajes de create_inquiry / mark_inquiry_opened, repetidos tal cual en la migración fase3_consultas y en el fake. */

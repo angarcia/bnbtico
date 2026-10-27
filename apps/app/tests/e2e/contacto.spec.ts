@@ -2,6 +2,7 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { composeInquiryMessage } from "../../src/domain/inquiry";
 import { injectSession } from "./helpers/session";
 import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
 
@@ -25,7 +26,7 @@ function expectedRange(a: string, b: string) {
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
-  casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", nightlyPriceCrc: 95000 } });
+  casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", nightlyPriceCrc: 95000, capacity: 6 } });
   cerrada = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina cerrada", zone: "Cocles" } });
   await h.owner("owner").setAvailable(cerrada.id, false);
   owner = h.ownerName("owner").split(" ")[0]!;
@@ -124,6 +125,29 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas, resp
     .poll(() => sql(`select count(*) from public.events where created_at >= '${since}' and name = 'whatsapp_tap' and listing_public_id = '${casa.publicId}'`))
     .toBe("3");
   expect(problems, problems.join("\n")).toEqual([]);
+});
+
+// Revisión UX A3 (puntos 4–5): personas con − / +, desde el filtro «Personas» de Explorar y con tope en la capacidad.
+test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y «+» se detiene en la capacidad", async ({ page }) => {
+  await page.goto("/explorar?ppl=4");
+  await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  const s = sheet(page);
+  const people = s.getByLabel("Personas (opcional)");
+  const more = s.getByRole("button", { name: "Una persona más" });
+  await expect(people).toHaveValue("4");
+  await expect(s.getByLabel("Su mensaje")).toHaveValue(composeInquiryMessage(TITLE, { arrival: null, departure: null, people: 4 }));
+  await more.click();
+  await more.click();
+  await expect(people).toHaveValue("6");
+  await expect(more).toBeDisabled(); // capacidad de la casa: 6
+  await s.getByRole("button", { name: "Una persona menos" }).click();
+  await expect(people).toHaveValue("5");
+  await expect(s.getByLabel("Su mensaje")).toHaveValue(composeInquiryMessage(TITLE, { arrival: null, departure: null, people: 5 }));
+  // Escribir más que la capacidad no deja seguir.
+  await people.fill("9");
+  await s.getByRole("button", { name: "Continuar" }).click();
+  await expect(s.getByRole("alert")).toHaveText("Esta casa es para 6 personas como máximo.");
 });
 
 test("modal: el foco no sale de la hoja, el resto de la página queda inerte y «Cerrar» cierra", async ({ page }) => {

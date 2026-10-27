@@ -37,7 +37,7 @@
       "dist/client/assets/contact-sheet-*.js",
       "dist/client/assets/inquiry-*.js"
     ],
-    "limit": "5 KB",
+    "limit": "5.5 KB",
     "gzip": true
   },
   {
@@ -52,7 +52,7 @@
       "dist/client/assets/image-*.js",
       "dist/client/assets/useMutation-*.js"
     ],
-    "limit": "20 KB",
+    "limit": "21 KB",
     "gzip": true
   },
   {

@@ -18,6 +18,7 @@ import {
   restoreContactDraft,
   startDraft,
   storeContactDraft,
+  tooManyPeople,
   validateInquiryDraft,
   type ContactDraftAction,
   type ContactDraftState,
@@ -25,6 +26,7 @@ import {
 } from "../domain/inquiry";
 import type { PublicListing } from "../domain/listing";
 import { hasStoredSession, webStore } from "../data/storage";
+import { PEOPLE_FILTER_KEY } from "../domain/contact-return";
 import { proceedToWhatsApp } from "./contact-flow";
 import { I } from "./icons";
 
@@ -35,6 +37,12 @@ const withKeyboard = (el: EventTarget | null) => el instanceof HTMLTextAreaEleme
 const KB_RELEASE_MS = 400;
 
 type Status = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message: string; field?: InquiryField };
+
+/** Personas del filtro de Explorar (pestaña), si caben en la casa. */
+function filteredPeople(max: number): number | null {
+  const n = Number(webStore("session").getItem(PEOPLE_FILTER_KEY));
+  return Number.isInteger(n) && n >= 1 && n <= max ? n : null;
+}
 
 /** Bloquea el scroll y deja inerte la página mientras la hoja está abierta. */
 function useModal() {
@@ -56,10 +64,13 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
   const store = useRef(webStore("session")).current;
   const key = contactDraftKey(listing.publicId);
   const [restored] = useState(() => restoreContactDraft(store.getItem(key), title, Date.now()));
+  // Tope de personas: la capacidad de la casa (y nunca más que el máximo de una consulta).
+  const maxPeople = Math.min(listing.capacity || INQUIRY_MAX_PEOPLE, INQUIRY_MAX_PEOPLE);
   const [draft, dispatch] = useReducer(
     (s: ContactDraftState, a: ContactDraftAction) => redraft(s, a, title),
     null,
-    () => restored?.state ?? startDraft(title),
+    // Sin borrador, las personas del filtro de Explorar si caben en la casa (revisión UX A3).
+    () => restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople) }),
   );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
@@ -141,6 +152,7 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
     const fields = { arrival: draft.arrival, departure: draft.departure, people: draft.people, message: draft.message };
     const problem = validateInquiryDraft(fields, today);
     if (problem) return setStatus({ kind: "error", message: problem.message, field: problem.field });
+    if (fields.people !== null && fields.people > maxPeople) return setStatus({ kind: "error", message: tooManyPeople(maxPeople), field: "people" });
     inFlight.current = true;
     store.setItem(key, storeContactDraft(draft, true, Date.now()));
     setStatus({ kind: "sending" });
@@ -209,22 +221,32 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
               />
             </label>
           </div>
-          <label>
-            Personas (opcional)
-            <input
-              className="people"
-              type="number"
-              name="people"
-              inputMode="numeric"
-              min={1}
-              max={INQUIRY_MAX_PEOPLE}
-              step={1}
-              placeholder="¿Cuántos son?"
-              value={draft.people ?? ""}
-              aria-invalid={invalid("people")}
-              onChange={(e) => change({ type: "fields", patch: { people: parsePeople(e.target.value) } })}
-            />
-          </label>
+          {/* − / + como el paso 4 de publicar, con el campo editable en medio y tope en la capacidad (revisión UX A3). */}
+          <div className="people-field">
+            <label htmlFor="contact-people">Personas (opcional)</label>
+            <div className="people-stepper">
+              <button type="button" className="minus" aria-label="Una persona menos" disabled={!draft.people || draft.people <= 1} onClick={() => change({ type: "fields", patch: { people: draft.people && draft.people > 1 ? draft.people - 1 : null } })}>
+                −
+              </button>
+              <input
+                id="contact-people"
+                className="people"
+                type="number"
+                name="people"
+                inputMode="numeric"
+                min={1}
+                max={maxPeople}
+                step={1}
+                placeholder="–"
+                value={draft.people ?? ""}
+                aria-invalid={invalid("people")}
+                onChange={(e) => change({ type: "fields", patch: { people: parsePeople(e.target.value) } })}
+              />
+              <button type="button" className="plus" aria-label="Una persona más" disabled={(draft.people ?? 0) >= maxPeople} onClick={() => change({ type: "fields", patch: { people: Math.min(maxPeople, (draft.people ?? 0) + 1) } })}>
+                +
+              </button>
+            </div>
+          </div>
           <label>
             Su mensaje
             <textarea

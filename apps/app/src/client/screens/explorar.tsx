@@ -2,6 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { webStore } from "../../data/storage";
+import { PEOPLE_FILTER_KEY } from "../../domain/contact-return";
 import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, toggleMode, MODE_CHIPS, type Filters } from "../../domain/filters";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
@@ -63,6 +65,12 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
   const currency = useCurrency();
   const { data: listings, isError } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
+  // La hoja de contacto de la ficha arranca con estas personas (revisión UX A3); en la pestaña, no en la URL de la ficha.
+  useEffect(() => {
+    const store = webStore("session");
+    if (f.ppl > 0) store.setItem(PEOPLE_FILTER_KEY, String(f.ppl));
+    else store.removeItem(PEOPLE_FILTER_KEY);
+  }, [f.ppl]);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
   const extras = extrasCount(f);
   const search = searchFor(f, provinces);

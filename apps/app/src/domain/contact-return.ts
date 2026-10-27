@@ -2,6 +2,9 @@
 // (JS inicial de la zona privada) sepa si reabrir la hoja sin arrastrar el resto de las consultas.
 import { safeNext } from "./account";
 
+/** Personas del filtro de Explorar, en la pestaña: la hoja de contacto arranca con ellas (revisión UX A3). */
+export const PEOPLE_FILTER_KEY = "bnbtico-personas";
+
 /** Lo escrito en la hoja de una casa, en la pestaña (sessionStorage, 30 min). */
 export const contactDraftKey = (publicId: string) => `bnbtico-contacto:${publicId}`;
 
