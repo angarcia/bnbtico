@@ -100,6 +100,8 @@ export interface Listing extends ListingDraft {
   reviewNote: string | null;
   /** Momento de la última decisión del admin; un borrador con fecha fue una casa publicada o revisada (no se descarta). */
   reviewedAt: string | null;
+  /** Primera aprobación del admin (revisión UX A5): la casa estuvo publicada alguna vez, aunque ahora se esté editando. */
+  firstPublishedAt: string | null;
   whatsappPhone: string;
   createdAt: string;
   updatedAt: string;

@@ -17,6 +17,7 @@ function owned(over: Partial<Listing> = {}): Listing {
     reopenAt: null,
     reviewNote: null,
     reviewedAt: "2026-10-20T10:00:00Z",
+    firstPublishedAt: "2026-10-20T10:00:00Z",
     whatsappPhone: "+50687770001",
     createdAt: "2026-10-18T10:00:00Z",
     updatedAt: "2026-10-21T10:00:00Z",

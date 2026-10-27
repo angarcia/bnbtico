@@ -57,6 +57,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       const text = note.trim().slice(0, 2000);
       const at = db.now();
       Object.assign(l, { status: DECISION_STATUS[decision], reviewNote: text || null, reviewedAt: at, updatedAt: at });
+      if (decision === "approve") l.firstPublishedAt ??= at;
       if (decision === "approve") {
         const owner = db.profiles.get(l.ownerId);
         if (owner) owner.isOwner = true;

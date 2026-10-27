@@ -58,6 +58,10 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         expect(by("Casa active").photos.map((p) => p.path)).toEqual(mine.active.photoPaths);
         expect(by("Casa draft")).toMatchObject({ reviewedAt: null, photoCount: 0, photos: [] });
         expect(by("Casa reopened").reviewedAt).not.toBeNull();
+        // Revisión UX A5: «estuvo publicada alguna vez» = primera aprobación; pedir cambios o rechazar no cuenta.
+        expect(by("Casa active").firstPublishedAt).not.toBeNull();
+        expect(by("Casa reopened").firstPublishedAt).not.toBeNull();
+        for (const t of ["Casa changes", "Casa rejected", "Casa review", "Casa draft"]) expect(by(t).firstPublishedAt, t).toBeNull();
       });
 
       it("getOwn devuelve mi casa con todo y null para una ajena, inexistente o con id raro", async () => {

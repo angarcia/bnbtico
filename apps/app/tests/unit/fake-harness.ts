@@ -37,7 +37,7 @@ export function fakeHarness(db = new FakeDb()): CalendarHarness & { db: FakeDb }
     async seedContacts(who, n) {
       const other = who === "owner" ? "other" : "owner";
       for (let k = 0; k < n; k++) {
-        const l = db.insertListing(owners[other], { ...COMPLETE, status: "active", reviewedAt: db.now(), title: `Contactada ${k}` });
+        const l = db.insertListing(owners[other], { ...COMPLETE, status: "active", reviewedAt: db.now(), firstPublishedAt: db.now(), title: `Contactada ${k}` });
         const at = new Date(Date.now() - 3_600_000).toISOString();
         db.inquiries.push({ id: db.newId(), listingId: l.id, clientId: owners[who], ownerId: owners[other], arrival: null, departure: null, people: null, message: "Hola", whatsappPhone: l.whatsappPhone, createdAt: at, updatedAt: at, ownerOpenedAt: null, source: "listing" });
       }
@@ -54,6 +54,8 @@ export function fakeHarness(db = new FakeDb()): CalendarHarness & { db: FakeDb }
         ...draft,
         status: spec.status === "reopened" ? "draft" : spec.status,
         reviewedAt: reviewed ? db.now() : null,
+        // Como en Supabase: solo la aprobación la rellena (activa, o activa y luego reabierta para editar).
+        firstPublishedAt: spec.status === "active" || spec.status === "reopened" ? db.now() : null,
         reviewNote: spec.status === "changes" || spec.status === "rejected" ? "Faltan fotos del baño." : null,
       });
       const n = spec.photos ?? (spec.status === "draft" ? 0 : 5);

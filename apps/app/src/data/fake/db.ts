@@ -32,6 +32,7 @@ export interface FakeListing extends Omit<ListingDraft, "photoCount"> {
   reopenAt: string | null;
   reviewNote: string | null;
   reviewedAt: string | null;
+  firstPublishedAt: string | null;
   whatsappPhone: string;
   createdAt: string;
   updatedAt: string;
@@ -129,6 +130,7 @@ export class FakeDb {
       reopenAt: null,
       reviewNote: null,
       reviewedAt: null,
+      firstPublishedAt: null,
       whatsappPhone: this.profiles.get(ownerId)?.phone ?? "",
       createdAt: at,
       updatedAt: at,
