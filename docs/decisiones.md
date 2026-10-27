@@ -8,6 +8,13 @@ Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spe
 - **Base del enlace:** bnbtico.com en producción; en pruebas la variable `PUBLIC_ORIGIN` (`https://nueva.bnbtico.com`, pasa a `pruebas.bnbtico.com` el día del corte) porque el cron no tiene petición; la ruta del reloj usa `PUBLIC_ORIGIN` o el origen de la petición.
 - **Reloj de pruebas** `POST /_pruebas/oferta/CT-####`: 404 en producción o sin `TEST_CLOCK_SECRET`, 401 con otro secreto, 409 con el mensaje de la base si falta el secreto de Vault. El deploy desde `main` nunca sube `TEST_CLOCK_SECRET`.
 - `WhatsAppSender` vive en `src/domain/whatsapp-sender.ts` (`whatsapp.ts` ya era el de los enlaces `wa.me`).
+## 2026-10-27 · Fase 5, ticket 04: método de pago con Stripe en modo de prueba
+
+Decisiones de implementación dentro de la especificación aprobada.
+
+- **Checkout de Stripe en modo `setup`, página alojada de Stripe** (navegación de primer nivel; la CSP del shell no cambia): `currency=usd` (Stripe la exige en `setup`; no se cobra nada) y solo tarjetas (`payment_method_types[0]=card`), porque solo sabemos mostrar marca, últimos 4 y vencimiento; `locale=es-419`. El cliente de Stripe se crea con nombre y `metadata[owner_id]` (sin el teléfono) y clave de idempotencia por propietario.
+- **Eventos aceptados:** solo `checkout.session.completed` de una sesión `setup`, fuera de `livemode`, con el SetupIntent `succeeded`; todo lo demás se registra en `payment_events` como ignorado (también los tipos desconocidos). Un `client_reference_id` que no es un uuid se trata como sin propietario.
+- **Producción sin pagos en esta fase** y ninguna `sk_live_`/`rk_live_` en otro entorno: el worker solo acepta claves `sk_test_`/`rk_test_`. La pasarela falsa (`PAYMENTS=fake`) solo con `ENVIRONMENT=local`; su sesión es un token firmado con `FAKE_PAYMENTS_SECRET` (una hora) y su evento pasa por el mismo camino del webhook. `/webhooks/stripe` responde 503 (no 404) si Stripe no está configurado, para que Stripe reintente.
 
 ## 2026-10-27 · Fase 5, ticket 02: suscripción en la base
 

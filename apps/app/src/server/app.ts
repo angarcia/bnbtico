@@ -11,6 +11,7 @@ import { escapeHtml, heroLinkHeader, renderDocument } from "./render";
 import { securityHeaders } from "../shared/security";
 import type { ReminderEnv, ReminderRuntime } from "./reminders";
 import { testClock } from "./test-clock";
+import { registerBilling, type BillingDeps, type PaymentsEnv } from "./billing";
 
 export type Env = ReminderEnv & {
   ENVIRONMENT: Environment;
@@ -24,7 +25,7 @@ export type Env = ReminderEnv & {
   CF_PURGE_TOKEN?: string;
   CF_VERSION_METADATA?: { id: string };
   ASSETS: { fetch(input: Request | URL | string): Promise<Response> };
-};
+} & PaymentsEnv;
 
 export interface CacheLike {
   match(key: string): Promise<Response | undefined>;
@@ -47,6 +48,8 @@ export interface Deps {
   telemetry?(env: Env): TelemetryWriter | null;
   /** CSP y demás cabeceras en el HTML del worker; apagado solo en `vite dev` (inyecta scripts en línea). */
   securityHeaders?: boolean;
+  /** Método de pago (src/server/billing.ts): sin esto, sus rutas no existen. */
+  billing?: BillingDeps;
 }
 
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
@@ -212,6 +215,8 @@ export function createApp(deps: Deps) {
     });
     return res.ok ? c.json({ purged: key }) : c.json({ error: "Cloudflare rechazó la purga." }, 502);
   });
+
+  if (deps.billing) registerBilling(app, deps.billing, deps.securityHeaders !== false);
 
   app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 

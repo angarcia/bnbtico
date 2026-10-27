@@ -19,7 +19,7 @@ describe("estrategia del service worker por petición", () => {
   it("la ficha pública y la portada van a la red primero; robots, sitemap, purga y archivos nunca reciben el shell", () => {
     expect(strategy(nav("/casa/CT-1234"))).toBe("page");
     expect(strategy(nav("/"))).toBe("page");
-    for (const path of ["/robots.txt", "/sitemap.xml", "/_purge/CT-1234", "/sw.js", "/logo-horizontal.png"]) expect(strategy(nav(path)), path).toBe("network");
+    for (const path of ["/robots.txt", "/sitemap.xml", "/_purge/CT-1234", "/_pago-falso/abc.def", "/sw.js", "/logo-horizontal.png"]) expect(strategy(nav(path)), path).toBe("network");
   });
 
   it("los recursos precacheados salen de la caché; lo demás del mismo origen va a la red", () => {

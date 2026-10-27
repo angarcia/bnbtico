@@ -1,7 +1,7 @@
+import { createBillingService } from "../data/postgrest/billing-service";
 import { createAnonListings } from "../data/postgrest/client";
 import { createFxWriter } from "../data/postgrest/fx";
 import { createTelemetryWriter } from "../data/postgrest/telemetry";
-import { createBillingService } from "../data/postgrest/billing-service";
 import { parseAllowlist } from "../domain/whatsapp-sender";
 import { createApp, type CacheLike, type Env } from "./app";
 import { runHourly } from "./cron";
@@ -30,6 +30,12 @@ const app = createApp({
   telemetry,
   // `vite dev` inyecta scripts en línea (React Refresh): la CSP solo se envía en el build (preview y despliegue).
   securityHeaders: !import.meta.env.DEV,
+  billing: {
+    service: (env) => (env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL ? createBillingService({ supabaseUrl: env.SUPABASE_URL, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, anonKey: env.SUPABASE_ANON_KEY, fetch: (i, init) => fetch(i, init) }) : null),
+    fetch: (i, init) => fetch(i, init),
+    now: () => Date.now(),
+    log: (l) => console.log(l),
+  },
 });
 
 export default {

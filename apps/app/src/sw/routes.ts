@@ -11,7 +11,7 @@ export interface SwRequest {
 /** Datos con sesión o escrituras: nunca se cachean (además, todo lo que no es GET va a la red). */
 const NEVER = ["/rest/v1/", "/auth/v1/", "/storage/v1/upload", "/functions/v1/"];
 /** Rutas que responde el worker de Cloudflare: una navegación a ellas no debe recibir el shell. */
-const SERVER = /^\/(robots\.txt|sitemap\.xml|_purge\/|sw\.js)/;
+const SERVER = /^\/(robots\.txt|sitemap\.xml|_purge\/|sw\.js|_pago-falso\/)/;
 const PUBLIC_PHOTO = /\/storage\/v1\/(object|render\/image)\/public\//;
 
 export const SHELL_URL = "/";
