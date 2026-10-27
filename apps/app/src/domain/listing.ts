@@ -159,6 +159,17 @@ export function normalize(d: ListingDraft): ListingDraft {
   return n;
 }
 
+/** Paso 6 (ticket 19): la misma regla en el dominio, el fake y `submit_listing`. Se cuentan caracteres (como char_length). */
+export const TITLE_MIN = 5;
+export const TITLE_MAX = 60;
+export const DESCRIPTION_MIN = 80;
+export const DESCRIPTION_MAX = 2000;
+export const TITLE_LENGTH_ERROR = `El nombre de la casa debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.`;
+export const DESCRIPTION_LENGTH_ERROR = `La descripción debe tener entre ${DESCRIPTION_MIN} y ${DESCRIPTION_MAX} caracteres.`;
+/** Caracteres (puntos de código) de un texto sin los espacios de los extremos. */
+export const charCount = (text: string) => [...text.trim()].length;
+const between = (n: number, min: number, max: number) => n >= min && n <= max;
+
 export function validateStep(step: Step, d: ListingDraft): string | null {
   switch (step) {
     case 1:
@@ -186,7 +197,9 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       return null;
     case 6:
       if (!d.title.trim()) return "Póngale un nombre a la casa.";
+      if (!between(charCount(d.title), TITLE_MIN, TITLE_MAX)) return TITLE_LENGTH_ERROR;
       if (!d.description.trim()) return "Escriba una descripción.";
+      if (!between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX)) return DESCRIPTION_LENGTH_ERROR;
       return null;
     case 7:
       if (d.photoCount < MIN_PHOTOS) return `Agregue al menos ${MIN_PHOTOS} fotos.`;

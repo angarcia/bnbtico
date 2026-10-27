@@ -8,6 +8,7 @@ import { injectSession } from "./helpers/session";
 // iPhone SE (375×667): ninguna pantalla hace scroll, con o sin teclado. Aquí las fotos se siembran en la base; la subida real está en fotos.spec.ts.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 const TITLE = "Casa Manzanillo, a pie de playa";
+const LATE = "Descripción que no espera a la anterior: sale ya, con keepalive, aunque la página se vaya enseguida.";
 const alert = (page: Page) => page.locator('.note[role="alert"]');
 let h: ListingsHarness;
 
@@ -159,8 +160,19 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   expect((await h.owner("owner").listOwn()).length).toBe(1);
 
   await page.goto(`/propietario/publicar/${id}/6`);
+  // Ticket 19: nombre de 5 a 60 y descripción de 80 a 2000, con contador.
+  await title.fill("Casa");
+  await expect(page.locator("#pub-title-count")).toHaveText("4 / 60 · mínimo 5");
+  await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa.");
+  await continuar(page);
+  await expect(alert(page)).toHaveText("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+  await expect(page).toHaveURL(/\/6$/);
   await title.fill(TITLE);
-  await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho y hamacas.");
+  await continuar(page);
+  await expect(alert(page)).toHaveText("La descripción debe tener entre 80 y 2000 caracteres.");
+  await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.");
+  await expect(page.locator("#pub-description-count")).toHaveText("93 / 2000 · mínimo 80");
+  await expect(page.getByLabel("Nombre de la casa")).toHaveAttribute("maxlength", "60");
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
 
@@ -224,7 +236,7 @@ test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo 
   await expect(page).toHaveURL(/\/6$/);
   await expect(alert(page)).toHaveText("Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.");
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina renovada");
-  await expect(page.getByLabel("Descripción")).toHaveValue("Cabina frente al parque.");
+  await expect(page.getByLabel("Descripción")).toHaveValue("Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho.");
   expect((await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina Cahuita");
 
   // Con la base de vuelta, el mismo paso se guarda.
@@ -274,9 +286,9 @@ test("cerrar o recargar la app justo al tocar «Continuar» no pierde el paso", 
   await expect.poll(() => patches).toBe(1);
   await page.getByRole("link", { name: "Atrás" }).click();
   await expect(page).toHaveURL(/\/6$/);
-  await page.getByLabel("Descripción").fill("Descripción que no espera.");
+  await page.getByLabel("Descripción").fill(LATE);
   await submitAndReload();
-  await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.description).toBe("Descripción que no espera.");
+  await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.description).toBe(LATE);
   release();
   await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina en vuelo");
 });

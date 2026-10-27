@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { cantonesDe } from "../../domain/cantones";
-import { FEATURES, KIND_HINTS, KIND_LABELS, PROVINCES, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, PROVINCES, TITLE_MAX, TITLE_MIN, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
@@ -105,18 +105,41 @@ function BathroomChoice({ shared }: { shared: boolean | null }) {
   );
 }
 
-/** Descripción con contador; el área crece hasta llenar lo que queda de pantalla. */
-function DescriptionField({ value, max = 2000 }: { value: string; max?: number }) {
-  const [n, setN] = useState(value.length);
+/** Contador «n / máx» (ticket 19): en caracteres, como la regla del dominio; en rojo suave fuera del rango. */
+function CharCount({ id, n, min, max, hint }: { id: string; n: number; min: number; max: number; hint?: string }) {
+  const out = n > 0 && (n < min || n > max);
+  return (
+    <span id={id} className={`xs num${out ? " counter-out" : " muted"}`} aria-live="polite">
+      {n} / {max}
+      {hint ? ` · ${hint}` : ""}
+    </span>
+  );
+}
+
+/** Nombre de la casa (5 a 60 caracteres) con contador. */
+function TitleField({ value }: { value: string }) {
+  const [n, setN] = useState(charCount(value));
+  return (
+    <div className="field">
+      <div className="row between baseline">
+        <label htmlFor="pub-title">Nombre de la casa</label>
+        <CharCount id="pub-title-count" n={n} min={TITLE_MIN} max={TITLE_MAX} hint={`mínimo ${TITLE_MIN}`} />
+      </div>
+      <input id="pub-title" name="title" maxLength={TITLE_MAX} defaultValue={value} autoComplete="off" placeholder="Casa Manzanillo, a pie de playa" aria-describedby="pub-title-count" onChange={(e) => setN(charCount(e.currentTarget.value))} />
+    </div>
+  );
+}
+
+/** Descripción (80 a 2000 caracteres) con contador; el área crece hasta llenar lo que queda de pantalla. */
+function DescriptionField({ value }: { value: string }) {
+  const [n, setN] = useState(charCount(value));
   return (
     <div className="field grow-col">
       <div className="row between baseline">
         <label htmlFor="pub-description">Descripción</label>
-        <span className="xs muted num">
-          {n} / {max}
-        </span>
+        <CharCount id="pub-description-count" n={n} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} hint={`mínimo ${DESCRIPTION_MIN}`} />
       </div>
-      <textarea id="pub-description" name="description" rows={3} maxLength={max} defaultValue={value} onChange={(e) => setN(e.currentTarget.value.length)} />
+      <textarea id="pub-description" name="description" rows={3} maxLength={DESCRIPTION_MAX} defaultValue={value} aria-describedby="pub-description-count" onChange={(e) => setN(charCount(e.currentTarget.value))} />
     </div>
   );
 }
@@ -271,10 +294,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>Nombre y descripción</h2>
-          <div className="field">
-            <label htmlFor="pub-title">Nombre de la casa</label>
-            <input id="pub-title" name="title" maxLength={100} defaultValue={draft.title} autoComplete="off" placeholder="Casa Manzanillo, a pie de playa" />
-          </div>
+          <TitleField value={draft.title} />
           <DescriptionField value={draft.description} />
           <span className="xs muted">Sin enlaces, teléfonos ni publicidad. Se revisa antes de publicar.</span>
         </>

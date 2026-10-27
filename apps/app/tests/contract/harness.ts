@@ -48,7 +48,7 @@ export const COMPLETE: Partial<ListingDraft> = {
   acceptsNightly: true,
   acceptsMonthly: false,
   title: "Cabina Cahuita",
-  description: "Cabina frente al parque.",
+  description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho.",
   province: "Limón",
   canton: "Talamanca",
   zone: "Cahuita",

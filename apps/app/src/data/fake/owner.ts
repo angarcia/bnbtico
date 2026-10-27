@@ -6,7 +6,7 @@ import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import { inCostaRica } from "../../domain/geo";
-import { MAX_PHOTOS, MIN_PHOTOS, planStep, type Listing } from "../../domain/listing";
+import { charCount, DESCRIPTION_LENGTH_ERROR, DESCRIPTION_MAX, DESCRIPTION_MIN, MAX_PHOTOS, MIN_PHOTOS, planStep, TITLE_LENGTH_ERROR, TITLE_MAX, TITLE_MIN, type Listing } from "../../domain/listing";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
 
@@ -29,6 +29,8 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
   if ((l.bathrooms ?? 0) < 1) return "Indique el número de baños (mínimo 1).";
   if (l.kind === "habitacion" && l.bathroomShared === null) return "Indique si el baño es privado o compartido.";
   if (!l.title || !l.description) return "Complete el nombre de la casa y la descripción.";
+  if (charCount(l.title) < TITLE_MIN || charCount(l.title) > TITLE_MAX) return TITLE_LENGTH_ERROR;
+  if (charCount(l.description) < DESCRIPTION_MIN || charCount(l.description) > DESCRIPTION_MAX) return DESCRIPTION_LENGTH_ERROR;
   if (l.features.includes("parking")) {
     if (l.parkingPaid === null) return "Indique si el parqueo es gratuito o de pago.";
   } else if (l.parkingPaid !== null) return "El tipo de parqueo solo aplica si el anuncio tiene parqueo.";

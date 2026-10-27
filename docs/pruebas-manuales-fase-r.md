@@ -8,7 +8,7 @@ La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo 
 
 | Paso | Estado |
 |---|---|
-| A1 Migraciones | ✅ hecho (las cinco aplicadas en `bnbtico-pruebas`) |
+| A1 Migraciones | ✅ las cinco de la fase R aplicadas · ☐ **nueva (2026-10-26):** `20261027040909_nombre_y_descripcion` (`pnpm exec supabase db push`; sin ella el asistente exige los límites pero la base no) |
 | A2 Segundo factor por app de autenticación | ✅ hecho (TOTP activo; admins Daniel y Ana; falta que cada uno vincule su app, B12a0–B12b) |
 | A3 Secretos de Vault | ✅ hecho |
 | A4 Access sin PIN | ✅ `/casa/*` y `/_purge/*` hechos · ☐ opcional `/sw.js` y `/manifest.webmanifest` · ☐ `workers.dev` y vistas previas siguen públicas |
@@ -161,6 +161,8 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 |---|---|---|---|
 | B11a | Entrar con `8777 0001` → «Publicar mi casa» | Modo propietario: barra Inicio, Mis casas, Calendario, Consultas, Cuenta; Inicio con su casa CT-1015 y la tarjeta de la oferta de lanzamiento con las plazas que quedan | ☐ |
 | B11b | Inicio → «Publicar casa» (si ofrece «Tiene un borrador sin enviar», «Empezar otro») | «Paso 1 de 9». Recorra las nueve pantallas: tipo y modalidad, dónde, mapa (pin arrastrable, «Usar mi ubicación»), capacidad, características, nombre y descripción, fotos, precios, revisión. Ninguna pantalla necesita scroll con el teclado cerrado; con teclado, el campo activo queda visible | ☐ |
+| B11b2 | Paso 6 (actualizado 2026-10-26): nombre de 4 letras y una descripción corta → «Continuar» | Contadores «n / 60 · mínimo 5» y «n / 2000 · mínimo 80» (en rojo fuera del rango); avisos «El nombre de la casa debe tener entre 5 y 60 caracteres.» y «La descripción debe tener entre 80 y 2000 caracteres.»; corregidos, sigue al paso 7 | ☐ |
+| B11b3 | En cualquier paso, «✕ Cerrar» (arriba a la izquierda; actualizado 2026-10-26) | «Guardando…» un instante si hacía falta y vuelve a Mis casas; Inicio → «Publicar casa» ofrece «Seguir con el borrador» con lo escrito | ☐ |
 | B11c | Paso 7: «Añadir fotos» con 5–6 fotos reales del carrete, **incluida una HEIC** si es iPhone | Cada foto muestra su progreso y aparece en la rejilla. La HEIC llega convertida (iPhone) o sale «Ese formato no se puede subir. Use JPG o PNG.» (Android con HEIC). Tocar una foto → «Hacer portada», «Después →», «Quitar foto n» funcionan | ☐ |
 | B11d | En el paso 5 o 6, cerrar la app del todo; volver a abrir → Inicio → «Publicar casa» | «Tiene un borrador sin enviar» → «Seguir con el borrador» retoma lo escrito y las fotos | ☐ |
 | B11e | Terminar y «Enviar a revisión» | Pantalla «Enviada»; en Mis casas la casa «en revisión» | ☐ |

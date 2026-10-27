@@ -1,7 +1,7 @@
 // Lectura de cada pantalla del asistente de publicar: del formulario (claves → valores) a un parche del borrador.
 // Misma semántica que el parser del formulario de la app anterior, ahora con zod.
 import * as z from "zod/mini";
-import { FEATURE_LABEL, KINDS, parseColones, type Feature, type Kind, type ListingDraft, type Step } from "./listing";
+import { DESCRIPTION_MAX, FEATURE_LABEL, KINDS, TITLE_MAX, parseColones, type Feature, type Kind, type ListingDraft, type Step } from "./listing";
 
 /** Valores de un formulario agrupados por nombre (las casillas repiten nombre). */
 export type FormInput = Readonly<Record<string, readonly string[]>>;
@@ -42,7 +42,7 @@ const STEP_SCHEMAS = {
     features: features.filter((f): f is Feature => f in FEATURE_LABEL),
     parkingPaid,
   })),
-  6: draft(z.object({ title: text, description: text }), ({ title, description }) => ({ title: title.slice(0, 100), description: description.slice(0, 2000) })),
+  6: draft(z.object({ title: text, description: text }), ({ title, description }) => ({ title: [...title].slice(0, TITLE_MAX).join(""), description: [...description].slice(0, DESCRIPTION_MAX).join("") })),
   // El número de fotos sale de la lista del servidor, nunca de un campo del formulario.
   7: nothing,
   8: draft(z.object({ nightlyPriceCrc: colones, monthlyPriceCrc: colones }), (v) => v),

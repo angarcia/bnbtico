@@ -21,6 +21,9 @@ async function rejection(p: Promise<unknown>): Promise<DomainError> {
 }
 
 /** Cada pantalla con un parche inválido (mensaje esperado) y uno válido, sobre un borrador recién creado y relleno en orden. */
+/** Descripción válida (80–2000 caracteres, ticket 19) para las pruebas que guardan el paso 6. */
+const TEXT = "Descripción de prueba con lo justo para pasar el mínimo de ochenta caracteres que pide el paso seis.";
+
 const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Partial<ListingDraft> }[] = [
   {
     step: 1,
@@ -68,8 +71,11 @@ const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Par
     invalid: [
       [{ title: " ", description: "Linda" }, "Póngale un nombre a la casa."],
       [{ title: "Cabina", description: "" }, "Escriba una descripción."],
+      // Ticket 19: nombre de 5 a 60 caracteres y descripción de 80 a 2000.
+      [{ title: "Casa", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." }, "El nombre de la casa debe tener entre 5 y 60 caracteres."],
+      [{ title: "Cabina", description: "Cabina frente al parque." }, "La descripción debe tener entre 80 y 2000 caracteres."],
     ],
-    valid: { title: "Cabina Cahuita", description: "Cabina frente al parque." },
+    valid: { title: "Cabina Cahuita", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." },
   },
   { step: 7, invalid: [[{ photoCount: 12 }, "Agregue al menos 5 fotos."]], valid: {} },
   {
@@ -219,13 +225,13 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
       it("con el borrador que ya tiene el navegador guarda sin releerlo, con las mismas reglas", async () => {
         const known = (await me.getOwn(id))!;
         expect((await rejection(me.saveStep(id, 6, { title: " ", description: "x" }, known))).message).toBe("Póngale un nombre a la casa.");
-        const saved = await me.saveStep(id, 6, { title: "Con lo del navegador", description: "Una sola petición." }, known);
-        expect(saved).toMatchObject({ title: "Con lo del navegador", description: "Una sola petición.", status: "draft" });
+        const saved = await me.saveStep(id, 6, { title: "Con lo del navegador", description: TEXT }, known);
+        expect(saved).toMatchObject({ title: "Con lo del navegador", description: TEXT, status: "draft" });
         expect(await me.getOwn(id)).toEqual(saved);
         const review = await h.seed({ status: "review" });
         const stale = { ...(await me.getOwn(review.id))!, status: "draft" as const };
-        expect((await rejection(me.saveStep(review.id, 6, { title: "Otro", description: "Otra" }, stale))).message).toBe(FROZEN);
-        expect((await rejection(me.saveStep(review.id, 6, { title: "Otro", description: "Otra" }, known))).message).toBe(NOT_FOUND);
+        expect((await rejection(me.saveStep(review.id, 6, { title: "Otro nombre", description: TEXT }, stale))).message).toBe(FROZEN);
+        expect((await rejection(me.saveStep(review.id, 6, { title: "Otro nombre", description: TEXT }, known))).message).toBe(NOT_FOUND);
       });
 
       it("el paso 7 cuenta las fotos del servidor, nunca un número del formulario", async () => {
@@ -237,21 +243,21 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
 
       it("con cambios pedidos se edita; en revisión o activa, el mensaje del trigger; ajena o inexistente, no existe", async () => {
         const changes = await h.seed({ status: "changes" });
-        expect(await me.saveStep(changes.id, 6, { title: "Cabina corregida", description: "Con fotos del baño." })).toMatchObject({ status: "changes", title: "Cabina corregida" });
+        expect(await me.saveStep(changes.id, 6, { title: "Cabina corregida", description: TEXT })).toMatchObject({ status: "changes", title: "Cabina corregida" });
         for (const status of ["review", "active"] as const) {
           const s = await h.seed({ status });
-          expect((await rejection(me.saveStep(s.id, 6, { title: "Otro", description: "Otra" }))).message).toBe(FROZEN);
+          expect((await rejection(me.saveStep(s.id, 6, { title: "Otro nombre", description: TEXT }))).message).toBe(FROZEN);
           expect((await me.getOwn(s.id))?.title).toBe("Cabina Cahuita");
         }
         const theirs = await h.seed({ status: "draft", as: "other" });
-        expect((await rejection(me.saveStep(theirs.id, 6, { title: "Mía", description: "Mía" }))).message).toBe(NOT_FOUND);
-        expect((await rejection(me.saveStep("00000000-0000-4000-8000-999999999999", 6, { title: "x", description: "y" }))).message).toBe(NOT_FOUND);
-        expect((await rejection(me.saveStep("no-es-un-id", 6, { title: "x", description: "y" }))).message).toBe(NOT_FOUND);
+        expect((await rejection(me.saveStep(theirs.id, 6, { title: "Mía propia", description: TEXT }))).message).toBe(NOT_FOUND);
+        expect((await rejection(me.saveStep("00000000-0000-4000-8000-999999999999", 6, { title: "Casa x", description: TEXT }))).message).toBe(NOT_FOUND);
+        expect((await rejection(me.saveStep("no-es-un-id", 6, { title: "Casa x", description: TEXT }))).message).toBe(NOT_FOUND);
       });
     });
 
     describe("enviar a revisión", () => {
-      const s = {} as Record<"ready" | "fewPhotos" | "noKind" | "parkingWithout" | "review" | "active" | "changes" | "theirs", Seeded>;
+      const s = {} as Record<"ready" | "fewPhotos" | "noKind" | "parkingWithout" | "shortTitle" | "shortText" | "review" | "active" | "changes" | "theirs", Seeded>;
 
       beforeAll(async () => {
         h = await makeHarness();
@@ -279,6 +285,15 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         expect((await rejection(me.submit(s.noKind.id))).message).toBe("Elija Alojamiento completo o Habitación.");
         expect((await rejection(me.submit(s.parkingWithout.id))).message).toBe("El tipo de parqueo solo aplica si el anuncio tiene parqueo.");
         for (const x of [s.fewPhotos, s.noKind, s.parkingWithout]) expect((await me.getOwn(x.id))?.status).toBe("draft");
+      });
+
+      it("nombre de 5 a 60 caracteres y descripción de 80 a 2000 al enviar", async () => {
+        // Aquí y no en beforeAll: como mucho cinco borradores sin enviar (el primero ya se envió).
+        s.shortTitle = await h.seed({ status: "draft", photos: 5, draft: { title: "Casa" } });
+        s.shortText = await h.seed({ status: "draft", photos: 5, draft: { description: "Cabina frente al parque." } });
+        expect((await rejection(me.submit(s.shortTitle.id))).message).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+        expect((await rejection(me.submit(s.shortText.id))).message).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+        for (const x of [s.shortTitle, s.shortText]) expect((await me.getOwn(x.id))?.status).toBe("draft");
       });
 
       it("en revisión, activa o ajena no se envía; con cambios pedidos, sí", async () => {

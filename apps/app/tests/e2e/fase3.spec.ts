@@ -88,7 +88,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → M
   await continuar();
   await expect(owner).toHaveURL(/\/6$/);
   await owner.getByLabel("Nombre de la casa").fill(TITLE);
-  await owner.getByLabel("Descripción").fill("Cabina de madera entre la selva y el mar, con hamacas y rancho.");
+  await owner.getByLabel("Descripción").fill("Cabina de madera entre la selva y el mar, con hamacas, rancho y un sendero corto hasta la playa.");
   await continuar();
   await expect(owner).toHaveURL(/\/7$/);
   await h.addPhotos(id, 5);

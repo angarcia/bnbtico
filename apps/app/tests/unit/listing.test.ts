@@ -40,7 +40,7 @@ function validDraft(): ListingDraft {
     bedrooms: 2,
     bathrooms: 2,
     title: "Casa Manzanillo",
-    description: "Casa de madera a 80 m de la playa.",
+    description: "Casa de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.",
     features: ["wifi"],
     photoCount: 5,
     nightlyPriceCrc: 85000,
@@ -141,6 +141,14 @@ describe("validateStep", () => {
     expect(validateStep(6, d)).toBeNull();
     expect(validateStep(6, { ...d, title: " " })).toBe("Póngale un nombre a la casa.");
     expect(validateStep(6, { ...d, description: " " })).toBe("Escriba una descripción.");
+    expect(validateStep(6, { ...d, title: "Casa" })).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+    expect(validateStep(6, { ...d, title: "C".repeat(5) })).toBeNull();
+    expect(validateStep(6, { ...d, title: "C".repeat(61) })).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+    expect(validateStep(6, { ...d, description: "x".repeat(79) })).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+    expect(validateStep(6, { ...d, description: ` ${"x".repeat(80)} ` })).toBeNull();
+    expect(validateStep(6, { ...d, description: "x".repeat(2001) })).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+    // Se cuentan caracteres, no unidades UTF-16 (como char_length en SQL): un emoji es uno.
+    expect(validateStep(6, { ...d, title: `${"C".repeat(59)}🌴` })).toBeNull();
   });
 
   it("paso 7: 4 fotos falla, 5 pasa, 16 falla", () => {
@@ -204,7 +212,7 @@ describe("parseStep (zod, misma semántica que el parser anterior)", () => {
   });
   it("paso 6 recorta nombre y descripción", () => {
     expect(parseStep(6, fd([["title", " Casa "], ["description", " Linda "]]))).toEqual({ title: "Casa", description: "Linda" });
-    expect(parseStep(6, fd([["title", "x".repeat(120)], ["description", "y".repeat(2100)]]))).toEqual({ title: "x".repeat(100), description: "y".repeat(2000) });
+    expect(parseStep(6, fd([["title", "x".repeat(120)], ["description", "y".repeat(2100)]]))).toEqual({ title: "x".repeat(60), description: "y".repeat(2000) });
   });
   it("paso 8 usa parseColones para los dos precios", () => {
     expect(parseStep(8, fd([["nightlyPriceCrc", "85.000"], ["monthlyPriceCrc", "₡480 000"]]))).toEqual({ nightlyPriceCrc: 85000, monthlyPriceCrc: 480000 });
