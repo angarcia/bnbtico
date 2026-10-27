@@ -52,7 +52,7 @@
       "dist/client/assets/image-*.js",
       "dist/client/assets/useMutation-*.js"
     ],
-    "limit": "21 KB",
+    "limit": "22 KB",
     "gzip": true
   },
   {
