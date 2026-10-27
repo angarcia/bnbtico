@@ -4,6 +4,7 @@
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { OwnerListingsApi, PhotosApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
+import { rememberOwnListings } from "../shared/own-listings";
 import { allSavesSettled, savesSettled } from "./save-queue";
 import { authApi } from "./session";
 
@@ -29,8 +30,18 @@ export const ownListingsQuery = (userId: string) =>
     queryKey: ["own-listings", userId] as const,
     queryFn: async () => {
       await allSavesSettled(); // una lista leída a mitad de un guardado del asistente pisaría lo recién escrito
-      return (await api()).listOwn();
+      const list = await (await api()).listOwn();
+      rememberOwnListings(list.map((l) => l.publicId)); // la ficha no cuenta las visitas del dueño (revisión UX A2)
+      return list;
     },
+    staleTime: OWNER_STALE_MS,
+  });
+
+/** Visitas y consultas de 30 días de una casa (revisión UX A2). */
+export const listingStatsQuery = (userId: string, id: string) =>
+  queryOptions({
+    queryKey: ["own-stats", userId, id] as const,
+    queryFn: async () => (await api()).stats(id),
     staleTime: OWNER_STALE_MS,
   });
 

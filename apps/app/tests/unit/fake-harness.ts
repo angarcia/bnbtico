@@ -34,6 +34,10 @@ export function fakeHarness(db = new FakeDb()): CalendarHarness & { db: FakeDb }
       const back = (iso: string) => new Date(Date.parse(iso) - days * 86_400_000).toISOString();
       Object.assign(i, { createdAt: back(i.createdAt), updatedAt: back(i.updatedAt) });
     },
+    async recordViews(publicId, n, daysAgo = 0) {
+      const at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+      for (let k = 0; k < n; k++) db.views.push({ publicId, at });
+    },
     async seedContacts(who, n) {
       const other = who === "owner" ? "other" : "owner";
       for (let k = 0; k < n; k++) {

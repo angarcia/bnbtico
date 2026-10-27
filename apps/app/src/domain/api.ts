@@ -37,6 +37,12 @@ export interface PublicListingsApi {
  * Casas del propietario con sesión. Las reglas las pone la base (RLS, trigger listings_protect, política
  * listings_owner_delete, RPC set_listing_available); el fake las repite con los mismos mensajes.
  */
+/** Lo que el propietario ve de su ficha en 30 días (revisión UX A2). */
+export interface ListingStats {
+  views: number;
+  inquiries: number;
+}
+
 export interface OwnerListingsApi {
   /** Las casas propias en cualquier estado, la más reciente primero (el admin tampoco ve aquí las ajenas). */
   listOwn(): Promise<Listing[]>;
@@ -68,6 +74,11 @@ export interface OwnerListingsApi {
   setAvailable(id: string, available: boolean, reopenAt?: string | null): Promise<void>;
   /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
+  /**
+   * Visitas a la ficha (`listing_view`) y consultas de los últimos 30 días (RPC owner_listing_stats, revisión UX A2). Solo
+   * el dueño (o el admin); si no, «No encontramos ese anuncio.».
+   */
+  stats(id: string): Promise<ListingStats>;
 }
 
 /** Las tres variantes JPEG de una foto, ya generadas en el navegador. */

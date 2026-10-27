@@ -5,6 +5,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
 import { track } from "../shared/beacon";
+import { forgetOwnListings } from "../shared/own-listings";
 import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
 import { afterRender, viewTransitions } from "./motion";
@@ -194,6 +195,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: PERSI
 // Al cerrar sesión (aquí, en otra pestaña o porque el servidor la revocó): fuera la caché privada y de vuelta a modo cliente.
 onSignedOut(() => {
   queryClient.removeQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
+  forgetOwnListings();
   setRole("guest");
 });
 

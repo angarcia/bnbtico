@@ -50,6 +50,18 @@ test("el shell manda una vista por ruta y la ficha abierta desde una tarjeta", a
     .toEqual([`listing_view ficha ${casa.publicId}`, "page_view explorar -", "page_view ficha -"]);
 });
 
+// Revisión UX A2: las visitas del propio dueño no cuentan.
+test("el propietario que abre su propia ficha no suma una visita", async ({ page }) => {
+  const own = await postgrestHarness().then((h) => h.seed({ status: "active", draft: { title: "Casa Propia Telemetría" } }));
+  await injectSession(page, "owner");
+  await page.goto("/propietario/casas"); // la lista de Mis casas recuerda en el teléfono qué casas son suyas
+  await expect(page.getByRole("heading", { name: "Casa Propia Telemetría" })).toBeVisible();
+  await page.goto(`/casa/${own.publicId}`);
+  await expect(page.locator("html[data-hydrated=true]")).toHaveCount(1);
+  await page.waitForTimeout(800);
+  expect(rows(`select name from public.events where created_at >= '${since}' and name = 'listing_view' and listing_public_id = '${own.publicId}'`)).toEqual([]);
+});
+
 // Revisión UX C4 (punto 6): cada pantalla del asistente que se abre, para ver dónde se abandona.
 test("el asistente manda «wizard_step» con la casa y la ruta sin el id del borrador", async ({ page }) => {
   await injectSession(page, "owner");

@@ -100,6 +100,8 @@ export interface InquiriesHarness extends ListingsHarness {
   backdateInquiry(id: string, days: number): Promise<void>;
   /** `n` consultas de `who` hechas en las últimas horas a `n` casas activas nuevas del otro propietario (como el servicio). */
   seedContacts(who: SeedOwner, n: number): Promise<void>;
+  /** `n` aperturas de ficha (`listing_view`) de esa casa, hace `daysAgo` días (como el worker al recibir la baliza). */
+  recordViews(publicId: string, n: number, daysAgo?: number): Promise<void>;
 }
 
 // ---------- Calendario (fase 4) ----------

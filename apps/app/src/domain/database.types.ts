@@ -467,6 +467,11 @@ isOneToOne: true
               "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"message": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
             }[]
                            },
+"owner_listing_stats":
+{ Args: { "p_listing": string }; Returns: {
+              "inquiries": number,"views": number
+            }[]
+                           },
 "public_listing_days":
 { Args: { "p_public_id": string }; Returns: {
               "available": boolean,"day": string,"special_price_crc": number

@@ -9,7 +9,7 @@ terceros salvo Turnstile en Ingresar.
 |---|---|---|
 | `POST /vitals` | LCP, INP y CLS de `web-vitals` (trozo `vitals-*.js` que se importa tras `load`), con la ruta de aterrizaje | `web_vitals` |
 | `POST /errors` | errores no capturados y promesas rechazadas (como mucho 5 por carga), con mensaje, pila, ruta y build | `client_errors` |
-| `POST /events` | `page_view` (una por ruta resuelta en el shell; una al hidratar la ficha SSR), `listing_view` (ficha montada), `whatsapp_tap` (marcador en el botón «Contactar por WhatsApp», que hoy está deshabilitado), `inquiry_created` (fase 3: consulta registrada con `create_inquiry`; solo la casa, nada personal; la base lo acepta desde la migración `fase3_consultas`), `wizard_step` (revisión UX C4: cada pantalla del asistente de publicar que se abre, con la casa y la ruta `/propietario/publicar/:id/<paso>`; migración `evento_paso_asistente`) | `events` |
+| `POST /events` | `page_view` (una por ruta resuelta en el shell; una al hidratar la ficha SSR), `listing_view` (ficha montada; no se manda si quien la abre es su dueño, según la lista de casas propias que Mis casas deja en el teléfono, ni desde la vista previa del asistente: revisión UX A2 y C4), `whatsapp_tap` (marcador en el botón «Contactar por WhatsApp», que hoy está deshabilitado), `inquiry_created` (fase 3: consulta registrada con `create_inquiry`; solo la casa, nada personal; la base lo acepta desde la migración `fase3_consultas`), `wizard_step` (revisión UX C4: cada pantalla del asistente de publicar que se abre, con la casa y la ruta `/propietario/publicar/:id/<paso>`; migración `evento_paso_asistente`) | `events` |
 
 - El navegador usa `navigator.sendBeacon` (o `fetch` con `keepalive`): sobrevive a cerrar la pestaña o a salir hacia WhatsApp. Código en `src/shared/beacon.ts` y `src/client/vitals.ts`.
 - Solo se guarda la **ruta** (sin consulta ni fragmento y con los uuid cambiados por `:id`), el tipo de página (`pageType` en `src/domain/telemetry.ts`: `inicio`, `explorar`, `filtros`, `ficha`, `favoritos`, `cuenta`, `ayuda`, `publicar`, `propietario`, `admin`, `otra`), el build (`__BUILD_ID__` = los 12 primeros caracteres del commit) y el **país**, que añade el worker desde `request.cf.country` (o la cabecera `CF-IPCountry`). Los errores llevan además el user agent (recortado a 300).
@@ -46,6 +46,7 @@ select split_part(path, '/', 5)::int as paso, count(distinct listing_public_id) 
 from public.events where name = 'wizard_step' and created_at > now() - interval '30 days'
 group by 1 order by 1;
 
+-- El propietario ve sus propias cifras con la RPC owner_listing_stats (visitas y consultas de 30 días, revisión UX A2).
 -- Vistas de ficha y toques de WhatsApp por casa (30 días)
 select listing_public_id, count(*) filter (where name = 'listing_view') as vistas, count(*) filter (where name = 'whatsapp_tap') as whatsapp
 from public.events where created_at > now() - interval '30 days' and listing_public_id is not null

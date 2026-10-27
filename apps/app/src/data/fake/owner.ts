@@ -132,6 +132,16 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       touch(l, { status: "draft" });
     },
 
+    async stats(id) {
+      const l = own(id);
+      if (!l) throw new DomainError("No encontramos ese anuncio.", "not_found");
+      const since = Date.now() - 30 * 86_400_000;
+      return {
+        views: db.views.filter((v) => v.publicId === l.publicId && Date.parse(v.at) > since).length,
+        inquiries: db.inquiries.filter((i) => i.listingId === id && Date.parse(i.createdAt) > since).length,
+      };
+    },
+
     async deleteDraft(id) {
       const l = own(id);
       const refusal = discardRefusal(l ?? null);

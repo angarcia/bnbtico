@@ -14,6 +14,7 @@ import { useFx } from "./fx";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
 import { firstName, initials } from "../domain/person";
+import { isOwnListing } from "./own-listings";
 import { useHydrated } from "./hydration";
 import { I, type IconName } from "./icons";
 import { whenIdle } from "./idle";
@@ -204,7 +205,8 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
   const fx = useFx();
   const d = describe(l, { base });
   useEffect(() => {
-    if (!preview) track("listing_view", l.publicId);
+    // Ni la vista previa ni el propio dueño cuentan como visita (revisión UX A2).
+    if (!preview && !isOwnListing(l.publicId)) track("listing_view", l.publicId);
   }, [l.publicId, preview]);
   const main = d.mainPrice;
   const { bar, spacer } = useSpacerMatchingBar();

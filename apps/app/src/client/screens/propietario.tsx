@@ -24,7 +24,7 @@ import { calendarQuery } from "../calendar-days";
 import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
 import { countNew, inquiriesQuery } from "../inquiries";
-import { activeCountQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
+import { activeCountQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
 import { setRole } from "../role";
 import { useSession } from "../session";
 
@@ -209,10 +209,26 @@ function FeaturedCard({ listing: l, secondary }: { listing: Listing; secondary?:
             {titleOf(l)}
           </Link>
           <span className="small muted">{line}</span>
+          {l.status === "active" ? <StatsLine listing={l} /> : null}
         </div>
       </div>
       <FeaturedAction listing={l} secondary={secondary} />
     </section>
+  );
+}
+
+/** Visitas y consultas de 30 días (revisión UX A2): si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
+function StatsLine({ listing: l }: { listing: Listing }) {
+  const userId = useUserId();
+  const { data } = useQuery({ ...listingStatsQuery(userId, l.id), enabled: !!userId });
+  if (!data) return <span className="small stats-line" aria-hidden="true">&nbsp;</span>;
+  const { views, inquiries } = data;
+  return (
+    <span className="small strong primary stats-line" data-testid="listing-stats">
+      {views === 0 && inquiries === 0
+        ? "Comparta su enlace para que lleguen las primeras visitas"
+        : `${views} ${views === 1 ? "visita" : "visitas"} · ${inquiries} ${inquiries === 1 ? "consulta" : "consultas"} · últimos 30 días`}
+    </span>
   );
 }
 
@@ -508,6 +524,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
           </span>
         ) : null}
       </div>
+      {l.status === "active" ? <StatsLine listing={l} /> : null}
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
       {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}

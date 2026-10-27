@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
-import type { ListingsHarness, Seeded } from "../contract/harness";
+import type { Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 
@@ -7,7 +7,7 @@ const HOST = `127.0.0.1:${process.env.E2E_PORT ?? 4173}`;
 
 // Zona del propietario (pantallas 09, 10, 16 y 19) contra Supabase local, con la sesión inyectada por localStorage.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
-let h: ListingsHarness;
+let h: Awaited<ReturnType<typeof postgrestHarness>>;
 let active: Seeded;
 let changes: Seeded;
 let review: Seeded;
@@ -44,6 +44,8 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await expect(page.getByText(`${HOST}/casa/${active.publicId}`)).toBeVisible();
   await expect(page.getByTestId("offer-left")).toHaveText("Quedan 48 de 50");
   await expect(page.getByText("5 en total")).toBeVisible();
+  // Revisión UX A2: sin visitas ni consultas, la invitación a compartir; con ellas, las cifras de 30 días.
+  await expect(page.getByTestId("listing-stats")).toHaveText("Comparta su enlace para que lleguen las primeras visitas");
   // Revisión UX A1: lo que falta por publicar va arriba (aquí, la casa con cambios más reciente) con el único botón
   // relleno; compartir la casa activa pasa a contorno y los otros borradores se cuentan.
   const resume = page.getByTestId("resume-card");
@@ -75,6 +77,16 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Inicio" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Su casa, en marcha" })).toBeVisible();
   await expect(page.getByTestId("offer-left")).toHaveText("Quedan 48 de 50");
+});
+
+test("visitas y consultas de 30 días en Inicio y en el detalle de la casa", async ({ page }) => {
+  await h.recordViews(active.publicId, 4);
+  await h.recordViews(active.publicId, 2, 45);
+  await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });
+  await page.goto("/propietario");
+  await expect(page.getByTestId("listing-stats")).toHaveText("4 visitas · 1 consulta · últimos 30 días");
+  await page.goto(`/propietario/casas/${active.id}`);
+  await expect(page.getByTestId("listing-stats")).toHaveText("4 visitas · 1 consulta · últimos 30 días");
 });
 
 test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", async ({ page }) => {

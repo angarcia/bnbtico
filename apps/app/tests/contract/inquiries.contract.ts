@@ -153,5 +153,17 @@ export function inquiriesContract(name: string, makeHarness: () => Promise<Inqui
       await h.inquiries("other").create(house.publicId, draft({ message: "A2" }));
       expect((await h.inquiries("owner").listForOwner()).map((i) => i.message)).toEqual(["A2", "B"]);
     });
+
+    // Revisión UX A2: el propietario ve si su ficha funciona (visitas y consultas de 30 días), y nadie más.
+    it("estadísticas de 30 días de una casa: visitas y consultas, solo para su dueño", async () => {
+      expect(await h.owner("owner").stats(house.id)).toEqual({ views: 0, inquiries: 0 });
+      await h.recordViews(house.publicId, 3);
+      await h.recordViews(house.publicId, 2, 40); // hace 40 días: fuera
+      const recent = await h.inquiries("other").create(house.publicId, draft());
+      expect(await h.owner("owner").stats(house.id)).toEqual({ views: 3, inquiries: 1 });
+      await h.backdateInquiry(recent.inquiryId, 31);
+      expect(await h.owner("owner").stats(house.id)).toEqual({ views: 3, inquiries: 0 });
+      expect((await rejection(h.owner("other").stats(house.id))).message).toBe("No encontramos ese anuncio.");
+    });
   });
 }

@@ -89,6 +89,11 @@ export async function postgrestHarness(): Promise<CalendarHarness> {
       const back = (iso: string) => new Date(Date.parse(iso) - days * 86_400_000).toISOString();
       fail("atrasar consulta", (await service.from("inquiries").update({ created_at: back(data!.created_at), updated_at: back(data!.updated_at) }).eq("id", id)).error);
     },
+    async recordViews(publicId, n, daysAgo = 0) {
+      const created_at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+      const row = { name: "listing_view", listing_public_id: publicId, page: "ficha", path: `/casa/${publicId}`, build: "prueba", created_at };
+      fail("registrar visitas", (await service.from("events").insert(Array.from({ length: n }, () => row))).error);
+    },
     async seedContacts(who, n) {
       const other = who === "owner" ? "other" : "owner";
       const base = { owner_id: ids[other], status: "active" as const, title: "Contactada", description: "x", province: "Limón", whatsapp_phone: TEST_PHONES[other], capacity: 2, bedrooms: 1, bathrooms: 1, accepts_nightly: true, nightly_price_crc: 30000 };
