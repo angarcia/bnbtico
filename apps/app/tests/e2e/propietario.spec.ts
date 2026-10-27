@@ -56,7 +56,11 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
 
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Mis casas" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.locator(".tile")).toHaveText(["1activa", "0por pagar", "1en revisión"]);
+  // Revisión UX N1: sin casillas a 0; un solo relleno (lo que falta por publicar) y «Nueva» en contorno.
+  await expect(page.locator(".tile")).toHaveText(["1activa", "1en revisión"]);
+  await expect(page.locator("main .btn-primary")).toHaveCount(1);
+  await expect(card(page, "Cabina con cambios").getByRole("button", { name: "Corregir y reenviar" })).toHaveClass(/btn-primary/);
+  await expect(page.getByRole("link", { name: "Nueva" })).toHaveClass(/btn-ghost/);
   await expect(page.getByRole("article")).toHaveCount(5);
   await expect(page.getByRole("heading", { name: "Casa de Ana" })).toHaveCount(0);
   await expect(card(page, "Cabina con cambios").getByText("Cambios pedidos", { exact: true })).toBeVisible();

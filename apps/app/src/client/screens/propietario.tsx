@@ -293,32 +293,36 @@ export function CasasScreen() {
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
   const count = (s: Listing["status"]) => list?.filter((l) => l.status === s).length ?? 0;
+  // Casillas a 0 fuera: no llaman la atención sobre nada (revisión UX N1).
+  const tiles = [
+    { n: count("active"), label: count("active") === 1 ? "activa" : "activas", cls: "tile-soft" },
+    { n: count("payment_due"), label: "por pagar", cls: "tile-sun" },
+    { n: count("review"), label: "en revisión", cls: "tile-review" },
+  ].filter((t) => t.n > 0);
+  // Un solo botón relleno, con la misma prioridad que Inicio (revisión UX N1/A1): lo que falta por publicar; si no, compartir.
+  const primaryId = (list?.find((l) => l.status === "draft" || l.status === "changes") ?? list?.find((l) => can(l, "share")))?.id;
   return (
     <>
       <RootHeader
         title="Mis casas"
         home="/propietario"
         action={
-          <Link to="/propietario/publicar" className="btn btn-primary btn-header">
-            <I.plus size={18} /> Nueva
-          </Link>
+          list && list.length > 0 ? (
+            <Link to="/propietario/publicar" className="btn btn-ghost btn-header">
+              <I.plus size={18} /> Nueva
+            </Link>
+          ) : undefined
         }
       />
       {listings.isError && !list ? <p className="note" role="alert">{message(listings.error)}</p> : null}
-      {list && list.length > 0 ? (
+      {tiles.length ? (
         <div className="grid-3">
-          <div className="tile tile-soft">
-            <b className="num">{count("active")}</b>
-            <span>{count("active") === 1 ? "activa" : "activas"}</span>
-          </div>
-          <div className="tile tile-sun">
-            <b className="num">{count("payment_due")}</b>
-            <span>por pagar</span>
-          </div>
-          <div className="tile tile-review">
-            <b className="num">{count("review")}</b>
-            <span>en revisión</span>
-          </div>
+          {tiles.map((t) => (
+            <div key={t.label} className={`tile ${t.cls}`}>
+              <b className="num">{t.n}</b>
+              <span>{t.label}</span>
+            </div>
+          ))}
         </div>
       ) : null}
       {!list && !listings.isError ? <SkeletonCard /> : null}
@@ -334,7 +338,7 @@ export function CasasScreen() {
       {list && list.length > 0 ? (
         <div className="stack gap-14">
           {list.map((l) => (
-            <OwnerCard key={l.id} listing={l} userId={userId} />
+            <OwnerCard key={l.id} listing={l} userId={userId} primary={l.id === primaryId} />
           ))}
         </div>
       ) : null}
@@ -342,7 +346,7 @@ export function CasasScreen() {
   );
 }
 
-function OwnerCard({ listing: l, userId }: { listing: Listing; userId: string }) {
+function OwnerCard({ listing: l, userId, primary }: { listing: Listing; userId: string; primary: boolean }) {
   const d = describe(l, { base: base() });
   const navigate = useNavigate();
   const discard = useDeleteDraft(userId);
@@ -364,20 +368,20 @@ function OwnerCard({ listing: l, userId }: { listing: Listing; userId: string })
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <div className="note note-sun small">Nota de bnbtico: {l.reviewNote}</div> : null}
       {can(l, "share") ? (
         <div className="row gap-8">
-          <ShareButtonInline listing={l} />
+          <ShareButtonInline listing={l} primary={primary} />
           <Link to="/propietario/calendario" search={{ casa: l.id }} className="btn btn-ghost grow">
             Calendario
           </Link>
         </div>
       ) : null}
       {l.status === "changes" ? (
-        <button type="button" className="btn btn-ghost btn-block" onClick={() => void navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } })}>
+        <button type="button" className={`btn ${primary ? "btn-primary" : "btn-ghost"} btn-block`} onClick={() => void navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } })}>
           Corregir y reenviar
         </button>
       ) : null}
       {l.status === "draft" ? (
         <div className="row gap-8">
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="btn btn-primary grow">
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} className={`btn ${primary ? "btn-primary" : "btn-ghost"} grow`}>
             Seguir
           </Link>
           {can(l, "discard") ? (
@@ -397,11 +401,11 @@ function OwnerCard({ listing: l, userId }: { listing: Listing; userId: string })
   );
 }
 
-function ShareButtonInline({ listing: l }: { listing: Listing }) {
+function ShareButtonInline({ listing: l, primary }: { listing: Listing; primary: boolean }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className="btn btn-primary grow" onClick={share} data-share-url={target.url}>
+    <button type="button" className={`btn ${primary ? "btn-primary" : "btn-ghost"} grow`} onClick={share} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? "Enlace copiado" : "Compartir ficha"}
       </span>
