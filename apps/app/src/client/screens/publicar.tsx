@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
-import { LAST_STEP, STEPS, resumeStep, type Step } from "../../domain/listing";
+import { LAST_STEP, STEPS, resumeStep, wizardStage, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
@@ -107,12 +107,25 @@ function CloseWizard({ id }: { id: string }) {
   );
 }
 
+function StageLabel({ step }: { step: Step }) {
+  const stage = wizardStage(step);
+  return (
+    <span className="right stage-label" aria-label={`${stage.name}, ${stage.position} de ${stage.size}. Paso ${step} de ${LAST_STEP}.`}>
+      <b>{stage.name}</b>
+      <span>
+        {stage.position} de {stage.size}
+      </span>
+    </span>
+  );
+}
+
 function StepHeader({ id, step }: { id: string; step: Step | null }) {
   return (
     <header className="header-flow">
       <CloseWizard id={id} />
       <h1>Publicar casa</h1>
-      {step ? <span className="right">Paso {step} de {LAST_STEP}</span> : null}
+      {/* La etapa en vez de «Paso n de 9» (revisión UX C4): tres tramos que se leen más cortos que nueve pasos. */}
+      {step ? <StageLabel step={step} /> : null}
     </header>
   );
 }
@@ -169,8 +182,9 @@ export function PasoScreen() {
     <>
       {header}
       <div className="progress" aria-hidden="true">
+        {/* Los 9 tramos agrupados por etapa: un hueco mayor donde empieza la siguiente. */}
         {STEPS.map((s) => (
-          <span key={s} className={s <= step ? "on" : ""} />
+          <span key={s} className={`${s <= step ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
         ))}
       </div>
       <StepForm key={step} userId={userId} listing={l} step={step} enter={enter}>

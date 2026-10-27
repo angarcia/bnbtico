@@ -63,7 +63,7 @@ const savedZone = async () => (await serviceClient().from("listings").select("zo
 test("sugerencias de Photon con espera entre teclas, la vieja se descarta, se elige y el mapa abre con zoom en la zona", async ({ page }) => {
   await fakePhoton(page, "Coc");
   await page.goto(`/propietario/publicar/${id}/2`);
-  await expect(page.getByText("Paso 2 de 9")).toBeVisible();
+  await expect(page.locator(".stage-label")).toHaveText("Su casa2 de 5");
   await expectNoScroll(page, "paso 2");
   await expect(page.getByRole("group", { name: "Zonas frecuentes" }).getByRole("button")).toHaveText(["Puerto Viejo", "Playa Negra", "Cocles", "Playa Chiquita", "Punta Uva", "Manzanillo", "Cahuita", "Limón centro", "Otra"]);
 

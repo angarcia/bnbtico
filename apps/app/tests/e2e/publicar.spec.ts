@@ -58,7 +58,7 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.getByRole("link", { name: "Publicar casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
-  await expect(page.getByText("Paso 1 de 9")).toBeVisible();
+  await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 5");
   await expect(page.locator(".progress span")).toHaveCount(9);
   await expect(page.locator(".progress span.on")).toHaveCount(1);
   await expectNoScroll(page, "paso 1");
@@ -75,7 +75,7 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.getByText("Mensual", { exact: true }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
-  await expect(page.getByText("Paso 2 de 9")).toBeVisible();
+  await expect(page.locator(".stage-label")).toHaveText("Su casa2 de 5");
   await expectNoScroll(page, "paso 2");
 
   // 2 Dónde está: cantón de lista según la provincia; «Listo» en la zona envía el paso.
@@ -241,7 +241,7 @@ test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo 
   await continuar(page);
   // Navega al instante mientras guarda por detrás.
   await expect(page).toHaveURL(/\/7$/);
-  await expect(page.getByText("Paso 7 de 9")).toBeVisible();
+  await expect(page.locator(".stage-label")).toHaveText("Fotos y texto2 de 2");
   release();
   await expect(page).toHaveURL(/\/6$/);
   await expect(alert(page)).toHaveText("Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.");
@@ -376,7 +376,7 @@ test("enviar con un dato que falta lleva a la pantalla que lo pide", async ({ pa
 test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrás / Continuar» sigue fija abajo", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5 });
   await page.goto(`/propietario/publicar/${draft.id}/4`);
-  await expect(page.getByText("Paso 4 de 9")).toBeVisible();
+  await expect(page.locator(".stage-label")).toHaveText("Su casa4 de 5");
   const sample = () =>
     page.evaluate(() => {
       const w = window as unknown as { maxScrollWidth: number };

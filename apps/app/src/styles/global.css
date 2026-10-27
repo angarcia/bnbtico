@@ -677,3 +677,8 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .photos-missing{color:var(--sun-ink);font-weight:600}
 /* Qué tener a mano antes de publicar (revisión UX C4). */
 .ready-list{margin:0;padding-left:20px;display:grid;gap:4px}
+/* Etapas del asistente (revisión UX C4): rótulo de la etapa en la cabecera, en dos líneas para que quepa a 360 px, y un
+   hueco mayor entre los tramos de una etapa y la siguiente. */
+.stage-label{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:12px}
+.stage-label b{color:var(--fg);font-size:13px}
+.progress span.stage-start{margin-left:8px}
