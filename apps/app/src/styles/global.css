@@ -178,6 +178,8 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .header-root .greeting{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:2px}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:15px;font-weight:700;color:var(--fg);text-decoration:none}
+.header-close:disabled{opacity:.6}
 .header-flow .right{margin-left:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:6}
 .tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}

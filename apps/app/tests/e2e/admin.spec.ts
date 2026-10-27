@@ -160,6 +160,19 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await expect(page.getByRole("status")).toContainText("Cambios pedidos");
   await expect(page.getByRole("status")).toContainText("Necesitamos una foto de la cocina.");
   await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toHaveCount(0);
+
+  // B12c: con el segundo código, Cuenta lleva la barra del admin (también tras recargar) y se puede volver a modo cliente.
+  await page.goto("/admin");
+  await nav(page).getByRole("link", { name: "Cuenta" }).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
+  await page.reload();
+  await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
+  await expect(page.getByRole("link", { name: /Revisión de anuncios · admin/ })).toBeVisible();
+  await page.getByRole("button", { name: /Buscar una casa/ }).click();
+  await expect(page).toHaveURL(/\/explorar/);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi cuenta"]);
 });
 
 test("quien no es admin no entra: no se le pide código ni se le inscribe ningún factor", async ({ page }) => {

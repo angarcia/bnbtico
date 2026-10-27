@@ -2,10 +2,12 @@
 // cortas sin scroll. Se carga bajo demanda al abrir /propietario/publicar: no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, STEPS, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
+import { I } from "../../shared/icons";
+import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
 import { api, ownListingQuery, resumableQuery } from "../owner";
 import { StepFields } from "../publish/fields";
@@ -78,6 +80,33 @@ export function PublicarScreen() {
 
 // ---------- Una pantalla del asistente ----------
 
+/** «Cerrar» (B11f): espera a que salgan los guardados de esta casa y vuelve a Mis casas; el borrador se retoma después. */
+function CloseWizard({ id }: { id: string }) {
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  async function close() {
+    setSaving(true);
+    await savesSettled(id);
+    await navigate({ to: "/propietario/casas" });
+  }
+  return (
+    <button type="button" className="btn-link header-close" onClick={close} disabled={saving} aria-label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"}>
+      <I.x size={20} />
+      <span>{saving ? "Guardando…" : "Cerrar"}</span>
+    </button>
+  );
+}
+
+function StepHeader({ id, step }: { id: string; step: Step | null }) {
+  return (
+    <header className="header-flow">
+      <CloseWizard id={id} />
+      <h1>Publicar casa</h1>
+      {step ? <span className="right">Paso {step} de {LAST_STEP}</span> : null}
+    </header>
+  );
+}
+
 const stepRoute = getRouteApi("/_flow/_privateFlow/propietario/publicar/$id/$paso");
 const toStep = (paso: string): Step | null => (STEPS as readonly number[]).includes(Number(paso)) && /^\d$/.test(paso) ? (Number(paso) as Step) : null;
 
@@ -100,7 +129,7 @@ export function PasoScreen() {
     if (step === 7) void client.invalidateQueries({ queryKey: ["own-listing", userId, id] });
   }, [step, client, userId, id]);
 
-  const header = <FlowHeader title="Publicar casa" back="/propietario/casas" action={step ? <span className="right">Paso {step} de {LAST_STEP}</span> : undefined} />;
+  const header = <StepHeader id={id} step={step} />;
   if (!step || l === null) {
     return (
       <>

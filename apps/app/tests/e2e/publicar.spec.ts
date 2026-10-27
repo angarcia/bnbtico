@@ -310,6 +310,35 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${changes.id}$`));
 });
 
+test("«Cerrar» en la cabecera espera al guardado en curso y vuelve a Mis casas con el borrador guardado (B11f)", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 5 });
+  await page.goto(`/propietario/publicar/${draft.id}/6`);
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina Cahuita");
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/rest/v1/listings?**", async (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback();
+    await held;
+    await route.fallback();
+  });
+  await page.getByLabel("Nombre de la casa").fill("Cabina que se cierra");
+  await continuar(page);
+  await expect(page).toHaveURL(/\/7$/);
+  const close = page.getByRole("button", { name: "Cerrar y seguir después" });
+  await expect(close).toBeVisible();
+  await close.click();
+  // Mientras el guardado no vuelve, sigue en el asistente y lo dice.
+  await expect(page.getByRole("button", { name: "Guardando el borrador…" })).toBeDisabled();
+  await expect(page).toHaveURL(/\/7$/);
+  release();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  expect((await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina que se cierra");
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.goto("/propietario/publicar");
+  await expect(page.getByText(/«Cabina que se cierra»/)).toBeVisible();
+});
+
 test("enviar con un dato que falta lleva a la pantalla que lo pide", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5, draft: { capacity: null } });
   await page.goto(`/propietario/publicar/${draft.id}/9`);

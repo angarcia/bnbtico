@@ -1,5 +1,6 @@
 // Shell de la zona en el navegador: router (rutas por código) y caché de Query persistida en IndexedDB.
 import { QueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
@@ -101,6 +102,11 @@ const requireAdmin = async ({ location }: { location: { href: string } }) => {
 function AdminOutlet() {
   const { status, session } = useSession();
   const location = useLocation();
+  const aal2 = session?.aal === "aal2";
+  // Con el segundo código, la barra y Cuenta pasan a modo admin también fuera de /admin (B12c).
+  useEffect(() => {
+    if (aal2) setRole("admin");
+  }, [aal2]);
   if (status === "signed-out") return <Navigate to="/cuenta" search={{ next: location.href }} replace />;
   if (session && session.aal !== "aal2") return <Navigate to="/admin/codigo" search={{ next: location.href }} replace />;
   return <Outlet />;

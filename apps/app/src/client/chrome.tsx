@@ -5,7 +5,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { I } from "../shared/icons";
 import { countNew, inquiriesQuery } from "./inquiries";
-import { useRole } from "./role";
+import { barRole, useRole, type Zone } from "./role";
 import { useSession } from "./session";
 
 const GUEST = [
@@ -47,10 +47,10 @@ function useNewInquiries(show: boolean, fetch: boolean): number {
 
 export function TabsFrame({ children }: { children: ReactNode }) {
   // En /propietario/* la barra es la del propietario desde el primer pintado (la pantalla fija además el modo).
-  const zone = useLocation({ select: (l) => (l.pathname.startsWith("/propietario") ? "owner" : l.pathname.startsWith("/admin") ? "admin" : null) });
-  const role = useRole();
-  const tabs = zone === "admin" ? ADMIN : role === "owner" || zone === "owner" ? OWNER : GUEST;
-  const pending = useReviewCount(zone === "admin");
+  const zone = useLocation({ select: (l): Zone => (l.pathname.startsWith("/propietario") ? "owner" : l.pathname.startsWith("/admin") ? "admin" : null) });
+  const role = barRole(zone, useRole());
+  const tabs = role === "admin" ? ADMIN : role === "owner" ? OWNER : GUEST;
+  const pending = useReviewCount(role === "admin");
   const fresh = useNewInquiries(tabs === OWNER, zone === "owner");
   return (
     <div className="app">

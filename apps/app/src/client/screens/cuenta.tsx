@@ -365,7 +365,9 @@ function initials(name: string): string {
 
 function MyAccount({ editing }: { editing: boolean }) {
   const { session } = useSession();
-  const owner = useRole() === "owner";
+  const role = useRole();
+  const owner = role === "owner";
+  const admin = role === "admin";
   const navigate = useNavigate();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const [leaving, setLeaving] = useState(false);
@@ -385,7 +387,7 @@ function MyAccount({ editing }: { editing: boolean }) {
   const a = account.data;
   return (
     <>
-      <RootHeader title={owner ? "Cuenta" : "Mi cuenta"} home={owner ? "/propietario" : "/explorar"} />
+      <RootHeader title={role === "guest" ? "Mi cuenta" : "Cuenta"} home={owner ? "/propietario" : admin ? "/admin" : "/explorar"} />
       {a ? (
         <section className="card row account-card">
           <span className="avatar" aria-hidden="true">
@@ -448,7 +450,7 @@ function MyAccount({ editing }: { editing: boolean }) {
             </span>
           </Link>
         ) : null}
-        {!owner ? (
+        {role === "guest" ? (
           <Link to="/favoritos" className="list-item">
             <I.heart />
             <span className="body">
@@ -479,7 +481,7 @@ function MyAccount({ editing }: { editing: boolean }) {
             <I.chevron />
           </span>
         </Link>
-        {owner ? (
+        {role !== "guest" ? (
           <button type="button" className="list-item" onClick={() => switchRole("guest")}>
             <I.search />
             <span className="body">
@@ -492,7 +494,7 @@ function MyAccount({ editing }: { editing: boolean }) {
         ) : null}
       </section>
 
-      {!owner ? (
+      {role === "guest" ? (
         <section className="card-arena stack">
           <b className="display">¿Tiene una casa en el Caribe?</b>
           <span className="small">Publíquela gratis durante 12 meses si está entre las primeras 50. Sin comisiones: los clientes le escriben por WhatsApp.</span>
@@ -609,8 +611,7 @@ export function RecuperarScreen() {
 
 // ---------- /ayuda ----------
 export function AyudaScreen() {
-  const role = useRole();
-  const s = SUPPORT[role];
+  const s = SUPPORT[useRole() === "owner" ? "owner" : "guest"];
   return (
     <>
       <FlowHeader title="Ayuda por WhatsApp" back="/cuenta" />
