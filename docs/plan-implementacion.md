@@ -112,6 +112,12 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 **Incluye:** el cliente publica lo que busca (zona, fechas, personas, imprescindibles, presupuesto), los propietarios compatibles lo ven en su panel y le escriben por WhatsApp con consentimiento del cliente; caducidad y límites del prototipo.
 **Hecho cuando:** un «Buscan casa» creado desde un móvil aparece al owner de una casa compatible y no al de una incompatible.
 
+### Pasada de escritorio (entre la fase 6 y la 7; decidido el 2026-10-26)
+**Objetivo:** toda la app con un diseño propio en ordenador, no solo la columna de teléfono centrada.
+**Incluye:** primero el diseño en el lienzo (navegación de escritorio: barra superior o lateral, tomando como base la lateral de 232 px del admin del diseño v1; rejillas y anchos por pantalla) y después cada pantalla del cliente y del propietario, incluidas las de las fases 5 y 6. Explorar y la ficha ya tienen versión de escritorio desde la revisión UX del 2026-10-26 (`.scratch/revision-ux/`).
+**No incluye:** cambiar lo que carga el móvil (presupuestos y puertas de CI iguales).
+**Hecho cuando:** cada pantalla se ve bien a 1280 px y a 1024 px, sin romper el móvil, con capturas de las dos.
+
 ### Fase 7 · Lanzamiento
 **Objetivo:** abrir bnbtico.com.
 **Incluye:** (la web ya vive en Cloudflare Workers desde la fase R; Vercel se da de baja en el corte) borrar datos de prueba, cargar las primeras casas reales con sus propietarios (ellos publican; nosotros acompañamos), privacidad y condiciones de uso publicadas, números de WhatsApp de bnbtico reales, Meta aprobada o Twilio en producción, prueba de restauración de la copia diaria (que existe desde la fase R) y decisión sobre Supabase Pro, un panel mínimo de salud sobre las tablas de errores y `web_vitals` y los Workers Logs, landing abierta.
