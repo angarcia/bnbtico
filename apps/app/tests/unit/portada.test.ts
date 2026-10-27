@@ -82,6 +82,7 @@ describe("portada · el HTML estático", () => {
     // Revisión UX C1: la oferta pasa a su tarjeta bajo la foto.
     expect(portada).toContain("Las primeras 50 casas: 12 meses gratis.");
     expect(portada).toContain("<!--cta-propietarios-->");
+    expect(portada).toContain("Después, ₡2 900 al mes por casa"); // precio decidido el 2026-10-27
   });
 });
 

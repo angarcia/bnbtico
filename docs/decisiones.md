@@ -25,6 +25,11 @@ Aprobado por Daniel. Sustituye «el tipo sigue siendo la constante `FX_CRC_PER_U
 - **Dónde se ve la fecha, sin agrandar nada:** nota de Explorar en dólares «Dólares solo para orientarle: ≈ ₡456 por US$1 (tipo de referencia del 2 nov.). Los propietarios…» (del mismo largo que la anterior); ayuda del precio de Filtros igual; Mi cuenta «≈ ₡456 por US$1 (2 nov.)»; en la ficha, en el `title` de la cifra de referencia («Orientativo: ≈ ₡456 por US$1, tipo de referencia del 2 nov.»): la barra fija no crece (revisión UX C3 quiere achicarla).
 - **CSP sin cambios:** las fuentes las pide el worker, no el navegador.
 
+## 2026-10-27 · Suscripción a ₡2 900 al mes por casa
+
+- **Precio:** después del período gratis de la oferta de lanzamiento, la suscripción cuesta **₡2 900 al mes por casa activa** (antes, la referencia era ₡9 900), sin permanencia ni comisiones. La oferta (12 / 6 / 3 meses para las primeras 50 / 50 / 100 casas) no cambia. Decidido por Daniel.
+- **Dónde:** `MONTHLY_FEE_CRC` en `apps/app/src/domain/offer.ts` (Inicio, Mis casas, paso 9 del asistente y Cuenta, que ahora usa la constante en vez del texto fijo), las dos portadas (la viva en `main` y la de la app nueva), la app vieja hasta el corte, CLAUDE.md, `business-model.md` (incluido el cálculo de ingresos: 150 casas de pago = ₡435 000/mes), `diseno-v1.md`, `marketing.md`, `pitch.md` y el plan. Las maquetas de `design/pantallas/`, el prototipo y los documentos históricos se dejan como estaban.
+
 ## 2026-10-26 · Revisión UX (`.scratch/revision-ux/2026-10-26-revision-ux.md`)
 
 Acordado con Daniel punto por punto; se implementa todo junto cuando terminen los tickets 18–20.

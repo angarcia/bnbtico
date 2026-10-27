@@ -1,6 +1,6 @@
 // Promoción de lanzamiento (CLAUDE.md): las primeras 50 casas activas tienen 12 meses gratis, las siguientes 50 seis
-// meses y las siguientes 100 tres meses; después, ₡9 900 al mes por casa, sin permanencia.
-export const MONTHLY_FEE_CRC = 9900;
+// meses y las siguientes 100 tres meses; después, ₡2 900 al mes por casa, sin permanencia (decisión 2026-10-27).
+export const MONTHLY_FEE_CRC = 2900;
 export const LAUNCH_TIERS: readonly { size: number; months: number }[] = [
   { size: 50, months: 12 },
   { size: 50, months: 6 },

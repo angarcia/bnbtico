@@ -136,7 +136,7 @@ export function StepFields({ step, draft }: { step: Step; draft: Listing }) {
               <b>{draft.title || "Su casa"}</b>
               <b className="num primary">₡0 · 12 meses</b>
             </div>
-            <span className="small">Si está entre las primeras 50 casas, gratis 12 meses desde que se apruebe. Después, ₡9 900 al mes, sin permanencia. No pedimos tarjeta ahora.</span>
+            <span className="small">Si está entre las primeras 50 casas, gratis 12 meses desde que se apruebe. Después, ₡2 900 al mes, sin permanencia. No pedimos tarjeta ahora.</span>
           </section>
           <span className="small muted">Revisamos el anuncio y le avisamos por WhatsApp.</span>
         </>

@@ -126,7 +126,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 ## Después del lanzamiento (en este orden salvo que cambie)
 
 1. **v1.1 · Veriff opcional**: sello «Identidad verificada», sugerencia saltable al contactar y publicar, orden del catálogo. Requiere contrato con Veriff y la revisión jurídica pendiente (`privacidad-verificaciones.md`).
-2. **Cobro real**: pasarela local (Tilopay / ONVO Pay / Greenpay, por decidir con sus condiciones) con tarjeta recurrente y SINPE Móvil; ₡9.900 al mes por casa. Requiere empresa y cuenta bancaria en Costa Rica.
+2. **Cobro real**: pasarela local (Tilopay / ONVO Pay / Greenpay, por decidir con sus condiciones) con tarjeta recurrente y SINPE Móvil; ₡2.900 al mes por casa. Requiere empresa y cuenta bancaria en Costa Rica.
 3. **App en tiendas**: envoltorio de la web (Capacitor) con compartir nativo y apertura nativa de WhatsApp, publicado en Google Play y App Store.
 
 ## En paralelo desde ya (no es código, y tarda más que el código)

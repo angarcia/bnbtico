@@ -77,7 +77,7 @@ Ejemplo ficticio de transformación: «Casa en Cahuita, dos cuartos, seis person
 
 ## Mensaje central de la promoción
 
-> **Oferta de lanzamiento de bnbtico.** Las primeras 50 casas reciben 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Oferta limitada a 200 casas. Sin comisiones por alquiler. Tarifa posterior de referencia: ₡9.900 al mes por casa.
+> **Oferta de lanzamiento de bnbtico.** Las primeras 50 casas reciben 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Oferta limitada a 200 casas. Sin comisiones por alquiler. Tarifa posterior de referencia: ₡2.900 al mes por casa.
 
 | Posición de la casa | Casas en el tramo | Publicación gratuita |
 |---|---|---|
@@ -93,11 +93,11 @@ Antes de usar este texto públicamente, disponer de las condiciones definitivas 
 
 ### Propietario
 
-> Hola, [nombre]. Soy Ana, tengo una casa en el Caribe y he creado bnbtico, un catálogo de casas de alquiler en Costa Rica. Nuestra oferta de lanzamiento es para 200 casas: las primeras 50 tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Después, la tarifa prevista es ₡9.900 al mes por casa, sin comisiones por alquiler. ¿Te gustaría conocer la app y ver las plazas disponibles? Te comparto el enlace y te ayudo a preparar tu anuncio.
+> Hola, [nombre]. Soy Ana, tengo una casa en el Caribe y he creado bnbtico, un catálogo de casas de alquiler en Costa Rica. Nuestra oferta de lanzamiento es para 200 casas: las primeras 50 tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Después, la tarifa prevista es ₡2.900 al mes por casa, sin comisiones por alquiler. ¿Te gustaría conocer la app y ver las plazas disponibles? Te comparto el enlace y te ayudo a preparar tu anuncio.
 
 ### Agencia o administrador
 
-> Hola, equipo de [agencia]. Soy Ana, propietaria de una casa en el Caribe y creadora de bnbtico. Estamos incorporando casas de alquiler de la zona con una promoción para las primeras 200: 1 año gratis para las primeras 50, 6 meses para las siguientes 50 y 3 meses para las siguientes 100. Cada casa ocupa una plaza y recibe el período de su tramo. Después, la tarifa prevista es ₡9.900 al mes por casa, sin comisión de bnbtico por alquiler. Me gustaría mostrarles la app y conversar sobre cómo podría servir a las propiedades que administran. ¿Con quién podría coordinarlo?
+> Hola, equipo de [agencia]. Soy Ana, propietaria de una casa en el Caribe y creadora de bnbtico. Estamos incorporando casas de alquiler de la zona con una promoción para las primeras 200: 1 año gratis para las primeras 50, 6 meses para las siguientes 50 y 3 meses para las siguientes 100. Cada casa ocupa una plaza y recibe el período de su tramo. Después, la tarifa prevista es ₡2.900 al mes por casa, sin comisión de bnbtico por alquiler. Me gustaría mostrarles la app y conversar sobre cómo podría servir a las propiedades que administran. ¿Con quién podría coordinarlo?
 
 Personalizar solo con información comprobada. Usar los borradores cuando sus afirmaciones sean ciertas y revisar la tarifa y las plazas de cada tramo antes de enviarlos. WhatsApp comercial requiere consentimiento previo del destinatario; un teléfono público no basta. [Política de WhatsApp](https://business.whatsapp.com/policy).
 

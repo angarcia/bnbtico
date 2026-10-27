@@ -22,7 +22,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - **Modalidad y tipo (diseño v1):** una casa es Vacacional, Mensual o las dos, con un precio por modalidad; es Alojamiento completo o Habitación (con baño privado o compartido).
 - «Mensual» en vez de «Largo plazo» en toda la UI (la landing no se toca).
 - Los propietarios podrán valorar a los clientes; no hay reseñas de casas.
-- Promoción de lanzamiento: primeras 50 casas 12 meses gratis, siguientes 50 seis meses, siguientes 100 tres meses; después ₡9.900 al mes por casa, sin permanencia.
+- Promoción de lanzamiento: primeras 50 casas 12 meses gratis, siguientes 50 seis meses, siguientes 100 tres meses; después ₡2.900 al mes por casa, sin permanencia (₡9.900 hasta el 2026-10-27).
 
 ## Arquitectura vigente (decisión 2026-10-21; fase R construida en `apps/app`, pendiente del corte)
 

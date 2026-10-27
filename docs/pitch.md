@@ -4,7 +4,7 @@
 
 
 ## En una frase
-Oferta de lanzamiento de bnbtico para 200 casas: las primeras 50 tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Después, la tarifa de referencia es ₡9.900 al mes por casa, cero comisiones por alquiler y sin permanencia.
+Oferta de lanzamiento de bnbtico para 200 casas: las primeras 50 tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Después, la tarifa de referencia es ₡2.900 al mes por casa, cero comisiones por alquiler y sin permanencia.
 
 El cupo y el período se asignan por casa, aunque un propietario o agencia publique varias. Condiciones y criterio de asignación pendiente en [business-model.md](business-model.md).
 
@@ -13,7 +13,7 @@ Hoy alquilás tu casa a conocidos y conocidos de conocidos, por WhatsApp. Funcio
 
 CasaTica es un catálogo nacional. Subís fotos, zona y un precio orientativo; verificamos la identidad de propietarios y clientes con documento, rostro y prueba de persona real; y cuando alguien se interesa, solicita contacto aceptando compartir su número. Vos decidís si responderle por WhatsApp. Fechas, precio y pago los arreglan ustedes, como siempre. Además, cuando un cliente escribe "somos 3, queremos piscina y cargador eléctrico en Guanacaste", si tu casa cumple te avisamos y le podés escribir vos primero.
 
-Durante el lanzamiento, las primeras 50 casas tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Cada casa ocupa una plaza y recibe el período correspondiente a su tramo. Después, la tarifa de referencia es ₡9.900 al mes por casa. Sin comisiones por alquiler ni permanencia. Las condiciones de contratación se mostrarán antes de activar una suscripción de pago.
+Durante el lanzamiento, las primeras 50 casas tienen 1 año gratis; las siguientes 50, 6 meses; y las siguientes 100, 3 meses. Cada casa ocupa una plaza y recibe el período correspondiente a su tramo. Después, la tarifa de referencia es ₡2.900 al mes por casa. Sin comisiones por alquiler ni permanencia. Las condiciones de contratación se mostrarán antes de activar una suscripción de pago.
 
 ## Objeciones y respuestas
 

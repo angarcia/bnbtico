@@ -11,6 +11,8 @@ import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
+import { formatCRC } from "../../domain/money";
+import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { useFx } from "../../shared/fx";
 import { CurrencySwitch } from "../currency-switch";
 import { listingQuery } from "../../shared/listing-query";
@@ -560,7 +562,7 @@ function MyAccount({ editing }: { editing: boolean }) {
             <span className="small muted">Próximo cobro</span>
             <b className="num">₡0 · sin método de pago</b>
           </div>
-          <span className="xs muted">₡9 900 al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
+          <span className="xs muted">{formatCRC(MONTHLY_FEE_CRC)} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
         </section>
       ) : null}
 

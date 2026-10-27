@@ -89,7 +89,7 @@ export default async function Panel({ searchParams }: { searchParams: Promise<{ 
             <span className="xs num" style={{ fontWeight: 700 }}>Quedan {Math.max(0, PROMO_SLOTS - taken)} de {PROMO_SLOTS}</span>
           </div>
           <span className="small ink">
-            {active.length ? <>Su casa está entre las primeras {PROMO_SLOTS}: <b>12 meses gratis</b>. Después, ₡9 900 al mes por casa, sin permanencia.</> : <>Las primeras {PROMO_SLOTS} casas publicadas tienen <b>12 meses gratis</b>. Después, ₡9 900 al mes por casa, sin permanencia. No pedimos tarjeta ahora.</>}
+            {active.length ? <>Su casa está entre las primeras {PROMO_SLOTS}: <b>12 meses gratis</b>. Después, ₡2 900 al mes por casa, sin permanencia.</> : <>Las primeras {PROMO_SLOTS} casas publicadas tienen <b>12 meses gratis</b>. Después, ₡2 900 al mes por casa, sin permanencia. No pedimos tarjeta ahora.</>}
           </span>
           <div className="offer-bar"><div style={{ width: `${Math.min(100, Math.round((taken / PROMO_SLOTS) * 100))}%` }} /></div>
           <Link href="/cuenta" className="link small">Ver mi suscripción</Link>

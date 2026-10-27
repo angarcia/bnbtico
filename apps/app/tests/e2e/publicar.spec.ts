@@ -235,6 +235,7 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   // 9 Enviar: WhatsApp de la cuenta (solo lectura) y la oferta; relee el borrador, valida todo y envía.
   await expect(page.getByText("+506 8777 0001")).toBeVisible();
   await expect(page.getByText("₡0 · 12 meses")).toBeVisible();
+  await expect(page.locator(".offer-line")).toContainText("Después, ₡2\u00a0900 al mes."); // precio decidido el 2026-10-27
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();

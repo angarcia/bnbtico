@@ -82,7 +82,7 @@ export default async function Cuenta({ searchParams }: { searchParams: Promise<{
             <span className="small muted">Próximo cobro</span>
             <b className="num">₡0 · sin método de pago</b>
           </div>
-          <span className="xs muted">₡9 900 al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
+          <span className="xs muted">₡2 900 al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
         </section>
       ) : null}
 
