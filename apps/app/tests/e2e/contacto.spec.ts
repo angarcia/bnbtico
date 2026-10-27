@@ -151,7 +151,11 @@ test("con el teclado abierto la hoja gana sitio abajo y el mensaje sube", async 
   await message(page).focus();
   await expect(s).toHaveClass(/\bkb\b/);
   await expect.poll(() => s.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(before);
-  // El campo queda en la mitad de arriba de la pantalla (por encima de donde estaría el teclado).
+  // El campo queda en la mitad de arriba de la pantalla (por encima de donde estaría el teclado) cuando la hoja termina
+  // de entrar: durante la animación de entrada (280 ms, translateY) la hoja aún está más abajo. Con la CPU lenta del
+  // runner (o con la CPU a 4× en local) el foco llega antes de que termine y medir entonces daba el campo a ~494 px; ya
+  // asentada, la hoja lo deja a ~149 px. No es un fallo de la hoja: la prueba medía a mitad de la animación.
+  await s.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   const top = await message(page).evaluate((el) => el.getBoundingClientRect().top);
   expect(top).toBeLessThan((page.viewportSize()!.height) / 2);
   await s.getByRole("button", { name: "Cerrar" }).focus();
