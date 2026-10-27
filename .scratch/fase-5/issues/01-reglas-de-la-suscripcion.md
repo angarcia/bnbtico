@@ -8,14 +8,14 @@
 
 - [x] `tierForSlot`, `launchOffer(taken)` (input is now assigned slots; `offer.ts` reexports or moves without breaking its callers), `promoEndsOn` (month-end clamping, last free day), `daysLeft`, `reminderThreshold` (smallest threshold ≥ days left; 91 → null … −1 → null; prototype bug not ported), `nextStatus` with `SUBSCRIPTION_MESSAGES`, `payButtonDue`, `subscriptionLine`, `reminderCard`, `reminderWhatsApp` (90/30/7 and 0 variants), `payLink`/`parsePayHash`, `nextCharge`, `blockedReason`.
 - [x] Every case listed in spec § Domain «Rules from the prototype tests…» as a Vitest case with fake time (Costa Rica dates; no real `Date.now()`).
-- [x] Copy in usted exactly as the spec; amounts `₡9 900`.
+- [x] Copy in usted exactly as the spec; amounts `₡2 900`.
 - [x] `tests/prototype/*.cjs` untouched and passing; architecture test green (no framework imports).
 - [x] Green: `typecheck`, `test`, `build`, `size` (nothing should move: the module is not imported by screens yet).
 
 ## Cierre (2026-10-27)
 
 - `apps/app/src/domain/subscription.ts` (sin frameworks; importa `./dates`, `./money`, `./offer` y el tipo de `./listing`). Pruebas en `apps/app/tests/unit/subscription.test.ts`: 55 casos; un `describe` por archivo del prototipo con las reglas de v1 de la especificación, más uno por función. Fechas fijas de Costa Rica; un caso con `vi.useFakeTimers` + `costaRicaToday` comprueba el cambio de día a medianoche de Costa Rica.
-- **Precio:** el texto sale de `MONTHLY_FEE_CRC` (₡2 900, decisión del 2026-10-27, más reciente que el «₡9 900» de la especificación). Las pruebas fijan «₡2 900»; `subscriptionLine` usa `monthlyPriceCrc` de la casa. Los importes llevan `formatCRC` (espacio U+00A0): el SQL de los tickets 02/03 tiene que generar el mismo carácter.
+- **Precio:** el texto sale de `MONTHLY_FEE_CRC` (₡2 900, decisión del 2026-10-27, más reciente que el «₡2 900» de la especificación). Las pruebas fijan «₡2 900»; `subscriptionLine` usa `monthlyPriceCrc` de la casa. Los importes llevan `formatCRC` (espacio U+00A0): el SQL de los tickets 02/03 tiene que generar el mismo carácter.
 - `LAUNCH_TIERS`, `MONTHLY_FEE_CRC` y `launchOffer` **siguen en `offer.ts`** (las pantallas no cambian) y `subscription.ts` los reexporta; el argumento de `launchOffer` pasa a llamarse `taken` (plazas asignadas), documentado. Las pantallas siguen pasándole las casas activas hasta el ticket 06.
 - API para los tickets siguientes: `REMINDER_DAYS`, `REMINDER_WINDOW_DAYS`, tipo `HouseSubscription` (`status`, `plan`, `promoEndsOn`, `paidSince`, `stoppedOn` —día de Costa Rica—, `monthlyPriceCrc`, `hasMethod`), `tierForSlot`, `promoEndsOn`, `daysLeft`, `reminderThreshold`, `promoRunning`, `reminderDaysLeft`, `nextStatus` + `SUBSCRIPTION_MESSAGES`, `payButtonDue(sub, today)`, `subscriptionLine(sub, today)`, `cardDate`, `reminderCard(días)` → `{ title, body } | null`, `reminderWhatsApp`, `payLink`, `parsePayHash`, `nextCharge(casas, método | null, today)`, `blockedReason`.
 - Decisiones de lectura (para que el SQL del ticket 02 las copie):
