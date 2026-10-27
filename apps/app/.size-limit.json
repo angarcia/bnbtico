@@ -67,7 +67,7 @@
     "gzip": true
   },
   {
-    "name": "Zona del admin · trozo diferido (cola, revisar y segundo código)",
+    "name": "Zona del admin · trozo diferido (cola, revisar, casas y segundo código)",
     "path": [
       "dist/client/assets/admin-*.js",
       "dist/client/assets/review-*.js"

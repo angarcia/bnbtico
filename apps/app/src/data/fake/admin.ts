@@ -1,5 +1,6 @@
 // Fake en memoria de la revisión del admin: mismas reglas y mensajes que la base. Admin = profiles.is_admin y sesión aal2
 // (is_admin() de la migración admin_aal2_y_purga); quien no es admin no ve nada; review_listing con sus comprobaciones.
+import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi, Session } from "../../domain/api";
 import { DomainError } from "../../domain/errors";
 import { MIN_PHOTOS, type Listing } from "../../domain/listing";
@@ -43,6 +44,41 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (a === "mfa") throw mfa();
       const l = db.listings.get(id);
       return l ? toItem(l) : null;
+    },
+
+    async houses() {
+      const today = db.today();
+      const a = access();
+      if (a === "none") return { houses: [], today };
+      if (a === "mfa") throw mfa();
+      const houses = [...db.listings.values()]
+        .flatMap((l) => {
+          const sub = db.subscriptions.get(l.id);
+          if (!sub) return [];
+          const cover = fromPhotoRows(db.photosOf(l.id), url)[0] ?? null;
+          const house: AdminHouse = {
+            listingId: l.id,
+            publicId: l.publicId,
+            title: l.title,
+            status: l.status,
+            ownerName: db.profiles.get(l.ownerId)?.fullName ?? "",
+            zone: l.zone,
+            cover,
+            subscription: {
+              status: l.status,
+              plan: sub.plan,
+              promoEndsOn: sub.promoEndsOn,
+              paidSince: sub.paidSince,
+              stoppedOn: sub.stoppedOn,
+              monthlyPriceCrc: sub.monthlyPriceCrc,
+              hasMethod: db.paymentMethods.has(l.ownerId),
+            },
+          };
+          return [{ house, at: l.firstPublishedAt ?? "" }];
+        })
+        .sort((x, y) => (x.at < y.at ? 1 : x.at > y.at ? -1 : 0))
+        .map((x) => x.house);
+      return { houses, today };
     },
 
     async review(id, decision, note) {

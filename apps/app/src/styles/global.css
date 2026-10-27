@@ -446,6 +446,15 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .queue-card .chev{align-self:center;color:var(--muted)}
 .queue-title{font-size:17px;line-height:1.1}
 .queue-foot{padding:0 4px}
+.search-field{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.search-field input:not([type=checkbox]):not([type=file]):not([type=radio]){flex:1;min-width:0;min-height:46px;padding:0;border:0;border-radius:0;background:transparent;font-size:16px;color:var(--fg);outline:none;-webkit-appearance:none;appearance:none}
+.search-field input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.search-field:focus-within{border-color:var(--selection);box-shadow:0 0 0 1px var(--selection)}
+.house-row{padding:12px 14px}
+.house-thumb{width:56px;height:56px;border-radius:14px}
+.house-body{gap:2px}
+.house-title{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.house-row .badge{align-self:center;flex-shrink:0}
 .review-photo{width:200px}
 .review-photo-sm{width:110px}
 .review-owner{padding:12px 14px;border-radius:20px}

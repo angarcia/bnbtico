@@ -20,6 +20,14 @@ export const adminQueueQuery = (userId: string) =>
     staleTime: 0,
   });
 
+/** Casas del admin (diseño 23): solo lectura; se piden de nuevo al abrir la pantalla. */
+export const adminHousesQuery = (userId: string) =>
+  queryOptions({
+    queryKey: ["admin-houses", userId] as const,
+    queryFn: async () => (await adminApi()).houses(),
+    staleTime: 0,
+  });
+
 const fromQueue = (q: AdminQueue | undefined, id: string) => q && [...q.review, ...q.changes, ...q.rejected].find((i) => i.listing.id === id);
 
 export const adminListingQuery = (userId: string, id: string, client: QueryClient) => {
@@ -108,6 +116,7 @@ export function useReview(userId: string) {
       void client.invalidateQueries({ queryKey: ["listing", item.listing.publicId] });
       void client.invalidateQueries({ queryKey: ["listings"] });
       void client.invalidateQueries({ queryKey: ["active-count"] });
+      void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
     },
   });
 }
