@@ -4,9 +4,14 @@ import { zoneCenter } from "../../domain/zones";
 import { ZoneField } from "./zone-field";
 import { rememberedZone } from "./zone-center";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Link } from "@tanstack/react-router";
 import { cantonesDe } from "../../domain/cantones";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, PROVINCES, TITLE_MAX, TITLE_MIN, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, PROVINCES, TITLE_MAX, TITLE_MIN, missingPhotosLabel, modesLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { previewListing } from "../../domain/preview";
+import { ListingPage } from "../../shared/listing-page";
+import { accountQuery } from "../account";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
@@ -187,39 +192,88 @@ function PlaceFields({ listingId, province: initialProvince, canton: initialCant
   );
 }
 
-function SendSummary({ draft, listing }: { draft: ListingDraft; listing: Listing }) {
+/** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5): lo escrito en cinco filas que llevan a su pantalla, lo que falta
+ *  (las fotos), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin scroll en un teléfono pequeño. */
+function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing: Listing; userId: string }) {
   const count = useQuery(activeCountQuery);
+  const account = useQuery({ ...accountQuery(userId), enabled: !!userId });
+  const [preview, setPreview] = useState(false);
   const offer = count.data === undefined ? undefined : launchOffer(count.data);
   const fee = formatCRC(MONTHLY_FEE_CRC);
+  const d = { ...draft, photoCount: listing.photoCount };
+  const missing = MIN_PHOTOS - listing.photoCount;
+  const prices = [
+    d.acceptsNightly && d.nightlyPriceCrc ? `${formatCRC(d.nightlyPriceCrc)} / noche` : null,
+    d.acceptsMonthly && d.monthlyPriceCrc ? `${formatCRC(d.monthlyPriceCrc)} / mes` : null,
+  ].filter(Boolean);
+  const rows: { step: Step; label: string; value: string; warn?: string }[] = [
+    { step: 1, label: "Alojamiento", value: [d.kind ? KIND_LABELS[d.kind] : null, modesLabel({ acceptsNightly: d.acceptsNightly, acceptsMonthly: d.acceptsMonthly })].filter(Boolean).join(" · ") || "Falta elegir" },
+    { step: 2, label: "Dónde", value: [d.zone, d.canton].filter(Boolean).join(", ") || "Falta la zona" },
+    { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.bedrooms ?? 0} hab. · ${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
+    {
+      step: missing > 0 ? 7 : 6,
+      label: "Nombre y fotos",
+      value: `${d.title.trim() || "Sin nombre"} · ${listing.photoCount} ${listing.photoCount === 1 ? "foto" : "fotos"}`,
+      warn: missing > 0 ? missingPhotosLabel(missing) : undefined,
+    },
+    { step: 8, label: "Precio", value: prices.join(" · ") || "Falta el precio" },
+  ];
   return (
     <>
-      <h2>Enviar a revisión</h2>
-      <section className="stack gap-8">
-        <span className="label-plain">WhatsApp de esta casa</span>
-        <div className="card row wa-card">
-          <span className="avatar avatar-sm">
-            <I.check size={18} />
-          </span>
-          <span className="stack gap-0 grow">
-            <b className="num">{formatPhone(listing.whatsappPhone)}</b>
-            <span className="xs primary strong">Verificado · el de su cuenta</span>
-          </span>
-        </div>
-        <span className="small muted">Los clientes le escriben aquí desde la ficha. No se muestra públicamente.</span>
-      </section>
-      <section className="card-arena stack gap-8">
-        <div className="row between baseline">
-          <b>{draft.title || "Su casa"}</b>
-          <b className="num primary">{offer === null ? `${fee} al mes` : `₡0 · ${offer?.months ?? 12} meses`}</b>
-        </div>
+      <h2>Revisar y enviar</h2>
+      <nav className="card review-list" aria-label="Lo que va a enviar">
+        {rows.map((r) => (
+          <Link key={r.label} to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(r.step) }} className="review-row">
+            <span className="review-label">{r.label}</span>
+            <span className="review-value">
+              <span className="review-text">{r.value}</span>
+              {r.warn ? <b className="review-warn">{r.warn}</b> : null}
+            </span>
+            <I.chevron size={16} />
+          </Link>
+        ))}
+      </nav>
+      <button type="button" className="btn btn-ghost btn-block" onClick={() => setPreview(true)}>
+        Ver cómo queda su ficha
+      </button>
+      <span className="small muted">
+        Los clientes le escriben al <b className="num ink">{formatPhone(listing.whatsappPhone)}</b> (verificado). No se muestra públicamente.
+      </span>
+      <section className="card-arena row between baseline gap-8 offer-line">
         <span className="small">
           {offer === null
-            ? `La oferta de lanzamiento terminó: ${fee} al mes por casa desde que se apruebe, sin permanencia. No pedimos tarjeta ahora.`
-            : `Si está entre las próximas ${offer?.remaining ?? offer?.size ?? 50} casas, gratis ${offer?.months ?? 12} meses desde que se apruebe. Después, ${fee} al mes, sin permanencia. No pedimos tarjeta ahora.`}
+            ? `${fee} al mes desde que se apruebe, sin permanencia.`
+            : `Si está entre las próximas ${offer?.remaining ?? offer?.size ?? 50} casas. Después, ${fee} al mes. Sin tarjeta.`}
         </span>
+        <b className="num primary">{offer === null ? `${fee} al mes` : `₡0 · ${offer?.months ?? 12} meses`}</b>
       </section>
-      <span className="small muted">Revisamos el anuncio y le avisamos por WhatsApp.</span>
+      {preview ? <FichaPreview listing={listing} draft={d} ownerName={account.data?.name ?? ""} onClose={() => setPreview(false)} /> : null}
     </>
+  );
+}
+
+/** La ficha tal como la verán los clientes, encima del asistente, con una banda «Vista previa» y «Cerrar». */
+function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing; draft: ListingDraft; ownerName: string; onClose: () => void }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", esc);
+    document.documentElement.classList.add("sheet-open");
+    return () => {
+      document.removeEventListener("keydown", esc);
+      document.documentElement.classList.remove("sheet-open");
+    };
+  }, [onClose]);
+  return createPortal(
+    <div className="ficha-preview" role="dialog" aria-modal="true" aria-label="Vista previa de su ficha">
+      <div className="preview-bar">
+        <span className="small strong">Vista previa · así la verán los clientes</span>
+        <button type="button" className="btn btn-sm btn-primary" onClick={onClose} autoFocus>
+          Cerrar
+        </button>
+      </div>
+      <ListingPage listing={previewListing({ ...listing, ...draft }, ownerName)} base="" preview />
+    </div>,
+    document.body,
   );
 }
 
@@ -332,6 +386,6 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
         </>
       );
     case 9:
-      return <SendSummary draft={draft} listing={listing} />;
+      return <SendSummary draft={draft} listing={listing} userId={userId} />;
   }
 }

@@ -195,18 +195,23 @@ function useSpacerMatchingBar() {
   return { bar, spacer };
 }
 
-export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation, openContact }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate; openContact?: boolean }) {
+/** `preview`: el borrador visto desde el asistente (revisión UX C4): sin balizas, sin compartir ni favorito, sin calendario
+ *  (aún no es público) y con el botón de contacto a la vista pero apagado. */
+export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation, openContact, preview }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate; openContact?: boolean; preview?: boolean }) {
   const hydrated = useHydrated();
   const currency = useCurrency();
   const fx = useFx();
   const d = describe(l, { base });
-  useEffect(() => track("listing_view", l.publicId), [l.publicId]);
+  useEffect(() => {
+    if (!preview) track("listing_view", l.publicId);
+  }, [l.publicId, preview]);
   const main = d.mainPrice;
   const { bar, spacer } = useSpacerMatchingBar();
   return (
     <div className="app">
       <main className="view no-nav listing-view">
         <HeroGallery photos={l.photos} title={l.title}>
+          {preview ? <span /> : (
           <a
             href="/explorar"
             aria-label="Volver a Explorar"
@@ -222,10 +227,11 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           >
             <I.back />
           </a>
+          )}
           {/* Compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
           <div className="row gap-8">
-            {hydrated ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
-            {hydrated ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
+            {hydrated && !preview ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
+            {hydrated && !preview ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
           </div>
         </HeroGallery>
 
@@ -265,7 +271,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             </div>
           ) : null}
 
-          <Availability listing={l} currency={currency} fx={fx.crcPerUsd} />
+          {preview ? null : <Availability listing={l} currency={currency} fx={fx.crcPerUsd} />}
 
           {l.approx ? (
             <div className="stack gap-8">
@@ -302,7 +308,13 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency, fx.crcPerUsd)}</b> / mes
             </span>
           ) : null}
-          <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openContact} />
+          {preview ? (
+            <span className="btn btn-wa is-pending" aria-disabled="true">
+              <I.wa size={22} /> Contactar por WhatsApp
+            </span>
+          ) : (
+            <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openContact} />
+          )}
         </div>
       </main>
     </div>

@@ -200,7 +200,22 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page).toHaveURL(/\/9$/);
   await expectNoScroll(page, "paso 9");
 
-  // 9 Enviar con 4 fotos: vuelve al paso 7 con el aviso; con la quinta, se envía.
+  // 9 Revisar y enviar (revisión UX C4): cinco filas que llevan a su pantalla, lo que falta, y la vista previa.
+  await expect(page.getByRole("heading", { name: "Revisar y enviar" })).toBeVisible();
+  const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
+  await expect(review.getByRole("link")).toHaveCount(5);
+  const photosRow = review.getByRole("link", { name: /Nombre y fotos/ });
+  await expect(photosRow).toContainText(`${TITLE} · 4 fotos`);
+  await expect(photosRow.locator(".review-warn")).toHaveText("Falta 1 foto");
+  await expect(photosRow).toHaveAttribute("href", `/propietario/publicar/${id}/7`);
+  await expect(review.getByRole("link", { name: /Precio/ })).toContainText("₡85 000 / noche · ₡900 000 / mes");
+  await page.getByRole("button", { name: "Ver cómo queda su ficha" }).click();
+  const preview = page.getByRole("dialog", { name: "Vista previa de su ficha" });
+  await expect(preview.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
+  await expect(preview.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
+  await preview.getByRole("button", { name: "Cerrar" }).click();
+  await expect(preview).toHaveCount(0);
+  // Enviar con 4 fotos: vuelve al paso 7 con el aviso; con la quinta, se envía.
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(/\/7$/);
   await expect(alert(page)).toHaveText("Agregue al menos 5 fotos.");

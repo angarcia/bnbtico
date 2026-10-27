@@ -682,3 +682,17 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .stage-label{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:12px}
 .stage-label b{color:var(--fg);font-size:13px}
 .progress span.stage-start{margin-left:8px}
+/* Paso 9 «Revisar y enviar» (revisión UX C4): filas compactas que llevan a su pantalla. */
+.review-list{padding:0;display:flex;flex-direction:column}
+.review-row{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:8px;min-height:44px;padding:6px 12px 6px 14px;border-bottom:1px solid var(--line-soft);color:inherit;text-decoration:none;font-size:14px}
+.review-row:last-child{border-bottom:0}
+.review-label{color:var(--muted);font-size:12px;font-weight:600}
+.review-value{display:flex;flex-direction:column;min-width:0}
+.review-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-warn{color:var(--sun-ink);font-size:12px}
+.offer-line b{white-space:nowrap}
+.review-row svg{color:var(--muted)}
+.offer-line{padding:10px 14px}
+/* Vista previa de la ficha encima del asistente. */
+.ficha-preview{position:fixed;inset:0;z-index:30;overflow-y:auto;background:var(--bg)}
+.preview-bar{position:sticky;top:0;z-index:31;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 16px 8px;background:var(--sun-soft);color:var(--sun-ink)}
