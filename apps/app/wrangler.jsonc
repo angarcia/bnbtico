@@ -8,21 +8,32 @@
     "not_found_handling": "single-page-application",
     // Sin esto, las navegaciones a estas rutas recibirían el index.html de la SPA sin pasar por el worker. `/` pasa por el
     // worker para la portada estática (`/?pronto=1`, y producción antes del lanzamiento).
-    "run_worker_first": ["/", "/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/vitals", "/errors", "/events"]
+    "run_worker_first": ["/", "/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/_pruebas/*", "/vitals", "/errors", "/events"]
   },
   // Las vinculaciones no se heredan: cada entorno repite version_metadata.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "observability": { "enabled": true },
   // Cron diario (src/server/cron.ts): keep-alive a PostgREST y recorte de la telemetría. Los triggers no se heredan: cada
   // entorno los repite. 09:17 UTC = 03:17 en Costa Rica.
-  "triggers": { "crons": ["17 9 * * *"] },
+  // Fase 5: cada hora (un trigger por entorno, el plan gratuito permite 5 por cuenta): lo diario solo en la de las 09 UTC
+  // y los avisos por WhatsApp de 08:00 a 17:59 de Costa Rica (src/server/cron.ts runHourly).
+  "triggers": { "crons": ["17 * * * *"] },
   // Local: SUPABASE_URL y SUPABASE_ANON_KEY salen de .dev.vars (pnpm dev:vars, desde `supabase status`).
   "vars": { "ENVIRONMENT": "local" },
   "env": {
     "pruebas": {
-      "vars": { "ENVIRONMENT": "pruebas", "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co" },
+      "vars": {
+        "ENVIRONMENT": "pruebas",
+        "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co",
+        // Avisos por WhatsApp (src/server/reminders.ts): Twilio sandbox, apagado hasta que estén los secretos
+        // TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM y WHATSAPP_ALLOWLIST. PUBLIC_ORIGIN es la base del
+        // enlace del aviso (pasa a https://pruebas.bnbtico.com el día del corte). El secreto TEST_CLOCK_SECRET abre
+        // /_pruebas/oferta/CT-####.
+        "WHATSAPP_SENDER": "twilio",
+        "PUBLIC_ORIGIN": "https://nueva.bnbtico.com"
+      },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "triggers": { "crons": ["17 9 * * *"] },
+      "triggers": { "crons": ["17 * * * *"] },
       // Día del corte (docs/corte-fase-r.md, paso 3): pasa a
       //   "routes": [{ "pattern": "pruebas.bnbtico.com", "custom_domain": true }],
       // y nueva.bnbtico.com se retira una vez comprobado pruebas.
@@ -43,7 +54,7 @@
       // assets no se hereda por partes: si el entorno lo define, se repite entero.
       "assets": { "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": true },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "triggers": { "crons": ["17 9 * * *"] },
+      "triggers": { "crons": ["17 * * * *"] },
       "workers_dev": false,
       "preview_urls": false
     }
