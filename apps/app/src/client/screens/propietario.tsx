@@ -3,8 +3,8 @@
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { occupiedNightsLabel } from "../../domain/calendar";
 import { can } from "../../domain/can";
 import { longDate, relativeDate } from "../../domain/dates";
@@ -14,7 +14,7 @@ import { costaRicaToday } from "../../domain/inquiry";
 import { variantUrl } from "../../domain/image";
 import { MIN_PHOTOS, STATUS_LABELS, missingPhotosLabel, resumeStep, wizardStage, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
-import { LAUNCH_TIERS, MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, payLink, promoRunning, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
+import { LAUNCH_TIERS, MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, promoRunning, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
@@ -75,22 +75,12 @@ const confirmed = (text: string) => window.confirm(text);
 /** «14 oct» si es de este año; si no, «14 oct 2027». */
 const dayOf = (date: string, today: string) => (date.slice(0, 4) === today.slice(0, 4) ? cardDate(date).slice(0, -5) : cardDate(date));
 
-/**
- * Enlace a «Promoción y suscripción» (`/propietario/suscripcion`, con `#pago=CT-####` para resaltar una casa): es un
- * enlace de verdad (se abre en otra pestaña, lo lee el lector de pantalla) y, con un toque normal, navega dentro de la SPA.
- */
+/** Enlace a «Promoción y suscripción» (`/propietario/suscripcion`, con `#pago=CT-####` para resaltar una casa). */
 function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
-  const router = useRouter();
-  const href = publicId ? payLink("", publicId) : "/propietario/suscripcion";
-  const go = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    e.preventDefault();
-    router.history.push(href);
-  };
   return (
-    <a href={href} className={className} onClick={go}>
+    <Link to="/propietario/suscripcion" hash={publicId ? `pago=${publicId}` : undefined} className={className}>
       {children}
-    </a>
+    </Link>
   );
 }
 

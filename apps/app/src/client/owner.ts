@@ -5,6 +5,7 @@ import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@ta
 import type { OwnerListingsApi, PhotosApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
 import { rememberOwnListings } from "../shared/own-listings";
+import { billingQuery } from "./billing";
 import { allSavesSettled, savesSettled } from "./save-queue";
 import { authApi } from "./session";
 
@@ -94,7 +95,7 @@ export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "i
   void client.invalidateQueries({ queryKey: ["listing", l.publicId] });
   void client.invalidateQueries({ queryKey: ["listings"] });
   void client.invalidateQueries({ queryKey: ["offer-taken"] });
-  void client.invalidateQueries({ queryKey: ["billing", userId] });
+  void client.invalidateQueries({ queryKey: billingQuery(userId).queryKey });
 }
 
 /** Abrir (borra la fecha de reapertura) o cerrar a consultas con una fecha opcional. */

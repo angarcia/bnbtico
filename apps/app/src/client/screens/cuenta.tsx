@@ -2,7 +2,7 @@
 // recuperar y ayuda. Todo contra AuthApi; supabase-js se carga al enviar el primer formulario o si ya hay sesión.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { Suspense, lazy, useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
 import { isContactNext, listingInNext } from "../../domain/contact-return";
 import { firstName } from "../../domain/inquiry";
@@ -18,6 +18,7 @@ import { CurrencySwitch } from "../currency-switch";
 import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
 import { accountQuery } from "../account";
+import { suscripcionScreen } from "../lazy-screens";
 import { FlowHeader, RootHeader, TabsFrame } from "../chrome";
 import { setRole, useRole } from "../role";
 import { authApi, pendingOtp, useSession } from "../session";
@@ -484,6 +485,26 @@ export function ListaScreen() {
 }
 
 // ---------- Mi cuenta / Cuenta ----------
+// La tarjeta «Suscripción» y la fila «Método de pago» del propietario viven en el trozo de «Promoción y suscripción»
+// (precargado con las pantallas del propietario). Mientras llega, o si owner_billing falla, la tarjeta de siempre.
+const CuentaSubscriptionCard = lazy(() => suscripcionScreen().then((m) => ({ default: m.CuentaSubscriptionCard })));
+const CuentaPaymentRow = lazy(() => suscripcionScreen().then((m) => ({ default: m.CuentaPaymentRow })));
+const SUBSCRIPTION_PLACEHOLDER = (
+  <section className="card stack">
+    <div className="row between">
+      <b>Suscripción</b>
+      <span className="xs muted">Oferta de lanzamiento</span>
+    </div>
+    <p className="small muted">Cuando publique una casa, aquí verá su suscripción. Las primeras 50 casas tienen 12 meses gratis.</p>
+    <hr className="divider" />
+    <div className="row between baseline">
+      <span className="small muted">Próximo cobro</span>
+      <b className="num">₡0 · sin método de pago</b>
+    </div>
+    <span className="xs muted">{formatCRC(MONTHLY_FEE_CRC)} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
+  </section>
+);
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
@@ -551,22 +572,17 @@ function MyAccount({ editing }: { editing: boolean }) {
       ) : null}
 
       {owner ? (
-        <section className="card stack">
-          <div className="row between">
-            <b>Suscripción</b>
-            <span className="xs muted">Oferta de lanzamiento</span>
-          </div>
-          <p className="small muted">Cuando publique una casa, aquí verá su suscripción. Las primeras 50 casas tienen 12 meses gratis.</p>
-          <hr className="divider" />
-          <div className="row between baseline">
-            <span className="small muted">Próximo cobro</span>
-            <b className="num">₡0 · sin método de pago</b>
-          </div>
-          <span className="xs muted">{formatCRC(MONTHLY_FEE_CRC)} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
-        </section>
+        <Suspense fallback={SUBSCRIPTION_PLACEHOLDER}>
+          <CuentaSubscriptionCard fallback={SUBSCRIPTION_PLACEHOLDER} />
+        </Suspense>
       ) : null}
 
       <section className="list">
+        {owner ? (
+          <Suspense fallback={null}>
+            <CuentaPaymentRow />
+          </Suspense>
+        ) : null}
         {!owner ? (
           <Link to="/cuenta" search={{ editar: "1" }} className="list-item">
             <I.user />

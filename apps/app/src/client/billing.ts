@@ -5,7 +5,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { BillingHouse, BillingOverview, HouseSubscription, PaymentMethodSummary } from "../domain/subscription";
 import { houseSubscription } from "../domain/subscription";
-import { OWNER_STALE_MS } from "./owner";
 import { authApi } from "./session";
 
 export const billingQuery = (userId: string) =>
@@ -15,7 +14,7 @@ export const billingQuery = (userId: string) =>
       await authApi();
       return (await import("./supabase-data")).ownerBilling().overview();
     },
-    staleTime: OWNER_STALE_MS,
+    staleTime: 30_000, // como las casas propias (owner.ts OWNER_STALE_MS; owner.ts importa este módulo)
     // Sin la RPC (base sin la migración) no tiene sentido insistir: las pantallas ya se pintan sin ella.
     retry: 1,
   });

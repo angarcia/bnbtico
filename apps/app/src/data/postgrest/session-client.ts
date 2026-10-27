@@ -71,5 +71,7 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     favorites: createPostgrestFavorites(db),
     calendar: createPostgrestCalendar(db),
     billing: createPostgrestOwnerBilling(db),
+    /** El JWT de la sesión (renovado si hacía falta) para las rutas del worker que lo reenvían a PostgREST (POST /api/pago/sesion). */
+    accessToken: async (): Promise<string | null> => (await db.auth.getSession()).data.session?.access_token ?? null,
   };
 }

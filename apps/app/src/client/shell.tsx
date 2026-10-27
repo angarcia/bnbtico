@@ -12,6 +12,7 @@ import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { whenIdle } from "../shared/idle";
 import { cuentaSearch, nextSearch } from "./cuenta-search";
+import { suscripcionScreen } from "./lazy-screens";
 import { setRole, storedRole } from "./role";
 import { CasaScreen } from "./screens/casa";
 import { ExplorarScreen } from "./screens/explorar";
@@ -38,6 +39,7 @@ function prefetchTabs() {
     void ownerScreens();
     void consultasScreen();
     void calendarioScreen();
+    void suscripcionScreen();
   }
 }
 
@@ -138,6 +140,9 @@ const calendarioSearch = (params: Record<string, unknown>): { casa?: string; mes
   ...(typeof params.mes === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(params.mes) ? { mes: params.mes } : {}),
 });
 
+/** `pago=ok`: vuelta de la página de la pasarela (la pantalla lo quita de la URL al leerlo). */
+const suscripcionSearch = (params: Record<string, unknown>): { pago?: "ok" } => (params.pago === "ok" ? { pago: "ok" } : {});
+
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
 /** `contacto=1`: vuelta de verificar el WhatsApp (la hoja reabre y sigue sola); `escribir=1`: abrir la hoja desde
  *  Favoritos (revisión UX N6), sin enviar nada. */
@@ -172,6 +177,7 @@ const routeTree = rootRoute.addChildren([
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/suscripcion", validateSearch: suscripcionSearch, component: lazyRouteComponent(suscripcionScreen, "SuscripcionScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
