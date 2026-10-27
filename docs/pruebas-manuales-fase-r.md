@@ -213,6 +213,31 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 
 ---
 
+## D. Segunda vuelta (2026-10-27): lo que cambió tras la primera prueba
+
+Cambios hechos entre el 2026-10-26 y el 2026-10-27 a partir de los resultados de la primera vuelta (tickets 14–22 en `.scratch/fase-r/issues/`). Para repetir de una vez, en este orden. Cada fila dice qué paso de B tiene el detalle; los pasos marcados «nuevo» solo están aquí.
+
+**Antes de empezar:** el despliegue de `develop` del 2026-10-27 debe estar en verde (`gh run list` o GitHub → Actions) y las migraciones `nombre_y_descripcion` y `tipo_de_cambio` aplicadas en `bnbtico-pruebas` (ya hechas el 2026-10-27).
+
+| # | Qué probar | Detalle | ✓ |
+|---|---|---|---|
+| D1 | **Ficha desde WhatsApp con estilos** (B2): abrir el enlace de CT-1015 desde WhatsApp en un teléfono que **nunca** haya entrado en `nueva.bnbtico.com` (p. ej. el de Ana) | Carga con estilos, fotos y tipografías a la primera, sin pedir PIN (bypass de Access ampliado a `/assets/*`, `/fonts/*`, `/icons/*`…) | ☐ |
+| D2 | **Moneda única** (B4, B5d) | Selector «₡ \| $» junto al número de casas en Explorar y en Mi cuenta → «Moneda»; cambia toda la app (tarjetas, ficha, Favoritos, filtros). La ficha ya no tiene botón: muestra la otra moneda debajo como referencia. Colones por defecto | ☐ |
+| D3 | **Tipo de cambio diario** (B5g; nuevo) | Con «$»: la nota de Explorar, la ayuda del precio en «Más filtros» y «Moneda» en Mi cuenta dicen «tipo de referencia del <día>». Hasta el primer cron (03:17 hora de Costa Rica) el valor es el inicial (₡510). Si algún día sale «· ExchangeRate-API», ese día se usó la fuente de respaldo | ☐ |
+| D4 | **Filtros en una fila** (B5b) | En Explorar solo Vacacional, Mensual y «Más filtros» (con contador), sin deslizar a 360 px. Vacacional y Mensual no se excluyen: ninguno o los dos = todas; uno = solo esa. En «Más filtros», sección «Modalidad» igual | ☐ |
+| D5 | **Precio mínimo mayor que el máximo** (B5c) | Aviso «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» desactivado hasta corregirlo; ya no se intercambian solos. Los precios se escriben en la moneda elegida | ☐ |
+| D6 | **Barra inferior en Ingresar** (B9) | En Ingresar y en Mi cuenta se ve la barra (Explorar, Favoritos, Mi cuenta); solo la pantalla del código va sin ella | ☐ |
+| D7 | **Entrar solo con el WhatsApp, número sin cuenta** (B6, B10) | Con un número de prueba sin cuenta (p. ej. `8888 9999`, si se borró antes): primero solo país y número; aparece el paso del nombre sin haber enviado código; «Cambiar número» vuelve atrás; con el nombre llega un solo código. Ya no existe «Ya tengo cuenta» | ☐ |
+| D8 | **Entrar con un número que ya tiene cuenta** (B9d, B10b, B10c) | El código sale al primer paso, sin pedir nombre. Con el número de un admin (+1 778…) o con «Otro país» y `+1 778 347 9837`, igual. Tras el código **no** aparece «¡Listo! Su cuenta está creada» | ☐ |
+| D9 | **Barra de admin en Cuenta** (nuevo) | Daniel o Ana, con el segundo código ya puesto: en Mi cuenta la barra de abajo es la de admin (no la de cliente). «Buscar una casa» vuelve a la barra de cliente | ☐ |
+| D10 | **Zonas con sugerencias** (B11b1) | Paso 2 del asistente: escribir «Coc» o «Playa Ne» → sugerencias de Costa Rica; elegir una. También probar las zonas frecuentes (fila de chips) y «Otra» para escribir libremente. En el paso 3 el mapa abre con zoom en la zona elegida; con «Otra», en la provincia | ☐ |
+| D11 | **Nombre y descripción con límites** (B11b2) | Paso 6: contadores «n / 60 · mínimo 5» y «n / 2000 · mínimo 80»; con menos no deja continuar y lo explica | ☐ |
+| D12 | **Salir del asistente** (B11b3) | «✕ Cerrar» arriba a la izquierda en cualquier paso: «Guardando…» si hacía falta y vuelve a Mis casas; el borrador se retoma después | ☐ |
+| D13 | **Anuncio visible** (B12d, B12e) | En el detalle de una casa activa, «Anuncio visible» (antes «Disponible para consultas») con su explicación. Al apagarlo («Pausar anuncio»): en Mis casas sale «Pausado», la casa **desaparece de Explorar**, su ficha abre con «No disponible por ahora» y sigue en Favoritos; al encenderlo vuelve a Explorar | ☐ |
+| D14 | **Fila del tipo de cambio** (B23; al día siguiente) | Cloudflare → Workers → `bnbtico-pruebas` → Logs: una línea `fx` del cron. O pedirle a Claude que compruebe la fila del día en `fx_rates` | ☐ |
+
+Sigue pendiente B5f (scroll al volver de una ficha): hace falta tener varias casas.
+
 ## C. Si algo falla
 
 Mande por WhatsApp o en un issue de `.scratch/fase-r/` (uno por fallo):
