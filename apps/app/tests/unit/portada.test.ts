@@ -79,7 +79,9 @@ describe("portada · el HTML estático", () => {
     expect(portada).toContain("Alquile en el Caribe de Costa Rica, directo con quien lo recibe");
     expect(portada).toContain("Muy pronto");
     expect(portada).toContain("Qué es bnbtico");
-    expect(portada).toContain("Las primeras 50 casas publicadas tendrán 12 meses gratis");
+    // Revisión UX C1: la oferta pasa a su tarjeta bajo la foto.
+    expect(portada).toContain("Las primeras 50 casas: 12 meses gratis.");
+    expect(portada).toContain("<!--cta-propietarios-->");
   });
 });
 
