@@ -9,6 +9,10 @@ alter table listings add column first_published_at timestamptz;
 -- Relleno: las casas activas hoy. Las que se están editando tras haber estado publicadas no se distinguen con certeza de
 -- las que vuelven de «cambios» o «rechazada» (todas son borrador con reviewed_at); antes del lanzamiento solo hay datos
 -- de prueba, así que no se adivinan.
+-- El trigger listings_protect congela las casas activas: el relleno pasa con el mismo permiso que usan las RPCs de revisión,
+-- solo para esta transacción (sin él, en una base con casas activas la migración falla; en local pasaba porque `db reset`
+-- la aplica con la base vacía).
+select set_config('app.allow_status', 'on', true);
 update listings set first_published_at = coalesce(reviewed_at, updated_at) where status = 'active';
 
 create or replace function listings_protect() returns trigger language plpgsql security definer set search_path = public as $$
