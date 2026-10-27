@@ -644,3 +644,15 @@ small.swap-in{display:block}
   .sent-check path{animation:none;stroke-dashoffset:0}
   .progress span::after,.upload-bar span{transition-property:none}
 }
+
+/* ---------- Zona con sugerencias (paso 2 del asistente, ticket 22) ---------- */
+/* La lista flota sobre lo de abajo: no cambia el alto de la pantalla (el paso sigue sin scroll a 375×667). */
+.zone-combo{position:relative}
+.zone-combo input{width:100%}
+.zone-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;padding:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-input);box-shadow:var(--shadow-float)}
+.zone-pop[hidden]{display:none}
+.zone-options{margin:0;padding:0;list-style:none;max-height:240px;overflow-y:auto}
+.zone-credit{margin:4px 12px 2px;font-size:11px;color:var(--muted)}
+.zone-options li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;cursor:pointer}
+.zone-options li[aria-selected="true"],.zone-options li:hover{background:var(--surface-2)}
+.zone-chips{margin-top:4px}

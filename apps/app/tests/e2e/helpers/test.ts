@@ -11,7 +11,16 @@ declare global {
   }
 }
 
-export const test = base.extend<{ allowCspViolations: boolean; cspViolations: string[] }>({
+export const test = base.extend<{ allowCspViolations: boolean; cspViolations: string[]; noPhoton: void }>({
+  // Nada sale a Photon (sugerencias de zona del asistente, ticket 22): sin sugerencias salvo que la prueba lo intercepte
+  // con page.route, que manda sobre la del contexto.
+  noPhoton: [
+    async ({ context }, use) => {
+      await context.route("https://photon.komoot.io/**", (route) => route.fulfill({ json: { type: "FeatureCollection", features: [] }, headers: { "access-control-allow-origin": "*" } }));
+      await use();
+    },
+    { auto: true },
+  ],
   allowCspViolations: [false, { option: true }],
   cspViolations: [
     async ({ context, allowCspViolations, baseURL }, use) => {

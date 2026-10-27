@@ -4,6 +4,8 @@
 
 export const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 export const TILES_ORIGIN = "https://tile.openstreetmap.org";
+/** Sugerencias de zonas del asistente (Photon de Komoot, ticket 22): solo `fetch` desde el shell. */
+export const PHOTON_ORIGIN = "https://photon.komoot.io";
 
 export interface CspOptions {
   /** URL del proyecto de Supabase del entorno (PostgREST, Auth y Storage salen del mismo origen). */
@@ -13,6 +15,8 @@ export interface CspOptions {
    * única excepción de terceros y solo va en el shell; la ficha SSR no la lleva.
    */
   turnstile: boolean;
+  /** Photon (sugerencias de zona del paso 2 del asistente): solo en el shell. */
+  photon?: boolean;
 }
 
 function originOf(url?: string): string | null {
@@ -39,7 +43,7 @@ export function contentSecurityPolicy(o: CspOptions): string {
     ["img-src", ["'self'", "data:", "blob:", ...extra(supabase, TILES_ORIGIN)]],
     ["font-src", ["'self'"]],
     // El service worker pide teselas y fotos con fetch: también cuenta como conexión.
-    ["connect-src", ["'self'", ...extra(supabase, TILES_ORIGIN)]],
+    ["connect-src", ["'self'", ...extra(supabase, TILES_ORIGIN, o.photon === true && PHOTON_ORIGIN)]],
     ["frame-src", o.turnstile ? [TURNSTILE_ORIGIN] : ["'none'"]],
     ["worker-src", ["'self'"]],
     ["manifest-src", ["'self'"]],

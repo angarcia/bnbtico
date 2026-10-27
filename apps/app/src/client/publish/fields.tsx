@@ -1,5 +1,8 @@
 // Campos de cada pantalla del asistente (decisión 2026-10-21: nueve pantallas cortas, sin scroll en 375×667).
 // Casillas y contadores llevan su valor en el formulario (campos ocultos o casillas); el texto va sin controlar.
+import { zoneCenter } from "../../domain/zones";
+import { ZoneField } from "./zone-field";
+import { rememberedZone } from "./zone-center";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { cantonesDe } from "../../domain/cantones";
@@ -144,8 +147,8 @@ function DescriptionField({ value }: { value: string }) {
   );
 }
 
-/** Provincia y cantón de lista (cambiar la provincia vacía el cantón) y zona en texto libre. */
-function PlaceFields({ province: initialProvince, canton: initialCanton, zone }: { province: string; canton: string; zone: string }) {
+/** Provincia y cantón de lista (cambiar la provincia vacía el cantón) y la zona con sugerencias (ticket 22). */
+function PlaceFields({ listingId, province: initialProvince, canton: initialCanton, zone }: { listingId: string; province: string; canton: string; zone: string }) {
   const [province, setProvince] = useState(initialProvince);
   const [canton, setCanton] = useState(cantonesDe(initialProvince).includes(initialCanton) ? initialCanton : "");
   return (
@@ -179,10 +182,7 @@ function PlaceFields({ province: initialProvince, canton: initialCanton, zone }:
           ))}
         </select>
       </div>
-      <div className="field">
-        <label htmlFor="pub-zone">Zona, playa o barrio</label>
-        <input id="pub-zone" name="zone" maxLength={120} defaultValue={zone} autoComplete="off" placeholder="Playa Negra, Puerto Viejo" />
-      </div>
+      <ZoneField listingId={listingId} province={province} canton={canton} initial={zone} />
     </>
   );
 }
@@ -261,14 +261,14 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>¿Dónde está?</h2>
-          <PlaceFields province={draft.province} canton={draft.canton} zone={draft.zone} />
+          <PlaceFields listingId={listing.id} province={draft.province} canton={draft.canton} zone={draft.zone} />
         </>
       );
     case 3:
       return (
         <>
           <h2>Ubicación en el mapa</h2>
-          <LocationPicker province={draft.province} lat={draft.lat} lng={draft.lng} />
+          <LocationPicker province={draft.province} lat={draft.lat} lng={draft.lng} zone={zoneCenter(draft.zone, rememberedZone(listing.id))} />
         </>
       );
     case 4:

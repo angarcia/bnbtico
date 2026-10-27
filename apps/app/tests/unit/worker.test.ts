@@ -418,6 +418,7 @@ describe("worker · cabeceras de seguridad del HTML", () => {
       expect(csp).toContain("script-src 'self';");
       expect(csp).toContain("style-src 'self';");
       expect(csp).toContain("connect-src 'self' http://supabase.test https://tile.openstreetmap.org");
+      expect(csp).not.toContain("photon.komoot.io");
       expect(csp).toContain("img-src 'self' data: blob: http://supabase.test https://tile.openstreetmap.org");
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).not.toContain("challenges.cloudflare.com");

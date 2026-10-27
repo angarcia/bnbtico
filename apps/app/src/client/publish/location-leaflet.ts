@@ -13,9 +13,9 @@ export interface PickerMap {
   dispose(): void;
 }
 
-export function drawPicker(el: HTMLElement, start: { point: LatLng | null; center: LatLng }, onPick: (p: LatLng) => void): PickerMap {
+export function drawPicker(el: HTMLElement, start: { point: LatLng | null; center: LatLng; zoom: number }, onPick: (p: LatLng) => void): PickerMap {
   const at = start.point ?? start.center;
-  const map = L.map(el, { zoomControl: true, attributionControl: true, maxBounds: COSTA_RICA, maxBoundsViscosity: 1, minZoom: 7 }).setView([at.lat, at.lng], start.point ? 13 : 9);
+  const map = L.map(el, { zoomControl: true, attributionControl: true, maxBounds: COSTA_RICA, maxBoundsViscosity: 1, minZoom: 7 }).setView([at.lat, at.lng], start.point ? 13 : start.zoom);
   L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
   const icon = L.divIcon({ className: "pin-icon", html: "<span></span>", iconSize: [26, 26], iconAnchor: [13, 26] });
   let marker: L.Marker | null = null;

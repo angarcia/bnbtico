@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PROVINCE_CENTERS, roundPoint, type LatLng } from "../../domain/geo";
+import { ZONE_ZOOM } from "../../domain/zones";
 import { DEFAULT_PROVINCE } from "../../domain/listing";
 import type { PickerMap } from "./location-leaflet";
 
@@ -10,18 +11,19 @@ const Locate = () => (
   </svg>
 );
 
-/** Pantalla 3: pin arrastrable con el círculo de ~500 m, «Toque el mapa» / «Arrastre el pin» y «Usar mi ubicación». */
-export function LocationPicker({ province, lat, lng }: { province: string; lat: number | null; lng: number | null }) {
+/** Pantalla 3: pin arrastrable con el círculo de ~500 m, «Toque el mapa» / «Arrastre el pin» y «Usar mi ubicación». Sin pin,
+ *  abre con zoom en la zona elegida en el paso 2 (`zone`, ticket 22) o, si no hay, en la provincia. */
+export function LocationPicker({ province, lat, lng, zone }: { province: string; lat: number | null; lng: number | null; zone: LatLng | null }) {
   const box = useRef<HTMLDivElement>(null);
   const picker = useRef<PickerMap | null>(null);
   const [point, setPoint] = useState<LatLng | null>(lat !== null && lng !== null ? { lat, lng } : null);
 
   useEffect(() => {
     let cancelled = false;
-    const center = PROVINCE_CENTERS[province] ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!;
+    const center = zone ?? PROVINCE_CENTERS[province] ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!;
     import("./location-leaflet").then(({ drawPicker }) => {
       if (cancelled || !box.current) return;
-      picker.current = drawPicker(box.current, { point, center }, (p) => setPoint(roundPoint(p)));
+      picker.current = drawPicker(box.current, { point, center, zoom: zone ? ZONE_ZOOM : 9 }, (p) => setPoint(roundPoint(p)));
     });
     return () => {
       cancelled = true;

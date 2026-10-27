@@ -66,7 +66,7 @@ function securityHeadersFile(): Plugin {
     writeBundle(options) {
       const file = join(options.dir!, "_headers");
       if (!existsSync(file)) throw new Error("Falta dist/client/_headers (public/_headers).");
-      appendFileSync(file, `\n${staticHeadersBlock({ supabaseUrl, turnstile: true })}`);
+      appendFileSync(file, `\n${staticHeadersBlock({ supabaseUrl, turnstile: true, photon: true })}`);
     },
   };
 }

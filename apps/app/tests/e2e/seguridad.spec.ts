@@ -18,12 +18,14 @@ test("el shell y la ficha llevan la CSP; Turnstile solo en el shell", async ({ r
     const csp = (await request.get(path)).headers()["content-security-policy"];
     expect(csp, path).toContain("script-src 'self' https://challenges.cloudflare.com;");
     expect(csp, path).toContain("style-src 'self';");
-    expect(csp, path).toContain(`connect-src 'self' ${localSupabase().url} https://tile.openstreetmap.org`);
+    expect(csp, path).toContain(`connect-src 'self' ${localSupabase().url} https://tile.openstreetmap.org https://photon.komoot.io;`);
     expect(csp, path).not.toContain("unsafe-inline");
   }
   const ficha = (await request.get(`/casa/${casa.publicId}`)).headers()["content-security-policy"];
   expect(ficha).toContain("script-src 'self';");
   expect(ficha).toContain("frame-src 'none'");
+  // Photon (sugerencias de zona del asistente) solo en el shell.
+  expect(ficha).not.toContain("photon.komoot.io");
 });
 
 test.describe("con violaciones esperadas", () => {
