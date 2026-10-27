@@ -1,3 +1,4 @@
+import type { BlockedReason } from "../domain/blocked";
 import type { CalendarDay } from "../domain/calendar";
 import type { FxRate } from "../domain/fx";
 import type { PublicListing } from "../domain/listing";
@@ -8,7 +9,7 @@ import type { PublicListing } from "../domain/listing";
 export type SsrData =
   | { page: "listing"; listing: PublicListing; days: CalendarDay[] | null; fx: FxRate; base: string }
   | { page: "missing" }
-  | { page: "blocked" }
+  | { page: "blocked"; reason: BlockedReason }
   | { page: "error" };
 
 export const SSR_DATA_ID = "ssr-data";

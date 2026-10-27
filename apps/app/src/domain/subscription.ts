@@ -8,6 +8,7 @@ import { formatCRC } from "./money";
 import { LAUNCH_TIERS, MONTHLY_FEE_CRC, launchOffer, type LaunchOffer } from "./offer";
 
 export { LAUNCH_TIERS, MONTHLY_FEE_CRC, launchOffer, type LaunchOffer };
+export { blockedReason, type BlockedReason } from "./blocked";
 
 /** Días antes del fin de la oferta en que se avisa por WhatsApp; 90 abre también la ventana de la tarjeta en la app. */
 export const REMINDER_DAYS = [90, 30, 7, 0] as const;
@@ -229,20 +230,6 @@ export function nextCharge(houses: readonly HouseSubscription[], method: object 
   const first = due.reduce((min, x) => (x.day < min ? x.day : min), due[0]!.day);
   const total = due.filter((x) => x.day === first).reduce((sum, x) => sum + x.h.monthlyPriceCrc, 0);
   return `${formatCRC(total)} · ${cardDate(first)}`;
-}
-
-export type BlockedReason = "stopped" | "payment" | "other";
-
-/** Motivo de la página 410 de una ficha que ya no está activa. */
-export function blockedReason(reason: BlockedReason | null): string {
-  switch (reason) {
-    case "stopped":
-      return "El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.";
-    case "payment":
-      return "Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.";
-    default:
-      return "Este anuncio no está disponible en este momento.";
-  }
 }
 
 // ---------- Datos de la suscripción (fase 5, ticket 02: RPCs de fase5_suscripcion y su fake) ----------

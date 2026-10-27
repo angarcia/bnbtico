@@ -34,8 +34,9 @@ function prices(l: Listing | PublicListing): [Price | null, Price | null] {
 
 function situation(l: Listing, now: number): string {
   switch (l.status) {
+    // Lo de la oferta (tramo, «Gratis hasta…») sale de la suscripción (subscriptionLine): aquí solo lo que dice la casa.
     case "active":
-      return "Gratis 12 meses · oferta de lanzamiento";
+      return l.available ? "Visible en Explorar y con su enlace" : "Pausado: no aparece en Explorar";
     case "review":
       return `Enviada ${relativeDate(l.updatedAt, now)}. Le avisamos por WhatsApp.`;
     case "changes":
@@ -43,9 +44,9 @@ function situation(l: Listing, now: number): string {
     case "rejected":
       return "Rechazada. Si quiere, publique una nueva.";
     case "payment_due":
-      return "Aprobada. Falta el método de pago para publicarla.";
+      return "La ficha vuelve a verse al pagar.";
     case "inactive":
-      return "Inactiva: no aparece en Explorar.";
+      return "Parada · no aparece en Explorar";
     case "draft":
       return l.reviewedAt ? "Estuvo publicada: al enviarla volverá a revisión." : "Borrador sin enviar.";
   }

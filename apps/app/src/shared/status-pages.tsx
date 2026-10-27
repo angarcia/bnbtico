@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { blockedReason, type BlockedReason } from "../domain/blocked";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
  *  quien llega por un enlace compartido ve otras casas o puede reintentar (revisión UX N4). */
@@ -31,10 +32,12 @@ export function MissingPage() {
   );
 }
 
-export function BlockedPage() {
+/** `reason`: el motivo que da el worker (fase 5: parada por el propietario o fuera del catálogo por la suscripción); sin él,
+ *  el texto genérico. */
+export function BlockedPage({ reason }: { reason?: BlockedReason }) {
   return (
     <StatusPage title="Este enlace ya no está activo" actions={<a href="/explorar" className="btn btn-primary">Ver otras casas en el Caribe</a>}>
-      <p>Este anuncio no está disponible en este momento.</p>
+      <p>{blockedReason(reason ?? null)}</p>
       <p className="small muted">Si ya habló con el propietario por WhatsApp, puede seguir esa conversación por su cuenta.</p>
     </StatusPage>
   );

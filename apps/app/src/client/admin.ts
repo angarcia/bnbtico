@@ -107,7 +107,7 @@ export function useReview(userId: string) {
       void client.invalidateQueries({ queryKey: itemKey(item.listing.id) });
       void client.invalidateQueries({ queryKey: ["listing", item.listing.publicId] });
       void client.invalidateQueries({ queryKey: ["listings"] });
-      void client.invalidateQueries({ queryKey: ["active-count"] });
+      void client.invalidateQueries({ queryKey: ["offer-taken"] });
     },
   });
 }

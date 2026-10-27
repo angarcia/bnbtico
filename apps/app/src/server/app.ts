@@ -184,7 +184,11 @@ export function createApp(deps: Deps) {
       const [listing, days, fx] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId).catch(() => null), api.fxRate().catch(() => null)]);
       if (!listing) {
         const state = await api.linkState(publicId);
-        return state === "blocked" ? page(c, { page: "blocked" }, 410, STATUS_CACHE) : page(c, { page: "missing" }, 404, STATUS_CACHE);
+        if (state !== "blocked") return page(c, { page: "missing" }, 404, STATUS_CACHE);
+        // El motivo solo en este camino (la ficha activa no da ninguna vuelta más). Si falla (una base sin la migración de la
+        // fase 5, un error pasajero), el 410 genérico de siempre, nunca un error.
+        const reason = (await api.blockedReason(publicId).catch(() => null)) ?? "other";
+        return page(c, { page: "blocked", reason }, 410, STATUS_CACHE);
       }
       const complete = days !== null && fx !== null;
       const res = await page(c, { page: "listing", listing, days, fx: fx ?? FX_INITIAL, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, complete ? LISTING_CACHE : "no-store");

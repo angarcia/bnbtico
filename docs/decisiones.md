@@ -1,3 +1,13 @@
+## 2026-10-27 · Fase 5, ticket 06: estados de la suscripción en las pantallas y motivo del 410
+
+Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spec.md`).
+
+- **Una consulta `["billing", uid]`** (`src/client/billing.ts`, `owner_billing`, privada, persistida con la sesión, 30 s, un solo reintento) para Inicio, Mis casas y el detalle; la usará también el ticket 05. La de casas propias no cambia. Si falla, las pantallas salen sin las partes de la suscripción; el contador de la oferta usa `launch_offer_taken` y, si falla, las casas activas (`["offer-taken"]` sustituye a `["active-count"]`).
+- **`describe.situation` ya no promete la oferta:** activa → «Visible en Explorar y con su enlace» (o «Pausado: no aparece en Explorar»), pendiente de pago → «La ficha vuelve a verse al pagar.», inactiva → «Parada · no aparece en Explorar». La línea «Gratis hasta el …» sale de `subscriptionLine` cuando hay datos de facturación.
+- **Enlaces a «Promoción y suscripción»** (`/propietario/suscripcion`, con `#pago=CT-####`): un `<a href>` que navega dentro de la SPA con `router.history.push`, porque la ruta la crea el ticket 05. Hasta entonces abre «No encontramos esta página». «Ver mi suscripción» de Inicio va allí (antes, a Cuenta).
+- **410 con motivo:** el worker pide `listing_blocked_reason` solo tras `linkState = blocked`, con `catch → other`; `SsrData` lleva `reason` para hidratar igual. El texto vive en `src/domain/blocked.ts` (lo reexporta `subscription.ts`) para que las reglas de la suscripción no entren en la ficha ni en el JS inicial.
+- **Tamaño:** las reglas de la suscripción quedan en un trozo compartido diferido (`subscription-*.js`, con `can`), que usan las pantallas del propietario y el adaptador de `supabase-data`; sale de «zona privada» y entra en «pantallas de las pestañas», cuyo límite pasa de 22 a 24,5 KB (≈ +2,8 KB gz reales: textos y reglas de los estados de pago).
+
 ## 2026-10-27 · Fase 5, ticket 03: envío de los avisos desde el worker
 
 Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spec.md`).

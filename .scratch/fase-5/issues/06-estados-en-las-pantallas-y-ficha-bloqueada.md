@@ -4,13 +4,27 @@
 
 **Blocked by:** 02
 
-**Status:** blocked
+**Status:** done
 
-- [ ] `["billing", uid]` query (private, persisted, removed on sign-out) shared by Inicio, Mis casas, the detail and ticket 05; own-listings query unchanged.
-- [ ] Inicio offer card with the house's tier and end, counter from `offerTaken()` (fallback `countActive`), reminder card.
-- [ ] Mis casas tiles and cards per state (Pendiente de pago, active in window, Inactiva), `describe.situation` no longer hard-codes «Gratis 12 meses».
-- [ ] Detail: ocre card, disabled share with its line, «Suscripción» row.
-- [ ] Wizard step 8 and «enviada» use `offerTaken()`.
-- [ ] Worker: `blockedReason` only on the blocked path, `.catch → other`; `BlockedPage` with the three texts; hydration test and Lighthouse listing ≤ 1.70 s.
-- [ ] Playwright: each state on each screen; 410 for stopped / unpaid / edited houses, no hydration warnings, and the page without the migration (reason RPC failing) equals today's.
-- [ ] Green: all batteries; tab-screens limit not raised without a reason.
+- [x] `["billing", uid]` query (private, persisted, removed on sign-out) shared by Inicio, Mis casas, the detail and ticket 05; own-listings query unchanged.
+- [x] Inicio offer card with the house's tier and end, counter from `offerTaken()` (fallback `countActive`), reminder card.
+- [x] Mis casas tiles and cards per state (Pendiente de pago, active in window, Inactiva), `describe.situation` no longer hard-codes «Gratis 12 meses».
+- [x] Detail: ocre card, disabled share with its line, «Suscripción» row.
+- [x] Wizard step 8 and «enviada» use `offerTaken()`.
+- [x] Worker: `blockedReason` only on the blocked path, `.catch → other`; `BlockedPage` with the three texts; hydration test and Lighthouse listing ≤ 1.70 s.
+- [x] Playwright: each state on each screen; 410 for stopped / unpaid / edited houses, no hydration warnings, and the page without the migration (reason RPC failing) equals today's.
+- [x] Green: all batteries; tab-screens limit not raised without a reason.
+
+## Cierre (2026-10-27)
+
+- **Consulta** `src/client/billing.ts`: `billingQuery(uid)` → `["billing", uid]` (`owner_billing` por el trozo diferido `supabase-data`, que ahora cablea `createPostgrestOwnerBilling` en `createBrowserData` y exporta `ownerBilling()`), `staleTime` 30 s como `own-listings`, un reintento; `"billing"` en `PRIVATE_KEYS` (persistida con sesión, borrada al cerrar). `useBilling(uid)` → `{ today, method, all, of(listingId) }` con `houseSubscription`; para el ticket 05. La consulta de casas propias no cambia. `refresh()` invalida también `billing` y `offer-taken`.
+- **Contador:** `offerTakenQuery` (`["offer-taken"]`, pública y persistida; sustituye a `["active-count"]`, también en el admin): `offerTaken()` y, si falla, `countActive()`. La usan Inicio, el paso 9 y «enviada» («Publicada y gratis N meses» con el tramo de la próxima plaza).
+- **Inicio:** tarjeta de la oferta con el tramo y el último día de su casa («Su casa está entre las primeras 50: **12 meses gratis**, hasta el 26 nov 2026…»; «las siguientes 50/100» en los otros tramos; «Los meses gratis de su casa ya terminaron…» si ninguna la tiene en curso); tarjeta ocre (`card-sun` + `btn-sun`) con el nombre de la casa: primero una pendiente de pago, si no una en la ventana (`reminderCard`); «Ver mi suscripción» → `/propietario/suscripcion`.
+- **Mis casas:** activa → `subscriptionLine`; pendiente de pago → «La ficha vuelve a verse al pagar.» y solo el botón ocre; activa en la ventana → Compartir + Calendario + ocre debajo; inactiva → «Parada · no aparece en Explorar» y «Reactivar» (contorno). `describe.situation` ya no dice «Gratis 12 meses» (ver `docs/decisiones.md`).
+- **Detalle:** tarjeta ocre (pendiente: «Su oferta gratuita terminó el 26 oct» + texto del diseño 19; en la ventana: `reminderCard`), Compartir apagado con «Disponible cuando la casa vuelva a estar activa» (pendiente o parada), fila «Suscripción» con `subscriptionLine` → la pantalla. «Anuncio visible» sin cambios. Sin datos de facturación, la nota de antes.
+- **Enlaces de pago, parar y reactivar:** `<a href="/propietario/suscripcion#pago=CT-####">` que navega en la SPA con `router.history.push` (la ruta tipada no existe hasta el ticket 05; hasta entonces cae en «No encontramos esta página»). El ticket 05 puede cambiarlos por `<Link>`.
+- **Worker:** `blockedReason` solo tras `linkState = blocked`, `.catch(() => null) ?? "other"`; `SsrData` `{ page: "blocked", reason }`; `BlockedPage({ reason })` en el worker y al hidratar. El texto pasa a `src/domain/blocked.ts` (reexportado por `subscription.ts`). La SPA (ficha abierta desde una tarjeta) sigue con el texto genérico.
+- **Pruebas:** `tests/unit/worker.test.ts` +2 (motivo parada/pago, solo en el camino bloqueado, RPC caída → genérico) y la de siempre ahora con `reason: "other"`; `describe-can.test.ts` con los textos nuevos. `tests/e2e/estados-suscripcion.spec.ts` (6, cada una con `reset()` y sus casas; cifras relativas a `offerTaken()`/`countActive()`): Inicio (tramo, fin, contador con una casa parada que conserva plaza, aviso de 30 días, enlace y navegación, desaparece con método); Mis casas (casillas y las cinco tarjetas; con método la pendiente pasa a «Suscripción activa desde el …»); detalle (pendiente, «termina mañana», parada); sin `owner_billing` ni `launch_offer_taken` (404 interceptados) todo como antes; paso 9 y «enviada»; 410 parada / pago / en edición, hidratado sin avisos, y con `listing_blocked_reason` revocada el HTML es idéntico al genérico; reactivada vuelve el 200 con «Contactar por WhatsApp». `propietario.spec.ts` compara el contador con `offerTaken()`. Los estados se fijan con el arnés (`setDaysLeft` + `runDay`, `applyPaymentEvent`, `stop`/`resume`), sin el reloj de pruebas ni Vault.
+- **Capturas Pixel 7** (`test-results/capturas/`, no versionadas, revisadas): `inicio-aviso`, `mis-casas-estados`, `detalle-pendiente`, `detalle-ventana`, `410-parada`, `410-pago`.
+- **Baterías** (Supabase propio `bnbtico-f5-pantallas` en 553xx, `E2E_PORT=4273`): `typecheck` limpio; `test` 61 archivos, 872 pruebas; `test:db` 21 archivos, 234; `build` en verde; `test:e2e` 128 en verde + 2 omitidas (medición; en una primera pasada `contacto-cuenta` falló una vez con «Not attached to an active page» en `goBack`, pasó sola y en la pasada completa siguiente); `lighthouse` ficha en frío LCP **1,61 s** (1,62 · 1,59 · 1,61), shell instalado 0,30 s.
+- **Tamaños:** zona privada **142,03 KB** gz / 150 (antes 141,8: +0,15 la ficha con los tres textos del 410, el resto rutas y claves); pantallas de las pestañas **24,09 / 24,5 KB** (antes 21,28 / 22); propietario 8,25 KB (antes 6,72). **Límite subido con motivo:** Rolldown junta `subscription.ts` y `can.ts` en un trozo compartido diferido `subscription-*.js` (1,51 KB: lo importan `propietario` y `supabase-data`, ninguno del JS inicial); se excluye de la zona privada y se mide con las pestañas. Crecimiento real ≈ 2,8 KB gz (reglas y textos de los estados de pago). Si el ticket 05 cambia el nombre de ese trozo, caería en la zona privada (falla del lado seguro).

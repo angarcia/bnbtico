@@ -75,7 +75,8 @@ function body(data: SsrData): string {
       </QueryClientProvider>,
     );
   }
-  const Page = { missing: MissingPage, blocked: BlockedPage, error: ErrorPage }[data.page];
+  if (data.page === "blocked") return renderToString(<BlockedPage reason={data.reason} />);
+  const Page = { missing: MissingPage, error: ErrorPage }[data.page];
   return renderToString(<Page />);
 }
 

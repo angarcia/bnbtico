@@ -16,7 +16,8 @@ function Hydrated({ children }: { children: ReactNode }) {
 }
 
 function ssrPage(data: SsrData): ReactNode {
-  if (data.page !== "listing") return { missing: <MissingPage />, blocked: <BlockedPage />, error: <ErrorPage /> }[data.page];
+  if (data.page === "blocked") return <BlockedPage reason={data.reason} />;
+  if (data.page !== "listing") return { missing: <MissingPage />, error: <ErrorPage /> }[data.page];
   // La caché de Query arranca con la casa, los días y el tipo de cambio del servidor: hidratar no vuelve a pedirlos.
   const client = new QueryClient();
   seedListing(client, data.listing, data.days, data.fx);

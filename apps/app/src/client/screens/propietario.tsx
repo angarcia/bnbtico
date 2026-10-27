@@ -3,8 +3,8 @@
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { occupiedNightsLabel } from "../../domain/calendar";
 import { can } from "../../domain/can";
 import { longDate, relativeDate } from "../../domain/dates";
@@ -14,17 +14,18 @@ import { costaRicaToday } from "../../domain/inquiry";
 import { variantUrl } from "../../domain/image";
 import { MIN_PHOTOS, STATUS_LABELS, missingPhotosLabel, resumeStep, wizardStage, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
-import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
+import { LAUNCH_TIERS, MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, payLink, promoRunning, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { accountQuery } from "../account";
+import { useBilling, type Billing, type HouseBilling } from "../billing";
 import { calendarQuery } from "../calendar-days";
 import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
 import { countNew, inquiriesQuery } from "../inquiries";
-import { activeCountQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
+import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
 import { setRole } from "../role";
 import { useSession } from "../session";
 
@@ -69,6 +70,60 @@ function Price({ listing: l }: { listing: Listing }) {
 
 const confirmed = (text: string) => window.confirm(text);
 
+// ---------- Suscripción (fase 5) ----------
+
+/** «14 oct» si es de este año; si no, «14 oct 2027». */
+const dayOf = (date: string, today: string) => (date.slice(0, 4) === today.slice(0, 4) ? cardDate(date).slice(0, -5) : cardDate(date));
+
+/**
+ * Enlace a «Promoción y suscripción» (`/propietario/suscripcion`, con `#pago=CT-####` para resaltar una casa): es un
+ * enlace de verdad (se abre en otra pestaña, lo lee el lector de pantalla) y, con un toque normal, navega dentro de la SPA.
+ */
+function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
+  const router = useRouter();
+  const href = publicId ? payLink("", publicId) : "/propietario/suscripcion";
+  const go = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    router.history.push(href);
+  };
+  return (
+    <a href={href} className={className} onClick={go}>
+      {children}
+    </a>
+  );
+}
+
+function PayButton({ publicId }: { publicId: string }) {
+  return (
+    <SubscriptionLink publicId={publicId} className="btn btn-sun btn-block">
+      Añadir método de pago
+    </SubscriptionLink>
+  );
+}
+
+/** Tarjeta ocre: la oferta terminó sin método (pendiente de pago) o termina dentro de 90 días; null si no toca avisar. */
+function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; title?: string }) {
+  if (!payButtonDue(hb.sub, today)) return null;
+  const { house, sub } = hb;
+  const card =
+    sub.status === "payment_due"
+      ? {
+          title: sub.promoEndsOn ? `Su oferta gratuita terminó el ${dayOf(sub.promoEndsOn, today)}` : "Falta el método de pago",
+          body: `La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${formatCRC(sub.monthlyPriceCrc)} al mes, sin permanencia; puede parar cuando quiera.`,
+        }
+      : reminderCard(reminderDaysLeft(sub, today) ?? -1);
+  if (!card) return null;
+  return (
+    <section className="card-sun stack gap-10" data-testid="pay-notice">
+      {title ? <span className="xs strong">{title}</span> : null}
+      <b className="display offer-title">{card.title}</b>
+      <span className="small ink">{card.body}</span>
+      <PayButton publicId={house.publicId} />
+    </section>
+  );
+}
+
 // ---------- Inicio ----------
 
 export function InicioScreen() {
@@ -85,6 +140,10 @@ export function InicioScreen() {
   const featured = active[0] ?? inReview[0] ?? list?.find((l) => l !== pending && l.status !== "draft" && l.status !== "changes");
   const title = !list ? "Inicio" : active.length ? "Su casa, en marcha" : inReview.length ? "Su casa, en revisión" : "Publique su casa";
   const firstName = account.data?.name.trim().split(/\s+/)[0];
+  const billing = useBilling(userId);
+  // Un solo aviso de pago arriba: primero la casa ya oculta por falta de método, luego la que está en la ventana de 90 días.
+  const due = billing?.all.filter((x) => payButtonDue(x.sub, billing.today) && list?.some((l) => l.id === x.house.listingId));
+  const notice = due?.find((x) => x.sub.status === "payment_due") ?? due?.[0];
 
   return (
     <>
@@ -114,8 +173,9 @@ export function InicioScreen() {
         </section>
       ) : null}
 
+      {notice && billing ? <PayNotice hb={notice} today={billing.today} title={notice.house.title} /> : null}
       {featured ? <FeaturedCard listing={featured} secondary={!!pending} /> : null}
-      {list ? <OfferCard hasActive={active.length > 0} /> : null}
+      {list ? <OfferCard hasActive={active.length > 0} billing={billing} featuredId={featured?.id} /> : null}
 
       {list && list.length > 1 ? (
         <Link to="/propietario/casas" className="list-item card">
@@ -270,10 +330,25 @@ function ShareBlock({ listing: l, secondary }: { listing: Listing; secondary?: b
   );
 }
 
-function OfferCard({ hasActive }: { hasActive: boolean }) {
-  const count = useQuery(activeCountQuery);
+/** «las primeras 50» / «las siguientes 50» / «las siguientes 100»: el tramo de la plaza. */
+function tierOf(slot: number): string | null {
+  let first = 1;
+  for (const [i, tier] of LAUNCH_TIERS.entries()) {
+    if (slot < first + tier.size) return `${i === 0 ? "las primeras" : "las siguientes"} ${tier.size}`;
+    first += tier.size;
+  }
+  return null;
+}
+
+/** La oferta de la casa del propietario (tramo y último día gratis) si alguna la tiene en curso; si no, la de las próximas. */
+function OfferCard({ hasActive, billing, featuredId }: { hasActive: boolean; billing: Billing | null; featuredId?: string }) {
+  const count = useQuery(offerTakenQuery);
   const offer = count.data === undefined ? undefined : launchOffer(count.data);
   const fee = formatCRC(MONTHLY_FEE_CRC);
+  const running = billing?.all.filter((x) => x.house.promoSlot && x.house.promoMonths && promoRunning(x.sub, billing.today));
+  const own = running?.find((x) => x.house.listingId === featuredId) ?? running?.[0];
+  const tier = own?.house.promoSlot ? tierOf(own.house.promoSlot) : null;
+  const ended = !!billing && !own && billing.all.some((x) => x.house.status === "active" || x.house.status === "payment_due");
   return (
     <section className="card stack gap-10 offer-card">
       <div className="row between baseline">
@@ -283,9 +358,15 @@ function OfferCard({ hasActive }: { hasActive: boolean }) {
         </span>
       </div>
       <span className="small ink">
-        {offer === null ? (
+        {own && tier && own.sub.promoEndsOn ? (
+          <>
+            Su casa está entre {tier}: <b>{own.house.promoMonths} meses gratis</b>, hasta el {cardDate(own.sub.promoEndsOn)}. Después, {fee} al mes por casa, sin permanencia.
+          </>
+        ) : ended ? (
+          <>Los meses gratis de su casa ya terminaron. {fee} al mes por casa, sin permanencia.</>
+        ) : offer === null ? (
           <>La oferta de lanzamiento terminó. {fee} al mes por casa, sin permanencia.</>
-        ) : hasActive ? (
+        ) : hasActive && !billing ? (
           <>Su casa activa tiene la oferta de lanzamiento: meses gratis desde que la aprobamos. Después, {fee} al mes por casa, sin permanencia.</>
         ) : (
           <>
@@ -294,9 +375,7 @@ function OfferCard({ hasActive }: { hasActive: boolean }) {
         )}
       </span>
       {offer !== null ? <progress className="offer-bar" value={offer?.taken ?? 0} max={offer?.size ?? 50} aria-label="Plazas ocupadas en la oferta" /> : null}
-      <Link to="/cuenta" className="link small">
-        Ver mi suscripción
-      </Link>
+      <SubscriptionLink className="link small">Ver mi suscripción</SubscriptionLink>
     </section>
   );
 }
@@ -308,6 +387,7 @@ export function CasasScreen() {
   const userId = useUserId();
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
+  const billing = useBilling(userId);
   const count = (s: Listing["status"]) => list?.filter((l) => l.status === s).length ?? 0;
   // Casillas a 0 fuera: no llaman la atención sobre nada (revisión UX N1).
   const tiles = [
@@ -354,7 +434,7 @@ export function CasasScreen() {
       {list && list.length > 0 ? (
         <div className="stack gap-14">
           {list.map((l) => (
-            <OwnerCard key={l.id} listing={l} userId={userId} primary={l.id === primaryId} />
+            <OwnerCard key={l.id} listing={l} userId={userId} primary={l.id === primaryId} billing={billing} />
           ))}
         </div>
       ) : null}
@@ -362,10 +442,14 @@ export function CasasScreen() {
   );
 }
 
-function OwnerCard({ listing: l, userId, primary }: { listing: Listing; userId: string; primary: boolean }) {
+function OwnerCard({ listing: l, userId, primary, billing }: { listing: Listing; userId: string; primary: boolean; billing: Billing | null }) {
   const d = describe(l, { base: base() });
   const navigate = useNavigate();
   const discard = useDeleteDraft(userId);
+  const hb = billing?.of(l.id);
+  // Activa: la línea de la suscripción («Gratis hasta el 14 oct 2027»); las demás, la situación de la casa.
+  const line = (hb && billing && l.status === "active" ? subscriptionLine(hb.sub, billing.today) : null) ?? d.situation;
+  const pay = !!hb && !!billing && payButtonDue(hb.sub, billing.today);
   return (
     <article className="card stack gap-12 owner-card">
       <div className="row gap-12 align-top">
@@ -378,7 +462,7 @@ function OwnerCard({ listing: l, userId, primary }: { listing: Listing; userId: 
             </Link>
           </h2>
           <Price listing={l} />
-          <span className="xs muted">{d.situation}</span>
+          <span className="xs muted" data-testid="card-line">{line}</span>
         </div>
       </div>
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <div className="note note-sun small">Nota de bnbtico: {l.reviewNote}</div> : null}
@@ -389,6 +473,12 @@ function OwnerCard({ listing: l, userId, primary }: { listing: Listing; userId: 
             Calendario
           </Link>
         </div>
+      ) : null}
+      {pay ? <PayButton publicId={l.publicId} /> : null}
+      {hb && l.status === "inactive" ? (
+        <SubscriptionLink publicId={l.publicId} className="btn btn-ghost btn-block">
+          Reactivar
+        </SubscriptionLink>
       ) : null}
       {l.status === "changes" ? (
         <button type="button" className={`btn ${primary ? "btn-primary" : "btn-ghost"} btn-block`} onClick={() => void navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } })}>
@@ -480,6 +570,9 @@ export function CasaPropietarioScreen() {
 
 function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   const navigate = useNavigate();
+  const billing = useBilling(userId);
+  const hb = billing?.of(l.id);
+  const subLine = hb && billing ? subscriptionLine(hb.sub, billing.today) : null;
   const available = useSetAvailable(userId, l);
   const reopen = useReopen(userId, l);
   const discard = useDeleteDraft(userId);
@@ -528,7 +621,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
       {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}
-      {l.status === "payment_due" ? <div className="note note-sun">{describe(l, { base: "" }).situation}</div> : null}
+      {hb && billing ? <PayNotice hb={hb} today={billing.today} /> : l.status === "payment_due" ? <div className="note note-sun">{describe(l, { base: "" }).situation}</div> : null}
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? (
         <section className="card-sun stack gap-10">
           <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
@@ -544,6 +637,19 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       <section className="list">
         <ShareListItem listing={l} />
         {l.status !== "rejected" ? <CalendarRow listing={l} userId={userId} /> : null}
+        {hb && subLine ? (
+          <SubscriptionLink publicId={l.publicId} className="list-item">
+            <span className="muted-icon">
+              <I.shield />
+            </span>
+            <span className="body">
+              Suscripción<small data-testid="subscription-row">{subLine}</small>
+            </span>
+            <span className="chev">
+              <I.chevron />
+            </span>
+          </SubscriptionLink>
+        ) : null}
         {l.status === "active" ? (
           <button type="button" className="list-item" onClick={edit} disabled={reopen.isPending}>
             <span className="muted-icon">
@@ -661,7 +767,7 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
         Compartir ficha
         {/* La referencia CT-#### va aquí, dentro del enlace, y no sobre la foto (revisión UX N7). */}
         {enabled && !copied ? <small className="num primary share-url">{target.url.replace(/^https?:\/\//, "")}</small> : null}
-        <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
+        <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : l.status === "payment_due" || l.status === "inactive" ? "Disponible cuando la casa vuelva a estar activa" : "Disponible cuando la casa esté activa"}</small>
       </span>
       <span className="chev">
         <I.chevron />
@@ -679,6 +785,8 @@ export function EnviadaScreen() {
   const { id } = sentRoute.useParams();
   const { query } = useOwnListing(id);
   const l = query.data;
+  const taken = useQuery(offerTakenQuery).data;
+  const offer = taken === undefined ? undefined : launchOffer(taken);
   if (l === null) return <NotFoundCard />;
   const cover = l?.photos[0];
   return (
@@ -715,7 +823,7 @@ export function EnviadaScreen() {
         <div>
           <span className="n">3</span>
           <span>
-            <b>Publicada y con la oferta de lanzamiento</b>
+            <b>{offer ? `Publicada y gratis ${offer.months} meses` : offer === null ? `Publicada · ${formatCRC(MONTHLY_FEE_CRC)} al mes` : "Publicada y con la oferta de lanzamiento"}</b>
             <span className="block muted">Comparta el enlace y los clientes le escriben por WhatsApp</span>
           </span>
         </div>
