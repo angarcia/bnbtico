@@ -77,7 +77,9 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
   await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveAttribute("href", `/casa/${active.publicId}`);
-  await expect(page.getByText(active.publicId, { exact: true })).toBeVisible();
+  // Revisión UX N7: la referencia no va sobre la foto; se ve como enlace en «Compartir ficha».
+  await expect(page.locator(".detail-photo")).not.toContainText(active.publicId);
+  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toContainText(`${HOST}/casa/${active.publicId}`);
   await expect(page.getByText("+506 8777 0001 · verificado")).toBeVisible();
   // Los textos de compartir no se animan al abrir el detalle; solo al cambiar a «Enlace copiado».
   expect(await page.locator(".swap-in").evaluateAll((els) => els.reduce((n, el) => n + el.getAnimations().length, 0))).toBe(0);

@@ -461,7 +461,6 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             {formatCRC(price.amount)} <span>/ {price.unit}</span>
           </span>
         ) : null}
-        <span className="pill pill-sm pill-br">{l.publicId}</span>
       </div>
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
@@ -597,6 +596,8 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
       </span>
       <span className="body">
         Compartir ficha
+        {/* La referencia CT-#### va aquí, dentro del enlace, y no sobre la foto (revisión UX N7). */}
+        {enabled && !copied ? <small className="num primary share-url">{target.url.replace(/^https?:\/\//, "")}</small> : null}
         <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
       </span>
       <span className="chev">
