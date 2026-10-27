@@ -23,6 +23,9 @@ import { BlockedPage } from "./status-pages";
 
 const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+/** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
+ *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
+const LONG_TITLE = 38;
 
 export interface ListingSeed {
   listing: PublicListing;
@@ -234,11 +237,11 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             {!l.available ? <span className="badge badge-sun">No disponible por ahora</span> : null}
           </div>
           <div className="stack gap-4">
-            <h1 className="listing-title">{l.title}</h1>
+            <h1 className={`listing-title${l.title.length > LONG_TITLE ? " is-long" : ""}`}>{l.title}</h1>
             <span className="row muted gap-6">
               <I.pin size={18} /> {[l.zone, l.canton].filter(Boolean).join(", ")} · ubicación aproximada
             </span>
-            <span className="small muted">
+            <span className="small muted" data-testid="listing-capacity">
               {plural(l.capacity, "persona", "personas")} · {plural(l.bedrooms, "habitación", "habitaciones")} · {plural(l.bathrooms, "baño", "baños")}
             </span>
           </div>
@@ -286,7 +289,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                 </span>
               </span>
               <span className="xs muted price-note">
-                <PriceReference amountCrc={main.amount} currency={currency} fx={fx} /> · orientativo; el precio final lo acuerda con el propietario
+                <PriceReference amountCrc={main.amount} currency={currency} fx={fx} /> · orientativo
               </span>
             </div>
           ) : null}

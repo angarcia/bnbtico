@@ -72,7 +72,8 @@ describe("worker · ficha /casa/CT-####", () => {
     const html = await res.text();
     expect(html).toMatch(/<div id="root">[\s\S]*<h1[^>]*>Casa &quot;Sol&quot; &lt;y&gt; Mar<\/h1>/);
     expect(html).toContain("₡95\u00a0000");
-    expect(html).toContain("el precio final lo acuerda con el propietario");
+    expect(html).toContain("· orientativo");
+    expect(html).toContain("fechas, precio y pago los acuerda directamente con el propietario");
     expect(html).toContain("Contactar por WhatsApp");
     expect(html).toContain("1 / 6");
   });

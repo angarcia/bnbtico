@@ -23,6 +23,7 @@ function watch(page: Page) {
 let casa: Seeded;
 let oculta: Seeded;
 let cara: Seeded;
+let larga: Seeded;
 
 test.beforeAll(async () => {
   const h = await postgrestHarness();
@@ -30,6 +31,7 @@ test.beforeAll(async () => {
   oculta = await h.seed({ status: "reopened" });
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
   cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 2500000 } });
+  larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo con piscina y rancho frente al mar Caribe", zone: "Manzanillo", nightlyPriceCrc: 185000 } });
   const storage = serviceClient().storage.from("listings");
   for (const path of casa.photoPaths) {
     const { error } = await storage.upload(path, PHOTO, { contentType: "image/jpeg", upsert: true });
@@ -193,6 +195,26 @@ test("a 320 px la barra mide lo mismo en colones y en dólares y no tapa el fina
     ]);
     expect(textBottom, "el último párrafo queda por encima de la barra").toBeLessThanOrEqual(barTop!);
   }
+});
+
+// Revisión UX C3: en un iPhone SE la barra fija no se come la ficha; sin hacer scroll se ven la zona y las personas.
+test("en un iPhone SE la barra cabe en una línea de precio y deja ver la zona y las personas", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  for (const publicId of [casa.publicId, larga.publicId]) {
+    await page.goto(`/casa/${publicId}`);
+    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    expect(await barHeight(page), `${publicId}: alto de la barra`).toBeLessThanOrEqual(150);
+    await expect(page.locator(".cta-bar")).not.toContainText("el precio final");
+    await expect(page.locator(".cta-bar .price-note")).toHaveText(/^≈ \$\d+\s*· orientativo$/, { useInnerText: true });
+    const [capacityBottom, barTop] = await page.evaluate(() => [
+      document.querySelector('[data-testid="listing-capacity"]')!.getBoundingClientRect().bottom,
+      document.querySelector(".cta-bar")!.getBoundingClientRect().top,
+    ]);
+    expect(capacityBottom, `${publicId}: «N personas» por encima de la barra sin scroll`).toBeLessThanOrEqual(barTop!);
+  }
+  await expect(page.locator("h1.listing-title")).toHaveClass(/is-long/);
+  await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el propietario");
 });
 
 // «Enlace copiado» y el contador del hero se animan al cambiar, no al pintarse por primera vez.

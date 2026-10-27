@@ -311,6 +311,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .listing-view{padding-top:calc(8px + env(safe-area-inset-top))}
 .listing-body{gap:16px;padding-top:4px}
 .listing-title{font-size:30px}
+.listing-title.is-long{font-size:24px}
 .listing-description{font-size:16px;white-space:pre-wrap;overflow-wrap:anywhere}
 .hero-counter{right:14px;bottom:14px}
 .map-box-listing{height:180px}
