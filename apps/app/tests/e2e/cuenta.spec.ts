@@ -226,5 +226,5 @@ test("recuperar la cuenta y Favoritos sin sesión", async ({ page }) => {
   await expect(page.getByText("atención a clientes")).toBeVisible();
   await page.goto("/favoritos");
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
-  await expect(page.getByText("No necesita cuenta.")).toBeVisible();
+  await expect(page.getByText(/Guardar casas no necesita cuenta/)).toBeVisible();
 });

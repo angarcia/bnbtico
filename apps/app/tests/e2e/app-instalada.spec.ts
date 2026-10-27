@@ -143,14 +143,16 @@ test("versión nueva: espera, avisa al volver a la app, no se ofrece dentro del 
     expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe("installed");
 
     // Dentro del asistente no se ofrece ni se recarga; la versión nueva sigue esperando.
+    // «Publicar casa» entra directo al paso 1 (revisión UX C4).
     await page.goto("/propietario/publicar");
+    await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await page.waitForTimeout(800);
     await expect(page.getByText("Hay una versión nueva")).toHaveCount(0);
     expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.state)).toBe("installed");
 
     // Al salir del asistente vuelve el aviso; «Actualizar» activa la versión nueva y recarga esta pestaña.
-    await page.getByRole("link", { name: "Volver" }).click();
+    await page.getByRole("button", { name: /Cerrar/ }).click();
     await expect(page).not.toHaveURL(/\/propietario\/publicar/);
     await expect(banner).toBeVisible();
     await Promise.all([page.waitForEvent("load"), banner.getByRole("button", { name: "Actualizar" }).click()]);
