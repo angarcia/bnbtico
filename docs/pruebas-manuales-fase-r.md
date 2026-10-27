@@ -131,7 +131,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | B5a | Abrir `https://nueva.bnbtico.com/` (pasa el PIN de Access) | Explorar «¿Para dónde va?», arranca en Limón, CT-1015 en la lista con su foto | ☐ |
-| B5b | «Más filtros» | Filtros: en Zona solo provincias con casas; «Ver N casas» cuenta en vivo al tocar Piscina, Personas o precio | ☐ |
+| B5b | En Explorar, tocar Vacacional y después Mensual; luego «Más filtros» (actualizado 2026-10-26) | Los chips (Vacacional, Mensual, Más filtros) caben en una fila sin deslizar; los dos quedan marcados a la vez (= todas las casas), uno solo filtra esa modalidad. Filtros: «Modalidad» con los mismos chips; en Zona solo provincias con casas; «Ver N casas» cuenta en vivo al tocar Piscina, Personas o precio | ☐ |
 | B5c | Precio mínimo mayor que el máximo (actualizado 2026-10-26) | Aviso «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» desactivado; al corregirlo se activa, vuelve a Explorar y la URL lo refleja; «Limpiar» los quita | ☐ |
 | B5d | En Explorar, selector «₡ \| $» junto al número de casas → «$»; entrar a una ficha, a Favoritos y a «Más filtros» (actualizado 2026-10-26) | Todo en dólares: tarjetas, ficha (con «≈ ₡…» debajo), Favoritos y los precios de Filtros (se escriben en $). Mi cuenta → «Moneda» cambia lo mismo. Al recargar recuerda la elección | ☐ |
 | B5f | En Explorar, bajar hasta las últimas tarjetas, abrir una ficha y volver atrás | Explorar vuelve al mismo punto del scroll, sin recargar. **Pendiente (2026-10-26): con una sola casa no se puede probar; repetir cuando haya más casas** | ☐ |

@@ -1,7 +1,7 @@
 // Fake en memoria de ListingsApi. Aplica las reglas de la base que cubre la suite de contrato.
 import type { PublicListingsApi } from "../../domain/api";
 import { calendarWindow } from "../../domain/calendar";
-import { ALL_PROVINCES, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, modeFilter, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { approxPoint, type FakeDb, type FakeListing } from "./db";
@@ -56,7 +56,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
     async searchPublic(f: Filters) {
       return active()
         .filter((l) => f.prov === ALL_PROVINCES || l.province === f.prov)
-        .filter((l) => (f.mode === "nightly" ? l.acceptsNightly : f.mode === "monthly" ? l.acceptsMonthly === true : true))
+        .filter((l) => (modeFilter(f) === "nightly" ? l.acceptsNightly : modeFilter(f) === "monthly" ? l.acceptsMonthly === true : true))
         .filter((l) => !f.ppl || gte(l.capacity, f.ppl))
         .filter((l) => !f.beds || gte(l.bedrooms, f.beds))
         .filter((l) => f.features.every((x) => l.features.includes(x)))

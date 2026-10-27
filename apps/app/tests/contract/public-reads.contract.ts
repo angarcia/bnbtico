@@ -118,6 +118,8 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
       it("modalidad", async () => {
         expect(await ids(filters({ modo: "monthly" }))).toEqual([grande.publicId, mensual.publicId]);
         expect(await ids(filters({ modo: "nightly" }))).toEqual([nicoya.publicId, grande.publicId, cahuita.publicId]);
+        // Vacacional y Mensual marcados a la vez = todas (ticket 16).
+        expect(await ids(filters({ modo: "both" }))).toEqual(await ids(filters()));
       });
 
       it("personas y habitaciones como mínimo", async () => {

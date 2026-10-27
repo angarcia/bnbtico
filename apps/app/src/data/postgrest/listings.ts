@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
-import { ALL_PROVINCES, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, modeFilter, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 
@@ -22,8 +22,9 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
     async searchPublic(f: Filters) {
       let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
       if (f.prov !== ALL_PROVINCES) q = q.eq("province", f.prov);
-      if (f.mode === "nightly") q = q.eq("accepts_nightly", true);
-      if (f.mode === "monthly") q = q.eq("accepts_monthly", true);
+      const mode = modeFilter(f);
+      if (mode === "nightly") q = q.eq("accepts_nightly", true);
+      if (mode === "monthly") q = q.eq("accepts_monthly", true);
       if (f.ppl) q = q.gte("capacity", f.ppl);
       if (f.beds) q = q.gte("bedrooms", f.beds);
       if (f.features.length) q = q.contains("features", f.features);

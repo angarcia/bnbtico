@@ -11,10 +11,34 @@ export const ALL_PROVINCES = "Todas";
 export const FEATURE_KEYS = Object.keys(FEATURE_LABEL) as Feature[];
 
 export type Mode = "nightly" | "monthly";
+const MODES: readonly Mode[] = ["nightly", "monthly"];
+/** Los dos chips de modalidad, en Explorar y en Filtros. */
+export const MODE_CHIPS = [
+  ["nightly", "Vacacional"],
+  ["monthly", "Mensual"],
+] as const satisfies readonly (readonly [Mode, string])[];
+
+/** `modo` en la URL: una modalidad o las dos marcadas. */
+type ModeParam = Mode | "both";
+
+/** Lo que filtra la consulta: una modalidad, o null (ninguna o las dos marcadas = todas; ticket 16). */
+export function modeFilter(f: Pick<Filters, "modes">): Mode | null {
+  return f.modes.length === 1 ? f.modes[0]! : null;
+}
+
+/** Marcar o desmarcar un chip de modalidad sin tocar el otro. */
+export function toggleMode(modes: readonly Mode[], m: Mode): Mode[] {
+  const next = modes.includes(m) ? modes.filter((x) => x !== m) : [...modes, m];
+  return MODES.filter((x) => next.includes(x));
+}
+
+const modesFrom = (p: ModeParam | null): Mode[] => (p === "both" ? [...MODES] : p ? [p] : []);
+/** Las modalidades marcadas tal como van en `modo`. */
+export const modeParam = (modes: readonly Mode[]): ModeParam | null => (modes.length === 2 ? "both" : (modes[0] ?? null));
 
 export interface Filters {
   prov: string; // provincia o «Todas»
-  mode: Mode | null; // Vacacional / Mensual; null = las dos
+  modes: Mode[]; // chips Vacacional y Mensual marcados (en este orden); ninguno o los dos = todas
   ppl: number;
   beds: number;
   features: Feature[];
@@ -45,7 +69,7 @@ const money = z.pipe(
 
 const searchSchema = z.looseObject({
   prov: first,
-  modo: z.pipe(first, z.transform((v): Mode | null => (v === "nightly" || v === "monthly" ? v : null))),
+  modo: z.pipe(first, z.transform((v): ModeParam | null => (v === "nightly" || v === "monthly" || v === "both" ? v : null))),
   ppl: option(PEOPLE_OPTIONS),
   beds: option(BEDS_OPTIONS),
   min: money,
@@ -66,7 +90,7 @@ export function parseFilters(params: SearchParams, provinces: readonly string[])
   const max = invalid ? 0 : p.max;
   return {
     prov: p.prov === ALL_PROVINCES || provinces.includes(p.prov) ? p.prov : defaultProvince(provinces),
-    mode: p.modo,
+    modes: modesFrom(p.modo),
     ppl: p.ppl,
     beds: p.beds,
     features: FEATURE_KEYS.filter((f) => p[f]),
@@ -105,7 +129,8 @@ export function colonesToPriceInput(crc: number, currency: Currency): string {
 export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearchParams {
   const p = new URLSearchParams();
   if (f.prov !== defaults.prov) p.set("prov", f.prov);
-  if (f.mode) p.set("modo", f.mode);
+  const modo = modeParam(MODES.filter((m) => f.modes.includes(m)));
+  if (modo) p.set("modo", modo);
   if (f.ppl) p.set("ppl", String(f.ppl));
   if (f.beds) p.set("beds", String(f.beds));
   for (const feature of f.features) p.set(feature, "1");

@@ -113,6 +113,7 @@ a{color:var(--primary)}
 .chip-sm{min-height:36px;padding:0 14px;font-size:13px}
 .chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px}
 .chiprow::-webkit-scrollbar{display:none}
+.chiprow.fit{overflow-x:visible;margin:0;padding:0;flex-wrap:nowrap}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--fg);align-self:flex-start}
 .badge-ok{background:var(--state-soft);color:var(--state-ink)}
 .badge-warn,.badge-sun{background:var(--sun-soft);color:var(--sun-ink)}

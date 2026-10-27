@@ -2,8 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, type Filters } from "../../domain/filters";
-import { FEATURE_LABEL, type Feature } from "../../domain/listing";
+import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, toggleMode, MODE_CHIPS, type Filters } from "../../domain/filters";
 import { FX_CRC_PER_USD } from "../../domain/money";
 import { useCurrency } from "../../shared/currency";
 import { CurrencySwitch } from "../currency-switch";
@@ -14,7 +13,6 @@ import { listingsQuery, provincesQuery } from "../queries";
 import { useSession } from "../session";
 
 const route = getRouteApi("/_tabs/explorar");
-const QUICK: Feature[] = ["pool", "pets", "beachfront"];
 const casas = (n: number) => `${n} ${n === 1 ? "casa" : "casas"}`;
 
 function Header() {
@@ -65,7 +63,6 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
   const { data: listings, isError } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
-  const toggleFeature = (key: Feature) => go({ ...f, features: f.features.includes(key) ? f.features.filter((x) => x !== key) : [...f.features, key] });
   const extras = extrasCount(f);
   const search = searchFor(f, provinces);
   const summaryBottom = ["Cualquier fecha", f.ppl ? `${f.ppl}+ personas` : "cualquier grupo", extras ? `${extras} ${extras === 1 ? "filtro" : "filtros"}` : null].filter(Boolean).join(" · ");
@@ -79,15 +76,11 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
             <span className="small muted">{summaryBottom}</span>
           </span>
         </Link>
-        <div className="chiprow">
-          {(["nightly", "monthly"] as const).map((m) => (
-            <button key={m} type="button" className="chip" aria-pressed={f.mode === m} onClick={() => go({ ...f, mode: f.mode === m ? null : m })}>
-              {m === "nightly" ? "Vacacional" : "Mensual"}
-            </button>
-          ))}
-          {QUICK.map((key) => (
-            <button key={key} type="button" className="chip" aria-pressed={f.features.includes(key)} onClick={() => toggleFeature(key)}>
-              {FEATURE_LABEL[key]}
+        {/* Una fila sin scroll lateral a 360 px (ticket 16): modalidad y «Más filtros»; las características van en Filtros. */}
+        <div className="chiprow fit">
+          {MODE_CHIPS.map(([m, label]) => (
+            <button key={m} type="button" className="chip" aria-pressed={f.modes.includes(m)} onClick={() => go({ ...f, modes: toggleMode(f.modes, m) })}>
+              {label}
             </button>
           ))}
           <Link to="/explorar/filtros" search={search} className="chip chip-strong">

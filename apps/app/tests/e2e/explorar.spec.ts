@@ -93,13 +93,44 @@ test("con dólares elegidos, los precios de Filtros se escriben en dólares y se
   await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("98");
 });
 
-test("los chips rápidos cambian la URL y la URL restaura la pantalla", async ({ page }) => {
+test("Vacacional y Mensual no se excluyen, caben en una fila a 360 px y la URL restaura la pantalla", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("/explorar");
-  await page.getByRole("button", { name: "Mensual", exact: true }).click();
+  const chips = page.locator(".chiprow");
+  await expect(chips.locator(".chip")).toHaveText(["Vacacional", "Mensual", "Más filtros"]);
+  const [scrollW, clientW, pageW] = await chips.evaluate((el) => [el.scrollWidth, el.clientWidth, document.documentElement.scrollWidth]);
+  expect(scrollW, "sin scroll lateral en los chips").toBeLessThanOrEqual(clientW!);
+  expect(pageW, "la página no se ensancha").toBeLessThanOrEqual(360);
+
+  const vac = page.getByRole("button", { name: "Vacacional", exact: true });
+  const men = page.getByRole("button", { name: "Mensual", exact: true });
+  await men.click();
   await expect(page).toHaveURL(/modo=monthly/);
   await expect(results(page)).toHaveText("1 casa en Limón");
+  await vac.click();
+  await expect(page).toHaveURL(/modo=both/);
+  await expect(vac).toHaveAttribute("aria-pressed", "true");
+  await expect(men).toHaveAttribute("aria-pressed", "true");
+  await expect(results(page)).toHaveText("8 casas en Limón");
+  await men.click();
+  await expect(page).toHaveURL(/modo=nightly/);
+  await expect(results(page)).toHaveText("8 casas en Limón");
+
+  // Filtros: la misma modalidad, con los mismos chips.
+  await page.getByRole("link", { name: /Más filtros/ }).click();
+  const modalidad = page.getByRole("group", { name: "Modalidad" });
+  await expect(modalidad.getByRole("button", { name: "Vacacional" })).toHaveAttribute("aria-pressed", "true");
+  await modalidad.getByRole("button", { name: "Mensual" }).click();
+  await modalidad.getByRole("button", { name: "Vacacional" }).click();
+  await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
+  await page.getByRole("button", { name: "Ver 1 casa" }).click();
+  await expect(page).toHaveURL(/modo=monthly/);
+
+  // Las características van en «Más filtros», con el contador.
   await page.goto("/explorar?prov=Guanacaste&pool=1");
   await expect(results(page)).toHaveText("1 casa en Guanacaste");
+  await expect(page.getByRole("link", { name: /Más filtros/ })).toContainText("1");
+  await page.getByRole("link", { name: /Más filtros/ }).click();
   await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 

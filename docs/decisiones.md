@@ -9,6 +9,8 @@ Aprobados por Daniel tras probar `nueva.bnbtico.com`. Tickets en `.scratch/fase-
 - **Filtros en la moneda elegida.** Los precios se escriben en ₡ o en $ y la búsqueda guarda colones enteros (`priceInputToColones`, `colonesToPriceInput`; $86 → ₡43 860). **Mínimo mayor que el máximo ya no se intercambia:** aviso «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» desactivado. Una URL con `min > max` se trata como **sin rango** (se ignoran los dos), no como error: el enlace sigue abriendo Explorar.
 - El toque medido en `medicion.spec.ts` pasa a ser el corazón de la ficha (ya no hay botón de moneda).
 
+- **Chips de Explorar en una fila y modalidad no excluyente (ticket 16).** En Explorar quedan Vacacional, Mensual y «Más filtros» (con el contador); Piscina, Mascotas y Frente al mar se van a «Qué necesitan» de Filtros, donde ya estaban. Vacacional y Mensual se marcan a la vez: ninguno o los dos = todas; uno = solo esa. En la URL `modo=nightly|monthly|both` (los enlaces viejos siguen valiendo); el dominio guarda `modes` y la consulta usa `modeFilter`. Filtros gana la sección «Modalidad» con los mismos chips. El precio de Filtros sigue siendo por noche aunque solo esté marcado Mensual (sin cambio; pendiente si hace falta).
+
 - **Prueba de la hoja de cierre:** con el foco en un campo de la fecha, `:focus` de Playwright ya no ve el `input` en el Chrome actual; la prueba mira `document.activeElement` (fallaba antes de estos cambios).
 
 ## 2026-10-23 · Cierre de la fase 4: recorrido de punta a punta, plan manual y pendientes

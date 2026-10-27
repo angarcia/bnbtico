@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, modeFilter, toggleMode, colonesToPriceInput, priceInputToColones, priceRangeInvalid, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 
@@ -116,5 +116,29 @@ describe("precio en la moneda elegida (ticket 15)", () => {
     expect(priceRangeInvalid(30000, 90000)).toBe(false);
     expect(priceRangeInvalid(90000, 0)).toBe(false);
     expect(priceRangeInvalid(0, 30000)).toBe(false);
+  });
+});
+
+describe("modalidad no excluyente (ticket 16)", () => {
+  it("ninguno o los dos = todas; uno = solo esa", () => {
+    expect(parseFilters({}, []).modes).toEqual([]);
+    expect(modeFilter(parseFilters({}, []))).toBeNull();
+    expect(parseFilters({ modo: "nightly" }, []).modes).toEqual(["nightly"]);
+    expect(modeFilter(parseFilters({ modo: "monthly" }, []))).toBe("monthly");
+    expect(parseFilters({ modo: "both" }, []).modes).toEqual(["nightly", "monthly"]);
+    expect(modeFilter(parseFilters({ modo: "both" }, []))).toBeNull();
+    expect(parseFilters({ modo: "otra" }, []).modes).toEqual([]);
+  });
+  it("marcar uno no desmarca el otro", () => {
+    expect(toggleMode([], "nightly")).toEqual(["nightly"]);
+    expect(toggleMode(["nightly"], "monthly")).toEqual(["nightly", "monthly"]);
+    expect(toggleMode(["nightly", "monthly"], "nightly")).toEqual(["monthly"]);
+    expect(toggleMode(["monthly"], "monthly")).toEqual([]);
+  });
+  it("en la URL: modo=nightly, monthly o both", () => {
+    expect(toSearchParams(parseFilters({ modo: "both" }, []), { prov: "Todas" }).get("modo")).toBe("both");
+    expect(toSearchParams({ ...parseFilters({}, []), modes: ["monthly", "nightly"] }, { prov: "Todas" }).get("modo")).toBe("both");
+    expect(toSearchParams({ ...parseFilters({}, []), modes: ["monthly"] }, { prov: "Todas" }).get("modo")).toBe("monthly");
+    expect(normalizeSearch({ modo: "both" })).toEqual({ modo: "both" });
   });
 });
