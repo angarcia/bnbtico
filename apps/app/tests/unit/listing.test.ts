@@ -11,6 +11,7 @@ import {
   normalize,
   parseColones,
   planStep,
+  resumeStep,
   validateAll,
   validateStep,
   type Feature,
@@ -271,5 +272,16 @@ describe("planStep (guardar una pantalla)", () => {
   it("paso 7: el número de fotos es el del borrador (servidor), nunca el del parche", () => {
     expect(planStep({ ...validDraft(), photoCount: 4 }, 7, { photoCount: 9 })).toEqual({ error: "Agregue al menos 5 fotos." });
     expect(planStep({ ...validDraft(), photoCount: 5 }, 7, { photoCount: 0 })).toEqual({ changes: {}, next: expect.objectContaining({ photoCount: 5 }) });
+  });
+});
+
+// Revisión UX A1/A5: «Seguir publicando» abre el primer paso con algo pendiente, no siempre el 1.
+describe("paso donde retomar un borrador", () => {
+  it("el primero que falta; todo completo → el 9 (revisar y enviar)", () => {
+    expect(resumeStep(emptyDraft())).toBe(1);
+    expect(resumeStep({ ...validDraft(), zone: "" })).toBe(2);
+    expect(resumeStep({ ...validDraft(), photoCount: 2 })).toBe(7);
+    expect(resumeStep({ ...validDraft(), nightlyPriceCrc: null })).toBe(8);
+    expect(resumeStep(validDraft())).toBe(9);
   });
 });

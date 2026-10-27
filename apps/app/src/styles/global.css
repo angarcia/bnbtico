@@ -658,3 +658,4 @@ small.swap-in{display:block}
 .zone-options li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;cursor:pointer}
 .zone-options li[aria-selected="true"],.zone-options li:hover{background:var(--surface-2)}
 .zone-chips{margin-top:4px}
+.cal-house{font-weight:600;margin-top:-6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

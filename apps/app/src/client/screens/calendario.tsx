@@ -27,7 +27,7 @@ import {
 import { longDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
-import type { Listing } from "../../domain/listing";
+import { resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { I } from "../../shared/icons";
 import { MonthGrid, MonthLegend } from "../../shared/month-grid";
@@ -43,6 +43,9 @@ const LAST_HOUSE = "bnbtico-calendario-casa";
 const KB_RELEASE_MS = 400;
 
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
+/** Casas con calendario (revisión UX A5): todo lo enviado alguna vez (en revisión, con cambios pedidos, activa, pausada) y
+ *  las ya publicadas que se están editando. Fuera: los borradores nunca enviados y las rechazadas. */
+const hasCalendar = (l: Listing) => l.status !== "rejected" && !(l.status === "draft" && l.firstPublishedAt === null);
 const baseOf = (l: Listing) => (l.acceptsNightly ? l.nightlyPriceCrc : null);
 /** «95 000» en el campo (se edita con espacios; parseColones los quita). */
 const grouped = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -69,15 +72,27 @@ export function CalendarioScreen() {
   const navigate = useNavigate();
   const go = (casa: string, mes: string | undefined) => void navigate({ to: "/propietario/calendario", search: mes ? { casa, mes } : { casa }, replace: true });
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
-  const houses = listings.data?.filter((l) => l.status !== "rejected");
+  const houses = listings.data?.filter(hasCalendar);
   const last = readLast();
-  const current = houses?.find((l) => l.id === search.casa) ?? houses?.find((l) => l.id === last) ?? houses?.[0];
+  // Por defecto, la elegida en la URL, la última usada o la primera activa; nunca un borrador (revisión UX A5).
+  const current =
+    houses?.find((l) => l.id === search.casa) ?? houses?.find((l) => l.id === last) ?? houses?.find((l) => l.status === "active") ?? houses?.[0];
+  // Para el estado vacío: el borrador sin enviar más reciente (la lista llega de la más nueva a la más vieja).
+  const draft = listings.data?.find((l) => l.status === "draft" && l.firstPublishedAt === null);
 
   useEffect(() => {
     if (current) storeLast(current.id);
   }, [current]);
+  // `?casa=` de una casa sin calendario (un borrador) o que ya no existe: la URL pasa a la que se muestra.
+  const corrected = search.casa && current && search.casa !== current.id ? current.id : null;
+  useEffect(() => {
+    if (corrected) go(corrected, search.mes);
+    // `go` cambia en cada render: basta con depender de la casa corregida.
+  }, [corrected]);
 
-  const picker = current && houses ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : undefined;
+  // Con una sola casa no hay nada que elegir: su nombre como subtítulo.
+  const picker =
+    current && houses && houses.length > 1 ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : undefined;
   return (
     <>
       <RootHeader title="Calendario" home="/propietario" aside={picker} />
@@ -87,12 +102,19 @@ export function CalendarioScreen() {
         </p>
       ) : null}
       {!houses && !listings.isError ? <section className="card skeleton cal-skeleton" aria-busy="true" aria-label="Cargando su calendario" /> : null}
+      {current && houses && houses.length === 1 ? <p className="muted cal-house">{titleOf(current)}</p> : null}
       {houses && houses.length === 0 ? (
         <section className="card stack gap-12">
-          <p>Publique su casa para usar el calendario.</p>
-          <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
-            Publicar casa
-          </Link>
+          <p>Su calendario se activa cuando envíe su casa a revisión.</p>
+          {draft ? (
+            <Link to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} className="btn btn-primary btn-lg btn-block">
+              Seguir publicando
+            </Link>
+          ) : (
+            <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
+              Publicar casa
+            </Link>
+          )}
         </section>
       ) : null}
       {current ? (

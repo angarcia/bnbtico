@@ -126,7 +126,8 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   // 2. «Marcar las noches ocupadas» → su calendario, aún en revisión: 3 noches ocupadas y una ★.
   await owner.getByRole("link", { name: "Marcar las noches ocupadas" }).click();
   await expect(owner).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${draft.id}`));
-  await expect(owner.getByRole("button", { name: new RegExp(TITLE) })).toBeVisible();
+  // Una sola casa: su nombre como subtítulo, sin selector (revisión UX A5).
+  await expect(owner.locator(".cal-house")).toHaveText(new RegExp(TITLE));
   if (!opensOnNext()) await owner.getByRole("button", { name: "Mes siguiente" }).click();
   await expect(owner.getByText(monthTitle(next()), { exact: true })).toBeVisible();
   const day = (iso: string) => owner.getByRole("button", { name: dayName(iso) });

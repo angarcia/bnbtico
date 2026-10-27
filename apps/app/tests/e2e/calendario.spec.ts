@@ -25,6 +25,8 @@ const shortMonth = (month: string) => SHORT[Number(month.slice(5)) - 1];
 const grid = (page: Page) => page.getByRole("group", { name: /^\p{L}+ \d{4}$/u });
 const day = (page: Page, iso: string) => page.getByRole("button", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)},`) });
 const cellOf = (page: Page, iso: string) => page.getByRole("gridcell", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)},`) });
+/** La casa que se muestra: en el selector (varias casas) o como subtítulo (una sola, revisión UX A5). */
+const shown = (page: Page, title: string) => page.getByRole("button", { name: new RegExp(title) }).or(page.locator(".cal-house", { hasText: title }));
 const panel = (page: Page) => page.getByRole("region", { name: "Días seleccionados" });
 const saveBtn = (page: Page) => panel(page).getByRole("button", { name: "Guardar cambios" });
 const open = (page: Page, id: string, month = next()) => page.goto(`/propietario/calendario?casa=${id}&mes=${month}`);
@@ -43,21 +45,67 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-test("sin casas: «Publique su casa para usar el calendario.» y «Publicar casa»", async ({ page }) => {
+/** La cuenta «other» sin casas: punto de partida limpio para las pruebas de qué casas tienen calendario. */
+async function clearOther() {
   const { data: other } = await serviceClient().from("profiles").select("id").eq("phone", h.phone("other")).single();
   await serviceClient().from("listings").delete().eq("owner_id", other!.id);
+}
+
+test("sin casas: «Su calendario se activa cuando envíe su casa a revisión.» y «Publicar casa»", async ({ page }) => {
+  await clearOther();
   await injectSession(page, "other");
   await page.goto("/propietario/calendario");
   await expect(page.getByRole("heading", { level: 1, name: "Calendario" })).toBeVisible();
-  await expect(page.getByText("Publique su casa para usar el calendario.")).toBeVisible();
+  await expect(page.getByText("Su calendario se activa cuando envíe su casa a revisión.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Publicar casa" })).toHaveAttribute("href", "/propietario/publicar");
+});
+
+// Revisión UX A5: el calendario nunca abre un borrador; con una sola casa no hay selector.
+test("solo un borrador sin enviar: el aviso y «Seguir publicando» al paso donde se quedó", async ({ page }) => {
+  await clearOther();
+  const draft = await h.seed({ status: "draft", as: "other", draft: { title: "Borrador Cal", nightlyPriceCrc: null } });
+  await injectSession(page, "other");
+  await page.goto("/propietario/calendario");
+  await expect(page.getByText("Su calendario se activa cuando envíe su casa a revisión.")).toBeVisible();
+  await expect(grid(page)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Seguir publicando" })).toHaveAttribute("href", `/propietario/publicar/${draft.id}/7`);
+});
+
+test("una casa activa y un borrador más nuevo: abre la activa, sin selector, y el borrador no aparece", async ({ page }) => {
+  await clearOther();
+  const active = await h.seed({ status: "active", as: "other", draft: { title: "Casa Activa Cal", nightlyPriceCrc: 95000 } });
+  const draft = await h.seed({ status: "draft", as: "other", draft: { title: "Borrador Nuevo Cal" } });
+  await injectSession(page, "other");
+  await page.goto("/propietario/calendario");
+  await expect(page.locator(".cal-house")).toHaveText("Casa Activa Cal");
+  await expect(page.getByRole("button", { name: /Casa Activa Cal/ })).toHaveCount(0);
+  await expect(page.getByText("Borrador Nuevo Cal")).toHaveCount(0);
+  await expect(grid(page)).toBeVisible();
+  // Un enlace a un borrador cae en la casa activa.
+  await page.goto(`/propietario/calendario?casa=${draft.id}`);
+  await expect(page.locator(".cal-house")).toHaveText("Casa Activa Cal");
+  await expect(page).toHaveURL(new RegExp(`casa=${active.id}`));
+});
+
+test("en el selector: activas, en revisión por primera vez y la publicada que se está editando; no el borrador nuevo ni la rechazada", async ({ page }) => {
+  await clearOther();
+  await h.seed({ status: "active", as: "other", draft: { title: "Cal Activa" } });
+  await h.seed({ status: "review", as: "other", draft: { title: "Cal En Revisión" } });
+  await h.seed({ status: "reopened", as: "other", draft: { title: "Cal Reabierta" } });
+  await h.seed({ status: "draft", as: "other", draft: { title: "Cal Borrador" } });
+  await h.seed({ status: "rejected", as: "other", draft: { title: "Cal Rechazada" } });
+  await injectSession(page, "other");
+  await page.goto("/propietario/calendario");
+  await page.getByRole("button", { name: /Cal / }).click();
+  const list = page.getByRole("listbox", { name: "Elegir casa" });
+  await expect(list.getByRole("option")).toHaveText(["Cal Reabierta", "Cal En Revisión", "Cal Activa"]);
 });
 
 test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recargar y liberar borra la fila", async ({ page }) => {
   const casa = await seedHouse("Casa Ocupada");
   await open(page, casa.id);
   await expect(page.getByRole("heading", { level: 1, name: "Calendario" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Casa Ocupada/ })).toBeVisible();
+  await expect(shown(page, "Casa Ocupada")).toBeVisible();
   await expect(page.getByText(monthTitle(next()), { exact: true })).toBeVisible();
   await expect(page.getByText("Toque los días para editarlos")).toBeVisible();
   await expect(panel(page)).toHaveCount(0);
@@ -283,16 +331,16 @@ test("puntos de entrada: pestaña, Mis casas, detalle y «Marcar las noches ocup
   const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Casa Entradas" }) });
   await expect(card.getByRole("link", { name: "Calendario" })).toHaveAttribute("href", `/propietario/calendario?casa=${casa.id}`);
   await card.getByRole("link", { name: "Calendario" }).click();
-  await expect(page.getByRole("button", { name: /Casa Entradas/ })).toBeVisible();
+  await expect(shown(page, "Casa Entradas")).toBeVisible();
 
   await page.goto(`/propietario/casas/${casa.id}`);
   await page.getByRole("link", { name: /Calendario y precios/ }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${casa.id}`));
-  await expect(page.getByRole("button", { name: /Casa Entradas/ })).toBeVisible();
+  await expect(shown(page, "Casa Entradas")).toBeVisible();
 
   await page.goto(`/propietario/casas/${sent.id}/enviada`);
   await page.getByRole("link", { name: "Marcar las noches ocupadas" }).click();
-  await expect(page.getByRole("button", { name: /Casa Enviada/ })).toBeVisible();
+  await expect(shown(page, "Casa Enviada")).toBeVisible();
   // Una casa en revisión también se puede preparar (a fin de mes abre en el siguiente: «‹» vuelve a hoy).
   if (openingMonth(today()) !== today().slice(0, 7)) await page.getByRole("button", { name: "Mes anterior" }).click();
   await expect(day(page, today())).toBeEnabled();
@@ -300,5 +348,5 @@ test("puntos de entrada: pestaña, Mis casas, detalle y «Marcar las noches ocup
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" }).click();
   await expect(page).toHaveURL(/\/propietario\/calendario/);
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("button", { name: /Casa Enviada/ })).toBeVisible();
+  await expect(shown(page, "Casa Enviada")).toBeVisible();
 });

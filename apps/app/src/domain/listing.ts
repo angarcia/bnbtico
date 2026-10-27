@@ -224,6 +224,11 @@ export function validateAll(d: ListingDraft): { step: Step; error: string } | nu
   return null;
 }
 
+/** Paso donde retomar un borrador (revisión UX A1/A5): el primero con algo pendiente; si no falta nada, el último. */
+export function resumeStep(d: ListingDraft): Step {
+  return validateAll(d)?.step ?? LAST_STEP;
+}
+
 /** Cómo alquila, para etiquetas y píldoras: «Vacacional», «Mensual» o «Vacacional · Mensual». */
 export function modesLabel(d: { acceptsNightly: boolean; acceptsMonthly: boolean | null }): string {
   return [d.acceptsNightly ? "Vacacional" : null, d.acceptsMonthly ? "Mensual" : null].filter(Boolean).join(" · ");
