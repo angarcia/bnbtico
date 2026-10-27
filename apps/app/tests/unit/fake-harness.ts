@@ -1,24 +1,62 @@
 import { FakeDb } from "../../src/data/fake/db";
 import { createFakeAdmin } from "../../src/data/fake/admin";
+import { approveSubscription, createFakeBillingService, createFakeOwnerBilling } from "../../src/data/fake/billing";
 import { createFakeCalendar } from "../../src/data/fake/calendar";
 import { createFakeFavorites, createFakeInquiries } from "../../src/data/fake/inquiries";
 import { createFakeListings } from "../../src/data/fake/listings";
 import { createFakeOwnerListings } from "../../src/data/fake/owner";
 import { createFakePhotos } from "../../src/data/fake/photos";
-import { applyChange } from "../../src/domain/calendar";
-import { COMPLETE, type CalendarHarness, type SeedOwner } from "../contract/harness";
+import { addDays, applyChange } from "../../src/domain/calendar";
+import { MONTHLY_FEE_CRC } from "../../src/domain/subscription";
+import { COMPLETE, type SeedOwner, type SubscriptionHarness } from "../contract/harness";
 
 export const FAKE_SUPABASE_URL = "http://supabase.test";
 
-export function fakeHarness(db = new FakeDb()): CalendarHarness & { db: FakeDb } {
+export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: FakeDb } {
   const owners: Record<SeedOwner, string> = {
     owner: db.addProfile({ fullName: "Yorleny Prueba", phone: "+50687770001", phoneVerified: true, isAdmin: false }).id,
     other: db.addProfile({ fullName: "Ana Prueba", phone: "+50688881234", phoneVerified: true, isAdmin: false }).id,
   };
   const adminId = db.addProfile({ fullName: "Admin Prueba", phone: "+50688990001", phoneVerified: true, isAdmin: true }).id;
   const as = (who: SeedOwner | "anon") => ({ userId: () => (who === "anon" ? null : owners[who]) });
+  const tokens: Record<SeedOwner, string> = { owner: "jwt-owner", other: "jwt-other" };
+  db.authSessions.set(tokens.owner, owners.owner);
+  db.authSessions.set(tokens.other, owners.other);
   return {
     db,
+    billing: (who) => createFakeOwnerBilling(db, as(who)),
+    service: createFakeBillingService(db),
+    ownerId: (who) => owners[who],
+    async jwt(who) {
+      return tokens[who];
+    },
+    async takeSlots(n) {
+      for (let slot = 1; slot <= n; slot++) {
+        const l = db.insertListing(adminId, { ...COMPLETE, status: "inactive", reviewedAt: db.now(), firstPublishedAt: db.now(), title: `Relleno ${slot}` });
+        db.subscriptions.set(l.id, { listingId: l.id, plan: "promo", promoSlot: slot, promoMonths: 12, promoEndsOn: addDays(db.today(), 365), paidSince: null, stoppedOn: null, monthlyPriceCrc: MONTHLY_FEE_CRC });
+      }
+    },
+    async setDaysLeft(listingId, days) {
+      db.subscriptions.get(listingId)!.promoEndsOn = addDays(db.today(), days);
+    },
+    async setAccountActive(who, active) {
+      db.profiles.get(owners[who])!.isActive = active;
+    },
+    async reminders(listingId) {
+      return db.reminders
+        .filter((r) => r.listingId === listingId)
+        .sort((a, b) => b.daysBefore - a.daysBefore)
+        .map(({ daysBefore, status, attempts, toPhone, body, providerRef, sentAt }) => ({ daysBefore, status, attempts, toPhone, body, providerRef, sentAt }));
+    },
+    async storedMethod(who) {
+      const m = db.paymentMethods.get(owners[who]);
+      return m ? { customerRef: m.customerRef, methodRef: m.methodRef } : null;
+    },
+    async setTestClock(on) {
+      const was = db.testClock;
+      db.testClock = on;
+      return was;
+    },
     inquiries: (who) => createFakeInquiries(db, as(who)),
     favorites: (who) => createFakeFavorites(db, as(who)),
     calendar: (who) => createFakeCalendar(db, as(who)),
@@ -62,6 +100,11 @@ export function fakeHarness(db = new FakeDb()): CalendarHarness & { db: FakeDb }
         firstPublishedAt: spec.status === "active" || spec.status === "reopened" ? db.now() : null,
         reviewNote: spec.status === "changes" || spec.status === "rejected" ? "Faltan fotos del baño." : null,
       });
+      // Como review_listing: la aprobación toma la plaza de la oferta y decide el estado (activa o pendiente de pago).
+      if (spec.status === "active" || spec.status === "reopened") {
+        const status = approveSubscription(db, listing);
+        if (spec.status === "active") listing.status = status;
+      }
       const n = spec.photos ?? (spec.status === "draft" ? 0 : 5);
       const photoPaths = Array.from({ length: n }, (_, i) => `${listing.id}/foto-${i}.jpg`);
       for (let i = n - 1; i >= 0; i--) db.photos.push({ id: db.newId(), listingId: listing.id, path: photoPaths[i]!, position: i });

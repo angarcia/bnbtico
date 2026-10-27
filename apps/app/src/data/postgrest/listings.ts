@@ -82,6 +82,18 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       return data ? fromFxRow(data) : { ...FX_INITIAL };
     },
 
+    async offerTaken() {
+      const { data, error } = await db.rpc("launch_offer_taken");
+      if (error) throw toDomainError(error);
+      return data ?? 0;
+    },
+
+    async blockedReason(publicId) {
+      const { data, error } = await db.rpc("listing_blocked_reason", { p_public_id: publicId });
+      if (error) throw toDomainError(error);
+      return data === "stopped" || data === "payment" || data === "other" ? data : null;
+    },
+
     async sitemap() {
       const { data, error } = await db.from("listings_public").select("public_id, updated_at").order("updated_at", { ascending: false }).limit(SITEMAP_LIMIT);
       if (error) throw toDomainError(error);

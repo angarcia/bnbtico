@@ -2,6 +2,8 @@
 // decide con review_listing; reabrir es el update a borrador que permite el trigger).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
+import { createPostgrestOwnerBilling } from "../../src/data/postgrest/billing";
+import { createBillingService } from "../../src/data/postgrest/billing-service";
 import { createPostgrestCalendar } from "../../src/data/postgrest/calendar";
 import { createPostgrestFavorites, createPostgrestInquiries } from "../../src/data/postgrest/inquiries";
 import { createPostgrestListings } from "../../src/data/postgrest/listings";
@@ -10,11 +12,13 @@ import { createPostgrestPhotos } from "../../src/data/postgrest/photos";
 import { quickWriter } from "../../src/data/postgrest/session-client";
 import { SESSION_STORAGE_KEY, memoryStore } from "../../src/data/storage";
 import type { Database } from "../../src/domain/database.types";
+import { addDays } from "../../src/domain/calendar";
+import { costaRicaToday } from "../../src/domain/inquiry";
 import { toListingUpdate } from "../../src/domain/rows";
-import { COMPLETE, type CalendarHarness, type SeedOwner, type SeedSpec, type Seeded } from "../contract/harness";
-import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn, signInAdmin } from "./local";
+import { COMPLETE, type SeedOwner, type SeedSpec, type Seeded, type StoredReminder, type SubscriptionHarness } from "../contract/harness";
+import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn, signInAdmin, sql } from "./local";
 
-export async function postgrestHarness(): Promise<CalendarHarness> {
+export async function postgrestHarness(): Promise<SubscriptionHarness> {
   const service = serviceClient();
   const owners: Record<SeedOwner, SupabaseClient<Database>> = { owner: await signIn("owner"), other: await signIn("other") };
   // El admin decide con el segundo factor (aal2): sin él, review_listing lo rechaza (migración admin_aal2_y_purga).
@@ -70,7 +74,51 @@ export async function postgrestHarness(): Promise<CalendarHarness> {
   for (const who of ["owner", "other"] as const) ids[who] = (await owners[who].auth.getUser()).data.user!.id;
   const anon = anonClient();
 
+  const adminId = (await admin.auth.getUser()).data.user!.id;
+  const today = () => costaRicaToday(Date.now());
+
   return {
+    billing: (who) => createPostgrestOwnerBilling(who === "anon" ? anon : owners[who]),
+    service: createBillingService({ supabaseUrl: localSupabase().url, serviceKey: localSupabase().serviceKey, anonKey: localSupabase().anonKey, fetch }),
+    ownerId: (who) => ids[who],
+    async jwt(who) {
+      return (await owners[who].auth.getSession()).data.session!.access_token;
+    },
+    async takeSlots(n) {
+      const base = { owner_id: adminId, status: "inactive" as const, description: "x", province: "Limón", whatsapp_phone: TEST_PHONES.admin, capacity: 2, bedrooms: 1, bathrooms: 1, accepts_nightly: true, nightly_price_crc: 30000 };
+      const created = await service.from("listings").insert(Array.from({ length: n }, (_, k) => ({ ...base, title: `Relleno ${k + 1}` }))).select("id, title");
+      fail("sembrar relleno", created.error);
+      const rows = created.data!.map((l) => ({ listing_id: l.id, plan: "promo" as const, promo_slot: Number(l.title.slice(8)), promo_months: 12, promo_ends_on: addDays(today(), 365) }));
+      fail("sembrar plazas", (await service.from("subscriptions").insert(rows)).error);
+    },
+    async setDaysLeft(listingId, days) {
+      fail("mover la oferta", (await service.from("subscriptions").update({ promo_ends_on: addDays(today(), days) }).eq("listing_id", listingId)).error);
+    },
+    async setAccountActive(who, active) {
+      fail("cuenta", (await service.from("profiles").update({ is_active: active }).eq("id", ids[who])).error);
+    },
+    async reminders(listingId) {
+      const { data, error } = await service
+        .from("subscription_reminders")
+        .select("days_before, status, attempts, to_phone, body, provider_ref, sent_at")
+        .eq("listing_id", listingId)
+        .order("days_before", { ascending: false });
+      fail("avisos", error);
+      return data!.map(
+        (r): StoredReminder => ({ daysBefore: r.days_before, status: r.status as StoredReminder["status"], attempts: r.attempts, toPhone: r.to_phone, body: r.body, providerRef: r.provider_ref, sentAt: r.sent_at }),
+      );
+    },
+    async storedMethod(who) {
+      const { data, error } = await service.from("payment_methods").select("customer_ref, method_ref").eq("owner_id", ids[who]).maybeSingle();
+      fail("método", error);
+      return data ? { customerRef: data.customer_ref, methodRef: data.method_ref } : null;
+    },
+    async setTestClock(on) {
+      const was = sql("select count(*) from vault.secrets where name = 'bnbtico_test_clock'") !== "0";
+      sql("delete from vault.secrets where name = 'bnbtico_test_clock'");
+      if (on) sql("select vault.create_secret('on', 'bnbtico_test_clock')");
+      return was;
+    },
     inquiries: (who) => createPostgrestInquiries(who === "anon" ? anon : owners[who]),
     favorites: (who) => createPostgrestFavorites(who === "anon" ? anon : owners[who]),
     calendar: (who) => createPostgrestCalendar(who === "anon" ? anon : owners[who]),
@@ -107,6 +155,10 @@ export async function postgrestHarness(): Promise<CalendarHarness> {
     owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url, quickWrite: quick[who] }),
     async reset() {
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);
+      // El método de pago es de la cuenta (no se borra con las casas) y cambia la regla de aprobar: fuera en cada caso.
+      fail("vaciar métodos", (await service.from("payment_methods").delete().not("owner_id", "is", null)).error);
+      fail("vaciar clientes", (await service.from("payment_customers").delete().not("owner_id", "is", null)).error);
+      fail("vaciar eventos", (await service.from("payment_events").delete().not("event_id", "is", null)).error);
       await emptyBucket(service);
     },
     seed,

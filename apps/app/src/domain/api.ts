@@ -6,9 +6,20 @@ import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { FxRate } from "./fx";
 import type { VariantSize } from "./image";
-import type { LinkState, Listing, ListingDraft, Photo, PublicListing, SitemapEntry, Step } from "./listing";
+import type { LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SitemapEntry, Step } from "./listing";
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
 import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
+import type {
+  BillingOverview,
+  BlockedReason,
+  DayRunResult,
+  PaymentEvent,
+  PaymentEventResult,
+  PaymentProviderName,
+  PaymentSetupContext,
+  ReminderOutcome,
+  ReminderToSend,
+} from "./subscription";
 
 export type { AdminQueue, QueueItem, ReviewDecision } from "./review";
 
@@ -31,6 +42,10 @@ export interface PublicListingsApi {
   getPublicDays(publicId: string): Promise<CalendarDay[]>;
   /** Tipo de cambio vigente (el del día más reciente de fx_rates; el inicial si no hay otro). Ticket 21. */
   fxRate(): Promise<FxRate>;
+  /** Plazas de la oferta de lanzamiento ya asignadas (RPC launch_offer_taken; fase 5): la entrada de launchOffer. */
+  offerTaken(): Promise<number>;
+  /** Motivo del 410 de un enlace bloqueado (RPC listing_blocked_reason); null si el enlace no está bloqueado. */
+  blockedReason(publicId: string): Promise<BlockedReason | null>;
 }
 
 /**
@@ -133,6 +148,42 @@ export interface OwnerCalendarApi {
   days(listingId: string): Promise<CalendarDay[]>;
   /** Guarda el cambio en todos los días a la vez o en ninguno; si la casa está activa, la ficha pública se refresca. */
   save(listingId: string, change: CalendarChange): Promise<void>;
+}
+
+/**
+ * Suscripción del propietario con sesión (fase 5). Una sola lectura (RPC owner_billing) y las transiciones
+ * stop_subscription/resume_subscription; mensajes de SUBSCRIPTION_MESSAGES y estados de nextStatus en el fake.
+ * Sin sesión, todas fallan con «Su sesión venció. Ingrese de nuevo.» (kind `session`) antes de llegar a la red.
+ */
+export interface OwnerBillingApi {
+  /** Las casas propias con suscripción (la más reciente primero), el método de pago de la cuenta y el «hoy» de la base. */
+  overview(): Promise<BillingOverview>;
+  /** «Parar suscripción»: activa o pendiente de pago → inactiva. Devuelve el estado nuevo. */
+  stop(listingId: string): Promise<ListingStatus>;
+  /** «Reactivar»: inactiva → activa (oferta en curso o método) o pendiente de pago. Devuelve el estado nuevo. */
+  resume(listingId: string): Promise<ListingStatus>;
+}
+
+/**
+ * Datos de la suscripción para el worker (fase 5, tickets 03 y 04): todo con la service role salvo `setupContext`, que va
+ * con el JWT del usuario para que PostgREST valide la sesión (el worker no verifica JWT). Adaptador con fetch a secas
+ * (src/data/postgrest/billing-service.ts) y fake (src/data/fake/billing.ts).
+ */
+export interface BillingServiceApi {
+  /** run_subscription_day: fin de las ofertas y avisos en cola. Sin `today`, el de Costa Rica según la base. */
+  runDay(today?: string): Promise<DayRunResult>;
+  /** claim_reminders: hasta `limit` avisos en cola pasan a «sending» y se devuelven (los que ya no tocan, a «skipped»). */
+  claimReminders(limit: number): Promise<ReminderToSend[]>;
+  /** finish_reminders: solo cambia avisos en «sending». Devuelve cuántos cambió. */
+  finishReminders(results: ReminderOutcome[]): Promise<number>;
+  /** payment_setup_context con el JWT de la sesión: «Su sesión venció…» o «Su cuenta está desactivada…» si no vale. */
+  setupContext(userJwt: string, provider: PaymentProviderName): Promise<PaymentSetupContext>;
+  savePaymentCustomer(ownerId: string, provider: PaymentProviderName, customerRef: string): Promise<void>;
+  /** apply_payment_event: una sola vez por (pasarela, evento). */
+  applyPaymentEvent(event: PaymentEvent): Promise<PaymentEventResult>;
+  /** test_set_offer_days_left (reloj de pruebas): la casa queda con `days` días de oferta; devuelve su último día gratis.
+   *  Sin el secreto de Vault (producción) falla con SUBSCRIPTION_MESSAGES.testClockOff. */
+  setOfferDaysLeft(publicId: string, days: number): Promise<string>;
 }
 
 export interface ListingsApi extends PublicListingsApi, OwnerListingsApi {

@@ -6,6 +6,7 @@ import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { costaRicaToday } from "../../domain/inquiry";
 import { emptyDraft, type ListingDraft, type ListingStatus } from "../../domain/listing";
+import type { PaymentProviderName, ReminderDays, ReminderStatus } from "../../domain/subscription";
 
 export interface FakeProfile {
   id: string;
@@ -68,6 +69,49 @@ export interface FakeFavorite {
   createdAt: string;
 }
 
+/** subscriptions (fase 5): una por casa aprobada alguna vez. */
+export interface FakeSubscription {
+  listingId: string;
+  plan: "promo" | "paid";
+  promoSlot: number | null;
+  promoMonths: number | null;
+  promoEndsOn: string | null;
+  paidSince: string | null;
+  /** Día (Costa Rica) en que se paró. */
+  stoppedOn: string | null;
+  monthlyPriceCrc: number;
+}
+
+/** subscription_reminders: el outbox de los avisos; (casa, umbral) es único. */
+export interface FakeReminder {
+  id: string;
+  listingId: string;
+  daysBefore: ReminderDays;
+  promoEndsOn: string;
+  queuedAt: string;
+  status: ReminderStatus;
+  attempts: number;
+  claimedAt: string | null;
+  toPhone: string | null;
+  body: string | null;
+  providerRef: string | null;
+  lastError: string | null;
+  sentAt: string | null;
+}
+
+/** payment_methods: uno por propietario. */
+export interface FakePaymentMethod {
+  ownerId: string;
+  provider: PaymentProviderName;
+  customerRef: string;
+  methodRef: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  addedAt: string;
+}
+
 export interface FakeObject {
   cacheControl: string;
   contentType: string;
@@ -97,6 +141,16 @@ export class FakeDb {
   readonly mfaFactors = new Map<string, { id: string; secret: string; verified: boolean }>();
   /** Último código pedido por número (reloj del adaptador), para el límite de un código por segundo de Supabase. */
   readonly otpSentAt = new Map<string, number>();
+  /** Suscripción (fase 5): por casa, outbox de avisos, método de pago y cliente de la pasarela por propietario, eventos. */
+  readonly subscriptions = new Map<string, FakeSubscription>();
+  reminders: FakeReminder[] = [];
+  readonly paymentMethods = new Map<string, FakePaymentMethod>();
+  /** payment_customers: `${owner}|${provider}` → referencia del cliente. */
+  readonly paymentCustomers = new Map<string, string>();
+  /** payment_events: `${provider}|${evento}` → resultado. */
+  readonly paymentEvents = new Map<string, string>();
+  /** El secreto bnbtico_test_clock de Vault (pruebas y local; nunca en producción). */
+  testClock = false;
   /** fx_rates: un tipo por día, con la fila inicial de la migración. */
   readonly fxRates = new Map<string, FxRate>([[FX_INITIAL.day, { ...FX_INITIAL }]]);
   private tick = Date.parse("2026-10-01T12:00:00Z");
@@ -191,6 +245,11 @@ export class FakeDb {
     this.views = [];
     this.favorites = [];
     this.days.clear();
+    this.subscriptions.clear();
+    this.reminders = [];
+    this.paymentMethods.clear();
+    this.paymentCustomers.clear();
+    this.paymentEvents.clear();
   }
 }
 

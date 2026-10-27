@@ -1,3 +1,13 @@
+## 2026-10-27 · Fase 5, ticket 02: suscripción en la base
+
+Decisiones de implementación dentro de la especificación aprobada (`.scratch/fase-5/spec.md`, ya ajustada).
+
+- **El texto del WhatsApp no se compone en SQL:** `claim_reminders` devuelve los datos (casa, propietario, número actual, umbral, fin de la oferta) y el worker lo compone con `reminderWhatsApp` del dominio; `finish_reminders` guarda el número y el texto enviados. Una sola plantilla.
+- **«Quedan N de 50» = la plaza más alta asignada** (`launch_offer_taken`): una plaza no se reutiliza aunque se borre su casa.
+- **Relleno:** toman plaza todas las casas publicadas alguna vez (`first_published_at`), también las que se están editando, en ese orden y con el día de Costa Rica de la primera publicación.
+- **La purga de la ficha también salta entre pendiente de pago e inactiva**, porque cambia el motivo del 410.
+- Un aviso de una cuenta desactivada se omite al reclamar. El reloj de pruebas recibe el `CT-####` (la ruta del worker lo trae así) y `payment_setup_context` la pasarela.
+
 ## 2026-10-27 · Fase 5: suscripción, estados y avisos (especificación aprobada)
 
 Aprobado por Daniel. Especificación y tickets en `.scratch/fase-5/`.

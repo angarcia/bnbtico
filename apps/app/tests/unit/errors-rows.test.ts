@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DomainError, GENERIC_MESSAGE, toDomainError } from "../../src/domain/errors";
-import { fromListingRow, fromPublicRow, storagePhotoUrl, toListingUpdate, type ListingRow, type PublicRow } from "../../src/domain/rows";
+import { fromBillingJson, fromListingRow, fromPublicRow, fromSetupContextJson, storagePhotoUrl, toListingUpdate, type ListingRow, type PublicRow } from "../../src/domain/rows";
+import { houseSubscription } from "../../src/domain/subscription";
 
 describe("toDomainError", () => {
   it("los mensajes que lanza la base pasan tal cual", () => {
@@ -101,5 +102,36 @@ describe("mapeo de filas", () => {
     expect(toListingUpdate({ title: "Casa", capacity: Number.NaN })).toEqual({ title: "Casa", capacity: null });
     expect(toListingUpdate({ acceptsNightly: undefined as unknown as boolean })).toEqual({ accepts_nightly: false });
     expect(toListingUpdate({})).toEqual({});
+  });
+});
+
+describe("fromBillingJson y fromSetupContextJson (fase 5)", () => {
+  it("traduce owner_billing a camelCase y la pasa a las reglas con houseSubscription", () => {
+    const json = {
+      houses: [
+        {
+          listing_id: "l1", public_id: "CT-1001", title: "Casa", status: "inactive", plan: "promo", promo_slot: 7, promo_months: 12,
+          promo_ends_on: "2027-10-14", paid_since: null, stopped_on: "2026-10-27", monthly_price_crc: 2900,
+          reminders: [{ days_before: 90, status: "sent", sent_at: "2027-07-16T14:00:00Z" }],
+        },
+      ],
+      method: { brand: "visa", last4: "4242", exp_month: 12, exp_year: 2029, added_at: "2026-10-27T10:00:00Z" },
+      today: "2026-10-27",
+    };
+    const o = fromBillingJson(json);
+    expect(o).toEqual({
+      houses: [
+        { listingId: "l1", publicId: "CT-1001", title: "Casa", status: "inactive", plan: "promo", promoSlot: 7, promoMonths: 12, promoEndsOn: "2027-10-14", paidSince: null, stoppedOn: "2026-10-27", monthlyPriceCrc: 2900, reminders: [{ daysBefore: 90, status: "sent", sentAt: "2027-07-16T14:00:00Z" }] },
+      ],
+      method: { brand: "visa", last4: "4242", expMonth: 12, expYear: 2029, addedAt: "2026-10-27T10:00:00Z" },
+      today: "2026-10-27",
+    });
+    expect(houseSubscription(o.houses[0]!, o.method)).toEqual({ status: "inactive", plan: "promo", promoEndsOn: "2027-10-14", paidSince: null, stoppedOn: "2026-10-27", monthlyPriceCrc: 2900, hasMethod: true });
+  });
+
+  it("sin casas ni método, o con basura, no rompe", () => {
+    expect(fromBillingJson({ houses: [], method: null, today: "2026-10-27" })).toEqual({ houses: [], method: null, today: "2026-10-27" });
+    expect(fromBillingJson(null)).toEqual({ houses: [], method: null, today: "" });
+    expect(fromSetupContextJson({ owner_id: "u", full_name: "Yorleny", phone: "+50687770001", customer_ref: null })).toEqual({ ownerId: "u", fullName: "Yorleny", phone: "+50687770001", customerRef: null });
   });
 });

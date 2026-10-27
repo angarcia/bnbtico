@@ -116,3 +116,39 @@ export interface CalendarHarness extends InquiriesHarness {
   /** Escribe una fila de listing_days saltándose las reglas (como el servicio), p. ej. fuera de la ventana. */
   putDay(listingId: string, day: CalendarDay): Promise<void>;
 }
+
+// ---------- Suscripción (fase 5) ----------
+import type { BillingServiceApi, OwnerBillingApi } from "../../src/domain/api";
+import type { ReminderStatus } from "../../src/domain/subscription";
+
+export interface StoredReminder {
+  daysBefore: number;
+  status: ReminderStatus;
+  attempts: number;
+  toPhone: string | null;
+  body: string | null;
+  providerRef: string | null;
+  sentAt: string | null;
+}
+
+export interface SubscriptionHarness extends CalendarHarness {
+  /** Suscripción con la sesión de esa persona (o sin sesión). */
+  billing(who: Persona): OwnerBillingApi;
+  /** Lo que usa el worker con la service role (y payment_setup_context con el JWT del usuario). */
+  service: BillingServiceApi;
+  ownerId(who: SeedOwner): string;
+  /** El JWT de la sesión de esa persona, como lo recibe el worker en `Authorization`. */
+  jwt(who: SeedOwner): Promise<string>;
+  /** Ocupa las plazas 1..n de la oferta con casas de relleno paradas de la cuenta admin (como el servicio). */
+  takeSlots(n: number): Promise<void>;
+  /** Deja el último día gratis de la casa a `days` días de hoy (Costa Rica), como el servicio, sin el reloj de pruebas. */
+  setDaysLeft(listingId: string, days: number): Promise<void>;
+  /** profiles.is_active de esa cuenta (como el admin al desactivarla). */
+  setAccountActive(who: SeedOwner, active: boolean): Promise<void>;
+  /** Avisos de una casa tal como están en la base, del umbral más alto al más bajo (como el servicio). */
+  reminders(listingId: string): Promise<StoredReminder[]>;
+  /** Los ids de la pasarela guardados para esa cuenta (como el servicio); null sin método. */
+  storedMethod(who: SeedOwner): Promise<{ customerRef: string; methodRef: string } | null>;
+  /** Crea o borra el secreto bnbtico_test_clock de Vault; devuelve si estaba. */
+  setTestClock(on: boolean): Promise<boolean>;
+}

@@ -5,6 +5,7 @@ import { DomainError } from "../../domain/errors";
 import { MIN_PHOTOS, type Listing } from "../../domain/listing";
 import { DECISION_STATUS, REVIEW_MESSAGES as M, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
+import { approveSubscription } from "./billing";
 import type { FakeDb, FakeListing } from "./db";
 
 type Access = "admin" | "mfa" | "none";
@@ -56,7 +57,9 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (decision === "approve" && db.photosOf(id).length < MIN_PHOTOS) throw new DomainError(M.fewPhotos, "validation");
       const text = note.trim().slice(0, 2000);
       const at = db.now();
-      Object.assign(l, { status: DECISION_STATUS[decision], reviewNote: text || null, reviewedAt: at, updatedAt: at });
+      // Aprobar toma la plaza de la oferta la primera vez y decide entre activa y pendiente de pago (fase 5).
+      const status = decision === "approve" ? approveSubscription(db, l) : DECISION_STATUS[decision];
+      Object.assign(l, { status, reviewNote: text || null, reviewedAt: at, updatedAt: at });
       if (decision === "approve") l.firstPublishedAt ??= at;
       if (decision === "approve") {
         const owner = db.profiles.get(l.ownerId);

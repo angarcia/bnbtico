@@ -5,6 +5,7 @@ import { FX_INITIAL } from "../../domain/fx";
 import { ALL_PROVINCES, modeFilter, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
+import { offerTaken } from "./billing";
 import { approxPoint, type FakeDb, type FakeListing } from "./db";
 
 export const SEARCH_LIMIT = 60;
@@ -49,6 +50,14 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
     };
   }
 
+  function linkState(publicId: string): LinkState {
+    const l = db.byPublicId(publicId);
+    if (!l) return null;
+    if (l.status === "active") return "active";
+    if (l.status === "draft" && l.reviewedAt === null) return null;
+    return "blocked";
+  }
+
   // Comparaciones con null fallan, como en SQL: una casa solo mensual no entra en un filtro de precio por noche.
   const gte = (v: number | null, min: number) => v !== null && v >= min;
   const lte = (v: number | null, max: number) => v !== null && v <= max;
@@ -79,12 +88,8 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       return active().filter((l) => wanted.has(l.publicId)).map(toPublic);
     },
 
-    async linkState(publicId): Promise<LinkState> {
-      const l = db.byPublicId(publicId);
-      if (!l) return null;
-      if (l.status === "active") return "active";
-      if (l.status === "draft" && l.reviewedAt === null) return null;
-      return "blocked";
+    async linkState(publicId) {
+      return linkState(publicId);
     },
 
     async provincesWithListings() {
@@ -106,6 +111,16 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
     async fxRate() {
       const latest = [...db.fxRates.values()].sort((a, b) => b.day.localeCompare(a.day))[0];
       return latest ? { ...latest } : { ...FX_INITIAL };
+    },
+
+    async offerTaken() {
+      return offerTaken(db);
+    },
+
+    async blockedReason(publicId) {
+      if (linkState(publicId) !== "blocked") return null;
+      const status = db.byPublicId(publicId)!.status;
+      return status === "inactive" ? "stopped" : status === "payment_due" ? "payment" : "other";
     },
 
     async sitemap() {

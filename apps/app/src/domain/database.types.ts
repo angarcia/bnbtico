@@ -259,6 +259,66 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payment_customers": {
+                  Row: {
+                    "created_at": string,"customer_ref": string,"owner_id": string,"provider": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"customer_ref": string,"owner_id": string,"provider": string
+                  }
+                  Update: {
+                    "created_at"?: string,"customer_ref"?: string,"owner_id"?: string,"provider"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_customers_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_events": {
+                  Row: {
+                    "event_id": string,"owner_id": string | null,"provider": string,"received_at": string,"result": string,"type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "event_id": string,"owner_id"?: string | null,"provider": string,"received_at"?: string,"result"?: string,"type": string
+                  }
+                  Update: {
+                    "event_id"?: string,"owner_id"?: string | null,"provider"?: string,"received_at"?: string,"result"?: string,"type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_events_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"payment_methods": {
+                  Row: {
+                    "added_at": string,"brand": string,"customer_ref": string,"exp_month": number,"exp_year": number,"last4": string,"method_ref": string,"owner_id": string,"provider": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "added_at"?: string,"brand": string,"customer_ref": string,"exp_month": number,"exp_year": number,"last4": string,"method_ref": string,"owner_id": string,"provider": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "added_at"?: string,"brand"?: string,"customer_ref"?: string,"exp_month"?: number,"exp_year"?: number,"last4"?: string,"method_ref"?: string,"owner_id"?: string,"provider"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_methods_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "created_at": string,"description": string | null,"email": string | null,"full_name": string,"id": string,"is_active": boolean,"is_admin": boolean,"is_owner": boolean,"phone": string,"phone_verified_at": string | null,"updated_at": string
@@ -333,14 +393,14 @@ isOneToOne: false
                   ]
                 },"subscription_reminders": {
                   Row: {
-                    "channel": string,"days_before": number,"listing_id": string,"sent_at": string
+                    "attempts": number,"body": string | null,"channel": string,"claimed_at": string | null,"days_before": number,"id": string,"last_error": string | null,"listing_id": string,"promo_ends_on": string | null,"provider_ref": string | null,"queued_at": string,"sent_at": string | null,"status": string,"to_phone": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "channel"?: string,"days_before": number,"listing_id": string,"sent_at"?: string
+                    "attempts"?: number,"body"?: string | null,"channel"?: string,"claimed_at"?: string | null,"days_before": number,"id"?: string,"last_error"?: string | null,"listing_id": string,"promo_ends_on"?: string | null,"provider_ref"?: string | null,"queued_at"?: string,"sent_at"?: string | null,"status"?: string,"to_phone"?: string | null
                   }
                   Update: {
-                    "channel"?: string,"days_before"?: number,"listing_id"?: string,"sent_at"?: string
+                    "attempts"?: number,"body"?: string | null,"channel"?: string,"claimed_at"?: string | null,"days_before"?: number,"id"?: string,"last_error"?: string | null,"listing_id"?: string,"promo_ends_on"?: string | null,"provider_ref"?: string | null,"queued_at"?: string,"sent_at"?: string | null,"status"?: string,"to_phone"?: string | null
                   }
                   Relationships: [
                     {
@@ -359,14 +419,14 @@ isOneToOne: false
                   ]
                 },"subscriptions": {
                   Row: {
-                    "created_at": string,"listing_id": string,"monthly_price_crc": number,"payment_method_added_at": string | null,"payment_method_token": string | null,"plan": Database["public"]['Enums']["plan"],"promo_ends_at": string | null,"promo_months": number | null,"stopped_at": string | null,"updated_at": string,"subscription_state": string | null
+                    "created_at": string,"listing_id": string,"monthly_price_crc": number,"paid_since": string | null,"plan": Database["public"]['Enums']["plan"],"promo_ends_on": string | null,"promo_months": number | null,"promo_slot": number | null,"stopped_at": string | null,"updated_at": string
                   }
-                  ComputedFields: "subscription_state"
+                  ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"listing_id": string,"monthly_price_crc"?: number,"payment_method_added_at"?: string | null,"payment_method_token"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"promo_ends_at"?: string | null,"promo_months"?: number | null,"stopped_at"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"listing_id": string,"monthly_price_crc"?: number,"paid_since"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"promo_ends_on"?: string | null,"promo_months"?: number | null,"promo_slot"?: number | null,"stopped_at"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"listing_id"?: string,"monthly_price_crc"?: number,"payment_method_added_at"?: string | null,"payment_method_token"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"promo_ends_at"?: string | null,"promo_months"?: number | null,"stopped_at"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"listing_id"?: string,"monthly_price_crc"?: number,"paid_since"?: string | null,"plan"?: Database["public"]['Enums']["plan"],"promo_ends_on"?: string | null,"promo_months"?: number | null,"promo_slot"?: number | null,"stopped_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -424,16 +484,36 @@ isOneToOne: true
               "id": string,"path": string,"position": number
             }[]
                            },
+"apply_payment_event":
+{ Args: { "p_brand"?: string,"p_customer_ref"?: string,"p_event_id": string,"p_exp_month"?: number,"p_exp_year"?: number,"p_last4"?: string,"p_method_ref"?: string,"p_owner"?: string,"p_provider": string,"p_type": string }; Returns: string
+                           },
 "approx_point":
 { Args: { "p_lat": number,"p_lng": number,"p_seed": string }; Returns: unknown
+                           },
+"claim_reminders":
+{ Args: { "p_limit"?: number }; Returns: {
+              "days_before": number,"id": string,"listing_id": string,"owner_name": string,"promo_ends_on": string,"public_id": string,"title": string,"to_phone": string
+            }[]
+                           },
+"costa_rica_today":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "create_inquiry":
 { Args: { "p_arrival": string,"p_departure": string,"p_message": string,"p_people": number,"p_public_id": string }; Returns: {
               "inquiry_id": string,"whatsapp_phone": string
             }[]
                            },
+"finish_reminders":
+{ Args: { "p_results": Json }; Returns: number
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"launch_offer_taken":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"listing_blocked_reason":
+{ Args: { "p_public_id": string }; Returns: string
                            },
 "listing_editable":
 { Args: { "p_listing": string }; Returns: boolean
@@ -462,6 +542,12 @@ isOneToOne: true
 "open_drafts":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"owner_billing":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"owner_has_payment_method":
+{ Args: { "p_owner": string }; Returns: boolean
+                           },
 "owner_inquiries":
 { Args: Record<PropertyKey, never>; Returns: {
               "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"message": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
@@ -471,6 +557,9 @@ isOneToOne: true
 { Args: { "p_listing": string }; Returns: {
               "inquiries": number,"views": number
             }[]
+                           },
+"payment_setup_context":
+{ Args: { "p_provider": string }; Returns: Json
                            },
 "public_listing_days":
 { Args: { "p_public_id": string }; Returns: {
@@ -489,11 +578,20 @@ isOneToOne: true
 "reorder_listing_photos":
 { Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
                            },
+"resume_subscription":
+{ Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"run_subscription_day":
+{ Args: { "p_today"?: string }; Returns: Json
+                           },
 "save_listing_days":
 { Args: { "p_available"?: boolean,"p_days": (string)[],"p_listing": string,"p_price_crc"?: number }; Returns: undefined
+                           },
+"save_payment_customer":
+{ Args: { "p_owner": string,"p_provider": string,"p_ref": string }; Returns: undefined
                            },
 "seed_admin":
 { Args: { "p_phone": string }; Returns: undefined
@@ -501,11 +599,14 @@ isOneToOne: true
 "set_listing_available":
 { Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined
                            },
+"stop_subscription":
+{ Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
 "submit_listing":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
-"subscription_state":
-{ Args: { "s": Omit<Database["public"]['Tables']["subscriptions"]['Row'], Database["public"]['Tables']["subscriptions"]['ComputedFields']> }; Returns: string
+"test_set_offer_days_left":
+{ Args: { "p_days_left": number,"p_public_id": string }; Returns: string
                            }
           }
           Enums: {

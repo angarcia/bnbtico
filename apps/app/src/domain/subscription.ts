@@ -39,6 +39,10 @@ export const SUBSCRIPTION_MESSAGES = {
   stop: "Solo puede parar la suscripción de una casa activa o pendiente de pago.",
   resume: "Solo puede reactivar una casa con la suscripción parada.",
   dayPassed: "Solo cambia con los días una casa activa.",
+  /** payment_setup_context sin sesión. */
+  session: "Su sesión venció. Ingrese de nuevo.",
+  /** test_set_offer_days_left sin el secreto bnbtico_test_clock en Vault (producción). */
+  testClockOff: "El reloj de pruebas no está habilitado.",
 } as const;
 
 const SHORT_MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -239,4 +243,113 @@ export function blockedReason(reason: BlockedReason | null): string {
     default:
       return "Este anuncio no está disponible en este momento.";
   }
+}
+
+// ---------- Datos de la suscripción (fase 5, ticket 02: RPCs de fase5_suscripcion y su fake) ----------
+
+export type ReminderStatus = "queued" | "sending" | "sent" | "failed" | "unknown" | "skipped";
+
+/** Una casa del propietario con su suscripción (fila de owner_billing). */
+export interface BillingHouse {
+  listingId: string;
+  publicId: string;
+  title: string;
+  status: ListingStatus;
+  plan: SubscriptionPlan;
+  /** Plaza de la oferta de lanzamiento (1–200); null si llegó después. */
+  promoSlot: number | null;
+  promoMonths: number | null;
+  promoEndsOn: string | null;
+  paidSince: string | null;
+  /** Día (Costa Rica) en que el propietario la paró; null si no está parada. */
+  stoppedOn: string | null;
+  monthlyPriceCrc: number;
+  /** Avisos de fin de oferta de esta casa, del umbral más alto al más bajo. */
+  reminders: { daysBefore: ReminderDays; status: ReminderStatus; sentAt: string | null }[];
+}
+
+/** El método de pago de la cuenta tal como lo ve el navegador: nunca los ids de la pasarela. */
+export interface PaymentMethodSummary {
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  addedAt: string;
+}
+
+/** Lo que devuelve owner_billing: una petición para Cuenta, Inicio, Mis casas y Promoción y suscripción. */
+export interface BillingOverview {
+  houses: BillingHouse[];
+  method: PaymentMethodSummary | null;
+  /** «Hoy» de Costa Rica según la base. */
+  today: string;
+}
+
+/** La fila de owner_billing como la esperan las reglas de arriba. */
+export function houseSubscription(house: BillingHouse, method: PaymentMethodSummary | null): HouseSubscription {
+  return {
+    status: house.status,
+    plan: house.plan,
+    promoEndsOn: house.promoEndsOn,
+    paidSince: house.paidSince,
+    stoppedOn: house.stoppedOn,
+    monthlyPriceCrc: house.monthlyPriceCrc,
+    hasMethod: method !== null,
+  };
+}
+
+export type PaymentProviderName = "stripe" | "fake";
+
+/** Un aviso reclamado por el worker (claim_reminders): lo que necesita para componer el texto con reminderWhatsApp. */
+export interface ReminderToSend {
+  id: string;
+  listingId: string;
+  publicId: string;
+  title: string;
+  ownerName: string;
+  /** El WhatsApp actual del propietario (E.164). */
+  toPhone: string;
+  daysBefore: ReminderDays;
+  promoEndsOn: string;
+}
+
+/**
+ * Resultado de un envío (finish_reminders): `sent` con la referencia de la pasarela y el número y el texto enviados;
+ * `retry` si la pasarela lo rechazó antes de aceptarlo (vuelve a la cola hasta 5 intentos, luego `failed`); `unknown` sin
+ * respuesta (nunca se reintenta solo); `skipped` si no se envía (p. ej. número fuera de la lista permitida en pruebas).
+ */
+export type ReminderOutcome =
+  | { id: string; outcome: "sent"; providerRef: string; toPhone: string; body: string }
+  | { id: string; outcome: "retry" | "unknown"; error: string; toPhone?: string; body?: string }
+  | { id: string; outcome: "skipped"; error?: string };
+
+/** Lo que hizo un trabajo diario: casas que pasaron al plan de pago, a pendiente de pago y avisos encolados. */
+export interface DayRunResult {
+  paid: number;
+  paymentDue: number;
+  queued: number;
+}
+
+/** Evento ya verificado de la pasarela. `setup_completed`: el propietario guardó su tarjeta (sin cobro). */
+export interface PaymentEvent {
+  provider: PaymentProviderName;
+  eventId: string;
+  type: "setup_completed" | (string & {});
+  ownerId: string | null;
+  customerRef: string | null;
+  methodRef: string | null;
+  brand: string | null;
+  last4: string | null;
+  expMonth: number | null;
+  expYear: number | null;
+}
+
+export type PaymentEventResult = "applied" | "duplicate" | "ignored";
+
+/** payment_setup_context: la cuenta de la sesión y su cliente en la pasarela, si ya existe. */
+export interface PaymentSetupContext {
+  ownerId: string;
+  fullName: string;
+  phone: string;
+  customerRef: string | null;
 }

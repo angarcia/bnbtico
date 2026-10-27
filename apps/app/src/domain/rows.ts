@@ -3,7 +3,8 @@
 import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
 import { photoSrcSet, variantPath } from "./image";
-import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type MonthlyMode, type Photo, type PublicListing } from "./listing";
+import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type ListingStatus, type MonthlyMode, type Photo, type PublicListing } from "./listing";
+import type { BillingHouse, BillingOverview, PaymentSetupContext, ReminderDays, ReminderStatus, SubscriptionPlan } from "./subscription";
 
 /** Sin `listing_is_public`: es una columna calculada (función SQL) que solo llega si se pide por nombre. */
 export type ListingRow = Omit<Database["public"]["Tables"]["listings"]["Row"], "listing_is_public">;
@@ -138,3 +139,48 @@ export const fromDayRow = (r: { day: string; available: boolean; special_price_c
   available: r.available,
   specialPriceCrc: r.special_price_crc,
 });
+
+// ---------- Suscripción (fase 5): el JSON de owner_billing y payment_setup_context ----------
+
+type JsonObject = Record<string, unknown>;
+const obj = (v: unknown): JsonObject => (v && typeof v === "object" && !Array.isArray(v) ? (v as JsonObject) : {});
+const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
+const int = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+function fromBillingHouse(v: unknown): BillingHouse {
+  const h = obj(v);
+  return {
+    listingId: str(h.listing_id) ?? "",
+    publicId: str(h.public_id) ?? "",
+    title: str(h.title) ?? "",
+    status: (str(h.status) ?? "draft") as ListingStatus,
+    plan: (h.plan === "paid" ? "paid" : "promo") as SubscriptionPlan,
+    promoSlot: int(h.promo_slot),
+    promoMonths: int(h.promo_months),
+    promoEndsOn: str(h.promo_ends_on),
+    paidSince: str(h.paid_since),
+    stoppedOn: str(h.stopped_on),
+    monthlyPriceCrc: int(h.monthly_price_crc) ?? 0,
+    reminders: (Array.isArray(h.reminders) ? h.reminders : []).map((r) => {
+      const x = obj(r);
+      return { daysBefore: (int(x.days_before) ?? 0) as ReminderDays, status: (str(x.status) ?? "queued") as ReminderStatus, sentAt: str(x.sent_at) };
+    }),
+  };
+}
+
+/** La respuesta de la RPC owner_billing. */
+export function fromBillingJson(json: Json | unknown): BillingOverview {
+  const o = obj(json);
+  const m = o.method ? obj(o.method) : null;
+  return {
+    houses: (Array.isArray(o.houses) ? o.houses : []).map(fromBillingHouse),
+    method: m ? { brand: str(m.brand) ?? "", last4: str(m.last4) ?? "", expMonth: int(m.exp_month) ?? 0, expYear: int(m.exp_year) ?? 0, addedAt: str(m.added_at) ?? "" } : null,
+    today: str(o.today) ?? "",
+  };
+}
+
+/** La respuesta de la RPC payment_setup_context. */
+export function fromSetupContextJson(json: Json | unknown): PaymentSetupContext {
+  const o = obj(json);
+  return { ownerId: str(o.owner_id) ?? "", fullName: str(o.full_name) ?? "", phone: str(o.phone) ?? "", customerRef: str(o.customer_ref) };
+}

@@ -1,5 +1,5 @@
 // Supabase local para las pruebas de base: URL y claves salen de `supabase status` (o de variables si ya están puestas).
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/domain/database.types";
@@ -65,6 +65,16 @@ export function sql(query: string): string {
     encoding: "utf8",
     stdio: ["pipe", "pipe", "pipe"],
   }).trim();
+}
+
+/** Como `sql`, pero sin bloquear: cada llamada es una conexión propia (para probar dos sesiones a la vez). */
+export function sqlAsync(query: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = execFile("docker", ["exec", "-i", dbContainer(), "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-tAq"], { encoding: "utf8" }, (error, stdout, stderr) =>
+      error ? reject(new Error(`${error.message}\n${stderr}`)) : resolve(stdout.trim()),
+    );
+    child.stdin!.end(query);
+  });
 }
 
 /**

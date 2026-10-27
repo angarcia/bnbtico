@@ -220,6 +220,8 @@ describe("nextStatus: la máquina de estados", () => {
       stop: "Solo puede parar la suscripción de una casa activa o pendiente de pago.",
       resume: "Solo puede reactivar una casa con la suscripción parada.",
       dayPassed: "Solo cambia con los días una casa activa.",
+      session: "Su sesión venció. Ingrese de nuevo.",
+      testClockOff: "El reloj de pruebas no está habilitado.",
     });
     expect(Object.values(SUBSCRIPTION_MESSAGES).join(" ")).not.toMatch(/podés|parás|añadí|tenés|vos\b/);
   });
