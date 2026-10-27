@@ -2,10 +2,12 @@ import { expect, test } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { injectSession } from "./helpers/session";
 
 // Balizas de primera parte de punta a punta: navegador → worker (vite preview) → Supabase local con la service role.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 let casa: Seeded;
+let draft: Seeded;
 let since: string;
 
 const rows = (query: string) => sql(query).split("\n").filter(Boolean);
@@ -14,6 +16,7 @@ test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
   casa = await h.seed({ status: "active", photos: 5 });
+  draft = await h.seed({ status: "draft" });
 });
 
 test.beforeEach(async ({ page }) => {
@@ -45,6 +48,16 @@ test("el shell manda una vista por ruta y la ficha abierta desde una tarjeta", a
   await expect
     .poll(() => rows(`select name || ' ' || page || ' ' || coalesce(listing_public_id, '-') from public.events where created_at >= '${since}' order by name, page`))
     .toEqual([`listing_view ficha ${casa.publicId}`, "page_view explorar -", "page_view ficha -"]);
+});
+
+// Revisión UX C4 (punto 6): cada pantalla del asistente que se abre, para ver dónde se abandona.
+test("el asistente manda «wizard_step» con la casa y la ruta sin el id del borrador", async ({ page }) => {
+  await injectSession(page, "owner");
+  await page.goto(`/propietario/publicar/${draft.id}/3`);
+  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 5");
+  await expect
+    .poll(() => rows(`select name || ' ' || listing_public_id || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'wizard_step'`))
+    .toEqual([`wizard_step ${draft.publicId} publicar /propietario/publicar/:id/3`]);
 });
 
 test("errores no capturados y promesas rechazadas llegan con ruta y build; una baliza ajena se rechaza", async ({ page }) => {

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
+import { track } from "../../shared/beacon";
 import { LAST_STEP, STEPS, resumeStep, wizardStage, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
@@ -146,6 +147,12 @@ export function PasoScreen() {
   useEffect(() => {
     previous.current = step;
   }, [step]);
+
+  // Qué pantalla se abre (revisión UX C4): para ver dónde se abandona. La ruta lleva el paso y el id sale como :id.
+  const publicId = l?.publicId;
+  useEffect(() => {
+    if (step && publicId) track("wizard_step", publicId);
+  }, [step, publicId]);
 
   // Fotos: siempre las del servidor al llegar a esa pantalla (la lectura espera a los guardados en curso).
   useEffect(() => {

@@ -60,6 +60,11 @@ describe("telemetría · validación de balizas", () => {
       row: { name: "inquiry_created", listing_public_id: "CT-1015", page: "ficha", path: "/casa/CT-1015", build: "abc123" },
     });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "inquiry_created" })).ok).toBe(false);
+    // Revisión UX C4: el paso del asistente que se abre, con la casa y la ruta sin el id del borrador.
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "wizard_step", listing: "CT-1015", path: "/propietario/publicar/2f8c5a1e-0d6b-4c1e-9a7e-3b1c2d4e5f60/7" }))).toEqual({
+      ok: true,
+      row: { name: "wizard_step", listing_public_id: "CT-1015", page: "publicar", path: "/propietario/publicar/:id/7", build: "abc123" },
+    });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "listing_view", listing: "drop table" })).ok).toBe(false);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "signup" })).ok).toBe(false);
   });
