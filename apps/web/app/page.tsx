@@ -6,6 +6,14 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { appEnabled } from "@/lib/stage";
 
 // Portada de bnbtico.com hasta el lanzamiento. En pruebas y local redirige a la app; `?pronto=1` la fuerza para verla.
+// Revisión UX C1 (2026-10-27): tarjeta de la oferta bajo la foto, «Cómo funciona» en tres pasos y el botón de propietarios
+// solo cuando hay número de WhatsApp de bnbtico (`WA_OWNERS` en Vercel); sin él, «Abrimos pronto en el Caribe sur.».
+const OWNER_CTA_TEXT = "Hola, tengo una casa en el Caribe sur y quiero publicarla en bnbtico.";
+
+function ownerCtaUrl(): string | null {
+  const number = process.env.WA_OWNERS?.replace(/\D/g, "");
+  return number ? `https://wa.me/${number}?text=${encodeURIComponent(OWNER_CTA_TEXT)}` : null;
+}
 export default async function Portada({ searchParams }: { searchParams: Promise<{ pronto?: string }> }) {
   const { pronto } = await searchParams;
   if (appEnabled() && !pronto) redirect("/explorar");
@@ -16,6 +24,7 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
       { "@type": "WebSite", "@id": `${SITE_URL}/#web`, name: SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION, inLanguage: "es-CR", publisher: { "@id": `${SITE_URL}/#org` } },
     ],
   };
+  const ownerCta = ownerCtaUrl();
   return (
     <>
       <main className="soon">
@@ -31,6 +40,19 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
           <p className="soon-place">Playa Negra · Puerto Viejo de Talamanca</p>
         </div>
       </main>
+      <section className="soon-offer" aria-labelledby="oferta">
+        <h2 id="oferta">¿Tiene una casa en el Caribe?</h2>
+        <p>
+          <b>Las primeras 50 casas: 12 meses gratis.</b> Después, ₡9 900 al mes por casa, sin comisiones ni permanencia.
+        </p>
+        {ownerCta ? (
+          <a className="soon-cta" href={ownerCta} rel="noopener">
+            Quiero publicar mi casa gratis
+          </a>
+        ) : (
+          <p className="soon-later">Abrimos pronto en el Caribe sur.</p>
+        )}
+      </section>
       <section className="soon-more" aria-labelledby="que-es">
         <h2 id="que-es">Qué es bnbtico</h2>
         <p>
@@ -41,10 +63,17 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
           En el Caribe sur de Limón: Puerto Viejo de Talamanca, Playa Negra, Cocles, Playa Chiquita, Punta Uva, Manzanillo y Cahuita. Casas frente al mar, en la selva o en el pueblo, para un fin de semana, unas vacaciones o una temporada completa.
         </p>
         <h2>Cómo funciona</h2>
-        <p>
-          Quien tiene una casa la publica con sus fotos, su precio en colones y su WhatsApp verificado; bnbtico la revisa antes de mostrarla. Quien busca, explora sin registrarse, guarda favoritos y contacta directo con un mensaje ya redactado con fechas y personas. El acuerdo es entre las dos personas; nosotros solo las ponemos en contacto.
-        </p>
-        <p className="small muted">¿Tiene una casa en el Caribe? Las primeras 50 casas publicadas tendrán 12 meses gratis.</p>
+        <ol className="soon-steps">
+          <li>
+            <b>El propietario publica</b> su casa con fotos, precio en colones y su WhatsApp verificado. bnbtico la revisa antes de mostrarla.
+          </li>
+          <li>
+            <b>Usted la encuentra</b> sin registrarse, guarda sus favoritas y le escribe con un mensaje ya redactado con fechas y personas.
+          </li>
+          <li>
+            <b>Acuerdan directo</b> por WhatsApp, sin intermediarios ni comisiones. Nosotros solo los ponemos en contacto.
+          </li>
+        </ol>
       </section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
