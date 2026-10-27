@@ -2,6 +2,12 @@
 
 Lista de cosas decididas que **no** se hacen todavía en pruebas, pero deben estar hechas antes del lanzamiento. Se revisa al cortar (ticket 13 de la fase R y lanzamiento de la v1). La más reciente arriba.
 
+
+## Para más adelante (no bloquea el lanzamiento) (2026-10-26)
+
+- **Google Maps.** Decisión de Daniel: de momento seguimos con OpenStreetMap (gratis, sin terceros, compatible con la CSP estricta). Opciones para el futuro: (1) botón «Abrir en Google Maps» que abre la app del teléfono (sin clave ni coste; en la ficha pública solo con la zona aproximada, nunca la dirección exacta); (2) mapa de Google dentro de la app: necesita una clave con facturación (tarjeta) aunque el uso gratuito mensual cubra el arranque, y abrir la CSP a sus scripts.
+- **Entrar sin código cada vez (passkeys).** Pendiente de discutir: comprobar si Supabase ofrece passkeys para iniciar sesión en el plan gratuito; si no, valorar montarlas en el worker. Recordar que Safari en iPhone borra la sesión de una web no instalada tras 7 días sin abrirla (la app instalada no).
+
 ## Calendario: reapertura nocturna, purga y ventana de 12 meses (2026-10-23, fase 4)
 
 1. **`pg_cron` en producción, con alerta.** La migración `20261024024441_fase4_calendario` habilita `pg_cron` y registra `bnbtico-reabrir-casas` (`0 6 * * *`, 00:00 de Costa Rica), que llama a `reopen_due_listings()`. En el proyecto de producción: comprobar que el trabajo existe y está activo (`select jobname, schedule, active from cron.job;`) y, tras la primera noche, que corrió (`cron.job_run_details`, `status = 'succeeded'`). Poner una **alerta** si la reapertura falla o no corre: por ejemplo, que el cron diario del worker (keep-alive) consulte `cron.job_run_details` de las últimas 26 h y mande un evento a la telemetría (o un correo) si no hay un `succeeded`, o si queda alguna casa con `reopen_at < hoy CR` y `available = false`. Sin esto, una casa cerrada «hasta el 15 de enero» seguiría cerrada sin que nadie lo note.
