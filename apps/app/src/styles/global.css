@@ -700,3 +700,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .grid-3:has(> .tile){grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
 /* Descripción por debajo del mínimo (revisión UX N3). */
 .description-short{color:var(--sun-ink);font-weight:600}
+/* La persona que alquila, bajo el nombre de la casa (revisión UX A10). */
+.host-line{align-items:center}
+.avatar-xs{width:28px;height:28px;font-size:11px;flex-shrink:0}

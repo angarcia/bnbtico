@@ -13,6 +13,7 @@ import { useCurrency } from "./currency";
 import { useFx } from "./fx";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
+import { firstName, initials } from "../domain/person";
 import { useHydrated } from "./hydration";
 import { I, type IconName } from "./icons";
 import { whenIdle } from "./idle";
@@ -237,17 +238,22 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
         <div className="stack listing-body">
           <div className="row wrap gap-8">
-            {l.ownerWhatsappVerified ? (
-              <span className="badge badge-ok">
-                <I.check size={14} /> WhatsApp verificado
-              </span>
-            ) : null}
             <span className="badge">{modesLabel(l)}</span>
             {l.kind === "habitacion" ? <span className="badge">Habitación{l.bathroomShared === null ? "" : l.bathroomShared ? " · baño compartido" : " · baño privado"}</span> : null}
             {!l.available ? <span className="badge badge-sun">No disponible por ahora</span> : null}
           </div>
           <div className="stack gap-4">
             <h1 className={`listing-title${l.title.length > LONG_TITLE ? " is-long" : ""}`}>{l.title}</h1>
+            {/* Sin reseñas, la persona verificada es la confianza: va arriba, no al final (revisión UX A10). */}
+            <span className="row gap-8 host-line" data-testid="host-line">
+              <span className="avatar avatar-xs" aria-hidden="true">
+                {initials(l.ownerName)}
+              </span>
+              <span className="small">
+                <b className="ink">{firstName(l.ownerName)}</b>
+                {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
+              </span>
+            </span>
             <span className="row muted gap-6">
               <I.pin size={18} /> {[l.zone, l.canton].filter(Boolean).join(", ")} · ubicación aproximada
             </span>

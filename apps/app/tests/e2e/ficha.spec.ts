@@ -55,6 +55,7 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Playa Negra" })).toBeVisible();
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+ · WhatsApp verificado$/u);
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
   // Compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño.

@@ -157,10 +157,8 @@ export function parsePeople(value: string): number | null {
   return v === "" ? null : Number(v);
 }
 
-/** «Escríbale a Daniel»: el nombre de pila del propietario. */
-export function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] || "el propietario";
-}
+// firstName e initials viven en person.ts (la ficha los usa sin cargar este módulo).
+export { firstName, initials } from "./person";
 
 // ---------- Borrador guardado en la pestaña ----------
 
@@ -228,14 +226,6 @@ export function relativeTime(iso: string, nowMs: number): string {
   return y === Number(today.slice(0, 4)) ? `${d} ${SHORT_MONTHS[m - 1]}` : `${d} ${SHORT_MONTHS[m - 1]} ${y}`;
 }
 
-/** Iniciales para el avatar: primera letra del primer y del último nombre. */
-export function initials(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "?";
-  const first = words[0]!.charAt(0);
-  const last = words.length > 1 ? words[words.length - 1]!.charAt(0) : "";
-  return (first + last).toLocaleUpperCase("es");
-}
 
 /** Línea de la tarjeta de Mis consultas: «Casa Cocles · 20–27 dic · 4 personas» (sin personas, solo casa y fechas). */
 export function inquirySummary(i: Pick<OwnerInquiry, "listingTitle" | "arrival" | "departure" | "people">): string {
