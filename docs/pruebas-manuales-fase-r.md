@@ -2,6 +2,8 @@
 
 Fecha: 2026-10-23 (tickets 01–12, la parte preparable del 13 y los arreglos posteriores: segundo factor por app de autenticación, WhatsApp de cualquier país, avisos del perfil). **Actualizado el 2026-10-26** con los arreglos de los tickets 14–20 y las mejoras 21–22 (pasos marcados «actualizado 2026-10-26» o «añadido 2026-10-26»). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
+**Revisión UX (2026-10-27):** lo cambiado por la revisión UX (contactar sin cuenta, Ingresar, publicar en tres etapas, calendarios, Inicio y Mis casas, Favoritos, portada…) se prueba con `docs/pruebas-manuales-revision-ux.md`; donde un paso de aquí no coincida (p. ej. «Empezar» al publicar, «Paso n de 9», «País de su WhatsApp»), manda ese documento.
+
 La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo y su estado.
 
 **Estado de la parte A (2026-10-23):**
