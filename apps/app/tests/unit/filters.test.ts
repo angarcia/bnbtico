@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 
@@ -30,9 +30,10 @@ describe("parseFilters · resto", () => {
   it("features solo con '1' y solo las conocidas", () => {
     expect(parseFilters({ pool: "1", pets: "0", wifi: "1", jacuzzi: "1" }, []).features).toEqual(["pool", "wifi"]);
   });
-  it("precios aceptan separadores; min > max se intercambian; inválidos → 0", () => {
+  it("precios aceptan separadores; min > max = sin rango (no se intercambian); inválidos → 0", () => {
     expect(parseFilters({ min: "30.000", max: "90 000" }, [])).toMatchObject({ min: 30000, max: 90000 });
-    expect(parseFilters({ min: "90000", max: "30000" }, [])).toMatchObject({ min: 30000, max: 90000 });
+    expect(parseFilters({ min: "90000", max: "30000" }, [])).toMatchObject({ min: 0, max: 0 });
+    expect(parseFilters({ min: "30000", max: "30000" }, [])).toMatchObject({ min: 30000, max: 30000 });
     expect(parseFilters({ min: "abc", max: "-5" }, [])).toMatchObject({ min: 0, max: 0 });
     expect(parseFilters({ min: "90000" }, [])).toMatchObject({ min: 90000, max: 0 });
   });
@@ -90,5 +91,30 @@ describe("búsqueda en la URL de Explorar", () => {
     const f = parseFilters({ prov: "Todas", max: "50000", min: "44000" }, ["Limón"]);
     expect(searchFor(f, ["Limón"])).toEqual({ prov: "Todas", min: "44000", max: "50000" });
     expect(searchFor(parseFilters({}, ["Limón"]), ["Limón"])).toEqual({});
+  });
+});
+
+describe("precio en la moneda elegida (ticket 15)", () => {
+  it("en colones, la entrada es la cifra en colones", () => {
+    expect(priceInputToColones("30.000", "CRC")).toBe(30000);
+    expect(priceInputToColones("", "CRC")).toBeNull();
+    expect(priceInputToColones("abc", "CRC")).toBeNull();
+  });
+  it("en dólares se convierte a colones enteros con el tipo vigente", () => {
+    expect(priceInputToColones("100", "USD")).toBe(51000);
+    expect(priceInputToColones("$ 1,000", "USD")).toBe(510000);
+    expect(priceInputToColones("12.5", "USD")).toBe(6375);
+    expect(priceInputToColones("-3", "USD")).toBeNull();
+  });
+  it("y vuelve a mostrarse en la moneda elegida", () => {
+    expect(colonesToPriceInput(51000, "USD")).toBe("100");
+    expect(colonesToPriceInput(30000, "CRC")).toBe("30000");
+    expect(colonesToPriceInput(0, "USD")).toBe("");
+  });
+  it("rango inválido solo con los dos límites y mínimo > máximo", () => {
+    expect(priceRangeInvalid(90000, 30000)).toBe(true);
+    expect(priceRangeInvalid(30000, 90000)).toBe(false);
+    expect(priceRangeInvalid(90000, 0)).toBe(false);
+    expect(priceRangeInvalid(0, 30000)).toBe(false);
   });
 });

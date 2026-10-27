@@ -40,7 +40,7 @@ test("Explorar arranca en Limón y Filtros solo ofrece provincias con casas", as
   await expect(page.getByRole("button", { name: "Ver 8 casas" })).toBeVisible();
 });
 
-test("Filtros cuenta en vivo, intercambia mínimo y máximo, y «Ver N casas» aplica y vuelve", async ({ page }) => {
+test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N casas» aplica y vuelve", async ({ page }) => {
   await page.goto("/explorar/filtros");
   const zona = page.getByRole("group", { name: "Zona" });
   await zona.getByRole("button", { name: "Todas" }).click();
@@ -53,6 +53,14 @@ test("Filtros cuenta en vivo, intercambia mínimo y máximo, y «Ver N casas» a
   await page.getByLabel("Personas").selectOption("0");
   await page.getByLabel("Precio mínimo por noche").fill("50.000");
   await page.getByLabel("Precio máximo por noche").fill("44000");
+  // Ticket 15: no se intercambian; aviso y el botón desactivado hasta corregirlo.
+  await expect(page.getByRole("alert")).toHaveText("El precio mínimo no puede ser mayor que el máximo.");
+  await expect(page.getByRole("button", { name: /^Ver/ })).toBeDisabled();
+  await page.getByLabel("Precio máximo por noche").press("Enter");
+  await expect(page).toHaveURL(/\/explorar\/filtros/);
+  await page.getByLabel("Precio mínimo por noche").fill("44000");
+  await page.getByLabel("Precio máximo por noche").fill("50.000");
+  await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Ver 3 casas" })).toBeVisible();
   await page.getByRole("button", { name: "Ver 3 casas" }).click();
   await expect(page).toHaveURL(/\/explorar\?prov=Todas&min=44000&max=50000$/);
@@ -63,6 +71,26 @@ test("Filtros cuenta en vivo, intercambia mínimo y máximo, y «Ver N casas» a
   await page.getByRole("link", { name: "Limpiar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(results(page)).toHaveText("8 casas en Limón");
+
+  // Una URL con mínimo > máximo se trata como sin rango.
+  await page.goto("/explorar?prov=Todas&min=50000&max=44000");
+  await expect(results(page)).toHaveText("9 casas");
+});
+
+test("con dólares elegidos, los precios de Filtros se escriben en dólares y se buscan en colones", async ({ page }) => {
+  await page.goto("/explorar");
+  await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Dólares" }).click();
+  await page.getByRole("link", { name: /Más filtros/ }).click();
+  await page.getByRole("group", { name: "Zona" }).getByRole("button", { name: "Todas" }).click();
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveAttribute("placeholder", "$ 0");
+  await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
+  await page.getByLabel("Precio mínimo por noche").fill("86");
+  await page.getByLabel("Precio máximo por noche").fill("98");
+  await page.getByRole("button", { name: "Ver 3 casas" }).click();
+  await expect(page).toHaveURL(/\/explorar\?prov=Todas&min=43860&max=49980$/);
+  await page.getByRole("link", { name: /Más filtros/ }).click();
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("86");
+  await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("98");
 });
 
 test("los chips rápidos cambian la URL y la URL restaura la pantalla", async ({ page }) => {
@@ -78,12 +106,20 @@ test("los chips rápidos cambian la URL y la URL restaura la pantalla", async ({
 test("la moneda cambia al instante y se comparte con la ficha", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("₡85 000");
-  await page.getByRole("button", { name: "$ Dólares" }).click();
+  const moneda = page.getByRole("group", { name: "Moneda de los precios" });
+  await expect(moneda.getByRole("button", { name: "Colones" })).toHaveAttribute("aria-pressed", "true");
+  await moneda.getByRole("button", { name: "Dólares" }).click();
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("$167");
   await page.getByRole("link", { name: /Casa Manzanillo/ }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${manzanillo.publicId}$`));
   await expect(page.getByTestId("main-price")).toHaveText("$167 / noche");
-  await page.getByRole("button", { name: "Ver en colones" }).click();
+  // La ficha no tiene botón de moneda: la otra cifra va debajo como referencia.
+  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ ₡85\u00a0000");
+  await expect(page.getByRole("button", { name: /Ver en (colones|dólares)/ })).toHaveCount(0);
+  // Cuenta también cambia la moneda de toda la app.
+  await page.goto("/cuenta");
+  await page.goto("/explorar");
+  await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("$167");
 });
 
 test("volver de una ficha deja Explorar en el mismo punto del scroll", async ({ page }) => {

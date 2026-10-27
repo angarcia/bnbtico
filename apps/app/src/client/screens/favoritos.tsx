@@ -12,7 +12,6 @@ import { favoritesStore, useFavorites } from "../../shared/favorites-store";
 import { Picture } from "../../shared/picture";
 import { RootHeader } from "../chrome";
 import { useSession } from "../session";
-import { CurrencySwitch } from "../currency-switch";
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,
@@ -121,16 +120,11 @@ export function FavoritosScreen() {
       ) : loading ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonCards n={favs.length} />
       ) : (
-        <>
-          <div className="row fav-tools">
-            <CurrencySwitch />
-          </div>
-          <div className="stack fav-list">
-            {shown.map((l) => (
-              <FavoriteCard key={l.publicId} listing={l} />
-            ))}
-          </div>
-        </>
+        <div className="stack fav-list">
+          {shown.map((l) => (
+            <FavoriteCard key={l.publicId} listing={l} />
+          ))}
+        </div>
       )}
 
       <div className="note note-col">

@@ -1,16 +1,18 @@
 import { setCurrency, useCurrency } from "../shared/currency";
 
-/** «₡ Colones · $ Dólares» de Explorar y Favoritos (solo cambia cómo se muestran los precios). */
+/**
+ * Selector único de moneda (ticket 15): «₡ | $» en la cabecera de Explorar y en Cuenta. Cambia cómo se ven todos los
+ * precios de la app (tarjetas, ficha, Favoritos, calendario y filtros); los propietarios fijan y cobran en colones.
+ */
 export function CurrencySwitch() {
   const currency = useCurrency();
   return (
-    <div className="row gap-4 currency-switch" role="group" aria-label="Moneda">
-      <button type="button" className="link small" aria-pressed={currency === "CRC"} onClick={() => setCurrency("CRC")}>
-        ₡ Colones
+    <div className="currency-switch" role="group" aria-label="Moneda de los precios">
+      <button type="button" aria-pressed={currency === "CRC"} aria-label="Colones" onClick={() => setCurrency("CRC")}>
+        ₡
       </button>
-      <span className="small muted">·</span>
-      <button type="button" className="link small" aria-pressed={currency === "USD"} onClick={() => setCurrency("USD")}>
-        $ Dólares
+      <button type="button" aria-pressed={currency === "USD"} aria-label="Dólares" onClick={() => setCurrency("USD")}>
+        $
       </button>
     </div>
   );

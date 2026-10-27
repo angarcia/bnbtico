@@ -109,7 +109,10 @@ test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base
   await page.screenshot({ path: "test-results/ficha-calendario.png" });
 
   // La moneda de la página manda también en el calendario.
-  await page.getByRole("button", { name: "Ver en dólares" }).click();
+  await page.evaluate(() => {
+    localStorage.setItem("bnbtico_currency", "USD");
+    dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
+  });
   await expect(cell(page, on(20))).toHaveText(`20 ★${formatUSD(150000)}`);
   await expect(section(page).getByText(`Precio base ${formatUSD(95000)} por noche; los días con ★ tienen otro precio.`)).toBeVisible();
   expect(await boxHeight(page), "en dólares, el mismo alto").toBe(before);

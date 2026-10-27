@@ -65,13 +65,23 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-test("el precio se ve en dólares al tocar y la preferencia se recuerda", async ({ page }) => {
+/** Cambia la moneda como lo haría el selector de Explorar o Cuenta en otra pantalla (mismo almacenamiento y aviso). */
+const chooseCurrency = (page: Page, currency: "USD" | "CRC") =>
+  page.evaluate((c) => {
+    localStorage.setItem("bnbtico_currency", c);
+    dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
+  }, currency);
+
+test("la ficha sigue la moneda elegida y muestra la otra como referencia, sin botón", async ({ page }) => {
   const seen = watch(page);
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await page.getByRole("button", { name: "Ver en dólares" }).click();
+  await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ $186");
+  await expect(page.getByRole("button", { name: /Ver en (dólares|colones)/ })).toHaveCount(0);
+  await chooseCurrency(page, "USD");
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
-  await expect(page.getByRole("button", { name: "Ver en colones" })).toHaveText("≈ ₡95 000", { useInnerText: true });
+  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ ₡95 000");
 
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
@@ -126,15 +136,15 @@ test("si la portada no carga, la ficha hidrata igual", async ({ page }) => {
   await page.route(`**/listings/${casa.photoPaths[0]}*`, (route) => route.abort());
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await page.getByRole("button", { name: "Ver en dólares" }).click();
+  await chooseCurrency(page, "USD");
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
 });
 
 const barHeight = (page: Page) => page.evaluate(() => document.querySelector(".cta-bar")!.getBoundingClientRect().height);
 
-// Revisión del movimiento: la ficha hidrata cuando la portada cargó (o a los 3 s). Hasta entonces el cambio de moneda no
-// haría nada: no se ofrece como botón. Su hueco ya mide lo que el botón, así que nada se mueve al hidratar ni al cambiar.
-test("antes de hidratar no hay botón de moneda, y ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ page }) => {
+// Revisión del movimiento: la ficha hidrata cuando la portada cargó (o a los 3 s). La referencia en la otra moneda nunca es
+// un botón (ticket 15) y apila las dos cifras, así que nada se mueve al hidratar ni al cambiar de moneda.
+test("ni hidratar ni cambiar de moneda cambian el alto de la barra, y no hay botón de moneda", async ({ page }) => {
   let release!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve));
   await page.route(`**/listings/${casa.photoPaths[0]}*`, async (route) => {
@@ -145,7 +155,7 @@ test("antes de hidratar no hay botón de moneda, y ni hidratar ni cambiar de mon
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   expect(await page.locator("html").getAttribute("data-hydrated")).toBeNull();
-  await expect(page.getByRole("button", { name: "Ver en dólares" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   // El botón de contacto tampoco es un botón todavía: una caja apagada del mismo tamaño.
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
@@ -153,10 +163,11 @@ test("antes de hidratar no hay botón de moneda, y ni hidratar ni cambiar de mon
 
   release();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByRole("button", { name: "Ver en dólares" })).toHaveText("≈ $186", { useInnerText: true });
+  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ $186");
+  await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeEnabled();
   expect(await barHeight(page), "al hidratar").toBe(before);
-  await page.getByRole("button", { name: "Ver en dólares" }).click();
+  await chooseCurrency(page, "USD");
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
   expect(await barHeight(page), "en dólares").toBe(before);
 });
@@ -167,12 +178,11 @@ test("a 320 px la barra mide lo mismo en colones y en dólares y no tapa el fina
     await page.goto(`/casa/${publicId}`);
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
-    const toggle = page.getByRole("button", { name: /Ver en (dólares|colones)/ });
     const first = await barHeight(page);
-    await toggle.click();
+    await chooseCurrency(page, "USD");
     await expect(page.getByTestId("main-price")).not.toHaveText(/^₡/);
     expect(await barHeight(page), `${publicId} en dólares`).toBe(first);
-    await toggle.click();
+    await chooseCurrency(page, "CRC");
     await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
     expect(await barHeight(page), `${publicId} de vuelta en colones`).toBe(first);
 

@@ -9,6 +9,8 @@ import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
 import { I } from "../../shared/icons";
+import { FX_CRC_PER_USD } from "../../domain/money";
+import { CurrencySwitch } from "../currency-switch";
 import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
 import { accountQuery } from "../account";
@@ -472,6 +474,15 @@ function MyAccount({ editing }: { editing: boolean }) {
             </span>
           </Link>
         ) : null}
+        <div className="list-item">
+          <span aria-hidden="true" className="muted-icon currency-icon">
+            ₡
+          </span>
+          <span className="body" id="currency-label">
+            Moneda<small>Dólares solo de referencia: ≈ ₡{FX_CRC_PER_USD} por US$1</small>
+          </span>
+          <CurrencySwitch />
+        </div>
         <Link to="/ayuda" className="list-item">
           <I.help />
           <span className="body">

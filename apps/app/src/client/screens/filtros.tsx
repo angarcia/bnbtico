@@ -2,8 +2,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { BEDS_OPTIONS, PEOPLE_OPTIONS, parseFilters, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
+import { BEDS_OPTIONS, PEOPLE_OPTIONS, colonesToPriceInput, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
 import { FEATURES } from "../../domain/listing";
+import { FX_CRC_PER_USD } from "../../domain/money";
+import { useCurrency } from "../../shared/currency";
 import { I } from "../../shared/icons";
 import { listingsQuery, provincesQuery } from "../queries";
 
@@ -13,9 +15,19 @@ function FiltrosForm({ provinces, initial }: { provinces: string[]; initial: Exp
   const navigate = useNavigate();
   const [draft, setDraft] = useState<ExploreSearch>(initial);
   const set = (key: SearchKey, value: string | undefined) => setDraft((d) => ({ ...d, [key]: value }));
+  const currency = useCurrency();
+  // Los precios se escriben en la moneda elegida; la búsqueda guarda colones enteros (ticket 15).
+  const [prices, setPrices] = useState(() => ({ min: colonesToPriceInput(Number(initial.min ?? 0), currency), max: colonesToPriceInput(Number(initial.max ?? 0), currency) }));
+  const setPrice = (key: "min" | "max", text: string) => {
+    setPrices((p) => ({ ...p, [key]: text }));
+    const crc = priceInputToColones(text, currency);
+    set(key, crc ? String(crc) : undefined);
+  };
   const f = parseFilters(draft, provinces);
+  const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
+  const symbol = currency === "USD" ? "$" : "₡";
   const apply = () => navigate({ to: "/explorar", search: searchFor(f, provinces), replace: true });
   return (
     <>
@@ -34,7 +46,7 @@ function FiltrosForm({ provinces, initial }: { provinces: string[]; initial: Exp
         className="stack filters-form"
         onSubmit={(e) => {
           e.preventDefault();
-          apply();
+          if (!badRange) void apply();
         }}
       >
         <section className="stack" role="group" aria-labelledby="f-zona">
@@ -90,17 +102,25 @@ function FiltrosForm({ provinces, initial }: { provinces: string[]; initial: Exp
           <div className="grid-2">
             <div className="field">
               <label htmlFor="f-min">Mínimo</label>
-              <input id="f-min" inputMode="numeric" placeholder="₡ 0" aria-label="Precio mínimo por noche" value={draft.min ?? ""} onChange={(e) => set("min", e.target.value)} />
+              <input id="f-min" inputMode="decimal" placeholder={`${symbol} 0`} aria-label="Precio mínimo por noche" aria-invalid={badRange || undefined} aria-describedby="f-price-help" value={prices.min} onChange={(e) => setPrice("min", e.target.value)} />
             </div>
             <div className="field">
               <label htmlFor="f-max">Máximo</label>
-              <input id="f-max" inputMode="numeric" placeholder="₡ 150 000" aria-label="Precio máximo por noche" value={draft.max ?? ""} onChange={(e) => set("max", e.target.value)} />
+              <input id="f-max" inputMode="decimal" placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"} aria-label="Precio máximo por noche" aria-invalid={badRange || undefined} aria-describedby="f-price-help" value={prices.max} onChange={(e) => setPrice("max", e.target.value)} />
             </div>
           </div>
+          <span className="xs muted" id="f-price-help">
+            {currency === "USD" ? `En dólares (${symbol}), solo para orientarle: ≈ ₡${FX_CRC_PER_USD} por US$1. Los propietarios fijan sus precios en colones.` : `En colones (${symbol}). Puede verlos en dólares desde Explorar o Cuenta.`}
+          </span>
+          {badRange ? (
+            <p className="field-error" role="alert">
+              El precio mínimo no puede ser mayor que el máximo.
+            </p>
+          ) : null}
         </section>
         <div className="sticky-spacer" aria-hidden="true" />
         <div className="sticky-actions">
-          <button className="btn btn-primary grow" type="submit">
+          <button className="btn btn-primary grow" type="submit" disabled={badRange}>
             {count === undefined ? "Ver casas" : `Ver ${count} ${count === 1 ? "casa" : "casas"}`}
           </button>
         </div>

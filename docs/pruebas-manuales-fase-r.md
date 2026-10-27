@@ -124,7 +124,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B1 | En una pestaña privada (sin sesión de Access) abrir `https://nueva.bnbtico.com/casa/CT-1015` | Ficha sin pedir PIN: fotos (la primera aparece enseguida), título, precio en colones, mapa aproximado tras un momento, «Contactar por WhatsApp» (deshabilitado en esta fase) | ☐ |
 | B2 | Mandarse por WhatsApp el enlace `https://nueva.bnbtico.com/casa/CT-1015` | La vista previa muestra **la foto de portada y el título** de la casa | ☐ |
 | B3 | Abrir `https://nueva.bnbtico.com/casa/CT-999999` | «Este enlace no existe» | ☐ |
-| B4 | En la ficha, tocar el precio («Ver en dólares») | Precio en dólares; tocar otra vez vuelve a colones. Al recargar recuerda la elección | ☐ |
+| B4 | En la ficha, mirar el precio (actualizado 2026-10-26) | Precio en la moneda elegida (colones por defecto) y debajo la otra como referencia, sin botón («≈ $186 · orientativo…»). La barra no salta al cargar | ☐ |
 
 ### Explorar, Filtros y moneda
 
@@ -132,8 +132,8 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 |---|---|---|---|
 | B5a | Abrir `https://nueva.bnbtico.com/` (pasa el PIN de Access) | Explorar «¿Para dónde va?», arranca en Limón, CT-1015 en la lista con su foto | ☐ |
 | B5b | «Más filtros» | Filtros: en Zona solo provincias con casas; «Ver N casas» cuenta en vivo al tocar Piscina, Personas o precio | ☐ |
-| B5c | Precio mínimo mayor que el máximo → «Ver N casas» | Se intercambian solos; vuelve a Explorar con chips y la URL lo refleja; «Limpiar» los quita | ☐ |
-| B5d | Cambiar a dólares en una tarjeta, entrar a la ficha | La ficha también en dólares (preferencia compartida) | ☐ |
+| B5c | Precio mínimo mayor que el máximo (actualizado 2026-10-26) | Aviso «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» desactivado; al corregirlo se activa, vuelve a Explorar y la URL lo refleja; «Limpiar» los quita | ☐ |
+| B5d | En Explorar, selector «₡ \| $» junto al número de casas → «$»; entrar a una ficha, a Favoritos y a «Más filtros» (actualizado 2026-10-26) | Todo en dólares: tarjetas, ficha (con «≈ ₡…» debajo), Favoritos y los precios de Filtros (se escriben en $). Mi cuenta → «Moneda» cambia lo mismo. Al recargar recuerda la elección | ☐ |
 | B5f | En Explorar, bajar hasta las últimas tarjetas, abrir una ficha y volver atrás | Explorar vuelve al mismo punto del scroll, sin recargar. **Pendiente (2026-10-26): con una sola casa no se puede probar; repetir cuando haya más casas** | ☐ |
 | B5e | Abrir `https://nueva.bnbtico.com/?pronto=1` (añadido con el ticket 13) | La portada de bnbtico.com: foto de Playa Negra, logo, «Muy pronto», «Alquile en el Caribe de Costa Rica, directo con quien lo recibe» y debajo «Qué es bnbtico». Es lo que verá bnbtico.com tras el corte | ☐ |
 

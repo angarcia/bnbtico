@@ -107,7 +107,7 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true", { timeout: 30_000 });
     lcps.push(await page.evaluate(() => (window as unknown as { lcp: number }).lcp));
 
-    // 2) Toque: «Ver en dólares» (con la ficha ya hidratada).
+    // 2) Toque: el corazón de favoritos (con la ficha ya hidratada; la ficha ya no cambia de moneda, ticket 15).
     if (i === 0) {
       const taps: number[] = [];
       await page.evaluate(() => {
@@ -116,11 +116,11 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
         new PerformanceObserver((l) => l.getEntries().forEach((e) => e.name === "click" && w.taps.push(e.duration))).observe({ type: "event", durationThreshold: 16 } as PerformanceObserverInit);
       });
       for (let t = 0; t < 6; t++) {
-        await page.locator('button[aria-label^="Ver en"]').click();
+        await page.locator(".heart-hero").click();
         await page.waitForTimeout(300);
       }
       taps.push(...(await page.evaluate(() => (window as unknown as { taps: number[] }).taps)));
-      console.log(`Toque «Ver en dólares» (Event Timing, solo se registran ≥ 16 ms): ${taps.length ? taps.join(", ") + " ms" : "todos < 16 ms"} (presupuesto < 50 ms)`);
+      console.log(`Toque del corazón (Event Timing, solo se registran ≥ 16 ms): ${taps.length ? taps.join(", ") + " ms" : "todos < 16 ms"} (presupuesto < 50 ms)`);
     }
     await ctx.close();
   }

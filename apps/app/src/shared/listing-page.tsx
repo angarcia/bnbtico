@@ -8,7 +8,7 @@ import { describe } from "../domain/describe";
 import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
 import { formatCRC, formatMoney, formatUSD, FX_CRC_PER_USD } from "../domain/money";
 import { ApproxMap } from "./approx-map";
-import { setCurrency, useCurrency } from "./currency";
+import { useCurrency } from "./currency";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
 import { useHydrated } from "./hydration";
@@ -155,28 +155,18 @@ function Availability({ listing, currency }: { listing: PublicListing; currency:
   );
 }
 
-/** Cambio de moneda. Ocupa siempre lo mismo (las dos cifras apiladas, la que no se ve queda oculta debajo): cambiar de moneda
- *  o hidratar no mueve la barra. Antes de hidratar no es un botón (no haría nada): solo el hueco. */
-function PriceToggle({ amountCrc, hydrated }: { amountCrc: number; hydrated: boolean }) {
-  const currency = useCurrency();
-  const other = currency === "CRC" ? "USD" : "CRC";
+/** La otra moneda como referencia, sin botón (ticket 15: la moneda se elige en Explorar o en Cuenta). Ocupa siempre lo
+ *  mismo (las dos cifras apiladas, la que no se ve queda oculta debajo): hidratar o cambiar de moneda no mueve la barra. */
+function PriceReference({ amountCrc, currency }: { amountCrc: number; currency: Currency }) {
   const usd = `≈ ${formatUSD(amountCrc)}`;
   const crc = `≈ ${formatCRC(amountCrc)}`;
-  if (!hydrated) {
-    return (
-      <span className="link xs both" aria-hidden="true">
-        <span className="ghost">{usd}</span>
-        <span className="ghost">{crc}</span>
-      </span>
-    );
-  }
   return (
-    <button type="button" className="link xs both" onClick={() => setCurrency(other)} aria-label={other === "USD" ? "Ver en dólares" : "Ver en colones"} title={`≈ ₡${FX_CRC_PER_USD} por US$1`}>
-      <span>{other === "USD" ? usd : crc}</span>
+    <span className="xs both price-ref" data-testid="price-reference" title={`Orientativo: ≈ ₡${FX_CRC_PER_USD} por US$1`}>
+      <span>{currency === "CRC" ? usd : crc}</span>
       <span className="ghost" aria-hidden="true">
-        {other === "USD" ? crc : usd}
+        {currency === "CRC" ? crc : usd}
       </span>
-    </button>
+    </span>
   );
 }
 
@@ -293,7 +283,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                 </span>
               </span>
               <span className="xs muted price-note">
-                <PriceToggle amountCrc={main.amount} hydrated={hydrated} /> · el precio final lo acuerda con el propietario
+                <PriceReference amountCrc={main.amount} currency={currency} /> · orientativo; el precio final lo acuerda con el propietario
               </span>
             </div>
           ) : null}

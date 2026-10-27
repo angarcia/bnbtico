@@ -94,7 +94,7 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
             Más filtros{extras ? <span className="badge badge-ok badge-tight">{extras}</span> : null}
           </Link>
         </div>
-        <div className="row between wrap small muted">
+        <div className="row between small muted">
           <span data-testid="results-count">
             {listings ? <b className="ink num">{casas(listings.length)}</b> : "Buscando casas…"}
             {listings && f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : ""}

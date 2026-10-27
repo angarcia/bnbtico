@@ -1,7 +1,9 @@
 // Filtros de Explorar, en la URL (prototipo explorar-filtros.js y zona-caribe.js).
 // Zona → Para quiénes → Qué necesitan → Precio. Limón por defecto mientras tenga casas; solo provincias con casas.
 import * as z from "zod/mini";
+import type { Currency } from "./currency";
 import { DEFAULT_PROVINCE, FEATURE_LABEL, PROVINCES, parseColones, type Feature } from "./listing";
+import { FX_CRC_PER_USD } from "./money";
 
 export const PEOPLE_OPTIONS = [0, 2, 4, 6, 8, 12] as const;
 export const BEDS_OPTIONS = [0, 1, 2, 3, 4] as const;
@@ -58,8 +60,10 @@ export function defaultProvince(provinces: readonly string[]): string {
 
 export function parseFilters(params: SearchParams, provinces: readonly string[]): Filters {
   const p = searchSchema.parse(params) as z.infer<typeof searchSchema> & Record<Feature, boolean>;
-  let { min, max } = p;
-  if (min && max && min > max) [min, max] = [max, min];
+  // Un rango imposible (mínimo > máximo) en la URL se trata como sin rango: Filtros no deja aplicarlo (ticket 15).
+  const invalid = priceRangeInvalid(p.min, p.max);
+  const min = invalid ? 0 : p.min;
+  const max = invalid ? 0 : p.max;
   return {
     prov: p.prov === ALL_PROVINCES || provinces.includes(p.prov) ? p.prov : defaultProvince(provinces),
     mode: p.modo,
@@ -70,6 +74,31 @@ export function parseFilters(params: SearchParams, provinces: readonly string[])
     max,
     open: p.mas,
   };
+}
+
+/** Mínimo mayor que el máximo (con los dos límites puestos). */
+export function priceRangeInvalid(min: number, max: number): boolean {
+  return min > 0 && max > 0 && min > max;
+}
+
+/**
+ * Lo escrito en un campo de precio de Filtros, en la moneda elegida, a colones enteros (el dominio y la consulta van en
+ * colones). En dólares se convierte con el tipo de referencia; null si está vacío o no es una cifra válida.
+ */
+export function priceInputToColones(text: string, currency: Currency): number | null {
+  if (currency === "CRC") {
+    const n = parseColones(text);
+    return n === null || Number.isNaN(n) || n < 0 ? null : n;
+  }
+  const raw = text.replace(/[$\s,\u00a0\u202f]/g, "");
+  if (!/^\d+(\.\d+)?$/.test(raw)) return null;
+  return Math.round(Number(raw) * FX_CRC_PER_USD);
+}
+
+/** Un límite en colones tal como se ve en el campo de la moneda elegida ("" sin límite). */
+export function colonesToPriceInput(crc: number, currency: Currency): string {
+  if (!crc) return "";
+  return String(currency === "USD" ? Math.round(crc / FX_CRC_PER_USD) : crc);
 }
 
 /** Solo lo que difiere del valor por defecto, para enlaces limpios. `open` no viaja: lo pone el botón «Más filtros». */

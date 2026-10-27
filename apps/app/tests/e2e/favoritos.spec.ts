@@ -77,9 +77,13 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect(page.locator(".fav-card").first()).toContainText("Playa Negra · 2 pers. · 1 hab.Aire acond. · Wifi");
   await expect(page.locator(".fav-card").first()).toContainText("₡95 000 / noche");
   await expect(page.getByText("Compare y escriba directo")).toBeVisible();
-  await page.getByRole("button", { name: "$ Dólares" }).click();
+  // La moneda se elige en Explorar o Cuenta (ticket 15): Favoritos no tiene selector propio, pero la sigue.
+  await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
+  await page.evaluate(() => localStorage.setItem("bnbtico_currency", "USD"));
+  await page.reload();
   await expect(page.locator(".fav-card").first()).toContainText("$186 / noche");
-  await page.getByRole("button", { name: "₡ Colones" }).click();
+  await page.evaluate(() => localStorage.removeItem("bnbtico_currency"));
+  await page.reload();
 
   await page.locator(".fav-card", { hasText: "Casa Cocles" }).getByRole("button", { name: "Quitar de favoritos" }).click();
   await expect(page.locator(".fav-card h2")).toHaveText(["Casa Playa Negra"]);
