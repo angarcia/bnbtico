@@ -144,7 +144,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B6 | Mi cuenta → «Crear una cuenta»: en «País de su WhatsApp» Costa Rica viene por defecto; abrir la lista (14 países y «Otro país») y volver a Costa Rica; nombre y un número de prueba libre → «Recibir código por WhatsApp» | No llega nada (número de prueba); pantalla «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare. Con Twilio de pago (antes de producción) aquí llegaría el WhatsApp | ☐ |
 | B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno (`123456`) «¡Listo! Su cuenta está creada» con «Añadir correo a mi perfil» y «Ahora no · continuar» | ☐ |
 | B8 | Cerrar la app/pestaña del todo y volver a abrir `nueva.bnbtico.com/cuenta` | Sigue con la sesión (Mi cuenta con su nombre) | ☐ |
-| B9 | «Cerrar sesión» | Vuelve a Ingresar («Su nombre y su WhatsApp. Nada más.») y la barra en modo cliente | ☐ |
+| B9 | «Cerrar sesión» | Vuelve a Ingresar con la barra inferior en modo cliente y «Mi cuenta» activa (la pantalla del código es la única sin barra; actualizado 2026-10-26) | ☐ |
 | B9a | Mi cuenta → «Editar» | «Guardar cambios» está desactivado hasta cambiar algo | ☐ |
 | B9b | Escribir un correo mal formado (`ana@`) → «Guardar cambios» | Aviso rojo «Ese correo no parece válido.» | ☐ |
 | B9c | Corregir el correo (`ana@ejemplo.com`) y una descripción → «Guardar cambios» | Mientras guarda: «Guardando…»; después aviso verde «Cambios guardados.» y el botón queda desactivado como «Guardado». Al volver a escribir, el aviso desaparece | ☐ |

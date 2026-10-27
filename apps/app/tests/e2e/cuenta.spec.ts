@@ -13,7 +13,9 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(page.getByRole("link", { name: "Ingresar" })).toBeVisible();
   await page.getByRole("link", { name: "Mi cuenta", exact: true }).click();
   await expect(entryHeading(page)).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Navegación principal" })).toHaveCount(0);
+  // Ticket 17: Ingresar lleva la barra inferior con «Mi cuenta» activa; la pantalla del código no.
+  const nav = page.getByRole("navigation", { name: "Navegación principal" });
+  await expect(nav.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
 
   await page.getByLabel("Nombre").fill("Ana Prueba");
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
@@ -21,6 +23,7 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
 
   await expect(page).toHaveURL(/\/cuenta\/codigo/);
   await expect(page.getByRole("heading", { name: "Introduzca el código" })).toBeVisible();
+  await expect(nav).toHaveCount(0);
   await expect(page.getByText("+506 8888 9999")).toBeVisible();
   await expect(page.getByText(/Puede pedir otro en/)).toBeVisible();
   // El número pendiente sobrevive a recargar la pestaña.

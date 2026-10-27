@@ -14,7 +14,7 @@ import { CurrencySwitch } from "../currency-switch";
 import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
 import { accountQuery } from "../account";
-import { FlowFrame, FlowHeader, RootHeader, TabsFrame } from "../chrome";
+import { FlowHeader, RootHeader, TabsFrame } from "../chrome";
 import { setRole, useRole } from "../role";
 import { authApi, pendingOtp, useSession } from "../session";
 import { SUPPORT, waLink } from "../support";
@@ -74,11 +74,12 @@ const cuentaRoute = getRouteApi("/cuenta");
 export function CuentaScreen() {
   const { status } = useSession();
   const search = cuentaRoute.useSearch();
+  // Ingresar y Mi cuenta llevan la barra inferior (ticket 17); solo la pantalla del código va sin ella.
   if (status === "signed-out") {
     return (
-      <FlowFrame>
+      <TabsFrame>
         <EntryForm mode={search.modo === "entrar" ? "login" : "register"} next={search.next} />
-      </FlowFrame>
+      </TabsFrame>
     );
   }
   return (

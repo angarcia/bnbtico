@@ -268,8 +268,9 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
   await nav.getByRole("link", { name: "Mi cuenta" }).click();
-  // Sin sesión, Mi cuenta es Ingresar (sin barra inferior); se pinta sin red porque no descarga supabase-js.
+  // Sin sesión, Mi cuenta es Ingresar, con la barra inferior (ticket 17); se pinta sin red porque no descarga supabase-js.
   await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(results(page)).toHaveText("8 casas en Limón");
 });

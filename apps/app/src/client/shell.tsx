@@ -148,7 +148,7 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon("Usuarios") }),
     ]),
   ]),
-  // Mi cuenta con sesión lleva la barra inferior; Ingresar (sin sesión) es una pantalla de flujo: la ruta elige el marco.
+  // /cuenta elige el marco en la pantalla (Ingresar y Mi cuenta, los dos con la barra inferior).
   createRoute({ getParentRoute: () => rootRoute, path: "/cuenta", validateSearch: cuentaSearch, component: cuentaScreen("CuentaScreen") }),
   flow.addChildren([
     createRoute({ getParentRoute: () => flow, path: "/cuenta/codigo", validateSearch: nextSearch, component: cuentaScreen("CodigoScreen") }),

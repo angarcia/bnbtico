@@ -24,8 +24,9 @@ test("el shell muestra la barra inferior y cambia de pestaña sin recargar", asy
   await expect(page).toHaveURL(/\/favoritos$/);
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
   await nav.getByRole("link", { name: "Mi cuenta" }).click();
-  // Sin sesión, Mi cuenta es Ingresar (pantalla de flujo, sin barra inferior).
+  // Sin sesión, Mi cuenta es Ingresar, con la barra inferior y «Mi cuenta» activa (ticket 17).
   await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(nav.getByRole("link", { name: "Explorar" })).toHaveAttribute("aria-current", "page");
   expect(await page.evaluate(() => (window as unknown as { __sinRecargar?: boolean }).__sinRecargar)).toBe(true);

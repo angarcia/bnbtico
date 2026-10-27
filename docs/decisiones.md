@@ -11,6 +11,8 @@ Aprobados por Daniel tras probar `nueva.bnbtico.com`. Tickets en `.scratch/fase-
 
 - **Chips de Explorar en una fila y modalidad no excluyente (ticket 16).** En Explorar quedan Vacacional, Mensual y «Más filtros» (con el contador); Piscina, Mascotas y Frente al mar se van a «Qué necesitan» de Filtros, donde ya estaban. Vacacional y Mensual se marcan a la vez: ninguno o los dos = todas; uno = solo esa. En la URL `modo=nightly|monthly|both` (los enlaces viejos siguen valiendo); el dominio guarda `modes` y la consulta usa `modeFilter`. Filtros gana la sección «Modalidad» con los mismos chips. El precio de Filtros sigue siendo por noche aunque solo esté marcado Mensual (sin cambio; pendiente si hace falta).
 
+- **Barra inferior en Ingresar (ticket 17).** Ingresar (sin sesión) y Mi cuenta llevan la barra con «Mi cuenta» activa; solo la pantalla del código va sin barra. Cambia lo decidido en el ticket 05 (Ingresar como pantalla de flujo según el diseño 06): así se puede salir a Explorar o Favoritos sin buscar la flecha.
+
 - **Prueba de la hoja de cierre:** con el foco en un campo de la fecha, `:focus` de Playwright ya no ve el `input` en el Chrome actual; la prueba mira `document.activeElement` (fallaba antes de estos cambios).
 
 ## 2026-10-23 · Cierre de la fase 4: recorrido de punta a punta, plan manual y pendientes
