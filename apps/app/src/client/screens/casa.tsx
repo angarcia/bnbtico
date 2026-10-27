@@ -12,22 +12,24 @@ const route = getRouteApi("/casa/$publicId");
 
 export function CasaScreen() {
   const { publicId } = route.useParams();
-  const { contacto } = route.useSearch();
+  const { contacto, escribir } = route.useSearch();
   const client = useQueryClient();
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const [seed] = useState(() => listingSeed(client, publicId));
-  const [openContact] = useState(() => shouldReopenContact(contacto, webStore("session"), publicId));
+  const [openSheet] = useState<"return" | "write" | undefined>(() =>
+    shouldReopenContact(contacto, webStore("session"), publicId) ? "return" : escribir === "1" ? "write" : undefined,
+  );
   useEffect(() => {
-    if (contacto) void router.navigate({ to: "/casa/$publicId", params: { publicId }, search: {}, replace: true });
-  }, [contacto, publicId, router]);
+    if (contacto || escribir) void router.navigate({ to: "/casa/$publicId", params: { publicId }, search: {}, replace: true });
+  }, [contacto, escribir, publicId, router]);
   return (
     <ListingScreen
       key={publicId}
       publicId={publicId}
       base={window.location.origin}
       seed={seed}
-      openContact={openContact}
+      openSheet={openSheet}
       onBack={() => (canGoBack ? router.history.back() : router.navigate({ to: "/explorar" }))}
       navigate={(href) => void router.navigate({ href })}
     />

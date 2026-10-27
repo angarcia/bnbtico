@@ -106,6 +106,21 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
 });
 
+// Revisión UX N6: un favorito es intención; «Escribir» abre la ficha con la hoja de contacto (sin enviar nada sola).
+test("«Escribir» en un favorito abre la ficha con la hoja de contacto, y la nota lo dice", async ({ page }) => {
+  await page.goto("/robots.txt");
+  await page.evaluate(([key, id]) => localStorage.setItem(key!, JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }])), [KEY, negra.publicId]);
+  await page.goto("/favoritos");
+  await expect(page.getByText("Escriba directo desde aquí.", { exact: false })).toBeVisible();
+  const wa: string[] = [];
+  await page.route("https://wa.me/**", (r) => (wa.push(r.request().url()), r.abort()));
+  await page.getByRole("link", { name: "Escribir" }).click();
+  await expect(page).toHaveURL(new RegExp(`/casa/${negra.publicId}$`)); // el parámetro se quita
+  await expect(page.getByRole("dialog", { name: /Escríbale a/ })).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(wa).toEqual([]);
+});
+
 test("casas que ya no están publicadas se quitan solas; vacío con «Explorar casas»", async ({ page }) => {
   await page.goto("/robots.txt");
   await page.evaluate(

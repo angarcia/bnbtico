@@ -703,3 +703,5 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 /* La persona que alquila, bajo el nombre de la casa (revisión UX A10). */
 .host-line{align-items:center}
 .avatar-xs{width:28px;height:28px;font-size:11px;flex-shrink:0}
+/* «Escribir» en un favorito, por encima del enlace que cubre la tarjeta (revisión UX N6). */
+.fav-write{position:relative;z-index:1;align-self:flex-start;margin-top:4px}

@@ -137,7 +137,10 @@ const calendarioSearch = (params: Record<string, unknown>): { casa?: string; mes
 });
 
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
-const casaSearch = (params: Record<string, unknown>): { contacto?: "1" } => (params.contacto === "1" ? { contacto: "1" } : {});
+/** `contacto=1`: vuelta de verificar el WhatsApp (la hoja reabre y sigue sola); `escribir=1`: abrir la hoja desde
+ *  Favoritos (revisión UX N6), sin enviar nada. */
+const casaSearch = (params: Record<string, unknown>): { contacto?: "1"; escribir?: "1" } =>
+  params.contacto === "1" ? { contacto: "1" } : params.escribir === "1" ? { escribir: "1" } : {};
 
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/", beforeLoad: () => { throw redirect({ to: "/explorar", replace: true }); } }),

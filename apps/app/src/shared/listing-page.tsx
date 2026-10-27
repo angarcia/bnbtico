@@ -36,11 +36,15 @@ export interface ListingSeed {
 
 /** La ficha a partir de la caché de Query: sembrada por el worker (SSR) o, al abrirla desde una tarjeta, con la fila del
  *  listado (`seed`), que se pinta antes de que responda su propia petición. */
-export function ListingScreen({ publicId, base, seed, onBack, navigate, openContact }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void; navigate?: Navigate; openContact?: boolean }) {
+/** `openSheet`: la hoja de contacto abierta al llegar: «return» al volver de verificar (sigue sola hacia WhatsApp), «write»
+ *  desde Favoritos (espera el toque). */
+export type OpenSheet = "return" | "write";
+
+export function ListingScreen({ publicId, base, seed, onBack, navigate, openSheet }: { publicId: string; base: string; seed?: ListingSeed; onBack?: () => void; navigate?: Navigate; openSheet?: OpenSheet }) {
   const { data } = useQuery({ ...listingQuery(publicId), initialData: seed?.listing, initialDataUpdatedAt: seed?.updatedAt });
   if (data === null) return <BlockedPage />;
   if (!data) return null;
-  return <ListingPage listing={data} base={base} onBack={onBack} navigate={navigate} openContact={openContact} />;
+  return <ListingPage listing={data} base={base} onBack={onBack} navigate={navigate} openSheet={openSheet} />;
 }
 
 /** Ir a otra ruta: el router en la SPA; en la ficha del servidor (sin router), navegación completa. */
@@ -53,10 +57,10 @@ const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactShe
 
 /** El botón de la barra. Mide lo mismo antes y después de hidratar: antes es una caja apagada que aún no responde.
  *  `openOnMount`: la ficha de la SPA al volver de Ingresar con lo escrito (`?contacto=1`). */
-function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: PublicListing; hydrated: boolean; navigate: Navigate; openOnMount?: boolean }) {
+function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: PublicListing; hydrated: boolean; navigate: Navigate; openOnMount?: OpenSheet }) {
   const [open, setOpen] = useState(!!openOnMount);
   // Solo la hoja que reabre al volver de verificar sigue sola hacia WhatsApp; si se cierra, la siguiente espera el toque.
-  const [autoSend, setAutoSend] = useState(!!openOnMount);
+  const [autoSend, setAutoSend] = useState(openOnMount === "return");
   const button = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
   useEffect(() => {
@@ -199,7 +203,7 @@ function useSpacerMatchingBar() {
 
 /** `preview`: el borrador visto desde el asistente (revisión UX C4): sin balizas, sin compartir ni favorito, sin calendario
  *  (aún no es público) y con el botón de contacto a la vista pero apagado. */
-export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation, openContact, preview }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate; openContact?: boolean; preview?: boolean }) {
+export function ListingPage({ listing: l, base, onBack, navigate = fullNavigation, openSheet, preview }: { listing: PublicListing; base: string; onBack?: () => void; navigate?: Navigate; openSheet?: OpenSheet; preview?: boolean }) {
   const hydrated = useHydrated();
   const currency = useCurrency();
   const fx = useFx();
@@ -321,7 +325,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               <I.wa size={22} /> Contactar por WhatsApp
             </span>
           ) : (
-            <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openContact} />
+            <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
         </div>
       </main>

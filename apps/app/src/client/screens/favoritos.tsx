@@ -52,6 +52,14 @@ function FavoriteCard({ listing: l }: { listing: PublicListing }) {
             {formatMoney(price.amount, currency, fx.crcPerUsd)} <span className="muted">/ {price.unit}</span>
           </span>
         ) : null}
+        {/* Un favorito es intención: escribir desde aquí abre la ficha con la hoja de contacto (revisión UX N6). */}
+        {l.available ? (
+          <Link to="/casa/$publicId" params={{ publicId: l.publicId }} search={{ escribir: "1" }} className="btn btn-ghost btn-sm fav-write">
+            Escribir
+          </Link>
+        ) : (
+          <span className="small muted">No disponible por ahora</span>
+        )}
       </div>
     </article>
   );
@@ -131,7 +139,7 @@ export function FavoritosScreen() {
 
       <div className="note note-col">
         <b>Compare y escriba directo</b>
-        <span>Guardar casas no necesita cuenta. Para contactar a un propietario solo tiene que verificar su WhatsApp con un código.</span>
+        <span>Escriba directo desde aquí. Guardar casas no necesita cuenta; para escribir solo verifica su WhatsApp con un código.</span>
       </div>
     </>
   );
