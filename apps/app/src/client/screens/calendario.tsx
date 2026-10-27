@@ -14,6 +14,7 @@ import {
   effectiveDay,
   emptySelection,
   monthTitle,
+  openingMonth,
   selectDay,
   selectionLabel,
   setAvailability,
@@ -155,7 +156,8 @@ function Calendar({ listing: l, userId, month, onMonth }: { listing: Listing; us
   const client = useQueryClient();
   const today = costaRicaToday(Date.now());
   const win = calendarWindow(today);
-  const shown = month && month >= win.firstMonth && month <= win.lastMonth ? month : win.firstMonth;
+  // Sin `?mes`, el mes con que abre: a fin de mes, el siguiente (revisión UX A4).
+  const shown = month && month >= win.firstMonth && month <= win.lastMonth ? month : openingMonth(today);
   const options = calendarQuery(userId, l.id);
   const key = options.queryKey;
   const query = useQuery({ ...options, enabled: !!userId });

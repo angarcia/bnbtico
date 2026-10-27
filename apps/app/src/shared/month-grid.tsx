@@ -53,7 +53,8 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
             const showPrice = s.priceCrc !== null && (prices === "all" || (prices === "special" && s.special));
             const mark = s.special && prices !== "none" ? " ★" : "";
             const off = g.past || g.beyond;
-            const cls = `day${s.available ? "" : " is-busy"}${off ? " is-past" : ""}`;
+            // Un día pasado (o fuera de la ventana) es solo su número: sin ocupado ni precio (revisión UX A4).
+            const cls = off ? "day is-past" : `day${s.available ? "" : " is-busy"}`;
             const name = [
               `${longDate(g.day)} de ${year}`,
               s.available ? "disponible" : "ocupado",
@@ -64,8 +65,8 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
               .join(", ");
             const body = (
               <>
-                <b>{`${g.date}${mark}`}</b>
-                <span className="day-sub">{!s.available ? "ocupado" : showPrice ? compactPrice(s.priceCrc!, currency, fx) : ""}</span>
+                <b>{off ? `${g.date}` : `${g.date}${mark}`}</b>
+                <span className="day-sub">{off ? "" : !s.available ? "ocupado" : showPrice ? compactPrice(s.priceCrc!, currency, fx) : ""}</span>
               </>
             );
             return interactive ? (

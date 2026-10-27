@@ -17,6 +17,7 @@ import {
   monthTitle,
   occupiedNightsIn,
   occupiedNightsLabel,
+  openingMonth,
   reopenIfDue,
   selectDay,
   selectionLabel,
@@ -374,6 +375,16 @@ describe("rejilla del mes (lunes primero, días pasados) y ventana de 12 meses",
     // 00:30 del 1 de diciembre en Costa Rica = 06:30 UTC; a las 05:59 UTC todavía es 30 de noviembre.
     expect(calendarWindow(costaRicaToday(Date.UTC(2026, 11, 1, 6, 30))).first).toBe("2026-12-01");
     expect(calendarWindow(costaRicaToday(Date.UTC(2026, 11, 1, 5, 59))).first).toBe("2026-11-30");
+  });
+  // Revisión UX A4: a fin de mes el calendario abre en el siguiente para no enseñar casi solo días pasados.
+  it("mes con que abre el calendario: el actual si quedan 10 días o más; si no, el siguiente", () => {
+    expect(openingMonth("2026-10-21")).toBe("2026-10"); // quedan 11 días (21–31)
+    expect(openingMonth("2026-10-22")).toBe("2026-10"); // quedan 10
+    expect(openingMonth("2026-10-23")).toBe("2026-11"); // quedan 9
+    expect(openingMonth("2026-10-31")).toBe("2026-11");
+    expect(openingMonth("2026-12-26")).toBe("2027-01"); // cambio de año
+    expect(openingMonth("2028-02-20")).toBe("2028-02"); // febrero bisiesto: 20–29 son 10
+    expect(openingMonth("2027-02-20")).toBe("2027-03"); // 20–28 son 9
   });
   it("títulos de mes", () => {
     expect(monthTitle("2027-01")).toBe("Enero 2027");

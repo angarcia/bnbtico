@@ -3,7 +3,7 @@ import type { CalendarHarness } from "../contract/harness";
 import { serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { addDays, addMonths, monthTitle } from "../../src/domain/calendar";
+import { addDays, addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
 import { longDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
@@ -171,10 +171,14 @@ test("precios mezclados: el campo queda en «Varios precios» y cambiar solo la 
   await expect(day(page, on(21))).toHaveAttribute("aria-pressed", "false");
 });
 
-test("ventana de un año: flechas desactivadas en los extremos, días pasados desactivados y un mes fuera de la ventana vuelve al actual", async ({ page }) => {
+test("ventana de un año: flechas desactivadas en los extremos, días pasados desactivados y un mes fuera de la ventana vuelve al de apertura", async ({ page }) => {
   const casa = await seedHouse("Casa Ventana");
   await open(page, casa.id, "2020-01");
   const now = today().slice(0, 7);
+  // Revisión UX A4: abre en el mes de apertura (a fin de mes, el siguiente) y «‹» lleva al actual.
+  const opening = openingMonth(today());
+  await expect(page.getByText(monthTitle(opening), { exact: true })).toBeVisible();
+  if (opening !== now) await page.getByRole("button", { name: "Mes anterior" }).click();
   await expect(page.getByText(monthTitle(now), { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Mes anterior" })).toBeDisabled();
   const yesterday = addDays(today(), -1);
@@ -289,7 +293,8 @@ test("puntos de entrada: pestaña, Mis casas, detalle y «Marcar las noches ocup
   await page.goto(`/propietario/casas/${sent.id}/enviada`);
   await page.getByRole("link", { name: "Marcar las noches ocupadas" }).click();
   await expect(page.getByRole("button", { name: /Casa Enviada/ })).toBeVisible();
-  // Una casa en revisión también se puede preparar.
+  // Una casa en revisión también se puede preparar (a fin de mes abre en el siguiente: «‹» vuelve a hoy).
+  if (openingMonth(today()) !== today().slice(0, 7)) await page.getByRole("button", { name: "Mes anterior" }).click();
   await expect(day(page, today())).toBeEnabled();
 
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" }).click();

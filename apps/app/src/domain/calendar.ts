@@ -85,6 +85,18 @@ export function monthTitle(month: string): string {
 }
 
 /** Los días que se editan y se muestran: de hoy (Costa Rica) a hoy + 365, y sus meses primero y último. */
+/** Días que deben quedar en el mes (hoy incluido) para abrir el calendario en él; con menos, abre en el siguiente. */
+export const OPENING_MONTH_MIN_DAYS = 10;
+
+/** Mes con que abre un calendario (ficha y propietario, revisión UX A4): a fin de mes, el siguiente, para no enseñar una
+ *  rejilla casi entera de días pasados. «‹» sigue llevando al mes actual. */
+export function openingMonth(today: string): string {
+  const month = today.slice(0, 7);
+  const next = addMonths(month, 1);
+  const daysLeft = (Date.parse(`${next}-01T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000;
+  return daysLeft >= OPENING_MONTH_MIN_DAYS ? month : next;
+}
+
 export function calendarWindow(today: string): { first: string; last: string; firstMonth: string; lastMonth: string } {
   const last = addDays(today, CALENDAR_WINDOW_DAYS);
   return { first: today, last, firstMonth: today.slice(0, 7), lastMonth: last.slice(0, 7) };

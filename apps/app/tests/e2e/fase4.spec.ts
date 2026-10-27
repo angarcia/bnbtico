@@ -6,7 +6,7 @@ import { totp } from "../contract/totp";
 import { serviceClient, sql, TEST_PHONES, totpSecretOf } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { addDays, addMonths, monthTitle } from "../../src/domain/calendar";
+import { addDays, addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
 import { longDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
@@ -39,6 +39,8 @@ let listingId: string | undefined;
 
 const today = () => costaRicaToday(Date.now());
 const next = () => addMonths(today().slice(0, 7), 1);
+// Revisión UX A4: a fin de mes el calendario ya abre en el siguiente.
+const opensOnNext = () => openingMonth(today()) === next();
 const on = (d: number) => `${next()}-${String(d).padStart(2, "0")}`;
 const dayJson = (day: string, available: boolean, price: number | null = null) => `{"day":"${day}","available":${available},"specialPriceCrc":${price}}`;
 const dayName = (iso: string) => new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)},`);
@@ -79,8 +81,8 @@ async function clientCalendar(publicId: string) {
   const { page } = await client(publicId);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const section = page.locator(".listing-calendar");
-  await expect(section.getByRole("grid", { name: monthTitle(today().slice(0, 7)) })).toBeVisible();
-  await section.getByRole("button", { name: "Mes siguiente" }).click();
+  await expect(section.getByRole("grid", { name: monthTitle(openingMonth(today())) })).toBeVisible();
+  if (!opensOnNext()) await section.getByRole("button", { name: "Mes siguiente" }).click();
   await expect(section.getByRole("grid", { name: monthTitle(next()) })).toBeVisible();
   return { page, cell: (iso: string) => section.getByRole("gridcell", { name: dayName(iso) }) };
 }
@@ -125,7 +127,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await owner.getByRole("link", { name: "Marcar las noches ocupadas" }).click();
   await expect(owner).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${draft.id}`));
   await expect(owner.getByRole("button", { name: new RegExp(TITLE) })).toBeVisible();
-  await owner.getByRole("button", { name: "Mes siguiente" }).click();
+  if (!opensOnNext()) await owner.getByRole("button", { name: "Mes siguiente" }).click();
   await expect(owner.getByText(monthTitle(next()), { exact: true })).toBeVisible();
   const day = (iso: string) => owner.getByRole("button", { name: dayName(iso) });
   const panel = owner.getByRole("region", { name: "Días seleccionados" });

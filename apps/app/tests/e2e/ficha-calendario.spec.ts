@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { CalendarHarness, Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
-import { addDays, addMonths, monthTitle } from "../../src/domain/calendar";
+import { addDays, addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
 import { longDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 import { formatUSD } from "../../src/domain/money";
@@ -16,6 +16,11 @@ test.describe.configure({ mode: "serial" });
 
 const today = () => costaRicaToday(Date.now());
 const next = () => addMonths(today().slice(0, 7), 1);
+// Revisión UX A4: a fin de mes el calendario ya abre en el siguiente.
+const opening = () => openingMonth(today());
+const toNextMonth = async (page: Page) => {
+  if (opening() !== next()) await section(page).getByRole("button", { name: "Mes siguiente" }).click();
+};
 const on = (d: number) => `${next()}-${String(d).padStart(2, "0")}`;
 const section = (page: Page) => page.locator(".listing-calendar");
 const grid = (page: Page, month: string) => section(page).getByRole("grid", { name: monthTitle(month) });
@@ -87,13 +92,13 @@ test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base
 
   release();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(section(page).getByRole("grid", { name: monthTitle(today().slice(0, 7)) })).toBeVisible();
+  await expect(section(page).getByRole("grid", { name: monthTitle(opening()) })).toBeVisible();
   expect(scripts.some((s) => s.includes("listing-calendar-"))).toBe(true);
   expect(await boxHeight(page), "la caja mide lo mismo con la rejilla").toBe(before);
   // Nada se sale de la caja.
   expect(await section(page).evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true);
 
-  await section(page).getByRole("button", { name: "Mes siguiente" }).click();
+  await toNextMonth(page);
   await expect(grid(page, next())).toBeVisible();
   await expect(cell(page, on(10))).toHaveAttribute("aria-label", `${longDate(on(10))} de ${on(10).slice(0, 4)}, ocupado`);
   await expect(cell(page, on(10))).toContainText("ocupado");
@@ -121,13 +126,15 @@ test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-test("meses: del actual a doce más; los días pasados se atenúan", async ({ page }) => {
+test("meses: abre en el de apertura, del actual a doce más; los días pasados se atenúan", async ({ page }) => {
   const casa = await seedWithDays("Casa Meses Ficha");
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const prev = section(page).getByRole("button", { name: "Mes anterior" });
   const following = section(page).getByRole("button", { name: "Mes siguiente" });
   const first = today().slice(0, 7);
+  await expect(grid(page, opening())).toBeVisible();
+  if (opening() !== first) await prev.click();
   await expect(grid(page, first)).toBeVisible();
   await expect(prev).toBeDisabled();
   if (today().slice(8) !== "01") await expect(cell(page, addDays(today(), -1))).toHaveClass(/is-past/);
@@ -145,7 +152,7 @@ test("solo mensual: ocupados sin cifras ni línea del precio base", async ({ pag
   const casa = await seedWithDays("Casa Solo Mensual Ficha", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 600000 });
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await section(page).getByRole("button", { name: "Mes siguiente" }).click();
+  await toNextMonth(page);
   await expect(cell(page, on(10))).toContainText("ocupado");
   await expect(cell(page, on(20))).toHaveText("20");
   await expect(section(page).getByText(/Precio base/)).toHaveCount(0);
@@ -177,8 +184,8 @@ test("ficha dentro de la SPA: pide los días una vez y muestra el calendario", a
   await page.goto("/explorar");
   await page.getByRole("link", { name: /Casa Calendario SPA/ }).first().click();
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
-  await expect(section(page).getByRole("grid", { name: monthTitle(today().slice(0, 7)) })).toBeVisible();
-  await section(page).getByRole("button", { name: "Mes siguiente" }).click();
+  await expect(section(page).getByRole("grid", { name: monthTitle(opening()) })).toBeVisible();
+  await toNextMonth(page);
   await expect(cell(page, on(11))).toContainText("ocupado");
   await expect(cell(page, on(20))).toHaveText("20 ★150k");
   expect(days).toHaveLength(1);

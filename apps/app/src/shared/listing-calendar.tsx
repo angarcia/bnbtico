@@ -2,7 +2,7 @@
 // que trajo el worker (ssr-data) o la consulta pública de la SPA. Cifra solo en los días ★, en la moneda de la página.
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { addMonths, calendarWindow, monthTitle } from "../domain/calendar";
+import { addMonths, calendarWindow, monthTitle, openingMonth } from "../domain/calendar";
 import type { Currency } from "../domain/currency";
 import type { PublicListing } from "../domain/listing";
 import { formatMoney } from "../domain/money";
@@ -18,7 +18,8 @@ const costaRicaToday = (nowMs: number) => new Date(nowMs - 6 * 3_600_000).toISOS
 export function ListingCalendar({ listing: l, currency, fx }: { listing: PublicListing; currency: Currency; fx: number }) {
   const today = costaRicaToday(Date.now());
   const win = calendarWindow(today);
-  const [month, setMonth] = useState(win.firstMonth);
+  // A fin de mes abre en el siguiente (revisión UX A4); «‹» vuelve al actual.
+  const [month, setMonth] = useState(() => openingMonth(today));
   const { data: days } = useQuery(listingDaysQuery(l.publicId));
   const base = l.acceptsNightly ? l.nightlyPriceCrc : null;
   const title = monthTitle(month);

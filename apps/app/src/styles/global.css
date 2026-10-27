@@ -590,7 +590,8 @@ small.swap-in{display:block}
 .month-grid .day.is-busy{background:var(--busy);color:var(--busy-ink)}
 .month-grid .day.is-busy .day-sub{color:var(--busy-ink)}
 .month-grid .day[aria-pressed="true"]{border-color:var(--brand-ink)}
-.month-grid .day.is-past{opacity:.4}
+/* Días pasados: solo el número en gris tenue, sin fondo ni precio (revisión UX A4). */
+.month-grid .day.is-past{background:none;color:var(--muted);opacity:.55}
 .month-grid button.day:disabled{cursor:default}
 .month-grid button.day:active:not(:disabled){transform:scale(0.94)}
 .month-grid.is-dimmed{opacity:.6}
