@@ -154,7 +154,8 @@ describe("validateStep", () => {
 
   it("paso 7: 4 fotos falla, 5 pasa, 16 falla", () => {
     const d = validDraft();
-    expect(validateStep(7, { ...d, photoCount: 4 })).toBe("Agregue al menos 5 fotos.");
+    // Revisión UX C4: con menos de 5 se puede seguir; el mínimo lo exige validateAll (al enviar).
+    expect(validateStep(7, { ...d, photoCount: 4 })).toBeNull();
     expect(validateStep(7, { ...d, photoCount: 5 })).toBeNull();
     expect(validateStep(7, { ...d, photoCount: 16 })).toBe("Máximo 15 fotos.");
   });
@@ -270,7 +271,7 @@ describe("planStep (guardar una pantalla)", () => {
   });
 
   it("paso 7: el número de fotos es el del borrador (servidor), nunca el del parche", () => {
-    expect(planStep({ ...validDraft(), photoCount: 4 }, 7, { photoCount: 9 })).toEqual({ error: "Agregue al menos 5 fotos." });
+    expect(planStep({ ...validDraft(), photoCount: 4 }, 7, { photoCount: 9 })).toEqual({ changes: {}, next: expect.objectContaining({ photoCount: 4 }) });
     expect(planStep({ ...validDraft(), photoCount: 5 }, 7, { photoCount: 0 })).toEqual({ changes: {}, next: expect.objectContaining({ photoCount: 5 }) });
   });
 });

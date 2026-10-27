@@ -77,7 +77,8 @@ const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Par
     ],
     valid: { title: "Cabina Cahuita", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." },
   },
-  { step: 7, invalid: [[{ photoCount: 12 }, "Agregue al menos 5 fotos."]], valid: {} },
+  // Revisión UX C4: el paso 7 deja seguir con menos de 5 fotos; el mínimo se exige al enviar (submit).
+  { step: 7, invalid: [], valid: {} },
   {
     step: 8,
     invalid: [
@@ -234,9 +235,9 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         expect((await rejection(me.saveStep(review.id, 6, { title: "Otro nombre", description: TEXT }, known))).message).toBe(NOT_FOUND);
       });
 
-      it("el paso 7 cuenta las fotos del servidor, nunca un número del formulario", async () => {
+      it("el paso 7 cuenta las fotos del servidor, nunca un número del formulario, y deja seguir con menos de 5", async () => {
         const four = await h.seed({ status: "draft", photos: 4 });
-        expect((await rejection(me.saveStep(four.id, 7, { photoCount: 9 }))).message).toBe("Agregue al menos 5 fotos.");
+        expect((await me.saveStep(four.id, 7, { photoCount: 9 })).photoCount).toBe(4);
         await h.addPhotos(four.id, 1);
         expect((await me.saveStep(four.id, 7, { photoCount: 0 })).photoCount).toBe(5);
       });

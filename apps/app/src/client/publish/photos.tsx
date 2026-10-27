@@ -21,6 +21,9 @@ const queueFor = (id: string) => {
   return q;
 };
 
+/** «Faltan 3 fotos» / «Falta 1 foto». */
+export const missingLabel = (n: number) => (n === 1 ? "Falta 1 foto" : `Faltan ${n} fotos`);
+
 const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "No pudimos cambiar las fotos. Intente de nuevo.");
 
@@ -69,10 +72,12 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
     <div className="stack grow-col gap-12">
       <div className="row between baseline">
         <h2>Fotos</h2>
-        <span className="small primary num photos-count" role="status">
+        <span className={`small num photos-count${photos.length < MIN_PHOTOS ? " is-short" : " primary"}`} role="status">
           {photos.length} de {MIN_PHOTOS}–{MAX_PHOTOS}
         </span>
       </div>
+      {/* Con menos de 5 se puede seguir: el mínimo se pide al enviar (revisión UX C4). */}
+      {photos.length < MIN_PHOTOS ? <span className="small photos-missing">{missingLabel(MIN_PHOTOS - photos.length)} · puede añadirlas al final</span> : null}
       <div className="photos-scroll">
         <div className="photos-grid" aria-busy={busy || uploads.length > 0}>
           {photos.map((p, i) => (
@@ -129,7 +134,6 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
           {errors.join(" ")}
         </p>
       ) : null}
-      {photos.length < MIN_PHOTOS ? <span className="small strong">Añada al menos {MIN_PHOTOS} fotos.</span> : null}
     </div>
   );
 }

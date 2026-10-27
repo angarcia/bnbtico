@@ -176,18 +176,13 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
 
-  // 7 Fotos: el recuento sale de la base; con 4 no deja seguir, con 5 sí. La rejilla hace scroll por dentro, la página no.
+  // 7 Fotos: el recuento sale de la base; con 4 deja seguir y avisa de lo que falta (revisión UX C4): el mínimo de 5 se
+  // pide al enviar. La rejilla hace scroll por dentro, la página no.
   await expect(page.getByRole("status")).toHaveText("0 de 5–15");
   await h.addPhotos(id, 4);
   await page.reload();
   await expect(page.getByRole("status")).toHaveText("4 de 5–15");
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Agregue al menos 5 fotos.");
-  await h.addPhotos(id, 1);
-  await page.reload();
-  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
-  await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
-  await expectNoScroll(page, "paso 7 con 5 fotos");
+  await expect(page.getByText("Falta 1 foto · puede añadirlas al final")).toBeVisible();
   await continuar(page);
   await expect(page).toHaveURL(/\/8$/);
   await expectNoScroll(page, "paso 8");
@@ -203,6 +198,20 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.getByLabel("Por mes").press("Enter");
   await expect(page).toHaveURL(/\/9$/);
   await expectNoScroll(page, "paso 9");
+
+  // 9 Enviar con 4 fotos: vuelve al paso 7 con el aviso; con la quinta, se envía.
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page).toHaveURL(/\/7$/);
+  await expect(alert(page)).toHaveText("Agregue al menos 5 fotos.");
+  await h.addPhotos(id, 1);
+  await page.reload();
+  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+  await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
+  await expectNoScroll(page, "paso 7 con 5 fotos");
+  await continuar(page);
+  await expect(page).toHaveURL(/\/8$/);
+  await continuar(page);
+  await expect(page).toHaveURL(/\/9$/);
 
   // 9 Enviar: WhatsApp de la cuenta (solo lectura) y la oferta; relee el borrador, valida todo y envía.
   await expect(page.getByText("+506 8777 0001")).toBeVisible();

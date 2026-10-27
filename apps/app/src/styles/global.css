@@ -672,3 +672,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .people-stepper .minus{border:1.5px solid var(--line);background:var(--surface);color:var(--primary)}
 .people-stepper .plus{background:var(--primary);color:var(--primary-on)}
 .people-stepper button:disabled{opacity:.4}
+/* Paso 7 con menos de 5 fotos: aviso en ocre, sin bloquear (revisión UX C4). */
+.photos-count.is-short{color:var(--sun-ink);font-weight:700}
+.photos-missing{color:var(--sun-ink);font-weight:600}

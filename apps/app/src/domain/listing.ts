@@ -204,7 +204,7 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       if (!between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX)) return DESCRIPTION_LENGTH_ERROR;
       return null;
     case 7:
-      if (d.photoCount < MIN_PHOTOS) return `Agregue al menos ${MIN_PHOTOS} fotos.`;
+      // Con menos de 5 fotos se puede seguir (revisión UX C4): el mínimo se exige al enviar (validateAll y submit_listing).
       if (d.photoCount > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
       return null;
     case 8:
@@ -216,9 +216,13 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
   }
 }
 
+/** Mensaje del mínimo de fotos, que se exige al enviar a revisión (no para pasar del paso 7). */
+export const photosMissing = (count: number) => (count < MIN_PHOTOS ? `Agregue al menos ${MIN_PHOTOS} fotos.` : null);
+
+/** Todo lo necesario para enviar a revisión, en el orden de las pantallas (incluido el mínimo de fotos en el paso 7). */
 export function validateAll(d: ListingDraft): { step: Step; error: string } | null {
   for (const step of STEPS) {
-    const error = validateStep(step, d);
+    const error = validateStep(step, d) ?? (step === 7 ? photosMissing(d.photoCount) : null);
     if (error) return { step, error };
   }
   return null;

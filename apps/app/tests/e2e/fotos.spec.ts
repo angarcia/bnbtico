@@ -43,7 +43,8 @@ test("subir seis fotos con progreso, hacer portada, quitar una y seguir", async 
   });
   await page.goto(`/propietario/publicar/${id}/7`);
   await expect(page.getByRole("status")).toHaveText("0 de 5–15");
-  await expect(page.getByText("Añada al menos 5 fotos.")).toBeVisible();
+  // Revisión UX C4: con menos de 5 se puede seguir; el aviso dice cuántas faltan.
+  await expect(page.getByText("Faltan 5 fotos · puede añadirlas al final")).toBeVisible();
 
   await pick(page).setInputFiles(SEIS);
   await expect(page.getByRole("progressbar", { name: "Subiendo hero.jpg" })).toBeVisible();
