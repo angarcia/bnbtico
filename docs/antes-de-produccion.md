@@ -3,6 +3,11 @@
 Lista de cosas decididas que **no** se hacen todavía en pruebas, pero deben estar hechas antes del lanzamiento. Se revisa al cortar (ticket 13 de la fase R y lanzamiento de la v1). La más reciente arriba.
 
 
+## Números de WhatsApp de bnbtico (2026-10-26, revisión UX A12 y C1)
+
+1. **`WA_OWNERS` y `WA_GUESTS` en GitHub (variables o secretos) con los números reales de atención**, en E.164. Ayuda es el único canal de bnbtico: sin ellos su botón sale desactivado («Número pendiente de configurar»). El build de producción **falla** si `LAUNCHED` es `"true"` en `wrangler.jsonc` y falta alguno; mientras no se lance, solo deja un aviso en el log de GitHub Actions. Conseguirlos: chip prepago +506 con la app gratuita WhatsApp Business (uno para propietarios y otro para clientes).
+2. **Botón de propietarios de la portada.** «Quiero publicar mi casa gratis» aparece solo cuando `WA_OWNERS` está configurado (revisión UX C1). Al poner el número, comprobar en bnbtico.com que sale y que abre WhatsApp con el mensaje redactado.
+
 ## Para más adelante (no bloquea el lanzamiento) (2026-10-26)
 
 - **Google Maps.** Decisión de Daniel: de momento seguimos con OpenStreetMap (gratis, sin terceros, compatible con la CSP estricta). Opciones para el futuro: (1) botón «Abrir en Google Maps» que abre la app del teléfono (sin clave ni coste; en la ficha pública solo con la zona aproximada, nunca la dirección exacta); (2) mapa de Google dentro de la app: necesita una clave con facturación (tarjeta) aunque el uso gratuito mensual cubra el arranque, y abrir la CSP a sus scripts.

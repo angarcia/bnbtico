@@ -1,8 +1,10 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { appendFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import ts from "typescript";
 import { build, defineConfig, loadEnv, type Plugin } from "vite";
+import { launchedFor, supportNumbersCheck } from "./src/domain/support";
 import { staticHeadersBlock } from "./src/shared/security";
 import { precacheList } from "./src/sw/routes";
 
@@ -71,8 +73,30 @@ function securityHeadersFile(): Plugin {
   };
 }
 
+/**
+ * Números de WhatsApp de Ayuda (revisión UX A12): con LAUNCHED "true" en el entorno de wrangler que se construye
+ * (`CLOUDFLARE_ENV`) el build falla sin ellos; si no, en CI deja un aviso visible en el log de GitHub Actions.
+ */
+function supportNumbers(): Plugin {
+  return {
+    name: "bnbtico:support-numbers",
+    apply: "build",
+    applyToEnvironment: (env) => env.name === "client",
+    configResolved(config) {
+      // El hook corre una vez por build anidado (cliente, worker, service worker): basta con mirar una.
+      if (process.env.BNBTICO_SUPPORT_CHECKED) return;
+      process.env.BNBTICO_SUPPORT_CHECKED = "1";
+      const env = { ...loadEnv(config.mode, root, "VITE_"), ...process.env };
+      const wrangler = ts.parseConfigFileTextToJson("wrangler.jsonc", readFileSync(join(root, "wrangler.jsonc"), "utf8")).config;
+      const check = supportNumbersCheck({ launched: launchedFor(wrangler, process.env.CLOUDFLARE_ENV), owners: env.VITE_WA_OWNERS, guests: env.VITE_WA_GUESTS });
+      if (check?.level === "error") throw new Error(check.message);
+      if (check && process.env.CI) console.warn(`::warning::${check.message}`);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile()],
+  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers()],
   define: { __BUILD_ID__: JSON.stringify(buildId) },
   // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).
   preview: { allowedHosts: ["host.docker.internal"] },
