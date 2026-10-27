@@ -310,9 +310,56 @@ describe("worker · enlaces que no se muestran", () => {
       expect(res.status).toBe(410);
       const html = await res.text();
       expect(html).toContain("Este enlace ya no está activo");
-      expect(ssrData(html)).toEqual({ page: "blocked" });
+      expect(ssrData(html)).toEqual({ page: "blocked", reason: "other" });
+      expect(html).toContain("Este anuncio no está disponible en este momento.");
       expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
     }
+  });
+
+  it("el 410 dice el motivo: parada por el propietario o fuera del catálogo por la suscripción", async () => {
+    const t = setup();
+    const stopped = await t.h.seed({ status: "active" });
+    await t.h.billing("owner").stop(stopped.id);
+    const unpaid = await t.h.seed({ status: "active" });
+    await t.h.setDaysLeft(unpaid.id, -1);
+    await t.h.service.runDay();
+    const reason = vi.spyOn(t.h.anon, "blockedReason");
+
+    const a = await t.request(`/casa/${stopped.publicId}`);
+    expect(a.status).toBe(410);
+    const ha = await a.text();
+    expect(ssrData(ha)).toEqual({ page: "blocked", reason: "stopped" });
+    expect(ha).toContain("El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(ha).toContain("Si ya habló con el propietario por WhatsApp");
+    expect(ha).not.toContain("Contactar por WhatsApp");
+
+    const b = await t.request(`/casa/${unpaid.publicId}`);
+    expect(b.status).toBe(410);
+    const hb = await b.text();
+    expect(ssrData(hb)).toEqual({ page: "blocked", reason: "payment" });
+    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.");
+    expect(b.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+    expect(reason).toHaveBeenCalledTimes(2);
+  });
+
+  it("el motivo solo se pide en el camino bloqueado y, si falla (base sin la migración), sale el 410 de siempre", async () => {
+    const t = setup();
+    const reason = vi.spyOn(t.h.anon, "blockedReason");
+    const active = await t.h.seed({ status: "active" });
+    expect((await t.request(`/casa/${active.publicId}`)).status).toBe(200);
+    const missing = await t.request("/casa/CT-9999");
+    expect(missing.status).toBe(404);
+    expect(reason).not.toHaveBeenCalled();
+
+    const stopped = await t.h.seed({ status: "active" });
+    await t.h.billing("owner").stop(stopped.id);
+    reason.mockRejectedValueOnce(new Error("Could not find the function public.listing_blocked_reason"));
+    const res = await t.request(`/casa/${stopped.publicId}`);
+    expect(res.status).toBe(410);
+    const html = await res.text();
+    expect(ssrData(html)).toEqual({ page: "blocked", reason: "other" });
+    expect(html).toContain("Este anuncio no está disponible en este momento.");
+    expect(html).not.toContain("paró la suscripción");
   });
 
   it("si la base falla, 503 sin guardar en caché", async () => {

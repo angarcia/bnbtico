@@ -21,6 +21,7 @@
       "!dist/client/assets/consultas-*.js",
       "!dist/client/assets/owner-*.js",
       "!dist/client/assets/can-*.js",
+      "!dist/client/assets/subscription-*.js",
       "!dist/client/assets/image-*.js",
       "!dist/client/assets/useMutation-*.js",
       "!dist/client/assets/calendario-*.js",
@@ -41,7 +42,7 @@
     "gzip": true
   },
   {
-    "name": "Pantallas de las pestañas · trozos diferidos (cuenta, propietario, consultas, favoritos; se precargan al apuntar o tocar la pestaña y en reposo)",
+    "name": "Pantallas de las pestañas · trozos diferidos (cuenta, propietario, consultas, favoritos, y las reglas de la suscripción que comparten con supabase-data; se precargan al apuntar o tocar la pestaña y en reposo)",
     "path": [
       "dist/client/assets/cuenta-*.js",
       "dist/client/assets/propietario-*.js",
@@ -49,10 +50,11 @@
       "dist/client/assets/consultas-*.js",
       "dist/client/assets/owner-*.js",
       "dist/client/assets/can-*.js",
+      "dist/client/assets/subscription-*.js",
       "dist/client/assets/image-*.js",
       "dist/client/assets/useMutation-*.js"
     ],
-    "limit": "22 KB",
+    "limit": "24.5 KB",
     "gzip": true
   },
   {

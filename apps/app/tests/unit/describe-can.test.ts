@@ -83,16 +83,16 @@ group("describe · precios", () => {
 
 group("describe · situación y etiqueta por estado", () => {
   it.each<[string, Partial<Listing>, string, string]>([
-    ["activa", { status: "active" }, "Activa", "Gratis 12 meses · oferta de lanzamiento"],
-    ["activa no disponible", { status: "active", available: false }, "Pausado", "Gratis 12 meses · oferta de lanzamiento"],
+    ["activa", { status: "active" }, "Activa", "Visible en Explorar y con su enlace"],
+    ["activa no disponible", { status: "active", available: false }, "Pausado", "Pausado: no aparece en Explorar"],
     ["en revisión desde ayer", { status: "review", updatedAt: "2026-10-21T10:00:00Z" }, "En revisión", "Enviada ayer. Le avisamos por WhatsApp."],
     ["en revisión desde hoy", { status: "review", updatedAt: "2026-10-22T09:00:00Z" }, "En revisión", "Enviada hoy. Le avisamos por WhatsApp."],
     ["cambios pedidos", { status: "changes" }, "Cambios pedidos", "Le pedimos cambios. Corríjalos y reenvíe."],
     ["rechazada", { status: "rejected" }, "Rechazada", "Rechazada. Si quiere, publique una nueva."],
     ["borrador nunca enviado", { status: "draft", reviewedAt: null }, "Borrador", "Borrador sin enviar."],
     ["borrador que estuvo publicada", { status: "draft" }, "Borrador", "Estuvo publicada: al enviarla volverá a revisión."],
-    ["pendiente de pago", { status: "payment_due" }, "Pendiente de pago", "Aprobada. Falta el método de pago para publicarla."],
-    ["inactiva", { status: "inactive" }, "Inactiva", "Inactiva: no aparece en Explorar."],
+    ["pendiente de pago", { status: "payment_due" }, "Pendiente de pago", "La ficha vuelve a verse al pagar."],
+    ["inactiva", { status: "inactive" }, "Inactiva", "Parada · no aparece en Explorar"],
   ])("%s", (_, over, label, situation) => {
     const d = describe(owned(over), { base: BASE, now: NOW });
     expect(d.statusLabel).toBe(label);

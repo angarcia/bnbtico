@@ -16,7 +16,7 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
-import { activeCountQuery } from "../owner";
+import { offerTakenQuery } from "../owner";
 import { LocationPicker } from "./location-picker";
 import { PhotoUploader } from "./photos";
 
@@ -212,7 +212,7 @@ function PlaceFields({ listingId, province: initialProvince, canton: initialCant
 /** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5): lo escrito en cinco filas que llevan a su pantalla, lo que falta
  *  (las fotos), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin scroll en un teléfono pequeño. */
 function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing: Listing; userId: string }) {
-  const count = useQuery(activeCountQuery);
+  const count = useQuery(offerTakenQuery);
   const account = useQuery({ ...accountQuery(userId), enabled: !!userId });
   const [preview, setPreview] = useState(false);
   const offer = count.data === undefined ? undefined : launchOffer(count.data);

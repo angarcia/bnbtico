@@ -59,10 +59,14 @@ export const ownListingQuery = (userId: string, id: string, client: QueryClient)
   });
 };
 
-/** Casas activas de todo el catálogo: plazas ocupadas de la oferta de lanzamiento (lectura pública). */
-export const activeCountQuery = queryOptions({
-  queryKey: ["active-count"] as const,
-  queryFn: async () => (await import("./supabase-data")).publicListings().countActive(),
+/** Plazas asignadas de la oferta de lanzamiento (lectura pública, launch_offer_taken). Si la RPC falla (un despliegue
+ *  antes de la migración de la fase 5, un error pasajero), las casas activas, como antes. */
+export const offerTakenQuery = queryOptions({
+  queryKey: ["offer-taken"] as const,
+  queryFn: async () => {
+    const listings = (await import("./supabase-data")).publicListings();
+    return listings.offerTaken().catch(() => listings.countActive());
+  },
   staleTime: 5 * 60_000,
 });
 
@@ -89,7 +93,8 @@ export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "i
   void client.invalidateQueries({ queryKey: ["own-listing", userId, l.id] });
   void client.invalidateQueries({ queryKey: ["listing", l.publicId] });
   void client.invalidateQueries({ queryKey: ["listings"] });
-  void client.invalidateQueries({ queryKey: ["active-count"] });
+  void client.invalidateQueries({ queryKey: ["offer-taken"] });
+  void client.invalidateQueries({ queryKey: ["billing", userId] });
 }
 
 /** Abrir (borra la fecha de reapertura) o cerrar a consultas con una fecha opcional. */

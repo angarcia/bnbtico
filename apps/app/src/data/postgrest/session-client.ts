@@ -6,6 +6,7 @@ import type { Database } from "../../domain/database.types";
 import { SESSION_STORAGE_KEY, type KeyValueStore, type SessionStorageAdapter } from "../storage";
 import { createPostgrestAdmin } from "./admin";
 import { createPostgrestAuth, type OtpChannel } from "./auth";
+import { createPostgrestOwnerBilling } from "./billing";
 import { createPostgrestCalendar } from "./calendar";
 import { createPostgrestFavorites, createPostgrestInquiries } from "./inquiries";
 import { keepaliveFetch } from "./keepalive-fetch";
@@ -69,5 +70,6 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     inquiries: createPostgrestInquiries(db),
     favorites: createPostgrestFavorites(db),
     calendar: createPostgrestCalendar(db),
+    billing: createPostgrestOwnerBilling(db),
   };
 }

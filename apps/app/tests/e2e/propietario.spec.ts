@@ -35,6 +35,7 @@ test.beforeEach(async ({ page }) => {
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
 test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red, desde la caché", async ({ page }) => {
+  const left = `Quedan ${50 - (await h.anon.offerTaken())} de 50`; // plazas asignadas (fase 5), no casas activas
   await page.goto("/propietario");
   await expect(page.getByRole("heading", { level: 1, name: "Su casa, en marcha" })).toBeVisible();
   await expect(page.getByText("Hola, Yorleny")).toBeVisible();
@@ -42,7 +43,7 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await expect(page.getByRole("link", { name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
   await expect(page.getByText(`${HOST}/casa/${active.publicId}`)).toBeVisible();
-  await expect(page.getByTestId("offer-left")).toHaveText("Quedan 48 de 50");
+  await expect(page.getByTestId("offer-left")).toHaveText(left);
   await expect(page.getByText("5 en total")).toBeVisible();
   // Revisión UX A2: sin visitas ni consultas, la invitación a compartir; con ellas, las cifras de 30 días.
   await expect(page.getByTestId("listing-stats")).toHaveText("Comparta su enlace para que lleguen las primeras visitas");
@@ -76,7 +77,7 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await expect(page.getByRole("article")).toHaveCount(5);
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Inicio" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Su casa, en marcha" })).toBeVisible();
-  await expect(page.getByTestId("offer-left")).toHaveText("Quedan 48 de 50");
+  await expect(page.getByTestId("offer-left")).toHaveText(left);
 });
 
 test("visitas y consultas de 30 días en Inicio y en el detalle de la casa", async ({ page }) => {
