@@ -119,12 +119,13 @@ export function FlowHeader({ title, back, search, action }: { title: string; bac
 }
 
 /** Pantalla que llega en otro ticket: cabecera raíz y una tarjeta con lo que vendrá. */
-export function Placeholder({ title, text, home }: { title: string; text: string; home?: string }) {
+export function Placeholder({ title, text, home, action }: { title: string; text: string; home?: string; action?: ReactNode }) {
   return (
     <>
       <RootHeader title={title} home={home} />
       <section className="card stack">
         <p>{text}</p>
+        {action}
       </section>
     </>
   );

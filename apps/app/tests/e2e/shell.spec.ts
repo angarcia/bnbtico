@@ -37,4 +37,7 @@ test("una ruta desconocida muestra el shell con su aviso", async ({ page }) => {
   await page.goto("/no-existe");
   await expect(page.getByRole("heading", { level: 1, name: "No encontramos esta página" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Navegación principal" })).toBeVisible();
+  // Revisión UX N4: la página no es un callejón sin salida.
+  await page.getByRole("link", { name: "Ir a Explorar" }).click();
+  await expect(page).toHaveURL(/\/explorar$/);
 });

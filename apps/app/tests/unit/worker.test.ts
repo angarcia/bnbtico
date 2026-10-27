@@ -282,6 +282,7 @@ describe("worker · enlaces que no se muestran", () => {
     const html = await res.text();
     expect(html).toContain("Este enlace no existe");
     expect(html).toContain('<meta name="robots" content="noindex" />');
+    expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
     expect(ssrData(html)).toEqual({ page: "missing" });
   });
 
@@ -307,6 +308,7 @@ describe("worker · enlaces que no se muestran", () => {
       const html = await res.text();
       expect(html).toContain("Este enlace ya no está activo");
       expect(ssrData(html)).toEqual({ page: "blocked" });
+      expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
     }
   });
 
@@ -316,7 +318,11 @@ describe("worker · enlaces que no se muestran", () => {
     t.spy.getPublic.mockRejectedValueOnce(new Error("caída"));
     const res = await t.request(`/casa/${casa.publicId}`);
     expect(res.status).toBe(503);
-    expect(await res.text()).toContain("No pudimos cargar esta casa");
+    const html = await res.text();
+    expect(html).toContain("No pudimos cargar esta casa");
+    // Revisión UX N4: reintentar (enlace a la misma página) y, en contorno, ir a Explorar.
+    expect(html).toMatch(/<a href="" class="btn btn-primary">Intentar de nuevo<\/a>/);
+    expect(html).toMatch(/<a href="\/explorar" class="btn btn-ghost">Ir a Explorar<\/a>/);
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(t.cache.store.size).toBe(0);
   });

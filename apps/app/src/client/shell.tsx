@@ -2,7 +2,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
+import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
 import { track } from "../shared/beacon";
 import { PRIVATE_KEYS } from "./account";
@@ -49,7 +49,15 @@ const rootRoute = createRootRoute({
   ),
   notFoundComponent: () => (
     <TabsFrame>
-      <Placeholder title="No encontramos esta página" text="Revise el enlace o vuelva a Explorar desde la barra de abajo." />
+      <Placeholder
+        title="No encontramos esta página"
+        text="Revise el enlace o vuelva a Explorar."
+        action={
+          <Link to="/explorar" className="btn btn-primary">
+            Ir a Explorar
+          </Link>
+        }
+      />
     </TabsFrame>
   ),
 });
