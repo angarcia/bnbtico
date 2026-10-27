@@ -1,3 +1,14 @@
+## 2026-10-27 · Fase 5, ticket 03: envío de los avisos desde el worker
+
+Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spec.md`).
+
+- **Cron cada hora** (`17 * * * *`) en los tres entornos, con el mismo número de triggers: lo diario (keep-alive, recorte, tipo de cambio) solo en la ejecución de las 09 UTC; los avisos solo de 08:00 a 17:59 de Costa Rica. Un lote = 1 `claim_reminders` + ≤ 20 envíos + 1 `finish_reminders`.
+- **Remitente apagado salvo que esté todo:** sin `WHATSAPP_SENDER`, sin los secretos de Twilio o, en pruebas, sin `WHATSAPP_ALLOWLIST`, el worker no reclama nada y los avisos esperan en cola (no se queman como «omitidos»). En producción, apagado en esta fase aunque haya secretos. Los números fuera de la lista se omiten (definitivo).
+- **Twilio:** HTTP 4xx/5xx = rechazo seguro (vuelve a la cola, hasta 5 intentos); error de red o sin respuesta en 10 s = dudoso (`unknown`, nunca se reintenta). Si falla `finish_reminders`, las filas se quedan en «sending» y no se reenvían (para una alerta).
+- **Base del enlace:** bnbtico.com en producción; en pruebas la variable `PUBLIC_ORIGIN` (`https://nueva.bnbtico.com`, pasa a `pruebas.bnbtico.com` el día del corte) porque el cron no tiene petición; la ruta del reloj usa `PUBLIC_ORIGIN` o el origen de la petición.
+- **Reloj de pruebas** `POST /_pruebas/oferta/CT-####`: 404 en producción o sin `TEST_CLOCK_SECRET`, 401 con otro secreto, 409 con el mensaje de la base si falta el secreto de Vault. El deploy desde `main` nunca sube `TEST_CLOCK_SECRET`.
+- `WhatsAppSender` vive en `src/domain/whatsapp-sender.ts` (`whatsapp.ts` ya era el de los enlaces `wa.me`).
+
 ## 2026-10-27 · Fase 5, ticket 02: suscripción en la base
 
 Decisiones de implementación dentro de la especificación aprobada (`.scratch/fase-5/spec.md`, ya ajustada).

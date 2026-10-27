@@ -45,7 +45,7 @@ Cloudflare → Zero Trust → Access → Applications:
 
 Un dominio personalizado de Workers no se crea si ya existe un registro DNS con ese nombre: hay unos minutos sin servicio en `pruebas` (aceptable: es el entorno de pruebas).
 
-1. En `apps/app/wrangler.jsonc`, entorno `pruebas`: `"routes": [{ "pattern": "nueva.bnbtico.com", "custom_domain": true }, { "pattern": "pruebas.bnbtico.com", "custom_domain": true }]` (los dos a la vez durante la transición). Commit en `develop` sin empujar todavía.
+1. En `apps/app/wrangler.jsonc`, entorno `pruebas`: `"routes": [{ "pattern": "nueva.bnbtico.com", "custom_domain": true }, { "pattern": "pruebas.bnbtico.com", "custom_domain": true }]` (los dos a la vez durante la transición), y en sus `vars` `"PUBLIC_ORIGIN": "https://pruebas.bnbtico.com"` (base del enlace de los avisos por WhatsApp; fase 5). Commit en `develop` sin empujar todavía.
 2. Cloudflare → DNS: borrar el CNAME `pruebas` → `cname.vercel-dns.com`.
 3. `git push origin develop`. El despliegue crea el dominio personalizado (registro y certificado) para `pruebas.bnbtico.com`.
 4. Comprobar desde el teléfono: `https://pruebas.bnbtico.com/` pide el PIN de Access y abre Explorar; `/casa/CT-1015` sin PIN; `curl -I https://pruebas.bnbtico.com/` → 200 tras Access (o 302 a Access sin sesión); `/?pronto=1` muestra la portada; `robots.txt` → `Disallow: /`.

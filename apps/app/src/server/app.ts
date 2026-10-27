@@ -9,8 +9,10 @@ import { parsePublicId, publicPath, publicUrl } from "../domain/share";
 import type { SsrData } from "../shared/ssr-data";
 import { escapeHtml, heroLinkHeader, renderDocument } from "./render";
 import { securityHeaders } from "../shared/security";
+import type { ReminderEnv, ReminderRuntime } from "./reminders";
+import { testClock } from "./test-clock";
 
-export type Env = {
+export type Env = ReminderEnv & {
   ENVIRONMENT: Environment;
   /** Solo producción: "true" abre la app entera; cualquier otro valor (o nada) sirve solo la portada. */
   LAUNCHED?: string;
@@ -39,6 +41,8 @@ export interface Deps {
   listings(env: Env): PublicListingsApi;
   cache(): CacheLike | null;
   purgeFetch: typeof fetch;
+  /** Avisos de la suscripción (cola, remitente de WhatsApp); null sin clave de servicio. */
+  reminders?(env: Env): ReminderRuntime | null;
   /** null sin clave de servicio: las balizas se aceptan y se descartan. */
   telemetry?(env: Env): TelemetryWriter | null;
   /** CSP y demás cabeceras en el HTML del worker; apagado solo en `vite dev` (inyecta scripts en línea). */
@@ -134,6 +138,8 @@ export function createApp(deps: Deps) {
       return c.body(null, 204);
     });
   }
+
+  app.post("/_pruebas/oferta/:publicId", (c) => testClock(c, deps.reminders));
 
   app.get("/robots.txt", (c) => c.text(robotsTxt(c.env.ENVIRONMENT)));
 

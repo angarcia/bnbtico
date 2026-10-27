@@ -124,6 +124,10 @@ El workflow `.github/workflows/app.yml` construye, prueba y despliega `apps/app`
 | `PURGE_SECRET` | secreto | Secreto del worker para `POST /_purge/CT-####`; el mismo valor va en Vault como `worker_purge_secret`. |
 | `CLOUDFLARE_ZONE_ID` | secreto | Se sube al worker como `CF_ZONE_ID` (purga por URL en la zona `bnbtico.com`). |
 | `CLOUDFLARE_PURGE_TOKEN` | secreto | Se sube como `CF_PURGE_TOKEN` (token con Cache Purge de la zona). |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | secretos | Fase 5: envío de los avisos de fin de oferta por WhatsApp (Twilio, sandbox en pruebas). Sin ellos el envío está apagado y los avisos esperan en cola. |
+| `TWILIO_WHATSAPP_FROM` | secreto | Número E.164 del remitente de WhatsApp (el del sandbox de Twilio en pruebas), sin `whatsapp:`. |
+| `WHATSAPP_ALLOWLIST` | secreto | Números E.164 (separados por comas) que pueden recibir avisos en pruebas; los demás se omiten. Con Twilio en pruebas es obligatoria: sin ella, el envío está apagado. |
+| `TEST_CLOCK_SECRET` | secreto | Abre `POST /_pruebas/oferta/CT-####` (reloj de pruebas). Nunca se sube desde `main` y el worker de producción responde 404 igualmente; además hace falta en Vault `bnbtico_test_clock = 'on'`. |
 | `TURNSTILE_SITE_KEY` | variable o secreto | `VITE_TURNSTILE_SITE_KEY` (pública). La secret key de Turnstile va en Supabase Auth, no en GitHub. |
 | `WA_OWNERS`, `WA_GUESTS` | variable o secreto | `VITE_WA_OWNERS` / `VITE_WA_GUESTS`: números de atención de Ayuda en E.164. |
 | `SUPABASE_DB_URL` | secreto | Copia diaria: cadena del Session pooler. |
