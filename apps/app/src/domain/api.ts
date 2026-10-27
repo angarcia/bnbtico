@@ -8,6 +8,7 @@ import type { FxRate } from "./fx";
 import type { VariantSize } from "./image";
 import type { LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SitemapEntry, Step } from "./listing";
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
+import type { AdminHouses } from "./admin-houses";
 import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
 import type {
   BillingOverview,
@@ -127,8 +128,8 @@ export interface PhotosApi {
 /**
  * Revisión del admin (ticket 09). Solo un admin con el segundo factor (sesión aal2) ve y decide: lo exige la base (RLS y
  * review_listing). Firma decidida en el ticket 09: `queue` devuelve la cola ya separada por estado. Sin ser admin no se
- * obtiene nada (cola vacía, `get` null, `review` con el mensaje de la base); un admin en aal1 recibe
- * REVIEW_MESSAGES.mfaRequired en las tres.
+ * obtiene nada (cola vacía, `get` null, `review` con el mensaje de la base, `houses` vacía); un admin en aal1 recibe
+ * REVIEW_MESSAGES.mfaRequired en las cuatro.
  */
 export interface AdminListingsApi {
   queue(): Promise<AdminQueue>;
@@ -136,6 +137,11 @@ export interface AdminListingsApi {
   get(id: string): Promise<QueueItem | null>;
   /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
+  /**
+   * Casas del admin (fase 5, ticket 07): las aprobadas alguna vez (las que tienen suscripción), en cualquier estado, con
+   * propietario, zona, portada y suscripción; la aprobada más recientemente primero. Sin ser admin, lista vacía.
+   */
+  houses(): Promise<AdminHouses>;
 }
 
 /**

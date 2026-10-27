@@ -124,9 +124,11 @@ function AdminOutlet() {
 const adminTabs = createRoute({ getParentRoute: () => tabs, id: "_admin", beforeLoad: requireAdmin, component: AdminOutlet });
 const adminFlow = createRoute({ getParentRoute: () => flow, id: "_adminFlow", beforeLoad: requireAdmin, component: AdminOutlet });
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
-const adminScreen = (name: "AnunciosScreen" | "RevisarScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
+const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
+const casasSearch = (params: Record<string, unknown>): { ver?: "activas" | "por-pagar" | "inactivas" } =>
+  params.ver === "activas" || params.ver === "por-pagar" || params.ver === "inactivas" ? { ver: params.ver } : {};
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
 /** Calendario: `casa` (id de una casa propia) y `mes` (`YYYY-MM`); la pantalla elige la casa y acota el mes a la ventana. */
@@ -156,7 +158,7 @@ const routeTree = rootRoute.addChildren([
     ]),
     adminTabs.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),
-      createRoute({ getParentRoute: () => adminTabs, path: "/admin/casas", component: adminSoon("Casas") }),
+      createRoute({ getParentRoute: () => adminTabs, path: "/admin/casas", validateSearch: casasSearch, component: adminScreen("CasasAdminScreen") }),
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon("Usuarios") }),
     ]),
   ]),

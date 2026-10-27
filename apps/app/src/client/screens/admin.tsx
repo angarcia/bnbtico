@@ -1,8 +1,9 @@
-// Zona del admin (pantallas 21 y 22 del diseño v1): cola de anuncios y revisión de una casa, más el segundo código que la
+// Zona del admin (pantallas 21, 22 y 23 del diseño v1): cola de anuncios, revisión de una casa y lista de casas, más el segundo código que la
 // abre. Se descarga al entrar (no está en el JS inicial). Las rutas exigen sesión aal2 (solo UX): quien manda es la base.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { CHIP_LABELS, HOUSE_BADGES, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
 import { relativeDate } from "../../domain/dates";
 import type { MfaFactor } from "../../domain/api";
 import { describe } from "../../domain/describe";
@@ -14,7 +15,7 @@ import { formatPhone } from "../../domain/phone";
 import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
-import { adminListingQuery, adminQueueQuery, clearReviewOutcome, loadSecondFactor, useQueueWithPending, useReview, useReviewOutcome, verifySecondCode } from "../admin";
+import { adminHousesQuery, adminListingQuery, adminQueueQuery, clearReviewOutcome, loadSecondFactor, useQueueWithPending, useReview, useReviewOutcome, verifySecondCode } from "../admin";
 import { FlowHeader, RootHeader } from "../chrome";
 import { useSession } from "../session";
 
@@ -174,6 +175,104 @@ function QueueCard({ item: { listing: l, ownerName } }: { item: QueueItem }) {
       <span className="chev">
         <I.chevron />
       </span>
+    </Link>
+  );
+}
+
+// ---------- 23 · Casas ----------
+const casasRoute = getRouteApi("/_tabs/_admin/admin/casas");
+
+export function CasasAdminScreen() {
+  const { ver } = casasRoute.useSearch();
+  const chip: HouseChip = ver ?? "todas";
+  const userId = useUserId();
+  const isAdmin = useIsAdmin();
+  const houses = useQuery({ ...adminHousesQuery(userId), enabled: !!userId && isAdmin !== false });
+  const [query, setQuery] = useState("");
+
+  if (isAdmin === false) {
+    return (
+      <>
+        <RootHeader title="Casas" home="/explorar" />
+        <NotAdmin />
+      </>
+    );
+  }
+  if (houses.error && toDomainError(houses.error).kind === "forbidden") return <Navigate to="/admin/codigo" search={{ next: "/admin/casas" }} replace />;
+
+  const data = houses.data;
+  const counts = data ? countHouses(data.houses) : null;
+  const shown = data ? filterHouses(data.houses, chip, query) : [];
+  return (
+    <>
+      <RootHeader title="Casas" home="/admin" action={<AdminBadge />} />
+      <label className="search-field">
+        <I.search size={18} />
+        <input
+          type="search"
+          name="q"
+          aria-label="Buscar casas"
+          placeholder="Nombre, CT-#### o propietario"
+          autoComplete="off"
+          enterKeyHint="search"
+          value={query}
+          onChange={(e) => setQuery(e.currentTarget.value)}
+        />
+      </label>
+      <nav className="chiprow" aria-label="Filtrar casas">
+        {HOUSE_CHIPS.map((c) => (
+          <Link key={c} to="/admin/casas" search={c === "todas" ? {} : { ver: c }} className="chip chip-sm" activeOptions={{ exact: true, includeSearch: true }}>
+            {counts ? `${CHIP_LABELS[c]} · ${counts[c]}` : CHIP_LABELS[c]}
+          </Link>
+        ))}
+      </nav>
+      {houses.isError && !data ? (
+        <p className="note" role="alert">
+          {message(houses.error)}
+        </p>
+      ) : null}
+      {!data && !houses.isError ? (
+        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando las casas">
+          <span className="sk sk-line" />
+        </section>
+      ) : null}
+      {data && shown.length === 0 ? (
+        <section className="card">
+          <p className="muted">{query.trim() ? "Ninguna casa coincide con la búsqueda." : chip === "todas" ? "Todavía no hay casas aprobadas." : "Nada por aquí."}</p>
+        </section>
+      ) : null}
+      {data && shown.length > 0 ? (
+        <section className="list" aria-label="Casas">
+          {shown.map((h) => (
+            <HouseRow key={h.listingId} house={h} today={data.today} />
+          ))}
+        </section>
+      ) : null}
+      <p className="xs muted queue-foot">Toque una casa activa para ver su ficha; las demás abren su revisión.</p>
+    </>
+  );
+}
+
+function HouseRow({ house: h, today }: { house: AdminHouse; today: string }) {
+  const badge = HOUSE_BADGES[h.status];
+  const body = (
+    <>
+      {h.cover ? <img src={variantUrl(h.cover, 480)} alt="" className="thumb house-thumb" width={56} height={56} loading="lazy" decoding="async" /> : <span className="thumb house-thumb" />}
+      <span className="body stack house-body">
+        <b className="house-title">{h.title || "Sin nombre"}</b>
+        <small className="num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</small>
+        <small className="num">{adminHouseLine(h.subscription, today)}</small>
+      </span>
+      <span className={`badge badge-tight ${badge.badge}`}>{badge.label}</span>
+    </>
+  );
+  return h.status === "active" ? (
+    <Link to="/casa/$publicId" params={{ publicId: h.publicId }} className="list-item house-row">
+      {body}
+    </Link>
+  ) : (
+    <Link to="/admin/anuncios/$id" params={{ id: h.listingId }} className="list-item house-row">
+      {body}
     </Link>
   );
 }

@@ -2,17 +2,29 @@
 // solo deja ver lo ajeno a un admin en aal2 (is_admin()) y review_listing lo vuelve a exigir. Aquí solo se distingue, para
 // la interfaz, «no es admin» (nada, en vez de sus propias casas, que la RLS sí le deja leer) de «falta el segundo código».
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { REVIEW_MESSAGES as M, REJECTED_SHOWN, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
-import { fromListingRow, storagePhotoUrl, type ListingRow, type PhotoRow } from "../../domain/rows";
+import { costaRicaToday } from "../../domain/inquiry";
+import { fromListingRow, fromPhotoRows, storagePhotoUrl, type ListingRow, type PhotoRow } from "../../domain/rows";
 import { aalOf } from "./auth";
 
 const ADMIN_COLUMNS = "*, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name)";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type AdminRow = ListingRow & { listing_photos: PhotoRow[]; owner: { full_name: string } | null };
+
+// Casas del admin: solo las que tienen suscripción (aprobadas alguna vez); la portada es la foto en la posición 0.
+const HOUSE_COLUMNS =
+  "id, public_id, title, status, zone, owner_id, first_published_at, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name), " +
+  "subscriptions!inner(plan, promo_ends_on, paid_since, stopped_at, monthly_price_crc)";
+type HouseRow = Pick<ListingRow, "id" | "public_id" | "title" | "status" | "zone" | "owner_id"> & {
+  listing_photos: PhotoRow[];
+  owner: { full_name: string } | null;
+  subscriptions: { plan: string; promo_ends_on: string | null; paid_since: string | null; stopped_at: string | null; monthly_price_crc: number };
+};
 
 export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): AdminListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
@@ -51,6 +63,47 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (who === "mfa") throw mfa();
       if (res.error) throw toDomainError(res.error);
       return res.data ? toItem(res.data) : null;
+    },
+
+    async houses() {
+      const today = costaRicaToday(Date.now());
+      const [who, res, methods] = await Promise.all([
+        access(),
+        db
+          .from("listings")
+          .select(HOUSE_COLUMNS)
+          .eq("listing_photos.position", 0)
+          .order("first_published_at", { ascending: false, nullsFirst: false })
+          .order("public_id", { ascending: false })
+          .returns<HouseRow[]>(),
+        db.from("payment_methods").select("owner_id"),
+      ]);
+      if (who === "none") return { houses: [], today };
+      if (who === "mfa") throw mfa();
+      for (const r of [res, methods]) if (r.error) throw toDomainError(r.error);
+      const withMethod = new Set((methods.data ?? []).map((m) => m.owner_id));
+      const houses = (res.data ?? []).map((row): AdminHouse => {
+        const s = row.subscriptions;
+        return {
+          listingId: row.id,
+          publicId: row.public_id,
+          title: row.title,
+          status: row.status,
+          ownerName: row.owner?.full_name ?? "",
+          zone: row.zone ?? "",
+          cover: fromPhotoRows(row.listing_photos, url)[0] ?? null,
+          subscription: {
+            status: row.status,
+            plan: s.plan === "paid" ? "paid" : "promo",
+            promoEndsOn: s.promo_ends_on,
+            paidSince: s.paid_since,
+            stoppedOn: s.stopped_at ? costaRicaToday(Date.parse(s.stopped_at)) : null,
+            monthlyPriceCrc: s.monthly_price_crc,
+            hasMethod: withMethod.has(row.owner_id),
+          },
+        };
+      });
+      return { houses, today };
     },
 
     async review(id, decision, note) {

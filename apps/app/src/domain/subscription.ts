@@ -58,7 +58,7 @@ export function cardDate(date: string): string {
 }
 
 /** «9 oct» si es del año de hoy; si no, «9 oct 2025». */
-function shortDate(date: string, today: string): string {
+export function shortDate(date: string, today: string): string {
   const full = cardDate(date);
   return date.slice(0, 4) === today.slice(0, 4) ? full.slice(0, -5) : full;
 }
