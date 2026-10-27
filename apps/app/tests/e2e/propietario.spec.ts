@@ -44,6 +44,15 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await expect(page.getByText(`${HOST}/casa/${active.publicId}`)).toBeVisible();
   await expect(page.getByTestId("offer-left")).toHaveText("Quedan 48 de 50");
   await expect(page.getByText("5 en total")).toBeVisible();
+  // Revisión UX A1: lo que falta por publicar va arriba (aquí, la casa con cambios más reciente) con el único botón
+  // relleno; compartir la casa activa pasa a contorno y los otros borradores se cuentan.
+  const resume = page.getByTestId("resume-card");
+  await expect(resume).toContainText("Cabina con cambios");
+  await expect(resume).toContainText("Faltan fotos del baño.");
+  await expect(resume.getByRole("link", { name: "Corregir y reenviar" })).toHaveAttribute("href", `/propietario/publicar/${changes.id}/1`);
+  await expect(resume.getByRole("link", { name: "y 2 borradores más · Ver en Mis casas" })).toBeVisible();
+  expect(await resume.evaluate((el) => !!(el.compareDocumentPosition(document.querySelector(".inquiries-card")!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveClass(/btn-ghost/);
 
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Mis casas" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();

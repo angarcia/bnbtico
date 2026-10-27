@@ -53,9 +53,9 @@ async function expectKeyboardRoom(page: Page, fieldId: string) {
 
 test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado, y se envía a revisión", async ({ page }) => {
   await page.goto("/propietario");
+  // Revisión UX C4: antes de empezar, qué tener a mano; y «Publicar casa» entra directo al paso 1 (sin «Empezar»).
+  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche o por mes", "Unos 10 minutos"]);
   await page.getByRole("link", { name: "Publicar casa" }).click();
-  await expect(page).toHaveURL(/\/propietario\/publicar$/);
-  await page.getByRole("button", { name: "Empezar" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
   await expect(page.getByText("Paso 1 de 9")).toBeVisible();
@@ -156,7 +156,8 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await page.reload();
   await page.getByRole("link", { name: "Seguir con el borrador" }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${id}/1$`));
+  // Abre el primer paso con algo pendiente (revisión UX A1/C4): aquí, el 6 (nombre y descripción).
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${id}/6$`));
   expect((await h.owner("owner").listOwn()).length).toBe(1);
 
   await page.goto(`/propietario/publicar/${id}/6`);
@@ -309,7 +310,9 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await expect(page.getByText(/«Borrador del otro teléfono»/)).toBeVisible();
   await page.getByRole("link", { name: "Seguir con el borrador" }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/1$`));
+  // El borrador sembrado solo tiene pendientes las fotos: abre en el paso 7 (revisión UX A1/C4).
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/7$`));
+  await page.goto(`/propietario/publicar/${pending.id}/1`);
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Vacacional/, /Habitación/]);
   await page.goto(`/propietario/publicar/${pending.id}/4`);
   await expect(page.getByText("Baño de la habitación")).toBeVisible();

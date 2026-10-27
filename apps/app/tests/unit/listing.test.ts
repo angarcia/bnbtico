@@ -12,6 +12,7 @@ import {
   parseColones,
   planStep,
   resumeStep,
+  wizardStage,
   validateAll,
   validateStep,
   type Feature,
@@ -284,5 +285,17 @@ describe("paso donde retomar un borrador", () => {
     expect(resumeStep({ ...validDraft(), photoCount: 2 })).toBe(7);
     expect(resumeStep({ ...validDraft(), nightlyPriceCrc: null })).toBe(8);
     expect(resumeStep(validDraft())).toBe(9);
+  });
+});
+
+// Revisión UX C4 (punto 4): las 9 pantallas en tres etapas.
+describe("etapas del asistente", () => {
+  it("Su casa (1–5), Fotos y texto (6–7), Precio (8–9), con la posición dentro de la etapa", () => {
+    expect(wizardStage(1)).toEqual({ name: "Su casa", index: 0, position: 1, size: 5, first: 1 });
+    expect(wizardStage(5)).toEqual({ name: "Su casa", index: 0, position: 5, size: 5, first: 1 });
+    expect(wizardStage(6)).toEqual({ name: "Fotos y texto", index: 1, position: 1, size: 2, first: 6 });
+    expect(wizardStage(7)).toEqual({ name: "Fotos y texto", index: 1, position: 2, size: 2, first: 6 });
+    expect(wizardStage(8)).toEqual({ name: "Precio", index: 2, position: 1, size: 2, first: 8 });
+    expect(wizardStage(9)).toEqual({ name: "Precio", index: 2, position: 2, size: 2, first: 8 });
   });
 });

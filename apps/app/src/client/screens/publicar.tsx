@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
-import { LAST_STEP, STEPS, type Step } from "../../domain/listing";
+import { LAST_STEP, STEPS, resumeStep, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
@@ -35,6 +35,16 @@ export function PublicarScreen() {
     },
   });
   const draft = resumable.data;
+  // Sin borrador pendiente no hay nada que elegir: se crea y se entra directo al paso 1 (revisión UX C4). Un solo intento
+  // por visita (el modo estricto de React monta dos veces); si falla, el botón «Empezar» queda para reintentar.
+  const autoStarted = useRef(false);
+  // Solo con una lectura de esta visita: un «sin borrador» de la caché del teléfono podría estar desfasado y crear otro.
+  const fresh = resumable.isFetchedAfterMount && !resumable.isFetching;
+  useEffect(() => {
+    if (!fresh || draft !== null || autoStarted.current) return;
+    autoStarted.current = true;
+    create.mutate();
+  }, [fresh, draft, create]);
   const start = (
     <button type="button" className={`btn btn-block ${draft ? "btn-ghost" : "btn-primary btn-lg"}`} disabled={create.isPending} onClick={() => create.mutate()}>
       {create.isPending ? "Un momento…" : draft ? "Empezar otro" : "Empezar"}
@@ -56,19 +66,19 @@ export function PublicarScreen() {
           <p className="small muted">
             {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
           </p>
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: "1" }} className="btn btn-primary btn-lg btn-block">
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} className="btn btn-primary btn-lg btn-block">
             Seguir con el borrador
           </Link>
           {start}
         </section>
       ) : null}
-      {draft === null ? (
+      {draft === null && create.isError ? (
         <section className="card stack gap-12">
           <h3>Publique su casa en pantallas cortas</h3>
-          <p className="small muted">Una pregunta por pantalla: alojamiento, ubicación, capacidad, características, nombre, fotos y precio. Guardamos el borrador en cada paso; puede seguir después, también desde otro teléfono.</p>
           {start}
         </section>
       ) : null}
+      {draft === null && !create.isError ? <SkeletonCard /> : null}
       {create.isError ? (
         <p className="note" role="alert">
           {message(create.error)}

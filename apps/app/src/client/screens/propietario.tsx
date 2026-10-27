@@ -12,7 +12,7 @@ import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
 import { variantUrl } from "../../domain/image";
-import { STATUS_LABELS, type Listing } from "../../domain/listing";
+import { MIN_PHOTOS, STATUS_LABELS, missingPhotosLabel, resumeStep, wizardStage, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
@@ -79,7 +79,10 @@ export function InicioScreen() {
   const list = listings.data;
   const active = list?.filter((l) => l.status === "active") ?? [];
   const inReview = list?.filter((l) => l.status === "review") ?? [];
-  const featured = active[0] ?? inReview[0] ?? list?.find((l) => l.status === "changes") ?? list?.[0];
+  // Lo que falta por publicar va arriba del todo (revisión UX A1): el borrador o la casa con cambios más reciente.
+  const unfinished = list?.filter((l) => l.status === "draft" || l.status === "changes") ?? [];
+  const pending = unfinished[0];
+  const featured = active[0] ?? inReview[0] ?? list?.find((l) => l !== pending && l.status !== "draft" && l.status !== "changes");
   const title = !list ? "Inicio" : active.length ? "Su casa, en marcha" : inReview.length ? "Su casa, en revisión" : "Publique su casa";
   const firstName = account.data?.name.trim().split(/\s+/)[0];
 
@@ -89,21 +92,29 @@ export function InicioScreen() {
       {listings.isError && !list ? <p className="note" role="alert">{message(listings.error)}</p> : null}
       {!list && !listings.isError ? <SkeletonCard /> : null}
 
+      {pending ? <ResumeCard listing={pending} more={unfinished.length - 1} /> : null}
+
       {list && list.length > 0 ? (
         <InquiriesCard userId={userId} />
       ) : null}
 
-      {list && !featured ? (
+      {list && list.length === 0 ? (
         <section className="card stack gap-12">
           <h3>Publique su casa en pocos pasos</h3>
-          <p className="small muted">Fotos, ubicación aproximada, características y precio. La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
+          {/* Lo que pide el asistente, antes de empezar (revisión UX C4): las fotos son lo que más frena. */}
+          <ul className="ready-list small">
+            <li>5 fotos horizontales o más</li>
+            <li>El precio por noche o por mes</li>
+            <li>Unos 10 minutos</li>
+          </ul>
+          <p className="small muted">La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
           <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
             Publicar casa
           </Link>
         </section>
       ) : null}
 
-      {featured ? <FeaturedCard listing={featured} /> : null}
+      {featured ? <FeaturedCard listing={featured} secondary={!!pending} /> : null}
       {list ? <OfferCard hasActive={active.length > 0} /> : null}
 
       {list && list.length > 1 ? (
@@ -153,7 +164,38 @@ export function SkeletonCard() {
   );
 }
 
-function FeaturedCard({ listing: l }: { listing: Listing }) {
+/** El borrador (o la casa con cambios) que falta por publicar, con un único botón relleno hacia el paso donde se quedó. */
+function ResumeCard({ listing: l, more }: { listing: Listing; more: number }) {
+  const step = resumeStep(l);
+  const stage = wizardStage(step);
+  const missing = MIN_PHOTOS - l.photoCount;
+  const where = step === 7 && missing > 0 ? `${stage.name} · ${missingPhotosLabel(missing).toLowerCase()}` : step === 9 ? "Todo listo · solo falta enviarla" : `${stage.name} · ${stage.position} de ${stage.size}`;
+  const changes = l.status === "changes";
+  return (
+    <section className="card stack gap-12 resume-card" data-testid="resume-card">
+      <div className="row gap-12 align-top">
+        <Thumb listing={l} small />
+        <div className="stack gap-4 grow-col">
+          <StatusBadge listing={l} />
+          <b className="display featured-title">{l.title.trim() || "Sin nombre todavía"}</b>
+          <span className="small muted">{changes ? "Le pedimos cambios antes de publicarla" : where}</span>
+        </div>
+      </div>
+      {changes && l.reviewNote ? <p className="note note-sun small">{l.reviewNote}</p> : null}
+      <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(changes ? 1 : step) }} className="btn btn-primary btn-lg btn-block">
+        {changes ? "Corregir y reenviar" : "Seguir publicando"}
+      </Link>
+      {more > 0 ? (
+        <Link to="/propietario/casas" className="link small">
+          y {more} {more === 1 ? "borrador más" : "borradores más"} · Ver en Mis casas
+        </Link>
+      ) : null}
+    </section>
+  );
+}
+
+/** `secondary`: arriba hay un borrador por terminar; su botón es el relleno y compartir pasa a contorno. */
+function FeaturedCard({ listing: l, secondary }: { listing: Listing; secondary?: boolean }) {
   const d = describe(l, { base: base() });
   const line =
     l.status === "active" ? `Publicada ${relativeDate(l.reviewedAt ?? l.updatedAt, Date.now())}` : l.status === "review" ? `Enviada ${relativeDate(l.updatedAt, Date.now())} · le avisamos por WhatsApp` : d.situation;
@@ -169,14 +211,14 @@ function FeaturedCard({ listing: l }: { listing: Listing }) {
           <span className="small muted">{line}</span>
         </div>
       </div>
-      <FeaturedAction listing={l} />
+      <FeaturedAction listing={l} secondary={secondary} />
     </section>
   );
 }
 
 /** Una sola acción según el estado: compartir, seguir el borrador, ver lo que pedimos… En revisión no hay nada que hacer. */
-function FeaturedAction({ listing: l }: { listing: Listing }) {
-  if (l.status === "active") return <ShareBlock listing={l} />;
+function FeaturedAction({ listing: l, secondary }: { listing: Listing; secondary?: boolean }) {
+  if (l.status === "active") return <ShareBlock listing={l} secondary={secondary} />;
   if (l.status === "review") return null;
   if (l.status === "draft") {
     return (
@@ -192,7 +234,7 @@ function FeaturedAction({ listing: l }: { listing: Listing }) {
   );
 }
 
-function ShareBlock({ listing: l }: { listing: Listing }) {
+function ShareBlock({ listing: l, secondary }: { listing: Listing; secondary?: boolean }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
@@ -202,7 +244,7 @@ function ShareBlock({ listing: l }: { listing: Listing }) {
         <span className="small">Envíe el enlace por WhatsApp o en sus redes. Quien lo abra puede escribirle directo; solo necesita verificar su WhatsApp.</span>
         <span className="small num primary share-url">{target.url.replace(/^https?:\/\//, "")}</span>
       </div>
-      <button type="button" className="btn btn-primary btn-lg btn-block" onClick={share} data-share-url={target.url}>
+      <button type="button" className={`btn ${secondary ? "btn-ghost" : "btn-primary"} btn-lg btn-block`} onClick={share} data-share-url={target.url}>
         <I.wa size={20} />{" "}
         <span key={copied ? "copied" : "share"} className={swap}>
           {copied ? "Enlace copiado" : "Compartir ficha por WhatsApp"}

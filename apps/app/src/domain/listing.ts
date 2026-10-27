@@ -216,6 +216,9 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
   }
 }
 
+/** «Faltan 3 fotos» / «Falta 1 foto» (revisión UX C4). */
+export const missingPhotosLabel = (n: number) => (n === 1 ? "Falta 1 foto" : `Faltan ${n} fotos`);
+
 /** Mensaje del mínimo de fotos, que se exige al enviar a revisión (no para pasar del paso 7). */
 export const photosMissing = (count: number) => (count < MIN_PHOTOS ? `Agregue al menos ${MIN_PHOTOS} fotos.` : null);
 
@@ -226,6 +229,19 @@ export function validateAll(d: ListingDraft): { step: Step; error: string } | nu
     if (error) return { step, error };
   }
   return null;
+}
+
+/** Las 9 pantallas en tres etapas (revisión UX C4): la cabecera y el borrador de Inicio hablan de la etapa, no del paso. */
+export const WIZARD_STAGES = [
+  { name: "Su casa", first: 1, last: 5 },
+  { name: "Fotos y texto", first: 6, last: 7 },
+  { name: "Precio", first: 8, last: 9 },
+] as const;
+
+export function wizardStage(step: Step): { name: string; index: number; position: number; size: number; first: number } {
+  const index = WIZARD_STAGES.findIndex((s) => step >= s.first && step <= s.last);
+  const stage = WIZARD_STAGES[index]!;
+  return { name: stage.name, index, position: step - stage.first + 1, size: stage.last - stage.first + 1, first: stage.first };
 }
 
 /** Paso donde retomar un borrador (revisión UX A1/A5): el primero con algo pendiente; si no falta nada, el último. */

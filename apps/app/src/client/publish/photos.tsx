@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore, type ChangeEvent } from "react";
 import type { PhotosApi } from "../../domain/api";
 import { DomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { MAX_PHOTOS, MIN_PHOTOS, type Listing } from "../../domain/listing";
+import { MAX_PHOTOS, MIN_PHOTOS, missingPhotosLabel as missingLabel, type Listing } from "../../domain/listing";
 import { asCover, moveBy } from "../../domain/photo-order";
 import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
@@ -20,9 +20,6 @@ const queueFor = (id: string) => {
   if (!q) queues.set(id, (q = createUploadQueue()));
   return q;
 };
-
-/** «Faltan 3 fotos» / «Falta 1 foto». */
-export const missingLabel = (n: number) => (n === 1 ? "Falta 1 foto" : `Faltan ${n} fotos`);
 
 const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "No pudimos cambiar las fotos. Intente de nuevo.");

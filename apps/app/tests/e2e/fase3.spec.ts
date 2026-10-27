@@ -62,7 +62,6 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → M
   await injectSession(owner, "owner");
   await owner.goto("/propietario");
   await owner.getByRole("link", { name: "Publicar casa" }).click();
-  await owner.getByRole("button", { name: "Empezar" }).click();
   await expect(owner).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = /\/publicar\/([0-9a-f-]{36})\//.exec(owner.url())![1]!;
   const continuar = () => owner.getByRole("button", { name: "Continuar" }).click();

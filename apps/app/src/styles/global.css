@@ -675,3 +675,5 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 /* Paso 7 con menos de 5 fotos: aviso en ocre, sin bloquear (revisión UX C4). */
 .photos-count.is-short{color:var(--sun-ink);font-weight:700}
 .photos-missing{color:var(--sun-ink);font-weight:600}
+/* Qué tener a mano antes de publicar (revisión UX C4). */
+.ready-list{margin:0;padding-left:20px;display:grid;gap:4px}
