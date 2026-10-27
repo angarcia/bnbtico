@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
-import { sql, TEST_NAMES, TEST_PHONES } from "../db/local";
+import { serviceClient, sql, TEST_NAMES, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { catchWhatsApp } from "./helpers/whatsapp";
@@ -183,12 +183,25 @@ test("el contador se va con la sesión y no aparece en las pestañas del cliente
   await expect(page.getByTestId("inquiries-badge")).toHaveCount(0);
 });
 
+test("sin casas publicadas: qué verá aquí y «Publicar casa» o «Seguir publicando»", async ({ page }) => {
+  const { data: other } = await serviceClient().from("profiles").select("id").eq("phone", TEST_PHONES.other).single();
+  await serviceClient().from("listings").delete().eq("owner_id", other!.id);
+  await injectSession(page, "other");
+  await page.goto("/propietario/consultas");
+  await expect(page.getByText("Aquí verá a los clientes que le escriban por WhatsApp desde su ficha.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Publicar casa" })).toHaveAttribute("href", "/propietario/publicar");
+  const draft = await h.seed({ status: "draft", as: "other" });
+  await page.reload();
+  await expect(page.getByRole("link", { name: "Seguir publicando" })).toHaveAttribute("href", new RegExp(`/propietario/publicar/${draft.id}/\\d$`));
+});
+
 test("sin consultas: el aviso y «Compartir ficha» de la casa activa; todo leído: sin contador", async ({ page }) => {
   sql("delete from public.inquiries");
   await injectSession(page, "owner");
   await page.goto("/propietario/consultas");
-  await expect(page.getByText("Todavía no le han escrito. Comparta su ficha para recibir consultas.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Compartir ficha" })).toHaveAttribute("data-share-url", new RegExp(`/casa/CT-\\d{4}$`));
+  // Revisión UX N2: el estado vacío dice qué hacer para que lleguen las primeras.
+  await expect(page.getByText("Todavía nadie le ha escrito. Comparta su ficha para que lleguen las primeras consultas.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveAttribute("data-share-url", new RegExp(`/casa/CT-\\d{4}$`));
   await expect(page.getByRole("group", { name: "Filtrar por casa" })).toHaveCount(0);
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveCount(0);
   await expect(nav(page).getByRole("link", { name: "Consultas" })).toBeVisible();

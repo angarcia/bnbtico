@@ -5,7 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { describe } from "../../domain/describe";
 import { initials, inquiryHouses, inquirySummary, relativeTime, type OwnerInquiry } from "../../domain/inquiry";
-import type { Listing } from "../../domain/listing";
+import { resumeStep, type Listing } from "../../domain/listing";
+import { Link } from "@tanstack/react-router";
 import { toDomainError } from "../../domain/errors";
 import { I } from "../../shared/icons";
 import { useShare } from "../../shared/share-button";
@@ -98,13 +99,36 @@ function InquiryCard({ inquiry: i, userId }: { inquiry: OwnerInquiry; userId: st
   );
 }
 
+/** Sin consultas, un único siguiente paso (revisión UX N2): compartir la ficha si hay una casa publicada; si no, publicarla. */
 function EmptyInquiries({ userId }: { userId: string }) {
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
-  const active = listings.data?.find((l) => l.status === "active");
+  const list = listings.data;
+  if (!list) return null;
+  const active = list.find((l) => l.status === "active");
+  if (active) {
+    return (
+      <section className="card stack gap-12">
+        <p>Todavía nadie le ha escrito. Comparta su ficha para que lleguen las primeras consultas.</p>
+        <ShareListing listing={active} />
+      </section>
+    );
+  }
+  const draft = list.find((l) => l.status === "draft" || l.status === "changes");
+  const inReview = list.some((l) => l.status === "review");
   return (
     <section className="card stack gap-12">
-      <p>Todavía no le han escrito. Comparta su ficha para recibir consultas.</p>
-      {active ? <ShareListing listing={active} /> : null}
+      <p>Aquí verá a los clientes que le escriban por WhatsApp desde su ficha.</p>
+      {draft ? (
+        <Link to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} className="btn btn-primary btn-lg btn-block">
+          Seguir publicando
+        </Link>
+      ) : inReview ? (
+        <p className="small muted">Su casa está en revisión. Cuando la publiquemos, compártala desde aquí.</p>
+      ) : (
+        <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
+          Publicar casa
+        </Link>
+      )}
     </section>
   );
 }
@@ -116,7 +140,7 @@ function ShareListing({ listing: l }: { listing: Listing }) {
   return (
     <button type="button" className="btn btn-primary btn-lg btn-block" onClick={share} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
-        {copied ? "Enlace copiado" : "Compartir ficha"}
+        {copied ? "Enlace copiado" : "Compartir ficha por WhatsApp"}
       </span>
     </button>
   );
