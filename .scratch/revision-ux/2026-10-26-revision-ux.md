@@ -22,6 +22,19 @@ Todo lo de abajo se ordena por cuánto frena una de esas dos cosas.
 - Presupuestos: JS privado < 150 KB gz (hoy ~146 KB: poco margen), ficha LCP < 1,5 s, sin avisos de hidratación.
 - Ya abiertos y no repetidos aquí: tickets 16 (filtros en una fila), 17 (barra inferior en Ingresar y Mi cuenta), 18 (entrar solo con el WhatsApp), 19 (nombre y descripción) y 20 («Anuncio visible»).
 
+## Segunda pasada (2026-10-26, sobre `abf003e`, con los tickets 15–20 hechos)
+
+Mismo recorrido en 390×844, 375×667 y 1280. **Todo lo acordado sigue aplicando**, con estos matices:
+
+- **C2 / A6:** el Ingresar nuevo (ticket 18) pide primero el número, pero desde la hoja de contacto sigue diciendo «Ingresar · Entre con su WhatsApp», la hoja sigue diciendo «Abrir WhatsApp», sigue el campo «País de su WhatsApp» además de la caja «+506», y con el número vacío sale «Ese número no parece válido para el país elegido.». Se implementan sobre el flujo de dos pasos.
+- **C3:** igual (barra de ~260 px en el SE con la línea en dos renglones).
+- **C4:** igual; el paso 7 bloquea «Continuar» con 2 fotos («Agregue al menos 5 fotos.» en rojo arriba y «Añada al menos 5 fotos.» abajo). El paso 6 ya tiene «n / 60 · mínimo 5» y «n / 2000 · mínimo 80» (ticket 19): N3 se monta sobre eso.
+- **A1, A2, A10, N1, N6, N7:** igual.
+- **A4 / A5:** el Calendario sigue abriendo «Mi borrador» con octubre casi entero en gris.
+- **A5 / N2, estados vacíos que ya existen:** sin casas, Calendario dice «Publique su casa para usar el calendario.» con «Publicar casa», y Consultas con casa publicada dice «Todavía no le han escrito. Comparta su ficha para recibir consultas.» sin botón. Se sustituyen por los textos acordados (y se añade el botón), sin duplicarlos.
+- **A11:** el buscador sigue diciendo «Cualquier fecha · cualquier grupo»; Explorar ya tiene solo Vacacional, Mensual y «Más filtros» (ticket 16).
+- **N5:** igual (columna de 560 px en 1280).
+
 ---
 
 ## Crítico — frena la conversión hoy
