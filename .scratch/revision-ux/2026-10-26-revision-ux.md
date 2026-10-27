@@ -1,6 +1,6 @@
 # Revisión UX sin anestesia · 2026-10-26
 
-Status: ready-for-agent (revisada punto por punto con Daniel el 2026-10-26; se implementa cuando termine el ticket 20)
+Status: done (2026-10-27) · implementada sobre `develop`; plan de pruebas en `docs/pruebas-manuales-revision-ux.md`
 
 Dos pasadas sobre la app nueva (`apps/app`, árbol de trabajo del 2026-10-26, con el ticket 15 ya hecho): (1) diseñador obsesionado con la conversión destrozando cada decisión visual; (2) usuario que entra por primera vez y lo toca todo, anotando dónde se pierde o quiere irse. Recorrido en iPhone 13 (390×844) y iPhone SE (375×667), y unas capturas en escritorio (1280): cliente sin cuenta, propietario nuevo sin casas y propietario con casa activa, borrador, casa en revisión y una consulta. Las capturas están en `capturas/` (no versionadas; los nombres van entre corchetes en cada punto).
 
@@ -21,6 +21,10 @@ Todo lo de abajo se ordena por cuánto frena una de esas dos cosas.
 - Usted en toda la UI, español de Costa Rica. Precios en colones, orientativos.
 - Presupuestos: JS privado < 150 KB gz (hoy ~146 KB: poco margen), ficha LCP < 1,5 s, sin avisos de hidratación.
 - Ya abiertos y no repetidos aquí: tickets 16 (filtros en una fila), 17 (barra inferior en Ingresar y Mi cuenta), 18 (entrar solo con el WhatsApp), 19 (nombre y descripción) y 20 («Anuncio visible»).
+
+## Implementación (2026-10-27)
+
+Un commit por punto, con sus pruebas: C3 `a768507` · A11 `6ec5f04` · N4 `25004b4` · N7 `83b71c3` · A12 `a1ecde5` · A4 `325ddad` · A5 `dbaa51d`, `ab8f2c2` · C2 `ac6746c` · A6 `4925215` · A3 (4–5) `9fd5aeb` · C4 `b338649` (3), `59b37ed` (1–2, con A1), `890949d` (4), `9737e77` (5, con A9), `e803cb6` (6) · N1 `cee09d8` · N2 `6f33883` · N3 `c14e86e` · A10 `18002a5` · A2 `17b3074` · N6 `33828c3` · N5 `38641eb` · C1 `ec6439f`. Migraciones nuevas: `primera_publicacion`, `evento_paso_asistente`, `estadisticas_casa`. Límites de tamaño ajustados: hoja de contacto 5 → 5,5 KB y pantallas de las pestañas 20 → 22 KB (el total de la zona privada sigue < 150 KB). Pendiente: A3 (1–3, con Ana), A7 y A8 (fase 5), A11 (b) con su disparador, la pasada de escritorio completa y el número +506 de propietarios.
 
 ## Segunda pasada (2026-10-26, sobre `abf003e`, con los tickets 15–20 hechos)
 
