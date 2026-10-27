@@ -43,7 +43,7 @@ export default async function Portada({ searchParams }: { searchParams: Promise<
       <section className="soon-offer" aria-labelledby="oferta">
         <h2 id="oferta">¿Tiene una casa en el Caribe?</h2>
         <p>
-          <b>Las primeras 50 casas: 12 meses gratis.</b> Después, ₡9 900 al mes por casa, sin comisiones ni permanencia.
+          <b>Las primeras 50 casas: 12 meses gratis.</b> Después, ₡2 900 al mes por casa, sin comisiones ni permanencia.
         </p>
         {ownerCta ? (
           <a className="soon-cta" href={ownerCta} rel="noopener">
