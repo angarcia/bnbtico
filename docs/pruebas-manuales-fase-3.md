@@ -6,6 +6,8 @@ La parte A va antes, **una acción cada vez y en este orden**.
 
 ---
 
+> **Nota (2026-10-26, ticket 20 de la fase R):** el interruptor «Disponible para consultas» se llama ahora «Anuncio visible»; la hoja, «Pausar anuncio» («¿Cuándo vuelve a verse? (opcional)»); apagado dice «Pausado…» y en Mis casas «Pausado»; la ficha muestra «No disponible por ahora» y **la casa deja de salir en Explorar** (sigue en Favoritos). Donde los pasos de abajo digan el copy antiguo, espere el nuevo.
+
 ## A. Acciones previas (Daniel)
 
 ### A1. Migración `fase3_consultas` en `bnbtico-pruebas` · bloquea: pruebas · ✅ hecho el 2026-10-24

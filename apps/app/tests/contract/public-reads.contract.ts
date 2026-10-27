@@ -146,5 +146,19 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.countActive()).toBe(4);
       });
     });
+    describe("anuncio pausado (ticket 20)", () => {
+      it("no aparece en Explorar, pero su ficha y Favoritos la siguen trayendo como no disponible", async () => {
+        h = await makeHarness();
+        await h.reset();
+        const shown = await h.seed({ status: "active", draft: { title: "Casa visible" } });
+        const paused = await h.seed({ status: "active", draft: { title: "Casa pausada" } });
+        await h.owner("owner").setAvailable(paused.id, false);
+        expect(await ids(filters())).toEqual([shown.publicId]);
+        expect(await h.anon.getPublic(paused.publicId)).toMatchObject({ title: "Casa pausada", available: false });
+        expect((await h.anon.getManyPublic([paused.publicId])).map((l) => l.available)).toEqual([false]);
+        await h.owner("owner").setAvailable(paused.id, true);
+        expect(await ids(filters())).toEqual([paused.publicId, shown.publicId]);
+      }, 60_000);
+    });
   });
 }

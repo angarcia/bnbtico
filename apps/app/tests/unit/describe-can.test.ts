@@ -83,7 +83,7 @@ group("describe · precios", () => {
 group("describe · situación y etiqueta por estado", () => {
   it.each<[string, Partial<Listing>, string, string]>([
     ["activa", { status: "active" }, "Activa", "Gratis 12 meses · oferta de lanzamiento"],
-    ["activa no disponible", { status: "active", available: false }, "No disponible", "Gratis 12 meses · oferta de lanzamiento"],
+    ["activa no disponible", { status: "active", available: false }, "Pausado", "Gratis 12 meses · oferta de lanzamiento"],
     ["en revisión desde ayer", { status: "review", updatedAt: "2026-10-21T10:00:00Z" }, "En revisión", "Enviada ayer. Le avisamos por WhatsApp."],
     ["en revisión desde hoy", { status: "review", updatedAt: "2026-10-22T09:00:00Z" }, "En revisión", "Enviada hoy. Le avisamos por WhatsApp."],
     ["cambios pedidos", { status: "changes" }, "Cambios pedidos", "Le pedimos cambios. Corríjalos y reenvíe."],
@@ -100,7 +100,7 @@ group("describe · situación y etiqueta por estado", () => {
 
   it("una casa vista por el público no tiene línea de situación", () => {
     expect(describe(publicOf(owned()), { base: BASE }).situation).toBeNull();
-    expect(describe(publicOf(owned({ available: false })), { base: BASE }).statusLabel).toBe("No disponible");
+    expect(describe(publicOf(owned({ available: false })), { base: BASE }).statusLabel).toBe("Pausado");
   });
 });
 

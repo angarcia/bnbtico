@@ -522,8 +522,14 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
               <I.chat />
             </span>
             <span className="body">
-              <span id="available-label">Disponible para consultas</span>
-              <small>{l.available ? "Si la cierra, la ficha sigue visible pero sin botón de contacto" : l.reopenAt ? `Cerrada hasta el ${longDate(l.reopenAt)}` : "Cerrada a consultas"}</small>
+              <span id="available-label">Anuncio visible</span>
+              <small>
+                {l.available
+                  ? "Si lo apaga, la casa no aparece en Explorar y su ficha dice que no está disponible por ahora. Su calendario no cambia."
+                  : l.reopenAt
+                    ? `Pausado hasta el ${longDate(l.reopenAt)}: no aparece en Explorar`
+                    : "Pausado: no aparece en Explorar hasta que lo encienda"}
+              </small>
             </span>
             <button
               ref={toggle}

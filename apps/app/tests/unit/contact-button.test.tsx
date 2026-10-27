@@ -59,7 +59,7 @@ describe("botón de contacto antes de hidratar", () => {
   });
   it("no disponible, sin fecha: botón deshabilitado y sin nota", () => {
     const html = bar(listing({ available: false }));
-    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">.*No disponible para consultas<\/button>/);
+    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">.*No disponible por ahora<\/button>/);
     expect(html).not.toContain("Vuelve a estar disponible");
   });
   it("no disponible con fecha de reapertura: la nota debajo", () => {

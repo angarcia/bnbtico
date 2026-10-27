@@ -191,7 +191,7 @@ export function validateReopenDate(date: string | null, today: string): string |
   return toUtc(date) !== null && date > today && date <= addDays(today, CALENDAR_WINDOW_DAYS) ? null : CALENDAR_MESSAGES.reopenDate;
 }
 
-/** El interruptor «Disponible para consultas» (set_listing_available): solo casas activas; abrir a mano cancela la fecha.
+/** El interruptor «Anuncio visible» (antes «Disponible para consultas») (set_listing_available): solo casas activas; abrir a mano cancela la fecha.
  *  No toca el estado de la casa: cerrada sigue publicada; abierta no republica una oculta. */
 export function availabilityUpdate(
   listing: { status: ListingStatus },

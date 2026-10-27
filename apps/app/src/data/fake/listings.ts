@@ -55,6 +55,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
   return {
     async searchPublic(f: Filters) {
       return active()
+        .filter((l) => l.available)
         .filter((l) => f.prov === ALL_PROVINCES || l.province === f.prov)
         .filter((l) => (modeFilter(f) === "nightly" ? l.acceptsNightly : modeFilter(f) === "monthly" ? l.acceptsMonthly === true : true))
         .filter((l) => !f.ppl || gte(l.capacity, f.ppl))

@@ -103,7 +103,7 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
 
 test("disponible para consultas responde al instante y vuelve atrás con el mensaje de la base si falla", async ({ page }) => {
   await page.goto(`/propietario/casas/${active.id}`);
-  const toggle = page.getByRole("switch", { name: /Disponible para consultas/ });
+  const toggle = page.getByRole("switch", { name: /Anuncio visible/ });
   await expect(toggle).toHaveAttribute("aria-checked", "true");
 
   // La respuesta tarda: el interruptor ya cambió antes de que llegue.
@@ -115,9 +115,9 @@ test("disponible para consultas responde al instante y vuelve atrás con el mens
   });
   // Apagar pide la fecha opcional en una hoja (ticket 04 de la fase 4); sin fecha, «Cerrar a consultas».
   await toggle.click();
-  await page.getByRole("dialog", { name: "Cerrar a consultas" }).getByRole("button", { name: "Cerrar a consultas" }).click();
+  await page.getByRole("dialog", { name: "Pausar anuncio" }).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(toggle).toHaveAttribute("aria-checked", "false");
-  await expect(page.getByText("No disponible", { exact: true })).toBeVisible();
+  await expect(page.getByText("Pausado", { exact: true })).toBeVisible();
   release();
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(false);
   await page.unroute("**/rest/v1/rpc/set_listing_available");

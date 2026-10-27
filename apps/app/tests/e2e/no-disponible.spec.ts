@@ -18,8 +18,8 @@ test.describe.configure({ mode: "serial" });
 
 const today = () => costaRicaToday(Date.now());
 const nextMonthDay = (d: number) => `${addMonths(today().slice(0, 7), 1)}-${String(d).padStart(2, "0")}`;
-const toggle = (page: Page) => page.getByRole("switch", { name: /Disponible para consultas/ });
-const sheet = (page: Page) => page.getByRole("dialog", { name: "Cerrar a consultas" });
+const toggle = (page: Page) => page.getByRole("switch", { name: /Anuncio visible/ });
+const sheet = (page: Page) => page.getByRole("dialog", { name: "Pausar anuncio" });
 const row = (page: Page) => page.locator(".list-item").filter({ has: page.getByRole("switch") });
 const calendarRow = (page: Page) => page.getByRole("link", { name: /Calendario y precios/ });
 const reopenDue = (date: string) => Number(sql(`select public.reopen_due_listings('${date}')`));
@@ -57,10 +57,10 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
   await toggle(page).click();
   await expect(sheet(page)).toBeVisible();
   await expect(toggle(page)).toHaveAttribute("aria-checked", "true");
-  const date = sheet(page).getByLabel("¿Cuándo vuelve a abrir? (opcional)");
+  const date = sheet(page).getByLabel("¿Cuándo vuelve a verse? (opcional)");
   await expect(date).toHaveAttribute("min", addDays(today(), 1));
   await expect(date).toHaveAttribute("max", addDays(today(), 365));
-  await expect(sheet(page).getByText("Sin fecha, queda cerrada hasta que usted la abra.")).toBeVisible();
+  await expect(sheet(page).getByText(/Sin fecha, sigue pausado hasta que usted lo encienda\./)).toBeVisible();
   await expect(sheet(page)).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(sheet(page)).toHaveCount(0);
@@ -76,7 +76,7 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
   // Una fecha de hoy no vale (el campo la limita, pero se puede escribir): el mensaje es el de la base.
   await toggle(page).click();
   await date.fill(today());
-  await sheet(page).getByRole("button", { name: "Cerrar a consultas" }).click();
+  await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(sheet(page).locator('.note[role="alert"]')).toHaveText("La fecha de reapertura debe ser a partir de mañana y dentro de un año.");
   // Tab no sale de la hoja.
   for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
@@ -84,26 +84,30 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
   expect(await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
   await date.fill(reopen);
   await page.screenshot({ path: "test-results/no-disponible-hoja.png" });
-  await sheet(page).getByRole("button", { name: "Cerrar a consultas" }).click();
+  await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(sheet(page)).toHaveCount(0);
   await expect(toggle(page)).toHaveAttribute("aria-checked", "false");
-  await expect(row(page)).toContainText(`Cerrada hasta el ${longDate(reopen)}`);
+  await expect(row(page)).toContainText(`Pausado hasta el ${longDate(reopen)}`);
   await expect.poll(async () => (await h.owner("owner").getOwn(casa.id))?.reopenAt).toBe(reopen);
   await page.screenshot({ path: "test-results/no-disponible-cerrada.png" });
 
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("article").filter({ hasText: "Casa Reapertura" }).getByText("No disponible", { exact: true })).toBeVisible();
+  await expect(page.getByRole("article").filter({ hasText: "Casa Reapertura" }).getByText("Pausado", { exact: true })).toBeVisible();
 
+  // Pausado: no sale en Explorar (ticket 20), pero su ficha se abre y dice que no está disponible por ahora.
+  await page.goto("/explorar?prov=Todas");
+  await expect(page.getByTestId("results-count")).toHaveText(/\d+ casas?/);
+  await expect(page.getByRole("link", { name: /Casa Reapertura/ })).toHaveCount(0);
   await page.goto(`/casa/${casa.publicId}`);
-  await expect(page.getByRole("button", { name: "No disponible para consultas" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "No disponible por ahora" })).toBeDisabled();
   await expect(page.locator(".cta-bar").getByText(`Vuelve a estar disponible el ${longDate(reopen)}`)).toBeVisible();
 
   // La reapertura de las 00:00 de Costa Rica (el job de pg_cron llama a esta función).
   expect(reopenDue(reopen)).toBeGreaterThanOrEqual(1);
   await page.goto(`/propietario/casas/${casa.id}`);
   await expect(toggle(page)).toHaveAttribute("aria-checked", "true");
-  await expect(row(page)).toContainText("Si la cierra, la ficha sigue visible pero sin botón de contacto");
-  await expect(row(page)).not.toContainText("Cerrada");
+  await expect(row(page)).toContainText("Si lo apaga, la casa no aparece en Explorar y su ficha dice que no está disponible por ahora. Su calendario no cambia.");
+  await expect(row(page)).not.toContainText("Pausado");
   await page.getByRole("link", { name: "Ver ficha" }).click();
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(page.getByText(/Vuelve a estar disponible/)).toHaveCount(0);
@@ -118,15 +122,15 @@ test("cerrar sin fecha: «Cerrada a consultas» y sigue cerrada tras la reapertu
   await page.goto(`/propietario/casas/${casa.id}`);
   await expect(calendarRow(page)).toContainText("Sin noches ocupadas este mes");
   await toggle(page).click();
-  await sheet(page).getByRole("button", { name: "Cerrar a consultas" }).click();
+  await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(toggle(page)).toHaveAttribute("aria-checked", "false");
-  await expect(row(page)).toContainText("Cerrada a consultas");
+  await expect(row(page)).toContainText("Pausado: no aparece en Explorar");
   await expect.poll(async () => (await h.owner("owner").getOwn(casa.id))?.available).toBe(false);
 
   reopenDue(addDays(today(), 40));
   await page.reload();
   await expect(toggle(page)).toHaveAttribute("aria-checked", "false");
-  await expect(row(page)).toContainText("Cerrada a consultas");
+  await expect(row(page)).toContainText("Pausado: no aparece en Explorar");
   expect(await h.owner("owner").getOwn(casa.id)).toMatchObject({ available: false, reopenAt: null });
 });
 
@@ -135,12 +139,12 @@ test("abrir a mano es un toque, borra la fecha y, si la base rechaza el cierre, 
   const reopen = addDays(today(), 3);
   await h.owner("owner").setAvailable(casa.id, false, reopen);
   await page.goto(`/propietario/casas/${casa.id}`);
-  await expect(row(page)).toContainText(`Cerrada hasta el ${longDate(reopen)}`);
+  await expect(row(page)).toContainText(`Pausado hasta el ${longDate(reopen)}`);
 
   await toggle(page).click();
   await expect(sheet(page)).toHaveCount(0);
   await expect(toggle(page)).toHaveAttribute("aria-checked", "true");
-  await expect(row(page)).not.toContainText("Cerrada");
+  await expect(row(page)).not.toContainText("Pausado");
   await expect.poll(async () => (await h.owner("owner").getOwn(casa.id))?.reopenAt ?? "abierta").toBe("abierta");
   expect((await h.owner("owner").getOwn(casa.id))?.available).toBe(true);
 
@@ -148,11 +152,11 @@ test("abrir a mano es un toque, borra la fecha y, si la base rechaza el cierre, 
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Solo puede cambiar la disponibilidad de una casa activa.", details: null, hint: null }) }),
   );
   await toggle(page).click();
-  await sheet(page).getByLabel("¿Cuándo vuelve a abrir? (opcional)").fill(reopen);
-  await sheet(page).getByRole("button", { name: "Cerrar a consultas" }).click();
+  await sheet(page).getByLabel("¿Cuándo vuelve a verse? (opcional)").fill(reopen);
+  await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("Solo puede cambiar la disponibilidad de una casa activa.");
   await expect(toggle(page)).toHaveAttribute("aria-checked", "true");
-  await expect(row(page)).not.toContainText("Cerrada");
+  await expect(row(page)).not.toContainText("Pausado");
 });
 
 test("una casa devuelta a edición con la fecha vencida se abre a consultas pero sigue oculta", async ({ page }) => {

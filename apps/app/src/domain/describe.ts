@@ -66,7 +66,7 @@ export function describe(l: Listing | PublicListing, opts: { base: string; now?:
   return {
     mainPrice,
     secondaryPrice,
-    statusLabel: status === "active" && !l.available ? "No disponible" : STATUS_LABELS[status].label,
+    statusLabel: status === "active" && !l.available ? "Pausado" : STATUS_LABELS[status].label,
     situation: owner ? situation(l, opts.now ?? Date.now()) : null,
     shareUrl: publicUrl(l.publicId, opts.base),
     previewText: previewText(l, mainPrice),

@@ -171,7 +171,7 @@ test("la hoja se precarga en reposo tras hidratar: tocar no espera a la red", as
 
 test("una casa que no recibe consultas muestra el botón deshabilitado", async ({ page }) => {
   await openListing(page, cerrada.publicId);
-  await expect(page.getByRole("button", { name: "No disponible para consultas" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "No disponible por ahora" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/contacto-no-disponible.png" });
 });

@@ -1,4 +1,4 @@
-// Hoja «Cerrar a consultas» del detalle de la casa (pantalla 19): fecha de reapertura opcional. Va en el trozo del
+// Hoja «Pausar anuncio» (antes «Cerrar a consultas», ticket 20) del detalle de la casa (pantalla 19): fecha de reapertura opcional. Va en el trozo del
 // propietario. Diálogo modal como la hoja de contacto: la página queda `inert`, el foco no sale de la hoja y Escape, el
 // fondo o «Cancelar» la cierran (el foco vuelve al interruptor desde quien la abre).
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
@@ -57,10 +57,10 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
       <div className="sheet-backdrop" onClick={onClose} data-testid="sheet-backdrop" />
       <section ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-labelledby="close-title" tabIndex={-1} onKeyDown={onKeyDown}>
         <span className="grabber" aria-hidden="true" />
-        <h2 id="close-title">Cerrar a consultas</h2>
+        <h2 id="close-title">Pausar anuncio</h2>
         <form onSubmit={onSubmit} noValidate>
           <label>
-            ¿Cuándo vuelve a abrir? (opcional)
+            ¿Cuándo vuelve a verse? (opcional)
             <input
               type="date"
               name="reopen"
@@ -76,7 +76,7 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
             />
           </label>
           <span className="hint" id="close-hint">
-            Sin fecha, queda cerrada hasta que usted la abra.
+            Mientras esté pausado, la casa no aparece en Explorar y su ficha dice que no está disponible por ahora. Sin fecha, sigue pausado hasta que usted lo encienda.
           </span>
           {problem ? (
             <p className="note" role="alert">
@@ -84,7 +84,7 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
             </p>
           ) : null}
           <button type="submit" className="btn btn-primary btn-lg">
-            Cerrar a consultas
+            Pausar anuncio
           </button>
           <button type="button" className="btn btn-ghost btn-lg" onClick={onClose}>
             Cancelar

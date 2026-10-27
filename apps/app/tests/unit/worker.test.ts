@@ -85,10 +85,10 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).not.toContain("disponible pronto");
   });
 
-  it("una casa que no recibe consultas llega con el botón deshabilitado «No disponible para consultas»", async () => {
+  it("una casa que no recibe consultas llega con el botón deshabilitado «No disponible por ahora»", async () => {
     await t.h.owner("owner").setAvailable(casa.id, false);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
-    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">[\s\S]*?No disponible para consultas<\/button>/);
+    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">[\s\S]*?No disponible por ahora<\/button>/);
     expect(html).not.toContain("Contactar por WhatsApp");
   });
 

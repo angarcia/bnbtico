@@ -65,7 +65,7 @@ function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: 
     return (
       <>
         <button className="btn btn-wa" type="button" disabled>
-          <I.wa size={22} /> No disponible para consultas
+          <I.wa size={22} /> No disponible por ahora
         </button>
         {reopen ? <span className="xs muted cta-note">{reopen}</span> : null}
       </>

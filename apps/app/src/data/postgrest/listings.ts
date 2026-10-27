@@ -21,6 +21,8 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
   return {
     async searchPublic(f: Filters) {
       let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
+      // Un anuncio pausado («Anuncio visible» apagado, ticket 20) no sale en Explorar; su ficha sí se abre.
+      q = q.eq("available", true);
       if (f.prov !== ALL_PROVINCES) q = q.eq("province", f.prov);
       const mode = modeFilter(f);
       if (mode === "nightly") q = q.eq("accepts_nightly", true);

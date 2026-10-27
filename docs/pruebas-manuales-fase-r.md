@@ -1,6 +1,6 @@
 # Plan de pruebas manual · fase R en nueva.bnbtico.com
 
-Fecha: 2026-10-23 (tickets 01–12, la parte preparable del 13 y los arreglos posteriores: segundo factor por app de autenticación, WhatsApp de cualquier país, avisos del perfil). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
+Fecha: 2026-10-23 (tickets 01–12, la parte preparable del 13 y los arreglos posteriores: segundo factor por app de autenticación, WhatsApp de cualquier país, avisos del perfil). **Actualizado el 2026-10-26** con los arreglos de los tickets 14–20 (pasos marcados «actualizado 2026-10-26»). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Sustituye a `docs/pruebas-manuales-fase-2.md` para la app nueva. Se ejecuta **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
 La parte A es para hacer antes, en orden. Cada acción dice si **bloquea** algo y su estado.
 
@@ -177,8 +177,8 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 | B12b | Escribir un código equivocado y luego el de 6 dígitos que muestra la app → «Verificar y entrar» | Con el equivocado «Ese código no es correcto o caducó.»; con el bueno, cola «Anuncios»: la casa de B11e en «Por revisar» como «Nueva» | ☐ |
 | B12b2 | Cerrar sesión, volver a ingresar y entrar otra vez a la revisión | «Confirme que es usted» sin QR («Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.»); el código de la app abre la cola | ☐ |
 | B12c | Abrirla → «Aprobar y publicar» | Vuelve a la cola sin la casa al instante y «Aprobada y publicada». En otro teléfono, su ficha `/casa/CT-…` se ve activa | ☐ |
-| B12d | **Purga:** en el detalle de la propietaria, apagar «Disponible para consultas» de CT-1015; abrir la ficha en otro dispositivo a los pocos segundos | La ficha refleja el cambio en segundos (sin esperar 24 h). Si no: en el SQL Editor `select status_code, content from net._http_response order by id desc limit 5;` dice qué respondió el worker | ☐ |
-| B12e | Volver a encender «Disponible para consultas» | La ficha vuelve a estar disponible | ☐ |
+| B12d | **Purga:** en el detalle de la propietaria, apagar «Anuncio visible» de CT-1015 (antes «Disponible para consultas»; hoja «Pausar anuncio»); abrir la ficha en otro dispositivo a los pocos segundos | La ficha refleja el cambio en segundos (sin esperar 24 h): «No disponible por ahora». En Explorar la casa ya no aparece. En el detalle: «Pausado: no aparece en Explorar…». Si no: en el SQL Editor `select status_code, content from net._http_response order by id desc limit 5;` dice qué respondió el worker | ☐ |
+| B12e | Volver a encender «Anuncio visible» | La ficha vuelve a estar disponible y la casa vuelve a Explorar | ☐ |
 | B12f | Con un número que no es admin (`8888 1234`), abrir `https://nueva.bnbtico.com/admin` | «Solo para el equipo de bnbtico»; no pide código ni muestra QR | ☐ |
 
 ### Pedir cambios y corregir
@@ -197,7 +197,7 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 |---|---|---|---|
 | B17 | Chrome Android: menú → «Instalar app». iPhone (Safari): Compartir → «Agregar a inicio» | Icono terracota; abre a pantalla completa en Explorar | ☐ |
 | B18 | Abrir la app instalada una vez con red; cerrarla; **modo avión**; abrirla | Abre Explorar con las casas de la última vez; tocar una tarjeta muestra la ficha; Mi cuenta abre | ☐ |
-| B19 | Aún sin red, propietaria → detalle de una casa activa → tocar «Disponible para consultas» | «Sin conexión. Revise su internet e intente de nuevo.» y el interruptor vuelve a su sitio. Con red de nuevo, nada cambió en la base | ☐ |
+| B19 | Aún sin red, propietaria → detalle de una casa activa → tocar «Anuncio visible» | «Sin conexión. Revise su internet e intente de nuevo.» y el interruptor vuelve a su sitio. Con red de nuevo, nada cambió en la base | ☐ |
 | B20 | Hacer un segundo despliegue (cualquier push a `develop`); con la app abierta, salir y volver a ella | Aviso «Hay una versión nueva · Actualizar» (no aparece dentro del asistente). «Actualizar» recarga y el aviso desaparece | ☐ |
 
 ### Telemetría y copia

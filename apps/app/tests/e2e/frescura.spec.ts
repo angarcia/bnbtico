@@ -88,8 +88,8 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-const toggle = (page: Page) => page.getByRole("switch", { name: /Disponible para consultas/ });
-const sheet = (page: Page) => page.getByRole("dialog", { name: "Cerrar a consultas" });
+const toggle = (page: Page) => page.getByRole("switch", { name: /Anuncio visible/ });
+const sheet = (page: Page) => page.getByRole("dialog", { name: "Pausar anuncio" });
 
 test("el worker local cachea la ficha; guardar el calendario, cerrar y la reapertura nocturna la refrescan en ≤ 5 s", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Frescura", nightlyPriceCrc: 95000 } });
@@ -120,8 +120,8 @@ test("el worker local cachea la ficha; guardar el calendario, cerrar y la reaper
   const reopen = addDays(today(), 9);
   await page.goto(`/propietario/casas/${casa.id}`);
   await toggle(page).click();
-  await sheet(page).getByLabel("¿Cuándo vuelve a abrir? (opcional)").fill(reopen);
-  await sheet(page).getByRole("button", { name: "Cerrar a consultas" }).click();
+  await sheet(page).getByLabel("¿Cuándo vuelve a verse? (opcional)").fill(reopen);
+  await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(toggle(page)).toHaveAttribute("aria-checked", "false");
   await expect.poll(() => freshHtml(casa.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario cerrado");
   expect(await freshHtml(casa.publicId)).toContain(`Vuelve a estar disponible el ${longDate(reopen)}`);

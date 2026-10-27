@@ -2,7 +2,7 @@
 // política listings_owner_delete y RPCs submit_listing y set_listing_available); la base sigue siendo quien decide.
 import type { Listing } from "./listing";
 
-/** `available`: el interruptor «Disponible para consultas»; `share`: el enlace público solo funciona con la casa activa. */
+/** `available`: el interruptor «Anuncio visible» (antes «Disponible para consultas»); `share`: el enlace público solo funciona con la casa activa. */
 export type ListingAction = "edit" | "discard" | "submit" | "reopen" | "available" | "share";
 
 export function can(l: Pick<Listing, "status" | "reviewedAt">, action: ListingAction): boolean {
