@@ -53,6 +53,8 @@ const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactShe
  *  `openOnMount`: la ficha de la SPA al volver de Ingresar con lo escrito (`?contacto=1`). */
 function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: PublicListing; hydrated: boolean; navigate: Navigate; openOnMount?: boolean }) {
   const [open, setOpen] = useState(!!openOnMount);
+  // Solo la hoja que reabre al volver de verificar sigue sola hacia WhatsApp; si se cierra, la siguiente espera el toque.
+  const [autoSend, setAutoSend] = useState(!!openOnMount);
   const button = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
   useEffect(() => {
@@ -104,8 +106,10 @@ function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: 
           <ContactSheet
             listing={listing}
             navigate={navigate}
+            autoSend={autoSend}
             onClose={() => {
               returnFocus.current = true;
+              setAutoSend(false);
               setOpen(false);
             }}
           />

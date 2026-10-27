@@ -49,14 +49,17 @@ function useModal() {
   }, []);
 }
 
-export function ContactSheet({ listing, onClose, navigate }: { listing: PublicListing; onClose: () => void; navigate: (href: string) => void }) {
+/** `autoSend`: la hoja reabre al volver de verificar el WhatsApp y sigue sola hacia WhatsApp (revisión UX C2), solo si lo
+ *  escrito sigue guardado: con el borrador caducado se queda abierta con el mensaje por defecto y espera el toque. */
+export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing: PublicListing; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean }) {
   const title = listing.title;
   const store = useRef(webStore("session")).current;
   const key = contactDraftKey(listing.publicId);
+  const [restored] = useState(() => restoreContactDraft(store.getItem(key), title, Date.now()));
   const [draft, dispatch] = useReducer(
     (s: ContactDraftState, a: ContactDraftAction) => redraft(s, a, title),
     null,
-    () => restoreContactDraft(store.getItem(key), title, Date.now())?.state ?? startDraft(title),
+    () => restored?.state ?? startDraft(title),
   );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
@@ -123,8 +126,17 @@ export function ContactSheet({ listing, onClose, navigate }: { listing: PublicLi
 
   // Un solo vuelo: el estado de React llega en el siguiente render y un doble toque lo adelantaría.
   const inFlight = useRef(false);
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    void send();
+  }
+  // Vuelta de la verificación con lo escrito intacto y ya con sesión: se envía sin pedir otro toque.
+  useEffect(() => {
+    if (autoSend && restored && !signedOut) void send();
+    // Solo al montar la hoja.
+  }, []);
+
+  async function send() {
     if (inFlight.current) return;
     const fields = { arrival: draft.arrival, departure: draft.departure, people: draft.people, message: draft.message };
     const problem = validateInquiryDraft(fields, today);
@@ -239,7 +251,8 @@ export function ContactSheet({ listing, onClose, navigate }: { listing: PublicLi
             aria-disabled={status.kind === "sending" || undefined}
             aria-busy={status.kind === "sending" || undefined}
           >
-            <I.wa size={20} /> {status.kind === "sending" ? "Abriendo WhatsApp…" : "Abrir WhatsApp"}
+            {/* Sin sesión el botón todavía no abre WhatsApp: lleva a verificar el número (revisión UX C2). */}
+            <I.wa size={20} /> {status.kind === "sending" ? "Abriendo WhatsApp…" : signedOut ? "Continuar" : "Abrir WhatsApp"}
           </button>
           {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}
           <span className="consent">{name} verá su nombre y su WhatsApp.</span>

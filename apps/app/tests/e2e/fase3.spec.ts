@@ -144,29 +144,21 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → M
   await expect(sheet.getByLabel("Su mensaje")).toHaveValue(message);
   await sheet.getByLabel("Personas (opcional)").blur();
   await expect(sheet).not.toHaveClass(/\bkb\b/);
-  await sheet.getByRole("button", { name: "Abrir WhatsApp" }).click();
+  await sheet.getByRole("button", { name: "Continuar" }).click();
 
-  // 5. Sin cuenta: la crea con su WhatsApp (código de prueba) y vuelve a la hoja con lo mismo escrito.
+  // 5. Sin cuenta: la crea con su WhatsApp (código de prueba) y, sin «¡Listo!» ni segundo toque, WhatsApp se abre con el
+  //    número de la casa y el mensaje exactos (revisión UX C2).
   await expect(page).toHaveURL(new RegExp(`/cuenta\\?next=%2Fcasa%2F${publicId}%3Fcontacto%3D1$`));
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await page.getByLabel("Nombre").fill(CLIENT);
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await enterCode(page);
-  await expect(page).toHaveURL(/\/cuenta\/lista\?next=%2Fcasa%2F/);
-  await page.getByRole("link", { name: "Ahora no · continuar" }).click();
-  await expect(page).toHaveURL(new RegExp(`/casa/${publicId}$`));
-  await expect(sheet).toBeVisible();
-  await expect(sheet.getByLabel("Su mensaje")).toHaveValue(message);
-  await expect(sheet.getByLabel("Personas (opcional)")).toHaveValue("3");
-  // El favorito guardado sin cuenta pasó a la cuenta al ingresar.
-  await expect.poll(clientFavorites).toEqual([publicId]);
-
-  // 6. «Abrir WhatsApp»: el número de la casa y el mensaje, exactos.
   const wa = await catchWhatsApp(page);
-  await sheet.getByRole("button", { name: "Abrir WhatsApp" }).click();
+  await enterCode(page);
   await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, message)]);
+  // 6. El favorito guardado sin cuenta pasó a la cuenta al verificar.
+  await expect.poll(clientFavorites).toEqual([publicId]);
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`/casa/${publicId}$`));
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();

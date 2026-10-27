@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
-import { listingInNext } from "../../domain/contact-return";
+import { isContactNext, listingInNext } from "../../domain/contact-return";
+import { firstName } from "../../domain/inquiry";
 import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
@@ -41,6 +42,40 @@ const backFrom = (next?: string) => {
   const publicId = listingInNext(next);
   return publicId ? `/casa/${publicId}` : "/explorar";
 };
+
+/** La casa a la que se vuelve, si `next` es una ficha (la misma consulta que la tarjeta; Query la comparte). */
+function useReturnListing(next?: string) {
+  const publicId = listingInNext(next);
+  return useQuery({ ...listingQuery(publicId ?? ""), enabled: !!publicId }).data ?? undefined;
+}
+
+/** Verificar el WhatsApp para escribirle a un propietario (revisión UX C2): la pantalla habla de escribirle, no de ingresar. */
+function useContactMode(next?: string) {
+  const contact = isContactNext(next);
+  const listing = useReturnListing(contact ? next : undefined);
+  const owner = listing ? firstName(listing.ownerName) : null;
+  return { contact, listing, header: contact ? `Escribirle a ${owner ?? "el propietario"}` : "Ingresar", owner };
+}
+
+/** La casa a la que se escribe, arriba de la verificación: foto, nombre y quién la alquila. */
+function ContactCard({ next }: { next?: string }) {
+  const l = useReturnListing(next);
+  const photo = l?.photos[0];
+  return (
+    <div className="card row gap-12 return-card contact-card" data-testid="return-card">
+      <span className="return-thumb">{photo ? <Picture photo={photo} alt="" sizes="56px" width={56} height={56} /> : null}</span>
+      <span className="stack gap-0">
+        <b className="ink">{l?.title ?? "La casa"}</b>
+        {l ? (
+          <span className="small muted">
+            {firstName(l.ownerName)}
+            {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
+          </span>
+        ) : null}
+      </span>
+    </div>
+  );
+}
 
 /** Tarjeta «recordando a qué casa vuelve» (diseño 07) cuando `next` es una ficha: foto y nombre de la casa. */
 function ReturnCard({ next }: { next?: string }) {
@@ -104,6 +139,7 @@ function EntryForm({ next }: { next?: string }) {
   const [newPhone, setNewPhone] = useState<string | null>(null);
   const captcha = useTurnstile();
   const other = country === OTHER_COUNTRY;
+  const { contact, header, owner } = useContactMode(next);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -134,10 +170,11 @@ function EntryForm({ next }: { next?: string }) {
 
   return (
     <>
-      <FlowHeader title="Ingresar" back={backFrom(next)} />
+      <FlowHeader title={header} back={backFrom(next)} />
       <div className="stack flow">
+        {contact ? <ContactCard next={next} /> : null}
         <div className="stack gap-8">
-          <h2 className="flow-title">{newPhone ? "Es su primera vez en bnbtico" : "Entre con su WhatsApp"}</h2>
+          <h2 className="flow-title">{newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el propietario"}` : "Entre con su WhatsApp"}</h2>
           <p className="muted">
             {newPhone ? (
               <>
@@ -205,15 +242,17 @@ function EntryForm({ next }: { next?: string }) {
               Cambiar número
             </button>
           ) : null}
-          <Link to="/cuenta/recuperar" className="link muted">
-            No tengo acceso a mi WhatsApp
-          </Link>
+          {contact ? null : (
+            <Link to="/cuenta/recuperar" className="link muted">
+              No tengo acceso a mi WhatsApp
+            </Link>
+          )}
         </div>
         <div className="note">
           <I.shield size={22} />
           <span>Su número solo se comparte con el propietario cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
         </div>
-        {listingInNext(next) ? <ReturnCard next={next} /> : null}
+        {listingInNext(next) && !contact ? <ReturnCard next={next} /> : null}
         <p className="xs muted center">Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.</p>
       </div>
     </>
@@ -240,6 +279,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
   const [resent, setResent] = useState<string | null>(null);
   const [wait, setWait] = useState(() => resendWaitSeconds(sentAt, Date.now()));
   const captcha = useTurnstile();
+  const { contact, header } = useContactMode(next);
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -257,7 +297,8 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
       queryClient.setQueryData(accountQuery(account.id).queryKey, account);
       if (account.isOwner) setRole("owner");
       // La pantalla «¡Listo!» invita a añadir un correo: no tiene sentido si la cuenta ya tiene uno.
-      if (mode === "register" && !account.email) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
+      // Para escribirle a un propietario no se interpone «¡Listo!»: la invitación al correo queda en Mi cuenta (revisión UX C2).
+      if (mode === "register" && !account.email && !contact) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
       else await goTo(next ?? "/cuenta");
     } catch (err) {
       setError(message(err));
@@ -285,8 +326,9 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
   const mmss = `${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}`;
   return (
     <>
-      <FlowHeader title="Ingresar" back="/cuenta" search={next ? { next } : {}} />
+      <FlowHeader title={header} back="/cuenta" search={next ? { next } : {}} />
       <div className="stack flow">
+        {contact ? <ContactCard next={next} /> : null}
         <div className="stack gap-8">
           <h2 className="flow-title">Introduzca el código</h2>
           <p className="muted">
@@ -344,7 +386,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
             Cambiar número
           </button>
         </div>
-        <ReturnCard next={next} />
+        {contact ? null : <ReturnCard next={next} />}
       </div>
     </>
   );

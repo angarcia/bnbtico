@@ -24,3 +24,9 @@ export function listingInNext(next: string | null | undefined): string | null {
 export function shouldReopenContact(contacto: string | undefined, store: { getItem(key: string): string | null }, publicId: string): boolean {
   return contacto === "1" && store.getItem(contactDraftKey(publicId)) !== null;
 }
+
+/** `next` vuelve a la hoja de contacto de una ficha: la verificación se presenta como parte de escribirle al propietario. */
+export function isContactNext(next: string | null | undefined): boolean {
+  const path = safeNext(next);
+  return !!path && listingInNext(path) !== null && /[?&]contacto=1(?:[&#]|$)/.test(path);
+}

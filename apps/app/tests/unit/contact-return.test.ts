@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { contactDraftKey, contactNext, listingInNext, shouldReopenContact, signInToContact } from "../../src/domain/contact-return";
+import { contactDraftKey, contactNext, isContactNext, listingInNext, shouldReopenContact, signInToContact } from "../../src/domain/contact-return";
 import { memoryStore } from "../../src/data/storage";
 import { proceedToWhatsApp } from "../../src/shared/contact-flow";
 import { INQUIRY_MESSAGES, type InquiryDraft } from "../../src/domain/inquiry";
@@ -94,5 +94,17 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
       expect(navigate).toHaveBeenCalledExactlyOnceWith("/cuenta?next=%2Fcasa%2FCT-1042%3Fcontacto%3D1");
       expect(open).not.toHaveBeenCalled();
     }
+  });
+});
+
+// Revisión UX C2: la verificación se lee como «Escribirle a <nombre>» solo cuando se viene de la hoja de contacto.
+describe("¿se viene de la hoja de contacto?", () => {
+  it("solo la ficha con contacto=1", () => {
+    expect(isContactNext(contactNext("CT-1042"))).toBe(true);
+    expect(isContactNext("/casa/CT-1042")).toBe(false);
+    expect(isContactNext("/casa/CT-1042?contacto=0")).toBe(false);
+    expect(isContactNext("/propietario")).toBe(false);
+    expect(isContactNext(undefined)).toBe(false);
+    expect(isContactNext("https://otro.com/casa/CT-1042?contacto=1")).toBe(false);
   });
 });

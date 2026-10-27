@@ -133,11 +133,12 @@ test("modal: el foco no sale de la hoja, el resto de la página queda inerte y �
   await expect(s).toBeFocused();
   expect(await page.locator("#root").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
   // Desde el último control, Tab vuelve al primero («Cerrar»); Mayús+Tab desde el primero, al último.
-  await s.getByRole("button", { name: "Abrir WhatsApp" }).focus();
+  // Sin sesión el último control es «Continuar» (todavía no abre WhatsApp, revisión UX C2).
+  await s.getByRole("button", { name: "Continuar" }).focus();
   await page.keyboard.press("Tab");
   await expect(s.getByRole("button", { name: "Cerrar" })).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(s.getByRole("button", { name: "Abrir WhatsApp" })).toBeFocused();
+  await expect(s.getByRole("button", { name: "Continuar" })).toBeFocused();
   await s.getByRole("button", { name: "Cerrar" }).click();
   await expect(s).toHaveCount(0);
   expect(await page.locator("#root").evaluate((el) => (el as HTMLElement).inert)).toBe(false);
