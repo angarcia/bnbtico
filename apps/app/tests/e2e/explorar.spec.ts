@@ -31,6 +31,9 @@ test("Explorar arranca en Limón y Filtros solo ofrece provincias con casas", as
   await expect(page.getByRole("heading", { level: 1, name: "¿Para dónde va?" })).toBeVisible();
   await expect(results(page)).toHaveText("8 casas en Limón");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toBeVisible();
+  // Revisión UX A11: sin filtro de fechas, el buscador no promete fechas.
+  await expect(page.locator(".search-pill")).toContainText("Cualquier grupo");
+  await expect(page.locator(".search-pill")).not.toContainText(/fecha/i);
   await expect(page.getByRole("link", { name: /Cabina Sámara/ })).toHaveCount(0);
   await page.getByRole("link", { name: /Más filtros/ }).click();
   await expect(page).toHaveURL(/\/explorar\/filtros$/);

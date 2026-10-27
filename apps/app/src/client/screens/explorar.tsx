@@ -66,7 +66,8 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
   const extras = extrasCount(f);
   const search = searchFor(f, provinces);
-  const summaryBottom = ["Cualquier fecha", f.ppl ? `${f.ppl}+ personas` : "cualquier grupo", extras ? `${extras} ${extras === 1 ? "filtro" : "filtros"}` : null].filter(Boolean).join(" · ");
+  // Sin «Cualquier fecha»: no hay filtro de fechas hasta que los calendarios sean fiables (revisión UX A11).
+  const summaryBottom = [f.ppl ? `${f.ppl}+ personas` : "Cualquier grupo", extras ? `${extras} ${extras === 1 ? "filtro" : "filtros"}` : null].filter(Boolean).join(" · ");
   return (
     <>
       <div className="stack explore-head">
