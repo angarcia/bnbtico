@@ -175,15 +175,17 @@ Hoy, 26 de octubre, tanto la ficha como el Calendario del propietario muestran o
 > 4. Con una sola casa publicada, sin selector: su nombre como subtítulo.
 > 5. Playwright: borrador creado después de la casa activa → Calendario abre la activa y el borrador no está en el selector; `?casa=<id de un borrador>` cae en la activa.
 >
+> **Cambio de regla (2026-10-27, opción a, al implementar):** la pantalla «Enviada» tiene «Marcar las noches ocupadas» (diseño v1, pantalla 12) para preparar el calendario mientras se revisa, así que la regla final es: **tienen calendario todas las casas salvo los borradores nunca enviados y las rechazadas** (en revisión por primera vez, con cambios pedidos, activas, pausadas y las publicadas que se están editando). Por defecto, la casa de la URL, la última usada o la primera activa. El estado vacío dice «Su calendario se activa cuando envíe su casa a revisión.» (en vez de «cuando publiquemos su casa», que ya no es cierto). Un `?casa=` de un borrador cae en la activa y la URL se corrige. Implementado en `ab8f2c2` (columna en `dbaa51d`).
+>
 > **Ajuste acordado (2026-10-26):** una casa ya publicada que se reabre para editarla conserva su calendario mientras se revisa (punto 1). Hoy no hay columna que lo diga: `reviewed_at` se rellena en cualquier revisión (también al pedir cambios a una casa nunca publicada). Implementación: migración con `listings.first_published_at timestamptz`, que `review_listing` rellena la primera vez que aprueba (y no se toca después), con relleno para las casas activas actuales (`= reviewed_at`), sin grant de escritura para el cliente (lo protege `listings_protect`) y su prueba de contrato.
 >
 > **Pasos de prueba manual (van a la guía final).** Desde el teléfono, en `nueva.bnbtico.com` (o la URL del worker), con una cuenta de propietario de prueba. Para tener una segunda casa activa, publíquela y apruébela desde la cuenta de admin (segundo código).
 >
 > | # | Preparación | Acción | Resultado esperado |
 > |---|---|---|---|
-> | A5-1 | Propietario sin casas ni borradores | Pestaña Calendario | «Su calendario se activa cuando publiquemos su casa» y un botón «Publicar casa»; sin selector ni rejilla. Tocar el botón abre el paso 1 del asistente. |
-> | A5-2 | Solo un borrador, empezado y dejado en el paso 4 | Pestaña Calendario | El mismo aviso con el botón «Seguir publicando»; al tocarlo, el asistente abre en el paso 4 con lo escrito. |
-> | A5-3 | Solo una casa en revisión que nunca se publicó (enviada por primera vez, sin aprobar) | Pestaña Calendario | El aviso; la casa en revisión no aparece. |
+> | A5-1 | Propietario sin casas ni borradores | Pestaña Calendario | «Su calendario se activa cuando envíe su casa a revisión.» y un botón «Publicar casa»; sin selector ni rejilla. |
+> | A5-2 | Solo un borrador, empezado y dejado en el paso 4 | Pestaña Calendario | El mismo aviso con el botón «Seguir publicando»; al tocarlo, el asistente abre en el paso 4 (el primero con algo pendiente) con lo escrito. |
+> | A5-3 | Solo una casa enviada a revisión por primera vez (sin aprobar) | Pestaña Calendario | Abre **su** calendario (con su nombre como subtítulo, sin selector): se puede preparar mientras se revisa. Lo mismo desde «Enviada» → «Marcar las noches ocupadas». |
 > | A5-4 | Una casa activa («Casa A») y después crear un borrador nuevo | Pestaña Calendario | Abre el calendario de «Casa A» con su nombre como subtítulo y **sin selector**; el borrador no aparece en ningún sitio de la pantalla. |
 > | A5-5 | Dos casas activas («Casa A» y «Casa B») y un borrador | Pestaña Calendario → abrir el selector | El selector lista solo «Casa A» y «Casa B». |
 > | A5-6 | Igual que A5-5 | Elegir «Casa B» → pestaña Inicio → volver a Calendario | Abre «Casa B» (recuerda la última usada). Cerrar la app y volver a abrirla: sigue en «Casa B». |
