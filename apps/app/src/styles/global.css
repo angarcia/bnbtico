@@ -705,3 +705,24 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .avatar-xs{width:28px;height:28px;font-size:11px;flex-shrink:0}
 /* «Escribir» en un favorito, por encima del enlace que cubre la tarjeta (revisión UX N6). */
 .fav-write{position:relative;z-index:1;align-self:flex-start;margin-top:4px}
+
+/* ---------- Escritorio: Explorar y la ficha (revisión UX N5) ----------
+   Solo CSS: lo que carga el móvil no cambia (presupuestos y Lighthouse). El resto de la app sigue en la columna de teléfono
+   hasta la pasada de escritorio (docs/plan-implementacion.md). */
+@media (min-width:900px){
+  .app:has(.listing-grid){max-width:1120px}
+  .app:has(.listing-grid) .tabbar{max-width:1120px}
+  .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+  .listing-grid .listing-card .photo{height:200px}
+}
+@media (min-width:1200px){
+  .listing-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (min-width:1024px){
+  .app:has(.listing-view){max-width:1120px}
+  .listing-view{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:40px;align-items:start}
+  .listing-view > .hero{grid-column:1;grid-row:1;height:480px;margin:0}
+  .listing-view > .listing-body{grid-column:1;grid-row:2}
+  .listing-view > .cta-spacer{display:none}
+  .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;transform:none;width:auto;max-width:none;border:0;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
+}

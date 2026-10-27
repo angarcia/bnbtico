@@ -218,6 +218,19 @@ test("en un iPhone SE la barra cabe en una línea de precio y deja ver la zona y
   await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el propietario");
 });
 
+// Revisión UX N5: en un ordenador, dos columnas (fotos y texto a la izquierda, precio y contacto fijos a la derecha).
+test("en escritorio la ficha va a dos columnas con el contacto a la derecha; en el móvil, la barra fija de siempre", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  const [hero, bar] = await page.evaluate(() => [".hero", ".cta-bar"].map((q) => document.querySelector(q)!.getBoundingClientRect().toJSON()));
+  expect(bar.left, "el contacto a la derecha de las fotos").toBeGreaterThanOrEqual(hero.right);
+  expect(bar.top, "arriba, a la altura de las fotos").toBeLessThan(hero.bottom);
+  expect(await page.locator(".cta-bar").evaluate((el) => getComputedStyle(el).position)).toBe("sticky");
+  await page.setViewportSize({ width: 375, height: 667 });
+  expect(await page.locator(".cta-bar").evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
+});
+
 // «Enlace copiado» y el contador del hero se animan al cambiar, no al pintarse por primera vez.
 test("compartir y el contador de fotos no se animan al abrir la ficha, solo al cambiar", async ({ page }) => {
   await page.addInitScript(() => {

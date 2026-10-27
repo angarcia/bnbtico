@@ -137,6 +137,20 @@ test("Vacacional y Mensual no se excluyen, caben en una fila a 360 px y la URL r
   await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
+// Revisión UX N5: en un ordenador, la rejilla de Explorar usa el ancho (3 columnas desde 900 px, 4 desde 1200 px).
+test("Explorar en escritorio: 3 y 4 columnas; en el móvil, 2", async ({ page }) => {
+  const grid = page.locator(".listing-grid:not(.skeleton)");
+  const columns = () => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/explorar");
+  await expect(grid.locator(".listing-card").first()).toBeVisible();
+  expect(await columns()).toBe(4);
+  await page.setViewportSize({ width: 1000, height: 800 });
+  expect(await columns()).toBe(3);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await columns()).toBe(2);
+});
+
 test("la moneda cambia al instante y se comparte con la ficha", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("₡85 000");
