@@ -176,9 +176,13 @@ export interface Account {
   isAdmin: boolean;
 }
 
-export type StartInput = { mode: "register"; name: string; phone: string } | { mode: "login"; phone: string };
+/** Ingresar (ticket 18): el WhatsApp y, solo si el número aún no tiene cuenta, el nombre para crearla. */
+export type StartInput = { phone: string; name?: string };
+/** «sent»: código enviado. «needs-name»: el número no tiene cuenta y no se envió nada; falta el nombre. */
+export type StartResult = "sent" | "needs-name";
 
 export interface PendingOtp {
+  /** «register»: la cuenta se crea al verificar este código; «login»: ya existía. */
   mode: "register" | "login";
   name?: string;
   phone: string;
@@ -208,10 +212,12 @@ export type ProfilePatch = Partial<Pick<Account, "name" | "email" | "description
  */
 export interface AuthApi {
   /**
-   * Valida nombre y número y pide el código por WhatsApp. Falla si no pasaron 30 s desde el último envío a ese número.
+   * Un único flujo (ticket 18). Sin nombre: si el número tiene cuenta pide el código («sent»); si no, no envía nada y
+   * responde «needs-name». Con nombre: pide el código y la cuenta se crea al verificarlo. Falla si no pasaron 30 s desde
+   * el último envío a ese número.
    * `captchaToken` (ticket 11): token de Turnstile para la protección de bots de Supabase Auth; sin él si no está configurada.
    */
-  start(input: StartInput, captchaToken?: string): Promise<void>;
+  start(input: StartInput, captchaToken?: string): Promise<StartResult>;
   pending(): PendingOtp | null;
   /** Comprueba el código del número pendiente y abre sesión. */
   verify(code: string): Promise<Account>;

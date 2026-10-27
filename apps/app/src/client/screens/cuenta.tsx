@@ -78,7 +78,8 @@ export function CuentaScreen() {
   if (status === "signed-out") {
     return (
       <TabsFrame>
-        <EntryForm mode={search.modo === "entrar" ? "login" : "register"} next={search.next} />
+        {/* Un enlace viejo con `?modo=entrar` abre el mismo flujo único. */}
+        <EntryForm next={search.next} />
       </TabsFrame>
     );
   }
@@ -89,25 +90,35 @@ export function CuentaScreen() {
   );
 }
 
-function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }) {
+/**
+ * Ingresar en un único flujo (ticket 18): primero el WhatsApp. Si el número tiene cuenta se envía el código; si no, se
+ * pide el nombre y entonces se envía (un solo código por número; ver AuthApi.start).
+ */
+function EntryForm({ next }: { next?: string }) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [country, setCountry] = useState(DEFAULT_COUNTRY);
-  const register = mode === "register";
+  // Número sin cuenta: se pide el nombre para crearla.
+  const [newPhone, setNewPhone] = useState<string | null>(null);
   const captcha = useTurnstile();
   const other = country === OTHER_COUNTRY;
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const phone = composePhone(country, field(fd, "phone"));
+    const phone = newPhone ?? composePhone(country, field(fd, "phone"));
     if (!phone) return setError(other ? "Escriba el número completo con «+» y el código de su país." : "Ese número no parece válido para el país elegido.");
     setBusy(true);
     setError(null);
     try {
       const [api, token] = await Promise.all([authApi(), captcha.token()]);
-      await api.start(register ? { mode, name: field(fd, "name"), phone } : { mode, phone }, token);
+      const result = await api.start(newPhone ? { phone, name: field(fd, "name") } : { phone }, token);
+      if (result === "needs-name") {
+        setNewPhone(phone);
+        setBusy(false);
+        return;
+      }
       await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
     } catch (err) {
       setError(message(err));
@@ -115,55 +126,72 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
     }
   }
 
+  function changeNumber() {
+    setNewPhone(null);
+    setError(null);
+  }
+
   return (
     <>
       <FlowHeader title="Ingresar" back={backFrom(next)} />
       <div className="stack flow">
         <div className="stack gap-8">
-          <h2 className="flow-title">{register ? "Su nombre y su WhatsApp. Nada más." : "Entre con su WhatsApp"}</h2>
-          <p className="muted">{register ? "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Sin contraseña ni correo." : "Le mandamos un código por WhatsApp para autorizar este teléfono."}</p>
+          <h2 className="flow-title">{newPhone ? "Es su primera vez en bnbtico" : "Entre con su WhatsApp"}</h2>
+          <p className="muted">
+            {newPhone ? (
+              <>
+                Díganos su nombre para crear su cuenta. Le mandamos el código al <b className="ink num">{formatPhone(newPhone)}</b>.
+              </>
+            ) : (
+              "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Si es su primera vez, le pedimos también su nombre. Sin contraseña ni correo."
+            )}
+          </p>
         </div>
+        {/* Sin `key`: el contenedor de Turnstile tiene que seguir montado entre los dos pasos (un token por envío). */}
         <form onSubmit={submit} className="stack gap-14" noValidate>
-          {register ? (
+          {newPhone ? (
             <div className="field">
               <label htmlFor="account-name">Nombre</label>
-              <input id="account-name" name="name" autoComplete="name" maxLength={80} placeholder="Su nombre" required />
+              <input id="account-name" name="name" autoComplete="name" maxLength={80} placeholder="Su nombre" required autoFocus />
             </div>
-          ) : null}
-          <div className="field">
-            <label htmlFor="account-country">País de su WhatsApp</label>
-            <select id="account-country" name="country" autoComplete="tel-country-code" value={country} onChange={(e) => setCountry(e.currentTarget.value)}>
-              {PHONE_COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name} (+{c.code})
-                </option>
-              ))}
-              <option value={OTHER_COUNTRY}>Otro país</option>
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="account-phone">Número de WhatsApp</label>
-            <div className="input-prefix">
-              {other ? null : (
-                <span className="prefix" aria-hidden="true">
-                  +{country}
+          ) : (
+            <>
+              <div className="field">
+                <label htmlFor="account-country">País de su WhatsApp</label>
+                <select id="account-country" name="country" autoComplete="tel-country-code" value={country} onChange={(e) => setCountry(e.currentTarget.value)}>
+                  {PHONE_COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name} (+{c.code})
+                    </option>
+                  ))}
+                  <option value={OTHER_COUNTRY}>Otro país</option>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="account-phone">Número de WhatsApp</label>
+                <div className="input-prefix">
+                  {other ? null : (
+                    <span className="prefix" aria-hidden="true">
+                      +{country}
+                    </span>
+                  )}
+                  <input
+                    id="account-phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete={other ? "tel" : "tel-national"}
+                    inputMode="tel"
+                    placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
+                    aria-describedby="account-phone-help"
+                    required
+                  />
+                </div>
+                <span id="account-phone-help" className="xs muted">
+                  {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Elija su país arriba." : "Escriba su número sin el código de país."}
                 </span>
-              )}
-              <input
-                id="account-phone"
-                name="phone"
-                type="tel"
-                autoComplete={other ? "tel" : "tel-national"}
-                inputMode="tel"
-                placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
-                aria-describedby="account-phone-help"
-                required
-              />
-            </div>
-            <span id="account-phone-help" className="xs muted">
-              {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Elija su país arriba." : "Escriba su número sin el código de país."}
-            </span>
-          </div>
+              </div>
+            </>
+          )}
           <div ref={captcha.container} className="captcha" />
           {error ? <p className="field-error" role="alert">{error}</p> : null}
           <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
@@ -171,9 +199,11 @@ function EntryForm({ mode, next }: { mode: "register" | "login"; next?: string }
           </button>
         </form>
         <div className="stack small">
-          <Link to="/cuenta" search={{ ...(register ? { modo: "entrar" as const } : {}), ...(next ? { next } : {}) }} className="link" replace>
-            {register ? "Ya tengo cuenta · entrar con mi WhatsApp" : "Crear una cuenta"}
-          </Link>
+          {newPhone ? (
+            <button type="button" className="btn-link" onClick={changeNumber}>
+              Cambiar número
+            </button>
+          ) : null}
           <Link to="/cuenta/recuperar" className="link muted">
             No tengo acceso a mi WhatsApp
           </Link>

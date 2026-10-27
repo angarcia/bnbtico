@@ -35,11 +35,14 @@ export function parsePending(raw: string | null, now: number): PendingOtp | null
 export function validateStart(input: StartInput): StartInput {
   const phone = normalizePhone(input.phone);
   if (!phone) throw new DomainError("Escriba un WhatsApp válido, con código de país si no es de Costa Rica.", "validation");
-  if (input.mode === "login") return { mode: "login", phone };
+  if (input.name === undefined) return { phone };
   const name = input.name.trim();
   if (name.length < 2) throw new DomainError("Escriba su nombre.", "validation");
-  return { mode: "register", name, phone };
+  return { name, phone };
 }
+
+/** El primer paso sin nombre responde que no hay cuenta (GoTrue: `otp_disabled` con `shouldCreateUser: false`). */
+export const isNoAccount = (e: DomainError) => e.kind === "not_found";
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 

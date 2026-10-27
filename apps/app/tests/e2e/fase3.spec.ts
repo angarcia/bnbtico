@@ -148,9 +148,10 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → M
 
   // 5. Sin cuenta: la crea con su WhatsApp (código de prueba) y vuelve a la hoja con lo mismo escrito.
   await expect(page).toHaveURL(new RegExp(`/cuenta\\?next=%2Fcasa%2F${publicId}%3Fcontacto%3D1$`));
-  await page.getByLabel("Nombre").fill(CLIENT);
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await page.getByLabel("Nombre").fill(CLIENT);
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await enterCode(page);
   await expect(page).toHaveURL(/\/cuenta\/lista\?next=%2Fcasa%2F/);

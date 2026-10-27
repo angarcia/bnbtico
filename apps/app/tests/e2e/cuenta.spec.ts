@@ -5,7 +5,7 @@ import { enterCode, expectNoCookies, injectSession } from "./helpers/session";
 // Cuenta con WhatsApp verificado por código (pantallas 06, 07, 08 y 20), en el navegador contra Supabase local.
 test.describe.configure({ mode: "serial" });
 
-const entryHeading = (page: import("@playwright/test").Page) => page.getByRole("heading", { name: "Su nombre y su WhatsApp. Nada más." });
+const entryHeading = (page: import("@playwright/test").Page) => page.getByRole("heading", { name: "Entre con su WhatsApp" });
 
 test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, sin una sola cookie", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
@@ -17,8 +17,16 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
   await expect(nav.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
 
-  await page.getByLabel("Nombre").fill("Ana Prueba");
+  // Un único flujo (ticket 18): primero el número; sin cuenta, el nombre y entonces el código.
+  await expect(page.getByRole("link", { name: /Ya tengo cuenta/ })).toHaveCount(0);
+  await expect(page.getByLabel("Nombre")).toHaveCount(0);
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+  await expect(page.getByText("+506 8888 9999")).toBeVisible();
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.locator(".field-error")).toHaveText("Escriba su nombre.");
+  await page.getByLabel("Nombre").fill("Ana Prueba");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
 
   await expect(page).toHaveURL(/\/cuenta\/codigo/);
@@ -72,8 +80,7 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(entryHeading(page)).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).toBeNull();
 
-  await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
-  await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
+  // Con cuenta: el código sale al primer paso, sin pedir el nombre.
   await page.getByLabel("Número de WhatsApp").fill("+506 8888 9999");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
 
@@ -86,10 +93,9 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(page.getByLabel("Descripción (opcional)")).toHaveValue("Viajo con mi familia");
   await expectNoCookies(page);
 
-  // Volver a «Crear cuenta» con un número que ya tiene correo no vuelve a ofrecer añadirlo.
+  // Volver a entrar con un número que ya tiene cuenta no ofrece «¡Listo!» (solo sale al crear una cuenta sin correo).
   await page.goto("/cuenta");
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
-  await page.getByLabel("Nombre").fill("Ana Prueba");
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100);
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -98,15 +104,19 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(page.getByRole("heading", { name: "¡Listo! Su cuenta está creada" })).toHaveCount(0);
 });
 
-test("ingresar con un número sin cuenta avisa", async ({ page }) => {
+test("un enlace viejo con ?modo=entrar abre el mismo flujo; «Cambiar número» vuelve al primer paso", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   await page.goto("/cuenta?modo=entrar");
-  await page.getByLabel("Número de WhatsApp").fill("8888 9999");
-  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.locator(".field-error")).toHaveText("No hay una cuenta con ese WhatsApp. Cree una cuenta.");
+  await expect(entryHeading(page)).toBeVisible();
   await page.getByLabel("Número de WhatsApp").fill("123");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.locator(".field-error")).toHaveText("Ese número no parece válido para el país elegido.");
+  await page.getByLabel("Número de WhatsApp").fill("8888 9999");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+  await page.getByRole("button", { name: "Cambiar número" }).click();
+  await expect(entryHeading(page)).toBeVisible();
+  await expect(page.getByLabel("Número de WhatsApp")).toBeVisible();
 });
 
 test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro país»", async ({ page }) => {
@@ -115,7 +125,6 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   const country = page.getByLabel("País de su WhatsApp");
   await expect(country).toHaveValue("506");
   await expect(page.locator(".input-prefix .prefix")).toHaveText("+506");
-  await page.getByLabel("Nombre").fill("John Test");
   await country.selectOption({ label: "Estados Unidos / Canadá (+1)" });
   await expect(page.locator(".input-prefix .prefix")).toHaveText("+1");
   await page.getByLabel("Número de WhatsApp").fill("(415) 555-01");
@@ -123,7 +132,10 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await expect(page.locator(".field-error")).toHaveText("Ese número no parece válido para el país elegido.");
   await page.getByLabel("Número de WhatsApp").fill("(415) 555-0100");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await page.getByLabel("Nombre").fill("John Test");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
 
+  await expect(page).toHaveURL(/\/cuenta\/codigo/);
   await expect(page.getByText("+1 415 555 0100")).toBeVisible();
   await page.reload();
   await expect(page.getByText("+1 415 555 0100")).toBeVisible();
@@ -133,7 +145,6 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await expect(page.getByText("WhatsApp verificado · +1 415 555 0100")).toBeVisible();
 
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
-  await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
   await page.getByLabel("País de su WhatsApp").selectOption("other");
   await expect(page.locator(".input-prefix .prefix")).toHaveCount(0);
   await page.getByLabel("Número de WhatsApp").fill("1 415 555 0100");
@@ -148,7 +159,6 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
 test("una ruta privada sin sesión lleva a Ingresar y, tras el código, vuelve a ella", async ({ page }) => {
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
-  await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
   await page.getByLabel("Número de WhatsApp").fill("8777 0001");
   await page.waitForTimeout(1100); // otro archivo pudo pedir un código para este número hace un instante
 

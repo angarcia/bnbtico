@@ -51,7 +51,7 @@ describe("Supabase Auth recibe el token", () => {
 
   it("start y resend mandan captchaToken en options", async () => {
     const { api, calls } = auth();
-    await api.start({ mode: "login", phone: "8888 1234" }, "tok-1");
+    await api.start({ phone: "8888 1234" }, "tok-1");
     await api.resend("tok-2");
     expect(calls).toEqual([
       expect.objectContaining({ phone: "+50688881234", options: expect.objectContaining({ captchaToken: "tok-1" }) }),
@@ -61,7 +61,7 @@ describe("Supabase Auth recibe el token", () => {
 
   it("sin Turnstile configurado no manda captchaToken", async () => {
     const { api, calls } = auth();
-    await api.start({ mode: "login", phone: "8888 1234" });
+    await api.start({ phone: "8888 1234" });
     expect((calls[0] as { options: Record<string, unknown> }).options).not.toHaveProperty("captchaToken");
   });
 

@@ -141,19 +141,19 @@ Copy que debe verse en toda la app: trato de usted, precios en colones `₡95 00
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| B6 | Mi cuenta → «Crear una cuenta»: en «País de su WhatsApp» Costa Rica viene por defecto; abrir la lista (14 países y «Otro país») y volver a Costa Rica; nombre y un número de prueba libre → «Recibir código por WhatsApp» | No llega nada (número de prueba); pantalla «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare. Con Twilio de pago (antes de producción) aquí llegaría el WhatsApp | ☐ |
-| B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno (`123456`) «¡Listo! Su cuenta está creada» con «Añadir correo a mi perfil» y «Ahora no · continuar» | ☐ |
+| B6 | Mi cuenta → Ingresar (actualizado 2026-10-26: un único flujo, sin «Ya tengo cuenta»): en «País de su WhatsApp» Costa Rica viene por defecto; abrir la lista (14 países y «Otro país») y volver a Costa Rica; un número de prueba **sin cuenta** → «Recibir código por WhatsApp» | No se envía nada todavía: «Es su primera vez en bnbtico» con el número a la vista, campo Nombre y «Cambiar número». Escribir el nombre → «Recibir código por WhatsApp» → «Introduzca el código». Si activó Turnstile, puede aparecer la casilla de Cloudflare | ☐ |
+| B7 | Código erróneo, luego el bueno → «Verificar y continuar» | Error «Ese código no es correcto o caducó.»; con el bueno (`123456`) «¡Listo! Su cuenta está creada» con «Añadir correo a mi perfil» y «Ahora no · continuar» (solo sale al crear una cuenta sin correo) | ☐ |
 | B8 | Cerrar la app/pestaña del todo y volver a abrir `nueva.bnbtico.com/cuenta` | Sigue con la sesión (Mi cuenta con su nombre) | ☐ |
 | B9 | «Cerrar sesión» | Vuelve a Ingresar con la barra inferior en modo cliente y «Mi cuenta» activa (la pantalla del código es la única sin barra; actualizado 2026-10-26) | ☐ |
 | B9a | Mi cuenta → «Editar» | «Guardar cambios» está desactivado hasta cambiar algo | ☐ |
 | B9b | Escribir un correo mal formado (`ana@`) → «Guardar cambios» | Aviso rojo «Ese correo no parece válido.» | ☐ |
 | B9c | Corregir el correo (`ana@ejemplo.com`) y una descripción → «Guardar cambios» | Mientras guarda: «Guardando…»; después aviso verde «Cambios guardados.» y el botón queda desactivado como «Guardado». Al volver a escribir, el aviso desaparece | ☐ |
-| B9d | Cerrar sesión y volver a «Crear una cuenta» con el **mismo** número (que ya tiene correo) | Tras el código **no** aparece «¡Listo! Su cuenta está creada» ni la invitación a añadir correo: entra directo | ☐ |
+| B9d | Cerrar sesión y volver a Ingresar con el **mismo** número | No pide el nombre: el código sale al primer paso; tras el código **no** aparece «¡Listo! Su cuenta está creada»: entra directo. (Si en B7 no salió «¡Listo!», el número ya tenía cuenta en `bnbtico-pruebas`: use uno que no la tenga; ver `docs/decisiones.md` 2026-10-26) | ☐ |
 | B9e | Mi cuenta → «Ayuda» | Texto según el rol y botón «Abrir WhatsApp». Deshabilitado hasta hacer A6 | ☐ |
 | B9f | Barra inferior → «Favoritos» sin sesión y con sesión | Pantalla de marcador («Toque el corazón en una casa…»), sin errores | ☐ |
-| B10 | «Ya tengo cuenta · entrar con mi WhatsApp» con `8888 9999` | Aviso de que no hay cuenta con ese número | ☐ |
-| B10b | «Ya tengo cuenta» eligiendo «Estados Unidos/Canadá (+1)» y un número de admin (`778 347 9837`), código `123456` | Entra; en Mi cuenta el número se ve como `+1 778 347 9837` | ☐ |
-| B10c | «Ya tengo cuenta» eligiendo «Otro país» y escribiendo `+1 778 347 9837` | Entra igual. Con «Otro país» y un número sin `+`, aviso de número no válido | ☐ |
+| B10 | En Ingresar, número sin cuenta → aparece el paso del nombre → «Cambiar número» | Vuelve al primer paso (país y número) sin haber enviado ningún código | ☐ |
+| B10b | Ingresar eligiendo «Estados Unidos/Canadá (+1)» y un número de admin (`778 347 9837`), código `123456` | El código sale al primer paso (sin pedir nombre); entra; en Mi cuenta el número se ve como `+1 778 347 9837` | ☐ |
+| B10c | Ingresar eligiendo «Otro país» y escribiendo `+1 778 347 9837` | Entra igual. Con «Otro país» y un número sin `+`, aviso de número no válido | ☐ |
 
 ### Propietaria: publicar (teléfono con `8777 0001`)
 

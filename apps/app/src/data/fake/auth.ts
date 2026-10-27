@@ -51,7 +51,13 @@ export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pendi
       const previous = pending.read();
       const wait = previous?.phone === v.phone ? cooldownError(previous.sentAt, deps.now()) : null;
       if (wait) throw wait;
-      send(v.mode === "register" ? { mode: "register", name: v.name, phone: v.phone } : { mode: "login", phone: v.phone });
+      if (v.name !== undefined) {
+        send({ mode: "register", name: v.name, phone: v.phone });
+        return "sent";
+      }
+      if (!db.profileByPhone(v.phone)) return "needs-name"; // como GoTrue con shouldCreateUser: false: nada enviado
+      send({ mode: "login", phone: v.phone });
+      return "sent";
     },
     pending: () => pending.read(),
     async resend() {

@@ -23,15 +23,15 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
     });
 
     const register = async (auth = h.auth, fullName = "Ana Prueba") => {
-      await auth.start({ mode: "register", name: fullName, phone: h.phone });
+      await auth.start({ name: fullName, phone: h.phone });
       return auth.verify(h.code);
     };
 
     it("registra con nombre y WhatsApp y deja la sesión abierta", async () => {
       expect(await h.auth.session()).toBeNull();
       expect(await h.auth.profile()).toBeNull();
-      await h.auth.start({ mode: "register", name: " Ana Prueba ", phone: h.phone.replace("+506", "") });
-      expect(h.auth.pending()).toMatchObject({ mode: "register", name: "Ana Prueba", phone: h.phone });
+      expect(await h.auth.start({ name: " Ana Prueba ", phone: h.phone.replace("+506", "") })).toBe("sent");
+      expect(h.auth.pending()).toMatchObject({ name: "Ana Prueba", phone: h.phone });
       expect((await failure(h.auth.verify("000000"))).message).toBe("Ese código no es correcto o caducó.");
       const account = await h.auth.verify(h.code);
       expect(account).toMatchObject({ name: "Ana Prueba", phone: h.phone, phoneVerified: true, isOwner: false, isAdmin: false, email: null, description: null });
@@ -41,7 +41,7 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
     });
 
     it("registra y vuelve a entrar con un WhatsApp de otro país; el número pendiente y el reenvío lo conservan", async () => {
-      await h.auth.start({ mode: "register", name: "John Test", phone: "+1 (415) 555-0100" });
+      await h.auth.start({ name: "John Test", phone: "+1 (415) 555-0100" });
       expect(h.auth.pending()).toMatchObject({ mode: "register", phone: h.intlPhone });
       expect(h.restart().pending()?.phone).toBe(h.intlPhone);
       await h.advance(RESEND_COOLDOWN_MS);
@@ -50,7 +50,7 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
       expect(account).toMatchObject({ name: "John Test", phone: h.intlPhone, phoneVerified: true });
       await h.auth.logout();
       await h.advance(RESEND_COOLDOWN_MS);
-      await h.auth.start({ mode: "login", phone: h.intlPhone });
+      await h.auth.start({ phone: h.intlPhone });
       expect((await h.auth.verify(h.code)).id).toBe(account.id);
     });
 
@@ -64,15 +64,29 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
       expect(seen.at(-1)).toBeNull();
     });
 
-    it("no deja ingresar con un número sin cuenta", async () => {
-      const e = await failure(h.auth.start({ mode: "login", phone: h.phone }));
-      expect(e.message).toBe("No hay una cuenta con ese WhatsApp. Cree una cuenta.");
+    it("un único flujo (ticket 18): sin cuenta pide el nombre sin enviar nada; con el nombre crea la cuenta", async () => {
+      expect(await h.auth.start({ phone: h.phone })).toBe("needs-name");
       expect(h.auth.pending()).toBeNull();
+      // No se envió ningún código: el nombre se puede mandar al momento (sin enfriamiento ni tope por segundo).
+      expect(await h.auth.start({ name: "Ana Prueba", phone: h.phone })).toBe("sent");
+      expect(h.auth.pending()).toMatchObject({ mode: "register", name: "Ana Prueba", phone: h.phone });
+      const account = await h.auth.verify(h.code);
+      expect(account.name).toBe("Ana Prueba");
+    });
+
+    it("un número con cuenta recibe el código al primer paso, sin pedir el nombre", async () => {
+      const account = await register();
+      await h.auth.logout();
+      await h.advance(RESEND_COOLDOWN_MS);
+      expect(await h.auth.start({ phone: h.phone })).toBe("sent");
+      expect(h.auth.pending()).toMatchObject({ mode: "login", phone: h.phone });
+      expect((await h.auth.verify(h.code)).id).toBe(account.id);
     });
 
     it("valida nombre y número antes de pedir el código", async () => {
-      expect((await failure(h.auth.start({ mode: "register", name: "A", phone: h.phone }))).message).toBe("Escriba su nombre.");
-      expect((await failure(h.auth.start({ mode: "login", phone: "12" }))).kind).toBe("validation");
+      expect((await failure(h.auth.start({ name: "A", phone: h.phone }))).message).toBe("Escriba su nombre.");
+      expect((await failure(h.auth.start({ phone: "12" }))).kind).toBe("validation");
+      expect((await failure(h.auth.start({ name: "Ana", phone: "12" }))).kind).toBe("validation");
     });
 
     it("la sesión sobrevive a reiniciar la app y cerrar sesión la revoca en el servidor", async () => {
@@ -95,7 +109,7 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
       expect(updated).toMatchObject({ name: "Ana Prueba", description: "Viajo con mi familia", email: "ana@ejemplo.com" });
       await h.auth.logout();
       await h.advance(RESEND_COOLDOWN_MS);
-      await h.auth.start({ mode: "login", phone: h.phone });
+      await h.auth.start({ phone: h.phone });
       const account = await h.auth.verify(h.code);
       expect(account).toMatchObject({ name: "Ana Prueba", description: "Viajo con mi familia", email: "ana@ejemplo.com" });
     });
@@ -117,26 +131,26 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
     });
 
     it("espera 30 segundos entre códigos para el mismo número", async () => {
-      await h.auth.start({ mode: "register", name: "Ana Prueba", phone: h.phone });
+      await h.auth.start({ name: "Ana Prueba", phone: h.phone });
       const tooSoon = await failure(h.auth.resend());
       expect(tooSoon.kind).toBe("rate_limit");
       expect(tooSoon.message).toBe("Espere 30 segundos antes de pedir otro código.");
-      expect((await failure(h.auth.start({ mode: "register", name: "Ana Prueba", phone: h.phone }))).message).toMatch(/^Espere \d+ segundos antes de pedir otro código\.$/);
+      expect((await failure(h.auth.start({ name: "Ana Prueba", phone: h.phone }))).message).toMatch(/^Espere \d+ segundos antes de pedir otro código\.$/);
       await h.advance(RESEND_COOLDOWN_MS);
       await h.auth.resend();
       expect((await h.auth.verify(h.code)).name).toBe("Ana Prueba");
     });
 
     it("el límite de envíos de Supabase llega como aviso en español", async () => {
-      await h.auth.start({ mode: "register", name: "Ana Prueba", phone: h.phone });
+      await h.auth.start({ name: "Ana Prueba", phone: h.phone });
       h.auth.cancel();
-      const e = await failure(h.auth.start({ mode: "register", name: "Ana Prueba", phone: h.phone }));
+      const e = await failure(h.auth.start({ name: "Ana Prueba", phone: h.phone }));
       expect(e.kind).toBe("rate_limit");
       expect(e.message).toMatch(/^Espere (un momento|\d+ segundos) antes de pedir otro código\.$/);
     });
 
     it("cancelar olvida el número pendiente", async () => {
-      await h.auth.start({ mode: "register", name: "Ana Prueba", phone: h.phone });
+      await h.auth.start({ name: "Ana Prueba", phone: h.phone });
       h.auth.cancel();
       expect(h.auth.pending()).toBeNull();
       expect((await failure(h.auth.verify(h.code))).message).toBe("No hay ningún código pendiente. Vuelva a empezar.");
@@ -144,7 +158,7 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
     });
 
     it("el número pendiente sobrevive a reabrir la pestaña durante diez minutos", async () => {
-      await h.auth.start({ mode: "register", name: "Ana Prueba", phone: h.phone });
+      await h.auth.start({ name: "Ana Prueba", phone: h.phone });
       expect(h.restart().pending()?.phone).toBe(h.phone);
       await h.advance(PENDING_TTL_MS);
       expect(h.restart().pending()).toBeNull();
@@ -206,7 +220,7 @@ export function authContract(name: string, makeHarness: () => Promise<AuthHarnes
         await h.auth.verifyMfa(first.factorId, h.mfaCode(first.secret));
         await h.auth.logout();
         await h.advance(1000);
-        await h.auth.start({ mode: "login", phone: h.phone });
+        await h.auth.start({ phone: h.phone });
         await h.auth.verify(h.code);
         expect((await h.auth.session())?.aal).toBe("aal1");
         const again = await h.auth.enrolMfa();

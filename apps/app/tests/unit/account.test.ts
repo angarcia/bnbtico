@@ -31,12 +31,12 @@ describe("número pendiente", () => {
 
 describe("validateStart", () => {
   it("normaliza el número y recorta el nombre", () => {
-    expect(validateStart({ mode: "register", name: "  Ana Prueba ", phone: "8888 1234" })).toEqual({ mode: "register", name: "Ana Prueba", phone: "+50688881234" });
-    expect(validateStart({ mode: "login", phone: "+506 8888 1234" })).toEqual({ mode: "login", phone: "+50688881234" });
+    expect(validateStart({ name: "  Ana Prueba ", phone: "8888 1234" })).toEqual({ name: "Ana Prueba", phone: "+50688881234" });
+    expect(validateStart({ phone: "+506 8888 1234" })).toEqual({ phone: "+50688881234" });
   });
   it("rechaza número o nombre inválidos con mensajes en español", () => {
-    expect(() => validateStart({ mode: "login", phone: "123" })).toThrow("Escriba un WhatsApp válido, con código de país si no es de Costa Rica.");
-    expect(() => validateStart({ mode: "register", name: "A", phone: "88881234" })).toThrow("Escriba su nombre.");
+    expect(() => validateStart({ phone: "123" })).toThrow("Escriba un WhatsApp válido, con código de país si no es de Costa Rica.");
+    expect(() => validateStart({ name: "A", phone: "88881234" })).toThrow("Escriba su nombre.");
   });
 });
 

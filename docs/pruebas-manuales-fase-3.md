@@ -70,8 +70,8 @@ Copy que debe verse: trato de usted, nada de «Identidad», fechas como «del 20
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | B3 | Con fechas válidas → «Abrir WhatsApp» | Pantalla de cuenta con la tarjeta «Después de verificar vuelve a <casa> con su consulta tal como la dejó.» y la foto | ☐ |
-| B3a | «Ya tengo cuenta» → país **Estados Unidos/Canadá (+1)** → `778 347 9837` (Daniel) → código `123456` | Vuelve a la ficha **con la hoja abierta** y lo mismo escrito (fechas, personas y el texto editado); ya sin el aviso del código | ☐ |
-| B3b | Repetir B1–B3 en otra pestaña privada, pero con «Crear una cuenta» y un número de prueba libre (`8888 9999`), luego «Ahora no · continuar» | Tras «¡Listo! Su cuenta está creada» vuelve a la hoja con lo escrito. (Cierre esa pestaña sin enviar) | ☐ |
+| B3a | (Desde 2026-10-26 no hay «Ya tengo cuenta»: un único flujo, primero el número) País **Estados Unidos/Canadá (+1)** → `778 347 9837` (Daniel) → código `123456` | Vuelve a la ficha **con la hoja abierta** y lo mismo escrito (fechas, personas y el texto editado); ya sin el aviso del código | ☐ |
+| B3b | Repetir B1–B3 en otra pestaña privada, pero con un número de prueba libre (`8888 9999`): tras el número pide el nombre («Es su primera vez en bnbtico»); luego «Ahora no · continuar» | Tras «¡Listo! Su cuenta está creada» vuelve a la hoja con lo escrito. (Cierre esa pestaña sin enviar) | ☐ |
 
 ### Abrir WhatsApp de verdad y volver
 

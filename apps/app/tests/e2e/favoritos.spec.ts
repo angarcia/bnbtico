@@ -92,7 +92,6 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
 
   // Ingresar en el mismo teléfono: vuelve a Favoritos y la lista pasa a la cuenta.
   await page.getByRole("link", { name: "Ingresar" }).click();
-  await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
   await page.getByLabel("Número de WhatsApp").fill("8888 1234");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();

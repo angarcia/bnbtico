@@ -71,9 +71,7 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   await expect(page.getByRole("link", { name: "Volver" })).toHaveAttribute("href", `/casa/${casa.publicId}`);
   await page.screenshot({ path: "test-results/contacto-ingresar.png" });
 
-  await page.getByRole("link", { name: "Ya tengo cuenta · entrar con mi WhatsApp" }).click();
   await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
-  await expect(card).toHaveText(CARD);
   await page.getByLabel("Número de WhatsApp").fill("8888 1234");
   await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -116,11 +114,14 @@ test("ficha de la SPA sin sesión → Crear cuenta con un número nuevo → «¡
   await sheet(page).getByRole("button", { name: "Abrir WhatsApp" }).click();
 
   await expect(page).toHaveURL(accountUrl());
-  await expect(page.getByRole("heading", { name: "Su nombre y su WhatsApp. Nada más." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
   await expect(page.getByTestId("return-card")).toHaveText(CARD);
-  await page.getByLabel("Nombre").fill("Ana Nueva");
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100);
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+  await expect(page.getByTestId("return-card")).toHaveText(CARD);
+  await page.getByLabel("Nombre").fill("Ana Nueva");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.getByTestId("return-card")).toHaveText(CARD);
   await enterCode(page);
@@ -140,10 +141,11 @@ test("WhatsApp de otro país (+1 415 555 0100); con el borrador caducado (más d
   await message(page).fill("Hello, is it free?");
   await sheet(page).getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect(page).toHaveURL(accountUrl());
-  await page.getByLabel("Nombre").fill("John Test");
   await page.getByLabel("País de su WhatsApp").selectOption({ label: "Estados Unidos / Canadá (+1)" });
   await page.getByLabel("Número de WhatsApp").fill("(415) 555-0100");
   await page.waitForTimeout(1100);
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await page.getByLabel("Nombre").fill("John Test");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.getByText("+1 415 555 0100")).toBeVisible();
   // Pasan más de 30 minutos en la pantalla del código.

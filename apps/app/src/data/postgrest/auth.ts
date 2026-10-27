@@ -3,7 +3,7 @@
 // trigger en auth.users con el nombre que va como metadato. La sesión la guarda supabase-js en el almacenamiento que
 // recibió el cliente (ver session-client.ts).
 import type { Session as SupabaseSession, SupabaseClient } from "@supabase/supabase-js";
-import { cooldownError, validateProfilePatch, validateStart } from "../../domain/account";
+import { cooldownError, isNoAccount, validateProfilePatch, validateStart } from "../../domain/account";
 import type { Account, AuthApi, MfaApi, PendingOtp, Session } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
@@ -76,7 +76,19 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
       const previous = pending.read();
       const wait = previous?.phone === v.phone ? cooldownError(previous.sentAt, now()) : null;
       if (wait) throw wait;
-      await send(v.mode === "register" ? { mode: "register", name: v.name, phone: v.phone } : { mode: "login", phone: v.phone }, captchaToken);
+      if (v.name !== undefined) {
+        await send({ mode: "register", name: v.name, phone: v.phone }, captchaToken);
+        return "sent";
+      }
+      // Sin nombre se intenta entrar sin crear cuenta. Si GoTrue dice que no hay usuario, no envió nada (no cuenta para el
+      // tope de un código por segundo ni para el enfriamiento): se pide el nombre y el segundo paso envía el único código.
+      try {
+        await send({ mode: "login", phone: v.phone }, captchaToken);
+        return "sent";
+      } catch (e) {
+        if (e instanceof DomainError && isNoAccount(e)) return "needs-name";
+        throw e;
+      }
     },
     pending: () => pending.read(),
     async resend(captchaToken) {
