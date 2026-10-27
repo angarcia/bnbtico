@@ -40,7 +40,7 @@ test.beforeAll(async () => {
   casa = await h.seed({
     status: "active",
     photos: 5,
-    draft: { title: "Casa Playa Negra", zone: "Playa Negra" },
+    draft: { title: "Casa Playa Negra", zone: "Playa Negra", capacity: 4 },
   });
   cabina = await h.seed({
     status: "active",
