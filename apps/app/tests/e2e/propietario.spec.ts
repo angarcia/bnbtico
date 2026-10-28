@@ -68,6 +68,53 @@ test("Mis casas: estado, nota del admin y, sin red, desde la caché", async ({ p
   await expect(page.getByTestId("resume-card")).toContainText("Cabina con cambios");
 });
 
+// Revisión de Ana: toda la tarjeta abre el detalle (enlace estirado del título); sus botones siguen haciendo lo suyo y
+// arrastrar sobre una tarjeta desplaza la lista.
+test("Mis casas: tocar la foto o el precio abre el detalle; «Compartir ficha», «Calendario» y «Seguir» siguen; arrastrar desplaza", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.addInitScript(() => {
+    const w = window as unknown as { shared: unknown[] };
+    w.shared = [];
+    Object.defineProperty(navigator, "share", { configurable: true, value: async (data: unknown) => void w.shared.push(data) });
+  });
+  await page.goto("/propietario/casas");
+  // Un toque donde está la pieza (el enlace estirado la cubre: un clic «sobre el elemento» lo intercepta, que es la idea).
+  const tap = async (target: ReturnType<Page["locator"]>) => {
+    await target.evaluate((el) => el.scrollIntoView({ block: "center" })); // lejos de las barras fijas
+    const b = (await target.boundingBox())!;
+    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
+  };
+  await tap(card(page, "Casa Cocles").locator(".thumb"));
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
+  await page.goBack();
+  await tap(card(page, "Casa Cocles").locator(".price-line"));
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
+  await page.goBack();
+  await tap(card(page, "Casa en revisión").getByTestId("card-line"));
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${review.id}$`));
+  await page.goBack();
+
+  await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  expect(await page.evaluate(() => (window as unknown as { shared: { url: string }[] }).shared)).toEqual([expect.objectContaining({ url: `http://${HOST}/casa/${active.publicId}` })]);
+  await card(page, "Casa Cocles").getByRole("link", { name: "Calendario" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${active.id}`));
+  await page.goBack();
+  await card(page, "Borrador nuevo").getByRole("link", { name: "Seguir" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/\\d+$`));
+  await page.goto("/propietario/casas");
+
+  // Un arrastre con el dedo que empieza sobre una tarjeta desplaza la lista y no abre nada.
+  await expect(card(page, "Casa en revisión")).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const before = await page.evaluate(() => window.scrollY);
+  const box = (await card(page, "Casa en revisión").boundingBox())!;
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.synthesizeScrollGesture", { x: Math.round(box.x + box.width / 2), y: Math.round(Math.min(box.y + box.height / 2, 600)), yDistance: -250, gestureSourceType: "touch", speed: 800 });
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+});
+
 test("visitas y consultas de 30 días en el detalle de la casa", async ({ page }) => {
   await page.goto(`/propietario/casas/${active.id}`);
   // Revisión UX A2: sin visitas ni consultas, la invitación a compartir; con ellas, las cifras de 30 días.

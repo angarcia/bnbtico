@@ -260,8 +260,9 @@ function OwnerCard({ listing: l, userId, primary, billing }: { listing: Listing;
         <Thumb listing={l} />
         <div className="stack gap-4 grow-col">
           <StatusBadge listing={l} />
+          {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
           <h2 className="owner-card-title">
-            <Link to="/propietario/casas/$id" params={{ id: l.id }}>
+            <Link to="/propietario/casas/$id" params={{ id: l.id }} className="stretched">
               {titleOf(l)}
             </Link>
           </h2>

@@ -407,7 +407,9 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .offer-left{font-weight:700}
 .price-line{font-weight:600}
 .price-line .muted{font-weight:400}
-.owner-card{padding:12px}
+.owner-card{padding:12px;position:relative}
+/* Toda la tarjeta abre el detalle (el título es un enlace estirado); sus botones quedan por encima y se pueden tocar. */
+.owner-card .btn{position:relative;z-index:1}
 .owner-card-title{font-size:19px;font-weight:700}
 .owner-card-title a{color:inherit;text-decoration:none}
 /* Promoción y suscripción (fase 5): una casa por bloque; la del enlace #pago=CT-#### resaltada. */
