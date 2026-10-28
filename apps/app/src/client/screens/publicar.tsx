@@ -1,11 +1,12 @@
-// Asistente de publicar (decisión 2026-10-21): entrada (empezar o retomar el borrador pendiente) y nueve pantallas
-// cortas sin scroll. Se carga bajo demanda al abrir /propietario/publicar: no entra en el JS inicial.
+// Asistente de publicar (decisión 2026-10-21): entrada (empezar o retomar el borrador pendiente) y ocho pantallas
+// cortas sin scroll (ids de URL 1, 2 y 4–9; el 3 viejo lleva al 2). Se carga bajo demanda al abrir /propietario/publicar:
+// no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
-import { LAST_STEP, STEPS, resumeStep, wizardStage, type Listing, type Step } from "../../domain/listing";
+import { STEP_COUNT, STEPS, resumeStep, stepFromParam, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
@@ -115,7 +116,7 @@ function CloseWizard({ id }: { id: string }) {
 function StageLabel({ step }: { step: Step }) {
   const stage = wizardStage(step);
   return (
-    <span className="right stage-label" aria-label={`${stage.name}, ${stage.position} de ${stage.size}. Paso ${step} de ${LAST_STEP}.`}>
+    <span className="right stage-label" aria-label={`${stage.name}, ${stage.position} de ${stage.size}. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
       <b>{stage.name}</b>
       <span>
         {stage.position} de {stage.size}
@@ -129,18 +130,17 @@ function StepHeader({ id, step }: { id: string; step: Step | null }) {
     <header className="header-flow">
       <CloseWizard id={id} />
       <h1>Publicar casa</h1>
-      {/* La etapa en vez de «Paso n de 9» (revisión UX C4): tres tramos que se leen más cortos que nueve pasos. */}
+      {/* La etapa en vez de «Paso n de 8» (revisión UX C4): tres tramos que se leen más cortos que ocho pasos. */}
       {step ? <StageLabel step={step} /> : null}
     </header>
   );
 }
 
 const stepRoute = getRouteApi("/_flow/_privateFlow/propietario/publicar/$id/$paso");
-const toStep = (paso: string): Step | null => (STEPS as readonly number[]).includes(Number(paso)) && /^\d$/.test(paso) ? (Number(paso) as Step) : null;
-
 export function PasoScreen() {
   const { id, paso } = stepRoute.useParams();
-  const step = toStep(paso);
+  const parsed = stepFromParam(paso);
+  const step = parsed && "step" in parsed ? parsed.step : null;
   const { userId, query } = useOwnListing(id);
   const client = useQueryClient();
   const l = query.data;
@@ -162,6 +162,8 @@ export function PasoScreen() {
     if (step === 7) void client.invalidateQueries({ queryKey: ["own-listing", userId, id] });
   }, [step, client, userId, id]);
 
+  // Un id de pantalla retirado (el 3, el mapa de antes) lleva a la que lo sustituye: los enlaces viejos siguen sirviendo.
+  if (parsed && "redirect" in parsed) return <Navigate to="/propietario/publicar/$id/$paso" params={{ id, paso: String(parsed.redirect) }} replace />;
   const header = <StepHeader id={id} step={step} />;
   if (!step || l === null) {
     return (
@@ -192,9 +194,9 @@ export function PasoScreen() {
     <>
       {header}
       <div className="progress" aria-hidden="true">
-        {/* Los 9 tramos agrupados por etapa: un hueco mayor donde empieza la siguiente. */}
+        {/* Los 8 tramos agrupados por etapa: un hueco mayor donde empieza la siguiente. */}
         {STEPS.map((s) => (
-          <span key={s} className={`${s <= step ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
+          <span key={s} className={`${stepPosition(s) <= stepPosition(step) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
         ))}
       </div>
       <StepForm key={step} userId={userId} listing={l} step={step} enter={enter}>

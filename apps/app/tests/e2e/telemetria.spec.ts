@@ -65,11 +65,11 @@ test("el propietario que abre su propia ficha no suma una visita", async ({ page
 // Revisión UX C4 (punto 6): cada pantalla del asistente que se abre, para ver dónde se abandona.
 test("el asistente manda «wizard_step» con la casa y la ruta sin el id del borrador", async ({ page }) => {
   await injectSession(page, "owner");
-  await page.goto(`/propietario/publicar/${draft.id}/3`);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 5");
+  await page.goto(`/propietario/publicar/${draft.id}/4`);
+  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
   await expect
     .poll(() => rows(`select name || ' ' || listing_public_id || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'wizard_step'`))
-    .toEqual([`wizard_step ${draft.publicId} publicar /propietario/publicar/:id/3`]);
+    .toEqual([`wizard_step ${draft.publicId} publicar /propietario/publicar/:id/4`]);
 });
 
 test("errores no capturados y promesas rechazadas llegan con ruta y build; una baliza ajena se rechaza", async ({ page }) => {

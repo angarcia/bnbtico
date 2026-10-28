@@ -67,12 +67,12 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await owner.getByText("Alojamiento completo", { exact: true }).click();
   await continuar();
   await expect(owner).toHaveURL(/\/2$/);
-  await owner.getByLabel("Cantón").selectOption("Talamanca");
-  await owner.getByLabel("Zona, playa o barrio").fill("Punta Mona");
-  await continuar();
-  await expect(owner).toHaveURL(/\/3$/);
-  await owner.locator(".leaflet-container").click({ position: { x: 150, y: 120 } });
-  await expect(owner.locator('input[name="lat"]')).not.toHaveValue("");
+  // ¿Dónde está su casa?: un toque en el mapa (abre en Limón) da el cantón y la zona más cercana.
+  // El mapa abre en Limón a zoom 9, con la costa a unos 3 px al este del centro: el toque va 10 px al oeste, en tierra.
+  await expect(owner.locator(".map-box.leaflet-container")).toBeVisible();
+  const map = (await owner.locator(".map-box").boundingBox())!;
+  await owner.mouse.click(map.x + map.width / 2 - 10, map.y + map.height / 2);
+  await expect(owner.locator(".place-line")).toHaveText("Limón, Limón");
   await continuar();
   await expect(owner).toHaveURL(/\/4$/);
   for (const [label, n] of [["personas", 4], ["habitaciones", 2], ["baños", 1]] as const) {
@@ -97,9 +97,6 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await continuar();
   await expect(owner).toHaveURL(/\/9$/);
   await expect(owner.getByText("+506 8777 0001")).toBeVisible();
-  // Puente hasta la tarea 7 de la ubicación por punto: el paso 2 aún no guarda de dónde sale la zona y submit_listing la exige;
-  // además, el toque en el mapa del paso 3 cae en el mar y place_at no da cantón: se pone un punto en tierra (Manzanillo).
-  await serviceClient().from("listings").update({ zone_source: "other", lat: 9.6317, lng: -82.6572 }).eq("id", id);
   await owner.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(owner.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
   await owner.context().close();

@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { PROVINCE_CENTERS, roundPoint, type LatLng } from "../../domain/geo";
-import { ZONE_ZOOM } from "../../domain/zones";
 import { DEFAULT_PROVINCE } from "../../domain/listing";
 import type { PickerMap } from "./location-leaflet";
 
@@ -11,26 +10,33 @@ const Locate = () => (
   </svg>
 );
 
-/** Pantalla 3: pin arrastrable con el círculo de ~500 m, «Toque el mapa» / «Arrastre el pin» y «Usar mi ubicación». Sin pin,
- *  abre con zoom en la zona elegida en el paso 2 (`zone`, ticket 22) o, si no hay, en la provincia. */
-export function LocationPicker({ province, lat, lng, zone }: { province: string; lat: number | null; lng: number | null; zone: LatLng | null }) {
+/** Lo que la pantalla puede pedirle al mapa: moverlo (el buscador) sin tocar el pin. */
+export interface PickerHandle {
+  view(p: LatLng, zoom: number): void;
+}
+
+/** Mapa del paso 2: pin arrastrable con el círculo de ~500 m y «Usar mi ubicación». Abre en el pin o, sin pin, en Limón
+ *  (Caribe por defecto). Cada toque o arrastre que deja el pin en Costa Rica llama a `onPick` con el punto redondeado. */
+export function LocationPicker({ lat, lng, onPick, ref }: { lat: number | null; lng: number | null; onPick: (p: LatLng) => void; ref?: Ref<PickerHandle> }) {
   const box = useRef<HTMLDivElement>(null);
   const picker = useRef<PickerMap | null>(null);
-  const [point, setPoint] = useState<LatLng | null>(lat !== null && lng !== null ? { lat, lng } : null);
+  const pick = useRef(onPick);
+  pick.current = onPick;
+  useImperativeHandle(ref, () => ({ view: (p, zoom) => picker.current?.view(p, zoom) }), []);
 
   useEffect(() => {
     let cancelled = false;
-    const center = zone ?? PROVINCE_CENTERS[province] ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!;
+    const point = lat !== null && lng !== null ? { lat, lng } : null;
     import("./location-leaflet").then(({ drawPicker }) => {
       if (cancelled || !box.current) return;
-      picker.current = drawPicker(box.current, { point, center, zoom: zone ? ZONE_ZOOM : 9 }, (p) => setPoint(roundPoint(p)));
+      picker.current = drawPicker(box.current, { point, center: PROVINCE_CENTERS[DEFAULT_PROVINCE]!, zoom: 9 }, (p) => pick.current(roundPoint(p)));
     });
     return () => {
       cancelled = true;
       picker.current?.dispose();
       picker.current = null;
     };
-    // Solo al montar: la provincia y el pin iniciales deciden el encuadre; después manda el pin.
+    // Solo al montar: el pin inicial decide el encuadre; después manda el pin.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -38,17 +44,11 @@ export function LocationPicker({ province, lat, lng, zone }: { province: string;
     navigator.geolocation?.getCurrentPosition((pos) => picker.current?.place({ lat: pos.coords.latitude, lng: pos.coords.longitude }), () => undefined, { enableHighAccuracy: true, timeout: 8000 });
 
   return (
-    <div className="stack grow-col gap-8">
-      <div className="map-wrap">
-        <div ref={box} className="map-box" role="application" aria-label="Mapa para marcar la ubicación aproximada" />
-        <span className="pill pill-sm map-hint">{point ? "Arrastre el pin" : "Toque el mapa"}</span>
-        <button type="button" className="icon-btn overlay map-locate" aria-label="Usar mi ubicación" onClick={locate}>
-          <Locate />
-        </button>
-      </div>
-      <input type="hidden" name="lat" value={point?.lat ?? ""} />
-      <input type="hidden" name="lng" value={point?.lng ?? ""} />
-      <span className="small muted">En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.</span>
+    <div className="map-wrap">
+      <div ref={box} className="map-box" role="application" aria-label="Mapa para marcar la ubicación aproximada" />
+      <button type="button" className="icon-btn overlay map-locate" aria-label="Usar mi ubicación" onClick={locate}>
+        <Locate />
+      </button>
     </div>
   );
 }

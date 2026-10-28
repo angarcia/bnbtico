@@ -142,6 +142,12 @@ export function reconcileZone(current: ZoneChoice | null, pin: LatLng, options: 
   const first = options[0];
   if (!first) return current;
   if (current) {
+    // Un distrito elegido cuya opción quitó una zona de la lista con el mismo nombre pasa a esa zona: si no, la lista se
+    // quedaría sin ningún valor elegido.
+    if (current.source === "district" && place !== null && norm(place.district) === norm(current.name)) {
+      const same = options.find((o) => o.source === "list" && norm(o.name) === norm(current.name));
+      if (same) return choiceOf(same);
+    }
     const stays =
       current.source === "list"
         ? options.some((o) => o.source === "list" && o.zoneId === current.zoneId)

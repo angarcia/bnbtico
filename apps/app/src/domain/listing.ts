@@ -3,18 +3,39 @@
 // «Alquiler mensual» es opcional, con precio al mes opcional (vacío = «Precio a negociar con el dueño»; decisión
 // 2026-10-27). Tipo Alojamiento completo / Habitación (con baño privado o compartido), contadores. Dinero en colones
 // enteros. Copy en usted.
-// El formulario va en 9 pantallas cortas, sin scroll en el móvil (decisión 2026-10-21): cada una guarda su parte del borrador.
+// El formulario va en pantallas cortas, sin scroll en el móvil (decisión 2026-10-21): cada una guarda su parte del borrador.
+// Desde 2026-10-27 son 8 (ubicación por punto): el mapa se unió al paso 2 y su id de URL, el 3, se retiró y lleva al 2; los
+// demás ids no cambian (el precio sigue siendo el 8), así los enlaces y los borradores retomados no caen en otra pantalla.
 // Módulo de dominio: sin imports de framework.
-import { esCanton } from "./cantones";
 import { inCostaRica, type LatLng } from "./geo";
+import { OTHER_ZONE_MAX, type ZoneSource } from "./zones";
 
 export type Kind = "completo" | "habitacion" | "casa" | "apartamento"; // casa/apartamento: filas anteriores al diseño v1
 export type Feature = "pool" | "pets" | "wifi" | "ac" | "parking" | "ev" | "kids_free" | "beachfront" | "bbq";
 export type MonthlyMode = "amount" | "contact";
 export type ListingStatus = "draft" | "review" | "changes" | "rejected" | "payment_due" | "active" | "inactive";
-export type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-export const STEPS: readonly Step[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+/** Ids de pantalla estables; el 3 (mapa) se retiró el 2026-10-27. */
+export type Step = 1 | 2 | 4 | 5 | 6 | 7 | 8 | 9;
+export const STEPS: readonly Step[] = [1, 2, 4, 5, 6, 7, 8, 9];
 export const LAST_STEP: Step = 9;
+export const STEP_COUNT = STEPS.length;
+/** Ids de URL retirados y la pantalla que los sustituye. */
+export const RETIRED_STEPS: Readonly<Record<string, Step>> = { "3": 2 };
+
+/** El parámetro `paso` de la URL: un paso, uno retirado (a dónde llevarlo) o nada (no existe). */
+export function stepFromParam(paso: string): { step: Step } | { redirect: Step } | null {
+  if (!/^[1-9]$/.test(paso)) return null;
+  const retired = RETIRED_STEPS[paso];
+  if (retired) return { redirect: retired };
+  const n = Number(paso) as Step;
+  return STEPS.includes(n) ? { step: n } : null;
+}
+
+/** Posición 1…8 de la pantalla, para «Paso n de 8» y la barra de progreso. */
+export const stepPosition = (step: Step): number => STEPS.indexOf(step) + 1;
+/** La pantalla siguiente o la anterior (saltan el 3); null en los extremos. */
+export const nextStep = (step: Step): Step | null => STEPS[STEPS.indexOf(step) + 1] ?? null;
+export const previousStep = (step: Step): Step | null => STEPS[STEPS.indexOf(step) - 1] ?? null;
 
 /** Una sola lista, igual al publicar, al filtrar y en la ficha. */
 export const FEATURES: readonly [Feature, string][] = [
@@ -43,7 +64,7 @@ export const KIND_HINTS: Record<"completo" | "habitacion", string> = {
   habitacion: "Un cuarto en una casa donde vive más gente.",
 };
 
-export const STEP_NAMES = ["Alojamiento", "Ubicación", "Mapa", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"] as const;
+export const STEP_NAMES = ["Alojamiento", "Ubicación", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"] as const;
 export const MIN_PHOTOS = 5;
 
 /** «Alquiler mensual»: chip, interruptor de Filtros y característica de la ficha. */
@@ -68,9 +89,14 @@ export interface ListingDraft {
   /** Siempre true: toda casa se alquila por noches (check en la base). */
   acceptsNightly: boolean;
   acceptsMonthly: boolean;
+  /** Provincia, cantón y distrito: los da el pin (place_at); submit_listing los recalcula. */
   province: string;
   canton: string;
+  district: string;
+  /** Nombre de la zona elegida: de la lista (`zoneId`), el distrito del pin, u «Otra…» (propuesta por el dueño). */
   zone: string;
+  zoneId: string | null;
+  zoneSource: ZoneSource | null;
   lat: number | null;
   lng: number | null;
   capacity: number | null;
@@ -123,7 +149,10 @@ export const emptyDraft = (): ListingDraft => ({
   acceptsMonthly: false,
   province: DEFAULT_PROVINCE,
   canton: "",
+  district: "",
   zone: "",
+  zoneId: null,
+  zoneSource: null,
   lat: null,
   lng: null,
   capacity: null,
@@ -161,9 +190,11 @@ export function parseColones(input: string): number | null {
 const isInt = (v: number | null, min: number) => v !== null && Number.isInteger(v) && v >= min;
 
 /** Limpia dependencias: toda casa se alquila por noches; sin parqueo no hay tipo; sin «Alquiler mensual» no hay precio al
- *  mes; sin habitación no hay dato del baño. Las columnas antiguas (monthlyMode, minNights, minMonths) no se tocan. */
+ *  mes; sin habitación no hay dato del baño; solo una zona de la lista lleva `zoneId`. Las columnas antiguas (monthlyMode,
+ *  minNights, minMonths) no se tocan. */
 export function normalize(d: ListingDraft): ListingDraft {
   const n = { ...d, acceptsNightly: true };
+  if (n.zoneSource !== "list") n.zoneId = null;
   if (!n.features.includes("parking")) n.parkingPaid = null;
   if (n.kind !== "habitacion") n.bathroomShared = null;
   if (!n.acceptsMonthly) n.monthlyPriceCrc = null;
@@ -181,20 +212,28 @@ export const DESCRIPTION_LENGTH_ERROR = `La descripción debe tener entre ${DESC
 export const charCount = (text: string) => [...text.trim()].length;
 const between = (n: number, min: number, max: number) => n >= min && n <= max;
 
+/** Paso 2 (ubicación por punto): los mismos mensajes en el dominio, el fake y `submit_listing`. */
+export const LOCATION_MESSAGES = {
+  noPin: "Marque en el mapa la ubicación aproximada.",
+  notLand: "Ponga el punto sobre tierra, dentro de Costa Rica.",
+  noZone: "Elija la zona.",
+  farZone: "La zona elegida queda a más de 5 km del punto. Elija otra.",
+  notDistrict: "La zona no coincide con el distrito del punto. Elija otra.",
+  longZone: `La zona puede tener como mucho ${OTHER_ZONE_MAX} caracteres.`,
+} as const;
+
 export function validateStep(step: Step, d: ListingDraft): string | null {
   switch (step) {
     case 1:
       if (!d.kind) return "Elija Alojamiento completo o Habitación.";
       return null;
     case 2:
-      if (!PROVINCES.includes(d.province)) return "Elija la provincia.";
-      if (!d.canton.trim()) return "Elija el cantón.";
-      if (!esCanton(d.province, d.canton)) return "Elija un cantón de la provincia.";
-      if (!d.zone.trim()) return "Indique la zona, playa o barrio.";
-      return null;
-    case 3:
-      if (d.lat === null || d.lng === null) return "Marque en el mapa la ubicación aproximada.";
-      if (!inCostaRica(d.lat, d.lng)) return "Marque un punto dentro de Costa Rica.";
+      if (d.lat === null || d.lng === null) return LOCATION_MESSAGES.noPin;
+      if (!inCostaRica(d.lat, d.lng) || !d.canton.trim() || !d.province.trim()) return LOCATION_MESSAGES.notLand;
+      if (!d.zone.trim() || d.zoneSource === null) return LOCATION_MESSAGES.noZone;
+      if (d.zoneSource === "list" && !d.zoneId) return LOCATION_MESSAGES.noZone;
+      if (d.zoneSource === "district" && d.zone.trim() !== d.district.trim()) return LOCATION_MESSAGES.noZone;
+      if (d.zoneSource === "other" && charCount(d.zone) > OTHER_ZONE_MAX) return LOCATION_MESSAGES.longZone;
       return null;
     case 4:
       if (!isInt(d.capacity, 1)) return "Indique cuántas personas pueden alojarse (mínimo 1).";
@@ -240,18 +279,31 @@ export function validateAll(d: ListingDraft): { step: Step; error: string } | nu
   return null;
 }
 
-/** Las 9 pantallas en tres etapas (revisión UX C4): la cabecera y el aviso «Seguir publicando» hablan de la etapa, no del paso. */
-export const WIZARD_STAGES = [
-  { name: "Su casa", first: 1, last: 5 },
-  { name: "Fotos y texto", first: 6, last: 7 },
-  { name: "Precio", first: 8, last: 9 },
-] as const;
+/** Las pantallas en tres etapas (revisión UX C4): la cabecera y el aviso «Seguir publicando» hablan de la etapa, no del paso. */
+export const WIZARD_STAGES: readonly { name: string; steps: readonly Step[] }[] = [
+  { name: "Su casa", steps: [1, 2, 4, 5] },
+  { name: "Fotos y texto", steps: [6, 7] },
+  { name: "Precio", steps: [8, 9] },
+];
 
-export function wizardStage(step: Step): { name: string; index: number; position: number; size: number; first: number } {
-  const index = WIZARD_STAGES.findIndex((s) => step >= s.first && step <= s.last);
+export function wizardStage(step: Step): { name: string; index: number; position: number; size: number; first: Step } {
+  const index = WIZARD_STAGES.findIndex((s) => s.steps.includes(step));
   const stage = WIZARD_STAGES[index]!;
-  return { name: stage.name, index, position: step - stage.first + 1, size: stage.last - stage.first + 1, first: stage.first };
+  return { name: stage.name, index, position: stage.steps.indexOf(step) + 1, size: stage.steps.length, first: stage.steps[0]! };
 }
+
+/** «Cocles · Cahuita, Talamanca, Limón»: la zona y, tras el punto medio, distrito, cantón y provincia (la zona no se repite
+ *  si es el distrito; lo vacío no deja huecos). */
+export function locationLine(l: { zone: string; district: string; canton: string; province: string }): string {
+  const zone = l.zone.trim();
+  const district = l.district.trim();
+  const where = [district, l.canton.trim(), l.province.trim()].filter(Boolean).join(", ");
+  if (!zone || zone === district) return where || zone;
+  return where ? `${zone} · ${where}` : zone;
+}
+
+/** Zona propuesta por el dueño con «Otra…» (el admin la revisa con una marca). */
+export const isProposedZone = (l: { zoneSource: ZoneSource | null }) => l.zoneSource === "other";
 
 /** Paso donde retomar un borrador (revisión UX A1/A5): el primero con algo pendiente; si no falta nada, el último. */
 export function resumeStep(d: ListingDraft): Step {

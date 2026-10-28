@@ -8,13 +8,21 @@ import {
   NIGHTLY_PRICE_ERROR,
   PROVINCES,
   STATUS_LABELS,
+  STEP_COUNT,
   STEP_NAMES,
+  STEPS,
   emptyDraft,
   isFreshDraft,
+  isProposedZone,
+  locationLine,
+  nextStep,
   normalize,
+  previousStep,
   parseColones,
   planStep,
   resumeStep,
+  stepFromParam,
+  stepPosition,
   wizardStage,
   validateAll,
   validateStep,
@@ -26,8 +34,9 @@ import { formInput, parseStep } from "../../src/domain/step-forms";
 // Modelo del diseño v1 (docs/diseno-v1.md, punto 11) con «Alquiler mensual» como característica (2026-10-27): toda casa
 // se alquila por noches (precio por noche obligatorio) y puede aceptar alquiler por meses con precio al mes opcional.
 // Alojamiento completo / Habitación (con baño privado o compartido), contadores. Copy en usted.
-// Desde 2026-10-21 el formulario va en 9 pantallas sin scroll: 1 alojamiento, 2 dónde está, 3 mapa, 4 capacidad,
-// 5 características, 6 nombre y descripción, 7 fotos, 8 precio, 9 enviar.
+// Desde 2026-10-27 (ubicación por punto) el formulario va en 8 pantallas sin scroll, con ids de URL estables: 1 alojamiento,
+// 2 ¿dónde está su casa? (mapa, cantón y zona), 4 capacidad, 5 características, 6 nombre y descripción, 7 fotos, 8 precio,
+// 9 enviar. El 3 (el mapa de antes) se retiró y lleva al 2.
 
 const fd = (entries: [string, string][]) => formInput(entries);
 
@@ -39,7 +48,10 @@ function validDraft(): ListingDraft {
     acceptsMonthly: false,
     province: "Limón",
     canton: "Talamanca",
+    district: "Cahuita",
     zone: "Manzanillo",
+    zoneId: "704-manzanillo",
+    zoneSource: "list",
     lat: 9.63,
     lng: -82.65,
     capacity: 5,
@@ -69,8 +81,28 @@ describe("constantes", () => {
     expect(PROVINCES).toEqual(["Guanacaste", "Puntarenas", "Limón", "Alajuela", "San José", "Heredia", "Cartago"]);
     expect(DEFAULT_PROVINCE).toBe("Limón");
   });
-  it("los 9 pasos del formulario, en orden", () => {
-    expect(STEP_NAMES).toEqual(["Alojamiento", "Ubicación", "Mapa", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"]);
+  it("las 8 pantallas del formulario, en orden, con ids de URL estables (el 3 se retiró)", () => {
+    expect(STEPS).toEqual([1, 2, 4, 5, 6, 7, 8, 9]);
+    expect(STEP_COUNT).toBe(8);
+    expect(STEP_NAMES).toEqual(["Alojamiento", "Ubicación", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"]);
+    expect(stepPosition(1)).toBe(1);
+    expect(stepPosition(2)).toBe(2);
+    expect(stepPosition(4)).toBe(3);
+    expect(stepPosition(9)).toBe(8);
+  });
+  it("de la URL al paso: el 3 viejo lleva al 2; lo demás que no es un paso, a ninguno", () => {
+    expect(stepFromParam("3")).toEqual({ redirect: 2 });
+    expect(stepFromParam("2")).toEqual({ step: 2 });
+    expect(stepFromParam("9")).toEqual({ step: 9 });
+    for (const bad of ["10", "x", "0", "", "02", "2.0"]) expect(stepFromParam(bad), bad).toBeNull();
+  });
+  it("siguiente y anterior saltan el 3", () => {
+    expect(nextStep(2)).toBe(4);
+    expect(nextStep(1)).toBe(2);
+    expect(nextStep(9)).toBeNull();
+    expect(previousStep(4)).toBe(2);
+    expect(previousStep(2)).toBe(1);
+    expect(previousStep(1)).toBeNull();
   });
   it("etiquetas de estado con los colores del diseño", () => {
     expect(STATUS_LABELS.review).toEqual({ label: "En revisión", badge: "badge-review" });
@@ -98,21 +130,22 @@ describe("validateStep", () => {
     expect(validateStep(1, { ...d, kind: "completo", acceptsNightly: false, acceptsMonthly: false })).toBeNull();
   });
 
-  it("paso 2 exige provincia de la lista, cantón de esa provincia y zona", () => {
+  it("paso 2: el pin, un punto en tierra de Costa Rica con cantón y provincia, y la zona", () => {
     const d = validDraft();
     expect(validateStep(2, d)).toBeNull();
-    expect(validateStep(2, { ...d, province: "Marte" })).toBe("Elija la provincia.");
-    expect(validateStep(2, { ...d, canton: "  " })).toBe("Elija el cantón.");
-    expect(validateStep(2, { ...d, canton: "Nicoya" })).toBe("Elija un cantón de la provincia.");
-    expect(validateStep(2, { ...d, zone: " " })).toBe("Indique la zona, playa o barrio.");
-    expect(validateStep(2, { ...d, lat: null, lng: null })).toBeNull(); // el pin va en el paso 3
-  });
-
-  it("paso 3 exige el pin dentro de Costa Rica", () => {
-    const d = validDraft();
-    expect(validateStep(3, d)).toBeNull();
-    expect(validateStep(3, { ...d, lat: null })).toBe("Marque en el mapa la ubicación aproximada.");
-    expect(validateStep(3, { ...d, lat: 40.4, lng: -3.7 })).toBe("Marque un punto dentro de Costa Rica.");
+    expect(validateStep(2, { ...d, lat: null, lng: null })).toBe("Marque en el mapa la ubicación aproximada.");
+    expect(validateStep(2, { ...d, lng: null })).toBe("Marque en el mapa la ubicación aproximada.");
+    expect(validateStep(2, { ...d, lat: 40.4, lng: -3.7 })).toBe("Ponga el punto sobre tierra, dentro de Costa Rica.");
+    expect(validateStep(2, { ...d, canton: " " })).toBe("Ponga el punto sobre tierra, dentro de Costa Rica.");
+    expect(validateStep(2, { ...d, province: "" })).toBe("Ponga el punto sobre tierra, dentro de Costa Rica.");
+    expect(validateStep(2, { ...d, zone: " " })).toBe("Elija la zona.");
+    expect(validateStep(2, { ...d, zoneSource: null })).toBe("Elija la zona.");
+    expect(validateStep(2, { ...d, zoneId: null })).toBe("Elija la zona.");
+    expect(validateStep(2, { ...d, zone: "Sixaola", zoneSource: "district", zoneId: null, district: "Cahuita" })).toBe("Elija la zona.");
+    expect(validateStep(2, { ...d, zone: "Cahuita", zoneSource: "district", zoneId: null, district: "Cahuita" })).toBeNull();
+    expect(validateStep(2, { ...d, zone: "x".repeat(61), zoneSource: "other", zoneId: null })).toBe("La zona puede tener como mucho 60 caracteres.");
+    expect(validateStep(2, { ...d, zone: ` ${"x".repeat(59)}🌴 `, zoneSource: "other", zoneId: null })).toBeNull(); // caracteres, sin los extremos
+    expect(validateStep(2, { ...d, zone: "Rancho Escondido", zoneSource: "other", zoneId: null })).toBeNull();
   });
 
   it("paso 4: alojamiento completo admite 0 habitaciones (estudio); una habitación no", () => {
@@ -200,6 +233,11 @@ describe("normalize", () => {
     expect(normalize({ ...validDraft(), acceptsMonthly: false, monthlyPriceCrc: 150000 }).monthlyPriceCrc).toBeNull();
     expect(normalize({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: 480000 }).monthlyMode).toBeNull();
   });
+  it("solo una zona de la lista lleva zoneId: el distrito y «Otra…» no", () => {
+    expect(normalize({ ...validDraft(), zoneSource: "other", zoneId: "704-cocles" }).zoneId).toBeNull();
+    expect(normalize({ ...validDraft(), zoneSource: "district", zoneId: "704-cocles" }).zoneId).toBeNull();
+    expect(normalize({ ...validDraft(), zoneSource: "list", zoneId: "704-cocles" }).zoneId).toBe("704-cocles");
+  });
   it("toda casa se alquila por noches; sin habitación no hay dato del baño", () => {
     expect(normalize({ ...validDraft(), acceptsNightly: false }).acceptsNightly).toBe(true);
     expect(normalize({ ...validDraft(), kind: "completo", bathroomShared: true }).bathroomShared).toBeNull();
@@ -211,10 +249,20 @@ describe("parseStep (zod, misma semántica que el parser anterior)", () => {
     expect(parseStep(1, fd([["kind", "completo"], ["modes", "nightly"]]))).toEqual({ kind: "completo" });
     expect(parseStep(1, fd([["kind", "x"]]))).toEqual({ kind: null });
   });
-  it("paso 2 lee provincia, cantón y zona; paso 3 el pin", () => {
-    expect(parseStep(2, fd([["province", "Limón"], ["canton", "Talamanca"], ["zone", " Manzanillo "]]))).toEqual({ province: "Limón", canton: "Talamanca", zone: "Manzanillo" });
-    expect(parseStep(3, fd([["lat", "9.63"], ["lng", "-82.65"]]))).toEqual({ lat: 9.63, lng: -82.65 });
-    expect(parseStep(3, fd([["lat", ""], ["lng", "x"]]))).toEqual({ lat: null, lng: null });
+  it("paso 2 lee el pin, lo que dio place_at y la zona con su origen", () => {
+    const base: [string, string][] = [["lat", "9.63"], ["lng", "-82.65"], ["province", "Limón"], ["canton", "Talamanca"], ["district", "Cahuita"], ["zone", " Manzanillo "]];
+    expect(parseStep(2, fd([...base, ["zoneId", "704-manzanillo"], ["zoneSource", "list"]]))).toEqual({
+      lat: 9.63,
+      lng: -82.65,
+      province: "Limón",
+      canton: "Talamanca",
+      district: "Cahuita",
+      zone: "Manzanillo",
+      zoneId: "704-manzanillo",
+      zoneSource: "list",
+    });
+    expect(parseStep(2, fd([...base, ["zoneId", ""], ["zoneSource", "other"]]))).toMatchObject({ zoneId: null, zoneSource: "other" });
+    expect(parseStep(2, fd([["lat", ""], ["lng", "x"], ["zoneSource", "inventada"]]))).toMatchObject({ lat: null, lng: null, zoneId: null, zoneSource: null });
   });
   it("paso 4 lee contadores y baño", () => {
     const base: [string, string][] = [["capacity", "4"], ["bedrooms", "2"], ["bathrooms", "1"]];
@@ -252,8 +300,8 @@ describe("validateAll", () => {
   it("devuelve el primer paso con error", () => {
     expect(validateAll(emptyDraft())).toEqual({ step: 1, error: "Elija Alojamiento completo o Habitación." });
     expect(validateAll({ ...validDraft(), photoCount: 2 })).toEqual({ step: 7, error: "Agregue al menos 5 fotos." });
-    expect(validateAll({ ...validDraft(), canton: "Nicoya" })).toEqual({ step: 2, error: "Elija un cantón de la provincia." });
-    expect(validateAll({ ...validDraft(), lat: null })).toEqual({ step: 3, error: "Marque en el mapa la ubicación aproximada." });
+    expect(validateAll({ ...validDraft(), zoneSource: null })).toEqual({ step: 2, error: "Elija la zona." });
+    expect(validateAll({ ...validDraft(), lat: null })).toEqual({ step: 2, error: "Marque en el mapa la ubicación aproximada." });
     expect(validateAll(validDraft())).toBeNull();
   });
 });
@@ -284,7 +332,7 @@ describe("planStep (guardar una pantalla)", () => {
   });
 
   it("nada que cambiar: cambios vacíos", () => {
-    expect(planStep(validDraft(), 2, { province: "Limón", canton: "Talamanca", zone: "Manzanillo" })).toEqual({ changes: {}, next: expect.anything() });
+    expect(planStep(validDraft(), 2, { province: "Limón", canton: "Talamanca", zone: "Manzanillo", zoneId: "704-manzanillo", zoneSource: "list" })).toEqual({ changes: {}, next: expect.anything() });
   });
 
   it("paso 7: el número de fotos es el del borrador (servidor), nunca el del parche", () => {
@@ -298,21 +346,40 @@ describe("paso donde retomar un borrador", () => {
   it("el primero que falta; todo completo → el 9 (revisar y enviar)", () => {
     expect(resumeStep(emptyDraft())).toBe(1);
     expect(resumeStep({ ...validDraft(), zone: "" })).toBe(2);
+    expect(resumeStep({ ...validDraft(), lat: null, lng: null })).toBe(2); // con zona pero sin pin: el 2, nunca el 3
     expect(resumeStep({ ...validDraft(), photoCount: 2 })).toBe(7);
     expect(resumeStep({ ...validDraft(), nightlyPriceCrc: null })).toBe(8);
     expect(resumeStep(validDraft())).toBe(9);
   });
 });
 
-// Revisión UX C4 (punto 4): las 9 pantallas en tres etapas.
+// Revisión UX C4 (punto 4): las pantallas en tres etapas (8 desde que el mapa se unió al paso 2).
 describe("etapas del asistente", () => {
-  it("Su casa (1–5), Fotos y texto (6–7), Precio (8–9), con la posición dentro de la etapa", () => {
-    expect(wizardStage(1)).toEqual({ name: "Su casa", index: 0, position: 1, size: 5, first: 1 });
-    expect(wizardStage(5)).toEqual({ name: "Su casa", index: 0, position: 5, size: 5, first: 1 });
+  it("Su casa (1, 2, 4, 5), Fotos y texto (6, 7), Precio (8, 9), con la posición dentro de la etapa", () => {
+    expect(wizardStage(1)).toEqual({ name: "Su casa", index: 0, position: 1, size: 4, first: 1 });
+    expect(wizardStage(2)).toEqual({ name: "Su casa", index: 0, position: 2, size: 4, first: 1 });
+    expect(wizardStage(4)).toEqual({ name: "Su casa", index: 0, position: 3, size: 4, first: 1 });
+    expect(wizardStage(5)).toEqual({ name: "Su casa", index: 0, position: 4, size: 4, first: 1 });
     expect(wizardStage(6)).toEqual({ name: "Fotos y texto", index: 1, position: 1, size: 2, first: 6 });
     expect(wizardStage(7)).toEqual({ name: "Fotos y texto", index: 1, position: 2, size: 2, first: 6 });
     expect(wizardStage(8)).toEqual({ name: "Precio", index: 2, position: 1, size: 2, first: 8 });
     expect(wizardStage(9)).toEqual({ name: "Precio", index: 2, position: 2, size: 2, first: 8 });
+  });
+});
+
+describe("línea de la ubicación", () => {
+  it("«zona · distrito, cantón, provincia»", () => {
+    expect(locationLine({ zone: "Cocles", district: "Cahuita", canton: "Talamanca", province: "Limón" })).toBe("Cocles · Cahuita, Talamanca, Limón");
+  });
+  it("sin repetir la zona cuando es el distrito, y sin huecos", () => {
+    expect(locationLine({ zone: "Cahuita", district: "Cahuita", canton: "Talamanca", province: "Limón" })).toBe("Cahuita, Talamanca, Limón");
+    expect(locationLine({ zone: "Cocles", district: "", canton: "Talamanca", province: "Limón" })).toBe("Cocles · Talamanca, Limón");
+    expect(locationLine({ zone: "", district: "", canton: "", province: "" })).toBe("");
+  });
+  it("zona propuesta por el dueño solo con «Otra…»", () => {
+    expect(isProposedZone({ zoneSource: "other" })).toBe(true);
+    expect(isProposedZone({ zoneSource: "list" })).toBe(false);
+    expect(isProposedZone({ zoneSource: null })).toBe(false);
   });
 });
 

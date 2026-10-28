@@ -5,6 +5,7 @@ import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
 import { photoSrcSet, variantPath } from "./image";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type ListingStatus, type MonthlyMode, type Photo, type PublicListing } from "./listing";
+import type { ZoneSource } from "./zones";
 import type { BillingHouse, BillingOverview, PaymentSetupContext, ReminderDays, ReminderStatus, SubscriptionPlan } from "./subscription";
 
 /** Sin `listing_is_public`: es una columna calculada (función SQL) que solo llega si se pide por nombre. */
@@ -22,6 +23,7 @@ export const storagePhotoUrl =
     `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/listings/${path}`;
 
 const monthlyMode = (v: string | null): MonthlyMode | null => (v === "amount" || v === "contact" ? v : null);
+const zoneSource = (v: string | null): ZoneSource | null => (v === "list" || v === "district" || v === "other" ? v : null);
 const num = (v: number | null | undefined) => (v === null || v === undefined || Number.isNaN(v) ? null : v);
 
 export function toListingUpdate(d: Partial<ListingDraft>): ListingUpdate {
@@ -30,7 +32,10 @@ export function toListingUpdate(d: Partial<ListingDraft>): ListingUpdate {
   if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly === true;
   if ("province" in d) row.province = d.province;
   if ("canton" in d) row.canton = d.canton;
+  if ("district" in d) row.district = d.district || null;
   if ("zone" in d) row.zone = d.zone;
+  if ("zoneId" in d) row.zone_id = d.zoneId ?? null;
+  if ("zoneSource" in d) row.zone_source = d.zoneSource ?? null;
   if ("lat" in d) row.lat = num(d.lat);
   if ("lng" in d) row.lng = num(d.lng);
   if ("capacity" in d) row.capacity = num(d.capacity);
@@ -65,7 +70,10 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
     acceptsMonthly: row.accepts_monthly === true,
     province: row.province || DEFAULT_PROVINCE,
     canton: row.canton ?? "",
+    district: row.district ?? "",
     zone: row.zone ?? "",
+    zoneId: row.zone_id ?? null,
+    zoneSource: zoneSource(row.zone_source),
     lat: num(row.lat),
     lng: num(row.lng),
     capacity: num(row.capacity),

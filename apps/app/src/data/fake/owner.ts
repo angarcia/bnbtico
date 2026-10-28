@@ -5,9 +5,9 @@ import type { OwnerListingsApi } from "../../domain/api";
 import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
-import { inCostaRica } from "../../domain/geo";
 import {
   charCount,
+  LOCATION_MESSAGES as LOC,
   DESCRIPTION_LENGTH_ERROR,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
@@ -21,22 +21,47 @@ import {
   TITLE_MIN,
   type Listing,
 } from "../../domain/listing";
+import { OTHER_ZONE_MAX, ZONE_RADIUS_M } from "../../domain/zones";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
+import { FAKE_ZONES, fakePlaceAt, fakeZonesNear } from "./places";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
 /** Política listings_owner_insert y trigger listings_insert_guard (ticket 08). */
 const MAX_OPEN_DRAFTS = 5;
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
 
+type Located = Pick<FakeListing, "province" | "canton" | "district" | "zone">;
+
+/** Ubicación por punto, como submit_listing: provincia, cantón y distrito salen del pin (place_at, aquí los polígonos del
+ *  fake) y la zona se comprueba según su origen. Devuelve el mensaje o lo que se guarda al enviar. */
+function locationOf(l: FakeListing): { error: string } | Located {
+  if (l.lat === null || l.lng === null) return { error: LOC.noPin };
+  const place = fakePlaceAt(l.lat, l.lng);
+  if (!place) return { error: LOC.notLand };
+  const zone = l.zone.trim();
+  if (!zone || l.zoneSource === null) return { error: LOC.noZone };
+  let name = zone;
+  if (l.zoneSource === "list") {
+    if (!l.zoneId) return { error: LOC.noZone };
+    if (!fakeZonesNear(l.lat, l.lng, ZONE_RADIUS_M / 1000).some((z) => z.id === l.zoneId)) return { error: LOC.farZone };
+    name = FAKE_ZONES.find((z) => z.id === l.zoneId)!.name;
+  } else if (l.zoneSource === "district") {
+    if (l.zoneId !== null || zone !== place.district) return { error: LOC.notDistrict };
+  } else {
+    if (l.zoneId !== null) return { error: LOC.noZone };
+    if (charCount(zone) > OTHER_ZONE_MAX) return { error: LOC.longZone };
+  }
+  return { province: place.province, canton: place.canton, district: place.district, zone: name };
+}
+
 /** Las comprobaciones de la RPC submit_listing, en su orden y con sus mensajes. */
 function submitRefusal(l: FakeListing, photos: number): string | null {
   if (l.status === "review") return "Este anuncio ya está en revisión.";
   if (l.status !== "draft" && l.status !== "changes") return "Este anuncio no se puede enviar en su estado actual.";
   if (!l.kind) return "Elija Alojamiento completo o Habitación.";
-  if (!l.province || !l.canton || !l.zone) return "Complete provincia, cantón y zona aproximada.";
-  if (l.lat === null || l.lng === null) return "Marque en el mapa la ubicación aproximada.";
-  if (!inCostaRica(l.lat, l.lng)) return "Marque un punto dentro de Costa Rica.";
+  const located = locationOf(l);
+  if ("error" in located) return located.error;
   if ((l.capacity ?? 0) < 1) return "Indique cuántas personas pueden alojarse (mínimo 1).";
   if (l.bedrooms === null || (l.bedrooms < 1 && l.kind !== "completo" && l.kind !== "apartamento")) return "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
   if ((l.bathrooms ?? 0) < 1) return "Indique el número de baños (mínimo 1).";
@@ -125,7 +150,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       if (!l) throw new DomainError(NOT_FOUND, "validation");
       const refusal = submitRefusal(l, db.photosOf(id).length);
       if (refusal) throw new DomainError(refusal, "validation");
-      touch(l, { status: "review", reviewNote: null });
+      touch(l, { status: "review", reviewNote: null, ...(locationOf(l) as Located) });
     },
 
     async setAvailable(id, available, reopenAt = null) {

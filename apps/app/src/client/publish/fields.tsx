@@ -1,14 +1,11 @@
-// Campos de cada pantalla del asistente (decisión 2026-10-21: nueve pantallas cortas, sin scroll en 375×667).
-// Casillas y contadores llevan su valor en el formulario (campos ocultos o casillas); el texto va sin controlar.
-import { zoneCenter } from "../../domain/zones";
-import { ZoneField } from "./zone-field";
-import { rememberedZone } from "./zone-center";
+// Campos de cada pantalla del asistente (decisión 2026-10-21: pantallas cortas, sin scroll en 375×667; ocho desde que el
+// mapa se unió al paso 2, el 2026-10-27). Casillas y contadores llevan su valor en el formulario (campos ocultos o
+// casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { cantonesDe } from "../../domain/cantones";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, PROVINCES, TITLE_MAX, TITLE_MIN, isFreshDraft, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -17,7 +14,7 @@ import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { offerTakenQuery } from "../owner";
-import { LocationPicker } from "./location-picker";
+import { LocationStep } from "./location-step";
 import { PhotoUploader } from "./photos";
 
 /** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
@@ -222,46 +219,6 @@ function DescriptionField({ value }: { value: string }) {
   );
 }
 
-/** Provincia y cantón de lista (cambiar la provincia vacía el cantón) y la zona con sugerencias (ticket 22). */
-function PlaceFields({ listingId, province: initialProvince, canton: initialCanton, zone }: { listingId: string; province: string; canton: string; zone: string }) {
-  const [province, setProvince] = useState(initialProvince);
-  const [canton, setCanton] = useState(cantonesDe(initialProvince).includes(initialCanton) ? initialCanton : "");
-  return (
-    <>
-      <div className="field">
-        <label htmlFor="pub-province">Provincia</label>
-        <select
-          id="pub-province"
-          name="province"
-          value={province}
-          onChange={(e) => {
-            setProvince(e.currentTarget.value);
-            setCanton("");
-          }}
-        >
-          {PROVINCES.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="field">
-        <label htmlFor="pub-canton">Cantón</label>
-        <select id="pub-canton" name="canton" value={canton} onChange={(e) => setCanton(e.currentTarget.value)}>
-          <option value="">Seleccione el cantón</option>
-          {cantonesDe(province).map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      <ZoneField listingId={listingId} province={province} canton={canton} initial={zone} />
-    </>
-  );
-}
-
 /** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5): lo escrito en cinco filas que llevan a su pantalla, lo que falta
  *  (las fotos), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin scroll en un teléfono pequeño. */
 function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing: Listing; userId: string }) {
@@ -278,7 +235,7 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   ].filter(Boolean);
   const rows: { step: Step; label: string; value: string; warn?: string }[] = [
     { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
-    { step: 2, label: "Dónde", value: [d.zone, d.canton].filter(Boolean).join(", ") || "Falta la zona" },
+    { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
     { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.bedrooms ?? 0} hab. · ${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
     {
       step: missing > 0 ? 7 : 6,
@@ -389,15 +346,8 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
     case 2:
       return (
         <>
-          <h2>¿Dónde está?</h2>
-          <PlaceFields listingId={listing.id} province={draft.province} canton={draft.canton} zone={draft.zone} />
-        </>
-      );
-    case 3:
-      return (
-        <>
-          <h2>Ubicación en el mapa</h2>
-          <LocationPicker province={draft.province} lat={draft.lat} lng={draft.lng} zone={zoneCenter(draft.zone, rememberedZone(listing.id))} />
+          <h2>¿Dónde está su casa?</h2>
+          <LocationStep listing={listing} draft={draft} />
         </>
       );
     case 4:

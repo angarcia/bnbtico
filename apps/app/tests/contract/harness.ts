@@ -7,13 +7,7 @@ import type { ListingDraft } from "../../src/domain/listing";
 export type SeedStatus = "draft" | "review" | "active" | "changes" | "rejected" | "reopened";
 export type SeedOwner = "owner" | "other";
 
-/** Ubicación por punto: ListingDraft la gana en la tarea 7; hasta entonces solo la siembra PostgREST la escribe. */
-export interface SeedLocation {
-  district?: string;
-  zoneId?: string | null;
-  zoneSource?: "list" | "district" | "other" | null;
-}
-export type SeedDraft = Partial<ListingDraft> & SeedLocation;
+export type SeedDraft = Partial<ListingDraft>;
 
 export interface SeedSpec {
   status: SeedStatus;

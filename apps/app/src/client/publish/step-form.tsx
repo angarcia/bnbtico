@@ -1,4 +1,6 @@
-// Módulo de formulario del asistente de publicar: una sola pieza para las nueve pantallas.
+// Módulo de formulario del asistente de publicar: una sola pieza para las ocho pantallas.
+// - Una pantalla puede tener «Continuar» deshabilitado mientras le falta algo que llega solo (p. ej. el cantón del pin):
+//   `useStepReady(false)`.
 // - «Continuar» valida la pantalla en el navegador (planStep, con las fotos del servidor), escribe el borrador en la caché
 //   al instante (escritura optimista), navega a la pantalla siguiente y guarda por detrás (cola por casa, save-queue.ts).
 // - Si el guardado falla, vuelve a esa pantalla con el mensaje de la base y lo que el propietario había escrito.
@@ -11,9 +13,9 @@
 //   (sin `action`), y cada pantalla monta su propio <form> (key) para que los valores iniciales sean los de ese paso.
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
-import { LAST_STEP, normalize, planStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { formInput, parseStep } from "../../domain/step-forms";
 import { api, loadedApi, patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
@@ -158,6 +160,19 @@ function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
   }, [ref]);
 }
 
+// ---------- «Continuar» listo o no ----------
+
+const ReadyContext = createContext<(ready: boolean) => void>(() => undefined);
+
+/** «Continuar» deshabilitado mientras `ready` sea false (dentro de un StepForm). */
+export function useStepReady(ready: boolean): void {
+  const set = useContext(ReadyContext);
+  useEffect(() => {
+    set(ready);
+    return () => set(true);
+  }, [set, ready]);
+}
+
 // ---------- El formulario ----------
 
 export function StepForm({ userId, listing, step, enter, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; children: (values: ListingDraft) => ReactNode }) {
@@ -169,6 +184,7 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
   const failed = useFailure(listing.id, step);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [ready, setReady] = useState(true);
   const ref = useRef<HTMLFormElement>(null);
   useEnterKeyHints(ref);
   useEffect(() => () => setRoom(false), []);
@@ -178,6 +194,7 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!ready) return; // p. ej. Enter en un campo mientras «Continuar» espera
     if (step === LAST_STEP) {
       setSending(true);
       setError(null);
@@ -195,7 +212,7 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
     const request = startSave(listing.id, step, patch, listing);
     request.catch(() => undefined); // el error lo recoge la mutación
     save.mutate({ step, patch, seq: ++saveSeq, request });
-    void toStep(router, listing.id, (step + 1) as Step);
+    void toStep(router, listing.id, nextStep(step) ?? LAST_STEP);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
@@ -235,18 +252,18 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
           {shown}
         </div>
       ) : null}
-      {children(values)}
+      <ReadyContext.Provider value={setReady}>{children(values)}</ReadyContext.Provider>
       <div className="sticky-actions">
         {step === 1 ? (
           <span className="btn btn-ghost is-disabled" aria-disabled="true">
             Atrás
           </span>
         ) : (
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(step - 1) }} className="btn btn-ghost">
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(previousStep(step) ?? 1) }} className="btn btn-ghost">
             Atrás
           </Link>
         )}
-        <button className="btn btn-primary grow" type="submit" disabled={sending}>
+        <button className="btn btn-primary grow" type="submit" disabled={sending || !ready}>
           {step < LAST_STEP ? "Continuar" : sending ? "Un momento…" : "Enviar a revisión"}
         </button>
       </div>

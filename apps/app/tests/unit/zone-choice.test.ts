@@ -68,6 +68,15 @@ describe("zoneOptions y reconcileZone", () => {
     expect(reconcileZone(cahuita, PIN, o, limon)).toMatchObject({ name: "Limón centro", source: "list" });
   });
 
+  it("el distrito elegido cuya opción quitó una zona de la lista con el mismo nombre pasa a esa zona (la lista no queda sin valor)", () => {
+    const cahuita: ZoneChoice = { name: "Cahuita", source: "district", zoneId: null, anchor: null };
+    const o = zoneOptions([{ id: "704-cahuita", name: "Cahuita", distanceM: 300 }, ...near], place);
+    expect(o.some((x) => x.source === "district")).toBe(false);
+    expect(reconcileZone(cahuita, PIN, o, place)).toEqual({ name: "Cahuita", source: "list", zoneId: "704-cahuita", anchor: null });
+    // Sin tildes ni mayúsculas, como el resto de comparaciones de nombres.
+    expect(reconcileZone({ ...cahuita, name: "cahuíta" }, PIN, o, place)).toMatchObject({ source: "list", zoneId: "704-cahuita" });
+  });
+
   const anchor = { lat: 9.8, lng: -82.93 };
   const other: ZoneChoice = { name: "Finca Los Almendros", source: "other", zoneId: null, anchor };
 

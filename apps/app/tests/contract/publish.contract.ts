@@ -6,6 +6,7 @@ import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
 import { MONTHLY_PRICE_ERROR, NIGHTLY_PRICE_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
 import type { ListingsHarness, Seeded } from "./harness";
+import { COCLES, MAR } from "./points";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
@@ -24,6 +25,9 @@ async function rejection(p: Promise<unknown>): Promise<DomainError> {
 /** Descripción válida (80–2000 caracteres, ticket 19) para las pruebas que guardan el paso 6. */
 const TEXT = "Descripción de prueba con lo justo para pasar el mínimo de ochenta caracteres que pide el paso seis.";
 
+/** Paso 2 válido: el pin de COMPLETE (Cahuita) con lo que da place_at y la zona Cahuita de la lista. */
+const LOCATION_OK: Partial<ListingDraft> = { lat: 9.7366, lng: -82.8431, province: "Limón", canton: "Talamanca", district: "Cahuita", zone: "Cahuita", zoneId: "704-cahuita", zoneSource: "list" };
+
 const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Partial<ListingDraft> }[] = [
   {
     step: 1,
@@ -31,22 +35,16 @@ const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Par
     valid: { kind: "habitacion" },
   },
   {
+    // Ubicación por punto: el mapa, el cantón y la provincia que da el pin, y la zona (con su origen) en una pantalla.
     step: 2,
     invalid: [
-      [{ province: "Marte", canton: "Talamanca", zone: "Cahuita" }, "Elija la provincia."],
-      [{ province: "Limón", canton: "", zone: "Cahuita" }, "Elija el cantón."],
-      [{ province: "Limón", canton: "Nicoya", zone: "Cahuita" }, "Elija un cantón de la provincia."],
-      [{ province: "Limón", canton: "Talamanca", zone: " " }, "Indique la zona, playa o barrio."],
+      [{ ...LOCATION_OK, lat: null, lng: null }, "Marque en el mapa la ubicación aproximada."],
+      [{ ...LOCATION_OK, lat: 40.4, lng: -3.7 }, "Ponga el punto sobre tierra, dentro de Costa Rica."],
+      [{ ...LOCATION_OK, ...COCLES, province: "", canton: "" }, "Ponga el punto sobre tierra, dentro de Costa Rica."],
+      [{ ...LOCATION_OK, zone: " " }, "Elija la zona."],
+      [{ ...LOCATION_OK, zone: "x".repeat(61), zoneSource: "other", zoneId: null }, "La zona puede tener como mucho 60 caracteres."],
     ],
-    valid: { province: "Limón", canton: "Talamanca", zone: "Cahuita" },
-  },
-  {
-    step: 3,
-    invalid: [
-      [{ lat: null, lng: null }, "Marque en el mapa la ubicación aproximada."],
-      [{ lat: 40.4, lng: -3.7 }, "Marque un punto dentro de Costa Rica."],
-    ],
-    valid: { lat: 9.7366, lng: -82.8431 },
+    valid: LOCATION_OK,
   },
   {
     step: 4,
@@ -118,7 +116,10 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
           acceptsMonthly: false,
           province: "Limón",
           canton: "",
+          district: "",
           zone: "",
+          zoneId: null,
+          zoneSource: null,
           lat: null,
           lng: null,
           capacity: null,
@@ -201,6 +202,10 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
           acceptsNightly: true,
           acceptsMonthly: true,
           canton: "Talamanca",
+          district: "Cahuita",
+          zone: "Cahuita",
+          zoneId: "704-cahuita",
+          zoneSource: "list",
           bathroomShared: true,
           features: ["wifi", "parking"],
           parkingPaid: false,
@@ -321,6 +326,61 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         const negotiable = await h.seed({ status: "draft", photos: 5, draft: { acceptsMonthly: true, monthlyPriceCrc: null } });
         await me.submit(negotiable.id);
         expect(await me.getOwn(negotiable.id)).toMatchObject({ status: "review", acceptsMonthly: true, monthlyPriceCrc: null });
+      });
+    });
+
+    describe("enviar: la ubicación sale del pin y la zona se comprueba", () => {
+      // Mismo orden y mensajes que submit_listing (20261028071444_ubicacion_en_listings.sql). Cada prueba con su reset:
+      // como mucho cinco borradores sin enviar.
+      beforeAll(async () => {
+        h = await makeHarness();
+        me = h.owner("owner");
+      }, 90_000);
+
+      const refused = async (draft: Parameters<ListingsHarness["seed"]>[0]["draft"]) => {
+        const s = await h.seed({ status: "draft", photos: 5, draft });
+        const message = (await rejection(me.submit(s.id))).message;
+        expect((await me.getOwn(s.id))?.status).toBe("draft");
+        return message;
+      };
+
+      it("provincia, cantón y distrito se recalculan desde el pin: un cantón equivocado se guarda corregido", async () => {
+        await h.reset();
+        const s = await h.seed({ status: "draft", photos: 5, draft: { province: "Limón", canton: "Limón", district: "Limón" } });
+        await me.submit(s.id);
+        expect(await me.getOwn(s.id)).toMatchObject({ status: "review", province: "Limón", canton: "Talamanca", district: "Cahuita", zone: "Cahuita", zoneSource: "list" });
+      });
+
+      it("una zona de la lista guarda el nombre de la lista; «Otra…» guarda lo escrito sin espacios de más", async () => {
+        await h.reset();
+        const list = await h.seed({ status: "draft", photos: 5, draft: { zone: "cahuita", zoneId: "704-cahuita", zoneSource: "list" } });
+        const other = await h.seed({ status: "draft", photos: 5, draft: { zone: "  Rancho Escondido ", zoneId: null, zoneSource: "other" } });
+        const district = await h.seed({ status: "draft", photos: 5, draft: { zone: "Cahuita", zoneId: null, zoneSource: "district" } });
+        for (const x of [list, other, district]) await me.submit(x.id);
+        expect(await me.getOwn(list.id)).toMatchObject({ status: "review", zone: "Cahuita" });
+        expect(await me.getOwn(other.id)).toMatchObject({ status: "review", zone: "Rancho Escondido", zoneId: null, zoneSource: "other" });
+        expect(await me.getOwn(district.id)).toMatchObject({ status: "review", zone: "Cahuita", zoneSource: "district" });
+      });
+
+      it("sin pin, en el mar o fuera del país no se envía", async () => {
+        await h.reset();
+        expect(await refused({ lat: null, lng: null })).toBe("Marque en el mapa la ubicación aproximada.");
+        expect(await refused({ ...MAR })).toBe("Ponga el punto sobre tierra, dentro de Costa Rica.");
+      });
+
+      it("sin zona, una de la lista a más de 5 km o un distrito que no es el del pin no se envían", async () => {
+        await h.reset();
+        expect(await refused({ zone: "Cahuita", zoneSource: null })).toBe("Elija la zona.");
+        expect(await refused({ zone: " ", zoneSource: "other", zoneId: null })).toBe("Elija la zona.");
+        expect(await refused({ zone: "Cahuita", zoneSource: "list", zoneId: null })).toBe("Elija la zona.");
+        expect(await refused({ zone: "Manzanillo", zoneSource: "list", zoneId: "704-manzanillo" })).toBe("La zona elegida queda a más de 5 km del punto. Elija otra.");
+        expect(await refused({ zone: "Sixaola", zoneSource: "district", zoneId: null })).toBe("La zona no coincide con el distrito del punto. Elija otra.");
+      });
+
+      it("«Otra…» admite como mucho 60 caracteres", async () => {
+        await h.reset();
+        expect(await refused({ zone: "x".repeat(61), zoneSource: "other", zoneId: null })).toBe("La zona puede tener como mucho 60 caracteres.");
+        expect(await refused({ zone: "Cahuita", zoneSource: "other", zoneId: "704-cahuita" })).toBe("Elija la zona.");
       });
     });
   });

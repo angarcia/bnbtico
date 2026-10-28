@@ -1,4 +1,5 @@
-// Mapa del paso 3 con el pin arrastrable. Se carga bajo demanda al abrir esa pantalla: Leaflet no entra en el JS inicial.
+// Mapa del paso 2 («¿Dónde está su casa?») con el pin arrastrable. Se carga bajo demanda al abrir esa pantalla: Leaflet no
+// entra en el JS inicial.
 // El mapa no sale de Costa Rica y el pin tampoco: un toque o un arrastre fuera del país no lo mueve.
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -10,6 +11,8 @@ const COSTA_RICA = L.latLngBounds([7.6, -86.4], [11.6, -82.2]);
 
 export interface PickerMap {
   place(p: LatLng): void;
+  /** Mueve el mapa sin animación (el buscador); no toca el pin. */
+  view(p: LatLng, zoom: number): void;
   dispose(): void;
 }
 
@@ -43,5 +46,16 @@ export function drawPicker(el: HTMLElement, start: { point: LatLng | null; cente
 
   if (start.point) place(start.point);
   map.on("click", (e) => place(e.latlng));
-  return { place, dispose: () => map.remove() };
+  // La caja del mapa ocupa lo que sobra de la pantalla: si cambia de alto (fuentes, teclado), Leaflet recalcula su tamaño
+  // (si no, un toque caería en otro punto que el que se ve).
+  const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => map.invalidateSize({ animate: false }));
+  resize?.observe(el);
+  return {
+    place,
+    view: (p, zoom) => void map.setView([p.lat, p.lng], zoom, { animate: false }),
+    dispose: () => {
+      resize?.disconnect();
+      map.remove();
+    },
+  };
 }

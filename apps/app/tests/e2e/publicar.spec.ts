@@ -3,9 +3,9 @@ import type { ListingsHarness } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { SESSION_STORAGE_KEY } from "../../src/data/storage";
 import { injectSession } from "./helpers/session";
-import { serviceClient } from "../db/local";
 
-// Asistente de publicar en nueve pantallas (decisión 2026-10-21) contra Supabase local, con la sesión inyectada.
+// Asistente de publicar en ocho pantallas (decisión 2026-10-21; el mapa se unió al paso 2 el 2026-10-27) contra Supabase
+// local, con la sesión inyectada.
 // iPhone SE (375×667): ninguna pantalla hace scroll, con o sin teclado. Aquí las fotos se siembran en la base; la subida real está en fotos.spec.ts.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 const TITLE = "Casa Manzanillo, a pie de playa";
@@ -52,15 +52,16 @@ async function expectKeyboardRoom(page: Page, fieldId: string) {
   await expect.poll(extra).toBe(0);
 }
 
-test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado, y se envía a revisión", async ({ page }) => {
+test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, y se envía a revisión", async ({ page }) => {
   // Revisión UX C4: «Publicar» entra directo al paso 1 (sin «Empezar»), y arriba del paso 1 de un borrador recién creado,
   // qué tener a mano.
   await page.goto("/propietario/publicar");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
   await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche", "Unos 10 minutos"]);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 5");
-  await expect(page.locator(".progress span")).toHaveCount(9);
+  await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+  await expect(page.locator(".stage-label")).toHaveAttribute("aria-label", "Su casa, 1 de 4. Paso 1 de 8.");
+  await expect(page.locator(".progress span")).toHaveCount(8);
   await expect(page.locator(".progress span.on")).toHaveCount(1);
   await expectNoScroll(page, "paso 1");
 
@@ -73,37 +74,27 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa2 de 5");
+  await expect(page.locator(".stage-label")).toHaveText("Su casa2 de 4");
+  await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
   await expectNoScroll(page, "paso 2");
 
-  // 2 Dónde está: cantón de lista según la provincia; «Listo» en la zona envía el paso.
-  const canton = page.getByLabel("Cantón");
-  await expect(page.getByLabel("Provincia")).toHaveValue("Limón");
-  await expect(canton.locator("option")).toHaveCount(7);
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Elija el cantón.");
-  await canton.selectOption("Talamanca");
-  await page.getByLabel("Provincia").selectOption("Puntarenas");
-  await expect(canton).toHaveValue("");
-  await page.getByLabel("Provincia").selectOption("Limón");
-  await canton.selectOption("Talamanca");
-  const zone = page.getByLabel("Zona, playa o barrio");
-  await expect(zone).toHaveAttribute("enterkeyhint", "done");
-  expect(await page.evaluate(() => Math.round(document.getElementById("pub-zone")!.getBoundingClientRect().top))).toBeGreaterThan(300);
-  await expectKeyboardRoom(page, "pub-zone");
-  await zone.fill("Manzanillo");
-  await zone.press("Enter");
-  await expect(page).toHaveURL(/\/3$/);
-  await expectNoScroll(page, "paso 3");
-
-  // 3 Mapa (Leaflet bajo demanda): el pin es obligatorio.
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Marque en el mapa la ubicación aproximada.");
-  await page.locator(".leaflet-container").click({ position: { x: 150, y: 120 } });
+  // 2 ¿Dónde está su casa?: sin pin no se sigue; un toque en el mapa (abre en Limón) da el cantón y la zona más cercana.
+  await expect(page.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
+  // El mapa abre en Limón a zoom 9, con la costa a unos 3 px al este del centro: el toque va 10 px al oeste, en tierra.
+  await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
+  const map = (await page.locator(".map-box").boundingBox())!;
+  await page.mouse.click(map.x + map.width / 2 - 10, map.y + map.height / 2);
   await expect(page.locator('input[name="lat"]')).not.toHaveValue("");
-  await expect(page.getByText("Arrastre el pin")).toBeVisible();
+  await expect(page.locator(".place-line")).toHaveText("Limón, Limón");
+  // La zona más cercana del pin, de la lista (zones), ya elegida.
+  const chosenZone = page.getByRole("combobox", { name: "Zona" }).locator("option:checked");
+  await expect(chosenZone).toHaveAttribute("value", /^list:701-/);
+  const zoneName = (await chosenZone.textContent())!;
+  await expectNoScroll(page, "paso 2 con el pin");
   await continuar(page);
   await expect(page).toHaveURL(/\/4$/);
+  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
   await expectNoScroll(page, "paso 4");
 
   // 4 Capacidad.
@@ -141,8 +132,8 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   // Lo no enviado se pierde al recargar; lo guardado en pantallas anteriores sigue en la base.
   await page.reload();
   await expect(title).toHaveValue("");
-  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.canton).toBe("Talamanca");
-  expect(await h.owner("owner").getOwn(id)).toMatchObject({ kind: "completo", acceptsNightly: true, acceptsMonthly: false, zone: "Manzanillo", capacity: 5, bedrooms: 2, bathrooms: 2, features: ["parking", "beachfront"], parkingPaid: false });
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.canton).toBe("Limón");
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ kind: "completo", acceptsNightly: true, acceptsMonthly: false, province: "Limón", district: "Limón", zone: zoneName, zoneSource: "list", capacity: 5, bedrooms: 2, bathrooms: 2, features: ["parking", "beachfront"], parkingPaid: false });
   await page.getByRole("link", { name: "Atrás" }).click();
   await expect(page).toHaveURL(/\/5$/);
   await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveCount(2);
@@ -226,6 +217,9 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page.getByRole("heading", { name: "Revisar y enviar" })).toBeVisible();
   const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
   await expect(review.getByRole("link")).toHaveCount(5);
+  const where = review.getByRole("link", { name: /Dónde/ });
+  await expect(where.locator(".review-text")).toHaveText(`${zoneName} · Limón, Limón, Limón`);
+  await expect(where).toHaveAttribute("href", `/propietario/publicar/${id}/2`);
   const photosRow = review.getByRole("link", { name: /Nombre y fotos/ });
   await expect(photosRow).toContainText(`${TITLE} · 4 fotos`);
   await expect(photosRow.locator(".review-warn")).toHaveText("Falta 1 foto");
@@ -255,8 +249,6 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page.getByText("+506 8777 0001")).toBeVisible();
   await expect(page.getByText("₡0 · 12 meses")).toBeVisible();
   await expect(page.locator(".offer-line")).toContainText("Después, ₡2\u00a0900 al mes."); // precio decidido el 2026-10-27
-  // Puente hasta la tarea 7 de la ubicación por punto: el paso 2 aún no guarda de dónde sale la zona y submit_listing la exige.
-  await serviceClient().from("listings").update({ zone_source: "other" }).eq("id", id);
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
@@ -453,7 +445,7 @@ test("enviar con un dato que falta lleva a la pantalla que lo pide", async ({ pa
 test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrás / Continuar» sigue fija abajo", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5 });
   await page.goto(`/propietario/publicar/${draft.id}/4`);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa4 de 5");
+  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
   const sample = () =>
     page.evaluate(() => {
       const w = window as unknown as { maxScrollWidth: number };

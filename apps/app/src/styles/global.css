@@ -213,6 +213,10 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
 .map-wrap{position:relative;flex:1;min-height:200px;display:flex}
 .map-wrap .map-box{flex:1;height:auto}
+/* Ubicación por punto: la línea «{cantón}, {provincia}» en una caja de alto fijo (no salta al cambiar). */
+.place-line{min-height:2.75rem;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:16px}
+.place-line .place-off{color:var(--sun-ink);font-size:14px}
+.place-line .btn{flex-shrink:0}
 .photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
 .cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;padding:12px 20px calc(24px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
 .cta-bar .price{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
