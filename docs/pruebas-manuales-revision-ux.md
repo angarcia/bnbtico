@@ -74,7 +74,7 @@ Con una cuenta sin casas (p. ej. `8888 9999` recién creada en U6, o borre las s
 
 ### Propietaria con casa activa (A1, A2, N1, N2, N7)
 
-> Desde 2026-10-27 (navegación simple) no hay pestañas Inicio ni Consultas: U31, U32, U33 y U36 quedan sustituidas por la sección «Navegación simple» (U44–U53); U34 y U35 valen con las salvedades de allí (una casa se ve directa, un solo aviso). Lo mismo para U20, U28 y U30 más arriba: donde dicen «Inicio» o «Consultas», léase Mis casas (aviso «Seguir publicando») o Actividad. Lo mismo para U20, U28 y U30 más arriba: donde dicen «Inicio» o «Consultas», léase Mis casas (aviso «Seguir publicando») o Actividad.
+> Desde 2026-10-27 (navegación simple) no hay pestañas Inicio ni Consultas: U31, U32, U33 y U36 quedan sustituidas por la sección «Navegación simple» (U44–U53); U34 y U35 valen con las salvedades de allí (una casa se ve directa, un solo aviso). Lo mismo para U20, U28 y U30 más arriba: donde dicen «Inicio» o «Consultas», léase Mis casas (aviso «Seguir publicando») o Actividad.
 
 Con `8777 0001` (Yorleny, con CT-1015 activa). Antes, desde **otro** teléfono o una pestaña privada, abra la ficha de CT-1015 un par de veces.
 
