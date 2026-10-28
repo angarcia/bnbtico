@@ -34,7 +34,7 @@ export function ActividadScreen() {
 
   return (
     <>
-      <RootHeader title="Actividad" home="/propietario/casas" aside={<span className="small muted">Últimos 30 días</span>} />
+      <RootHeader title="Actividad" aside={<span className="small muted">Últimos 30 días</span>} />
       {failed ? (
         <p className="note" role="alert">
           {toDomainError(failed.error).message}

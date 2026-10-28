@@ -371,6 +371,11 @@ test("la barra superior: 56 px más el área segura, y los botones de al menos 4
   await page.goto("/cuenta");
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
   await expect(banner).toHaveCount(0);
+  // Filtros es una pantalla completa con su cabecera: sin barra superior ni selector.
+  await page.goto("/explorar/filtros");
+  await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible();
+  await expect(banner).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
   // Sin sesión, «Ingresar».
   await page.evaluate(() => localStorage.clear());
   await page.goto("/explorar");

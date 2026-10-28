@@ -93,7 +93,7 @@ export function CalendarioScreen() {
     current && houses && houses.length > 1 ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : undefined;
   return (
     <>
-      <RootHeader title="Calendario" home="/propietario/casas" aside={picker} />
+      <RootHeader title="Calendario" aside={picker} />
       {listings.isError && !houses ? (
         <p className="note" role="alert">
           {toDomainError(listings.error).message}

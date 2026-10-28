@@ -29,8 +29,13 @@ function useNewInquiries(enabled: boolean): number {
   return enabled ? (data ?? 0) : 0;
 }
 
+/** Las cinco pestañas llevan la barra superior; Filtros (pantalla completa con su cabecera), la zona del admin y la página
+ *  de «no encontrada», no. */
+const TOP_BAR_PATHS = new Set(["/explorar", "/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]);
+
 export function TabsFrame({ children }: { children: ReactNode }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
+  const topBar = useLocation({ select: (l) => TOP_BAR_PATHS.has(l.pathname) });
   const { status } = useSession();
   const { count } = useListingsCount();
   const tabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count });
@@ -38,9 +43,9 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   const fresh = useNewInquiries(tabs.some((t) => t.badge === "inquiries"));
   return (
     <div className="app">
-      {adminZone ? null : <TopBar />}
-      <UnderTopBar.Provider value={!adminZone}>
-        <main className={adminZone ? "view" : "view has-topbar"}>{children}</main>
+      {topBar ? <TopBar /> : null}
+      <UnderTopBar.Provider value={topBar}>
+        <main className={topBar ? "view has-topbar" : "view"}>{children}</main>
       </UnderTopBar.Provider>
       <nav className={`tabbar${tabs.length === 2 ? " two" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon, exact, badge }) => {
@@ -70,7 +75,7 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Bajo la barra superior (pestañas fuera de /admin): el logo y la cuenta ya están arriba. */
+/** Bajo la barra superior (las cinco pestañas): el logo y la cuenta ya están arriba. */
 const UnderTopBar = createContext(false);
 
 /** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
@@ -117,8 +122,8 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Bajo la barra superior, solo el título (y `action` en su fila, si la hay); en /admin, que no la lleva, también el logo y
- *  `role="banner"`, la cabecera de la página. */
+/** Bajo la barra superior, solo el título (y `action` en su fila, si la hay); sin ella (/admin, «no encontrada»), también
+ *  el logo (que lleva a `home`) y `role="banner"`, la cabecera de la página. */
 export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
   const under = useContext(UnderTopBar);
   return (

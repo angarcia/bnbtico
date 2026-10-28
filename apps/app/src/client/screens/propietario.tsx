@@ -184,7 +184,6 @@ export function CasasScreen() {
       <>
         <RootHeader
           title={titleOf(single)}
-          home="/propietario/casas"
           action={
             can(single, "share") ? (
               <Link to="/casa/$publicId" params={{ publicId: single.publicId }} className="link header-action">
@@ -215,7 +214,6 @@ export function CasasScreen() {
     <>
       <RootHeader
         title="Mis casas"
-        home="/propietario/casas"
         action={
           view === "list" ? (
             <Link to="/propietario/publicar" className="btn btn-ghost btn-header">
