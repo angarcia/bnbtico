@@ -2,7 +2,7 @@
 // (clave privada, ver account.ts y persist.ts): Mis casas y Actividad se pintan al instante desde la caché y se refrescan
 // por detrás (30 s, al volver a la app y al recuperar la red). El detalle se siembra con la fila de la lista.
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { ListingActivity, OwnerListingsApi, PhotosApi } from "../domain/api";
+import type { ListingActivity, OwnerListingsApi, PhotosApi, PlacesApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
 import { rememberOwnListings } from "../shared/own-listings";
 import { billingQuery } from "./billing";
@@ -26,6 +26,12 @@ export const loadedApi = (): OwnerListingsApi | null => loaded;
 export const photosApi = async (): Promise<PhotosApi> => {
   await authApi();
   return (await import("./supabase-data")).photosApi();
+};
+
+/** Lugar del pin y zonas (place_at, zones_near, zones), con la misma sesión. */
+export const places = async (): Promise<PlacesApi> => {
+  await authApi();
+  return (await import("./supabase-data")).placesApi();
 };
 
 /** La lectura de Mis casas (la consulta está en own-listings-query.ts, que la carga al pedirla). */

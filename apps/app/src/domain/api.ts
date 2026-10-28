@@ -10,6 +10,7 @@ import type { LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicList
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
 import type { AdminHouses } from "./admin-houses";
 import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
+import type { NearZone, Place, Zone } from "./zones";
 import type {
   BillingOverview,
   BlockedReason,
@@ -203,9 +204,20 @@ export interface BillingServiceApi {
   setOfferDaysLeft(publicId: string, days: number): Promise<string>;
 }
 
+/** Ubicación por punto (spec .scratch/ubicacion-por-punto/spec.md): lugar del pin y zonas. Los polígonos no salen de la base. */
+export interface PlacesApi {
+  /** RPC place_at: provincia, cantón y distrito del punto (500 m de margen en la costa); null fuera de Costa Rica o mar adentro. */
+  placeAt(lat: number, lng: number): Promise<Place | null>;
+  /** RPC zones_near: zonas activas a ≤ km (5 por defecto), la más cercana primero. */
+  zonesNear(lat: number, lng: number, km?: number): Promise<NearZone[]>;
+  /** Zonas activas para el buscador del paso 2 (tabla zones: id, name, canton_code, lat, lng), Caribe primero. */
+  listZones(): Promise<Zone[]>;
+}
+
 export interface ListingsApi extends PublicListingsApi, OwnerListingsApi {
   photos: PhotosApi;
   admin: AdminListingsApi;
+  places: PlacesApi;
 }
 
 // ---------- Consultas y favoritos (fase 3) ----------

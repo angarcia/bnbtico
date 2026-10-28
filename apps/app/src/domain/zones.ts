@@ -114,6 +114,9 @@ export interface Place { province: string; canton: string; district: string; dis
 export interface NearZone { id: string; name: string; distanceM: number }
 /** Una zona de la tabla `zones` (para el buscador). */
 export interface Zone { id: string; name: string; cantonCode: string; lat: number; lng: number }
+/** Caribe (cantones 7xx, Limón) primero; el resto del orden se respeta. */
+export const caribeFirst = (zones: readonly Zone[]): Zone[] =>
+  [...zones].sort((a, b) => Number(!a.cantonCode.startsWith("7")) - Number(!b.cantonCode.startsWith("7")));
 /** La zona elegida. `anchor`: donde estaba el pin al elegirla con «Otra…» (null en las demás). */
 export interface ZoneChoice { name: string; source: ZoneSource; zoneId: string | null; anchor: LatLng | null }
 export interface ZoneSelectOption { key: string; name: string; source: "list" | "district"; zoneId: string | null; distanceM: number | null }

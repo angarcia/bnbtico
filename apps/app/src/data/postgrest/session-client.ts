@@ -13,6 +13,7 @@ import { keepaliveFetch } from "./keepalive-fetch";
 import { createPostgrestListings } from "./listings";
 import { createPostgrestOwnerListings, type QuickWrite } from "./owner";
 import { createPostgrestPhotos } from "./photos";
+import { createPostgrestPlaces } from "./places";
 
 export interface DeviceStores {
   session: SessionStorageAdapter;
@@ -67,6 +68,7 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     owner: createPostgrestOwnerListings(db, { supabaseUrl, quickWrite: quickWriter(supabaseUrl, anonKey, stores.session) }),
     photos: createPostgrestPhotos(db, { supabaseUrl }),
     admin: createPostgrestAdmin(db, { supabaseUrl }),
+    places: createPostgrestPlaces(db),
     inquiries: createPostgrestInquiries(db),
     favorites: createPostgrestFavorites(db),
     calendar: createPostgrestCalendar(db),

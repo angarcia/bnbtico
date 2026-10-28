@@ -1,17 +1,9 @@
 import { describe, expect, it } from "vitest";
+// Puntos fijos (comprobados con ST_Covers al escribir la prueba), compartidos con la suite de PlacesApi.
+import { BEACH_100, BEACH_600, COCLES, LIMON_CENTRO, MAR, PANAMA } from "../contract/points";
 import { anonClient, sql } from "./local";
 
 const at = async (lat: number, lng: number) => (await anonClient().rpc("place_at", { p_lat: lat, p_lng: lng })).data ?? [];
-// Puntos fijos (comprobados con ST_Covers al escribir la prueba; ver el paso 3).
-const COCLES = { lat: 9.6418, lng: -82.733 };
-const LIMON_CENTRO = { lat: 9.9925, lng: -83.036 };
-const MAR = { lat: 10.2, lng: -82.8 };
-const PANAMA = { lat: 9.43, lng: -82.52 };
-// Pin en la playa de Punta Uva, calculado con PostGIS sobre los datos cargados: desde el punto C del borde de Cahuita
-// (70403) más cercano a un punto de mar (9.66, -82.70), C = (9.641338, -82.69355), hacia el mar con azimut 341.07°,
-// a 100 m y a 600 m. Ninguno queda dentro de un polígono; el de 600 m queda a 600 m del distrito más cercano.
-const BEACH_100 = { lat: 9.642193, lng: -82.693846 };
-const BEACH_600 = { lat: 9.646469, lng: -82.695323 };
 
 describe("place_at y los límites de OpenStreetMap", () => {
   it("Cocles: Limón / Talamanca / Cahuita", async () => {
