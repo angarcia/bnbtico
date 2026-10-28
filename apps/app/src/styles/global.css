@@ -179,8 +179,11 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .header-root .logo{height:38px;width:auto}
 /* Barra superior fija de las pestañas (logo · ₡ | $ · cuenta): 56 px más el área segura, centrada como la de abajo. */
 .topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 20px 0;display:flex;justify-content:space-between;align-items:center;background:var(--bg);z-index:6}
-.topbar-home{display:inline-flex;align-items:center;min-height:44px}
-.topbar .logo{height:38px;width:auto;display:block}
+/* A 375 px sin sesión (logo, «₡ | $» e «Ingresar») no sobra sitio: el logo es lo que encoge, nunca los botones. */
+.topbar{gap:8px}
+.topbar > .row{flex:none}
+.topbar-home{display:inline-flex;align-items:center;min-height:44px;min-width:0;flex:0 1 auto}
+.topbar .logo{height:auto;max-height:38px;width:auto;max-width:100%;display:block}
 .topbar-slot{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
 .topbar .topbar-account{width:44px;height:44px;text-decoration:none}
 .view.has-topbar{padding-top:calc(56px + 12px + env(safe-area-inset-top))}

@@ -133,6 +133,21 @@ test("7 · con una casa activa: las tres cifras en grande y las últimas consult
   await page.unroute("**/rest/v1/**");
 });
 
+test("7a · si las cifras no cargan, las últimas consultas y «Abrir WhatsApp» siguen", async ({ page }) => {
+  // P. ej. la app desplegada antes que la migración: la función no existe (404 de PostgREST).
+  await page.route("**/rest/v1/rpc/owner_activity*", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ code: "PGRST202", message: "Could not find the function public.owner_activity" }) }),
+  );
+  await page.goto("/propietario/actividad");
+  const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
+  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
+  await expect(inquiry.getByRole("button", { name: "Abrir WhatsApp" })).toBeVisible();
+  await expect(page.getByText("No pudimos cargar las cifras. Intente de nuevo.")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("activity-figures")).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
+  await expect(inquiry.getByRole("button", { name: "Abrir WhatsApp" })).toBeVisible();
+});
+
 test("7b · con dos casas: una tarjeta por casa; la que no está activa muestra solo su estado", async ({ page }) => {
   await h.seed({ status: "review", draft: { title: "Casa en revisión" } });
   await page.goto("/propietario/actividad");
@@ -274,6 +289,23 @@ test("el propietario entra y la barra no salta; al volver a abrir, cinco desde e
   expect(await tabCountsAt(page, "/")).toEqual([5]);
 });
 
+test("si la lista de casas tarda al ingresar, a los 5 s entra a Explorar y la barra crece cuando llega", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
+  let held = false;
+  await page.route("**/rest/v1/listings?*", async (route) => {
+    if (route.request().method() === "GET" && !held) {
+      held = true;
+      await new Promise((resolve) => setTimeout(resolve, 9000));
+    }
+    await route.fallback();
+  });
+  await signInByUi(page, "8777 0001");
+  await expect(page).toHaveURL(/\/explorar$/, { timeout: 7000 });
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS, { timeout: 10_000 });
+  await page.unroute("**/rest/v1/listings?*");
+});
+
 test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "draft", draft: { title: "Borrador uno" } });
@@ -381,4 +413,32 @@ test("la barra superior: 56 px más el área segura, y los botones de al menos 4
   await page.goto("/explorar");
   await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
   await checkBar();
+});
+
+test.describe("en un teléfono de 375 px", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test("la barra superior cabe entera, con y sin sesión, sin scroll horizontal", async ({ page }) => {
+    const banner = page.getByRole("banner");
+    const fits = async (account: RegExp | string) => {
+      const logo = (await banner.getByRole("img", { name: "bnbtico" }).boundingBox())!;
+      const currency = (await banner.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
+      const last = (await banner.getByRole("link", { name: account }).boundingBox())!;
+      expect(logo.x).toBeGreaterThanOrEqual(0);
+      expect(logo.x + logo.width).toBeLessThanOrEqual(currency.x);
+      expect(currency.x + currency.width).toBeLessThanOrEqual(last.x);
+      expect(last.x + last.width).toBeLessThanOrEqual(375);
+      expect(Math.min(last.width, last.height)).toBeGreaterThanOrEqual(44);
+      for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+    };
+    await page.goto("/explorar");
+    await expect(banner.getByRole("link", { name: "Cuenta" })).toBeVisible();
+    await fits("Cuenta");
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/explorar");
+    await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
+    await fits("Ingresar");
+    await page.screenshot({ path: "test-results/barra-375-sin-sesion.png" });
+  });
 });

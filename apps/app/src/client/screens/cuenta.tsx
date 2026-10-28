@@ -15,6 +15,7 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
+import { withTimeout } from "../../shared/timeout";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
 import { FlowFrame, FlowHeader } from "../chrome";
@@ -310,6 +311,8 @@ function EntryForm({ next }: { next?: string }) {
 
 // ---------- /cuenta/codigo ----------
 const codigoRoute = getRouteApi("/_flow/cuenta/codigo");
+/** Lo que se espera a la lista de casas al ingresar antes de seguir a Explorar. */
+const LIST_WAIT_MS = 5000;
 
 export function CodigoScreen() {
   const { next } = codigoRoute.useSearch();
@@ -345,8 +348,9 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
       const account = await (await authApi()).verify(code);
       queryClient.setQueryData(accountQuery(account.id).queryKey, account);
       // La lista de casas antes de navegar: la barra se pinta ya con sus pestañas (no salta de dos a cinco) y se llega a
-      // Mis casas con casas o a Explorar sin ellas. Si la lectura falla, Explorar.
-      const list = await queryClient.fetchQuery(ownListingsQuery(account.id)).catch(() => []);
+      // Mis casas con casas o a Explorar sin ellas. Si la lectura falla o tarda más de 5 s, Explorar (la barra crece cuando
+      // llegue la lista, que sigue leyéndose).
+      const list = await withTimeout(queryClient.fetchQuery(ownListingsQuery(account.id)), LIST_WAIT_MS, []).catch(() => []);
       // La pantalla «¡Listo!» invita a añadir un correo: no tiene sentido si la cuenta ya tiene uno.
       // Para escribirle a un propietario no se interpone «¡Listo!»: la invitación al correo queda en Cuenta (revisión UX C2).
       if (mode === "register" && !account.email && !contact) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });

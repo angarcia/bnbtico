@@ -19,7 +19,11 @@ import { useSession } from "../session";
 const LATEST = 20;
 const EMPTY = "Cuando su casa esté activa verá aquí cuántas personas la visitan y le escriben";
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
+const FIGURES_FAILED = "No pudimos cargar las cifras. Intente de nuevo.";
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+/** Las cifras van aparte de la lista y de las consultas: si no llegan, las consultas (el camino al cliente) siguen. */
+type FiguresState = "ready" | "loading" | "failed";
 
 export function ActividadScreen() {
   const userId = useSession().session?.userId ?? "";
@@ -28,33 +32,45 @@ export function ActividadScreen() {
   const inquiries = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
   const list = listings.data;
   const byId = new Map((activity.data ?? []).map((a) => [a.listingId, a]));
-  const failed = [listings, activity, inquiries].find((q) => q.isError && !q.data);
-  const ready = list && activity.data && inquiries.data;
+  const figures: FiguresState = activity.data ? "ready" : activity.isError ? "failed" : "loading";
+  const inquiriesFailed = inquiries.isError && !inquiries.data;
+  const anyActive = !!list?.some((l) => l.status === "active");
   const latest = inquiries.data?.slice(0, LATEST) ?? [];
+  // Sin casa activa, hasta saber si hay consultas no se sabe si toca el mensaje de «vacío».
+  const waiting = !list || (!anyActive && !inquiries.data && !inquiriesFailed);
 
   return (
     <>
       <RootHeader title="Actividad" aside={<span className="small muted">Últimos 30 días</span>} />
-      {failed ? (
+      {listings.isError && !list ? (
         <p className="note" role="alert">
-          {toDomainError(failed.error).message}
+          {toDomainError(listings.error).message}
         </p>
-      ) : null}
-      {!ready && !failed ? <SkeletonActivity /> : null}
-      {ready && activityEmpty(list, inquiries.data.length) ? (
+      ) : waiting ? (
+        <SkeletonActivity />
+      ) : inquiries.data && activityEmpty(list, inquiries.data.length) ? (
         <p>{EMPTY}</p>
-      ) : ready ? (
+      ) : (
         <>
+          {figures === "failed" && anyActive ? (
+            <p className="note" role="alert">
+              {FIGURES_FAILED}
+            </p>
+          ) : null}
           {casasView(list.length) === "list" ? (
             <div className="stack gap-12">
               {list.map((l) => (
-                <ActivityCard key={l.id} listing={l} activity={byId.get(l.id)} />
+                <ActivityCard key={l.id} listing={l} activity={byId.get(l.id)} figures={figures} />
               ))}
             </div>
           ) : list[0] ? (
-            <SingleActivity listing={list[0]} activity={byId.get(list[0].id)} />
+            <SingleActivity listing={list[0]} activity={byId.get(list[0].id)} figures={figures} />
           ) : null}
-          {latest.length > 0 ? (
+          {inquiriesFailed ? (
+            <p className="note" role="alert">
+              {toDomainError(inquiries.error).message}
+            </p>
+          ) : latest.length > 0 ? (
             <section className="stack gap-12">
               <h2 className="activity-h2">Últimas consultas</h2>
               {latest.map((i) => (
@@ -64,9 +80,16 @@ export function ActividadScreen() {
             </section>
           ) : null}
         </>
-      ) : null}
+      )}
     </>
   );
+}
+
+/** Las cifras de una casa activa: mientras llegan, su hueco; si fallaron, nada (el aviso va arriba, una sola vez). */
+function FiguresSlot({ activity, figures, large }: { activity: ListingActivity | undefined; figures: FiguresState; large?: boolean }) {
+  if (figures === "ready") return <Figures activity={activity} large={large} />;
+  if (figures === "loading") return <span className="sk sk-line" aria-busy="true" aria-label="Cargando las cifras" />;
+  return null;
 }
 
 function Figures({ activity: a, large }: { activity: ListingActivity | undefined; large?: boolean }) {
@@ -90,8 +113,8 @@ function Figures({ activity: a, large }: { activity: ListingActivity | undefined
 
 const statusOf = (l: Listing) => describe(l, { base: "" }).statusLabel;
 
-function SingleActivity({ listing: l, activity }: { listing: Listing; activity: ListingActivity | undefined }) {
-  if (l.status === "active") return <Figures activity={activity} large />;
+function SingleActivity({ listing: l, activity, figures }: { listing: Listing; activity: ListingActivity | undefined; figures: FiguresState }) {
+  if (l.status === "active") return <FiguresSlot activity={activity} figures={figures} large />;
   return (
     <section className="stack gap-8">
       <span className="small muted">{statusOf(l)}</span>
@@ -100,7 +123,7 @@ function SingleActivity({ listing: l, activity }: { listing: Listing; activity: 
   );
 }
 
-function ActivityCard({ listing: l, activity }: { listing: Listing; activity: ListingActivity | undefined }) {
+function ActivityCard({ listing: l, activity, figures }: { listing: Listing; activity: ListingActivity | undefined; figures: FiguresState }) {
   const cover = l.photos[0];
   return (
     <article className="card activity-card">
@@ -112,7 +135,7 @@ function ActivityCard({ listing: l, activity }: { listing: Listing; activity: Li
           {l.status === "active" ? null : <span className="small muted">{statusOf(l)}</span>}
         </div>
       </div>
-      {l.status === "active" ? <Figures activity={activity} /> : null}
+      {l.status === "active" ? <FiguresSlot activity={activity} figures={figures} /> : null}
     </article>
   );
 }
