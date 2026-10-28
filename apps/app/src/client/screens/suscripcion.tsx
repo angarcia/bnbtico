@@ -192,7 +192,7 @@ function PayNotice({ hb, today }: { hb: HouseBilling; today: string }) {
   );
 }
 
-function HouseCard({ hb, today, userId, hasMethod, target }: { hb: HouseBilling; today: string; userId: string; hasMethod: boolean; target: boolean }) {
+function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: HouseBilling; today: string; userId: string; hasMethod: boolean; target: boolean; onAction(): void }) {
   const { house, sub } = hb;
   const [confirming, setConfirming] = useState(false);
   const change = useStopResume(userId, house, hasMethod);
@@ -203,6 +203,8 @@ function HouseCard({ hb, today, userId, hasMethod, target }: { hb: HouseBilling;
     ref.current.focus({ preventScroll: true });
   }, [target]);
   const label = STATUS_LABELS[sub.status];
+  // «Pendiente de pago» ya lo dice la etiqueta: la línea solo sale cuando añade algo.
+  const line = subscriptionLine(sub, today);
   const pay = payButtonDue(sub, today);
   const sent = house.reminders.filter((r) => r.status === "sent" && r.sentAt);
   return (
@@ -211,9 +213,11 @@ function HouseCard({ hb, today, userId, hasMethod, target }: { hb: HouseBilling;
         <h3 className="sub-house-title">{house.title || "Casa sin título"}</h3>
         <span className={`badge ${label.badge}`}>{label.label}</span>
       </div>
-      <span className="small muted num" data-testid="sub-line">
-        {subscriptionLine(sub, today) ?? label.label}
-      </span>
+      {line && line !== label.label ? (
+        <span className="small muted num" data-testid="sub-line">
+          {line}
+        </span>
+      ) : null}
       {pay ? <PayNotice hb={hb} today={today} /> : null}
       {pay ? <PayButton publicId={house.publicId} /> : null}
       {sub.status === "active" || sub.status === "payment_due" ? (
@@ -222,7 +226,10 @@ function HouseCard({ hb, today, userId, hasMethod, target }: { hb: HouseBilling;
         </button>
       ) : null}
       {sub.status === "inactive" ? (
-        <button type="button" className="btn btn-primary btn-block" disabled={change.isPending} onClick={() => change.mutate("resume")}>
+        <button type="button" className="btn btn-primary btn-block" disabled={change.isPending} onClick={() => {
+            onAction();
+            change.mutate("resume");
+          }}>
           Reactivar
         </button>
       ) : null}
@@ -243,6 +250,7 @@ function HouseCard({ hb, today, userId, hasMethod, target }: { hb: HouseBilling;
           onClose={() => setConfirming(false)}
           onConfirm={() => {
             setConfirming(false);
+            onAction();
             change.mutate("stop");
           }}
         />
@@ -256,7 +264,7 @@ function HouseCard({ hb, today, userId, hasMethod, target }: { hb: HouseBilling;
 type Saving = "saving" | "saved" | "late" | null;
 
 /** Vuelta de la pasarela con `?pago=ok`: se quita de la URL y se vuelve a leer owner_billing hasta ~10 s. */
-function useSavingMethod(userId: string): Saving {
+function useSavingMethod(userId: string): [Saving, () => void] {
   const search = route.useSearch();
   const hash = useLocation({ select: (l) => l.hash });
   const navigate = useNavigate();
@@ -287,7 +295,9 @@ function useSavingMethod(userId: string): Saving {
       stopped = true;
     };
   }, [saving, userId, client]);
-  return saving;
+  // El aviso de la vuelta se retira en cuanto el propietario hace otra cosa (parar o reactivar una casa).
+  const dismiss = () => setSaving((s) => (s === "saving" ? s : null));
+  return [saving, dismiss];
 }
 
 const SAVING_TEXT: Record<Exclude<Saving, null>, string> = {
@@ -303,7 +313,7 @@ export function SuscripcionScreen() {
   const indexed = useBilling(userId);
   const hash = useLocation({ select: (l) => l.hash });
   const target = parsePayHash(hash ? `#${hash}` : "");
-  const saving = useSavingMethod(userId);
+  const [saving, dismissSaving] = useSavingMethod(userId);
   const today = indexed?.today ?? "";
   const method = indexed?.method ?? null;
   const due = indexed?.all.some((x) => payButtonDue(x.sub, today)) ?? false;
@@ -322,7 +332,7 @@ export function SuscripcionScreen() {
           <section className="card stack gap-12">
             <h2 className="card-title">Sus casas</h2>
             {indexed.all.length ? (
-              indexed.all.map((hb) => <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} />)
+              indexed.all.map((hb) => <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} onAction={dismissSaving} />)
             ) : (
               <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>
             )}

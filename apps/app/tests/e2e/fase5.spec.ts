@@ -239,7 +239,8 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   expect(await inExplorar()).toBe(false);
   await fresh(owner, `${SCREEN}#pago=${publicId}`);
   const due = house(owner);
-  await expect(due.getByText("Pendiente de pago", { exact: true }).first()).toBeVisible();
+  await expect(due.getByText("Pendiente de pago", { exact: true })).toHaveCount(1);
+  await expect(due.getByTestId("sub-line")).toHaveCount(0);
   await expect(due.getByTestId("pay-notice")).toContainText("La ficha está oculta y el enlace no funciona hasta que añada un método de pago.");
   await capture(owner, "pendiente-de-pago");
 
@@ -269,6 +270,7 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   await dialog.getByRole("button", { name: "Parar suscripción" }).click();
   await expect(paid.getByText("Inactiva", { exact: true })).toBeVisible();
   await expect(paid.getByRole("button", { name: "Reactivar" })).toBeVisible();
+  await expect(owner.getByText("Método de pago guardado. No se cobra nada hasta que termine la oferta.")).toHaveCount(0);
   await expect.poll(async () => (await mine()).status).toBe("inactive");
   await capture(owner, "parada");
   await expectBlocked(publicId, "El propietario paró la suscripción de este anuncio", "410-parada");
