@@ -120,15 +120,13 @@ Zona   [ Cocles            ▾ ]    ← nearest preselected
     - `'other'` requires non-empty text, at most 60 characters.
   - The writes happen inside the RPC, so `listings_protect` allows them.
 
-### Existing listings (migration)
+### Existing listings
 
-- For every listing with `lat/lng`, recompute `province`, `canton` and `district`. This needs `app.allow_status` because content is frozen outside `draft`/`changes`; `db reset` does not catch a missing flag.
-- Classify the current `zone` text:
-  - It matches a zone within 5 km: `zone_source = 'list'`, set `zone_id`.
-  - It equals the district: `'district'`.
-  - Otherwise: `'other'`.
-- **No status change.** Admins see `'other'` highlighted, and the next edit by the owner offers the nearest zone.
-- Before writing it, count affected listings in `bnbtico-pruebas` with the management API.
+None are kept. Test listings in `bnbtico-pruebas` are wiped before these migrations are applied (Daniel, 2026-10-27); the procedure is «Test data reset» in `.scratch/mensual-como-caracteristica/spec.md`. Production has no listings.
+
+The migration does no data repair. `district`, `zone_id` and `zone_source` are added as nullable columns, and `submit_listing` enforces them from now on.
+
+Local seeds (`supabase/seed.sql` and test fixtures) must be updated so seeded listings have points inside their canton and valid zones.
 
 ### Admin review
 
@@ -156,7 +154,6 @@ Zona   [ Cocles            ▾ ]    ← nearest preselected
     - rejects a `'list'` zone 10 km away;
     - rejects `'district'` with another name;
     - accepts `'other'`.
-  - The migration classifies existing zones into the three sources.
 - **Vitest:**
   - building the zone options (dedupe district, preselection);
   - replacement when the pin moves;

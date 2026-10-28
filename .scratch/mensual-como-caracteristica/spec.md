@@ -30,11 +30,10 @@ For a client, «Mensual» is really one more thing a house offers, like Wifi or 
 ### Migration (`pnpm exec supabase migration new mensual_como_caracteristica < /dev/null`)
 
 1. `accepts_monthly`: set `null` to `false`, then `set default false` and `set not null`. New drafts are inserted with `false` (`data/postgrest/owner.ts` l.74 and the fake).
-2. **Existing monthly-only listings** (`accepts_nightly = false`):
-   - `draft`: set `accepts_nightly = true`. Step 8 asks for the nightly price.
-   - Any other status: set `accepts_nightly = true` and move to `changes`, with the review note «Añada un precio por noche: desde ahora toda casa se alquila por noches y lo mensual es opcional.»
-   - These updates need `app.allow_status`, because `listings_protect` freezes content outside `draft`/`changes`. A local `db reset` will not catch a missing flag, so test the migration against data that has such listings.
-   - **Before writing it:** count these listings in `bnbtico-pruebas` with the management API.
+2. **Existing listings:** none are kept.
+   - All listings in `bnbtico-pruebas` are test data and are wiped before these migrations are applied (Daniel, 2026-10-27). See «Test data reset» below.
+   - Production has no listings.
+   - The migration therefore does no data repair. It only `update`s `accepts_nightly = true` defensively; with no rows, that is a no-op.
 3. `add constraint listings_accepts_nightly check (accepts_nightly)`.
 4. `submit_listing`:
    - requires `nightly_price_crc > 0`;
@@ -85,6 +84,13 @@ For a client, «Mensual» is really one more thing a house offers, like Wifi or 
   - The CTA bar's secondary line reads «Mensual: ₡350 000 / mes», or «Mensual: precio a negociar con el dueño».
 - The contact sheet and the WhatsApp message do not change.
 
+## Test data reset (shared with `.scratch/ubicacion-por-punto/spec.md`)
+
+- This is a one-off operation on `bnbtico-pruebas`, run through the management API before the first migration of projects 2/4 is pushed. It is **not** a migration, so it never runs in production.
+- It deletes all `listings` and everything that hangs from them (photos rows, `listing_days`, `listing_rates`, `inquiries`, subscriptions, outbox rows), and the Storage objects under the listing photo prefixes.
+- Users, profiles and admins are kept.
+- Irreversible: confirm with Daniel right before running it, list the counts first, and write the exact SQL in the plan.
+
 ## Testing (test first)
 
 - **Vitest:**
@@ -99,7 +105,6 @@ For a client, «Mensual» is really one more thing a house offers, like Wifi or 
 - **DB (`test:db`):**
   - `submit_listing` rejects a listing without a nightly price, and accepts `accepts_monthly` with a null monthly price.
   - `accepts_nightly = false` is rejected by the check.
-  - The migration moves a non-draft monthly-only listing to `changes` with the note, and a draft only gets `accepts_nightly = true`.
 - **Contract suite:** the monthly filter against PostgREST and the fake.
 - **Playwright** (mobile viewport):
   1. Publish with «Sí» and no monthly price. After approval, the ficha shows «Mensual: precio a negociar con el dueño» and the «Alquiler mensual» feature.

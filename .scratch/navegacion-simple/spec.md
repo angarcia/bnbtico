@@ -128,7 +128,8 @@ The UI only renders what these functions return.
   6. `/propietario/consultas` redirects to `/propietario/actividad`.
   7. Actividad with one active listing shows the three figures and the inquiries list.
 - **Gates:**
-  - `size-limit`: the tab-screens bundle stays under 24.5 KB. Deleting Inicio and Consultas pays for TopBar and Actividad. If it does not fit, stop and ask before raising the limit.
+  - `size-limit`: the tab-screens bundle stays under 24.5 KB. Deleting Inicio and Consultas pays for TopBar and Actividad.
+  - **If it does not fit** (decided by Daniel 2026-10-27): the top bar keeps only the logo and the account button, and the ₡ | $ switch goes back to Explorar's results line. The ficha keeps its switch. Do not raise the limit for this.
   - Hydration test on the ficha.
   - Lighthouse.
 - Prototype tests (`tests/prototype/*.cjs`) must still pass. The prototype is not changed.
