@@ -1,5 +1,7 @@
 # Plan de pruebas manual · revisión UX (2026-10-26/27)
 
+> **2026-10-28:** las mejoras del 2026-10-27 (navegación simple, alquiler mensual, ubicación por punto y fotos arrastrando) se prueban con `docs/pruebas-manuales-mejoras-2026-10-27.md`, que manda sobre este plan donde no coincidan.
+
 Comprueba desde el teléfono todo lo cambiado por la revisión UX acordada con Daniel (`.scratch/revision-ux/2026-10-26-revision-ux.md`). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas`, Supabase `bnbtico-pruebas`). Desde la red de Rivian, la misma app está en `https://bnbtico-pruebas.ana-garcia-saiz.workers.dev`. Se hace **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
 Números de prueba con código `123456`: `8888 1234` (cliente), `8777 0001` (propietaria «Yorleny Prueba»), `8888 9999` (libre). Los admins (Daniel y Ana) también entran con `123456`. Conviene un segundo teléfono o una pestaña privada para hacer de cliente y de propietaria a la vez.
@@ -25,7 +27,7 @@ Lo que **no** cambió y no hace falta repetir: Explorar con filtros, moneda y ti
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | U1 | En una pestaña privada, sin sesión, abrir una ficha (p. ej. `/casa/CT-1015`) en un teléfono pequeño (iPhone SE o similar) | La barra de abajo tiene **una sola línea** bajo el precio: «≈ $186 · orientativo». **Sin hacer scroll** se ven la zona y «N personas · N habitaciones». Si el nombre de la casa es largo (más de ~38 letras) sale más pequeño, sin ocupar tres líneas | ☐ |
-| U2 | En la misma ficha, debajo del nombre de la casa | Un círculo con las iniciales de quien la alquila y «**Yorleny** · WhatsApp verificado». Arriba ya no está la etiqueta suelta «WhatsApp verificado» (sigue la de «Vacacional»). Al final de la ficha sigue «Publicada por Yorleny Prueba…» | ☐ |
+| U2 | En la misma ficha, debajo del nombre de la casa | Un círculo con las iniciales de quien la alquila y «**Yorleny** · WhatsApp verificado». Arriba ya no está la etiqueta suelta «WhatsApp verificado» (sigue la de «Vacacional»). Al final de la ficha sigue «Publicada por Yorleny Prueba…» | ☐ (sustituida 2026-10-28: ver `docs/pruebas-manuales-mejoras-2026-10-27.md`, M42) |
 | U3 | En Explorar, «Más filtros» → Personas «4+» → «Ver N casas»; abrir una casa con capacidad de 4 o más → «Contactar por WhatsApp» | La hoja abre con **Personas 4** y el mensaje dice «…para 4 personas». Los botones − y + cambian el número y el mensaje; «+» se apaga al llegar a la capacidad de la casa. Escribir un número mayor y tocar el botón → «Esta casa es para N personas como máximo.» | ☐ |
 | U4 | Sin sesión, en la hoja: mirar el botón verde | Dice **«Continuar»** (no «Abrir WhatsApp»), con la nota «Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.» | ☐ |
 | U5 | Escribir un mensaje propio y tocar «Continuar» | Pantalla **«Escribirle a Yorleny»** (no «Ingresar»): arriba la tarjeta de la casa (foto, nombre, «Yorleny · WhatsApp verificado»), «Un paso y le escribe a Yorleny», el número de WhatsApp. **No** hay «No tengo acceso a mi WhatsApp» ni la palabra «Ingresar» | ☐ |
