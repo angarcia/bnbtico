@@ -70,6 +70,11 @@ Con una cuenta sin casas (p. ej. `8888 9999` recién creada en U6, o borre las s
 | U27 | Con 2 fotos, tocar «Enviar a revisión» | Vuelve al paso 7 con «Agregue al menos 5 fotos.» (no se envía nada sin 5 fotos) | ☐ |
 | U28 | «✕ Cerrar» → Inicio | Arriba del todo, la tarjeta del borrador con su nombre, «Fotos y texto · faltan 3 fotos» y el único botón relleno **«Seguir publicando»**, que abre el paso 7 | ☐ |
 | U29 | Añadir fotos hasta 5, ir al paso 9 y «Enviar a revisión» | «¡Listo! Su casa está en revisión» como antes | ☐ |
+| U54 | Paso 7 con 6+ fotos (iPhone y Android): mantener pulsada una foto ~½ s | Se agranda un poco con sombra. **En Android vibra** (en iPhone no). **No** sale el menú de la imagen ni la lupa o selección de texto | ☐ |
+| U55 | Arrastrarla a la portada y soltar | Las demás se apartan mientras arrastra. Al soltar queda primera con «Portada», sin parpadeo de vuelta. Tras recargar, sigue igual | ☐ |
+| U56 | Con 12+ fotos, arrastrar la última hacia el borde de arriba de la rejilla | La rejilla sube sola hasta la portada | ☐ |
+| U57 | Deslizar el dedo en vertical empezando sobre una foto | Hace scroll normal y no levanta ninguna. Un toque corto no hace nada | ☐ |
+| U58 | *(Opcional, iPhone con VoiceOver)* Dos dedos hacia la derecha hasta «Mover foto 3 antes», luego doble toque | Dice «Foto movida a la posición 2» | ☐ |
 | U30 | Pestaña Consultas sin casa publicada | «Aquí verá a los clientes que le escriban por WhatsApp desde su ficha.» con «Publicar casa» (o «Seguir publicando» si hay un borrador; si solo hay una en revisión, «Su casa está en revisión…») | ☐ |
 
 ### Propietaria con casa activa (A1, A2, N1, N2, N7)

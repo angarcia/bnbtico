@@ -1,6 +1,6 @@
 # Spec · Fotos: ordenar arrastrando
 
-Status: ready-for-agent (approved by Daniel 2026-10-27) · plan escrito (ad39e08), sin implementar todavía
+Status: ready-for-agent (approved by Daniel 2026-10-27) · implementada en `develop` (258bf89..3898671); plan de pruebas en `docs/pruebas-manuales-revision-ux.md` (U54–U58)
 Date: 2026-10-27
 Decided by: Daniel, in the brainstorming of 2026-10-27 («Mejoras fase R y 3», project 3 of 4).
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.

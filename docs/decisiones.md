@@ -1,3 +1,17 @@
+## 2026-10-27 · Fotos: ordenar arrastrando
+
+Decisión de Daniel (lluvia de ideas «Mejoras fase R y 3», proyecto 3 de 4). Especificación: `.scratch/fotos-arrastrar/spec.md`.
+
+- **Qué:** mantener pulsada una foto (~400 ms) la levanta (×1,05, vibración en Android). Al arrastrar, las demás se apartan. Al soltar, el orden se aplica al instante y se guarda con una sola llamada a `reorder_listing_photos`. Si falla, vuelve el anterior con «No pudimos cambiar las fotos. Intente de nuevo.». Moverse más de 8 px antes o un toque corto cancela, y el scroll sigue funcionando.
+- **Quitado:** tocar para elegir, «Hacer portada», «← Antes» y «Después →». La portada es la primera y se cambia arrastrando a la casilla 1.
+- **Accesible:** dos botones ocultos por foto, «Mover foto N antes/después», que se ven al enfocarlos con el teclado. Usan `aria-disabled` en los extremos, para no perder el foco. El foco sigue a la foto y se anuncia «Foto movida a la posición N».
+- **Regla que cambia:** «nada se reordena en el navegador por su cuenta» deja de valer para el orden (optimista). Subir y quitar siguen releyendo antes de mostrar.
+- **Cómo:** sin librería: Pointer Events, `setPointerCapture`, rAF, solo `transform`. Un `touchmove` no pasivo impide que el navegador se quede el gesto tras levantar. Pruebas con toques reales por CDP (`tests/e2e/helpers/touch.ts`).
+- **Trozo propio:** el paso de las fotos es ahora un trozo diferido (se pide al llegar al paso 7) con entrada nueva en `size-limit`, «Fotos del asistente» (5 KB; mide 4,97 KB). El asistente de publicar pasó de 14,95 a 13,02 KB de 15.
+- **Si el trozo no carga:** una barrera de error en el paso muestra «No pudimos cargar las fotos. Revise su conexión.» con «Reintentar».
+- **Decisiones menores:** soltar fuera de la rejilla deja la foto en la última casilla mostrada. Un segundo dedo cancela antes de levantar y se ignora después. Durante una subida no se puede arrastrar. La foto soltada salta a su casilla, sin animación de asiento.
+- **Pruebas manuales:** U54–U58 en `docs/pruebas-manuales-revision-ux.md` (los U44–U48 de la especificación ya estaban en uso por «Navegación simple»).
+
 ## 2026-10-27 · Ubicación por punto: el mapa decide provincia, cantón y zona
 
 Decisión de Daniel. Especificación: `.scratch/ubicacion-por-punto/spec.md`. Sustituye al paso 2 «¿Dónde está?» (selects de provincia y cantón + zona en texto) y al paso 3 (mapa) de `docs/diseno-v1.md`.
