@@ -554,6 +554,34 @@ describe("worker · balizas /vitals, /errors y /events", () => {
     expect(b.written).toEqual([{ table: "events", row: { name: "inquiry_created", listing_public_id: "CT-1015", page: "ficha", path: "/casa/CT-1015", build: "abc", country: "CR" } }]);
   });
 
+  it("/events: search_help_tap (fase 6) se escribe solo con lo de siempre", async () => {
+    const b = beacons();
+    const body = { name: "search_help_tap", path: "/explorar?prov=Lim%C3%B3n&ppl=4", build: "abc", text: "Hola, estoy buscando casa", prov: "Limón" };
+    const res = await b.post("/events", JSON.stringify(body), { origin: ORIGIN });
+    expect(res.status).toBe(204);
+    expect(b.written).toEqual([{ table: "events", row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
+  });
+
+  it("/events: si la base rechaza la fila (p. ej. un nombre nuevo sin su migración) responde 204 igual y lo registra", async () => {
+    const t = setup();
+    const errors: string[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((m: unknown) => void errors.push(String(m)));
+    try {
+      const app = createApp({
+        listings: () => t.h.anon,
+        cache: () => null,
+        purgeFetch: fetch,
+        telemetry: () => ({ insert: () => Promise.reject(new Error("PostgREST 400 en events: violates check constraint events_name_check")) }),
+      });
+      const res = await app.request(`${ORIGIN}/events`, { method: "POST", body: JSON.stringify({ name: "search_help_tap", path: "/explorar", build: "abc" }), headers: { origin: ORIGIN } }, t.env);
+      expect(res.status).toBe(204);
+      expect(await res.text()).toBe("");
+      await vi.waitFor(() => expect(errors.some((e) => e.includes("beacon_write_failed") && e.includes("events_name_check"))).toBe(true));
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it("rechaza balizas de otro origen", async () => {
     const b = beacons();
     expect((await b.post("/events", JSON.stringify(valid["/events"]), { origin: "https://malo.example" })).status).toBe(403);

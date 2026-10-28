@@ -65,6 +65,15 @@ describe("telemetría · validación de balizas", () => {
       ok: true,
       row: { name: "wizard_step", listing_public_id: "CT-1015", page: "publicar", path: "/propietario/publicar/:id/7", build: "abc123" },
     });
+    // Fase 6, ticket 01: «Escribir a bnbtico por WhatsApp» en Explorar, sin casa y sin el mensaje ni los filtros.
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "search_help_tap", path: "/explorar?prov=Todas&pool=1" }))).toEqual({
+      ok: true,
+      row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc123" },
+    });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "search_help_tap", path: "/explorar", text: "Hola", prov: "Limón" }))).toEqual({
+      ok: true,
+      row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc123" },
+    });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "listing_view", listing: "drop table" })).ok).toBe(false);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "signup" })).ok).toBe(false);
   });

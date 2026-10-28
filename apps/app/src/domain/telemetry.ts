@@ -63,7 +63,7 @@ const errors = z.object({
 const PUBLIC_ID = /^CT-\d{4,}$/;
 const events = z.object({
   ...common,
-  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step"]),
+  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap"]),
   listing: z.optional(z.string().check(z.regex(PUBLIC_ID))),
 });
 
@@ -114,7 +114,8 @@ export function parseBeacon(kind: BeaconKind, body: string): ParsedBeacon {
   const r = events.safeParse(json);
   if (!r.success) return { ok: false, status: 400 };
   const e = r.data;
-  if (e.name !== "page_view" && !e.listing) return { ok: false, status: 400 };
+  // Los de una casa la llevan; la vista de página y la ayuda de Explorar no.
+  if (e.name !== "page_view" && e.name !== "search_help_tap" && !e.listing) return { ok: false, status: 400 };
   return { ok: true, row: defined({ name: e.name, listing_public_id: e.listing, ...where(e.path), build: e.build }) };
 }
 

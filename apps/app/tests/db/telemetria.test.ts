@@ -45,6 +45,14 @@ describe("telemetría · permisos", () => {
     expect(ins.data?.country).toBe("CR");
   });
 
+  it("acepta search_help_tap (fase 6) sin casa y sigue rechazando un nombre desconocido", async () => {
+    const db = serviceClient();
+    const ok = await db.from("events").insert({ name: "search_help_tap", page: "explorar", path: "/explorar", build: BUILD, country: "CR" }).select("name, listing_public_id").single();
+    expect(ok.error).toBeNull();
+    expect(ok.data).toEqual({ name: "search_help_tap", listing_public_id: null });
+    expect((await db.from("events").insert({ name: "search_help", page: "explorar", path: "/explorar", build: BUILD })).error?.code).toBe("23514");
+  });
+
   it("la base rechaza filas fuera de forma aunque vengan de la service role", async () => {
     const db = serviceClient();
     expect((await db.from("web_vitals").insert({ name: "FID", value: 1, metric_id: "x", page: "ficha", path: "/", build: BUILD })).error?.code).toBe("23514");

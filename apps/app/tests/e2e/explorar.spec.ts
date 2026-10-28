@@ -269,7 +269,7 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await expect(page.getByRole("button", { name: "Ver 0 casas" })).toBeVisible();
   await page.getByRole("button", { name: "Ver 0 casas" }).click();
   await expect(page).toHaveURL(/\/explorar\?ppl=6$/);
-  await expect(page.getByText("Sin resultados con esos filtros.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No hay casas con esos filtros" })).toBeVisible();
   await page.goto("/explorar");
   await expect(results(page)).toHaveText("8 casas en Limón");
 

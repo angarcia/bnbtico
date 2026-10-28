@@ -12,6 +12,8 @@ import { CurrencySwitch } from "../currency-switch";
 import { I } from "../../shared/icons";
 import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
+import { SearchHelp } from "../search-help";
+import { SUPPORT_NUMBERS } from "../support-numbers";
 import { listingsQuery, provincesQuery } from "../queries";
 import { useSession } from "../session";
 
@@ -109,13 +111,16 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
       {!listings ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonGrid />
       ) : listings.length === 0 ? (
-        <div className="card muted">Sin resultados con esos filtros.</div>
+        <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} onClear={f.modes.length || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
       ) : (
-        <div className={`listing-grid${reveal}`}>
-          {listings.map((l) => (
-            <ListingCard key={l.publicId} listing={l} />
-          ))}
-        </div>
+        <>
+          <div className={`listing-grid${reveal}`}>
+            {listings.map((l) => (
+              <ListingCard key={l.publicId} listing={l} />
+            ))}
+          </div>
+          <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} />
+        </>
       )}
     </>
   );

@@ -1,6 +1,6 @@
 # 01 · «¿No encuentra lo que busca?» por WhatsApp en Explorar
 
-Status: ready-for-agent
+Status: done
 Blocked by: nada
 Fecha: 2026-10-27 · Decisión: `docs/decisiones.md` (2026-10-27, «Fase 6 aplazada…»)
 
@@ -19,11 +19,26 @@ Sustituto de la fase 6 aplazada: en Explorar, una nota que lleva al WhatsApp de 
 
 ## Acceptance
 
-- [ ] Vitest del mensaje: sin filtros; provincia; «Todas las zonas»; personas; cada modalidad y las dos; características; precio máximo; que «Fechas: » vaya al final; que nunca salga «undefined» ni dobles espacios.
-- [ ] Costura del worker: `/events` acepta `search_help_tap` y guarda solo lo de siempre; base: la restricción acepta el nombre nuevo y sigue rechazando uno desconocido.
-- [ ] Playwright Pixel 7 (`tests/e2e/`): con filtros sin resultados → «No hay casas con esos filtros», el botón lleva a `https://wa.me/<número de soporte>?text=…` con el mensaje esperado (interceptado, sin salir a internet) y «Quitar filtros» vuelve a mostrar casas; con resultados → la nota al final de la rejilla; sin `VITE_WA_GUESTS` → sin nota (si hace falta, un build aparte o una variable de prueba; elegir lo más simple y explicarlo). Cada prueba crea sus casas y no supone recuentos globales.
-- [ ] Capturas Pixel 7 revisadas (vacío y con resultados, a 360 px y 412 px), para enseñárselas a Daniel.
-- [ ] Sin tocar la ficha `/casa/CT-####` ni su camino: Lighthouse ficha ≤ 1,70 s; CSP sin cambios.
-- [ ] Tamaño: Explorar va en el JS inicial; la zona privada no pasa de **142,6 KB gz** (hoy 142,16 de 150) y las pantallas de las pestañas no suben de 24,5. Sin subir ningún límite.
-- [ ] Todas las baterías en verde desde `apps/app`: `typecheck`, `test`, `test:db`, `build`, `size`, `test:e2e`, `lighthouse`; los `tests/prototype/*.cjs` siguen pasando.
-- [ ] `docs/telemetria.md` con el evento y su consulta; `docs/decisiones.md` solo si hay alguna decisión de implementación que no esté aquí.
+- [x] Vitest del mensaje: sin filtros; provincia; «Todas las zonas»; personas; cada modalidad y las dos; características; precio máximo; que «Fechas: » vaya al final; que nunca salga «undefined» ni dobles espacios.
+- [x] Costura del worker: `/events` acepta `search_help_tap` y guarda solo lo de siempre; base: la restricción acepta el nombre nuevo y sigue rechazando uno desconocido.
+- [x] Playwright Pixel 7 (`tests/e2e/`): con filtros sin resultados → «No hay casas con esos filtros», el botón lleva a `https://wa.me/<número de soporte>?text=…` con el mensaje esperado (interceptado, sin salir a internet) y «Quitar filtros» vuelve a mostrar casas; con resultados → la nota al final de la rejilla; sin `VITE_WA_GUESTS` → sin nota (si hace falta, un build aparte o una variable de prueba; elegir lo más simple y explicarlo). Cada prueba crea sus casas y no supone recuentos globales.
+- [x] Capturas Pixel 7 revisadas (vacío y con resultados, a 360 px y 412 px), para enseñárselas a Daniel.
+- [x] Sin tocar la ficha `/casa/CT-####` ni su camino: Lighthouse ficha ≤ 1,70 s; CSP sin cambios.
+- [x] Tamaño: Explorar va en el JS inicial; la zona privada no pasa de **142,6 KB gz** (hoy 142,16 de 150) y las pantallas de las pestañas no suben de 24,5. Sin subir ningún límite.
+- [x] Todas las baterías en verde desde `apps/app`: `typecheck`, `test`, `test:db`, `build`, `size`, `test:e2e`, `lighthouse`; los `tests/prototype/*.cjs` siguen pasando.
+- [x] `docs/telemetria.md` con el evento y su consulta; `docs/decisiones.md` solo si hay alguna decisión de implementación que no esté aquí.
+
+## Cierre (2026-10-27)
+
+- **Qué hay:** `src/domain/search-help.ts` (`searchHelpMessage`, líneas separadas por salto de línea; precio con `formatCRC`, o sea `₡80 000` con espacio duro como en toda la app), `src/client/search-help.tsx` (`SearchHelp`: con `onClear` es la tarjeta «No hay casas con esos filtros» + nota + «Quitar filtros»; sin él, la nota arena al final de la rejilla), `src/client/support-numbers.ts` (los dos números del build; `support.ts` los toma de ahí) y Explorar usa los tres. Evento `search_help_tap` en `telemetry.ts` (sin casa, como `page_view`) y en `EventName`; migración `20261028010831_evento_ayuda_busqueda.sql` (solo `events_name_check`; aplicada solo en local; `database.types.ts` no cambia).
+- **Desviaciones (las más conservadoras):**
+  - El enlace se abre **como Ayuda**, que en `cuenta.tsx` usa `target="_blank" rel="noopener"` (el ticket decía «en la misma pestaña» y a la vez «hacer lo mismo que Ayuda»; se siguió a Ayuda).
+  - No usa `waLink(SUPPORT.guest.number, …)` sino `waUrl(SUPPORT_NUMBERS.guest, …)`: mismo número y misma función de fondo, pero importar `support.ts` metía los textos de Ayuda en el JS inicial (+0,26 KB, de `cuenta-*` a la zona privada) y no cabía en 142,6.
+  - «Quitar filtros» conserva la zona elegida y quita todo lo demás (`parseFilters({ prov })`); solo sale si hay modalidad o algún filtro de «Más filtros».
+  - Sin número: el componente no pinta nota ni botón; se prueba con `renderToString` en `tests/unit/search-help-note.test.tsx` en vez de con un segundo build. Para el caso con número, `pnpm dev:vars` escribe en `.env.local` un número de prueba `VITE_WA_GUESTS=+506 6000 0000` (no es de nadie; el build de despliegue borra `.env.local`). Con él Ayuda de clientes sale activa en local y en las E2E.
+- **`/events` sin la migración** (comprobado de verdad contra el preview y la base local con la restricción vieja): `POST /events` con `search_help_tap` responde **204**, la fila no se guarda y el worker registra `{"event":"beacon_write_failed",…23514…}`; el resto de eventos se sigue guardando. El navegador manda la baliza con `sendBeacon` sin esperar respuesta: en pantalla no cambia nada. Prueba de costura en `worker.test.ts` («si la base rechaza la fila … responde 204 igual y lo registra»). Se puede desplegar antes de aplicar la migración en `bnbtico-pruebas`; solo se pierden esos toques.
+- **Pruebas:** Vitest `search-help.test.ts` (8: sin filtros, provincia, «Todas», personas, cada modalidad y las dos, características, precio máximo, orden con «Fechas: » al final, sin «undefined»/«null»/dobles espacios), `search-help-note.test.tsx` (5), `telemetry.test.ts` y `worker.test.ts` (`search_help_tap` acepta y descarta campos de más: ni texto ni filtros), `tests/db/telemetria.test.ts` (la restricción acepta el nombre sin casa y rechaza `search_help` con 23514), Playwright `tests/e2e/no-encuentra.spec.ts` (2; siembra su casa sin `reset`, filtros que nada cumple con máximo ₡1; wa.me interceptado; mensaje exacto; baliza `search_help_tap - explorar /explorar`; «Quitar filtros» vuelve a mostrar su casa; la nota es el hermano siguiente de la rejilla). `explorar.spec.ts` cambia el texto del vacío.
+- **Baterías** (desde `apps/app`, instancia propia `bnbtico-nf` en 55421, preview en 4183): `typecheck` limpio; `test` 65 archivos, **904**; `test:db` 23 archivos, **244**; `build` en verde; `size` en verde; `test:e2e` **141 en verde + 2 omitidas** (medición), 5,5 min; `lighthouse` ficha en frío **LCP 1,61 s** (1,64 · 1,61 · 1,61; 99 puntos), shell instalado **0,29 s**; 34 `tests/prototype/*.cjs` en verde.
+- **Tamaños (gz):** zona privada **142,60 / 150 KB** (142,16 antes; tope del ticket 142,6, justo en el borde: para caber se quitaron `clearFilters`, los `data-testid` y se unieron los dos componentes); pantallas de las pestañas **24,48 / 24,5** (24,47 antes). Ningún límite cambiado. Ficha y CSP sin tocar.
+- **Capturas Pixel 7 revisadas** (`apps/app/test-results/capturas-no-encuentra/`, no versionadas): `vacio-412.png`, `vacio-360.png`, `resultados-412.png`, `resultados-360.png`. El botón en contorno verde se lee bien sobre arena y sobre la tarjeta blanca; no hace falta verde WhatsApp. A 360 px el chip «Más filtros» con su contador roza el borde derecho (ya pasaba antes; no es de este ticket).
+- **Para Daniel:** aplicar la migración `evento_ayuda_busqueda` en `bnbtico-pruebas` (si se despliega antes, solo se pierden los toques); confirmar que `WA_GUESTS` está en las variables de GitHub (sin él la nota no sale en pruebas); mirar las capturas.

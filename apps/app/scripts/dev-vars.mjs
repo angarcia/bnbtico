@@ -22,5 +22,11 @@ const purgeSecret = kept("PURGE_SECRET");
 // FAKE_PAYMENTS_SECRET). Los secretos se conservan entre ejecuciones.
 const fase5 = `WHATSAPP_SENDER=fake\nTEST_CLOCK_SECRET=${kept("TEST_CLOCK_SECRET")}\nPAYMENTS=fake\nFAKE_PAYMENTS_SECRET=${kept("FAKE_PAYMENTS_SECRET")}\n`;
 writeFileSync(devVars, `SUPABASE_URL=${env.API_URL}\nSUPABASE_ANON_KEY=${env.ANON_KEY}\nSUPABASE_SERVICE_ROLE_KEY=${env.SERVICE_ROLE_KEY}\nPURGE_SECRET=${purgeSecret}\n${fase5}`);
-writeFileSync(new URL(".env.local", app), `VITE_SUPABASE_URL=${env.API_URL}\nVITE_SUPABASE_ANON_KEY=${env.ANON_KEY}\nVITE_TURNSTILE_SITE_KEY=${TURNSTILE_TEST_SITE_KEY}\n`);
+// Número de atención a clientes de prueba (no es de nadie): con él salen Ayuda y «¿No encuentra lo que busca?» en Explorar, y
+// las pruebas E2E comprueban el enlace wa.me sin salir a internet. El de propietarios se deja vacío (la portada no cambia).
+const SUPPORT_GUESTS_TEST_NUMBER = "+506 6000 0000";
+writeFileSync(
+  new URL(".env.local", app),
+  `VITE_SUPABASE_URL=${env.API_URL}\nVITE_SUPABASE_ANON_KEY=${env.ANON_KEY}\nVITE_TURNSTILE_SITE_KEY=${TURNSTILE_TEST_SITE_KEY}\nVITE_WA_GUESTS=${SUPPORT_GUESTS_TEST_NUMBER}\n`,
+);
 console.log(`Variables locales apuntando a ${env.API_URL}`);

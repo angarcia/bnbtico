@@ -1,3 +1,11 @@
+## 2026-10-27 · «¿No encuentra lo que busca?»: decisiones de implementación (fase 6, ticket 01)
+
+- El botón «Escribir a bnbtico por WhatsApp» se abre como «Abrir WhatsApp» de Ayuda (otra pestaña), en contorno verde.
+- «Quitar filtros» conserva la zona y quita lo demás.
+- El número sale de `src/client/support-numbers.ts` (el mismo `VITE_WA_GUESTS` que Ayuda) para no cargar los textos de Ayuda en el JS inicial; la zona privada queda en 142,60 KB.
+- Evento `search_help_tap` sin casa ni mensaje; si la base no lo acepta aún, el worker responde 204 y solo registra el fallo.
+- `pnpm dev:vars` pone un número de atención a clientes de prueba (`+506 6000 0000`) en `.env.local` para las pruebas locales y de CI.
+
 ## 2026-10-27 · Fase 6 («Buscan casa») aplazada hasta después del lanzamiento; en su lugar, «¿No encuentra lo que busca?» por WhatsApp
 
 Decisión de Daniel.
