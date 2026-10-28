@@ -259,6 +259,44 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.locator(".detail-badge").getByText("En revisión", { exact: true })).toBeVisible();
 });
 
+// Revisión de Ana: con el teclado abierto la descripción dejaba un hueco vacío debajo. Llena lo que queda de la pantalla con
+// y sin teclado: lo último del paso (la nota) queda justo encima de la barra «Atrás / Continuar» o del teclado.
+test("paso 6: la descripción llena el alto que queda, con y sin teclado", async ({ page }) => {
+  const id = (await h.seed({ status: "draft", draft: { description: "" } })).id;
+  await page.goto(`/propietario/publicar/${id}/6`);
+  const area = page.getByLabel("Descripción");
+  await expect(area).toBeVisible();
+  const geometry = () =>
+    page.evaluate(() => {
+      const r = (el: Element) => el.getBoundingClientRect();
+      const ta = r(document.getElementById("pub-description")!);
+      const note = r(document.querySelector(".publish-form > span.xs")!);
+      const bar = r(document.querySelector(".sticky-actions")!);
+      const vv = window.visualViewport!;
+      const bottom = Math.min(bar.top, vv.offsetTop + vv.height);
+      return { taTop: Math.round(ta.top), taBottom: Math.round(ta.bottom), gap: Math.round(bottom - note.bottom), noteGap: Math.round(note.top - ta.bottom) };
+    });
+  const expectFilled = async (what: string) => {
+    // Entre 0 (nada bajo la barra o el teclado) y 16 px de hueco; se espera a que acabe de subir (scroll suave).
+    await expect.poll(async () => { const { gap } = await geometry(); return gap >= 0 && gap <= 16 ? "lleno" : gap; }, { message: `${what}: hueco bajo la descripción` }).toBe("lleno");
+    const g = await geometry();
+    expect(g.noteGap, `${what}: la nota va pegada a la descripción`).toBeLessThanOrEqual(16);
+    expect(g.taBottom - g.taTop, `${what}: alto mínimo`).toBeGreaterThanOrEqual(96);
+  };
+  await expectFilled("sin teclado");
+  await area.focus();
+  await expect.poll(async () => Math.abs((await geometry()).taTop - 88)).toBeLessThanOrEqual(2); // sube hasta debajo de la cabecera
+  await expectFilled("con el sitio del teclado");
+  await area.fill("Casa de madera a 200 m de la playa. ".repeat(12));
+  await expectFilled("escribiendo");
+  // Un teclado que encoge la vista (Android, o la vista visible del iPhone): la descripción se ajusta encima de él.
+  await page.setViewportSize({ width: 375, height: 380 });
+  await expectFilled("con la vista encogida");
+  await page.setViewportSize({ width: 375, height: 667 });
+  await area.blur();
+  await expectFilled("al cerrar el teclado");
+});
+
 test("publicar con mensual sin precio: tras aprobarla, la ficha dice «precio a negociar con el dueño» y lleva «Alquiler mensual»", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5 });
   await page.goto(`/propietario/publicar/${draft.id}/8`);

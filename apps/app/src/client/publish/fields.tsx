@@ -2,7 +2,7 @@
 // mapa se unió al paso 2, el 2026-10-27). Casillas y contadores llevan su valor en el formulario (campos ocultos o
 // casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
@@ -16,6 +16,7 @@ import { reportError } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { isChunkLoadError } from "../chunk-error";
 import { offerTakenQuery } from "../owner";
+import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
@@ -241,9 +242,11 @@ function TitleField({ value }: { value: string }) {
   );
 }
 
-/** Descripción (80 a 2000 caracteres) con contador; el área crece hasta llenar lo que queda de pantalla. */
+/** Descripción (80 a 2000 caracteres) con contador; el área llena lo que queda de pantalla, con y sin teclado. */
 function DescriptionField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
+  const area = useRef<HTMLTextAreaElement>(null);
+  useFillHeight(area);
   return (
     <div className="field grow-col">
       <div className="row between baseline">
@@ -259,6 +262,7 @@ function DescriptionField({ value }: { value: string }) {
       </div>
       {/* Tres preguntas guía que se van al escribir; sin texto de ejemplo, que acabaría copiado en todas las fichas. */}
       <textarea
+        ref={area}
         id="pub-description"
         name="description"
         rows={3}
