@@ -33,3 +33,11 @@ export const PROVINCE_CENTERS: Readonly<Record<string, LatLng>> = {
 
 /** Punto con seis decimales (unos 10 cm): lo que se guarda del pin. */
 export const roundPoint = (p: LatLng): LatLng => ({ lat: Number(p.lat.toFixed(6)), lng: Number(p.lng.toFixed(6)) });
+
+/** Rectángulo que contiene el círculo de `meters` alrededor de `p` (oeste, sur, este, norte), con la misma Tierra que
+ *  `distanceMeters`. */
+export function bboxAround(p: LatLng, meters: number): [west: number, south: number, east: number, north: number] {
+  const dLat = (meters / 6_371_000) * (180 / Math.PI);
+  const dLng = dLat / Math.cos((p.lat * Math.PI) / 180);
+  return [p.lng - dLng, p.lat - dLat, p.lng + dLng, p.lat + dLat];
+}
