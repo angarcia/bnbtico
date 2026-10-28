@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
+import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 
 // Explorar y Filtros en el navegador (pantallas 01 y 02), contra Supabase local.
@@ -17,6 +18,7 @@ test.beforeAll(async () => {
   ultima = await h.seed({ status: "active", draft: { title: "Casa Cocles 7", zone: "Cocles", capacity: 2, nightlyPriceCrc: 40000 } });
   for (let i = 6; i >= 1; i--) await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", capacity: 2, nightlyPriceCrc: 40000 + i * 1000 } });
   manzanillo = await h.seed({ status: "active", draft: { title: "Casa Manzanillo", zone: "Manzanillo", capacity: 5, acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 85000, features: ["wifi", "beachfront"] } });
+  await h.seed({ status: "active", draft: { title: "Casa Cocles mensual", zone: "Cocles", capacity: 2, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null } });
 });
 
 test.beforeEach(async ({ page }) => {
@@ -29,7 +31,7 @@ const results = (page: Page) => page.getByTestId("results-count");
 test("Explorar arranca en Limón y Filtros solo ofrece provincias con casas", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("heading", { level: 1, name: "¿Para dónde va?" })).toBeVisible();
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  await expect(results(page)).toHaveText("9 casas en Limón");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toBeVisible();
   // Revisión UX A11: sin filtro de fechas, el buscador no promete fechas.
   await expect(page.locator(".search-pill")).toContainText("Cualquier grupo");
@@ -40,14 +42,14 @@ test("Explorar arranca en Limón y Filtros solo ofrece provincias con casas", as
   await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible();
   const zona = page.getByRole("group", { name: "Zona" });
   await expect(zona.getByRole("button")).toHaveText(["Todas", "Guanacaste", "Limón"]);
-  await expect(page.getByRole("button", { name: "Ver 8 casas" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ver 9 casas" })).toBeVisible();
 });
 
 test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N casas» aplica y vuelve", async ({ page }) => {
   await page.goto("/explorar/filtros");
   const zona = page.getByRole("group", { name: "Zona" });
   await zona.getByRole("button", { name: "Todas" }).click();
-  await expect(page.getByRole("button", { name: "Ver 9 casas" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
   await page.getByRole("button", { name: "Piscina", exact: true }).click();
   await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
   await page.getByRole("button", { name: "Piscina", exact: true }).click();
@@ -64,20 +66,20 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await page.getByLabel("Precio mínimo por noche").fill("44000");
   await page.getByLabel("Precio máximo por noche").fill("50.000");
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Ver 3 casas" })).toBeVisible();
-  await page.getByRole("button", { name: "Ver 3 casas" }).click();
+  await expect(page.getByRole("button", { name: "Ver 4 casas" })).toBeVisible();
+  await page.getByRole("button", { name: "Ver 4 casas" }).click();
   await expect(page).toHaveURL(/\/explorar\?prov=Todas&min=44000&max=50000$/);
-  await expect(results(page)).toHaveText("3 casas");
+  await expect(results(page)).toHaveText("4 casas");
 
   await page.getByRole("link", { name: /Más filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("44000");
   await page.getByRole("link", { name: "Limpiar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  await expect(results(page)).toHaveText("9 casas en Limón");
 
   // Una URL con mínimo > máximo se trata como sin rango.
   await page.goto("/explorar?prov=Todas&min=50000&max=44000");
-  await expect(results(page)).toHaveText("9 casas");
+  await expect(results(page)).toHaveText("10 casas");
 });
 
 test("con dólares elegidos, los precios de Filtros se escriben en dólares y se buscan en colones", async ({ page }) => {
@@ -89,45 +91,64 @@ test("con dólares elegidos, los precios de Filtros se escriben en dólares y se
   await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
   await page.getByLabel("Precio mínimo por noche").fill("86");
   await page.getByLabel("Precio máximo por noche").fill("98");
-  await page.getByRole("button", { name: "Ver 3 casas" }).click();
+  await page.getByRole("button", { name: "Ver 4 casas" }).click();
   await expect(page).toHaveURL(/\/explorar\?prov=Todas&min=43860&max=49980$/);
   await page.getByRole("link", { name: /Más filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("86");
   await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("98");
 });
 
-test("Vacacional y Mensual no se excluyen, caben en una fila a 360 px y la URL restaura la pantalla", async ({ page }) => {
+test("Alquiler mensual: un chip, la línea y los precios por mes; al quitarlo vuelven «/ noche» y el rango", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto("/explorar");
   const chips = page.locator(".chiprow");
-  await expect(chips.locator(".chip")).toHaveText(["Vacacional", "Mensual", "Más filtros"]);
+  await expect(chips.locator(".chip")).toHaveText(["Alquiler mensual", "Más filtros"]);
   const [scrollW, clientW, pageW] = await chips.evaluate((el) => [el.scrollWidth, el.clientWidth, document.documentElement.scrollWidth]);
   expect(scrollW, "sin scroll lateral en los chips").toBeLessThanOrEqual(clientW!);
   expect(pageW, "la página no se ensancha").toBeLessThanOrEqual(360);
 
-  const vac = page.getByRole("button", { name: "Vacacional", exact: true });
-  const men = page.getByRole("button", { name: "Mensual", exact: true });
-  await men.click();
-  await expect(page).toHaveURL(/modo=monthly/);
-  await expect(results(page)).toHaveText("1 casa en Limón");
-  await vac.click();
-  await expect(page).toHaveURL(/modo=both/);
-  await expect(vac).toHaveAttribute("aria-pressed", "true");
-  await expect(men).toHaveAttribute("aria-pressed", "true");
-  await expect(results(page)).toHaveText("8 casas en Limón");
-  await men.click();
-  await expect(page).toHaveURL(/modo=nightly/);
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  // Las nueve casas de Limón cuestan entre ₡40 000 y ₡85 000 la noche.
+  await page.goto("/explorar?min=40000&max=90000");
+  await expect(results(page)).toHaveText("9 casas en Limón");
+  const badge = page.getByRole("link", { name: /Más filtros/ }).locator(".badge");
+  await expect(badge).toHaveText("2");
+  const pills = page.locator(".listing-card .pill-bl");
+  await expect(pills.first()).toContainText("/ noche");
 
-  // Filtros: la misma modalidad, con los mismos chips.
+  const since = sql("select now()::text");
+  const chip = page.getByRole("button", { name: "Alquiler mensual", exact: true });
+  await chip.click();
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/mensual=1/);
+  await expect(page).toHaveURL(/min=40000/);
+  await expect(page).toHaveURL(/max=90000/);
+  await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual en Limón");
+  await expect(page.getByRole("link", { name: /Casa Manzanillo/ }).locator(".pill-bl")).toHaveText("₡480 000 / mes");
+  await expect(page.getByRole("link", { name: /Casa Cocles mensual/ }).locator(".pill-bl")).toHaveText("Precio a negociar");
+  await expect(pills).toHaveCount(2);
+  for (const text of await pills.allTextContents()) expect(text).not.toContain("/ noche");
+  await expect
+    .poll(() => sql(`select name || ' ' || coalesce(listing_public_id, '-') || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'monthly_filter_tap'`).split("\n").filter(Boolean))
+    .toEqual(["monthly_filter_tap - explorar /explorar"]);
+  // El rango por noche queda sin efecto: el contador de «Más filtros» no lo cuenta.
+  await expect(badge).toHaveCount(0);
+
   await page.getByRole("link", { name: /Más filtros/ }).click();
-  const modalidad = page.getByRole("group", { name: "Modalidad" });
-  await expect(modalidad.getByRole("button", { name: "Vacacional" })).toHaveAttribute("aria-pressed", "true");
-  await modalidad.getByRole("button", { name: "Mensual" }).click();
-  await modalidad.getByRole("button", { name: "Vacacional" }).click();
-  await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
-  await page.getByRole("button", { name: "Ver 1 casa" }).click();
-  await expect(page).toHaveURL(/modo=monthly/);
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveCount(0);
+  const needs = page.locator("section", { has: page.getByText("Qué necesitan", { exact: true }) }).locator(".chip");
+  await expect(needs.last()).toHaveText("Alquiler mensual");
+  await expect(needs.last()).toHaveAttribute("aria-pressed", "true");
+  await needs.last().click();
+  await expect(needs.last()).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("40000");
+  await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("90000");
+  await page.getByRole("button", { name: "Ver 9 casas" }).click();
+
+  await expect(page).toHaveURL(/\/explorar\?min=40000&max=90000$/);
+  await expect(results(page)).toHaveText("9 casas en Limón");
+  await expect(results(page)).not.toContainText("aceptan");
+  await expect(pills).toHaveCount(9);
+  for (const text of await pills.allTextContents()) expect(text).toMatch(/\/ noche$/);
 
   // Las características van en «Más filtros», con el contador.
   await page.goto("/explorar?prov=Guanacaste&pool=1");
@@ -135,6 +156,26 @@ test("Vacacional y Mensual no se excluyen, caben en una fila a 360 px y la URL r
   await expect(page.getByRole("link", { name: /Más filtros/ })).toContainText("1");
   await page.getByRole("link", { name: /Más filtros/ }).click();
   await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("un enlace viejo /explorar?modo=monthly llega con el chip encendido", async ({ page }) => {
+  const chip = page.getByRole("button", { name: "Alquiler mensual", exact: true });
+  await page.goto("/explorar?modo=monthly");
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual en Limón");
+  await page.goto("/explorar?modo=both");
+  await expect(chip).toHaveAttribute("aria-pressed", "false");
+  await expect(results(page)).toHaveText("9 casas en Limón");
+
+  // En Filtros, un rango inválido que el mensual oculta no bloquea «Ver N casas».
+  await page.goto("/explorar/filtros");
+  await page.getByLabel("Precio mínimo por noche").fill("50000");
+  await page.getByLabel("Precio máximo por noche").fill("44000");
+  await expect(page.getByRole("button", { name: /^Ver/ })).toBeDisabled();
+  await page.getByRole("button", { name: "Alquiler mensual", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Ver 2 casas" })).toBeEnabled();
+  await page.getByRole("button", { name: "Ver 2 casas" }).click();
+  await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual en Limón");
 });
 
 // Revisión UX N5: en un ordenador, la rejilla de Explorar usa el ancho (3 columnas desde 900 px, 4 desde 1200 px).
@@ -251,11 +292,11 @@ test("Explorar ↔ ficha con View Transition: al volver, el scroll ya está rest
 
 test("la segunda visita pinta desde la caché sin red, y la ficha se pinta desde la tarjeta", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  await expect(results(page)).toHaveText("9 casas en Limón");
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());
   await page.reload();
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  await expect(results(page)).toHaveText("9 casas en Limón");
   await page.getByRole("link", { name: /Casa Manzanillo/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo" })).toBeVisible();
   await expect(page.getByTestId("main-price")).toHaveText("₡85 000 / noche");
@@ -269,7 +310,7 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await expect(page).toHaveURL(/\/explorar\?ppl=6$/);
   await expect(page.getByRole("heading", { name: "No hay casas con esos filtros" })).toBeVisible();
   await page.goto("/explorar");
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  await expect(results(page)).toHaveText("9 casas en Limón");
 
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
   // Favoritos y Cuenta son trozos diferidos: los trae la precarga (en reposo o al apuntar a la pestaña; instalada, el
@@ -287,5 +328,5 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeVisible();
   await expect(nav).toHaveCount(0);
   await page.getByRole("link", { name: "Volver" }).click();
-  await expect(results(page)).toHaveText("8 casas en Limón");
+  await expect(results(page)).toHaveText("9 casas en Limón");
 });

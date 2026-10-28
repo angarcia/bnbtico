@@ -74,6 +74,11 @@ describe("telemetría · validación de balizas", () => {
       ok: true,
       row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc123" },
     });
+    // «Alquiler mensual» en Explorar: el toque del chip, sin casa y sin los filtros.
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "monthly_filter_tap", path: "/explorar?mensual=1" }))).toEqual({
+      ok: true,
+      row: { name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: "abc123" },
+    });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "listing_view", listing: "drop table" })).ok).toBe(false);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "signup" })).ok).toBe(false);
   });

@@ -44,7 +44,7 @@ const helpEvents = () =>
     .filter(Boolean);
 
 test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsqueda y «Quitar filtros»", async ({ page }) => {
-  await page.goto("/explorar?ppl=12&pool=1&modo=nightly&max=1");
+  await page.goto("/explorar?ppl=12&pool=1&mensual=1&max=1");
   const empty = page.locator("section.card", { has: page.getByRole("heading", { name: "No hay casas con esos filtros" }) });
   await expect(empty.getByRole("heading", { name: "No hay casas con esos filtros" })).toBeVisible();
   await expect(empty).toContainText("¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.");
@@ -59,7 +59,7 @@ test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsque
   await empty.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/vacio-360.png` });
 
-  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nPersonas: 12.\nModalidad: Vacacional.\nNecesito: Piscina.\nPrecio por noche: hasta ₡1.\nFechas: ");
+  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nPersonas: 12.\nBusca alquiler mensual.\nNecesito: Piscina.\nFechas: ");
   // La baliza: solo nombre, página y ruta (sin la búsqueda ni el mensaje).
   await expect.poll(helpEvents).toEqual(["search_help_tap - explorar /explorar"]);
 

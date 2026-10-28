@@ -25,7 +25,8 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
     set(key, crc ? String(crc) : undefined);
   };
   const f = parseFilters(draft, provinces);
-  const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
+  // Con el mensual el rango por noche se oculta y no cuenta: uno inválido escondido no bloquea «Ver N casas».
+  const badRange = !f.monthly && priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
   const symbol = currency === "USD" ? "$" : "₡";
@@ -101,27 +102,29 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
             </button>
           </div>
         </section>
-        <section className="stack">
-          <span className="eyebrow">Precio orientativo por noche</span>
-          <div className="grid-2">
-            <div className="field">
-              <label htmlFor="f-min">Mínimo</label>
-              <input id="f-min" inputMode="decimal" placeholder={`${symbol} 0`} aria-label="Precio mínimo por noche" aria-invalid={badRange || undefined} aria-describedby="f-price-help" value={prices.min} onChange={(e) => setPrice("min", e.target.value)} />
+        {f.monthly ? null : (
+          <section className="stack">
+            <span className="eyebrow">Precio orientativo por noche</span>
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="f-min">Mínimo</label>
+                <input id="f-min" inputMode="decimal" placeholder={`${symbol} 0`} aria-label="Precio mínimo por noche" aria-invalid={badRange || undefined} aria-describedby="f-price-help" value={prices.min} onChange={(e) => setPrice("min", e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="f-max">Máximo</label>
+                <input id="f-max" inputMode="decimal" placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"} aria-label="Precio máximo por noche" aria-invalid={badRange || undefined} aria-describedby="f-price-help" value={prices.max} onChange={(e) => setPrice("max", e.target.value)} />
+              </div>
             </div>
-            <div className="field">
-              <label htmlFor="f-max">Máximo</label>
-              <input id="f-max" inputMode="decimal" placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"} aria-label="Precio máximo por noche" aria-invalid={badRange || undefined} aria-describedby="f-price-help" value={prices.max} onChange={(e) => setPrice("max", e.target.value)} />
-            </div>
-          </div>
-          <span className="xs muted" id="f-price-help">
-            {currency === "USD" ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.` : `En colones (${symbol}). Puede verlos en dólares desde Explorar o Cuenta.`}
-          </span>
-          {badRange ? (
-            <p className="field-error" role="alert">
-              El precio mínimo no puede ser mayor que el máximo.
-            </p>
-          ) : null}
-        </section>
+            <span className="xs muted" id="f-price-help">
+              {currency === "USD" ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.` : `En colones (${symbol}). Puede verlos en dólares desde Explorar o Cuenta.`}
+            </span>
+            {badRange ? (
+              <p className="field-error" role="alert">
+                El precio mínimo no puede ser mayor que el máximo.
+              </p>
+            ) : null}
+          </section>
+        )}
         <div className="sticky-spacer" aria-hidden="true" />
         <div className="sticky-actions">
           <button className="btn btn-primary grow" type="submit" disabled={badRange}>

@@ -562,6 +562,13 @@ describe("worker · balizas /vitals, /errors y /events", () => {
     expect(b.written).toEqual([{ table: "events", row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
   });
 
+  it("/events: monthly_filter_tap se escribe sin casa y sin los filtros", async () => {
+    const b = beacons();
+    const res = await b.post("/events", JSON.stringify({ name: "monthly_filter_tap", path: "/explorar?mensual=1&min=40000", build: "abc" }), { origin: ORIGIN });
+    expect(res.status).toBe(204);
+    expect(b.written).toEqual([{ table: "events", row: { name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
+  });
+
   it("/events: si la base rechaza la fila (p. ej. un nombre nuevo sin su migración) responde 204 igual y lo registra", async () => {
     const t = setup();
     const errors: string[] = [];

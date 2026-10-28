@@ -4,9 +4,10 @@ import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { PEOPLE_FILTER_KEY } from "../../domain/contact-return";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, extrasCount, parseFilters, resultsText, searchFor, searchToString, type Filters } from "../../domain/filters";
 import { MONTHLY_LABEL } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
+import { track } from "../../shared/beacon";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { I } from "../../shared/icons";
@@ -18,7 +19,6 @@ import { listingsQuery, provincesQuery } from "../queries";
 import { RootHeader } from "../chrome";
 
 const route = getRouteApi("/_tabs/explorar");
-const casas = (n: number) => `${n} ${n === 1 ? "casa" : "casas"}`;
 
 function Header() {
   return (
@@ -82,7 +82,11 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
         </Link>
         {/* Una fila sin scroll lateral a 360 px (ticket 16): «Alquiler mensual» y «Más filtros»; las características van en Filtros. */}
         <div className="chiprow fit">
-          <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => go({ ...f, monthly: !f.monthly })}>
+          <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => {
+              track("monthly_filter_tap");
+              void go({ ...f, monthly: !f.monthly });
+            }}
+          >
             {MONTHLY_LABEL}
           </button>
           <Link to="/explorar/filtros" search={search} className="chip chip-strong">
@@ -91,8 +95,17 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
         </div>
         <div className="row between small muted">
           <span data-testid="results-count">
-            {listings ? <b className="ink num">{casas(listings.length)}</b> : "Buscando casas…"}
-            {listings && f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : ""}
+            {listings
+              ? (() => {
+                  const r = resultsText(listings.length, f);
+                  return (
+                    <>
+                      <b className="ink num">{r.count}</b>
+                      {r.rest}
+                    </>
+                  );
+                })()
+              : "Buscando casas…"}
           </span>
         </div>
         {currency === "USD" ? <UsdNote /> : null}
@@ -105,7 +118,7 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
         <>
           <div className={`listing-grid${reveal}`}>
             {listings.map((l) => (
-              <ListingCard key={l.publicId} listing={l} />
+              <ListingCard key={l.publicId} listing={l} monthly={f.monthly} />
             ))}
           </div>
           <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} />
