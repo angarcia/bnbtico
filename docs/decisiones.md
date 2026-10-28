@@ -1,3 +1,18 @@
+## 2026-10-27 · «Alquiler mensual» como característica, con precio al mes opcional
+
+Decisión de Daniel. Especificación: `.scratch/mensual-como-caracteristica/spec.md`. Sustituye a «Vacacional / Mensual / las dos, con un precio por modalidad» de `docs/diseno-v1.md`.
+
+- **Toda casa se alquila por noches.** `accepts_nightly` es siempre `true` (con `check` en la base) y el precio por noche es obligatorio.
+- **«¿Acepta alquiler por meses?» vive en la pantalla del precio**, con «No» por defecto y sin paso propio: el asistente sigue en 9 pasos (el paso 1 queda solo con «¿Qué es?»).
+- **El precio al mes es opcional.** Vacío = «Precio a negociar con el dueño».
+- **Un solo chip «Alquiler mensual»** en Explorar (`?mensual=1`; `modo=monthly` se mantiene como enlace viejo). Con él activo se oculta el rango de precio por noche, sin borrarlo de la URL. Desaparecen las píldoras Vacacional/Mensual, la etiqueta «Vacacional» de la ficha y el segundo precio de las tarjetas.
+- **Medición:** evento `monthly_filter_tap` (toque en el chip, al activarlo o al quitarlo, sin casa). Consulta en `docs/telemetria.md`.
+- **Textos elegidos al construirlo:** resumen de la casa «mensual a negociar»; error «Indique el precio al mes en colones o déjelo vacío.»; la línea de resultados lleva ` en <provincia>` al final.
+- **Migración extra `20261028053953`** (`save_listing_days`): el mensaje de error del calendario ya no dice «solo por mes», porque ese caso no existe.
+- **Arreglo en `step-form.tsx`:** el hueco del teclado se quita en `setTimeout(0)`, para que el toque en un chip no se pierda mientras un campo tiene el foco.
+- **Antes de subir estas migraciones a `bnbtico-pruebas` hay que borrar sus casas de prueba** (tarea 9 del plan, la hace Daniel): los datos viejos con modalidades no cumplen las nuevas restricciones. No se toca el remoto sin ese paso.
+- Fuera de alcance: filtro por rango de precio mensual, estancia mínima (`min_nights`, `min_months`), disponibilidad mensual en el calendario y quitar las columnas heredadas.
+
 ## 2026-10-27 · Navegación simple: una barra que crece, Cuenta arriba y «Actividad»
 
 Decisión de Daniel. Sustituye la decisión N2 de la revisión UX (`.scratch/revision-ux/2026-10-26-revision-ux.md`, «las pestañas del propietario nunca se ocultan») y la barra inferior de `docs/diseno-v1.md`. Especificación: `.scratch/navegacion-simple/spec.md`.

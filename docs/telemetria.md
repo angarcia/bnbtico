@@ -9,7 +9,7 @@ terceros salvo Turnstile en Ingresar.
 |---|---|---|
 | `POST /vitals` | LCP, INP y CLS de `web-vitals` (trozo `vitals-*.js` que se importa tras `load`), con la ruta de aterrizaje | `web_vitals` |
 | `POST /errors` | errores no capturados y promesas rechazadas (como mucho 5 por carga), con mensaje, pila, ruta y build | `client_errors` |
-| `POST /events` | `page_view` (una por ruta resuelta en el shell; una al hidratar la ficha SSR), `listing_view` (ficha montada; no se manda si quien la abre es su dueño, según la lista de casas propias que Mis casas deja en el teléfono, ni desde la vista previa del asistente: revisión UX A2 y C4), `whatsapp_tap` (marcador en el botón «Contactar por WhatsApp», que hoy está deshabilitado), `inquiry_created` (fase 3: consulta registrada con `create_inquiry`; solo la casa, nada personal; la base lo acepta desde la migración `fase3_consultas`), `wizard_step` (revisión UX C4: cada pantalla del asistente de publicar que se abre, con la casa y la ruta `/propietario/publicar/:id/<paso>`; migración `evento_paso_asistente`), `search_help_tap` (fase 6, ticket 01: toque de «Escribir a bnbtico por WhatsApp» en Explorar, «¿No encuentra lo que busca?»; sin casa y sin el mensaje ni los filtros: la ruta queda en `/explorar`; migración `evento_ayuda_busqueda`. Si la base aún no lo acepta, el worker responde 204 igual y registra `beacon_write_failed`) | `events` |
+| `POST /events` | `page_view` (una por ruta resuelta en el shell; una al hidratar la ficha SSR), `listing_view` (ficha montada; no se manda si quien la abre es su dueño, según la lista de casas propias que Mis casas deja en el teléfono, ni desde la vista previa del asistente: revisión UX A2 y C4), `whatsapp_tap` (marcador en el botón «Contactar por WhatsApp», que hoy está deshabilitado), `inquiry_created` (fase 3: consulta registrada con `create_inquiry`; solo la casa, nada personal; la base lo acepta desde la migración `fase3_consultas`), `wizard_step` (revisión UX C4: cada pantalla del asistente de publicar que se abre, con la casa y la ruta `/propietario/publicar/:id/<paso>`; migración `evento_paso_asistente`), `search_help_tap` (fase 6, ticket 01: toque de «Escribir a bnbtico por WhatsApp» en Explorar, «¿No encuentra lo que busca?»; sin casa y sin el mensaje ni los filtros: la ruta queda en `/explorar`; migración `evento_ayuda_busqueda`. Si la base aún no lo acepta, el worker responde 204 igual y registra `beacon_write_failed`), `monthly_filter_tap` (toque en el chip «Alquiler mensual» de Explorar, al activarlo o al quitarlo; sin casa, ruta `/explorar`; migración `mensual_como_caracteristica`) | `events` |
 
 - El navegador usa `navigator.sendBeacon` (o `fetch` con `keepalive`): sobrevive a cerrar la pestaña o a salir hacia WhatsApp. Código en `src/shared/beacon.ts` y `src/client/vitals.ts`.
 - Solo se guarda la **ruta** (sin consulta ni fragmento y con los uuid cambiados por `:id`), el tipo de página (`pageType` en `src/domain/telemetry.ts`: `inicio`, `explorar`, `filtros`, `ficha`, `favoritos`, `cuenta`, `ayuda`, `publicar`, `propietario`, `admin`, `otra`), el build (`__BUILD_ID__` = los 12 primeros caracteres del commit) y el **país**, que añade el worker desde `request.cf.country` (o la cabecera `CF-IPCountry`). Los errores llevan además el user agent (recortado a 300).
@@ -51,6 +51,14 @@ group by 1 order by 1;
 select date_trunc('week', created_at at time zone 'America/Costa_Rica')::date as semana, count(*) as toques
 from public.events where name = 'search_help_tap' and created_at > now() - interval '12 weeks'
 group by 1 order by 1;
+
+-- «Alquiler mensual» (2026-10-27): toques del chip por semana sobre las vistas de Explorar. No hay ids de sesión por
+-- diseño, así que es una aproximación a la parte de sesiones de Explorar que usan el filtro.
+select date_trunc('week', created_at at time zone 'America/Costa_Rica')::date as semana,
+       count(*) filter (where name = 'monthly_filter_tap') as toques_mensual,
+       count(*) filter (where name = 'page_view' and page = 'explorar') as vistas_explorar,
+       round(100.0 * count(*) filter (where name = 'monthly_filter_tap') / nullif(count(*) filter (where name = 'page_view' and page = 'explorar'), 0), 1) as pct
+from public.events where created_at > now() - interval '12 weeks' group by 1 order by 1;
 
 -- El propietario ve sus propias cifras con la RPC owner_listing_stats (visitas y consultas de 30 días, revisión UX A2).
 -- Vistas de ficha y toques de WhatsApp por casa (30 días)

@@ -18,8 +18,8 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - **Estados de una casa:** Pendiente de revisión → Pendiente de pago → Activa → Inactiva (si el propietario para la suscripción). Las casas con oferta gratuita saltan «Pendiente de pago» hasta que termina la oferta. Avisos por WhatsApp y en la app a 90/30/7/0 días del fin de la oferta, con enlace `#pago=CT-xxxx` a la pantalla de método de pago. El enlace de una ficha parada o pendiente de pago deja de funcionar. «Añadir método de pago» solo aparece mientras no hay método y toca avisar.
 - **Precios en colones**, siempre orientativos; el cliente puede verlos convertidos a dólares (solo visualización). Nunca «total a pagar».
 - **Caribe por defecto:** Explorar arranca en Limón; en los filtros solo aparecen provincias con casas; una casa aprobada de otra zona añade su provincia.
-- **Características (una sola lista, igual al publicar y al filtrar):** Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis, Frente al mar, Rancho/BBQ.
-- **Modalidad y tipo (diseño v1):** una casa es Vacacional, Mensual o las dos, con un precio por modalidad; es Alojamiento completo o Habitación (con baño privado o compartido).
+- **Características (una sola lista, igual al publicar y al filtrar):** Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis, Frente al mar, Rancho/BBQ. Los filtros añaden «Alquiler mensual» (no se marca en características al publicar: se pregunta en el precio).
+- **Alquiler y tipo:** toda casa se alquila por noches, con precio por noche obligatorio; «Acepta alquiler mensual» es opcional, con precio al mes opcional (vacío = «Precio a negociar con el dueño»); es Alojamiento completo o Habitación (con baño privado o compartido).
 - «Mensual» en vez de «Largo plazo» en toda la UI (la landing no se toca).
 - Los propietarios podrán valorar a los clientes; no hay reseñas de casas.
 - Promoción de lanzamiento: primeras 50 casas 12 meses gratis, siguientes 50 seis meses, siguientes 100 tres meses; después ₡2.900 al mes por casa, sin permanencia (₡9.900 hasta el 2026-10-27).
