@@ -21,7 +21,19 @@ describe("zones y zones_near", () => {
     expect((await anonClient().from("zones").select("point").limit(1)).error?.code).toBe("42501");
     const owner = await signIn("owner");
     const ins = await owner.from("zones").insert({ id: "704-prueba", name: "Prueba", canton_code: "704", point: "SRID=4326;POINT(-82.7 9.6)" } as never);
-    expect(ins.error).not.toBeNull();
+    expect(ins.error?.code).toBe("42501"); // RLS: zones_admin exige is_admin()
+    expect(sql("select count(*) from zones where id = '704-prueba'")).toBe("0");
+  });
+  it("una zona inactiva («revisar» en zonas.md) no sale en zones_near ni en la lectura pública", async () => {
+    const [id, lat, lng] = sql("select id, lat, lng from zones where not active order by id limit 1").split("|");
+    expect(id).toBeTruthy();
+    const near = await anonClient().rpc("zones_near", { p_lat: Number(lat), p_lng: Number(lng), p_km: 0.5 });
+    expect(near.error).toBeNull();
+    expect(near.data!.map((z) => z.id)).not.toContain(id);
+    const read = await anonClient().from("zones").select("id").eq("id", id!);
+    expect(read.error).toBeNull();
+    expect(read.data).toEqual([]);
+    expect(sql("select count(*) > 0 from zones where active")).toBe("t");
   });
   it("cada zona cae en su cantón según place_at", () => {
     expect(sql("select count(*) from zones z where not exists (select 1 from place_at(z.lat, z.lng) p join geo.admin_names c on c.name = p.canton and c.level = 'canton' where c.code = z.canton_code)")).toBe("0");

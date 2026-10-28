@@ -231,7 +231,7 @@ const lines = [
   "",
   "> **Status: borrador cargado sin revisar (Daniel no disponible el 2026-10-27). Revisar antes del lanzamiento; los cambios van en una migración nueva.**",
   "",
-  "**Borrador sin revisar por Daniel.** Se carga entero en `public.zones` (migración `*_zonas.sql`), también las filas «revisar»: la marca vive aquí, no en la base.",
+  "**Borrador sin revisar por Daniel.** Se carga entero en `public.zones` (migración `*_zonas.sql`): las filas «sí» activas y las «revisar» **inactivas** (`active = false`: no salen en `zones_near` ni en la lectura pública). Tras la revisión, una migración nueva activa las que valgan y corrige o borra el resto.",
   "",
   `Generado con \`node scripts/osm-zonas/borrador.mjs\` a partir de OpenStreetMap (Overpass, ${date}; © colaboradores de OpenStreetMap, ODbL 1.0).`,
   "",
@@ -259,8 +259,9 @@ const lines = [
 writeFileSync(outMd, lines.join("\n"));
 
 if (sqlOut) {
-  const values = items.map((it) => `  (${sqlText(it.id)}, ${sqlText(it.name)}, '${it.canton_code}', extensions.ST_SetSRID(extensions.ST_MakePoint(${it.lng}, ${it.lat}), 4326))`);
-  writeFileSync(sqlOut, `insert into public.zones (id, name, canton_code, point) values\n${values.join(",\n")};\n`);
+  // Las «revisar» entran inactivas: no salen en zones_near ni en la lectura pública hasta que una migración las active.
+  const values = items.map((it) => `  (${sqlText(it.id)}, ${sqlText(it.name)}, '${it.canton_code}', extensions.ST_SetSRID(extensions.ST_MakePoint(${it.lng}, ${it.lat}), 4326), ${it.include === "sí"})`);
+  writeFileSync(sqlOut, `insert into public.zones (id, name, canton_code, point, active) values\n${values.join(",\n")};\n`);
 }
 
 console.log(`${items.length} zonas (${review} para revisar)`);
