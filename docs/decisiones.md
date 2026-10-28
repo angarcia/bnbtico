@@ -1,3 +1,15 @@
+## 2026-10-28 · Arreglos de la revisión de Ana
+
+Decisión de Daniel, tras las pruebas de Ana desde el teléfono.
+
+- **Paso 2, «Otra…»:** mientras se escribe, la lista «Zona» dice «Otra…»; después muestra el nombre elegido como opción marcada, con «Otra…» al final para cambiarlo; «Continuar» espera mientras «Otra…» está abierta. El campo sube por encima del teclado y de la barra «Atrás / Continuar» (también al tocarlo ya enfocado, cuando el teclado encoge la vista y al cerrarlo); el sitio de la barra es ahora el último elemento del paso, no un relleno, para que un paso que no cabe pueda subir su último campo.
+- **Paso «Nombre y descripción»:** la descripción llena el alto que queda hasta la barra o el teclado, con el teclado abierto y cerrado (`publish/fill-height.ts`).
+- **Mis casas:** toda la tarjeta abre el detalle (enlace estirado en el título); «Compartir ficha», «Calendario», «Seguir», «Descartar», «Reactivar» y el pago siguen por encima. Sin manejadores de toque: arrastrar sobre una tarjeta desplaza la lista.
+- **Favoritos:** «Escribir» pasa a «Enviar WhatsApp», con el icono y el verde de «Contactar por WhatsApp», en pequeño. Mismo destino (la ficha con la hoja de contacto abierta).
+- **Pestaña:** «Mi casa» con una sola casa, «Mis casas» con dos o más (`tabsFor`). Los títulos de pantalla no cambian.
+- **Detalle de una casa:** fuera la fila «Calendario y precios»; la pestaña Calendario y el botón «Calendario» de la tarjeta de Mis casas ya lo cubren. Se borran `occupiedNightsLabel` y `occupiedNightsIn`.
+- **Filtro mensual:** el chip de Explorar y el interruptor de Filtros dicen «Solo alquiler mensual» (`MONTHLY_FILTER_LABEL`); la característica de la ficha, el resumen del admin, la pregunta del asistente y la línea de resultados no cambian. Cabe en una fila a 360 y 375 px.
+
 ## 2026-10-27 · Fotos: ordenar arrastrando
 
 Decisión de Daniel (lluvia de ideas «Mejoras fase R y 3», proyecto 3 de 4). Especificación: `.scratch/fotos-arrastrar/spec.md`.
