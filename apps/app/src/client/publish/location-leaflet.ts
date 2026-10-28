@@ -13,6 +13,8 @@ export interface PickerMap {
   place(p: LatLng): void;
   /** Mueve el mapa sin animación (el buscador); no toca el pin. */
   view(p: LatLng, zoom: number): void;
+  /** Centro de lo que se ve. */
+  center(): LatLng;
   dispose(): void;
 }
 
@@ -53,6 +55,10 @@ export function drawPicker(el: HTMLElement, start: { point: LatLng | null; cente
   return {
     place,
     view: (p, zoom) => void map.setView([p.lat, p.lng], zoom, { animate: false }),
+    center: () => {
+      const c = map.getCenter();
+      return { lat: c.lat, lng: c.lng };
+    },
     dispose: () => {
       resize?.disconnect();
       map.remove();

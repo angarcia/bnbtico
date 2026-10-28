@@ -151,6 +151,34 @@ describe("createPlaceLookup", () => {
     expect(api.placeAt).toHaveBeenCalledTimes(1);
   });
 
+  it("con un cargador del adaptador que falla: error, y Reintentar u online lo vuelven a cargar", async () => {
+    const { api, resolve } = fakeApi();
+    const online = fakeOnline();
+    const load = vi.fn<() => Promise<typeof api>>().mockRejectedValueOnce(new TypeError("Failed to fetch dynamically imported module"));
+    load.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    load.mockResolvedValue(api);
+    const l = createPlaceLookup(load, onChange, { online });
+    l.set(A);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(states.at(-1)).toEqual({ status: "error", point: A });
+    l.retry();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(states.at(-1)).toEqual({ status: "error", point: A });
+    online.fire();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(load).toHaveBeenCalledTimes(3);
+    expect(api.placeAt).toHaveBeenCalledWith(A.lat, A.lng);
+    await resolve(0, placeA);
+    expect(states.at(-1)).toEqual({ status: "ready", point: A, place: placeA, near: [] });
+    // Cargado una vez, no se vuelve a pedir.
+    l.set(B);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(load).toHaveBeenCalledTimes(3);
+    expect(api.placeAt).toHaveBeenLastCalledWith(B.lat, B.lng);
+  });
+
   it("por defecto escucha el evento online de window, si existe", () => {
     const { api } = fakeApi();
     expect(() => createPlaceLookup(api, onChange).dispose()).not.toThrow();

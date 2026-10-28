@@ -10,9 +10,10 @@ const Locate = () => (
   </svg>
 );
 
-/** Lo que la pantalla puede pedirle al mapa: moverlo (el buscador) sin tocar el pin. */
+/** Lo que la pantalla puede pedirle al mapa: moverlo (el buscador) sin tocar el pin, y su centro (null hasta que carga). */
 export interface PickerHandle {
   view(p: LatLng, zoom: number): void;
+  center(): LatLng | null;
 }
 
 /** Mapa del paso 2: pin arrastrable con el círculo de ~500 m y «Usar mi ubicación». Abre en el pin o, sin pin, en Limón
@@ -22,7 +23,7 @@ export function LocationPicker({ lat, lng, onPick, ref }: { lat: number | null; 
   const picker = useRef<PickerMap | null>(null);
   const pick = useRef(onPick);
   pick.current = onPick;
-  useImperativeHandle(ref, () => ({ view: (p, zoom) => picker.current?.view(p, zoom) }), []);
+  useImperativeHandle(ref, () => ({ view: (p, zoom) => picker.current?.view(p, zoom), center: () => picker.current?.center() ?? null }), []);
 
   useEffect(() => {
     let cancelled = false;

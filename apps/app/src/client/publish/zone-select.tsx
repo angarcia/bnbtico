@@ -1,5 +1,6 @@
 // «Zona» del paso 2 (ubicación por punto): una lista nativa con las zonas a 5 km o menos del pin (la más cercana primero),
-// el distrito del pin y, al final, «Otra…» (su buscador llega en la tarea 8: aquí solo avisa con `onOther`).
+// el distrito del pin y, al final, «Otra…» (avisa con `onOther`: la pantalla abre su buscador). Una zona elegida con «Otra…»
+// sale como una opción más con su nombre.
 import type { ZoneChoice, ZoneSelectOption } from "../../domain/zones";
 
 const OTHER = "other";

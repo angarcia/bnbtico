@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "./helpers/test";
 import { postgrestHarness } from "../db/postgrest-harness";
-import type { LatLng } from "../../src/domain/geo";
+import { bboxAround, type LatLng } from "../../src/domain/geo";
 import { injectSession } from "./helpers/session";
 
 // Ubicación por punto (.scratch/ubicacion-por-punto): el paso 2 «¿Dónde está su casa?» une el mapa con el cantón y la zona.
@@ -33,10 +33,15 @@ async function expectNoScroll(page: Page, what: string) {
   await page.waitForLoadState("networkidle");
   const [scrollH, innerH] = await page.evaluate(() => [document.documentElement.scrollHeight, window.innerHeight]);
   expect(scrollH, `${what} hace scroll: ${scrollH} > ${innerH}`).toBeLessThanOrEqual(innerH);
+  // Y nada queda debajo de la barra de «Continuar».
+  const last = (await page.locator(".publish-form > :not(.sticky-actions):not([type=hidden])").last().boundingBox())!;
+  const bar = (await page.locator(".sticky-actions").boundingBox())!;
+  expect(last.y + last.height, `${what}: lo último queda bajo «Continuar»`).toBeLessThanOrEqual(bar.y);
 }
 
 const line = (page: Page) => page.locator(".place-line");
-const zone = (page: Page) => page.getByRole("combobox", { name: "Zona" });
+const zone = (page: Page) => page.getByRole("combobox", { name: "Zona", exact: true });
+const search = (page: Page) => page.getByRole("combobox", { name: "Busque un pueblo, playa o barrio" });
 const chosen = (page: Page) => zone(page).locator("option:checked");
 const continuar = (page: Page) => page.getByRole("button", { name: "Continuar" });
 
@@ -50,6 +55,23 @@ const tapMap = async (page: Page, dx = 0, dy = 0) => {
   await page.mouse.click(c.x + dx, c.y + dy);
 };
 
+/** Peticiones a Photon desde que se llama (las responde vacías el fixture noPhoton). */
+function photonCalls(page: Page) {
+  const calls: URL[] = [];
+  page.on("request", (r) => {
+    if (r.url().startsWith("https://photon.komoot.io/")) calls.push(new URL(r.url()));
+  });
+  return calls;
+}
+
+/** Busca una zona de la lista con el buscador del mapa y la elige; el mapa va allí sin poner el pin. */
+async function searchZone(page: Page, name: string) {
+  await search(page).fill(name);
+  await page.getByRole("option", { name, exact: true }).click();
+  await expect(search(page)).not.toBeFocused();
+  await expect(page.locator(".pin-icon")).toHaveCount(0);
+}
+
 /** Peticiones a place_at desde que se llama. */
 function placeAtCalls(page: Page) {
   const calls: string[] = [];
@@ -60,12 +82,23 @@ function placeAtCalls(page: Page) {
 }
 
 test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ page }) => {
-  // El buscador llega en la tarea 8; hasta entonces se entra con el pin del borrador en Cocles.
-  const id = await draftAt(COCLES);
+  const id = await draftAt(null);
+  const photon = photonCalls(page);
   await page.goto(`/propietario/publicar/${id}/2`);
   await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
+  await expect(search(page)).toHaveAttribute("placeholder", "Busque un pueblo, playa o barrio…");
+  // Enfocado y vacío: las zonas de la base, sin pedir nada a Photon.
+  await search(page).focus();
+  await expect(page.getByRole("option", { name: "Cocles", exact: true })).toBeVisible();
+  expect(photon.length).toBe(0);
+  // Elegir mueve el mapa (zoom de calle), cierra el teclado y no pone el pin.
+  await searchZone(page, "Cocles");
+  await tapMap(page);
   await expect(line(page)).toHaveText("Talamanca, Limón");
   await expect(chosen(page)).toHaveText("Cocles");
+  const pin = { lat: Number(await page.locator('input[name="lat"]').inputValue()), lng: Number(await page.locator('input[name="lng"]').inputValue()) };
+  expect(Math.abs(pin.lat - COCLES.lat)).toBeLessThan(0.001);
+  expect(Math.abs(pin.lng - COCLES.lng)).toBeLessThan(0.001);
   // Las zonas a 5 km o menos, la más cercana primero; luego el distrito; al final «Otra…».
   const names = await zone(page).locator("option").allTextContents();
   expect(names[0]).toBe("Cocles");
@@ -74,6 +107,8 @@ test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ 
   expect(names.at(-1)).toBe("Otra…");
   await expect(continuar(page)).toBeEnabled();
   await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
+  // El punto exacto no se publica: el propietario lo sabe antes de marcarlo.
+  await expect(page.getByText("En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.")).toBeVisible();
   await expect(page.locator(".leaflet-control-attribution")).toContainText("OpenStreetMap");
   await expect(page.getByRole("button", { name: "Usar mi ubicación" })).toBeVisible();
   await expectNoScroll(page, "paso 2");
@@ -83,7 +118,7 @@ test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ 
   await continuar(page).click();
   await expect(page).toHaveURL(/\/4$/);
   await expect.poll(async () => (await h.owner("owner").getOwn(id))?.zoneId).toBe("704-puerto-viejo");
-  expect(await h.owner("owner").getOwn(id)).toMatchObject({ province: "Limón", canton: "Talamanca", district: "Cahuita", zone: "Puerto Viejo", zoneSource: "list", lat: COCLES.lat, lng: COCLES.lng });
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ province: "Limón", canton: "Talamanca", district: "Cahuita", zone: "Puerto Viejo", zoneSource: "list", lat: pin.lat, lng: pin.lng });
   // «Atrás» desde la capacidad vuelve al 2 (el 3 ya no existe) con lo elegido.
   await page.getByRole("link", { name: "Atrás" }).click();
   await expect(page).toHaveURL(/\/2$/);
@@ -92,11 +127,12 @@ test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ 
 });
 
 test("mover el punto a Limón centro cambia la línea y la zona", async ({ page }) => {
-  const id = await draftAt(LIMON_CENTRO);
+  const id = await draftAt(null);
   await page.goto(`/propietario/publicar/${id}/2`);
-  await expect(line(page)).toHaveText("Limón, Limón");
+  await searchZone(page, "Limón centro");
   const calls = placeAtCalls(page);
   await tapMap(page);
+  await expect(line(page)).toHaveText("Limón, Limón");
   const pin = (await page.locator(".pin-icon").boundingBox())!;
   const from = { x: pin.x + pin.width / 2, y: pin.y + pin.height / 2 };
   await page.mouse.move(from.x, from.y);
@@ -159,4 +195,34 @@ test("sin red al mover el punto: aviso, Continuar deshabilitado y se recupera", 
   await context.setOffline(false);
   await expect(line(page)).toHaveText("Limón, Limón");
   await expect(continuar(page)).toBeEnabled();
+});
+
+test("Otra… con un nombre inventado y Usar", async ({ page }) => {
+  const id = await draftAt(COCLES);
+  const photon = photonCalls(page);
+  await page.goto(`/propietario/publicar/${id}/2`);
+  await expect(line(page)).toHaveText("Talamanca, Limón");
+  await zone(page).selectOption({ label: "Otra…" });
+  const other = page.getByRole("combobox", { name: "Otra zona" });
+  await expect(other).toBeFocused();
+  await other.fill("Rancho Escondido");
+  // Photon no conoce el nombre (responde []): el último elemento deja usar lo escrito.
+  await expect.poll(() => photon.length).toBeGreaterThan(0);
+  const options = page.getByRole("listbox", { name: "Zonas sugeridas" }).getByRole("option");
+  await expect(options.last()).toHaveText('Usar "Rancho Escondido"');
+  // Enter sobre una sugerencia no envía el paso.
+  await other.press("ArrowDown");
+  await other.press("Enter");
+  await expect(page).toHaveURL(/\/2$/);
+  await expect(chosen(page)).toHaveText("Rancho Escondido");
+  await expect(other).toHaveCount(0);
+  await expect(page.locator('input[name="zoneSource"]')).toHaveValue("other");
+  // Photon busca dentro de los 5 km alrededor del pin.
+  const bbox = photon.at(-1)!.searchParams.get("bbox")!.split(",").map((n) => Number(n).toFixed(3));
+  expect(bbox).toEqual(bboxAround(COCLES, 5000).map((n) => n.toFixed(3)));
+  expect(photon.at(-1)!.searchParams.get("q")).toBe("Rancho Escondido");
+  await continuar(page).click();
+  await expect(page).toHaveURL(/\/4$/);
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.zoneSource).toBe("other");
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ zone: "Rancho Escondido", zoneId: null, canton: "Talamanca" });
 });

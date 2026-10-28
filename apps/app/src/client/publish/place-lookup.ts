@@ -1,6 +1,8 @@
 // Búsqueda del lugar del pin (ubicación por punto): `place_at` y `zones_near` a la vez, 300 ms después del último punto;
 // solo cuenta la respuesta del último punto pedido (las viejas se tiran por número de secuencia); sin red queda en
-// `error` y se repite sola al volver la conexión, o con `retry()`. Sin React: la pantalla se suscribe con `onChange`.
+// `error` y se repite sola al volver la conexión, o con `retry()`. El adaptador puede llegar con un cargador (import
+// diferido): si cargarlo falla también es `error`, y el reintento lo vuelve a cargar. Sin React: la pantalla se suscribe
+// con `onChange`.
 import type { LatLng } from "../../domain/geo";
 import { PLACE_DEBOUNCE_MS, type NearZone, type Place } from "../../domain/zones";
 
@@ -28,8 +30,13 @@ const windowOnline: OnlineSource = {
   },
 };
 
+export interface PlaceSource {
+  placeAt(lat: number, lng: number): Promise<Place | null>;
+  zonesNear(lat: number, lng: number, km?: number): Promise<NearZone[]>;
+}
+
 export function createPlaceLookup(
-  api: { placeAt(lat: number, lng: number): Promise<Place | null>; zonesNear(lat: number, lng: number, km?: number): Promise<NearZone[]> },
+  source: PlaceSource | (() => Promise<PlaceSource>),
   onChange: (s: LookupState) => void,
   opts: { debounceMs?: number; online?: OnlineSource } = {},
 ): PlaceLookup {
@@ -39,6 +46,8 @@ export function createPlaceLookup(
   let point: LatLng | null = null;
   let status: LookupState["status"] = "idle";
   let disposed = false;
+  /** El adaptador, cuando ya está (si se cargó una vez, no se vuelve a pedir). */
+  let api: PlaceSource | null = typeof source === "function" ? null : source;
 
   const emit = (s: LookupState) => {
     status = s.status;
@@ -51,14 +60,18 @@ export function createPlaceLookup(
     const p = point;
     const mine = ++seq;
     if (status !== "loading") emit({ status: "loading", point: p });
-    Promise.all([api.placeAt(p.lat, p.lng), api.zonesNear(p.lat, p.lng)]).then(
-      ([place, near]) => {
+    const failed = () => {
+      if (!disposed && mine === seq) emit({ status: "error", point: p });
+    };
+    const ask = (a: PlaceSource) =>
+      Promise.all([a.placeAt(p.lat, p.lng), a.zonesNear(p.lat, p.lng)]).then(([place, near]) => {
         if (!disposed && mine === seq) emit({ status: "ready", point: p, place, near });
-      },
-      () => {
-        if (!disposed && mine === seq) emit({ status: "error", point: p });
-      },
-    );
+      }, failed);
+    if (api) return void ask(api);
+    (source as () => Promise<PlaceSource>)().then((a) => {
+      api = a;
+      if (!disposed && mine === seq) void ask(a);
+    }, failed);
   };
 
   const clear = () => {

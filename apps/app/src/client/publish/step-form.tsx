@@ -13,7 +13,7 @@
 //   (sin `action`), y cada pantalla monta su propio <form> (key) para que los valores iniciales sean los de ese paso.
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { formInput, parseStep } from "../../domain/step-forms";
@@ -164,10 +164,11 @@ function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
 
 const ReadyContext = createContext<(ready: boolean) => void>(() => undefined);
 
-/** «Continuar» deshabilitado mientras `ready` sea false (dentro de un StepForm). */
+/** «Continuar» deshabilitado mientras `ready` sea false (dentro de un StepForm). Antes de pintar: si no, se vería un
+ *  fotograma con «Continuar» habilitado al abrir la pantalla. */
 export function useStepReady(ready: boolean): void {
   const set = useContext(ReadyContext);
-  useEffect(() => {
+  useLayoutEffect(() => {
     set(ready);
     return () => set(true);
   }, [set, ready]);

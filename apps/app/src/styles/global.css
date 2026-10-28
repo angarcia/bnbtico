@@ -211,7 +211,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .publish-form h2{font-size:21px}
 .publish-form input,.publish-form textarea{scroll-margin-top:88px}
 .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
-.map-wrap{position:relative;flex:1;min-height:200px;display:flex}
+.map-wrap{position:relative;flex:1;min-height:180px;display:flex}
 .map-wrap .map-box{flex:1;height:auto}
 /* Ubicación por punto: la línea «{cantón}, {provincia}» en una caja de alto fijo (no salta al cambiar). */
 .place-line{min-height:2.75rem;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:16px}
@@ -674,17 +674,20 @@ small.swap-in{display:block}
   .progress span::after,.upload-bar span{transition-property:none}
 }
 
-/* ---------- Zona con sugerencias (paso 2 del asistente, ticket 22) ---------- */
+/* ---------- Buscador del mapa y «Otra zona» (paso 2 del asistente, place-search.tsx) ---------- */
 /* La lista flota sobre lo de abajo: no cambia el alto de la pantalla (el paso sigue sin scroll a 375×667). */
-.zone-combo{position:relative}
-.zone-combo input{width:100%}
+.place-search{position:relative}
+.place-search .zone-pop{z-index:600} /* sobre «Usar mi ubicación» (z-index 500) */
+/* La lupa va en el CSS (no en el JS del asistente; img-src admite data:). El selector gana al de todos los campos. */
+.place-search input:not([type=checkbox]):not([type=file]):not([type=radio]){padding-left:40px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px center}
+.location-hint{margin:0;line-height:1.3}
+.location-hint .xs{display:block}
 .zone-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;padding:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-input);box-shadow:var(--shadow-float)}
 .zone-pop[hidden]{display:none}
 .zone-options{margin:0;padding:0;list-style:none;max-height:240px;overflow-y:auto}
 .zone-credit{margin:4px 12px 2px;font-size:11px;color:var(--muted)}
 .zone-options li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;cursor:pointer}
 .zone-options li[aria-selected="true"],.zone-options li:hover{background:var(--surface-2)}
-.zone-chips{margin-top:4px}
 .cal-house{font-weight:600;margin-top:-6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Selector de país dentro de la caja del prefijo (revisión UX A6): el select va invisible encima de toda la caja. */
 .prefix-select{position:relative;gap:4px;cursor:pointer}

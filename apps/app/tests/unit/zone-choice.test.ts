@@ -4,15 +4,13 @@ import {
   OTHER_ZONE_MAX,
   PLACE_DEBOUNCE_MS,
   ZONE_RADIUS_M,
-  parsePhotonNear,
-  photonNearUrl,
   placeLine,
   reconcileZone,
-  searchZones,
   zoneOptions,
   type Zone,
   type ZoneChoice,
 } from "../../src/domain/zones";
+import { parsePhotonNear, photonNearUrl, searchZones } from "../../src/domain/place-search";
 
 const PIN = { lat: 9.6438, lng: -82.7306 };
 const place = { province: "Limón", canton: "Talamanca", district: "Cahuita", districtCode: "70403" };
