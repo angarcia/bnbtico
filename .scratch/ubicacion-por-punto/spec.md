@@ -84,21 +84,35 @@ Zona   [ Cocles            ▾ ]    ← nearest preselected
 ### PostGIS and boundaries
 
 - `create extension if not exists postgis with schema extensions;` (available on the Supabase free plan).
-- Table `admin_areas`:
-  - columns `id`, `level ('province'|'canton'|'district')`, `name`, `parent_id`, `geom geometry(MultiPolygon, 4326)`, plus a GIST index on `geom`;
-  - RLS: public select, no writes except via migration.
-- **Source:** official boundaries of cantons and districts from IGN/SNIT open data, or OpenStreetMap `admin_level` 4/6/8 for Costa Rica.
-- **First ticket of the implementation (research):**
-  - Check the license (ODbL for OSM requires attribution; check the terms for IGN/SNIT).
-  - Check completeness: 7 provinces, 84 cantons, all districts.
-  - Check geometry quality on the Caribe coast.
-  - Simplify to about 20 m tolerance and check the migration size.
-  - Record the choice in `docs/decisiones.md`.
-- Loaded by a migration from a versioned GeoJSON or SQL file under `supabase/datos/`.
+- Tables (no public grants; read only inside `security definer` RPCs):
+  - `admin_names(code text primary key, level, name)` for provinces (1 digit), cantons (3) and districts (5).
+  - `district_shapes(code text references admin_names, geom geometry(Polygon, 4326))`, holding the subdivided pieces, with a GiST index.
+- **Source (researched 2026-10-27): OpenStreetMap.**
+  - Use relations `boundary=administrative` with admin_level 4 (provinces, 7), 6 (cantons, 84) and 8 (districts), taken from a dated Geofabrik extract (`central-america/costa-rica-latest.osm.pbf`) or Overpass.
+  - Live check: OSM has 7 / 84 / 495, including Río Cuarto, Monteverde, Puerto Jiménez, and the 2025 districts Pijije and Cabagra.
+  - **Exclude «Conte Burica»** (relation 14365588). It is only a bill (expediente 25.750), not law. Its area belongs to Pavón.
+  - Expected after exclusion: **494 districts**. The loader asserts 7 / 84 / 494.
+  - District `postal_code` equals the DTA code (e.g. Pijije 50405). Store it as `code`; fill the 2 missing by hand.
+- **Rejected sources:**
+  - IGN/SNIT: authoritative, but its terms forbid commercial use without written permission. We can ask IGN for permission later and switch.
+  - INEC/HDX: statistical units, unclear license, 492 districts, missing the 2025 ones.
+  - geoBoundaries: 83 cantons and 472 districts, from 2017.
+  - GADM: no commercial use.
+- **License: ODbL 1.0.**
+  - The polygon table is an internal Derivative Database. Names stored on listings are geocoding results («insubstantial extracts», OSMF Geocoding Guideline), so no share-alike applies.
+  - **Never expose the polygons:** no public select on `geom`, no endpoint that returns them, and never ship them to the client. Only `place_at` / `zones_near` results leave the DB.
+  - **Attribution** in Ayuda (and the ficha/map credits that already cite OSM): «Límites administrativos © colaboradores de OpenStreetMap, disponibles bajo la Open Database License (ODbL)», linking to https://www.openstreetmap.org/copyright.
+- **Geometry:**
+  - Load districts at full or near-full resolution.
+  - If the versioned file must be smaller, simplify **topology-aware** (mapshaper `-simplify` keeping shared edges) at about 5–10 m, never per polygon. The file target is under about 8 MB.
+  - Store `ST_Subdivide(geom, 256)` pieces with a GiST index for fast lookup.
+  - Cantons and provinces are not stored as separate polygons: they come from the district's code (province = 1st digit, canton = first 3) joined to a small names table, so the three levels never disagree.
+- **Coast fallback:** if `ST_Covers` finds no district, take the nearest district within **500 m** (`ST_DWithin` on geography, ordered by `ST_Distance`). Beyond that, return no row. This covers beach pins where OSM's coastline and the tiles differ.
+- **Versioned file:** `supabase/datos/distritos-osm-YYYY-MM-DD.sql`, with a header comment giving the source, date, license and how to regenerate it. The script lives in `scripts/` and is not run in CI. A migration includes or loads it.
 
 ### `zones`
 
-- Table with columns `id`, `name`, `canton_id → admin_areas`, `point geometry(Point, 4326)`, `active boolean`; RLS public select, writes by admin only.
+- Table with columns `id`, `name`, `canton_code → admin_names`, `point geometry(Point, 4326)`, `active boolean`; RLS public select, writes by admin only.
 - **First version:**
   - Prepared by Claude from OSM (`place=village|hamlet|suburb|neighbourhood` and `natural=beach` within the Limón province cantons: Limón, Pococí, Siquirres, Talamanca, Matina, Guácimo).
   - Cleaned up by hand and **reviewed by Daniel before it is loaded**, as a table in a markdown file in `.scratch/ubicacion-por-punto/zonas.md`.
@@ -107,10 +121,10 @@ Zona   [ Cocles            ▾ ]    ← nearest preselected
 
 ### RPCs
 
-- `place_at(p_lat, p_lng) → (province, canton, district)`:
-  - `stable`, granted to `anon` and `authenticated`;
-  - point-in-polygon on `admin_areas`;
-  - returns no row outside Costa Rica.
+- `place_at(p_lat, p_lng) → (province, canton, district, district_code)`:
+  - `stable security definer`, granted to `anon` and `authenticated`;
+  - point-in-polygon on `district_shapes`, with the 500 m coast fallback;
+  - returns no row outside Costa Rica or further out at sea.
 - `zones_near(p_lat, p_lng, p_km default 5) → setof (id, name, distance_m)`, ordered by distance.
 - `submit_listing` changes (latest version in `20261027040909_nombre_y_descripcion.sql` l.21):
   - recomputes `province`, `canton` and `district` from `lat/lng` with `place_at` and overwrites them; rejects if there is no row;
@@ -147,7 +161,9 @@ Local seeds (`supabase/seed.sql` and test fixtures) must be updated so seeded li
     - a point in Cocles gives Limón / Talamanca / Cahuita;
     - Limón centro gives Limón / Limón / Limón;
     - a point in the sea gives no row;
-    - a point in Panamá gives no row.
+    - a point in Panamá gives no row;
+    - a beach pin 100 m outside the polygon falls back to the nearest district;
+    - `anon` cannot select from `district_shapes`.
   - `zones_near` gives order and radius.
   - `submit_listing`:
     - overwrites a wrong canton sent by the client;
@@ -168,7 +184,7 @@ Local seeds (`supabase/seed.sql` and test fixtures) must be updated so seeded li
 
 ## Documentation (same day)
 
-- `docs/decisiones.md`: pin as the source of truth; cascade selects replaced; 5 km radius; «Otra…» with Photon and «Usar …»; boundary data source and license.
+- `docs/decisiones.md`: pin as the source of truth; cascade selects replaced; 5 km radius; «Otra…» with Photon and «Usar …»; boundary data source (OSM, ODbL, Conte Burica excluded, IGN rejected for its commercial-use terms).
 - `docs/diseno-v1.md`: the wizard is 8 steps; the new step 2.
 - `docs/telemetria.md`: step renumbering for `wizard_step`.
 - `docs/publicacion.md`: location rules.
