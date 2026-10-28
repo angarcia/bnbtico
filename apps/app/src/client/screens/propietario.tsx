@@ -6,12 +6,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { occupiedNightsLabel } from "../../domain/calendar";
 import { can } from "../../domain/can";
 import { longDate } from "../../domain/dates";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
-import { costaRicaToday } from "../../domain/inquiry";
 import { variantUrl } from "../../domain/image";
 import { MIN_PHOTOS, STATUS_LABELS, missingPhotosLabel, resumeStep, wizardStage, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -23,7 +21,6 @@ import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
-import { calendarQuery } from "../calendar-days";
 import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
 import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
@@ -445,7 +442,6 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
 
       <section className="list">
         <ShareListItem listing={l} />
-        {l.status !== "rejected" ? <CalendarRow listing={l} userId={userId} /> : null}
         {hb && subLine ? (
           <SubscriptionLink publicId={l.publicId} className="list-item">
             <span className="muted-icon">
@@ -540,26 +536,6 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
         </button>
       ) : null}
     </>
-  );
-}
-
-/** «Calendario y precios» con las noches ocupadas de este mes, de la misma consulta que la pantalla del calendario. */
-function CalendarRow({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const days = useQuery({ ...calendarQuery(userId, l.id), enabled: !!userId }).data;
-  const month = costaRicaToday(Date.now()).slice(0, 7);
-  return (
-    <Link to="/propietario/calendario" search={{ casa: l.id }} className="list-item">
-      <span className="muted-icon">
-        <I.calendar />
-      </span>
-      <span className="body">
-        Calendario y precios
-        <small>{days ? occupiedNightsLabel(days, month) : "Noches ocupadas y precios por fecha"}</small>
-      </span>
-      <span className="chev">
-        <I.chevron />
-      </span>
-    </Link>
   );
 }
 

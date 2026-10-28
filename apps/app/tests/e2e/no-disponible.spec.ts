@@ -3,12 +3,12 @@ import type { CalendarHarness } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { addDays, addMonths, occupiedNightsLabel } from "../../src/domain/calendar";
+import { addDays, addMonths } from "../../src/domain/calendar";
 import { longDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
-// «Disponible para consultas» con fecha de reapertura opcional y la fila «Calendario y precios» del detalle (pantalla 19,
-// fase 4 ticket 04) contra Supabase local. Cada prueba siembra sus casas. La ficha del servidor se mira solo en una casa
+// «Disponible para consultas» con fecha de reapertura opcional en el detalle (pantalla 19, fase 4 ticket 04; la fila
+// «Calendario y precios» se quitó en la revisión de Ana: la pestaña Calendario ya lo cubre) contra Supabase local. Cada prueba siembra sus casas. La ficha del servidor se mira solo en una casa
 // que nadie ha visitado antes (la copia en caché del worker local y su purga son del ticket 05); tras reabrir se mira la
 // ficha dentro de la SPA.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
@@ -50,8 +50,7 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
 
   await page.goto(`/propietario/casas/${casa.id}`);
   await expect(toggle(page)).toHaveAttribute("aria-checked", "true");
-  await expect(calendarRow(page)).toContainText(occupiedNightsLabel(days, today().slice(0, 7)));
-  await expect(calendarRow(page)).toHaveAttribute("href", `/propietario/calendario?casa=${casa.id}`);
+  await expect(calendarRow(page)).toHaveCount(0);
 
   // Apagar abre la hoja; Escape y el fondo la cierran sin cambiar nada.
   await toggle(page).click();
@@ -122,7 +121,6 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
 test("cerrar sin fecha: «Cerrada a consultas» y sigue cerrada tras la reapertura nocturna de dentro de 40 días", async ({ page }) => {
   const casa = await seedHouse("Casa Sin Fecha");
   await page.goto(`/propietario/casas/${casa.id}`);
-  await expect(calendarRow(page)).toContainText("Sin noches ocupadas este mes");
   await toggle(page).click();
   await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(toggle(page)).toHaveAttribute("aria-checked", "false");

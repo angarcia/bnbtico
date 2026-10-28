@@ -104,7 +104,7 @@
     "gzip": true
   },
   {
-    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, la rejilla del mes, que comparte con la ficha, y su consulta, que también usa el detalle de la casa; se precarga con las pantallas del propietario)",
+    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, la rejilla del mes, que comparte con la ficha, y su consulta; se precarga con las pantallas del propietario)",
     "path": [
       "dist/client/assets/calendario-*.js",
       "dist/client/assets/calendar-*.js",

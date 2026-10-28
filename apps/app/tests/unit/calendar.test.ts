@@ -15,8 +15,6 @@ import {
   emptySelection,
   monthGrid,
   monthTitle,
-  occupiedNightsIn,
-  occupiedNightsLabel,
   openingMonth,
   reopenIfDue,
   selectDay,
@@ -416,20 +414,6 @@ describe("rótulo de la selección", () => {
     expect(selectionLabel([day(20), day(22)])).toBe("2 noches · 20 y 22 dic");
     expect(selectionLabel(["2026-12-30", "2027-01-02", "2027-01-05"])).toBe("3 noches · 30 dic, 2 y 5 ene");
     expect(selectionLabel([])).toBe("");
-  });
-});
-
-describe("noches ocupadas del mes (fila «Calendario y precios» del detalle)", () => {
-  const days = [occupied(day(2)), occupied(day(3), 120_000), special(day(4), 120_000), occupied("2027-01-02")];
-  it("cuenta solo las ocupadas del mes pedido", () => {
-    expect(occupiedNightsIn(days, "2026-12")).toBe(2);
-    expect(occupiedNightsIn(days, "2027-01")).toBe(1);
-    expect(occupiedNightsIn(days, "2027-02")).toBe(0);
-  });
-  it("«Diciembre: 2 noches ocupadas», singular y cero", () => {
-    expect(occupiedNightsLabel(days, "2026-12")).toBe("Diciembre: 2 noches ocupadas");
-    expect(occupiedNightsLabel(days, "2027-01")).toBe("Enero: 1 noche ocupada");
-    expect(occupiedNightsLabel(days, "2027-02")).toBe("Sin noches ocupadas este mes");
   });
 });
 

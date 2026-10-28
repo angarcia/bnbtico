@@ -306,7 +306,7 @@ test("casa cerrada a consultas: nota con la fecha, días de solo lectura y «Abr
   await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(true);
 });
 
-test("puntos de entrada: pestaña, Mis casas, detalle y «Marcar las noches ocupadas» llevan a la casa", async ({ page }) => {
+test("puntos de entrada: pestaña, Mis casas y «Marcar las noches ocupadas» llevan a la casa; el detalle ya no lleva la fila", async ({ page }) => {
   const casa = await seedHouse("Casa Entradas");
   const sent = await h.seed({ status: "review", draft: { title: "Casa Enviada" } });
   await page.goto("/propietario/casas");
@@ -315,10 +315,10 @@ test("puntos de entrada: pestaña, Mis casas, detalle y «Marcar las noches ocup
   await card.getByRole("link", { name: "Calendario" }).click();
   await expect(shown(page, "Casa Entradas")).toBeVisible();
 
+  // Revisión de Ana: el detalle no repite la pestaña Calendario.
   await page.goto(`/propietario/casas/${casa.id}`);
-  await page.getByRole("link", { name: /Calendario y precios/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${casa.id}`));
-  await expect(shown(page, "Casa Entradas")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Calendario y precios/ })).toHaveCount(0);
 
   await page.goto(`/propietario/casas/${sent.id}/enviada`);
   await page.getByRole("link", { name: "Marcar las noches ocupadas" }).click();

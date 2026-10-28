@@ -310,15 +310,3 @@ export function selectionLabel(days: readonly string[]): string {
   const items = sorted.map((d, i) => (i === n - 1 || !sameMonth(d, sorted[i + 1]!) ? shortDay(d) : String(Number(d.slice(8)))));
   return `${nights} · ${items.slice(0, -1).join(", ")} y ${items[n - 1]}`;
 }
-
-/** Noches ocupadas de un mes (`YYYY-MM`). */
-export function occupiedNightsIn(days: readonly CalendarDay[], month: string): number {
-  return days.filter((d) => !d.available && d.day.startsWith(`${month}-`)).length;
-}
-
-/** «Diciembre: 9 noches ocupadas», «Enero: 1 noche ocupada», «Sin noches ocupadas este mes». */
-export function occupiedNightsLabel(days: readonly CalendarDay[], month: string): string {
-  const n = occupiedNightsIn(days, month);
-  if (n === 0) return "Sin noches ocupadas este mes";
-  return `${MONTHS[Number(month.slice(5)) - 1]}: ${n} noche${n === 1 ? "" : "s"} ocupada${n === 1 ? "" : "s"}`;
-}
