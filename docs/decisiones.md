@@ -1,3 +1,17 @@
+## 2026-10-27 · Ubicación por punto: el mapa decide provincia, cantón y zona
+
+Decisión de Daniel. Especificación: `.scratch/ubicacion-por-punto/spec.md`. Sustituye al paso 2 «¿Dónde está?» (selects de provincia y cantón + zona en texto) y al paso 3 (mapa) de `docs/diseno-v1.md`.
+
+- **El pin es la fuente de verdad.** Provincia, cantón y distrito los calcula Postgres (`place_at`, PostGIS) y no se editan; `submit_listing` los recalcula.
+- **La zona** deja de ser texto libre: un selector con las zonas a menos de 5 km (`zones_near`), el distrito y «Otra…» (Photon a 5 km y «Usar "…"»). Cascada de selects y zonas frecuentes, fuera.
+- **Los ids de paso siguen estables (1, 2, 4–9);** el usuario ve 8 pasos y el precio sigue siendo el id 8. El `/3` viejo redirige a `/2`. La especificación decía «los números de paso se desplazan»; esto es lo equivalente y más seguro (las URL viejas no se vuelven ambiguas).
+- **Límites:** OpenStreetMap admin_level 4/6/8 (Overpass, 2026-10-27), ODbL, en el esquema privado `geo`; los polígonos nunca se exponen. Conte Burica (14365588, expediente 25.750) se excluye y se une a Pavón. **Códigos de distrito asignados a mano, marcados «COMPROBAR»:** Cabagra 60310 y Colorado (Abangares) 50704 (OSM traía 51201). Rechazados: IGN (términos de uso comercial), INEC/HDX, geoBoundaries y GADM (motivos en la especificación).
+- **Respaldo de costa de 500 m** para puntos en la orilla.
+- **Zonas del Caribe cargadas sin la revisión de Daniel:** el borrador de OSM (con `city|town` añadido a la consulta) está en `zones` (en `public`, con `lat/lng` generadas desde `point`); solo las 55 «sí» están activas y las 1037 «revisar» van inactivas. Revisión pendiente en `docs/antes-de-produccion.md` y `.scratch/ubicacion-por-punto/zonas.md`.
+- **La migración de datos `20261028065239_distritos_osm.sql` es un enlace simbólico de git** a `supabase/datos/…` (unos 8 MB); funciona con la CLI v2.121 en local. **Comprobar en el primer `supabase db push` remoto;** si la CLI lo rechaza, se sustituye por una copia.
+- **Orden del despliegue en `bnbtico-pruebas`** (compartido con la entrada de «mensual»): `git push` de `develop`, vaciar las casas de prueba y entonces `supabase db push`; hasta entonces la app vieja deja de crear borradores.
+- **`size-limit`:** el trozo de publicar queda en ~14,96 de 15 KB (casi al límite; el siguiente cambio ahí obliga a subirlo o a repartir).
+
 ## 2026-10-27 · «Alquiler mensual» como característica, con precio al mes opcional
 
 Decisión de Daniel. Especificación: `.scratch/mensual-como-caracteristica/spec.md`. Sustituye a «Vacacional / Mensual / las dos, con un precio por modalidad» de `docs/diseno-v1.md`.

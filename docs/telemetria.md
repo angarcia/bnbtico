@@ -40,6 +40,8 @@ Lo mismo para INP (`name = 'INP'`, ms; presupuesto de toque < 50 ms es más estr
 select build, message, count(*) from public.client_errors
 where created_at > now() - interval '7 days' group by 1, 2 order by 3 desc limit 20;
 
+-- Desde el 2026-10-27 la pantalla 3 (mapa) no existe: la 2, «¿Dónde está su casa?», la incluye. Los números de la ruta son ids
+-- de pantalla, no posiciones; los datos de antes y después se comparan tal cual salvo el 3.
 -- Asistente de publicar: cuántos borradores llegan a cada paso (30 días). La caída entre un paso y el siguiente dice
 -- dónde se abandona; decidir con esto si sobra, se une o se reordena alguna pantalla (revisión UX C4).
 select split_part(path, '/', 5)::int as paso, count(distinct listing_public_id) as borradores

@@ -25,6 +25,13 @@ Demo: `listing-whatsapp.js`, paso Precio al crear y sección WhatsApp de esta ca
 
 Registro y borradores sin verificaciones iniciales. Antes de la primera publicación se requieren **Veriff aprobado y WhatsApp verificado mediante OTP**; reutilizar ambos para anuncios posteriores mientras sigan vigentes. Un nuevo número debe verificarse antes de usarlo como contacto. Ver [identidad-y-seguridad.md](identidad-y-seguridad.md); OTP y permisos reales aún no implementados. Verificación registral fuera de v1. Suscripción/promoción por casa sigue [business-model.md](business-model.md); esta iteración no implementa cobros ni asignación de plazas.
 
+## Ubicación (2026-10-27)
+
+- El **pin** del mapa manda: provincia, cantón y distrito los calcula la base (`place_at`) al enviar a revisión y no se pueden editar.
+- La **zona** se elige entre las zonas a menos de 5 km del pin, el distrito o «Otra…» (hasta 60 caracteres; Photon a 5 km o «Usar "…"»).
+- En la revisión del admin una zona de «Otra…» sale marcada como «Zona propuesta por el dueño».
+- Consulta del admin para nombres propuestos repetidos: `select zone, count(*) from listings where zone_source = 'other' group by 1 having count(*) > 1 order by 2 desc;` — los que se repiten se añaden a `zones` con una migración.
+
 ## Estado real de la demo
 
 `design/prototype/publication.js` sustituye el recorrido de publicación desde `SCREENS['o-new']`: cinco pasos, validación, borrador conservado entre pasos/configuración de cuenta y resultado En revisión. Las fotos se simulan con un botón; no se suben archivos. Identidad y teléfono inicial son ejemplos. No se publican anuncios nuevos en el catálogo ni se envían datos, avisos o pagos. Recargar borra el estado.
