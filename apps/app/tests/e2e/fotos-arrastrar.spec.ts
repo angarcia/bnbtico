@@ -123,6 +123,67 @@ test("si el trozo de las fotos no carga, lo dice y «Reintentar» lo vuelve a pe
   await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(6);
 });
 
+test("si el paso de las fotos falla al pintarse, no culpa a la conexión y manda el error a /errors", async ({ page }) => {
+  test.info().annotations.push({ type: "nota", description: "El error se provoca a propósito." });
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const beacons: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "POST" && new URL(r.url()).pathname === "/errors") beacons.push(r.postData() ?? "");
+  });
+  await page.route("**/assets/photos-*.js", (r) =>
+    r.fulfill({ contentType: "text/javascript", body: 'export const PhotoUploader = () => { throw new Error("fallo de pintado e2e"); };' }),
+  );
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Algo falló al mostrar las fotos. Inténtelo de nuevo.");
+  await expect.poll(() => beacons.some((b) => b.includes("fallo de pintado e2e"))).toBe(true);
+  const beacon = JSON.parse(beacons.find((b) => b.includes("fallo de pintado e2e"))!);
+  expect(beacon).toMatchObject({ kind: "error", path: `/propietario/publicar/${id}/7` });
+  expect(beacon.stack).toContain("fallo de pintado e2e");
+  await expect(page.getByRole("button", { name: "Reintentar" })).toBeVisible();
+});
+
+test("al volver al paso 7 las fotos salen sin pasar por la espera", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/8$/);
+  // Cada vez que aparece el título «Fotos», ¿ya está el contador al lado? Si no, se vio la espera.
+  await page.evaluate(() => {
+    const w = window as unknown as { fallbacks: number };
+    w.fallbacks = 0;
+    new MutationObserver(() => {
+      for (const h2 of document.querySelectorAll("h2")) if (h2.textContent === "Fotos" && !h2.parentElement?.querySelector(".photos-count")) w.fallbacks++;
+    }).observe(document.body, { childList: true, subtree: true });
+  });
+  await page.getByRole("link", { name: "Atrás" }).click();
+  await expect(page).toHaveURL(/\/7$/);
+  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  expect(await page.evaluate(() => (window as unknown as { fallbacks: number }).fallbacks)).toBe(0);
+});
+
+test("durante una subida, los botones «Mover…» quedan sin efecto", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const before = (await own(id)).photos.map((p) => p.id);
+  await page.unroute("**/storage/v1/object/public/**"); // subida real en esta prueba
+  await page.route("**/storage/v1/object/listings/**", async (r) => {
+    if (r.request().method() === "POST") await new Promise((s) => setTimeout(s, 1500));
+    await r.continue();
+  });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await page.getByLabel("Añadir fotos").setInputFiles([foto("hero.jpg")]);
+  await expect(page.getByRole("progressbar")).toBeVisible();
+  const move = page.getByRole("button", { name: "Mover foto 3 antes" });
+  await expect(move).toHaveAttribute("aria-disabled", "true");
+  await move.focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  expect(await grid(page)).toEqual(before);
+  expect(reorders).toHaveLength(0);
+  await expect(page.getByRole("status")).toHaveText("7 de 5–15", { timeout: 20_000 });
+  await expect(move).not.toHaveAttribute("aria-disabled", "true");
+});
+
 test.describe("tocar y arrastrar", () => {
   test.use({ viewport: { width: 375, height: 667 } }); // la rejilla hace scroll por dentro: lo necesita la prueba de deslizar
   test("deslizar en vertical sobre una foto hace scroll y no reordena", async ({ page }) => {

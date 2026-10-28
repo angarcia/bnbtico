@@ -24,13 +24,21 @@ export function track(name: EventName, listing?: string): void {
   sendBeacon("events", listing ? { name, listing } : { name });
 }
 
+let sent = 0;
+const report = (payload: Record<string, unknown>) => {
+  if (sent++ >= MAX_ERRORS_PER_PAGE) return;
+  sendBeacon("errors", { ...payload, userAgent: navigator.userAgent });
+};
+
+/** Un error que la app captura (p. ej. un límite de errores de React) y que aun así debe llegar a /errors; comparte el
+ * tope de cinco por carga de página con los no capturados. */
+export function reportError(error: unknown): void {
+  const e = error as { message?: unknown; stack?: unknown } | undefined;
+  report({ kind: "error", message: typeof e?.message === "string" ? e.message : String(error), stack: typeof e?.stack === "string" ? e.stack : undefined });
+}
+
 /** Errores no capturados y promesas rechazadas sin manejar, con ruta y build; como mucho cinco por carga de página. */
 export function installErrorBeacon(): void {
-  let sent = 0;
-  const report = (payload: Record<string, unknown>) => {
-    if (sent++ >= MAX_ERRORS_PER_PAGE) return;
-    sendBeacon("errors", { ...payload, userAgent: navigator.userAgent });
-  };
   addEventListener("error", (e) => {
     const error = e.error as { stack?: unknown } | undefined;
     report({

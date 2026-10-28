@@ -12,14 +12,19 @@ import { accountQuery } from "../account";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
+import { reportError } from "../../shared/beacon";
 import { I } from "../../shared/icons";
+import { isChunkLoadError } from "../chunk-error";
 import { offerTakenQuery } from "../owner";
 import { LocationStep } from "./location-step";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
- * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Si el trozo no llega (sin
- * red, o un despliegue nuevo cambió su nombre), se avisa sin salir del asistente y «Reintentar» lo vuelve a pedir. */
+ * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Un solo componente para
+ * todo el módulo: al volver al paso 7 ya está cargado y no hay espera. Si el trozo no llega (sin red, o un despliegue
+ * nuevo cambió su nombre), se avisa de la conexión sin salir del asistente; si falla al pintarse, se manda a /errors y se
+ * dice sin culpar a la red. «Reintentar» crea otro componente, que vuelve a pedir el trozo. */
 const loadPhotos = () => lazy(() => import("./photos").then((m) => ({ default: m.PhotoUploader })));
+let PhotoUploader = loadPhotos();
 const photosFrame = (rest?: ReactNode) => (
   <div className="stack grow-col gap-12">
     <div className="row between baseline">
@@ -29,27 +34,37 @@ const photosFrame = (rest?: ReactNode) => (
   </div>
 );
 
-class PhotosStep extends Component<{ listing: Listing; userId: string }, { Uploader: ReturnType<typeof loadPhotos>; failed: boolean }> {
-  override state = { Uploader: loadPhotos(), failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
+class PhotosStep extends Component<{ listing: Listing; userId: string }, { failed: "chunk" | "render" | null }> {
+  override state = { failed: null as "chunk" | "render" | null };
+  static getDerivedStateFromError(error: unknown) {
+    return { failed: isChunkLoadError(error) ? "chunk" : "render" };
+  }
+  override componentDidCatch(error: unknown) {
+    if (!isChunkLoadError(error)) reportError(error);
   }
   override render() {
-    const { Uploader, failed } = this.state;
+    const { failed } = this.state;
     if (failed)
       return photosFrame(
         <div className="row gap-8 baseline">
           <p className="field-error" role="alert">
-            No pudimos cargar las fotos. Revise su conexión.
+            {failed === "chunk" ? "No pudimos cargar las fotos. Revise su conexión." : "Algo falló al mostrar las fotos. Inténtelo de nuevo."}
           </p>
-          <button type="button" className="btn btn-sm btn-ghost" onClick={() => this.setState({ Uploader: loadPhotos(), failed: false })}>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            onClick={() => {
+              PhotoUploader = loadPhotos();
+              this.setState({ failed: null });
+            }}
+          >
             Reintentar
           </button>
         </div>,
       );
     return (
       <Suspense fallback={photosFrame()}>
-        <Uploader listing={this.props.listing} userId={this.props.userId} />
+        <PhotoUploader listing={this.props.listing} userId={this.props.userId} />
       </Suspense>
     );
   }

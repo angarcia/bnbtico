@@ -114,7 +114,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   /** Botones ocultos: con aria-disabled (no disabled) para que el foco no se pierda al llegar a un extremo. */
   function move(id: string, from: number, dir: Dir) {
     const to = from + (dir === "before" ? -1 : 1);
-    if (busy || to < 0 || to >= ids.length) return;
+    if (busy || uploads.length > 0 || to < 0 || to >= ids.length) return;
     follow.current = { id, dir };
     setAnnounce(movedTo(to));
     change.reset();
@@ -147,10 +147,10 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
               <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy || drag.dragging} onClick={() => remove(p.id)}>
                 <I.x size={16} />
               </button>
-              <button type="button" className="sr-move" data-move="before" aria-disabled={busy || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>
+              <button type="button" className="sr-move" data-move="before" aria-disabled={busy || uploads.length > 0 || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>
                 Mover foto {i + 1} antes
               </button>
-              <button type="button" className="sr-move" data-move="after" aria-disabled={busy || i === ids.length - 1 ? true : undefined} onClick={() => move(p.id, i, "after")}>
+              <button type="button" className="sr-move" data-move="after" aria-disabled={busy || uploads.length > 0 || i === ids.length - 1 ? true : undefined} onClick={() => move(p.id, i, "after")}>
                 Mover foto {i + 1} después
               </button>
             </div>
