@@ -118,6 +118,7 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 **Cuando se retome, incluía:** el cliente publica lo que busca (zona, fechas, personas, imprescindibles, presupuesto), los propietarios compatibles lo ven en su panel y le escriben por WhatsApp con consentimiento del cliente; caducidad y límites del prototipo. **Hecho cuando:** un «Buscan casa» creado desde un móvil aparece al owner de una casa compatible y no al de una incompatible.
 
 ### Pasada de escritorio (antes de la fase 7; decidido el 2026-10-26)
+**En espera (decisión de Daniel, 2026-10-27):** se hace cuando todas las pantallas del móvil estén definidas y probadas. El borrador ya hecho (inventario de 24 pantallas y maquetas de la navegación E01–E04: barra superior para el cliente, lateral de 232 px para propietario y admin, desde 1024 px) está en `.scratch/escritorio/inventario.md` y `design/pantallas/escritorio/`, sin aprobar.
 **Objetivo:** toda la app con un diseño propio en ordenador, no solo la columna de teléfono centrada.
 **Incluye:** primero el diseño en el lienzo (navegación de escritorio: barra superior o lateral, tomando como base la lateral de 232 px del admin del diseño v1; rejillas y anchos por pantalla) y después cada pantalla del cliente y del propietario, incluidas las de la fase 5 (la 6 quedó aplazada). Explorar y la ficha ya tienen versión de escritorio desde la revisión UX del 2026-10-26 (`.scratch/revision-ux/`).
 **No incluye:** cambiar lo que carga el móvil (presupuestos y puertas de CI iguales).

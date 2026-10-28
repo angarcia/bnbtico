@@ -1,0 +1,152 @@
+/* Maquetas de la pasada de escritorio · «Sol y sal», tokens 0.2.0 (design/tokens/tokens.json).
+   Referencia visual, no código de producción. Fluidas: se revisan a 1280 y a 1024 px. */
+*{box-sizing:border-box}
+body{margin:0;background:#FFFBF2;color:#1C2B2A;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.45}
+a{color:#2F5D45;text-decoration:none}a:hover{color:#16331F}
+h1,h2,h3,.display{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.02em;margin:0}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:#5C6B69}.small{font-size:13px}.xs{font-size:12px}
+.ink-ocre{color:#7A4E07}
+
+/* Iconos de línea (mismo trazo que la barra inferior) */
+.ic{width:22px;height:22px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- Barra superior del cliente (≥ 1024 px) ---------- */
+.topbar{position:sticky;top:0;z-index:5;background:#FFFBF2;border-bottom:2px solid #EADFC8}
+.topbar-in{max-width:1200px;margin:0 auto;height:72px;padding:0 32px;display:flex;align-items:center;gap:28px}
+.topbar .logo{height:38px;width:auto}
+.topbar nav{display:flex;gap:6px;flex:1}
+.topbar nav a{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:999px;color:#5C6B69;font-weight:600}
+.topbar nav a .ic{width:20px;height:20px}
+.topbar nav a[aria-current="page"]{color:#BF4D2E;font-weight:700;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6}
+.topbar nav a[aria-current="page"] .ic{stroke-width:2.4}
+.topbar .right{display:flex;align-items:center;gap:12px}
+
+/* ---------- Barra lateral del propietario y del admin (≥ 1024 px; la del admin del diseño v1) ---------- */
+.with-side{display:flex;min-height:100vh}
+.side{width:232px;flex-shrink:0;position:sticky;top:0;height:100vh;padding:28px 16px;border-right:2px solid #EADFC8;display:flex;flex-direction:column;gap:6px;background:#FFFBF2}
+.side .brand{display:flex;align-items:center;justify-content:space-between;padding:0 8px 18px}
+.side .brand img{height:38px;width:auto}
+.side a.item{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:14px;color:#5C6B69;font-weight:600}
+.side a.item .ic{width:20px;height:20px}
+.side a.item[aria-current="page"]{background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;color:#BF4D2E;font-weight:700}
+.side a.item[aria-current="page"] .ic{stroke-width:2.4}
+.side a.item .grow{flex:1}
+.count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#D65C3C;color:#FFFBF2;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.side .spacer{flex:1}
+.side .switch{margin:0 8px 10px;font-size:13px}
+.side .me{display:flex;align-items:center;gap:10px;padding:12px 8px 0;border-top:2px solid #EADFC8}
+.avatar{width:36px;height:36px;border-radius:999px;background:#F6E7C8;color:#1C2B2A;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.main{flex:1;min-width:0;padding:40px 48px 64px}
+.main-in{max-width:1040px}
+
+/* ---------- Cabecera de pantalla raíz en escritorio: sin logo (va en la barra), título y acción ---------- */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.page-head .hello{display:block;color:#5C6B69;font-weight:600;margin-bottom:4px}
+.page-head h1{font-size:34px;font-weight:800;line-height:1.1}
+
+/* ---------- Piezas del sistema ---------- */
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 2px 0 #E6DCC6;padding:20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:999px;font-weight:700;font-size:15px;border:0;cursor:pointer;white-space:nowrap}
+.btn-sm{height:40px;padding:0 16px;font-size:14px}
+.btn-primary{background:#2F5D45;color:#FFFBF2}.btn-primary:hover{color:#FFFBF2;background:#244a37}
+.btn-outline{background:transparent;color:#2F5D45;box-shadow:inset 0 0 0 1.5px #2F5D45}
+.btn-ocre{background:#F2B544;color:#3d2703}
+.btn-wa{background:#25D366;color:#063B1E;border-radius:18px}
+.badge{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge-ok{background:#DCE8DF;color:#2F5D45}
+.badge-sun{background:#FBE8C2;color:#7A4E07}
+.badge-arena{background:#F6E7C8;color:#5C6B69}
+.note{border-radius:18px;padding:14px 16px;font-size:14px}
+.note-arena{background:#F6E7C8}
+.note-salvia{background:#DCE8DF;color:#16331F}
+.chip{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:999px;background:#F6E7C8;color:#1C2B2A;font-weight:600;font-size:14px;border:0}
+.chip[aria-pressed="true"]{background:#7FA98A;color:#16331F}
+.link-row{display:flex;align-items:center;gap:6px;font-weight:700}
+
+/* ---------- Explorar ---------- */
+.explore{max-width:1200px;margin:0 auto;padding:32px 32px 64px}
+.explore h1{font-size:34px;font-weight:800;margin-bottom:16px}
+.search{display:flex;align-items:center;gap:14px;background:#FFFFFF;border-radius:999px;box-shadow:0 2px 0 #E6DCC6;padding:10px 12px 10px 22px;max-width:640px}
+.search .grow{flex:1;display:flex;flex-direction:column}
+.chips{display:flex;gap:8px;margin:16px 0}
+.result-line{display:flex;justify-content:space-between;align-items:center;margin:4px 0 16px}
+.seg{display:inline-flex;background:#F6E7C8;border-radius:999px;padding:3px}
+.seg b{min-width:44px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;color:#5C6B69}
+.seg b.on{background:#FFFFFF;color:#1C2B2A;box-shadow:0 2px 0 #E6DCC6}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+@media (max-width:1199px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.lcard .photo{position:relative;height:200px;border-radius:18px;overflow:hidden;background:#DCE8DF}
+.lcard .photo img{width:100%;height:100%;object-fit:cover;display:block}
+.lcard .price{position:absolute;left:10px;bottom:10px;background:rgba(28,43,42,.86);color:#FFFBF2;border-radius:999px;padding:4px 10px;font-weight:700;font-size:13px}
+.lcard .heart{position:absolute;right:10px;top:10px;width:34px;height:34px;border-radius:999px;background:#FFFBF2;display:flex;align-items:center;justify-content:center;color:#D65C3C}
+.lcard b{display:block;margin-top:10px;font-family:'Outfit',sans-serif;font-size:17px;letter-spacing:-.01em}
+.lcard span{font-size:13px;color:#5C6B69}
+
+/* ---------- Inicio del propietario: dos columnas ---------- */
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:24px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px}
+.house-row{display:flex;gap:16px;align-items:center}
+.house-row img{width:120px;height:92px;border-radius:18px;object-fit:cover}
+.stats{display:flex;gap:24px;margin-top:6px}
+.stats b{font-family:'Outfit',sans-serif;font-size:24px;display:block}
+.offer-bar{height:8px;border-radius:999px;background:#FBE8C2;overflow:hidden;margin:10px 0}
+.offer-bar i{display:block;height:100%;width:26%;background:#F2B544}
+.tile-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px;max-width:560px}
+.tile{background:#FFFFFF;border-radius:20px;box-shadow:0 2px 0 #E6DCC6;padding:14px 16px}
+.tile b{font-family:'Outfit',sans-serif;font-size:28px;display:block;line-height:1}
+.tile.sun{background:#FBE8C2}.tile.sun b,.tile.sun span{color:#7A4E07}
+
+/* ---------- Mis casas: rejilla de tarjetas ---------- */
+.houses{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.hcard{display:flex;flex-direction:column;gap:12px;padding:14px}
+.hcard img{width:100%;height:170px;border-radius:18px;object-fit:cover}
+.hcard h2{font-size:19px}
+.hcard .actions{display:flex;gap:8px;margin-top:auto}
+
+/* ---------- Calendario: rejilla grande + panel lateral fijo ---------- */
+.cal-wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.cal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.month{display:flex;align-items:center;gap:12px}
+.round{width:40px;height:40px;border-radius:999px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;display:inline-flex;align-items:center;justify-content:center;color:#2F5D45}
+.dow,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.dow span{text-align:center;font-size:12px;font-weight:700;color:#5C6B69;padding-bottom:6px}
+.day{height:74px;border-radius:14px;background:#DCE8DF;display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px;border:2px solid transparent}
+.day b{font-size:15px}.day span{font-size:12px;color:#2F5D45;font-weight:600}
+.day.busy{background:#F5DDD4}.day.busy span{color:#9E3D22}
+.day.sel{border-color:#BF4D2E}
+.day.empty{background:transparent}
+.legend{display:flex;gap:16px;margin-top:14px;font-size:13px;color:#5C6B69}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.panel{position:sticky;top:40px}
+.toggle-row{display:flex;gap:8px;margin:12px 0}
+.toggle-row .chip{flex:1;justify-content:center}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.field .input{height:48px;border-radius:16px;border:1.5px solid #E6DCC6;background:#FFFFFF;display:flex;align-items:center;padding:0 14px;font-size:16px}
+
+/* Etiqueta de las maquetas (no forma parte del diseño) */
+.mock-tag{position:fixed;right:12px;bottom:12px;background:#1C2B2A;color:#FFFBF2;font-size:12px;padding:6px 10px;border-radius:8px;opacity:.85;z-index:50}
+.ink{color:#1C2B2A}
+.sprite{position:absolute;overflow:hidden}
+.leg-ok{background:#DCE8DF}.leg-busy{background:#F5DDD4}
+.grow{flex:1;min-width:0}
+.panel .btn{width:100%;margin-top:6px}
+.page-head h1+.chip,.page-head .chip{align-self:center}
+.card-link{color:#1C2B2A}.card-link:hover{color:#1C2B2A}.card-link .ic{color:#2F5D45}
+.avatar-ocre{background:#FBE8C2;color:#7A4E07}
+.month b{white-space:nowrap}
+.day span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1199px){
+  .cal-wrap{grid-template-columns:minmax(0,1fr) 256px;gap:20px}
+  .dow,.days{gap:6px}
+  .day{height:64px;padding:6px 7px}
+  .day span{font-size:11px}
+  .cal-top .small{display:none}
+}
+@media (max-width:1199px){
+  .main{padding:32px 28px 56px}
+  .dow,.days{gap:4px}
+  .day{padding:6px 5px}
+  .day span{font-size:11px;text-overflow:clip}
+}
+.lcard{color:#1C2B2A}.lcard:hover{color:#1C2B2A}

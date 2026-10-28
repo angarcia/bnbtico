@@ -1,3 +1,11 @@
+## 2026-10-27 · Pasada de escritorio en espera hasta cerrar el móvil
+
+Decisión de Daniel.
+
+- **Qué:** la pasada de escritorio no se diseña ni se construye todavía; se retoma cuando todas las pantallas del móvil estén definidas y probadas (las de la fase 5 aún están en su prueba manual). Motivo: el móvil es lo primero (CLAUDE.md) y diseñar el escritorio sobre pantallas que aún cambian obliga a rehacerlo.
+- **Lo hecho hasta hoy, como borrador sin aprobar:** inventario de las 24 pantallas con lo que cambiaría cada una (`.scratch/escritorio/inventario.md`) y cuatro maquetas de la navegación (`design/pantallas/escritorio/E01–E04`: barra superior para el cliente sobre Explorar; barra lateral de 232 px, la del admin, para el propietario sobre Inicio, Mis casas y Calendario; corte en 1024 px). Quedan abiertas: la navegación, si el asistente y el código van sin barra, Filtros como panel o columna, y el orden de construcción.
+- Sigue valiendo lo ya hecho en la revisión UX (N5): Explorar en 3–4 columnas y la ficha en dos columnas, solo con CSS.
+
 ## 2026-10-27 · «¿No encuentra lo que busca?»: decisiones de implementación (fase 6, ticket 01)
 
 - El botón «Escribir a bnbtico por WhatsApp» se abre como «Abrir WhatsApp» de Ayuda (otra pestaña), en contorno verde.
@@ -14,7 +22,7 @@ Decisión de Daniel.
 - **Por qué:** al principio habrá pocas casas, casi todas en Limón: una búsqueda llegaría a muy pocos propietarios y el cliente ve todo el catálogo en Explorar en un minuto. Es la parte que más complicaría la app (dos pantallas nuevas, reparto, caducidad, el número del cliente para varios propietarios, avisos por WhatsApp) y las pantallas de las pestañas ya están al borde (24,46 de 24,5 KB). Lanzar antes da datos reales para diseñarla. Recupera lo que ya decía «Lanzamiento ligero» (2026-10-13) frente al plan del 2026-10-15.
 - **Sustituto:** en Explorar, al final de la lista y cuando no hay resultados, «¿No encuentra lo que busca?» con un enlace al WhatsApp de atención a clientes (`VITE_WA_GUESTS`, el de Ayuda) y un mensaje redactado con la zona y las personas de la búsqueda. bnbtico ayuda a mano, como prevé «Atención manual y consultas creadas por administración» (2026-10-13). Sin tablas, RPCs ni pantallas nuevas; sin número configurado, la nota no sale. Ticket `.scratch/fase-6/issues/01-no-encuentra-whatsapp.md`.
 - **Cuándo retomarla:** cuando lleguen a menudo peticiones de casa por ese WhatsApp o una provincia tenga muchas más casas de las que un cliente revisa a mano. `requests` y `request_matches` (de `0001`) siguen vacías y sin usar, también en `bnbtico-pruebas` (comprobado el 2026-10-27).
-- **Consecuencias:** la pasada de escritorio pasa a ser lo siguiente antes de la fase 7. Siguen fuera las barras de «Buscan casa» en el calendario y el reparto por tandas.
+- **Consecuencias:** la pasada de escritorio pasa a ser lo siguiente antes de la fase 7 (puesta en espera el mismo día, ver arriba). Siguen fuera las barras de «Buscan casa» en el calendario y el reparto por tandas.
 
 ## 2026-10-27 · Cierre de la fase 5: recorrido con el reloj de pruebas, plan manual y pendientes
 

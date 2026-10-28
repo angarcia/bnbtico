@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritorio · Propietario · Inicio con barra lateral</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="escritorio.css">
+</head>
+<body>
+<svg width="0" height="0" class="sprite" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-house" viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 18V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
+<div class="with-side">
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><img src="../../logo/bnbtico-horizontal-terracota.png" alt="bnbtico"></div>
+    <a class="item" href="E02-propietario-inicio-barra-lateral.html" aria-current="page"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
+    <a class="item" href="E03-propietario-mis-casas.html"><svg class="ic"><use href="#i-house"/></svg>Mis casas</a>
+    <a class="item" href="E04-propietario-calendario.html"><svg class="ic"><use href="#i-cal"/></svg>Calendario</a>
+    <a class="item" href="#"><svg class="ic"><use href="#i-chat"/></svg><span class="grow">Consultas</span><span class="count num" aria-label="3 nuevas">3</span></a>
+    <a class="item" href="#"><svg class="ic"><use href="#i-user"/></svg>Cuenta</a>
+    <div class="spacer"></div>
+    <a class="switch link-row" href="E01-cliente-explorar-barra-superior.html"><svg class="ic"><use href="#i-search"/></svg>Buscar una casa</a>
+    <div class="me"><span class="avatar">DA</span><span><b>Daniel</b><br><span class="xs muted">WhatsApp verificado</span></span></div>
+  </nav>
+  <main class="main"><div class="main-in">
+    <div class="page-head">
+      <div><span class="hello">Hola, Daniel</span><h1>Su casa, en marcha</h1></div>
+      <a class="btn btn-outline" href="#"><svg class="ic"><use href="#i-plus"/></svg>Publicar otra casa</a>
+    </div>
+    <div class="two">
+      <div class="stack">
+        <a class="card link-row card-link" href="#"><span class="avatar avatar-ocre">3</span><span class="grow"><b>3 consultas nuevas</b><br><span class="small muted">Clientes que le escribieron por WhatsApp desde su ficha</span></span><svg class="ic"><use href="#i-arrow"/></svg></a>
+        <section class="card stack">
+          <div class="house-row">
+            <img src="../fotos/hero.jpg" alt="">
+            <div class="grow">
+              <span class="badge badge-ok">Activa</span>
+              <h2 class="display">Crystal Jungle Villa</h2>
+              <div class="stats"><span><b class="num">38</b><span class="small muted">visitas</span></span><span><b class="num">3</b><span class="small muted">consultas</span></span></div><span class="xs muted">Últimos 30 días</span>
+            </div>
+          </div>
+          <div class="note note-arena"><b>Comparta su ficha</b><br>Envíe el enlace por WhatsApp o en sus redes. Quien lo abra puede escribirle directo; solo necesita verificar su WhatsApp.<br><span class="num">bnbtico.com/casa/CT-1203</span></div>
+          <div><a class="btn btn-primary" href="#">Compartir ficha por WhatsApp</a></div>
+        </section>
+      </div>
+      <div class="stack">
+        <section class="card">
+          <div class="link-row"><b class="grow ink-ocre display">Oferta de lanzamiento</b><span class="ink-ocre small num">Quedan 37 de 50</span></div>
+          <div class="offer-bar"><i></i></div>
+          <p class="small">Su casa está entre las primeras 50: <b>12 meses gratis</b>, hasta el 14 oct 2027. Después, ₡2&nbsp;900 al mes por casa, sin permanencia.</p>
+          <a class="link-row" href="#">Ver mi suscripción<svg class="ic"><use href="#i-arrow"/></svg></a>
+        </section>
+      </div>
+    </div>
+  </div></main>
+</div>
+<span class="mock-tag">E02 · barra lateral del propietario · maqueta</span>
+</body>
+</html>
