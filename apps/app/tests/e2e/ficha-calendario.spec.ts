@@ -43,7 +43,7 @@ async function seedWithDays(title: string, draft: Record<string, unknown> = {}):
   const casa = await h.seed({ status: "active", draft: { title, nightlyPriceCrc: 95000, ...draft } });
   await h.putDay(casa.id, { day: on(10), available: false, specialPriceCrc: null });
   await h.putDay(casa.id, { day: on(11), available: false, specialPriceCrc: null });
-  if (draft.acceptsNightly !== false) await h.putDay(casa.id, { day: on(20), available: true, specialPriceCrc: 150000 });
+  await h.putDay(casa.id, { day: on(20), available: true, specialPriceCrc: 150000 });
   return casa;
 }
 
@@ -148,15 +148,14 @@ test("meses: abre en el de apertura, del actual a doce más; los días pasados s
   await expect(grid(page, addMonths(first, 11))).toBeVisible();
 });
 
-test("solo mensual: ocupados sin cifras ni línea del precio base", async ({ page }) => {
-  const casa = await seedWithDays("Casa Solo Mensual Ficha", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 600000 });
+test("con alquiler mensual a negociar, el calendario sigue siendo por noches con su precio base", async ({ page }) => {
+  const casa = await seedWithDays("Casa Mensual Ficha", { acceptsMonthly: true, monthlyPriceCrc: null });
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await toNextMonth(page);
   await expect(cell(page, on(10))).toContainText("ocupado");
-  await expect(cell(page, on(20))).toHaveText("20");
-  await expect(section(page).getByText(/Precio base/)).toHaveCount(0);
-  await expect(section(page).getByText("★ Precio distinto")).toHaveCount(0);
+  await expect(cell(page, on(20))).toContainText("★");
+  await expect(section(page).getByText("Precio base ₡95 000 por noche; los días con ★ tienen otro precio.")).toBeVisible();
 });
 
 test("casa cerrada a consultas: «Calendario cerrado» y cuándo vuelve, ya en el HTML y sin rejilla", async ({ page }) => {

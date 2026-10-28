@@ -42,7 +42,7 @@ export const CALENDAR_MESSAGES = {
   range: "Elija días entre hoy y dentro de un año.",
   nothing: "No hay cambios que guardar.",
   price: "Escriba un precio por noche en colones, mayor que cero y sin decimales.",
-  noNightlyPrice: "Esta casa se alquila solo por mes: no lleva precio por noche.",
+  noNightlyPrice: "Ponga primero el precio por noche de la casa para cambiar el de un día.",
   reopenDate: "La fecha de reapertura debe ser a partir de mañana y dentro de un año.",
   reopenWhileOpen: "La fecha de reapertura solo se pone al cerrar la casa.",
   notActive: "Solo puede cambiar la disponibilidad de una casa activa.",

@@ -154,10 +154,11 @@ describe("edición en bloque inválida es atómica («invalid bulk edit must be 
     expect(ok({ days: [day(1)], priceCrc: 1 })).toBeNull();
     expect(ok({ days: [day(1)], priceCrc: 100_000_000 })).toBeNull();
   });
-  it("una casa solo mensual no acepta precio por noche, pero sí ocupar días", () => {
-    const monthly: CalendarListing = { ...open, nightlyPriceCrc: null };
-    expect(ok({ days: [day(1)], priceCrc: 80_000 }, monthly)).toBe(M.noNightlyPrice);
-    expect(ok({ days: [day(1)], available: false }, monthly)).toBeNull();
+  it("un borrador sin precio por noche todavía no acepta precio de un día, pero sí ocupar días", () => {
+    const unpriced: CalendarListing = { ...open, nightlyPriceCrc: null };
+    expect(ok({ days: [day(1)], priceCrc: 80_000 }, unpriced)).toBe(M.noNightlyPrice);
+    expect(M.noNightlyPrice).toBe("Ponga primero el precio por noche de la casa para cambiar el de un día.");
+    expect(ok({ days: [day(1)], available: false }, unpriced)).toBeNull();
   });
 });
 

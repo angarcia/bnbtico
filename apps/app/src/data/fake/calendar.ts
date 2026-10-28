@@ -11,7 +11,7 @@ function session(userId: () => string | null): string {
   return id;
 }
 
-/** El precio por noche que vale como base; null en una casa solo mensual. */
+/** El precio por noche que vale como base; null en un borrador sin precio por noche todavía. */
 export const nightlyBase = (l: Pick<FakeListing, "acceptsNightly" | "nightlyPriceCrc">): number | null => (l.acceptsNightly ? l.nightlyPriceCrc : null);
 
 export function createFakeCalendar(db: FakeDb, opts: { userId: () => string | null }): OwnerCalendarApi {

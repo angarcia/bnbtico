@@ -306,23 +306,6 @@ test("casa cerrada a consultas: nota con la fecha, días de solo lectura y «Abr
   await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(true);
 });
 
-test("casa solo mensual: ni precios en la rejilla ni campo de precio", async ({ page }) => {
-  const casa = await h.seed({
-    status: "active",
-    draft: { title: "Casa Mensual", acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 480000 },
-  });
-  await open(page, casa.id);
-  await expect(day(page, on(10))).toHaveAccessibleName(new RegExp(`${on(10).slice(0, 4)}, disponible$`));
-  await expect(grid(page)).not.toContainText("k");
-  await expect(page.getByText("★ Precio distinto")).toHaveCount(0);
-  await day(page, on(10)).click();
-  await expect(panel(page).getByLabel("Precio por noche")).toHaveCount(0);
-  await panel(page).getByRole("button", { name: "Ocupado" }).click();
-  await saveBtn(page).click();
-  await expect(day(page, on(10))).toContainText("ocupado");
-  await expect.poll(async () => (await h.calendar("owner").days(casa.id)).length).toBe(1);
-});
-
 test("puntos de entrada: pestaña, Mis casas, detalle y «Marcar las noches ocupadas» llevan a la casa", async ({ page }) => {
   const casa = await seedHouse("Casa Entradas");
   const sent = await h.seed({ status: "review", draft: { title: "Casa Enviada" } });

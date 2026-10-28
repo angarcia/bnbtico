@@ -116,7 +116,7 @@ export function calendarContract(name: string, makeHarness: () => Promise<Calend
     it("un borrador sin precio por noche todavía no lleva precio en el calendario, pero sí noches ocupadas", async () => {
       const l = await house({ status: "draft", draft: NO_NIGHTLY_PRICE });
       const me = h.calendar("owner");
-      expect((await rejection(me.save(l.id, { days: [day(3)], priceCrc: 50_000 }))).message).toBe(M.noNightlyPrice);
+      expect((await rejection(me.save(l.id, { days: [day(3)], priceCrc: 50_000 }))).message).toBe("Ponga primero el precio por noche de la casa para cambiar el de un día.");
       await me.save(l.id, { days: [day(3)], available: false });
       expect(await me.days(l.id)).toEqual([occupied(day(3))]);
     });
