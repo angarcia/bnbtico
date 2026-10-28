@@ -79,7 +79,8 @@ export function LocationStep({ listing: _listing, draft }: { listing: Listing; d
   };
 
   const place = state.status === "ready" ? state.place : null;
-  useStepReady(!!pin && !!place && !!choice);
+  // Con «Otra…» abierta la lista dice «Otra…»: «Continuar» espera a que se elija un nombre (o otra zona de la lista).
+  useStepReady(!!pin && !!place && !!choice && !otherOpen);
 
   const zoneItems = (text: string): PlaceItem[] =>
     searchZones(zones ?? [], text, text.trim() ? ZONE_SUGGESTIONS : undefined).map((z) => ({ key: `zone:${z.id}`, name: z.name, detail: "", point: { lat: z.lat, lng: z.lng } }));

@@ -265,6 +265,7 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await zone(page).selectOption({ label: "Otra…" });
   await expect(other).toBeFocused();
   await expect(chosen(page)).toHaveText("Otra…");
+  await expect(continuar(page)).toBeDisabled(); // lo que dice la lista es lo que se guarda
   await expectAboveBar("con el teclado", true);
   // Tocar el campo ya enfocado (en el iPhone es cuando sale el teclado) lo vuelve a subir.
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -284,6 +285,7 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await page.getByRole("option", { name: 'Usar "Cerca del río"' }).click();
   await expect(other).toHaveCount(0);
   await expect(chosen(page)).toHaveText("Cerca del río");
+  await expect(continuar(page)).toBeEnabled();
   expect(await zone(page).evaluate((el: HTMLSelectElement) => el.selectedOptions[0]?.text)).toBe("Cerca del río");
   await expect(page.locator('input[name="zoneSource"]')).toHaveValue("other");
   // «Otra…» sigue para cambiarla.
