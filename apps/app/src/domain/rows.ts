@@ -1,5 +1,6 @@
 // Mapeo tipado entre filas de la base y objetos del dominio, en un solo sitio.
-// `acceptsNightly` se lee igual en las dos vistas: la columna es not null, y solo `true` cuenta como vacacional.
+// `acceptsNightly` se lee igual en las dos vistas (siempre true: check en la base) y nunca se escribe; `acceptsMonthly`
+// es not null, y solo `true` cuenta como «Alquiler mensual».
 import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
 import { photoSrcSet, variantPath } from "./image";
@@ -26,7 +27,6 @@ const num = (v: number | null | undefined) => (v === null || v === undefined || 
 export function toListingUpdate(d: Partial<ListingDraft>): ListingUpdate {
   const row: ListingUpdate = {};
   if ("kind" in d) row.kind = d.kind ?? null;
-  if ("acceptsNightly" in d) row.accepts_nightly = d.acceptsNightly === true;
   if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly === true;
   if ("province" in d) row.province = d.province;
   if ("canton" in d) row.canton = d.canton;
@@ -62,7 +62,7 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
     status: row.status,
     kind: row.kind ?? null,
     acceptsNightly: row.accepts_nightly === true,
-    acceptsMonthly: row.accepts_monthly ?? null,
+    acceptsMonthly: row.accepts_monthly === true,
     province: row.province || DEFAULT_PROVINCE,
     canton: row.canton ?? "",
     zone: row.zone ?? "",

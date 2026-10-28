@@ -72,7 +72,7 @@ group("describe · precios", () => {
     ["las dos", { acceptsNightly: true, nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 480000 }, { amount: 85000, unit: "noche" }, { amount: 480000, unit: "mes" }],
     ["vacacional sin precio todavía, mensual con precio", { acceptsNightly: true, nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, { amount: 480000, unit: "mes" }, null],
     ["un precio sin su modalidad no cuenta", { acceptsNightly: false, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: 480000 }, null, null],
-    ["borrador sin precios", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: null, monthlyPriceCrc: null }, null, null],
+    ["borrador sin precios", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: false, monthlyPriceCrc: null }, null, null],
   ] as const)("%s", (_, over, main, secondary) => {
     const d = describe(owned(over), { base: BASE, now: NOW });
     expect(d.mainPrice).toEqual(main);

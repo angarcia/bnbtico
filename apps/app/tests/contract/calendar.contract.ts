@@ -23,7 +23,7 @@ const day = (offset: number) => costaRicaToday(Date.now() + offset * 86_400_000)
 const BASE = 42_000; // COMPLETE.nightlyPriceCrc
 const occupied = (d: string, specialPriceCrc: number | null = null): CalendarDay => ({ day: d, available: false, specialPriceCrc });
 const special = (d: string, specialPriceCrc: number): CalendarDay => ({ day: d, available: true, specialPriceCrc });
-const MONTHLY_ONLY: SeedSpec["draft"] = { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 300_000, minMonths: 1 };
+const NO_NIGHTLY_PRICE: SeedSpec["draft"] = { nightlyPriceCrc: null };
 
 export function calendarContract(name: string, makeHarness: () => Promise<CalendarHarness>) {
   describe(`calendario · ${name}`, () => {
@@ -113,8 +113,8 @@ export function calendarContract(name: string, makeHarness: () => Promise<Calend
       expect(await me.days(l.id)).toEqual([special(day(1), 1), special(day(2), 100_000_000)]);
     });
 
-    it("una casa solo mensual no lleva precio por noche, pero sí noches ocupadas", async () => {
-      const l = await house({ status: "draft", draft: MONTHLY_ONLY });
+    it("un borrador sin precio por noche todavía no lleva precio en el calendario, pero sí noches ocupadas", async () => {
+      const l = await house({ status: "draft", draft: NO_NIGHTLY_PRICE });
       const me = h.calendar("owner");
       expect((await rejection(me.save(l.id, { days: [day(3)], priceCrc: 50_000 }))).message).toBe(M.noNightlyPrice);
       await me.save(l.id, { days: [day(3)], available: false });

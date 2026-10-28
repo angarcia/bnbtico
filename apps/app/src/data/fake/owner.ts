@@ -6,7 +6,21 @@ import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import { inCostaRica } from "../../domain/geo";
-import { charCount, DESCRIPTION_LENGTH_ERROR, DESCRIPTION_MAX, DESCRIPTION_MIN, MAX_PHOTOS, MIN_PHOTOS, planStep, TITLE_LENGTH_ERROR, TITLE_MAX, TITLE_MIN, type Listing } from "../../domain/listing";
+import {
+  charCount,
+  DESCRIPTION_LENGTH_ERROR,
+  DESCRIPTION_MAX,
+  DESCRIPTION_MIN,
+  MAX_PHOTOS,
+  MIN_PHOTOS,
+  MONTHLY_PRICE_ERROR,
+  NIGHTLY_PRICE_ERROR,
+  planStep,
+  TITLE_LENGTH_ERROR,
+  TITLE_MAX,
+  TITLE_MIN,
+  type Listing,
+} from "../../domain/listing";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
 
@@ -20,7 +34,6 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
   if (l.status === "review") return "Este anuncio ya está en revisión.";
   if (l.status !== "draft" && l.status !== "changes") return "Este anuncio no se puede enviar en su estado actual.";
   if (!l.kind) return "Elija Alojamiento completo o Habitación.";
-  if (!l.acceptsNightly && !l.acceptsMonthly) return "Marque Vacacional, Mensual o las dos.";
   if (!l.province || !l.canton || !l.zone) return "Complete provincia, cantón y zona aproximada.";
   if (l.lat === null || l.lng === null) return "Marque en el mapa la ubicación aproximada.";
   if (!inCostaRica(l.lat, l.lng)) return "Marque un punto dentro de Costa Rica.";
@@ -36,8 +49,9 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
   } else if (l.parkingPaid !== null) return "El tipo de parqueo solo aplica si el anuncio tiene parqueo.";
   if (photos < MIN_PHOTOS) return `Agregue al menos ${MIN_PHOTOS} fotos.`;
   if (photos > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
-  if (l.acceptsNightly && (l.nightlyPriceCrc ?? 0) <= 0) return "Indique el precio por noche en colones.";
-  if (l.acceptsMonthly && (l.monthlyPriceCrc ?? 0) <= 0) return "Indique el precio por mes en colones.";
+  if ((l.nightlyPriceCrc ?? 0) <= 0) return NIGHTLY_PRICE_ERROR;
+  // Precio al mes opcional: vacío es «Precio a negociar con el dueño».
+  if (l.acceptsMonthly && l.monthlyPriceCrc !== null && l.monthlyPriceCrc <= 0) return MONTHLY_PRICE_ERROR;
   return null;
 }
 
@@ -88,7 +102,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       const owner = me();
       const open = [...db.listings.values()].filter((l) => l.ownerId === owner && l.status === "draft" && l.reviewedAt === null).length;
       if (open >= MAX_OPEN_DRAFTS) throw new DomainError(`Ya tiene ${MAX_OPEN_DRAFTS} borradores sin enviar. Termine o descarte uno antes de empezar otro.`, "validation");
-      const l = db.insertListing(owner, { acceptsMonthly: null });
+      const l = db.insertListing(owner);
       return { id: l.id, publicId: l.publicId };
     },
 

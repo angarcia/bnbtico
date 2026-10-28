@@ -4,7 +4,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
-import type { ListingDraft, Step } from "../../src/domain/listing";
+import { MONTHLY_PRICE_ERROR, NIGHTLY_PRICE_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
 import type { ListingsHarness, Seeded } from "./harness";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
@@ -27,11 +27,8 @@ const TEXT = "Descripción de prueba con lo justo para pasar el mínimo de ochen
 const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Partial<ListingDraft> }[] = [
   {
     step: 1,
-    invalid: [
-      [{ kind: null, acceptsNightly: true, acceptsMonthly: false }, "Elija Alojamiento completo o Habitación."],
-      [{ kind: "completo", acceptsNightly: false, acceptsMonthly: false }, "Marque Vacacional, Mensual o las dos."],
-    ],
-    valid: { kind: "habitacion", acceptsNightly: true, acceptsMonthly: true },
+    invalid: [[{ kind: null }, "Elija Alojamiento completo o Habitación."]],
+    valid: { kind: "habitacion" },
   },
   {
     step: 2,
@@ -82,10 +79,10 @@ const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Par
   {
     step: 8,
     invalid: [
-      [{ nightlyPriceCrc: null, monthlyPriceCrc: 480000 }, "Indique el precio por noche en colones."],
-      [{ nightlyPriceCrc: 42000, monthlyPriceCrc: 0 }, "Indique el precio por mes en colones."],
+      [{ nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, NIGHTLY_PRICE_ERROR],
+      [{ nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: 0 }, MONTHLY_PRICE_ERROR],
     ],
-    valid: { nightlyPriceCrc: 42000, monthlyPriceCrc: 480000 },
+    valid: { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: 480000 },
   },
   { step: 9, invalid: [], valid: {} },
 ];
@@ -108,7 +105,7 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         expect(await me.findResumable()).toBeNull();
       });
 
-      it("un borrador nuevo tiene su CT-####, el WhatsApp del perfil y nada preseleccionado", async () => {
+      it("un borrador nuevo tiene su CT-####, el WhatsApp del perfil, se alquila por noches y no por meses", async () => {
         const { id, publicId } = await me.createDraft();
         expect(publicId).toMatch(/^CT-\d+$/);
         const l = await me.getOwn(id);
@@ -117,7 +114,8 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
           publicId,
           status: "draft",
           kind: null,
-          acceptsNightly: false,
+          acceptsNightly: true,
+          acceptsMonthly: false,
           province: "Limón",
           canton: "",
           zone: "",
@@ -139,7 +137,6 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
           reviewNote: null,
           whatsappPhone: "+50687770001",
         });
-        expect(l!.acceptsMonthly).not.toBe(true);
         expect(await h.anon.linkState(publicId)).toBeNull(); // un borrador que nunca se revisó no tiene enlace público
       });
 
@@ -203,7 +200,6 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
           kind: "habitacion",
           acceptsNightly: true,
           acceptsMonthly: true,
-          monthlyMode: "amount",
           canton: "Talamanca",
           bathroomShared: true,
           features: ["wifi", "parking"],
@@ -214,11 +210,15 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         });
       });
 
-      it("guarda todo lo que normalize limpia: precio por noche sin vacacional, baño sin habitación, datos mensuales sin mensual", async () => {
-        await me.saveStep(id, 1, { kind: "completo", acceptsNightly: false, acceptsMonthly: true });
-        expect(await me.getOwn(id)).toMatchObject({ kind: "completo", acceptsNightly: false, nightlyPriceCrc: null, bathroomShared: null, monthlyPriceCrc: 480000, monthlyMode: "amount" });
-        await me.saveStep(id, 1, { kind: "completo", acceptsNightly: true, acceptsMonthly: false });
-        expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: false, monthlyMode: null, monthlyPriceCrc: null });
+      it("Sí sin precio se guarda; Sí con precio y luego No no guarda el precio", async () => {
+        await me.saveStep(id, 8, { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: null });
+        expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });
+        await me.saveStep(id, 8, { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: 480000 });
+        expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: 480000 });
+        await me.saveStep(id, 8, { nightlyPriceCrc: 42000, acceptsMonthly: false, monthlyPriceCrc: 480000 });
+        expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: false, monthlyPriceCrc: null });
+        await me.saveStep(id, 1, { kind: "completo" });
+        expect(await me.getOwn(id)).toMatchObject({ kind: "completo", bathroomShared: null });
         await me.saveStep(id, 5, { features: ["wifi"], parkingPaid: false });
         expect(await me.getOwn(id)).toMatchObject({ features: ["wifi"], parkingPaid: null });
       });
@@ -303,6 +303,24 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         expect((await rejection(me.submit(s.theirs.id))).message).toBe(NOT_FOUND);
         await me.submit(s.changes.id);
         expect(await me.getOwn(s.changes.id)).toMatchObject({ status: "review", reviewNote: null });
+      });
+    });
+
+    describe("enviar: noche obligatoria y mensual opcional", () => {
+      // Su propio reset: «enviar a revisión» ya llega al tope de cinco borradores sin enviar.
+      beforeAll(async () => {
+        h = await makeHarness();
+        me = h.owner("owner");
+        await h.reset();
+      }, 90_000);
+
+      it("sin precio por noche no se envía; mensual sin precio (a negociar) sí", async () => {
+        const noNightly = await h.seed({ status: "draft", photos: 5, draft: { nightlyPriceCrc: null } });
+        expect((await rejection(me.submit(noNightly.id))).message).toBe(NIGHTLY_PRICE_ERROR);
+        expect((await me.getOwn(noNightly.id))?.status).toBe("draft");
+        const negotiable = await h.seed({ status: "draft", photos: 5, draft: { acceptsMonthly: true, monthlyPriceCrc: null } });
+        await me.submit(negotiable.id);
+        expect(await me.getOwn(negotiable.id)).toMatchObject({ status: "review", acceptsMonthly: true, monthlyPriceCrc: null });
       });
     });
   });

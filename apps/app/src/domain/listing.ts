@@ -1,6 +1,8 @@
 // Anuncio (Listing): tipos, listas únicas y validación del formulario de publicación.
-// Modelo del diseño v1 (docs/diseno-v1.md, punto 11): modalidad Vacacional y/o Mensual, tipo Alojamiento completo /
-// Habitación (con baño privado o compartido), contadores, un precio por modalidad. Dinero en colones enteros. Copy en usted.
+// Modelo del diseño v1 (docs/diseno-v1.md, punto 11): toda casa se alquila por noches (precio por noche obligatorio);
+// «Alquiler mensual» es opcional, con precio al mes opcional (vacío = «Precio a negociar con el dueño»; decisión
+// 2026-10-27). Tipo Alojamiento completo / Habitación (con baño privado o compartido), contadores. Dinero en colones
+// enteros. Copy en usted.
 // El formulario va en 9 pantallas cortas, sin scroll en el móvil (decisión 2026-10-21): cada una guarda su parte del borrador.
 // Módulo de dominio: sin imports de framework.
 import { esCanton } from "./cantones";
@@ -43,6 +45,12 @@ export const KIND_HINTS: Record<"completo" | "habitacion", string> = {
 
 export const STEP_NAMES = ["Alojamiento", "Ubicación", "Mapa", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"] as const;
 export const MIN_PHOTOS = 5;
+
+/** «Alquiler mensual»: chip, interruptor de Filtros y característica de la ficha. */
+export const MONTHLY_LABEL = "Alquiler mensual";
+/** Paso del precio: los mismos mensajes en el dominio, el fake y `submit_listing`. */
+export const NIGHTLY_PRICE_ERROR = "Indique el precio por noche en colones.";
+export const MONTHLY_PRICE_ERROR = "Indique el precio al mes en colones o déjelo vacío.";
 export const MAX_PHOTOS = 15;
 
 export const STATUS_LABELS: Record<ListingStatus, { label: string; badge: string }> = {
@@ -57,8 +65,9 @@ export const STATUS_LABELS: Record<ListingStatus, { label: string; badge: string
 
 export interface ListingDraft {
   kind: Kind | null;
+  /** Siempre true: toda casa se alquila por noches (check en la base). */
   acceptsNightly: boolean;
-  acceptsMonthly: boolean | null;
+  acceptsMonthly: boolean;
   province: string;
   canton: string;
   zone: string;
@@ -110,7 +119,7 @@ export interface Listing extends ListingDraft {
 
 export const emptyDraft = (): ListingDraft => ({
   kind: null,
-  acceptsNightly: false,
+  acceptsNightly: true,
   acceptsMonthly: false,
   province: DEFAULT_PROVINCE,
   canton: "",
@@ -137,7 +146,7 @@ const isBlank = (v: unknown) => v === null || v === "" || v === false || v === 0
 
 /** Borrador recién creado, sin nada rellenado (la provincia viene puesta): arriba del paso 1, qué tener a mano (C4). */
 export function isFreshDraft(d: ListingDraft): boolean {
-  return (Object.keys(emptyDraft()) as (keyof ListingDraft)[]).every((k) => k === "province" || isBlank(d[k]));
+  return (Object.keys(emptyDraft()) as (keyof ListingDraft)[]).every((k) => k === "province" || k === "acceptsNightly" || isBlank(d[k]));
 }
 
 /** «95000», «95.000», «95 000», «₡95 000» → 95000. Vacío → null. Decimales u otra cosa → NaN. */
@@ -151,20 +160,13 @@ export function parseColones(input: string): number | null {
 
 const isInt = (v: number | null, min: number) => v !== null && Number.isInteger(v) && v >= min;
 
-/** Limpia dependencias: sin parqueo no hay tipo; sin mensual no hay precio mensual; sin vacacional no hay precio por noche;
- *  sin habitación no hay dato del baño. */
+/** Limpia dependencias: toda casa se alquila por noches; sin parqueo no hay tipo; sin «Alquiler mensual» no hay precio al
+ *  mes; sin habitación no hay dato del baño. Las columnas antiguas (monthlyMode, minNights, minMonths) no se tocan. */
 export function normalize(d: ListingDraft): ListingDraft {
-  const n = { ...d };
+  const n = { ...d, acceptsNightly: true };
   if (!n.features.includes("parking")) n.parkingPaid = null;
   if (n.kind !== "habitacion") n.bathroomShared = null;
-  if (!n.acceptsNightly) n.nightlyPriceCrc = null;
-  if (n.acceptsMonthly !== true) {
-    n.monthlyMode = null;
-    n.monthlyPriceCrc = null;
-    n.minMonths = null;
-  } else {
-    n.monthlyMode = "amount";
-  }
+  if (!n.acceptsMonthly) n.monthlyPriceCrc = null;
   return n;
 }
 
@@ -183,7 +185,6 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
   switch (step) {
     case 1:
       if (!d.kind) return "Elija Alojamiento completo o Habitación.";
-      if (!d.acceptsNightly && !d.acceptsMonthly) return "Marque Vacacional, Mensual o las dos.";
       return null;
     case 2:
       if (!PROVINCES.includes(d.province)) return "Elija la provincia.";
@@ -215,8 +216,9 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       if (d.photoCount > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
       return null;
     case 8:
-      if (d.acceptsNightly && !isInt(d.nightlyPriceCrc, 1)) return "Indique el precio por noche en colones.";
-      if (d.acceptsMonthly && !isInt(d.monthlyPriceCrc, 1)) return "Indique el precio por mes en colones.";
+      if (!isInt(d.nightlyPriceCrc, 1)) return NIGHTLY_PRICE_ERROR;
+      // Precio al mes opcional: vacío es «Precio a negociar con el dueño».
+      if (d.acceptsMonthly && d.monthlyPriceCrc !== null && !isInt(d.monthlyPriceCrc, 1)) return MONTHLY_PRICE_ERROR;
       return null;
     case 9:
       return null;
@@ -257,7 +259,7 @@ export function resumeStep(d: ListingDraft): Step {
 }
 
 /** Cómo alquila, para etiquetas y píldoras: «Vacacional», «Mensual» o «Vacacional · Mensual». */
-export function modesLabel(d: { acceptsNightly: boolean; acceptsMonthly: boolean | null }): string {
+export function modesLabel(d: { acceptsNightly: boolean; acceptsMonthly: boolean }): string {
   return [d.acceptsNightly ? "Vacacional" : null, d.acceptsMonthly ? "Mensual" : null].filter(Boolean).join(" · ");
 }
 
@@ -319,8 +321,8 @@ export type StepPlan = { error: string } | { changes: Partial<ListingDraft>; nex
 
 /**
  * Guardar una pantalla del asistente: mezcla el parche sobre el borrador actual (el del servidor), valida esa pantalla y
- * devuelve todas las columnas que cambian, también las que limpia `normalize` (precio por noche sin vacacional, baño sin
- * habitación, tipo de parqueo sin parqueo, datos mensuales sin mensual). El número de fotos es siempre el del borrador.
+ * devuelve todas las columnas que cambian, también las que limpia `normalize` (baño sin habitación, tipo de parqueo sin
+ * parqueo, precio al mes sin «Alquiler mensual»). El número de fotos es siempre el del borrador.
  */
 export function planStep(current: ListingDraft, step: Step, patch: Partial<ListingDraft>): StepPlan {
   const merged: ListingDraft = { ...current, ...patch, photoCount: current.photoCount };

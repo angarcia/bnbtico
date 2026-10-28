@@ -59,7 +59,7 @@ function listingRow(over: Partial<ListingRow> = {}): ListingRow {
   return {
     id: "l1", public_id: "CT-1042", owner_id: "o1", status: "draft", kind: null, title: "", description: "", province: "Limón", canton: null, zone: null,
     lat: null, lng: null, capacity: null, bedrooms: null, bathrooms: null, bathroom_shared: null, features: [], parking_paid: null,
-    accepts_nightly: false, nightly_price_crc: null, min_nights: null, accepts_monthly: null, monthly_mode: null, monthly_price_crc: null, min_months: null,
+    accepts_nightly: true, nightly_price_crc: null, min_nights: null, accepts_monthly: false, monthly_mode: null, monthly_price_crc: null, min_months: null,
     whatsapp_phone: "+50687770001", available: true, review_note: null, reviewed_at: null, created_at: "2026-10-01", updated_at: "2026-10-02",
     ...over,
   } as ListingRow;
@@ -77,8 +77,10 @@ describe("mapeo de filas", () => {
     }
   });
 
-  it("acceptsMonthly del dueño conserva null (aún no elegido); en público es booleano", () => {
-    expect(fromListingRow(listingRow(), [], url).acceptsMonthly).toBeNull();
+  it("acceptsMonthly es booleano para el dueño y para el público (null, por si acaso, es No)", () => {
+    expect(fromListingRow(listingRow(), [], url).acceptsMonthly).toBe(false);
+    expect(fromListingRow(listingRow({ accepts_monthly: true }), [], url).acceptsMonthly).toBe(true);
+    expect(fromListingRow(listingRow({ accepts_monthly: null as unknown as boolean }), [], url).acceptsMonthly).toBe(false);
     expect(fromPublicRow({ accepts_monthly: null, photos: [] } as unknown as PublicRow, url).acceptsMonthly).toBe(false);
   });
 
@@ -100,7 +102,10 @@ describe("mapeo de filas", () => {
 
   it("toListingUpdate solo escribe lo que viene en el parche; NaN y vacío son null", () => {
     expect(toListingUpdate({ title: "Casa", capacity: Number.NaN })).toEqual({ title: "Casa", capacity: null });
-    expect(toListingUpdate({ acceptsNightly: undefined as unknown as boolean })).toEqual({ accepts_nightly: false });
+    expect(toListingUpdate({ acceptsMonthly: true })).toEqual({ accepts_monthly: true });
+    expect(toListingUpdate({ acceptsMonthly: undefined as unknown as boolean })).toEqual({ accepts_monthly: false });
+    // Toda casa se alquila por noches (check en la base): el parche nunca escribe accepts_nightly.
+    expect(toListingUpdate({ acceptsNightly: false })).toEqual({});
     expect(toListingUpdate({})).toEqual({});
   });
 });

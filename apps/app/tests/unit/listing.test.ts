@@ -4,6 +4,8 @@ import {
   FEATURES,
   KINDS,
   KIND_LABELS,
+  MONTHLY_PRICE_ERROR,
+  NIGHTLY_PRICE_ERROR,
   PROVINCES,
   STATUS_LABELS,
   STEP_NAMES,
@@ -21,8 +23,9 @@ import {
 } from "../../src/domain/listing";
 import { formInput, parseStep } from "../../src/domain/step-forms";
 
-// Modelo del diseño v1 (docs/diseno-v1.md, punto 11): Vacacional / Mensual (una o las dos), Alojamiento completo /
-// Habitación (con baño privado o compartido), contadores, un precio por modalidad. Copy en usted.
+// Modelo del diseño v1 (docs/diseno-v1.md, punto 11) con «Alquiler mensual» como característica (2026-10-27): toda casa
+// se alquila por noches (precio por noche obligatorio) y puede aceptar alquiler por meses con precio al mes opcional.
+// Alojamiento completo / Habitación (con baño privado o compartido), contadores. Copy en usted.
 // Desde 2026-10-21 el formulario va en 9 pantallas sin scroll: 1 alojamiento, 2 dónde está, 3 mapa, 4 capacidad,
 // 5 características, 6 nombre y descripción, 7 fotos, 8 precio, 9 enviar.
 
@@ -85,13 +88,14 @@ describe("parseColones", () => {
 });
 
 describe("validateStep", () => {
-  it("paso 1 exige tipo y al menos una modalidad", () => {
+  it("emptyDraft: toda casa por noches y «Alquiler mensual» en No", () => {
+    expect(emptyDraft()).toMatchObject({ acceptsNightly: true, acceptsMonthly: false });
+  });
+
+  it("paso 1 solo exige el tipo", () => {
     const d = emptyDraft();
     expect(validateStep(1, d)).toBe("Elija Alojamiento completo o Habitación.");
-    d.kind = "habitacion";
-    expect(validateStep(1, d)).toBe("Marque Vacacional, Mensual o las dos.");
-    d.acceptsMonthly = true;
-    expect(validateStep(1, d)).toBeNull();
+    expect(validateStep(1, { ...d, kind: "completo", acceptsNightly: false, acceptsMonthly: false })).toBeNull();
   });
 
   it("paso 2 exige provincia de la lista, cantón de esa provincia y zona", () => {
@@ -162,16 +166,25 @@ describe("validateStep", () => {
     expect(validateStep(7, { ...d, photoCount: 16 })).toBe("Máximo 15 fotos.");
   });
 
-  it("paso 8: un precio por modalidad", () => {
+  it("paso 8: el precio por noche siempre es obligatorio", () => {
     const d = validDraft();
-    expect(validateStep(8, { ...d, nightlyPriceCrc: Number.NaN })).toBe("Indique el precio por noche en colones.");
-    expect(validateStep(8, { ...d, nightlyPriceCrc: 0 })).toBe("Indique el precio por noche en colones.");
+    expect(NIGHTLY_PRICE_ERROR).toBe("Indique el precio por noche en colones.");
+    expect(validateStep(8, { ...d, nightlyPriceCrc: null })).toBe(NIGHTLY_PRICE_ERROR);
+    expect(validateStep(8, { ...d, nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 })).toBe(NIGHTLY_PRICE_ERROR);
+    expect(validateStep(8, { ...d, nightlyPriceCrc: Number.NaN })).toBe(NIGHTLY_PRICE_ERROR);
+    expect(validateStep(8, { ...d, nightlyPriceCrc: 0 })).toBe(NIGHTLY_PRICE_ERROR);
     expect(validateStep(8, d)).toBeNull();
-    const both = { ...d, acceptsMonthly: true };
-    expect(validateStep(8, both)).toBe("Indique el precio por mes en colones.");
-    expect(validateStep(8, { ...both, monthlyPriceCrc: 480000 })).toBeNull();
-    const monthlyOnly = { ...d, acceptsNightly: false, acceptsMonthly: true, nightlyPriceCrc: null, monthlyPriceCrc: 480000 };
-    expect(validateStep(8, monthlyOnly)).toBeNull();
+  });
+
+  it("paso 8: el precio al mes es opcional, pero si se indica es un entero positivo", () => {
+    const d = validDraft();
+    expect(MONTHLY_PRICE_ERROR).toBe("Indique el precio al mes en colones o déjelo vacío.");
+    expect(validateStep(8, { ...d, acceptsMonthly: true, monthlyPriceCrc: null })).toBeNull();
+    expect(validateStep(8, { ...d, acceptsMonthly: true, monthlyPriceCrc: 0 })).toBe(MONTHLY_PRICE_ERROR);
+    expect(validateStep(8, { ...d, acceptsMonthly: true, monthlyPriceCrc: Number.NaN })).toBe(MONTHLY_PRICE_ERROR);
+    expect(validateStep(8, { ...d, acceptsMonthly: true, monthlyPriceCrc: -5 })).toBe(MONTHLY_PRICE_ERROR);
+    expect(validateStep(8, { ...d, acceptsMonthly: false, monthlyPriceCrc: 0 })).toBeNull();
+    expect(validateStep(8, { ...d, nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 480000 })).toBeNull();
   });
 
   it("paso 9 no pide nada nuevo: la comprobación completa la hace validateAll al enviar", () => {
@@ -183,21 +196,20 @@ describe("normalize", () => {
   it("quitar parqueo limpia parkingPaid", () => {
     expect(normalize({ ...validDraft(), features: ["wifi"], parkingPaid: true }).parkingPaid).toBeNull();
   });
-  it("sin mensual no hay precio mensual; con mensual el modo es 'amount'", () => {
-    const n = normalize({ ...validDraft(), acceptsMonthly: false, monthlyMode: "amount", monthlyPriceCrc: 150000, minMonths: 2 });
-    expect([n.monthlyMode, n.monthlyPriceCrc, n.minMonths]).toEqual([null, null, null]);
-    expect(normalize({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: 480000 }).monthlyMode).toBe("amount");
+  it("sin mensual no hay precio al mes; con mensual el modo antiguo no se toca", () => {
+    expect(normalize({ ...validDraft(), acceptsMonthly: false, monthlyPriceCrc: 150000 }).monthlyPriceCrc).toBeNull();
+    expect(normalize({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: 480000 }).monthlyMode).toBeNull();
   });
-  it("sin vacacional no hay precio por noche; sin habitación no hay dato del baño", () => {
-    expect(normalize({ ...validDraft(), acceptsNightly: false, acceptsMonthly: true, monthlyPriceCrc: 1 }).nightlyPriceCrc).toBeNull();
+  it("toda casa se alquila por noches; sin habitación no hay dato del baño", () => {
+    expect(normalize({ ...validDraft(), acceptsNightly: false }).acceptsNightly).toBe(true);
     expect(normalize({ ...validDraft(), kind: "completo", bathroomShared: true }).bathroomShared).toBeNull();
   });
 });
 
 describe("parseStep (zod, misma semántica que el parser anterior)", () => {
-  it("paso 1 lee tipo y modalidades como casillas", () => {
-    expect(parseStep(1, fd([["kind", "completo"], ["modes", "nightly"], ["modes", "monthly"]]))).toEqual({ kind: "completo", acceptsNightly: true, acceptsMonthly: true });
-    expect(parseStep(1, fd([["kind", "x"]]))).toEqual({ kind: null, acceptsNightly: false, acceptsMonthly: false });
+  it("paso 1 solo lee el tipo (el campo antiguo de modalidades se ignora)", () => {
+    expect(parseStep(1, fd([["kind", "completo"], ["modes", "nightly"]]))).toEqual({ kind: "completo" });
+    expect(parseStep(1, fd([["kind", "x"]]))).toEqual({ kind: null });
   });
   it("paso 2 lee provincia, cantón y zona; paso 3 el pin", () => {
     expect(parseStep(2, fd([["province", "Limón"], ["canton", "Talamanca"], ["zone", " Manzanillo "]]))).toEqual({ province: "Limón", canton: "Talamanca", zone: "Manzanillo" });
@@ -218,9 +230,12 @@ describe("parseStep (zod, misma semántica que el parser anterior)", () => {
     expect(parseStep(6, fd([["title", " Casa "], ["description", " Linda "]]))).toEqual({ title: "Casa", description: "Linda" });
     expect(parseStep(6, fd([["title", "x".repeat(120)], ["description", "y".repeat(2100)]]))).toEqual({ title: "x".repeat(60), description: "y".repeat(2000) });
   });
-  it("paso 8 usa parseColones para los dos precios", () => {
-    expect(parseStep(8, fd([["nightlyPriceCrc", "85.000"], ["monthlyPriceCrc", "₡480 000"]]))).toEqual({ nightlyPriceCrc: 85000, monthlyPriceCrc: 480000 });
-    expect(parseStep(8, fd([["nightlyPriceCrc", ""]]))).toEqual({ nightlyPriceCrc: null, monthlyPriceCrc: null });
+  it("paso 8: precio por noche, «¿Acepta alquiler por meses?» (No por defecto) y precio al mes opcional", () => {
+    expect(parseStep(8, fd([["nightlyPriceCrc", "85.000"]]))).toEqual({ nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null });
+    expect(parseStep(8, fd([["nightlyPriceCrc", "85000"], ["acceptsMonthly", "yes"], ["monthlyPriceCrc", ""]]))).toEqual({ nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: null });
+    expect(parseStep(8, fd([["nightlyPriceCrc", "85000"], ["acceptsMonthly", "yes"], ["monthlyPriceCrc", "₡480 000"]]))).toEqual({ nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 480000 });
+    expect(parseStep(8, fd([["nightlyPriceCrc", "85000"], ["acceptsMonthly", "no"], ["monthlyPriceCrc", "480000"]]))).toEqual({ nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null });
+    expect(parseStep(8, fd([["nightlyPriceCrc", ""]]))).toEqual({ nightlyPriceCrc: null, acceptsMonthly: false, monthlyPriceCrc: null });
   });
   it("paso 9 no cambia nada", () => {
     expect(parseStep(9, fd([["title", "no"]]))).toEqual({});
@@ -245,23 +260,23 @@ describe("validateAll", () => {
 
 describe("planStep (guardar una pantalla)", () => {
   it("valida la pantalla sobre el borrador mezclado y no devuelve cambios si falla", () => {
-    expect(planStep(emptyDraft(), 1, { kind: "completo" })).toEqual({ error: "Marque Vacacional, Mensual o las dos." });
+    expect(planStep(emptyDraft(), 1, { kind: null })).toEqual({ error: "Elija Alojamiento completo o Habitación." });
     expect(planStep({ ...validDraft(), kind: "habitacion", bathroomShared: null }, 4, { capacity: 2, bedrooms: 1, bathrooms: 1 })).toEqual({ error: "Indique si el baño es privado o compartido." });
   });
 
   it("devuelve solo las columnas que cambian, incluidas las que limpia normalize", () => {
-    const current = { ...validDraft(), kind: "habitacion" as const, bathroomShared: true, acceptsNightly: true, nightlyPriceCrc: 42000 };
-    const plan = planStep(current, 1, { kind: "completo", acceptsNightly: false, acceptsMonthly: true });
+    const current = { ...validDraft(), kind: "habitacion" as const, bathroomShared: true, nightlyPriceCrc: 42000 };
+    const plan = planStep(current, 1, { kind: "completo" });
     expect(plan).toEqual({
-      changes: { kind: "completo", acceptsNightly: false, acceptsMonthly: true, bathroomShared: null, nightlyPriceCrc: null, monthlyMode: "amount" },
-      next: expect.objectContaining({ kind: "completo", bathroomShared: null, nightlyPriceCrc: null, monthlyMode: "amount" }),
+      changes: { kind: "completo", bathroomShared: null },
+      next: expect.objectContaining({ kind: "completo", bathroomShared: null, nightlyPriceCrc: 42000, acceptsNightly: true }),
     });
   });
 
-  it("sin mensual se limpian modo y precio mensual; quitar parqueo limpia su tipo", () => {
-    const monthly = { ...validDraft(), acceptsMonthly: true, monthlyMode: "amount" as const, monthlyPriceCrc: 480000 };
-    expect(planStep(monthly, 1, { kind: "completo", acceptsNightly: true, acceptsMonthly: false })).toEqual({
-      changes: { acceptsMonthly: false, monthlyMode: null, monthlyPriceCrc: null },
+  it("pasar «Alquiler mensual» a No limpia el precio al mes; quitar parqueo limpia su tipo", () => {
+    const monthlyDraft = { ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 85000 };
+    expect(planStep(monthlyDraft, 8, { nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null })).toEqual({
+      changes: { acceptsMonthly: false, monthlyPriceCrc: null },
       next: expect.anything(),
     });
     const parking = { ...validDraft(), features: ["parking", "wifi"] as Feature[], parkingPaid: true };
@@ -304,12 +319,11 @@ describe("etapas del asistente", () => {
 describe("isFreshDraft (qué tener a mano, arriba del paso 1)", () => {
   it("un borrador recién creado, sin nada rellenado", () => {
     expect(isFreshDraft(emptyDraft())).toBe(true);
-    expect(isFreshDraft({ ...emptyDraft(), acceptsMonthly: null })).toBe(true);
     expect(isFreshDraft({ ...emptyDraft(), province: "Puntarenas" })).toBe(true); // la provincia viene puesta
   });
   it("con cualquier cosa rellenada, ya no", () => {
     expect(isFreshDraft({ ...emptyDraft(), kind: "completo" })).toBe(false);
-    expect(isFreshDraft({ ...emptyDraft(), acceptsNightly: true })).toBe(false);
+    expect(isFreshDraft({ ...emptyDraft(), acceptsMonthly: true })).toBe(false);
     expect(isFreshDraft({ ...emptyDraft(), title: "Casa" })).toBe(false);
     expect(isFreshDraft({ ...emptyDraft(), photoCount: 1 })).toBe(false);
     expect(isFreshDraft({ ...emptyDraft(), features: ["wifi"] })).toBe(false);

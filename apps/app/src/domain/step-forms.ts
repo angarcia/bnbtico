@@ -30,11 +30,7 @@ const draft = <S extends z.ZodMiniType>(schema: S, fn: (v: z.output<S>) => Parti
 const nothing = draft(z.object({}), () => ({}));
 
 const STEP_SCHEMAS = {
-  1: draft(z.object({ kind: text, modes: all }), ({ kind, modes }) => ({
-    kind: (KINDS as readonly string[]).includes(kind) ? (kind as Kind) : null,
-    acceptsNightly: modes.includes("nightly"),
-    acceptsMonthly: modes.includes("monthly"),
-  })),
+  1: draft(z.object({ kind: text }), ({ kind }) => ({ kind: (KINDS as readonly string[]).includes(kind) ? (kind as Kind) : null })),
   2: draft(z.object({ province: text, canton: text, zone: text }), (v) => v),
   3: draft(z.object({ lat: decimal, lng: decimal }), (v) => v),
   4: draft(z.object({ capacity: integer, bedrooms: integer, bathrooms: integer, bathroomShared: choice({ shared: true, private: false }) }), (v) => v),
@@ -45,7 +41,12 @@ const STEP_SCHEMAS = {
   6: draft(z.object({ title: text, description: text }), ({ title, description }) => ({ title: [...title].slice(0, TITLE_MAX).join(""), description: [...description].slice(0, DESCRIPTION_MAX).join("") })),
   // El número de fotos sale de la lista del servidor, nunca de un campo del formulario.
   7: nothing,
-  8: draft(z.object({ nightlyPriceCrc: colones, monthlyPriceCrc: colones }), (v) => v),
+  // «¿Acepta alquiler por meses?»: No por defecto; con No el precio al mes del formulario se descarta.
+  8: draft(z.object({ nightlyPriceCrc: colones, acceptsMonthly: choice({ yes: true, no: false }), monthlyPriceCrc: colones }), (v) => ({
+    nightlyPriceCrc: v.nightlyPriceCrc,
+    acceptsMonthly: v.acceptsMonthly === true,
+    monthlyPriceCrc: v.acceptsMonthly === true ? v.monthlyPriceCrc : null,
+  })),
   9: nothing,
 } satisfies Record<Step, z.ZodMiniType<Partial<ListingDraft>, unknown>>;
 
