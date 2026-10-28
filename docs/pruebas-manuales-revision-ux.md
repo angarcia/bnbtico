@@ -74,16 +74,35 @@ Con una cuenta sin casas (p. ej. `8888 9999` recién creada en U6, o borre las s
 
 ### Propietaria con casa activa (A1, A2, N1, N2, N7)
 
+> Desde 2026-10-27 (navegación simple) no hay pestañas Inicio ni Consultas: U31, U32, U33 y U36 quedan sustituidas por la sección «Navegación simple» (U44–U53); U34 y U35 valen con las salvedades de allí (una casa se ve directa, un solo aviso). Lo mismo para U20, U28 y U30 más arriba: donde dicen «Inicio» o «Consultas», léase Mis casas (aviso «Seguir publicando») o Actividad. Lo mismo para U20, U28 y U30 más arriba: donde dicen «Inicio» o «Consultas», léase Mis casas (aviso «Seguir publicando») o Actividad.
+
 Con `8777 0001` (Yorleny, con CT-1015 activa). Antes, desde **otro** teléfono o una pestaña privada, abra la ficha de CT-1015 un par de veces.
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| U31 | Inicio | En la tarjeta de la casa activa: **«N visitas · N consultas · últimos 30 días»** (o «Comparta su enlace para que lleguen las primeras visitas» si aún no hay). Las visitas del otro teléfono cuentan | ☐ |
-| U32 | Desde el teléfono de Yorleny (ya con sesión y tras abrir Mis casas), abrir su propia ficha varias veces y volver a Inicio | Las visitas **no** suben: las de la propia dueña no cuentan | ☐ |
-| U33 | Crear un borrador («Nueva») y volver a Inicio | Arriba, la tarjeta del borrador con «Seguir publicando» (relleno); «Compartir ficha por WhatsApp» de la casa activa pasa a **contorno**. Con dos o más borradores: «y N borradores más · Ver en Mis casas» | ☐ |
+| U31 | Inicio | En la tarjeta de la casa activa: **«N visitas · N consultas · últimos 30 días»** (o «Comparta su enlace para que lleguen las primeras visitas» si aún no hay). Las visitas del otro teléfono cuentan | ☐ (sustituida: ya no hay Inicio ni Consultas; ver U44–U53) |
+| U32 | Desde el teléfono de Yorleny (ya con sesión y tras abrir Mis casas), abrir su propia ficha varias veces y volver a Inicio | Las visitas **no** suben: las de la propia dueña no cuentan | ☐ (sustituida: ya no hay Inicio ni Consultas; ver U44–U53) |
+| U33 | Crear un borrador («Nueva») y volver a Inicio | Arriba, la tarjeta del borrador con «Seguir publicando» (relleno); «Compartir ficha por WhatsApp» de la casa activa pasa a **contorno**. Con dos o más borradores: «y N borradores más · Ver en Mis casas» | ☐ (sustituida: ya no hay Inicio ni Consultas; ver U44–U53) |
 | U34 | Mis casas | Casillas solo las que tienen algo (ya no «0 por pagar»); **un solo botón relleno** en la pantalla (el «Seguir» del borrador; sin borrador, «Compartir ficha»); «Nueva» en contorno. «Seguir» abre el primer paso con algo pendiente | ☐ |
 | U35 | Detalle de la casa activa | La foto lleva estado y precio, **sin «CT-1015»**; la fila «Compartir ficha» muestra el enlace `…/casa/CT-1015`; bajo la foto, las visitas y consultas de U31 | ☐ |
-| U36 | Consultas (si no hay ninguna; si hay, borrar en pruebas o saltar) | «Todavía nadie le ha escrito. Comparta su ficha para que lleguen las primeras consultas.» con «Compartir ficha por WhatsApp» | ☐ |
+| U36 | Consultas (si no hay ninguna; si hay, borrar en pruebas o saltar) | «Todavía nadie le ha escrito. Comparta su ficha para que lleguen las primeras consultas.» con «Compartir ficha por WhatsApp» | ☐ (sustituida: ya no hay Inicio ni Consultas; ver U44–U53) |
+
+### Navegación simple (2026-10-27)
+
+En el teléfono. Para los pasos 2 a 7 hace falta un número de prueba sin casas (por ejemplo `8888 9999`; si ya tiene, bórrelas antes).
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U44 | Sin sesión (ventana privada), abrir la app | Barra de abajo con **solo dos pestañas**: Explorar y Favoritos. Arriba, logo, «₡ \| $» y «Ingresar» | ☐ |
+| U45 | Ingresar con un número sin casas | Siguen **dos pestañas**; arriba, en lugar de «Ingresar», las iniciales. Cae en Explorar | ☐ |
+| U46 | Tocar las iniciales | Cuenta a **pantalla completa** con flecha de volver (no es pestaña). Hay una fila **«Publicar mi casa»** y no hay fila «Moneda». La flecha vuelve a donde estaba, sin rebotar | ☐ |
+| U47 | «Publicar mi casa» y crear el borrador | Pasa a **cinco pestañas** (Explorar · Favoritos · Mis casas · Calendario · Actividad) y Mis casas muestra **directo el detalle del borrador** (sin lista, sin flecha), con «Seguir publicando» y «Añadir otra casa» | ☐ |
+| U48 | «Añadir otra casa» y crear un segundo borrador | Mis casas pasa a **lista** con las dos; arriba, un único aviso | ☐ |
+| U49 | Borrar las dos casas | La barra vuelve a **dos pestañas** y se aterriza en Explorar. En Cuenta reaparece «Publicar mi casa» | ☐ |
+| U50 | En Explorar tocar «₡ \| $» para pasar a **$**; abrir una ficha; recargar la página y volver a mirar | Los precios salen en dólares en Explorar y en la ficha (que tiene el mismo selector en su cabecera) y **se conserva tras recargar**. La línea «N casas en Limón» ya no lleva «₡ · $» | ☐ |
+| U51 | Abrir `/propietario/consultas` (como en un aviso antiguo de WhatsApp) con una casa | Entra en **Actividad** sin pantalla en blanco; `/propietario` entra en Mis casas | ☐ |
+| U52 | Con una casa activa (`8777 0001`, CT-1015), abrir Actividad | «Actividad · Últimos 30 días» con **tres cifras grandes** (visitas · toques en WhatsApp · consultas, sin tarjeta) y «Últimas consultas» con «Abrir WhatsApp»; el contador de consultas nuevas está en la pestaña Actividad. Las visitas de la propia dueña no cuentan (como U32) | ☐ |
+| U53 | Con la app instalada y una casa, cerrarla del todo y volver a abrirla | **La barra no salta**: desde el primer pintado ya muestra las cinco pestañas | ☐ |
 
 ### Calendarios (A4, A5)
 

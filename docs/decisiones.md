@@ -1,3 +1,15 @@
+## 2026-10-27 · Navegación simple: una barra que crece, Cuenta arriba y «Actividad»
+
+Decisión de Daniel. Sustituye la decisión N2 de la revisión UX (`.scratch/revision-ux/2026-10-26-revision-ux.md`, «las pestañas del propietario nunca se ocultan») y la barra inferior de `docs/diseno-v1.md`. Especificación: `.scratch/navegacion-simple/spec.md`.
+
+- **Una sola barra inferior que crece.** Sin casas: Explorar · Favoritos (2 pestañas). Con al menos una casa en cualquier estado, borrador incluido: Explorar · Favoritos · Mis casas · Calendario · Actividad (5). **Nunca más de 5**: lo nuevo va en Cuenta o dentro de una pestaña. La barra del admin no cambia y solo sale dentro de `/admin`.
+- **El propietario se deriva, no se elige.** Es propietario mientras la consulta de casas propias (persistida en IndexedDB) devuelva alguna; `bnbtico-mis-casas` en localStorage sirve de pista para el primer pintado y la barra no salta al abrir la app instalada. Se quitan `bnbtico-role` y el control «cambiar de vista». Al borrar la última casa vuelve a ser cliente y aterriza en Explorar; tras ingresar, el propietario va a Mis casas y el resto a Explorar.
+- **Cuenta en la esquina superior**, como pantalla completa con flecha de volver (ya no es pestaña). Sin casas lleva una fila «Publicar mi casa».
+- **₡ | $ en la barra superior y en la ficha.** Barra fija arriba (logo · ₡ | $ · iniciales o «Ingresar») solo en las cinco pestañas; en la ficha el selector va en su cabecera, en una caja de tamaño fijo hasta hidratar (el servidor siempre pinta colones). La preferencia sigue en `bnbtico_currency`. Sale de la línea de resultados de Explorar y de la fila «Moneda» de Cuenta. El plan de reserva por tamaño (selector de vuelta a Explorar) no hizo falta.
+- **«Actividad» sustituye a Inicio y a Mis consultas** (`owner_activity()`: visitas, toques en WhatsApp y consultas de los últimos 30 días por casa, más las 20 últimas consultas con «Abrir WhatsApp»). `/propietario` redirige a `/propietario/casas` y `/propietario/consultas` a `/propietario/actividad`, para que sigan valiendo los enlaces de los avisos ya enviados.
+- **Una casa se ve directa** en Mis casas (su detalle como raíz de la pestaña, con «Añadir otra casa»); con dos o más, la lista. Un único aviso arriba, con el de pago por encima de «Seguir publicando». Sin tarjeta de la oferta de lanzamiento: cada casa muestra su estado y «Promoción y suscripción» (Cuenta) guarda el detalle.
+- Las maquetas `design/pantallas/09-prop-inicio.html` y `20-prop-cuenta.html` quedan superadas en la navegación.
+
 ## 2026-10-27 · Pasada de escritorio en espera hasta cerrar el móvil
 
 Decisión de Daniel.

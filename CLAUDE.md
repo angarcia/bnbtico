@@ -12,7 +12,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 ## Reglas de producto vigentes (2026-10-15)
 
-- **WhatsApp es el único canal.** Cliente → propietario: botón «Contactar por WhatsApp» que abre `wa.me` con un mensaje redactado (casa, fechas, personas). Propietario → cliente: desde Mis consultas, directo a WhatsApp. Usuarios → bnbtico: dos números de WhatsApp, uno para clientes y otro para propietarios. Sin chat interno, sin números intermediarios, sin flujo de reclamaciones en la app.
+- **WhatsApp es el único canal.** Cliente → propietario: botón «Contactar por WhatsApp» que abre `wa.me` con un mensaje redactado (casa, fechas, personas). Propietario → cliente: desde Actividad, directo a WhatsApp. Usuarios → bnbtico: dos números de WhatsApp, uno para clientes y otro para propietarios. Sin chat interno, sin números intermediarios, sin flujo de reclamaciones en la app.
 - **WhatsApp verificado por código es lo único obligatorio** para publicar o contactar. Explorar y guardar favoritos no requiere cuenta.
 - **Veriff (identidad) es opcional y queda fuera de la v1** (va en v1.1). En v1 no se muestra nada de identidad.
 - **Estados de una casa:** Pendiente de revisión → Pendiente de pago → Activa → Inactiva (si el propietario para la suscripción). Las casas con oferta gratuita saltan «Pendiente de pago» hasta que termina la oferta. Avisos por WhatsApp y en la app a 90/30/7/0 días del fin de la oferta, con enlace `#pago=CT-xxxx` a la pantalla de método de pago. El enlace de una ficha parada o pendiente de pago deja de funcionar. «Añadir método de pago» solo aparece mientras no hay método y toca avisar.
