@@ -2,6 +2,7 @@
 
 Decisión de Daniel. Especificación: `.scratch/mensual-como-caracteristica/spec.md`. Sustituye a «Vacacional / Mensual / las dos, con un precio por modalidad» de `docs/diseno-v1.md`.
 
+- **Orden del despliegue y la app vieja:** primero `git push` de `develop` (despliegue), después se vacían las casas de `bnbtico-pruebas` y al final `supabase db push`. Desde el `db push`, la app vieja (`apps/web` en Vercel, pruebas.bnbtico.com) ya no puede crear borradores ni guardar pasos (su `accepts_nightly:false` y sus escrituras nulas chocan con el `check` y el `not null`): la publicación se prueba solo desde nueva.bnbtico.com.
 - **Toda casa se alquila por noches.** `accepts_nightly` es siempre `true` (con `check` en la base) y el precio por noche es obligatorio.
 - **«¿Acepta alquiler por meses?» vive en la pantalla del precio**, con «No» por defecto y sin paso propio: el asistente sigue en 9 pasos (el paso 1 queda solo con «¿Qué es?»).
 - **El precio al mes es opcional.** Vacío = «Precio a negociar con el dueño».

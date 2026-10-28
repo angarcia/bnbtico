@@ -640,6 +640,8 @@ Steps:
 
 ## Task 9 (remote — only run when migrations are pushed to bnbtico-pruebas): Test data reset
 
+> **Order and consequence:** from the `supabase db push` on, the OLD app (`apps/web`, Vercel) can no longer create drafts or save steps (its insert of `accepts_nightly:false` and its nullable writes are rejected by the new check / not null): publishing is tested only from nueva.bnbtico.com. Deploy order: `git push` develop first (deploy), then wipe the `bnbtico-pruebas` listings, then `supabase db push`.
+
 > Run this once, through the Supabase management API, **before** the first `supabase db push` of this project or of `.scratch/ubicacion-por-punto` to `bnbtico-pruebas` (ref `bpxiggdzgzolcazaaboj`).
 >
 > - It is not a migration and never runs in production.

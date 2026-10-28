@@ -344,7 +344,6 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
   ]
     .filter(Boolean)
     .join(" · ");
-  const stay = l.acceptsNightly && l.minNights ? ` · mín. ${l.minNights} ${l.minNights === 1 ? "noche" : "noches"}` : "";
   return (
     <>
       <div className="photo-strip" aria-label={`${l.photos.length} fotos`}>
@@ -371,7 +370,6 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
             {formatCRC(d.mainPrice.amount)}{" "}
             <span className="muted">
               / {d.mainPrice.unit}
-              {stay}
             </span>
             {d.monthly ? <span className="muted"> · {isNegotiable(d.monthly) ? "mensual a negociar" : `mensual ${formatCRC(d.monthly.amount)}`}</span> : null}
           </span>

@@ -45,11 +45,6 @@ export function cardPrice(d: Pick<ListingDescription, "mainPrice" | "monthly">, 
 export const NEGOTIABLE_CARD = "Precio a negociar";
 export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
 
-/** «Mensual: ₡350 000 / mes» o «Mensual: precio a negociar con el dueño»; `format` decide la moneda. */
-export function monthlyLineText(m: MonthlyPrice, format: (crc: number) => string): string {
-  return isNegotiable(m) ? NEGOTIABLE_LINE : `Mensual: ${format(m.amount)} / mes`;
-}
-
 function situation(l: Listing, now: number): string {
   switch (l.status) {
     // Lo de la oferta (tramo, «Gratis hasta…») sale de la suscripción (subscriptionLine): aquí solo lo que dice la casa.

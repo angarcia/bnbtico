@@ -1,7 +1,6 @@
 import { describe as group, expect, it } from "vitest";
 import { can, type ListingAction } from "../../src/domain/can";
-import { cardPrice, describe, monthlyLineText } from "../../src/domain/describe";
-import { formatCRC } from "../../src/domain/money";
+import { cardPrice, describe } from "../../src/domain/describe";
 import { emptyDraft, type Listing, type ListingStatus, type PublicListing } from "../../src/domain/listing";
 
 const NOW = Date.parse("2026-10-22T12:00:00Z");
@@ -86,11 +85,6 @@ group("describe · precios", () => {
     expect(cardPrice({ mainPrice: nightly, monthly: { amount: 350000, unit: "mes" } }, false)).toEqual(nightly);
     expect(cardPrice({ mainPrice: nightly, monthly: { amount: 350000, unit: "mes" } }, true)).toEqual({ amount: 350000, unit: "mes" });
     expect(cardPrice({ mainPrice: nightly, monthly: { negotiable: true } }, true)).toEqual({ negotiable: true });
-  });
-
-  it("la línea mensual de la ficha", () => {
-    expect(monthlyLineText({ amount: 350000, unit: "mes" }, formatCRC)).toBe("Mensual: ₡350\u00a0000 / mes");
-    expect(monthlyLineText({ negotiable: true }, formatCRC)).toBe("Mensual: precio a negociar con el dueño");
   });
 });
 
