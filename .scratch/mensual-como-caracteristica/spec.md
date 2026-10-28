@@ -6,6 +6,7 @@ Decided by: Daniel, in the brainstorming of 2026-10-27 («Mejoras fase R y 3», 
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.
 Supersedes: the «Modalidad y tipo (diseño v1)» rule in `CLAUDE.md` (Vacacional, Mensual or both, one price per modality), the step 1 «¿Cómo alquila?» question and the step 8 per-modality prices of `docs/diseno-v1.md`, and the Vacacional/Mensual chips in Explorar.
 Related: `.scratch/navegacion-simple/spec.md` (project 1), which touches the same Explorar header and the ficha header.
+Step numbers: «step 8 (precio)» here is the current numbering. If `.scratch/ubicacion-por-punto/spec.md` lands first, steps 2 and 3 merge and the price step becomes step 7.
 
 ## Problem Statement
 
