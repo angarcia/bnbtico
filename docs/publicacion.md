@@ -18,7 +18,7 @@ Demo: `listing-whatsapp.js`, paso Precio al crear y sección WhatsApp de esta ca
 ## Campos del recorrido
 
 1. Alojamiento: tipo y respuesta explícita a largo plazo.
-2. Ubicación: provincia, cantón y zona aproximada obligatorios; sin dirección exacta pública.
+2. Ubicación (ubicación por punto, 2026-10-28): un punto en el mapa obligatorio, del que Postgres calcula provincia, cantón y distrito (`place_at`, no se editan), y una zona elegida entre las cercanas (a 5 km o menos), el distrito o «Otra…»; sin dirección exacta pública (la ficha solo muestra una zona aproximada de unos 500 m).
 3. Detalles: capacidad, habitaciones, baños, uso de baños, título y descripción. Casillas inicialmente desmarcadas para **Acepta mascotas, Piscina, Wifi, Aire acondicionado y Parqueo**; se marca lo que ofrece el alojamiento. Si se marca Parqueo, aparece un menú obligatorio **Gratuito / De pago**, sin preselección. Desmarcarlo borra la tarifa elegida. **Está amueblado** se elimina, también para largo plazo. Los datos históricos de tarifa de parqueo desconocida no se convierten automáticamente en gratuito.
 4. Fotos: mínimo 5 y portada. Sin contactos, enlaces o publicidad de agencias; moderación antes de publicación.
 5. Precio: moneda CRC/USD, importe orientativo por noche y mínimo de noches; opciones mensuales condicionales. Mostrar el contacto de la cuenta y acceso a configurarlo, sin teléfono propio del anuncio.

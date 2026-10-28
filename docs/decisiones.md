@@ -10,7 +10,8 @@ Decisión de Daniel. Especificación: `.scratch/ubicacion-por-punto/spec.md`. Su
 - **Zonas del Caribe cargadas sin la revisión de Daniel:** el borrador de OSM (con `city|town` añadido a la consulta) está en `zones` (en `public`, con `lat/lng` generadas desde `point`); solo las 55 «sí» están activas y las 1037 «revisar» van inactivas. Revisión pendiente en `docs/antes-de-produccion.md` y `.scratch/ubicacion-por-punto/zonas.md`.
 - **La migración de datos `20261028065239_distritos_osm.sql` es un enlace simbólico de git** a `supabase/datos/…` (unos 8 MB); funciona con la CLI v2.121 en local. **Comprobar en el primer `supabase db push` remoto;** si la CLI lo rechaza, se sustituye por una copia.
 - **Orden del despliegue en `bnbtico-pruebas`** (compartido con la entrada de «mensual»): `git push` de `develop`, vaciar las casas de prueba y entonces `supabase db push`; hasta entonces la app vieja deja de crear borradores.
-- **`size-limit`:** el trozo de publicar queda en ~14,96 de 15 KB (casi al límite; el siguiente cambio ahí obliga a subirlo o a repartir).
+- **`size-limit`:** el trozo de publicar queda en ~14,94 de 15 KB (casi al límite; el siguiente cambio ahí obliga a repartir en otro trozo diferido con su propia entrada, sin subir el límite).
+- **Arreglos de la revisión final (2026-10-28):** en «Otra…», un nombre que ya está entre las opciones (sin tildes ni mayúsculas) elige esa opción en vez de proponer una zona nueva; Enter sin nada marcado elige «Usar "…"»; `place_at` desempata por código de distrito (migración `20261028090823`), para que un punto en el borde de dos distritos dé siempre el mismo.
 
 ## 2026-10-27 · «Alquiler mensual» como característica, con precio al mes opcional
 
@@ -18,7 +19,7 @@ Decisión de Daniel. Especificación: `.scratch/mensual-como-caracteristica/spec
 
 - **Orden del despliegue y la app vieja:** primero `git push` de `develop` (despliegue), después se vacían las casas de `bnbtico-pruebas` y al final `supabase db push`. Desde el `db push`, la app vieja (`apps/web` en Vercel, pruebas.bnbtico.com) ya no puede crear borradores ni guardar pasos (su `accepts_nightly:false` y sus escrituras nulas chocan con el `check` y el `not null`): la publicación se prueba solo desde nueva.bnbtico.com.
 - **Toda casa se alquila por noches.** `accepts_nightly` es siempre `true` (con `check` en la base) y el precio por noche es obligatorio.
-- **«¿Acepta alquiler por meses?» vive en la pantalla del precio**, con «No» por defecto y sin paso propio: el asistente sigue en 9 pasos (el paso 1 queda solo con «¿Qué es?»).
+- **«¿Acepta alquiler por meses?» vive en la pantalla del precio**, con «No» por defecto y sin paso propio: el asistente sigue en 9 pasos (8 desde la ubicación por punto) (el paso 1 queda solo con «¿Qué es?»).
 - **El precio al mes es opcional.** Vacío = «Precio a negociar con el dueño».
 - **Un solo chip «Alquiler mensual»** en Explorar (`?mensual=1`; `modo=monthly` se mantiene como enlace viejo). Con él activo se oculta el rango de precio por noche, sin borrarlo de la URL. Desaparecen las píldoras Vacacional/Mensual, la etiqueta «Vacacional» de la ficha y el segundo precio de las tarjetas.
 - **Medición:** evento `monthly_filter_tap` (toque en el chip, al activarlo o al quitarlo, sin casa). Consulta en `docs/telemetria.md`.

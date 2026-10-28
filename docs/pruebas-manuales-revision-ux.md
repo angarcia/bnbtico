@@ -62,7 +62,7 @@ Con una cuenta sin casas (p. ej. `8888 9999` recién creada en U6, o borre las s
 |---|---|---|---|
 | U20 | Mi cuenta → «Publicar mi casa» → Inicio | Tarjeta «Publique su casa en pocos pasos» con la lista **5 fotos horizontales o más · El precio por noche o por mes · Unos 10 minutos** y el botón «Publicar casa» | ☐ |
 | U21 | Tocar «Publicar casa» | Entra **directo al paso 1** (sin la pantalla intermedia «Empezar») | ☐ |
-| U22 | Mirar la cabecera y la barra en varios pasos | Arriba a la derecha la etapa en dos líneas: **«Su casa · 1 de 5»** … «Su casa · 5 de 5», «Fotos y texto · 1 de 2», «Precio · 2 de 2». La barra tiene 9 tramos agrupados 5 · 2 · 2, con un hueco mayor entre etapas | ☐ |
+| U22 | Mirar la cabecera y la barra en varios pasos | Arriba a la derecha la etapa en dos líneas: **«Su casa · 1 de 4»** … «Su casa · 4 de 4», «Fotos y texto · 1 de 2», «Precio · 2 de 2» (actualizado 2026-10-28: con la ubicación por punto el mapa va dentro de «¿Dónde está su casa?»). La barra tiene 8 tramos agrupados 4 · 2 · 2, con un hueco mayor entre etapas | ☐ |
 | U23 | Paso 6, descripción vacía | Dentro de la caja, tres preguntas guía («¿Cómo es por dentro? ¿Qué hay cerca…? ¿Qué incluye…?») que desaparecen al escribir. Con menos de 80 caracteres el contador dice **«Faltan N caracteres»** en ocre; desde 80, «n / 2000» | ☐ |
 | U24 | Paso 7 con **2 fotos** → «Continuar» | Arriba en ocre «Faltan 3 fotos · puede añadirlas al final» y el contador «2 de 5–15» en ocre. **Deja seguir** al paso 8 | ☐ |
 | U25 | Paso 9 | Título **«Revisar y enviar»**; cinco filas (Alojamiento, Dónde, Capacidad, Nombre y fotos, Precio) que llevan a su pantalla; en «Nombre y fotos», debajo y en ocre, «Faltan 3 fotos». Todo cabe sin scroll | ☐ |

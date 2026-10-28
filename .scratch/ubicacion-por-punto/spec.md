@@ -1,6 +1,6 @@
 # Spec · Ubicación por punto: el mapa decide provincia, cantón y zona
 
-Status: needs-triage
+Status: ready-for-agent (approved by Daniel 2026-10-27) · implementada en `develop` (28ed452..08d93b3 y el arreglo de la revisión final); plan de pruebas en `docs/pruebas-manuales-fase-r.md` (B11b, B11b1, D10)
 Date: 2026-10-27
 Decided by: Daniel, in the brainstorming of 2026-10-27 («Mejoras fase R y 3», project 2 of 4).
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.

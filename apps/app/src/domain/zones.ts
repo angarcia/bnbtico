@@ -67,5 +67,16 @@ export function reconcileZone(current: ZoneChoice | null, pin: LatLng, options: 
   return choiceOf(first);
 }
 
+/** Lo escrito en «Otra…», recortado como lo cuenta la base (`char_length(btrim())`). */
+export const otherName = (text: string) => Array.from(text.trim()).slice(0, OTHER_ZONE_MAX).join("");
+
+/** La zona elegida con «Otra…» (una sugerencia de Photon o lo escrito): si ya es una de las opciones (mismo nombre sin
+ *  tildes ni mayúsculas), esa opción; si no, una zona propuesta anclada al pin. */
+export function otherChoice(text: string, options: readonly ZoneSelectOption[], pin: LatLng): ZoneChoice {
+  const name = otherName(text);
+  const known = options.find((o) => norm(o.name) === norm(name));
+  return known ? choiceOf(known) : { name, source: "other", zoneId: null, anchor: pin };
+}
+
 /** «{cantón}, {provincia}», p. ej. «Talamanca, Limón». */
 export const placeLine = (place: Place): string => `${place.canton}, ${place.province}`;

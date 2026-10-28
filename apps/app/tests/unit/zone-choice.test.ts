@@ -4,6 +4,7 @@ import {
   OTHER_ZONE_MAX,
   PLACE_DEBOUNCE_MS,
   ZONE_RADIUS_M,
+  otherChoice,
   placeLine,
   reconcileZone,
   zoneOptions,
@@ -88,6 +89,18 @@ describe("zoneOptions y reconcileZone", () => {
   it("sin opciones (buscando o sin red) no borra lo elegido", () => {
     expect(reconcileZone(other, PIN, [], null)).toBe(other);
     expect(reconcileZone(null, PIN, [], null)).toBeNull();
+  });
+});
+
+describe("otherChoice", () => {
+  const o = zoneOptions(near, place);
+  it("un nombre de «Otra…» que ya está entre las opciones elige esa opción (sin tildes ni mayúsculas)", () => {
+    expect(otherChoice("  cocles ", o, PIN)).toEqual({ name: "Cocles", source: "list", zoneId: "704-cocles", anchor: null });
+    expect(otherChoice("CAHUITA", o, PIN)).toEqual({ name: "Cahuita", source: "district", zoneId: null, anchor: null });
+  });
+  it("un nombre nuevo queda como zona propuesta, anclada al pin y recortada a 60 caracteres", () => {
+    expect(otherChoice(" Rancho Escondido ", o, PIN)).toEqual({ name: "Rancho Escondido", source: "other", zoneId: null, anchor: PIN });
+    expect(Array.from(otherChoice("á".repeat(70), o, PIN).name)).toHaveLength(OTHER_ZONE_MAX);
   });
 });
 

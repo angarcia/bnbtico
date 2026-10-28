@@ -1,7 +1,8 @@
 // Combobox de lugares del paso 2 (ubicación por punto): el buscador sobre el mapa y el de «Otra…». Muestra primero lo
 // local (las zonas de la tabla `zones`), luego lo que responde Photon (OpenStreetMap) 300 ms después de la última tecla
 // (la petición anterior se cancela) y, si se pide, un último elemento fijo («Usar "…"»). Flechas, Enter y Escape; Enter
-// nunca envía el paso. Elegir cierra la lista y el teclado. Si Photon no responde, lo local y el último elemento siguen.
+// nunca envía el paso (sin nada marcado, elige el último elemento fijo; lo marcado se borra cuando llega Photon). Elegir
+// cierra la lista y el teclado. Si Photon no responde, lo local y el último elemento siguen.
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { LatLng } from "../../domain/geo";
 import { parsePhotonNear, photonNearUrl, sameName, ZONE_DEBOUNCE_MS } from "../../domain/place-search";
@@ -73,6 +74,7 @@ export function PlaceSearch(props: PlaceSearchProps) {
         .then((res) => (res.ok ? res.json() : null))
         .then((json: unknown) => {
           if (controller.signal.aborted) return;
+          setActive(-1); // la lista cambia bajo lo marcado: nada queda marcado por sorpresa
           setFound(parsePhotonNear(json, center, withinM).map((p) => ({ key: p.name + p.detail, name: p.name, detail: p.detail, point: { lat: p.lat, lng: p.lng } })));
         })
         .catch(() => undefined); // sin red o Photon caído: quedan lo local y el último elemento
@@ -91,10 +93,11 @@ export function PlaceSearch(props: PlaceSearchProps) {
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      // Ni envía el paso ni salta al campo siguiente: solo elige la sugerencia marcada.
+      // Ni envía el paso ni salta al campo siguiente: elige la sugerencia marcada o, sin ninguna, el último elemento fijo.
       e.preventDefault();
       e.stopPropagation();
-      if (shown && active >= 0 && items[active]) choose(items[active]);
+      const pick = shown && active >= 0 ? items[active] : extra;
+      if (pick) choose(pick);
       return;
     }
     if (!shown) return;
@@ -132,7 +135,7 @@ export function PlaceSearch(props: PlaceSearchProps) {
       />
       {/* Tocar dentro (una sugerencia o el enlace de OpenStreetMap) no quita el foco al campo: la lista no se cierra bajo el dedo. */}
       <div className="zone-pop" hidden={!shown} onMouseDown={(e) => e.preventDefault()}>
-        <ul id={listId} role="listbox" aria-label="Zonas sugeridas" className="zone-options">
+        <ul id={listId} role="listbox" aria-label={props.label} className="zone-options">
           {items.map((item, i) => (
             <li key={item.key} id={`${listId}-${i}`} role="option" aria-selected={i === active} onClick={() => choose(item)}>
               <b>{item.label ?? item.name}</b>

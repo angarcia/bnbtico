@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PROVINCE_CENTERS, type LatLng } from "../../domain/geo";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft } from "../../domain/listing";
 import { searchZones, ZONE_SUGGESTIONS, ZONE_ZOOM } from "../../domain/place-search";
-import { OTHER_ZONE_MAX, placeLine, reconcileZone, ZONE_RADIUS_M, zoneOptions, type ZoneChoice } from "../../domain/zones";
+import { otherChoice, otherName, placeLine, reconcileZone, ZONE_RADIUS_M, zoneOptions, type ZoneChoice } from "../../domain/zones";
 import { places } from "../owner";
 import { LocationPicker, type PickerHandle } from "./location-picker";
 import { createPlaceLookup, type LookupState, type PlaceLookup } from "./place-lookup";
@@ -21,9 +21,6 @@ const same = (a: LatLng | null, b: LatLng | null) => a !== null && b !== null &&
 
 /** Las zonas de la tabla `zones` (Caribe primero), para el buscador del mapa. Cambian poco: un día de frescura. */
 export const zonesQuery = queryOptions({ queryKey: ["zones"], queryFn: async () => (await places()).listZones(), staleTime: 86_400_000 });
-
-/** Lo escrito en «Otra…», recortado como lo cuenta la base (`char_length(btrim())`). */
-const otherName = (text: string) => Array.from(text.trim()).slice(0, OTHER_ZONE_MAX).join("");
 
 function PlaceLine({ state, onRetry }: { state: LookupState; onRetry(): void }) {
   return (
@@ -111,7 +108,7 @@ export function LocationStep({ listing: _listing, draft }: { listing: Listing; d
           withinM={ZONE_RADIUS_M}
           extra={(text) => (otherName(text) ? { key: "use", name: otherName(text), label: `Usar "${otherName(text)}"`, detail: "", point: null } : null)}
           onChoose={(item) => {
-            setChoice({ name: otherName(item.name), source: "other", zoneId: null, anchor: pin });
+            setChoice(otherChoice(item.name, options, pin));
             setOtherOpen(false);
           }}
           autoFocus

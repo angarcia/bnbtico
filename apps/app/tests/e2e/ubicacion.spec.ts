@@ -209,7 +209,7 @@ test("Otra… con un nombre inventado y Usar", async ({ page }) => {
   await other.fill("Rancho Escondido");
   // Photon no conoce el nombre (responde []): el último elemento deja usar lo escrito.
   await expect.poll(() => photon.length).toBeGreaterThan(0);
-  const options = page.getByRole("listbox", { name: "Zonas sugeridas" }).getByRole("option");
+  const options = page.getByRole("listbox", { name: "Otra zona" }).getByRole("option");
   await expect(options.last()).toHaveText('Usar "Rancho Escondido"');
   // Enter sobre una sugerencia no envía el paso.
   await other.press("ArrowDown");
@@ -241,6 +241,47 @@ test("Otra… con un nombre inventado y Usar", async ({ page }) => {
   await expect(adminPage.getByText("Rancho Escondido · Cahuita, Talamanca, Limón")).toBeVisible();
   await expect(adminPage.getByText("Zona propuesta por el dueño")).toBeVisible();
   await admin.close();
+});
+
+test("Otra… con el nombre de una zona de la lista elige esa zona; Enter sin marcar usa lo escrito", async ({ page }) => {
+  const id = await draftAt(COCLES);
+  await page.goto(`/propietario/publicar/${id}/2`);
+  await expect(line(page)).toHaveText("Talamanca, Limón");
+  await zone(page).selectOption({ label: "Puerto Viejo" });
+  await zone(page).selectOption({ label: "Otra…" });
+  const other = page.getByRole("combobox", { name: "Otra zona" });
+  await other.fill("cocles");
+  await expect(page.getByRole("listbox", { name: "Otra zona" }).getByRole("option").last()).toHaveText('Usar "cocles"');
+  // Enter sin sugerencia marcada: el último elemento («Usar "…"»). Como Cocles ya está en la lista, queda esa zona, no
+  // una propuesta (el admin no ve la marca).
+  await other.press("Enter");
+  await expect(other).toHaveCount(0);
+  await expect(chosen(page)).toHaveText("Cocles");
+  await expect(page.locator('input[name="zoneSource"]')).toHaveValue("list");
+  await expect(page.locator('input[name="zoneId"]')).toHaveValue("704-cocles");
+});
+
+test("Otra…: las sugerencias de Photon que llegan después no cambian lo marcado", async ({ page }) => {
+  const id = await draftAt(COCLES);
+  await page.route("https://photon.komoot.io/**", async (route) => {
+    await new Promise((r) => setTimeout(r, 800));
+    await route.fulfill({
+      json: { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [-82.7, 9.63] }, properties: { name: "Playa Chiquita", countrycode: "CR", county: "Talamanca", state: "Limón" } }] },
+      headers: { "access-control-allow-origin": "*" },
+    });
+  });
+  await page.goto(`/propietario/publicar/${id}/2`);
+  await expect(line(page)).toHaveText("Talamanca, Limón");
+  await zone(page).selectOption({ label: "Otra…" });
+  const other = page.getByRole("combobox", { name: "Otra zona" });
+  await other.fill("Playa Ch");
+  const list = page.getByRole("listbox", { name: "Otra zona" });
+  await other.press("ArrowDown");
+  await expect(list.getByRole("option", { selected: true })).toHaveText('Usar "Playa Ch"');
+  await expect(list.getByRole("option", { name: "Playa Chiquita" })).toBeVisible();
+  await expect(list.getByRole("option", { selected: true })).toHaveCount(0);
+  await other.press("Enter");
+  await expect(chosen(page)).toHaveText("Playa Ch");
 });
 
 test("Ayuda cita los límites de OpenStreetMap con su licencia", async ({ page }) => {

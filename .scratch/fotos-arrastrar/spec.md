@@ -1,6 +1,6 @@
 # Spec · Fotos: ordenar arrastrando
 
-Status: needs-triage
+Status: ready-for-agent (approved by Daniel 2026-10-27) · plan escrito (ad39e08), sin implementar todavía
 Date: 2026-10-27
 Decided by: Daniel, in the brainstorming of 2026-10-27 («Mejoras fase R y 3», project 3 of 4).
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.

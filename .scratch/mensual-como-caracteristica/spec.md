@@ -1,6 +1,6 @@
 # Spec · «Alquiler mensual» como característica, con precio al mes opcional
 
-Status: needs-triage
+Status: ready-for-agent (approved by Daniel 2026-10-27) · implementada en `develop` (2897871..5060f37)
 Date: 2026-10-27
 Decided by: Daniel, in the brainstorming of 2026-10-27 («Mejoras fase R y 3», project 4 of 4).
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.

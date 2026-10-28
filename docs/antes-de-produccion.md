@@ -5,6 +5,7 @@ Lista de cosas decididas que **no** se hacen todavía en pruebas, pero deben est
 ## Zonas del Caribe (2026-10-28, ubicación por punto)
 
 1. **Revisar con Daniel `.scratch/ubicacion-por-punto/zonas.md` (zonas del Caribe cargadas como borrador el 2026-10-27) y aplicar sus cambios con una migración.** La migración `*_zonas.sql` carga las 1092 zonas del borrador de OpenStreetMap porque Daniel no estaba disponible: las 55 «sí» activas y las 1037 «revisar» (caseríos y barrios: hamlet, neighbourhood) con `active = false`, así que no salen en el selector. Activar las que valgan (`active = true`), quitar o corregir las demás (nombres y puntos) y no cambiar los ids de las que quedan.
+2. **En esa migración, no borrar zonas que usen casas: desactivarlas (`active = false`).** `listings.zone_id` referencia `zones(id)` con `on delete set null`: un `delete` pone a null la zona de las casas que la usan, y en cualquier casa fuera de `draft`/`changes` ese `update` lo frena el trigger `listings_protect` («Este anuncio no se puede editar en su estado actual…»: el contenido está congelado), así que la migración falla salvo que ponga antes `select set_config('app.allow_status', 'on', true);`. Desactivada, la zona deja de salir en el selector y las casas que ya la tienen no cambian.
 
 
 ## Suscripción, pagos y avisos (2026-10-27, fase 5)
