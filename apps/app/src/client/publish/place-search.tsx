@@ -29,6 +29,8 @@ export interface PlaceSearchProps {
   /** Último elemento fijo, después de Photon. */
   extra?(text: string): PlaceItem | null;
   onChoose(item: PlaceItem): void;
+  /** Escape con la lista ya cerrada (p. ej. para cerrar el campo de «Otra…» sin elegir). */
+  onCancel?(): void;
   autoFocus?: boolean;
 }
 
@@ -100,7 +102,14 @@ export function PlaceSearch(props: PlaceSearchProps) {
       if (pick) choose(pick);
       return;
     }
-    if (!shown) return;
+    if (!shown) {
+      if (e.key === "Escape" && latest.current.onCancel) {
+        e.preventDefault();
+        stop();
+        latest.current.onCancel();
+      }
+      return;
+    }
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       const step = e.key === "ArrowDown" ? 1 : -1;

@@ -112,6 +112,7 @@ export function LocationStep({ listing: _listing, draft }: { listing: Listing; d
             setChoice(otherChoice(item.name, options, pin));
             setOtherOpen(false);
           }}
+          onCancel={() => setOtherOpen(false)} // Escape: cierra sin cambiar la zona elegida
           autoFocus
         />
       ) : null}

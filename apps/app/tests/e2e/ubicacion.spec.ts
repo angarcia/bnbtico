@@ -292,6 +292,22 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await expect(zone(page).locator("option").last()).toHaveText("Otra…");
   await zone(page).selectOption({ label: "Otra…" });
   await expect(chosen(page)).toHaveText("Otra…");
+  // Abrir «Otra…» por error: volver a elegir «Cerca del río» la cierra y deja seguir.
+  await zone(page).selectOption({ label: "Cerca del río" });
+  await expect(other).toHaveCount(0);
+  await expect(chosen(page)).toHaveText("Cerca del río");
+  await expect(continuar(page)).toBeEnabled();
+  await expect(page.locator('input[name="zone"]')).toHaveValue("Cerca del río");
+  // Escape en el campo de «Otra…» también la cierra y deja la zona de antes.
+  await zone(page).selectOption({ label: "Otra…" });
+  await expect(other).toBeFocused();
+  await other.fill("Algo");
+  await other.press("Escape"); // primero cierra la lista de sugerencias
+  await other.press("Escape");
+  await expect(other).toHaveCount(0);
+  await expect(chosen(page)).toHaveText("Cerca del río");
+  await expect(continuar(page)).toBeEnabled();
+  await zone(page).selectOption({ label: "Otra…" });
   await zone(page).selectOption({ label: "Cocles" });
   await expect(other).toHaveCount(0);
   await expect(chosen(page)).toHaveText("Cocles");

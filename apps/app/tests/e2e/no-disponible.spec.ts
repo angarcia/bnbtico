@@ -8,7 +8,8 @@ import { longDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
 // «Disponible para consultas» con fecha de reapertura opcional en el detalle (pantalla 19, fase 4 ticket 04; la fila
-// «Calendario y precios» se quitó en la revisión de Ana: la pestaña Calendario ya lo cubre) contra Supabase local. Cada prueba siembra sus casas. La ficha del servidor se mira solo en una casa
+// «Calendario y precios» se quitó en la revisión de Ana: la pestaña Calendario ya lo cubre) contra Supabase local.
+// Cada prueba siembra sus casas. La ficha del servidor se mira solo en una casa
 // que nadie ha visitado antes (la copia en caché del worker local y su purga son del ticket 05); tras reabrir se mira la
 // ficha dentro de la SPA.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");

@@ -21,6 +21,8 @@ export function ZoneSelect({ options, value, other, onChange, onOther }: { optio
         onChange={(e) => {
           const key = e.currentTarget.value;
           if (key === OTHER) return onOther?.();
+          // Volver a la zona elegida con «Otra…» (p. ej. tras abrir «Otra…» por error): la misma elección, y la pantalla cierra el campo.
+          if (key === CURRENT && value) return onChange(value);
           const o = options.find((x) => x.key === key);
           if (o) onChange({ name: o.name, source: o.source, zoneId: o.zoneId, anchor: null });
         }}

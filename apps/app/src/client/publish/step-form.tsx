@@ -135,6 +135,8 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
 const FIELDS = "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea";
 /** Sitio extra bajo el formulario mientras hay un campo de texto enfocado: más que el teclado más alto del iPhone. */
 export const KEYBOARD_ROOM = "320px";
+/** Lo que tiene que encoger la vista para contar como teclado (un pellizco de zoom la encoge poco a poco). */
+const KEYBOARD_MIN_PX = 100;
 const NO_KEYBOARD = new Set(["checkbox", "radio", "file", "hidden", "submit", "button", "range", "color"]);
 const fieldsOf = (form: HTMLFormElement) => Array.from(form.querySelectorAll<HTMLElement>(FIELDS)).filter((el) => !el.hidden);
 const isText = (el: EventTarget | null): el is HTMLInputElement | HTMLTextAreaElement =>
@@ -203,7 +205,7 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
     if (!vv) return;
     let height = vv.height;
     const onResize = () => {
-      const shrank = vv.height < height;
+      const shrank = height - vv.height >= KEYBOARD_MIN_PX;
       height = vv.height;
       const el = document.activeElement;
       if (shrank && isText(el) && ref.current?.contains(el)) lift(el);

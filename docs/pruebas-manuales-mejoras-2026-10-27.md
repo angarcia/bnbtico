@@ -56,7 +56,7 @@ Los admins (Daniel y Ana) entran con `123456` y su app de autenticación. Convie
 | M5 | Ingresar con `8777 0001` → código `123456` | Llega a **Explorar** porque aún no tiene casas. Siguen **dos pestañas**. Arriba, en lugar de «Ingresar», un círculo con **«YP»** | ☐ |
 | M6 | Tocar «YP» | **Cuenta a pantalla completa** con flecha de volver (no es una pestaña). Tiene una fila **«Publicar mi casa»** y **no** tiene fila «Moneda» | ☐ |
 | M7 | Flecha de volver. Volver a abrir Cuenta → «Ayuda por WhatsApp» → «Volver» → «Volver» | Vuelve a Ayuda, luego a Cuenta y luego a **Explorar**, sin rebotar entre Cuenta y Ayuda | ☐ |
-| M8 | Cuenta → «Publicar mi casa» | Se crea el borrador. **La barra pasa a cinco pestañas**: Explorar · Favoritos · Mis casas · Calendario · Actividad. Abre el paso 1 «¿Qué es?» con «Su casa · 1 de 4» y, arriba, **«Tenga a mano:»** con 5 fotos horizontales o más, el precio y unos 10 minutos. **No** pregunta «¿Cómo alquila?» | ☐ |
+| M8 | Cuenta → «Publicar mi casa» | Se crea el borrador. **La barra pasa a cinco pestañas**: Explorar · Favoritos · **Mi casa** · Calendario · Actividad (con una sola casa la pestaña dice «Mi casa»; con dos o más, «Mis casas»). Abre el paso 1 «¿Qué es?» con «Su casa · 1 de 4» y, arriba, **«Tenga a mano:»** con 5 fotos horizontales o más, el precio y unos 10 minutos. **No** pregunta «¿Cómo alquila?» | ☐ |
 | M9 | Elegir el tipo → «Continuar» | Paso **«¿Dónde está su casa?»** («Su casa · 2 de 4»): buscador arriba, mapa, el texto «Toque el mapa o arrastre el punto hasta su casa.», la nota «En la ficha solo se ve una zona aproximada de unos 500 m…» y, abajo, «Zona». **Ya no hay** selectores de provincia ni de cantón, y tampoco hay otra pantalla con el mapa | ☐ |
 | M10 | En el buscador escribir «Coc» y elegir «Cocles» | El mapa va a Cocles con zoom de calle y el teclado se cierra. **No pone el punto** | ☐ |
 | M11 | Tocar el mapa sobre Cocles | Aparece el punto. Debajo, **«Talamanca, Limón»** (no se puede editar). En «Zona» queda elegida **Cocles**. La lista trae las zonas a menos de 5 km (Cocles, Puerto Viejo, Playa Chiquita…), luego el distrito **Cahuita** y al final «Otra…» | ☐ |
@@ -78,7 +78,7 @@ Los admins (Daniel y Ana) entran con `123456` y su app de autenticación. Convie
 | M27 | Tocar «Sí» con el teclado abierto en el precio por noche | Se marca a la primera, sin que la pantalla se mueva y se pierda el toque. Aparece **«Precio al mes (opcional)»** con la ayuda «Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».» | ☐ |
 | M28 | Escribir un precio al mes, tocar «No» y luego «Sí» otra vez | El precio al mes se ha borrado | ☐ |
 | M29 | Dejar «Sí» con el precio al mes **vacío**, poner el precio por noche → «Continuar» | Pasa al resumen. Dice «₡X / noche · mensual a negociar» | ☐ |
-| M30 | «Enviar a revisión» | «Enviada a revisión». En **Mis casas** se ve **directamente el detalle de la casa**, sin lista ni flecha de volver, con «Añadir otra casa» al final | ☐ |
+| M30 | «Enviar a revisión» | «Enviada a revisión». En la pestaña **Mi casa** se ve **directamente el detalle de la casa**, sin lista ni flecha de volver, con «Añadir otra casa» al final | ☐ |
 
 ### B3 · Un admin la revisa (Daniel o Ana)
 
@@ -91,7 +91,7 @@ Los admins (Daniel y Ana) entran con `123456` y su app de autenticación. Convie
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| M33 | Con `8777 0001`, abrir **Mis casas** | Detalle directo de la casa activa, con un **único aviso** arriba si toca (el de pago tiene prioridad sobre «Seguir publicando»). No hay tarjeta de la oferta de lanzamiento: la casa dice «Gratis hasta…» | ☐ |
+| M33 | Con `8777 0001`, abrir la pestaña **Mi casa** (con una casa; «Mis casas» si tiene dos o más) | Detalle directo de la casa activa, con un **único aviso** arriba si toca (el de pago tiene prioridad sobre «Seguir publicando»). No hay tarjeta de la oferta de lanzamiento: la casa dice «Gratis hasta…» | ☐ |
 | M34 | Desde el otro teléfono (cliente), abrir la ficha de la casa dos o tres veces y tocar «Contactar por WhatsApp» | — | ☐ |
 | M35 | En el teléfono de la propietaria, abrir **Actividad** | «Actividad · Últimos 30 días» con **tres cifras grandes**: visitas, toques en WhatsApp y consultas. Las visitas y el toque del cliente cuentan; las de la propia dueña no. Abajo, «Últimas consultas» con «Abrir WhatsApp», y el contador de nuevas está en la pestaña Actividad | ☐ |
 | M36 | Abrir `/propietario/consultas` y `/propietario` (como en un aviso antiguo de WhatsApp) | Entran en Actividad y en Mis casas, sin pantalla en blanco | ☐ |
@@ -114,7 +114,7 @@ Los admins (Daniel y Ana) entran con `123456` y su app de autenticación. Convie
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| M46 | Propietaria: Mis casas → «Añadir otra casa» → «Cerrar» en el paso 1 | Mis casas pasa a **lista** con las dos casas y un único aviso arriba («Seguir publicando» del borrador) | ☐ |
+| M46 | Propietaria: pestaña Mi casa → «Añadir otra casa» → «Cerrar» en el paso 1 | La pestaña pasa a decir **«Mis casas»** y muestra la **lista** con las dos casas y un único aviso arriba («Seguir publicando» del borrador) | ☐ |
 | M47 | Calendario y Actividad con dos casas | Actividad muestra **una tarjeta por casa**: la activa con sus cifras y el borrador solo con su estado | ☐ |
 | M48 | *(Opcional, al final)* Borrar el borrador y pedir a un admin que quite la casa activa | Con cero casas, la barra vuelve a **dos pestañas**, la app lleva a Explorar y en Cuenta reaparece «Publicar mi casa» | ☐ |
 
