@@ -2,14 +2,16 @@
 // (clave privada, ver account.ts y persist.ts): Inicio y Mis casas se pintan al instante desde la caché y se refrescan
 // por detrás (30 s, al volver a la app y al recuperar la red). El detalle se siembra con la fila de la lista.
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { OwnerListingsApi, PhotosApi } from "../domain/api";
+import type { ListingActivity, OwnerListingsApi, PhotosApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
 import { rememberOwnListings } from "../shared/own-listings";
 import { billingQuery } from "./billing";
+import { OWNER_STALE_MS, ownListingsQuery } from "./own-listings-query";
 import { allSavesSettled, savesSettled } from "./save-queue";
 import { authApi } from "./session";
 
-export const OWNER_STALE_MS = 30_000;
+// La consulta de la lista vive en el JS inicial (la barra de pestañas cuenta las casas); los importadores de siempre la toman de aquí.
+export { ownListingsQuery, OWNER_STALE_MS } from "./own-listings-query";
 
 /** Carga supabase-js con la sesión ya leída antes de pedir datos del propietario. */
 let loaded: OwnerListingsApi | null = null;
@@ -26,15 +28,19 @@ export const photosApi = async (): Promise<PhotosApi> => {
   return (await import("./supabase-data")).photosApi();
 };
 
-export const ownListingsQuery = (userId: string) =>
+/** La lectura de Mis casas (la consulta está en own-listings-query.ts, que la carga al pedirla). */
+export async function fetchOwnListings(): Promise<Listing[]> {
+  await allSavesSettled(); // una lista leída a mitad de un guardado del asistente pisaría lo recién escrito
+  const list = await (await api()).listOwn();
+  rememberOwnListings(list.map((l) => l.publicId)); // la ficha no cuenta las visitas del dueño (revisión UX A2)
+  return list;
+}
+
+/** Visitas, toques en WhatsApp y consultas de 30 días de todas las casas propias (Inicio). */
+export const activityQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["own-listings", userId] as const,
-    queryFn: async () => {
-      await allSavesSettled(); // una lista leída a mitad de un guardado del asistente pisaría lo recién escrito
-      const list = await (await api()).listOwn();
-      rememberOwnListings(list.map((l) => l.publicId)); // la ficha no cuenta las visitas del dueño (revisión UX A2)
-      return list;
-    },
+    queryKey: ["own-activity", userId] as const,
+    queryFn: async (): Promise<ListingActivity[]> => (await api()).ownerActivity(),
     staleTime: OWNER_STALE_MS,
   });
 
@@ -86,6 +92,11 @@ export const resumableQuery = (userId: string) =>
 export function patchCached(client: QueryClient, userId: string, id: string, patch: Partial<Listing>) {
   client.setQueryData<Listing[]>(ownListingsQuery(userId).queryKey, (list) => list?.map((l) => (l.id === id ? { ...l, ...patch } : l)));
   client.setQueryData<Listing | null>(["own-listing", userId, id], (l) => (l ? { ...l, ...patch } : l));
+}
+
+/** Una casa recién creada, al principio de la lista ya leída (si la hay), para que la barra crezca al instante. */
+export function addOwnCached(client: QueryClient, userId: string, l: Listing) {
+  client.setQueryData<Listing[]>(ownListingsQuery(userId).queryKey, (list) => (list && !list.some((x) => x.id === l.id) ? [l, ...list] : list));
 }
 
 /** Tras cualquier cambio: la lista, el detalle y lo que el público ve de esa casa vuelven a pedirse. */

@@ -5,12 +5,12 @@ import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
-import { LAST_STEP, STEPS, resumeStep, wizardStage, type Step } from "../../domain/listing";
+import { LAST_STEP, STEPS, resumeStep, wizardStage, type Listing, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
-import { api, ownListingQuery, resumableQuery } from "../owner";
+import { addOwnCached, api, ownListingQuery, resumableQuery } from "../owner";
 import { StepFields } from "../publish/fields";
 import { StepForm } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing, useOwnerMode, useUserId } from "./propietario";
@@ -30,6 +30,8 @@ export function PublicarScreen() {
     mutationFn: async () => (await api()).createDraft(),
     onSuccess: async ({ id }) => {
       await client.prefetchQuery(ownListingQuery(userId, id, client));
+      const created = client.getQueryData<Listing | null>(["own-listing", userId, id]);
+      if (created) addOwnCached(client, userId, created); // la barra crece al instante, antes de releer la lista
       void client.invalidateQueries({ queryKey: ["own-listings", userId] });
       void client.invalidateQueries({ queryKey: ["own-resumable", userId] });
       await navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: "1" } });

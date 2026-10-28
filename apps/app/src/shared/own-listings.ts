@@ -19,3 +19,10 @@ export function isOwnListing(publicId: string): boolean {
   if (typeof window === "undefined") return false;
   return (webStore("local").getItem(KEY) ?? "").split(",").includes(publicId);
 }
+
+/** Cuántas casas guardó la última lista de Mis casas en este teléfono: la pista del primer pintado, antes de leer la lista. */
+export function ownListingsHint(): number {
+  if (typeof window === "undefined") return 0;
+  const stored = webStore("local").getItem(KEY);
+  return stored ? stored.split(",").filter(Boolean).length : 0;
+}
