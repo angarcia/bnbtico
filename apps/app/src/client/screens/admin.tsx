@@ -9,7 +9,7 @@ import type { MfaFactor } from "../../domain/api";
 import { describe, isNegotiable } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, MONTHLY_LABEL, STATUS_LABELS, type Listing } from "../../domain/listing";
+import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
 import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
@@ -337,7 +337,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
     l.acceptsMonthly ? MONTHLY_LABEL : null,
     l.kind ? KIND_LABELS[l.kind] : null,
     l.kind === "habitacion" && l.bathroomShared !== null ? (l.bathroomShared ? "baño compartido" : "baño privado") : null,
-    [l.zone, l.canton].filter(Boolean).join(", "),
+    locationLine(l),
     l.capacity ? `${l.capacity} personas` : null,
     l.bedrooms !== null ? `${l.bedrooms} hab` : null,
     l.bathrooms ? `${l.bathrooms} ${l.bathrooms === 1 ? "baño" : "baños"}` : null,
@@ -365,6 +365,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
           <span className="xs muted num">{l.publicId}</span>
         </div>
         <span className="small muted">{facts}</span>
+        {isProposedZone(l) ? <span className="badge badge-sun">Zona propuesta por el dueño</span> : null}
         {d.mainPrice ? (
           <span className="num strong">
             {formatCRC(d.mainPrice.amount)}{" "}

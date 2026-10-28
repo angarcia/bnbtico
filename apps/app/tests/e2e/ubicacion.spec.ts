@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "./helpers/test";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { bboxAround, type LatLng } from "../../src/domain/geo";
+import { secondCode } from "./helpers/admin";
 import { injectSession } from "./helpers/session";
 
 // Ubicación por punto (.scratch/ubicacion-por-punto): el paso 2 «¿Dónde está su casa?» une el mapa con el cantón y la zona.
@@ -225,4 +226,26 @@ test("Otra… con un nombre inventado y Usar", async ({ page }) => {
   await expect(page).toHaveURL(/\/4$/);
   await expect.poll(async () => (await h.owner("owner").getOwn(id))?.zoneSource).toBe("other");
   expect(await h.owner("owner").getOwn(id)).toMatchObject({ zone: "Rancho Escondido", zoneId: null, canton: "Talamanca" });
+
+  // El borrador ya está completo: se envía a revisión y el admin ve la línea de ubicación y la marca de zona propuesta.
+  await page.goto(`/propietario/publicar/${id}/9`);
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.status).toBe("review");
+  const admin = await page.context().browser()!.newContext({ viewport: { width: 375, height: 667 } });
+  const adminPage = await admin.newPage();
+  await adminPage.route("**/storage/v1/object/public/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
+  await adminPage.route("https://tile.openstreetmap.org/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
+  await injectSession(adminPage, "admin");
+  await adminPage.goto(`/admin/anuncios/${id}`);
+  await secondCode(adminPage);
+  await expect(adminPage.getByText("Rancho Escondido · Cahuita, Talamanca, Limón")).toBeVisible();
+  await expect(adminPage.getByText("Zona propuesta por el dueño")).toBeVisible();
+  await admin.close();
+});
+
+test("Ayuda cita los límites de OpenStreetMap con su licencia", async ({ page }) => {
+  await page.goto("/ayuda");
+  const link = page.getByRole("link", { name: "colaboradores de OpenStreetMap" });
+  await expect(link).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+  await expect(page.getByText("Open Database License (ODbL)")).toBeVisible();
 });

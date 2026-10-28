@@ -755,6 +755,9 @@ export function AyudaScreen() {
           </>
         )}
       </section>
+      <p className="xs muted">
+        Límites administrativos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a>, disponibles bajo la Open Database License (ODbL).
+      </p>
     </>
   );
 }
