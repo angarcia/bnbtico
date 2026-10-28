@@ -182,13 +182,13 @@ export function InicioScreen() {
   );
 }
 
-/** «N consultas nuevas» → Mis consultas. Lee la misma consulta que la pantalla y el contador de la pestaña. */
+/** «N consultas nuevas» → Actividad. Lee la misma consulta que la pantalla y el contador de la pestaña. */
 function InquiriesCard({ userId }: { userId: string }) {
   const { data } = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
   const fresh = countNew(data);
   const title = !data ? "Consultas" : fresh ? `${fresh} ${fresh === 1 ? "consulta nueva" : "consultas nuevas"}` : "Sin consultas nuevas";
   return (
-    <Link to="/propietario/consultas" className="card row gap-14 inquiries-card">
+    <Link to="/propietario/actividad" className="card row gap-14 inquiries-card">
       <span className="round-icon round-icon-sun">
         <I.chat size={22} />
       </span>

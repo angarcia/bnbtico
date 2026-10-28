@@ -1,5 +1,5 @@
 // Consultas por WhatsApp (fase 3): el mensaje que redacta la hoja de contacto, su validación (los mismos mensajes que la
-// RPC create_inquiry), la regla de redacción automática, y lo que muestra la tarjeta de Mis consultas.
+// RPC create_inquiry), la regla de redacción automática, y lo que muestra la tarjeta de una consulta en Actividad.
 // `waUrl` vive en su propio módulo para que el soporte (zona privada inicial) no arrastre el resto de este.
 export { waUrl } from "./whatsapp";
 
@@ -227,20 +227,9 @@ export function relativeTime(iso: string, nowMs: number): string {
 }
 
 
-/** Línea de la tarjeta de Mis consultas: «Casa Cocles · 20–27 dic · 4 personas» (sin personas, solo casa y fechas). */
+/** Línea de la tarjeta de una consulta en Actividad: «Casa Cocles · 20–27 dic · 4 personas» (sin personas, solo casa y fechas). */
 export function inquirySummary(i: Pick<OwnerInquiry, "listingTitle" | "arrival" | "departure" | "people">): string {
   const parts = [i.listingTitle, formatInquiryDates(i.arrival, i.departure)];
   if (i.people) parts.push(i.people === 1 ? "1 persona" : `${i.people} personas`);
   return parts.join(" · ");
-}
-
-/** Filtros de Mis consultas: una entrada por casa con consultas, en el orden de la lista, con cuántas tiene. */
-export function inquiryHouses(list: readonly Pick<OwnerInquiry, "publicId" | "listingTitle">[]): { publicId: string; title: string; count: number }[] {
-  const houses = new Map<string, { publicId: string; title: string; count: number }>();
-  for (const i of list) {
-    const h = houses.get(i.publicId);
-    if (h) h.count++;
-    else houses.set(i.publicId, { publicId: i.publicId, title: i.listingTitle, count: 1 });
-  }
-  return [...houses.values()];
 }

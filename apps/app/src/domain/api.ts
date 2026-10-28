@@ -222,7 +222,7 @@ export interface InquiriesApi {
    * disponible, no propia, fechas, personas, mensaje, 20 casas distintas por día).
    */
   create(publicId: string, draft: InquiryDraft): Promise<{ inquiryId: string; whatsappPhone: string }>;
-  /** Mis consultas: las de las casas del propietario de la sesión, con nombre y WhatsApp del cliente; la más reciente primero. */
+  /** Las consultas (Actividad): las de las casas del propietario de la sesión, con nombre y WhatsApp del cliente; la más reciente primero. */
   listForOwner(): Promise<OwnerInquiry[]>;
   /** El propietario abrió el chat: la consulta deja de ser «Nueva». Solo el dueño; si no, «No encontramos esa consulta.». */
   markOpened(id: string): Promise<void>;

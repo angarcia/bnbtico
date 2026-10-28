@@ -1,4 +1,4 @@
-// Mis consultas del propietario en el navegador. Una sola consulta, `["inquiries", uid]`: la leen la pantalla, la tarjeta
+// Las consultas del propietario en el navegador (Actividad). Una sola consulta, `["inquiries", uid]`: la leen la pantalla, la tarjeta
 // de Inicio y el contador de la pestaña. Es privada (account.ts PRIVATE_KEYS): se guarda en el dispositivo mientras dure
 // la sesión y se borra al cerrarla. Este módulo va en el JS inicial (lo usa la barra): sin el dominio de las consultas.
 import { queryOptions, type QueryClient } from "@tanstack/react-query";

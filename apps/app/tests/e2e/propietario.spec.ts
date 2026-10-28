@@ -39,7 +39,7 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await page.goto("/propietario");
   await expect(page.getByRole("heading", { level: 1, name: "Su casa, en marcha" })).toBeVisible();
   await expect(page.getByText("Hola, Yorleny")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", /^Consultas\d*$/, "Cuenta"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
   await expect(page.getByRole("link", { name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
   await expect(page.getByText(`${HOST}/casa/${active.publicId}`)).toBeVisible();

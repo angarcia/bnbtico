@@ -17,7 +17,7 @@ const OWNER = [
   { to: "/propietario", label: "Inicio", icon: I.home, exact: true },
   { to: "/propietario/casas", label: "Mis casas", icon: I.house, exact: false },
   { to: "/propietario/calendario", label: "Calendario", icon: I.calendar, exact: false },
-  { to: "/propietario/consultas", label: "Consultas", icon: I.chat, exact: false },
+  { to: "/propietario/actividad", label: "Actividad", icon: I.chat, exact: false },
   { to: "/cuenta", label: "Cuenta", icon: I.user, exact: false },
 ] as const;
 
@@ -36,7 +36,7 @@ function useReviewCount(enabled: boolean): number {
 }
 
 /**
- * Contador terracota de Consultas: las nuevas de `["inquiries", uid]`, la misma consulta de Mis consultas e Inicio. Dentro
+ * Contador terracota de Actividad: las nuevas de `["inquiries", uid]`, la misma consulta de Actividad e Inicio. Dentro
  * de /propietario la pide si no está en la caché o está vieja (30 s); fuera (Cuenta en modo propietario) solo la lee.
  */
 function useNewInquiries(show: boolean, fetch: boolean): number {
@@ -63,12 +63,12 @@ export function TabsFrame({ children }: { children: ReactNode }) {
             className="nav"
             activeOptions={{ exact, includeSearch: false }}
             activeProps={{ "aria-current": "page" }}
-            aria-label={to === "/propietario/consultas" && fresh > 0 ? `${label}, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : undefined}
+            aria-label={to === "/propietario/actividad" && fresh > 0 ? `${label}, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : undefined}
           >
             <Icon size={22} />
             <span>{label}</span>
             {to === "/admin" && pending > 0 ? <b className="nav-count num">{pending}</b> : null}
-            {to === "/propietario/consultas" && fresh > 0 ? (
+            {to === "/propietario/actividad" && fresh > 0 ? (
               <b className="nav-count num" data-testid="inquiries-badge">
                 {fresh}
               </b>

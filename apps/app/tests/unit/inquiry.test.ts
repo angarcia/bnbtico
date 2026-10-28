@@ -5,7 +5,6 @@ import {
   costaRicaToday,
   formatInquiryDates,
   initials,
-  inquiryHouses,
   inquirySummary,
   redraft,
   relativeTime,
@@ -170,20 +169,5 @@ describe("inquirySummary: casa · fechas · personas", () => {
     expect(inquirySummary(inquiry({ people: 2 }))).toBe("Casa Cocles · sin fechas · 2 personas");
     expect(inquirySummary(inquiry({ people: 1 }))).toBe("Casa Cocles · sin fechas · 1 persona");
     expect(inquirySummary(inquiry({}))).toBe("Casa Cocles · sin fechas");
-  });
-});
-
-describe("inquiryHouses: un filtro por casa con consultas", () => {
-  it("en el orden de la lista (la más reciente primero), sin repetir, con cuántas tiene cada una", () => {
-    const list = [
-      inquiry({ id: "1", publicId: "CT-1002", listingTitle: "Cabina Cocles" }),
-      inquiry({ id: "2", publicId: "CT-1001" }),
-      inquiry({ id: "3", publicId: "CT-1002", listingTitle: "Cabina Cocles" }),
-    ];
-    expect(inquiryHouses(list)).toEqual([
-      { publicId: "CT-1002", title: "Cabina Cocles", count: 2 },
-      { publicId: "CT-1001", title: "Casa Cocles", count: 1 },
-    ]);
-    expect(inquiryHouses([])).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-// Enlaces wa.me: los usan la hoja de contacto, Mis consultas y el soporte de bnbtico.
+// Enlaces wa.me: los usan la hoja de contacto, Actividad y el soporte de bnbtico.
 
 /** Enlace de WhatsApp a un número (solo dígitos); sin texto abre el chat a secas. */
 export function waUrl(phone: string, text?: string): string {

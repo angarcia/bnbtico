@@ -13,7 +13,7 @@ import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
 // publica por el asistente → el admin (aal2, código de su app de autenticación) aprueba → un cliente sin cuenta guarda la
 // casa en favoritos y la contacta: crea su cuenta con un número de prueba recién borrado (el único código por SMS del
 // recorrido; las demás sesiones se inyectan) y vuelve a la hoja con lo escrito → «Abrir WhatsApp» con la URL exacta →
-// el propietario ve «Nueva» en Mis consultas, abre WhatsApp con el cliente y el contador desaparece.
+// el propietario ve «Nueva» en Actividad, abre WhatsApp con el cliente y el contador desaparece.
 test.describe.configure({ mode: "serial" });
 
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
@@ -54,7 +54,7 @@ test.afterAll(async () => {
   await deleteAccount(FREE_PHONE);
 });
 
-test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → Mis consultas → responder", async ({ page, browser }, info) => {
+test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → Actividad → responder", async ({ page, browser }, info) => {
   test.setTimeout(180_000);
 
   // 1. El propietario publica por el asistente (las fotos se siembran en la base; la subida real está en fotos.spec.ts).
@@ -169,8 +169,9 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → M
   await later.goto("/propietario");
   await expect(later.getByTestId("inquiries-title")).toHaveText("1 consulta nueva");
   await expect(nav(later).getByTestId("inquiries-badge")).toHaveText("1");
-  await nav(later).getByRole("link", { name: "Consultas, 1 nueva" }).click();
-  await expect(later.getByRole("heading", { level: 1, name: "Mis consultas" })).toBeVisible();
+  await later.goto("/propietario/actividad");
+  await expect(later.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
+  await expect(nav(later).getByRole("link", { name: /Actividad/ })).toHaveAttribute("aria-current", "page");
   const card = later.getByRole("article");
   await expect(card).toHaveCount(1);
   await expect(card.getByRole("heading", { name: CLIENT })).toBeVisible();
@@ -182,9 +183,9 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → M
   await card.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect.poll(() => waOwner).toEqual([`https://wa.me/${FREE_PHONE.replace(/\D/g, "")}`]);
   await later.goBack();
-  await expect(later.getByRole("heading", { level: 1, name: "Mis consultas" })).toBeVisible();
+  await expect(later.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
   await expect(card.getByText("Nueva", { exact: true })).toHaveCount(0);
   await expect(nav(later).getByTestId("inquiries-badge")).toHaveCount(0);
-  await expect(nav(later).getByRole("link", { name: "Consultas" })).toBeVisible();
+  await expect(nav(later).getByRole("link", { name: /Actividad/ })).toBeVisible();
   await later.context().close();
 });
