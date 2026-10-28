@@ -2,6 +2,7 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
+import { touch } from "./helpers/touch";
 
 const HOST = `127.0.0.1:${process.env.E2E_PORT ?? 4173}`;
 
@@ -104,13 +105,23 @@ test("Mis casas: tocar la foto o el precio abre el detalle; «Compartir ficha»,
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/\\d+$`));
   await page.goto("/propietario/casas");
 
-  // Un arrastre con el dedo que empieza sobre una tarjeta desplaza la lista y no abre nada.
-  await expect(card(page, "Casa en revisión")).toBeVisible();
+  // Un arrastre con el dedo que empieza sobre una tarjeta desplaza la lista y no abre nada. El dedo baja sobre la tarjeta,
+  // no sobre la barra fija de abajo.
+  const target = page.getByRole("article").first(); // la primera, para que quede lista por debajo
+  await expect(target).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
+  await target.evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top - 120)); // arriba, lejos de la barra
   const before = await page.evaluate(() => window.scrollY);
-  const box = (await card(page, "Casa en revisión").boundingBox())!;
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send("Input.synthesizeScrollGesture", { x: Math.round(box.x + box.width / 2), y: Math.round(Math.min(box.y + box.height / 2, 600)), yDistance: -250, gestureSourceType: "touch", speed: 800 });
+  const box = (await target.boundingBox())!;
+  const start = { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + Math.min(box.height / 2, 40)) };
+  // Precondiciones, para que la prueba no pase ni falle en vacío: queda recorrido y el dedo cae dentro de la tarjeta.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight - innerHeight - scrollY)).toBeGreaterThan(150);
+  expect(await target.evaluate((el, p) => el.contains(document.elementFromPoint(p.x, p.y)), start)).toBe(true);
+  // Dedo real por CDP (helpers/touch): Input.synthesizeScrollGesture con touch no desplaza nada en Chromium de Linux (CI).
+  const finger = await touch(page);
+  await finger.down(start.x, start.y);
+  await finger.move(start.x, start.y - 250, 15);
+  await finger.up();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 100);
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
