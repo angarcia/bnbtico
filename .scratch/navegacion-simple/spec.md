@@ -31,6 +31,7 @@ Problems:
 | Owner = at least one listing in **any** state (draft included) | Explorar · Favoritos · Mis casas · Calendario · Actividad | same |
 | Admin | unchanged (Anuncios · Casas · Usuarios · Cuenta) | unchanged |
 
+- **Never more than 5 bottom tabs** (Daniel, 2026-10-27). New sections go in Cuenta or inside an existing tab, never as a sixth tab. If space is short, only the top bar gives way (see Gates).
 - **Owner is derived, not chosen.** A user is an owner while the owner-listings query (already persisted in IndexedDB) returns at least one listing. Deleting the last listing turns them back into a client and the owner tabs disappear.
 - Optimistic create/delete updates that list, so the bar changes instantly.
 - With no cache yet (first load after login), show the client bar until the list arrives. Later loads read the cached list, so the bar does not jump.
