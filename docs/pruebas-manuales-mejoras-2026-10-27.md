@@ -45,8 +45,8 @@ Los admins (Daniel y Ana) entran con `123456` y su app de autenticación. Convie
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | M1 | En una pestaña privada, abrir la app | Explorar. Abajo, **solo dos pestañas: Explorar y Favoritos**. Arriba, una barra fija con el logo, «₡ \| $» e «Ingresar». En un teléfono de 375 px (iPhone SE o mini) todo cabe sin cortarse ni solaparse | ☐ |
-| M2 | Mirar la fila de chips bajo el buscador | Solo **«Alquiler mensual»** y **«Más filtros»**. Ya no están «Vacacional» y «Mensual» | ☐ |
-| M3 | Abrir «Más filtros» | Filtros a pantalla completa, **sin la barra superior** (lleva su propia cabecera con «Volver»). En la lista de características, **«Alquiler mensual» después de las nueve** | ☐ |
+| M2 | Mirar la fila de chips bajo el buscador | Solo **«Solo alquiler mensual»** y **«Más filtros»**. Ya no están «Vacacional» y «Mensual» | ☐ |
+| M3 | Abrir «Más filtros» | Filtros a pantalla completa, **sin la barra superior** (lleva su propia cabecera con «Volver»). En la lista de características, **«Solo alquiler mensual» después de las nueve** | ☐ |
 | M4 | Volver y tocar «Ingresar» | Lleva a la pantalla del código por WhatsApp | ☐ |
 
 ### B2 · La propietaria publica desde cero (`8777 0001`)
@@ -102,13 +102,13 @@ Los admins (Daniel y Ana) entran con `123456` y su app de autenticación. Convie
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | M38 | Como cliente, en Explorar | La tarjeta de la casa dice **«₡X / noche»**: el precio siempre lleva su unidad. Ya no aparece la etiqueta «Mensual» en la tarjeta | ☐ |
-| M39 | Tocar el chip **«Alquiler mensual»** | Se marca. La línea dice **«1 casa acepta alquiler mensual en Limón»** y la tarjeta dice **«Precio a negociar»** | ☐ |
-| M40 | Con el chip puesto, abrir «Más filtros» | El rango de precio **no aparece**. «Alquiler mensual» está marcado en la lista. Un mínimo mayor que el máximo que quedara de antes no bloquea «Ver N casas» | ☐ |
+| M39 | Tocar el chip **«Solo alquiler mensual»** | Se marca. La línea dice **«1 casa acepta alquiler mensual en Limón»** y la tarjeta dice **«Precio a negociar»** | ☐ |
+| M40 | Con el chip puesto, abrir «Más filtros» | El rango de precio **no aparece**. «Solo alquiler mensual» está marcado en la lista. Un mínimo mayor que el máximo que quedara de antes no bloquea «Ver N casas» | ☐ |
 | M41 | Quitar el chip | Vuelven «N casas en Limón», «₡X / noche» y el rango de precio | ☐ |
 | M42 | Abrir la ficha | En la cabecera de la foto está el selector **«₡ \| $»** y no hace saltar nada al cargar. En la rejilla de características está **«Alquiler mensual»** con su icono de calendario. En la barra de abajo, bajo el precio por noche, **«Mensual: precio a negociar con el dueño»**. Ya no está la etiqueta «Vacacional · Mensual» | ☐ |
 | M43 | En la barra superior de Explorar pasar a **$**, abrir la ficha y recargar | Los precios salen en dólares en Explorar y en la ficha, y la elección se mantiene tras recargar. Bajo el número de casas ya no hay selector | ☐ |
-| M44 | Abrir `/explorar?modo=monthly`, que es un enlace viejo | Entra con el chip «Alquiler mensual» puesto y la dirección pasa a `?mensual=1`. Con `?modo=both` entra sin filtro | ☐ |
-| M45 | Con el chip puesto, en «Más filtros» marcar «Piscina» (para que no salga ninguna) → «Ver 0 casas» → «Escribir a bnbtico por WhatsApp» | El mensaje dice «Busca alquiler mensual.» y no «Modalidad: …» | ☐ |
+| M44 | Abrir `/explorar?modo=monthly`, que es un enlace viejo | Entra con el chip «Solo alquiler mensual» puesto y la dirección pasa a `?mensual=1`. Con `?modo=both` entra sin filtro | ☐ |
+| M45 | Con el chip «Solo alquiler mensual» puesto, en «Más filtros» marcar «Piscina» (para que no salga ninguna) → «Ver 0 casas» → «Escribir a bnbtico por WhatsApp» | El mensaje dice «Busca alquiler mensual.» y no «Modalidad: …» | ☐ |
 
 ### B6 · Una segunda casa, y volver a cliente
 
@@ -136,7 +136,7 @@ Mande por WhatsApp, o en un issue de `.scratch/<mejora>/`, uno por fallo:
 | Plan | Filas | Por qué |
 |---|---|---|
 | `pruebas-manuales-fase-r.md` | B4, D2 | La ficha ahora tiene selector «₡ \| $» y la moneda vive en la barra superior, no en Explorar ni en Cuenta (M42–M43) |
-| `pruebas-manuales-fase-r.md` | B5b, D4 | Ya no hay chips Vacacional y Mensual: solo «Alquiler mensual» (M2, M39–M41) |
+| `pruebas-manuales-fase-r.md` | B5b, D4 | Ya no hay chips Vacacional y Mensual: solo «Solo alquiler mensual» (M2, M39–M41) |
 | `pruebas-manuales-fase-r.md` | B5d | El selector «₡ \| $» está en la barra superior, no junto al número de casas ni en Cuenta (M43) |
 | `pruebas-manuales-fase-r.md` | B11b, B11b3 | Se publica desde Cuenta → «Publicar mi casa» o Mis casas; ya no hay Inicio (M8, M30) |
 | `pruebas-manuales-fase-r.md` | D6 | Cuenta no es una pestaña: se abre desde la esquina superior (M6) |

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { PEOPLE_FILTER_KEY } from "../../domain/contact-return";
 import { ALL_PROVINCES, extrasCount, parseFilters, resultsText, searchFor, searchToString, type Filters } from "../../domain/filters";
-import { MONTHLY_LABEL } from "../../domain/listing";
+import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { useCurrency } from "../../shared/currency";
@@ -80,14 +80,14 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
             <span className="small muted">{summaryBottom}</span>
           </span>
         </Link>
-        {/* Una fila sin scroll lateral a 360 px (ticket 16): «Alquiler mensual» y «Más filtros»; las características van en Filtros. */}
+        {/* Una fila sin scroll lateral a 360 px (ticket 16): «Solo alquiler mensual» y «Más filtros»; las características van en Filtros. */}
         <div className="chiprow fit">
           <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => {
               track("monthly_filter_tap");
               void go({ ...f, monthly: !f.monthly });
             }}
           >
-            {MONTHLY_LABEL}
+            {MONTHLY_FILTER_LABEL}
           </button>
           <Link to="/explorar/filtros" search={search} className="chip chip-strong">
             Más filtros{extras ? <span className="badge badge-ok badge-tight">{extras}</span> : null}

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { BEDS_OPTIONS, PEOPLE_OPTIONS, colonesToPriceInput, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
-import { FEATURES, MONTHLY_LABEL } from "../../domain/listing";
+import { FEATURES, MONTHLY_FILTER_LABEL } from "../../domain/listing";
 import { FX_INITIAL, fxDayLabel, fxRateLabel, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { fxQuery } from "../../shared/fx";
@@ -98,7 +98,7 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
               </button>
             ))}
             <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => set("mensual", f.monthly ? undefined : "1")}>
-              {MONTHLY_LABEL}
+              {MONTHLY_FILTER_LABEL}
             </button>
           </div>
         </section>

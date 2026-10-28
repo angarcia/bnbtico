@@ -67,8 +67,10 @@ export const KIND_HINTS: Record<"completo" | "habitacion", string> = {
 export const STEP_NAMES = ["Alojamiento", "Ubicación", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"] as const;
 export const MIN_PHOTOS = 5;
 
-/** «Alquiler mensual»: chip, interruptor de Filtros y característica de la ficha. */
+/** «Alquiler mensual»: característica de la ficha y resumen del admin. */
 export const MONTHLY_LABEL = "Alquiler mensual";
+/** El filtro: chip de Explorar e interruptor de Filtros (revisión de Ana, 2026-10-28). */
+export const MONTHLY_FILTER_LABEL = "Solo alquiler mensual";
 /** Paso del precio: los mismos mensajes en el dominio, el fake y `submit_listing`. */
 export const NIGHTLY_PRICE_ERROR = "Indique el precio por noche en colones.";
 export const MONTHLY_PRICE_ERROR = "Indique el precio al mes en colones o déjelo vacío.";
