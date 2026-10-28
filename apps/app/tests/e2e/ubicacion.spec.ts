@@ -243,6 +243,53 @@ test("Otra… con un nombre inventado y Usar", async ({ page }) => {
   await admin.close();
 });
 
+// Revisión de Ana: en un iPhone SE el campo de «Otra…» quedaba bajo el teclado o, cerrado el teclado, bajo la barra de
+// «Atrás / Continuar»; y la lista «Zona» no decía qué se estaba eligiendo.
+test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado), la lista dice «Otra…» y luego el nombre", async ({ page }) => {
+  const id = await draftAt(COCLES);
+  await page.goto(`/propietario/publicar/${id}/2`);
+  await expect(line(page)).toHaveText("Talamanca, Limón");
+  const bar = page.locator(".sticky-actions");
+  const other = page.getByRole("combobox", { name: "Otra zona" });
+  /** Entero a la vista: debajo de la cabecera y encima de la barra; con el teclado (`--kb`), además en la mitad de arriba. */
+  async function expectAboveBar(what: string, keyboard: boolean) {
+    await expect
+      .poll(async () => {
+        const f = (await other.boundingBox())!;
+        const b = (await bar.boundingBox())!;
+        const top = keyboard ? 667 - 320 : b.y; // con el teclado abierto, lo que queda visible encima de él
+        return f.y >= 56 && f.y + f.height <= Math.min(b.y, top);
+      }, { message: what })
+      .toBe(true);
+  }
+  await zone(page).selectOption({ label: "Otra…" });
+  await expect(other).toBeFocused();
+  await expect(chosen(page)).toHaveText("Otra…");
+  await expectAboveBar("con el teclado", true);
+  // Tocar el campo ya enfocado (en el iPhone es cuando sale el teclado) lo vuelve a subir.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await other.click();
+  await expectAboveBar("al tocarlo", true);
+  // Con el teclado cerrado (sin foco), tampoco queda bajo la barra.
+  await other.fill("Cerca del río");
+  await page.locator(".location-hint").click();
+  await expect(other).not.toBeFocused();
+  await expectAboveBar("sin teclado", false);
+  await other.focus();
+  await page.getByRole("option", { name: 'Usar "Cerca del río"' }).click();
+  await expect(other).toHaveCount(0);
+  await expect(chosen(page)).toHaveText("Cerca del río");
+  expect(await zone(page).evaluate((el: HTMLSelectElement) => el.selectedOptions[0]?.text)).toBe("Cerca del río");
+  await expect(page.locator('input[name="zoneSource"]')).toHaveValue("other");
+  // «Otra…» sigue para cambiarla.
+  await expect(zone(page).locator("option").last()).toHaveText("Otra…");
+  await zone(page).selectOption({ label: "Otra…" });
+  await expect(chosen(page)).toHaveText("Otra…");
+  await zone(page).selectOption({ label: "Cocles" });
+  await expect(other).toHaveCount(0);
+  await expect(chosen(page)).toHaveText("Cocles");
+});
+
 test("Otra… con el nombre de una zona de la lista elige esa zona; Enter sin marcar usa lo escrito", async ({ page }) => {
   const id = await draftAt(COCLES);
   await page.goto(`/propietario/publicar/${id}/2`);

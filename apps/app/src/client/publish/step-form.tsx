@@ -8,12 +8,14 @@
 //   del envío: se lanza desde onSubmit (no desde la mutación, que arranca tras varias esperas) con el adaptador ya cargado
 //   y el token guardado, así que recargar o cerrar la app justo después de «Continuar» no pierde el paso.
 // - Teclado del iPhone: al enfocar un campo de texto la pantalla gana 320 px abajo (`--kb`) y el campo sube hasta debajo de
-//   la cabecera (scroll-margin-top en CSS); al salir, vuelve. enterKeyHint «Siguiente»/«Listo» por posición del campo.
+//   la cabecera (scroll-margin-top en CSS); al salir, vuelve. Un campo enfocado desde el código (p. ej. «Otra…») no abre el
+//   teclado hasta que se toca: tocarlo ya enfocado, o que el teclado encoja la vista, lo vuelve a subir (revisión de Ana).
+//   enterKeyHint «Siguiente»/«Listo» por posición del campo.
 // - React 19 vacía los campos no controlados de un <form action={fn}> al terminar la acción: aquí se envía desde onSubmit
 //   (sin `action`), y cada pantalla monta su propio <form> (key) para que los valores iniciales sean los de ese paso.
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { formInput, parseStep } from "../../domain/step-forms";
@@ -141,6 +143,12 @@ function setRoom(on: boolean): void {
   if (on) document.documentElement.style.setProperty("--kb", KEYBOARD_ROOM);
   else document.documentElement.style.removeProperty("--kb");
 }
+/** Sube el campo hasta debajo de la cabecera, ya y tras la animación del teclado (por si el navegador movió la vista). */
+function lift(el: HTMLElement): void {
+  const go = () => el.scrollIntoView({ block: "start", behavior: "smooth" });
+  requestAnimationFrame(go);
+  setTimeout(go, 350);
+}
 
 /** enterKeyHint según la posición del campo; se recalcula si aparece uno (p. ej. «Tipo de parqueo»). */
 function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
@@ -189,6 +197,20 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
   const ref = useRef<HTMLFormElement>(null);
   useEnterKeyHints(ref);
   useEffect(() => () => setRoom(false), []);
+  // El teclado que sale tarde (campo enfocado desde el código y tocado después) encoge la vista: el campo vuelve a subir.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let height = vv.height;
+    const onResize = () => {
+      const shrank = vv.height < height;
+      height = vv.height;
+      const el = document.activeElement;
+      if (shrank && isText(el) && ref.current?.contains(el)) lift(el);
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   // Lo que se ve al montar: el borrador (optimista) y, si el guardado de esta pantalla falló, lo que se había escrito.
   const values: ListingDraft = failed ? { ...listing, ...failed.patch, photoCount: listing.photoCount } : listing;
@@ -230,9 +252,19 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
     const el = e.target;
     if (!isText(el)) return;
     setRoom(true);
-    const lift = () => el.scrollIntoView({ block: "start", behavior: "smooth" });
-    requestAnimationFrame(lift);
-    setTimeout(lift, 350); // tras la animación del teclado, por si el navegador movió la vista por su cuenta
+    lift(el);
+  }
+
+  // Tocar un campo que ya tenía el foco (en el iPhone, es cuando sale el teclado si se enfocó desde el código).
+  const focusedBefore = useRef<Element | null>(null);
+  function onPointerDown(e: PointerEvent<HTMLFormElement>) {
+    focusedBefore.current = e.target === document.activeElement ? document.activeElement : null;
+  }
+  function onClick(e: MouseEvent<HTMLFormElement>) {
+    const el = e.target;
+    if (!isText(el) || focusedBefore.current !== el) return;
+    setRoom(true);
+    lift(el);
   }
 
   function onBlur(e: FocusEvent<HTMLFormElement>) {
@@ -247,7 +279,7 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
 
   const shown = error ?? failed?.message ?? null;
   return (
-    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} className="publish-form" data-enter={entering} noValidate>
+    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} onPointerDown={onPointerDown} onClick={onClick} className="publish-form" data-enter={entering} noValidate>
       {shown ? (
         <div className="note" role="alert">
           {shown}

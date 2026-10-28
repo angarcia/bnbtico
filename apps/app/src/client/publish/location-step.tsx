@@ -98,7 +98,7 @@ export function LocationStep({ listing: _listing, draft }: { listing: Listing; d
         Toque el mapa o arrastre el punto hasta su casa. <span className="xs">En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.</span>
       </p>
       <PlaceLine state={state} onRetry={() => lookup.current?.retry()} />
-      <ZoneSelect options={options} value={choice} onChange={(c) => (setChoice(c), setOtherOpen(false))} onOther={() => pin && setOtherOpen(true)} />
+      <ZoneSelect options={options} value={choice} other={otherOpen && !!pin} onChange={(c) => (setChoice(c), setOtherOpen(false))} onOther={() => pin && setOtherOpen(true)} />
       {otherOpen && pin ? (
         <PlaceSearch
           label="Otra zona"

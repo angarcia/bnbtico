@@ -1,6 +1,6 @@
 // «Zona» del paso 2 (ubicación por punto): una lista nativa con las zonas a 5 km o menos del pin (la más cercana primero),
 // el distrito del pin y, al final, «Otra…» (avisa con `onOther`: la pantalla abre su buscador). Una zona elegida con «Otra…»
-// sale como una opción más con su nombre.
+// sale como una opción más con su nombre, elegida; mientras se escribe en «Otra…», la lista dice «Otra…» (revisión de Ana).
 import type { ZoneChoice, ZoneSelectOption } from "../../domain/zones";
 
 const OTHER = "other";
@@ -8,7 +8,7 @@ const CURRENT = "current";
 
 const matches = (o: ZoneSelectOption, c: ZoneChoice) => (c.source === "list" ? o.source === "list" && o.zoneId === c.zoneId : c.source === "district" && o.source === "district" && o.name === c.name);
 
-export function ZoneSelect({ options, value, onChange, onOther }: { options: ZoneSelectOption[]; value: ZoneChoice | null; onChange(c: ZoneChoice): void; onOther?(): void }) {
+export function ZoneSelect({ options, value, other, onChange, onOther }: { options: ZoneSelectOption[]; value: ZoneChoice | null; other?: boolean; onChange(c: ZoneChoice): void; onOther?(): void }) {
   const match = value ? options.find((o) => matches(o, value)) : undefined;
   // Lo elegido que no está entre las opciones (una zona de «Otra…», o la del borrador mientras se busca): se muestra igual.
   const current = value && !match ? value : null;
@@ -17,7 +17,7 @@ export function ZoneSelect({ options, value, onChange, onOther }: { options: Zon
       <label htmlFor="pub-zone">Zona</label>
       <select
         id="pub-zone"
-        value={match?.key ?? (current ? CURRENT : "")}
+        value={other ? OTHER : (match?.key ?? (current ? CURRENT : ""))}
         onChange={(e) => {
           const key = e.currentTarget.value;
           if (key === OTHER) return onOther?.();
