@@ -45,12 +45,15 @@ For a client, «Mensual» is really one more thing a house offers, like Wifi or 
 ### Publish wizard
 
 - **Step 1:** remove «¿Cómo alquila?» (`client/publish/fields.tsx` l.300-314).
-- **Step 5 (características):** the nine feature chips stay as they are. Below them, a separate question:
-  > **¿Acepta alquiler por meses?** · **No** (selected by default) · **Sí**
-  - When the answer is Sí, show *Precio al mes (opcional)* with the help text «Si lo deja vacío, en su ficha dirá *Precio a negociar con el dueño*».
+- **Step 5 (características):** unchanged. The nine feature chips; «Alquiler mensual» is not one of them when publishing.
+- **Step 8 (precio)**, top to bottom:
+  1. «Precio por noche», required.
+  2. A question:
+     > **¿Acepta alquiler por meses?** · **No** (selected by default) · **Sí**
+  3. When the answer is Sí, *Precio al mes (opcional)* appears below, with the help text «Si lo deja vacío, en su ficha dirá *Precio a negociar con el dueño*».
   - Switching back to No clears the monthly price.
-- **Step 8 (precio):** only «Precio por noche», required.
-- The step validation (`domain/step-forms.ts`) moves the monthly price to step 5 and makes the nightly price always required in step 8.
+  - Decided 2026-10-27: on the price screen, not in características and not in a step of its own. The wizard keeps 9 steps.
+- The step validation (`domain/step-forms.ts`, step 8) always requires the nightly price, and requires the monthly price only to be `> 0` when Sí is chosen and a price is typed.
 - The preview (`domain/preview.ts`) and the owner's house detail show the same as the ficha.
 
 ### Explorar and Filtros
@@ -86,11 +89,11 @@ For a client, «Mensual» is really one more thing a house offers, like Wifi or 
 - **Vitest:**
   - `filters.ts`: parse and serialise `mensual`, map old `modo` values, and ignore price when `monthly`.
   - `describe.ts`: card and ficha price for nightly only, monthly with price and monthly negotiable.
-  - `step-forms.ts`:
-    - step 5 defaults to No;
+  - `step-forms.ts` (step 8):
+    - the monthly answer defaults to No;
     - Sí without a price is valid;
     - Sí with a price ≤ 0 is invalid;
-    - step 8 requires a nightly price.
+    - a nightly price is always required.
   - `search-help.ts`: the monthly line.
 - **DB (`test:db`):**
   - `submit_listing` rejects a listing without a nightly price, and accepts `accepts_monthly` with a null monthly price.
@@ -106,11 +109,11 @@ For a client, «Mensual» is really one more thing a house offers, like Wifi or 
 
 ## Documentation (same day)
 
-- `docs/decisiones.md`: new entry with the new model, the step 5 question defaulting to No, «Precio a negociar con el dueño», the single chip and the measurement event.
+- `docs/decisiones.md`: new entry with the new model, the monthly question on the price step defaulting to No, «Precio a negociar con el dueño», the single chip and the measurement event.
 - `CLAUDE.md`:
   - Rewrite «Modalidad y tipo (diseño v1)»: toda casa se alquila por noches, «Acepta alquiler mensual» opcional con precio opcional, and Alojamiento completo or Habitación as before.
   - The characteristics list notes that filters add «Alquiler mensual».
-- `docs/diseno-v1.md`: steps 1, 5 and 8, Explorar and the ficha.
+- `docs/diseno-v1.md`: steps 1 and 8, Explorar and the ficha.
 - `docs/telemetria.md`: the `monthly_filter_tap` event and a query for its share of Explorar sessions.
 
 ## Out of scope
