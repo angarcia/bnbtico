@@ -9,7 +9,7 @@ Acordado el 2026-10-15. Este documento manda sobre `roadmap.md` (histórico) en 
 - **Sin Veriff.** Nada de identidad en v1: ni sello «Identidad verificada», ni sugerencia al contactar o publicar, ni orden del catálogo por verificadas. Solo «WhatsApp verificado». Veriff completo pasa a la **v1.1**. El prototipo lo conserva porque es la referencia de hacia dónde va.
 - **Sin cobro real.** La pantalla de método de pago existe y guarda la tarjeta, pero la pasarela se conecta después del lanzamiento. Con 12 meses gratis, el primer aviso llega a los 9 meses y el primer cargo al año: hay margen.
 
-Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes por nivel, búsqueda con IA) queda fuera, igual que hoy.
+Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes por nivel, búsqueda con IA) queda fuera, igual que hoy. Tampoco entra «Pedir casa / Buscan casa» (la fase 6, aplazada el 2026-10-27 hasta después del lanzamiento; en su lugar, Explorar lleva al WhatsApp de atención a clientes).
 
 ## Cómo se construye
 
@@ -112,14 +112,14 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 **Especificación y tickets:** `.scratch/fase-5/` (construida el 2026-10-27; plan manual en `docs/pruebas-manuales-fase-5.md`). El «reloj adelantado» es el reloj de pruebas: acerca el fin de la oferta de una casa (`POST /_pruebas/oferta/CT-####`), no mueve la fecha.
 **Hecho cuando:** con el reloj adelantado en pruebas, una casa recorre todos los estados, llegan los avisos por WhatsApp a un número de prueba y el enlace bloqueado muestra «Este enlace ya no está activo».
 
-### Fase 6 · Búsqueda asistida («Buscan casa»)
-**Objetivo:** lo que queda del prototipo.
-**Incluye:** el cliente publica lo que busca (zona, fechas, personas, imprescindibles, presupuesto), los propietarios compatibles lo ven en su panel y le escriben por WhatsApp con consentimiento del cliente; caducidad y límites del prototipo.
-**Hecho cuando:** un «Buscan casa» creado desde un móvil aparece al owner de una casa compatible y no al de una incompatible.
+### Fase 6 · Búsqueda asistida («Buscan casa») — aplazada hasta después del lanzamiento (2026-10-27)
+**Decisión de Daniel (2026-10-27, `decisiones.md`):** no entra en la v1. Con pocas casas al principio, una búsqueda llegaría a muy pocos propietarios y el cliente ve todo el catálogo en Explorar; es la parte que más complicaría la app. Se retoma después del lanzamiento (abajo). Lo analizado para retomarla está en `.scratch/fase-6/notas.md`.
+**Sustituto en la v1:** en Explorar, «¿No encuentra lo que busca?» con un enlace al WhatsApp de atención a clientes, con un mensaje que ya lleva la zona y las personas de la búsqueda; bnbtico le ayuda a mano (ticket `.scratch/fase-6/issues/01-no-encuentra-whatsapp.md`).
+**Cuando se retome, incluía:** el cliente publica lo que busca (zona, fechas, personas, imprescindibles, presupuesto), los propietarios compatibles lo ven en su panel y le escriben por WhatsApp con consentimiento del cliente; caducidad y límites del prototipo. **Hecho cuando:** un «Buscan casa» creado desde un móvil aparece al owner de una casa compatible y no al de una incompatible.
 
-### Pasada de escritorio (entre la fase 6 y la 7; decidido el 2026-10-26)
+### Pasada de escritorio (antes de la fase 7; decidido el 2026-10-26)
 **Objetivo:** toda la app con un diseño propio en ordenador, no solo la columna de teléfono centrada.
-**Incluye:** primero el diseño en el lienzo (navegación de escritorio: barra superior o lateral, tomando como base la lateral de 232 px del admin del diseño v1; rejillas y anchos por pantalla) y después cada pantalla del cliente y del propietario, incluidas las de las fases 5 y 6. Explorar y la ficha ya tienen versión de escritorio desde la revisión UX del 2026-10-26 (`.scratch/revision-ux/`).
+**Incluye:** primero el diseño en el lienzo (navegación de escritorio: barra superior o lateral, tomando como base la lateral de 232 px del admin del diseño v1; rejillas y anchos por pantalla) y después cada pantalla del cliente y del propietario, incluidas las de la fase 5 (la 6 quedó aplazada). Explorar y la ficha ya tienen versión de escritorio desde la revisión UX del 2026-10-26 (`.scratch/revision-ux/`).
 **No incluye:** cambiar lo que carga el móvil (presupuestos y puertas de CI iguales).
 **Hecho cuando:** cada pantalla se ve bien a 1280 px y a 1024 px, sin romper el móvil, con capturas de las dos.
 
@@ -132,7 +132,8 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 1. **v1.1 · Veriff opcional**: sello «Identidad verificada», sugerencia saltable al contactar y publicar, orden del catálogo. Requiere contrato con Veriff y la revisión jurídica pendiente (`privacidad-verificaciones.md`).
 2. **Cobro real**: pasarela local (Tilopay / ONVO Pay / Greenpay, por decidir con sus condiciones) con tarjeta recurrente y SINPE Móvil; ₡2.900 al mes por casa. Requiere empresa y cuenta bancaria en Costa Rica.
-3. **App en tiendas**: envoltorio de la web (Capacitor) con compartir nativo y apertura nativa de WhatsApp, publicado en Google Play y App Store.
+3. **Búsqueda asistida («Buscan casa», la antigua fase 6)**: retomarla cuando el sustituto de WhatsApp lo pida (clientes que piden casa a menudo por el WhatsApp de atención) o cuando una provincia tenga muchas más casas de las que un cliente revisa a mano. Punto de partida: `.scratch/fase-6/notas.md`.
+4. **App en tiendas**: envoltorio de la web (Capacitor) con compartir nativo y apertura nativa de WhatsApp, publicado en Google Play y App Store.
 
 ## En paralelo desde ya (no es código, y tarda más que el código)
 

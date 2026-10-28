@@ -1,3 +1,13 @@
+## 2026-10-27 · Fase 6 («Buscan casa») aplazada hasta después del lanzamiento; en su lugar, «¿No encuentra lo que busca?» por WhatsApp
+
+Decisión de Daniel.
+
+- **Qué:** la búsqueda asistida (el cliente publica lo que busca y hasta 10 propietarios compatibles le escriben) no entra en la v1. Se retoma después del lanzamiento (`plan-implementacion.md`, «Después del lanzamiento»). Lo analizado hoy (contradicciones entre decisiones, qué sobra y qué falta en `requests`/`request_matches`, reglas del prototipo, opciones para cada decisión) queda en `.scratch/fase-6/notas.md`.
+- **Por qué:** al principio habrá pocas casas, casi todas en Limón: una búsqueda llegaría a muy pocos propietarios y el cliente ve todo el catálogo en Explorar en un minuto. Es la parte que más complicaría la app (dos pantallas nuevas, reparto, caducidad, el número del cliente para varios propietarios, avisos por WhatsApp) y las pantallas de las pestañas ya están al borde (24,46 de 24,5 KB). Lanzar antes da datos reales para diseñarla. Recupera lo que ya decía «Lanzamiento ligero» (2026-10-13) frente al plan del 2026-10-15.
+- **Sustituto:** en Explorar, al final de la lista y cuando no hay resultados, «¿No encuentra lo que busca?» con un enlace al WhatsApp de atención a clientes (`VITE_WA_GUESTS`, el de Ayuda) y un mensaje redactado con la zona y las personas de la búsqueda. bnbtico ayuda a mano, como prevé «Atención manual y consultas creadas por administración» (2026-10-13). Sin tablas, RPCs ni pantallas nuevas; sin número configurado, la nota no sale. Ticket `.scratch/fase-6/issues/01-no-encuentra-whatsapp.md`.
+- **Cuándo retomarla:** cuando lleguen a menudo peticiones de casa por ese WhatsApp o una provincia tenga muchas más casas de las que un cliente revisa a mano. `requests` y `request_matches` (de `0001`) siguen vacías y sin usar, también en `bnbtico-pruebas` (comprobado el 2026-10-27).
+- **Consecuencias:** la pasada de escritorio pasa a ser lo siguiente antes de la fase 7. Siguen fuera las barras de «Buscan casa» en el calendario y el reparto por tandas.
+
 ## 2026-10-27 · Cierre de la fase 5: recorrido con el reloj de pruebas, plan manual y pendientes
 
 - **Fase 5 construida** (tickets 01–08 de `.scratch/fase-5/`): plaza de la oferta en la primera aprobación, estados Activa / Pendiente de pago / Inactiva con parar y reactivar, 410 con motivo, avisos 90/30/7/0 en la app y por WhatsApp (outbox), método de pago en Stripe en modo de prueba sin cobrar, «Promoción y suscripción», Cuenta, Inicio, Mis casas, detalle y Casas del admin. La migración `fase5_suscripcion` ya está aplicada en `bnbtico-pruebas`.
