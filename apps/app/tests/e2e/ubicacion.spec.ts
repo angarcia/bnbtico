@@ -258,7 +258,7 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
         const f = (await other.boundingBox())!;
         const b = (await bar.boundingBox())!;
         const top = keyboard ? 667 - 320 : b.y; // con el teclado abierto, lo que queda visible encima de él
-        return f.y >= 56 && f.y + f.height <= Math.min(b.y, top);
+        return f.y >= 56 && f.y + f.height <= Math.min(b.y, top) ? true : `campo ${Math.round(f.y)}–${Math.round(f.y + f.height)}, barra ${Math.round(b.y)}, scroll ${await page.evaluate(() => `${scrollY} de ${document.documentElement.scrollHeight}, kb ${getComputedStyle(document.documentElement).getPropertyValue("--kb")}, app ${document.querySelector(".app")!.getBoundingClientRect().height}`)}`;
       }, { message: what })
       .toBe(true);
   }
@@ -272,9 +272,14 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await expectAboveBar("al tocarlo", true);
   // Con el teclado cerrado (sin foco), tampoco queda bajo la barra.
   await other.fill("Cerca del río");
-  await page.locator(".location-hint").click();
+  await other.blur(); // «Listo» en el teclado
   await expect(other).not.toBeFocused();
   await expectAboveBar("sin teclado", false);
+  // Tocar fuera (aquí, el texto bajo el mapa) también cierra el teclado: el campo no se queda bajo la barra.
+  await other.focus();
+  await page.locator(".location-hint").click();
+  await expect(other).not.toBeFocused();
+  await expectAboveBar("al tocar fuera", false);
   await other.focus();
   await page.getByRole("option", { name: 'Usar "Cerca del río"' }).click();
   await expect(other).toHaveCount(0);

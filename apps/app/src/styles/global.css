@@ -207,9 +207,12 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 /* `--kb`: sitio extra mientras hay un campo de texto enfocado (lo pone step-form.tsx) para que el campo pueda subir por encima del teclado. */
 .app:has(.publish-form){height:calc(100dvh + var(--kb,0px))}
 .app:has(.publish-form) .view{min-height:0;padding-bottom:0}
-.publish-form{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:4px 0 calc(76px + var(--kb,0px) + env(safe-area-inset-bottom))}
+.publish-form{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding-top:4px}
+/* El sitio de la barra (y del teclado) como último elemento y no como relleno: si el paso no cabe (p. ej. con el campo de
+   «Otra…»), este hueco sigue debajo del último campo y la página deja subirlo por encima de la barra (revisión de Ana). */
+.publish-form::after{content:"";flex:none;height:calc(76px + var(--kb,0px) + env(safe-area-inset-bottom))}
 .publish-form h2{font-size:21px}
-.publish-form input,.publish-form textarea{scroll-margin-top:88px}
+.publish-form input,.publish-form textarea{scroll-margin-top:88px;scroll-margin-bottom:calc(88px + env(safe-area-inset-bottom))}
 .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
 .map-wrap{position:relative;flex:1;min-height:180px;display:flex}
 .map-wrap .map-box{flex:1;height:auto}
