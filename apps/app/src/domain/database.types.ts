@@ -566,6 +566,11 @@ isOneToOne: true
 "payment_setup_context":
 { Args: { "p_provider": string }; Returns: Json
                            },
+"place_at":
+{ Args: { "p_lat": number,"p_lng": number }; Returns: {
+              "canton": string,"district": string,"district_code": string,"province": string
+            }[]
+                           },
 "public_listing_days":
 { Args: { "p_public_id": string }; Returns: {
               "available": boolean,"day": string,"special_price_crc": number
