@@ -162,7 +162,7 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
     await ctx.close();
   }
 
-  // 4) Pantalla nueva con sesión: Mi cuenta → Mis casas por primera vez (datos de la red).
+  // 4) Pantalla nueva con sesión: Calendario → Mis casas por primera vez (datos de la red).
   {
     const client = await signIn("owner");
     const { data } = await client.auth.getSession();
@@ -174,12 +174,12 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
       await setup.evaluate(([k, v]) => localStorage.setItem(k!, v!), [SESSION_STORAGE_KEY, JSON.stringify(data.session)]);
       await setup.close();
       const { page } = await throttled(ctx);
-      await page.goto(`${base}/propietario`);
-      await expect(page.getByText("Hola, Yorleny")).toBeVisible({ timeout: 30_000 });
+      await page.goto(`${base}/propietario/calendario`);
+      await expect(page.getByRole("heading", { level: 1, name: "Calendario" })).toBeVisible({ timeout: 30_000 });
       times.push(await navTime(page, 'a[href="/propietario/casas"]', "article h2, article h3", "Casa Cocles"));
       await ctx.close();
     }
-    report("Pantalla nueva con sesión (Inicio → Mis casas, con red)", times, "< 300 ms");
+    report("Pantalla nueva con sesión (Calendario → Mis casas, con red)", times, "< 300 ms");
   }
   await proxy.close();
 });

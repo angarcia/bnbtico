@@ -1,4 +1,4 @@
-// Marcos de pantalla del diseño v1: pantallas raíz con barra inferior (3 pestañas del cliente, 5 del propietario, 4 del admin) y
+// Marcos de pantalla del diseño v1: pantallas raíz con barra inferior (3 pestañas del cliente, 4 del propietario, 4 del admin) y
 // pantallas de flujo sin barra (Ingresar, código, ayuda…), con su cabecera.
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -14,7 +14,6 @@ const GUEST = [
   { to: "/cuenta", label: "Mi cuenta", icon: I.user, exact: false },
 ] as const;
 const OWNER = [
-  { to: "/propietario", label: "Inicio", icon: I.home, exact: true },
   { to: "/propietario/casas", label: "Mis casas", icon: I.house, exact: false },
   { to: "/propietario/calendario", label: "Calendario", icon: I.calendar, exact: false },
   { to: "/propietario/actividad", label: "Actividad", icon: I.chat, exact: false },
@@ -36,7 +35,7 @@ function useReviewCount(enabled: boolean): number {
 }
 
 /**
- * Contador terracota de Actividad: las nuevas de `["inquiries", uid]`, la misma consulta de Actividad e Inicio. Dentro
+ * Contador terracota de Actividad: las nuevas de `["inquiries", uid]`, la misma consulta de Actividad. Dentro
  * de /propietario la pide si no está en la caché o está vieja (30 s); fuera (Cuenta en modo propietario) solo la lee.
  */
 function useNewInquiries(show: boolean, fetch: boolean): number {
@@ -88,7 +87,7 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-export function RootHeader({ title, home = "/explorar", action, greeting, aside }: { title: ReactNode; home?: string; action?: ReactNode; greeting?: string; aside?: ReactNode }) {
+export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
   return (
     <header className="header-root">
       <div className="top">
@@ -98,7 +97,6 @@ export function RootHeader({ title, home = "/explorar", action, greeting, aside 
         {action}
       </div>
       <div className={aside ? "row between baseline wrap gap-4" : undefined}>
-        {greeting ? <span className="greeting">{greeting}</span> : null}
         <h1>{title}</h1>
         {aside}
       </div>

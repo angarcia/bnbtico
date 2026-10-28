@@ -188,10 +188,10 @@ test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol (sesi�
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
 
   await page.getByRole("button", { name: "Publicar mi casa" }).click();
-  await expect(page).toHaveURL(/\/propietario$/);
+  await expect(page).toHaveURL(/\/propietario\/casas$/); // /propietario lleva a Mis casas
   // «Actividad» lleva el contador de nuevas si otra prueba dejó consultas a este propietario (el orden no es fijo).
-  await expect(nav.getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
-  await expect(nav.getByRole("link", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link")).toHaveText(["Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
+  await expect(nav.getByRole("link", { name: "Mis casas" })).toHaveAttribute("aria-current", "page");
   await nav.getByRole("link", { name: "Cuenta", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
   await expect(page.getByText("Próximo cobro")).toBeVisible();
@@ -214,7 +214,7 @@ test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol (sesi�
   await page.goto("/explorar");
   await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi cuenta"]);
   await page.goto("/propietario");
-  await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario$/);
+  await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
   await expectNoCookies(page);
 });
 

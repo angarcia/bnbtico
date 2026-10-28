@@ -34,35 +34,25 @@ test.beforeEach(async ({ page }) => {
 
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
-test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red, desde la caché", async ({ page }) => {
-  const left = `Quedan ${50 - (await h.anon.offerTaken())} de 50`; // plazas asignadas (fase 5), no casas activas
-  await page.goto("/propietario");
-  await expect(page.getByRole("heading", { level: 1, name: "Su casa, en marcha" })).toBeVisible();
-  await expect(page.getByText("Hola, Yorleny")).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Inicio", "Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
-  await expect(page.getByRole("link", { name: "Casa Cocles" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
-  await expect(page.getByText(`${HOST}/casa/${active.publicId}`)).toBeVisible();
-  await expect(page.getByTestId("offer-left")).toHaveText(left);
-  await expect(page.getByText("5 en total")).toBeVisible();
-  // Revisión UX A2: sin visitas ni consultas, la invitación a compartir; con ellas, las cifras de 30 días.
-  await expect(page.getByTestId("listing-stats")).toHaveText("Comparta su enlace para que lleguen las primeras visitas");
-  // Revisión UX A1: lo que falta por publicar va arriba (aquí, la casa con cambios más reciente) con el único botón
-  // relleno; compartir la casa activa pasa a contorno y los otros borradores se cuentan.
+test("Mis casas: estado, nota del admin y, sin red, desde la caché", async ({ page }) => {
+  await page.goto("/propietario/casas");
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
+  // Revisión UX A1: lo que falta por publicar va arriba (aquí, la casa con cambios más reciente), como único aviso y con el
+  // único botón relleno; el botón de su tarjeta y el de compartir la casa activa van en contorno.
   const resume = page.getByTestId("resume-card");
   await expect(resume).toContainText("Cabina con cambios");
   await expect(resume).toContainText("Faltan fotos del baño.");
   await expect(resume.getByRole("link", { name: "Corregir y reenviar" })).toHaveAttribute("href", `/propietario/publicar/${changes.id}/1`);
-  await expect(resume.getByRole("link", { name: "y 2 borradores más · Ver en Mis casas" })).toBeVisible();
-  expect(await resume.evaluate((el) => !!(el.compareDocumentPosition(document.querySelector(".inquiries-card")!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
-  await expect(page.getByRole("button", { name: "Compartir ficha por WhatsApp" })).toHaveClass(/btn-ghost/);
-
-  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Mis casas" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  // Revisión UX N1: sin casillas a 0; un solo relleno (lo que falta por publicar) y «Nueva» en contorno.
+  await expect(resume).not.toContainText("borradores más");
+  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
+  await expect(page.getByTestId("offer-left")).toHaveCount(0); // sin tarjeta de la oferta de lanzamiento
+  // Revisión UX N1: sin casillas a 0; un solo relleno y «Nueva» en contorno.
   await expect(page.locator(".tile")).toHaveText(["1activa", "1en revisión"]);
   await expect(page.locator("main .btn-primary")).toHaveCount(1);
-  await expect(card(page, "Cabina con cambios").getByRole("button", { name: "Corregir y reenviar" })).toHaveClass(/btn-primary/);
+  await expect(card(page, "Cabina con cambios").getByRole("button", { name: "Corregir y reenviar" })).toHaveClass(/btn-ghost/);
+  await expect(card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-ghost/);
+  await expect(card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" })).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
   await expect(page.getByRole("link", { name: "Nueva" })).toHaveClass(/btn-ghost/);
   await expect(page.getByRole("article")).toHaveCount(5);
   await expect(page.getByRole("heading", { name: "Casa de Ana" })).toHaveCount(0);
@@ -75,17 +65,21 @@ test("Inicio y Mis casas: estado, nota del admin, plazas de la oferta y, sin red
   await page.route("**/rest/v1/**", (route) => route.abort());
   await page.reload();
   await expect(page.getByRole("article")).toHaveCount(5);
-  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Inicio" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Su casa, en marcha" })).toBeVisible();
-  await expect(page.getByTestId("offer-left")).toHaveText(left);
+  await expect(page.getByTestId("resume-card")).toContainText("Cabina con cambios");
 });
 
-test("visitas y consultas de 30 días en Inicio y en el detalle de la casa", async ({ page }) => {
+test("visitas y consultas de 30 días en el detalle de la casa", async ({ page }) => {
+  await page.goto(`/propietario/casas/${active.id}`);
+  // Revisión UX A2: sin visitas ni consultas, la invitación a compartir; con ellas, las cifras de 30 días.
+  await expect(page.getByTestId("listing-stats")).toHaveText("Comparta su enlace para que lleguen las primeras visitas");
   await h.recordViews(active.publicId, 4);
   await h.recordViews(active.publicId, 2, 45);
   await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });
-  await page.goto("/propietario");
-  await expect(page.getByTestId("listing-stats")).toHaveText("4 visitas · 1 consulta · últimos 30 días");
+  await page.goto("/robots.txt");
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    const req = indexedDB.deleteDatabase("bnbtico");
+    req.onsuccess = req.onerror = req.onblocked = () => resolve();
+  }));
   await page.goto(`/propietario/casas/${active.id}`);
   await expect(page.getByTestId("listing-stats")).toHaveText("4 visitas · 1 consulta · últimos 30 días");
 });

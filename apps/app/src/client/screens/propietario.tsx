@@ -1,4 +1,5 @@
-// Zona del propietario (pantallas 09, 10, 16 y 19 del diseño v1): Inicio, Mis casas, detalle de una casa y «enviada».
+// Zona del propietario (pantallas 10, 16 y 19 del diseño v1): Mis casas, detalle de una casa y «enviada». Con una sola
+// casa, Mis casas es su detalle; con dos o más, la lista. Arriba, como mucho un aviso (domain/navigation.ts noticeFor).
 // El calendario (17) va en su propio trozo (screens/calendario.tsx).
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
@@ -7,24 +8,23 @@ import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { occupiedNightsLabel } from "../../domain/calendar";
 import { can } from "../../domain/can";
-import { longDate, relativeDate } from "../../domain/dates";
+import { longDate } from "../../domain/dates";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
 import { variantUrl } from "../../domain/image";
 import { MIN_PHOTOS, STATUS_LABELS, missingPhotosLabel, resumeStep, wizardStage, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
-import { LAUNCH_TIERS, MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, promoRunning, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
+import { casasView, noticeFor, type Notice } from "../../domain/navigation";
+import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
-import { accountQuery } from "../account";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
 import { calendarQuery } from "../calendar-days";
 import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
-import { countNew, inquiriesQuery } from "../inquiries";
 import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
 import { setRole } from "../role";
 import { useSession } from "../session";
@@ -114,96 +114,7 @@ function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; titl
   );
 }
 
-// ---------- Inicio ----------
-
-export function InicioScreen() {
-  useOwnerMode();
-  const userId = useUserId();
-  const account = useQuery({ ...accountQuery(userId), enabled: !!userId });
-  const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
-  const list = listings.data;
-  const active = list?.filter((l) => l.status === "active") ?? [];
-  const inReview = list?.filter((l) => l.status === "review") ?? [];
-  // Lo que falta por publicar va arriba del todo (revisión UX A1): el borrador o la casa con cambios más reciente.
-  const unfinished = list?.filter((l) => l.status === "draft" || l.status === "changes") ?? [];
-  const pending = unfinished[0];
-  const featured = active[0] ?? inReview[0] ?? list?.find((l) => l !== pending && l.status !== "draft" && l.status !== "changes");
-  const title = !list ? "Inicio" : active.length ? "Su casa, en marcha" : inReview.length ? "Su casa, en revisión" : "Publique su casa";
-  const firstName = account.data?.name.trim().split(/\s+/)[0];
-  const billing = useBilling(userId);
-  // Un solo aviso de pago arriba: primero la casa ya oculta por falta de método, luego la que está en la ventana de 90 días.
-  const due = billing?.all.filter((x) => payButtonDue(x.sub, billing.today) && list?.some((l) => l.id === x.house.listingId));
-  const notice = due?.find((x) => x.sub.status === "payment_due") ?? due?.[0];
-
-  return (
-    <>
-      <RootHeader title={title} home="/propietario" greeting={firstName ? `Hola, ${firstName}` : undefined} />
-      {listings.isError && !list ? <p className="note" role="alert">{message(listings.error)}</p> : null}
-      {!list && !listings.isError ? <SkeletonCard /> : null}
-
-      {pending ? <ResumeCard listing={pending} more={unfinished.length - 1} /> : null}
-
-      {list && list.length > 0 ? (
-        <InquiriesCard userId={userId} />
-      ) : null}
-
-      {list && list.length === 0 ? (
-        <section className="card stack gap-12">
-          <h3>Publique su casa en pocos pasos</h3>
-          {/* Lo que pide el asistente, antes de empezar (revisión UX C4): las fotos son lo que más frena. */}
-          <ul className="ready-list small">
-            <li>5 fotos horizontales o más</li>
-            <li>El precio por noche o por mes</li>
-            <li>Unos 10 minutos</li>
-          </ul>
-          <p className="small muted">La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
-          <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
-            Publicar casa
-          </Link>
-        </section>
-      ) : null}
-
-      {notice && billing ? <PayNotice hb={notice} today={billing.today} title={notice.house.title} /> : null}
-      {featured ? <FeaturedCard listing={featured} secondary={!!pending} /> : null}
-      {list ? <OfferCard hasActive={active.length > 0} billing={billing} featuredId={featured?.id} /> : null}
-
-      {list && list.length > 1 ? (
-        <Link to="/propietario/casas" className="list-item card">
-          <I.house />
-          <span className="body">
-            Mis casas<small>{list.length} en total</small>
-          </span>
-          <span className="chev">
-            <I.chevron />
-          </span>
-        </Link>
-      ) : null}
-    </>
-  );
-}
-
-/** «N consultas nuevas» → Actividad. Lee la misma consulta que la pantalla y el contador de la pestaña. */
-function InquiriesCard({ userId }: { userId: string }) {
-  const { data } = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
-  const fresh = countNew(data);
-  const title = !data ? "Consultas" : fresh ? `${fresh} ${fresh === 1 ? "consulta nueva" : "consultas nuevas"}` : "Sin consultas nuevas";
-  return (
-    <Link to="/propietario/actividad" className="card row gap-14 inquiries-card">
-      <span className="round-icon round-icon-sun">
-        <I.chat size={22} />
-      </span>
-      <span className="stack gap-4 grow-col">
-        <b className="display inquiries-title" data-testid="inquiries-title">
-          {title}
-        </b>
-        <span className="small muted">Clientes que le escribieron por WhatsApp desde su ficha</span>
-      </span>
-      <span className="chev">
-        <I.chevron />
-      </span>
-    </Link>
-  );
-}
+// ---------- Avisos y piezas de Mis casas ----------
 
 export function SkeletonCard() {
   return (
@@ -215,7 +126,7 @@ export function SkeletonCard() {
 }
 
 /** El borrador (o la casa con cambios) que falta por publicar, con un único botón relleno hacia el paso donde se quedó. */
-function ResumeCard({ listing: l, more }: { listing: Listing; more: number }) {
+function ResumeCard({ listing: l }: { listing: Listing }) {
   const step = resumeStep(l);
   const stage = wizardStage(step);
   const missing = MIN_PHOTOS - l.photoCount;
@@ -235,34 +146,6 @@ function ResumeCard({ listing: l, more }: { listing: Listing; more: number }) {
       <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(changes ? 1 : step) }} className="btn btn-primary btn-lg btn-block">
         {changes ? "Corregir y reenviar" : "Seguir publicando"}
       </Link>
-      {more > 0 ? (
-        <Link to="/propietario/casas" className="link small">
-          y {more} {more === 1 ? "borrador más" : "borradores más"} · Ver en Mis casas
-        </Link>
-      ) : null}
-    </section>
-  );
-}
-
-/** `secondary`: arriba hay un borrador por terminar; su botón es el relleno y compartir pasa a contorno. */
-function FeaturedCard({ listing: l, secondary }: { listing: Listing; secondary?: boolean }) {
-  const d = describe(l, { base: base() });
-  const line =
-    l.status === "active" ? `Publicada ${relativeDate(l.reviewedAt ?? l.updatedAt, Date.now())}` : l.status === "review" ? `Enviada ${relativeDate(l.updatedAt, Date.now())} · le avisamos por WhatsApp` : d.situation;
-  return (
-    <section className="card stack gap-12">
-      <div className="row gap-12 align-top">
-        <Thumb listing={l} small />
-        <div className="stack gap-4 grow-col">
-          <StatusBadge listing={l} />
-          <Link to="/propietario/casas/$id" params={{ id: l.id }} className="display featured-title">
-            {titleOf(l)}
-          </Link>
-          <span className="small muted">{line}</span>
-          {l.status === "active" ? <StatsLine listing={l} /> : null}
-        </div>
-      </div>
-      <FeaturedAction listing={l} secondary={secondary} />
     </section>
   );
 }
@@ -282,95 +165,17 @@ function StatsLine({ listing: l }: { listing: Listing }) {
   );
 }
 
-/** Una sola acción según el estado: compartir, seguir el borrador, ver lo que pedimos… En revisión no hay nada que hacer. */
-function FeaturedAction({ listing: l, secondary }: { listing: Listing; secondary?: boolean }) {
-  if (l.status === "active") return <ShareBlock listing={l} secondary={secondary} />;
-  if (l.status === "review") return null;
-  if (l.status === "draft") {
-    return (
-      <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="btn btn-primary btn-lg">
-        Seguir con el borrador
-      </Link>
-    );
-  }
-  return (
-    <Link to="/propietario/casas/$id" params={{ id: l.id }} className={`btn btn-lg ${l.status === "changes" ? "btn-sun" : "btn-ghost"}`}>
-      {l.status === "changes" ? "Ver lo que le pedimos" : "Ver mi casa"}
-    </Link>
-  );
-}
-
-function ShareBlock({ listing: l, secondary }: { listing: Listing; secondary?: boolean }) {
-  const target = shareOf(l);
-  const { share, copied, swap } = useShare(target);
-  return (
-    <>
-      <div className="share-box stack gap-6">
-        <b className="small">Comparta su ficha</b>
-        <span className="small">Envíe el enlace por WhatsApp o en sus redes. Quien lo abra puede escribirle directo; solo necesita verificar su WhatsApp.</span>
-        <span className="small num primary share-url">{target.url.replace(/^https?:\/\//, "")}</span>
-      </div>
-      <button type="button" className={`btn ${secondary ? "btn-ghost" : "btn-primary"} btn-lg btn-block`} onClick={share} data-share-url={target.url}>
-        <I.wa size={20} />{" "}
-        <span key={copied ? "copied" : "share"} className={swap}>
-          {copied ? "Enlace copiado" : "Compartir ficha por WhatsApp"}
-        </span>
-      </button>
-    </>
-  );
-}
-
-/** «las primeras 50» / «las siguientes 50» / «las siguientes 100»: el tramo de la plaza. */
-function tierOf(slot: number): string | null {
-  let first = 1;
-  for (const [i, tier] of LAUNCH_TIERS.entries()) {
-    if (slot < first + tier.size) return `${i === 0 ? "las primeras" : "las siguientes"} ${tier.size}`;
-    first += tier.size;
-  }
-  return null;
-}
-
-/** La oferta de la casa del propietario (tramo y último día gratis) si alguna la tiene en curso; si no, la de las próximas. */
-function OfferCard({ hasActive, billing, featuredId }: { hasActive: boolean; billing: Billing | null; featuredId?: string }) {
-  const count = useQuery(offerTakenQuery);
-  const offer = count.data === undefined ? undefined : launchOffer(count.data);
-  const fee = formatCRC(MONTHLY_FEE_CRC);
-  const running = billing?.all.filter((x) => x.house.promoSlot && x.house.promoMonths && promoRunning(x.sub, billing.today));
-  const own = running?.find((x) => x.house.listingId === featuredId) ?? running?.[0];
-  const tier = own?.house.promoSlot ? tierOf(own.house.promoSlot) : null;
-  const ended = !!billing && !own && billing.all.some((x) => x.house.status === "active" || x.house.status === "payment_due");
-  return (
-    <section className="card stack gap-10 offer-card">
-      <div className="row between baseline">
-        <b className="display offer-title">Oferta de lanzamiento</b>
-        <span className={`xs num offer-left${offer === undefined ? " is-hidden" : ""}`} data-testid="offer-left">
-          {offer ? `Quedan ${offer.remaining} de ${offer.size}` : offer === null ? "Terminada" : "Quedan …"}
-        </span>
-      </div>
-      <span className="small ink">
-        {own && tier && own.sub.promoEndsOn ? (
-          <>
-            Su casa está entre {tier}: <b>{own.house.promoMonths} meses gratis</b>, hasta el {cardDate(own.sub.promoEndsOn)}. Después, {fee} al mes por casa, sin permanencia.
-          </>
-        ) : ended ? (
-          <>Los meses gratis de su casa ya terminaron. {fee} al mes por casa, sin permanencia.</>
-        ) : offer === null ? (
-          <>La oferta de lanzamiento terminó. {fee} al mes por casa, sin permanencia.</>
-        ) : hasActive && !billing ? (
-          <>Su casa activa tiene la oferta de lanzamiento: meses gratis desde que la aprobamos. Después, {fee} al mes por casa, sin permanencia.</>
-        ) : (
-          <>
-            Las próximas casas publicadas tienen <b>{offer?.months ?? 12} meses gratis</b>. Después, {fee} al mes por casa, sin permanencia. No pedimos tarjeta ahora.
-          </>
-        )}
-      </span>
-      {offer !== null ? <progress className="offer-bar" value={offer?.taken ?? 0} max={offer?.size ?? 50} aria-label="Plazas ocupadas en la oferta" /> : null}
-      <SubscriptionLink className="link small">Ver mi suscripción</SubscriptionLink>
-    </section>
-  );
-}
-
 // ---------- Mis casas ----------
+
+/** El único aviso de arriba (domain/navigation.ts noticeFor): el pago con el nombre de la casa o seguir publicando. */
+function NoticeCard({ notice, list, billing }: { notice: Notice | null; list: Listing[]; billing: Billing | null }) {
+  if (notice?.kind === "payment") {
+    const hb = billing?.of(notice.listingId);
+    return hb && billing ? <PayNotice hb={hb} today={billing.today} title={hb.house.title} /> : null;
+  }
+  const l = notice ? list.find((x) => x.id === notice.listingId) : undefined;
+  return l ? <ResumeCard listing={l} /> : null;
+}
 
 export function CasasScreen() {
   useOwnerMode();
@@ -378,6 +183,31 @@ export function CasasScreen() {
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
   const billing = useBilling(userId);
+  const notice = list ? noticeFor(list, billing && { today: billing.today, houses: billing.all.map((x) => ({ listingId: x.house.listingId, sub: x.sub })) }) : null;
+  const view = list ? casasView(list.length) : null;
+  const single = view === "single" ? list![0]! : undefined;
+  if (single) {
+    return (
+      <>
+        <RootHeader
+          title={titleOf(single)}
+          home="/propietario/casas"
+          action={
+            can(single, "share") ? (
+              <Link to="/casa/$publicId" params={{ publicId: single.publicId }} className="link header-action">
+                Ver ficha
+              </Link>
+            ) : undefined
+          }
+        />
+        <NoticeCard notice={notice} list={list!} billing={billing} />
+        <Detail listing={single} userId={userId} shown={notice} />
+        <Link to="/propietario/publicar" className="btn btn-ghost btn-block">
+          Añadir otra casa
+        </Link>
+      </>
+    );
+  }
   const count = (s: Listing["status"]) => list?.filter((l) => l.status === s).length ?? 0;
   // Casillas a 0 fuera: no llaman la atención sobre nada (revisión UX N1).
   const tiles = [
@@ -385,15 +215,16 @@ export function CasasScreen() {
     { n: count("payment_due"), label: "por pagar", cls: "tile-sun" },
     { n: count("review"), label: "en revisión", cls: "tile-review" },
   ].filter((t) => t.n > 0);
-  // Un solo botón relleno, con la misma prioridad que Inicio (revisión UX N1/A1): lo que falta por publicar; si no, compartir.
-  const primaryId = (list?.find((l) => l.status === "draft" || l.status === "changes") ?? list?.find((l) => can(l, "share")))?.id;
+  // Un solo botón relleno (revisión UX N1/A1): el del aviso «Seguir publicando» si lo hay; si no, lo que falta por
+  // publicar y, si no, compartir.
+  const primaryId = notice?.kind === "resume" ? undefined : (list?.find((l) => l.status === "draft" || l.status === "changes") ?? list?.find((l) => can(l, "share")))?.id;
   return (
     <>
       <RootHeader
         title="Mis casas"
-        home="/propietario"
+        home="/propietario/casas"
         action={
-          list && list.length > 0 ? (
+          view === "list" ? (
             <Link to="/propietario/publicar" className="btn btn-ghost btn-header">
               <I.plus size={18} /> Nueva
             </Link>
@@ -401,32 +232,26 @@ export function CasasScreen() {
         }
       />
       {listings.isError && !list ? <p className="note" role="alert">{message(listings.error)}</p> : null}
-      {tiles.length ? (
-        <div className="grid-3">
-          {tiles.map((t) => (
-            <div key={t.label} className={`tile ${t.cls}`}>
-              <b className="num">{t.n}</b>
-              <span>{t.label}</span>
-            </div>
-          ))}
-        </div>
-      ) : null}
       {!list && !listings.isError ? <SkeletonCard /> : null}
-      {list && list.length === 0 ? (
-        <section className="card stack">
-          <h3>Todavía no publicó ninguna casa</h3>
-          <p className="small muted">Fotos, ubicación aproximada, características y precio. La revisamos a mano y queda visible con su enlace.</p>
-          <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
-            Publicar casa
-          </Link>
-        </section>
-      ) : null}
-      {list && list.length > 0 ? (
-        <div className="stack gap-14">
-          {list.map((l) => (
-            <OwnerCard key={l.id} listing={l} userId={userId} primary={l.id === primaryId} billing={billing} />
-          ))}
-        </div>
+      {view === "list" ? (
+        <>
+          <NoticeCard notice={notice} list={list!} billing={billing} />
+          {tiles.length ? (
+            <div className="grid-3">
+              {tiles.map((t) => (
+                <div key={t.label} className={`tile ${t.cls}`}>
+                  <b className="num">{t.n}</b>
+                  <span>{t.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <div className="stack gap-14">
+            {list!.map((l) => (
+              <OwnerCard key={l.id} listing={l} userId={userId} primary={l.id === primaryId} billing={billing} />
+            ))}
+          </div>
+        </>
       ) : null}
     </>
   );
@@ -558,8 +383,10 @@ export function CasaPropietarioScreen() {
   );
 }
 
-function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
+/** `shown`: el aviso que Mis casas ya pinta arriba (vista de una casa); el detalle no lo repite. */
+function Detail({ listing: l, userId, shown }: { listing: Listing; userId: string; shown?: Notice | null }) {
   const navigate = useNavigate();
+  const above = shown?.listingId === l.id ? shown.kind : undefined;
   const billing = useBilling(userId);
   const hb = billing?.of(l.id);
   const subLine = hb && billing ? subscriptionLine(hb.sub, billing.today) : null;
@@ -611,8 +438,8 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
       {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}
-      {hb && billing ? <PayNotice hb={hb} today={billing.today} /> : l.status === "payment_due" ? <div className="note note-sun">{describe(l, { base: "" }).situation}</div> : null}
-      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? (
+      {hb && billing ? (above === "payment" ? null : <PayNotice hb={hb} today={billing.today} />) : l.status === "payment_due" ? <div className="note note-sun">{describe(l, { base: "" }).situation}</div> : null}
+      {l.reviewNote && (l.status === "rejected" || (l.status === "changes" && above !== "resume")) ? (
         <section className="card-sun stack gap-10">
           <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
           <span className="small ink">{l.reviewNote}</span>

@@ -60,8 +60,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   // 1. El propietario publica por el asistente (las fotos se siembran en la base; la subida real está en fotos.spec.ts).
   const owner = await phone(browser, info);
   await injectSession(owner, "owner");
-  await owner.goto("/propietario");
-  await owner.getByRole("link", { name: "Publicar casa" }).click();
+  await owner.goto("/propietario/publicar");
   await expect(owner).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = /\/publicar\/([0-9a-f-]{36})\//.exec(owner.url())![1]!;
   const continuar = () => owner.getByRole("button", { name: "Continuar" }).click();
@@ -166,8 +165,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   // 7. El propietario (más tarde, desde su teléfono) ve «Nueva» y abre WhatsApp con el cliente; el contador desaparece.
   const later = await phone(browser, info);
   await injectSession(later, "owner");
-  await later.goto("/propietario");
-  await expect(later.getByTestId("inquiries-title")).toHaveText("1 consulta nueva");
+  await later.goto("/propietario/casas");
   await expect(nav(later).getByTestId("inquiries-badge")).toHaveText("1");
   await later.goto("/propietario/actividad");
   await expect(later.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();

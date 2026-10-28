@@ -4,7 +4,7 @@ import { postgrestHarness } from "../db/postgrest-harness";
 import { cardDate, launchOffer, type BillingHouse } from "../../src/domain/subscription";
 import { injectSession } from "./helpers/session";
 
-// Estados de la suscripción en Inicio, Mis casas, el detalle, el asistente y la ficha 410 (fase 5, ticket 06), contra
+// Estados de la suscripción en Mis casas, el detalle, el asistente y la ficha 410 (fase 5, ticket 06), contra
 // Supabase local. Cada prueba vacía la base y crea sus casas; los estados se fijan como el servicio (fin de la oferta,
 // trabajo diario, evento de pago) y las cifras de la oferta se comparan con lo que dice la base, nunca con un número fijo.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
@@ -55,41 +55,57 @@ async function fresh(page: Page, path: string) {
   await page.goto(path);
 }
 
-test("Inicio: el tramo y el último día gratis de su casa, las plazas asignadas y el aviso ocre de los 90 días", async ({ page }) => {
+test("Mis casas: un solo aviso arriba, primero el pago (la pendiente antes que la ventana de 90 días) y luego seguir publicando", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
-  const parada = await h.seed({ status: "active", draft: { title: "Casa parada" } });
-  await h.billing("owner").stop(parada.id); // conserva su plaza: el contador no son las casas activas
-  const sub = await mine(casa.id);
-  const taken = await h.anon.offerTaken();
-  expect(taken).toBeGreaterThan(await h.anon.countActive());
-  const offer = launchOffer(taken)!;
+  await h.seed({ status: "draft", draft: { title: "Borrador del Caribe" } });
 
   await owner(page);
-  await page.goto("/propietario");
-  const offerCard = page.locator(".offer-card");
-  await expect(offerCard).toContainText(`Su casa está entre las primeras 50: 12 meses gratis, hasta el ${cardDate(sub.promoEndsOn!)}. Después, ${FEE} al mes por casa, sin permanencia.`);
-  await expect(page.getByTestId("offer-left")).toHaveText(`Quedan ${offer.remaining} de 50`);
-  await expect(offerCard.getByRole("link", { name: "Ver mi suscripción" })).toHaveAttribute("href", "/propietario/suscripcion");
+  await page.goto("/propietario/casas");
+  await expect(page.getByTestId("resume-card")).toContainText("Borrador del Caribe");
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
+  await expect(page.locator(".offer-card")).toHaveCount(0); // sin tarjeta de la oferta de lanzamiento (spec)
 
   await h.setDaysLeft(casa.id, 30);
-  await fresh(page, "/propietario");
+  await fresh(page, "/propietario/casas");
   const notice = page.getByTestId("pay-notice");
   await expect(notice).toContainText("Casa Cocles");
   await expect(notice).toContainText("Su oferta gratuita termina en 30 días");
   await expect(notice).toContainText(`No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en bnbtico; después, ${FEE} al mes por casa, sin permanencia. También se lo recordamos por WhatsApp.`);
   await expect(notice).not.toContainText("Hola,"); // nunca el texto del WhatsApp
-  await page.screenshot({ path: "test-results/capturas/inicio-aviso.png", fullPage: true });
+  await expect(page.getByTestId("resume-card")).toHaveCount(0);
+  await page.screenshot({ path: "test-results/capturas/mis-casas-aviso.png", fullPage: true });
   const pay = notice.getByRole("link", { name: "Añadir método de pago" });
   await expect(pay).toHaveClass(/btn-sun/);
   await expect(pay).toHaveAttribute("href", payLink(casa.publicId));
-  await pay.click(); // navegación dentro de la SPA (la pantalla llega con el ticket 05)
-  await expect(page).toHaveURL(new RegExp(`/propietario/suscripcion#pago=${casa.publicId}$`));
+
+  // La casa ya oculta por falta de método va antes que la que está en la ventana.
+  const debe = await h.seed({ status: "active", draft: { title: "Casa por pagar" } });
+  await expire(debe.id);
+  await fresh(page, "/propietario/casas");
+  await expect(page.getByTestId("pay-notice")).toHaveCount(1);
+  await expect(page.getByTestId("pay-notice")).toContainText("Casa por pagar");
+  await expect(page.getByTestId("pay-notice").getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(debe.publicId));
+  await page.getByTestId("pay-notice").getByRole("link", { name: "Añadir método de pago" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/suscripcion#pago=${debe.publicId}$`));
 
   await addCard();
-  await fresh(page, "/propietario");
-  await expect(page.locator(".offer-card")).toContainText("12 meses gratis");
+  await fresh(page, "/propietario/casas");
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
+  await expect(page.getByTestId("resume-card")).toContainText("Borrador del Caribe");
+});
+
+test("una sola casa: el aviso de pago arriba, sin repetirlo en su detalle", async ({ page }) => {
+  const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+  await h.setDaysLeft(casa.id, 30);
+  await owner(page);
+  await page.goto("/propietario/casas");
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  await expect(page.getByTestId("pay-notice")).toHaveCount(1);
+  await expect(page.getByTestId("pay-notice")).toContainText("Casa Cocles");
+  await expect(page.getByTestId("subscription-row")).toBeVisible();
+  await page.goto(`/propietario/casas/${casa.id}`);
+  await expect(page.getByTestId("pay-notice")).toHaveCount(1);
+  await expect(page.getByTestId("pay-notice")).not.toContainText("Casa Cocles");
 });
 
 test("Mis casas: casillas y tarjetas de cada estado; con método, el botón ocre desaparece y la pendiente vuelve", async ({ page }) => {
@@ -203,15 +219,10 @@ test("sin owner_billing ni launch_offer_taken (despliegue antes de la migración
       return route.fulfill(missing(fn));
     });
   }
-  const active = await h.anon.countActive();
 
   await owner(page);
-  await page.goto("/propietario");
-  await expect(page.getByTestId("offer-left")).toHaveText(`Quedan ${50 - active} de 50`);
-  await expect(page.locator(".offer-card")).toContainText("Su casa activa tiene la oferta de lanzamiento");
+  await page.goto("/propietario/casas");
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
-
-  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Mis casas" }).click();
   await expect(page.locator(".tile")).toHaveText(["1activa", "1por pagar"]);
   await expect(card(page, "Casa Cocles").getByTestId("card-line")).toHaveText("Visible en Explorar y con su enlace");
   await expect(card(page, "Casa por pagar").getByTestId("card-line")).toHaveText("La ficha vuelve a verse al pagar.");
@@ -221,7 +232,7 @@ test("sin owner_billing ni launch_offer_taken (despliegue antes de la migración
   await expect(page.locator(".note-sun")).toHaveText("La ficha vuelve a verse al pagar.");
   await expect(page.getByTestId("subscription-row")).toHaveCount(0);
   await expect(page.locator('.note[role="alert"]')).toHaveCount(0);
-  expect(asked).toEqual(expect.arrayContaining(["owner_billing", "launch_offer_taken"]));
+  expect(asked).toEqual(expect.arrayContaining(["owner_billing"])); // launch_offer_taken ya no se pide aquí (sin tarjeta de la oferta)
 });
 
 test("el asistente (paso 9) y «enviada» dicen el tramo de la próxima plaza asignada", async ({ page }) => {

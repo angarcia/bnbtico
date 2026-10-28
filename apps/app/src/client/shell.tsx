@@ -27,7 +27,7 @@ const cuentaScreens = () => import("./screens/cuenta");
 const favoritosScreen = () => import("./screens/favoritos");
 const actividadScreen = () => import("./screens/actividad");
 const calendarioScreen = () => import("./screens/calendario");
-type OwnerScreen = "InicioScreen" | "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
+type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 const ownerScreen = (name: OwnerScreen) => lazyRouteComponent(ownerScreens, name);
 const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreens, name);
@@ -151,14 +151,14 @@ const casaSearch = (params: Record<string, unknown>): { contacto?: "1"; escribir
 
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/", beforeLoad: () => { throw redirect({ to: "/explorar", replace: true }); } }),
-  // Mis consultas pasó a Actividad: los enlaces ya enviados siguen funcionando.
+  // Inicio pasó a Mis casas y Mis consultas a Actividad: los enlaces ya enviados siguen funcionando.
+  createRoute({ getParentRoute: () => rootRoute, path: "/propietario", beforeLoad: () => { throw redirect({ to: "/propietario/casas", replace: true }); } }),
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario/consultas", beforeLoad: () => { throw redirect({ to: "/propietario/actividad", replace: true }); } }),
   tabs.addChildren([
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: normalizeSearch, component: ExplorarScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: normalizeSearch, component: FiltrosScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario", component: ownerScreen("InicioScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", validateSearch: calendarioSearch, component: lazyRouteComponent(calendarioScreen, "CalendarioScreen") }),
       createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/actividad", component: lazyRouteComponent(actividadScreen, "ActividadScreen") }),

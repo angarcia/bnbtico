@@ -178,8 +178,9 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   expect(approved).toMatchObject({ plan: "promo", promoMonths: 12 });
   expect(approved.promoSlot).toBeGreaterThan(0);
   await fresh(owner, "/propietario/casas");
-  const tile = owner.getByRole("article").filter({ has: owner.getByRole("heading", { name: TITLE }) });
-  await expect(tile.getByTestId("card-line")).toHaveText(`Gratis hasta el ${cardDate(approved.promoEndsOn!)}`);
+  // Una sola casa: Mis casas es su detalle, con la fila «Suscripción».
+  await expect(owner.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
+  await expect(owner.getByTestId("subscription-row")).toHaveText(`Gratis hasta el ${cardDate(approved.promoEndsOn!)}`);
   await capture(owner, "mis-casas-activa");
   await owner.goto(SCREEN);
   await expect(house(owner).getByText("Activa", { exact: true })).toBeVisible();

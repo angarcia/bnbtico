@@ -177,7 +177,6 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .header-root{display:flex;flex-direction:column;gap:14px}
 .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
 .header-root .logo{height:38px;width:auto}
-.header-root .greeting{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:2px}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:15px;font-weight:700;color:var(--fg);text-decoration:none}
@@ -282,8 +281,6 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .map-box{height:220px;border-radius:var(--r-tile);overflow:hidden;border:1.5px solid var(--line);background:#E9EFE4;position:relative}
 .leaflet-container{font:inherit}
 .pin-icon span{display:block;width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--brand-ink);border:3px solid #FFFBF2;box-shadow:0 2px 6px rgba(0,0,0,.35)}
-.offer-bar{height:8px;border-radius:999px;background:var(--sun-soft);overflow:hidden}
-.offer-bar div{height:100%;background:var(--sun)}
 .steps-list{display:flex;flex-direction:column;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;text-align:left}
 .steps-list > div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line-soft);font-size:14px}
 .steps-list > div:last-child{border-bottom:0}
@@ -366,9 +363,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .btn-header svg{margin-left:-4px}
 .round-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:999px;flex-shrink:0}
 .round-icon-sun{background:var(--sun-soft);color:var(--sun-ink)}
-.inquiries-card{text-decoration:none;color:inherit;padding:14px 16px}
-.inquiries-title{font-size:17px}
-.inquiries-card .chev{color:var(--muted);flex-shrink:0}
 /* Actividad: cifras de 30 días (tres columnas; en grande con una sola casa) y las últimas consultas */
 .activity-figures{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .activity-figures p{margin:0;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);line-height:1.25}
@@ -390,16 +384,10 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .btn-wa.inquiry-wa{min-height:44px;border-radius:999px;font-family:inherit;font-weight:700;font-size:14px;gap:8px}
 .inquiries-foot{margin:0;padding:0 4px}
 .featured-title{font-weight:700;font-size:18px;line-height:1.1;color:inherit;text-decoration:none}
-.share-box{padding:12px 14px;border-radius:var(--r-input);background:var(--surface-2)}
 .share-url{font-weight:700;overflow-wrap:anywhere}
 .offer-card{color:var(--sun-ink);padding:14px 16px}
 .offer-title{font-size:16px}
 .offer-left{font-weight:700}
-progress.offer-bar{display:block;width:100%;border:0;appearance:none;-webkit-appearance:none;color:var(--sun)}
-progress.offer-bar::-webkit-progress-bar{background:var(--sun-soft);border-radius:999px}
-progress.offer-bar::-webkit-progress-value{background:var(--sun);border-radius:999px}
-progress.offer-bar::-moz-progress-bar{background:var(--sun);border-radius:999px}
-.offer-card .link{align-self:flex-start;min-height:36px;display:flex;align-items:center}
 .price-line{font-weight:600}
 .price-line .muted{font-weight:400}
 .owner-card{padding:12px}
@@ -702,7 +690,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .photos-count.is-short{color:var(--sun-ink);font-weight:700}
 .photos-missing{color:var(--sun-ink);font-weight:600}
 /* Qué tener a mano antes de publicar (revisión UX C4). */
-.ready-list{margin:0;padding-left:20px;display:grid;gap:4px}
 /* Etapas del asistente (revisión UX C4): rótulo de la etapa en la cabecera, en dos líneas para que quepa a 360 px, y un
    hueco mayor entre los tramos de una etapa y la siguiente. */
 .stage-label{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:12px}

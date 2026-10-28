@@ -52,10 +52,8 @@ async function expectKeyboardRoom(page: Page, fieldId: string) {
 }
 
 test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado, y se envía a revisión", async ({ page }) => {
-  await page.goto("/propietario");
-  // Revisión UX C4: antes de empezar, qué tener a mano; y «Publicar casa» entra directo al paso 1 (sin «Empezar»).
-  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche o por mes", "Unos 10 minutos"]);
-  await page.getByRole("link", { name: "Publicar casa" }).click();
+  // «Publicar» entra directo al paso 1 (sin «Empezar»).
+  await page.goto("/propietario/publicar");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
   await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 5");
@@ -149,9 +147,9 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page).toHaveURL(/\/5$/);
   await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveCount(2);
 
-  // «Nueva» con un borrador pendiente ofrece seguirlo; abrir esa pantalla no crea borradores.
+  // «Añadir otra casa» (Mis casas con una sola casa) con un borrador pendiente ofrece seguirlo; abrir esa pantalla no crea borradores.
   await page.goto("/propietario/casas");
-  await page.getByRole("link", { name: "Nueva" }).click();
+  await page.getByRole("link", { name: "Añadir otra casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar$/);
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await page.reload();
@@ -241,8 +239,9 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
   expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, monthlyPriceCrc: 900000, photoCount: 5 });
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
-  await expect(page.getByRole("article").getByText("En revisión", { exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: TITLE })).toBeVisible();
+  // Una sola casa: Mis casas es su detalle.
+  await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
+  await expect(page.locator(".detail-badge").getByText("En revisión", { exact: true })).toBeVisible();
 });
 
 test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo escrito intacto", async ({ page }) => {
@@ -375,7 +374,8 @@ test("«Cerrar» en la cabecera espera al guardado en curso y vuelve a Mis casas
   await expect(page).toHaveURL(/\/7$/);
   release();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  // Una sola casa: Mis casas es el detalle del borrador, ya con el nombre guardado.
+  await expect(page.getByRole("heading", { level: 1, name: "Cabina que se cierra" })).toBeVisible();
   expect((await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina que se cierra");
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await page.goto("/propietario/publicar");

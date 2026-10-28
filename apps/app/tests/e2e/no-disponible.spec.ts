@@ -91,8 +91,10 @@ test("cerrar con fecha → «Cerrada hasta el …» → ficha sin contacto → r
   await expect.poll(async () => (await h.owner("owner").getOwn(casa.id))?.reopenAt).toBe(reopen);
   await page.screenshot({ path: "test-results/no-disponible-cerrada.png" });
 
+  // Una sola casa: Mis casas es su detalle.
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("article").filter({ hasText: "Casa Reapertura" }).getByText("Pausado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Reapertura" })).toBeVisible();
+  await expect(page.locator(".detail-badge").getByText("Pausado", { exact: true })).toBeVisible();
 
   // Pausado: no sale en Explorar (ticket 20), pero su ficha se abre y dice que no está disponible por ahora.
   await page.goto("/explorar?prov=Todas");
