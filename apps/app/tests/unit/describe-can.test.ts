@@ -1,6 +1,7 @@
 import { describe as group, expect, it } from "vitest";
 import { can, type ListingAction } from "../../src/domain/can";
-import { describe } from "../../src/domain/describe";
+import { cardPrice, describe, monthlyLineText } from "../../src/domain/describe";
+import { formatCRC } from "../../src/domain/money";
 import { emptyDraft, type Listing, type ListingStatus, type PublicListing } from "../../src/domain/listing";
 
 const NOW = Date.parse("2026-10-22T12:00:00Z");
@@ -67,17 +68,29 @@ const publicOf = (l: Listing): PublicListing => ({
 
 group("describe · precios", () => {
   it.each([
-    ["solo vacacional", { acceptsNightly: true, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null }, { amount: 85000, unit: "noche" }, null],
-    ["solo mensual", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, { amount: 480000, unit: "mes" }, null],
-    ["las dos", { acceptsNightly: true, nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 480000 }, { amount: 85000, unit: "noche" }, { amount: 480000, unit: "mes" }],
-    ["vacacional sin precio todavía, mensual con precio", { acceptsNightly: true, nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, { amount: 480000, unit: "mes" }, null],
-    ["un precio sin su modalidad no cuenta", { acceptsNightly: false, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: 480000 }, null, null],
-    ["borrador sin precios", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: false, monthlyPriceCrc: null }, null, null],
-  ] as const)("%s", (_, over, main, secondary) => {
-    const d = describe(owned(over), { base: BASE, now: NOW });
-    expect(d.mainPrice).toEqual(main);
-    expect(d.secondaryPrice).toEqual(secondary);
-    expect(describe(publicOf(owned(over)), { base: BASE }).mainPrice).toEqual(main);
+    ["solo por noche", { nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null }, { amount: 85000, unit: "noche" }, null],
+    ["mensual con precio", { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 350000 }, { amount: 85000, unit: "noche" }, { amount: 350000, unit: "mes" }],
+    ["mensual a negociar", { nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null }, { amount: 45000, unit: "noche" }, { negotiable: true }],
+    ["mensual con 0 guardado es a negociar", { nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: 0 }, { amount: 45000, unit: "noche" }, { negotiable: true }],
+    ["precio al mes sin aceptar mensual no cuenta", { nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: 480000 }, { amount: 85000, unit: "noche" }, null],
+    ["borrador sin precio", { nightlyPriceCrc: null, acceptsMonthly: false, monthlyPriceCrc: null }, null, null],
+  ] as const)("%s", (_, over, main, monthly) => {
+    for (const d of [describe(owned(over), { base: BASE, now: NOW }), describe(publicOf(owned(over)), { base: BASE })]) {
+      expect(d.mainPrice).toEqual(main);
+      expect(d.monthly).toEqual(monthly);
+    }
+  });
+
+  it("la tarjeta: sin el filtro, el precio por noche; con él, el mensual o «a negociar»", () => {
+    const nightly = { amount: 85000, unit: "noche" } as const;
+    expect(cardPrice({ mainPrice: nightly, monthly: { amount: 350000, unit: "mes" } }, false)).toEqual(nightly);
+    expect(cardPrice({ mainPrice: nightly, monthly: { amount: 350000, unit: "mes" } }, true)).toEqual({ amount: 350000, unit: "mes" });
+    expect(cardPrice({ mainPrice: nightly, monthly: { negotiable: true } }, true)).toEqual({ negotiable: true });
+  });
+
+  it("la línea mensual de la ficha", () => {
+    expect(monthlyLineText({ amount: 350000, unit: "mes" }, formatCRC)).toBe("Mensual: ₡350\u00a0000 / mes");
+    expect(monthlyLineText({ negotiable: true }, formatCRC)).toBe("Mensual: precio a negociar con el dueño");
   });
 });
 
@@ -112,7 +125,7 @@ group("describe · enlace y vista previa", () => {
 
   it.each<[string, Partial<Listing>, string]>([
     ["vacacional", {}, "Alojamiento completo en Manzanillo, Limón · 5 personas · ₡85\u00a0000 por noche · orientativo"],
-    ["mensual", { acceptsNightly: false, nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, "Alojamiento completo en Manzanillo, Limón · 5 personas · ₡480\u00a0000 por mes · orientativo"],
+    ["mensual", { nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null }, "Alojamiento completo en Manzanillo, Limón · 5 personas · ₡45\u00a0000 por noche · orientativo"],
     ["habitación para una persona", { kind: "habitacion", capacity: 1 }, "Habitación en Manzanillo, Limón · 1 persona · ₡85\u00a0000 por noche · orientativo"],
     ["tipo anterior al diseño v1", { kind: "casa" }, "Casa en Manzanillo, Limón · 5 personas · ₡85\u00a0000 por noche · orientativo"],
     ["borrador sin tipo ni precio", { kind: null, capacity: null, nightlyPriceCrc: null, title: "Mi cabina" }, "Mi cabina"],

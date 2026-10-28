@@ -48,4 +48,8 @@ describe("vista previa de la ficha", () => {
     expect([p.capacity, p.bedrooms, p.bathrooms]).toEqual([0, 0, 0]);
     expect(p.kind).toBe("completo");
   });
+  it("toda casa se alquila por noches y el mensual sin precio se conserva («a negociar»)", () => {
+    expect(previewListing(draft({ acceptsNightly: false }), "Ana").acceptsNightly).toBe(true);
+    expect(previewListing(draft({ acceptsMonthly: true, monthlyPriceCrc: null }), "Ana")).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });
+  });
 });

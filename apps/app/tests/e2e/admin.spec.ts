@@ -93,7 +93,8 @@ test("la primera vez el admin vincula su app con el QR, ve la cola y aprueba: la
   await cards.first().click();
   await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${first.id}$`));
   await expect(page.getByRole("heading", { level: 2, name: "Cabina Punta Uva" })).toBeVisible();
-  await expect(page.getByText("Vacacional · Mensual · Alojamiento completo", { exact: false })).toBeVisible();
+  await expect(page.getByText("Alquiler mensual · Alojamiento completo", { exact: false })).toBeVisible();
+  await expect(page.getByText("· mensual ₡480 000")).toBeVisible();
   await expect(page.getByText("5 fotos")).toBeVisible();
   await expect(page.getByText("Frente al mar")).toBeVisible();
   await expect(page.getByText("+506 8777 0001")).toBeVisible();

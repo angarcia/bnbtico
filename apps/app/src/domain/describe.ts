@@ -11,11 +11,15 @@ export interface Price {
   unit: PriceUnit;
 }
 
+/** El alquiler mensual: con su precio al mes o «a negociar con el dueño». */
+export type MonthlyPrice = { amount: number; unit: "mes" } | { negotiable: true };
+export const isNegotiable = (m: MonthlyPrice): m is { negotiable: true } => "negotiable" in m;
+
 export interface ListingDescription {
-  /** Precio por noche si es vacacional y lo tiene; si no, el mensual. */
+  /** Precio por noche: toda casa lo tiene al publicarse; null solo en un borrador sin precio todavía. */
   mainPrice: Price | null;
-  /** El mensual cuando además es vacacional. */
-  secondaryPrice: Price | null;
+  /** null si no acepta alquiler mensual; negociable si lo acepta sin precio (o con uno no positivo). */
+  monthly: MonthlyPrice | null;
   statusLabel: string;
   /** Línea de situación de Mis casas; null para una casa vista por el público. */
   situation: string | null;
@@ -26,10 +30,24 @@ export interface ListingDescription {
 
 const isOwnerListing = (l: Listing | PublicListing): l is Listing => "ownerId" in l;
 
-function prices(l: Listing | PublicListing): [Price | null, Price | null] {
-  const nightly = l.acceptsNightly && l.nightlyPriceCrc ? { amount: l.nightlyPriceCrc, unit: "noche" as const } : null;
-  const monthly = l.acceptsMonthly && l.monthlyPriceCrc ? { amount: l.monthlyPriceCrc, unit: "mes" as const } : null;
-  return nightly ? [nightly, monthly] : [monthly, null];
+function prices(l: Listing | PublicListing): [Price | null, MonthlyPrice | null] {
+  const nightly = l.nightlyPriceCrc && l.nightlyPriceCrc > 0 ? { amount: l.nightlyPriceCrc, unit: "noche" as const } : null;
+  const monthly = !l.acceptsMonthly ? null : l.monthlyPriceCrc && l.monthlyPriceCrc > 0 ? { amount: l.monthlyPriceCrc, unit: "mes" as const } : { negotiable: true as const };
+  return [nightly, monthly];
+}
+
+/** El precio de una tarjeta: el de la noche; con el filtro «Alquiler mensual», el del mes o «a negociar». */
+export type CardPrice = Price | { negotiable: true } | null;
+export function cardPrice(d: Pick<ListingDescription, "mainPrice" | "monthly">, monthlyFilter: boolean): CardPrice {
+  return monthlyFilter && d.monthly ? d.monthly : d.mainPrice;
+}
+
+export const NEGOTIABLE_CARD = "Precio a negociar";
+export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
+
+/** «Mensual: ₡350 000 / mes» o «Mensual: precio a negociar con el dueño»; `format` decide la moneda. */
+export function monthlyLineText(m: MonthlyPrice, format: (crc: number) => string): string {
+  return isNegotiable(m) ? NEGOTIABLE_LINE : `Mensual: ${format(m.amount)} / mes`;
 }
 
 function situation(l: Listing, now: number): string {
@@ -61,12 +79,12 @@ function previewText(l: Listing | PublicListing, main: Price | null): string {
 }
 
 export function describe(l: Listing | PublicListing, opts: { base: string; now?: number }): ListingDescription {
-  const [mainPrice, secondaryPrice] = prices(l);
+  const [mainPrice, monthly] = prices(l);
   const owner = isOwnerListing(l);
   const status = owner ? l.status : "active";
   return {
     mainPrice,
-    secondaryPrice,
+    monthly,
     statusLabel: status === "active" && !l.available ? "Pausado" : STATUS_LABELS[status].label,
     situation: owner ? situation(l, opts.now ?? Date.now()) : null,
     shareUrl: publicUrl(l.publicId, opts.base),

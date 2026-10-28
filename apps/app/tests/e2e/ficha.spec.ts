@@ -24,13 +24,15 @@ let casa: Seeded;
 let oculta: Seeded;
 let cara: Seeded;
 let larga: Seeded;
+let negociable: Seeded;
 
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
   oculta = await h.seed({ status: "reopened" });
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
-  cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyMode: "amount", monthlyPriceCrc: 2500000 } });
+  cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyPriceCrc: 2500000 } });
+  negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
   larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo con piscina y rancho frente al mar Caribe", zone: "Manzanillo", nightlyPriceCrc: 185000 } });
   const storage = serviceClient().storage.from("listings");
   for (const path of casa.photoPaths) {
@@ -74,6 +76,29 @@ const chooseCurrency = (page: Page, currency: "USD" | "CRC") =>
     localStorage.setItem("bnbtico_currency", c);
     dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
   }, currency);
+
+test("una casa con mensual a negociar llega del servidor con la línea y la característica, e hidrata sin avisos", async ({ page }) => {
+  const seen = watch(page);
+  const res = await page.goto(`/casa/${negociable.publicId}`);
+  const source = await res!.text();
+  expect(source).toContain("Alquiler mensual");
+  expect(source).toContain("Mensual: precio a negociar con el dueño");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
+  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
+  await expect(page.locator(".badge").filter({ hasText: /^(Vacacional|Mensual)/ })).toHaveCount(0);
+  expect(seen.problems, seen.problems.join("\n")).toEqual([]);
+});
+
+test("una casa con precio al mes lo muestra en la línea mensual, en la moneda elegida", async ({ page }) => {
+  await page.goto(`/casa/${cara.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("main-price")).toHaveText("₡1 250 000 / noche");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
+  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
+  await chooseCurrency(page, "USD");
+  await expect(page.getByTestId("monthly-line")).toHaveText(/^Mensual: \$[\d,]+ \/ mes$/);
+});
 
 test("la ficha sigue la moneda elegida y muestra la otra como referencia, sin botón", async ({ page }) => {
   const seen = watch(page);
@@ -181,7 +206,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
 
 test("a 320 px la barra mide lo mismo en colones y en dólares y no tapa el final de la ficha", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
-  for (const publicId of [casa.publicId, cara.publicId]) {
+  for (const publicId of [casa.publicId, cara.publicId, negociable.publicId]) {
     await page.goto(`/casa/${publicId}`);
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await page.evaluate(() => document.fonts.ready.then(() => undefined));

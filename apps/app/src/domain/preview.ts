@@ -20,7 +20,7 @@ export function previewListing(l: Listing, ownerName: string): PublicListing {
     bathroomShared: l.bathroomShared,
     features: l.features,
     parkingPaid: l.parkingPaid,
-    acceptsNightly: l.acceptsNightly,
+    acceptsNightly: true,
     nightlyPriceCrc: l.nightlyPriceCrc,
     minNights: l.minNights,
     acceptsMonthly: l.acceptsMonthly === true,

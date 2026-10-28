@@ -6,10 +6,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { CHIP_LABELS, HOUSE_BADGES, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
 import { relativeDate } from "../../domain/dates";
 import type { MfaFactor } from "../../domain/api";
-import { describe } from "../../domain/describe";
+import { describe, isNegotiable } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, STATUS_LABELS, modesLabel, type Listing } from "../../domain/listing";
+import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, MONTHLY_LABEL, STATUS_LABELS, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
 import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
@@ -334,7 +334,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
   const { listing: l, ownerName } = item;
   const d = describe(l, { base: "" });
   const facts = [
-    modesLabel(l),
+    l.acceptsMonthly ? MONTHLY_LABEL : null,
     l.kind ? KIND_LABELS[l.kind] : null,
     l.kind === "habitacion" && l.bathroomShared !== null ? (l.bathroomShared ? "baño compartido" : "baño privado") : null,
     [l.zone, l.canton].filter(Boolean).join(", "),
@@ -373,7 +373,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
               / {d.mainPrice.unit}
               {stay}
             </span>
-            {d.secondaryPrice ? <span className="muted"> · mensual {formatCRC(d.secondaryPrice.amount)}</span> : null}
+            {d.monthly ? <span className="muted"> · {isNegotiable(d.monthly) ? "mensual a negociar" : `mensual ${formatCRC(d.monthly.amount)}`}</span> : null}
           </span>
         ) : (
           <span className="small muted">Sin precio</span>

@@ -5,7 +5,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
 import { describe } from "../domain/describe";
-import { FEATURE_SHORT, modesLabel, type Feature, type PublicListing } from "../domain/listing";
+import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatMoney, formatUSD } from "../domain/money";
 import { ApproxMap } from "./approx-map";
@@ -14,6 +14,7 @@ import { CurrencySwitchSlot } from "./currency-switch";
 import { useFx } from "./fx";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
+import { MonthlyLine } from "./monthly-line";
 import { firstName, initials } from "../domain/person";
 import { isOwnListing } from "./own-listings";
 import { useHydrated } from "./hydration";
@@ -245,11 +246,12 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
         </HeroGallery>
 
         <div className="stack listing-body">
-          <div className="row wrap gap-8">
-            <span className="badge">{modesLabel(l)}</span>
-            {l.kind === "habitacion" ? <span className="badge">Habitación{l.bathroomShared === null ? "" : l.bathroomShared ? " · baño compartido" : " · baño privado"}</span> : null}
-            {!l.available ? <span className="badge badge-sun">No disponible por ahora</span> : null}
-          </div>
+          {l.kind === "habitacion" || !l.available ? (
+            <div className="row wrap gap-8">
+              {l.kind === "habitacion" ? <span className="badge">Habitación{l.bathroomShared === null ? "" : l.bathroomShared ? " · baño compartido" : " · baño privado"}</span> : null}
+              {!l.available ? <span className="badge badge-sun">No disponible por ahora</span> : null}
+            </div>
+          ) : null}
           <div className="stack gap-4">
             <h1 className={`listing-title${l.title.length > LONG_TITLE ? " is-long" : ""}`}>{l.title}</h1>
             {/* Sin reseñas, la persona verificada es la confianza: va arriba, no al final (revisión UX A10). */}
@@ -271,7 +273,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           </div>
           <p className="listing-description">{l.description}</p>
 
-          {l.features.length ? (
+          {l.features.length || d.monthly ? (
             <div className="feature-tiles">
               {l.features.map((f) => {
                 const Icon = I[FEATURE_ICON[f]];
@@ -282,6 +284,12 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                   </div>
                 );
               })}
+              {d.monthly ? (
+                <div>
+                  <I.calendar size={22} />
+                  {MONTHLY_LABEL}
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -317,11 +325,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               </span>
             </div>
           ) : null}
-          {d.secondaryPrice ? (
-            <span className="xs muted">
-              Mensual: <b className="ink num">{formatMoney(d.secondaryPrice.amount, currency, fx.crcPerUsd)}</b> / mes
-            </span>
-          ) : null}
+          {d.monthly ? <MonthlyLine monthly={d.monthly} format={(crc) => formatMoney(crc, currency, fx.crcPerUsd)} /> : null}
           {preview ? (
             <span className="btn btn-wa is-pending" aria-disabled="true">
               <I.wa size={22} /> Contactar por WhatsApp

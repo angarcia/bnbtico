@@ -19,6 +19,7 @@ import { casasView, noticeFor, type Notice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
+import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
@@ -383,7 +384,7 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
   const available = useSetAvailable(userId, l);
   const reopen = useReopen(userId, l);
   const discard = useDeleteDraft(userId);
-  const price = describe(l, { base: "" }).mainPrice;
+  const { mainPrice: price, monthly } = describe(l, { base: "" });
   const cover = l.photos[0];
   const [closing, setClosing] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -424,6 +425,7 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
           </span>
         ) : null}
       </div>
+      {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
       {l.status === "active" ? <StatsLine listing={l} /> : null}
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
