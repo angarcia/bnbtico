@@ -8,7 +8,7 @@
 // dejar de estar permitido o que cambie la lista a mitad de gesto: todo vuelve a su sitio y no se pide nada.
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { moveTo, reorderOnDrop } from "../../domain/photo-order";
-import { LIFT_SCALE, LONG_PRESS_MS, SLOP_PX, shiftBetween, slotAt, type Slot } from "./photo-drag";
+import { LIFT_SCALE, LONG_PRESS_MS, SLOP_PX, edgeSpeed, shiftBetween, slotAt, type Slot } from "./photo-drag";
 
 export interface PhotoDragOptions {
   ids: readonly string[];
@@ -84,6 +84,7 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
     return () => {
       grid?.removeEventListener("touchmove", hold);
       gesture.current?.stop();
+      clearTimeout(settleTimer.current);
     };
   }, []);
 
@@ -103,14 +104,21 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
         t.style.transform = d ? `translate(${d.x}px,${d.y}px) scale(${d.s})` : "";
       }
     };
+    // Un solo bucle de rAF: cerca del borde de arriba o de abajo del scroller desplaza la rejilla y, como los sitios están en
+    // coordenadas del contenido, recalcula el destino y la foto levantada con el scroll nuevo. Sigue mientras haya
+    // velocidad y el scroll se mueva; se para en el centro, en el tope, al soltar o al cancelar (stop).
     const paint = () => {
       frame = 0;
       const sc = opts.current.scroller.current;
       if (!last || !sc) return;
       const { clientX: x, clientY: y } = last;
-      to = slotAt(g.slots, x - box.left, y - box.top + sc.scrollTop, to);
+      const before = sc.scrollTop;
+      sc.scrollTop += edgeSpeed(y, box.top, Math.min(box.bottom, innerHeight));
+      const top = sc.scrollTop;
+      to = slotAt(g.slots, x - box.left, y - box.top + top, to);
       place(moveTo(g.snapshot, id, to));
-      tile.style.transform = `translate(${x - x0}px,${y - y0 + sc.scrollTop - top0}px)${scale}`;
+      tile.style.transform = `translate(${x - x0}px,${y - y0 + top - top0}px)${scale}`;
+      if (top !== before) frame = requestAnimationFrame(paint);
     };
 
     const stop = (drop?: boolean) => {

@@ -459,6 +459,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 /* Las demás se apartan solo con transform; al llegar el orden nuevo se quitan los transforms sin transición (is-settling). */
 .photos-grid.is-dragging .photo:not(.is-lifted){transition:transform 150ms var(--ease-out)}
 .photos-grid.is-settling .photo{transition:none !important}
+/* Movimiento reducido: mismo selector que la transición de arriba (si no, gana ella) — las fotos saltan a su sitio. */
+@media (prefers-reduced-motion:reduce){.photos-grid.is-dragging .photo:not(.is-lifted){transition:none}}
 .photos-grid .photo.is-lifted{z-index:2;transform-origin:50% 50%;box-shadow:var(--shadow-lift, 0 12px 28px rgba(28,43,42,.28))}
 /* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
 .sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
