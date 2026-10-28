@@ -81,8 +81,18 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   }
 
   const busy = change.isPending || reorder.isPending;
-  // Soltar todavía no reordena: lo hace la tarea siguiente.
-  const drag = usePhotoDrag({ ids, enabled: !busy && uploads.length === 0, scroller, onDrop: () => {} });
+  // Soltar en otro sitio: el orden nuevo se ve al instante y se guarda con una sola petición.
+  const drag = usePhotoDrag({
+    ids,
+    enabled: !busy && uploads.length === 0,
+    scroller,
+    onDrop: (next, id) => {
+      follow.current = null;
+      setAnnounce(movedTo(next.indexOf(id)));
+      change.reset();
+      reorder.mutate(next);
+    },
+  });
 
   // El foco sigue a la foto movida: React puede mover el botón enfocado con insertBefore, y eso lo desenfoca.
   useLayoutEffect(() => {
@@ -123,7 +133,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
       {photos.length < MIN_PHOTOS ? <span className="small photos-missing">{missingLabel(MIN_PHOTOS - photos.length)} · puede añadirlas al final</span> : null}
       {photos.length >= 2 ? <p className="small muted photos-help">Mantenga pulsada una foto y arrástrela para cambiar el orden. La primera es la portada.</p> : null}
       <div className="photos-scroll" ref={scroller}>
-        <div className={`photos-grid${drag.liftedId ? " is-dragging" : ""}`} ref={drag.gridRef} aria-busy={busy || uploads.length > 0}>
+        <div className={`photos-grid${drag.dragging ? " is-dragging" : ""}`} ref={drag.gridRef} aria-busy={busy || uploads.length > 0}>
           {photos.map((p, i) => (
             <div
               key={p.id}
@@ -134,7 +144,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
             >
               <img draggable={false} src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
               {i === 0 ? <span className="tag">Portada</span> : null}
-              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy || !!drag.liftedId} onClick={() => remove(p.id)}>
+              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy || drag.dragging} onClick={() => remove(p.id)}>
                 <I.x size={16} />
               </button>
               <button type="button" className="sr-move" data-move="before" aria-disabled={busy || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>

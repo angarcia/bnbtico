@@ -7,7 +7,8 @@ import { touch } from "./helpers/touch";
 
 // Paso 7: ordenar fotos. Botones ocultos «Mover foto N antes / después» para teclado y lector de pantalla, con el orden
 // pintado al instante (optimista), anunciado en una región viva y con vuelta atrás si el servidor lo rechaza. Con el dedo
-// (toques reales por CDP, helpers/touch.ts): mantener pulsada una foto la levanta; deslizar sigue haciendo scroll.
+// (toques reales por CDP, helpers/touch.ts): mantener pulsada una foto la levanta; deslizar sigue haciendo scroll; al
+// arrastrarla las demás se apartan y al soltar el orden nuevo se ve al instante y se guarda con una sola petición.
 const FOTOS = new URL("../../../../design/pantallas/fotos/", import.meta.url).pathname;
 let h: ListingsHarness;
 let reorders: string[][];
@@ -31,6 +32,18 @@ test.beforeEach(async ({ page }) => {
 const own = async (id: string) => (await h.owner("owner").getOwn(id))!;
 const grid = (page: Page) => page.locator(".photos-grid [data-photo]").evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.photo));
 const live = (page: Page) => page.locator('[aria-live="polite"].sr-only');
+const foto = (name: string) => ({ name, mimeType: "image/jpeg", buffer: readFileSync(`${FOTOS}${name}`) });
+
+/** Mantener pulsada la foto `from` (desde 0), arrastrarla al centro de `target` y soltar. */
+async function drag(page: Page, from: number, target: { x: number; y: number }) {
+  const t = await touch(page);
+  const tile = page.locator(".photos-grid [data-photo]").nth(from);
+  const p = await t.center(tile);
+  await t.down(p.x, p.y);
+  await expect(tile).toHaveClass(/is-lifted/);
+  await t.move(target.x, target.y, 12);
+  await t.up();
+}
 
 test("teclado: «Mover foto 3 antes» la pone segunda, lo anuncia y el foco la sigue", async ({ page }) => {
   const { id } = await h.seed({ status: "draft", photos: 6 });
@@ -180,4 +193,153 @@ test("un segundo dedo durante la espera la cancela y no empieza otra", async ({ 
   await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
   await t.up();
   expect(reorders).toHaveLength(0);
+});
+
+test("6 fotos: arrastrar la 5 a la portada; queda «Portada», se guarda y hace una sola petición", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const b = (await own(id)).photos.map((p) => p.id);
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(6); // el trozo de las fotos es diferido
+  const scrollTop = await page.locator(".photos-scroll").evaluate((e) => e.scrollTop);
+  await page.evaluate(() => {
+    (window as any).__cancels = 0;
+    addEventListener("pointercancel", () => (window as any).__cancels++, true);
+  });
+  const cover = await (await touch(page)).center(page.locator(".photos-grid .photo.cover"));
+  await drag(page, 4, cover);
+  const expected = [b[4], b[0], b[1], b[2], b[3], b[5]];
+  await expect.poll(() => grid(page)).toEqual(expected);
+  await expect(page.locator(`.photos-grid .photo.cover[data-photo="${b[4]}"] .tag`)).toHaveText("Portada");
+  await expect(live(page)).toHaveText("Foto movida a la posición 1, portada");
+  // Sin vuelta atrás ni transforms colgados: la rejilla queda quieta en el orden nuevo.
+  await expect(page.locator(".photos-grid")).not.toHaveClass(/is-dragging/);
+  expect(await page.locator(".photos-grid [data-photo]").evaluateAll((els) => els.map((e) => getComputedStyle(e).transform))).toEqual(Array(6).fill("none"));
+  expect(await page.evaluate(() => (window as any).__cancels)).toBe(0);
+  expect(await page.locator(".photos-scroll").evaluate((e) => e.scrollTop)).toBe(scrollTop);
+  await expect.poll(async () => (await own(id)).photos.map((p) => p.id)).toEqual(expected);
+  expect(reorders).toEqual([expected]);
+  await page.reload();
+  await expect.poll(() => grid(page)).toEqual(expected);
+});
+
+test("soltar en su sitio no hace ninguna petición", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  const tile = page.locator(".photos-grid [data-photo]").nth(3);
+  const p = await (await touch(page)).center(tile);
+  await drag(page, 3, { x: p.x + 20, y: p.y + 10 });
+  await page.waitForTimeout(300);
+  await expect(page.locator(".photos-grid")).not.toHaveClass(/is-dragging/);
+  expect(reorders).toHaveLength(0);
+});
+
+test("soltar fuera de la rejilla deja la foto donde se veía (y no toca «Continuar»)", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const b = (await own(id)).photos.map((p) => p.id);
+  await page.goto(`/propietario/publicar/${id}/7`);
+  const t = await touch(page);
+  const tile = page.locator(".photos-grid [data-photo]").nth(4);
+  const p = await t.center(tile);
+  const slot2 = await t.center(page.locator(".photos-grid [data-photo]").nth(1));
+  const cont = await t.center(page.getByRole("button", { name: "Continuar" }));
+  await t.down(p.x, p.y);
+  await expect(tile).toHaveClass(/is-lifted/);
+  await t.move(slot2.x, slot2.y, 10);
+  // Sale de la rejilla por la derecha y baja por fuera hasta «Continuar» (en línea recta pasaría por la foto 6).
+  const right = (await page.locator(".photos-grid").boundingBox())!;
+  const outside = Math.min(right.x + right.width + 8, (page.viewportSize()?.width ?? 0) - 2);
+  await t.move(outside, slot2.y, 4);
+  await t.move(outside, cont.y, 10);
+  await t.move(cont.x, cont.y, 4);
+  await t.up();
+  const expected = [b[0], b[4], b[1], b[2], b[3], b[5]];
+  await expect.poll(() => grid(page)).toEqual(expected);
+  await expect(page).toHaveURL(/\/7$/);
+  expect(reorders).toEqual([expected]);
+});
+
+test("si el servidor rechaza el orden al soltar, vuelve el anterior y avisa", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const b = (await own(id)).photos.map((p) => p.id);
+  await page.route("**/rest/v1/rpc/reorder_listing_photos", (r) => r.fulfill({ status: 500, json: {} }));
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await drag(page, 4, await (await touch(page)).center(page.locator(".photos-grid .photo.cover")));
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("No pudimos cambiar las fotos. Intente de nuevo.");
+  await expect.poll(() => grid(page)).toEqual(b);
+});
+
+test("un segundo dedo: antes de levantar cancela; después se ignora y no quita fotos", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const b = (await own(id)).photos.map((p) => p.id);
+  await page.goto(`/propietario/publicar/${id}/7`);
+  const t = await touch(page);
+  const tiles = page.locator(".photos-grid [data-photo]");
+  const p = await t.center(tiles.nth(4));
+  // (a) Un segundo dedo durante la espera: no se levanta nada.
+  await t.down(p.x, p.y);
+  await page.waitForTimeout(100);
+  const other = await t.center(tiles.nth(2));
+  await t.second(other.x, other.y);
+  await page.waitForTimeout(600);
+  await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+  await t.up();
+  // (b) Un segundo dedo sobre el ✕ de la foto 2 ya levantada: se ignora; soltar aplica el orden; quedan 6 fotos.
+  await t.down(p.x, p.y);
+  await expect(tiles.nth(4)).toHaveClass(/is-lifted/);
+  const x = await t.center(page.getByRole("button", { name: "Quitar foto 2" }));
+  await t.second(x.x, x.y);
+  const cover = await t.center(page.locator(".photos-grid .photo.cover"));
+  await t.move(cover.x, cover.y, 12); // mueve el dedo 0; el dedo 1 se queda
+  await t.up();
+  await expect.poll(() => grid(page)).toEqual([b[4], b[0], b[1], b[2], b[3], b[5]]);
+  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  expect(reorders).toHaveLength(1);
+});
+
+test("durante una subida no se levanta; al terminar, el orden incluye la foto nueva", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  await page.unroute("**/storage/v1/object/public/**"); // subida real en esta prueba
+  await page.route("**/storage/v1/object/listings/**", async (r) => {
+    if (r.request().method() === "POST") await new Promise((s) => setTimeout(s, 800));
+    await r.continue();
+  });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await page.getByLabel("Añadir fotos").setInputFiles([foto("hero.jpg")]);
+  await expect(page.getByRole("progressbar")).toBeVisible();
+  const t = await touch(page);
+  const tile = page.locator(".photos-grid [data-photo]").nth(4);
+  const p = await t.center(tile);
+  await t.down(p.x, p.y);
+  await page.waitForTimeout(600);
+  await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+  await t.up();
+  await expect(page.getByRole("status")).toHaveText("7 de 5–15", { timeout: 20_000 });
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
+  await drag(page, 4, await t.center(page.locator(".photos-grid .photo.cover")));
+  await expect.poll(() => reorders.length).toBe(1);
+  expect(reorders[0]).toHaveLength(7);
+  expect(reorders[0]).toEqual(expect.arrayContaining((await own(id)).photos.map((p) => p.id)));
+});
+
+test("si la lista cambia a mitad del arrastre, se cancela y soltar no pide nada", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const b = (await own(id)).photos.map((p) => p.id);
+  await page.goto(`/propietario/publicar/${id}/7`);
+  const t = await touch(page);
+  const tile = page.locator(".photos-grid [data-photo]").nth(4);
+  const p = await t.center(tile);
+  await t.down(p.x, p.y);
+  await expect(tile).toHaveClass(/is-lifted/);
+  // Otro cambio de orden llega mientras la foto está levantada (aquí, el botón oculto de la foto 1).
+  await page.getByRole("button", { name: "Mover foto 1 después" }).evaluate((e) => (e as HTMLElement).click());
+  const moved = [b[1], b[0], ...b.slice(2)];
+  await expect.poll(() => grid(page)).toEqual(moved);
+  await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+  const cover = await t.center(page.locator(".photos-grid .photo.cover"));
+  await t.move(cover.x, cover.y, 8);
+  await t.up();
+  await expect.poll(async () => (await own(id)).photos.map((p) => p.id)).toEqual(moved);
+  await page.waitForTimeout(300);
+  expect(reorders).toEqual([moved]);
+  expect(await grid(page)).toEqual(moved);
 });

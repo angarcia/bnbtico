@@ -456,6 +456,9 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 /* Arrastrar fotos: deslizar en vertical hace scroll hasta levantar la foto; levantada, el navegador ya no se queda el gesto. */
 .photos-grid .photo:not(.uploading){touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transform-origin:0 0}
 .photos-grid.is-dragging .photo{touch-action:none}
+/* Las demás se apartan solo con transform; al llegar el orden nuevo se quitan los transforms sin transición (is-settling). */
+.photos-grid.is-dragging .photo:not(.is-lifted){transition:transform 150ms var(--ease-out)}
+.photos-grid.is-settling .photo{transition:none !important}
 .photos-grid .photo.is-lifted{z-index:2;transform-origin:50% 50%;box-shadow:var(--shadow-lift, 0 12px 28px rgba(28,43,42,.28))}
 /* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
 .sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
