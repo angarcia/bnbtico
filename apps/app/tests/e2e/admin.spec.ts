@@ -163,7 +163,7 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await expect(page).toHaveURL(/\/admin$/);
   await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
   await page.goto("/explorar");
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/]);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi casa", "Calendario", /^Actividad\d*$/]);
   await serviceClient().from("listings").delete().eq("id", own.data!.id);
 });
 

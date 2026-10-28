@@ -32,8 +32,14 @@ describe("tabsFor", () => {
   });
   it("propietario con un borrador: cinco, Actividad con el contador", () => {
     const t = tabsFor({ session: true, isAdmin: false, listingsCount: 1 });
-    expect(labels(t)).toEqual(["Explorar", "Favoritos", "Mis casas", "Calendario", "Actividad"]);
+    expect(labels(t)).toEqual(["Explorar", "Favoritos", "Mi casa", "Calendario", "Actividad"]);
     expect(t.find((x) => x.badge === "inquiries")?.to).toBe("/propietario/actividad");
+  });
+  it("una casa → «Mi casa»; dos o más → «Mis casas» (misma ruta)", () => {
+    for (const [n, label] of [[1, "Mi casa"], [2, "Mis casas"], [9, "Mis casas"]] as const) {
+      const tab = tabsFor({ session: true, isAdmin: false, listingsCount: n }).find((x) => x.icon === "house");
+      expect(tab).toMatchObject({ to: "/propietario/casas", label });
+    }
   });
   it("admin (con o sin casas): la barra del admin", () => {
     for (const n of [0, 3]) expect(labels(tabsFor({ session: true, isAdmin: true, listingsCount: n }))).toEqual(["Anuncios", "Casas", "Usuarios", "Cuenta"]);

@@ -17,7 +17,9 @@ let casa: Seeded;
 
 const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
 const accountButton = (page: Page) => page.getByRole("banner").getByRole("link", { name: /Cuenta|^[A-Z]{1,2}$/ });
-const OWNER_TABS = ["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/];
+// Con una casa la pestaña dice «Mi casa»; con dos o más, «Mis casas».
+const OWNER_TABS = ["Explorar", "Favoritos", "Mi casa", "Calendario", /^Actividad\d*$/];
+const OWNER_TABS_MANY = ["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/];
 
 /** Ingresar por la interfaz con un número de prueba que ya tiene cuenta (código 123456). */
 async function signInByUi(page: Page, phone: string) {
@@ -312,10 +314,11 @@ test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", asyn
   await h.seed({ status: "draft", draft: { title: "Borrador dos" } });
   page.on("dialog", (d) => void d.accept());
   await page.goto("/propietario/casas");
-  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS_MANY);
   await expect(page.getByRole("article")).toHaveCount(2);
   await page.getByRole("article").filter({ hasText: "Borrador uno" }).getByRole("button", { name: "Descartar" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Borrador dos" })).toBeVisible();
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
   await page.getByRole("button", { name: "Descartar borrador" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);

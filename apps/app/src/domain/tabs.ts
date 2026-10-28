@@ -41,11 +41,13 @@ const ADMIN_TABS = [
   { to: "/cuenta", label: "Cuenta", icon: "user", exact: false },
 ] as const satisfies readonly Tab[];
 
-/** Admin → su barra; sin sesión o sin casas (o sin leer aún la lista) → cliente; con casas → propietario. */
+/** Admin → su barra; sin sesión o sin casas (o sin leer aún la lista) → cliente; con casas → propietario («Mi casa» con una). */
 export function tabsFor(input: { session: boolean; isAdmin: boolean; listingsCount: number | undefined }): Tab[] {
   if (input.isAdmin) return [...ADMIN_TABS];
   if (!input.session) return [...CLIENT_TABS];
-  if (input.listingsCount !== undefined && input.listingsCount > 0) return [...OWNER_TABS];
+  // Con una sola casa la pestaña dice «Mi casa»; con dos o más, «Mis casas» (misma ruta).
+  if (input.listingsCount === 1) return OWNER_TABS.map((t) => (t.to === "/propietario/casas" ? { ...t, label: "Mi casa" } : t));
+  if (input.listingsCount !== undefined && input.listingsCount > 1) return [...OWNER_TABS];
   return [...CLIENT_TABS];
 }
 
