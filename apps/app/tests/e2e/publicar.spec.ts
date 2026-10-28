@@ -57,22 +57,19 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.goto("/propietario/publicar");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
-  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche o por mes", "Unos 10 minutos"]);
+  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche", "Unos 10 minutos"]);
   await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 5");
   await expect(page.locator(".progress span")).toHaveCount(9);
   await expect(page.locator(".progress span.on")).toHaveCount(1);
   await expectNoScroll(page, "paso 1");
 
-  // 1 Alojamiento: tipo y modalidad explícitos, nada preseleccionado; un error no borra lo elegido.
+  // 1 Alojamiento: solo el tipo, explícito y sin preselección (la modalidad ya no se pregunta: toda casa es por noches).
+  await expect(page.getByRole("heading", { name: "¿Cómo alquila?" })).toHaveCount(0);
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
   await continuar(page);
   await expect(alert(page)).toHaveText("Elija Alojamiento completo o Habitación.");
   await page.getByText("Alojamiento completo", { exact: true }).click();
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Marque Vacacional, Mensual o las dos.");
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
-  await page.getByText("Vacacional", { exact: true }).click();
-  await page.getByText("Mensual", { exact: true }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
   await expect(page.locator(".stage-label")).toHaveText("Su casa2 de 5");
@@ -144,7 +141,7 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.reload();
   await expect(title).toHaveValue("");
   await expect.poll(async () => (await h.owner("owner").getOwn(id))?.canton).toBe("Talamanca");
-  expect(await h.owner("owner").getOwn(id)).toMatchObject({ kind: "completo", acceptsNightly: true, acceptsMonthly: true, zone: "Manzanillo", capacity: 5, bedrooms: 2, bathrooms: 2, features: ["parking", "beachfront"], parkingPaid: false });
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ kind: "completo", acceptsNightly: true, acceptsMonthly: false, zone: "Manzanillo", capacity: 5, bedrooms: 2, bathrooms: 2, features: ["parking", "beachfront"], parkingPaid: false });
   await page.getByRole("link", { name: "Atrás" }).click();
   await expect(page).toHaveURL(/\/5$/);
   await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveCount(2);
@@ -191,15 +188,36 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page).toHaveURL(/\/8$/);
   await expectNoScroll(page, "paso 8");
 
-  // 8 Precio: un precio por modalidad (acepta separadores); «Listo» en el último envía el paso.
-  await expect(page.getByLabel("Por noche")).toHaveAttribute("enterkeyhint", "next");
-  await expect(page.getByLabel("Por mes")).toHaveAttribute("enterkeyhint", "done");
+  // 8 Precio: el precio por noche siempre; «¿Acepta alquiler por meses?» con No por defecto y, con Sí, el precio al mes
+  // opcional. Volver a No vacía el campo. Acepta separadores; «Listo» en el último campo envía el paso. Los chips se tocan
+  // (tap) con el teclado abierto, como en el teléfono: el toque no se pierde al cerrarse el sitio del teclado.
+  const nightly = page.getByLabel("Precio por noche");
+  const monthly = page.getByLabel("Precio al mes (opcional)");
+  const accepts = page.getByRole("group", { name: "¿Acepta alquiler por meses?" });
+  await expect(accepts.getByRole("radio", { name: "No" })).toBeChecked();
+  await expect(monthly).toHaveCount(0);
+  await expect(nightly).toHaveAttribute("enterkeyhint", "done");
+  await continuar(page);
+  await expect(alert(page)).toHaveText("Indique el precio por noche en colones.");
+  await nightly.fill("85.000");
+  await accepts.getByText("Sí", { exact: true }).tap();
+  await expect(monthly).toBeVisible();
+  await expect(monthly).toHaveAccessibleDescription("Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».");
+  await expect(nightly).toHaveAttribute("enterkeyhint", "next");
+  await expect(monthly).toHaveAttribute("enterkeyhint", "done");
   await expectKeyboardRoom(page, "pub-monthlyPriceCrc");
-  await page.getByLabel("Por noche").fill("85.000");
-  await page.getByLabel("Por noche").press("Enter");
-  await expect(page.getByLabel("Por mes")).toBeFocused();
-  await page.getByLabel("Por mes").fill("900.000");
-  await page.getByLabel("Por mes").press("Enter");
+  await monthly.fill("0");
+  await continuar(page);
+  await expect(alert(page)).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
+  await monthly.fill("480.000");
+  await accepts.getByText("No", { exact: true }).tap();
+  await expect(monthly).toHaveCount(0);
+  await accepts.getByText("Sí", { exact: true }).tap();
+  await expect(monthly).toHaveValue("");
+  await expectNoScroll(page, "paso del precio con Sí");
+  await accepts.getByText("No", { exact: true }).tap();
+  await expectNoScroll(page, "paso del precio con No");
+  await nightly.press("Enter");
   await expect(page).toHaveURL(/\/9$/);
   await expectNoScroll(page, "paso 9");
 
@@ -211,7 +229,7 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(photosRow).toContainText(`${TITLE} · 4 fotos`);
   await expect(photosRow.locator(".review-warn")).toHaveText("Falta 1 foto");
   await expect(photosRow).toHaveAttribute("href", `/propietario/publicar/${id}/7`);
-  await expect(review.getByRole("link", { name: /Precio/ })).toContainText("₡85 000 / noche · ₡900 000 / mes");
+  await expect(review.getByRole("link", { name: /Precio/ }).locator(".review-text")).toHaveText("₡85 000 / noche");
   await page.getByRole("button", { name: "Ver cómo queda su ficha" }).click();
   const preview = page.getByRole("dialog", { name: "Vista previa de su ficha" });
   await expect(preview.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
@@ -239,11 +257,30 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
-  expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, monthlyPriceCrc: 900000, photoCount: 5 });
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null, photoCount: 5 });
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
   // Una sola casa: Mis casas es su detalle.
   await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
   await expect(page.locator(".detail-badge").getByText("En revisión", { exact: true })).toBeVisible();
+});
+
+test("publicar con mensual sin precio: tras aprobarla, la ficha dice «precio a negociar con el dueño» y lleva «Alquiler mensual»", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 5 });
+  await page.goto(`/propietario/publicar/${draft.id}/8`);
+  await page.getByLabel("Precio por noche").fill("45000");
+  await page.getByRole("group", { name: "¿Acepta alquiler por meses?" }).getByText("Sí", { exact: true }).tap();
+  await expect(page.getByLabel("Precio al mes (opcional)")).toHaveValue("");
+  await continuar(page);
+  await expect(page).toHaveURL(/\/9$/);
+  const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
+  await expect(review.getByRole("link", { name: /Precio/ }).locator(".review-text")).toHaveText("₡45 000 / noche · mensual a negociar");
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${draft.id}/enviada$`));
+  expect(await h.owner("owner").getOwn(draft.id)).toMatchObject({ nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null });
+  await h.admin("aal2").review(draft.id, "approve", "");
+  await page.goto(`/casa/${draft.publicId}`);
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
+  await expect(page.locator(".feature-tiles")).toContainText("Alquiler mensual");
 });
 
 test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo escrito intacto", async ({ page }) => {
@@ -348,7 +385,7 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   // El borrador sembrado solo tiene pendientes las fotos: abre en el paso 7 (revisión UX A1/C4).
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/7$`));
   await page.goto(`/propietario/publicar/${pending.id}/1`);
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Vacacional/, /Habitación/]);
+  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Habitación/]);
   await expect(page.locator(".ready-list")).toHaveCount(0); // con algo ya rellenado, no repite qué tener a mano
   await page.goto(`/propietario/publicar/${pending.id}/4`);
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
@@ -357,7 +394,7 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   await page.goto(`/propietario/casas/${changes.id}`);
   await page.getByRole("button", { name: "Corregir y reenviar" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${changes.id}/1$`));
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(2);
+  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
   await page.goto(`/propietario/publicar/${changes.id}/6`);
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina con cambios");
   await page.goto(`/propietario/publicar/${changes.id}/9`);

@@ -65,7 +65,6 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   const id = /\/publicar\/([0-9a-f-]{36})\//.exec(owner.url())![1]!;
   const continuar = () => owner.getByRole("button", { name: "Continuar" }).click();
   await owner.getByText("Alojamiento completo", { exact: true }).click();
-  await owner.getByText("Vacacional", { exact: true }).click();
   await continuar();
   await expect(owner).toHaveURL(/\/2$/);
   await owner.getByLabel("Cantón").selectOption("Talamanca");
@@ -94,7 +93,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(owner.getByRole("status")).toHaveText("5 de 5–15");
   await continuar();
   await expect(owner).toHaveURL(/\/8$/);
-  await owner.getByLabel("Por noche").fill("75.000");
+  await owner.getByLabel("Precio por noche").fill("75.000");
   await continuar();
   await expect(owner).toHaveURL(/\/9$/);
   await expect(owner.getByText("+506 8777 0001")).toBeVisible();

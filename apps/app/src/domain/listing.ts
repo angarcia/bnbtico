@@ -258,11 +258,6 @@ export function resumeStep(d: ListingDraft): Step {
   return validateAll(d)?.step ?? LAST_STEP;
 }
 
-/** Cómo alquila, para etiquetas y píldoras: «Vacacional», «Mensual» o «Vacacional · Mensual». */
-export function modesLabel(d: { acceptsNightly: boolean; acceptsMonthly: boolean }): string {
-  return [d.acceptsNightly ? "Vacacional" : null, d.acceptsMonthly ? "Mensual" : null].filter(Boolean).join(" · ");
-}
-
 /** Casa tal como la ve el público (vista listings_public): sin WhatsApp y con el punto desplazado 150–499 m. */
 export interface PublicListing {
   id: string;

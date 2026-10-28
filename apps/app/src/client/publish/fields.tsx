@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { cantonesDe } from "../../domain/cantones";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, PROVINCES, TITLE_MAX, TITLE_MIN, isFreshDraft, missingPhotosLabel, modesLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, PROVINCES, TITLE_MAX, TITLE_MIN, isFreshDraft, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -110,6 +110,59 @@ function BathroomChoice({ shared }: { shared: boolean | null }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí; con Sí, «Precio al mes (opcional)». Volver a No vacía el campo. */
+function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: number | null }) {
+  const [yes, setYes] = useState(accepts);
+  const [text, setText] = useState(price === null ? "" : String(price));
+  return (
+    <>
+      <div className="stack gap-8" role="group" aria-labelledby="pub-acceptsMonthly">
+        <span id="pub-acceptsMonthly" className="label-plain">
+          ¿Acepta alquiler por meses?
+        </span>
+        <div className="row gap-8">
+          {(
+            [
+              ["no", "No"],
+              ["yes", "Sí"],
+            ] as const
+          ).map(([val, label]) => {
+            const on = (val === "yes") === yes;
+            return (
+              <label key={val} className="chip" aria-pressed={on}>
+                <input
+                  type="radio"
+                  name="acceptsMonthly"
+                  value={val}
+                  checked={on}
+                  onChange={() => {
+                    setYes(val === "yes");
+                    if (val === "no") setText("");
+                  }}
+                  className="sr-input"
+                />
+                {label}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+      {yes ? (
+        <div className="field">
+          <label htmlFor="pub-monthlyPriceCrc">Precio al mes (opcional)</label>
+          <div className="input-money">
+            <span className="cur">₡</span>
+            <input id="pub-monthlyPriceCrc" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" value={text} onChange={(e) => setText(e.currentTarget.value)} placeholder="350 000" aria-describedby="pub-monthlyPriceCrc-help" />
+          </div>
+          <span id="pub-monthlyPriceCrc-help" className="xs muted">
+            Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».
+          </span>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -220,11 +273,11 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   const d = { ...draft, photoCount: listing.photoCount };
   const missing = MIN_PHOTOS - listing.photoCount;
   const prices = [
-    d.acceptsNightly && d.nightlyPriceCrc ? `${formatCRC(d.nightlyPriceCrc)} / noche` : null,
-    d.acceptsMonthly && d.monthlyPriceCrc ? `${formatCRC(d.monthlyPriceCrc)} / mes` : null,
+    d.nightlyPriceCrc ? `${formatCRC(d.nightlyPriceCrc)} / noche` : null,
+    d.acceptsMonthly ? (d.monthlyPriceCrc ? `${formatCRC(d.monthlyPriceCrc)} / mes` : "mensual a negociar") : null,
   ].filter(Boolean);
   const rows: { step: Step; label: string; value: string; warn?: string }[] = [
-    { step: 1, label: "Alojamiento", value: [d.kind ? KIND_LABELS[d.kind] : null, modesLabel({ acceptsNightly: d.acceptsNightly, acceptsMonthly: d.acceptsMonthly })].filter(Boolean).join(" · ") || "Falta elegir" },
+    { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
     { step: 2, label: "Dónde", value: [d.zone, d.canton].filter(Boolean).join(", ") || "Falta la zona" },
     { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.bedrooms ?? 0} hab. · ${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
     {
@@ -299,7 +352,7 @@ export function ReadyList() {
   return (
     <ul className="ready-list small">
       <li>5 fotos horizontales o más</li>
-      <li>El precio por noche o por mes</li>
+      <li>El precio por noche</li>
       <li>Unos 10 minutos</li>
     </ul>
   );
@@ -318,19 +371,6 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
               <ReadyList />
             </section>
           ) : null}
-          <section className="stack">
-            <h2>¿Cómo alquila?</h2>
-            <ChoiceCards
-              name="modes"
-              type="checkbox"
-              selected={[draft.acceptsNightly ? "nightly" : "", draft.acceptsMonthly ? "monthly" : ""].filter(Boolean)}
-              options={[
-                { value: "nightly", label: "Vacacional", hint: "Por noche. Fines de semana, temporada." },
-                { value: "monthly", label: "Mensual", hint: "Por mes. Para vivir una temporada." },
-              ]}
-            />
-            <span className="small muted">Puede marcar las dos.</span>
-          </section>
           <section className="stack">
             <h2>¿Qué es?</h2>
             <ChoiceCards
@@ -399,24 +439,14 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>Precio</h2>
-          {draft.acceptsNightly ? (
-            <div className="field">
-              <label htmlFor="pub-nightlyPriceCrc">Por noche</label>
-              <div className="input-money">
-                <span className="cur">₡</span>
-                <input id="pub-nightlyPriceCrc" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />
-              </div>
+          <div className="field">
+            <label htmlFor="pub-nightlyPriceCrc">Precio por noche</label>
+            <div className="input-money">
+              <span className="cur">₡</span>
+              <input id="pub-nightlyPriceCrc" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />
             </div>
-          ) : null}
-          {draft.acceptsMonthly ? (
-            <div className="field">
-              <label htmlFor="pub-monthlyPriceCrc">Por mes</label>
-              <div className="input-money">
-                <span className="cur">₡</span>
-                <input id="pub-monthlyPriceCrc" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.monthlyPriceCrc ?? ""} placeholder="480 000" />
-              </div>
-            </div>
-          ) : null}
+          </div>
+          <MonthlyQuestion accepts={draft.acceptsMonthly} price={draft.monthlyPriceCrc} />
           <span className="small muted">En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.</span>
         </>
       );

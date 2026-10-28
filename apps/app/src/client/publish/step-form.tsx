@@ -219,7 +219,12 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
 
   function onBlur(e: FocusEvent<HTMLFormElement>) {
     if (isText(e.relatedTarget) && e.currentTarget.contains(e.relatedTarget)) return; // de un campo a otro
-    setRoom(false);
+    // Después del toque: quitar el sitio ya movería la página entre el mousedown y el clic, y el toque sobre un chip
+    // (p. ej. «¿Acepta alquiler por meses?» con el teclado abierto) se perdería. Si entretanto se enfocó otro campo de
+    // texto (también el de la pantalla siguiente), el sitio se queda.
+    setTimeout(() => {
+      if (!isText(document.activeElement)) setRoom(false);
+    }, 0);
   }
 
   const shown = error ?? failed?.message ?? null;
