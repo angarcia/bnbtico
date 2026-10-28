@@ -177,6 +177,13 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .header-root{display:flex;flex-direction:column;gap:14px}
 .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
 .header-root .logo{height:38px;width:auto}
+/* Barra superior fija de las pestañas (logo · ₡ | $ · cuenta): 56 px más el área segura, centrada como la de abajo. */
+.topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 20px 0;display:flex;justify-content:space-between;align-items:center;background:var(--bg);z-index:6}
+.topbar-home{display:inline-flex;align-items:center;min-height:44px}
+.topbar .logo{height:38px;width:auto;display:block}
+.topbar-slot{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+.topbar .topbar-account{width:44px;height:44px;text-decoration:none}
+.view.has-topbar{padding-top:calc(56px + 12px + env(safe-area-inset-top))}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:15px;font-weight:700;color:var(--fg);text-decoration:none}
@@ -328,6 +335,11 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .currency-switch{display:inline-flex;padding:3px;border-radius:999px;background:var(--surface-2);gap:2px;flex:none}
 .currency-switch button{min-width:44px;min-height:36px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:700;font-size:16px;cursor:pointer;font-variant-numeric:tabular-nums}
 .currency-switch button[aria-pressed="true"]{background:var(--selection);color:var(--selection-ink)}
+/* Arriba y en la ficha, botones de 44 px; en la ficha, sobre la foto, el fondo de los botones redondos. Antes de hidratar,
+   la ficha pinta una caja del mismo tamaño (medido: 3 + 44 + 2 + 44 + 3 de ancho, 3 + 44 + 3 de alto). */
+.topbar .currency-switch button,.listing-view .currency-switch button{min-height:44px}
+.currency-switch.overlay{background:var(--overlay-btn)}
+.currency-switch-box{display:inline-block;width:96px;height:50px}
 .pill-tl{left:10px;top:10px}.pill-tr{right:10px;top:10px}.pill-bl{left:10px;bottom:10px}
 .listing-card .sk.photo{height:168px;border-radius:var(--r)}
 .sk-line{height:18px;width:70%}
@@ -409,10 +421,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .detail-photo .pill-bl{left:12px;bottom:12px}
 .detail-photo .pill-tl{left:12px;top:12px}
 .muted-icon{color:var(--muted);display:inline-flex;flex-shrink:0}
-.currency-icon{width:24px;justify-content:center;font-size:20px;font-weight:700}
-/* Atribución del tipo de cambio (solo si la fuente la exige, ticket 21): pequeña y gris bajo el selector, alineada con el texto. */
-.list-item:has(+ .fx-credit){border-bottom:0;padding-bottom:2px}
-.fx-credit{margin:0;padding:0 16px 10px 52px;border-bottom:1px solid var(--line-soft)}
 button.list-item{cursor:pointer}
 button.list-item:disabled{color:#A3ADA6;cursor:not-allowed}
 button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inherit}
@@ -723,7 +731,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
    hasta la pasada de escritorio (docs/plan-implementacion.md). */
 @media (min-width:900px){
   .app:has(.listing-grid){max-width:1120px}
-  .app:has(.listing-grid) .tabbar{max-width:1120px}
+  .app:has(.listing-grid) .tabbar,.app:has(.listing-grid) .topbar{max-width:1120px}
   .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
   .listing-grid .listing-card .photo{height:200px}
 }

@@ -82,7 +82,7 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
 
 test("con dólares elegidos, los precios de Filtros se escriben en dólares y se buscan en colones", async ({ page }) => {
   await page.goto("/explorar");
-  await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Dólares" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "Dólares" }).click();
   await page.getByRole("link", { name: /Más filtros/ }).click();
   await page.getByRole("group", { name: "Zona" }).getByRole("button", { name: "Todas" }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveAttribute("placeholder", "$ 0");
@@ -154,7 +154,7 @@ test("Explorar en escritorio: 3 y 4 columnas; en el móvil, 2", async ({ page })
 test("la moneda cambia al instante y se comparte con la ficha", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("₡85 000");
-  const moneda = page.getByRole("group", { name: "Moneda de los precios" });
+  const moneda = page.getByRole("banner").getByRole("group", { name: "Moneda de los precios" });
   await expect(moneda.getByRole("button", { name: "Colones" })).toHaveAttribute("aria-pressed", "true");
   await moneda.getByRole("button", { name: "Dólares" }).click();
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("$167");
@@ -164,8 +164,6 @@ test("la moneda cambia al instante y se comparte con la ficha", async ({ page })
   // La ficha no tiene botón de moneda: la otra cifra va debajo como referencia.
   await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ ₡85\u00a0000");
   await expect(page.getByRole("button", { name: /Ver en (colones|dólares)/ })).toHaveCount(0);
-  // Cuenta también cambia la moneda de toda la app.
-  await page.goto("/cuenta");
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("$167");
 });

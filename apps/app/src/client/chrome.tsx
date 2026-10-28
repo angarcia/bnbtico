@@ -1,11 +1,15 @@
 // Marcos de pantalla del diseño v1: pantallas raíz con una sola barra inferior que crece con las casas
 // (domain/navigation.ts tabsFor: dos pestañas sin casas, cinco con al menos una; la del admin solo en /admin) y pantallas
-// de flujo sin barra (Ingresar, código, Cuenta, ayuda…), con su cabecera.
+// de flujo sin barra (Ingresar, código, Cuenta, ayuda…), con su cabecera. Las pestañas llevan además la barra superior
+// (logo · ₡ | $ · cuenta), salvo la zona del admin.
 import { useQuery } from "@tanstack/react-query";
 import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
-import type { MouseEvent, ReactNode } from "react";
+import { createContext, useContext, type MouseEvent, type ReactNode } from "react";
+import { initials } from "../domain/person";
 import { tabsFor } from "../domain/tabs";
+import { CurrencySwitch } from "../shared/currency-switch";
 import { I } from "../shared/icons";
+import { accountQuery } from "./account";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
@@ -34,7 +38,10 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   const fresh = useNewInquiries(tabs.some((t) => t.badge === "inquiries"));
   return (
     <div className="app">
-      <main className="view">{children}</main>
+      {adminZone ? null : <TopBar />}
+      <UnderTopBar.Provider value={!adminZone}>
+        <main className={adminZone ? "view" : "view has-topbar"}>{children}</main>
+      </UnderTopBar.Provider>
       <nav className={`tabbar${tabs.length === 2 ? " two" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon, exact, badge }) => {
           const Icon = I[icon];
@@ -63,27 +70,42 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   );
 }
 
+/** Bajo la barra superior (pestañas fuera de /admin): el logo y la cuenta ya están arriba. */
+const UnderTopBar = createContext(false);
+
+/** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
+const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
+
 /**
- * La cuenta, arriba a la derecha de las pantallas de las pestañas (fuera de /admin, que tiene su pestaña «Cuenta»): sin
- * sesión, «Ingresar»; con sesión, «Cuenta» a pantalla completa. Mientras se lee la sesión guardada, la misma caja sin
- * verse, y nada salta.
+ * Barra superior fija de las cinco pestañas: logo, «₡ | $» y la cuenta. Sin sesión, «Ingresar»; con sesión, las
+ * iniciales en un círculo (vacío mientras llega la cuenta). Mientras se lee la sesión guardada, la misma caja sin verse,
+ * y nada salta. La cuenta se abre a pantalla completa, no como pestaña.
  */
-export function AccountButton({ next }: { next?: string }) {
-  const { status } = useSession();
-  const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
-  if (adminZone) return null;
-  if (status === "signed-in") {
-    return (
-      <Link to="/cuenta" className="btn btn-ghost btn-header">
-        Cuenta
-      </Link>
-    );
-  }
+export function TopBar() {
+  const { status, session } = useSession();
+  const next = useLocation({ select: (l) => nextFor(l.pathname) });
+  const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const out = status === "signed-out";
   return (
-    <Link to="/cuenta" search={next ? { next } : {}} className={`btn btn-ghost btn-header${out ? "" : " is-hidden"}`} aria-hidden={!out} tabIndex={out ? undefined : -1}>
-      Ingresar
-    </Link>
+    <header className="topbar">
+      <Link to="/explorar" className="topbar-home" aria-label="bnbtico, inicio">
+        <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
+      </Link>
+      <span className="row gap-8">
+        <CurrencySwitch />
+        <span className="topbar-slot">
+          {status === "signed-in" ? (
+            <Link to="/cuenta" className="avatar avatar-sm topbar-account" aria-label="Cuenta">
+              {account.data ? initials(account.data.name) : null}
+            </Link>
+          ) : (
+            <Link to="/cuenta" search={next ? { next } : {}} className={`btn btn-ghost btn-header${out ? "" : " is-hidden"}`} aria-hidden={!out} tabIndex={out ? undefined : -1}>
+              Ingresar
+            </Link>
+          )}
+        </span>
+      </span>
+    </header>
   );
 }
 
@@ -95,20 +117,22 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** `next`: adónde vuelve «Ingresar» tras verificar (sin él, a la pantalla de llegada). La cabecera va dentro de `main`:
- *  `role="banner"` la marca como la cabecera de la página (logo y cuenta). */
-export function RootHeader({ title, home = "/explorar", action, aside, next }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode; next?: string }) {
+/** Bajo la barra superior, solo el título (y `action` en su fila, si la hay); en /admin, que no la lleva, también el logo y
+ *  `role="banner"`, la cabecera de la página. */
+export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
+  const under = useContext(UnderTopBar);
   return (
-    <header className="header-root" role="banner">
-      <div className="top">
-        <Link to={home} aria-label="bnbtico, inicio">
-          <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
-        </Link>
-        <span className="row gap-8">
+    <header className="header-root" role={under ? undefined : "banner"}>
+      {under ? (
+        action ? <div className="top">{action}</div> : null
+      ) : (
+        <div className="top">
+          <Link to={home} aria-label="bnbtico, inicio">
+            <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
+          </Link>
           {action}
-          <AccountButton next={next} />
-        </span>
-      </div>
+        </div>
+      )}
       <div className={aside ? "row between baseline wrap gap-4" : undefined}>
         <h1>{title}</h1>
         {aside}

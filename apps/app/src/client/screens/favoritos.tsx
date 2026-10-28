@@ -100,7 +100,6 @@ export function FavoritosScreen() {
     <>
       <RootHeader
         title="Favoritos"
-        next="/favoritos"
         aside={
           favs.length ? (
             <span className="small muted" data-testid="favorites-count">

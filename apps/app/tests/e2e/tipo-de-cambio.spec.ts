@@ -2,10 +2,9 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
-import { injectSession } from "./helpers/session";
 
-// Tipo de cambio diario (ticket 21): con un tipo sembrado distinto de 510, Explorar, Filtros, Mi cuenta y la ficha del
-// servidor convierten con él y dicen de qué día es. La atribución solo sale si la fuente la exige, y nunca en la ficha.
+// Tipo de cambio diario (ticket 21): con un tipo sembrado distinto de 510, Explorar, Filtros y la ficha del servidor
+// convierten con él y dicen de qué día es. La atribución solo sale si la fuente la exige, y nunca en la ficha.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 let casa: Seeded;
 
@@ -83,23 +82,11 @@ test("la ficha del servidor convierte con el tipo vigente, hidrata sin avisos y 
   expect(problems, problems.join("\n")).toEqual([]);
 });
 
-test("Mi cuenta: el tipo y su día junto a «Moneda», y la línea de atribución bajo el selector", async ({ page }) => {
-  await injectSession(page, "other");
-  await page.goto("/cuenta");
-  await expect(page.locator("#currency-label")).toContainText("Dólares solo de referencia: ≈ ₡400 por US$1 (2 nov.)");
-  const credit = page.getByTestId("fx-credit");
-  await expect(credit).toHaveText("Tipo de referencia del 2 nov. · Rates By Exchange Rate API");
-  await expect(credit.getByRole("link")).toHaveAttribute("href", "https://www.exchangerate-api.com");
-});
-
 test("con la fuente principal (sin atribución) no hay enlace en ningún sitio", async ({ page }) => {
   putRate(455.07, "2026-11-03", "fawazahmed0");
   await usd(page);
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$209");
   await expect(page.getByTestId("usd-note")).toHaveText("Dólares solo para orientarle: ≈ ₡455 por US$1 (tipo de referencia del 3 nov.). Los propietarios fijan sus precios en colones.");
-  await injectSession(page, "other");
-  await page.goto("/cuenta");
-  await expect(page.locator("#currency-label")).toContainText("≈ ₡455 por US$1 (3 nov.)");
-  await expect(page.getByTestId("fx-credit")).toHaveCount(0);
+  await expect(page.getByTestId("usd-note").getByRole("link")).toHaveCount(0);
 });

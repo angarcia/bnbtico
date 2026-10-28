@@ -10,6 +10,7 @@ import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatMoney, formatUSD } from "../domain/money";
 import { ApproxMap } from "./approx-map";
 import { useCurrency } from "./currency";
+import { CurrencySwitchSlot } from "./currency-switch";
 import { useFx } from "./fx";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
@@ -235,8 +236,9 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             <I.back />
           </a>
           )}
-          {/* Compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
+          {/* La moneda, compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
           <div className="row gap-8">
+            {preview ? null : <CurrencySwitchSlot className="overlay" />}
             {hydrated && !preview ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
             {hydrated && !preview ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
           </div>

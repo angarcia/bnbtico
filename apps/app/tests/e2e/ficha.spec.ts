@@ -58,8 +58,8 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+ · WhatsApp verificado$/u);
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
-  // Compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño.
-  expect(source).toContain('<div class="row gap-8"><span class="icon-btn" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span></div>');
+  // La moneda, compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño.
+  expect(source).toContain('<div class="row gap-8"><span class="currency-switch currency-switch-box overlay" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span></div>');
   expect(source).not.toContain("favoritos");
   const heart = page.getByRole("button", { name: "Guardar en favoritos" });
   await expect(heart).toHaveAttribute("aria-pressed", "false");
@@ -68,7 +68,7 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-/** Cambia la moneda como lo haría el selector de Explorar o Cuenta en otra pantalla (mismo almacenamiento y aviso). */
+/** Cambia la moneda como lo haría el selector de otra pantalla u otra pestaña del navegador (mismo almacenamiento y aviso). */
 const chooseCurrency = (page: Page, currency: "USD" | "CRC") =>
   page.evaluate((c) => {
     localStorage.setItem("bnbtico_currency", c);
@@ -147,7 +147,7 @@ const barHeight = (page: Page) => page.evaluate(() => document.querySelector(".c
 
 // Revisión del movimiento: la ficha hidrata cuando la portada cargó (o a los 3 s). La referencia en la otra moneda nunca es
 // un botón (ticket 15) y apila las dos cifras, así que nada se mueve al hidratar ni al cambiar de moneda.
-test("ni hidratar ni cambiar de moneda cambian el alto de la barra, y no hay botón de moneda", async ({ page }) => {
+test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ page }) => {
   let release!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve));
   await page.route(`**/listings/${casa.photoPaths[0]}*`, async (route) => {
@@ -163,6 +163,9 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra, y no hay bot
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
   const before = await barHeight(page);
+  // El selector de moneda, antes de hidratar, es una caja del mismo tamaño.
+  await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
+  const box = await page.locator(".currency-switch-box").boundingBox();
 
   release();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
@@ -170,6 +173,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra, y no hay bot
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeEnabled();
   expect(await barHeight(page), "al hidratar").toBe(before);
+  expect(await page.getByRole("group", { name: "Moneda de los precios" }).boundingBox(), "el selector ocupa su caja").toEqual(box);
   await chooseCurrency(page, "USD");
   await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
   expect(await barHeight(page), "en dólares").toBe(before);

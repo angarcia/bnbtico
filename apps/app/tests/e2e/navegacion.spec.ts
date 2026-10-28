@@ -328,3 +328,52 @@ test("Cuenta se abre a pantalla completa, sin barra inferior, y la flecha vuelve
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
+
+test("5 · ₡ → $ arriba cambia los precios de Explorar y de la ficha y se mantiene al recargar", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Playa Negra", nightlyPriceCrc: 95000 } });
+  await page.goto("/explorar");
+  await page.getByRole("banner").getByRole("button", { name: "Dólares" }).click();
+  await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
+  await page.getByRole("link", { name: /Casa Playa Negra/ }).click();
+  await expect(page.getByTestId("main-price")).toHaveText(/^\$/);
+  await expect(page.getByRole("button", { name: "Dólares" })).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("main-price")).toHaveText(/^\$/);
+  await page.getByRole("button", { name: "Colones" }).click();
+  await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
+});
+
+test("la barra superior: 56 px más el área segura, y los botones de al menos 44 px", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
+  const banner = page.getByRole("banner");
+  const checkBar = async () => {
+    await expect(banner).toHaveCount(1);
+    expect((await banner.boundingBox())?.height).toBe(56);
+    await expect(banner.getByRole("img", { name: "bnbtico" })).toBeVisible();
+    for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    for (const l of await banner.getByRole("link").all()) {
+      const box = (await l.boundingBox())!;
+      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+    }
+  };
+  await page.goto("/explorar");
+  await expect(banner.getByRole("link", { name: "Cuenta" })).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}$/);
+  await checkBar();
+  // Las cinco pestañas la llevan; Cuenta (pantalla de flujo), no.
+  for (const path of ["/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]) {
+    await page.goto(path);
+    await expect(banner.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
+    await checkBar();
+  }
+  await page.goto("/cuenta");
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  await expect(banner).toHaveCount(0);
+  // Sin sesión, «Ingresar».
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/explorar");
+  await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
+  await checkBar();
+});

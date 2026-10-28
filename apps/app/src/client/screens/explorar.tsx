@@ -8,31 +8,26 @@ import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, to
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
-import { CurrencySwitch } from "../currency-switch";
 import { I } from "../../shared/icons";
 import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { SUPPORT_NUMBERS } from "../support-numbers";
 import { listingsQuery, provincesQuery } from "../queries";
-import { AccountButton } from "../chrome";
+import { RootHeader } from "../chrome";
 
 const route = getRouteApi("/_tabs/explorar");
 const casas = (n: number) => `${n} ${n === 1 ? "casa" : "casas"}`;
 
 function Header() {
   return (
-    <header className="header-root" role="banner">
-      <div className="top">
-        <Link to="/explorar" aria-label="bnbtico, inicio">
-          <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
-        </Link>
-        <AccountButton />
-      </div>
-      <h1>
-        ¿Para dónde <span className="primary">va</span>?
-      </h1>
-    </header>
+    <RootHeader
+      title={
+        <>
+          ¿Para dónde <span className="primary">va</span>?
+        </>
+      }
+    />
   );
 }
 
@@ -100,7 +95,6 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
             {listings ? <b className="ink num">{casas(listings.length)}</b> : "Buscando casas…"}
             {listings && f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : ""}
           </span>
-          <CurrencySwitch />
         </div>
         {currency === "USD" ? <UsdNote /> : null}
       </div>

@@ -6,16 +6,13 @@ import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } fro
 import { Suspense, lazy, useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
 import { isContactNext, listingInNext } from "../../domain/contact-return";
-import { firstName } from "../../domain/inquiry";
+import { firstName, initials } from "../../domain/person";
 import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../domain/phone";
 import { I } from "../../shared/icons";
-import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
-import { useFx } from "../../shared/fx";
-import { CurrencySwitch } from "../currency-switch";
 import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
 import { accountQuery } from "../account";
@@ -508,11 +505,6 @@ const SUBSCRIPTION_PLACEHOLDER = (
   </section>
 );
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
-}
-
 function MyAccount({ editing }: { editing: boolean }) {
   const { session } = useSession();
   const { count } = useListingsCount();
@@ -522,8 +514,6 @@ function MyAccount({ editing }: { editing: boolean }) {
   const canGoBack = useCanGoBack();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const [leaving, setLeaving] = useState(false);
-  const fx = useFx();
-  const fxCredit = FX_ATTRIBUTION[fx.source];
 
   async function logout() {
     setLeaving(true);
@@ -617,23 +607,6 @@ function MyAccount({ editing }: { editing: boolean }) {
               <I.chevron />
             </span>
           </Link>
-        ) : null}
-        <div className="list-item">
-          <span aria-hidden="true" className="muted-icon currency-icon">
-            ₡
-          </span>
-          <span className="body" id="currency-label">
-            Moneda<small>Dólares solo de referencia: ≈ {fxRateLabel(fx.crcPerUsd)} por US$1 ({fxDayLabel(fx.day)})</small>
-          </span>
-          <CurrencySwitch />
-        </div>
-        {fxCredit ? (
-          <p className="xs muted fx-credit" data-testid="fx-credit">
-            Tipo de referencia del {fxDayLabel(fx.day)} ·{" "}
-            <a href={fxCredit.href} target="_blank" rel="noopener">
-              {fxCredit.text}
-            </a>
-          </p>
         ) : null}
         <Link to="/ayuda" className="list-item">
           <I.help />
