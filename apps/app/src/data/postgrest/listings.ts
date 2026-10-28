@@ -5,7 +5,7 @@ import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
-import { ALL_PROVINCES, modeFilter, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, effectiveFilters, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 
@@ -21,18 +21,17 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
 
   return {
     async searchPublic(f: Filters) {
+      const x = effectiveFilters(f); // con el mensual no se aplica el rango por noche
       let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
       // Un anuncio pausado («Anuncio visible» apagado, ticket 20) no sale en Explorar; su ficha sí se abre.
       q = q.eq("available", true);
-      if (f.prov !== ALL_PROVINCES) q = q.eq("province", f.prov);
-      const mode = modeFilter(f);
-      if (mode === "nightly") q = q.eq("accepts_nightly", true);
-      if (mode === "monthly") q = q.eq("accepts_monthly", true);
-      if (f.ppl) q = q.gte("capacity", f.ppl);
-      if (f.beds) q = q.gte("bedrooms", f.beds);
-      if (f.features.length) q = q.contains("features", f.features);
-      if (f.min) q = q.gte("nightly_price_crc", f.min);
-      if (f.max) q = q.lte("nightly_price_crc", f.max);
+      if (x.prov !== ALL_PROVINCES) q = q.eq("province", x.prov);
+      if (x.monthly) q = q.eq("accepts_monthly", true);
+      if (x.ppl) q = q.gte("capacity", x.ppl);
+      if (x.beds) q = q.gte("bedrooms", x.beds);
+      if (x.features.length) q = q.contains("features", x.features);
+      if (x.min) q = q.gte("nightly_price_crc", x.min);
+      if (x.max) q = q.lte("nightly_price_crc", x.max);
       const { data, error } = await q;
       if (error) throw toDomainError(error);
       return data.map(toPublic);

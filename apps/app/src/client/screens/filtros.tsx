@@ -2,8 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { BEDS_OPTIONS, MODE_CHIPS, PEOPLE_OPTIONS, colonesToPriceInput, modeParam, toggleMode, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
-import { FEATURES } from "../../domain/listing";
+import { BEDS_OPTIONS, PEOPLE_OPTIONS, colonesToPriceInput, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
+import { FEATURES, MONTHLY_LABEL } from "../../domain/listing";
 import { FX_INITIAL, fxDayLabel, fxRateLabel, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { fxQuery } from "../../shared/fx";
@@ -63,19 +63,6 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
           </div>
           <span className="xs muted">Solo aparecen provincias con casas publicadas.</span>
         </section>
-        <section className="stack" role="group" aria-labelledby="f-modo">
-          <span className="eyebrow" id="f-modo">
-            Modalidad
-          </span>
-          <div className="row wrap gap-8">
-            {MODE_CHIPS.map(([m, label]) => (
-              <button key={m} type="button" className="chip" aria-pressed={f.modes.includes(m)} onClick={() => set("modo", modeParam(toggleMode(f.modes, m)) ?? undefined)}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <span className="xs muted">Sin marcar o con las dos, verá todas.</span>
-        </section>
         <section className="stack">
           <span className="eyebrow">Para quiénes</span>
           <div className="grid-2">
@@ -109,6 +96,9 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
                 {label}
               </button>
             ))}
+            <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => set("mensual", f.monthly ? undefined : "1")}>
+              {MONTHLY_LABEL}
+            </button>
           </div>
         </section>
         <section className="stack">

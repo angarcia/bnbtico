@@ -115,12 +115,15 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await ids(parseFilters({ prov: "Limón" }, ["Limón"]))).toEqual([grande.publicId, mensual.publicId, cahuita.publicId]);
       });
 
-      // Task 5: el filtro «Alquiler mensual» reescribe este caso.
-      it.skip("modalidad", async () => {
+      it("alquiler mensual", async () => {
+        expect(await ids(filters({ mensual: "1" }))).toEqual([grande.publicId, mensual.publicId]);
+        // Enlaces viejos: modo=monthly es el mensual; nightly y both ya no filtran.
         expect(await ids(filters({ modo: "monthly" }))).toEqual([grande.publicId, mensual.publicId]);
-        expect(await ids(filters({ modo: "nightly" }))).toEqual([nicoya.publicId, grande.publicId, cahuita.publicId]);
-        // Vacacional y Mensual marcados a la vez = todas (ticket 16).
         expect(await ids(filters({ modo: "both" }))).toEqual(await ids(filters()));
+        expect(await ids(filters({ modo: "nightly" }))).toEqual(await ids(filters()));
+        // Con el mensual no se aplica el rango por noche (mensual: 38 000 la noche; grande: 150 000).
+        expect(await ids(filters({ mensual: "1", min: "50000", max: "100000" }))).toEqual([grande.publicId, mensual.publicId]);
+        expect(await h.anon.getPublic(mensual.publicId)).toMatchObject({ acceptsNightly: true, acceptsMonthly: true, monthlyPriceCrc: null });
       });
 
       it("personas y habitaciones como mínimo", async () => {

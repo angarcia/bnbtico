@@ -1,5 +1,5 @@
 // Filtros de Explorar, en la URL (prototipo explorar-filtros.js y zona-caribe.js).
-// Zona → Para quiénes → Qué necesitan → Precio. Limón por defecto mientras tenga casas; solo provincias con casas.
+// Zona → Alquiler mensual → Para quiénes → Qué necesitan → Precio. Limón por defecto mientras tenga casas; solo provincias con casas.
 import * as z from "zod/mini";
 import type { Currency } from "./currency";
 import { DEFAULT_PROVINCE, FEATURE_LABEL, PROVINCES, parseColones, type Feature } from "./listing";
@@ -9,35 +9,9 @@ export const BEDS_OPTIONS = [0, 1, 2, 3, 4] as const;
 export const ALL_PROVINCES = "Todas";
 export const FEATURE_KEYS = Object.keys(FEATURE_LABEL) as Feature[];
 
-export type Mode = "nightly" | "monthly";
-const MODES: readonly Mode[] = ["nightly", "monthly"];
-/** Los dos chips de modalidad, en Explorar y en Filtros. */
-export const MODE_CHIPS = [
-  ["nightly", "Vacacional"],
-  ["monthly", "Mensual"],
-] as const satisfies readonly (readonly [Mode, string])[];
-
-/** `modo` en la URL: una modalidad o las dos marcadas. */
-type ModeParam = Mode | "both";
-
-/** Lo que filtra la consulta: una modalidad, o null (ninguna o las dos marcadas = todas; ticket 16). */
-export function modeFilter(f: Pick<Filters, "modes">): Mode | null {
-  return f.modes.length === 1 ? f.modes[0]! : null;
-}
-
-/** Marcar o desmarcar un chip de modalidad sin tocar el otro. */
-export function toggleMode(modes: readonly Mode[], m: Mode): Mode[] {
-  const next = modes.includes(m) ? modes.filter((x) => x !== m) : [...modes, m];
-  return MODES.filter((x) => next.includes(x));
-}
-
-const modesFrom = (p: ModeParam | null): Mode[] => (p === "both" ? [...MODES] : p ? [p] : []);
-/** Las modalidades marcadas tal como van en `modo`. */
-export const modeParam = (modes: readonly Mode[]): ModeParam | null => (modes.length === 2 ? "both" : (modes[0] ?? null));
-
 export interface Filters {
   prov: string; // provincia o «Todas»
-  modes: Mode[]; // chips Vacacional y Mensual marcados (en este orden); ninguno o los dos = todas
+  monthly: boolean; // «Alquiler mensual»: solo casas que aceptan alquiler por meses
   ppl: number;
   beds: number;
   features: Feature[];
@@ -68,7 +42,9 @@ const money = z.pipe(
 
 const searchSchema = z.looseObject({
   prov: first,
-  modo: z.pipe(first, z.transform((v): ModeParam | null => (v === "nightly" || v === "monthly" || v === "both" ? v : null))),
+  mensual: flag,
+  // Enlaces viejos (`modo=nightly|monthly|both`): solo `monthly` sigue filtrando, como el mensual.
+  modo: z.pipe(first, z.transform((v) => v === "monthly")),
   ppl: option(PEOPLE_OPTIONS),
   beds: option(BEDS_OPTIONS),
   min: money,
@@ -89,7 +65,7 @@ export function parseFilters(params: SearchParams, provinces: readonly string[])
   const max = invalid ? 0 : p.max;
   return {
     prov: p.prov === ALL_PROVINCES || provinces.includes(p.prov) ? p.prov : defaultProvince(provinces),
-    modes: modesFrom(p.modo),
+    monthly: p.mensual || p.modo,
     ppl: p.ppl,
     beds: p.beds,
     features: FEATURE_KEYS.filter((f) => p[f]),
@@ -128,19 +104,34 @@ export function colonesToPriceInput(crc: number, currency: Currency, fx: number)
 export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearchParams {
   const p = new URLSearchParams();
   if (f.prov !== defaults.prov) p.set("prov", f.prov);
-  const modo = modeParam(MODES.filter((m) => f.modes.includes(m)));
-  if (modo) p.set("modo", modo);
+  if (f.monthly) p.set("mensual", "1");
   if (f.ppl) p.set("ppl", String(f.ppl));
   if (f.beds) p.set("beds", String(f.beds));
   for (const feature of f.features) p.set(feature, "1");
+  // El rango viaja aunque el mensual lo oculte: vuelve al quitar el filtro.
   if (f.min) p.set("min", String(f.min));
   if (f.max) p.set("max", String(f.max));
   return p;
 }
 
-/** Filtros activos además de la zona: alimenta el contador de «Más filtros» y decide si el bloque empieza abierto. */
+/** Lo que pregunta la consulta: con el mensual, sin rango de precio (el rango es por noche). */
+export function effectiveFilters(f: Filters): Filters {
+  return f.monthly ? { ...f, min: 0, max: 0 } : f;
+}
+
+/** Filtros activos además de la zona: alimenta el contador de «Más filtros» y decide si el bloque empieza abierto.
+ *  El mensual no cuenta (va en la fila de chips) y el rango tampoco mientras el mensual lo deja sin efecto. */
 export function extrasCount(f: Filters): number {
-  return (f.ppl > 0 ? 1 : 0) + (f.beds > 0 ? 1 : 0) + f.features.length + (f.min > 0 ? 1 : 0) + (f.max > 0 ? 1 : 0);
+  const q = effectiveFilters(f);
+  return (q.ppl > 0 ? 1 : 0) + (q.beds > 0 ? 1 : 0) + q.features.length + (q.min > 0 ? 1 : 0) + (q.max > 0 ? 1 : 0);
+}
+
+/** Línea de resultados: { count: "2 casas", rest: " aceptan alquiler mensual en Limón" }. */
+export function resultsText(n: number, f: Pick<Filters, "prov" | "monthly">): { count: string; rest: string } {
+  const one = n === 1;
+  const monthly = f.monthly ? (one ? " acepta alquiler mensual" : " aceptan alquiler mensual") : "";
+  const zone = f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
+  return { count: `${n} ${one ? "casa" : "casas"}`, rest: monthly + zone };
 }
 
 /** «Todas» y las provincias con casas, en el orden del prototipo. */
@@ -150,7 +141,7 @@ export function provinceChips(provinces: readonly string[]): string[] {
 
 // ---------- Búsqueda en la URL (rutas tipadas de Explorar y Filtros) ----------
 
-export type SearchKey = "prov" | "modo" | "ppl" | "beds" | "min" | "max" | "mas" | Feature;
+export type SearchKey = "prov" | "mensual" | "ppl" | "beds" | "min" | "max" | "mas" | Feature;
 /** Parámetros de Explorar tal como viajan en la URL: texto, solo claves conocidas y solo si no son el valor por defecto. */
 export type ExploreSearch = Partial<Record<SearchKey, string>>;
 
@@ -160,7 +151,7 @@ export function normalizeSearch(params: SearchParams): ExploreSearch {
   const p = searchSchema.parse(params) as z.infer<typeof searchSchema> & Record<Feature, boolean>;
   const out: ExploreSearch = {};
   if (p.prov) out.prov = p.prov;
-  if (p.modo) out.modo = p.modo;
+  if (p.mensual || p.modo) out.mensual = "1";
   if (p.ppl) out.ppl = String(p.ppl);
   if (p.beds) out.beds = String(p.beds);
   for (const f of FEATURE_KEYS) if (p[f]) out[f] = "1";

@@ -4,7 +4,8 @@ import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { PEOPLE_FILTER_KEY } from "../../domain/contact-return";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, toggleMode, MODE_CHIPS, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, type Filters } from "../../domain/filters";
+import { MONTHLY_LABEL } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
@@ -79,13 +80,11 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
             <span className="small muted">{summaryBottom}</span>
           </span>
         </Link>
-        {/* Una fila sin scroll lateral a 360 px (ticket 16): modalidad y «Más filtros»; las características van en Filtros. */}
+        {/* Una fila sin scroll lateral a 360 px (ticket 16): «Alquiler mensual» y «Más filtros»; las características van en Filtros. */}
         <div className="chiprow fit">
-          {MODE_CHIPS.map(([m, label]) => (
-            <button key={m} type="button" className="chip" aria-pressed={f.modes.includes(m)} onClick={() => go({ ...f, modes: toggleMode(f.modes, m) })}>
-              {label}
-            </button>
-          ))}
+          <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => go({ ...f, monthly: !f.monthly })}>
+            {MONTHLY_LABEL}
+          </button>
           <Link to="/explorar/filtros" search={search} className="chip chip-strong">
             Más filtros{extras ? <span className="badge badge-ok badge-tight">{extras}</span> : null}
           </Link>
@@ -101,7 +100,7 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
       {!listings ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonGrid />
       ) : listings.length === 0 ? (
-        <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} onClear={f.modes.length || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
+        <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} onClear={f.monthly || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
       ) : (
         <>
           <div className={`listing-grid${reveal}`}>

@@ -2,7 +2,7 @@
 import type { PublicListingsApi } from "../../domain/api";
 import { calendarWindow } from "../../domain/calendar";
 import { FX_INITIAL } from "../../domain/fx";
-import { ALL_PROVINCES, modeFilter, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, effectiveFilters, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { offerTaken } from "./billing";
@@ -64,15 +64,16 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
 
   return {
     async searchPublic(f: Filters) {
+      const q = effectiveFilters(f); // con el mensual no se aplica el rango por noche
       return active()
         .filter((l) => l.available)
-        .filter((l) => f.prov === ALL_PROVINCES || l.province === f.prov)
-        .filter((l) => (modeFilter(f) === "nightly" ? l.acceptsNightly : modeFilter(f) === "monthly" ? l.acceptsMonthly === true : true))
-        .filter((l) => !f.ppl || gte(l.capacity, f.ppl))
-        .filter((l) => !f.beds || gte(l.bedrooms, f.beds))
-        .filter((l) => f.features.every((x) => l.features.includes(x)))
-        .filter((l) => !f.min || gte(l.nightlyPriceCrc, f.min))
-        .filter((l) => !f.max || lte(l.nightlyPriceCrc, f.max))
+        .filter((l) => q.prov === ALL_PROVINCES || l.province === q.prov)
+        .filter((l) => !q.monthly || l.acceptsMonthly === true)
+        .filter((l) => !q.ppl || gte(l.capacity, q.ppl))
+        .filter((l) => !q.beds || gte(l.bedrooms, q.beds))
+        .filter((l) => q.features.every((x) => l.features.includes(x)))
+        .filter((l) => !q.min || gte(l.nightlyPriceCrc, q.min))
+        .filter((l) => !q.max || lte(l.nightlyPriceCrc, q.max))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, SEARCH_LIMIT)
         .map(toPublic);

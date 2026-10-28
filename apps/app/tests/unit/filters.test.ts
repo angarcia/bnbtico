@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, modeFilter, toggleMode, colonesToPriceInput, priceInputToColones, priceRangeInvalid, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, effectiveFilters, resultsText, colonesToPriceInput, priceInputToColones, priceRangeInvalid, PEOPLE_OPTIONS, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, toSearchParams } from "../../src/domain/filters";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 
@@ -73,7 +73,9 @@ it("provinceChips respeta el orden del prototipo", () => {
 describe("búsqueda en la URL de Explorar", () => {
   it("normalizeSearch deja solo claves conocidas, en texto y sin valores por defecto", () => {
     expect(normalizeSearch({ prov: "Guanacaste", pool: "1", ppl: "4", min: "50.000", raro: "x", wifi: "0", modo: "otra" })).toEqual({ prov: "Guanacaste", ppl: "4", pool: "1", min: "50000" });
-    expect(normalizeSearch({ modo: "monthly", mas: "1", beds: 9 })).toEqual({ modo: "monthly", mas: "1" });
+    expect(normalizeSearch({ modo: "monthly", mas: "1", beds: 9 })).toEqual({ mensual: "1", mas: "1" });
+    expect(normalizeSearch({ modo: "both" })).toEqual({});
+    expect(normalizeSearch({ mensual: "1", modo: "nightly" })).toEqual({ mensual: "1" });
     expect(normalizeSearch({})).toEqual({});
   });
   it("lo que deja normalizeSearch da los mismos filtros", () => {
@@ -120,26 +122,41 @@ describe("precio en la moneda elegida (ticket 15)", () => {
   });
 });
 
-describe("modalidad no excluyente (ticket 16)", () => {
-  it("ninguno o los dos = todas; uno = solo esa", () => {
-    expect(parseFilters({}, []).modes).toEqual([]);
-    expect(modeFilter(parseFilters({}, []))).toBeNull();
-    expect(parseFilters({ modo: "nightly" }, []).modes).toEqual(["nightly"]);
-    expect(modeFilter(parseFilters({ modo: "monthly" }, []))).toBe("monthly");
-    expect(parseFilters({ modo: "both" }, []).modes).toEqual(["nightly", "monthly"]);
-    expect(modeFilter(parseFilters({ modo: "both" }, []))).toBeNull();
-    expect(parseFilters({ modo: "otra" }, []).modes).toEqual([]);
+describe("alquiler mensual (?mensual=1)", () => {
+  const base = parseFilters({}, []);
+  it("mensual=1 marca el filtro; sin él o con otro valor, no", () => {
+    expect(parseFilters({}, []).monthly).toBe(false);
+    expect(parseFilters({ mensual: "1" }, []).monthly).toBe(true);
+    expect(parseFilters({ mensual: "0" }, []).monthly).toBe(false);
   });
-  it("marcar uno no desmarca el otro", () => {
-    expect(toggleMode([], "nightly")).toEqual(["nightly"]);
-    expect(toggleMode(["nightly"], "monthly")).toEqual(["nightly", "monthly"]);
-    expect(toggleMode(["nightly", "monthly"], "nightly")).toEqual(["monthly"]);
-    expect(toggleMode(["monthly"], "monthly")).toEqual([]);
+  it("enlaces viejos: modo=monthly es mensual; nightly, both y otros se descartan", () => {
+    expect(parseFilters({ modo: "monthly" }, []).monthly).toBe(true);
+    expect(parseFilters({ modo: "nightly" }, []).monthly).toBe(false);
+    expect(parseFilters({ modo: "both" }, []).monthly).toBe(false);
+    expect(parseFilters({ modo: "otra" }, []).monthly).toBe(false);
   });
-  it("en la URL: modo=nightly, monthly o both", () => {
-    expect(toSearchParams(parseFilters({ modo: "both" }, []), { prov: "Todas" }).get("modo")).toBe("both");
-    expect(toSearchParams({ ...parseFilters({}, []), modes: ["monthly", "nightly"] }, { prov: "Todas" }).get("modo")).toBe("both");
-    expect(toSearchParams({ ...parseFilters({}, []), modes: ["monthly"] }, { prov: "Todas" }).get("modo")).toBe("monthly");
-    expect(normalizeSearch({ modo: "both" })).toEqual({ modo: "both" });
+  it("en la URL: mensual=1 y el rango se conserva; nunca modo", () => {
+    const params = toSearchParams({ ...base, monthly: true, min: 40000, max: 90000 }, { prov: "Todas" });
+    expect(params.toString()).toBe("mensual=1&min=40000&max=90000");
+    expect(params.has("modo")).toBe(false);
+    expect(toSearchParams(parseFilters({ modo: "monthly" }, []), { prov: "Todas" }).has("modo")).toBe(false);
+  });
+  it("con el mensual la consulta no aplica el rango por noche", () => {
+    expect(effectiveFilters({ ...base, monthly: true, min: 40000, max: 90000 })).toMatchObject({ min: 0, max: 0, monthly: true });
+    const off = { ...base, monthly: false, min: 40000, max: 90000 };
+    expect(effectiveFilters(off)).toEqual(off);
+  });
+  it("extrasCount no cuenta el rango con el mensual, ni el mensual mismo", () => {
+    expect(extrasCount({ ...base, monthly: true, min: 40000, max: 90000, ppl: 4 })).toBe(1);
+    expect(extrasCount({ ...base, monthly: false, min: 40000, max: 90000, ppl: 4 })).toBe(3);
+  });
+  it("línea de resultados", () => {
+    expect(resultsText(2, { prov: "Limón", monthly: true })).toEqual({ count: "2 casas", rest: " aceptan alquiler mensual en Limón" });
+    expect(resultsText(1, { prov: "Todas", monthly: true })).toEqual({ count: "1 casa", rest: " acepta alquiler mensual" });
+    expect(resultsText(8, { prov: "Limón", monthly: false })).toEqual({ count: "8 casas", rest: " en Limón" });
+    expect(resultsText(9, { prov: "Todas", monthly: false })).toEqual({ count: "9 casas", rest: "" });
+  });
+  it("ida y vuelta por searchFor", () => {
+    expect(searchFor(parseFilters({ mensual: "1", prov: "Limón" }, ["Limón"]), ["Limón"])).toEqual({ mensual: "1" });
   });
 });
