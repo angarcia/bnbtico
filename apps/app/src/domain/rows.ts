@@ -27,7 +27,7 @@ export function toListingUpdate(d: Partial<ListingDraft>): ListingUpdate {
   const row: ListingUpdate = {};
   if ("kind" in d) row.kind = d.kind ?? null;
   if ("acceptsNightly" in d) row.accepts_nightly = d.acceptsNightly === true;
-  if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly ?? null;
+  if ("acceptsMonthly" in d) row.accepts_monthly = d.acceptsMonthly === true;
   if ("province" in d) row.province = d.province;
   if ("canton" in d) row.canton = d.canton;
   if ("zone" in d) row.zone = d.zone;

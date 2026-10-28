@@ -159,7 +159,7 @@ describe("migración cliente_directo · fotos y topes", () => {
 
   describe("borradores abiertos", () => {
     const create = (db: SupabaseClient<Database>, ownerId: string) =>
-      db.from("listings").insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: "", accepts_nightly: false }).select("id").single();
+      db.from("listings").insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: "" }).select("id").single();
 
     it("como mucho cinco borradores sin enviar por dueño, con el mensaje en español", async () => {
       const ownerId = (await owner.auth.getUser()).data.user!.id;
@@ -177,13 +177,13 @@ describe("migración cliente_directo · fotos y topes", () => {
       for (let i = 0; i < 4; i++) expect((await create(owner, ownerId)).error).toBeNull();
       const { data, error } = await owner
         .from("listings")
-        .insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: "+50600000000", accepts_nightly: false })
+        .insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: "+50600000000" })
         .select("whatsapp_phone, status")
         .single();
       expect(error).toBeNull();
       expect(data).toEqual({ whatsapp_phone: "+50687770001", status: "draft" });
       expect((await create(owner, ownerId)).error?.message).toMatch(/^Ya tiene 5 borradores/);
-      expect((await owner.from("listings").insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: "", accepts_nightly: false, status: "active" })).error?.message).toBe(
+      expect((await owner.from("listings").insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: "", status: "active" })).error?.message).toBe(
         "Un anuncio nuevo empieza como borrador.",
       );
     });

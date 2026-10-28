@@ -9,7 +9,7 @@ import { TEST_PHONES, serviceClient, signIn } from "./local";
 describe("migración listings_alta_segura", () => {
   let owner: SupabaseClient<Database>;
   let ownerId: string;
-  const base = () => ({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: TEST_PHONES.owner, accepts_nightly: false });
+  const base = () => ({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: TEST_PHONES.owner });
 
   beforeAll(async () => {
     owner = await signIn("owner");

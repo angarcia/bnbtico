@@ -53,6 +53,13 @@ describe("telemetría · permisos", () => {
     expect((await db.from("events").insert({ name: "search_help", page: "explorar", path: "/explorar", build: BUILD })).error?.code).toBe("23514");
   });
 
+  it("acepta monthly_filter_tap sin casa", async () => {
+    const db = serviceClient();
+    const ok = await db.from("events").insert({ name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: BUILD, country: "CR" }).select("name, listing_public_id").single();
+    expect(ok.error).toBeNull();
+    expect(ok.data).toEqual({ name: "monthly_filter_tap", listing_public_id: null });
+  });
+
   it("la base rechaza filas fuera de forma aunque vengan de la service role", async () => {
     const db = serviceClient();
     expect((await db.from("web_vitals").insert({ name: "FID", value: 1, metric_id: "x", page: "ficha", path: "/", build: BUILD })).error?.code).toBe("23514");

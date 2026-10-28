@@ -46,7 +46,7 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     const draft = { ...COMPLETE, ...spec.draft };
     const created = await db
       .from("listings")
-      .insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: TEST_PHONES[spec.as ?? "owner"], accepts_nightly: false })
+      .insert({ owner_id: ownerId, title: "", description: "", province: "Limón", whatsapp_phone: TEST_PHONES[spec.as ?? "owner"] })
       .select("id, public_id")
       .single();
     fail("crear borrador", created.error);

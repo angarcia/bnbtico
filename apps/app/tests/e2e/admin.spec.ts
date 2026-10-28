@@ -166,7 +166,7 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   const adminId = await userIdOf(TEST_PHONES.admin);
   const own = await serviceClient()
     .from("listings")
-    .insert({ owner_id: adminId, title: "Casa del admin", description: "", province: "Limón", whatsapp_phone: TEST_PHONES.admin, accepts_nightly: false })
+    .insert({ owner_id: adminId, title: "Casa del admin", description: "", province: "Limón", whatsapp_phone: TEST_PHONES.admin })
     .select("id")
     .single();
   expect(own.error).toBeNull();

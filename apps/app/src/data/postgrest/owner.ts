@@ -68,10 +68,10 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       const owner = await me();
       const profile = await db.from("profiles").select("phone").eq("id", owner).single();
       if (profile.error) throw toDomainError(profile.error);
-      // Nada preseleccionado: tipo, modalidades, números y precios nulos o vacíos hasta que el propietario los elige.
+      // Nada preseleccionado salvo lo que no se pregunta: toda casa se alquila por noches y el mensual empieza en No.
       const { data, error } = await db
         .from("listings")
-        .insert({ owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: profile.data.phone, accepts_nightly: false, accepts_monthly: null })
+        .insert({ owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: profile.data.phone, accepts_nightly: true, accepts_monthly: false })
         .select("id, public_id")
         .single();
       if (error) throw toDomainError(error);
