@@ -9,6 +9,7 @@ Decisión de Daniel. Sustituye la decisión N2 de la revisión UX (`.scratch/rev
 - **«Actividad» sustituye a Inicio y a Mis consultas** (`owner_activity()`: visitas, toques en WhatsApp y consultas de los últimos 30 días por casa, más las 20 últimas consultas con «Abrir WhatsApp»). `/propietario` redirige a `/propietario/casas` y `/propietario/consultas` a `/propietario/actividad`, para que sigan valiendo los enlaces de los avisos ya enviados.
 - **Una casa se ve directa** en Mis casas (su detalle como raíz de la pestaña, con «Añadir otra casa»); con dos o más, la lista. Un único aviso arriba, con el de pago por encima de «Seguir publicando». Sin tarjeta de la oferta de lanzamiento: cada casa muestra su estado y «Promoción y suscripción» (Cuenta) guarda el detalle.
 - Las maquetas `design/pantallas/09-prop-inicio.html` y `20-prop-cuenta.html` quedan superadas en la navegación.
+- **Tamaños medidos al cerrar (gzip):** «Zona privada · JS inicial» 144,25 KB (límite 150); «Pantallas de las pestañas» 22,74 KB (límite 24,5); «Actividad» 1,86 KB (límite 4); «Favoritos» 1,96 KB.
 
 ## 2026-10-27 · Pasada de escritorio en espera hasta cerrar el móvil
 
