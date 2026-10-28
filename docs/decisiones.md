@@ -1,3 +1,11 @@
+## 2026-10-27 · Pasada de escritorio en espera hasta cerrar el móvil
+
+Decisión de Daniel.
+
+- **Qué:** la pasada de escritorio no se diseña ni se construye todavía; se retoma cuando todas las pantallas del móvil estén definidas y probadas (las de la fase 5 aún están en su prueba manual). Motivo: el móvil es lo primero (CLAUDE.md) y diseñar el escritorio sobre pantallas que aún cambian obliga a rehacerlo.
+- **Lo hecho hasta hoy, como borrador sin aprobar:** inventario de las 24 pantallas con lo que cambiaría cada una (`.scratch/escritorio/inventario.md`) y cuatro maquetas de la navegación (`design/pantallas/escritorio/E01–E04`: barra superior para el cliente sobre Explorar; barra lateral de 232 px, la del admin, para el propietario sobre Inicio, Mis casas y Calendario; corte en 1024 px). Quedan abiertas: la navegación, si el asistente y el código van sin barra, Filtros como panel o columna, y el orden de construcción.
+- Sigue valiendo lo ya hecho en la revisión UX (N5): Explorar en 3–4 columnas y la ficha en dos columnas, solo con CSS.
+
 ## 2026-10-27 · Fase 6 («Buscan casa») aplazada hasta después del lanzamiento; en su lugar, «¿No encuentra lo que busca?» por WhatsApp
 
 Decisión de Daniel.
