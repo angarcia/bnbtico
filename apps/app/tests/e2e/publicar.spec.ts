@@ -3,6 +3,7 @@ import type { ListingsHarness } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { SESSION_STORAGE_KEY } from "../../src/data/storage";
 import { injectSession } from "./helpers/session";
+import { serviceClient } from "../db/local";
 
 // Asistente de publicar en nueve pantallas (decisión 2026-10-21) contra Supabase local, con la sesión inyectada.
 // iPhone SE (375×667): ninguna pantalla hace scroll, con o sin teclado. Aquí las fotos se siembran en la base; la subida real está en fotos.spec.ts.
@@ -254,6 +255,8 @@ test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado,
   await expect(page.getByText("+506 8777 0001")).toBeVisible();
   await expect(page.getByText("₡0 · 12 meses")).toBeVisible();
   await expect(page.locator(".offer-line")).toContainText("Después, ₡2\u00a0900 al mes."); // precio decidido el 2026-10-27
+  // Puente hasta la tarea 7 de la ubicación por punto: el paso 2 aún no guarda de dónde sale la zona y submit_listing la exige.
+  await serviceClient().from("listings").update({ zone_source: "other" }).eq("id", id);
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();

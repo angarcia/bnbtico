@@ -47,11 +47,11 @@ test("Lighthouse móvil: ficha y shell instalado dentro del presupuesto de LCP",
   const casa = await h.seed({
     status: "active",
     photos: 5,
-    draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false },
+    draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false },
   });
   await realPhotos(casa.id);
   for (let i = 1; i <= 7; i++) {
-    const s = await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", nightlyPriceCrc: 40000 + i * 1000 } });
+    const s = await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 40000 + i * 1000 } });
     await realPhotos(s.id);
   }
 

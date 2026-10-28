@@ -28,8 +28,8 @@ test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
   oculta = await h.seed({ status: "reopened" });
-  cocles = await h.seed({ status: "active", draft: { title: "Casa Cocles", zone: "Cocles", nightlyPriceCrc: 68000, features: ["pets", "bbq", "parking", "wifi"], parkingPaid: false } });
-  negra = await h.seed({ status: "active", draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000, features: ["ac", "wifi"] } });
+  cocles = await h.seed({ status: "active", draft: { title: "Casa Cocles", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 68000, features: ["pets", "bbq", "parking", "wifi"], parkingPaid: false } });
+  negra = await h.seed({ status: "active", draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, features: ["ac", "wifi"] } });
   const client = await signIn("other");
   clientId = (await client.auth.getUser()).data.user!.id;
   await serviceClient().from("favorites").delete().eq("user_id", clientId);

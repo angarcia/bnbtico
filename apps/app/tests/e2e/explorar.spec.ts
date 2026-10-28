@@ -13,12 +13,12 @@ test.describe.configure({ mode: "serial" });
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
-  await h.seed({ status: "draft", draft: { province: "Cartago", canton: "Turrialba", zone: "Turrialba", lat: 9.9, lng: -83.68 } });
-  await h.seed({ status: "active", draft: { title: "Cabina Sámara", province: "Guanacaste", canton: "Nicoya", zone: "Sámara", lat: 9.88, lng: -85.53, capacity: 2, features: ["pool"], nightlyPriceCrc: 60000 } });
-  ultima = await h.seed({ status: "active", draft: { title: "Casa Cocles 7", zone: "Cocles", capacity: 2, nightlyPriceCrc: 40000 } });
-  for (let i = 6; i >= 1; i--) await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", capacity: 2, nightlyPriceCrc: 40000 + i * 1000 } });
-  manzanillo = await h.seed({ status: "active", draft: { title: "Casa Manzanillo", zone: "Manzanillo", capacity: 5, acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 85000, features: ["wifi", "beachfront"] } });
-  await h.seed({ status: "active", draft: { title: "Casa Cocles mensual", zone: "Cocles", capacity: 2, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null } });
+  await h.seed({ status: "draft", draft: { province: "Cartago", canton: "Turrialba", zone: "Turrialba", zoneSource: "other", zoneId: null, lat: 9.9, lng: -83.68 } });
+  await h.seed({ status: "active", draft: { title: "Cabina Sámara", province: "Guanacaste", canton: "Nicoya", zone: "Sámara", zoneSource: "other", zoneId: null, lat: 9.88, lng: -85.53, capacity: 2, features: ["pool"], nightlyPriceCrc: 60000 } });
+  ultima = await h.seed({ status: "active", draft: { title: "Casa Cocles 7", zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 40000 } });
+  for (let i = 6; i >= 1; i--) await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 40000 + i * 1000 } });
+  manzanillo = await h.seed({ status: "active", draft: { title: "Casa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, capacity: 5, acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 85000, features: ["wifi", "beachfront"] } });
+  await h.seed({ status: "active", draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null } });
 });
 
 test.beforeEach(async ({ page }) => {

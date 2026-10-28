@@ -16,8 +16,8 @@ let active: Seeded;
 test.beforeAll(async () => {
   h = await postgrestHarness();
   await h.reset();
-  active = await h.seed({ status: "active", draft: { title: "Casa Cocles", zone: "Cocles", nightlyPriceCrc: 55000 } });
-  await h.seed({ status: "active", draft: { title: "Casa Manzanillo", zone: "Manzanillo", nightlyPriceCrc: 85000 } });
+  active = await h.seed({ status: "active", draft: { title: "Casa Cocles", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 55000 } });
+  await h.seed({ status: "active", draft: { title: "Casa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 85000 } });
 });
 
 test.beforeEach(async ({ context }) => {

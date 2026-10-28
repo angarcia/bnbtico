@@ -62,7 +62,7 @@ describe("worker · ficha /casa/CT-####", () => {
 
   beforeEach(async () => {
     t = setup();
-    casa = await t.h.seed({ status: "active", photos: 6, draft: { title: 'Casa "Sol" <y> Mar', zone: "Playa Negra", canton: "Talamanca", capacity: 4, nightlyPriceCrc: 95000 } });
+    casa = await t.h.seed({ status: "active", photos: 6, draft: { title: 'Casa "Sol" <y> Mar', zone: "Playa Negra", zoneSource: "other", zoneId: null, canton: "Talamanca", capacity: 4, nightlyPriceCrc: 95000 } });
   });
 
   it("responde la ficha renderizada en servidor", async () => {

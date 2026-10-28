@@ -28,7 +28,7 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         changes = await h.seed({ status: "changes" });
         rejected = await h.seed({ status: "rejected" });
         reopened = await h.seed({ status: "reopened" });
-        active = await h.seed({ status: "active", photos: 6, draft: { title: "Casa Punta Uva", zone: "Punta Uva" } });
+        active = await h.seed({ status: "active", photos: 6, draft: { title: "Casa Punta Uva", zone: "Punta Uva", zoneSource: "other", zoneId: null } });
       }, 60_000);
 
       it("el catálogo solo trae casas activas", async () => {
@@ -103,7 +103,7 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
           draft: { acceptsMonthly: true, monthlyPriceCrc: null, nightlyPriceCrc: 38000, capacity: 4, bedrooms: 2, features: ["wifi", "pets"] },
         });
         grande = await h.seed({ status: "active", draft: { acceptsMonthly: true, monthlyPriceCrc: 900000, capacity: 8, bedrooms: 4, features: ["pool", "wifi", "parking"], parkingPaid: false, nightlyPriceCrc: 150000 } });
-        nicoya = await h.seed({ status: "active", draft: { province: "Guanacaste", canton: "Nicoya", zone: "Sámara", lat: 9.88, lng: -85.53, nightlyPriceCrc: 60000 } });
+        nicoya = await h.seed({ status: "active", draft: { province: "Guanacaste", canton: "Nicoya", zone: "Sámara", zoneSource: "other", zoneId: null, lat: 9.88, lng: -85.53, nightlyPriceCrc: 60000 } });
       }, 60_000);
 
       it("más recientes primero", async () => {

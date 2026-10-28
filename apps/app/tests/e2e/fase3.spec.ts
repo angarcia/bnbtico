@@ -97,6 +97,9 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await continuar();
   await expect(owner).toHaveURL(/\/9$/);
   await expect(owner.getByText("+506 8777 0001")).toBeVisible();
+  // Puente hasta la tarea 7 de la ubicación por punto: el paso 2 aún no guarda de dónde sale la zona y submit_listing la exige;
+  // además, el toque en el mapa del paso 3 cae en el mar y place_at no da cantón: se pone un punto en tierra (Manzanillo).
+  await serviceClient().from("listings").update({ zone_source: "other", lat: 9.6317, lng: -82.6572 }).eq("id", id);
   await owner.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(owner.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
   await owner.context().close();

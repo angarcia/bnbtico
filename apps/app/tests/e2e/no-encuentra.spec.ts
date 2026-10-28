@@ -16,7 +16,7 @@ test.describe.configure({ mode: "serial" });
 test.beforeAll(async () => {
   // Sin reset: la prueba solo cuenta con su casa (en Limón, la zona por defecto) y con filtros que nada cumple (máximo ₡1).
   const h = await postgrestHarness();
-  await h.seed({ status: "active", draft: { title: TITLE, zone: "Cocles", capacity: 2, nightlyPriceCrc: 45000 } });
+  await h.seed({ status: "active", draft: { title: TITLE, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 45000 } });
 });
 
 test.beforeEach(async ({ page, context }) => {

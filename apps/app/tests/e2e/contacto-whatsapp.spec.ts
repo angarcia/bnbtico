@@ -28,8 +28,8 @@ const inquiries = (publicId: string, cols: string) =>
 test.beforeAll(async () => {
   h = await postgrestHarness();
   await h.reset();
-  casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", nightlyPriceCrc: 95000, capacity: 6 } });
-  otra = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Cocles", zone: "Cocles" } });
+  casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, capacity: 6 } });
+  otra = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Cocles", zone: "Cocles", zoneSource: "other", zoneId: null } });
   sql(`begin; set local app.allow_status = 'on'; update public.listings set whatsapp_phone = '${HOUSE_PHONE}' where id = '${otra.id}'; commit;`);
   owner = h.ownerName("owner").split(" ")[0]!;
 });

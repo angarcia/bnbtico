@@ -13,8 +13,8 @@ describe("migración cliente_directo · vistas públicas", () => {
     h = await postgrestHarness();
     await h.reset();
     active = await h.seed({ status: "active", photos: 7 });
-    await h.seed({ status: "active", draft: { zone: "Puerto Viejo" } });
-    await h.seed({ status: "review", draft: { province: "Puntarenas", canton: "Osa", zone: "Uvita", lat: 9.15, lng: -83.75 } });
+    await h.seed({ status: "active", draft: { zone: "Puerto Viejo", zoneSource: "other", zoneId: null } });
+    await h.seed({ status: "review", draft: { province: "Puntarenas", canton: "Osa", zone: "Uvita", zoneSource: "other", zoneId: null, lat: 9.15, lng: -83.75 } });
   });
 
   it("listings_public.photos es la lista de rutas ordenada por posición", async () => {

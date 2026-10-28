@@ -14,7 +14,7 @@ test("apertura instalada hasta Explorar interactivo", async ({ context }) => {
   test.setTimeout(120_000);
   const h = await postgrestHarness();
   await h.reset();
-  for (let i = 1; i <= 8; i++) await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", nightlyPriceCrc: 40000 + i * 1000 } });
+  for (let i = 1; i <= 8; i++) await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 40000 + i * 1000 } });
 
   // Primera visita: instala el SW y guarda Explorar en IndexedDB.
   const first = await context.newPage();
@@ -63,9 +63,9 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
   const { SESSION_STORAGE_KEY } = await import("../../src/data/storage");
   const h = await postgrestHarness();
   await h.reset();
-  const casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000 } });
+  const casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000 } });
   await realPhotos(casa.id);
-  for (let i = 1; i <= 5; i++) await realPhotos((await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles" } })).id);
+  for (let i = 1; i <= 5; i++) await realPhotos((await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", zoneSource: "other", zoneId: null } })).id);
   const proxy = await gzipProxy(`http://127.0.0.1:${process.env.E2E_PORT ?? 4173}`);
   const base = proxy.url;
   const p = (xs: number[], q: number) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.ceil(q * xs.length) - 1)]!;

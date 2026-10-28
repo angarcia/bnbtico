@@ -7,10 +7,18 @@ import type { ListingDraft } from "../../src/domain/listing";
 export type SeedStatus = "draft" | "review" | "active" | "changes" | "rejected" | "reopened";
 export type SeedOwner = "owner" | "other";
 
+/** Ubicación por punto: ListingDraft la gana en la tarea 7; hasta entonces solo la siembra PostgREST la escribe. */
+export interface SeedLocation {
+  district?: string;
+  zoneId?: string | null;
+  zoneSource?: "list" | "district" | "other" | null;
+}
+export type SeedDraft = Partial<ListingDraft> & SeedLocation;
+
 export interface SeedSpec {
   status: SeedStatus;
   as?: SeedOwner;
-  draft?: Partial<ListingDraft>;
+  draft?: SeedDraft;
   /** Número de fotos; se registran en orden inverso de posición para comprobar el orden. */
   photos?: number;
 }
@@ -43,7 +51,7 @@ export interface ListingsHarness {
 }
 
 /** Borrador completo y válido (Cahuita, Limón), base de cada siembra. */
-export const COMPLETE: Partial<ListingDraft> = {
+export const COMPLETE: SeedDraft = {
   kind: "completo",
   acceptsNightly: true,
   acceptsMonthly: false,
@@ -51,7 +59,10 @@ export const COMPLETE: Partial<ListingDraft> = {
   description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho.",
   province: "Limón",
   canton: "Talamanca",
+  district: "Cahuita",
   zone: "Cahuita",
+  zoneId: "704-cahuita",
+  zoneSource: "list",
   lat: 9.7366,
   lng: -82.8431,
   capacity: 2,

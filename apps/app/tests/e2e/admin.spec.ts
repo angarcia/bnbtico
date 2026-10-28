@@ -20,9 +20,9 @@ test.beforeAll(async () => {
   await h.reset();
   first = await h.seed({
     status: "review",
-    draft: { title: "Cabina Punta Uva", zone: "Punta Uva", capacity: 4, acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 52000, features: ["wifi", "beachfront"] },
+    draft: { title: "Cabina Punta Uva", zone: "Punta Uva", zoneSource: "other", zoneId: null, capacity: 4, acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 52000, features: ["wifi", "beachfront"] },
   });
-  second = await h.seed({ status: "review", as: "other", draft: { title: "Loft Cocles", zone: "Cocles" }, photos: 6 });
+  second = await h.seed({ status: "review", as: "other", draft: { title: "Loft Cocles", zone: "Cocles", zoneSource: "other", zoneId: null }, photos: 6 });
   await h.seed({ status: "active", draft: { title: "Casa activa" } });
 });
 

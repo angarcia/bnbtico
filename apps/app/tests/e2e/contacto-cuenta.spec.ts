@@ -31,7 +31,7 @@ const defaultMessage = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disp
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
-  casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", nightlyPriceCrc: 95000, capacity: 6 } });
+  casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, capacity: 6 } });
   await realPhotos(casa.id); // la tarjeta de vuelta muestra la foto de verdad
   owner = h.ownerName("owner").split(" ")[0]!;
   sql(`update public.profiles set email = null where phone = '${TEST_PHONES.other}'`);

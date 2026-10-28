@@ -24,7 +24,7 @@ test.beforeAll(async () => {
   draft2 = await h.seed({ status: "draft", draft: { title: "Otro borrador" } });
   review = await h.seed({ status: "review", draft: { title: "Casa en revisión" } });
   changes = await h.seed({ status: "changes", draft: { title: "Cabina con cambios" } });
-  active = await h.seed({ status: "active", draft: { title: "Casa Cocles", zone: "Cocles", nightlyPriceCrc: 55000 } });
+  active = await h.seed({ status: "active", draft: { title: "Casa Cocles", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 55000 } });
 });
 
 test.beforeEach(async ({ page }) => {

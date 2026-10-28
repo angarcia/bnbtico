@@ -21,7 +21,7 @@ test.beforeAll(async () => {
   putRate(400, "2026-11-02", "exchangerate-api");
   const h = await postgrestHarness();
   await h.reset();
-  casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000 } });
+  casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000 } });
 });
 
 test.afterAll(() => resetRates());

@@ -30,10 +30,10 @@ test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
   oculta = await h.seed({ status: "reopened" });
-  casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
-  cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyPriceCrc: 2500000 } });
-  negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
-  larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo con piscina y rancho frente al mar Caribe", zone: "Manzanillo", nightlyPriceCrc: 185000 } });
+  casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
+  cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", zoneSource: "other", zoneId: null, nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyPriceCrc: 2500000 } });
+  negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
+  larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo con piscina y rancho frente al mar Caribe", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
   const storage = serviceClient().storage.from("listings");
   for (const path of casa.photoPaths) {
     const { error } = await storage.upload(path, PHOTO, { contentType: "image/jpeg", upsert: true });

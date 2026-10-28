@@ -49,8 +49,8 @@ export function adminHousesContract(name: string, makeHarness: () => Promise<Sub
     }, 60_000);
 
     it("lista las aprobadas alguna vez, en cualquier estado, con propietario, zona, portada y suscripción", async () => {
-      const active = await h.seed({ status: "active", draft: { title: "Activa", zone: "Cocles" } });
-      const other = await h.seed({ status: "active", as: "other", draft: { title: "De otra", zone: "Punta Uva" } });
+      const active = await h.seed({ status: "active", draft: { title: "Activa", zone: "Cocles", zoneSource: "other", zoneId: null } });
+      const other = await h.seed({ status: "active", as: "other", draft: { title: "De otra", zone: "Punta Uva", zoneSource: "other", zoneId: null } });
       const due = await h.seed({ status: "active", draft: { title: "Por pagar" } });
       const stopped = await h.seed({ status: "active", as: "other", draft: { title: "Parada" } });
       const editing = await h.seed({ status: "reopened", draft: { title: "En edición" } });

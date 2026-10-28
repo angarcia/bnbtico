@@ -66,9 +66,9 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
   const tag = `T${Date.now().toString(36)}`;
   // Sin método de pago en las cuentas de prueba (es de la cuenta y decide entre pendiente de pago y plan de pago).
   await serviceClient().from("payment_methods").delete().in("owner_id", [h.ownerId("owner"), h.ownerId("other")]);
-  const active = await h.seed({ status: "active", draft: { title: `Villa Activa ${tag}`, zone: "Cocles" } });
-  const due = await h.seed({ status: "active", as: "other", draft: { title: `Rancho Por Pagar ${tag}`, zone: "Manzanillo" } });
-  const stopped = await h.seed({ status: "active", draft: { title: `Cabina Parada ${tag}`, zone: "Punta Uva" } });
+  const active = await h.seed({ status: "active", draft: { title: `Villa Activa ${tag}`, zone: "Cocles", zoneSource: "other", zoneId: null } });
+  const due = await h.seed({ status: "active", as: "other", draft: { title: `Rancho Por Pagar ${tag}`, zone: "Manzanillo", zoneSource: "other", zoneId: null } });
+  const stopped = await h.seed({ status: "active", draft: { title: `Cabina Parada ${tag}`, zone: "Punta Uva", zoneSource: "other", zoneId: null } });
   await h.seed({ status: "review", draft: { title: `Nunca publicada ${tag}` } });
   await h.setDaysLeft(due.id, -1);
   await h.service.runDay(costaRicaToday(Date.now()));

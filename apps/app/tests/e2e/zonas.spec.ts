@@ -30,7 +30,7 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   await h.reset();
   // Borrador con los pasos 1 y 2 sin zona ni pin.
-  id = (await h.seed({ status: "draft", draft: { zone: "", lat: null, lng: null, canton: "Talamanca" } })).id;
+  id = (await h.seed({ status: "draft", draft: { zone: "", zoneSource: null, zoneId: null, lat: null, lng: null, canton: "Talamanca" } })).id;
   photon = [];
   zooms = [];
   await page.route("**/storage/v1/object/public/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));

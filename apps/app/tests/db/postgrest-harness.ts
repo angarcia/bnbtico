@@ -51,7 +51,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       .single();
     fail("crear borrador", created.error);
     const { id, public_id: publicId } = created.data!;
-    fail("editar borrador", (await db.from("listings").update(toListingUpdate(draft)).eq("id", id)).error);
+    const { district, zoneId, zoneSource, ...fields } = draft;
+    const location = { district, zone_id: zoneId, zone_source: zoneSource };
+    fail("editar borrador", (await db.from("listings").update({ ...toListingUpdate(fields), ...location }).eq("id", id)).error);
     const n = spec.photos ?? (spec.status === "draft" ? 0 : 5);
     const photoPaths = Array.from({ length: n }, (_, i) => `${id}/foto-${i}.jpg`);
     if (n > 0) {
