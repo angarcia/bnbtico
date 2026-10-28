@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, la subida de fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Actividad, el calendario, el de la ficha y las pantallas que se abren desde las pestañas)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, Actividad, el calendario, el de la ficha y las pantallas que se abren desde las pestañas)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -8,6 +8,7 @@
       "!dist/client/assets/leaflet-*.js",
       "!dist/client/assets/supabase-data-*.js",
       "!dist/client/assets/publicar-*.js",
+      "!dist/client/assets/photos-*.js",
       "!dist/client/assets/resize-*.js",
       "!dist/client/assets/concurrency-*.js",
       "!dist/client/assets/admin-*.js",
@@ -59,14 +60,22 @@
     "gzip": true
   },
   {
-    "name": "Asistente de publicar · trozo diferido (sin Leaflet), con la subida de fotos",
+    "name": "Asistente de publicar · trozo diferido (sin Leaflet ni el paso de las fotos)",
     "path": [
       "dist/client/assets/publicar-*.js",
-      "dist/client/assets/location-leaflet-*.js",
+      "dist/client/assets/location-leaflet-*.js"
+    ],
+    "limit": "15 KB",
+    "gzip": true
+  },
+  {
+    "name": "Fotos del asistente · trozo diferido (el paso 7: rejilla, subida y orden; se pide al llegar a las fotos)",
+    "path": [
+      "dist/client/assets/photos-*.js",
       "dist/client/assets/resize-*.js",
       "dist/client/assets/concurrency-*.js"
     ],
-    "limit": "15 KB",
+    "limit": "4.6 KB",
     "gzip": true
   },
   {

@@ -2,7 +2,7 @@
 // mapa se unió al paso 2, el 2026-10-27). Casillas y contadores llevan su valor en el formulario (campos ocultos o
 // casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
@@ -15,7 +15,17 @@ import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { offerTakenQuery } from "../owner";
 import { LocationStep } from "./location-step";
-import { PhotoUploader } from "./photos";
+
+/** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a
+ * las fotos (el service worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. */
+const PhotoUploader = lazy(() => import("./photos").then((m) => ({ default: m.PhotoUploader })));
+const photosPlaceholder = (
+  <div className="stack grow-col gap-12">
+    <div className="row between baseline">
+      <h2>Fotos</h2>
+    </div>
+  </div>
+);
 
 /** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
 function ChoiceCards({ name, type, options, selected }: { name: string; type: "checkbox" | "radio"; options: { value: string; label: string; hint: string }[]; selected: string[] }) {
@@ -381,7 +391,9 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
     case 7:
       return (
         <>
-          <PhotoUploader listing={listing} userId={userId} />
+          <Suspense fallback={photosPlaceholder}>
+            <PhotoUploader listing={listing} userId={userId} />
+          </Suspense>
           <span className="xs muted">Toque una foto para moverla o hacerla portada; la primera es la portada. Horizontales, sin teléfonos ni marcas de agua.</span>
         </>
       );
