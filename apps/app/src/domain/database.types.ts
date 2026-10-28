@@ -542,6 +542,11 @@ isOneToOne: true
 "open_drafts":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"owner_activity":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "inquiries": number,"listing_id": string,"public_id": string,"views": number,"whatsapp_taps": number
+            }[]
+                           },
 "owner_billing":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
