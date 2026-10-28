@@ -318,7 +318,7 @@ export function SuscripcionScreen() {
 
   return (
     <>
-      <FlowHeader title="Promoción y suscripción" back="/cuenta" />
+      <FlowHeader title="Promoción y suscripción" back="/cuenta" historyBack />
       {saving ? (
         <p className={`note${saving === "late" ? " note-sun" : ""}`} role="status">
           {SAVING_TEXT[saving]}

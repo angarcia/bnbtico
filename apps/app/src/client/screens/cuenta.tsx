@@ -549,12 +549,13 @@ function MyAccount({ editing }: { editing: boolean }) {
               <I.check size={16} /> WhatsApp verificado · <span className="num">{formatPhone(a.phone)}</span>
             </span>
           </div>
+          {/* Editar y Listo sustituyen la entrada del historial: la flecha de Cuenta sigue volviendo adonde se estaba. */}
           {editing ? (
-            <Link to="/cuenta" className="link small">
+            <Link to="/cuenta" replace className="link small">
               Listo
             </Link>
           ) : (
-            <Link to="/cuenta" search={{ editar: "1" }} className="link small">
+            <Link to="/cuenta" search={{ editar: "1" }} replace className="link small">
               Editar
             </Link>
           )}
@@ -585,7 +586,7 @@ function MyAccount({ editing }: { editing: boolean }) {
           </Suspense>
         ) : null}
         {!owner ? (
-          <Link to="/cuenta" search={{ editar: "1" }} className="list-item">
+          <Link to="/cuenta" search={{ editar: "1" }} replace className="list-item">
             <I.user />
             <span className="body">
               Mi perfil<small>Descripción y correo de recuperación (opcionales)</small>
@@ -727,7 +728,7 @@ function ProfileForm({ account }: { account: Account }) {
 export function RecuperarScreen() {
   return (
     <>
-      <FlowHeader title="Recuperar mi cuenta" back="/cuenta" />
+      <FlowHeader title="Recuperar mi cuenta" back="/cuenta" historyBack />
       <section className="card stack gap-14">
         <p>Use el correo que añadió y confirmó en su perfil. Después podrá verificar su nuevo WhatsApp para recuperar el acceso.</p>
         <div className="field">
@@ -755,7 +756,7 @@ export function AyudaScreen() {
   const s = SUPPORT[(useListingsCount().count ?? 0) > 0 ? "owner" : "guest"];
   return (
     <>
-      <FlowHeader title="Ayuda por WhatsApp" back="/cuenta" />
+      <FlowHeader title="Ayuda por WhatsApp" back="/cuenta" historyBack />
       <section className="card stack gap-14">
         <span className="eyebrow">{s.label}</span>
         <p>{s.intro}</p>

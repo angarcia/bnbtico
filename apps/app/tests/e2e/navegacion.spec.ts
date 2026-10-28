@@ -300,6 +300,29 @@ test("Cuenta se abre a pantalla completa, sin barra inferior, y la flecha vuelve
   await expect(nav(page)).toHaveCount(0);
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(/\/propietario\/calendario$/);
+  // Las pantallas que se abren desde Cuenta vuelven atrás: dos «Volver» llevan a la pestaña, sin rebotar con Cuenta.
+  const volver = () => page.getByRole("link", { name: "Volver" }).click();
+  await accountButton(page).click();
+  await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
+  await expect(page).toHaveURL(/\/ayuda$/);
+  await volver();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await volver();
+  await expect(page).toHaveURL(/\/propietario\/calendario$/);
+  await accountButton(page).click();
+  await page.getByTestId("subscription-card").getByRole("link", { name: "Ver detalle" }).click();
+  await expect(page).toHaveURL(/\/propietario\/suscripcion$/);
+  await volver();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await volver();
+  await expect(page).toHaveURL(/\/propietario\/calendario$/);
+  // Editar y Listo no apilan Cuenta.
+  await accountButton(page).click();
+  await page.getByRole("link", { name: "Editar", exact: true }).click();
+  await page.getByRole("link", { name: "Listo", exact: true }).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await volver();
+  await expect(page).toHaveURL(/\/propietario\/calendario$/);
   // Abierta directamente (sin historial en la app), la flecha lleva a Mis casas.
   await page.goto("/cuenta");
   await page.getByRole("link", { name: "Volver" }).click();

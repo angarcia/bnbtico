@@ -496,7 +496,7 @@ export function SegundoCodigoScreen() {
   if (session?.aal === "aal2") return <Navigate to={target as "/admin"} replace />;
   return (
     <>
-      <FlowHeader title="Segundo código" back="/cuenta" />
+      <FlowHeader title="Segundo código" back="/cuenta" historyBack />
       {isAdmin === false ? <NotAdmin /> : null}
       {isAdmin === null ? (
         <section className="card skeleton account-skeleton" aria-busy="true" aria-label="Cargando su cuenta">

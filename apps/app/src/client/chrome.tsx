@@ -2,7 +2,7 @@
 // (domain/navigation.ts tabsFor: dos pestañas sin casas, cinco con al menos una; la del admin solo en /admin) y pantallas
 // de flujo sin barra (Ingresar, código, Cuenta, ayuda…), con su cabecera.
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
 import type { MouseEvent, ReactNode } from "react";
 import { tabsFor } from "../domain/tabs";
 import { I } from "../shared/icons";
@@ -117,12 +117,33 @@ export function RootHeader({ title, home = "/explorar", action, aside, next }: {
   );
 }
 
-/** `onBack`: «Volver» hace eso en vez de seguir el enlace (el enlace queda como dirección, p. ej. para abrirlo aparte). */
-export function FlowHeader({ title, back, search, action, onBack }: { title: string; back: string; search?: Record<string, string>; action?: ReactNode; onBack?: () => void }) {
-  const click = onBack
+/**
+ * `onBack`: «Volver» hace eso en vez de seguir el enlace (el enlace queda como dirección, p. ej. para abrirlo aparte).
+ * `historyBack`: «Volver» vuelve atrás en el historial si se llegó desde la app, y si no, a `back` sin apilarla. Lo usan
+ * las pantallas que se abren desde Cuenta: así la flecha de Cuenta, que también vuelve atrás, no rebota entre las dos.
+ */
+export function FlowHeader({
+  title,
+  back,
+  search,
+  action,
+  onBack,
+  historyBack,
+}: {
+  title: string;
+  back: string;
+  search?: Record<string, string>;
+  action?: ReactNode;
+  onBack?: () => void;
+  historyBack?: boolean;
+}) {
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  const goBack = onBack ?? (historyBack ? () => (canGoBack ? router.history.back() : void router.navigate({ to: back, search, replace: true })) : undefined);
+  const click = goBack
     ? (e: MouseEvent) => {
         e.preventDefault();
-        onBack();
+        goBack();
       }
     : undefined;
   return (

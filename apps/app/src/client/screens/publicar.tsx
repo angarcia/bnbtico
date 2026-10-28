@@ -19,7 +19,8 @@ const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo sa
 
 // ---------- Entrada ----------
 
-/** Abrir esta pantalla no crea nada: el borrador nace al tocar «Empezar». Si hay uno pendiente, se ofrece seguirlo. */
+/** Sin borrador pendiente, abrir esta pantalla crea uno y entra al paso 1 (mientras, qué tener a mano; si falla, «Empezar»).
+ *  Si hay uno pendiente, no crea nada: ofrece seguirlo o empezar otro. */
 export function PublicarScreen() {
   const userId = useUserId();
   const client = useQueryClient();
