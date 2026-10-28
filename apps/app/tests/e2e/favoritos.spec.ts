@@ -107,19 +107,30 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
 });
 
-// Revisión UX N6: un favorito es intención; «Escribir» abre la ficha con la hoja de contacto (sin enviar nada sola).
-test("«Escribir» en un favorito abre la ficha con la hoja de contacto, y la nota lo dice", async ({ page }) => {
+// Revisión UX N6: un favorito es intención; «Enviar WhatsApp» (antes «Escribir», revisión de Ana) abre la ficha con la hoja
+// de contacto (sin enviar nada sola). Lleva el icono y el verde de «Contactar por WhatsApp» de la ficha.
+test("«Enviar WhatsApp» en un favorito abre la ficha con la hoja de contacto, y la nota lo dice", async ({ page }) => {
   await page.goto("/robots.txt");
   await page.evaluate(([key, id]) => localStorage.setItem(key!, JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }])), [KEY, negra.publicId]);
   await page.goto("/favoritos");
   await expect(page.getByText("Escriba directo desde aquí.", { exact: false })).toBeVisible();
   const wa: string[] = [];
   await page.route("https://wa.me/**", (r) => (wa.push(r.request().url()), r.abort()));
-  await page.getByRole("link", { name: "Escribir" }).click();
+  await expect(page.getByRole("link", { name: "Escribir", exact: true })).toHaveCount(0);
+  const send = page.getByRole("link", { name: "Enviar WhatsApp", exact: true });
+  await expect(send).toHaveClass(/\bbtn-wa\b/);
+  await expect(send.locator("svg")).toHaveCount(1);
+  const green = await send.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const box = await send.boundingBox();
+  expect(box!.height, "botón pequeño").toBeLessThan(48);
+  expect(box!.width, "no ocupa todo el ancho de la tarjeta").toBeLessThan(page.viewportSize()!.width / 2);
+  await send.click();
   await expect(page).toHaveURL(new RegExp(`/casa/${negra.publicId}$`)); // el parámetro se quita
   await expect(page.getByRole("dialog", { name: /Escríbale a/ })).toBeVisible();
   await page.waitForTimeout(500);
   expect(wa).toEqual([]);
+  // El mismo verde que el botón de la ficha.
+  expect(await page.locator(".btn-wa").first().evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(green);
 });
 
 test("casas que ya no están publicadas se quitan solas; vacío con «Explorar casas»", async ({ page }) => {

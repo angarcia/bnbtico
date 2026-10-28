@@ -49,9 +49,9 @@ Lo que **no** cambió y no hace falta repetir: Explorar con filtros, moneda y ti
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| U14 | Guardar una casa con el corazón → pestaña Favoritos | Cada casa tiene un botón **«Escribir»**. La nota dice «Escriba directo desde aquí. Guardar casas no necesita cuenta; para escribir solo verifica su WhatsApp con un código.» | ☐ |
-| U15 | Tocar «Escribir» | Abre la ficha con la hoja de contacto **ya abierta**; no se envía nada solo. La dirección queda `/casa/CT-…` sin `?escribir=1` | ☐ |
-| U16 | Una casa pausada (Anuncio visible apagado) que esté en Favoritos | En vez de «Escribir», «No disponible por ahora» | ☐ |
+| U14 | Guardar una casa con el corazón → pestaña Favoritos | Cada casa tiene un botón verde **«Enviar WhatsApp»** con el icono de WhatsApp (antes «Escribir»; revisión de Ana, 2026-10-28). La nota dice «Escriba directo desde aquí. Guardar casas no necesita cuenta; para escribir solo verifica su WhatsApp con un código.» | ☐ |
+| U15 | Tocar «Enviar WhatsApp» | Abre la ficha con la hoja de contacto **ya abierta**; no se envía nada solo. La dirección queda `/casa/CT-…` sin `?escribir=1` | ☐ |
+| U16 | Una casa pausada (Anuncio visible apagado) que esté en Favoritos | En vez de «Enviar WhatsApp», «No disponible por ahora» | ☐ |
 | U17 | Explorar: leer el buscador de arriba | «Limón · Cualquier grupo» (ya no dice «Cualquier fecha») | ☐ |
 | U18 | Abrir `/no-existe` | «No encontramos esta página» con el botón **«Ir a Explorar»** | ☐ |
 | U19 | Abrir `/casa/CT-999999` y la ficha de una casa reabierta para editar | «Este enlace no existe» / «Este enlace ya no está activo» con el botón **«Ver otras casas en el Caribe»** | ☐ |

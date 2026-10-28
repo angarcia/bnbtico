@@ -10,6 +10,7 @@ import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { FavoriteButton } from "../../shared/favorite-button";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
+import { I } from "../../shared/icons";
 import { Picture } from "../../shared/picture";
 import { RootHeader } from "../chrome";
 import { useSession } from "../session";
@@ -52,10 +53,11 @@ function FavoriteCard({ listing: l }: { listing: PublicListing }) {
             {formatMoney(price.amount, currency, fx.crcPerUsd)} <span className="muted">/ {price.unit}</span>
           </span>
         ) : null}
-        {/* Un favorito es intención: escribir desde aquí abre la ficha con la hoja de contacto (revisión UX N6). */}
+        {/* Un favorito es intención: escribir desde aquí abre la ficha con la hoja de contacto (revisión UX N6). Con el icono
+            y el verde de «Contactar por WhatsApp», en pequeño (revisión de Ana). */}
         {l.available ? (
-          <Link to="/casa/$publicId" params={{ publicId: l.publicId }} search={{ escribir: "1" }} className="btn btn-ghost btn-sm fav-write">
-            Escribir
+          <Link to="/casa/$publicId" params={{ publicId: l.publicId }} search={{ escribir: "1" }} className="btn btn-wa btn-sm fav-write">
+            <I.wa size={16} /> Enviar WhatsApp
           </Link>
         ) : (
           <span className="small muted">No disponible por ahora</span>
