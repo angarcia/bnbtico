@@ -60,6 +60,11 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   const reorder = useMutation({
     mutationFn: async (next: string[]) => (await photosApi()).reorder(listing.id, next),
     ...optimistic,
+    // El foco sigue a la foto hasta que el orden queda firme (también tras deshacerlo); luego no se vuelve a mover.
+    onSettled: async () => {
+      await optimistic.onSettled();
+      follow.current = null;
+    },
     onError: (e, next, ctx) => {
       optimistic.onError(e, next, ctx);
       setAnnounce("");
@@ -72,6 +77,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
     if (!files.length) return;
     change.reset();
     reorder.reset();
+    follow.current = null;
     void queue.start(files, MAX_PHOTOS - photos.length - queue.inFlight(), {
       prepare: async (file) => (await import("./resize")).makeVariants(file),
       upload: async (variants, onUploaded) => (await photosApi()).upload(listing.id, variants, onUploaded),
@@ -86,6 +92,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   const errors = [...notices, ...[change, reorder].flatMap((m) => (m.isError ? [photosErrorMessage(m.error)] : []))];
 
   function remove(id: string) {
+    follow.current = null;
     reorder.reset();
     change.mutate((api) => api.remove(id));
   }

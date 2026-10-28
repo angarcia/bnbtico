@@ -73,3 +73,32 @@ test("con una sola foto no sale la ayuda de arrastrar", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText("1 de 5–15");
   await expect(page.getByText(/Mantenga pulsada una foto/)).toHaveCount(0);
 });
+
+test("tras mover con el teclado, quitar otra foto no devuelve el foco a un «Mover…»", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await page.getByRole("button", { name: "Mover foto 3 antes" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Mover foto 2 antes" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Mover foto 2 antes" })).not.toHaveAttribute("aria-disabled", "true");
+  await page.getByRole("button", { name: "Quitar foto 5" }).click();
+  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+  await expect(page.getByRole("button", { name: "Quitar foto 1" })).toBeEnabled();
+  expect(await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.move ?? null)).toBeNull();
+});
+
+test("si el trozo de las fotos no carga, lo dice y «Reintentar» lo vuelve a pedir", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  let failed = false;
+  await page.route("**/assets/photos-*.js", (r) => {
+    if (failed) return r.continue();
+    failed = true;
+    return r.abort();
+  });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("No pudimos cargar las fotos. Revise su conexión.");
+  await expect(page.getByRole("heading", { name: "Fotos" })).toBeVisible();
+  await page.getByRole("button", { name: "Reintentar" }).click();
+  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(6);
+});

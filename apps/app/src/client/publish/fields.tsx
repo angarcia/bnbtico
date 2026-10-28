@@ -2,7 +2,7 @@
 // mapa se unió al paso 2, el 2026-10-27). Casillas y contadores llevan su valor en el formulario (campos ocultos o
 // casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
@@ -16,16 +16,44 @@ import { I } from "../../shared/icons";
 import { offerTakenQuery } from "../owner";
 import { LocationStep } from "./location-step";
 
-/** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a
- * las fotos (el service worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. */
-const PhotoUploader = lazy(() => import("./photos").then((m) => ({ default: m.PhotoUploader })));
-const photosPlaceholder = (
+/** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
+ * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Si el trozo no llega (sin
+ * red, o un despliegue nuevo cambió su nombre), se avisa sin salir del asistente y «Reintentar» lo vuelve a pedir. */
+const loadPhotos = () => lazy(() => import("./photos").then((m) => ({ default: m.PhotoUploader })));
+const photosFrame = (rest?: ReactNode) => (
   <div className="stack grow-col gap-12">
     <div className="row between baseline">
       <h2>Fotos</h2>
     </div>
+    {rest}
   </div>
 );
+
+class PhotosStep extends Component<{ listing: Listing; userId: string }, { Uploader: ReturnType<typeof loadPhotos>; failed: boolean }> {
+  override state = { Uploader: loadPhotos(), failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override render() {
+    const { Uploader, failed } = this.state;
+    if (failed)
+      return photosFrame(
+        <div className="row gap-8 baseline">
+          <p className="field-error" role="alert">
+            No pudimos cargar las fotos. Revise su conexión.
+          </p>
+          <button type="button" className="btn btn-sm btn-ghost" onClick={() => this.setState({ Uploader: loadPhotos(), failed: false })}>
+            Reintentar
+          </button>
+        </div>,
+      );
+    return (
+      <Suspense fallback={photosFrame()}>
+        <Uploader listing={this.props.listing} userId={this.props.userId} />
+      </Suspense>
+    );
+  }
+}
 
 /** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
 function ChoiceCards({ name, type, options, selected }: { name: string; type: "checkbox" | "radio"; options: { value: string; label: string; hint: string }[]; selected: string[] }) {
@@ -391,9 +419,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
     case 7:
       return (
         <>
-          <Suspense fallback={photosPlaceholder}>
-            <PhotoUploader listing={listing} userId={userId} />
-          </Suspense>
+          <PhotosStep listing={listing} userId={userId} />
           <span className="xs muted">Horizontales, sin teléfonos ni marcas de agua.</span>
         </>
       );
