@@ -457,6 +457,20 @@ isOneToOne: true
                   Relationships: [
                     
                   ]
+                },"zones": {
+                  Row: {
+                    "active": boolean,"canton_code": string,"created_at": string,"id": string,"lat": number | null,"lng": number | null,"name": string,"point": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"canton_code": string,"created_at"?: string,"id": string,"lat"?: never,"lng"?: never,"name": string,"point": unknown
+                  }
+                  Update: {
+                    "active"?: boolean,"canton_code"?: string,"created_at"?: string,"id"?: string,"lat"?: never,"lng"?: never,"name"?: string,"point"?: unknown
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
@@ -617,6 +631,11 @@ isOneToOne: true
                            },
 "test_set_offer_days_left":
 { Args: { "p_days_left": number,"p_public_id": string }; Returns: string
+                           },
+"zones_near":
+{ Args: { "p_km"?: number,"p_lat": number,"p_lng": number }; Returns: {
+              "distance_m": number,"id": string,"name": string
+            }[]
                            }
           }
           Enums: {
