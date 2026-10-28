@@ -1,17 +1,18 @@
-// Pantalla 7 del asistente: fotos. La rejilla, el recuento y el orden salen siempre de la lista del servidor: tras subir,
-// quitar o reordenar se relee la casa (nada se reordena en el navegador por su cuenta). Las fotos en curso se ven aparte,
-// con su progreso. El código de canvas (resize.ts) se carga al elegir fotos.
+// Pantalla 7 del asistente: fotos. La rejilla y el recuento salen de la lista del servidor: subir y quitar releen la casa
+// antes de mostrar el cambio. Reordenar (arrastrando o con los botones ocultos) se ve al instante (optimista) y vuelve al
+// orden anterior si el servidor lo rechaza; después se relee la casa. Las fotos en curso se ven aparte, con su progreso.
+// El código de canvas (resize.ts) se carga al elegir fotos.
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import type { PhotosApi } from "../../domain/api";
-import { DomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { MAX_PHOTOS, MIN_PHOTOS, missingPhotosLabel as missingLabel, type Listing } from "../../domain/listing";
-import { asCover, moveBy } from "../../domain/photo-order";
+import { moveBy } from "../../domain/photo-order";
 import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
 import { photosApi } from "../owner";
 import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type UploadQueue } from "./photo-queue";
+import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
 
 /** Una cola por casa, fuera de la pantalla: sobrevive a ir al paso 8 y volver. */
 const queues = new Map<string, UploadQueue>();
@@ -22,26 +23,47 @@ const queueFor = (id: string) => {
 };
 
 const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };
-const message = (e: unknown) => (e instanceof DomainError ? e.message : "No pudimos cambiar las fotos. Intente de nuevo.");
+const movedTo = (to: number) => (to === 0 ? "Foto movida a la posición 1, portada" : `Foto movida a la posición ${to + 1}`);
+type Dir = "before" | "after";
 
 export function PhotoUploader({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
   const queue = queueFor(listing.id);
   const uploads = useSyncExternalStore(queue.subscribe, queue.items, queue.items);
   const notices = useSyncExternalStore(queue.subscribe, queue.notices, queue.notices);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [announce, setAnnounce] = useState("");
+  const grid = useRef<HTMLDivElement>(null);
+  const follow = useRef<{ id: string; dir: Dir } | null>(null);
   const photos = listing.photos;
   const ids = photos.map((p) => p.id);
+  const order = ids.join();
+
+  // El foco sigue a la foto movida: React puede mover el botón enfocado con insertBefore, y eso lo desenfoca.
+  useLayoutEffect(() => {
+    const f = follow.current;
+    const active = document.activeElement;
+    if (!f || (active && active !== document.body && !grid.current?.contains(active))) return;
+    grid.current?.querySelector<HTMLElement>(`[data-photo="${f.id}"] [data-move="${f.dir}"]`)?.focus();
+  }, [order]);
 
   const reread = async () => {
     void client.invalidateQueries({ queryKey: ["own-listings", userId] });
     await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] });
   };
 
-  // Quitar y reordenar: la mutación sigue «en curso» hasta que llega la lista nueva del servidor.
+  // Quitar: la mutación sigue «en curso» hasta que llega la lista nueva del servidor.
   const change = useMutation({
     mutationFn: async (run: (api: PhotosApi) => Promise<void>) => run(await photosApi()),
     onSettled: reread,
+  });
+  const optimistic = photoReorderCallbacks(client, userId, listing.id, reread);
+  const reorder = useMutation({
+    mutationFn: async (next: string[]) => (await photosApi()).reorder(listing.id, next),
+    ...optimistic,
+    onError: (e, next, ctx) => {
+      optimistic.onError(e, next, ctx);
+      setAnnounce("");
+    },
   });
 
   function pick(e: ChangeEvent<HTMLInputElement>) {
@@ -49,6 +71,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
     e.currentTarget.value = "";
     if (!files.length) return;
     change.reset();
+    reorder.reset();
     void queue.start(files, MAX_PHOTOS - photos.length - queue.inFlight(), {
       prepare: async (file) => (await import("./resize")).makeVariants(file),
       upload: async (variants, onUploaded) => (await photosApi()).upload(listing.id, variants, onUploaded),
@@ -58,12 +81,24 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
     });
   }
 
-  const reorder = (order: string[]) => change.mutate((api) => api.reorder(listing.id, order));
-  const current = selected && ids.includes(selected) ? selected : null;
-  const index = current ? ids.indexOf(current) : -1;
-  const busy = change.isPending;
+  const busy = change.isPending || reorder.isPending;
   const room = photos.length + uploads.length < MAX_PHOTOS;
-  const errors = [...notices, ...(change.isError ? [message(change.error)] : [])];
+  const errors = [...notices, ...[change, reorder].flatMap((m) => (m.isError ? [photosErrorMessage(m.error)] : []))];
+
+  function remove(id: string) {
+    reorder.reset();
+    change.mutate((api) => api.remove(id));
+  }
+
+  /** Botones ocultos: con aria-disabled (no disabled) para que el foco no se pierda al llegar a un extremo. */
+  function move(id: string, from: number, dir: Dir) {
+    const to = from + (dir === "before" ? -1 : 1);
+    if (busy || to < 0 || to >= ids.length) return;
+    follow.current = { id, dir };
+    setAnnounce(movedTo(to));
+    change.reset();
+    reorder.mutate(moveBy(ids, id, dir === "before" ? -1 : 1));
+  }
 
   return (
     <div className="stack grow-col gap-12">
@@ -75,16 +110,21 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
       </div>
       {/* Con menos de 5 se puede seguir: el mínimo se pide al enviar (revisión UX C4). */}
       {photos.length < MIN_PHOTOS ? <span className="small photos-missing">{missingLabel(MIN_PHOTOS - photos.length)} · puede añadirlas al final</span> : null}
+      {photos.length >= 2 ? <p className="small muted photos-help">Mantenga pulsada una foto y arrástrela para cambiar el orden. La primera es la portada.</p> : null}
       <div className="photos-scroll">
-        <div className="photos-grid" aria-busy={busy || uploads.length > 0}>
+        <div className="photos-grid" ref={grid} aria-busy={busy || uploads.length > 0}>
           {photos.map((p, i) => (
-            <div key={p.id} className={`photo${i === 0 ? " cover" : ""}${p.id === current ? " is-selected" : ""}`}>
-              <button type="button" className="photo-pick" aria-pressed={p.id === current} aria-label={i === 0 ? "Portada" : `Foto ${i + 1}`} onClick={() => setSelected(p.id === current ? null : p.id)}>
-                <img src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
-              </button>
+            <div key={p.id} className={`photo${i === 0 ? " cover" : ""}`} data-photo={p.id}>
+              <img draggable={false} src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
               {i === 0 ? <span className="tag">Portada</span> : null}
-              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy} onClick={() => change.mutate((api) => api.remove(p.id))}>
+              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy} onClick={() => remove(p.id)}>
                 <I.x size={16} />
+              </button>
+              <button type="button" className="sr-move" data-move="before" aria-disabled={busy || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>
+                Mover foto {i + 1} antes
+              </button>
+              <button type="button" className="sr-move" data-move="after" aria-disabled={busy || i === ids.length - 1 ? true : undefined} onClick={() => move(p.id, i, "after")}>
+                Mover foto {i + 1} después
               </button>
             </div>
           ))}
@@ -113,24 +153,14 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
           ) : null}
         </div>
       </div>
-      {current ? (
-        <div className="row gap-8 photo-actions" role="group" aria-label={`Foto ${index + 1}`}>
-          <button type="button" className="btn btn-ghost btn-sm" disabled={busy || index === 0} onClick={() => reorder(asCover(ids, current))}>
-            Hacer portada
-          </button>
-          <button type="button" className="btn btn-ghost btn-sm" disabled={busy || index === 0} aria-label="Mover antes" onClick={() => reorder(moveBy(ids, current, -1))}>
-            ← Antes
-          </button>
-          <button type="button" className="btn btn-ghost btn-sm" disabled={busy || index === ids.length - 1} aria-label="Mover después" onClick={() => reorder(moveBy(ids, current, 1))}>
-            Después →
-          </button>
-        </div>
-      ) : null}
       {errors.length ? (
         <p className="field-error" role="alert">
           {errors.join(" ")}
         </p>
       ) : null}
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
     </div>
   );
 }

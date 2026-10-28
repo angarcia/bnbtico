@@ -4,7 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PhotoVariants } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
 import { variantUrl } from "../../src/domain/image";
-import { asCover } from "../../src/domain/photo-order";
+import { moveTo } from "../../src/domain/photo-order";
 import type { ListingsHarness } from "./harness";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
@@ -107,7 +107,7 @@ export function photosContract(name: string, makeHarness: () => Promise<Listings
       const ids = [(await addOne(id)).id, (await addOne(id)).id, (await addOne(id)).id];
       await photos().reorder(id, [ids[2]!, ids[0]!, ids[1]!]);
       expect((await own(id)).photos.map((p) => p.id)).toEqual([ids[2], ids[0], ids[1]]);
-      await photos().reorder(id, asCover([ids[2]!, ids[0]!, ids[1]!], ids[1]!));
+      await photos().reorder(id, moveTo([ids[2]!, ids[0]!, ids[1]!], ids[1]!, 0));
       const l = await own(id);
       expect(l.photos[0]!.id).toBe(ids[1]);
       expect(l.photos.map((p) => p.position)).toEqual([0, 1, 2]);

@@ -1,9 +1,5 @@
 // Órdenes de fotos que el propietario pide en el paso 7 (botones o arrastrando); la lista completa va a reorder_listing_photos y la portada es la primera.
 
-export function asCover(ids: readonly string[], id: string): string[] {
-  return ids.includes(id) ? [id, ...ids.filter((x) => x !== id)] : [...ids];
-}
-
 export function moveBy(ids: readonly string[], id: string, delta: -1 | 1): string[] {
   const from = ids.indexOf(id);
   const to = from + delta;

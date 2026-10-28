@@ -450,12 +450,12 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .map-hint{left:12px;bottom:12px;z-index:500}
 .map-locate{position:absolute;right:10px;bottom:10px;z-index:500;box-shadow:var(--shadow);color:var(--primary)}
 .photos-count{font-weight:700}
-.photos-grid .photo-pick{position:absolute;inset:0;padding:0;border:0;background:none;cursor:pointer;border-radius:inherit}
-.photos-grid .photo.is-selected::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 4px var(--primary);pointer-events:none}
 .photos-grid .remove{border:0;cursor:pointer;z-index:1}
 .photos-grid .tag{pointer-events:none}
 .photos-grid .photo.uploading{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 12px}
-.photo-actions .btn{flex:1 1 auto;padding:0 10px}
+/* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
+.sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-size:12px;font-weight:700}
 .wa-card{gap:12px;padding:12px 14px;border-radius:var(--r-input)}
 .input-money input:not([type=checkbox]):not([type=file]):not([type=radio]){border:0;background:transparent;min-height:0;padding:0}
 

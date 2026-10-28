@@ -394,7 +394,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
           <Suspense fallback={photosPlaceholder}>
             <PhotoUploader listing={listing} userId={userId} />
           </Suspense>
-          <span className="xs muted">Toque una foto para moverla o hacerla portada; la primera es la portada. Horizontales, sin teléfonos ni marcas de agua.</span>
+          <span className="xs muted">Horizontales, sin teléfonos ni marcas de agua.</span>
         </>
       );
     case 8:

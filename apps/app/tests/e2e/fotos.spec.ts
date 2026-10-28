@@ -34,7 +34,7 @@ const sizeOf = (page: Page, url: string) =>
     return [bitmap.width, bitmap.height];
   }, url);
 
-test("subir seis fotos con progreso, hacer portada, quitar una y seguir", async ({ page }) => {
+test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", async ({ page }) => {
   const { id } = await h.seed({ status: "draft" });
   // Las subidas tardan un poco: así se ve el progreso por foto.
   await page.route("**/storage/v1/object/listings/**", async (route) => {
@@ -66,16 +66,21 @@ test("subir seis fotos con progreso, hacer portada, quitar una y seguir", async 
   await expect(page.locator(".photos-grid .photo.cover img")).toHaveAttribute("src", `${hero}800.jpg`);
   await expect(page.locator(".photos-grid .photo:not(.cover) img").first()).toHaveAttribute("src", /\/480\.jpg$/);
 
-  // Hacer portada la tercera: la rejilla se relee del servidor.
-  await page.getByRole("button", { name: "Foto 3", exact: true }).click();
-  await page.getByRole("button", { name: "Hacer portada" }).click();
+  // La tercera a la portada con los botones ocultos (teclado): el orden se ve al instante y se guarda.
+  const mover = (name: string) => page.getByRole("button", { name });
+  await mover("Mover foto 3 antes").focus();
+  await page.keyboard.press("Enter");
+  await expect(mover("Mover foto 2 antes")).toBeFocused();
+  await expect(mover("Mover foto 2 antes")).not.toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("Enter");
   await expect(page.locator(".photos-grid .photo.cover img")).toHaveAttribute("src", l.photos[2]!.url);
   await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
-  expect((await own(id)).photos.map((p) => p.id)).toEqual([l.photos[2]!.id, l.photos[0]!.id, l.photos[1]!.id, ...l.photos.slice(3).map((p) => p.id)]);
+  await expect.poll(async () => (await own(id)).photos.map((p) => p.id)).toEqual([2, 0, 1, 3, 4, 5].map((i) => l.photos[i]!.id));
 
   // Mover después.
-  await page.getByRole("button", { name: "Foto 2", exact: true }).click();
-  await page.getByRole("button", { name: "Mover después" }).click();
+  await expect(mover("Mover foto 2 después")).not.toHaveAttribute("aria-disabled", "true");
+  await mover("Mover foto 2 después").focus();
+  await page.keyboard.press("Enter");
   await expect.poll(async () => (await own(id)).photos[2]!.id).toBe(l.photos[0]!.id);
 
   // Quitar la segunda: fila y tres objetos fuera.
@@ -91,9 +96,7 @@ test("subir seis fotos con progreso, hacer portada, quitar una y seguir", async 
   await pick(page).setInputFiles({ name: "IMG_0001.HEIC", mimeType: "image/heic", buffer: Buffer.from("no es un jpeg") });
   await expect(fieldAlert(page)).toHaveText("Ese formato no se puede subir. Use JPG o PNG.");
 
-  // La página no hace scroll, ni con la barra de acciones a la vista.
-  await page.getByRole("button", { name: "Foto 4", exact: true }).click();
-  await expect(page.getByRole("group", { name: "Foto 4" }).getByRole("button", { name: "Hacer portada" })).toBeEnabled();
+  // La página no hace scroll.
   const [scrollH, innerH] = await page.evaluate(() => [document.documentElement.scrollHeight, window.innerHeight]);
   expect(scrollH).toBeLessThanOrEqual(innerH);
 
