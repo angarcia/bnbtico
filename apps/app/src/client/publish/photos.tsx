@@ -13,6 +13,7 @@ import { fadeIn } from "../../shared/picture";
 import { photosApi } from "../owner";
 import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type UploadQueue } from "./photo-queue";
 import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
+import { usePhotoDrag } from "./use-photo-drag";
 
 /** Una cola por casa, fuera de la pantalla: sobrevive a ir al paso 8 y volver. */
 const queues = new Map<string, UploadQueue>();
@@ -32,7 +33,7 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   const uploads = useSyncExternalStore(queue.subscribe, queue.items, queue.items);
   const notices = useSyncExternalStore(queue.subscribe, queue.notices, queue.notices);
   const [announce, setAnnounce] = useState("");
-  const grid = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   const follow = useRef<{ id: string; dir: Dir } | null>(null);
   const photos = listing.photos;
   const ids = photos.map((p) => p.id);
@@ -42,8 +43,8 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   useLayoutEffect(() => {
     const f = follow.current;
     const active = document.activeElement;
-    if (!f || (active && active !== document.body && !grid.current?.contains(active))) return;
-    grid.current?.querySelector<HTMLElement>(`[data-photo="${f.id}"] [data-move="${f.dir}"]`)?.focus();
+    if (!f || (active && active !== document.body && !drag.gridRef.current?.contains(active))) return;
+    drag.gridRef.current?.querySelector<HTMLElement>(`[data-photo="${f.id}"] [data-move="${f.dir}"]`)?.focus();
   }, [order]);
 
   const reread = async () => {
@@ -88,6 +89,8 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   }
 
   const busy = change.isPending || reorder.isPending;
+  // Soltar todavía no reordena: lo hace la tarea siguiente.
+  const drag = usePhotoDrag({ ids, enabled: !busy && uploads.length === 0, scroller, onDrop: () => {} });
   const room = photos.length + uploads.length < MAX_PHOTOS;
   const errors = [...notices, ...[change, reorder].flatMap((m) => (m.isError ? [photosErrorMessage(m.error)] : []))];
 
@@ -118,13 +121,19 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
       {/* Con menos de 5 se puede seguir: el mínimo se pide al enviar (revisión UX C4). */}
       {photos.length < MIN_PHOTOS ? <span className="small photos-missing">{missingLabel(MIN_PHOTOS - photos.length)} · puede añadirlas al final</span> : null}
       {photos.length >= 2 ? <p className="small muted photos-help">Mantenga pulsada una foto y arrástrela para cambiar el orden. La primera es la portada.</p> : null}
-      <div className="photos-scroll">
-        <div className="photos-grid" ref={grid} aria-busy={busy || uploads.length > 0}>
+      <div className="photos-scroll" ref={scroller}>
+        <div className={`photos-grid${drag.liftedId ? " is-dragging" : ""}`} ref={drag.gridRef} aria-busy={busy || uploads.length > 0}>
           {photos.map((p, i) => (
-            <div key={p.id} className={`photo${i === 0 ? " cover" : ""}`} data-photo={p.id}>
+            <div
+              key={p.id}
+              className={`photo${i === 0 ? " cover" : ""}${drag.liftedId === p.id ? " is-lifted" : ""}`}
+              data-photo={p.id}
+              onPointerDown={(e) => drag.onPointerDown(e, p.id)}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <img draggable={false} src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
               {i === 0 ? <span className="tag">Portada</span> : null}
-              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy} onClick={() => remove(p.id)}>
+              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy || !!drag.liftedId} onClick={() => remove(p.id)}>
                 <I.x size={16} />
               </button>
               <button type="button" className="sr-move" data-move="before" aria-disabled={busy || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>

@@ -453,6 +453,10 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .photos-grid .remove{border:0;cursor:pointer;z-index:1}
 .photos-grid .tag{pointer-events:none}
 .photos-grid .photo.uploading{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 12px}
+/* Arrastrar fotos: deslizar en vertical hace scroll hasta levantar la foto; levantada, el navegador ya no se queda el gesto. */
+.photos-grid .photo:not(.uploading){touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transform-origin:0 0}
+.photos-grid.is-dragging .photo{touch-action:none}
+.photos-grid .photo.is-lifted{z-index:2;transform-origin:50% 50%;box-shadow:var(--shadow-lift, 0 12px 28px rgba(28,43,42,.28))}
 /* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
 .sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-size:12px;font-weight:700}

@@ -3,9 +3,11 @@ import { readFileSync } from "node:fs";
 import type { ListingsHarness } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
+import { touch } from "./helpers/touch";
 
 // Paso 7: ordenar fotos. Botones ocultos «Mover foto N antes / después» para teclado y lector de pantalla, con el orden
-// pintado al instante (optimista), anunciado en una región viva y con vuelta atrás si el servidor lo rechaza.
+// pintado al instante (optimista), anunciado en una región viva y con vuelta atrás si el servidor lo rechaza. Con el dedo
+// (toques reales por CDP, helpers/touch.ts): mantener pulsada una foto la levanta; deslizar sigue haciendo scroll.
 const FOTOS = new URL("../../../../design/pantallas/fotos/", import.meta.url).pathname;
 let h: ListingsHarness;
 let reorders: string[][];
@@ -101,4 +103,62 @@ test("si el trozo de las fotos no carga, lo dice y «Reintentar» lo vuelve a pe
   await page.getByRole("button", { name: "Reintentar" }).click();
   await expect(page.getByRole("status")).toHaveText("6 de 5–15");
   await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(6);
+});
+
+test.describe("tocar y arrastrar", () => {
+  test.use({ viewport: { width: 375, height: 667 } }); // la rejilla hace scroll por dentro: lo necesita la prueba de deslizar
+  test("deslizar en vertical sobre una foto hace scroll y no reordena", async ({ page }) => {
+    const { id } = await h.seed({ status: "draft", photos: 12 });
+    const before = (await own(id)).photos.map((p) => p.id);
+    await page.goto(`/propietario/publicar/${id}/7`);
+    const scroller = page.locator(".photos-scroll");
+    const t = await touch(page);
+    const p = await t.center(page.locator(".photos-grid [data-photo]").nth(4));
+    await t.down(p.x, p.y);
+    await t.move(p.x, p.y - 200, 10); // sin pausa: es un desplazamiento, no una pulsación larga
+    await t.up();
+    await expect.poll(() => scroller.evaluate((e) => e.scrollTop)).toBeGreaterThan(50);
+    await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+    expect(await grid(page)).toEqual(before);
+    expect(reorders).toHaveLength(0);
+  });
+});
+
+test("un toque corto no hace nada", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  const before = (await own(id)).photos.map((p) => p.id);
+  await page.goto(`/propietario/publicar/${id}/7`);
+  const t = await touch(page);
+  const p = await t.center(page.locator(".photos-grid [data-photo]").nth(2));
+  await t.down(p.x, p.y);
+  await page.waitForTimeout(120);
+  await t.up();
+  await page.waitForTimeout(600);
+  await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+  expect(await grid(page)).toEqual(before);
+  expect(reorders).toHaveLength(0);
+});
+
+test("mantener pulsada levanta la foto sin mover la página; el ✕ no levanta", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(6); // el trozo de las fotos es diferido
+  const scrollBefore = await page.evaluate(() => [window.scrollY, document.querySelector(".photos-scroll")!.scrollTop]);
+  const t = await touch(page);
+  const tile = page.locator(".photos-grid [data-photo]").nth(3);
+  const p = await t.center(tile);
+  await t.down(p.x, p.y);
+  await expect(tile).toHaveClass(/is-lifted/);
+  await expect(page.locator(".photos-grid")).toHaveClass(/is-dragging/);
+  expect(await page.evaluate(() => [window.scrollY, document.querySelector(".photos-scroll")!.scrollTop])).toEqual(scrollBefore);
+  await t.up();
+  await expect(tile).not.toHaveClass(/is-lifted/);
+  expect(reorders).toHaveLength(0);
+  // Pulsación larga sobre el ✕ de la foto 2: no se levanta nada ni se quita nada.
+  const x = await t.center(page.getByRole("button", { name: "Quitar foto 2" }));
+  await t.down(x.x, x.y);
+  await page.waitForTimeout(600);
+  await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+  await t.up();
+  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
 });
