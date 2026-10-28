@@ -1,5 +1,5 @@
 // Consultas y acciones de la zona del propietario. Mis casas se persiste en el dispositivo mientras dure la sesión
-// (clave privada, ver account.ts y persist.ts): Inicio y Mis casas se pintan al instante desde la caché y se refrescan
+// (clave privada, ver account.ts y persist.ts): Mis casas y Actividad se pintan al instante desde la caché y se refrescan
 // por detrás (30 s, al volver a la app y al recuperar la red). El detalle se siembra con la fila de la lista.
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { ListingActivity, OwnerListingsApi, PhotosApi } from "../domain/api";
@@ -36,7 +36,7 @@ export async function fetchOwnListings(): Promise<Listing[]> {
   return list;
 }
 
-/** Visitas, toques en WhatsApp y consultas de 30 días de todas las casas propias (Inicio). */
+/** Visitas, toques en WhatsApp y consultas de 30 días de todas las casas propias (Actividad). */
 export const activityQuery = (userId: string) =>
   queryOptions({
     queryKey: ["own-activity", userId] as const,

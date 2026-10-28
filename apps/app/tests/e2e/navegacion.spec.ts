@@ -2,10 +2,11 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { serviceClient, sql, TEST_NAMES, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
-import { injectSession } from "./helpers/session";
+import { enterCode, injectSession } from "./helpers/session";
 import { catchWhatsApp } from "./helpers/whatsapp";
 
-// Navegación simple: Mis casas (una casa directa, dos o más en lista), Actividad (cifras de 30 días por casa y últimas
+// Navegación simple: una sola barra que crece con las casas (dos pestañas sin casas, cinco con al menos una), Cuenta a
+// pantalla completa, Mis casas (una casa directa, dos o más en lista), Actividad (cifras de 30 días por casa y últimas
 // consultas) y la vuelta de /propietario y /propietario/consultas.
 // Contra Supabase local con las sesiones inyectadas (sin gastar SMS).
 test.describe.configure({ mode: "serial" });
@@ -15,6 +16,34 @@ let h: Awaited<ReturnType<typeof postgrestHarness>>;
 let casa: Seeded;
 
 const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
+const accountButton = (page: Page) => page.getByRole("banner").getByRole("link", { name: /Cuenta|^[A-Z]{1,2}$/ });
+const OWNER_TABS = ["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/];
+
+/** Ingresar por la interfaz con un número de prueba que ya tiene cuenta (código 123456). */
+async function signInByUi(page: Page, phone: string) {
+  await page.evaluate(() => localStorage.clear()); // sin la sesión inyectada
+  await page.waitForTimeout(1100); // Supabase admite un código por segundo y número
+  await page.goto("/cuenta");
+  await page.getByLabel("Número de WhatsApp").fill(phone);
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await enterCode(page);
+}
+
+/** Cada cambio del número de pestañas de la barra, con la ruta en ese momento, desde el primer pintado (0: aún sin barra). */
+const recordTabCounts = (page: Page) =>
+  page.addInitScript(() => {
+    const w = window as unknown as { __tabCounts: [string, number][] };
+    w.__tabCounts = [];
+    let last = -1;
+    new MutationObserver(() => {
+      const n = document.querySelector('nav[aria-label="Navegación principal"]')?.querySelectorAll("a").length ?? 0;
+      if (n === last) return;
+      last = n;
+      w.__tabCounts.push([location.pathname, n]);
+    }).observe(document, { childList: true, subtree: true });
+  });
+const tabCountsAt = (page: Page, prefix: string) =>
+  page.evaluate((p) => (window as unknown as { __tabCounts: [string, number][] }).__tabCounts.filter(([path, n]) => n > 0 && path.startsWith(p)).map(([, n]) => n), prefix);
 const opened = (publicId: string) => sql(`select count(*) from public.inquiries i join public.listings l on l.id = i.listing_id where l.public_id = '${publicId}' and i.owner_opened_at is not null`);
 
 /** La caché de Query guardada en IndexedDB, como texto. */
@@ -43,6 +72,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("6 · /propietario/consultas lleva a Actividad sin quedar en el historial", async ({ page }) => {
+  await h.seed({ status: "draft", draft: { title: "Borrador del propietario" } }); // sin casas, la zona lleva a Explorar
   await page.goto("/explorar");
   const before = await page.evaluate(() => history.length);
   await page.goto("/propietario/consultas");
@@ -60,6 +90,7 @@ test("/propietario lleva a Mis casas sin quedar en el historial", async ({ page 
 });
 
 test("7 · con una casa activa: las tres cifras en grande y las últimas consultas", async ({ page }) => {
+  await h.reset();
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
   await h.recordViews(casa.publicId, 4);
   await h.recordTaps(casa.publicId, 2);
@@ -135,13 +166,15 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
   await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: null, message: "Otra pregunta" });
   await page.goto("/propietario/actividad");
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
-  await nav(page).getByRole("link", { name: "Cuenta" }).click();
-  await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1"); // en Cuenta, modo propietario: lo leído
+  // Cuenta se abre a pantalla completa desde arriba, sin barra inferior.
+  await accountButton(page).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await expect(nav(page)).toHaveCount(0);
   await expect.poll(() => persistedCache(page)).toContain('"inquiries"');
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(page.getByRole("button", { name: "Cerrar sesión" })).toHaveCount(0);
   await page.getByRole("link", { name: "Volver" }).click();
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi cuenta"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
   await expect
     .poll(
       async () => {
@@ -192,4 +225,83 @@ test("la casa abierta desde la lista se queda aunque se descarte la otra", async
   await expect(page).toHaveURL(/\/propietario\/casas$/);
   await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
+});
+
+test("1 · sin sesión: dos pestañas e «Ingresar» arriba", async ({ page }) => {
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/explorar");
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(page.getByRole("banner").getByRole("link", { name: "Ingresar" })).toBeVisible();
+  await page.goto("/propietario/casas");
+  await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
+});
+
+test("2 · sin casas: dos pestañas; «Publicar mi casa» crea un borrador, cinco pestañas y Mis casas muestra el borrador", async ({ page }) => {
+  await h.reset(); // ninguna casa de «other»
+  await signInByUi(page, "8888 1234");
+  await expect(page).toHaveURL(/\/explorar$/);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  // Sin casas, la zona del propietario lleva a Explorar.
+  await page.goto("/propietario/casas");
+  await expect(page).toHaveURL(/\/explorar$/);
+  await accountButton(page).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await expect(page.getByRole("link", { name: /Favoritos/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Buscar una casa/ })).toHaveCount(0);
+  await page.getByRole("link", { name: /Publicar mi casa/ }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+  await page.goto("/propietario/casas");
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+  await expect(page.getByTestId("resume-card").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
+  // El aviso de arriba ya lleva al borrador: el detalle no repite «Seguir con el borrador».
+  await expect(page.getByRole("link", { name: /Seguir con el borrador/ })).toHaveCount(0);
+  await page.goto("/cuenta");
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  await expect(page.getByText("Próximo cobro")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Publicar mi casa/ })).toHaveCount(0);
+});
+
+test("el propietario entra y la barra no salta; al volver a abrir, cinco desde el primer pintado", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
+  await recordTabCounts(page);
+  await signInByUi(page, "8777 0001");
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+  expect(await tabCountsAt(page, "/propietario/casas")).toEqual([5]);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cahuita" })).toBeVisible();
+  expect(await tabCountsAt(page, "/")).toEqual([5]);
+});
+
+test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "draft", draft: { title: "Borrador uno" } });
+  await h.seed({ status: "draft", draft: { title: "Borrador dos" } });
+  page.on("dialog", (d) => void d.accept());
+  await page.goto("/propietario/casas");
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+  await expect(page.getByRole("article")).toHaveCount(2);
+  await page.getByRole("article").filter({ hasText: "Borrador uno" }).getByRole("button", { name: "Descartar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Borrador dos" })).toBeVisible();
+  await page.getByRole("button", { name: "Descartar borrador" }).click();
+  await expect(page).toHaveURL(/\/explorar$/);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+});
+
+test("Cuenta se abre a pantalla completa, sin barra inferior, y la flecha vuelve adonde estaba", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Manzanillo" } });
+  await page.goto("/propietario/calendario");
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+  await accountButton(page).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  await expect(nav(page)).toHaveCount(0);
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(/\/propietario\/calendario$/);
+  // Abierta directamente (sin historial en la app), la flecha lleva a Mis casas.
+  await page.goto("/cuenta");
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
 });

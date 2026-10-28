@@ -37,7 +37,7 @@ const card = (page: Page, title: string) => page.getByRole("article").filter({ h
 test("Mis casas: estado, nota del admin y, sin red, desde la caché", async ({ page }) => {
   await page.goto("/propietario/casas");
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/]);
   // Revisión UX A1: lo que falta por publicar va arriba (aquí, la casa con cambios más reciente), como único aviso y con el
   // único botón relleno; el botón de su tarjeta y el de compartir la casa activa van en contorno.
   const resume = page.getByTestId("resume-card");

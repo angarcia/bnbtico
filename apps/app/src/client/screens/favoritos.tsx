@@ -100,17 +100,7 @@ export function FavoritosScreen() {
     <>
       <RootHeader
         title="Favoritos"
-        action={
-          <Link
-            to="/cuenta"
-            search={{ next: "/favoritos" }}
-            className={`btn btn-ghost btn-header${status === "signed-out" ? "" : " is-hidden"}`}
-            aria-hidden={status !== "signed-out"}
-            tabIndex={status === "signed-out" ? undefined : -1}
-          >
-            Ingresar
-          </Link>
-        }
+        next="/favoritos"
         aside={
           favs.length ? (
             <span className="small muted" data-testid="favorites-count">

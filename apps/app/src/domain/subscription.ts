@@ -264,7 +264,7 @@ export interface PaymentMethodSummary {
   addedAt: string;
 }
 
-/** Lo que devuelve owner_billing: una petición para Cuenta, Inicio, Mis casas y Promoción y suscripción. */
+/** Lo que devuelve owner_billing: una petición para Cuenta, Mis casas y Promoción y suscripción. */
 export interface BillingOverview {
   houses: BillingHouse[];
   method: PaymentMethodSummary | null;

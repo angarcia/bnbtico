@@ -15,23 +15,19 @@ import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { SUPPORT_NUMBERS } from "../support-numbers";
 import { listingsQuery, provincesQuery } from "../queries";
-import { useSession } from "../session";
+import { AccountButton } from "../chrome";
 
 const route = getRouteApi("/_tabs/explorar");
 const casas = (n: number) => `${n} ${n === 1 ? "casa" : "casas"}`;
 
 function Header() {
-  // Caja de tamaño fijo: con sesión (o mientras se lee la guardada) el botón ocupa su sitio sin verse, y nada salta.
-  const signedOut = useSession().status === "signed-out";
   return (
-    <header className="header-root">
+    <header className="header-root" role="banner">
       <div className="top">
         <Link to="/explorar" aria-label="bnbtico, inicio">
           <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
         </Link>
-        <Link to="/cuenta" className={`btn btn-ghost btn-header${signedOut ? "" : " is-hidden"}`} aria-hidden={!signedOut} tabIndex={signedOut ? undefined : -1}>
-          Ingresar
-        </Link>
+        <AccountButton />
       </div>
       <h1>
         ¿Para dónde <span className="primary">va</span>?

@@ -1,4 +1,4 @@
-// La consulta de las casas propias, en el JS inicial: la barra de pestañas y el aviso de Inicio dependen de cuántas casas
+// La consulta de las casas propias, en el JS inicial: la barra de pestañas y la llegada tras ingresar dependen de cuántas casas
 // hay. La lectura en sí (supabase-js y el resto de la zona del propietario) se carga al pedirla, desde ./owner; por eso
 // este módulo no lo importa de forma estática. Mientras la lista no llega, decide la pista guardada en el teléfono.
 import { queryOptions, useQuery } from "@tanstack/react-query";

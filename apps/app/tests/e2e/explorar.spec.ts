@@ -274,7 +274,7 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await expect(results(page)).toHaveText("8 casas en Limón");
 
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
-  // Favoritos y Mi cuenta son trozos diferidos: los trae la precarga (en reposo o al apuntar a la pestaña; instalada, el
+  // Favoritos y Cuenta son trozos diferidos: los trae la precarga (en reposo o al apuntar a la pestaña; instalada, el
   // service worker) antes de quedarse sin red. Puede que ya estén descargados al llegar aquí, así que se mira lo cargado.
   await nav.getByRole("link", { name: "Favoritos" }).hover();
   await page.waitForFunction(() => {
@@ -284,10 +284,10 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await page.route("**/*", (route) => route.abort());
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
-  await nav.getByRole("link", { name: "Mi cuenta" }).click();
-  // Sin sesión, Mi cuenta es Ingresar, con la barra inferior (ticket 17); se pinta sin red porque no descarga supabase-js.
+  await page.getByRole("banner").getByRole("link", { name: "Ingresar" }).click();
+  // Sin sesión, «Ingresar» arriba abre Ingresar a pantalla completa; se pinta sin red porque no descarga supabase-js.
   await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
+  await expect(nav).toHaveCount(0);
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(results(page)).toHaveText("8 casas en Limón");
 });

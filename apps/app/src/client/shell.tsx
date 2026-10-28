@@ -1,11 +1,11 @@
 // Shell de la zona en el navegador: router (rutas por código) y caché de Query persistida en IndexedDB.
 import { QueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
 import { track } from "../shared/beacon";
-import { forgetOwnListings } from "../shared/own-listings";
+import { ownerZoneRedirect } from "../domain/tabs";
+import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
 import { PRIVATE_KEYS } from "./account";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
 import { afterRender, viewTransitions } from "./motion";
@@ -13,7 +13,7 @@ import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { whenIdle } from "../shared/idle";
 import { cuentaSearch, nextSearch } from "./cuenta-search";
 import { suscripcionScreen } from "./lazy-screens";
-import { setRole, storedRole } from "./role";
+import { useListingsCount } from "./own-listings-query";
 import { CasaScreen } from "./screens/casa";
 import { ExplorarScreen } from "./screens/explorar";
 import { FiltrosScreen } from "./screens/filtros";
@@ -35,7 +35,7 @@ const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreen
 function prefetchTabs() {
   void favoritosScreen();
   void cuentaScreens();
-  if (storedRole() === "owner" || location.pathname.startsWith("/propietario")) {
+  if (ownListingsHint() > 0 || location.pathname.startsWith("/propietario")) {
     void ownerScreens();
     void actividadScreen();
     void calendarioScreen();
@@ -89,6 +89,15 @@ const requireSession = async ({ location }: { location: { href: string } }) => {
 
 const privateRoutes = createRoute({ getParentRoute: () => tabs, id: "_private", beforeLoad: requireSession, component: PrivateOutlet });
 
+/** Las pestañas del propietario: sin casas (con la lista leída y sin lectura en curso), a Explorar. */
+function OwnerOutlet() {
+  const { count, fromData, fetching } = useListingsCount();
+  if (fromData && ownerZoneRedirect(count, fetching)) return <Navigate to="/explorar" replace />;
+  return <Outlet />;
+}
+
+const ownerRoutes = createRoute({ getParentRoute: () => privateRoutes, id: "_owner", component: OwnerOutlet });
+
 const flow = createRoute({
   getParentRoute: () => rootRoute,
   id: "_flow",
@@ -113,11 +122,6 @@ const requireAdmin = async ({ location }: { location: { href: string } }) => {
 function AdminOutlet() {
   const { status, session } = useSession();
   const location = useLocation();
-  const aal2 = session?.aal === "aal2";
-  // Con el segundo código, la barra y Cuenta pasan a modo admin también fuera de /admin (B12c).
-  useEffect(() => {
-    if (aal2) setRole("admin");
-  }, [aal2]);
   if (status === "signed-out") return <Navigate to="/cuenta" search={{ next: location.href }} replace />;
   if (session && session.aal !== "aal2") return <Navigate to="/admin/codigo" search={{ next: location.href }} replace />;
   return <Outlet />;
@@ -159,9 +163,11 @@ const routeTree = rootRoute.addChildren([
     createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: normalizeSearch, component: FiltrosScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/calendario", validateSearch: calendarioSearch, component: lazyRouteComponent(calendarioScreen, "CalendarioScreen") }),
-      createRoute({ getParentRoute: () => privateRoutes, path: "/propietario/actividad", component: lazyRouteComponent(actividadScreen, "ActividadScreen") }),
+      ownerRoutes.addChildren([
+        createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
+        createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/calendario", validateSearch: calendarioSearch, component: lazyRouteComponent(calendarioScreen, "CalendarioScreen") }),
+        createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/actividad", component: lazyRouteComponent(actividadScreen, "ActividadScreen") }),
+      ]),
     ]),
     adminTabs.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),
@@ -169,7 +175,7 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon("Usuarios") }),
     ]),
   ]),
-  // /cuenta elige el marco en la pantalla (Ingresar y Mi cuenta, los dos con la barra inferior).
+  // /cuenta elige el marco en la pantalla (Ingresar y Cuenta, los dos a pantalla completa, sin la barra inferior).
   createRoute({ getParentRoute: () => rootRoute, path: "/cuenta", validateSearch: cuentaSearch, component: cuentaScreen("CuentaScreen") }),
   flow.addChildren([
     createRoute({ getParentRoute: () => flow, path: "/cuenta/codigo", validateSearch: nextSearch, component: cuentaScreen("CodigoScreen") }),
@@ -205,11 +211,11 @@ const router = createRouter({
 // en pausa hasta que vuelva la red. En la v1 no hay cola de escrituras.
 const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: PERSIST_MAX_AGE }, mutations: { networkMode: "always" } } });
 
-// Al cerrar sesión (aquí, en otra pestaña o porque el servidor la revocó): fuera la caché privada y de vuelta a modo cliente.
+// Al cerrar sesión (aquí, en otra pestaña o porque el servidor la revocó): fuera la caché privada y la pista de las casas
+// (la barra vuelve a dos pestañas).
 onSignedOut(() => {
   queryClient.removeQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
   forgetOwnListings();
-  setRole("guest");
 });
 
 // La caché del dispositivo se guarda cada segundo como mucho: si la app se cerró justo después de un cambio, lo restaurado

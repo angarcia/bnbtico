@@ -1,5 +1,6 @@
 import { expect, test } from "./helpers/test";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
+import { postgrestHarness } from "../db/postgrest-harness";
 import { enterCode, expectNoCookies, injectSession } from "./helpers/session";
 
 // Cuenta con WhatsApp verificado por código (pantallas 06, 07, 08 y 20), en el navegador contra Supabase local.
@@ -7,15 +8,14 @@ test.describe.configure({ mode: "serial" });
 
 const entryHeading = (page: import("@playwright/test").Page) => page.getByRole("heading", { name: "Entre con su WhatsApp" });
 
-test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, sin una sola cookie", async ({ page }) => {
+test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin una sola cookie", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   await page.goto("/explorar");
-  await expect(page.getByRole("link", { name: "Ingresar" })).toBeVisible();
-  await page.getByRole("link", { name: "Mi cuenta", exact: true }).click();
+  await page.getByRole("banner").getByRole("link", { name: "Ingresar" }).click();
   await expect(entryHeading(page)).toBeVisible();
-  // Ticket 17: Ingresar lleva la barra inferior con «Mi cuenta» activa; la pantalla del código no.
+  // Ingresar, el código y Cuenta van a pantalla completa, sin la barra inferior.
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
-  await expect(nav.getByRole("link", { name: "Mi cuenta" })).toHaveAttribute("aria-current", "page");
+  await expect(nav).toHaveCount(0);
 
   // Un único flujo (ticket 18): primero el número; sin cuenta, el nombre y entonces el código.
   await expect(page.getByRole("link", { name: /Ya tengo cuenta/ })).toHaveCount(0);
@@ -59,7 +59,9 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
   await expect(page).toHaveURL(/\/explorar/);
   await expect(page.getByRole("link", { name: "Ingresar" })).toHaveCount(0);
 
-  await page.getByRole("link", { name: "Mi cuenta", exact: true }).click();
+  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  await expect(nav).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expect(page.getByText(/WhatsApp verificado/)).toBeVisible();
   await expect(page.getByText("Identidad", { exact: false })).toHaveCount(0);
@@ -97,7 +99,9 @@ test("registro, código, Mi cuenta, editar, cerrar sesión y volver a entrar, si
 
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await enterCode(page);
-  await expect(page).toHaveURL(/\/cuenta$/);
+  // Sin casas, se llega a Explorar.
+  await expect(page).toHaveURL(/\/explorar$/);
+  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expect(page.getByLabel("Descripción (opcional)")).toHaveCount(0);
   await page.getByRole("link", { name: "Editar", exact: true }).click();
@@ -164,11 +168,16 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.getByText("+1 415 555 0100")).toBeVisible();
   await enterCode(page);
+  await expect(page).toHaveURL(/\/explorar$/);
+  await page.goto("/cuenta");
   await expect(page.getByRole("heading", { name: "John Test" })).toBeVisible();
   await deleteAccount(INTL_PHONE);
 });
 
 test("una ruta privada sin sesión lleva a Ingresar y, tras el código, vuelve a ella", async ({ page }) => {
+  const h = await postgrestHarness();
+  await h.reset();
+  await h.seed({ status: "draft", draft: { title: "Casa de vuelta" } });
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
   await page.getByLabel("Número de WhatsApp").fill("8777 0001");
@@ -178,44 +187,45 @@ test("una ruta privada sin sesión lleva a Ingresar y, tras el código, vuelve a
   await expect(page.getByText("Después de verificar vuelve adonde estaba.")).toBeVisible();
   await enterCode(page);
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa de vuelta" })).toBeVisible();
 });
 
-test("modo propietario y vuelta a cliente; ayuda con el canal de cada rol (sesión inyectada)", async ({ page }) => {
+test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, el de propietarios (sesión inyectada)", async ({ page }) => {
+  const h = await postgrestHarness();
+  await h.reset();
   await injectSession(page, "owner");
   await page.goto("/cuenta");
-  await expect(page.getByRole("heading", { level: 1, name: "Mi cuenta" })).toBeVisible();
-  const nav = page.getByRole("navigation", { name: "Navegación principal" });
-
-  await page.getByRole("button", { name: "Publicar mi casa" }).click();
-  await expect(page).toHaveURL(/\/propietario\/casas$/); // /propietario lleva a Mis casas
-  // «Actividad» lleva el contador de nuevas si otra prueba dejó consultas a este propietario (el orden no es fijo).
-  await expect(nav.getByRole("link")).toHaveText(["Mis casas", "Calendario", /^Actividad\d*$/, "Cuenta"]);
-  await expect(nav.getByRole("link", { name: "Mis casas" })).toHaveAttribute("aria-current", "page");
-  await nav.getByRole("link", { name: "Cuenta", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  const nav = page.getByRole("navigation", { name: "Navegación principal" });
+  await expect(nav).toHaveCount(0);
+  // Sin casas: «Publicar mi casa», «Mi perfil» y la línea de clientes; nada de suscripción ni de cambiar de modo.
+  await expect(page.getByRole("link", { name: /Publicar mi casa/ })).toHaveAttribute("href", "/propietario/publicar");
+  await expect(page.getByRole("link", { name: /Mi perfil/ })).toBeVisible();
+  await expect(page.getByText("Próximo cobro")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Buscar una casa/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Ayuda por WhatsApp/ })).toContainText("Línea de bnbtico para clientes");
+  await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
+  await expect(page.getByText("atención a clientes")).toBeVisible();
+
+  // Con una casa (en cualquier estado): la suscripción y la línea de propietarios; sin «Publicar mi casa».
+  await h.seed({ status: "draft", draft: { title: "Casa de la ayuda" } });
+  await page.goto("/cuenta");
   await expect(page.getByText("Próximo cobro")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Publicar mi casa/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Mi perfil/ })).toHaveCount(0);
   await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
   await expect(page.getByText("atención a propietarios")).toBeVisible();
 
+  // Cerrar sesión deja la app sin sesión para la siguiente persona: dos pestañas y la zona del propietario pide ingresar.
   await page.goto("/cuenta");
-  await page.getByRole("button", { name: /Buscar una casa/ }).click();
-  await expect(page).toHaveURL(/\/explorar/);
-  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi cuenta"]);
-  await page.goto("/ayuda");
-  await expect(page.getByText("atención a clientes")).toBeVisible();
-
-  // Cerrar sesión en modo propietario deja la app en modo cliente para la siguiente persona.
-  await page.goto("/cuenta");
-  await page.getByRole("button", { name: "Publicar mi casa" }).click();
-  await nav.getByRole("link", { name: "Cuenta", exact: true }).click();
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(entryHeading(page)).toBeVisible();
   await page.goto("/explorar");
-  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi cuenta"]);
+  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
   await page.goto("/propietario");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
   await expectNoCookies(page);
+  await h.reset();
 });
 
 test("recuperar la cuenta y Favoritos sin sesión", async ({ page }) => {

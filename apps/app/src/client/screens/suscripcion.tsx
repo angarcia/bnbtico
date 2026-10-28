@@ -31,7 +31,6 @@ import { I } from "../../shared/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
 import { FlowHeader } from "../chrome";
 import { offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
-import { setRole } from "../role";
 import { useSession } from "../session";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
@@ -307,7 +306,6 @@ const SAVING_TEXT: Record<Exclude<Saving, null>, string> = {
 };
 
 export function SuscripcionScreen() {
-  useEffect(() => setRole("owner"), []);
   const userId = useSession().session?.userId ?? "";
   const billing = useQuery({ ...billingQuery(userId), enabled: !!userId });
   const indexed = useBilling(userId);

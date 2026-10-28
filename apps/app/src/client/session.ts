@@ -48,7 +48,7 @@ export function sessionState(): SessionState {
   return state;
 }
 
-/** Se llama al cerrar sesión (aquí o porque el servidor la dio por terminada): limpiar caché privada, modo cliente. */
+/** Se llama al cerrar sesión (aquí o porque el servidor la dio por terminada): limpiar caché privada y la pista de las casas. */
 export function onSignedOut(handler: () => void): () => void {
   signedOutHandlers.add(handler);
   return () => void signedOutHandlers.delete(handler);

@@ -231,7 +231,7 @@ export function validateAll(d: ListingDraft): { step: Step; error: string } | nu
   return null;
 }
 
-/** Las 9 pantallas en tres etapas (revisión UX C4): la cabecera y el borrador de Inicio hablan de la etapa, no del paso. */
+/** Las 9 pantallas en tres etapas (revisión UX C4): la cabecera y el aviso «Seguir publicando» hablan de la etapa, no del paso. */
 export const WIZARD_STAGES = [
   { name: "Su casa", first: 1, last: 5 },
   { name: "Fotos y texto", first: 6, last: 7 },

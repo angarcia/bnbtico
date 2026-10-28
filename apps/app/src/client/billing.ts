@@ -1,4 +1,4 @@
-// Suscripción del propietario (fase 5): una sola lectura, owner_billing, para Inicio, Mis casas, el detalle de una casa,
+// Suscripción del propietario (fase 5): una sola lectura, owner_billing, para Mis casas, el detalle de una casa,
 // Cuenta y «Promoción y suscripción». Es privada (account.ts PRIVATE_KEYS): se guarda en el dispositivo mientras dure la
 // sesión y se borra al cerrarla. Va aparte de la consulta de casas propias: si falla (un despliegue antes de la migración
 // en otro entorno, un error pasajero), las pantallas salen como antes, sin las partes de la suscripción.

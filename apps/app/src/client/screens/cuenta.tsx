@@ -1,7 +1,8 @@
-// Cuenta en el navegador: Ingresar (pantalla 06), código (07), Mi cuenta (08) y Cuenta del propietario (20), cuenta lista,
-// recuperar y ayuda. Todo contra AuthApi; supabase-js se carga al enviar el primer formulario o si ya hay sesión.
+// Cuenta en el navegador: Ingresar (pantalla 06), código (07), Cuenta (08 y 20, a pantalla completa desde arriba; lo del
+// propietario aparece con al menos una casa), cuenta lista, recuperar y ayuda. Todo contra AuthApi; supabase-js se carga
+// al enviar el primer formulario o si ya hay sesión.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
 import { isContactNext, listingInNext } from "../../domain/contact-return";
@@ -19,8 +20,8 @@ import { listingQuery } from "../../shared/listing-query";
 import { Picture } from "../../shared/picture";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
-import { FlowHeader, RootHeader, TabsFrame } from "../chrome";
-import { setRole, useRole } from "../role";
+import { FlowFrame, FlowHeader } from "../chrome";
+import { ownListingsQuery, useListingsCount } from "../own-listings-query";
 import { authApi, pendingOtp, useSession } from "../session";
 import { SUPPORT, waLink } from "../support";
 import { useTurnstile } from "../turnstile";
@@ -113,19 +114,19 @@ const cuentaRoute = getRouteApi("/cuenta");
 export function CuentaScreen() {
   const { status } = useSession();
   const search = cuentaRoute.useSearch();
-  // Ingresar y Mi cuenta llevan la barra inferior (ticket 17); solo la pantalla del código va sin ella.
+  // Ingresar y Cuenta, a pantalla completa (sin pestaña de Cuenta): se llega desde la esquina de arriba.
   if (status === "signed-out") {
     return (
-      <TabsFrame>
+      <FlowFrame>
         {/* Un enlace viejo con `?modo=entrar` abre el mismo flujo único. */}
         <EntryForm next={search.next} />
-      </TabsFrame>
+      </FlowFrame>
     );
   }
   return (
-    <TabsFrame>
+    <FlowFrame>
       <MyAccount editing={search.editar === "1"} />
-    </TabsFrame>
+    </FlowFrame>
   );
 }
 
@@ -346,11 +347,13 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
     try {
       const account = await (await authApi()).verify(code);
       queryClient.setQueryData(accountQuery(account.id).queryKey, account);
-      if (account.isOwner) setRole("owner");
+      // La lista de casas antes de navegar: la barra se pinta ya con sus pestañas (no salta de dos a cinco) y se llega a
+      // Mis casas con casas o a Explorar sin ellas. Si la lectura falla, Explorar.
+      const list = await queryClient.fetchQuery(ownListingsQuery(account.id)).catch(() => []);
       // La pantalla «¡Listo!» invita a añadir un correo: no tiene sentido si la cuenta ya tiene uno.
-      // Para escribirle a un propietario no se interpone «¡Listo!»: la invitación al correo queda en Mi cuenta (revisión UX C2).
+      // Para escribirle a un propietario no se interpone «¡Listo!»: la invitación al correo queda en Cuenta (revisión UX C2).
       if (mode === "register" && !account.email && !contact) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
-      else await goTo(next ?? "/cuenta");
+      else await goTo(next ?? (list.length ? "/propietario/casas" : "/explorar"));
     } catch (err) {
       setError(message(err));
       setBusy(false);
@@ -464,7 +467,7 @@ export function ListaScreen() {
             <I.check size={26} />
           </span>
           <h2 className="flow-title">¡Listo! Su cuenta está creada</h2>
-          <p className="muted">Su WhatsApp ya está verificado. Si quiere, añada un correo para recuperar la cuenta si pierde el acceso a ese número. Puede añadirlo después en Mi cuenta.</p>
+          <p className="muted">Su WhatsApp ya está verificado. Si quiere, añada un correo para recuperar la cuenta si pierde el acceso a ese número. Puede añadirlo después en Cuenta.</p>
         </div>
         <Link to="/cuenta" search={{ editar: "1" }} className="btn btn-primary btn-xl">
           Añadir correo a mi perfil
@@ -484,7 +487,7 @@ export function ListaScreen() {
   );
 }
 
-// ---------- Mi cuenta / Cuenta ----------
+// ---------- Cuenta ----------
 // La tarjeta «Suscripción» y la fila «Método de pago» del propietario viven en el trozo de «Promoción y suscripción»
 // (precargado con las pantallas del propietario). Mientras llega, o si owner_billing falla, la tarjeta de siempre.
 const CuentaSubscriptionCard = lazy(() => suscripcionScreen().then((m) => ({ default: m.CuentaSubscriptionCard })));
@@ -512,10 +515,11 @@ function initials(name: string): string {
 
 function MyAccount({ editing }: { editing: boolean }) {
   const { session } = useSession();
-  const role = useRole();
-  const owner = role === "owner";
-  const admin = role === "admin";
+  const { count } = useListingsCount();
+  const owner = (count ?? 0) > 0;
   const navigate = useNavigate();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const [leaving, setLeaving] = useState(false);
   const fx = useFx();
@@ -524,19 +528,16 @@ function MyAccount({ editing }: { editing: boolean }) {
   async function logout() {
     setLeaving(true);
     await (await authApi()).logout();
-    setRole("guest");
     await navigate({ to: "/cuenta", replace: true });
   }
 
-  async function switchRole(role: "guest" | "owner") {
-    setRole(role);
-    await navigate({ to: role === "owner" ? "/propietario" : "/explorar" });
-  }
+  // La flecha vuelve adonde estaba; abierta directamente, a Mis casas con casas o a Explorar.
+  const back = () => (canGoBack ? router.history.back() : void navigate({ to: count ? "/propietario/casas" : "/explorar" }));
 
   const a = account.data;
   return (
     <>
-      <RootHeader title={role === "guest" ? "Mi cuenta" : "Cuenta"} home={owner ? "/propietario" : admin ? "/admin" : "/explorar"} />
+      <FlowHeader title="Cuenta" back="/explorar" onBack={back} />
       {a ? (
         <section className="card row account-card">
           <span className="avatar" aria-hidden="true">
@@ -594,11 +595,11 @@ function MyAccount({ editing }: { editing: boolean }) {
             </span>
           </Link>
         ) : null}
-        {role === "guest" ? (
-          <Link to="/favoritos" className="list-item">
-            <I.heart />
+        {count === 0 ? (
+          <Link to="/propietario/publicar" className="list-item">
+            <I.house />
             <span className="body">
-              Favoritos<small>Las casas que guarde</small>
+              Publicar mi casa<small>Sin comisiones: los clientes le escriben por WhatsApp</small>
             </span>
             <span className="chev">
               <I.chevron />
@@ -642,28 +643,7 @@ function MyAccount({ editing }: { editing: boolean }) {
             <I.chevron />
           </span>
         </Link>
-        {role !== "guest" ? (
-          <button type="button" className="list-item" onClick={() => switchRole("guest")}>
-            <I.search />
-            <span className="body">
-              Buscar una casa<small>Pasar al modo cliente</small>
-            </span>
-            <span className="chev">
-              <I.chevron />
-            </span>
-          </button>
-        ) : null}
       </section>
-
-      {role === "guest" ? (
-        <section className="card-arena stack">
-          <b className="display">¿Tiene una casa en el Caribe?</b>
-          <span className="small">Publíquela gratis durante 12 meses si está entre las primeras 50. Sin comisiones: los clientes le escriben por WhatsApp.</span>
-          <button type="button" className="btn btn-ghost" onClick={() => switchRole("owner")}>
-            Publicar mi casa
-          </button>
-        </section>
-      ) : null}
 
       <div className="row between foot-row">
         <button type="button" className="btn-link muted" onClick={logout} disabled={leaving}>
@@ -772,7 +752,7 @@ export function RecuperarScreen() {
 
 // ---------- /ayuda ----------
 export function AyudaScreen() {
-  const s = SUPPORT[useRole() === "owner" ? "owner" : "guest"];
+  const s = SUPPORT[(useListingsCount().count ?? 0) > 0 ? "owner" : "guest"];
   return (
     <>
       <FlowHeader title="Ayuda por WhatsApp" back="/cuenta" />

@@ -52,9 +52,18 @@ async function expectKeyboardRoom(page: Page, fieldId: string) {
 }
 
 test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado, y se envía a revisión", async ({ page }) => {
-  // «Publicar» entra directo al paso 1 (sin «Empezar»).
+  // Revisión UX C4: mientras se crea el borrador, qué tener a mano; y «Publicar» entra directo al paso 1 (sin «Empezar»).
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/rest/v1/listings?*", async (route) => {
+    if (route.request().method() === "POST") await held;
+    await route.fallback();
+  });
   await page.goto("/propietario/publicar");
+  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche o por mes", "Unos 10 minutos"]);
+  release();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+  await page.unroute("**/rest/v1/listings?*");
   const id = idFrom(page);
   await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 5");
   await expect(page.locator(".progress span")).toHaveCount(9);

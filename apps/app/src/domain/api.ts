@@ -288,7 +288,7 @@ export type ProfilePatch = Partial<Pick<Account, "name" | "email" | "description
  *
  * Cambios respecto a la declaración del ticket 02 (ticket 05):
  * - `ProfilePatch` ya no incluye `isOwner`: la columna no se puede actualizar desde la app (grant por columna) y la marca
- *   la base al aprobar una casa. El modo propietario de la interfaz es estado del cliente.
+ *   la base al aprobar una casa. La interfaz del propietario sale de tener casas, no de esta marca.
  * - `onSessionChange`: la sesión puede terminar sola (refresco rechazado, cierre en otra pestaña) y la interfaz debe enterarse.
  * - `enrolMfa`/`verifyMfa` pasan a `MfaApi` (ticket 09), para que los adaptadores de este ticket no lleven métodos vacíos.
  */

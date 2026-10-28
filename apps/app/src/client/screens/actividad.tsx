@@ -1,7 +1,7 @@
 // Actividad (navegación simple): visitas, toques en WhatsApp y consultas de 30 días por casa, y las últimas consultas, que
 // abren WhatsApp con el cliente. Trozo diferido. Se pinta desde la caché (persistida con la sesión) y se refresca por detrás.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { ListingActivity } from "../../domain/api";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
@@ -14,7 +14,6 @@ import { RootHeader } from "../chrome";
 import { inquiriesQuery, openInquiry } from "../inquiries";
 import { activityQuery } from "../owner";
 import { ownListingsQuery } from "../own-listings-query";
-import { setRole } from "../role";
 import { useSession } from "../session";
 
 const LATEST = 20;
@@ -23,7 +22,6 @@ const titleOf = (l: Listing) => l.title || "Borrador sin título";
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 export function ActividadScreen() {
-  useEffect(() => setRole("owner"), []);
   const userId = useSession().session?.userId ?? "";
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const activity = useQuery({ ...activityQuery(userId), enabled: !!userId });

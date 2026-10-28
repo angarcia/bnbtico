@@ -25,10 +25,10 @@ test.beforeEach(async ({ page }) => {
 const owner = (page: Page) => injectSession(page, "owner");
 const house = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 const mine = async (id: string): Promise<BillingHouse> => (await h.billing("owner").overview()).houses.find((x) => x.listingId === id)!;
-/** Mis casas deja la interfaz en modo propietario; de ahí a Cuenta por la pestaña. */
+/** De Mis casas a Cuenta por el botón de arriba. */
 async function ownerCuenta(page: Page) {
   await page.goto("/propietario/casas");
-  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Cuenta" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
   await expect(page.getByRole("heading", { name: "Cuenta", level: 1 })).toBeVisible();
 }
 const statusOf = async (id: string) => (await mine(id)).status;

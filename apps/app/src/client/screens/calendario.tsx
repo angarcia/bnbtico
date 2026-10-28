@@ -35,10 +35,9 @@ import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { RootHeader } from "../chrome";
 import { ownListingsQuery, useSetAvailable } from "../owner";
-import { setRole } from "../role";
 import { useSession } from "../session";
 
-const route = getRouteApi("/_tabs/_private/propietario/calendario");
+const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "bnbtico-calendario-casa";
 const KB_RELEASE_MS = 400;
 
@@ -66,7 +65,6 @@ function storeLast(id: string) {
 }
 
 export function CalendarioScreen() {
-  useEffect(() => setRole("owner"), []);
   const userId = useSession().session?.userId ?? "";
   const search = route.useSearch();
   const navigate = useNavigate();
@@ -95,7 +93,7 @@ export function CalendarioScreen() {
     current && houses && houses.length > 1 ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : undefined;
   return (
     <>
-      <RootHeader title="Calendario" home="/propietario" aside={picker} />
+      <RootHeader title="Calendario" home="/propietario/casas" aside={picker} />
       {listings.isError && !houses ? (
         <p className="note" role="alert">
           {toDomainError(listings.error).message}

@@ -26,7 +26,6 @@ import { calendarQuery } from "../calendar-days";
 import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
 import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
-import { setRole } from "../role";
 import { useSession } from "../session";
 
 const base = () => window.location.origin;
@@ -39,11 +38,6 @@ const shareOf = (l: Listing) => {
 
 export function useUserId(): string {
   return useSession().session?.userId ?? "";
-}
-
-/** Entrar en la zona del propietario deja la interfaz en modo propietario (barra de cinco pestañas). */
-export function useOwnerMode() {
-  useEffect(() => setRole("owner"), []);
 }
 
 function StatusBadge({ listing: l }: { listing: Listing }) {
@@ -178,7 +172,6 @@ function NoticeCard({ notice, list, billing }: { notice: Notice | null; list: Li
 }
 
 export function CasasScreen() {
-  useOwnerMode();
   const userId = useUserId();
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
@@ -358,7 +351,6 @@ export function NotFoundCard() {
 }
 
 export function CasaPropietarioScreen() {
-  useOwnerMode();
   const { id } = detailRoute.useParams();
   const { userId, query } = useOwnListing(id);
   const l = query.data;
@@ -480,7 +472,7 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
             </span>
           </button>
         ) : null}
-        {l.status === "draft" ? (
+        {l.status === "draft" && above !== "resume" ? (
           <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="list-item">
             <span className="muted-icon">
               <I.edit />
@@ -598,7 +590,6 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
 const sentRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/enviada");
 
 export function EnviadaScreen() {
-  useOwnerMode();
   const { id } = sentRoute.useParams();
   const { query } = useOwnListing(id);
   const l = query.data;

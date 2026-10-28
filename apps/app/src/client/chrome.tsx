@@ -1,31 +1,14 @@
-// Marcos de pantalla del diseño v1: pantallas raíz con barra inferior (3 pestañas del cliente, 4 del propietario, 4 del admin) y
-// pantallas de flujo sin barra (Ingresar, código, ayuda…), con su cabecera.
+// Marcos de pantalla del diseño v1: pantallas raíz con una sola barra inferior que crece con las casas
+// (domain/navigation.ts tabsFor: dos pestañas sin casas, cinco con al menos una; la del admin solo en /admin) y pantallas
+// de flujo sin barra (Ingresar, código, Cuenta, ayuda…), con su cabecera.
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
+import { tabsFor } from "../domain/tabs";
 import { I } from "../shared/icons";
 import { countNew, inquiriesQuery } from "./inquiries";
-import { barRole, useRole, type Zone } from "./role";
+import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
-
-const GUEST = [
-  { to: "/explorar", label: "Explorar", icon: I.search, exact: false },
-  { to: "/favoritos", label: "Favoritos", icon: I.heart, exact: false },
-  { to: "/cuenta", label: "Mi cuenta", icon: I.user, exact: false },
-] as const;
-const OWNER = [
-  { to: "/propietario/casas", label: "Mis casas", icon: I.house, exact: false },
-  { to: "/propietario/calendario", label: "Calendario", icon: I.calendar, exact: false },
-  { to: "/propietario/actividad", label: "Actividad", icon: I.chat, exact: false },
-  { to: "/cuenta", label: "Cuenta", icon: I.user, exact: false },
-] as const;
-
-const ADMIN = [
-  { to: "/admin", label: "Anuncios", icon: I.inbox, exact: true },
-  { to: "/admin/casas", label: "Casas", icon: I.pin, exact: false },
-  { to: "/admin/usuarios", label: "Usuarios", icon: I.users, exact: false },
-  { to: "/cuenta", label: "Cuenta", icon: I.user, exact: false },
-] as const;
 
 /** Contador terracota de Anuncios: lo que ya hay en la caché de la cola (no la pide; la pide la pantalla). */
 function useReviewCount(enabled: boolean): number {
@@ -34,48 +17,73 @@ function useReviewCount(enabled: boolean): number {
   return enabled ? (data ?? 0) : 0;
 }
 
-/**
- * Contador terracota de Actividad: las nuevas de `["inquiries", uid]`, la misma consulta de Actividad. Dentro
- * de /propietario la pide si no está en la caché o está vieja (30 s); fuera (Cuenta en modo propietario) solo la lee.
- */
-function useNewInquiries(show: boolean, fetch: boolean): number {
+/** Contador terracota de Actividad: las nuevas de `["inquiries", uid]`, la misma consulta de Actividad. Con la barra del
+ *  propietario la pide en cualquier pestaña si no está en la caché o está vieja (30 s). */
+function useNewInquiries(enabled: boolean): number {
   const userId = useSession().session?.userId ?? "";
-  const { data } = useQuery({ ...inquiriesQuery(userId), enabled: show && fetch && !!userId, select: countNew });
-  return show ? (data ?? 0) : 0;
+  const { data } = useQuery({ ...inquiriesQuery(userId), enabled: enabled && !!userId, select: countNew });
+  return enabled ? (data ?? 0) : 0;
 }
 
 export function TabsFrame({ children }: { children: ReactNode }) {
-  // En /propietario/* la barra es la del propietario desde el primer pintado (la pantalla fija además el modo).
-  const zone = useLocation({ select: (l): Zone => (l.pathname.startsWith("/propietario") ? "owner" : l.pathname.startsWith("/admin") ? "admin" : null) });
-  const role = barRole(zone, useRole());
-  const tabs = role === "admin" ? ADMIN : role === "owner" ? OWNER : GUEST;
-  const pending = useReviewCount(role === "admin");
-  const fresh = useNewInquiries(tabs === OWNER, zone === "owner");
+  const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
+  const { status } = useSession();
+  const { count } = useListingsCount();
+  const tabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count });
+  const pending = useReviewCount(tabs.some((t) => t.badge === "review"));
+  const fresh = useNewInquiries(tabs.some((t) => t.badge === "inquiries"));
   return (
     <div className="app">
       <main className="view">{children}</main>
-      <nav className={`tabbar${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
-        {tabs.map(({ to, label, icon: Icon, exact }) => (
-          <Link
-            key={to}
-            to={to}
-            className="nav"
-            activeOptions={{ exact, includeSearch: false }}
-            activeProps={{ "aria-current": "page" }}
-            aria-label={to === "/propietario/actividad" && fresh > 0 ? `${label}, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : undefined}
-          >
-            <Icon size={22} />
-            <span>{label}</span>
-            {to === "/admin" && pending > 0 ? <b className="nav-count num">{pending}</b> : null}
-            {to === "/propietario/actividad" && fresh > 0 ? (
-              <b className="nav-count num" data-testid="inquiries-badge">
-                {fresh}
-              </b>
-            ) : null}
-          </Link>
-        ))}
+      <nav className={`tabbar${tabs.length === 2 ? " two" : ""}`} aria-label="Navegación principal">
+        {tabs.map(({ to, label, icon, exact, badge }) => {
+          const Icon = I[icon];
+          const n = badge === "review" ? pending : badge === "inquiries" ? fresh : 0;
+          return (
+            <Link
+              key={to}
+              to={to}
+              className="nav"
+              activeOptions={{ exact, includeSearch: false }}
+              activeProps={{ "aria-current": "page" }}
+              aria-label={badge === "inquiries" && n > 0 ? `${label}, ${n} ${n === 1 ? "nueva" : "nuevas"}` : undefined}
+            >
+              <Icon size={22} />
+              <span>{label}</span>
+              {n > 0 ? (
+                <b className="nav-count num" data-testid={badge === "inquiries" ? "inquiries-badge" : undefined}>
+                  {n}
+                </b>
+              ) : null}
+            </Link>
+          );
+        })}
       </nav>
     </div>
+  );
+}
+
+/**
+ * La cuenta, arriba a la derecha de las pantallas de las pestañas (fuera de /admin, que tiene su pestaña «Cuenta»): sin
+ * sesión, «Ingresar»; con sesión, «Cuenta» a pantalla completa. Mientras se lee la sesión guardada, la misma caja sin
+ * verse, y nada salta.
+ */
+export function AccountButton({ next }: { next?: string }) {
+  const { status } = useSession();
+  const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
+  if (adminZone) return null;
+  if (status === "signed-in") {
+    return (
+      <Link to="/cuenta" className="btn btn-ghost btn-header">
+        Cuenta
+      </Link>
+    );
+  }
+  const out = status === "signed-out";
+  return (
+    <Link to="/cuenta" search={next ? { next } : {}} className={`btn btn-ghost btn-header${out ? "" : " is-hidden"}`} aria-hidden={!out} tabIndex={out ? undefined : -1}>
+      Ingresar
+    </Link>
   );
 }
 
@@ -87,14 +95,19 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
+/** `next`: adónde vuelve «Ingresar» tras verificar (sin él, a la pantalla de llegada). La cabecera va dentro de `main`:
+ *  `role="banner"` la marca como la cabecera de la página (logo y cuenta). */
+export function RootHeader({ title, home = "/explorar", action, aside, next }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode; next?: string }) {
   return (
-    <header className="header-root">
+    <header className="header-root" role="banner">
       <div className="top">
         <Link to={home} aria-label="bnbtico, inicio">
           <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
         </Link>
-        {action}
+        <span className="row gap-8">
+          {action}
+          <AccountButton next={next} />
+        </span>
       </div>
       <div className={aside ? "row between baseline wrap gap-4" : undefined}>
         <h1>{title}</h1>
@@ -104,10 +117,17 @@ export function RootHeader({ title, home = "/explorar", action, aside }: { title
   );
 }
 
-export function FlowHeader({ title, back, search, action }: { title: string; back: string; search?: Record<string, string>; action?: ReactNode }) {
+/** `onBack`: «Volver» hace eso en vez de seguir el enlace (el enlace queda como dirección, p. ej. para abrirlo aparte). */
+export function FlowHeader({ title, back, search, action, onBack }: { title: string; back: string; search?: Record<string, string>; action?: ReactNode; onBack?: () => void }) {
+  const click = onBack
+    ? (e: MouseEvent) => {
+        e.preventDefault();
+        onBack();
+      }
+    : undefined;
   return (
     <header className="header-flow">
-      <Link to={back} search={search} aria-label="Volver" className="icon-btn">
+      <Link to={back} search={search} aria-label="Volver" className="icon-btn" onClick={click}>
         <I.back />
       </Link>
       <h1>{title}</h1>

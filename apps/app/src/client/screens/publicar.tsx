@@ -13,7 +13,7 @@ import { stepEnter } from "../motion";
 import { addOwnCached, api, ownListingQuery, resumableQuery } from "../owner";
 import { StepFields } from "../publish/fields";
 import { StepForm } from "../publish/step-form";
-import { NotFoundCard, SkeletonCard, useOwnListing, useOwnerMode, useUserId } from "./propietario";
+import { NotFoundCard, SkeletonCard, useOwnListing, useUserId } from "./propietario";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 
@@ -21,7 +21,6 @@ const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo sa
 
 /** Abrir esta pantalla no crea nada: el borrador nace al tocar «Empezar». Si hay uno pendiente, se ofrece seguirlo. */
 export function PublicarScreen() {
-  useOwnerMode();
   const userId = useUserId();
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -75,13 +74,19 @@ export function PublicarScreen() {
           {start}
         </section>
       ) : null}
-      {draft === null && create.isError ? (
+      {draft === null ? (
         <section className="card stack gap-12">
-          <h3>Publique su casa en pantallas cortas</h3>
-          {start}
+          <h3>Publique su casa en pocos pasos</h3>
+          {/* Lo que pide el asistente, mientras se crea el borrador (revisión UX C4): las fotos son lo que más frena. */}
+          <ul className="ready-list small">
+            <li>5 fotos horizontales o más</li>
+            <li>El precio por noche o por mes</li>
+            <li>Unos 10 minutos</li>
+          </ul>
+          <p className="small muted">La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
+          {create.isError ? start : null}
         </section>
       ) : null}
-      {draft === null && !create.isError ? <SkeletonCard /> : null}
       {create.isError ? (
         <p className="note" role="alert">
           {message(create.error)}
@@ -137,7 +142,6 @@ const stepRoute = getRouteApi("/_flow/_privateFlow/propietario/publicar/$id/$pas
 const toStep = (paso: string): Step | null => (STEPS as readonly number[]).includes(Number(paso)) && /^\d$/.test(paso) ? (Number(paso) as Step) : null;
 
 export function PasoScreen() {
-  useOwnerMode();
   const { id, paso } = stepRoute.useParams();
   const step = toStep(paso);
   const { userId, query } = useOwnListing(id);

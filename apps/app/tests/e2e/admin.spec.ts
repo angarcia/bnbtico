@@ -161,18 +161,28 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await expect(page.getByRole("status")).toContainText("Necesitamos una foto de la cocina.");
   await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toHaveCount(0);
 
-  // B12c: con el segundo código, Cuenta lleva la barra del admin (también tras recargar) y se puede volver a modo cliente.
+  // La barra del admin solo dentro de /admin: su pestaña «Cuenta» abre Cuenta a pantalla completa y la flecha vuelve a
+  // /admin; fuera, la barra que le dan sus casas (aquí una: cinco pestañas).
+  const adminId = await userIdOf(TEST_PHONES.admin);
+  const own = await serviceClient()
+    .from("listings")
+    .insert({ owner_id: adminId, title: "Casa del admin", description: "", province: "Limón", whatsapp_phone: TEST_PHONES.admin, accepts_nightly: false })
+    .select("id")
+    .single();
+  expect(own.error).toBeNull();
   await page.goto("/admin");
+  await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
   await nav(page).getByRole("link", { name: "Cuenta" }).click();
   await expect(page).toHaveURL(/\/cuenta$/);
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
-  await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
-  await page.reload();
-  await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
+  await expect(nav(page)).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Revisión de anuncios · admin/ })).toBeVisible();
-  await page.getByRole("button", { name: /Buscar una casa/ }).click();
-  await expect(page).toHaveURL(/\/explorar/);
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi cuenta"]);
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
+  await page.goto("/explorar");
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/]);
+  await serviceClient().from("listings").delete().eq("id", own.data!.id);
 });
 
 test("quien no es admin no entra: no se le pide código ni se le inscribe ningún factor", async ({ page }) => {

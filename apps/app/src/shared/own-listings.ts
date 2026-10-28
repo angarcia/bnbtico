@@ -1,6 +1,7 @@
 // Las casas propias en este teléfono (revisión UX A2): la ficha no manda `listing_view` cuando la abre su dueño, para que sus
-// visitas no inflen «N visitas» de Inicio. La ficha del servidor no tiene sesión: la lista vive en el almacenamiento local,
-// la escribe la lista de Mis casas y se borra al cerrar sesión. Solo códigos CT-####, nada personal.
+// visitas no inflen «N visitas» de Actividad. La ficha del servidor no tiene sesión: la lista vive en el almacenamiento local,
+// la escribe la lista de Mis casas y se borra al cerrar sesión. Solo códigos CT-####, nada personal. Su número de casas
+// es además la pista de la barra inferior en el primer pintado.
 import { webStore } from "../data/storage";
 
 const KEY = "bnbtico-mis-casas";
