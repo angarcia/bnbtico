@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { cantonesDe } from "../../domain/cantones";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, PROVINCES, TITLE_MAX, TITLE_MIN, missingPhotosLabel, modesLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, PROVINCES, TITLE_MAX, TITLE_MIN, isFreshDraft, missingPhotosLabel, modesLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -294,12 +294,30 @@ function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing
   );
 }
 
+/** Lo que pide el asistente (revisión UX C4): las fotos son lo que más frena. */
+export function ReadyList() {
+  return (
+    <ul className="ready-list small">
+      <li>5 fotos horizontales o más</li>
+      <li>El precio por noche o por mes</li>
+      <li>Unos 10 minutos</li>
+    </ul>
+  );
+}
+
 /** Campos de cada pantalla. `draft` trae los valores a mostrar; `listing`, lo que solo da el servidor (fotos, WhatsApp). */
 export function StepFields({ step, draft, listing, userId }: { step: Step; draft: ListingDraft; listing: Listing; userId: string }) {
   switch (step) {
     case 1:
       return (
         <>
+          {/* Arriba del primer paso de un borrador recién creado, qué tener a mano (revisión UX C4). */}
+          {isFreshDraft(listing) ? (
+            <section className="stack gap-4" aria-label="Qué tener a mano">
+              <span className="small strong">Tenga a mano:</span>
+              <ReadyList />
+            </section>
+          ) : null}
           <section className="stack">
             <h2>¿Cómo alquila?</h2>
             <ChoiceCards

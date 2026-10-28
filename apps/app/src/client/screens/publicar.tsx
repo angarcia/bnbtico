@@ -11,7 +11,7 @@ import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
 import { addOwnCached, api, ownListingQuery, resumableQuery } from "../owner";
-import { StepFields } from "../publish/fields";
+import { ReadyList, StepFields } from "../publish/fields";
 import { StepForm } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing, useUserId } from "./propietario";
 
@@ -56,7 +56,7 @@ export function PublicarScreen() {
 
   return (
     <>
-      <FlowHeader title="Publicar casa" back="/propietario/casas" />
+      <FlowHeader title="Publicar casa" back="/cuenta" historyBack />
       {resumable.isError && draft === undefined ? (
         <p className="note" role="alert">
           {message(resumable.error)}
@@ -79,11 +79,7 @@ export function PublicarScreen() {
         <section className="card stack gap-12">
           <h3>Publique su casa en pocos pasos</h3>
           {/* Lo que pide el asistente, mientras se crea el borrador (revisión UX C4): las fotos son lo que más frena. */}
-          <ul className="ready-list small">
-            <li>5 fotos horizontales o más</li>
-            <li>El precio por noche o por mes</li>
-            <li>Unos 10 minutos</li>
-          </ul>
+          <ReadyList />
           <p className="small muted">La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
           {create.isError ? start : null}
         </section>

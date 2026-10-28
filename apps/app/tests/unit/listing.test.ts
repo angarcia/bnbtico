@@ -8,6 +8,7 @@ import {
   STATUS_LABELS,
   STEP_NAMES,
   emptyDraft,
+  isFreshDraft,
   normalize,
   parseColones,
   planStep,
@@ -297,5 +298,21 @@ describe("etapas del asistente", () => {
     expect(wizardStage(7)).toEqual({ name: "Fotos y texto", index: 1, position: 2, size: 2, first: 6 });
     expect(wizardStage(8)).toEqual({ name: "Precio", index: 2, position: 1, size: 2, first: 8 });
     expect(wizardStage(9)).toEqual({ name: "Precio", index: 2, position: 2, size: 2, first: 8 });
+  });
+});
+
+describe("isFreshDraft (qué tener a mano, arriba del paso 1)", () => {
+  it("un borrador recién creado, sin nada rellenado", () => {
+    expect(isFreshDraft(emptyDraft())).toBe(true);
+    expect(isFreshDraft({ ...emptyDraft(), acceptsMonthly: null })).toBe(true);
+    expect(isFreshDraft({ ...emptyDraft(), province: "Puntarenas" })).toBe(true); // la provincia viene puesta
+  });
+  it("con cualquier cosa rellenada, ya no", () => {
+    expect(isFreshDraft({ ...emptyDraft(), kind: "completo" })).toBe(false);
+    expect(isFreshDraft({ ...emptyDraft(), acceptsNightly: true })).toBe(false);
+    expect(isFreshDraft({ ...emptyDraft(), title: "Casa" })).toBe(false);
+    expect(isFreshDraft({ ...emptyDraft(), photoCount: 1 })).toBe(false);
+    expect(isFreshDraft({ ...emptyDraft(), features: ["wifi"] })).toBe(false);
+    expect(isFreshDraft(validDraft())).toBe(false);
   });
 });

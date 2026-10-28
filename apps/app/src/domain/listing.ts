@@ -133,6 +133,13 @@ export const emptyDraft = (): ListingDraft => ({
   minMonths: null,
 });
 
+const isBlank = (v: unknown) => v === null || v === "" || v === false || v === 0 || (Array.isArray(v) && v.length === 0);
+
+/** Borrador recién creado, sin nada rellenado (la provincia viene puesta): arriba del paso 1, qué tener a mano (C4). */
+export function isFreshDraft(d: ListingDraft): boolean {
+  return (Object.keys(emptyDraft()) as (keyof ListingDraft)[]).every((k) => k === "province" || isBlank(d[k]));
+}
+
 /** «95000», «95.000», «95 000», «₡95 000» → 95000. Vacío → null. Decimales u otra cosa → NaN. */
 export function parseColones(input: string): number | null {
   const raw = input.replace(/[₡\s  ]/g, "");

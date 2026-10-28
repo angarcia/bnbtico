@@ -52,19 +52,12 @@ async function expectKeyboardRoom(page: Page, fieldId: string) {
 }
 
 test("las nueve pantallas: se guardan por detrás, sin scroll con y sin teclado, y se envía a revisión", async ({ page }) => {
-  // Revisión UX C4: mientras se crea el borrador, qué tener a mano; y «Publicar» entra directo al paso 1 (sin «Empezar»).
-  let release!: () => void;
-  const held = new Promise<void>((resolve) => (release = resolve));
-  await page.route("**/rest/v1/listings?*", async (route) => {
-    if (route.request().method() === "POST") await held;
-    await route.fallback();
-  });
+  // Revisión UX C4: «Publicar» entra directo al paso 1 (sin «Empezar»), y arriba del paso 1 de un borrador recién creado,
+  // qué tener a mano.
   await page.goto("/propietario/publicar");
-  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche o por mes", "Unos 10 minutos"]);
-  release();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
-  await page.unroute("**/rest/v1/listings?*");
   const id = idFrom(page);
+  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche o por mes", "Unos 10 minutos"]);
   await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 5");
   await expect(page.locator(".progress span")).toHaveCount(9);
   await expect(page.locator(".progress span.on")).toHaveCount(1);
@@ -330,6 +323,21 @@ test("cerrar o recargar la app justo al tocar «Continuar» no pierde el paso", 
   await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina en vuelo");
 });
 
+test("«Volver» de Publicar casa: atrás si se abrió desde la app; abierta directamente, a Cuenta", async ({ page }) => {
+  await h.seed({ status: "draft", draft: { title: "Borrador pendiente" } }); // con un borrador pendiente no se crea otro
+  await page.goto("/propietario/casas");
+  await page.getByRole("link", { name: "Añadir otra casa" }).click();
+  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await page.goto("/propietario/publicar");
+  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/propietario\/publicar$/);
+});
+
 test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar» abre el asistente con todo relleno", async ({ page }) => {
   const pending = await h.seed({ status: "draft", draft: { title: "Borrador del otro teléfono", kind: "habitacion", bathroomShared: true } });
   const changes = await h.seed({ status: "changes", draft: { title: "Cabina con cambios" } });
@@ -341,6 +349,7 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/7$`));
   await page.goto(`/propietario/publicar/${pending.id}/1`);
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Vacacional/, /Habitación/]);
+  await expect(page.locator(".ready-list")).toHaveCount(0); // con algo ya rellenado, no repite qué tener a mano
   await page.goto(`/propietario/publicar/${pending.id}/4`);
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
   await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveText("Compartido");
