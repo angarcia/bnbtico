@@ -39,14 +39,6 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   const ids = photos.map((p) => p.id);
   const order = ids.join();
 
-  // El foco sigue a la foto movida: React puede mover el botón enfocado con insertBefore, y eso lo desenfoca.
-  useLayoutEffect(() => {
-    const f = follow.current;
-    const active = document.activeElement;
-    if (!f || (active && active !== document.body && !drag.gridRef.current?.contains(active))) return;
-    drag.gridRef.current?.querySelector<HTMLElement>(`[data-photo="${f.id}"] [data-move="${f.dir}"]`)?.focus();
-  }, [order]);
-
   const reread = async () => {
     void client.invalidateQueries({ queryKey: ["own-listings", userId] });
     await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] });
@@ -91,6 +83,15 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   const busy = change.isPending || reorder.isPending;
   // Soltar todavía no reordena: lo hace la tarea siguiente.
   const drag = usePhotoDrag({ ids, enabled: !busy && uploads.length === 0, scroller, onDrop: () => {} });
+
+  // El foco sigue a la foto movida: React puede mover el botón enfocado con insertBefore, y eso lo desenfoca.
+  useLayoutEffect(() => {
+    const f = follow.current;
+    const active = document.activeElement;
+    if (!f || (active && active !== document.body && !drag.gridRef.current?.contains(active))) return;
+    drag.gridRef.current?.querySelector<HTMLElement>(`[data-photo="${f.id}"] [data-move="${f.dir}"]`)?.focus();
+  }, [order]);
+
   const room = photos.length + uploads.length < MAX_PHOTOS;
   const errors = [...notices, ...[change, reorder].flatMap((m) => (m.isError ? [photosErrorMessage(m.error)] : []))];
 

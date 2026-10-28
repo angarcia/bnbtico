@@ -151,6 +151,10 @@ test("mantener pulsada levanta la foto sin mover la página; el ✕ no levanta",
   await expect(tile).toHaveClass(/is-lifted/);
   await expect(page.locator(".photos-grid")).toHaveClass(/is-dragging/);
   expect(await page.evaluate(() => [window.scrollY, document.querySelector(".photos-scroll")!.scrollTop])).toEqual(scrollBefore);
+  // Levantada, mover el dedo en vertical no hace scroll (touchmove nativo no pasivo con preventDefault).
+  await t.move(p.x, p.y - 120, 6);
+  await expect(tile).toHaveClass(/is-lifted/);
+  expect(await page.evaluate(() => [window.scrollY, document.querySelector(".photos-scroll")!.scrollTop])).toEqual(scrollBefore);
   await t.up();
   await expect(tile).not.toHaveClass(/is-lifted/);
   expect(reorders).toHaveLength(0);
@@ -161,4 +165,19 @@ test("mantener pulsada levanta la foto sin mover la página; el ✕ no levanta",
   await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
   await t.up();
   await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+});
+
+test("un segundo dedo durante la espera la cancela y no empieza otra", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft", photos: 6 });
+  await page.goto(`/propietario/publicar/${id}/7`);
+  const t = await touch(page);
+  const a = await t.center(page.locator(".photos-grid [data-photo]").nth(1));
+  const b = await t.center(page.locator(".photos-grid [data-photo]").nth(3));
+  await t.down(a.x, a.y);
+  await page.waitForTimeout(150);
+  await t.second(b.x, b.y);
+  await page.waitForTimeout(600);
+  await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
+  await t.up();
+  expect(reorders).toHaveLength(0);
 });

@@ -55,7 +55,7 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
   }, []);
 
   function onPointerDown(e: ReactPointerEvent<HTMLElement>, id: string) {
-    if (!opts.current.enabled || e.button || gesture.current || (e.target as Element).closest("button")) return;
+    if (!opts.current.enabled || e.button || !e.isPrimary || gesture.current || (e.target as Element).closest("button")) return;
     const tile = e.currentTarget;
     const { pointerId, clientX: x0, clientY: y0 } = e;
 
@@ -63,6 +63,11 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
       clearTimeout(timer);
       for (const t of TYPES) removeEventListener(t, on, true);
       tile.style.transform = "";
+      try {
+        tile.releasePointerCapture(pointerId);
+      } catch {
+        // sin captura (no llegó a levantarse) o el puntero ya no existe
+      }
       gesture.current = null;
       setLiftedId(null);
     };
