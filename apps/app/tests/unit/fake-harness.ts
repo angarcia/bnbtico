@@ -76,6 +76,10 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
       const at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
       for (let k = 0; k < n; k++) db.views.push({ publicId, at });
     },
+    async recordTaps(publicId, n, daysAgo = 0) {
+      const at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+      for (let k = 0; k < n; k++) db.taps.push({ publicId, at });
+    },
     async seedContacts(who, n) {
       const other = who === "owner" ? "other" : "owner";
       for (let k = 0; k < n; k++) {

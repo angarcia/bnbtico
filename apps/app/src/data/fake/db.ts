@@ -125,6 +125,7 @@ export class FakeDb {
   inquiries: FakeInquiry[] = [];
   /** Balizas `listing_view` (como la tabla events): la casa y cuándo. */
   views: { publicId: string; at: string }[] = [];
+  taps: { publicId: string; at: string }[] = [];
   favorites: FakeFavorite[] = [];
   /** listing_days: por casa, solo los días que difieren del habitual, en orden. */
   readonly days = new Map<string, CalendarDay[]>();
@@ -243,6 +244,7 @@ export class FakeDb {
     this.objects.clear();
     this.inquiries = [];
     this.views = [];
+    this.taps = [];
     this.favorites = [];
     this.days.clear();
     this.subscriptions.clear();

@@ -165,5 +165,22 @@ export function inquiriesContract(name: string, makeHarness: () => Promise<Inqui
       expect(await h.owner("owner").stats(house.id)).toEqual({ views: 3, inquiries: 0 });
       expect((await rejection(h.owner("other").stats(house.id))).message).toBe("No encontramos ese anuncio.");
     });
+
+    it("actividad de 30 días: una fila por casa propia, con visitas, toques y consultas; nada ajeno", async () => {
+      const newer = await h.seed({ status: "draft", draft: { title: "Borrador" } });
+      const foreign = await h.seed({ status: "active", as: "other", draft: { title: "Ajena" } });
+      await h.recordViews(house.publicId, 3);
+      await h.recordViews(house.publicId, 2, 40);
+      await h.recordTaps(house.publicId, 2);
+      await h.recordTaps(house.publicId, 1, 31);
+      await h.inquiries("other").create(house.publicId, draft());
+      const rows = await h.owner("owner").ownerActivity();
+      expect(rows).toHaveLength(2);
+      expect(rows).toEqual(expect.arrayContaining([
+        { listingId: house.id, publicId: house.publicId, views: 3, whatsappTaps: 2, inquiries: 1 },
+        { listingId: newer.id, publicId: newer.publicId, views: 0, whatsappTaps: 0, inquiries: 0 },
+      ]));
+      expect((await h.owner("other").ownerActivity()).map((r) => r.publicId)).toEqual([foreign.publicId]);
+    });
   });
 }

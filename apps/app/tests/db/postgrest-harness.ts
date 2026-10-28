@@ -142,6 +142,11 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       const row = { name: "listing_view", listing_public_id: publicId, page: "ficha", path: `/casa/${publicId}`, build: "prueba", created_at };
       fail("registrar visitas", (await service.from("events").insert(Array.from({ length: n }, () => row))).error);
     },
+    async recordTaps(publicId, n, daysAgo = 0) {
+      const created_at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+      const row = { name: "whatsapp_tap", listing_public_id: publicId, page: "ficha", path: `/casa/${publicId}`, build: "prueba", created_at };
+      fail("registrar toques", (await service.from("events").insert(Array.from({ length: n }, () => row))).error);
+    },
     async seedContacts(who, n) {
       const other = who === "owner" ? "other" : "owner";
       const base = { owner_id: ids[other], status: "active" as const, title: "Contactada", description: "x", province: "Limón", whatsapp_phone: TEST_PHONES[other], capacity: 2, bedrooms: 1, bathrooms: 1, accepts_nightly: true, nightly_price_crc: 30000 };

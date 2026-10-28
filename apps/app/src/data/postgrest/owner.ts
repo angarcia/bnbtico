@@ -126,6 +126,13 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       return { views: row?.views ?? 0, inquiries: row?.inquiries ?? 0 };
     },
 
+    async ownerActivity() {
+      await me();
+      const { data, error } = await db.rpc("owner_activity");
+      if (error) throw toDomainError(error);
+      return data.map((r) => ({ listingId: r.listing_id, publicId: r.public_id, views: r.views, whatsappTaps: r.whatsapp_taps, inquiries: r.inquiries }));
+    },
+
     async deleteDraft(id) {
       if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
       const { data, error } = await db.from("listings").delete().eq("id", id).eq("owner_id", await me()).select("id");

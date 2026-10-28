@@ -59,6 +59,15 @@ export interface ListingStats {
   inquiries: number;
 }
 
+/** Actividad de 30 días de una casa propia (RPC owner_activity). */
+export interface ListingActivity {
+  listingId: string;
+  publicId: string;
+  views: number;
+  whatsappTaps: number;
+  inquiries: number;
+}
+
 export interface OwnerListingsApi {
   /** Las casas propias en cualquier estado, la más reciente primero (el admin tampoco ve aquí las ajenas). */
   listOwn(): Promise<Listing[]>;
@@ -95,6 +104,8 @@ export interface OwnerListingsApi {
    * el dueño (o el admin); si no, «No encontramos ese anuncio.».
    */
   stats(id: string): Promise<ListingStats>;
+  /** Una fila por casa propia (cualquier estado), la más reciente primero: visitas, toques en WhatsApp y consultas de 30 días (RPC owner_activity). */
+  ownerActivity(): Promise<ListingActivity[]>;
 }
 
 /** Las tres variantes JPEG de una foto, ya generadas en el navegador. */

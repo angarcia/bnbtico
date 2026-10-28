@@ -142,6 +142,22 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       };
     },
 
+    async ownerActivity() {
+      const owner = me();
+      const since = Date.now() - 30 * 86_400_000;
+      const recent = (rows: { publicId: string; at: string }[], publicId: string) => rows.filter((r) => r.publicId === publicId && Date.parse(r.at) > since).length;
+      return [...db.listings.values()]
+        .filter((l) => l.ownerId === owner)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .map((l) => ({
+          listingId: l.id,
+          publicId: l.publicId,
+          views: recent(db.views, l.publicId),
+          whatsappTaps: recent(db.taps, l.publicId),
+          inquiries: db.inquiries.filter((i) => i.listingId === l.id && Date.parse(i.createdAt) > since).length,
+        }));
+    },
+
     async deleteDraft(id) {
       const l = own(id);
       const refusal = discardRefusal(l ?? null);

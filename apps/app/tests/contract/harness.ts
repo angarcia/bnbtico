@@ -102,6 +102,8 @@ export interface InquiriesHarness extends ListingsHarness {
   seedContacts(who: SeedOwner, n: number): Promise<void>;
   /** `n` aperturas de ficha (`listing_view`) de esa casa, hace `daysAgo` días (como el worker al recibir la baliza). */
   recordViews(publicId: string, n: number, daysAgo?: number): Promise<void>;
+  /** `n` toques en «Contactar por WhatsApp» (`whatsapp_tap`) de esa casa, hace `daysAgo` días. */
+  recordTaps(publicId: string, n: number, daysAgo?: number): Promise<void>;
 }
 
 // ---------- Calendario (fase 4) ----------
