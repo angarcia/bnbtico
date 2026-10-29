@@ -268,6 +268,23 @@ test("si no se puede leer la cuenta tras enviar, la casa enviada se muestra igua
   }
 });
 
+test("si la cuenta tarda en leerse tras enviar, pasa a la casa enviada sin esperarla", async ({ page }) => {
+  const before = ownerEmail();
+  setOwnerEmail("");
+  try {
+    await injectSession(page, "owner", { askEmail: true });
+    await page.route("**/rest/v1/profiles*", async (route) => {
+      if (route.request().method() !== "GET") return route.continue();
+      await new Promise((r) => setTimeout(r, 8000));
+      await route.continue().catch(() => undefined);
+    });
+    const id = await sendFromStep9(page);
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`), { timeout: 5000 });
+  } finally {
+    setOwnerEmail(before);
+  }
+});
+
 test("guarda el correo desde la pregunta de después de enviar", async ({ page }) => {
   const before = ownerEmail();
   setOwnerEmail("");

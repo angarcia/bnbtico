@@ -109,6 +109,9 @@ export function useSaveStep(userId: string, listingId: string) {
   });
 }
 
+/** Lo más que se espera a la cuenta tras enviar antes de seguir a «Enviada». */
+const ACCOUNT_WAIT_MS = 2500;
+
 /** Última pantalla: espera los guardados, relee el borrador del servidor, valida todo y solo entonces envía. */
 async function sendForReview(client: QueryClient, router: ReturnType<typeof useRouter>, userId: string, id: string): Promise<string | null> {
   clearFailure(id);
@@ -126,8 +129,12 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   }
   await (await api()).submit(id);
   // Cuenta sin correo que aún no dijo «Ahora no»: antes de «Enviada», la pregunta del correo de recuperación. Una sola
-  // lectura, sin los reintentos de la consulta de la pantalla: si falla, la casa ya está enviada y se pasa a «Enviada».
-  const account = client.getQueryData(accountQuery(userId).queryKey) ?? (await (await authApi()).profile().catch(() => undefined)) ?? undefined;
+  // lectura, sin los reintentos de la consulta de la pantalla y con un tope de espera: si falla o tarda, la casa ya está
+  // enviada y se pasa a «Enviada» sin la pregunta.
+  const account =
+    client.getQueryData(accountQuery(userId).queryKey) ??
+    (await Promise.race([(await authApi()).profile().catch(() => undefined), new Promise<undefined>((r) => setTimeout(r, ACCOUNT_WAIT_MS))])) ??
+    undefined;
   const ask = shouldAskEmail(account, localStorage.getItem(EMAIL_SKIPPED_KEY));
   await router.navigate({ to: ask ? "/propietario/casas/$id/correo" : "/propietario/casas/$id/enviada", params: { id }, replace: true });
   patchCached(client, userId, id, { status: "review", reviewNote: null });
