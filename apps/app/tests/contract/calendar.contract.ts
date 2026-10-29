@@ -6,7 +6,9 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { CALENDAR_MESSAGES as M, type CalendarDay } from "../../src/domain/calendar";
 import { DomainError } from "../../src/domain/errors";
+import { parseFilters } from "../../src/domain/filters";
 import { costaRicaToday } from "../../src/domain/inquiry";
+import { PROVINCES } from "../../src/domain/listing";
 import type { CalendarHarness, SeedSpec } from "./harness";
 
 async function rejection(p: Promise<unknown>): Promise<DomainError> {
@@ -206,6 +208,27 @@ export function calendarContract(name: string, makeHarness: () => Promise<Calend
       expect(await owner.getOwn(noDate.id)).toMatchObject({ available: false, reopenAt: null, status: "active" });
       expect(await h.anon.getPublic(hidden.publicId)).toBeNull();
       expect(await h.calendar("owner").days(due.id)).toEqual([occupied(day(3), 66_000)]);
+    });
+
+    it("Explorar: solo casas libres todas esas noches y, con el mensual, 30 noches desde «Desde»", async () => {
+      const A = day(20);
+      const S = day(24);
+      const monthly = { draft: { acceptsMonthly: true } };
+      const free = await house();
+      const busyInside = await house();
+      const busyOnS = await house();
+      const month = await house(monthly);
+      const month2 = await house(monthly);
+      await h.putDay(busyInside.id, occupied(day(22)));
+      await h.putDay(busyOnS.id, occupied(S));
+      await h.putDay(month.id, occupied(day(10 + 29))); // la última de las 30 noches
+      await h.putDay(month2.id, occupied(day(10 + 30))); // la noche siguiente
+      const search = async (params: Record<string, string>) =>
+        (await h.anon.searchPublic(parseFilters({ prov: "Todas", ...params }, PROVINCES, { today: day(0) }))).map((l) => l.publicId);
+      const nightly = await search({ llegada: A, salida: S });
+      expect(nightly).toEqual(expect.arrayContaining([free.publicId, busyOnS.publicId]));
+      expect(nightly).not.toContain(busyInside.publicId);
+      expect(await search({ mensual: "1", desde: day(10) })).toEqual([month2.publicId]);
     });
   });
 }

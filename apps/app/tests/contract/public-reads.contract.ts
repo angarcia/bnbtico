@@ -1,9 +1,13 @@
 // Contrato de las lecturas públicas: catálogo con filtros, ficha, estado del enlace y provincias con casas.
 import { beforeAll, describe, expect, it } from "vitest";
+import { addDays } from "../../src/domain/dates";
+import { DomainError } from "../../src/domain/errors";
 import { parseFilters, type Filters } from "../../src/domain/filters";
+import { costaRicaToday } from "../../src/domain/inquiry";
 import { PROVINCES } from "../../src/domain/listing";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, distanceMeters } from "../../src/domain/geo";
 import type { ListingsHarness, Seeded } from "./harness";
+import { PUERTO_VIEJO } from "./points";
 
 const filters = (params: Record<string, string> = {}): Filters => parseFilters({ prov: "Todas", ...params }, PROVINCES);
 
@@ -150,6 +154,41 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.countActive()).toBe(4);
       });
     });
+    describe("zona (5 km)", () => {
+      let pv: Seeded;
+      let cahuita: Seeded;
+
+      beforeAll(async () => {
+        h = await makeHarness();
+        await h.reset();
+        cahuita = await h.seed({ status: "active" });
+        pv = await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo", zone: "Puerto Viejo", zoneSource: "other", zoneId: null, ...PUERTO_VIEJO } });
+      }, 60_000);
+
+      it("la zona trae las casas a 5 km o menos de su punto (o con esa zona) y manda sobre la provincia", async () => {
+        expect(await ids(filters({ zona: "704-cocles" }))).toEqual([pv.publicId]); // Puerto Viejo, a ~2,9 km de Cocles
+        expect(await ids(filters({ zona: "704-cahuita" }))).toEqual([cahuita.publicId]);
+        expect(await ids(filters({ zona: "704-cocles", prov: "Guanacaste" }))).toEqual([pv.publicId]);
+      });
+
+      it("zonesWithListings: las zonas con casas activas y abiertas cerca, con cantón y provincia", async () => {
+        const zones = await h.anon.zonesWithListings();
+        expect(zones).toContainEqual(expect.objectContaining({ id: "704-cocles", name: "Cocles", canton: "Talamanca", province: "Limón" }));
+        expect(zones).toContainEqual(expect.objectContaining({ id: "704-puerto-viejo" }));
+        expect(zones.map((z) => z.id)).not.toContain("701-limon-centro");
+        await h.owner("owner").setAvailable(pv.id, false);
+        expect((await h.anon.zonesWithListings()).map((z) => z.id)).not.toContain("704-cocles");
+        await h.owner("owner").setAvailable(pv.id, true);
+      });
+
+      it("un rango de fechas inválido se rechaza con «Revise las fechas.»", async () => {
+        const today = costaRicaToday(Date.now());
+        const p = h.anon.searchPublic({ ...filters(), arrival: addDays(today, -1), departure: addDays(today, 2) });
+        await expect(p).rejects.toBeInstanceOf(DomainError);
+        await expect(p).rejects.toThrow("Revise las fechas.");
+      });
+    });
+
     describe("anuncio pausado (ticket 20)", () => {
       it("no aparece en Explorar, pero su ficha y Favoritos la siguen trayendo como no disponible", async () => {
         h = await makeHarness();

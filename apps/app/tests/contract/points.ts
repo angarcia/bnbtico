@@ -3,6 +3,8 @@
 import type { LatLng } from "../../src/domain/geo";
 
 export const COCLES: LatLng = { lat: 9.6418, lng: -82.733 };
+/** Puerto Viejo, a ~2,9 km del punto de la zona Cocles y a más de 5 km del de Cahuita. */
+export const PUERTO_VIEJO: LatLng = { lat: 9.6565, lng: -82.7536 };
 export const LIMON_CENTRO: LatLng = { lat: 9.9925, lng: -83.036 };
 /** Valle La Estrella (cantón Limón), cerca del límite con Talamanca. */
 export const ESTRELLA: LatLng = { lat: 9.8, lng: -82.93 };

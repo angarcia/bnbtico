@@ -5,9 +5,10 @@ import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
-import { ALL_PROVINCES, effectiveFilters, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
+import { caribeFirst, type ZoneWithListings } from "../../domain/zones";
 
 const PUBLIC_COLUMNS =
   "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, reopen_at, created_at, updated_at, owner_name, owner_whatsapp_verified, photos";
@@ -22,19 +23,30 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
   return {
     async searchPublic(f: Filters) {
       const x = effectiveFilters(f); // con el mensual no se aplica el rango por noche
-      let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
-      // Una casa cerrada («Cerrar la casa hasta…» del Calendario, ticket 20) no sale en Explorar; su ficha sí se abre.
-      q = q.eq("available", true);
-      if (x.prov !== ALL_PROVINCES) q = q.eq("province", x.prov);
+      const r = stayRange(f);
+      // La RPC pone la zona (5 km con el punto real), las noches libres y deja fuera las casas cerradas («Cerrar la casa
+      // hasta…» del Calendario, ticket 20; su ficha sí se abre). El resto de filtros va encima.
+      let q = db.rpc("search_listings", { p_zone: x.zone ?? undefined, p_from: r?.from, p_to: r?.to }).select(PUBLIC_COLUMNS);
+      if (x.prov !== ALL_PROVINCES && !x.zone) q = q.eq("province", x.prov);
       if (x.monthly) q = q.eq("accepts_monthly", true);
       if (x.ppl) q = q.gte("capacity", x.ppl);
       if (x.beds) q = q.gte("bedrooms", x.beds);
       if (x.features.length) q = q.contains("features", x.features);
       if (x.min) q = q.gte("nightly_price_crc", x.min);
       if (x.max) q = q.lte("nightly_price_crc", x.max);
-      const { data, error } = await q;
+      const { data, error } = await q.order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
       if (error) throw toDomainError(error);
       return data.map(toPublic);
+    },
+
+    async zonesWithListings() {
+      const { data, error } = await db.from("zones_with_listings").select("id, name, canton_code, canton, province, lat, lng, listings").order("name");
+      if (error) throw toDomainError(error);
+      return caribeFirst(
+        data.map(
+          (z): ZoneWithListings => ({ id: z.id!, name: z.name!, cantonCode: z.canton_code!, canton: z.canton!, province: z.province!, lat: z.lat!, lng: z.lng!, listings: z.listings! }),
+        ),
+      );
     },
 
     async getPublic(publicId) {

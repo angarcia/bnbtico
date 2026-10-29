@@ -22,6 +22,13 @@ export const provincesQuery = queryOptions({
   staleTime: 10 * 60_000,
 });
 
+/** Zonas con casas para «¿Dónde?» (zones_with_listings). */
+export const zonesQuery = queryOptions({
+  queryKey: ["zones-with-listings"] as const,
+  queryFn: async () => (await api()).zonesWithListings(),
+  staleTime: 10 * 60_000,
+});
+
 /** La casa tal como llegó en algún listado ya cargado, para pintar la ficha antes de su propia petición. */
 export function listingSeed(client: QueryClient, publicId: string): { listing: PublicListing; updatedAt: number } | undefined {
   for (const query of client.getQueryCache().findAll({ queryKey: ["listings"] })) {

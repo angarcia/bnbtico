@@ -96,6 +96,12 @@ function distanceToRing(p: LatLng, ring: readonly LatLng[]): number {
   return best;
 }
 
+/** Cantón y provincia de un código de cantón (`704` → Talamanca, Limón), de los distritos del fake; null si no hay. */
+export function fakeCantonOf(cantonCode: string): { canton: string; province: string } | null {
+  const d = FAKE_DISTRICTS.find((x) => x.code.startsWith(cantonCode));
+  return d ? { canton: d.canton, province: d.province } : null;
+}
+
 const toPlace = (d: (typeof FAKE_DISTRICTS)[number]): Place => ({ province: d.province, canton: d.canton, district: d.district, districtCode: d.code });
 
 /** El distrito que contiene el punto; si ninguno, el más cercano a 500 m o menos; si no, null. */

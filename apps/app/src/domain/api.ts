@@ -10,7 +10,7 @@ import type { LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicList
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
 import type { AdminHouses } from "./admin-houses";
 import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
-import type { NearZone, Place, Zone } from "./zones";
+import type { NearZone, Place, Zone, ZoneWithListings } from "./zones";
 import type {
   BillingOverview,
   BlockedReason,
@@ -26,8 +26,11 @@ import type {
 export type { AdminQueue, QueueItem, ReviewDecision } from "./review";
 
 export interface PublicListingsApi {
-  /** Catálogo con filtros; más recientes primero, como mucho 60. */
+  /** Catálogo con filtros: RPC search_listings (zona a 5 km y noches libres) y encima provincia (solo sin zona), mensual,
+   *  personas, habitaciones, características y precio; más recientes primero, como mucho 60. Rango inválido: «Revise las fechas.» */
   searchPublic(filters: Filters): Promise<PublicListing[]>;
+  /** Zonas activas con alguna casa activa y abierta a 5 km o menos (o con esa zona), Caribe primero y por nombre. */
+  zonesWithListings(): Promise<ZoneWithListings[]>;
   /** Ficha pública por `CT-####`; null si no está activa. */
   getPublic(publicId: string): Promise<PublicListing | null>;
   /** Las casas activas de una lista de `CT-####` en una sola consulta (Favoritos); las demás no vuelven. Sin orden. */

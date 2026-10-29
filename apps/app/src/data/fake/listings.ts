@@ -2,11 +2,16 @@
 import type { PublicListingsApi } from "../../domain/api";
 import { calendarWindow } from "../../domain/calendar";
 import { FX_INITIAL } from "../../domain/fx";
-import { ALL_PROVINCES, effectiveFilters, type Filters } from "../../domain/filters";
+import { DomainError } from "../../domain/errors";
+import { ALL_PROVINCES, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
+import { distanceMeters } from "../../domain/geo";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
+import { addDays } from "../../domain/dates";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
+import { ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
 import { offerTaken } from "./billing";
 import { approxPoint, type FakeDb, type FakeListing } from "./db";
+import { FAKE_ZONES, fakeCantonOf } from "./places";
 
 export const SEARCH_LIMIT = 60;
 export const SITEMAP_LIMIT = 1000;
@@ -58,6 +63,12 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
     return "blocked";
   }
 
+  // Como search_listings: la zona elegida o el punto real a 5 km o menos del de la zona.
+  const nearZone = (l: FakeListing, z: Zone) =>
+    l.zoneId === z.id || (l.lat !== null && l.lng !== null && distanceMeters({ lat: l.lat, lng: l.lng }, z) <= ZONE_RADIUS_M);
+  // Alguna noche de [from, to) ocupada en el calendario del fake.
+  const busy = (l: FakeListing, from: string, to: string) => (db.days.get(l.id) ?? []).some((d) => !d.available && d.day >= from && d.day < to);
+
   // Comparaciones con null fallan, como en SQL: una casa solo mensual no entra en un filtro de precio por noche.
   const gte = (v: number | null, min: number) => v !== null && v >= min;
   const lte = (v: number | null, max: number) => v !== null && v <= max;
@@ -65,9 +76,16 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
   return {
     async searchPublic(f: Filters) {
       const q = effectiveFilters(f); // con el mensual no se aplica el rango por noche
+      const r = stayRange(f);
+      const today = db.today();
+      if (r && (r.to <= r.from || r.from < today || r.to > addDays(today, 366))) throw new DomainError("Revise las fechas.", "validation");
+      const zone = q.zone ? FAKE_ZONES.find((z) => z.id === q.zone) : null;
+      if (q.zone && !zone) return [];
       return active()
         .filter((l) => l.available)
-        .filter((l) => q.prov === ALL_PROVINCES || l.province === q.prov)
+        .filter((l) => !zone || nearZone(l, zone))
+        .filter((l) => !r || !busy(l, r.from, r.to))
+        .filter((l) => !!zone || q.prov === ALL_PROVINCES || l.province === q.prov)
         .filter((l) => !q.monthly || l.acceptsMonthly === true)
         .filter((l) => !q.ppl || gte(l.capacity, q.ppl))
         .filter((l) => !q.beds || gte(l.bedrooms, q.beds))
@@ -77,6 +95,16 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, SEARCH_LIMIT)
         .map(toPublic);
+    },
+
+    async zonesWithListings() {
+      const open = active().filter((l) => l.available && l.lat !== null);
+      const zones = FAKE_ZONES.flatMap((z): ZoneWithListings[] => {
+        const n = open.filter((l) => nearZone(l, z)).length;
+        const place = fakeCantonOf(z.cantonCode);
+        return n > 0 && place ? [{ ...z, ...place, listings: n }] : [];
+      });
+      return caribeFirst(zones.sort((a, b) => a.name.localeCompare(b.name, "es")));
     },
 
     async getPublic(publicId) {
