@@ -137,16 +137,6 @@ export function useSetAvailable(userId: string, listing: Pick<Listing, "id" | "p
   });
 }
 
-/** Editar una casa activa (o con cambios pedidos, o rechazada): vuelve a borrador. */
-export function useReopen(userId: string, listing: Pick<Listing, "id" | "publicId">) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: async () => (await api()).reopenForEdit(listing.id),
-    onSuccess: () => patchCached(client, userId, listing.id, { status: "draft" }),
-    onSettled: () => refresh(client, userId, listing),
-  });
-}
-
 /** Descartar un borrador que nunca se envió. */
 export function useDeleteDraft(userId: string) {
   const client = useQueryClient();

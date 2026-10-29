@@ -244,34 +244,6 @@ test("cerrar la casa responde al instante desde el Calendario y vuelve atrás si
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(true);
 });
 
-test("editar una casa activa pide confirmación, la reabre y deja de verse", async ({ page }) => {
-  await page.goto(`/propietario/casas/${active.id}`);
-  let warning = "";
-  page.once("dialog", (d) => {
-    warning = d.message();
-    void d.dismiss();
-  });
-  await page.getByRole("button", { name: /Editar la ficha/ }).click();
-  expect(warning).toContain("dejará de verse");
-  await expect(page.getByText("Activa", { exact: true })).toBeVisible();
-  expect(await h.anon.linkState(active.publicId)).toBe("active");
-
-  page.once("dialog", (d) => void d.accept());
-  await page.getByRole("button", { name: /Editar la ficha/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${active.id}/1$`));
-  expect(await h.anon.linkState(active.publicId)).toBe("blocked");
-
-  // El borrador de una casa que ya estuvo publicada no se descarta.
-  await page.goto("/propietario/casas");
-  const reopened = card(page, "Casa Cocles");
-  await expect(reopened.getByTestId("card-label")).toHaveText("Borrador");
-  await expect(reopened.getByRole("button", { name: "Descartar" })).toHaveCount(0);
-  await reopened.getByRole("link", { name: "Casa Cocles" }).click();
-  await expect(page.getByText("Estuvo publicada. Está editándola")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Seguir con el borrador/ })).toBeVisible();
-});
-
 test("con cambios pedidos: la nota y «Corregir y reenviar» abre el asistente", async ({ page }) => {
   await page.goto(`/propietario/casas/${changes.id}`);
   await expect(page.getByText("Le pedimos cambios")).toBeVisible();

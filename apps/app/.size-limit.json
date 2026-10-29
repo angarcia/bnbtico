@@ -33,7 +33,10 @@
       "!dist/client/assets/close-sheet-*.js",
       "!dist/client/assets/buscar-*.js",
       "!dist/client/assets/explore-map-leaflet-*.js",
-      "!dist/client/assets/explore-map-full-*.js"
+      "!dist/client/assets/explore-map-full-*.js",
+      "!dist/client/assets/casa-editable-*.js",
+      "!dist/client/assets/editar-*.js",
+      "!dist/client/assets/edit-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -93,6 +96,23 @@
       "dist/client/assets/useMutation-*.js"
     ],
     "limit": "24.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Ficha editable · trozo diferido (la ficha de una casa publicada; se precarga con las pantallas del propietario)",
+    "path": [
+      "dist/client/assets/casa-editable-*.js",
+      "dist/client/assets/edit-*.js"
+    ],
+    "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Editar un dato · trozo diferido (las pantallas de cada dato de una casa publicada)",
+    "path": [
+      "dist/client/assets/editar-*.js"
+    ],
+    "limit": "6 KB",
     "gzip": true
   },
   {

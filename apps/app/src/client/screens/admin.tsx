@@ -602,3 +602,8 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
     </div>
   );
 }
+
+/** Revisar la edición de una casa publicada (`/admin/ediciones/$id`). Por ahora solo el título; la pantalla llega en la tarea 12. */
+export function RevisarEdicionScreen() {
+  return <h1>Revisar edición</h1>;
+}

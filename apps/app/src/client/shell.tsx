@@ -28,6 +28,7 @@ const cuentaScreens = () => import("./screens/cuenta");
 const favoritosScreen = () => import("./screens/favoritos");
 const actividadScreen = () => import("./screens/actividad");
 const calendarioScreen = () => import("./screens/calendario");
+const casaEditable = () => import("./screens/casa-editable");
 type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 /** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica. */
@@ -49,6 +50,7 @@ function prefetchTabs() {
     void actividadScreen();
     void calendarioScreen();
     void suscripcionScreen();
+    void casaEditable();
   }
 }
 
@@ -139,7 +141,7 @@ function AdminOutlet() {
 const adminTabs = createRoute({ getParentRoute: () => tabs, id: "_admin", beforeLoad: requireAdmin, component: AdminOutlet });
 const adminFlow = createRoute({ getParentRoute: () => flow, id: "_adminFlow", beforeLoad: requireAdmin, component: AdminOutlet });
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
-const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
+const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
 const casasSearch = (params: Record<string, unknown>): { ver?: "activas" | "por-pagar" | "inactivas" } =>
@@ -196,13 +198,18 @@ const routeTree = rootRoute.addChildren([
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
+      // Cada dato de una casa publicada, en su propio trozo (editar-*).
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("./screens/editar"), "EditarCampoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/suscripcion", validateSearch: suscripcionSearch, component: lazyRouteComponent(suscripcionScreen, "SuscripcionScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/admin/codigo", validateSearch: nextSearch, component: adminScreen("SegundoCodigoScreen") }),
     ]),
-    adminFlow.addChildren([createRoute({ getParentRoute: () => adminFlow, path: "/admin/anuncios/$id", component: adminScreen("RevisarScreen") })]),
+    adminFlow.addChildren([
+      createRoute({ getParentRoute: () => adminFlow, path: "/admin/anuncios/$id", component: adminScreen("RevisarScreen") }),
+      createRoute({ getParentRoute: () => adminFlow, path: "/admin/ediciones/$id", component: adminScreen("RevisarEdicionScreen") }),
+    ]),
   ]),
   createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", validateSearch: casaSearch, component: CasaScreen }),
 ]);

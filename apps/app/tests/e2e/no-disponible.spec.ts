@@ -165,18 +165,20 @@ test("abrir a mano es un toque, borra la fecha y, si la base rechaza el cierre, 
   await expect(closedRow(page)).toHaveCount(0);
 });
 
-test("una casa devuelta a edición con la fecha vencida se abre a consultas pero sigue oculta", async ({ page }) => {
+test("una casa vuelta a borrador con la fecha vencida se abre a consultas pero sigue oculta", async ({ page }) => {
   const casa = await seedHouse("Casa En Edición");
   const reopen = addDays(today(), 1);
   await h.owner("owner").setAvailable(casa.id, false, reopen);
-  await h.owner("owner").reopenForEdit(casa.id);
+  // Estado heredado: desde la edición de casas publicadas ningún propietario devuelve una casa activa a borrador, así que
+  // se pasa como el servicio (igual que el estado "reopened" de la siembra).
+  sql(`begin; select set_config('app.allow_status','on',true); update public.listings set status = 'draft' where id = '${casa.id}'; commit;`);
 
   expect(reopenDue(reopen)).toBeGreaterThanOrEqual(1);
   expect(await h.owner("owner").getOwn(casa.id)).toMatchObject({ status: "draft", available: true, reopenAt: null });
   expect(await h.anon.getPublic(casa.publicId)).toBeNull();
 
   await page.goto(`/propietario/casas/${casa.id}`);
-  await expect(page.getByText("Estuvo publicada. Está editándola: al enviarla volverá a revisión.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Seguir con el borrador/ })).toBeVisible();
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(page.getByText("Anuncio visible")).toHaveCount(0);
 });

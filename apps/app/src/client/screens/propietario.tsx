@@ -22,7 +22,7 @@ import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
-import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen } from "../owner";
+import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft } from "../owner";
 import { useSession } from "../session";
 
 const base = () => window.location.origin;
@@ -295,24 +295,18 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   const billing = useBilling(userId);
   const hb = billing?.of(l.id);
   const subLine = hb && billing ? subscriptionLine(hb.sub, billing.today) : null;
-  const reopen = useReopen(userId, l);
   const discard = useDeleteDraft(userId);
   const { mainPrice: price, monthly } = describe(l, { base: "" });
   const cover = l.photos[0];
   const label = cardLabel(l);
   const toWizard = () => navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } });
 
-  function edit() {
-    if (!confirmed("Su casa dejará de verse mientras la revisamos. ¿Quiere editarla?")) return;
-    reopen.mutate(undefined, { onSuccess: () => void toWizard() });
-  }
-
   function remove() {
     if (!confirmed("¿Descartar este borrador? No se puede deshacer.")) return;
     discard.mutate(l.id, { onSuccess: () => void navigate({ to: "/propietario/casas", replace: true }) });
   }
 
-  const error = reopen.error ?? discard.error;
+  const error = discard.error;
   return (
     <>
       <div className="photo detail-photo">
@@ -328,7 +322,6 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       {l.status === "active" ? <StatsLine listing={l} /> : null}
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
-      {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}
       {hb && billing ? <PayNotice hb={hb} today={billing.today} /> : l.status === "payment_due" ? <PaymentDueNote listing={l} /> : null}
       {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
         <section className="card-arena stack gap-10">
@@ -356,19 +349,6 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
               <I.chevron />
             </span>
           </SubscriptionLink>
-        ) : null}
-        {l.status === "active" ? (
-          <button type="button" className="list-item" onClick={edit} disabled={reopen.isPending}>
-            <span className="muted-icon">
-              <I.edit />
-            </span>
-            <span className="body">
-              Editar la ficha<small>Fotos, descripción, características y precio · vuelve a revisión</small>
-            </span>
-            <span className="chev">
-              <I.chevron />
-            </span>
-          </button>
         ) : null}
         {l.status === "draft" ? (
           <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="list-item">
