@@ -126,7 +126,9 @@ export function ContinuarScreen() {
     },
   });
   const draft = resumable.data;
-  const orphan = draft && isFreshDraft(draft) && Date.now() - Date.parse(draft.createdAt) < ORPHAN_MS ? draft : null;
+  const age = draft ? Date.now() - Date.parse(draft.createdAt) : -1;
+  // Una fecha del futuro (reloj del teléfono desfasado) no cuenta como recién creada.
+  const orphan = draft && isFreshDraft(draft) && age >= 0 && age < ORPHAN_MS ? draft : null;
   // Un solo intento por visita (el modo estricto de React monta dos veces), y solo con una lectura de esta visita: un
   // «sin borrador» de la caché del teléfono podría estar desfasado.
   const autoStarted = useRef(false);
@@ -238,11 +240,21 @@ export function CorreoScreen() {
         <h2>¿Quiere añadir un correo?</h2>
         <div className="field">
           <label htmlFor="pub-email">Correo</label>
-          <input id="pub-email" name="email" type="email" autoComplete="email" inputMode="email" />
-          <span className="small muted">Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.</span>
+          <input
+            id="pub-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "pub-email-error pub-email-help" : "pub-email-help"}
+          />
+          <span id="pub-email-help" className="small muted">
+            Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.
+          </span>
         </div>
         {error ? (
-          <p className="note" role="alert">
+          <p id="pub-email-error" className="note" role="alert">
             {error}
           </p>
         ) : null}

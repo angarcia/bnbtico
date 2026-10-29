@@ -3,6 +3,7 @@ import type { ListingsHarness } from "../contract/harness";
 import { serviceClient, sql, TEST_PHONES } from "../db/local";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { EMAIL_SKIPPED_KEY } from "../../src/domain/publish-return";
 import { userIdOf } from "./helpers/admin";
 import { enterCode, injectSession } from "./helpers/session";
 
@@ -212,9 +213,18 @@ test("una recarga entre crear la casa y guardar el tipo usa ese borrador vacío"
   expect((await listingsOf(TEST_PHONES.owner)).map((l) => [l.id, l.kind])).toEqual([[orphan.id, "habitacion"]]);
 });
 
+test("un borrador vacío con fecha del futuro (reloj desfasado) no se toma por el de una recarga", async ({ page }) => {
+  const orphan = await h.owner("owner").createDraft();
+  sql(`begin; select set_config('app.allow_status','on',true); update public.listings set created_at = now() + interval '1 day' where id = '${orphan.id}'; commit;`);
+  await injectSession(page, "owner");
+  await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ kind: "habitacion", savedAt: Date.now() })), STEP1_KEY);
+  await page.goto("/publicar/continuar");
+  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
+  expect((await listingsOf(TEST_PHONES.owner)).map((l) => [l.id, l.kind])).toEqual([[orphan.id, null]]);
+});
+
 // ---------- «¿Quiere añadir un correo?» tras enviar ----------
 
-const EMAIL_KEY = "bnbtico-correo-omitido";
 const ownerEmail = () => sql(`select coalesce(email, '') from public.profiles where phone = '${TEST_PHONES.owner}'`);
 const setOwnerEmail = (email: string) => sql(`update public.profiles set email = ${email ? `'${email}'` : "null"} where phone = '${TEST_PHONES.owner}'`);
 
@@ -236,9 +246,23 @@ test("envía sin fotos ni descripción; el correo se puede saltar una vez", asyn
     await expect(page.getByRole("heading", { name: "¿Quiere añadir un correo?" })).toBeVisible();
     await page.getByRole("button", { name: "Ahora no" }).click();
     await expect(page).toHaveURL(new RegExp(`/propietario/casas/${first}/enviada$`));
-    expect(await page.evaluate((k) => localStorage.getItem(k), EMAIL_KEY)).toBe("1");
+    expect(await page.evaluate((k) => localStorage.getItem(k), EMAIL_SKIPPED_KEY)).toBe("1");
     const second = await sendFromStep9(page);
     await expect(page).toHaveURL(new RegExp(`/propietario/casas/${second}/enviada$`));
+  } finally {
+    setOwnerEmail(before);
+  }
+});
+
+test("si no se puede leer la cuenta tras enviar, la casa enviada se muestra igual, sin la pregunta del correo", async ({ page }) => {
+  const before = ownerEmail();
+  setOwnerEmail("");
+  try {
+    await injectSession(page, "owner", { askEmail: true });
+    await page.route("**/rest/v1/profiles*", (route) => (route.request().method() === "GET" ? route.fulfill({ status: 500, body: "{}" }) : route.continue()));
+    const id = await sendFromStep9(page);
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
+    expect((await h.owner("owner").getOwn(id))?.status).toBe("review");
   } finally {
     setOwnerEmail(before);
   }
@@ -253,6 +277,8 @@ test("guarda el correo desde la pregunta de después de enviar", async ({ page }
     await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/correo$`));
     await page.getByRole("button", { name: "Guardar correo" }).click();
     await expect(page.getByText("Escriba su correo o toque «Ahora no».")).toBeVisible();
+    await expect(page.locator("#pub-email")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByLabel("Correo")).toHaveAccessibleDescription(/Escriba su correo o toque «Ahora no»\./);
     await page.getByLabel("Correo").fill("ana@");
     await page.getByRole("button", { name: "Guardar correo" }).click();
     await expect(page.getByText("Ese correo no parece válido.")).toBeVisible();

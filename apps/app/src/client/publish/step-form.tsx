@@ -21,6 +21,7 @@ import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, ty
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
 import { accountQuery } from "../account";
+import { authApi } from "../session";
 import { api, loadedApi, patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
@@ -124,8 +125,9 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
     return null;
   }
   await (await api()).submit(id);
-  // Cuenta sin correo que aún no dijo «Ahora no»: antes de «Enviada», la pregunta del correo de recuperación.
-  const account = client.getQueryData(accountQuery(userId).queryKey) ?? (await client.fetchQuery(accountQuery(userId)).catch(() => undefined)) ?? undefined;
+  // Cuenta sin correo que aún no dijo «Ahora no»: antes de «Enviada», la pregunta del correo de recuperación. Una sola
+  // lectura, sin los reintentos de la consulta de la pantalla: si falla, la casa ya está enviada y se pasa a «Enviada».
+  const account = client.getQueryData(accountQuery(userId).queryKey) ?? (await (await authApi()).profile().catch(() => undefined)) ?? undefined;
   const ask = shouldAskEmail(account, localStorage.getItem(EMAIL_SKIPPED_KEY));
   await router.navigate({ to: ask ? "/propietario/casas/$id/correo" : "/propietario/casas/$id/enviada", params: { id }, replace: true });
   patchCached(client, userId, id, { status: "review", reviewNote: null });
