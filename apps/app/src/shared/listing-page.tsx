@@ -249,7 +249,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           {l.kind === "habitacion" || !l.available ? (
             <div className="row wrap gap-8">
               {l.kind === "habitacion" ? <span className="badge">Habitación{l.bathroomShared === null ? "" : l.bathroomShared ? " · baño compartido" : " · baño privado"}</span> : null}
-              {!l.available ? <span className="badge badge-sun">No disponible por ahora</span> : null}
+              {!l.available ? <span className="badge badge-mute">No disponible por ahora</span> : null}
             </div>
           ) : null}
           <div className="stack gap-4">

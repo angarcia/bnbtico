@@ -85,6 +85,11 @@ function PayButton({ publicId }: { publicId: string }) {
 }
 
 /** Tarjeta ocre: la oferta terminó sin método (pendiente de pago) o termina dentro de 90 días; null si no toca avisar. */
+/** Aviso de dinero cuando la casa está por pagar y aún no hay fila de cobro. */
+function PaymentDueNote({ listing: l }: { listing: Listing }) {
+  return <div className="note note-sun">{describe(l, { base: "" }).situation}</div>;
+}
+
 function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; title?: string }) {
   if (!payButtonDue(hb.sub, today)) return null;
   const { house, sub } = hb;
@@ -241,7 +246,7 @@ function OwnerCard({ listing: l, userId, primary, billing }: { listing: Listing;
           <span className="xs muted" data-testid="card-line">{line}</span>
         </div>
       </div>
-      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <div className="note note-sun small">Nota de bnbtico: {l.reviewNote}</div> : null}
+      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <div className="note note-arena small">Nota de bnbtico: {l.reviewNote}</div> : null}
       {can(l, "share") ? (
         <div className="row gap-8">
           <ShareButtonInline listing={l} primary={primary} />
@@ -399,13 +404,13 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
       {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}
-      {hb && billing ? (above === "payment" ? null : <PayNotice hb={hb} today={billing.today} />) : l.status === "payment_due" ? <div className="note note-sun">{describe(l, { base: "" }).situation}</div> : null}
+      {hb && billing ? (above === "payment" ? null : <PayNotice hb={hb} today={billing.today} />) : l.status === "payment_due" ? <PaymentDueNote listing={l} /> : null}
       {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
-        <section className="card-sun stack gap-10">
+        <section className="card-arena stack gap-10">
           <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
           <span className="small ink">{l.reviewNote}</span>
           {l.status === "changes" ? (
-            <button type="button" className="btn btn-sun btn-block" onClick={() => void toWizard()}>
+            <button type="button" className="btn btn-primary btn-block" onClick={() => void toWizard()}>
               Corregir y reenviar
             </button>
           ) : null}

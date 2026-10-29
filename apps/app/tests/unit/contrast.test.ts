@@ -54,6 +54,15 @@ const PAIRS: [string, string][] = [
   ["--muted", "--surface-2"],
 ];
 
+// Tema oscuro: el contador sobre --brand-ink lleva texto --bg (override de `.count-badge` en global.css).
+function darkVars(source: string): Record<string, string> {
+  const m = source.match(/@media \(prefers-color-scheme: dark\)\{:root:not\(\[data-theme="light"\]\)\{([^}]*)\}/);
+  if (!m) throw new Error("no hay bloque oscuro en global.css");
+  const vars: Record<string, string> = {};
+  for (const d of m[1]!.matchAll(/(--[\w-]+):([^;]+);/g)) vars[d[1]!] = d[2]!.trim();
+  return vars;
+}
+
 describe("contraste de los colores de texto (tema claro)", () => {
   it.each(PAIRS)("%s sobre %s ≥ 4,5:1", (fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
@@ -62,5 +71,16 @@ describe("contraste de los colores de texto (tema claro)", () => {
   it("terracota de texto #B44C30 y margen de 16 px", () => {
     expect(vars["--brand-ink"]).toBe("#B44C30");
     expect(vars["--gutter"]).toBe("16px");
+  });
+});
+
+describe("contraste del tema oscuro", () => {
+  const dark = darkVars(css);
+  it("texto --bg sobre el contador --brand-ink ≥ 4,5:1", () => {
+    expect(css).toMatch(/\.count-badge\{color:var\(--bg\)\}/);
+    const fg = dark["--bg"]!;
+    const bg = dark["--brand-ink"]!;
+    const [l1, l2] = [luminance(fg), luminance(bg)].sort((x, y) => y - x) as [number, number];
+    expect((l1 + 0.05) / (l2 + 0.05)).toBeGreaterThanOrEqual(4.5);
   });
 });

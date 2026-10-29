@@ -79,7 +79,7 @@ export const MAX_PHOTOS = 15;
 export const STATUS_LABELS: Record<ListingStatus, { label: string; badge: string }> = {
   draft: { label: "Borrador", badge: "badge-mute" },
   review: { label: "En revisión", badge: "badge-review" },
-  changes: { label: "Cambios pedidos", badge: "badge-sun" },
+  changes: { label: "Cambios pedidos", badge: "badge-review" },
   rejected: { label: "Rechazada", badge: "badge-bad" },
   payment_due: { label: "Pendiente de pago", badge: "badge-sun" },
   active: { label: "Activa", badge: "badge-ok" },

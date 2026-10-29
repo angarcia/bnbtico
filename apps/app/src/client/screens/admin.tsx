@@ -97,7 +97,7 @@ export function AnunciosScreen() {
           <b className="num ink">{q?.review.length ?? "–"}</b>
           <span>por revisar</span>
         </div>
-        <div className="tile tile-sun">
+        <div className="tile tile-review">
           <b className="num ink">{q?.changes.length ?? "–"}</b>
           <span>con cambios</span>
         </div>
@@ -120,7 +120,7 @@ export function AnunciosScreen() {
         ))}
       </nav>
       {outcome ? (
-        <p className={outcome.kind === "failed" ? "note note-sun small" : "note small"} role={outcome.kind === "failed" ? "alert" : "status"}>
+        <p className={outcome.kind === "failed" ? "note note-arena small" : "note small"} role={outcome.kind === "failed" ? "alert" : "status"}>
           {outcome.kind === "failed" ? `No se guardó la decisión sobre «${outcome.title}»: ${outcome.text}` : `«${outcome.title}»: ${outcome.text}`}
         </p>
       ) : null}
@@ -365,7 +365,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
           <span className="xs muted num">{l.publicId}</span>
         </div>
         <span className="small muted">{facts}</span>
-        {isProposedZone(l) ? <span className="badge badge-sun">Zona propuesta por el dueño</span> : null}
+        {isProposedZone(l) ? <span className="badge badge-mute">Zona propuesta por el dueño</span> : null}
         {d.mainPrice ? (
           <span className="num strong">
             {formatCRC(d.mainPrice.amount)}{" "}
@@ -465,7 +465,7 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
           {error}
         </p>
       ) : null}
-      {photos < MIN_PHOTOS ? <p className="note note-sun small">Faltan fotos: se requieren al menos {MIN_PHOTOS} para aprobar.</p> : null}
+      {photos < MIN_PHOTOS ? <p className="note note-arena small">Faltan fotos: se requieren al menos {MIN_PHOTOS} para aprobar.</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
         <button className="btn btn-primary btn-block" type="submit" disabled={photos < MIN_PHOTOS}>

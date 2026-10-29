@@ -107,6 +107,7 @@ describe("constantes", () => {
   it("etiquetas de estado con los colores del diseño", () => {
     expect(STATUS_LABELS.review).toEqual({ label: "En revisión", badge: "badge-review" });
     expect(STATUS_LABELS.active).toEqual({ label: "Activa", badge: "badge-ok" });
+    expect(STATUS_LABELS.changes).toEqual({ label: "Cambios pedidos", badge: "badge-review" });
     expect(STATUS_LABELS.payment_due).toEqual({ label: "Pendiente de pago", badge: "badge-sun" });
     expect(STATUS_LABELS.rejected).toEqual({ label: "Rechazada", badge: "badge-bad" });
     expect(STATUS_LABELS.draft).toEqual({ label: "Borrador", badge: "badge-mute" });

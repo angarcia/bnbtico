@@ -13,7 +13,7 @@ export function UpdateBanner() {
   return (
     <div className="update-banner" role="status">
       <span>Hay una versión nueva</span>
-      <button type="button" className="btn btn-sun btn-sm" onClick={applyUpdate}>
+      <button type="button" className="btn btn-primary btn-sm" onClick={applyUpdate}>
         Actualizar
       </button>
     </div>
