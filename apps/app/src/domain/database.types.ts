@@ -181,6 +181,70 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"listing_edit_photos": {
+                  Row: {
+                    "created_at": string,"id": string,"listing_id": string,"path": string,"position": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_edit_photos_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listing_edits"
+      referencedColumns: ["listing_id"]
+    }
+                  ]
+                },"listing_edits": {
+                  Row: {
+                    "bathroom_shared": boolean | null,"created_at": string,"description": string | null,"kind": Database["public"]['Enums']["listing_kind"] | null,"lat": number | null,"listing_id": string,"lng": number | null,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": string,"submitted_at": string | null,"title": string | null,"updated_at": string,"zone": string | null,"zone_id": string | null,"zone_source": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bathroom_shared"?: boolean | null,"created_at"?: string,"description"?: string | null,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"listing_id": string,"lng"?: number | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"submitted_at"?: string | null,"title"?: string | null,"updated_at"?: string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
+                  }
+                  Update: {
+                    "bathroom_shared"?: boolean | null,"created_at"?: string,"description"?: string | null,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"listing_id"?: string,"lng"?: number | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"submitted_at"?: string | null,"title"?: string | null,"updated_at"?: string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_edits_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: true
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_edits_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: true
+      referencedRelation: "listings_public"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_edits_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_edits_zone_id_fkey"
+      columns: ["zone_id"]
+isOneToOne: false
+      referencedRelation: "zones"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_edits_zone_id_fkey"
+      columns: ["zone_id"]
+isOneToOne: false
+      referencedRelation: "zones_with_listings"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"listing_photos": {
                   Row: {
                     "created_at": string,"id": string,"listing_id": string,"path": string,"position": number
@@ -560,12 +624,20 @@ isOneToOne: true
                            },
 "listing_is_published":
 { Args: { "p_listing": string }; Returns: boolean
+                           } |
+{ Args: { "p_first": string,"p_status": Database["public"]['Enums']["listing_status"] }; Returns: boolean
                            },
 "listing_link_state":
 { Args: { "p_public_id": string }; Returns: string
                            },
+"listing_photo_uploadable":
+{ Args: { "p_listing": string }; Returns: boolean
+                           },
 "listing_photos_guard":
 { Args: { "p_listing": string }; Returns: undefined
+                           },
+"listing_photos_owner_guard":
+{ Args: { "p_listing": string }; Returns: boolean
                            },
 "listing_visible":
 { Args: { "p_listing": string }; Returns: boolean
@@ -576,6 +648,54 @@ isOneToOne: true
 "open_drafts":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"own_published_listing":
+{ Args: { "p_listing": string }; Returns: {
+              "accepts_monthly": boolean,
+"accepts_nightly": boolean,
+"address_private": string | null,
+"available": boolean,
+"bathroom_shared": boolean | null,
+"bathrooms": number | null,
+"bedrooms": number | null,
+"canton": string,
+"capacity": number | null,
+"created_at": string,
+"description": string,
+"direct_contact": boolean,
+"district": string | null,
+"features": (Database["public"]['Enums']["feature"])[],
+"first_published_at": string | null,
+"id": string,
+"kind": Database["public"]['Enums']["listing_kind"] | null,
+"lat": number | null,
+"lng": number | null,
+"min_months": number | null,
+"min_nights": number | null,
+"monthly_mode": string | null,
+"monthly_price_crc": number | null,
+"nightly_price_crc": number | null,
+"owner_id": string,
+"parking_paid": boolean | null,
+"province": string,
+"public_id": string,
+"reopen_at": string | null,
+"review_note": string | null,
+"reviewed_at": string | null,
+"reviewed_by": string | null,
+"status": Database["public"]['Enums']["listing_status"],
+"title": string,
+"updated_at": string,
+"whatsapp_phone": string,
+"zone": string | null,
+"zone_id": string | null,
+"zone_source": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "listings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "owner_activity":
 { Args: Record<PropertyKey, never>; Returns: {
               "inquiries": number,"listing_id": string,"public_id": string,"views": number,"whatsapp_taps": number
@@ -599,6 +719,9 @@ isOneToOne: true
                            },
 "payment_setup_context":
 { Args: { "p_provider": string }; Returns: Json
+                           },
+"photo_unreferenced":
+{ Args: { "p_name": string }; Returns: boolean
                            },
 "place_at":
 { Args: { "p_lat": number,"p_lng": number }; Returns: {
@@ -690,6 +813,9 @@ isOneToOne: true
                            },
 "test_set_offer_days_left":
 { Args: { "p_days_left": number,"p_public_id": string }; Returns: string
+                           },
+"update_listing_live":
+{ Args: { "p_listing": string,"p_patch": Json }; Returns: undefined
                            },
 "zones_near":
 { Args: { "p_km"?: number,"p_lat": number,"p_lng": number }; Returns: {

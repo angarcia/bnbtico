@@ -58,10 +58,11 @@ describe("migración cliente_directo · fotos y topes", () => {
     });
 
     it("una casa en revisión o activa no gana fotos", async () => {
-      for (const status of ["review", "active"] as const) {
-        const { id } = await h.seed({ status });
-        expect((await add(owner, id)).error?.message).toBe(FROZEN);
-      }
+      const review = await h.seed({ status: "review" });
+      expect((await add(owner, review.id)).error?.message).toBe(FROZEN);
+      // Una casa publicada añade fotos por la edición (migración editar_casa_publicada).
+      const active = await h.seed({ status: "active" });
+      expect((await add(owner, active.id)).error?.message).toBe("Las fotos nuevas pasan por revisión. Añádalas desde la ficha de su casa.");
     });
 
     it("un intruso no añade fotos a una casa ajena; sin sesión no se llama", async () => {
@@ -87,15 +88,16 @@ describe("migración cliente_directo · fotos y topes", () => {
       ]);
     });
 
-    it("un intruso no quita fotos ajenas; fuera de borrador tampoco el dueño", async () => {
+    it("un intruso no quita fotos ajenas; en revisión tampoco el dueño", async () => {
       const { id } = await h.seed({ status: "draft" });
       await add(owner, id);
       const [photo] = await positions(id);
       expect((await other.rpc("remove_listing_photo", { p_photo: photo!.id })).error?.message).toBe("No encontramos esa foto.");
-      const active = await h.seed({ status: "active" });
-      const [first] = await positions(active.id);
+      // Una casa publicada sí quita fotos (editar_casa_publicada); una en revisión, no.
+      const review = await h.seed({ status: "review" });
+      const [first] = await positions(review.id);
       expect((await owner.rpc("remove_listing_photo", { p_photo: first!.id })).error?.message).toBe(FROZEN);
-      expect(await positions(active.id)).toHaveLength(5);
+      expect(await positions(review.id)).toHaveLength(5);
     });
   });
 

@@ -130,7 +130,7 @@ describe("purga de la ficha con pg_net", () => {
     expect(lastJson(out)).toEqual([{ method: "POST", url: `https://nueva.example.test/_purge/${publicId}`, auth: "Bearer secreto-de-prueba" }]);
   });
 
-  it("también al cambiar disponibilidad o reabrir una casa activa, y no al editar un borrador que nunca estuvo activo", async () => {
+  it("también al cambiar disponibilidad o un dato al momento de una casa activa, y no al editar un borrador que nunca estuvo activo", async () => {
     await h.reset();
     const active = await h.seed({ status: "active" });
     const draft = await h.seed({ status: "draft" });
@@ -140,10 +140,11 @@ describe("purga de la ficha con pg_net", () => {
       select set_listing_available('${active.id}', false) is null;
       ${queueOf(active.publicId)}`);
     expect(lastJson(available)).toHaveLength(1);
-    const reopened = inTransaction(`${withSecrets}${asOwner}
-      update listings set status = 'draft' where id = '${active.id}';
+    // Una casa publicada ya no vuelve a borrador (editar_casa_publicada): sus datos al momento también purgan la ficha.
+    const live = inTransaction(`${withSecrets}${asOwner}
+      select public.update_listing_live('${active.id}', '{"nightly_price_crc": 51000}'::jsonb) is null;
       ${queueOf(active.publicId)}`);
-    expect(lastJson(reopened)).toHaveLength(1);
+    expect(lastJson(live)).toHaveLength(1);
     const edited = inTransaction(`${withSecrets}${asOwner}
       update listings set title = 'Otro nombre' where id = '${draft.id}';
       ${queueOf(draft.publicId)}`);
