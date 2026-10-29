@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bnbtico v2 · Actividad</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#EFE6D3;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;color:#1C2B2A}
+.wrap{display:flex;flex-wrap:wrap;gap:40px;justify-content:center;align-items:flex-start;padding:32px 16px}
+figure{margin:0;display:flex;flex-direction:column;gap:10px}
+figcaption{font-size:13px;font-weight:600;color:#5C6B69;max-width:390px}
+.ab{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:#FFFBF2;color:#1C2B2A;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.4}
+.ab *{box-sizing:border-box}
+.ab h1,.ab h2,.ab h3,.ab p{margin:0}
+.o{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.02em}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mut{color:#5C6B69}
+svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cur{display:inline-flex;padding:3px;gap:2px;border-radius:999px;background:#F6E7C8;flex:none}
+.cur span{min-width:40px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:999px;font-weight:700;font-size:16px;color:#5C6B69}
+.cur span.on{background:#7FA98A;color:#16331F}
+.cur.ov{background:#FFFBF2}
+.topbar{position:absolute;left:0;right:0;top:56px;height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#FFFBF2;z-index:4}
+.topbar img{height:34px;width:auto}
+.avatar{width:44px;height:44px;border-radius:999px;background:#DCE8DF;color:#2F5D45;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;text-decoration:none;flex:none}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:84px;padding:8px 6px 20px;display:flex;align-items:center;background:#FFFBF2;border-top:2px solid #EADFC8;z-index:6}
+.tab{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#5C6B69;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap}
+.tab svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:#BF4D2E;font-weight:700}.tab.on svg{stroke-width:2.4}
+.badge{position:absolute;top:-6px;left:calc(50% + 6px);min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#BF4D2E;color:#FFFBF2;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #FFFBF2}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;border:0;font-family:inherit;white-space:nowrap;cursor:pointer}
+.btn.fill{background:#2F5D45;color:#FFFBF2}
+.btn.line{border:1.5px solid #2F5D45;color:#2F5D45;background:transparent}
+.btn.sun{background:#F2B544;color:#1C2B2A}
+.btn.ghost{background:transparent;color:#5C6B69;text-decoration:underline;text-underline-offset:3px;padding:0 8px}
+.btn.wa{background:#25D366;color:#063B1E;border-radius:18px;font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;min-height:56px}
+.state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:13px;font-weight:700;line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
+.state::before{content:"";width:8px;height:8px;border-radius:999px;background:currentColor}
+.st-ok{background:#DCE8DF;color:#2F5D45}.st-draft{background:#F6E7C8;color:#1C2B2A}.st-rev{background:#F0E6D2;color:#5C6B69}.st-pay{background:#FBE8C2;color:#7A4E07}.st-off{background:#F6E7C8;color:#5C6B69}
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 2px 0 #E6DCC6}
+.tag-rev{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#F0E6D2;color:#5C6B69;font-size:11px;font-weight:700;line-height:1.5;white-space:nowrap}
+.pin{position:absolute;transform:translate(-50%,-50%);padding:6px 10px;border-radius:999px;background:#FFFFFF;color:#1C2B2A;font-weight:700;font-size:13px;line-height:1.2;box-shadow:0 2px 0 #E6DCC6,0 6px 14px -6px rgba(28,43,42,.5);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pin.on{background:#BF4D2E;color:#FFFBF2;z-index:2;box-shadow:0 6px 14px -4px rgba(191,77,46,.6)}
+.photo{position:relative;overflow:hidden;background:#DCE8DF}
+.photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.heart{position:absolute;right:8px;top:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 3px rgba(28,43,42,.45))}
+.dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px}
+.dots i{width:7px;height:7px;border-radius:999px;background:rgba(255,251,242,.6)}.dots i.on{background:#FFFBF2}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));font-size:12px;font-weight:700;color:#5C6B69;text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:2px;font-variant-numeric:tabular-nums}
+.cal .d{height:44px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px}
+.cal .rg{background:#F8E1D8}
+.cal .rs{background:linear-gradient(90deg,transparent 50%,#F8E1D8 50%)}
+.cal .re{background:linear-gradient(90deg,#F8E1D8 50%,transparent 50%)}
+.cal .rs b,.cal .re b,.cal .one b{width:42px;height:42px;border-radius:999px;background:#BF4D2E;color:#FFFBF2;display:flex;align-items:center;justify-content:center;font-weight:700}
+.sbar{position:absolute;left:0;right:0;bottom:0;height:92px;padding:12px 16px 28px;display:flex;align-items:center;justify-content:space-between;background:#FFFBF2;border-top:2px solid #EADFC8;z-index:5}
+.fold{display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 20px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;text-decoration:none;color:#1C2B2A}
+.fold span{color:#5C6B69;font-size:14px;font-weight:600}.fold b{font-weight:700;font-size:15px}
+.big{border-radius:28px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6,0 16px 36px -22px rgba(28,43,42,.45);padding:20px}
+.xbtn{position:absolute;left:16px;top:60px;width:44px;height:44px;border-radius:999px;background:#FFFFFF;border:1.5px solid #E6DCC6;display:flex;align-items:center;justify-content:center;color:#1C2B2A;text-decoration:none}
+</style>
+</head>
+<body>
+<!-- Referencia visual de la ronda de Ana (2026-10-28). Decisiones: .scratch/ronda-ana-2026-10-28/decisiones.md -->
+<main class="wrap">
+<figure><figcaption>10 · Actividad: una tarjeta por casa (foto cuadrada, estado y cifras), chips para filtrar y la casa encima de cada consulta</figcaption>
+  <div class="ab" data-ab="10-actividad" style="height:1110px">
+    <header class="topbar">
+      <img src="../../logo/bnbtico-horizontal-terracota.png" alt="bnbtico">
+      <div style="display:flex;align-items:center;gap:8px"><div class="cur"><span class="on">₡</span><span>$</span></div><a class="avatar" href="#" aria-label="Cuenta de Marisol Brown">MB</a></div>
+    </header>
+
+    <div style="position:absolute;left:16px;right:16px;top:120px;display:flex;flex-direction:column;gap:16px">
+      <div><h1 class="o" style="font-weight:800;font-size:32px;line-height:1.05">Actividad</h1><span class="mut">Últimos 30 días</span></div>
+      <div style="display:flex;gap:12px">
+        <article style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div class="photo" style="aspect-ratio:1/1;border-radius:20px"><img src="../fotos/hero.jpg" alt=""><span class="state st-ok" style="left:8px;top:8px;font-size:12px;padding:6px 10px">Activa</span></div>
+          <h2 class="o" style="font-weight:700;font-size:16px;line-height:1.2;padding:0 2px">Casa Coco</h2>
+          <div style="display:flex;justify-content:space-between;gap:4px;padding:0 2px"><span style="display:flex;flex-direction:column;line-height:1.1"><b class="o num" style="font-weight:700;font-size:19px">214</b><span class="mut" style="font-size:11px;font-weight:600">visitas</span></span><span style="display:flex;flex-direction:column;line-height:1.1"><b class="o num" style="font-weight:700;font-size:19px">31</b><span class="mut" style="font-size:11px;font-weight:600">WhatsApp</span></span><span style="display:flex;flex-direction:column;line-height:1.1"><b class="o num" style="font-weight:700;font-size:19px">9</b><span class="mut" style="font-size:11px;font-weight:600">consultas</span></span></div>
+        </article>
+        <article style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div class="photo" style="aspect-ratio:1/1;border-radius:20px"><img src="../fotos/bedroom.jpg" alt=""><span class="state st-ok" style="left:8px;top:8px;font-size:12px;padding:6px 10px">Activa</span></div>
+          <h2 class="o" style="font-weight:700;font-size:16px;line-height:1.2;padding:0 2px">Cabina Cahuita</h2>
+          <div style="display:flex;justify-content:space-between;gap:4px;padding:0 2px"><span style="display:flex;flex-direction:column;line-height:1.1"><b class="o num" style="font-weight:700;font-size:19px">96</b><span class="mut" style="font-size:11px;font-weight:600">visitas</span></span><span style="display:flex;flex-direction:column;line-height:1.1"><b class="o num" style="font-weight:700;font-size:19px">12</b><span class="mut" style="font-size:11px;font-weight:600">WhatsApp</span></span><span style="display:flex;flex-direction:column;line-height:1.1"><b class="o num" style="font-weight:700;font-size:19px">4</b><span class="mut" style="font-size:11px;font-weight:600">consultas</span></span></div>
+        </article>
+      </div>
+      <h2 class="o" style="font-weight:700;font-size:21px;padding-top:6px">Últimas consultas</h2>
+      <div style="display:flex;gap:8px;margin-top:-4px"><a href="#" style="display:flex;align-items:center;height:38px;padding:0 15px;border-radius:999px;background:#7FA98A;color:#16331F;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap">Todas</a><a href="#" style="display:flex;align-items:center;height:38px;padding:0 15px;border-radius:999px;background:#F6E7C8;color:#1C2B2A;font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap">Casa Coco</a><a href="#" style="display:flex;align-items:center;height:38px;padding:0 15px;border-radius:999px;background:#F6E7C8;color:#1C2B2A;font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap">Cabina Cahuita</a></div>
+      <article class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+          <span style="align-self:flex-start;display:flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 4px;border-radius:999px;background:#F6E7C8;font-size:13px;font-weight:700"><span class="photo" style="width:24px;height:24px;border-radius:999px"><img src="../fotos/hero.jpg" alt=""></span>Casa Coco</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="avatar" style="width:40px;height:40px;font-size:14px;background:#F0E6D2;color:#1C2B2A">LM</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25"><span style="display:flex;align-items:center;gap:8px"><b style="font-weight:700">Laura Méndez</b><span style="padding:2px 8px;border-radius:999px;background:#BF4D2E;color:#FFFBF2;font-size:11px;font-weight:700">Nueva</span></span><span class="mut num" style="font-size:13px">23–27 nov · 4 personas</span></span>
+            <span class="mut" style="font-size:12px;white-space:nowrap;align-self:flex-start">hace 2 h</span>
+          </div>
+          <p style="font-size:14px;color:#1C2B2A">«Hola, me interesa Casa Coco del 23 al 27 de noviembre para 4 personas. ¿Está disponible?»</p>
+          <a class="btn wa" href="#" style="min-height:48px;font-size:15px"><svg class="i" width="18" height="18" viewBox="0 0 24 24" stroke-width="2.4"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.6 19L4 20z"></path></svg>Abrir WhatsApp</a>
+        </article>
+      <article class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+          <span style="align-self:flex-start;display:flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 4px;border-radius:999px;background:#F6E7C8;font-size:13px;font-weight:700"><span class="photo" style="width:24px;height:24px;border-radius:999px"><img src="../fotos/bedroom.jpg" alt=""></span>Cabina Cahuita</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="avatar" style="width:40px;height:40px;font-size:14px;background:#F0E6D2;color:#1C2B2A">JR</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25"><span style="display:flex;align-items:center;gap:8px"><b style="font-weight:700">José Rojas</b><span style="padding:2px 8px;border-radius:999px;background:#BF4D2E;color:#FFFBF2;font-size:11px;font-weight:700">Nueva</span></span><span class="mut num" style="font-size:13px">Mensual · desde el 1 dic · 2 personas</span></span>
+            <span class="mut" style="font-size:12px;white-space:nowrap;align-self:flex-start">ayer</span>
+          </div>
+          <p style="font-size:14px;color:#1C2B2A">«Hola, me interesa alquilar por meses desde el 1 de diciembre. ¿Cuál sería el precio?»</p>
+          <a class="btn wa" href="#" style="min-height:48px;font-size:15px"><svg class="i" width="18" height="18" viewBox="0 0 24 24" stroke-width="2.4"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.6 19L4 20z"></path></svg>Abrir WhatsApp</a>
+        </article>
+    </div>
+    <nav class="tabbar" aria-label="Navegación principal">
+      <a class="tab " href="#"><svg width="27" height="27" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>Explorar</a>
+      <a class="tab " href="#"><svg width="27" height="27" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>Favoritos</a>
+      <a class="tab " href="07-mis-casas.html"><svg width="27" height="27" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"></path><path d="M10 20v-5h4v5"></path></svg>Mis casas</a>
+      <a class="tab " href="09-calendario.html"><svg width="27" height="27" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M8 3v4M16 3v4"></path></svg>Calendario</a>
+      <a class="tab on" aria-current="page" href="10-actividad.html"><svg width="27" height="27" viewBox="0 0 24 24"><path d="M5 20v-6M12 20V5M19 20v-10"></path></svg>Actividad<span class="badge">2</span></a>
+    </nav>
+
+  </div></figure>
+</main>
+</body>
+</html>

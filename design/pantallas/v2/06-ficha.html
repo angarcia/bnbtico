@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bnbtico v2 · Ficha</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#EFE6D3;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;color:#1C2B2A}
+.wrap{display:flex;flex-wrap:wrap;gap:40px;justify-content:center;align-items:flex-start;padding:32px 16px}
+figure{margin:0;display:flex;flex-direction:column;gap:10px}
+figcaption{font-size:13px;font-weight:600;color:#5C6B69;max-width:390px}
+.ab{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:#FFFBF2;color:#1C2B2A;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.4}
+.ab *{box-sizing:border-box}
+.ab h1,.ab h2,.ab h3,.ab p{margin:0}
+.o{font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.02em}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mut{color:#5C6B69}
+svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cur{display:inline-flex;padding:3px;gap:2px;border-radius:999px;background:#F6E7C8;flex:none}
+.cur span{min-width:40px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:999px;font-weight:700;font-size:16px;color:#5C6B69}
+.cur span.on{background:#7FA98A;color:#16331F}
+.cur.ov{background:#FFFBF2}
+.topbar{position:absolute;left:0;right:0;top:56px;height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#FFFBF2;z-index:4}
+.topbar img{height:34px;width:auto}
+.avatar{width:44px;height:44px;border-radius:999px;background:#DCE8DF;color:#2F5D45;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;text-decoration:none;flex:none}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:84px;padding:8px 6px 20px;display:flex;align-items:center;background:#FFFBF2;border-top:2px solid #EADFC8;z-index:6}
+.tab{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#5C6B69;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap}
+.tab svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:#BF4D2E;font-weight:700}.tab.on svg{stroke-width:2.4}
+.badge{position:absolute;top:-6px;left:calc(50% + 6px);min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#BF4D2E;color:#FFFBF2;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #FFFBF2}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;border:0;font-family:inherit;white-space:nowrap;cursor:pointer}
+.btn.fill{background:#2F5D45;color:#FFFBF2}
+.btn.line{border:1.5px solid #2F5D45;color:#2F5D45;background:transparent}
+.btn.sun{background:#F2B544;color:#1C2B2A}
+.btn.ghost{background:transparent;color:#5C6B69;text-decoration:underline;text-underline-offset:3px;padding:0 8px}
+.btn.wa{background:#25D366;color:#063B1E;border-radius:18px;font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;min-height:56px}
+.state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:13px;font-weight:700;line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
+.state::before{content:"";width:8px;height:8px;border-radius:999px;background:currentColor}
+.st-ok{background:#DCE8DF;color:#2F5D45}.st-draft{background:#F6E7C8;color:#1C2B2A}.st-rev{background:#F0E6D2;color:#5C6B69}.st-pay{background:#FBE8C2;color:#7A4E07}.st-off{background:#F6E7C8;color:#5C6B69}
+.card{background:#FFFFFF;border-radius:24px;box-shadow:0 2px 0 #E6DCC6}
+.tag-rev{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#F0E6D2;color:#5C6B69;font-size:11px;font-weight:700;line-height:1.5;white-space:nowrap}
+.pin{position:absolute;transform:translate(-50%,-50%);padding:6px 10px;border-radius:999px;background:#FFFFFF;color:#1C2B2A;font-weight:700;font-size:13px;line-height:1.2;box-shadow:0 2px 0 #E6DCC6,0 6px 14px -6px rgba(28,43,42,.5);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pin.on{background:#BF4D2E;color:#FFFBF2;z-index:2;box-shadow:0 6px 14px -4px rgba(191,77,46,.6)}
+.photo{position:relative;overflow:hidden;background:#DCE8DF}
+.photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.heart{position:absolute;right:8px;top:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 3px rgba(28,43,42,.45))}
+.dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px}
+.dots i{width:7px;height:7px;border-radius:999px;background:rgba(255,251,242,.6)}.dots i.on{background:#FFFBF2}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));font-size:12px;font-weight:700;color:#5C6B69;text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:2px;font-variant-numeric:tabular-nums}
+.cal .d{height:44px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px}
+.cal .rg{background:#F8E1D8}
+.cal .rs{background:linear-gradient(90deg,transparent 50%,#F8E1D8 50%)}
+.cal .re{background:linear-gradient(90deg,#F8E1D8 50%,transparent 50%)}
+.cal .rs b,.cal .re b,.cal .one b{width:42px;height:42px;border-radius:999px;background:#BF4D2E;color:#FFFBF2;display:flex;align-items:center;justify-content:center;font-weight:700}
+.sbar{position:absolute;left:0;right:0;bottom:0;height:92px;padding:12px 16px 28px;display:flex;align-items:center;justify-content:space-between;background:#FFFBF2;border-top:2px solid #EADFC8;z-index:5}
+.fold{display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 20px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;text-decoration:none;color:#1C2B2A}
+.fold span{color:#5C6B69;font-size:14px;font-weight:600}.fold b{font-weight:700;font-size:15px}
+.big{border-radius:28px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6,0 16px 36px -22px rgba(28,43,42,.45);padding:20px}
+.xbtn{position:absolute;left:16px;top:60px;width:44px;height:44px;border-radius:999px;background:#FFFFFF;border:1.5px solid #E6DCC6;display:flex;align-items:center;justify-content:center;color:#1C2B2A;text-decoration:none}
+</style>
+</head>
+<body>
+<!-- Referencia visual de la ronda de Ana (2026-10-28). Decisiones: .scratch/ronda-ana-2026-10-28/decisiones.md -->
+<main class="wrap">
+<figure><figcaption>06 · Ficha: foto cuadrada a todo el ancho, sin márgenes, con los botones encima</figcaption>
+  <div class="ab" data-ab="06-ficha">
+    <div class="photo" style="position:absolute;left:0;top:0;width:390px;height:390px">
+      <img src="../fotos/hero.jpg" alt="Fachada de Casa Coco entre la vegetación">
+      <span style="position:absolute;left:0;right:0;top:0;height:110px;background:linear-gradient(rgba(28,43,42,.35),rgba(28,43,42,0))"></span>
+      <div style="position:absolute;left:16px;right:16px;top:58px;display:flex;justify-content:space-between;align-items:center">
+        <a href="01-explorar-resultados.html" aria-label="Volver" style="width:44px;height:44px;border-radius:999px;background:#FFFBF2;display:flex;align-items:center;justify-content:center;color:#1C2B2A"><svg class="i" width="22" height="22" viewBox="0 0 24 24" stroke-width="2.2"><path d="M15 5l-7 7 7 7"></path></svg></a>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="cur ov"><span class="on">₡</span><span>$</span></div>
+          <span role="button" aria-label="Compartir ficha" style="width:44px;height:44px;border-radius:999px;background:#FFFBF2;display:flex;align-items:center;justify-content:center;color:#1C2B2A"><svg class="i" width="20" height="20" viewBox="0 0 24 24" stroke-width="2.2"><path d="M12 4v12"></path><path d="M8 8l4-4 4 4"></path><path d="M5 14v5h14v-5"></path></svg></span>
+          <span role="button" aria-label="Quitar de favoritos" style="width:44px;height:44px;border-radius:999px;background:#FFFBF2;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="#D65C3C" stroke="#D65C3C" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg></span>
+        </div>
+      </div>
+      <span class="num" style="position:absolute;right:16px;bottom:16px;padding:6px 11px;border-radius:999px;background:rgba(28,43,42,.86);color:#FFFBF2;font-size:12px;font-weight:700">1 / 5</span>
+    </div>
+    <div style="position:absolute;left:0;right:0;top:390px;padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h1 class="o" style="font-weight:800;font-size:28px;line-height:1.05">Casa Coco</h1>
+        <span style="display:flex;align-items:center;gap:6px;color:#5C6B69"><svg class="i" width="16" height="16" viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11z"></path><circle cx="12" cy="10" r="2.2"></circle></svg>Cocles, Puerto Viejo · ubicación aproximada</span>
+        <span style="font-weight:600">Alojamiento completo</span><span class="mut" style="margin-top:-4px">4 personas · 2 habitaciones · 1 baño</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1.5px solid #F0E6D2;border-bottom:1.5px solid #F0E6D2">
+        <span class="avatar" style="width:40px;height:40px;font-size:14px">MB</span>
+        <b style="font-weight:700;flex:1">Le recibe Marisol</b>
+        <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#DCE8DF;color:#2F5D45;font-size:12px;font-weight:700"><svg class="i" width="13" height="13" viewBox="0 0 24 24" stroke-width="3"><path d="M5 12l5 5L20 7"></path></svg>WhatsApp verificado</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;font-size:12px;font-weight:600;text-align:center"><svg class="i" width="26" height="26" viewBox="0 0 24 24" stroke="#2F5D45"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0"></path><circle cx="12" cy="19.5" r="1"></circle></svg>Wifi</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;font-size:12px;font-weight:600;text-align:center"><svg class="i" width="26" height="26" viewBox="0 0 24 24" stroke="#2F5D45"><rect x="3" y="6" width="18" height="8" rx="2"></rect><path d="M7 18c1 1 2 1 3 0M14 18c1 1 2 1 3 0"></path></svg>Aire acondicionado</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;font-size:12px;font-weight:600;text-align:center"><svg class="i" width="26" height="26" viewBox="0 0 24 24" stroke="#2F5D45"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M8 3v4M16 3v4"></path></svg>Alquiler mensual</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;font-size:12px;font-weight:600;text-align:center"><svg class="i" width="26" height="26" viewBox="0 0 24 24" stroke="#2F5D45"><path d="M2 16c2 0 2-1.5 4-1.5S8 16 10 16s2-1.5 4-1.5S16 16 18 16s2-1.5 4-1.5M2 20c2 0 2-1.5 4-1.5S8 20 10 20s2-1.5 4-1.5S16 20 18 20s2-1.5 4-1.5"></path><circle cx="16" cy="7" r="3"></circle></svg>Frente al mar</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;font-size:12px;font-weight:600;text-align:center"><svg class="i" width="26" height="26" viewBox="0 0 24 24" stroke="#2F5D45"><path d="M5 16l1.5-5h11L19 16"></path><rect x="3" y="16" width="18" height="4"></rect></svg>Parqueo</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;font-size:12px;font-weight:600;text-align:center"><svg class="i" width="26" height="26" viewBox="0 0 24 24" stroke="#2F5D45"><circle cx="6" cy="10" r="2"></circle><circle cx="10" cy="6" r="2"></circle><circle cx="14" cy="6" r="2"></circle><circle cx="18" cy="10" r="2"></circle><path d="M8 17c0-3 2-5 4-5s4 2 4 5c0 2-2 2-4 2s-4 0-4-2z"></path></svg>Mascotas</div>
+      </div>
+      <p style="font-size:16px">Casa de madera a 100 m de Playa Cocles, entre almendros y palmeras. Cocina equipada, terraza con hamacas y bicicletas para ir a Puerto Viejo.</p>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 26px;background:#FFFBF2;border-top:2px solid #F0E6D2;display:flex;flex-direction:column;gap:8px;z-index:5">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+        <span class="o num" style="font-weight:800;font-size:22px">₡42 000 <span style="font-family:'Figtree',sans-serif;font-size:13px;font-weight:600;color:#5C6B69;letter-spacing:0">/ noche</span></span>
+        <span style="font-size:12px;color:#5C6B69;text-align:right"><a href="#" style="font-weight:600;color:#2F5D45">≈ $82</a> · el precio final lo acuerda con el propietario</span>
+      </div>
+      <span class="num" style="font-size:13px;color:#5C6B69;margin-top:-4px">Mensual: ₡650 000 / mes</span>
+      <a class="btn wa" href="#"><svg class="i" width="20" height="20" viewBox="0 0 24 24" stroke-width="2.4"><path d="M4 20l1.4-4.1A8 8 0 1 1 8.6 19L4 20z"></path></svg>Contactar por WhatsApp</a>
+    </div>
+  </div></figure>
+</main>
+</body>
+</html>
