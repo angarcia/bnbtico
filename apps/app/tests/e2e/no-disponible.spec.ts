@@ -180,3 +180,38 @@ test("una casa devuelta a edición con la fecha vencida se abre a consultas pero
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(page.getByText("Anuncio visible")).toHaveCount(0);
 });
+
+test("al confirmar, el foco pasa a «Abrir la casa», que no se puede tocar hasta que la base contesta", async ({ page }) => {
+  const casa = await seedHouse("Casa Foco");
+  await calendar(page, casa.id);
+  let release = () => {};
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/rest/v1/rpc/set_listing_available", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await closeRow(page).click();
+  await sheet(page).getByRole("button", { name: "Cerrar la casa" }).click();
+  await expect(sheet(page)).toHaveCount(0);
+  await expect(openBtn(page)).toBeFocused();
+  await expect(openBtn(page)).toBeDisabled();
+  // Tocarla mientras tanto no hace nada.
+  await openBtn(page).click({ force: true });
+  await expect(openBtn(page)).toBeVisible();
+  release();
+  await expect(openBtn(page)).toBeEnabled();
+  await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(false);
+  await page.unroute("**/rest/v1/rpc/set_listing_available");
+});
+
+test("sin el trozo de la hoja: avisa de la conexión y «Reintentar» la abre", async ({ page }) => {
+  const casa = await seedHouse("Casa Sin Hoja");
+  await page.route("**/assets/close-sheet-*.js", (route) => route.abort());
+  await calendar(page, casa.id);
+  await closeRow(page).click();
+  await expect(page.getByRole("alert")).toHaveText("No pudimos abrir «Cerrar la casa». Revise su conexión e inténtelo de nuevo.");
+  await expect(sheet(page)).toHaveCount(0);
+  await page.unroute("**/assets/close-sheet-*.js");
+  await page.getByRole("button", { name: "Reintentar" }).click();
+  await expect(sheet(page)).toBeVisible();
+});

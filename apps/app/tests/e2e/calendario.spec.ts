@@ -285,6 +285,64 @@ test("días altos: casillas de 64 px o más y el mes llena la pantalla", async (
   await page.screenshot({ path: "test-results/calendario-vertical.png" });
 });
 
+/** Fija el reloj del navegador en un día del mes pasado: `fromEnd` días antes de su último (hacia atrás, la sesión sigue
+ *  vigente). Devuelve ese «hoy». Solo cambia lo que el navegador cree que es hoy: la base sigue con el de verdad. */
+async function fixTodayLastMonth(page: Page, fromEnd: number) {
+  const month = addMonths(today().slice(0, 7), -1);
+  const [y, m] = month.split("-").map(Number) as [number, number];
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const day = `${month}-${String(last - fromEnd).padStart(2, "0")}`;
+  await page.clock.setFixedTime(new Date(`${day}T18:00:00Z`));
+  return day;
+}
+const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
+/** El mes empieza justo bajo la fila L K M J V S D: está arriba de todo. */
+async function expectMonthOnTop(page: Page, month: string) {
+  await expect(page.getByRole("heading", { name: monthTitle(month) })).toBeInViewport();
+  await expect
+    .poll(async () => {
+      const b = (await page.locator(`[data-month="${month}"]`).boundingBox())!;
+      const w = (await page.locator(".cal-weekdays").boundingBox())!;
+      return b.y >= w.y + w.height - 1 && b.y <= w.y + w.height + 4;
+    })
+    .toBe(true);
+}
+
+test("al abrir, sin semanas pasadas enteras: el primer día que se puede tocar se ve encima de la barra", async ({ page }) => {
+  const casa = await seedHouse("Casa Primer Día");
+  // Once días antes de fin de mes: abre en el mes actual, con casi todas sus semanas ya pasadas.
+  const now = await fixTodayLastMonth(page, 10);
+  expect(openingMonth(now)).toBe(now.slice(0, 7));
+  await page.goto(`/propietario/calendario?casa=${casa.id}`);
+  await expect(day(page, now)).toBeEnabled();
+  const d = (await day(page, now).boundingBox())!;
+  const bar = (await page.locator(".tabbar").boundingBox())!;
+  expect(d.y).toBeGreaterThanOrEqual(0);
+  expect(d.y + d.height).toBeLessThanOrEqual(bar.y);
+  // El mes que viene empieza enseguida: el primer bloque no se estira hasta llenar la pantalla.
+  await expect(page.getByRole("heading", { name: monthTitle(addMonths(now.slice(0, 7), 1)) })).toBeInViewport();
+  await page.screenshot({ path: "test-results/calendario-primer-dia.png" });
+});
+
+test("a fin de mes abre en el siguiente también al llegar desde la app: tarjeta de Mis casas y pestaña", async ({ page }) => {
+  await seedHouse("Casa Fin De Mes");
+  const now = await fixTodayLastMonth(page, 3);
+  const opening = openingMonth(now);
+  expect(opening).toBe(addMonths(now.slice(0, 7), 1));
+
+  await page.goto("/propietario/casas");
+  const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Casa Fin De Mes" }) });
+  await card.getByRole("link", { name: "Calendario" }).click();
+  await expect(shown(page, "Casa Fin De Mes")).toBeVisible();
+  await expectMonthOnTop(page, opening);
+
+  await nav(page).getByRole("link", { name: /^Mis? casas?$/ }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await nav(page).getByRole("link", { name: "Calendario" }).click();
+  await expect(page).toHaveURL(/\/propietario\/calendario/);
+  await expectMonthOnTop(page, opening);
+});
+
 test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última elegida se recuerda", async ({ page }) => {
   const a = await seedHouse("Casa Alfa");
   const b = await seedHouse("Casa Beta");

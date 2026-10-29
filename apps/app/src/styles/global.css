@@ -225,9 +225,10 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
 .cta-bar .price{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .cta-bar .price small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
-.cta-spacer{height:141px}
+/* Alto de partida (antes de medir la barra): el de una casa solo por noches, 140 px de barra menos 16 px de margen. */
+.cta-spacer{height:124px}
 /* Colones a la izquierda (noche y mensual), dólares a la derecha (≈ noche, ≈ mes): las dos monedas siempre, sin selector. */
-.cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:end}
+.cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
 .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cta-prices .price{line-height:1.1}
 .cta-usd{text-align:right;align-items:flex-end}
@@ -686,6 +687,8 @@ small.swap-in{display:block}
 .cal-weekdays{position:sticky;top:calc(56px + env(safe-area-inset-top));z-index:3;background:var(--bg);padding:4px 0;margin-bottom:-14px}
 .cal-month-block{display:flex;flex-direction:column;min-height:calc(100dvh - 56px - 26px - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));scroll-margin-top:calc(56px + 26px + env(safe-area-inset-top))}
 .cal-month-title{position:sticky;top:calc(56px + 26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:18px;font-weight:700;padding:6px 0}
+/* El primer mes (el actual, sin sus semanas ya pasadas) no se estira: el siguiente empieza enseguida. */
+.cal-month-block:first-child{min-height:0}
 .cal-month-placeholder{flex:1}
 .close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
 .close-row-icon{width:40px;height:40px;border-radius:12px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}

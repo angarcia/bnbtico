@@ -123,7 +123,7 @@ function ActivityCard({
   eager: boolean;
 }) {
   return (
-    <article className={`card house-card activity-card${wide ? " is-wide" : ""}`}>
+    <article className="card house-card activity-card">
       <HouseCardTop listing={l} sizes={wide ? "100vw" : "50vw"} eager={eager} />
       {l.status === "active" ? <FiguresSlot activity={activity} figures={figures} large={wide} /> : wide ? <p>{EMPTY}</p> : null}
     </article>

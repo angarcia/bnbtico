@@ -94,6 +94,18 @@ describe("MonthGrid", () => {
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
   });
 
+  it("alta: no pinta las semanas ya pasadas enteras; la de hoy es la primera fila, con los días anteriores atenuados", () => {
+    // Diciembre 2026 empieza en martes; hoy, miércoles 16: las semanas del 1 al 6 y del 7 al 13 ya pasaron.
+    const out = html({ size: "tall", today: "2026-12-16" });
+    expect(out.match(/class="month-week"/g)).toHaveLength(3);
+    expect(cells(out)).toHaveLength(31 - 13);
+    expect(cells(out)[0]).toContain("<b>14</b>");
+    expect(cell(out, 14)).toContain("is-past");
+    expect(cell(out, 16)).not.toContain("is-past");
+    // La compacta (la ficha) sigue con el mes entero.
+    expect(cells(html({ today: "2026-12-16" }))).toHaveLength(31);
+  });
+
   it("compacta (por defecto): cabecera propia y «95k» sin ₡", () => {
     const out = html();
     expect(out).toContain("month-head");

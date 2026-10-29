@@ -52,6 +52,17 @@ const PAIRS: [string, string][] = [
   ["--muted", "--review-soft"],
   ["--fg", "--surface-2"],
   ["--muted", "--surface-2"],
+  ["--busy-ink", "--busy"],
+];
+
+// Etiquetas de estado de las tarjetas (`.state-*` en global.css): texto sobre fondo, en los dos temas.
+const STATE_LABELS: [string, string, string][] = [
+  ["state-ok", "--state-ink", "--state-soft"],
+  ["state-draft", "--fg", "--surface-2"],
+  ["state-review", "--muted", "--review-soft"],
+  ["state-pay", "--sun-ink", "--sun-soft"],
+  ["state-off", "--muted", "--surface-2"],
+  ["state-bad", "--busy-ink", "--busy"],
 ];
 
 // Tema oscuro: el contador sobre --brand-ink lleva texto --bg (override de `.count-badge` en global.css).
@@ -68,6 +79,11 @@ describe("contraste de los colores de texto (tema claro)", () => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
+  it.each(STATE_LABELS)(".%s: %s sobre %s", (cls, fg, bg) => {
+    expect(css).toContain(`.${cls}{background:var(${bg});color:var(${fg})}`);
+    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("terracota de texto #B44C30 y margen de 16 px", () => {
     expect(vars["--brand-ink"]).toBe("#B44C30");
     expect(vars["--gutter"]).toBe("16px");
@@ -76,6 +92,18 @@ describe("contraste de los colores de texto (tema claro)", () => {
 
 describe("contraste del tema oscuro", () => {
   const dark = darkVars(css);
+  /** En el tema oscuro, la variable del bloque oscuro o, si no la cambia, la del claro. */
+  const darkHex = (token: string) => dark[token] ?? hex(token);
+  const darkContrast = (a: string, b: string) => {
+    const [l1, l2] = [luminance(darkHex(a)), luminance(darkHex(b))].sort((x, y) => y - x) as [number, number];
+    return (l1 + 0.05) / (l2 + 0.05);
+  };
+
+  it.each(STATE_LABELS)(".%s: %s sobre %s ≥ 4,5:1", (cls, fg, bg) => {
+    expect(css).toContain(`.${cls}{background:var(${bg});color:var(${fg})}`);
+    expect(darkContrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("texto --bg sobre el contador --brand-ink ≥ 4,5:1", () => {
     expect(css).toMatch(/\.count-badge\{color:var\(--bg\)\}/);
     const fg = dark["--bg"]!;

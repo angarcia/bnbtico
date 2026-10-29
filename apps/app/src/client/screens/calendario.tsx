@@ -5,8 +5,8 @@
 // dominio (domain/calendar.ts), las mismas que la RPC save_listing_days. Arriba, en una casa activa, «Cerrar la casa
 // hasta…» (set_listing_available) abre la hoja «Cerrar la casa», en su propio trozo diferido.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
+import { Component, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import {
   addMonths,
   applyChange,
@@ -29,6 +29,7 @@ import {
 import { can } from "../../domain/can";
 import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
+import { reportError } from "../../shared/beacon";
 import { costaRicaToday } from "../../domain/inquiry";
 import { resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -37,6 +38,7 @@ import { whenIdle } from "../../shared/idle";
 import { MonthGrid, MonthLegend, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
+import { isChunkLoadError } from "../chunk-error";
 import { RootHeader } from "../chrome";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";
@@ -45,7 +47,8 @@ const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "bnbtico-calendario-casa";
 const KB_RELEASE_MS = 400;
 const loadCloseSheet = () => import("../close-sheet");
-const CloseSheet = lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
+const lazySheet = () => lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
+let CloseSheet = lazySheet();
 
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
 /** Casas con calendario (revisión UX A5): todo lo enviado alguna vez (en revisión, con cambios pedidos, activa, pausada) y
@@ -121,9 +124,7 @@ export function CalendarioScreen() {
           )}
         </section>
       ) : null}
-      {current ? (
-<Calendar key={current.id} listing={current} userId={userId} month={search.mes} />
-      ) : null}
+      {current ? <Calendar key={current.id} listing={current} userId={userId} month={search.mes} /> : null}
     </>
   );
 }
@@ -271,25 +272,28 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
 }
 
 /** Arriba del calendario de una casa activa (can(l,"available")): abierta, la fila abre la hoja «Cerrar la casa»;
- *  cerrada, dice hasta cuándo y «Abrir la casa» la abre en un toque. Las dos escrituras son optimistas (useSetAvailable). */
+ *  cerrada, dice hasta cuándo y «Abrir la casa» la abre en un toque. Las dos escrituras son optimistas (useSetAvailable);
+ *  mientras la base no contesta, «Abrir la casa» no hace nada (sigue enfocable, con aria-disabled). */
 function CloseRow({ listing: l, userId }: { listing: Listing; userId: string }) {
   const available = useSetAvailable(userId, l);
   const [closing, setClosing] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef(false);
+  // El foco va al botón de la fila cuando la hoja ya se desmontó (la página dejó de estar inerte) y la fila muestra el
+  // estado esperado: al cancelar, la misma; al confirmar, «Abrir la casa»; al abrirla, «Cerrar la casa hasta…».
+  const focusWhen = useRef<boolean | null>(null);
   useEffect(() => {
-    whenIdle(() => void loadCloseSheet());
+    whenIdle(() => void loadCloseSheet().catch(() => {}));
   }, []);
-  // El foco vuelve a la fila cuando la hoja ya se desmontó y la página dejó de estar inerte.
   useEffect(() => {
-    if (closing || !returnFocus.current) return;
-    returnFocus.current = false;
+    if (closing || focusWhen.current !== l.available) return;
+    focusWhen.current = null;
     button.current?.focus();
-  }, [closing]);
-  const endClosing = () => {
-    returnFocus.current = true;
+  }, [closing, l.available]);
+  const endClosing = (next: boolean) => {
+    focusWhen.current = next;
     setClosing(false);
   };
+  const pending = available.isPending;
   return (
     <>
       {l.available ? (
@@ -306,7 +310,17 @@ function CloseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
       ) : (
         <section className="card close-row is-closed">
           <span>{l.reopenAt ? `Cerrada hasta el ${shortDate(l.reopenAt)}` : "Cerrada: no aparece en Explorar ni recibe consultas"}</span>
-          <button ref={button} type="button" className="btn btn-ghost btn-sm" onClick={() => available.mutate({ available: true })}>
+          <button
+            ref={button}
+            type="button"
+            className="btn btn-ghost btn-sm"
+            aria-disabled={pending || undefined}
+            onClick={() => {
+              if (pending) return;
+              focusWhen.current = true;
+              available.mutate({ available: true });
+            }}
+          >
             Abrir la casa
           </button>
         </section>
@@ -317,28 +331,76 @@ function CloseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
         </p>
       ) : null}
       {closing ? (
-        <Suspense fallback={<div className="sheet-backdrop" />}>
-          <CloseSheet
-            onClose={endClosing}
-            onConfirm={(reopenAt) => {
-              endClosing();
-              available.mutate({ available: false, reopenAt });
-            }}
-          />
-        </Suspense>
+        <SheetBoundary>
+          {() => (
+            <Suspense fallback={<div className="sheet-backdrop" />}>
+              <CloseSheet
+                onClose={() => endClosing(true)}
+                onConfirm={(reopenAt) => {
+                  endClosing(false);
+                  available.mutate({ available: false, reopenAt });
+                }}
+              />
+            </Suspense>
+          )}
+        </SheetBoundary>
       ) : null}
     </>
   );
 }
 
+/** Si el trozo de la hoja no llega (sin red, o un despliegue nuevo cambió su nombre) o falla al pintarse, se dice junto a
+ *  la fila (lo segundo, además, a /errors). «Reintentar» crea otro componente, que vuelve a pedir el trozo (por eso la
+ *  hoja llega como función: se pinta con el componente nuevo). */
+class SheetBoundary extends Component<{ children: () => ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override componentDidCatch(error: unknown) {
+    if (!isChunkLoadError(error)) reportError(error);
+  }
+  override render() {
+    if (!this.state.failed) return this.props.children();
+    return (
+      <div className="row gap-8 baseline">
+        <p className="field-error" role="alert">
+          No pudimos abrir «Cerrar la casa». Revise su conexión e inténtelo de nuevo.
+        </p>
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost"
+          onClick={() => {
+            CloseSheet = lazySheet();
+            this.setState({ failed: false });
+          }}
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+}
+
 /** Los meses uno debajo de otro, cada uno con su título fijo arriba. Una rejilla se monta al acercarse su mes a la vista
- *  (a una pantalla) y ya no se desmonta; al abrir, el mes pedido se lleva arriba. Desplazarse no cambia la URL. */
+ *  (a una pantalla) y ya no se desmonta; el primer mes y el pedido van montados desde el principio, para que nada crezca
+ *  encima del pedido. Al abrir, el mes pedido se lleva arriba. Desplazarse no cambia la URL. */
 function CalendarMonths({ months, target, render }: { months: string[]; target: string; render: (month: string) => ReactNode }) {
-  const [mounted, setMounted] = useState(() => new Set([target, addMonths(target, 1)].filter((m) => months.includes(m))));
+  const [mounted, setMounted] = useState(() => new Set([months[0]!, target, addMonths(target, 1)].filter((m) => months.includes(m))));
   const box = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   useLayoutEffect(() => {
-    if (target !== months[0]) box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
-    // Solo al abrir: después manda el dedo.
+    if (target === months[0]) return;
+    const toTarget = () => box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
+    toTarget();
+    // Al llegar desde la app, la restauración del desplazamiento del router corre en su onRendered, después de este
+    // efecto, y devuelve la página arriba: se lleva el mes otra vez justo después (una sola vez; luego manda el dedo).
+    const stop = router.subscribe("onRendered", () => {
+      stop();
+      toTarget();
+    });
+    return stop;
+    // Solo al abrir.
   }, []);
   useEffect(() => {
     const blocks = box.current?.querySelectorAll<HTMLElement>(".cal-month-block");
