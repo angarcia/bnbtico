@@ -224,7 +224,6 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
   await expect(review.getByRole("link")).toHaveCount(6);
   await expect(review.locator(".review-label")).toHaveText(["Alojamiento", "Dónde", "Capacidad", "Nombre", "Fotos", "Precio"]);
-  await expect(review.locator(".review-warn")).toHaveCount(0);
   const where = review.getByRole("link", { name: /Dónde/ });
   await expect(where.locator(".review-text")).toHaveText(`${zoneName} · Limón, Limón, Limón`);
   await expect(where).toHaveAttribute("href", `/propietario/publicar/${id}/2`);

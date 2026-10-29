@@ -23,8 +23,8 @@ export interface PhotoSource {
   photos: Photo[];
   /** Detrás de las demás, con «En revisión»; no se arrastran (en el asistente, []). */
   pending: Photo[];
-  /** «short»: faltan fotos (ocre, asistente); «ok»: verde (asistente); «muted»: gris (editor, maqueta 08d). */
-  counter: { text: string; tone: "short" | "ok" | "muted" };
+  /** «ok»: verde (asistente); «muted»: gris (editor, maqueta 08d). */
+  counter: { text: string; tone: "ok" | "muted" };
   /** Fotos que aún caben (sin contar las que están subiendo: eso se resta aquí). */
   room: number;
   canAdd: boolean;
@@ -42,7 +42,7 @@ const queueFor = (id: string) => {
   return q;
 };
 
-const TONE: Record<PhotoSource["counter"]["tone"], string> = { short: " is-short", ok: " primary", muted: " muted" };
+const TONE: Record<PhotoSource["counter"]["tone"], string> = { ok: " primary", muted: " muted" };
 
 /** La relectura de la casa tras subir, quitar u ordenar (lista de Mis casas y detalle). */
 export const rereadOwnListing = (client: QueryClient, userId: string, listingId: string) => async () => {
