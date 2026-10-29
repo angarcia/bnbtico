@@ -147,3 +147,20 @@ test("límites: hoy + 365 solo como salida, el «Desde» del mensual hasta hoy +
   await expect(page.getByText("50", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Una persona más" })).toBeDisabled();
 });
+
+test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta y una provincia quita la zona", async ({ page }) => {
+  await page.goto("/explorar/filtros?zona=704-cocles&ppl=4");
+  const mine = page.getByRole("group", { name: "Su búsqueda" });
+  await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/, /^Personas\s*4 personas$/]);
+  await expect(page.getByLabel("Personas", { exact: true })).toHaveCount(0);
+  await mine.getByRole("link", { name: /^Personas/ }).click();
+  await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=quienes/);
+  await expect(page.getByRole("button", { name: /¿Quiénes\?/ })).toHaveAttribute("aria-expanded", "true");
+  await page.goBack();
+  const zona = page.getByRole("group", { name: "Zona", exact: true });
+  await expect(zona.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await zona.getByRole("button", { name: "Todas" }).click();
+  await page.getByRole("button", { name: /^Ver \d+ casas?$/ }).click();
+  await expect(page).toHaveURL(/prov=Todas/);
+  await expect(page).not.toHaveURL(/zona=/);
+});

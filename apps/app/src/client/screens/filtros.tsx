@@ -1,14 +1,16 @@
-// Filtros (pantalla 02): Zona → Para quiénes → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
+// Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Zona → Para quiénes → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { BEDS_OPTIONS, colonesToPriceInput, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
+import { costaRicaToday } from "../../domain/dates";
+import { peopleLabel, stayLabel } from "../../domain/search";
 import { FEATURES, MONTHLY_FILTER_LABEL } from "../../domain/listing";
 import { FX_INITIAL, fxDayLabel, fxRateLabel, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
-import { listingsQuery, provincesQuery } from "../queries";
+import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 
@@ -24,12 +26,21 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
     const crc = priceInputToColones(text, currency, fx.crcPerUsd);
     set(key, crc ? String(crc) : undefined);
   };
-  const f = parseFilters(draft, provinces);
+  const zones = useQuery({ ...zonesQuery, enabled: !!draft.zona });
+  const f = parseFilters(draft, provinces, { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id) });
+  const zoneName = zones.data?.find((z) => z.id === f.zone)?.name ?? null;
   // Con el mensual el rango por noche se oculta y no cuenta: uno inválido escondido no bloquea «Ver N casas».
   const badRange = !f.monthly && priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
   const symbol = currency === "USD" ? "$" : "₡";
+  // Chip de provincia: elegir una provincia quita la zona (la zona manda sobre la provincia).
+  const pickProvince = (prov: string) => setDraft((d) => ({ ...d, prov, zona: undefined }));
+  const mineRows = [
+    { abrir: "donde", label: "Zona", value: f.zone ? (zoneName ?? "") : "Cualquier zona" },
+    { abrir: "cuando", label: "Fechas", value: stayLabel(f)?.replace(/^desde/, "Desde") ?? "Sin fechas" },
+    { abrir: "quienes", label: "Personas", value: peopleLabel(f.ppl) ?? "Sin indicar" },
+  ] as const;
   const apply = () => navigate({ to: "/explorar", search: searchFor(f, provinces), replace: true });
   return (
     <>
@@ -51,13 +62,31 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
           if (!badRange) void apply();
         }}
       >
+        <section className="stack" role="group" aria-labelledby="f-mine">
+          <span className="eyebrow" id="f-mine">
+            Su búsqueda
+          </span>
+          <div className="list">
+            {mineRows.map((r) => (
+              <Link key={r.abrir} to="/explorar/buscar" search={{ ...searchFor(f, provinces), abrir: r.abrir }} className="list-item">
+                <span className="body">
+                  {r.label}
+                  <small>{r.value}</small>
+                </span>
+                <span className="chev">
+                  <I.chevron />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
         <section className="stack" role="group" aria-labelledby="f-zona">
           <span className="eyebrow" id="f-zona">
             Zona
           </span>
           <div className="row wrap gap-8">
             {provinceChips(provinces).map((prov) => (
-              <button key={prov} type="button" className="chip" aria-pressed={f.prov === prov} onClick={() => set("prov", prov)}>
+              <button key={prov} type="button" className="chip" aria-pressed={!f.zone && f.prov === prov} onClick={() => pickProvince(prov)}>
                 {prov}
               </button>
             ))}
