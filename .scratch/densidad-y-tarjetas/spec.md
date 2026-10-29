@@ -132,6 +132,14 @@ Tokens (`design/tokens/tokens.json`): `color.sun.role` becomes «Dinero y avisos
 - Desktop layouts (on hold).
 - Calendar sync with Airbnb by iCal (future, decisions file).
 
+## Accessibility (controller ruling 2026-10-29)
+
+- Small terracota text, counters, «Nueva», map markers and the active tab use `#B44C30` (white on it 5.1:1); `--brand` `#D65C3C` stays for the logo, hearts and large accents. Add a token/CSS variable (e.g. `--brand-ink: #B44C30`, replacing `#BF4D2E`).
+- Selected chips (features, «Solo alquiler mensual») show a ✓ before the label, and the selected side of «₡ | $» is bold, so selection never depends on colour alone.
+- Unit test computing WCAG contrast for the token pairs used for text (fg on bg, white on primary, white on brand-ink, fg on sun, muted on bg, calendar busy text on busy bg) ≥ 4.5:1.
+- Calendar colours from the mockups: free days `#DCE8DF`, busy `#F7E3D3` with text `#9A4B2A`, stripes and «Ocupado»; search «¿Cuándo?» selection `#D9775A` with dark number (`#1C2B2A`), band `#F7E6D8`.
+- Ficha: no «₡ | $» switch (Daniel 2026-10-29); the CTA bar shows colones left (night, then monthly) and dollars right (≈ night, ≈ monthly), the button, then «Precios orientativos: el precio final lo acuerda con el propietario.». Overlay buttons at `top: calc(12px + env(safe-area-inset-top))`.
+
 ## Questions for triage
 
 - Resolved 2026-10-29 (Daniel): Mis casas with **one** house shows the **list with one card** (§3); tapping it opens the house detail (the editable ficha after D).
