@@ -47,7 +47,10 @@ create policy listing_edits_select on public.listing_edits for select using (
 create policy listing_edit_photos_select on public.listing_edit_photos for select using (
   exists (select 1 from public.listings l where l.id = listing_edit_photos.listing_id and (l.owner_id = auth.uid() or public.is_admin())));
 revoke all on public.listing_edits, public.listing_edit_photos from public, anon, authenticated;
-grant select on public.listing_edits, public.listing_edit_photos to authenticated;
+-- Por columna: quién revisó y cuándo (reviewed_by, reviewed_at) no lo lee el navegador, ni el propietario ni el admin.
+grant select (listing_id, status, title, kind, bathroom_shared, description, lat, lng, zone, zone_id, zone_source,
+  review_note, submitted_at, created_at, updated_at) on public.listing_edits to authenticated;
+grant select on public.listing_edit_photos to authenticated;
 
 -- ---------- 2. Ayudantes ----------
 -- Publicada = se aprobó alguna vez y no está en el circuito de la primera revisión.

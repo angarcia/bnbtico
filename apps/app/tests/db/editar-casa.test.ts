@@ -104,9 +104,13 @@ describe("editar una casa publicada · al momento y guardas", () => {
     sql(`insert into public.listing_edit_photos (listing_id, path) values ('${id}', '${id}/${crypto.randomUUID()}')`);
     expect((await anonClient().from("listing_edits").select("*")).data ?? []).toEqual([]);
     expect((await anonClient().from("listing_edit_photos").select("*")).data ?? []).toEqual([]);
-    expect((await other.from("listing_edits").select("*").eq("listing_id", id)).data).toEqual([]);
+    expect((await other.from("listing_edits").select("listing_id, title").eq("listing_id", id)).data).toEqual([]);
     expect((await other.from("listing_edit_photos").select("*").eq("listing_id", id)).data).toEqual([]);
     expect((await owner.from("listing_edits").select("title").eq("listing_id", id)).data).toEqual([{ title: "Casa Coco frente al mar" }]);
+    // Quién revisó y cuándo no es del propietario: ni esas columnas ni «*».
+    for (const columns of ["reviewed_by", "reviewed_at", "*"]) {
+      expect((await owner.from("listing_edits").select(columns).eq("listing_id", id)).error?.message).toMatch(/permission denied/);
+    }
     expect((await owner.from("listing_edit_photos").select("id").eq("listing_id", id)).data).toHaveLength(1);
     expect((await owner.from("listing_edits").update({ title: "Casa Coco" }).eq("listing_id", id)).error).not.toBeNull();
     expect((await owner.from("listing_edits").delete().eq("listing_id", id)).error).not.toBeNull();
