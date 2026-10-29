@@ -45,6 +45,7 @@ Reglas de siempre: móvil primero (375 px), estilos y tokens de bnbtico (`design
 - **Con revisión del admin:** ubicación (punto y zona), fotos nuevas, nombre, tipo y descripción. Mientras tanto **sigue activa la versión aprobada**; la edición queda como «Edición en revisión».
 - **Una sola edición a la vez por casa.** Si hay una edición sin enviar o en revisión, no se puede abrir otra. Siempre hay **«Descartar cambios»**. En la lista se ve claro que hay una edición en curso (etiqueta en la foto), sin duplicar la casa.
 - **«Anuncio visible»** sale del detalle y pasa al Calendario (ver C).
+- **Fotos (decisión de Daniel, 2026-10-29):** en la ficha editable las fotos **no se editan en línea**: solo se ve la portada con una píldora «N fotos · Editar» (en edición en revisión, «N fotos · 1 nueva en revisión · Editar»). Tocarla abre el editor de fotos a pantalla completa (maqueta 08d): la misma cuadrícula del paso 7 del asistente; orden y quitar al momento, fotos nuevas en revisión (etiqueta «En revisión»).
 
 ## E · Publicar
 

@@ -11,6 +11,6 @@ HTML estático de referencia (no es código de producción) para las decisiones 
 | `05-mapa.html` | Mapa a pantalla completa, marcador elegido con su tarjeta y «8 casas» para volver | A |
 | `06-ficha.html` | Ficha con foto cuadrada a todo el ancho y botones encima, «1 / 5», barra de WhatsApp | B |
 | `07-mis-casas.html` | Mis casas (dos casas): estado sobre la foto, sin precio; activa, borrador, edición en revisión y pendiente de pago (ocre) | B, D |
-| `08-casa-editable.html` | Ficha editable de una casa publicada: fotos, datos que se tocan, etiqueta «Revisión», «Compartir ficha», suscripción abajo; pausada (bloque ocre arriba) y con edición en revisión («Descartar cambios») | D, F |
+| `08-casa-editable.html` | Ficha editable de una casa publicada: portada, datos que se tocan, etiqueta «Revisión», «Compartir ficha», suscripción abajo; pausada (bloque ocre arriba) y con edición en revisión («Descartar cambios»); las fotos no se editan en la ficha: solo la portada con «N fotos · Editar», que abre el editor de fotos a pantalla completa (08d) | D, F |
 | `09-calendario.html` | Calendario: «Cerrar la casa hasta…», días altos con precio, meses en vertical | C |
 | `10-actividad.html` | Actividad: tarjetas por casa con foto cuadrada y cifras, chips por casa y la casa encima de cada consulta | B, G |
