@@ -16,8 +16,9 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - **WhatsApp verificado por código es lo único obligatorio** para publicar o contactar. Explorar y guardar favoritos no requiere cuenta.
 - **Veriff (identidad) es opcional y queda fuera de la v1** (va en v1.1). En v1 no se muestra nada de identidad.
 - **Estados de una casa:** Pendiente de revisión → Pendiente de pago → Activa → Inactiva (si el propietario para la suscripción). Las casas con oferta gratuita saltan «Pendiente de pago» hasta que termina la oferta. Avisos por WhatsApp y en la app a 90/30/7/0 días del fin de la oferta, con enlace `#pago=CT-xxxx` a la pantalla de método de pago. El enlace de una ficha parada o pendiente de pago deja de funcionar. «Añadir método de pago» solo aparece mientras no hay método y toca avisar.
+- Explorar filtra por fechas libres (todas las noches de llegada a salida; mensual: 30 noches desde «Desde»); las casas cerradas nunca salen.
 - **Precios en colones**, siempre orientativos; el cliente puede verlos convertidos a dólares (solo visualización). Nunca «total a pagar».
-- **Caribe por defecto:** Explorar arranca en Limón; en los filtros solo aparecen provincias con casas; una casa aprobada de otra zona añade su provincia.
+- **Caribe por defecto:** Explorar arranca en Limón; en los filtros solo aparecen provincias con casas; una casa aprobada de otra zona añade su provincia; con una zona elegida en la búsqueda, manda la zona (casas a 5 km o menos).
 - **Características (una sola lista, igual al publicar y al filtrar):** Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis, Frente al mar, Rancho/BBQ. Los filtros añaden «Solo alquiler mensual» (no se marca en características al publicar: se pregunta en el precio).
 - **Alquiler y tipo:** toda casa se alquila por noches, con precio por noche obligatorio; «Acepta alquiler mensual» es opcional, con precio al mes opcional (vacío = «Precio a negociar con el dueño»); es Alojamiento completo o Habitación (con baño privado o compartido).
 - «Mensual» en vez de «Largo plazo» en toda la UI (la landing no se toca).

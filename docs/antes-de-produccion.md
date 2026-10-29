@@ -62,3 +62,11 @@ Desde el 2026-10-23 el WhatsApp de un usuario puede ser de cualquier país (sele
 5. **Alerta de gasto en Twilio.** Billing → **Usage Triggers**: aviso por correo al llegar a un importe mensual (por ejemplo 20 USD). No corta el servicio, pero avisa pronto.
 
 Con 1, 2 y 4 el riesgo queda acotado; 3 lo cierra casi del todo; 5 es la red de seguridad.
+
+## Teselas de OpenStreetMap en Explorar (2026-10-29)
+
+Desde la fase de Explorar al estilo Airbnb el mapa con precios es el primer elemento de Explorar, así que casi todas las visitas cargan teselas de OpenStreetMap (antes solo la ficha y el asistente de publicar). Antes del lanzamiento:
+
+1. Leer la política de uso de teselas de la fundación OSM (`tile.openstreetmap.org`: sin uso intensivo, atribución visible, `Referer` válido, sin precarga masiva) y compararla con el tráfico esperado del lanzamiento.
+2. Decidir si se sigue con las teselas de OSM o se pasa a un proveedor de teselas (con clave y plan propio), y dejar la decisión en `docs/decisiones.md`.
+3. Si se cambia de proveedor, actualizar la CSP (`img-src`) y la prueba de Lighthouse, que hoy bloquea las teselas en la medición.

@@ -164,6 +164,29 @@ Las filas A5 son las acordadas en la revisión. Para tener una segunda casa acti
 | U65 | Calendario: bajar entre meses con el dedo, elegir un día de este mes y otro del siguiente, «Ocupado» y «Guardar cambios» | Los meses van uno debajo de otro, sin flechas; el panel dice las dos noches y al guardar las dos salen «Ocupado» | ☐ |
 | U66 | Calendario de una casa activa: «Cerrar la casa hasta…», poner una fecha y «Cerrar la casa»; mirar Explorar desde otro teléfono; volver y «Abrir la casa» | Arriba dice «Cerrada hasta el …» y los días se atenúan; la casa no sale en Explorar y su ficha dice «No disponible por ahora». «Abrir la casa» la devuelve en un toque y vuelve a salir en Explorar. El detalle de la casa ya no tiene el interruptor «Anuncio visible» | ☐ |
 
+### Explorar al estilo Airbnb (2026-10-29)
+
+Con un iPhone y un Android, sesión cerrada salvo donde se diga. Hacen falta casas con noches ocupadas (por ejemplo, una con el 25 de noviembre ocupado) y una en Cocles.
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U67 | Abrir Explorar en el iPhone (con muesca) | La píldora «Empiece su búsqueda» queda **bajo la muesca**, sin tapar la hora; arriba no hay barra con el logo; el botón de cuenta está a su derecha y «₡ \| $» al final de la fila de chips. Al bajar, la cabecera se queda fija | ☐ |
+| U68 | Tocar la píldora y escribir «coc» | Con el teclado abierto se sigue viendo la lista de zonas («Cocles», «Talamanca, Limón»), no queda tapada | ☐ |
+| U69 | Elegir Cocles | Pasa solo a «¿Cuándo?» y la tarjeta de ¿Dónde? muestra «Cocles» | ☐ |
+| U70 | En el calendario tocar el 23 de noviembre y luego el 27; probar también con la llegada en un mes y la salida en el siguiente | Los extremos en terracota y la banda en crema entre ellos, en los dos meses; abajo «23–27 nov» y «4 noches» | ☐ |
+| U71 | Tocar «Solo alquiler mensual» y abrir ¿Cuándo? | Pide solo «Desde» (un día) y dice «Casas libres del … al …» con 30 noches; no pide salida | ☐ |
+| U72 | En ¿Quiénes? poner 4 personas y «Buscar» | La píldora dice «Cocles · 23–27 nov · 4 personas»; la línea, «N casas en Cocles y alrededores · 23–27 nov»; la casa con el 25 de noviembre ocupado **no** sale | ☐ |
+| U73 | Cerrar una casa desde su Calendario (otro teléfono) y repetir la búsqueda | La casa cerrada **no** sale nunca, ni con otras fechas | ☐ |
+| U74 | Mirar el primer elemento de la lista | El **mapa** con marcadores de precio, sobre las tarjetas, que van **una por fila**. Si no hay red, queda una caja vacía y la lista funciona | ☐ |
+| U75 | Bajar por la lista | Flota el botón **«Mapa»** por encima de la barra de pestañas, sin taparla | ☐ |
+| U76 | Tocar «Mapa» | Mapa a pantalla completa; **pellizcar y arrastrar** funciona con los dedos; el botón dice «N casas» | ☐ |
+| U77 | Tocar un marcador | Sale la tarjeta de esa casa; tocarla abre la ficha | ☐ |
+| U78 | En el mapa, gesto o botón **Atrás** | Se cierra el mapa y vuelve la lista en el mismo punto, sin salir de Explorar | ☐ |
+| U79 | Con las fechas y las personas puestas, abrir una casa y «Contactar por WhatsApp» | Llegada, salida y personas **ya puestas**; en WhatsApp: «¿Está disponible del 23 al 27 de noviembre para 4 personas?» | ☐ |
+| U80 | Con «Solo alquiler mensual» y «Desde» elegido, abrir una casa y «Contactar por WhatsApp» | El mensaje dice «Me interesa alquilar por meses desde el …» | ☐ |
+| U81 | En Explorar con el filtro mensual encendido, mirar a 360 y 375 px de ancho | El chip se acorta con «…» y los botones de filtros siguen de 44 × 44 | ☐ |
+| U82 | «Borrar todo» en la búsqueda con una característica elegida (Piscina) | Quita zona, fechas y personas y **conserva** Piscina | ☐ |
+
 ---
 
 ## C. Si algo falla

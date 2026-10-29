@@ -83,3 +83,12 @@ Pruebas: `node tests/prototype/direct-whatsapp.cjs`, `node tests/prototype/conta
 Antes de producción: permisos e identidad en backend; consentimiento auditable; reloj de servidor y deduplicación atómica; acceso privado a teléfonos solo para participantes autorizados; límites de búsqueda; retención y avisos de privacidad. No almacenar números en la API pública ni tratar el estado del navegador como autorización.
 
 Copia de la versión con chat antes de volver: `backups/bnbtico-antes-volver-whatsapp-2026-10-07.tar.gz`. No se modifica la marca, el asistente de titularidad ni las reclamaciones.
+
+## Mensajes con fechas y con «Desde» (2026-10-29)
+
+La hoja de contacto de la ficha arranca con lo que el cliente puso en la búsqueda de Explorar (llegada, salida, personas); todo se puede editar. El texto lo redacta `composeInquiryMessage` (`src/domain/inquiry.ts`):
+
+- Sin datos: «Hola, vi <casa> en bnbtico y me interesa. ¿Está disponible? Gracias.»
+- Con fechas: «… ¿Está disponible del 23 al 27 de noviembre?»; con personas: «… para 4 personas?»; con las dos: «¿Está disponible del 23 al 27 de noviembre para 4 personas?».
+- Mensual (filtro «Solo alquiler mensual» y «Desde» elegido, sin llegada y salida válidas): «Hola, vi <casa> en bnbtico. Me interesa alquilar por meses desde el 16 de noviembre, para 2 personas. ¿Está disponible? Gracias.» Si hay llegada y salida válidas, mandan las fechas.
+- El mensaje de «¿No encuentra lo que busca?» usa la zona y las fechas de la búsqueda, no solo la provincia.

@@ -245,6 +245,8 @@ El buscador de Explorar dice «Limón · Cualquier fecha · cualquier grupo», p
 
 > **Acordado (2026-10-26): (a) ahora, (b) más adelante con disparador.** El buscador de Explorar pasa a «Limón · cualquier grupo» (fuera «Cualquier fecha»; `explorar.tsx`, `summaryBottom`). No se añade filtro de fechas antes del lanzamiento: un filtro que depende de calendarios que los propietarios casi no marcarán al principio escondería poco (y justo a los más cuidadosos) y daría falsa confianza con solo ~50 casas. **Disparador de (b):** cuando más de la mitad de las casas activas tengan al menos una noche ocupada marcada en los últimos 30 días (consulta sobre `listing_days`, a añadir en `docs/telemetria.md`). Entonces: sección «Fechas» en Filtros con la misma interacción que el calendario de la ficha (A3), Explorar oculta las casas con alguna noche ocupada en el rango, resultados rotulados «Sin noches ocupadas en esas fechas» (nunca «Disponible») y fechas precargadas en ficha y contacto. Anotado en `docs/decisiones.md`.
 
+Superada el 2026-10-29: filtro de fechas construido (`.scratch/explorar-airbnb/spec.md`); se mantiene «nunca "Disponible"».
+
 ### A12. Ayuda puede salir a producción con el botón desactivado
 [g12-ayuda]
 
