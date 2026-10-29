@@ -112,7 +112,7 @@ export function subscriptionContract(name: string, makeHarness: () => Promise<Su
         const before = await mine(a.id);
         await h.owner("owner").saveEdit(a.id, { title: "Casa renovada frente al mar" });
         await h.owner("owner").submitEdit(a.id);
-        await h.admin("aal2").reviewEdit(a.id, "approve", "");
+        await h.admin("aal2").reviewEdit(a.id, "approve", "", (await h.admin("aal2").getEdit(a.id))?.listing.edit?.submittedAt ?? null);
         expect(await mine(a.id)).toEqual({ ...before, title: "Casa renovada frente al mar" });
         expect(await h.anon.offerTaken()).toBe(1);
       });

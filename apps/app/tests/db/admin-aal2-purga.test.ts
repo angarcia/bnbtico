@@ -158,7 +158,7 @@ describe("purga de la ficha con pg_net", () => {
     expect((await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco frente al mar" } })).error).toBeNull();
     expect((await owner.rpc("submit_edit", { p_listing: id })).error).toBeNull();
     const out = inTransaction(`${withSecrets}${asAdminAal2(adminId)}
-      select public.review_edit('${id}', 'approve', '') is not null;
+      select public.review_edit('${id}', 'approve', '', (select submitted_at from public.listing_edits where listing_id = '${id}')) is not null;
       ${queueOf(publicId)}`);
     expect(lastJson(out).length).toBeGreaterThanOrEqual(1);
   });

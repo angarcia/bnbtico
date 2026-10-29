@@ -5,8 +5,10 @@
 --   aprobada, en su orden; borra la edición. Estado, suscripción y first_published_at no cambian. La ficha se purga con
 --   los triggers de listings y listing_photos (listings_purge_page, listing_photos_purge_page).
 -- - 'changes': la edición queda con cambios pedidos y la nota; el propietario corrige y reenvía. No hay «Rechazar».
+-- p_submitted_at es el envío que el admin abrió (submitted_at de la edición): si el propietario la descartó o la reenvió
+-- mientras tanto, no se decide sobre lo que el admin no vio.
 
-create or replace function public.review_edit(p_listing uuid, p_decision text, p_note text) returns text
+create or replace function public.review_edit(p_listing uuid, p_decision text, p_note text, p_submitted_at timestamptz) returns text
 language plpgsql security definer set search_path = '' as $$
 declare
   l public.listings;
@@ -27,7 +29,11 @@ begin
   -- La casa antes que la edición, en el mismo orden que las RPCs del propietario (own_published_listing).
   select * into l from public.listings where id = p_listing for update;
   select * into e from public.listing_edits where listing_id = p_listing for update;
-  if not found then raise exception 'No encontramos esa edición.'; end if;
+  if not found then
+    if p_submitted_at is not null then raise exception 'La edición cambió. Vuelva a abrirla.'; end if;
+    raise exception 'No encontramos esa edición.';
+  end if;
+  if e.submitted_at is distinct from p_submitted_at then raise exception 'La edición cambió. Vuelva a abrirla.'; end if;
   if e.status <> 'review' then raise exception 'Esta edición ya tiene una decisión.'; end if;
   if p_decision is null or p_decision not in ('approve','changes') then raise exception 'Decisión no válida.'; end if;
 
@@ -73,5 +79,5 @@ begin
   return 'approved';
 end $$;
 
-revoke execute on function public.review_edit(uuid, text, text) from public, anon;
-grant execute on function public.review_edit(uuid, text, text) to authenticated;
+revoke execute on function public.review_edit(uuid, text, text, timestamptz) from public, anon;
+grant execute on function public.review_edit(uuid, text, text, timestamptz) to authenticated;

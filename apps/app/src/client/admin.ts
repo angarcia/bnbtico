@@ -165,7 +165,7 @@ export function useReviewEdit(userId: string) {
   const editsKey = adminEditsQuery(userId).queryKey;
   return useMutation<void, Error, EditReviewInput, { edits: QueueItem[] | undefined }>({
     mutationKey: editReviewKey(userId),
-    mutationFn: async ({ item, decision, note }) => (await adminApi()).reviewEdit(item.listing.id, decision, note),
+    mutationFn: async ({ item, decision, note }) => (await adminApi()).reviewEdit(item.listing.id, decision, note, item.listing.edit?.submittedAt ?? null),
     onMutate: async ({ item, decision }) => {
       await client.cancelQueries({ queryKey: editsKey });
       const edits = client.getQueryData<QueueItem[]>(editsKey);

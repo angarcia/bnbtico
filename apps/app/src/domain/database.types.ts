@@ -775,7 +775,7 @@ isOneToOne: true
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
 "review_edit":
-{ Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: string
+{ Args: { "p_decision": string,"p_listing": string,"p_note": string,"p_submitted_at": string }; Returns: string
                            },
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]

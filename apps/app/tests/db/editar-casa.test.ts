@@ -345,7 +345,11 @@ describe("revisión de una edición", () => {
   });
   beforeEach(() => h.reset());
 
-  const review = (id: string, decision: string, note = "", db = admin) => db.rpc("review_edit", { p_listing: id, p_decision: decision, p_note: note });
+  /** submitted_at de la edición tal como la vio el admin al abrirla (null si no hay edición o no se envió). */
+  const seenAt = async (id: string) =>
+    (await serviceClient().from("listing_edits").select("submitted_at").eq("listing_id", id).maybeSingle()).data?.submitted_at ?? null;
+  const review = async (id: string, decision: string, note = "", db = admin, seen?: string | null) =>
+    db.rpc("review_edit", { p_listing: id, p_decision: decision, p_note: note, p_submitted_at: (seen === undefined ? await seenAt(id) : seen)! });
   /** Una edición del nombre enviada a revisión. */
   async function sent() {
     const seeded = await h.seed({ status: "active" });
@@ -425,6 +429,26 @@ describe("revisión de una edición", () => {
     expect((await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco del Caribe" } })).error).toBeNull();
     expect((await owner.rpc("submit_edit", { p_listing: id })).data).toBe("review");
     expect((await owner.from("listing_edits").select("status, review_note").eq("listing_id", id).single()).data).toEqual({ status: "review", review_note: null });
+  });
+
+  it("una edición reenviada tras abrirla no se decide: ni se aprueba ni se piden cambios sobre lo que el admin no vio", async () => {
+    const { id } = await sent();
+    const seen = await seenAt(id);
+    expect(seen).not.toBeNull();
+    await owner.rpc("discard_edit", { p_listing: id });
+    await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa B que el admin no vio" } });
+    expect((await owner.rpc("submit_edit", { p_listing: id })).error).toBeNull();
+    expect(await seenAt(id)).not.toBe(seen);
+    expect((await review(id, "approve", "", admin, seen)).error?.message).toBe("La edición cambió. Vuelva a abrirla.");
+    expect((await review(id, "changes", "Cambie el nombre.", admin, seen)).error?.message).toBe("La edición cambió. Vuelva a abrirla.");
+    expect((await serviceClient().from("listings").select("title").eq("id", id).single()).data?.title).toBe("Cabina Cahuita");
+    expect((await serviceClient().from("listing_edits").select("status, title, review_note").eq("listing_id", id).single()).data).toEqual({
+      status: "review", title: "Casa B que el admin no vio", review_note: null,
+    });
+    expect((await serviceClient().from("admin_actions").select("action").eq("target_listing_id", id).like("action", "edit.%")).data).toEqual([]);
+    // Descartada del todo mientras el admin la miraba: tampoco.
+    await owner.rpc("discard_edit", { p_listing: id });
+    expect((await review(id, "approve", "", admin, seen)).error?.message).toBe("La edición cambió. Vuelva a abrirla.");
   });
 
   it("quien no es admin y el admin sin segundo código no deciden", async () => {

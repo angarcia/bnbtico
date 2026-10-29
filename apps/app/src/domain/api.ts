@@ -174,8 +174,11 @@ export interface AdminListingsApi {
   editQueue(): Promise<QueueItem[]>;
   /** La casa aprobada con su edición y las fotos de las dos; null si no hay edición o no es admin. */
   getEdit(listingId: string): Promise<QueueItem | null>;
-  /** RPC review_edit. Motivo obligatorio para pedir cambios (reviewNoteRefusal). */
-  reviewEdit(listingId: string, decision: EditDecision, note: string): Promise<void>;
+  /**
+   * RPC review_edit. Motivo obligatorio para pedir cambios (editNoteRefusal). `submittedAt` es el envío que el admin abrió
+   * (listing.edit.submittedAt): si el propietario descartó o reenvió la edición, EDIT_MESSAGES.changed y no se aplica nada.
+   */
+  reviewEdit(listingId: string, decision: EditDecision, note: string, submittedAt: string | null): Promise<void>;
   /**
    * Casas del admin (fase 5, ticket 07): las aprobadas alguna vez (las que tienen suscripción), en cualquier estado, con
    * propietario, zona, portada y suscripción; la aprobada más recientemente primero. Sin ser admin, lista vacía.

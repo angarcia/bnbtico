@@ -235,6 +235,8 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
 
     describe("revisión del admin", () => {
       const admin = () => h.admin("aal2");
+      /** El envío que el admin ve al abrir la edición (submittedAt). */
+      const seen = async (id: string) => (await admin().getEdit(id))?.listing.edit?.submittedAt ?? null;
       const submitted = async (title: string, edit: string) => {
         const s = await h.seed({ status: "active", photos: 5, draft: { title } });
         await me.saveEdit(s.id, { title: edit });
@@ -272,7 +274,7 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
         await me.saveEdit(s.id, { title: "Casa Coco frente al mar" });
         await h.photos("owner").addEditPhoto(s.id, await h.photos("owner").upload(s.id, variants()));
         await me.submitEdit(s.id);
-        await admin().reviewEdit(s.id, "approve", "");
+        await admin().reviewEdit(s.id, "approve", "", await seen(s.id));
         const pub = await h.anon.getPublic(s.publicId);
         expect(pub?.title).toBe("Casa Coco frente al mar");
         expect(pub?.photos).toHaveLength(6);
@@ -283,7 +285,7 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
 
       it("pedir cambios guarda la nota; el propietario la ve y reenvía", async () => {
         const s = await submitted("Casa A", "Casa A renovada");
-        await admin().reviewEdit(s.id, "changes", "  La foto 2 tiene un teléfono.  ");
+        await admin().reviewEdit(s.id, "changes", "  La foto 2 tiene un teléfono.  ", await seen(s.id));
         expect((await me.getOwn(s.id))?.edit).toMatchObject({ status: "changes", reviewNote: "La foto 2 tiene un teléfono." });
         expect(await admin().editQueue()).toEqual([]);
         expect((await h.anon.getPublic(s.publicId))?.title).toBe("Casa A");
@@ -293,19 +295,36 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
         expect((await admin().editQueue()).map((i) => i.listing.id)).toEqual([s.id]);
       });
 
+      it("una edición descartada o reenviada después de abrirla no se decide", async () => {
+        const s = await submitted("Casa A", "Casa A renovada");
+        const at = await seen(s.id);
+        await me.discardEdit(s.id);
+        expect((await rejection(admin().reviewEdit(s.id, "approve", "", at))).message).toBe(EDIT_MESSAGES.changed);
+        await new Promise((r) => setTimeout(r, 5)); // otro envío, otro instante (el reloj del fake va en milisegundos)
+        await me.saveEdit(s.id, { title: "Casa B sin ver" });
+        await me.submitEdit(s.id);
+        expect((await rejection(admin().reviewEdit(s.id, "approve", "", at))).message).toBe(EDIT_MESSAGES.changed);
+        expect((await rejection(admin().reviewEdit(s.id, "changes", "No.", at))).message).toBe(EDIT_MESSAGES.changed);
+        expect((await h.anon.getPublic(s.publicId))?.title).toBe("Casa A");
+        expect((await me.getOwn(s.id))?.edit).toMatchObject({ status: "review", title: "Casa B sin ver", reviewNote: null });
+        await admin().reviewEdit(s.id, "approve", "", await seen(s.id));
+        expect((await h.anon.getPublic(s.publicId))?.title).toBe("Casa B sin ver");
+      });
+
       it("validación y acceso: nota obligatoria, ya decidida, no admin y aal1", async () => {
         const s = await submitted("Casa A", "Casa A renovada");
-        expect((await rejection(admin().reviewEdit(s.id, "changes", ""))).message).toBe(REVIEW_MESSAGES.noteRequired);
-        await admin().reviewEdit(s.id, "changes", "Falta algo.");
-        expect((await rejection(admin().reviewEdit(s.id, "approve", ""))).message).toBe(EDIT_MESSAGES.decided);
-        expect((await rejection(admin().reviewEdit("00000000-0000-4000-8000-999999999999", "approve", ""))).message).toBe(EDIT_MESSAGES.notFound);
+        const at = await seen(s.id);
+        expect((await rejection(admin().reviewEdit(s.id, "changes", "", at))).message).toBe(REVIEW_MESSAGES.noteRequired);
+        await admin().reviewEdit(s.id, "changes", "Falta algo.", at);
+        expect((await rejection(admin().reviewEdit(s.id, "approve", "", at))).message).toBe(EDIT_MESSAGES.decided);
+        expect((await rejection(admin().reviewEdit("00000000-0000-4000-8000-999999999999", "approve", "", null))).message).toBe(EDIT_MESSAGES.notFound);
         await me.submitEdit(s.id);
         const owner = h.admin("owner");
         expect(await owner.editQueue()).toEqual([]);
         expect(await owner.getEdit(s.id)).toBeNull();
-        expect((await rejection(owner.reviewEdit(s.id, "approve", ""))).message).toBe(REVIEW_MESSAGES.adminOnly);
+        expect((await rejection(owner.reviewEdit(s.id, "approve", "", at))).message).toBe(REVIEW_MESSAGES.adminOnly);
         const aal1 = h.admin("aal1");
-        for (const call of [() => aal1.editQueue(), () => aal1.getEdit(s.id), () => aal1.reviewEdit(s.id, "approve", "")]) {
+        for (const call of [() => aal1.editQueue(), () => aal1.getEdit(s.id), () => aal1.reviewEdit(s.id, "approve", "", at)]) {
           expect((await rejection(call())).message).toBe(REVIEW_MESSAGES.mfaRequired);
         }
         expect((await me.getOwn(s.id))?.edit?.status).toBe("review");

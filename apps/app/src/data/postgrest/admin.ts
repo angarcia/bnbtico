@@ -84,11 +84,12 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       return item?.listing.edit ? item : null;
     },
 
-    async reviewEdit(id, decision, note) {
+    async reviewEdit(id, decision, note, submittedAt) {
       const refusal = reviewNoteRefusal(decision, note);
       if (refusal) throw new DomainError(refusal, "validation");
       if (!UUID.test(id)) throw new DomainError(EDIT_MESSAGES.notFound, "validation");
-      const { error } = await db.rpc("review_edit", { p_listing: id, p_decision: decision, p_note: note.trim() });
+      // p_submitted_at admite null (una edición sin enviar); los tipos generados no lo dicen.
+      const { error } = await db.rpc("review_edit", { p_listing: id, p_decision: decision, p_note: note.trim(), p_submitted_at: submittedAt as string });
       if (!error) return;
       const e = toDomainError(error);
       throw e.message === M.mfaRequired ? mfa() : e;

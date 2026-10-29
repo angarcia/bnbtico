@@ -66,7 +66,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
 
     /** review_edit: aprobar copia cada dato cambiado a la casa y añade las fotos nuevas tras las aprobadas; no toca estado,
      *  suscripción ni first_published_at. Pedir cambios deja la edición con la nota. */
-    async reviewEdit(id, decision, note) {
+    async reviewEdit(id, decision, note, submittedAt) {
       const refusal = reviewNoteRefusal(decision, note);
       if (refusal) throw new DomainError(refusal, "validation");
       const a = access();
@@ -74,7 +74,8 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (a === "mfa") throw mfa();
       const l = db.listings.get(id);
       const e = db.edits.get(id);
-      if (!l || !e) throw new DomainError(EDIT_MESSAGES.notFound, "validation");
+      if (!l || !e) throw new DomainError(submittedAt === null ? EDIT_MESSAGES.notFound : EDIT_MESSAGES.changed, "validation");
+      if (e.submittedAt !== submittedAt) throw new DomainError(EDIT_MESSAGES.changed, "validation");
       if (e.status !== "review") throw new DomainError(EDIT_MESSAGES.decided, "validation");
       const at = db.now();
       if (decision === "changes") {
