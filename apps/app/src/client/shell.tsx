@@ -2,7 +2,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
-import { normalizeSearch, searchFromString, searchToString } from "../domain/filters";
+import { costaRicaToday } from "../domain/dates";
+import { normalizeSearch, searchFromString, searchToString, type SearchParams } from "../domain/filters";
 import { track } from "../shared/beacon";
 import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
@@ -29,6 +30,8 @@ const actividadScreen = () => import("./screens/actividad");
 const calendarioScreen = () => import("./screens/calendario");
 type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
+/** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica. */
+const exploreSearch = (p: SearchParams) => normalizeSearch(p, costaRicaToday(Date.now()));
 const ownerScreen = (name: OwnerScreen) => lazyRouteComponent(ownerScreens, name);
 const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreens, name);
 
@@ -159,8 +162,8 @@ const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario", beforeLoad: () => { throw redirect({ to: "/propietario/casas", replace: true }); } }),
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario/consultas", beforeLoad: () => { throw redirect({ to: "/propietario/actividad", replace: true }); } }),
   tabs.addChildren([
-    createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: normalizeSearch, component: ExplorarScreen }),
-    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: normalizeSearch, component: FiltrosScreen }),
+    createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: exploreSearch, component: ExplorarScreen }),
+    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: FiltrosScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
       ownerRoutes.addChildren([

@@ -4,6 +4,7 @@
 // Sin temporadas, sin precio de fin de semana y sin «Configurar tarifas» (fuera de v1).
 import type { Currency } from "./currency";
 import { parseColones, type ListingStatus } from "./listing";
+import { addDays } from "./dates";
 import { formatUSD } from "./money";
 
 /** Una fila de listing_days: solo existe si el día difiere del habitual (ocupado y/o con precio especial). */
@@ -67,10 +68,7 @@ export const isIsoDate = (date: string): boolean => toUtc(date) !== null;
 
 const fromUtc = (t: number) => new Date(t).toISOString().slice(0, 10);
 
-/** La fecha `n` días después (o antes) de `date`, que debe ser válida. */
-export function addDays(date: string, n: number): string {
-  return fromUtc(toUtc(date)! + n * DAY_MS);
-}
+export { addDays } from "./dates";
 
 /** `YYYY-MM` `n` meses después (o antes). */
 export function addMonths(month: string, n: number): string {

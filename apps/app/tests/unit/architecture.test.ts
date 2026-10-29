@@ -1,5 +1,5 @@
 // Reglas del dominio (decisión 2026-10-21): supabase-js solo en el adaptador PostgREST; el dominio sin frameworks.
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -55,5 +55,15 @@ describe("arquitectura", () => {
     const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
     expect(scripts.filter(([, attrs, body]) => !/\bsrc=/.test(attrs!) || body!.trim() !== "").map(([tag]) => tag)).toEqual([]);
     expect(html).not.toMatch(/<style\b|\sstyle=/);
+  });
+
+  it("el JS inicial de Explorar no arrastra trozos diferidos", () => {
+    // Las importaciones dinámicas `import("…")` no las ve `imports()`: son las únicas permitidas hacia esos trozos.
+    for (const path of ["domain/filters.ts", "domain/search.ts"].map((p) => join(SRC, p)).filter(existsSync)) {
+      expect(imports(path).filter((i) => i === "./calendar" || i === "./inquiry"), path).toEqual([]);
+    }
+    for (const path of ["client/explore-map.tsx", "client/screens/explorar.tsx"].map((p) => join(SRC, p)).filter(existsSync)) {
+      expect(imports(path).filter((i) => i.includes("leaflet") || /^\.\.?\/explore-map-leaflet$/.test(i)), path).toEqual([]);
+    }
   });
 });

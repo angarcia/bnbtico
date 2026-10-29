@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { BEDS_OPTIONS, PEOPLE_OPTIONS, colonesToPriceInput, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
+import { BEDS_OPTIONS, colonesToPriceInput, parseFilters, priceInputToColones, priceRangeInvalid, provinceChips, searchFor, type ExploreSearch, type SearchKey } from "../../domain/filters";
 import { FEATURES, MONTHLY_FILTER_LABEL } from "../../domain/listing";
 import { FX_INITIAL, fxDayLabel, fxRateLabel, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
@@ -67,16 +67,6 @@ function FiltrosForm({ provinces, initial, fx }: { provinces: string[]; initial:
         <section className="stack">
           <span className="eyebrow">Para quiénes</span>
           <div className="grid-2">
-            <div className="field">
-              <label htmlFor="f-ppl">Personas</label>
-              <select id="f-ppl" value={f.ppl} onChange={(e) => set("ppl", e.target.value)}>
-                {PEOPLE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n ? `${n}+` : "Cualquiera"}
-                  </option>
-                ))}
-              </select>
-            </div>
             <div className="field">
               <label htmlFor="f-beds">Habitaciones</label>
               <select id="f-beds" value={f.beds} onChange={(e) => set("beds", e.target.value)}>

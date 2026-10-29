@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Filters } from "../../src/domain/filters";
 import { searchHelpMessage } from "../../src/domain/search-help";
 
-const none: Filters = { prov: "Todas", monthly: false, ppl: 0, beds: 0, features: [], min: 0, max: 0, open: false };
+const none: Filters = { prov: "Todas", zone: null, arrival: null, departure: null, monthlyFrom: null, monthly: false, ppl: 0, beds: 0, features: [], min: 0, max: 0, open: false };
 const lines = (f: Partial<Filters>) => searchHelpMessage({ ...none, ...f }).split("\n");
 
 describe("searchHelpMessage", () => {

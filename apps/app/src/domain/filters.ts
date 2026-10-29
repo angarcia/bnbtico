@@ -1,18 +1,34 @@
 // Filtros de Explorar, en la URL (prototipo explorar-filtros.js y zona-caribe.js).
 // Zona → Alquiler mensual → Para quiénes → Qué necesitan → Precio. Limón por defecto mientras tenga casas; solo provincias con casas.
+// Explorar al estilo Airbnb: `zona`, `llegada`/`salida` (por noches), `desde` (mensual), `ppl` de 1 a 50 y `mapa`.
+// No importa calendar.ts ni inquiry.ts (trozos diferidos): las fechas salen de dates.ts.
 import * as z from "zod/mini";
 import type { Currency } from "./currency";
+import { addDays, isoParts } from "./dates";
 import { DEFAULT_PROVINCE, FEATURE_LABEL, PROVINCES, parseColones, type Feature } from "./listing";
 
-export const PEOPLE_OPTIONS = [0, 2, 4, 6, 8, 12] as const;
 export const BEDS_OPTIONS = [0, 1, 2, 3, 4] as const;
 export const ALL_PROVINCES = "Todas";
 export const FEATURE_KEYS = Object.keys(FEATURE_LABEL) as Feature[];
+/** Personas en la búsqueda: las mismas que admite una consulta (INQUIRY_MAX_PEOPLE). */
+export const SEARCH_MAX_PEOPLE = 50;
+/** La salida no puede pasar de hoy + 365. */
+export const STAY_MAX_DAYS = 365;
+/** El mensual empieza como muy tarde hoy + 335. */
+export const MONTHLY_FROM_MAX_DAYS = 335;
+/** El mensual busca casas libres las 30 noches desde `desde`: [desde, desde + 30). */
+export const MONTHLY_STAY_NIGHTS = 30;
+/** Id de una zona: código del cantón y nombre (`704-cocles`). */
+export const ZONE_ID = /^[1-7][0-9]{2}-[a-z0-9-]+$/;
 
 export interface Filters {
   prov: string; // provincia o «Todas»
+  zone: string | null; // id de zona (`704-cocles`); si está, manda sobre la provincia
+  arrival: string | null; // llegada por noches, con su salida
+  departure: string | null;
+  monthlyFrom: string | null; // «desde» del mensual
   monthly: boolean; // «Alquiler mensual»: solo casas que aceptan alquiler por meses
-  ppl: number;
+  ppl: number; // 0 = sin indicar, 1–50
   beds: number;
   features: Feature[];
   min: number; // 0 = sin límite
@@ -21,6 +37,13 @@ export interface Filters {
 }
 
 export type SearchParams = Record<string, unknown>;
+
+/** `today` (Costa Rica) activa la ventana de fechas; sin él, solo forma y orden. `zoneIds` sin definir = aún no han
+ *  llegado las zonas: la zona de la URL se conserva. */
+export interface ParseContext {
+  today?: string;
+  zoneIds?: readonly string[];
+}
 
 // zod/mini: la misma validación con una fracción del peso (este esquema va en el JS inicial de Explorar).
 const first = z.pipe(
@@ -32,6 +55,8 @@ const first = z.pipe(
 );
 const option = (options: readonly number[]) => z.pipe(first, z.transform((v) => (options.includes(Number(v)) ? Number(v) : 0)));
 const flag = z.pipe(first, z.transform((v) => v === "1"));
+const date = z.pipe(first, z.transform((v) => (isoParts(v) ? v : "")));
+const people = z.pipe(first, z.transform((v) => (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= SEARCH_MAX_PEOPLE ? Number(v) : 0)));
 const money = z.pipe(
   first,
   z.transform((v) => {
@@ -42,14 +67,19 @@ const money = z.pipe(
 
 const searchSchema = z.looseObject({
   prov: first,
+  zona: z.pipe(first, z.transform((v) => (ZONE_ID.test(v) ? v : ""))),
+  llegada: date,
+  salida: date,
+  desde: date,
   mensual: flag,
   // Enlaces viejos (`modo=nightly|monthly|both`): solo `monthly` sigue filtrando, como el mensual.
   modo: z.pipe(first, z.transform((v) => v === "monthly")),
-  ppl: option(PEOPLE_OPTIONS),
+  ppl: people,
   beds: option(BEDS_OPTIONS),
   min: money,
   max: money,
   mas: flag,
+  mapa: flag,
   ...(Object.fromEntries(FEATURE_KEYS.map((f) => [f, flag])) as Record<Feature, typeof flag>),
 });
 
@@ -57,14 +87,26 @@ export function defaultProvince(provinces: readonly string[]): string {
   return provinces.includes(DEFAULT_PROVINCE) ? DEFAULT_PROVINCE : ALL_PROVINCES;
 }
 
-export function parseFilters(params: SearchParams, provinces: readonly string[]): Filters {
-  const p = searchSchema.parse(params) as z.infer<typeof searchSchema> & Record<Feature, boolean>;
+type Parsed = z.infer<typeof searchSchema> & Record<Feature, boolean>;
+
+/** Las fechas de la URL que valen. Un par inválido (falta una, salida ≤ llegada, llegada antes de hoy o salida después
+ *  de hoy + 365) se descarta entero; un `desde` fuera de [hoy, hoy + 335], también. */
+function stayFrom(p: Parsed, today?: string): { arrival: string | null; departure: string | null; monthlyFrom: string | null } {
+  const pair = !!p.llegada && !!p.salida && p.salida > p.llegada && (!today || (p.llegada >= today && p.salida <= addDays(today, STAY_MAX_DAYS)));
+  const from = !!p.desde && (!today || (p.desde >= today && p.desde <= addDays(today, MONTHLY_FROM_MAX_DAYS)));
+  return { arrival: pair ? p.llegada : null, departure: pair ? p.salida : null, monthlyFrom: from ? p.desde : null };
+}
+
+export function parseFilters(params: SearchParams, provinces: readonly string[], ctx: ParseContext = {}): Filters {
+  const p = searchSchema.parse(params) as Parsed;
   // Un rango imposible (mínimo > máximo) en la URL se trata como sin rango: Filtros no deja aplicarlo (ticket 15).
   const invalid = priceRangeInvalid(p.min, p.max);
   const min = invalid ? 0 : p.min;
   const max = invalid ? 0 : p.max;
   return {
     prov: p.prov === ALL_PROVINCES || provinces.includes(p.prov) ? p.prov : defaultProvince(provinces),
+    zone: p.zona && (!ctx.zoneIds || ctx.zoneIds.includes(p.zona)) ? p.zona : null,
+    ...stayFrom(p, ctx.today),
     monthly: p.mensual || p.modo,
     ppl: p.ppl,
     beds: p.beds,
@@ -100,10 +142,18 @@ export function colonesToPriceInput(crc: number, currency: Currency, fx: number)
   return String(currency === "USD" ? Math.round(crc / fx) : crc);
 }
 
-/** Solo lo que difiere del valor por defecto, para enlaces limpios. `open` no viaja: lo pone el botón «Más filtros». */
+/** Solo lo que difiere del valor por defecto, para enlaces limpios. `open` no viaja: lo pone el botón «Más filtros»;
+ *  `mapa` tampoco: lo pone la pantalla del mapa. Con zona, la provincia sobra. Las fechas de las dos modalidades se
+ *  conservan: vuelven al cambiar de modalidad. */
 export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearchParams {
   const p = new URLSearchParams();
-  if (f.prov !== defaults.prov) p.set("prov", f.prov);
+  if (f.zone) p.set("zona", f.zone);
+  else if (f.prov !== defaults.prov) p.set("prov", f.prov);
+  if (f.arrival && f.departure) {
+    p.set("llegada", f.arrival);
+    p.set("salida", f.departure);
+  }
+  if (f.monthlyFrom) p.set("desde", f.monthlyFrom);
   if (f.monthly) p.set("mensual", "1");
   if (f.ppl) p.set("ppl", String(f.ppl));
   if (f.beds) p.set("beds", String(f.beds));
@@ -114,16 +164,23 @@ export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearc
   return p;
 }
 
-/** Lo que pregunta la consulta: con el mensual, sin rango de precio (el rango es por noche). */
+/** Lo que pregunta la consulta: con el mensual, sin llegada ni salida ni rango de precio (el rango es por noche); por
+ *  noches, sin el «desde» del mensual. */
 export function effectiveFilters(f: Filters): Filters {
-  return f.monthly ? { ...f, min: 0, max: 0 } : f;
+  return f.monthly ? { ...f, arrival: null, departure: null, min: 0, max: 0 } : { ...f, monthlyFrom: null };
 }
 
-/** Filtros activos además de la zona: alimenta el contador de «Más filtros» y decide si el bloque empieza abierto.
+/** Las noches que tienen que estar libres, [from, to): mensual [desde, desde + 30); por noches [llegada, salida). */
+export function stayRange(f: Filters): { from: string; to: string } | null {
+  if (f.monthly) return f.monthlyFrom ? { from: f.monthlyFrom, to: addDays(f.monthlyFrom, MONTHLY_STAY_NIGHTS) } : null;
+  return f.arrival && f.departure ? { from: f.arrival, to: f.departure } : null;
+}
+
+/** Filtros activos además de la búsqueda (zona, fechas y personas): alimenta el contador del botón «Filtros».
  *  El mensual no cuenta (va en la fila de chips) y el rango tampoco mientras el mensual lo deja sin efecto. */
 export function extrasCount(f: Filters): number {
   const q = effectiveFilters(f);
-  return (q.ppl > 0 ? 1 : 0) + (q.beds > 0 ? 1 : 0) + q.features.length + (q.min > 0 ? 1 : 0) + (q.max > 0 ? 1 : 0);
+  return (q.beds > 0 ? 1 : 0) + q.features.length + (q.min > 0 ? 1 : 0) + (q.max > 0 ? 1 : 0);
 }
 
 /** Línea de resultados: { count: "2 casas", rest: " aceptan alquiler mensual en Limón" }. */
@@ -141,16 +198,23 @@ export function provinceChips(provinces: readonly string[]): string[] {
 
 // ---------- Búsqueda en la URL (rutas tipadas de Explorar y Filtros) ----------
 
-export type SearchKey = "prov" | "mensual" | "ppl" | "beds" | "min" | "max" | "mas" | Feature;
+export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "desde" | "mensual" | "ppl" | "beds" | "min" | "max" | "mas" | "mapa" | Feature;
 /** Parámetros de Explorar tal como viajan en la URL: texto, solo claves conocidas y solo si no son el valor por defecto. */
 export type ExploreSearch = Partial<Record<SearchKey, string>>;
 
-/** Valida con el mismo esquema que `parseFilters`. La provincia queda en texto: se contrasta con las provincias con casas
- *  al pintar, porque esa lista llega de la red. */
-export function normalizeSearch(params: SearchParams): ExploreSearch {
-  const p = searchSchema.parse(params) as z.infer<typeof searchSchema> & Record<Feature, boolean>;
+/** Valida con el mismo esquema que `parseFilters`. La provincia y la zona quedan en texto: se contrastan con las
+ *  provincias con casas y las zonas al pintar, porque esas listas llegan de la red. `today` aplica la ventana de fechas. */
+export function normalizeSearch(params: SearchParams, today?: string): ExploreSearch {
+  const p = searchSchema.parse(params) as Parsed;
   const out: ExploreSearch = {};
+  const stay = stayFrom(p, today);
   if (p.prov) out.prov = p.prov;
+  if (p.zona) out.zona = p.zona;
+  if (stay.arrival && stay.departure) {
+    out.llegada = stay.arrival;
+    out.salida = stay.departure;
+  }
+  if (stay.monthlyFrom) out.desde = stay.monthlyFrom;
   if (p.mensual || p.modo) out.mensual = "1";
   if (p.ppl) out.ppl = String(p.ppl);
   if (p.beds) out.beds = String(p.beds);
@@ -158,6 +222,7 @@ export function normalizeSearch(params: SearchParams): ExploreSearch {
   if (p.min) out.min = String(p.min);
   if (p.max) out.max = String(p.max);
   if (p.mas) out.mas = "1";
+  if (p.mapa) out.mapa = "1";
   return out;
 }
 

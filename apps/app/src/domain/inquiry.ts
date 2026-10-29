@@ -1,7 +1,9 @@
 // Consultas por WhatsApp (fase 3): el mensaje que redacta la hoja de contacto, su validación (los mismos mensajes que la
 // RPC create_inquiry), la regla de redacción automática, y lo que muestra la tarjeta de una consulta en Actividad.
 // `waUrl` vive en su propio módulo para que el soporte (zona privada inicial) no arrastre el resto de este.
+import { costaRicaToday, formatInquiryDates, isoParts } from "./dates";
 export { waUrl } from "./whatsapp";
+export { costaRicaToday, formatInquiryDates } from "./dates";
 
 export const INQUIRY_MAX_PEOPLE = 50;
 /** Mensaje cuando se piden más personas de las que admite la casa. */
@@ -62,23 +64,12 @@ export interface OwnerInquiry {
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const SHORT_MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
-/** Costa Rica no tiene horario de verano: siempre UTC−6. */
-const CR_OFFSET_MS = 6 * 3_600_000;
-
-function parts(date: string): [number, number, number] | null {
-  const m = ISO_DATE.exec(date);
-  if (!m) return null;
-  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
-  const check = new Date(Date.UTC(y, mo - 1, d));
-  return check.getUTCMonth() === mo - 1 && check.getUTCDate() === d ? [y, mo, d] : null;
-}
 
 /** Rango válido: las dos fechas y la salida después de la llegada. */
 function validRange(f: InquiryFields): [[number, number, number], [number, number, number]] | null {
   if (!f.arrival || !f.departure || f.departure <= f.arrival) return null;
-  const a = parts(f.arrival);
-  const d = parts(f.departure);
+  const a = isoParts(f.arrival);
+  const d = isoParts(f.departure);
   return a && d ? [a, d] : null;
 }
 
@@ -99,11 +90,6 @@ export function composeInquiryMessage(title: string, f: InquiryFields): string {
   return `Hola, vi ${title} en bnbtico y me interesa. ${ask} Gracias.`;
 }
 
-/** La fecha de hoy en Costa Rica, `YYYY-MM-DD`. */
-export function costaRicaToday(nowMs: number): string {
-  return new Date(nowMs - CR_OFFSET_MS).toISOString().slice(0, 10);
-}
-
 export type InquiryField = "arrival" | "departure" | "people" | "message";
 
 /** El primer problema del borrador (en el orden de la RPC), o null si se puede enviar. */
@@ -111,8 +97,8 @@ export function validateInquiryDraft(d: InquiryDraft, today: string): { field: I
   if (d.arrival && !d.departure) return { field: "departure", message: INQUIRY_MESSAGES.bothDates };
   if (!d.arrival && d.departure) return { field: "arrival", message: INQUIRY_MESSAGES.bothDates };
   if (d.arrival && d.departure) {
-    if (!parts(d.arrival)) return { field: "arrival", message: INQUIRY_MESSAGES.badDate };
-    if (!parts(d.departure)) return { field: "departure", message: INQUIRY_MESSAGES.badDate };
+    if (!isoParts(d.arrival)) return { field: "arrival", message: INQUIRY_MESSAGES.badDate };
+    if (!isoParts(d.departure)) return { field: "departure", message: INQUIRY_MESSAGES.badDate };
     if (d.departure <= d.arrival) return { field: "departure", message: INQUIRY_MESSAGES.departureAfter };
     if (d.arrival < today) return { field: "arrival", message: INQUIRY_MESSAGES.arrivalPast };
   }
@@ -204,14 +190,6 @@ export function restoreContactDraft(raw: string | null, title: string, now: numb
 
 // ---------- Tarjeta del propietario ----------
 
-/** «20–27 dic», «28 dic – 2 ene», «sin fechas». */
-export function formatInquiryDates(arrival: string | null, departure: string | null): string {
-  const range = validRange({ arrival, departure });
-  if (!range) return "sin fechas";
-  const [[, am, ad], [, dm, dd]] = range;
-  return am === dm ? `${ad}–${dd} ${SHORT_MONTHS[am - 1]}` : `${ad} ${SHORT_MONTHS[am - 1]} – ${dd} ${SHORT_MONTHS[dm - 1]}`;
-}
-
 /** «ahora», «hace 25 min», «hace 2 h» (mismo día en Costa Rica), «ayer», «12 oct», «31 dic 2025». */
 export function relativeTime(iso: string, nowMs: number): string {
   const at = Date.parse(iso);
@@ -222,7 +200,7 @@ export function relativeTime(iso: string, nowMs: number): string {
   const today = costaRicaToday(nowMs);
   if (day === today) return `hace ${Math.floor(diff / 3_600_000)} h`;
   if (day === costaRicaToday(nowMs - 86_400_000)) return "ayer";
-  const [y, m, d] = parts(day)!;
+  const [y, m, d] = isoParts(day)!;
   return y === Number(today.slice(0, 4)) ? `${d} ${SHORT_MONTHS[m - 1]}` : `${d} ${SHORT_MONTHS[m - 1]} ${y}`;
 }
 

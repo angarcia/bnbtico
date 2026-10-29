@@ -17,6 +17,12 @@ export function longDate(date: string): string | null {
   return m && month ? `${Number(m[3])} de ${month}` : null;
 }
 
+/** «23 de noviembre de 2026» (la etiqueta de un día del calendario de «¿Cuándo?»); null si la fecha no existe. */
+export function longDateWithYear(date: string): string | null {
+  const p = isoParts(date);
+  return p ? `${p[2]} de ${MONTHS[p[1] - 1]} de ${p[0]}` : null;
+}
+
 /** Nota del botón deshabilitado de una casa que no recibe consultas y tiene fecha de reapertura. */
 export function reopenLabel(date: string | null): string | null {
   const d = date ? longDate(date) : null;
@@ -30,4 +36,41 @@ export function shortDate(date: string): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   const month = m ? SHORT_MONTHS[Number(m[2]) - 1] : undefined;
   return m && month ? `${Number(m[3])} ${month}` : null;
+}
+
+// ---------- Fechas `YYYY-MM-DD` sin zona horaria (Explorar, la hoja de contacto, Actividad y el calendario) ----------
+// Viven aquí y no en calendar.ts o inquiry.ts: esos son trozos diferidos y Explorar las necesita en el JS inicial.
+
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DAY_MS = 86_400_000;
+/** Costa Rica no tiene horario de verano: siempre UTC−6. */
+const CR_OFFSET_MS = 6 * 3_600_000;
+
+/** [año, mes, día] de una fecha que existe (`2026-02-30` no), o null. */
+export function isoParts(date: string): [number, number, number] | null {
+  const m = ISO_DATE.exec(date);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const check = new Date(Date.UTC(y, mo - 1, d));
+  return check.getUTCMonth() === mo - 1 && check.getUTCDate() === d ? [y, mo, d] : null;
+}
+
+/** La fecha `n` días después (o antes) de `date`, que debe ser válida. */
+export function addDays(date: string, n: number): string {
+  const [y, m, d] = isoParts(date)!;
+  return new Date(Date.UTC(y, m - 1, d) + n * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** La fecha de hoy en Costa Rica, `YYYY-MM-DD`. */
+export function costaRicaToday(nowMs: number): string {
+  return new Date(nowMs - CR_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** «20–27 dic», «28 dic – 2 ene», «sin fechas». */
+export function formatInquiryDates(arrival: string | null, departure: string | null): string {
+  const a = arrival && departure && departure > arrival ? isoParts(arrival) : null;
+  const d = a && departure ? isoParts(departure) : null;
+  if (!a || !d) return "sin fechas";
+  const [[, am, ad], [, dm, dd]] = [a, d];
+  return am === dm ? `${ad}–${dd} ${SHORT_MONTHS[am - 1]}` : `${ad} ${SHORT_MONTHS[am - 1]} – ${dd} ${SHORT_MONTHS[dm - 1]}`;
 }
