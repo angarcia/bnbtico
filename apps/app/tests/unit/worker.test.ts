@@ -623,3 +623,42 @@ describe("worker · balizas /vitals, /errors y /events", () => {
   });
 
 });
+
+describe("worker · botón de propietarios de la portada", () => {
+  const PORTADA = '<main><!--cta-propietarios--><p class="soon-later">Abrimos pronto en el Caribe sur.</p><!--/cta-propietarios--></main>';
+  const PORTADA_WA = '<main><!--cta-propietarios--><a class="soon-cta" href="https://wa.me/50660000000" rel="noopener">Quiero publicar mi casa gratis</a><!--/cta-propietarios--></main>';
+  const assets = (portada: string): Env["ASSETS"] => ({
+    async fetch(input: Request | URL | string) {
+      const url = new URL(input instanceof Request ? input.url : input);
+      return new Response(url.pathname === "/portada" ? portada : SHELL, { headers: { "content-type": "text/html" } });
+    },
+  });
+
+  it("en pruebas, /?pronto=1 enlaza al asistente (también cuando el build puso WhatsApp)", async () => {
+    for (const portada of [PORTADA, PORTADA_WA]) {
+      const html = await (await setup({ ENVIRONMENT: "pruebas", ASSETS: assets(portada) }).request("/?pronto=1")).text();
+      expect(html).toContain('<a class="soon-cta" href="/publicar">Publicar mi casa</a>');
+      expect(html).not.toContain("Abrimos pronto");
+      expect(html).not.toContain("wa.me");
+    }
+  });
+
+  it("producción antes del lanzamiento no cambia: ni el 200 ni el 404 llevan el asistente", async () => {
+    for (const portada of [PORTADA, PORTADA_WA]) {
+      const t = setup({ ENVIRONMENT: "production", ASSETS: assets(portada) });
+      const res = await t.request("/");
+      expect(await res.text()).toBe(portada);
+      const other = await t.request("/explorar");
+      expect(other.status).toBe(404);
+      expect(await other.text()).toBe(portada);
+    }
+  });
+
+  it("producción lanzada: /?pronto=1 enlaza al asistente; la CSP de la portada no cambia", async () => {
+    const before = await setup({ ENVIRONMENT: "production", ASSETS: assets(PORTADA) }).request("/");
+    const res = await setup({ ENVIRONMENT: "production", LAUNCHED: "true", ASSETS: assets(PORTADA) }).request("/?pronto=1");
+    expect(await res.text()).toContain('href="/publicar"');
+    expect(res.headers.get("content-security-policy")).toBe(before.headers.get("content-security-policy"));
+  });
+});
+

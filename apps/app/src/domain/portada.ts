@@ -10,5 +10,17 @@ const BLOCK = /<!--cta-propietarios-->[\s\S]*?<!--\/cta-propietarios-->/;
 export function withOwnerCta(html: string, ownersNumber: string | undefined): string {
   if (!ownersNumber?.trim()) return html;
   const href = waUrl(ownersNumber, OWNER_CTA_TEXT).replace(/&/g, "&amp;");
-  return html.replace(BLOCK, `<a class="soon-cta" href="${href}" rel="noopener">Quiero publicar mi casa gratis</a>`);
+  return html.replace(BLOCK, `<!--cta-propietarios--><a class="soon-cta" href="${href}" rel="noopener">Quiero publicar mi casa gratis</a><!--/cta-propietarios-->`);
+}
+
+// Publicar v2: tras el lanzamiento (y en pruebas) el botón lleva al asistente en vez de a WhatsApp. El build conserva los
+// marcadores para que el worker pueda cambiar el bloque en cada petición sin importar si el build puso WhatsApp.
+export const WIZARD_CTA = `<a class="soon-cta" href="/publicar">Publicar mi casa</a>`;
+
+export function ownerCtaTarget({ landingOnly }: { landingOnly: boolean }): "whatsapp" | "wizard" {
+  return landingOnly ? "whatsapp" : "wizard";
+}
+
+export function withWizardCta(html: string): string {
+  return html.replace(BLOCK, `<!--cta-propietarios-->${WIZARD_CTA}<!--/cta-propietarios-->`);
 }

@@ -2,6 +2,7 @@
 // `?pronto=1` en cualquier entorno) y el modo «solo portada» del worker de producción.
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
+import { withWizardCta } from "../../src/domain/portada";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "../../src/domain/seo";
 import { createApp, type Env } from "../../src/server/app";
 import { fakeHarness } from "./fake-harness";
@@ -99,7 +100,7 @@ describe("portada · en pruebas y local", () => {
     const res = await t.request("/?pronto=1");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toMatch(/text\/html/);
-    expect(await res.text()).toBe(portada);
+    expect(await res.text()).toBe(withWizardCta(portada));
     const csp = res.headers.get("content-security-policy")!;
     expect(csp).toContain("script-src 'self';");
     expect(csp).not.toContain("challenges.cloudflare.com");
@@ -162,7 +163,7 @@ describe("portada · producción antes del lanzamiento (LAUNCHED distinto de «t
   it("con LAUNCHED=true la app entera: `/` es el shell y la ficha funciona", async () => {
     const t = setup({ ...production, LAUNCHED: "true" });
     expect(await (await t.request("/")).text()).toBe(SHELL);
-    expect(await (await t.request("/?pronto=1")).text()).toBe(portada);
+    expect(await (await t.request("/?pronto=1")).text()).toBe(withWizardCta(portada));
     const casa = await t.h.seed({ status: "active" });
     expect((await t.request(`/casa/${casa.publicId}`)).status).toBe(200);
     expect(await (await t.request("/explorar")).text()).toBe(SHELL);

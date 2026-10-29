@@ -118,7 +118,9 @@ test("un enlace viejo a «¡Listo!» con la vuelta a publicar sigue hacia ella",
 test("desde la portada sin cuenta: paso 1, verificación y «¿Dónde está su casa?»", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   try {
-    await page.goto("/publicar");
+    await page.goto("/?pronto=1");
+    await page.getByRole("link", { name: "Publicar mi casa" }).click();
+    await expect(page).toHaveURL(/\/publicar$/);
     await expect(page.getByRole("heading", { name: "¿Qué es?" })).toBeVisible();
     await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
     await expect(page.locator(".ready-list")).toBeVisible();

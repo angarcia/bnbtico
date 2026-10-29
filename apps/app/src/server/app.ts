@@ -7,6 +7,7 @@ import { BEACON_MAX_BYTES, BEACON_TABLE, parseBeacon, type BeaconKind, type Beac
 import { landingOnly, robotsTxt, shareBase, type Environment } from "../domain/seo";
 import { parsePublicId, publicPath, publicUrl } from "../domain/share";
 import type { SsrData } from "../shared/ssr-data";
+import { ownerCtaTarget, withWizardCta } from "../domain/portada";
 import { escapeHtml, heroLinkHeader, renderDocument } from "./render";
 import { securityHeaders } from "../shared/security";
 import type { ReminderEnv, ReminderRuntime } from "./reminders";
@@ -96,7 +97,8 @@ export function createApp(deps: Deps) {
    * shell: sin Supabase ni Turnstile.
    */
   async function landing(c: Context<{ Bindings: Env }>, status: 200 | 404) {
-    const html = await (await c.env.ASSETS.fetch(new URL("/portada", c.req.url))).text();
+    const portada = await (await c.env.ASSETS.fetch(new URL("/portada", c.req.url))).text();
+    const html = ownerCtaTarget({ landingOnly: landingOnly(c.env) }) === "wizard" ? withWizardCta(portada) : portada;
     const security = deps.securityHeaders === false ? {} : securityHeaders({ turnstile: false });
     return c.html(html, status, { "cache-control": status === 200 ? LANDING_CACHE : STATUS_CACHE, ...security });
   }
