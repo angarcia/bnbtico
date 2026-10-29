@@ -8,7 +8,7 @@ import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../../domain/inquiry";
 import type { Listing } from "../../domain/listing";
-import { activityEmpty, casasView } from "../../domain/navigation";
+import { activityEmpty } from "../../domain/navigation";
 import { I } from "../../shared/icons";
 import { RootHeader } from "../chrome";
 import { inquiriesQuery, openInquiry } from "../inquiries";
@@ -57,7 +57,7 @@ export function ActividadScreen() {
               {FIGURES_FAILED}
             </p>
           ) : null}
-          {casasView(list.length) === "list" ? (
+          {list.length > 1 ? (
             <div className="stack gap-12">
               {list.map((l) => (
                 <ActivityCard key={l.id} listing={l} activity={byId.get(l.id)} figures={figures} />

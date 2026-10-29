@@ -22,3 +22,12 @@ export function reopenLabel(date: string | null): string | null {
   const d = date ? longDate(date) : null;
   return d ? `Vuelve a estar disponible el ${d}` : null;
 }
+
+const SHORT_MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** «3 dic», «15 sep» (sin año); null si no es una fecha AAAA-MM-DD. */
+export function shortDate(date: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const month = m ? SHORT_MONTHS[Number(m[2]) - 1] : undefined;
+  return m && month ? `${Number(m[3])} ${month}` : null;
+}

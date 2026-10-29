@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_TABS,
   activityEmpty,
+  cardLabel,
   casasView,
   noticeFor,
   ownerZoneRedirect,
   tabsFor,
   type Tab,
 } from "../../src/domain/navigation";
+import type { Listing } from "../../src/domain/listing";
 import { MONTHLY_FEE_CRC, type HouseSubscription } from "../../src/domain/subscription";
 
 const TODAY = "2026-12-01";
@@ -52,7 +54,7 @@ describe("tabsFor", () => {
 });
 
 describe("casasView", () =>
-  it("0 → none, 1 → single, 2+ → list", () => expect([0, 1, 2, 7].map(casasView)).toEqual(["none", "single", "list", "list"])));
+  it("0 → none; una o más → list", () => expect([0, 1, 2, 7].map(casasView)).toEqual(["none", "list", "list", "list"])));
 
 describe("noticeFor", () => {
   it("pago antes que seguir publicando; la pendiente de pago antes que la de la ventana de 90 días", () => {
@@ -68,8 +70,9 @@ describe("noticeFor", () => {
     expect(noticeFor(listings, { today: TODAY, houses })).toEqual({ kind: "payment", listingId: "p" });
     expect(noticeFor(listings, { today: TODAY, houses: [houses[0]!] })).toEqual({ kind: "payment", listingId: "a" });
   });
-  it("sin aviso de pago: el borrador o la casa con cambios más reciente", () =>
-    expect(noticeFor([{ id: "a", status: "active" }, { id: "c", status: "changes" }, { id: "d", status: "draft" }], null)).toEqual({ kind: "resume", listingId: "c" }));
+  it("sin aviso de pago: el borrador y la casa con cambios no dan aviso", () =>
+    expect(noticeFor([{ id: "a", status: "active" }, { id: "c", status: "changes" }, { id: "d", status: "draft" }], null)).toBeNull());
+  it("un borrador solo no da aviso", () => expect(noticeFor([{ id: "d", status: "draft" }], null)).toBeNull());
   it("con método de pago o sin nada pendiente: null", () => {
     const houses = [{ listingId: "a", sub: sub({ hasMethod: true }) }];
     expect(noticeFor([{ id: "a", status: "active" }], { today: TODAY, houses })).toBeNull();
@@ -77,6 +80,28 @@ describe("noticeFor", () => {
   });
   it("ignora suscripciones de casas que no están en la lista", () =>
     expect(noticeFor([{ id: "a", status: "active" }], { today: TODAY, houses: [{ listingId: "zzz", sub: sub({ status: "payment_due" }) }] })).toBeNull());
+});
+
+describe("cardLabel", () => {
+  const l = (status: Listing["status"], available = true, reopenAt: string | null = null) => ({ status, available, reopenAt });
+  it("pendiente de pago", () => expect(cardLabel(l("payment_due"))).toEqual({ text: "Pendiente de pago", cls: "state-pay" }));
+  it("inactiva", () => expect(cardLabel(l("inactive"))).toEqual({ text: "Inactiva", cls: "state-off" }));
+  it("edición sin enviar", () => expect(cardLabel(l("active"), "unsent")).toEqual({ text: "Edición sin enviar", cls: "state-draft" }));
+  it("edición en revisión", () => expect(cardLabel(l("active"), "review")).toEqual({ text: "Edición en revisión", cls: "state-review" }));
+  it("cambios pedidos en la edición", () =>
+    expect(cardLabel(l("active"), "changes")).toEqual({ text: "Cambios pedidos en la edición", cls: "state-review" }));
+  it("cerrada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Cerrada hasta el 3 dic", cls: "state-off" }));
+  it("cerrada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Cerrada", cls: "state-off" }));
+  it("activa", () => expect(cardLabel(l("active"))).toEqual({ text: "Activa", cls: "state-ok" }));
+  it("en revisión", () => expect(cardLabel(l("review"))).toEqual({ text: "En revisión", cls: "state-review" }));
+  it("borrador", () => expect(cardLabel(l("draft"))).toEqual({ text: "Borrador", cls: "state-draft" }));
+  it("cambios pedidos", () => expect(cardLabel(l("changes"))).toEqual({ text: "Cambios pedidos", cls: "state-review" }));
+  it("rechazada", () => expect(cardLabel(l("rejected"))).toEqual({ text: "Rechazada", cls: "state-bad" }));
+  it("prioridad: pago > edición > cerrada > estado", () => {
+    expect(cardLabel({ status: "payment_due", available: false, reopenAt: "2026-12-03" }, "review").text).toBe("Pendiente de pago");
+    expect(cardLabel({ status: "active", available: false, reopenAt: null }, "review").text).toBe("Edición en revisión");
+    expect(cardLabel({ status: "inactive", available: true, reopenAt: null }, "unsent").text).toBe("Inactiva");
+  });
 });
 
 describe("ownerZoneRedirect", () =>

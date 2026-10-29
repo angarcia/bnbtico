@@ -11,7 +11,7 @@ import { longDate } from "../../domain/dates";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { MIN_PHOTOS, STATUS_LABELS, missingPhotosLabel, resumeStep, wizardStage, type Listing } from "../../domain/listing";
+import { STATUS_LABELS, resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { casasView, noticeFor, type Notice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
@@ -117,31 +117,6 @@ export function SkeletonCard() {
   );
 }
 
-/** El borrador (o la casa con cambios) que falta por publicar, con un único botón relleno hacia el paso donde se quedó. */
-function ResumeCard({ listing: l }: { listing: Listing }) {
-  const step = resumeStep(l);
-  const stage = wizardStage(step);
-  const missing = MIN_PHOTOS - l.photoCount;
-  const where = step === 7 && missing > 0 ? `${stage.name} · ${missingPhotosLabel(missing).toLowerCase()}` : step === 9 ? "Todo listo · solo falta enviarla" : `${stage.name} · ${stage.position} de ${stage.size}`;
-  const changes = l.status === "changes";
-  return (
-    <section className="card stack gap-12 resume-card" data-testid="resume-card">
-      <div className="row gap-12 align-top">
-        <Thumb listing={l} small />
-        <div className="stack gap-4 grow-col">
-          <StatusBadge listing={l} />
-          <b className="display featured-title">{l.title.trim() || "Sin nombre todavía"}</b>
-          <span className="small muted">{changes ? "Le pedimos cambios antes de publicarla" : where}</span>
-        </div>
-      </div>
-      {changes && l.reviewNote ? <p className="note note-sun small">{l.reviewNote}</p> : null}
-      <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(changes ? 1 : step) }} className="btn btn-primary btn-lg btn-block">
-        {changes ? "Corregir y reenviar" : "Seguir publicando"}
-      </Link>
-    </section>
-  );
-}
-
 /** Visitas y consultas de 30 días (revisión UX A2): si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
 function StatsLine({ listing: l }: { listing: Listing }) {
   const userId = useUserId();
@@ -159,14 +134,10 @@ function StatsLine({ listing: l }: { listing: Listing }) {
 
 // ---------- Mis casas ----------
 
-/** El único aviso de arriba (domain/navigation.ts noticeFor): el pago con el nombre de la casa o seguir publicando. */
-function NoticeCard({ notice, list, billing }: { notice: Notice | null; list: Listing[]; billing: Billing | null }) {
-  if (notice?.kind === "payment") {
-    const hb = billing?.of(notice.listingId);
-    return hb && billing ? <PayNotice hb={hb} today={billing.today} title={hb.house.title} /> : null;
-  }
-  const l = notice ? list.find((x) => x.id === notice.listingId) : undefined;
-  return l ? <ResumeCard listing={l} /> : null;
+/** El único aviso de arriba (domain/navigation.ts noticeFor): el pago, con el nombre de la casa. */
+function NoticeCard({ notice, billing }: { notice: Notice | null; billing: Billing | null }) {
+  const hb = notice ? billing?.of(notice.listingId) : undefined;
+  return hb && billing ? <PayNotice hb={hb} today={billing.today} title={hb.house.title} /> : null;
 }
 
 export function CasasScreen() {
@@ -176,7 +147,8 @@ export function CasasScreen() {
   const billing = useBilling(userId);
   const notice = list ? noticeFor(list, billing && { today: billing.today, houses: billing.all.map((x) => ({ listingId: x.house.listingId, sub: x.sub })) }) : null;
   const view = list ? casasView(list.length) : null;
-  const single = view === "single" ? list![0]! : undefined;
+  // Provisional hasta la tarea 5 (Mis casas siempre en lista): con una sola casa se sigue pintando su detalle.
+  const single = list?.length === 1 ? list[0] : undefined;
   if (single) {
     return (
       <>
@@ -190,7 +162,7 @@ export function CasasScreen() {
             ) : undefined
           }
         />
-        <NoticeCard notice={notice} list={list!} billing={billing} />
+        <NoticeCard notice={notice} billing={billing} />
         <Detail listing={single} userId={userId} shown={notice} />
         <Link to="/propietario/publicar" className="btn btn-ghost btn-block">
           Añadir otra casa
@@ -205,9 +177,8 @@ export function CasasScreen() {
     { n: count("payment_due"), label: "por pagar", cls: "tile-sun" },
     { n: count("review"), label: "en revisión", cls: "tile-review" },
   ].filter((t) => t.n > 0);
-  // Un solo botón relleno (revisión UX N1/A1): el del aviso «Seguir publicando» si lo hay; si no, lo que falta por
-  // publicar y, si no, compartir.
-  const primaryId = notice?.kind === "resume" ? undefined : (list?.find((l) => l.status === "draft" || l.status === "changes") ?? list?.find((l) => can(l, "share")))?.id;
+  // Un solo botón relleno (revisión UX N1/A1): lo que falta por publicar y, si no, compartir.
+  const primaryId = (list?.find((l) => l.status === "draft" || l.status === "changes") ?? list?.find((l) => can(l, "share")))?.id;
   return (
     <>
       <RootHeader
@@ -224,7 +195,7 @@ export function CasasScreen() {
       {!list && !listings.isError ? <SkeletonCard /> : null}
       {view === "list" ? (
         <>
-          <NoticeCard notice={notice} list={list!} billing={billing} />
+          <NoticeCard notice={notice} billing={billing} />
           {tiles.length ? (
             <div className="grid-3">
               {tiles.map((t) => (
@@ -429,7 +400,7 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
       {l.status === "draft" && l.reviewedAt ? <div className="note note-arena">Estuvo publicada. Está editándola: al enviarla volverá a revisión.</div> : null}
       {hb && billing ? (above === "payment" ? null : <PayNotice hb={hb} today={billing.today} />) : l.status === "payment_due" ? <div className="note note-sun">{describe(l, { base: "" }).situation}</div> : null}
-      {l.reviewNote && (l.status === "rejected" || (l.status === "changes" && above !== "resume")) ? (
+      {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
         <section className="card-sun stack gap-10">
           <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
           <span className="small ink">{l.reviewNote}</span>
@@ -469,7 +440,7 @@ function Detail({ listing: l, userId, shown }: { listing: Listing; userId: strin
             </span>
           </button>
         ) : null}
-        {l.status === "draft" && above !== "resume" ? (
+        {l.status === "draft" ? (
           <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="list-item">
             <span className="muted-icon">
               <I.edit />
