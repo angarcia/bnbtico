@@ -5,7 +5,7 @@
 // edición) van detrás de las demás con «En revisión»: no se arrastran, se pueden quitar. Lo que cambia entre los dos usos
 // (registrar, quitar, el contador, si se puede añadir) lo trae `PhotoSource`. El código de canvas (resize.ts) se carga al
 // elegir fotos.
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useLayoutEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from "react";
 import { variantUrl } from "../../domain/image";
 import type { Photo } from "../../domain/listing";
@@ -23,7 +23,8 @@ export interface PhotoSource {
   photos: Photo[];
   /** Detrás de las demás, con «En revisión»; no se arrastran (en el asistente, []). */
   pending: Photo[];
-  counter: { text: string; short: boolean };
+  /** «short»: faltan fotos (ocre, asistente); «ok»: verde (asistente); «muted»: gris (editor, maqueta 08d). */
+  counter: { text: string; tone: "short" | "ok" | "muted" };
   /** Fotos que aún caben (sin contar las que están subiendo: eso se resta aquí). */
   room: number;
   canAdd: boolean;
@@ -41,6 +42,14 @@ const queueFor = (id: string) => {
   return q;
 };
 
+const TONE: Record<PhotoSource["counter"]["tone"], string> = { short: " is-short", ok: " primary", muted: " muted" };
+
+/** La relectura de la casa tras subir, quitar u ordenar (lista de Mis casas y detalle). */
+export const rereadOwnListing = (client: QueryClient, userId: string, listingId: string) => async () => {
+  void client.invalidateQueries({ queryKey: ["own-listings", userId] });
+  await client.invalidateQueries({ queryKey: ["own-listing", userId, listingId] });
+};
+
 const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };
 const movedTo = (to: number) => (to === 0 ? "Foto movida a la posición 1, portada" : `Foto movida a la posición ${to + 1}`);
 type Dir = "before" | "after";
@@ -48,7 +57,7 @@ type Dir = "before" | "after";
 /** El contador del asistente y del editor (con role="status": lo anuncia el lector de pantalla). */
 export function PhotoCounter({ counter }: { counter: PhotoSource["counter"] }) {
   return (
-    <span className={`small num photos-count${counter.short ? " is-short" : " primary"}`} role="status">
+    <span className={`small num photos-count${TONE[counter.tone]}`} role="status">
       {counter.text}
     </span>
   );
@@ -172,7 +181,7 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
           {pending.map((p, j) => (
             <div key={p.id} className="photo is-pending">
               <img draggable={false} src={variantUrl(p, 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
-              <span className="tag">En revisión</span>
+              <span className="tag tag-pending">En revisión</span>
               {/* Con la edición en revisión, sus fotos nuevas tampoco se quitan (la base lo rechaza). */}
               {source.canAdd ? (
                 <button type="button" className="remove" aria-label={`Quitar foto ${photos.length + j + 1}`} disabled={busy || drag.dragging} onClick={() => remove(p, true)}>

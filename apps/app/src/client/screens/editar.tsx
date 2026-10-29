@@ -18,7 +18,7 @@ import { useSaveEdit, useUpdateLive } from "../edit";
 import { photosApi } from "../owner";
 import { BathroomChoice, CapacityCounters, ChoiceCards, DescriptionField, FeatureChips, PriceFields, TitleField } from "../publish/fields";
 import { LocationStep } from "../publish/location-step";
-import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
+import { PhotoCounter, PhotoGrid, rereadOwnListing, type PhotoSource } from "../publish/photo-grid";
 import { ReadyScope } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
 
@@ -147,29 +147,28 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
   const pending = listing.edit?.photos ?? [];
   const total = listing.photos.length + pending.length;
+  const inReview = listing.edit?.status === "review";
   const source: PhotoSource = {
     listingId: listing.id,
     photos: listing.photos,
     pending,
-    counter: { text: `${total} de ${MAX_PHOTOS}`, short: false },
+    counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "muted" },
     room: MAX_PHOTOS - total,
-    canAdd: listing.edit?.status !== "review",
+    canAdd: !inReview,
     register: async (folder) => (await photosApi()).addEditPhoto(listing.id, folder),
     remove: async (photo, isPending) => {
       const api = await photosApi();
       await (isPending ? api.removeEditPhoto(photo.id) : api.remove(photo.id));
     },
     reorder: async (ids) => (await photosApi()).reorder(listing.id, ids),
-    reread: async () => {
-      void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-      await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] });
-    },
+    reread: rereadOwnListing(client, userId, listing.id),
   };
   return (
     <>
       <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
-        <PhotoGrid source={source} userId={userId} />
+        {/* Explica por qué no hay «Añadir» ni ✕ en las nuevas: la edición espera la respuesta del admin. */}
+        <PhotoGrid source={source} userId={userId} header={inReview ? <p className="note note-arena">{EDIT_COPY.readOnly}</p> : undefined} />
         <p className="note note-arena small">El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas.</p>
         <div className="sticky-actions">
           <Link className="btn btn-primary btn-block" to="/propietario/casas/$id" params={{ id: listing.id }} replace>

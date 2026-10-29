@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { MAX_PHOTOS, MIN_PHOTOS, missingPhotosLabel as missingLabel, type Listing } from "../../domain/listing";
 import { photosApi } from "../owner";
-import { PhotoCounter, PhotoGrid, type PhotoSource } from "./photo-grid";
+import { PhotoCounter, PhotoGrid, rereadOwnListing, type PhotoSource } from "./photo-grid";
 
 export function PhotoUploader({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
@@ -12,16 +12,13 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
     listingId: listing.id,
     photos: listing.photos,
     pending: [],
-    counter: { text: `${n} de ${MIN_PHOTOS}–${MAX_PHOTOS}`, short: n < MIN_PHOTOS },
+    counter: { text: `${n} de ${MIN_PHOTOS}–${MAX_PHOTOS}`, tone: n < MIN_PHOTOS ? "short" : "ok" },
     room: MAX_PHOTOS - n,
     canAdd: true,
     register: async (folder) => (await photosApi()).add(listing.id, folder),
     remove: async (photo) => (await photosApi()).remove(photo.id),
     reorder: async (ids) => (await photosApi()).reorder(listing.id, ids),
-    reread: async () => {
-      void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-      await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] });
-    },
+    reread: rereadOwnListing(client, userId, listing.id),
   };
   const header = (
     <>

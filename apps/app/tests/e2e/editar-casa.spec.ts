@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
@@ -349,4 +350,36 @@ test("quitar la última foto aprobada se rechaza", async ({ page }) => {
   await page.getByRole("button", { name: "Quitar foto 1" }).click();
   await expect(page.locator('.field-error[role="alert"]')).toHaveText("Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.");
   await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(1);
+});
+
+test("quitar una foto nueva: el contador baja y sus objetos se borran", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}/editar/fotos`);
+  await expect(counter(page)).toHaveClass(/muted/);
+  await page.getByLabel("Añadir fotos").setInputFiles([foto("beach.jpg"), foto("loft.jpg")]);
+  await expect(counter(page)).toHaveText("7 de 15", { timeout: 20_000 });
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
+  const [, last] = (await h.owner("owner").getOwn(id))!.edit!.photos.map((p) => p.path);
+  await expect.poll(async () => (await h.objects(id)).filter((o) => o.name.startsWith(`${last}/`)).length).toBe(3);
+  await page.getByRole("button", { name: "Quitar foto 7" }).click();
+  await expect(counter(page)).toHaveText("6 de 15");
+  await expect(page.locator(".photos-grid .photo.is-pending")).toHaveCount(1);
+  expect((await h.owner("owner").getOwn(id))!.edit!.photos.map((p) => p.path)).not.toContain(last);
+  await expect.poll(async () => (await h.objects(id)).filter((o) => o.name.startsWith(`${last}/`)).length).toBe(0);
+});
+
+test("con la edición en revisión: sin «Añadir» ni ✕ en las nuevas, se explica, y las aprobadas se quitan", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.photos("owner").addEditPhoto(id, `${id}/${randomUUID()}`);
+  await h.owner("owner").submitEdit(id);
+  await page.goto(`/propietario/casas/${id}/editar/fotos`);
+  await expect(counter(page)).toHaveText("6 de 15");
+  await expect(page.getByText("Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.")).toBeVisible();
+  await expect(page.locator(".photos-grid .photo.is-pending .tag")).toHaveText("En revisión");
+  await expect(page.locator(".photos-grid .photo.is-pending .remove")).toHaveCount(0);
+  await expect(page.getByLabel("Añadir fotos")).toHaveCount(0);
+  await page.getByRole("button", { name: "Quitar foto 5" }).click();
+  await expect(counter(page)).toHaveText("5 de 15");
+  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(4);
+  expect((await h.owner("owner").getOwn(id))!.photos).toHaveLength(4);
 });
