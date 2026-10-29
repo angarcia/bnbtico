@@ -3,14 +3,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
 import type { ListingActivity } from "../../domain/api";
-import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
-import { variantUrl } from "../../domain/image";
 import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../../domain/inquiry";
 import type { Listing } from "../../domain/listing";
 import { activityEmpty } from "../../domain/navigation";
 import { I } from "../../shared/icons";
 import { RootHeader } from "../chrome";
+import { HouseCardTop } from "../house-card";
 import { inquiriesQuery, openInquiry } from "../inquiries";
 import { activityQuery } from "../owner";
 import { ownListingsQuery } from "../own-listings-query";
@@ -18,7 +17,6 @@ import { useSession } from "../session";
 
 const LATEST = 20;
 const EMPTY = "Cuando su casa esté activa verá aquí cuántas personas la visitan y le escriben";
-const titleOf = (l: Listing) => l.title || "Borrador sin título";
 const FIGURES_FAILED = "No pudimos cargar las cifras. Intente de nuevo.";
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
@@ -58,13 +56,13 @@ export function ActividadScreen() {
             </p>
           ) : null}
           {list.length > 1 ? (
-            <div className="stack gap-12">
-              {list.map((l) => (
-                <ActivityCard key={l.id} listing={l} activity={byId.get(l.id)} figures={figures} />
+            <div className="grid-2 activity-grid">
+              {list.map((l, i) => (
+                <ActivityCard key={l.id} listing={l} activity={byId.get(l.id)} figures={figures} wide={false} eager={i === 0} />
               ))}
             </div>
           ) : list[0] ? (
-            <SingleActivity listing={list[0]} activity={byId.get(list[0].id)} figures={figures} />
+            <ActivityCard listing={list[0]} activity={byId.get(list[0].id)} figures={figures} wide eager />
           ) : null}
           {inquiriesFailed ? (
             <p className="note" role="alert">
@@ -111,31 +109,23 @@ function Figures({ activity: a, large }: { activity: ListingActivity | undefined
   );
 }
 
-const statusOf = (l: Listing) => describe(l, { base: "" }).statusLabel;
-
-function SingleActivity({ listing: l, activity, figures }: { listing: Listing; activity: ListingActivity | undefined; figures: FiguresState }) {
-  if (l.status === "active") return <FiguresSlot activity={activity} figures={figures} large />;
+function ActivityCard({
+  listing: l,
+  activity,
+  figures,
+  wide,
+  eager,
+}: {
+  listing: Listing;
+  activity: ListingActivity | undefined;
+  figures: FiguresState;
+  wide: boolean;
+  eager: boolean;
+}) {
   return (
-    <section className="stack gap-8">
-      <span className="small muted">{statusOf(l)}</span>
-      <p>{EMPTY}</p>
-    </section>
-  );
-}
-
-function ActivityCard({ listing: l, activity, figures }: { listing: Listing; activity: ListingActivity | undefined; figures: FiguresState }) {
-  const cover = l.photos[0];
-  return (
-    <article className="card activity-card">
-      <div className="row gap-12">
-        {cover ? <img src={variantUrl(cover, 480)} alt="" className="thumb thumb-sm" width={84} height={84} loading="lazy" decoding="async" /> : <span className="thumb thumb-sm" />}
-        <div className="stack gap-4 grow-col">
-          <h2 className="activity-title">{titleOf(l)}</h2>
-          <span className="xs muted num">{l.publicId}</span>
-          {l.status === "active" ? null : <span className="small muted">{statusOf(l)}</span>}
-        </div>
-      </div>
-      {l.status === "active" ? <FiguresSlot activity={activity} figures={figures} /> : null}
+    <article className={`card house-card activity-card${wide ? " is-wide" : ""}`}>
+      <HouseCardTop listing={l} sizes={wide ? "100vw" : "50vw"} eager={eager} />
+      {l.status === "active" ? <FiguresSlot activity={activity} figures={figures} large={wide} /> : wide ? <p>{EMPTY}</p> : null}
     </article>
   );
 }

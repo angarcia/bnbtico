@@ -100,7 +100,12 @@ test("7 · con una casa activa: las tres cifras en grande y las últimas consult
   await page.goto("/propietario/actividad");
   await expect(page.getByText("Últimos 30 días")).toBeVisible();
   await expect(page.getByTestId("activity-figures")).toHaveText(/4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
-  await expect(page.locator(".activity-card")).toHaveCount(0);
+  const own = page.locator("article.activity-card");
+  await expect(own).toHaveCount(1);
+  await expect(own.getByTestId("card-label")).toHaveText("Activa");
+  const box = await own.locator(".house-photo").boundingBox();
+  expect(box!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width * 0.85); // toda la fila menos 16 px de margen y 12 de relleno por lado
+  await expect(page.getByTestId("activity-figures")).toHaveClass(/\blg\b/);
   await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
   const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
   await expect(inquiry.getByRole("heading", { name: TEST_NAMES.other })).toBeVisible();
@@ -156,11 +161,14 @@ test("7b · con dos casas: una tarjeta por casa; la que no está activa muestra 
   const cards = page.locator(".activity-card");
   await expect(cards).toHaveCount(2);
   const active = cards.filter({ hasText: "Casa Cocles" });
-  await expect(active).toContainText(casa.publicId);
+  await expect(active.getByTestId("card-label")).toHaveText("Activa");
   await expect(active.getByTestId("activity-figures")).toHaveText(/4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
-  await expect(active.locator("img.thumb-sm")).toHaveCount(1);
+  await expect(active.locator(".house-photo img")).toHaveCount(1);
   const review = cards.filter({ hasText: "Casa en revisión" });
-  await expect(review).toContainText("En revisión");
+  await expect(review.getByTestId("card-label")).toHaveText("En revisión");
+  const [b1, b2] = [await active.boundingBox(), await review.boundingBox()];
+  expect(Math.abs(b1!.y - b2!.y)).toBeLessThan(2);
+  expect(b1!.x).not.toBe(b2!.x);
   await expect(review.getByTestId("activity-figures")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
   await page.screenshot({ path: "test-results/actividad-dos-casas.png", fullPage: true });
