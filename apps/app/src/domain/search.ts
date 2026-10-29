@@ -61,10 +61,13 @@ export function monthlyWindowLabel(from: string): string {
   return `Casas libres del ${shortDate(from)} al ${shortDate(addDays(from, MONTHLY_STAY_NIGHTS))}`;
 }
 
-/** Zonas cuyo nombre tiene una palabra que empieza con lo escrito (sin tildes ni mayúsculas): Caribe primero y por nombre. */
+/** Zonas cuyo nombre (o una de sus palabras) empieza con lo escrito, espacios incluidos («puerto v»), sin tildes ni mayúsculas: Caribe primero y por nombre. */
 export function zoneSuggestions(zones: readonly ZoneWithListings[], query: string): ZoneWithListings[] {
   const q = norm(query);
-  const match = zones.filter((z) => !q || norm(z.name).split(" ").some((w) => w.startsWith(q)));
+  const match = zones.filter((z) => {
+    const n = norm(z.name);
+    return !q || n.startsWith(q) || n.includes(" " + q);
+  });
   return caribeFirst(match.sort((a, b) => a.name.localeCompare(b.name, "es")));
 }
 

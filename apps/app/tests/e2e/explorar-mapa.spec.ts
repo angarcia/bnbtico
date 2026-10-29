@@ -14,20 +14,21 @@ test.describe.configure({ mode: "serial" });
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
-  // Ocho casas tierra adentro a lo largo de la costa de Talamanca, a unos 3 km entre una y otra: los marcadores no se tapan.
+  // approx_point mueve cada punto entre 150 y 499 m al azar (por UUID): siete cabinas tierra adentro a unos 7 km entre
+  // una y otra y Casa Coco sola, a más de 30 km, para que su marcador nunca quede tapado y se toque de verdad.
   const houses: [number, number, number][] = [
-    [9.73, -82.85, 55000],
-    [9.7, -82.83, 38000],
-    [9.66, -82.79, 29000],
-    [9.645, -82.765, 68000],
-    [9.635, -82.74, 95000],
-    [9.625, -82.71, 48000],
-    [9.62, -82.68, 35000],
+    [9.8, -83.0, 55000],
+    [9.8, -82.93, 38000],
+    [9.74, -83.0, 29000],
+    [9.74, -82.93, 68000],
+    [9.74, -82.86, 95000],
+    [9.68, -82.93, 48000],
+    [9.68, -82.86, 35000],
   ];
   for (const [i, [lat, lng, price]] of houses.entries()) {
     await h.seed({ status: "active", draft: { title: `Cabina ${i + 1}`, zone: "Cocles", zoneSource: "other", zoneId: null, lat, lng, nightlyPriceCrc: price } });
   }
-  coco = await h.seed({ status: "active", draft: { title: COCO, zone: "Cocles", zoneSource: "other", zoneId: null, lat: 9.615, lng: -82.66, nightlyPriceCrc: 42000 } });
+  coco = await h.seed({ status: "active", draft: { title: COCO, zone: "Cocles", zoneSource: "other", zoneId: null, lat: 9.55, lng: -82.55, nightlyPriceCrc: 42000 } });
 });
 
 test.beforeEach(async ({ page }) => {
@@ -82,10 +83,13 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect(card).toBeVisible();
   await expect(card).toHaveAttribute("href", `/casa/${coco.publicId}`);
   await expect(full.locator(".map-card")).toContainText("₡42 000 / noche");
-  // Tocar el mapa en otro sitio quita la tarjeta.
-  await full.locator(".leaflet-container").click({ position: { x: 20, y: 200 } });
+  // Tocar el mapa en otro sitio (el propio mapa, sin marcador debajo) quita la tarjeta.
+  await full.locator(".leaflet-container").dispatchEvent("click");
   await expect(full.locator(".map-card")).toHaveCount(0);
   await expect(marker).not.toHaveClass(/is-selected/);
+  // Con una casa elegida, Atrás cierra el mapa y la olvida: Adelante lo vuelve a abrir sin tarjeta.
+  await marker.click();
+  await expect(full.locator(".map-card")).toBeVisible();
 
   await page.goBack();
   await expect(page.locator(".map-full")).toHaveCount(0);
@@ -94,6 +98,11 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThanOrEqual(598);
   expect(Math.abs((await page.evaluate(() => scrollY)) - 600)).toBeLessThanOrEqual(2);
   expect(searches).toBe(0);
+  await page.goForward();
+  await expect(full.locator(".map-price")).toHaveCount(8);
+  await expect(full.locator(".map-card")).toHaveCount(0);
+  await page.goBack();
+  await expect(page.locator(".map-full")).toHaveCount(0);
 
   await page.evaluate(() => window.scrollTo(0, 0));
   await mapBox(page).click();

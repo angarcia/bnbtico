@@ -72,6 +72,11 @@ describe("zoneSuggestions", () => {
     expect(zoneSuggestions(zones, "viejo").map((x) => x.name)).toEqual(["Puerto Viejo"]);
     expect(zoneSuggestions(zones, "erto")).toEqual([]);
   });
+  it("con espacio: el nombre entero o el comienzo de una palabra seguida de lo demás", () => {
+    expect(zoneSuggestions(zones, "puerto viejo").map((x) => x.name)).toEqual(["Puerto Viejo"]);
+    expect(zoneSuggestions(zones, "Puerto V").map((x) => x.name)).toEqual(["Puerto Viejo"]);
+    expect(zoneSuggestions(zones, "uva").map((x) => x.name)).toEqual(["Punta Uva"]);
+  });
   it("cantón y provincia", () => {
     expect(zonePlace({ canton: "Talamanca", province: "Limón" })).toBe("Talamanca, Limón");
   });

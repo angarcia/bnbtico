@@ -244,12 +244,18 @@ test("a 320 px la barra cabe a lo ancho, mide lo mismo en cualquier moneda y no 
     await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
     expect(await barHeight(page), `${publicId} en dólares`).toBe(first);
 
-    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
-    const [textBottom, barTop] = await page.evaluate(() => [
-      [...document.querySelectorAll(".listing-body > p")].at(-1)!.getBoundingClientRect().bottom,
-      document.querySelector(".cta-bar")!.getBoundingClientRect().top,
-    ]);
-    expect(textBottom, "el último párrafo queda por encima de la barra").toBeLessThanOrEqual(barTop!);
+    // Se vuelve a bajar en cada intento: el espaciador se ajusta a la barra tras medirla (ResizeObserver).
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            scrollTo(0, document.documentElement.scrollHeight);
+            const text = [...document.querySelectorAll(".listing-body > p")].at(-1)!.getBoundingClientRect().bottom;
+            return text - document.querySelector(".cta-bar")!.getBoundingClientRect().top;
+          }),
+        { message: `${publicId}: el último párrafo queda por encima de la barra` },
+      )
+      .toBeLessThanOrEqual(0.5);
   }
 });
 

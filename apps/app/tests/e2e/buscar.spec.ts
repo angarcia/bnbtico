@@ -164,3 +164,29 @@ test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta y una provincia 
   await expect(page).toHaveURL(/prov=Todas/);
   await expect(page).not.toHaveURL(/zona=/);
 });
+
+test("al volver a abrir «¿Dónde?» con una zona de dos palabras, la zona sigue en la lista", async ({ page }) => {
+  await page.goto("/explorar/buscar?zona=704-puerto-viejo");
+  await expect(page.getByRole("combobox", { name: "Busque una zona" })).toHaveValue("Puerto Viejo");
+  await expect(page.getByRole("option", { name: /^Puerto Viejo/ })).toBeVisible();
+  await expect(page.getByText("Todavía no hay casas en esa zona.")).toHaveCount(0);
+});
+
+test("una zona que ya no está en la lista se muestra como «Añadir zona»", async ({ page }) => {
+  await page.goto("/explorar/buscar?zona=704-no-existe&abrir=quienes");
+  await expect(page.getByRole("button", { name: "¿Dónde? Añadir zona" })).toBeVisible();
+});
+
+test("si la base rechaza las fechas, Explorar lo dice y ofrece quitarlas", async ({ page }) => {
+  await page.route("**/rest/v1/rpc/search_listings*", (route) =>
+    new URL(route.request().url()).searchParams.has("p_from") || route.request().postDataJSON()?.p_from
+      ? route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Revise las fechas.", details: null, hint: null }) })
+      : route.fallback(),
+  );
+  await page.goto(`/explorar?llegada=${day(20)}&salida=${day(24)}`);
+  await expect(page.getByText("Revise las fechas de su búsqueda.")).toBeVisible();
+  await expect(page.getByText(/Revise su conexión/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Quitar fechas" }).click();
+  await expect(page).toHaveURL(/\/explorar$/);
+  await expect(house(page, "Casa Coco")).toBeVisible();
+});

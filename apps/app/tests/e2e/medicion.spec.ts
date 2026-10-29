@@ -176,7 +176,9 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
       const { page } = await throttled(ctx);
       await page.goto(`${base}/propietario/calendario`);
       await expect(page.getByRole("heading", { level: 1, name: "Calendario" })).toBeVisible({ timeout: 30_000 });
-      times.push(await navTime(page, 'a[href="/propietario/casas"]', "article h2, article h3", "Casa Cocles"));
+      // La pestaña «Mis casas» sale cuando se sabe que tiene casas (la lista llega de la red): se mide desde ahí.
+      await expect(page.locator('nav a[href="/propietario/casas"]')).toBeVisible({ timeout: 30_000 });
+      times.push(await navTime(page, 'nav a[href="/propietario/casas"]', "article h2, article h3", "Casa Cocles"));
       await ctx.close();
     }
     report("Pantalla nueva con sesión (Calendario → Mis casas, con red)", times, "< 300 ms");

@@ -19,7 +19,7 @@ import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { SUPPORT_NUMBERS } from "../support-numbers";
-import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
+import { isDatesError, listingsQuery, provincesQuery, zonesQuery } from "../queries";
 import { AccountButton } from "../chrome";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
@@ -117,11 +117,15 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   // Al cerrar el mapa (botón, «N casas» o Atrás) el foco vuelve a «Mapa» si está a la vista o, si no, a la caja.
   const wasOpen = useRef(mapOpen);
   useEffect(() => {
-    if (wasOpen.current && !mapOpen) (document.querySelector<HTMLElement>(".map-label") ?? mapBox.current)?.focus({ preventScroll: true });
+    if (wasOpen.current && !mapOpen) {
+      // También con Atrás del navegador: la próxima vez el mapa se abre sin casa elegida.
+      setSelected(null);
+      (document.querySelector<HTMLElement>(".map-label") ?? mapBox.current)?.focus({ preventScroll: true });
+    }
     wasOpen.current = mapOpen;
   }, [mapOpen]);
   const currency = useCurrency();
-  const { data: listings, isError } = useQuery(listingsQuery(f));
+  const { data: listings, isError, error } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
   // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
   const dates = searchDatesValue(stayRange(f), f.monthly);
@@ -166,7 +170,18 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         {currency === "USD" ? <UsdNote /> : null}
       </div>
       {!listings ? (
-        isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonGrid />
+        isDatesError(error) ? (
+          <div className="note note-arena note-col" role="alert">
+            <span>Revise las fechas de su búsqueda.</span>
+            <button type="button" className="btn btn-outline btn-block" onClick={() => go({ ...f, arrival: null, departure: null, monthlyFrom: null })}>
+              Quitar fechas
+            </button>
+          </div>
+        ) : isError ? (
+          <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
+        ) : (
+          <SkeletonGrid />
+        )
       ) : listings.length === 0 ? (
         <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} onClear={f.monthly || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
       ) : (

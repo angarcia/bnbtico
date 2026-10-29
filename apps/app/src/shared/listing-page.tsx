@@ -214,7 +214,7 @@ function useSpacerMatchingBar() {
     const b = bar.current;
     const s = spacer.current;
     if (!b || !s || typeof ResizeObserver === "undefined") return;
-    const fit = () => (s.style.height = `calc(${b.offsetHeight}px - 16px - env(safe-area-inset-bottom))`);
+    const fit = () => (s.style.height = `calc(${b.getBoundingClientRect().height}px - 16px - env(safe-area-inset-bottom))`);
     const observer = new ResizeObserver(fit);
     observer.observe(b);
     return () => observer.disconnect();

@@ -2,6 +2,7 @@
 import { keepPreviousData, queryOptions, type QueryClient } from "@tanstack/react-query";
 import { effectiveFilters, type Filters } from "../domain/filters";
 import type { PublicListing } from "../domain/listing";
+import { DomainError } from "../domain/errors";
 
 const api = async () => (await import("./supabase-data")).publicListings();
 
@@ -13,8 +14,13 @@ export const listingsQuery = (f: Filters) => {
     queryFn: async () => (await api()).searchPublic(f),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
+    // Fechas que la base rechaza (p. ej. un enlace viejo con la llegada ya pasada): no se reintenta.
+    retry: (count, error) => !isDatesError(error) && count < 3,
   });
 };
+
+/** search_listings lanza «Revise las fechas.» (P0001) si el rango no vale: Explorar ofrece quitar las fechas. */
+export const isDatesError = (error: unknown): boolean => error instanceof DomainError && error.kind === "validation" && error.message === "Revise las fechas.";
 
 export const provincesQuery = queryOptions({
   queryKey: ["provinces"] as const,

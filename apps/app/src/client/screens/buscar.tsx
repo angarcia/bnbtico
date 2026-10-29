@@ -152,7 +152,8 @@ export function BuscarScreen() {
   const set = (patch: Partial<SearchDraft>) => setDraft((d) => ({ ...d, ...patch }));
   const toggle = (card: Card) => () => setOpen((o) => (o === card ? null : card));
   const { data: zones } = useQuery(zonesQuery);
-  const zoneName = draft.zone ? (zones?.find((z) => z.id === draft.zone)?.name ?? "…") : null;
+  // «…» solo mientras llegan las zonas; una que ya no está en la lista se muestra como «Añadir zona».
+  const zoneName = draft.zone ? (zones ? (zones.find((z) => z.id === draft.zone)?.name ?? null) : "…") : null;
   const nightly = !!draft.arrival && !!draft.departure;
   const hasDates = monthly ? !!draft.monthlyFrom : nightly;
   const datesValue = monthly ? (draft.monthlyFrom ? `Desde el ${shortDate(draft.monthlyFrom)}` : null) : nightly ? formatInquiryDates(draft.arrival, draft.departure) : null;

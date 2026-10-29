@@ -11,7 +11,7 @@ const entryHeading = (page: import("@playwright/test").Page) => page.getByRole("
 test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin una sola cookie", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   await page.goto("/explorar");
-  await page.getByRole("banner").getByRole("link", { name: "Ingresar" }).click();
+  await page.locator(".explore-top").getByRole("link", { name: "Ingresar" }).click();
   await expect(entryHeading(page)).toBeVisible();
   // Ingresar, el código y Cuenta van a pantalla completa, sin la barra inferior.
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
@@ -59,7 +59,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expect(page).toHaveURL(/\/explorar/);
   await expect(page.getByRole("link", { name: "Ingresar" })).toHaveCount(0);
 
-  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
+  await page.locator(".explore-top").getByRole("link", { name: "Cuenta" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
   await expect(nav).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
@@ -101,7 +101,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await enterCode(page);
   // Sin casas, se llega a Explorar.
   await expect(page).toHaveURL(/\/explorar$/);
-  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
+  await page.locator(".explore-top").getByRole("link", { name: "Cuenta" }).click();
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expect(page.getByLabel("Descripción (opcional)")).toHaveCount(0);
   await page.getByRole("link", { name: "Editar", exact: true }).click();
