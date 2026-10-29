@@ -24,7 +24,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
 
   const toItem = (l: FakeListing): QueueItem => {
     const photos = fromPhotoRows(db.photosOf(l.id), url);
-    const listing: Listing = { ...l, features: [...l.features], photos, photoCount: photos.length };
+    const listing: Listing = { ...l, features: [...l.features], photos, photoCount: photos.length, edit: null };
     return { listing, ownerName: db.profiles.get(l.ownerId)?.fullName ?? "" };
   };
 

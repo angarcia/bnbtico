@@ -97,7 +97,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
 
   const toListing = (l: FakeListing): Listing => {
     const photos = fromPhotoRows(db.photosOf(l.id), url);
-    return { ...l, features: [...l.features], photos, photoCount: photos.length };
+    return { ...l, features: [...l.features], photos, photoCount: photos.length, edit: null };
   };
 
   const touch = (l: FakeListing, patch: Partial<FakeListing>) => Object.assign(l, patch, { updatedAt: db.now() });

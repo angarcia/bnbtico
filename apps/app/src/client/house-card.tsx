@@ -3,12 +3,13 @@
 import { Link } from "@tanstack/react-router";
 import { isLegacyPhotoPath, variantUrl } from "../domain/image";
 import type { Listing } from "../domain/listing";
-import { cardLabel, type EditState } from "../domain/navigation";
+import type { ListingEdit } from "../domain/edit";
+import { cardLabel } from "../domain/navigation";
 import { I } from "../shared/icons";
 
 export interface HouseCardTopProps {
   listing: Listing;
-  edit?: EditState;
+  edit?: Pick<ListingEdit, "status"> | null;
   /** La primera tarjeta: la foto se pide enseguida («eager»); las demás, al acercarse. */
   eager?: boolean;
   /** Ancho de la foto en la pantalla: «100vw» a toda la fila; Actividad, de dos en dos, «50vw». */

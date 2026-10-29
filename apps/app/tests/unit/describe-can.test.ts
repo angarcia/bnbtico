@@ -22,6 +22,7 @@ function owned(over: Partial<Listing> = {}): Listing {
     createdAt: "2026-10-18T10:00:00Z",
     updatedAt: "2026-10-21T10:00:00Z",
     photos: [],
+    edit: null,
     kind: "completo",
     zone: "Manzanillo",
     province: "Limón",
@@ -134,7 +135,7 @@ group("can", () => {
   const allowed: Record<ListingAction, ListingStatus[]> = {
     edit: ["draft", "changes"],
     submit: ["draft", "changes"],
-    reopen: ["active", "changes", "rejected"],
+    reopen: ["changes", "rejected"],
     discard: ["draft"],
     available: ["active"],
     share: ["active"],

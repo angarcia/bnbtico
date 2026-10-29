@@ -1,5 +1,7 @@
 // Reglas puras de la navegación: qué pestañas se ven, qué vista de Mis casas toca y qué aviso se muestra.
 import { shortDate } from "./dates";
+import type { ListingEdit } from "./edit";
+import { editLabel } from "./edit-label";
 import type { Listing } from "./listing";
 import { payButtonDue, type HouseSubscription } from "./subscription";
 
@@ -28,19 +30,11 @@ export function noticeFor(
   return null;
 }
 
-/** Edición en curso de una casa publicada (la rellena el plan D; aquí siempre null). */
-export type EditState = "unsent" | "review" | "changes" | null;
 export type CardLabelClass = "state-ok" | "state-review" | "state-draft" | "state-pay" | "state-off" | "state-bad";
 export interface CardLabel {
   text: string;
   cls: CardLabelClass;
 }
-
-const EDIT_LABELS: Record<Exclude<EditState, null>, CardLabel> = {
-  unsent: { text: "Edición sin enviar", cls: "state-draft" },
-  review: { text: "Edición en revisión", cls: "state-review" },
-  changes: { text: "Cambios pedidos en la edición", cls: "state-review" },
-};
 
 const STATUS_CARD_LABELS: Record<Listing["status"], CardLabel> = {
   payment_due: { text: "Pendiente de pago", cls: "state-pay" },
@@ -53,9 +47,10 @@ const STATUS_CARD_LABELS: Record<Listing["status"], CardLabel> = {
 };
 
 /** Una sola etiqueta sobre la foto. Prioridad: pago (Pendiente de pago, Inactiva) > edición > Cerrada > estado. */
-export function cardLabel(l: Pick<Listing, "status" | "available" | "reopenAt">, edit: EditState = null): CardLabel {
+export function cardLabel(l: Pick<Listing, "status" | "available" | "reopenAt">, edit: Pick<ListingEdit, "status"> | null = null): CardLabel {
   if (l.status === "payment_due" || l.status === "inactive") return STATUS_CARD_LABELS[l.status];
-  if (edit) return EDIT_LABELS[edit];
+  const e = editLabel(edit);
+  if (e) return { text: e.label, cls: e.badge };
   if (l.status === "active" && !l.available) {
     const d = l.reopenAt ? shortDate(l.reopenAt) : null;
     return { text: d ? `Cerrada hasta el ${d}` : "Cerrada", cls: "state-off" };

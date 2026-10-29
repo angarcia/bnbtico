@@ -95,6 +95,8 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
     reviewNote: row.review_note ?? null,
     reviewedAt: row.reviewed_at ?? null,
     firstPublishedAt: row.first_published_at ?? null,
+    // La edición pendiente la lee el adaptador del propietario (tarea 5 de editar-casa).
+    edit: null,
     whatsappPhone: row.whatsapp_phone ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,

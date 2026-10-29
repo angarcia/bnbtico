@@ -9,6 +9,7 @@
 // Módulo de dominio: sin imports de framework.
 import { inCostaRica, type LatLng } from "./geo";
 import { OTHER_ZONE_MAX, type ZoneSource } from "./zones";
+import type { ListingEdit } from "./edit";
 
 export type Kind = "completo" | "habitacion" | "casa" | "apartamento"; // casa/apartamento: filas anteriores al diseño v1
 export type Feature = "pool" | "pets" | "wifi" | "ac" | "parking" | "ev" | "kids_free" | "beachfront" | "bbq";
@@ -75,6 +76,8 @@ export const MONTHLY_FILTER_LABEL = "Solo alquiler mensual";
 export const NIGHTLY_PRICE_ERROR = "Indique el precio por noche en colones.";
 export const MONTHLY_PRICE_ERROR = "Indique el precio al mes en colones o déjelo vacío.";
 export const MAX_PHOTOS = 15;
+/** A published house keeps at least this many approved photos (removing the last is refused). */
+export const MIN_PHOTOS_PUBLISHED = 1;
 
 export const STATUS_LABELS: Record<ListingStatus, { label: string; badge: string }> = {
   draft: { label: "Borrador", badge: "badge-mute" },
@@ -143,6 +146,8 @@ export interface Listing extends ListingDraft {
   createdAt: string;
   updatedAt: string;
   photos: Photo[];
+  /** La edición pendiente de una casa publicada (una como mucho); null = sin edición. */
+  edit: ListingEdit | null;
 }
 
 export const emptyDraft = (): ListingDraft => ({
