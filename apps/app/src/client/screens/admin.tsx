@@ -14,7 +14,7 @@ import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS_TO_APPROVE, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
-import { REVIEW_MESSAGES, REVIEW_NOTE_MAX, editNoteRefusal, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
+import { NO_PHOTOS_NOTE, REVIEW_NOTE_MAX, editNoteRefusal, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
 import {
@@ -478,7 +478,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
       <OwnerCard l={l} ownerName={ownerName} />
       <section className="card stack gap-8 review-owner">
         <b className="small muted">Descripción</b>
-        <p className="small listing-description">{l.description}</p>
+        {l.description.trim() ? <p className="small listing-description">{l.description}</p> : <p className="small muted">Sin descripción</p>}
         <FeatureBadges l={l} />
       </section>
       {l.status === "review" ? (
@@ -496,9 +496,9 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
 function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
   const navigate = useNavigate();
   const review = useReview(userId);
-  const [note, setNote] = useState("");
+  const noPhotos = item.listing.photos.length < MIN_PHOTOS_TO_APPROVE;
+  const [note, setNote] = useState(noPhotos ? NO_PHOTOS_NOTE : "");
   const [error, setError] = useState<string | null>(null);
-  const photos = item.listing.photos.length;
 
   async function decide(decision: ReviewDecision) {
     const refusal = reviewNoteRefusal(decision, note);
@@ -516,10 +516,10 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
     <form className="stack gap-14" onSubmit={onSubmit} noValidate>
       <Checklist />
       <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios o rechaza)" error={error} />
-      {photos < MIN_PHOTOS_TO_APPROVE ? <p className="note note-arena small">{REVIEW_MESSAGES.fewPhotos}</p> : null}
+      {noPhotos ? <p className="note note-arena small">Sin fotos: solo puede pedir cambios.</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={photos < MIN_PHOTOS_TO_APPROVE || review.isPending}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={noPhotos || review.isPending}>
           <I.check size={18} /> Aprobar y publicar
         </button>
         <div className="row gap-8">

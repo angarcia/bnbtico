@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from "./helpers/test";
 import type { ListingsHarness, Seeded } from "../contract/harness";
+import { NO_PHOTOS_NOTE } from "../../src/domain/review";
 import { totp } from "../contract/totp";
 import { TEST_PHONES, serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -176,4 +177,23 @@ test("quien no es admin no entra: no se le pide código ni se le inscribe ningú
   expect(await factorsOf(TEST_PHONES.owner)).toEqual([]);
   await page.goto("/cuenta");
   await expect(page.getByRole("link", { name: /Revisión de anuncios/ })).toHaveCount(0);
+});
+
+test("el admin no aprueba sin fotos y pide una con el mensaje", async ({ page }) => {
+  const bare = await h.seed({ status: "review", as: "other", draft: { title: "Casa sin fotos", zone: "Cocles", zoneSource: "other", zoneId: null, description: "" }, photos: 0 });
+  await injectSession(page, "admin");
+  await page.goto(`/admin/anuncios/${bare.id}`);
+  await secondCode(page);
+  await expect(page.getByRole("heading", { level: 2, name: "Casa sin fotos" })).toBeVisible();
+  await expect(page.getByText("Sin descripción", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toBeDisabled();
+  await expect(page.locator("#admin-review-note")).toHaveValue(NO_PHOTOS_NOTE);
+  await expect(page.locator(".note-arena", { hasText: "Sin fotos: solo puede pedir cambios." })).toBeVisible();
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect.poll(async () => (await h.owner("other").getOwn(bare.id))?.reviewNote).toBe(NO_PHOTOS_NOTE);
+
+  await injectSession(page, "other");
+  await page.goto("/propietario/casas");
+  await expect(page.getByText(`Nota de bnbtico: ${NO_PHOTOS_NOTE}`)).toBeVisible();
 });
