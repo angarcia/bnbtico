@@ -187,6 +187,17 @@ Con un iPhone y un Android, sesión cerrada salvo donde se diga. Hacen falta cas
 | U81 | En Explorar con el filtro mensual encendido, mirar a 360 y 375 px de ancho | El chip se acorta con «…» y los botones de filtros siguen de 44 × 44 | ☐ |
 | U82 | «Borrar todo» en la búsqueda con una característica elegida (Piscina) | Quita zona, fechas y personas y **conserva** Piscina | ☐ |
 
+### Editar una casa publicada (2026-10-29)
+
+Con dos teléfonos: el de la propietaria (una casa activa) y el del admin (con su app de autenticación). Un tercero, sin sesión, para mirar la ficha pública.
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U83 | Propietaria: en su casa, tocar «Precio», cambiarlo y «Guardar»; luego «Características», marcar una más y «Guardar». Mirar la ficha pública desde el otro teléfono | «Guardado. Ya se ve en su ficha.» las dos veces, sin aviso de edición; la ficha pública ya muestra el precio y la característica nuevos | ☐ |
+| U84 | Propietaria: cambiar «Nombre», «Guardar»; en la píldora de fotos añadir una foto y «Listo»; «Enviar a revisión». Abrir Mis casas | Arriba «Cambios sin enviar: nombre, 1 foto nueva» y, tras enviar, «Edición en revisión: nombre, 1 foto nueva · normalmente en menos de 24 horas»; la tarjeta dice «Edición en revisión»; la ficha pública sigue con el nombre de antes | ☐ |
+| U85 | Admin, en su teléfono: Anuncios → «Ediciones por revisar» → la casa; mirar «Antes» / «Ahora» y la foto nueva; «Aprobar cambios». Propietaria: abrir su casa | Sin «Rechazar»; al aprobar, «Cambios aprobados. La ficha ya los muestra.» y la sección desaparece. La propietaria ya no ve aviso; la tarjeta dice «Activa»; la ficha pública tiene el nombre nuevo y la foto nueva **al final** | ☐ |
+| U86 | Propietaria: cambiar otra vez el nombre y enviarlo. Admin: «Pedir cambios» sin mensaje, luego con un mensaje. Propietaria: corregir el nombre y «Enviar a revisión». Admin: «Aprobar cambios». Después, la propietaria añade una foto nueva (edición nueva) y «Descartar cambios» | Sin mensaje: «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.». Con él, la propietaria ve «Le pedimos cambios en la edición» con el mensaje y la tarjeta «Cambios pedidos en la edición»; al reenviar, «Edición en revisión: nombre…». Al descartar la segunda edición pregunta «¿Descartar los cambios sin aplicar? Su ficha sigue como está.», el aviso desaparece y la foto nueva no queda en la ficha | ☐ |
+
 ---
 
 ## C. Si algo falla

@@ -37,6 +37,8 @@
       "!dist/client/assets/casa-editable-*.js",
       "!dist/client/assets/editar-*.js",
       "!dist/client/assets/edit-*.js",
+      "!dist/client/assets/edit-map-leaflet-*.js",
+      "!dist/client/assets/edit-summary-*.js",
       "!dist/client/assets/step-forms-*.js",
       "!dist/client/assets/fields-*.js",
       "!dist/client/assets/photo-grid-*.js"
@@ -74,6 +76,14 @@
       "dist/client/assets/leaflet-*.js"
     ],
     "limit": "44 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mapa de la revisión de una edición · trozo diferido (los dos puntos, antes y ahora, en la revisión del admin; Leaflet aparte)",
+    "path": [
+      "dist/client/assets/edit-map-leaflet-*.js"
+    ],
+    "limit": "2 KB",
     "gzip": true
   },
   {
@@ -116,6 +126,14 @@
       "dist/client/assets/edit-????????.js"
     ],
     "limit": "2 KB",
+    "gzip": true
+  },
+  {
+    "name": "Resumen de la edición · trozo compartido (qué cambia una edición, «nombre, descripción, 2 fotos nuevas»; lo leen la ficha editable, las reglas de la edición y la zona del admin)",
+    "path": [
+      "dist/client/assets/edit-summary-*.js"
+    ],
+    "limit": "0.5 KB",
     "gzip": true
   },
   {

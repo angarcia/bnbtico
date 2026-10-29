@@ -5,7 +5,7 @@ import { queryOptions, useMutation, useMutationState, useQueryClient, type Query
 import { useSyncExternalStore } from "react";
 import type { AdminListingsApi, MfaFactor } from "../domain/api";
 import { toDomainError } from "../domain/errors";
-import { DECISION_STATUS, applyDecision, type AdminQueue, type QueueItem, type ReviewDecision } from "../domain/review";
+import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
 import { authApi } from "./session";
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
@@ -116,6 +116,72 @@ export function useReview(userId: string) {
       void client.invalidateQueries({ queryKey: ["listing", item.listing.publicId] });
       void client.invalidateQueries({ queryKey: ["listings"] });
       void client.invalidateQueries({ queryKey: ["offer-taken"] });
+      void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
+    },
+  });
+}
+
+// ---------- Ediciones de casas publicadas (spec .scratch/editar-casa §4) ----------
+/** Ediciones en revisión, la que más espera primero; se piden de nuevo al abrir la cola. */
+export const adminEditsQuery = (userId: string) =>
+  queryOptions({
+    queryKey: ["admin-edits", userId] as const,
+    queryFn: async () => (await adminApi()).editQueue(),
+    staleTime: 0,
+  });
+
+/** Una edición con la casa aprobada; abre con la de la cola si ya está. */
+export const adminEditQuery = (userId: string, id: string, client?: QueryClient) => {
+  const edits = client?.getQueryState(adminEditsQuery(userId).queryKey);
+  return queryOptions({
+    queryKey: ["admin-edit", userId, id] as const,
+    queryFn: async () => (await adminApi()).getEdit(id),
+    staleTime: 0,
+    initialData: () => (edits?.data as QueueItem[] | undefined)?.find((i) => i.listing.id === id),
+    initialDataUpdatedAt: edits?.dataUpdatedAt,
+  });
+};
+
+export interface EditReviewInput {
+  item: QueueItem;
+  decision: EditDecision;
+  note: string;
+}
+
+const editReviewKey = (userId: string) => ["admin-review-edit", userId] as const;
+
+/** La cola de ediciones sin las que tienen una decisión en curso (como useQueueWithPending). */
+export function useEditsWithPending(userId: string, edits: QueueItem[] | undefined): QueueItem[] | undefined {
+  const pending = useMutationState({
+    filters: { mutationKey: editReviewKey(userId), status: "pending" },
+    select: (m) => (m.state.variables as EditReviewInput).item.listing.id,
+  });
+  return edits && pending.length ? edits.filter((i) => !pending.includes(i.listing.id)) : edits;
+}
+
+/** Decisión optimista sobre una edición: sale de la cola al instante y, si la base se niega, vuelve con su mensaje. */
+export function useReviewEdit(userId: string) {
+  const client = useQueryClient();
+  const editsKey = adminEditsQuery(userId).queryKey;
+  return useMutation<void, Error, EditReviewInput, { edits: QueueItem[] | undefined }>({
+    mutationKey: editReviewKey(userId),
+    mutationFn: async ({ item, decision, note }) => (await adminApi()).reviewEdit(item.listing.id, decision, note),
+    onMutate: async ({ item, decision }) => {
+      await client.cancelQueries({ queryKey: editsKey });
+      const edits = client.getQueryData<QueueItem[]>(editsKey);
+      client.setQueryData<QueueItem[]>(editsKey, (q) => q?.filter((i) => i.listing.id !== item.listing.id));
+      setOutcome({ kind: "saved", title: item.listing.title, text: EDIT_REVIEW_SAVED[decision] });
+      return { edits };
+    },
+    onError: (error, { item }, previous) => {
+      if (previous?.edits) client.setQueryData(editsKey, previous.edits);
+      setOutcome({ kind: "failed", title: item.listing.title, text: toDomainError(error).message });
+    },
+    onSettled: (_data, _error, { item }) => {
+      void client.invalidateQueries({ queryKey: editsKey });
+      void client.invalidateQueries({ queryKey: ["admin-edit", userId, item.listing.id] });
+      void client.invalidateQueries({ queryKey: ["listing", item.listing.publicId] });
+      void client.invalidateQueries({ queryKey: ["listings"] });
       void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
     },
   });

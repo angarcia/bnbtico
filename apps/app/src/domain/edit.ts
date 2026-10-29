@@ -8,10 +8,12 @@ import { parseStep, type FormInput } from "./step-forms";
 import type { ZoneSource } from "./zones";
 import type { EditStatus } from "./edit-label";
 import { EDIT_MESSAGES } from "./edit-messages";
+import { editedFields, type ReviewedField } from "./edit-summary";
 
 export type { EditStatus } from "./edit-label";
 export { editLabel, EDIT_LABELS } from "./edit-label";
 export { EDIT_MESSAGES } from "./edit-messages";
+export { editSummary, editedFields } from "./edit-summary";
 
 export interface EditLocation {
   lat: number;
@@ -45,7 +47,6 @@ export const EDIT_COPY = {
 
 export type EditField = "fotos" | "nombre" | "tipo" | "ubicacion" | "capacidad" | "caracteristicas" | "descripcion" | "precio";
 export type FormField = Exclude<EditField, "fotos">;
-type ReviewedField = "nombre" | "tipo" | "ubicacion" | "descripcion";
 
 /** Orden de las filas de la ficha editable (maqueta 08a). */
 export const FIELD_ORDER: readonly FormField[] = ["nombre", "tipo", "capacidad", "caracteristicas", "descripcion", "precio", "ubicacion"];
@@ -93,8 +94,6 @@ const REVIEWED_KEYS: Record<ReviewedField, readonly (typeof EDIT_KEYS)[number][]
   ubicacion: ["lat", "lng", "zone", "zoneId", "zoneSource"],
 };
 
-const SUMMARY_NAMES: Record<ReviewedField, string> = { nombre: "nombre", tipo: "tipo", ubicacion: "ubicación", descripcion: "descripción" };
-
 export function editFieldFromParam(campo: string): EditField | null {
   return (EDIT_FIELDS as readonly string[]).includes(campo) ? (campo as EditField) : null;
 }
@@ -112,24 +111,6 @@ export function mergeEdit(l: Listing, e: ListingEdit | null): ListingDraft {
   d.bathroomShared = d.kind === "habitacion" ? (e.bathroomShared ?? d.bathroomShared) : null;
   if (e.location) Object.assign(d, e.location);
   return d;
-}
-
-/** Datos con revisión que cambia la edición, en el orden nombre, tipo, ubicación, descripción. */
-export function editedFields(e: ListingEdit): ReviewedField[] {
-  const out: ReviewedField[] = [];
-  if (e.title !== null) out.push("nombre");
-  if (e.kind !== null || e.bathroomShared !== null) out.push("tipo");
-  if (e.location !== null) out.push("ubicacion");
-  if (e.description !== null) out.push("descripcion");
-  return out;
-}
-
-/** «nombre, descripción, 2 fotos nuevas»; "" si no cambia nada. */
-export function editSummary(e: ListingEdit): string {
-  const parts: string[] = editedFields(e).map((f) => SUMMARY_NAMES[f]);
-  const n = e.photos.length;
-  if (n > 0) parts.push(n === 1 ? "1 foto nueva" : `${n} fotos nuevas`);
-  return parts.join(", ");
 }
 
 export function isEmptyEdit(e: ListingEdit): boolean {

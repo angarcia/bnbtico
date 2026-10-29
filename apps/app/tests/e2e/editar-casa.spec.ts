@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
+import { secondCode } from "./helpers/admin";
 import { injectSession } from "./helpers/session";
 import { touch } from "./helpers/touch";
 
@@ -382,4 +383,98 @@ test("con la edición en revisión: sin «Añadir» ni ✕ en las nuevas, se exp
   await expect(counter(page)).toHaveText("5 de 15");
   await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(4);
   expect((await h.owner("owner").getOwn(id))!.photos).toHaveLength(4);
+});
+
+// ---------- La revisión del admin (spec §4) ----------
+
+const editSection = (page: Page) => page.getByRole("region", { name: "Ediciones por revisar" });
+const diff = (page: Page, title: string) => page.getByRole("region", { name: title });
+
+async function asAdmin(page: Page, path: string) {
+  await injectSession(page, "admin");
+  await page.goto(path);
+  await secondCode(page);
+  await expect(page).toHaveURL(new RegExp(`${path}$`));
+}
+
+test("el admin aprueba: la ficha muestra el nombre nuevo y el aviso desaparece", async ({ page }) => {
+  const { id, publicId } = await h.seed({ status: "active" });
+  await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
+  await h.owner("owner").submitEdit(id);
+  await asAdmin(page, "/admin");
+  await expect(editSection(page).getByRole("heading", { name: "Ediciones por revisar" })).toBeVisible();
+  const item = editSection(page).getByRole("link", { name: /Cabina Cahuita/ });
+  await expect(item).toContainText(publicId);
+  await expect(item).toContainText("Yorleny Prueba");
+  await expect(item).toContainText("Edición: nombre");
+  await item.click();
+  await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Revisar edición" })).toBeVisible();
+  await expect(diff(page, "Nombre").locator(".diff-col")).toHaveText(["Antes Cabina Cahuita", "Ahora Casa Coco frente al mar"]);
+  await expect(page.locator("details > summary", { hasText: "Lo que no cambia" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Rechazar" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Aprobar cambios" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole("status")).toContainText("«Cabina Cahuita»: Cambios aprobados. La ficha ya los muestra.");
+  await expect(editSection(page)).toHaveCount(0);
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))!.title).toBe("Casa Coco frente al mar");
+
+  await page.goto(`/casa/${publicId}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Casa Coco frente al mar");
+  await injectSession(page, "owner");
+  await page.goto(`/propietario/casas/${id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Coco frente al mar" })).toBeVisible();
+  await expect(page.getByText(/Edición en revisión|Cambios sin enviar|Le pedimos cambios/)).toHaveCount(0);
+  await page.goto("/propietario/casas");
+  await expect(card(page, "Casa Coco frente al mar").getByTestId("card-label")).toHaveText("Activa");
+});
+
+test("el admin pide cambios: el propietario ve la nota, corrige y reenvía", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.owner("owner").saveEdit(id, { title: "CASA COCO FRENTE AL MAR" });
+  await h.owner("owner").submitEdit(id);
+  await asAdmin(page, `/admin/ediciones/${id}`);
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.");
+  await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
+  await page.getByLabel(/Mensaje para el propietario/).fill("Use un nombre sin mayúsculas sostenidas.");
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole("status")).toContainText("Cambios pedidos. El propietario verá su mensaje.");
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit?.status).toBe("changes");
+
+  await injectSession(page, "owner");
+  await page.goto(`/propietario/casas/${id}`);
+  await expect(page.getByText("Le pedimos cambios en la edición")).toBeVisible();
+  await expect(page.getByText("Use un nombre sin mayúsculas sostenidas.")).toBeVisible();
+  await page.goto("/propietario/casas");
+  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Cambios pedidos en la edición");
+  await page.goto(`/propietario/casas/${id}`);
+  await row(page, "Nombre").click();
+  await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Envíelo a revisión cuando termine.");
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page.getByText("Edición en revisión: nombre · normalmente en menos de 24 horas")).toBeVisible();
+  expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ status: "review", title: "Casa Coco frente al mar" });
+});
+
+test("el diff de la descripción, la ubicación y las fotos nuevas", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.owner("owner").saveEdit(id, { description: "Casa de madera nueva frente al parque nacional Cahuita, con hamacas, rancho y wifi." });
+  await h.owner("owner").saveEdit(id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zoneId: "704-puerto-viejo", zoneSource: "list" });
+  await h.photos("owner").addEditPhoto(id, `${id}/${randomUUID()}`);
+  await h.owner("owner").submitEdit(id);
+  await asAdmin(page, "/admin");
+  await expect(editSection(page).getByRole("link")).toContainText("Edición: ubicación, descripción, 1 foto nueva");
+  await editSection(page).getByRole("link").click();
+  const desc = diff(page, "Descripción");
+  await expect(desc).toContainText("Casa de madera nueva frente al parque nacional Cahuita");
+  await expect(desc.locator("details > summary")).toHaveText("Antes");
+  await expect(desc.locator("details")).not.toHaveAttribute("open");
+  const map = diff(page, "Ubicación");
+  await expect(map.getByRole("img", { name: "Mapa con la ubicación de antes (Cahuita) y la de ahora (Puerto Viejo)" })).toBeVisible();
+  await expect(map.locator(".leaflet-tooltip")).toHaveText(["Antes: Cahuita", "Ahora: Puerto Viejo"]);
+  await expect(diff(page, "Fotos nuevas").locator("img")).toHaveCount(1);
+  await expect(diff(page, "Nombre")).toHaveCount(0);
 });

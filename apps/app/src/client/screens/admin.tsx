@@ -2,20 +2,36 @@
 // abre. Se descarga al entrar (no está en el JS inicial). Las rutas exigen sesión aal2 (solo UX): quien manda es la base.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { CHIP_LABELS, HOUSE_BADGES, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
 import { relativeDate } from "../../domain/dates";
 import type { MfaFactor } from "../../domain/api";
 import { describe, isNegotiable } from "../../domain/describe";
+import type { ListingEdit } from "../../domain/edit";
+import { editSummary, editedFields } from "../../domain/edit-summary";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
-import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
+import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
-import { adminHousesQuery, adminListingQuery, adminQueueQuery, clearReviewOutcome, loadSecondFactor, useQueueWithPending, useReview, useReviewOutcome, verifySecondCode } from "../admin";
+import {
+  adminEditQuery,
+  adminEditsQuery,
+  adminHousesQuery,
+  adminListingQuery,
+  adminQueueQuery,
+  clearReviewOutcome,
+  loadSecondFactor,
+  useEditsWithPending,
+  useQueueWithPending,
+  useReview,
+  useReviewEdit,
+  useReviewOutcome,
+  verifySecondCode,
+} from "../admin";
 import { FlowHeader, RootHeader } from "../chrome";
 import { useSession } from "../session";
 
@@ -68,8 +84,10 @@ export function AnunciosScreen() {
   const userId = useUserId();
   const isAdmin = useIsAdmin();
   const queue = useQuery({ ...adminQueueQuery(userId), enabled: !!userId && isAdmin !== false });
+  const editsQuery = useQuery({ ...adminEditsQuery(userId), enabled: !!userId && isAdmin !== false });
   const outcome = useReviewOutcome();
   const q = useQueueWithPending(userId, queue.data);
+  const edits = useEditsWithPending(userId, editsQuery.data);
 
   useEffect(() => () => clearReviewOutcome(), []);
 
@@ -124,6 +142,16 @@ export function AnunciosScreen() {
           {outcome.kind === "failed" ? `No se guardó la decisión sobre «${outcome.title}»: ${outcome.text}` : `«${outcome.title}»: ${outcome.text}`}
         </p>
       ) : null}
+      {edits?.length ? (
+        <section className="stack gap-12" aria-labelledby="ediciones-por-revisar">
+          <h2 id="ediciones-por-revisar" className="small strong">
+            Ediciones por revisar
+          </h2>
+          {edits.map((item) => (
+            <EditQueueCard key={item.listing.id} item={item} />
+          ))}
+        </section>
+      ) : null}
       {queue.isError && !q ? (
         <p className="note" role="alert">
           {message(queue.error)}
@@ -171,6 +199,29 @@ function QueueCard({ item: { listing: l, ownerName } }: { item: QueueItem }) {
         <b className="display queue-title">{titleOf(l)}</b>
         <span className="small muted">{ownerName} · WhatsApp verificado</span>
         <span className="small muted">{facts}</span>
+      </span>
+      <span className="chev">
+        <I.chevron />
+      </span>
+    </Link>
+  );
+}
+
+/** Una edición en revisión: la casa aprobada y lo que cambia. */
+function EditQueueCard({ item: { listing: l, ownerName } }: { item: QueueItem }) {
+  const cover = l.photos[0];
+  const e = l.edit!;
+  return (
+    <Link to="/admin/ediciones/$id" params={{ id: l.id }} className="card row gap-12 queue-card">
+      {cover ? <img src={variantUrl(cover, 480)} alt="" className="thumb" width={92} height={92} loading="lazy" decoding="async" /> : <span className="thumb" />}
+      <span className="stack gap-4 grow-col">
+        <span className="xs muted num">
+          {l.publicId}
+          {e.submittedAt ? ` · ${relativeDate(e.submittedAt, Date.now())}` : ""}
+        </span>
+        <b className="display queue-title">{titleOf(l)}</b>
+        <span className="small muted">{ownerName}</span>
+        <span className="small">Edición: {editSummary(e)}</span>
       </span>
       <span className="chev">
         <I.chevron />
@@ -330,20 +381,71 @@ export function RevisarScreen() {
   );
 }
 
-function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
-  const { listing: l, ownerName } = item;
-  const d = describe(l, { base: "" });
-  const facts = [
+const bathText = (l: Pick<Listing, "kind" | "bathroomShared">) =>
+  l.kind === "habitacion" && l.bathroomShared !== null ? (l.bathroomShared ? "baño compartido" : "baño privado") : null;
+
+/** «Alojamiento completo · Cahuita · Talamanca, Limón · 2 personas · 1 hab · 1 baño»; sin el tipo o la zona si cambian. */
+function factsLine(l: Listing, skip: { kind?: boolean; location?: boolean } = {}): string {
+  return [
     l.acceptsMonthly ? MONTHLY_LABEL : null,
-    l.kind ? KIND_LABELS[l.kind] : null,
-    l.kind === "habitacion" && l.bathroomShared !== null ? (l.bathroomShared ? "baño compartido" : "baño privado") : null,
-    locationLine(l),
+    !skip.kind && l.kind ? KIND_LABELS[l.kind] : null,
+    skip.kind ? null : bathText(l),
+    skip.location ? null : locationLine(l),
     l.capacity ? `${l.capacity} personas` : null,
     l.bedrooms !== null ? `${l.bedrooms} hab` : null,
     l.bathrooms ? `${l.bathrooms} ${l.bathrooms === 1 ? "baño" : "baños"}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+function PriceLine({ l }: { l: Listing }) {
+  const d = describe(l, { base: "" });
+  return d.mainPrice ? (
+    <span className="num strong">
+      {formatCRC(d.mainPrice.amount)}{" "}
+      <span className="muted">
+        / {d.mainPrice.unit}
+      </span>
+      {d.monthly ? <span className="muted"> · {isNegotiable(d.monthly) ? "mensual a negociar" : `mensual ${formatCRC(d.monthly.amount)}`}</span> : null}
+    </span>
+  ) : (
+    <span className="small muted">Sin precio</span>
+  );
+}
+
+function FeatureBadges({ l }: { l: Listing }) {
+  return (
+    <div className="row wrap gap-6">
+      {l.features.map((f) => (
+        <span key={f} className="badge">
+          {f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratuito"}` : FEATURE_LABEL[f]}
+        </span>
+      ))}
+      {l.features.length === 0 ? <span className="xs muted">Sin características marcadas</span> : null}
+    </div>
+  );
+}
+
+function OwnerCard({ l, ownerName }: { l: Listing; ownerName: string }) {
+  return (
+    <section className="card row gap-12 review-owner">
+      <span className="avatar avatar-sm" aria-hidden="true">
+        {initials(ownerName)}
+      </span>
+      <span className="stack gap-0 grow-col">
+        <b className="small">{ownerName}</b>
+        <span className="xs primary strong">
+          WhatsApp verificado · <span className="num">{formatPhone(l.whatsappPhone)}</span>
+        </span>
+      </span>
+    </section>
+  );
+}
+
+function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
+  const { listing: l, ownerName } = item;
+  const facts = factsLine(l);
   return (
     <>
       <div className="photo-strip" aria-label={`${l.photos.length} fotos`}>
@@ -366,40 +468,13 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
         </div>
         <span className="small muted">{facts}</span>
         {isProposedZone(l) ? <span className="badge badge-mute">Zona propuesta por el dueño</span> : null}
-        {d.mainPrice ? (
-          <span className="num strong">
-            {formatCRC(d.mainPrice.amount)}{" "}
-            <span className="muted">
-              / {d.mainPrice.unit}
-            </span>
-            {d.monthly ? <span className="muted"> · {isNegotiable(d.monthly) ? "mensual a negociar" : `mensual ${formatCRC(d.monthly.amount)}`}</span> : null}
-          </span>
-        ) : (
-          <span className="small muted">Sin precio</span>
-        )}
+        <PriceLine l={l} />
       </div>
-      <section className="card row gap-12 review-owner">
-        <span className="avatar avatar-sm" aria-hidden="true">
-          {initials(ownerName)}
-        </span>
-        <span className="stack gap-0 grow-col">
-          <b className="small">{ownerName}</b>
-          <span className="xs primary strong">
-            WhatsApp verificado · <span className="num">{formatPhone(l.whatsappPhone)}</span>
-          </span>
-        </span>
-      </section>
+      <OwnerCard l={l} ownerName={ownerName} />
       <section className="card stack gap-8 review-owner">
         <b className="small muted">Descripción</b>
         <p className="small listing-description">{l.description}</p>
-        <div className="row wrap gap-6">
-          {l.features.map((f) => (
-            <span key={f} className="badge">
-              {f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratuito"}` : FEATURE_LABEL[f]}
-            </span>
-          ))}
-          {l.features.length === 0 ? <span className="xs muted">Sin características marcadas</span> : null}
-        </div>
+        <FeatureBadges l={l} />
       </section>
       {l.status === "review" ? (
         <ReviewForm item={item} userId={userId} />
@@ -434,37 +509,8 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
 
   return (
     <form className="stack gap-14" onSubmit={onSubmit} noValidate>
-      <section className="card-soft stack gap-8">
-        <b className="small">Antes de decidir</b>
-        <label className="check">
-          <input type="checkbox" name="check-photos" /> Las fotos son de la casa y sin teléfonos ni logos
-        </label>
-        <label className="check">
-          <input type="checkbox" name="check-text" /> La descripción no tiene enlaces ni publicidad
-        </label>
-        <label className="check">
-          <input type="checkbox" name="check-price" /> Zona y precio coherentes
-        </label>
-      </section>
-      <div className="field">
-        <label htmlFor="admin-review-note">
-          Mensaje para el propietario <span className="label-plain">(obligatorio si pide cambios o rechaza)</span>
-        </label>
-        <textarea
-          id="admin-review-note"
-          name="note"
-          rows={3}
-          maxLength={REVIEW_NOTE_MAX}
-          placeholder="Ej.: la foto 4 muestra un número de teléfono; súbala sin él."
-          value={note}
-          onChange={(e) => setNote(e.currentTarget.value)}
-        />
-      </div>
-      {error ? (
-        <p className="field-error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <Checklist />
+      <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios o rechaza)" error={error} />
       {photos < MIN_PHOTOS ? <p className="note note-arena small">Faltan fotos: se requieren al menos {MIN_PHOTOS} para aprobar.</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
@@ -479,6 +525,259 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
             Rechazar
           </button>
         </div>
+      </div>
+    </form>
+  );
+}
+
+function Checklist() {
+  return (
+    <section className="card-soft stack gap-8">
+      <b className="small">Antes de decidir</b>
+      <label className="check">
+        <input type="checkbox" name="check-photos" /> Las fotos son de la casa y sin teléfonos ni logos
+      </label>
+      <label className="check">
+        <input type="checkbox" name="check-text" /> La descripción no tiene enlaces ni publicidad
+      </label>
+      <label className="check">
+        <input type="checkbox" name="check-price" /> Zona y precio coherentes
+      </label>
+    </section>
+  );
+}
+
+function NoteField({ note, onChange, hint, error }: { note: string; onChange: (v: string) => void; hint: string; error: string | null }) {
+  return (
+    <>
+      <div className="field">
+        <label htmlFor="admin-review-note">
+          Mensaje para el propietario <span className="label-plain">{hint}</span>
+        </label>
+        <textarea
+          id="admin-review-note"
+          name="note"
+          rows={3}
+          maxLength={REVIEW_NOTE_MAX}
+          placeholder="Ej.: la foto 4 muestra un número de teléfono; súbala sin él."
+          value={note}
+          onChange={(e) => onChange(e.currentTarget.value)}
+        />
+      </div>
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+// ---------- Revisar edición (spec .scratch/editar-casa §4) ----------
+const revisarEdicionRoute = getRouteApi("/_flow/_adminFlow/admin/ediciones/$id");
+
+export function RevisarEdicionScreen() {
+  const { id } = revisarEdicionRoute.useParams();
+  const userId = useUserId();
+  const client = useQueryClient();
+  const isAdmin = useIsAdmin();
+  const item = useQuery({ ...adminEditQuery(userId, id, client), enabled: !!userId && isAdmin !== false });
+
+  if (isAdmin === false) {
+    return (
+      <>
+        <FlowHeader title="Revisar edición" back="/explorar" />
+        <NotAdmin />
+      </>
+    );
+  }
+  if (item.error && toDomainError(item.error).kind === "forbidden") return <Navigate to="/admin/codigo" search={{ next: `/admin/ediciones/${id}` }} replace />;
+  const data = item.data;
+  const edit = data?.listing.edit;
+  return (
+    <>
+      <FlowHeader title="Revisar edición" back="/admin" />
+      {item.isError && !data ? (
+        <p className="note" role="alert">
+          {message(item.error)}
+        </p>
+      ) : null}
+      {data === null ? (
+        <section className="card">
+          <p className="muted">No encontramos esa edición.</p>
+        </section>
+      ) : null}
+      {data === undefined && !item.isError ? (
+        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando la edición">
+          <span className="sk sk-line" />
+        </section>
+      ) : null}
+      {data && edit ? (
+        <>
+          <div className="stack gap-4">
+            <div className="row between gap-8">
+              <h2>{titleOf(data.listing)}</h2>
+              <span className="xs muted num">{data.listing.publicId}</span>
+            </div>
+            <span className="small muted">Edición: {editSummary(edit)}</span>
+          </div>
+          <EditDiff item={data} />
+          {edit.status === "review" ? (
+            <EditReviewForm item={data} userId={userId} />
+          ) : (
+            <div className="note stack gap-4" role="status">
+              <b>Cambios pedidos</b>
+              <span className="listing-description">{edit.reviewNote || "Sin nota adicional."}</span>
+            </div>
+          )}
+        </>
+      ) : null}
+    </>
+  );
+}
+
+function DiffBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="card stack gap-8" aria-label={title}>
+      <b className="small muted">{title}</b>
+      {children}
+    </section>
+  );
+}
+
+function SideBySide({ before, after }: { before: string; after: string }) {
+  return (
+    <div className="diff-cols">
+      <p className="diff-col diff-before">
+        <b className="xs muted">Antes</b> <span>{before}</span>
+      </p>
+      <p className="diff-col">
+        <b className="xs primary">Ahora</b> <span>{after}</span>
+      </p>
+    </div>
+  );
+}
+
+const kindText = (l: Pick<Listing, "kind" | "bathroomShared">) => [l.kind ? KIND_LABELS[l.kind] : "Sin tipo", bathText(l)].filter(Boolean).join(" · ");
+
+/** Lo que cambia la edición, dato por dato («Antes» / «Ahora»), y lo demás plegado. */
+function EditDiff({ item }: { item: QueueItem }) {
+  const { listing: l, ownerName } = item;
+  const e: ListingEdit = l.edit!;
+  const fields = editedFields(e);
+  // Lo nuevo encima de lo aprobado (como mergeEdit, sin traer las reglas del formulario a la zona del admin).
+  const kind = e.kind ?? l.kind;
+  const after = { kind, bathroomShared: kind === "habitacion" ? (e.bathroomShared ?? l.bathroomShared) : null };
+  const has = (f: (typeof fields)[number]) => fields.includes(f);
+  return (
+    <>
+      {has("nombre") ? (
+        <DiffBlock title="Nombre">
+          <SideBySide before={titleOf(l)} after={e.title ?? ""} />
+        </DiffBlock>
+      ) : null}
+      {has("tipo") ? (
+        <DiffBlock title="Tipo">
+          <SideBySide before={kindText(l)} after={kindText(after)} />
+        </DiffBlock>
+      ) : null}
+      {has("ubicacion") && e.location ? (
+        <DiffBlock title="Ubicación">
+          <TwoPointsMap before={{ lat: l.lat ?? 0, lng: l.lng ?? 0, label: l.zone }} after={{ lat: e.location.lat, lng: e.location.lng, label: e.location.zone }} />
+        </DiffBlock>
+      ) : null}
+      {has("descripcion") ? (
+        <DiffBlock title="Descripción">
+          <p className="small listing-description">{e.description || "Sin descripción."}</p>
+          <details className="diff-old">
+            <summary className="link small">Antes</summary>
+            <p className="small muted listing-description">{l.description || "Sin descripción."}</p>
+          </details>
+        </DiffBlock>
+      ) : null}
+      {e.photos.length ? (
+        <DiffBlock title="Fotos nuevas">
+          <div className="diff-photos">
+            {e.photos.map((p, i) => (
+              <img key={p.id} src={variantUrl(p, 480)} alt={`Foto nueva ${i + 1}`} width={110} height={110} loading="lazy" decoding="async" />
+            ))}
+          </div>
+        </DiffBlock>
+      ) : null}
+      <details className="card stack gap-8 diff-fold">
+        <summary className="small strong">Lo que no cambia</summary>
+        {has("nombre") ? null : <b>{titleOf(l)}</b>}
+        <span className="small muted">{factsLine(l, { kind: has("tipo"), location: has("ubicacion") })}</span>
+        <PriceLine l={l} />
+        {has("descripcion") ? null : <p className="small listing-description">{l.description}</p>}
+        <FeatureBadges l={l} />
+        <span className="small muted">{l.photos.length === 1 ? "1 foto aprobada" : `${l.photos.length} fotos aprobadas`}</span>
+        <OwnerCard l={l} ownerName={ownerName} />
+      </details>
+    </>
+  );
+}
+
+type MapPoint = { lat: number; lng: number; label: string };
+
+/** Caja de tamaño fijo; Leaflet llega bajo demanda. Sin red, la caja arena con las dos zonas. */
+function TwoPointsMap({ before, after }: { before: MapPoint; after: MapPoint }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let dispose: (() => void) | null = null;
+    let cancelled = false;
+    import("../edit-map-leaflet").then(
+      ({ drawTwoPoints }) => {
+        if (!cancelled && box.current) dispose = drawTwoPoints(box.current, before, after);
+      },
+      () => !cancelled && setFailed(true),
+    );
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, [before.lat, before.lng, before.label, after.lat, after.lng, after.label]); // eslint-disable-line react-hooks/exhaustive-deps
+  const label = `Mapa con la ubicación de antes (${before.label}) y la de ahora (${after.label})`;
+  return failed ? (
+    <div className="map-box map-box-listing card-arena small" role="img" aria-label={label}>
+      Antes: {before.label} · Ahora: {after.label}
+    </div>
+  ) : (
+    <div ref={box} className="map-box map-box-listing" role="img" aria-label={label} data-testid="edit-map" />
+  );
+}
+
+function EditReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
+  const navigate = useNavigate();
+  const review = useReviewEdit(userId);
+  const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function decide(decision: EditDecision) {
+    const refusal = reviewNoteRefusal(decision, note);
+    if (refusal) return setError(refusal);
+    setError(null);
+    review.mutate({ item, decision, note });
+    await navigate({ to: "/admin" });
+  }
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    void decide("approve");
+  };
+
+  return (
+    <form className="stack gap-14" onSubmit={onSubmit} noValidate>
+      <Checklist />
+      <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
+      <div className="sticky-spacer review-spacer" aria-hidden="true" />
+      <div className="sticky-actions review-actions">
+        <button className="btn btn-primary btn-block" type="submit">
+          <I.check size={18} /> Aprobar cambios
+        </button>
+        <button className="btn btn-ghost btn-block" type="button" onClick={() => void decide("changes")}>
+          Pedir cambios
+        </button>
       </div>
     </form>
   );
@@ -601,9 +900,4 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
       </form>
     </div>
   );
-}
-
-/** Revisar la edición de una casa publicada (`/admin/ediciones/$id`). Por ahora solo el título; la pantalla llega en la tarea 12. */
-export function RevisarEdicionScreen() {
-  return <h1>Revisar edición</h1>;
 }
