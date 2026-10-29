@@ -7,7 +7,7 @@ import type { AdminListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError, toDomainError } from "../../domain/errors";
-import { REVIEW_MESSAGES as M, REJECTED_SHOWN, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
+import { REVIEW_MESSAGES as M, REJECTED_SHOWN, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { costaRicaToday } from "../../domain/inquiry";
 import { fromListingRow, fromPhotoRows, storagePhotoUrl, type EditRow, type ListingRow, type PhotoRow } from "../../domain/rows";
 import { aalOf } from "./auth";
@@ -85,7 +85,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
     },
 
     async reviewEdit(id, decision, note, submittedAt) {
-      const refusal = reviewNoteRefusal(decision, note);
+      const refusal = editNoteRefusal(decision, note);
       if (refusal) throw new DomainError(refusal, "validation");
       if (!UUID.test(id)) throw new DomainError(EDIT_MESSAGES.notFound, "validation");
       // p_submitted_at admite null (una edición sin enviar); los tipos generados no lo dicen.

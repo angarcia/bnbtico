@@ -435,7 +435,7 @@ test("el admin pide cambios: el propietario ve la nota, corrige y reenvía", asy
   await h.owner("owner").submitEdit(id);
   await asAdmin(page, `/admin/ediciones/${id}`);
   await page.getByRole("button", { name: "Pedir cambios" }).click();
-  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.");
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Escriba una nota para pedir cambios.");
   await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
   await page.getByLabel(/Mensaje para el propietario/).fill("Use un nombre sin mayúsculas sostenidas.");
   await page.getByRole("button", { name: "Pedir cambios" }).click();

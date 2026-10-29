@@ -14,7 +14,7 @@ import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
-import { REVIEW_NOTE_MAX, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
+import { REVIEW_NOTE_MAX, editNoteRefusal, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
 import {
@@ -769,7 +769,7 @@ function EditReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   async function decide(decision: EditDecision) {
-    const refusal = reviewNoteRefusal(decision, note);
+    const refusal = editNoteRefusal(decision, note);
     if (refusal) return setError(refusal);
     setError(null);
     review.mutate({ item, decision, note });

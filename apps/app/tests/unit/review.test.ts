@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emptyDraft, type Listing } from "../../src/domain/listing";
-import { REVIEW_MESSAGES, applyDecision, queueBadge, reviewNoteRefusal, splitQueue, type QueueItem } from "../../src/domain/review";
+import { EDIT_MESSAGES } from "../../src/domain/edit-messages";
+import { REVIEW_MESSAGES, applyDecision, editNoteRefusal, queueBadge, reviewNoteRefusal, splitQueue, type QueueItem } from "../../src/domain/review";
 
 const item = (id: string, patch: Partial<Listing>): QueueItem => ({
   ownerName: "Ana",
@@ -14,6 +15,14 @@ describe("revisión del admin", () => {
     expect(reviewNoteRefusal("reject", "No.")).toBeNull();
     expect(reviewNoteRefusal("reject", "x".repeat(2000))).toBeNull();
     expect(reviewNoteRefusal("approve", "x".repeat(2001))).toBe(REVIEW_MESSAGES.noteTooLong);
+  });
+
+  it("nota de una edición: obligatoria para pedir cambios, sin hablar de rechazar (no hay «Rechazar» en las ediciones)", () => {
+    expect(EDIT_MESSAGES.noteRequired).toBe("Escriba una nota para pedir cambios.");
+    expect(editNoteRefusal("changes", "  ")).toBe(EDIT_MESSAGES.noteRequired);
+    expect(editNoteRefusal("approve", "")).toBeNull();
+    expect(editNoteRefusal("changes", "Cambie la foto 2.")).toBeNull();
+    expect(editNoteRefusal("changes", "x".repeat(2001))).toBe(REVIEW_MESSAGES.noteTooLong);
   });
 
   it("separa la cola y ordena por antigüedad", () => {

@@ -314,7 +314,7 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       it("validación y acceso: nota obligatoria, ya decidida, no admin y aal1", async () => {
         const s = await submitted("Casa A", "Casa A renovada");
         const at = await seen(s.id);
-        expect((await rejection(admin().reviewEdit(s.id, "changes", "", at))).message).toBe(REVIEW_MESSAGES.noteRequired);
+        expect((await rejection(admin().reviewEdit(s.id, "changes", "", at))).message).toBe(EDIT_MESSAGES.noteRequired);
         await admin().reviewEdit(s.id, "changes", "Falta algo.", at);
         expect((await rejection(admin().reviewEdit(s.id, "approve", "", at))).message).toBe(EDIT_MESSAGES.decided);
         expect((await rejection(admin().reviewEdit("00000000-0000-4000-8000-999999999999", "approve", "", null))).message).toBe(EDIT_MESSAGES.notFound);

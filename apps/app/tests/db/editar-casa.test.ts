@@ -417,7 +417,7 @@ describe("revisión de una edición", () => {
 
   it("pedir cambios exige nota; el propietario la ve y puede reenviar", async () => {
     const { id } = await sent();
-    expect((await review(id, "changes", "  ")).error?.message).toBe("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.");
+    expect((await review(id, "changes", "  ")).error?.message).toBe("Escriba una nota para pedir cambios.");
     expect((await review(id, "reject", "No.")).error?.message).toBe("Decisión no válida.");
     expect((await review(id, "changes", " La foto 2 tiene un teléfono. ")).data).toBe("changes");
     expect((await owner.from("listing_edits").select("status, review_note").eq("listing_id", id).single()).data).toEqual({

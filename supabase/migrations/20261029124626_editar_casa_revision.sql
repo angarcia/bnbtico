@@ -38,7 +38,7 @@ begin
   if p_decision is null or p_decision not in ('approve','changes') then raise exception 'Decisión no válida.'; end if;
 
   if p_decision = 'changes' then
-    if note = '' then raise exception 'Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.'; end if;
+    if note = '' then raise exception 'Escriba una nota para pedir cambios.'; end if;
     update public.listing_edits set status = 'changes', review_note = note, reviewed_at = now(), reviewed_by = auth.uid()
     where listing_id = p_listing;
     insert into public.admin_actions (admin_id, action, target_listing_id, reason) values (auth.uid(), 'edit.changes', p_listing, note);

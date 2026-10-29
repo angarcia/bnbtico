@@ -1,5 +1,6 @@
 // Revisión del admin (ticket 09). Las reglas las aplica la RPC review_listing; aquí van sus mensajes, lo que el navegador
 // puede comprobar antes de llamarla (motivo obligatorio y largo) y cómo se reparte la cola.
+import { EDIT_MESSAGES } from "./edit-messages";
 import type { Listing } from "./listing";
 
 export type ReviewDecision = "approve" | "changes" | "reject";
@@ -32,6 +33,12 @@ export const queueBadge = (l: Pick<Listing, "reviewedAt">): "Nueva" | "Corregida
 
 /** Decisión sobre una edición enviada: aprobar o pedir cambios (no hay «Rechazar»). */
 export type EditDecision = "approve" | "changes";
+
+/** Como reviewNoteRefusal, para una edición: sin «Rechazar», el aviso de la nota no lo nombra (igual que review_edit). */
+export function editNoteRefusal(decision: EditDecision, note: string): string | null {
+  const refusal = reviewNoteRefusal(decision, note);
+  return refusal === REVIEW_MESSAGES.noteRequired ? EDIT_MESSAGES.noteRequired : refusal;
+}
 
 /** Aviso tras decidir una edición. */
 export const EDIT_REVIEW_SAVED: Record<EditDecision, string> = {

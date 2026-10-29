@@ -5,7 +5,7 @@ import type { AdminListingsApi, Session } from "../../domain/api";
 import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError } from "../../domain/errors";
 import { MAX_PHOTOS, MIN_PHOTOS, type Listing } from "../../domain/listing";
-import { DECISION_STATUS, REVIEW_MESSAGES as M, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
+import { DECISION_STATUS, REVIEW_MESSAGES as M, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import { approveSubscription } from "./billing";
 import type { FakeDb, FakeListing } from "./db";
@@ -67,7 +67,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
     /** review_edit: aprobar copia cada dato cambiado a la casa y añade las fotos nuevas tras las aprobadas; no toca estado,
      *  suscripción ni first_published_at. Pedir cambios deja la edición con la nota. */
     async reviewEdit(id, decision, note, submittedAt) {
-      const refusal = reviewNoteRefusal(decision, note);
+      const refusal = editNoteRefusal(decision, note);
       if (refusal) throw new DomainError(refusal, "validation");
       const a = access();
       if (a === "none") throw new DomainError(M.adminOnly, "validation");

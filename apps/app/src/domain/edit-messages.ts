@@ -11,6 +11,7 @@ export const EDIT_MESSAGES = {
   decided: "Esta edición ya tiene una decisión.",
   notFound: "No encontramos esa edición.",
   changed: "La edición cambió. Vuelva a abrirla.",
+  noteRequired: "Escriba una nota para pedir cambios.",
   lastPhoto: "Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.",
   newPhotosReviewed: "Las fotos nuevas pasan por revisión. Añádalas desde la ficha de su casa.",
   frozen: "Esta casa está publicada: cambie sus datos desde Mis casas.",
