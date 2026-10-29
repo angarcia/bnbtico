@@ -13,6 +13,7 @@ import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { whenIdle } from "../shared/idle";
 import { cuentaSearch, nextSearch } from "./cuenta-search";
+import { actividadSearch, calendarioSearch, suscripcionSearch } from "./owner-search";
 import { suscripcionScreen } from "./lazy-screens";
 import { useListingsCount } from "./own-listings-query";
 import { CasaScreen } from "./screens/casa";
@@ -150,16 +151,6 @@ const casasSearch = (params: Record<string, unknown>): { ver?: "activas" | "por-
   params.ver === "activas" || params.ver === "por-pagar" || params.ver === "inactivas" ? { ver: params.ver } : {};
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
-/** Calendario: `casa` (id de una casa propia) y `mes` (`YYYY-MM`); la pantalla elige la casa y acota el mes a la ventana. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const calendarioSearch = (params: Record<string, unknown>): { casa?: string; mes?: string } => ({
-  ...(typeof params.casa === "string" && UUID.test(params.casa) ? { casa: params.casa } : {}),
-  ...(typeof params.mes === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(params.mes) ? { mes: params.mes } : {}),
-});
-
-/** `pago=ok`: vuelta de la página de la pasarela (la pantalla lo quita de la URL al leerlo). */
-const suscripcionSearch = (params: Record<string, unknown>): { pago?: "ok" } => (params.pago === "ok" ? { pago: "ok" } : {});
-
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
 /** `contacto=1`: vuelta de verificar el WhatsApp (la hoja reabre y sigue sola); `escribir=1`: abrir la hoja desde
  *  Favoritos (revisión UX N6), sin enviar nada. */
@@ -179,7 +170,7 @@ const routeTree = rootRoute.addChildren([
       ownerRoutes.addChildren([
         createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/casas", component: ownerScreen("CasasScreen") }),
         createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/calendario", validateSearch: calendarioSearch, component: lazyRouteComponent(calendarioScreen, "CalendarioScreen") }),
-        createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/actividad", component: lazyRouteComponent(actividadScreen, "ActividadScreen") }),
+        createRoute({ getParentRoute: () => ownerRoutes, path: "/propietario/actividad", validateSearch: actividadSearch, component: lazyRouteComponent(actividadScreen, "ActividadScreen") }),
       ]),
     ]),
     adminTabs.addChildren([
