@@ -204,8 +204,11 @@ begin
     if m.description = btrim(coalesce(l.description, '')) then m.description := null; end if;
   end if;
   if m.kind = l.kind then m.kind := null; end if;
-  if m.bathroom_shared = l.bathroom_shared then m.bathroom_shared := null; end if;
+  -- El baño solo cuenta si el tipo resultante es habitación.
+  if coalesce(m.kind, l.kind) is distinct from 'habitacion' or m.bathroom_shared = l.bathroom_shared then m.bathroom_shared := null; end if;
   if p_patch ?& loc then
+    -- La ubicación va entera: sin zone_id en el parche, la zona no es de la lista (nunca la de un guardado anterior).
+    m.zone_id := p_patch ->> 'zone_id';
     if m.lat is null or m.lng is null or btrim(coalesce(m.zone, '')) = '' or m.zone_source is null
        or m.zone_source not in ('list','district','other')
        or (m.zone_id is not null and not exists (select 1 from public.zones z where z.id = m.zone_id)) then
@@ -239,6 +242,11 @@ begin
   if p_path !~ ('^' || p_listing::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') then
     raise exception 'Ruta de foto no válida.';
   end if;
+  -- Una carpeta ya usada (aprobada o nueva) no se enlaza dos veces.
+  if exists (select 1 from public.listing_photos ph where ph.path = p_path)
+     or exists (select 1 from public.listing_edit_photos ep where ep.path = p_path) then
+    raise exception 'Ruta de foto no válida.';
+  end if;
   if (select count(*) from public.listing_photos ph where ph.listing_id = p_listing)
      + (select count(*) from public.listing_edit_photos ep where ep.listing_id = p_listing) >= 15 then
     raise exception 'Máximo 15 fotos.';
@@ -260,6 +268,9 @@ begin
     raise exception 'No encontramos esa foto.';
   end if;
   perform public.own_published_listing(ph.listing_id);
+  -- Con la casa bloqueada, la foto puede haberse ido (otra llamada la quitó o descartó la edición).
+  select * into ph from public.listing_edit_photos where id = p_photo;
+  if not found then raise exception 'No encontramos esa foto.'; end if;
   select * into e from public.listing_edits where listing_id = ph.listing_id for update;
   if e.status = 'review' then raise exception 'Ya hay una edición en revisión. Espere la respuesta o descártela.'; end if;
   delete from public.listing_edit_photos where id = p_photo;

@@ -227,6 +227,24 @@ describe("ediciones del propietario", () => {
     expect((await owner.from("listing_edits").select("listing_id").eq("listing_id", id)).data).toEqual([]);
   });
 
+  it("una ubicación sin zone_id no hereda la zona de la lista de un guardado anterior", async () => {
+    const { id } = await h.seed({ status: "active" });
+    await save(id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zone_id: "704-puerto-viejo", zone_source: "list" });
+    const other_ = await save(id, { lat: 9.6553, lng: -82.7536, zone: "Mi finca", zone_source: "other" });
+    expect(other_.data).toMatchObject({ zone: "Mi finca", zone_id: null, zone_source: "other" });
+    expect((await owner.rpc("submit_edit", { p_listing: id })).data).toBe("review");
+    // Volver a la ubicación aprobada (zona propia, sin zone_id) tras una de la lista no cuenta como cambio.
+    const own = await h.seed({ status: "active", draft: { zone: "Mi finca", zoneId: null, zoneSource: "other" } });
+    await save(own.id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zone_id: "704-puerto-viejo", zone_source: "list" });
+    expect(gone((await save(own.id, { lat: 9.7366, lng: -82.8431, zone: "Mi finca", zone_source: "other" })).data)).toBe(true);
+  });
+
+  it("el baño de un tipo que no es habitación no cuenta como cambio", async () => {
+    const { id } = await h.seed({ status: "active" });
+    expect(gone((await save(id, { kind: "completo", bathroom_shared: true })).data)).toBe(true);
+    expect(gone((await save(id, { bathroom_shared: false })).data)).toBe(true);
+  });
+
   it("submit_edit rechaza una zona a 10 km, un nombre de 4 letras y una edición vacía", async () => {
     const { id } = await h.seed({ status: "active" });
     // Zona Cahuita con el pin en Puerto Viejo, a más de 10 km.
@@ -259,6 +277,7 @@ describe("ediciones del propietario", () => {
     expect((await owner.rpc("add_edit_photo", { p_listing: id, p_path: b })).error).toBeNull();
     expect((await owner.rpc("add_edit_photo", { p_listing: id, p_path: p() })).error?.message).toBe("Máximo 15 fotos.");
     expect((await owner.rpc("add_edit_photo", { p_listing: id, p_path: "otra/ruta" })).error?.message).toBe("Ruta de foto no válida.");
+    expect((await owner.rpc("add_edit_photo", { p_listing: id, p_path: a })).error?.message).toBe("Ruta de foto no válida.");
     expect((await owner.rpc("discard_edit", { p_listing: id })).data).toEqual([a, b]);
     expect((await serviceClient().from("listing_edit_photos").select("id").eq("listing_id", id)).data).toEqual([]);
     expect((await serviceClient().from("listing_edits").select("listing_id").eq("listing_id", id)).data).toEqual([]);
@@ -293,6 +312,9 @@ describe("ediciones del propietario", () => {
     expect((await save(draft.id, { title: "Casa Coco frente al mar" })).error?.message).toBe("Solo puede cambiar así una casa publicada.");
     expect((await anonClient().rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco" } })).error).not.toBeNull();
     expect((await anonClient().rpc("listing_edit_check" as never, {} as never)).error).not.toBeNull();
+    // Los ayudantes no se llaman ni con sesión.
+    expect((await owner.rpc("edit_place", { p_lat: 9.6553, p_lng: -82.7536, p_zone: "Puerto Viejo", p_zone_id: "704-puerto-viejo", p_zone_source: "list" })).error?.code).toBe("42501");
+    expect((await owner.rpc("listing_status_published", { p_status: "active", p_first: new Date().toISOString() })).error?.code).toBe("42501");
   });
 
   it("Storage: con la edición en revisión no se sube; descartada, se vuelve a poder", async () => {
