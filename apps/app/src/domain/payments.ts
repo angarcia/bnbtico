@@ -20,11 +20,13 @@ export interface PaymentProvider {
   verifyWebhook(request: Request): Promise<PaymentEvent | null>;
 }
 
-/** URLs de vuelta de la página de la pasarela: éxito con `?pago=ok`; las dos con `#pago=CT-####` si se sabe la casa. */
+/** URLs de vuelta de la página de la pasarela: éxito con `?pago=ok`; con la casa conocida, las dos llevan `?casa=CT-####`
+ *  (la suscripción vuelve acotada a esa casa) y `#pago=CT-####`; cancelar nunca lleva `pago=ok`. */
 export function setupReturnUrls(base: string, publicId: string | null): { successUrl: string; cancelUrl: string } {
   const path = `${base.replace(/\/$/, "")}/propietario/suscripcion`;
   const hash = publicId ? `#pago=${publicId}` : "";
-  return { successUrl: `${path}?pago=ok${hash}`, cancelUrl: `${path}${hash}` };
+  const casa = publicId ? `casa=${publicId}` : "";
+  return { successUrl: `${path}?pago=ok${casa && `&${casa}`}${hash}`, cancelUrl: `${path}${casa && `?${casa}`}${hash}` };
 }
 
 /** Mensajes de las rutas de pago del worker (usted). */

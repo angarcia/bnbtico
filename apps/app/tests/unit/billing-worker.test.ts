@@ -70,7 +70,7 @@ function checkoutCompleted(ownerId: string, over: { id?: string; mode?: string; 
         object: {
           id: "cs_test_abc",
           object: "checkout.session",
-          cancel_url: `${ORIGIN}/propietario/suscripcion#pago=CT-1001`,
+          cancel_url: `${ORIGIN}/propietario/suscripcion?casa=CT-1001#pago=CT-1001`,
           client_reference_id: ownerId,
           created: T - 120,
           currency: "usd",
@@ -84,7 +84,7 @@ function checkoutCompleted(ownerId: string, over: { id?: string; mode?: string; 
           payment_status: "no_payment_required",
           setup_intent: "seti_1Prueba",
           status: "complete",
-          success_url: `${ORIGIN}/propietario/suscripcion?pago=ok#pago=CT-1001`,
+          success_url: `${ORIGIN}/propietario/suscripcion?pago=ok&casa=CT-1001#pago=CT-1001`,
           ui_mode: "hosted_page",
           url: null,
         },
@@ -185,8 +185,8 @@ describe("POST /api/pago/sesion", () => {
     expect(f.get("customer")).toBe("cus_Prueba123");
     expect(f.get("client_reference_id")).toBe(t.h.ownerId("owner"));
     expect(f.get("setup_intent_data[metadata][owner_id]")).toBe(t.h.ownerId("owner"));
-    expect(f.get("success_url")).toBe(`${ORIGIN}/propietario/suscripcion?pago=ok#pago=${casa.publicId}`);
-    expect(f.get("cancel_url")).toBe(`${ORIGIN}/propietario/suscripcion#pago=${casa.publicId}`);
+    expect(f.get("success_url")).toBe(`${ORIGIN}/propietario/suscripcion?pago=ok&casa=${casa.publicId}#pago=${casa.publicId}`);
+    expect(f.get("cancel_url")).toBe(`${ORIGIN}/propietario/suscripcion?casa=${casa.publicId}#pago=${casa.publicId}`);
     expect(f.has("line_items[0][price]")).toBe(false);
     expect(t.h.db.paymentCustomers.get(`${t.h.ownerId("owner")}|stripe`)).toBe("cus_Prueba123");
   });
@@ -369,12 +369,12 @@ describe("pasarela falsa (solo ENVIRONMENT=local)", () => {
     const html = await page.text();
     expect(html).toContain("Guardar tarjeta de prueba");
     expect(html).toContain(`<form method="post" action="${path}">`);
-    expect(html).toContain(`href="${ORIGIN}/propietario/suscripcion#pago=${casa.publicId}"`);
+    expect(html).toContain(`href="${ORIGIN}/propietario/suscripcion?casa=${casa.publicId}#pago=${casa.publicId}"`);
     expect(html).not.toMatch(/<script|<style|\sstyle=|\son\w+=|<input/i);
 
     const saved = await t.request(path, { method: "POST" });
     expect(saved.status).toBe(303);
-    expect(saved.headers.get("location")).toBe(`${ORIGIN}/propietario/suscripcion?pago=ok#pago=${casa.publicId}`);
+    expect(saved.headers.get("location")).toBe(`${ORIGIN}/propietario/suscripcion?pago=ok&casa=${casa.publicId}#pago=${casa.publicId}`);
     const overview = await t.h.billing("owner").overview();
     expect(overview.method).toMatchObject({ brand: "visa", last4: "4242", expMonth: 12, expYear: 2029 });
     expect(overview.houses.find((x) => x.listingId === casa.id)!.status).toBe("active");
