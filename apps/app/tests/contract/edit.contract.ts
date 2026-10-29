@@ -3,7 +3,9 @@
 // en la base; mientras la edición no se apruebe, la ficha pública sigue con la versión aprobada.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { OwnerListingsApi, PhotoVariants } from "../../src/domain/api";
+import { EDIT_MESSAGES, editSummary } from "../../src/domain/edit";
 import { DomainError } from "../../src/domain/errors";
+import { REVIEW_MESSAGES } from "../../src/domain/review";
 import type { ListingsHarness } from "./harness";
 import { PUERTO_VIEJO } from "./points";
 
@@ -228,6 +230,85 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       it("addEditPhoto en un borrador falla", async () => {
         const s = await h.seed({ status: "draft" });
         expect((await rejection(ph().addEditPhoto(s.id, `${s.id}/${crypto.randomUUID()}`))).message).toBe("Solo puede cambiar así una casa publicada.");
+      });
+    });
+
+    describe("revisión del admin", () => {
+      const admin = () => h.admin("aal2");
+      const submitted = async (title: string, edit: string) => {
+        const s = await h.seed({ status: "active", photos: 5, draft: { title } });
+        await me.saveEdit(s.id, { title: edit });
+        await me.submitEdit(s.id);
+        return s;
+      };
+
+      it("la cola de ediciones trae las enviadas, la que más espera primero, con su resumen", async () => {
+        const a = await h.seed({ status: "active", draft: { title: "Casa A" } });
+        const b = await h.seed({ status: "active", draft: { title: "Casa B" } });
+        for (const s of [b, a]) {
+          await me.saveEdit(s.id, { title: `${s === a ? "Casa A" : "Casa B"} renovada` });
+          await me.submitEdit(s.id);
+        }
+        await me.saveEdit((await h.seed({ status: "active" })).id, { title: "Sin enviar todavía" });
+        const q = await admin().editQueue();
+        expect(q.map((i) => i.listing.title)).toEqual(["Casa B", "Casa A"]);
+        expect(editSummary(q[0]!.listing.edit!)).toBe("nombre");
+        expect(q[0]!.ownerName).toBe(h.ownerName("owner"));
+      });
+
+      it("getEdit trae la casa con su edición y las fotos nuevas; null si no hay edición", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        expect(await admin().getEdit(s.id)).toBeNull();
+        await me.saveEdit(s.id, { title: "Casa Coco frente al mar" });
+        await h.photos("owner").addEditPhoto(s.id, await h.photos("owner").upload(s.id, variants()));
+        await me.submitEdit(s.id);
+        const item = await admin().getEdit(s.id);
+        expect(item?.listing).toMatchObject({ title: "Cabina Cahuita", photoCount: 5, edit: { status: "review", title: "Casa Coco frente al mar" } });
+        expect(item?.listing.edit?.photos).toHaveLength(1);
+      });
+
+      it("aprobar aplica la edición: la ficha pública cambia y la edición desaparece", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        await me.saveEdit(s.id, { title: "Casa Coco frente al mar" });
+        await h.photos("owner").addEditPhoto(s.id, await h.photos("owner").upload(s.id, variants()));
+        await me.submitEdit(s.id);
+        await admin().reviewEdit(s.id, "approve", "");
+        const pub = await h.anon.getPublic(s.publicId);
+        expect(pub?.title).toBe("Casa Coco frente al mar");
+        expect(pub?.photos).toHaveLength(6);
+        expect(await me.getOwn(s.id)).toMatchObject({ status: "active", title: "Casa Coco frente al mar", edit: null });
+        expect(await admin().editQueue()).toEqual([]);
+        expect(await admin().getEdit(s.id)).toBeNull();
+      });
+
+      it("pedir cambios guarda la nota; el propietario la ve y reenvía", async () => {
+        const s = await submitted("Casa A", "Casa A renovada");
+        await admin().reviewEdit(s.id, "changes", "  La foto 2 tiene un teléfono.  ");
+        expect((await me.getOwn(s.id))?.edit).toMatchObject({ status: "changes", reviewNote: "La foto 2 tiene un teléfono." });
+        expect(await admin().editQueue()).toEqual([]);
+        expect((await h.anon.getPublic(s.publicId))?.title).toBe("Casa A");
+        await me.saveEdit(s.id, { title: "Casa A renovada del todo" });
+        await me.submitEdit(s.id);
+        expect((await me.getOwn(s.id))?.edit).toMatchObject({ status: "review", reviewNote: null });
+        expect((await admin().editQueue()).map((i) => i.listing.id)).toEqual([s.id]);
+      });
+
+      it("validación y acceso: nota obligatoria, ya decidida, no admin y aal1", async () => {
+        const s = await submitted("Casa A", "Casa A renovada");
+        expect((await rejection(admin().reviewEdit(s.id, "changes", ""))).message).toBe(REVIEW_MESSAGES.noteRequired);
+        await admin().reviewEdit(s.id, "changes", "Falta algo.");
+        expect((await rejection(admin().reviewEdit(s.id, "approve", ""))).message).toBe(EDIT_MESSAGES.decided);
+        expect((await rejection(admin().reviewEdit("00000000-0000-4000-8000-999999999999", "approve", ""))).message).toBe(EDIT_MESSAGES.notFound);
+        await me.submitEdit(s.id);
+        const owner = h.admin("owner");
+        expect(await owner.editQueue()).toEqual([]);
+        expect(await owner.getEdit(s.id)).toBeNull();
+        expect((await rejection(owner.reviewEdit(s.id, "approve", ""))).message).toBe(REVIEW_MESSAGES.adminOnly);
+        const aal1 = h.admin("aal1");
+        for (const call of [() => aal1.editQueue(), () => aal1.getEdit(s.id), () => aal1.reviewEdit(s.id, "approve", "")]) {
+          expect((await rejection(call())).message).toBe(REVIEW_MESSAGES.mfaRequired);
+        }
+        expect((await me.getOwn(s.id))?.edit?.status).toBe("review");
       });
     });
   });

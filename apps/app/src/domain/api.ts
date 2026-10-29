@@ -10,7 +10,7 @@ import type { VariantSize } from "./image";
 import type { LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SitemapEntry, Step } from "./listing";
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
 import type { AdminHouses } from "./admin-houses";
-import type { AdminQueue, QueueItem, ReviewDecision } from "./review";
+import type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./review";
 import type { NearZone, Place, Zone, ZoneWithListings } from "./zones";
 import type {
   BillingOverview,
@@ -24,7 +24,7 @@ import type {
   ReminderToSend,
 } from "./subscription";
 
-export type { AdminQueue, QueueItem, ReviewDecision } from "./review";
+export type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./review";
 
 export interface PublicListingsApi {
   /** Catálogo con filtros: RPC search_listings (zona a 5 km y noches libres) y encima provincia (solo sin zona), mensual,
@@ -170,6 +170,12 @@ export interface AdminListingsApi {
   get(id: string): Promise<QueueItem | null>;
   /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
+  /** Ediciones en revisión, la que más espera primero; cada casa con su edición (listing.edit). Sin ser admin, []. */
+  editQueue(): Promise<QueueItem[]>;
+  /** La casa aprobada con su edición y las fotos de las dos; null si no hay edición o no es admin. */
+  getEdit(listingId: string): Promise<QueueItem | null>;
+  /** RPC review_edit. Motivo obligatorio para pedir cambios (reviewNoteRefusal). */
+  reviewEdit(listingId: string, decision: EditDecision, note: string): Promise<void>;
   /**
    * Casas del admin (fase 5, ticket 07): las aprobadas alguna vez (las que tienen suscripción), en cualquier estado, con
    * propietario, zona, portada y suscripción; la aprobada más recientemente primero. Sin ser admin, lista vacía.

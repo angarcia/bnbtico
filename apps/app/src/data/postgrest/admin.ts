@@ -5,16 +5,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
+import { EDIT_MESSAGES } from "../../domain/edit";
 import { DomainError, toDomainError } from "../../domain/errors";
-import { REVIEW_MESSAGES as M, REJECTED_SHOWN, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
+import { REVIEW_MESSAGES as M, REJECTED_SHOWN, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { costaRicaToday } from "../../domain/inquiry";
-import { fromListingRow, fromPhotoRows, storagePhotoUrl, type ListingRow, type PhotoRow } from "../../domain/rows";
+import { fromListingRow, fromPhotoRows, storagePhotoUrl, type EditRow, type ListingRow, type PhotoRow } from "../../domain/rows";
 import { aalOf } from "./auth";
 
-const ADMIN_COLUMNS = "*, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name)";
+const EDIT_COLUMNS = "status, review_note, title, kind, bathroom_shared, description, lat, lng, zone, zone_id, zone_source, submitted_at, listing_edit_photos(id, path, position)";
+const BASE_COLUMNS = "*, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name)";
+const ADMIN_COLUMNS = `${BASE_COLUMNS}, listing_edits(${EDIT_COLUMNS})`;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type AdminRow = ListingRow & { listing_photos: PhotoRow[]; owner: { full_name: string } | null };
+type AdminRow = ListingRow & { listing_photos: PhotoRow[]; owner: { full_name: string } | null; listing_edits?: EditRow | null };
 
 // Casas del admin: solo las que tienen suscripción (aprobadas alguna vez); la portada es la foto en la posición 0.
 const HOUSE_COLUMNS =
@@ -28,7 +31,7 @@ type HouseRow = Pick<ListingRow, "id" | "public_id" | "title" | "status" | "zone
 
 export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): AdminListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
-  const toItem = (row: AdminRow): QueueItem => ({ listing: fromListingRow(row, row.listing_photos, url), ownerName: row.owner?.full_name ?? "" });
+  const toItem = (row: AdminRow): QueueItem => ({ listing: fromListingRow(row, row.listing_photos, url, row.listing_edits), ownerName: row.owner?.full_name ?? "" });
   const mfa = () => new DomainError(M.mfaRequired, "forbidden");
 
   /** «admin» con aal2, «mfa» si es admin sin el segundo código, «none» si no es admin. Se pide junto con los datos. */
@@ -63,6 +66,32 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (who === "mfa") throw mfa();
       if (res.error) throw toDomainError(res.error);
       return res.data ? toItem(res.data) : null;
+    },
+
+    async editQueue() {
+      const [who, res] = await Promise.all([
+        access(),
+        db.from("listings").select(`${BASE_COLUMNS}, listing_edits!inner(${EDIT_COLUMNS})`).eq("listing_edits.status", "review").returns<AdminRow[]>(),
+      ]);
+      if (who === "none") return [];
+      if (who === "mfa") throw mfa();
+      if (res.error) throw toDomainError(res.error);
+      return editQueueOrder((res.data ?? []).map(toItem));
+    },
+
+    async getEdit(id) {
+      const item = await this.get(id);
+      return item?.listing.edit ? item : null;
+    },
+
+    async reviewEdit(id, decision, note) {
+      const refusal = reviewNoteRefusal(decision, note);
+      if (refusal) throw new DomainError(refusal, "validation");
+      if (!UUID.test(id)) throw new DomainError(EDIT_MESSAGES.notFound, "validation");
+      const { error } = await db.rpc("review_edit", { p_listing: id, p_decision: decision, p_note: note.trim() });
+      if (!error) return;
+      const e = toDomainError(error);
+      throw e.message === M.mfaRequired ? mfa() : e;
     },
 
     async houses() {

@@ -30,6 +30,15 @@ export function reviewNoteRefusal(decision: ReviewDecision, note: string): strin
 /** «Corregida» si ya tuvo una decisión antes (el propietario reenvió tras cambios pedidos o tras editar una activa). */
 export const queueBadge = (l: Pick<Listing, "reviewedAt">): "Nueva" | "Corregida" => (l.reviewedAt ? "Corregida" : "Nueva");
 
+/** Decisión sobre una edición enviada: aprobar o pedir cambios (no hay «Rechazar»). */
+export type EditDecision = "approve" | "changes";
+
+/** Aviso tras decidir una edición. */
+export const EDIT_REVIEW_SAVED: Record<EditDecision, string> = {
+  approve: "Cambios aprobados. La ficha ya los muestra.",
+  changes: "Cambios pedidos. El propietario verá su mensaje.",
+};
+
 export interface QueueItem {
   listing: Listing;
   ownerName: string;
@@ -74,4 +83,9 @@ export function applyDecision(queue: AdminQueue, id: string, decision: ReviewDec
   const rest = { ...queue, review: queue.review.filter((i) => i.listing.id !== id) };
   if (status === "active") return { ...rest, active: queue.active + 1 };
   return status === "changes" ? { ...rest, changes: [decided, ...queue.changes] } : { ...rest, rejected: [decided, ...queue.rejected].slice(0, REJECTED_SHOWN) };
+}
+
+/** La cola de ediciones: la que más espera (enviada antes) primero. */
+export function editQueueOrder(items: QueueItem[]): QueueItem[] {
+  return [...items].sort((a, b) => (a.listing.edit?.submittedAt ?? "").localeCompare(b.listing.edit?.submittedAt ?? ""));
 }

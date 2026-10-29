@@ -2,17 +2,20 @@
 // (is_admin() de la migración admin_aal2_y_purga); quien no es admin no ve nada; review_listing con sus comprobaciones.
 import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi, Session } from "../../domain/api";
+import { EDIT_MESSAGES } from "../../domain/edit";
 import { DomainError } from "../../domain/errors";
-import { MIN_PHOTOS, type Listing } from "../../domain/listing";
-import { DECISION_STATUS, REVIEW_MESSAGES as M, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
+import { MAX_PHOTOS, MIN_PHOTOS, type Listing } from "../../domain/listing";
+import { DECISION_STATUS, REVIEW_MESSAGES as M, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import { approveSubscription } from "./billing";
 import type { FakeDb, FakeListing } from "./db";
+import { editStore } from "./edits";
 
 type Access = "admin" | "mfa" | "none";
 
 export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session: () => Session | null }): AdminListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
+  const edits = editStore(db);
 
   function access(): Access {
     const s = opts.session();
@@ -24,7 +27,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
 
   const toItem = (l: FakeListing): QueueItem => {
     const photos = fromPhotoRows(db.photosOf(l.id), url);
-    const listing: Listing = { ...l, features: [...l.features], photos, photoCount: photos.length, edit: null };
+    const listing: Listing = { ...l, features: [...l.features], photos, photoCount: photos.length, edit: edits.toEdit(l.id, url) };
     return { listing, ownerName: db.profiles.get(l.ownerId)?.fullName ?? "" };
   };
 
@@ -44,6 +47,56 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (a === "mfa") throw mfa();
       const l = db.listings.get(id);
       return l ? toItem(l) : null;
+    },
+
+    async editQueue() {
+      const a = access();
+      if (a === "none") return [];
+      if (a === "mfa") throw mfa();
+      return editQueueOrder([...db.edits.values()].filter((e) => e.status === "review").map((e) => toItem(db.listings.get(e.listingId)!)));
+    },
+
+    async getEdit(id) {
+      const a = access();
+      if (a === "none") return null;
+      if (a === "mfa") throw mfa();
+      const l = db.listings.get(id);
+      return l && db.edits.has(id) ? toItem(l) : null;
+    },
+
+    /** review_edit: aprobar copia cada dato cambiado a la casa y añade las fotos nuevas tras las aprobadas; no toca estado,
+     *  suscripción ni first_published_at. Pedir cambios deja la edición con la nota. */
+    async reviewEdit(id, decision, note) {
+      const refusal = reviewNoteRefusal(decision, note);
+      if (refusal) throw new DomainError(refusal, "validation");
+      const a = access();
+      if (a === "none") throw new DomainError(M.adminOnly, "validation");
+      if (a === "mfa") throw mfa();
+      const l = db.listings.get(id);
+      const e = db.edits.get(id);
+      if (!l || !e) throw new DomainError(EDIT_MESSAGES.notFound, "validation");
+      if (e.status !== "review") throw new DomainError(EDIT_MESSAGES.decided, "validation");
+      const at = db.now();
+      if (decision === "changes") {
+        Object.assign(e, { status: "changes", reviewNote: note.trim().slice(0, 2000), reviewedAt: at });
+        return;
+      }
+      const place = edits.check(l, e);
+      const fresh = db.editPhotosOf(id);
+      if (db.photosOf(id).length + fresh.length > MAX_PHOTOS) throw new DomainError(EDIT_MESSAGES.maxPhotos, "validation");
+      const kind = e.kind ?? l.kind;
+      Object.assign(l, {
+        title: e.title ?? l.title,
+        kind,
+        bathroomShared: kind === "habitacion" ? (e.bathroomShared ?? l.bathroomShared) : null,
+        description: e.description ?? l.description,
+        ...(e.lat !== null && place ? { lat: e.lat, lng: e.lng, zoneId: e.zoneId, zoneSource: e.zoneSource, ...place } : {}),
+        updatedAt: at,
+      });
+      const last = Math.max(-1, ...db.photosOf(id).map((p) => p.position));
+      fresh.forEach((p, i) => db.photos.push({ ...p, position: last + 1 + i }));
+      db.editPhotos = db.editPhotos.filter((p) => p.listingId !== id);
+      db.edits.delete(id);
     },
 
     async houses() {
