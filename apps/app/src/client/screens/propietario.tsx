@@ -44,10 +44,15 @@ const confirmed = (text: string) => window.confirm(text);
 /** «14 oct» si es de este año; si no, «14 oct 2027». */
 const dayOf = (date: string, today: string) => (date.slice(0, 4) === today.slice(0, 4) ? cardDate(date).slice(0, -5) : cardDate(date));
 
-/** Enlace a «Promoción y suscripción» (`/propietario/suscripcion`, con `#pago=CT-####` para resaltar una casa). */
+/** Enlace a la suscripción: con casa, «Suscripción» de esa sola casa (`?casa=CT-####` y `#pago=CT-####`, que la resalta);
+ *  sin ella, «Promoción y suscripción» con todas. */
 export function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
-  return (
-    <Link to="/propietario/suscripcion" hash={publicId ? `pago=${publicId}` : undefined} className={className}>
+  return publicId ? (
+    <Link to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <Link to="/propietario/suscripcion" className={className}>
       {children}
     </Link>
   );

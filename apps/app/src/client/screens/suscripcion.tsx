@@ -3,13 +3,14 @@
 // importa de aquí su tarjeta y su fila, para que las pestañas no crezcan. Todo sale de owner_billing (billing.ts); si esa
 // lectura falla (base sin la migración), Cuenta sale como antes y esta pantalla solo explica la oferta.
 // Parar y reactivar son optimistas con vuelta atrás; «Añadir método de pago» pide al worker la página de la pasarela.
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useIsRestoring, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { STATUS_LABELS, type Listing, type ListingStatus } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { PAYMENT_MESSAGES } from "../../domain/payments";
+import { scopeBilling, scopeFix } from "../../domain/subscription-scope";
 import {
   MONTHLY_FEE_CRC,
   launchOffer,
@@ -176,11 +177,11 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
         </button>
       ) : null}
       {sub.status === "inactive" ? (
-        <button type="button" className="btn btn-primary btn-block" disabled={change.isPending} onClick={() => {
+        <button type="button" className="btn btn-sun btn-block" disabled={change.isPending} onClick={() => {
             onAction();
             change.mutate("resume");
           }}>
-          Reactivar
+          Activar suscripción
         </button>
       ) : null}
       {change.isError ? (
@@ -217,16 +218,10 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
 
 type Saving = "saving" | "saved" | "late" | null;
 
-/** Vuelta de la pasarela con `?pago=ok`: se quita de la URL y se vuelve a leer owner_billing hasta ~10 s. */
-function useSavingMethod(userId: string): [Saving, () => void] {
-  const search = route.useSearch();
-  const hash = useLocation({ select: (l) => l.hash });
-  const navigate = useNavigate();
+/** Vuelta de la pasarela con `?pago=ok` (la pantalla lo quita de la URL): se vuelve a leer owner_billing hasta ~10 s. */
+function useSavingMethod(userId: string, pago: "ok" | undefined): [Saving, () => void] {
   const client = useQueryClient();
-  const [saving, setSaving] = useState<Saving>(() => (search.pago === "ok" ? "saving" : null));
-  useEffect(() => {
-    if (search.pago === "ok") void navigate({ to: "/propietario/suscripcion", search: {}, hash, replace: true });
-  }, [search.pago]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [saving, setSaving] = useState<Saving>(() => (pago === "ok" ? "saving" : null));
   useEffect(() => {
     if (saving !== "saving" || !userId) return;
     let stopped = false;
@@ -262,34 +257,56 @@ const SAVING_TEXT: Record<Exclude<Saving, null>, string> = {
 
 export function SuscripcionScreen() {
   const userId = useSession().session?.userId ?? "";
-  const billing = useQuery({ ...billingQuery(userId), enabled: !!userId });
+  const search = route.useSearch();
+  // Con `?casa=` se vuelve a leer siempre al abrir: una casa aprobada hace un momento aún no está en la caché.
+  const billing = useQuery({ ...billingQuery(userId), enabled: !!userId, refetchOnMount: search.casa ? "always" : true });
+  const restoring = useIsRestoring();
   const indexed = useBilling(userId);
   const hash = useLocation({ select: (l) => l.hash });
+  const navigate = useNavigate();
   const target = parsePayHash(hash ? `#${hash}` : "");
-  const [saving, dismissSaving] = useSavingMethod(userId);
+  const [saving, dismissSaving] = useSavingMethod(userId, search.pago);
+  const scope = indexed ? scopeBilling(indexed.all, search.casa) : null;
+  const settled = !!indexed && !billing.isFetching && !restoring;
+  // Una sola corrección de la URL: fuera `pago=ok` siempre y `casa` si no es suya (con los datos ya leídos); el hash se queda.
+  useEffect(() => {
+    const fix = scopeFix(search, { unknown: !!scope?.unknown, settled });
+    if (fix) void navigate({ to: "/propietario/suscripcion", search: fix, hash, replace: true });
+  }, [search, scope?.unknown, settled]); // eslint-disable-line react-hooks/exhaustive-deps
   const today = indexed?.today ?? "";
   const method = indexed?.method ?? null;
-  const due = indexed?.all.some((x) => payButtonDue(x.sub, today)) ?? false;
+  const scoped = scope?.scoped ?? null;
+  // Con casa: «Suscripción» desde el primer pintado (y mientras se confirma una casa que aún no está en la caché).
+  const single = !!search.casa && (scoped !== null || (indexed ? !settled : billing.isPending));
+  const due = scoped ? payButtonDue(scoped.sub, today) : (indexed?.all.some((x) => payButtonDue(x.sub, today)) ?? false);
+  const card = (hb: HouseBilling) => (
+    <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} onAction={dismissSaving} />
+  );
 
   return (
     <>
-      <FlowHeader title="Promoción y suscripción" back="/cuenta" historyBack />
+      <FlowHeader title={single ? "Suscripción" : "Promoción y suscripción"} back="/cuenta" historyBack />
+      {scoped ? (
+        <p className="small muted sub-scope" data-testid="sub-scope">
+          {scoped.house.title || "Casa sin título"}
+        </p>
+      ) : null}
       {saving ? (
         <p className={`note${saving === "late" ? " note-sun" : ""}`} role="status">
           {SAVING_TEXT[saving]}
         </p>
       ) : null}
 
-      {indexed ? (
+      {indexed && (!single || scoped) ? (
         <>
-          <section className="card stack gap-12">
-            <h2 className="card-title">Sus casas</h2>
-            {indexed.all.length ? (
-              indexed.all.map((hb) => <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} onAction={dismissSaving} />)
-            ) : (
-              <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>
-            )}
-          </section>
+          {scoped ? (
+            <section className="card stack gap-12">{card(scoped)}</section>
+          ) : (
+            <section className="card stack gap-12">
+              <h2 className="card-title">Sus casas</h2>
+              {indexed.all.length ? indexed.all.map(card) : <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>}
+            </section>
+          )}
 
           <section className="card stack gap-8" data-testid="method-card">
             <h2 className="card-title">Método de pago</h2>
@@ -298,26 +315,26 @@ export function SuscripcionScreen() {
                 <span className="row gap-8 num">
                   <CardIcon /> {methodName(method)} · vence {expiry(method)}
                 </span>
-                <PayButton label="Cambiar" ghost />
+                <PayButton label="Cambiar" ghost publicId={scoped?.house.publicId} />
               </div>
             ) : (
               <>
                 <span className="row gap-8">
                   <CardIcon /> Ninguno todavía
                 </span>
-                {due ? <PayButton /> : <span className="small muted">Puede añadirlo cuando le avisemos.</span>}
+                {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">Puede añadirlo cuando le avisemos.</span>}
               </>
             )}
             <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en bnbtico nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
           </section>
         </>
-      ) : billing.isPending && userId ? (
+      ) : userId && (billing.isPending || single) ? (
         <section className="card skeleton sub-skeleton" aria-busy="true" aria-label="Cargando su suscripción">
           <span className="sk sk-line" />
         </section>
       ) : null}
 
-      <TiersCard />
+      {single ? null : <TiersCard />}
 
       <section className="card-arena stack gap-4 small" data-testid="how-it-works">
         <b>Cómo funciona</b>
@@ -327,6 +344,11 @@ export function SuscripcionScreen() {
           de una casa cuando quiera (queda inactiva y no se cobra) y reactivarla después con el mismo enlace. Sin permanencia y sin comisiones por alquiler.
         </span>
       </section>
+      {scoped && indexed && indexed.all.length >= 2 ? (
+        <Link to="/propietario/suscripcion" className="link small center">
+          Ver todas sus casas
+        </Link>
+      ) : null}
     </>
   );
 }

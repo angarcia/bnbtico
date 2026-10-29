@@ -520,6 +520,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .sub-house.is-target{margin:0 -8px;padding:10px 8px;border-radius:18px;box-shadow:0 0 0 2px var(--primary)}
 .sub-house-title{font-size:17px;font-weight:700;margin:0}
 .sub-skeleton{min-height:160px}
+.sub-scope{margin:-8px 0 4px}
 .sun-ink{color:var(--sun-ink)}
 .align-end{text-align:right}
 .owner-skeleton{display:flex;gap:12px;align-items:center}

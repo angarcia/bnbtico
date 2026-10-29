@@ -13,7 +13,7 @@ import { cardDate, payLink, reminderCard, reminderWhatsApp, type BillingHouse, t
 // cada actor en su teléfono (contexto Pixel 7 propio): la propietaria la envía → el admin (aal2) la aprueba → Activa con
 // oferta → avisos a 90/30/7/0 días (texto exacto de reminderWhatsApp con #pago=, guardado como enviado; la tarjeta en la
 // app; repetir la llamada no reenvía nada) → −1: Pendiente de pago, 410 «regularice» y fuera de Explorar → «Añadir método
-// de pago» por la pasarela falsa → Activa y la ficha vuelve → «Parar suscripción» → Inactiva y 410 «paró» → «Reactivar»
+// de pago» por la pasarela falsa → Activa y la ficha vuelve → «Parar suscripción» → Inactiva y 410 «paró» → «Activar suscripción»
 // → Activa con el contacto de vuelta.
 // El secreto de Vault bnbtico_test_clock (sin él, test_set_offer_days_left se niega) se crea en beforeAll y se borra
 // SIEMPRE en afterAll. No depende de pg_net: la copia de la ficha guardada en la caché del worker se borra llamando a
@@ -254,7 +254,7 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   await capture(owner, "pasarela-falsa");
   await owner.getByRole("button", { name: "Guardar tarjeta de prueba" }).click();
   await expect(owner.getByRole("status").filter({ hasText: "Método de pago guardado. No se cobra nada hasta que termine la oferta." })).toBeVisible();
-  await expect(owner).toHaveURL(new RegExp(`${SCREEN}#pago=${publicId}$`));
+  await expect(owner).toHaveURL(new RegExp(`${SCREEN}\\?casa=${publicId}#pago=${publicId}$`));
   const paid = house(owner);
   await expect(paid.getByText("Activa", { exact: true })).toBeVisible();
   const today = (await h.billing("owner").overview()).today;
@@ -272,15 +272,15 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   await expect(dialog).toContainText(`¿Parar la suscripción de ${TITLE}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.`);
   await dialog.getByRole("button", { name: "Parar suscripción" }).click();
   await expect(paid.getByText("Inactiva", { exact: true })).toBeVisible();
-  await expect(paid.getByRole("button", { name: "Reactivar" })).toBeVisible();
+  await expect(paid.getByRole("button", { name: "Activar suscripción" })).toBeVisible();
   await expect(owner.getByText("Método de pago guardado. No se cobra nada hasta que termine la oferta.")).toHaveCount(0);
   await expect.poll(async () => (await mine()).status).toBe("inactive");
   await capture(owner, "parada");
   await expectBlocked(publicId, "El propietario paró la suscripción de este anuncio", "410-parada");
   expect(await inExplorar()).toBe(false);
 
-  // 8. «Reactivar»: Activa (ya tiene método) y el contacto de vuelta con el mismo enlace.
-  await paid.getByRole("button", { name: "Reactivar" }).click();
+  // 8. «Activar suscripción»: Activa (ya tiene método) y el contacto de vuelta con el mismo enlace.
+  await paid.getByRole("button", { name: "Activar suscripción" }).click();
   await expect(paid.getByText("Activa", { exact: true })).toBeVisible();
   await expect.poll(async () => (await mine()).status).toBe("active");
   await capture(owner, "reactivada");

@@ -23,7 +23,7 @@ test("la casa pendiente de pago vuelve a activa al guardar la tarjeta de prueba"
   await page.getByRole("button", { name: "Guardar tarjeta de prueba" }).click();
   const answer = await saved;
   expect(answer.status()).toBe(303);
-  expect(answer.headers()["location"]).toBe(`${baseURL}/propietario/suscripcion?pago=ok#pago=${casa.publicId}`);
+  expect(answer.headers()["location"]).toBe(`${baseURL}/propietario/suscripcion?pago=ok&casa=${casa.publicId}#pago=${casa.publicId}`);
 
   const overview = await h.billing("owner").overview();
   expect(overview.method).toMatchObject({ brand: "visa", last4: "4242" });

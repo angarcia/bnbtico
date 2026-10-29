@@ -23,7 +23,7 @@ test.beforeEach(async ({ page }) => {
 
 const owner = (page: Page) => injectSession(page, "owner");
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
-const payLink = (publicId: string) => `/propietario/suscripcion#pago=${publicId}`;
+const payLink = (publicId: string) => `/propietario/suscripcion?casa=${publicId}#pago=${publicId}`;
 const mine = async (id: string): Promise<BillingHouse> => (await h.billing("owner").overview()).houses.find((x) => x.listingId === id)!;
 const today = async () => (await h.billing("owner").overview()).today;
 /** «26 oct» si es de este año (como el detalle). */
@@ -90,7 +90,7 @@ test("Mis casas: arriba solo el pago (la pendiente antes que la ventana de 90 d�
   await expect(page.getByTestId("pay-notice")).toContainText("Casa por pagar");
   await expect(page.getByTestId("pay-notice").getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(debe.publicId));
   await page.getByTestId("pay-notice").getByRole("link", { name: "Añadir método de pago" }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/suscripcion#pago=${debe.publicId}$`));
+  await expect(page).toHaveURL(new RegExp(`/propietario/suscripcion\\?casa=${debe.publicId}#pago=${debe.publicId}$`));
 
   await addCard();
   await fresh(page, "/propietario/casas");

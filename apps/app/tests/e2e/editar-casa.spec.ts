@@ -60,7 +60,7 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(sub).toContainText("Al día");
   await expect(sub.getByTestId("subscription-row")).toHaveText(/^Gratis hasta el /);
   await expect(sub).toContainText(". Después, ₡2 900 al mes, sin permanencia.");
-  await expect(sub.getByRole("link")).toHaveAttribute("href", `/propietario/suscripcion#pago=${publicId}`);
+  await expect(sub.getByRole("link")).toHaveAttribute("href", `/propietario/suscripcion?casa=${publicId}#pago=${publicId}`);
   await expect(page.getByText("Editar la ficha")).toHaveCount(0);
   await expect(page.getByText("Anuncio visible")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
@@ -142,7 +142,7 @@ test("inactiva: el bloque ocre arriba", async ({ page }) => {
   const block = page.getByTestId("stopped-notice");
   await expect(block.getByRole("heading", { name: "Suscripción parada" })).toBeVisible();
   await expect(block).toContainText("Casa Coco no aparece en Explorar y el enlace de su ficha no funciona. Actívela para que vuelvan a escribirle.");
-  await expect(block.getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", `/propietario/suscripcion#pago=${publicId}`);
+  await expect(block.getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", `/propietario/suscripcion?casa=${publicId}#pago=${publicId}`);
   await expect(block).toContainText("₡2 900 al mes, sin permanencia");
   expect((await block.boundingBox())!.y).toBeLessThan((await page.locator(".detail-photo").boundingBox())!.y);
   await expect(page.getByRole("button", { name: "Compartir ficha" })).toHaveCount(0);

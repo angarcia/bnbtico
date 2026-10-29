@@ -108,7 +108,7 @@ test("cada estado con su línea, aviso y botones; «Añadir método de pago» so
   const d = house(page, "Casa parada");
   await expect(d.getByText("Inactiva", { exact: true })).toBeVisible();
   await expect(d.getByTestId("sub-line")).toHaveText(/^Parada el \d+ \w+.* · no se cobra$/);
-  await expect(d.getByRole("button", { name: "Reactivar" })).toHaveClass(/btn-primary/);
+  await expect(d.getByRole("button", { name: "Activar suscripción" })).toHaveClass(/btn-sun/);
   await expect(d.getByRole("button", { name: "Añadir método de pago" })).toHaveCount(0);
   await expect(d.getByRole("button", { name: "Parar suscripción" })).toHaveCount(0);
 
@@ -158,14 +158,14 @@ test("parar con confirmación y reactivar, optimistas; si la base se niega, vuel
   await a.getByRole("button", { name: "Parar suscripción" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Parar suscripción" }).click();
   await expect(a.getByText("Inactiva", { exact: true })).toBeVisible();
-  await expect(a.getByRole("button", { name: "Reactivar" })).toBeVisible();
+  await expect(a.getByRole("button", { name: "Activar suscripción" })).toBeVisible();
   release();
   await expect.poll(() => statusOf(casa.id)).toBe("inactive");
   expect(await statusOf(otra.id)).toBe("active"); // las demás casas no cambian
   await expect(house(page, "Casa Uva").getByText("Activa", { exact: true })).toBeVisible();
   await page.unroute("**/rest/v1/rpc/stop_subscription");
 
-  await a.getByRole("button", { name: "Reactivar" }).click();
+  await a.getByRole("button", { name: "Activar suscripción" }).click();
   await expect(a.getByText("Activa", { exact: true })).toBeVisible();
   await expect.poll(() => statusOf(casa.id)).toBe("active");
 
@@ -186,7 +186,7 @@ test("parar con confirmación y reactivar, optimistas; si la base se niega, vuel
   await page.route("**/rest/v1/rpc/resume_subscription", (route) => route.abort("internetdisconnected"));
   await h.billing("owner").stop(casa.id);
   await fresh(page, SCREEN);
-  await a.getByRole("button", { name: "Reactivar" }).click();
+  await a.getByRole("button", { name: "Activar suscripción" }).click();
   await expect(a.getByRole("alert")).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
   await expect(a.getByText("Inactiva", { exact: true })).toBeVisible();
 });
@@ -247,7 +247,7 @@ test("ida y vuelta por la pasarela falsa: tarjeta guardada y la casa pendiente p
   await page.getByRole("button", { name: "Guardar tarjeta de prueba" }).click();
 
   await expect(page.getByRole("status").filter({ hasText: "Método de pago guardado. No se cobra nada hasta que termine la oferta." })).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`${SCREEN}#pago=${casa.publicId}$`)); // sin ?pago=ok
+  await expect(page).toHaveURL(new RegExp(`${SCREEN}\\?casa=${casa.publicId}#pago=${casa.publicId}$`)); // sin pago=ok; el botón de la casa la acota
   await expect(card.getByText("Activa", { exact: true })).toBeVisible();
   await expect(card).toHaveClass(/is-target/);
   await expect(page.getByTestId("method-card")).toContainText("Visa ···· 4242");
