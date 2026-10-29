@@ -98,7 +98,7 @@ test("Mis casas: arriba solo el pago (la pendiente antes que la ventana de 90 d�
   await expect(card(page, "Borrador del Caribe").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
 });
 
-test("una sola casa: el aviso de pago arriba de su tarjeta y no dentro de ella; el detalle lo dice sin el nombre", async ({ page }) => {
+test("una sola casa: el aviso de pago arriba de su tarjeta y no dentro de ella; la ficha editable no lo repite", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
   await h.setDaysLeft(casa.id, 30);
   await owner(page);
@@ -111,10 +111,10 @@ test("una sola casa: el aviso de pago arriba de su tarjeta y no dentro de ella; 
   await expect(only.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
   expect((await page.getByTestId("pay-notice").boundingBox())!.y).toBeLessThan((await only.boundingBox())!.y);
   await expect(page.getByTestId("subscription-row")).toHaveCount(0); // la línea de la suscripción va en el detalle
+  // Ficha editable (spec editar-casa §1): arriba solo la pendiente de pago o la parada; las demás, la fila «Suscripción».
   await page.goto(`/propietario/casas/${casa.id}`);
   await expect(page.getByTestId("subscription-row")).toBeVisible();
-  await expect(page.getByTestId("pay-notice")).toHaveCount(1);
-  await expect(page.getByTestId("pay-notice")).not.toContainText("Casa Cocles");
+  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
 });
 
 test("Mis casas: casillas, etiqueta y botones de cada estado y su línea en el detalle; con método, el botón ocre desaparece y la pendiente vuelve", async ({ page }) => {
@@ -174,8 +174,13 @@ test("Mis casas: casillas, etiqueta y botones de cada estado y su línea en el d
   };
   await expect(await row(lejos.id)).toHaveText(`Gratis hasta el ${cardDate(subLejos.promoEndsOn!)}`);
   await expect(await row(cerca.id)).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
-  await expect(await row(debe.id)).toHaveText("Pendiente de pago");
-  await expect(await row(parada.id)).toHaveText(`Parada el ${dayOf(await today(), await today())} · no se cobra`);
+  // La pendiente de pago y la parada llevan su bloque ocre arriba en vez de la fila.
+  const subRow = await row(debe.id);
+  await expect(page.getByTestId("pay-notice")).toBeVisible();
+  await expect(subRow).toHaveCount(0);
+  await row(parada.id);
+  await expect(page.getByTestId("stopped-notice")).toBeVisible();
+  await expect(subRow).toHaveCount(0);
   await page.goto(`/propietario/casas/${review.id}`);
   await expect(page.getByText("La estamos revisando")).toBeVisible();
 
@@ -189,7 +194,7 @@ test("Mis casas: casillas, etiqueta y botones de cada estado y su línea en el d
   await expect(await row(cerca.id)).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
 });
 
-test("detalle: la tarjeta ocre de la pendiente y de la que está en la ventana, compartir apagado y la fila «Suscripción»", async ({ page }) => {
+test("ficha editable: la tarjeta ocre de la pendiente, el bloque de la parada, sin compartir, y la fila «Suscripción» de la que está en la ventana", async ({ page }) => {
   const debe = await h.seed({ status: "active", draft: { title: "Rancho Manzanillo" } });
   await expire(debe.id);
   const cerca = await h.seed({ status: "active", draft: { title: "Casa en la ventana" } });
@@ -205,17 +210,15 @@ test("detalle: la tarjeta ocre de la pendiente y de la que está en la ventana, 
   await expect(notice).toContainText(`Su oferta gratuita terminó el ${dayOf(subDebe.promoEndsOn!, now)}`);
   await expect(notice).toContainText(`La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${FEE} al mes, sin permanencia; puede parar cuando quiera.`);
   await expect(notice.getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(debe.publicId));
-  const share = page.getByRole("button", { name: /Compartir ficha/ });
-  await expect(share).toBeDisabled();
-  await expect(share).toContainText("Disponible cuando la casa vuelva a estar activa");
+  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveCount(0);
-  const row = page.getByRole("link", { name: /^Suscripción/ });
-  await expect(row).toHaveAttribute("href", payLink(debe.publicId));
-  await expect(page.getByTestId("subscription-row")).toHaveText("Pendiente de pago");
+  await expect(page.getByTestId("subscription-row")).toHaveCount(0);
   await page.screenshot({ path: "test-results/capturas/detalle-pendiente.png", fullPage: true });
 
+  // En la ventana del aviso, la tarjeta ocre sale en Mis casas; en la ficha, la fila «Suscripción» al final.
   await page.goto(`/propietario/casas/${cerca.id}`);
-  await expect(page.getByTestId("pay-notice")).toContainText("Su oferta gratuita termina mañana");
+  await expect(page.getByRole("link", { name: /^Suscripción/ })).toHaveAttribute("href", payLink(cerca.publicId));
+  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await page.screenshot({ path: "test-results/capturas/detalle-ventana.png", fullPage: true });
   await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeEnabled();
   await expect(page.getByTestId("subscription-row")).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
@@ -224,9 +227,10 @@ test("detalle: la tarjeta ocre de la pendiente y de la que está en la ventana, 
   await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
 
   await page.goto(`/propietario/casas/${parada.id}`);
+  await expect(page.getByTestId("stopped-notice").getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", payLink(parada.publicId));
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toContainText("Disponible cuando la casa vuelva a estar activa");
-  await expect(page.getByTestId("subscription-row")).toHaveText(`Parada el ${dayOf(now, now)} · no se cobra`);
+  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toHaveCount(0);
+  await expect(page.getByTestId("subscription-row")).toHaveCount(0);
 });
 
 test("sin owner_billing ni launch_offer_taken (despliegue antes de la migración) las pantallas salen como antes", async ({ page }) => {

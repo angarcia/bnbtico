@@ -5,8 +5,8 @@
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import { can } from "../../domain/can";
+import { Suspense, lazy, useState, type ReactNode } from "react";
+import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
@@ -27,8 +27,8 @@ import { useSession } from "../session";
 
 const base = () => window.location.origin;
 const message = (e: unknown) => toDomainError(e).message;
-const titleOf = (l: Listing) => l.title || "Borrador sin título";
-const shareOf = (l: Listing) => {
+export const titleOf = (l: Listing) => l.title || "Borrador sin título";
+export const shareOf = (l: Listing) => {
   const d = describe(l, { base: base() });
   return { url: d.shareUrl, title: titleOf(l), text: d.previewText };
 };
@@ -45,7 +45,7 @@ const confirmed = (text: string) => window.confirm(text);
 const dayOf = (date: string, today: string) => (date.slice(0, 4) === today.slice(0, 4) ? cardDate(date).slice(0, -5) : cardDate(date));
 
 /** Enlace a «Promoción y suscripción» (`/propietario/suscripcion`, con `#pago=CT-####` para resaltar una casa). */
-function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
+export function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
   return (
     <Link to="/propietario/suscripcion" hash={publicId ? `pago=${publicId}` : undefined} className={className}>
       {children}
@@ -62,7 +62,7 @@ function PayButton({ publicId }: { publicId: string }) {
 }
 
 /** Reactivar una casa parada: lleva a «Promoción y suscripción» con la casa resaltada. */
-function ActivateButton({ publicId }: { publicId: string }) {
+export function ActivateButton({ publicId }: { publicId: string }) {
   return (
     <SubscriptionLink publicId={publicId} className="btn btn-sun btn-block">
       Activar suscripción
@@ -71,12 +71,12 @@ function ActivateButton({ publicId }: { publicId: string }) {
 }
 
 /** Aviso de dinero cuando la casa está por pagar y aún no hay fila de cobro. */
-function PaymentDueNote({ listing: l }: { listing: Listing }) {
+export function PaymentDueNote({ listing: l }: { listing: Listing }) {
   return <div className="note note-sun">{describe(l, { base: "" }).situation}</div>;
 }
 
 /** Tarjeta ocre: la oferta terminó sin método (pendiente de pago) o termina dentro de 90 días; null si no toca avisar. */
-function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; title?: string }) {
+export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; title?: string }) {
   if (!payButtonDue(hb.sub, today)) return null;
   const { house, sub } = hb;
   const card =
@@ -109,7 +109,7 @@ export function SkeletonCard() {
 }
 
 /** Visitas y consultas de 30 días (revisión UX A2): si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
-function StatsLine({ listing: l }: { listing: Listing }) {
+export function StatsLine({ listing: l }: { listing: Listing }) {
   const userId = useUserId();
   const { data } = useQuery({ ...listingStatsQuery(userId, l.id), enabled: !!userId });
   if (!data) return <span className="small stats-line" aria-hidden="true">&nbsp;</span>;
@@ -191,7 +191,7 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
   return (
     <article className="card house-card">
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
-      <HouseCardTop listing={l} eager={eager} link />
+      <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de bnbtico: {l.reviewNote}</p> : null}
       {can(l, "share") ? (
         <div className="row gap-8">
@@ -230,11 +230,11 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
   );
 }
 
-function ShareButtonInline({ listing: l }: { listing: Listing }) {
+export function ShareButtonInline({ listing: l, className = "grow" }: { listing: Listing; className?: string }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className="btn btn-primary grow" onClick={share} data-share-url={target.url}>
+    <button type="button" className={`btn btn-primary ${className}`} onClick={share} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? "Enlace copiado" : "Compartir ficha"}
       </span>
@@ -243,6 +243,10 @@ function ShareButtonInline({ listing: l }: { listing: Listing }) {
 }
 
 // ---------- Detalle de una casa ----------
+
+// La ficha editable de una casa publicada va en su propio trozo (spec .scratch/editar-casa); las que nunca se publicaron
+// siguen con este detalle y el asistente.
+const EditableFicha = lazy(() => import("./casa-editable").then((m) => ({ default: m.EditableFicha })));
 
 const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
 
@@ -282,7 +286,12 @@ export function CasaPropietarioScreen() {
           ) : undefined
         }
       />
-      {l ? <Detail listing={l} userId={userId} /> : null}
+      {l && isPublished(l) ? (
+        <Suspense fallback={<SkeletonCard />}>
+          <EditableFicha listing={l} userId={userId} />
+        </Suspense>
+      ) : null}
+      {l && !isPublished(l) ? <Detail listing={l} userId={userId} /> : null}
       {l === null ? <NotFoundCard /> : null}
       {l === undefined && query.isError ? <p className="note" role="alert">{message(query.error)}</p> : null}
       {l === undefined && !query.isError ? <SkeletonCard /> : null}
@@ -337,19 +346,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
       <section className="list">
         <ShareListItem listing={l} />
-        {hb && subLine ? (
-          <SubscriptionLink publicId={l.publicId} className="list-item">
-            <span className="muted-icon">
-              <I.shield />
-            </span>
-            <span className="body">
-              Suscripción<small data-testid="subscription-row">{subLine}</small>
-            </span>
-            <span className="chev">
-              <I.chevron />
-            </span>
-          </SubscriptionLink>
-        ) : null}
+        {subLine ? <SubscriptionRow publicId={l.publicId} line={subLine} /> : null}
         {l.status === "draft" ? (
           <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="list-item">
             <span className="muted-icon">
@@ -363,14 +360,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             </span>
           </Link>
         ) : null}
-        <div className="list-item">
-          <span className="muted-icon">
-            <I.phone />
-          </span>
-          <span className="body">
-            WhatsApp de esta casa<small className="num">{formatPhone(l.whatsappPhone)} · verificado</small>
-          </span>
-        </div>
+        <WhatsAppItem listing={l} />
       </section>
 
       {error ? <p className="note" role="alert">{message(error)}</p> : null}
@@ -381,6 +371,37 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
         </button>
       ) : null}
     </>
+  );
+}
+
+/** «Suscripción» con su línea («Gratis hasta el 14 oct 2027»), que lleva a «Promoción y suscripción». */
+export function SubscriptionRow({ publicId, line }: { publicId: string; line: string }) {
+  return (
+    <SubscriptionLink publicId={publicId} className="list-item">
+      <span className="muted-icon">
+        <I.shield />
+      </span>
+      <span className="body">
+        Suscripción<small data-testid="subscription-row">{line}</small>
+      </span>
+      <span className="chev">
+        <I.chevron />
+      </span>
+    </SubscriptionLink>
+  );
+}
+
+/** El WhatsApp de la casa, de solo lectura (se cambia desde Cuenta). */
+export function WhatsAppItem({ listing: l }: { listing: Listing }) {
+  return (
+    <div className="list-item">
+      <span className="muted-icon">
+        <I.phone />
+      </span>
+      <span className="body">
+        WhatsApp de esta casa<small className="num">{formatPhone(l.whatsappPhone)} · verificado</small>
+      </span>
+    </div>
   );
 }
 

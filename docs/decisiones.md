@@ -1,3 +1,17 @@
+## 2026-10-29 · Editar una casa publicada sin sacarla de Explorar (Daniel, ronda de Ana, D)
+
+Especificación: `.scratch/editar-casa/spec.md`; maquetas `design/pantallas/v2/08-casa-editable.html` (08a–08d).
+
+- **Datos al momento y datos con revisión:** personas, habitaciones y baños, características (con el tipo de parqueo), precio por noche, alquiler mensual y su precio, el orden de las fotos y quitar una foto se guardan al momento (`update_listing_live` y las RPCs de fotos). Nombre, tipo, ubicación, descripción y las fotos nuevas pasan por la revisión del admin.
+- **Una edición por casa** en `listing_edits` (clave primaria `listing_id`; fotos nuevas en `listing_edit_photos`): `open` (sin enviar) → `review` (enviada) → aplicada (la fila se borra) o `changes` (el admin pide cambios; se corrige y se reenvía). Mientras haya una, no se abre otra; en revisión queda congelada. «Descartar cambios» está siempre (sin enviar, en revisión o con cambios pedidos) y borra la edición y sus fotos nuevas.
+- **Sin «Rechazar» para una edición:** el admin aprueba o pide cambios; el propietario siempre puede descartarla.
+- **Una casa publicada nunca vuelve a borrador:** fuera `reopenForEdit`/`useReopen` y la fila «Editar la ficha · vuelve a revisión» para las activas; `listings_protect` ya no deja pasar de `active` a `draft` (sigue para `changes` y `rejected` de las que nunca se publicaron).
+- **La versión aprobada sigue pública todo el tiempo:** la casa sigue activa y `listings_public`, la búsqueda y la ficha SSR leen solo `listings` y `listing_photos`, que la edición no toca hasta que se aprueba.
+- **Storage:** se puede subir a la carpeta de una casa publicada mientras su edición no esté en revisión (`listing_photo_uploadable`, con el mismo tope de 45 objetos, 15 fotos × 3 variantes); borrar un objeto solo si ninguna fila de `listing_photos` ni de `listing_edit_photos` lo enlaza (`photo_unreferenced`), así el navegador limpia lo que quitó o descartó y nunca una foto en uso.
+- **Tres migraciones en vez de una** (`editar_casa_publicada`, `editar_casa_ediciones`, `editar_casa_revision`): tablas, datos al momento y guardas; las RPCs de la edición; la revisión del admin. Cada una con sus pruebas antes de la siguiente.
+- **Ficha editable** (`/propietario/casas/$id`, trozo diferido `casa-editable-*`): arriba solo el bloque de dinero (pendiente de pago o parada, en ocre); el aviso de la edición en arena; la portada con «N fotos · Editar»; una fila por dato. El aviso sigue la copia del spec («Mientras tanto, los clientes ven la versión aprobada.»), sin el «Le avisamos por WhatsApp» de la maqueta: el aviso automático por WhatsApp de la decisión queda fuera de alcance. El bloque de la parada se titula «Suscripción parada» (no «pausada» como la maqueta), con el texto de la maqueta. En la ventana del aviso (90/30/7 días) la tarjeta ocre sale en Mis casas; en la ficha, la fila «Suscripción».
+- **Tamaño:** las reglas de los formularios (`step-forms-*`), que comparten el asistente y la edición, van en su propio trozo con su entrada de `size-limit` (1 KB), fuera del JS inicial.
+
 ## 2026-10-29 · Explorar al estilo Airbnb: Dónde · Cuándo · Quiénes, fechas libres y el mapa en la lista (Daniel, ronda de Ana, A)
 
 Especificación: `.scratch/explorar-airbnb/spec.md`; maquetas en `design/pantallas/v2/`.

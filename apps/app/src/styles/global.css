@@ -524,6 +524,10 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .owner-skeleton .sk-line{flex:1}
 .header-action{margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:14px;font-weight:700;white-space:nowrap}
 .detail-photo{height:170px;border-radius:var(--r)}
+/* Ficha editable (maqueta 08a): la píldora de las fotos sobre la portada y la etiqueta de lo que pasa por revisión. */
+.photo-pill{right:12px;bottom:12px;font-size:12px;line-height:1;padding:7px 12px;text-decoration:none}
+.tag-rev{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--review-soft);color:var(--muted);font-size:11px;font-weight:700;line-height:1.5;white-space:nowrap}
+.field-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted)}
 .pill-br{right:12px;bottom:12px}
 .detail-photo .pill-bl{left:12px;bottom:12px}
 .muted-icon{color:var(--muted);display:inline-flex;flex-shrink:0}

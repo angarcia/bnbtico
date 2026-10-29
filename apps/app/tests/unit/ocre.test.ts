@@ -13,6 +13,7 @@ const ALLOW = new Set([
   "client/screens/propietario.tsx#PaymentDueNote",
   "client/screens/propietario.tsx#ActivateButton",
   "client/screens/propietario.tsx#CasasScreen", // casilla «por pagar»
+  "client/screens/casa-editable.tsx#StoppedNotice", // «Suscripción parada» en la ficha editable
   "client/screens/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
   "shared/contact-sheet.tsx#*", // «no pague por adelantado»
 ]);

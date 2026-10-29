@@ -36,7 +36,8 @@
       "!dist/client/assets/explore-map-full-*.js",
       "!dist/client/assets/casa-editable-*.js",
       "!dist/client/assets/editar-*.js",
-      "!dist/client/assets/edit-*.js"
+      "!dist/client/assets/edit-*.js",
+      "!dist/client/assets/step-forms-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -105,6 +106,14 @@
       "dist/client/assets/edit-*.js"
     ],
     "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Reglas de los formularios · trozo compartido (lo que leen el asistente de publicar y la edición de una casa publicada de cada formulario)",
+    "path": [
+      "dist/client/assets/step-forms-*.js"
+    ],
+    "limit": "1 KB",
     "gzip": true
   },
   {
