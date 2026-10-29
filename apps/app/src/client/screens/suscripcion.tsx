@@ -372,7 +372,7 @@ function TiersCard() {
 
 // ---------- Cuenta (diseño 20): la tarjeta «Suscripción» y la fila «Método de pago» ----------
 
-const LINE_CLASS: Partial<Record<ListingStatus, string>> = { payment_due: "sun-ink strong", review: "muted" };
+const LINE_CLASS: Partial<Record<ListingStatus, string>> = { review: "muted" };
 
 /** La tarjeta de Cuenta con una línea por casa y el próximo cobro; `fallback` (la de siempre) sin datos de facturación. */
 export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
@@ -381,8 +381,8 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
   const own = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   if (!billing) return <>{fallback}</>;
   const { today } = billing;
-  const rows = billing.all.map(({ house, sub }) => ({ id: house.listingId, title: house.title, status: sub.status, line: subscriptionLine(sub, today) ?? STATUS_LABELS[sub.status].label, promo: sub.status === "active" && sub.plan === "promo" }));
-  // Las casas en revisión que aún no tienen suscripción (nunca aprobadas): «En revisión · ₡0».
+  const rows: { id: string; publicId?: string; title: string; status: ListingStatus; line: string; promo: boolean }[] = billing.all.map(({ house, sub }) => ({ id: house.listingId, publicId: house.publicId, title: house.title, status: sub.status, line: subscriptionLine(sub, today) ?? STATUS_LABELS[sub.status].label, promo: sub.status === "active" && sub.plan === "promo" }));
+  // Las casas en revisión que aún no tienen suscripción (nunca aprobadas): «En revisión · ₡0», sin enlace.
   for (const l of (own.data ?? []) as Listing[]) {
     if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: `En revisión · ${formatCRC(0)}`, promo: false });
   }
@@ -396,12 +396,25 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
       </div>
       {rows.length ? (
         <div className="stack gap-8 small">
-          {rows.map((r) => (
-            <div key={r.id} className={`row between gap-8 baseline${r.status === "review" ? " muted" : ""}`} data-testid="sub-row">
-              <span>{r.title || "Casa sin título"}</span>
-              <span className={`num align-end ${r.promo ? "primary strong" : (LINE_CLASS[r.status] ?? "")}`}>{r.line}</span>
-            </div>
-          ))}
+          {rows.map((r) => {
+            // Pendiente de pago o parada: el título en ocre y la etiqueta del estado (dinero que falta).
+            const ocre = r.status === "payment_due" || r.status === "inactive";
+            const inner = (
+              <>
+                <span className={ocre ? "sun-ink strong" : undefined}>{r.title || "Casa sin título"}</span>
+                {ocre ? <span className="badge badge-sun">{STATUS_LABELS[r.status].label}</span> : <span className={`num align-end ${r.promo ? "primary strong" : (LINE_CLASS[r.status] ?? "")}`}>{r.line}</span>}
+              </>
+            );
+            return r.publicId ? (
+              <Link key={r.id} to="/propietario/suscripcion" search={{ casa: r.publicId }} className="row between gap-8 baseline sub-row-link" data-testid="sub-row" data-ocre={ocre ? "1" : undefined}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={r.id} className={`row between gap-8 baseline${r.status === "review" ? " muted" : ""}`} data-testid="sub-row">
+                {inner}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="small muted">Cuando aprobemos su primera casa, aquí verá su suscripción.</p>
@@ -428,12 +441,12 @@ export function CuentaPaymentRow() {
   const billing = useBilling(userId);
   if (!billing) return null;
   return (
-    <Link to="/propietario/suscripcion" className="list-item">
+    <Link to="/propietario/suscripcion" className={billing.method ? "list-item" : "list-item list-item-sun"} data-testid="payment-row">
       <span className="primary">
         <CardIcon />
       </span>
       <span className="body">
-        Método de pago<small className="num">{billing.method ? `${methodName(billing.method)} · vence ${expiry(billing.method)}` : "Ninguno todavía · tarjeta"}</small>
+        Método de pago<small className="num">{billing.method ? `${methodName(billing.method)} · vence ${expiry(billing.method)}` : "Falta · añádalo antes de que termine su oferta"}</small>
       </span>
       <span className="chev">
         <I.chevron />

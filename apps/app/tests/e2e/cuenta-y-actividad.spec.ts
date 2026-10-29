@@ -27,6 +27,26 @@ const expire = async (id: string) => {
   await h.setDaysLeft(id, -1);
   await h.service.runDay();
 };
+let eventSeq = 0;
+const addCard = () =>
+  h.service.applyPaymentEvent({
+    provider: "fake",
+    eventId: `evt_e2e_cya_${Date.now()}_${++eventSeq}`,
+    type: "setup_completed",
+    ownerId: h.ownerId("owner"),
+    customerRef: "cus_e2e",
+    methodRef: "pm_e2e",
+    brand: "visa",
+    last4: "4242",
+    expMonth: 12,
+    expYear: 2030,
+  });
+/** De Mis casas a Cuenta por el botón de arriba. */
+async function ownerCuenta(page: Page) {
+  await page.goto("/propietario/casas");
+  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
+  await expect(page.getByRole("heading", { name: "Cuenta", level: 1 })).toBeVisible();
+}
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /** La caché de Query vive en IndexedDB (fresca 30 s): tras cambiar algo como el servicio, se abre la pantalla sin ella. */
 async function fresh(page: Page, path: string) {
@@ -148,5 +168,39 @@ test.describe("Suscripción de una casa", () => {
     await expect(page.getByRole("status").filter({ hasText: "Método de pago guardado. No se cobra nada hasta que termine la oferta." })).toBeVisible();
     await expect(houses(page)).toHaveCount(1);
     await expect(page.getByTestId("method-card")).toContainText("Visa ···· 4242");
+  });
+});
+
+test.describe("Cuenta", () => {
+  test("Flujo 4: Cuenta sin método de pago: la fila en ocre; con método, no", async ({ page }) => {
+    const a = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    await expire(a.id);
+    const b = await h.seed({ status: "active", draft: { title: "Crystal Jungle Villa" } });
+    await h.seed({ status: "review", draft: { title: "Cabina Punta Uva" } });
+    await owner(page);
+    await ownerCuenta(page);
+    const pay = page.getByTestId("payment-row");
+    await expect(pay).toHaveClass(/list-item-sun/);
+    await expect(pay).toContainText("Falta · añádalo antes de que termine su oferta");
+    await expect(pay).toHaveAttribute("href", SCREEN);
+    const rows = page.getByTestId("sub-row");
+    const rowA = rows.filter({ hasText: "Casa Cocles" });
+    await expect(rowA).toHaveAttribute("data-ocre", "1");
+    await expect(rowA.locator(".badge.badge-sun")).toHaveText("Pendiente de pago");
+    const rowB = rows.filter({ hasText: "Crystal Jungle Villa" });
+    await expect(rowB).not.toHaveAttribute("data-ocre", /./);
+    await expect(rowB).toHaveAttribute("href", `${SCREEN}?casa=${b.publicId}`);
+    const rowC = rows.filter({ hasText: "Cabina Punta Uva" });
+    await expect(rowC.locator("a")).toHaveCount(0);
+    expect(await rowC.evaluate((e) => e.tagName)).toBe("DIV");
+    await page.screenshot({ path: "test-results/capturas/cuenta-metodo-ocre.png", fullPage: true });
+    await rowB.click();
+    await expect(page).toHaveURL(new RegExp(`${SCREEN}\\?casa=${b.publicId}$`));
+    await expect(houses(page)).toHaveCount(1);
+
+    await addCard();
+    await fresh(page, "/cuenta");
+    await expect(page.getByTestId("payment-row")).toContainText("Visa ···· 4242");
+    await expect(page.getByTestId("payment-row")).not.toHaveClass(/list-item-sun/);
   });
 });

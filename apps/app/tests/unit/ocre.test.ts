@@ -5,7 +5,7 @@ import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SRC = new URL("../../src/", import.meta.url).pathname;
-const OCRE = /\b(btn|card|note|tile|badge)-sun\b/g;
+const OCRE = /\b(btn|card|note|tile|badge|list-item)-sun\b/g;
 // archivo (relativo a src/) + "#" + la `function Nombre` más cercana declarada antes de la coincidencia; "#*" = todo el archivo.
 const ALLOW = new Set([
   "client/screens/propietario.tsx#PayButton",
@@ -26,26 +26,29 @@ function files(dir: string): string[] {
   });
 }
 
-function matches(): string[] {
-  const found: string[] = [];
-  for (const root of ["client", "shared"]) {
-    for (const file of files(join(SRC, root))) {
-      const text = readFileSync(file, "utf8");
-      const rel = relative(SRC, file);
-      for (const m of text.matchAll(OCRE)) {
-        const before = text.slice(0, m.index);
-        const fns = [...before.matchAll(/\bfunction\s+(\w+)/g)];
-        const fn = fns.length ? fns[fns.length - 1]![1]! : "*";
-        found.push(`${rel}#${fn}`);
-      }
-    }
-  }
-  return found;
+/** Las claves `archivo#función` de cada clase ocre de un archivo. */
+function scan(text: string, rel: string): string[] {
+  return [...text.matchAll(OCRE)].map((m) => {
+    const fns = [...text.slice(0, m.index).matchAll(/\bfunction\s+(\w+)/g)];
+    return `${rel}#${fns.length ? fns[fns.length - 1]![1]! : "*"}`;
+  });
 }
+
+function matches(): string[] {
+  return ["client", "shared"].flatMap((root) => files(join(SRC, root)).flatMap((file) => scan(readFileSync(file, "utf8"), relative(SRC, file))));
+}
+
+const offending = (keys: string[]) => [...new Set(keys)].filter((k) => !ALLOW.has(k) && !ALLOW.has(`${k.split("#")[0]}#*`));
 
 describe("ocre solo para dinero y avisos de pago", () => {
   it("ninguna clase *-sun fuera de la lista de permitidos", () => {
-    const offenders = [...new Set(matches())].filter((k) => !ALLOW.has(k) && !ALLOW.has(`${k.split("#")[0]}#*`));
+    const offenders = offending(matches());
     expect(offenders, `Ocre fuera de dinero:\n${offenders.join("\n")}`).toEqual([]);
+  });
+
+  it("también la fila ocre de una lista (list-item-sun) fuera de la lista de permitidos", () => {
+    const fixture = 'function Fila() {\n  return <Link className="list-item list-item-sun" />;\n}';
+    expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Fila"]);
+    expect(offending(scan(fixture, "client/screens/suscripcion.tsx"))).toEqual([]);
   });
 });

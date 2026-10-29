@@ -283,7 +283,7 @@ test("Cuenta del propietario: una línea por casa, próximo cobro, «Ver detalle
   ]);
   await expect(sub.getByTestId("next-charge")).toHaveText("₡0 · sin método de pago");
   const row = page.getByRole("link", { name: /Método de pago/ });
-  await expect(row).toContainText("Ninguno todavía · tarjeta");
+  await expect(row).toContainText("Falta · añádalo antes de que termine su oferta");
   await expect(row).toHaveAttribute("href", SCREEN);
   await page.screenshot({ path: "test-results/capturas/cuenta-suscripcion.png", fullPage: true });
   await sub.getByRole("link", { name: "Ver detalle" }).click();
