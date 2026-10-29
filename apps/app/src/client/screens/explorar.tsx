@@ -48,14 +48,14 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
       <div className="chiprow fit">
         <button
           type="button"
-          className="chip"
+          className="chip monthly-chip"
           aria-pressed={f.monthly}
           onClick={() => {
             track("monthly_filter_tap");
             void navigate({ to: "/explorar", search: searchFor({ ...f, monthly: !f.monthly }, provinces), replace: true });
           }}
         >
-          {MONTHLY_FILTER_LABEL}
+          <span>{MONTHLY_FILTER_LABEL}</span>
         </button>
         <Link to="/explorar/filtros" search={search} className="chip filters-btn" aria-label={filtersLabel(extras)}>
           <I.sliders size={22} />

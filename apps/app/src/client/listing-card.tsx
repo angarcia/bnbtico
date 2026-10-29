@@ -18,7 +18,7 @@ export function ListingCard({ listing: l, monthly = false, priority = false }: {
   return (
     <div className="listing-cell">
       <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="listing-card">
-        <div className="photo">{cover ? <Picture photo={cover} alt="" sizes="100vw" width={800} height={600} priority={priority} /> : null}</div>
+        <div className="photo">{cover ? <Picture photo={cover} alt="" sizes="(min-width: 900px) 33vw, 100vw" width={800} height={600} priority={priority} /> : null}</div>
         <div className="listing-card-text">
           <h2>{l.title}</h2>
           <span className="muted">{l.zone}</span>

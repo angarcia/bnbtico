@@ -133,6 +133,18 @@ test("Solo alquiler mensual: un chip, la línea y los precios por mes; al quitar
     expect(new Set(mids).size, `el mensual, los filtros y ₡ | $ en una fila a ${width} px`).toBe(1);
   }
 
+  // Con el mensual encendido (negrita y «✓ »), a 360 px: el chip se acorta y los filtros siguen de 44 × 44 sin desbordar.
+  for (const width of [360, 375]) {
+    await page.setViewportSize({ width, height: 740 });
+    await page.goto("/explorar?mensual=1");
+    await expect(chips.getByRole("button", { name: "Solo alquiler mensual" })).toHaveAttribute("aria-pressed", "true");
+    const filters = (await chips.getByRole("link", { name: /^Filtros/ }).boundingBox())!;
+    expect(Math.min(filters.width, filters.height), `filtros de 44 px a ${width} px`).toBeGreaterThanOrEqual(44);
+    const currency = (await chips.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
+    expect(currency.x + currency.width, `₡ | $ dentro de la fila a ${width} px`).toBeLessThanOrEqual(width - 16 + 0.5);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+
   // Las nueve casas de Limón cuestan entre ₡40 000 y ₡85 000 la noche.
   await page.goto("/explorar?min=40000&max=90000");
   await expect(results(page)).toHaveText("9 casas en Limón");
