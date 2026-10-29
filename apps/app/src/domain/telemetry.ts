@@ -7,13 +7,14 @@ export type BeaconKind = "vitals" | "errors" | "events";
 /** Tope del cuerpo de una baliza: lo que pase de aquí es un error o un abuso, no telemetría. */
 export const BEACON_MAX_BYTES = 8 * 1024;
 
-export const PAGE_TYPES = ["inicio", "explorar", "filtros", "ficha", "favoritos", "cuenta", "ayuda", "publicar", "propietario", "admin", "otra"] as const;
+export const PAGE_TYPES = ["inicio", "explorar", "filtros", "buscar", "ficha", "favoritos", "cuenta", "ayuda", "publicar", "propietario", "admin", "otra"] as const;
 export type PageType = (typeof PAGE_TYPES)[number];
 
 export function pageType(pathname: string): PageType {
   const p = safePath(pathname);
   if (p === "/") return "inicio";
   if (p === "/explorar/filtros") return "filtros";
+  if (p === "/explorar/buscar") return "buscar";
   if (p.startsWith("/explorar")) return "explorar";
   if (p.startsWith("/casa/")) return "ficha";
   if (p.startsWith("/favoritos")) return "favoritos";
@@ -63,11 +64,13 @@ const errors = z.object({
 const PUBLIC_ID = /^CT-\d{4,}$/;
 const events = z.object({
   ...common,
-  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap", "monthly_filter_tap"]),
+  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open", "map_marker_tap"]),
   listing: z.optional(z.string().check(z.regex(PUBLIC_ID))),
+  /** Solo en search_submit: qué se indicó en la búsqueda, nunca los valores. */
+  flags: z.optional(z.array(z.enum(["zona", "fechas", "personas"])).check(z.maxLength(3))),
 });
 /** Eventos sin casa: los demás la exigen. */
-const NO_LISTING: ReadonlySet<string> = new Set(["page_view", "search_help_tap", "monthly_filter_tap"]);
+const NO_LISTING: ReadonlySet<string> = new Set(["page_view", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open"]);
 
 export type VitalsRow = { name: string; value: number; rating?: string; metric_id: string; navigation_type?: string; page: PageType; path: string; build: string };
 export type ErrorRow = {
@@ -82,7 +85,7 @@ export type ErrorRow = {
   path: string;
   build: string;
 };
-export type EventRow = { name: string; listing_public_id?: string; page: PageType; path: string; build: string };
+export type EventRow = { name: string; search_flags?: string[]; listing_public_id?: string; page: PageType; path: string; build: string };
 export type BeaconRow = VitalsRow | ErrorRow | EventRow;
 
 export type ParsedBeacon = { ok: true; row: BeaconRow } | { ok: false; status: 400 | 413 };
@@ -118,7 +121,8 @@ export function parseBeacon(kind: BeaconKind, body: string): ParsedBeacon {
   const e = r.data;
   // Los de una casa la llevan; la vista de página y los toques de Explorar (ayuda, «Alquiler mensual») no.
   if (!NO_LISTING.has(e.name) && !e.listing) return { ok: false, status: 400 };
-  return { ok: true, row: defined({ name: e.name, listing_public_id: e.listing, ...where(e.path), build: e.build }) };
+  if (e.flags && e.name !== "search_submit") return { ok: false, status: 400 };
+  return { ok: true, row: defined({ name: e.name, search_flags: e.flags, listing_public_id: e.listing, ...where(e.path), build: e.build }) };
 }
 
 export const BEACON_TABLE = { vitals: "web_vitals", errors: "client_errors", events: "events" } as const;

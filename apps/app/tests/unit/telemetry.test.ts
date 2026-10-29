@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BEACON_MAX_BYTES, pageType, parseBeacon, safePath } from "../../src/domain/telemetry";
 
 describe("telemetría · tipo de página y ruta", () => {
@@ -6,6 +6,7 @@ describe("telemetría · tipo de página y ruta", () => {
     expect(pageType("/")).toBe("inicio");
     expect(pageType("/explorar")).toBe("explorar");
     expect(pageType("/explorar/filtros")).toBe("filtros");
+    expect(pageType("/explorar/buscar")).toBe("buscar");
     expect(pageType("/casa/CT-1015")).toBe("ficha");
     expect(pageType("/favoritos")).toBe("favoritos");
     expect(pageType("/cuenta")).toBe("cuenta");
@@ -79,6 +80,23 @@ describe("telemetría · validación de balizas", () => {
       ok: true,
       row: { name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: "abc123" },
     });
+    // Explorar al estilo Airbnb: la búsqueda dice solo qué se indicó (nunca la zona, las fechas ni las personas).
+    expect(parseBeacon("events", JSON.stringify({ name: "search_submit", flags: ["zona", "personas"], path: "/explorar/buscar?zona=704-cocles", build: "abc" }))).toEqual({
+      ok: true,
+      row: { name: "search_submit", search_flags: ["zona", "personas"], page: "buscar", path: "/explorar/buscar", build: "abc" },
+    });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "page_view", flags: ["zona"] }))).toEqual({ ok: false, status: 400 });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "search_submit", flags: ["precio"] }))).toEqual({ ok: false, status: 400 });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "search_submit", flags: ["zona", "fechas", "personas", "zona"] }))).toEqual({ ok: false, status: 400 });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "map_marker_tap", path: "/explorar" }))).toEqual({ ok: false, status: 400 });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "map_marker_tap", listing: "CT-1015", path: "/explorar?mapa=1" }))).toEqual({
+      ok: true,
+      row: { name: "map_marker_tap", listing_public_id: "CT-1015", page: "explorar", path: "/explorar", build: "abc123" },
+    });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "explore_map_open", path: "/explorar?mapa=1" }))).toEqual({
+      ok: true,
+      row: { name: "explore_map_open", page: "explorar", path: "/explorar", build: "abc123" },
+    });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "listing_view", listing: "drop table" })).ok).toBe(false);
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "signup" })).ok).toBe(false);
   });
@@ -87,5 +105,26 @@ describe("telemetría · validación de balizas", () => {
     expect(parseBeacon("events", "{no es json")).toEqual({ ok: false, status: 400 });
     expect(parseBeacon("events", "[1,2]")).toEqual({ ok: false, status: 400 });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "page_view", pad: "x".repeat(BEACON_MAX_BYTES) }))).toEqual({ ok: false, status: 413 });
+  });
+});
+
+describe("telemetría · trackSearch", () => {
+  it("manda solo los nombres de lo indicado, nunca los valores", async () => {
+    const bodies: string[] = [];
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("location", { pathname: "/explorar/buscar" });
+    vi.stubGlobal("navigator", { sendBeacon: (_url: string, blob: Blob) => (void blob.text().then((t) => bodies.push(t)), true) });
+    try {
+      const { trackSearch } = await import("../../src/shared/beacon");
+      trackSearch({ zona: true, fechas: false, personas: true });
+      trackSearch({ zona: false, fechas: false, personas: false });
+      await vi.waitFor(() => expect(bodies).toHaveLength(2));
+      expect(bodies.map((b) => JSON.parse(b) as Record<string, unknown>).map(({ name, flags }) => ({ name, flags }))).toEqual([
+        { name: "search_submit", flags: ["zona", "personas"] },
+        { name: "search_submit", flags: undefined },
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

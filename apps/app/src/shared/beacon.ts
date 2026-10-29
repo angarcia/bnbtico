@@ -17,11 +17,18 @@ export function sendBeacon(kind: BeaconKind, payload: Record<string, unknown>, p
   void fetch(`/${kind}`, { method: "POST", body, keepalive: true }).catch(() => undefined);
 }
 
-export type EventName = "page_view" | "listing_view" | "whatsapp_tap" | "inquiry_created" | "wizard_step" | "search_help_tap" | "monthly_filter_tap";
+export type EventName = "page_view" | "listing_view" | "whatsapp_tap" | "inquiry_created" | "wizard_step" | "search_help_tap" | "monthly_filter_tap" | "search_submit" | "explore_map_open" | "map_marker_tap";
 
 export function track(name: EventName, listing?: string): void {
   if (typeof window === "undefined") return;
   sendBeacon("events", listing ? { name, listing } : { name });
+}
+
+/** «Buscar» en la búsqueda de Explorar: solo qué se indicó (zona, fechas, personas), nunca los valores. */
+export function trackSearch(flags: { zona: boolean; fechas: boolean; personas: boolean }): void {
+  if (typeof window === "undefined") return;
+  const names = (["zona", "fechas", "personas"] as const).filter((k) => flags[k]);
+  sendBeacon("events", names.length ? { name: "search_submit", flags: names } : { name: "search_submit" });
 }
 
 let sent = 0;
