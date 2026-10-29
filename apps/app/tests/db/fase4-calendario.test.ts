@@ -4,11 +4,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Database } from "../../src/domain/database.types";
 import { costaRicaToday } from "../../src/domain/inquiry";
-import type { CalendarHarness } from "../contract/harness";
+import type { SubscriptionHarness } from "../contract/harness";
 import { anonClient, serviceClient, signIn, sql } from "./local";
 import { postgrestHarness } from "./postgrest-harness";
 
-let h: CalendarHarness;
+let h: SubscriptionHarness;
 let owner: SupabaseClient<Database>;
 let ownerId: string;
 
@@ -66,14 +66,14 @@ describe("reapertura nocturna", () => {
     expect(job).toBe("0 6 * * *|select public.reopen_due_listings()|true");
   });
 
-  it("abre una casa activa y un borrador cuya fecha llegó sin cambiar su estado; deja las de fecha futura", async () => {
+  it("abre una casa activa y una parada cuya fecha llegó sin cambiar su estado; deja las de fecha futura", async () => {
     const active = await h.seed({ status: "active" });
     const hidden = await h.seed({ status: "active" });
     const later = await h.seed({ status: "active" });
     const me = h.owner("owner");
     await me.setAvailable(active.id, false, day(1));
     await me.setAvailable(hidden.id, false, day(1));
-    await me.reopenForEdit(hidden.id);
+    await h.billing("owner").stop(hidden.id);
     await me.setAvailable(later.id, false, day(2));
     const { data, error } = await serviceClient().rpc("reopen_due_listings", { p_today: day(1) });
     expect(error).toBeNull();
@@ -81,7 +81,7 @@ describe("reapertura nocturna", () => {
     const rows = await serviceClient().from("listings").select("id, status, available, reopen_at").in("id", [active.id, hidden.id, later.id]);
     const byId = new Map(rows.data!.map((r) => [r.id, r]));
     expect(byId.get(active.id)).toMatchObject({ status: "active", available: true, reopen_at: null });
-    expect(byId.get(hidden.id)).toMatchObject({ status: "draft", available: true, reopen_at: null });
+    expect(byId.get(hidden.id)).toMatchObject({ status: "inactive", available: true, reopen_at: null });
     expect(byId.get(later.id)).toMatchObject({ status: "active", available: false, reopen_at: day(2) });
   });
 });

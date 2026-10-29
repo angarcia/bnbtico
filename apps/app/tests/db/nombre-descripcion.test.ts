@@ -1,6 +1,6 @@
 // Migración nombre_y_descripcion (ticket 19): submit_listing exige un nombre de 5 a 60 caracteres y una descripción de 80
-// a 2000. Sin `check` en la tabla: una casa publicada antes de la regla se sigue leyendo y editando, y solo al reenviarla
-// a revisión tiene que cumplirla.
+// a 2000. Sin `check` en la tabla: una casa publicada antes de la regla se sigue leyendo y editando, y solo al enviar una
+// edición a revisión tiene que cumplirla (listing_edit_check).
 import { beforeAll, describe, expect, it } from "vitest";
 import type { ListingsHarness, Seeded } from "../contract/harness";
 import { postgrestHarness } from "./postgrest-harness";
@@ -23,16 +23,18 @@ describe("migración nombre_y_descripcion", () => {
     expect(await h.owner("owner").getOwn(old.id)).toMatchObject({ title: "Ola", status: "active" });
   });
 
-  it("al editarla se guardan otras pantallas; enviarla exige la regla y, corregida, pasa", async () => {
+  it("al editarla cambian al momento otros datos; enviar la edición exige la regla y, corregida, pasa", async () => {
+    // Desde editar-casa una casa publicada no vuelve a borrador: se edita con datos al momento y una edición revisada.
     const me = h.owner("owner");
-    await me.reopenForEdit(old.id);
-    expect((await me.saveStep(old.id, 5, { features: ["wifi", "pool"], parkingPaid: null })).features).toEqual(["wifi", "pool"]);
-    await expect(me.submit(old.id)).rejects.toThrow("El nombre de la casa debe tener entre 5 y 60 caracteres.");
-    sql(`update listings set title = 'Ola Cahuita' where id = '${old.id}';`);
-    await expect(me.submit(old.id)).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres.");
-    sql(`update listings set description = repeat('a', 2001) where id = '${old.id}';`);
-    await expect(me.submit(old.id)).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres.");
-    sql(`update listings set description = '  ' || repeat('a', 80) || '  ' where id = '${old.id}';`);
-    expect(await me.submit(old.id)).toBeUndefined();
+    await me.updateLive(old.id, { features: ["wifi", "pool"] });
+    expect((await me.getOwn(old.id))?.features).toEqual(["wifi", "pool"]);
+    await me.saveEdit(old.id, { kind: "habitacion", bathroomShared: false });
+    await expect(me.submitEdit(old.id)).rejects.toThrow("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+    await me.saveEdit(old.id, { title: "Ola Cahuita" });
+    await expect(me.submitEdit(old.id)).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres.");
+    await expect(me.saveEdit(old.id, { description: "a".repeat(2001) })).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres.");
+    await me.saveEdit(old.id, { description: `  ${"a".repeat(80)}  ` });
+    expect(await me.submitEdit(old.id)).toBeUndefined();
+    expect(await me.getOwn(old.id)).toMatchObject({ status: "active", title: "Ola", edit: { status: "review", title: "Ola Cahuita" } });
   });
 });

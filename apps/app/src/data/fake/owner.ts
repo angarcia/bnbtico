@@ -1,13 +1,12 @@
 // Fake en memoria de las casas del propietario: mismas reglas y mensajes que la base (RLS de listings, trigger
 // listings_protect, política listings_owner_delete y RPCs set_listing_available y submit_listing). Guardar una pantalla
-// valida con planStep, como el adaptador PostgREST.
+// valida con planStep, como el adaptador PostgREST. La edición de una casa publicada sigue las reglas de ./edits.
 import type { OwnerListingsApi } from "../../domain/api";
 import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
   charCount,
-  LOCATION_MESSAGES as LOC,
   DESCRIPTION_LENGTH_ERROR,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
@@ -21,39 +20,16 @@ import {
   TITLE_MIN,
   type Listing,
 } from "../../domain/listing";
-import { OTHER_ZONE_MAX, ZONE_RADIUS_M } from "../../domain/zones";
+import { EDIT_MESSAGES } from "../../domain/edit";
+import { photoObjectPaths } from "../../domain/image";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
-import { FAKE_ZONES, fakePlaceAt, fakeZonesNear } from "./places";
+import { editStore, locationOf, type Located } from "./edits";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
 /** Política listings_owner_insert y trigger listings_insert_guard (ticket 08). */
 const MAX_OPEN_DRAFTS = 5;
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
-
-type Located = Pick<FakeListing, "province" | "canton" | "district" | "zone">;
-
-/** Ubicación por punto, como submit_listing: provincia, cantón y distrito salen del pin (place_at, aquí los polígonos del
- *  fake) y la zona se comprueba según su origen. Devuelve el mensaje o lo que se guarda al enviar. */
-function locationOf(l: FakeListing): { error: string } | Located {
-  if (l.lat === null || l.lng === null) return { error: LOC.noPin };
-  const place = fakePlaceAt(l.lat, l.lng);
-  if (!place) return { error: LOC.notLand };
-  const zone = l.zone.trim();
-  if (!zone || l.zoneSource === null) return { error: LOC.noZone };
-  let name = zone;
-  if (l.zoneSource === "list") {
-    if (!l.zoneId) return { error: LOC.noZone };
-    if (!fakeZonesNear(l.lat, l.lng, ZONE_RADIUS_M / 1000).some((z) => z.id === l.zoneId)) return { error: LOC.farZone };
-    name = FAKE_ZONES.find((z) => z.id === l.zoneId)!.name;
-  } else if (l.zoneSource === "district") {
-    if (l.zoneId !== null || zone !== place.district) return { error: LOC.notDistrict };
-  } else {
-    if (l.zoneId !== null) return { error: LOC.noZone };
-    if (charCount(zone) > OTHER_ZONE_MAX) return { error: LOC.longZone };
-  }
-  return { province: place.province, canton: place.canton, district: place.district, zone: name };
-}
 
 /** Las comprobaciones de la RPC submit_listing, en su orden y con sus mensajes. */
 function submitRefusal(l: FakeListing, photos: number): string | null {
@@ -82,6 +58,7 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
 
 export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string; userId: () => string | null }): OwnerListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
+  const edits = editStore(db);
 
   function me(): string {
     const id = opts.userId();
@@ -97,7 +74,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
 
   const toListing = (l: FakeListing): Listing => {
     const photos = fromPhotoRows(db.photosOf(l.id), url);
-    return { ...l, features: [...l.features], photos, photoCount: photos.length, edit: null };
+    return { ...l, features: [...l.features], photos, photoCount: photos.length, edit: edits.toEdit(l.id, url) };
   };
 
   const touch = (l: FakeListing, patch: Partial<FakeListing>) => Object.assign(l, patch, { updatedAt: db.now() });
@@ -165,10 +142,37 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       const l = own(id);
       if (!l) throw new DomainError(NOT_FOUND, "not_found");
       if (l.status === "draft") return void touch(l, {});
-      if (l.status !== "active" && l.status !== "changes" && l.status !== "rejected") {
-        throw new DomainError("Solo bnbtico puede cambiar el estado de un anuncio.", "validation");
-      }
+      // Una casa publicada ya no vuelve a borrador (trigger listings_protect): se edita con updateLive y saveEdit.
+      if (l.status !== "changes" && l.status !== "rejected") throw new DomainError("Solo bnbtico puede cambiar el estado de un anuncio.", "validation");
       touch(l, { status: "draft" });
+    },
+
+    async updateLive(id, patch) {
+      edits.live(edits.published(id, me()), patch);
+    },
+
+    async saveEdit(id, patch) {
+      const l = edits.published(id, me());
+      return edits.save(l, patch) ? edits.toEdit(id, url) : null;
+    },
+
+    async submitEdit(id) {
+      const l = edits.published(id, me());
+      const e = db.edits.get(id);
+      if (!e) throw new DomainError(EDIT_MESSAGES.notFound, "not_found");
+      if (e.status === "review") throw new DomainError(EDIT_MESSAGES.inReview, "validation");
+      if (edits.isEmpty(e)) throw new DomainError(EDIT_MESSAGES.empty, "validation");
+      edits.check(l, e);
+      Object.assign(e, { status: "review", submittedAt: db.now(), reviewNote: null });
+    },
+
+    async discardEdit(id) {
+      edits.published(id, me());
+      const paths = db.editPhotosOf(id).map((p) => p.path);
+      db.edits.delete(id);
+      db.editPhotos = db.editPhotos.filter((p) => p.listingId !== id);
+      // Como el navegador tras discard_edit: ya sin filas que los enlacen, se borran los objetos de las fotos nuevas.
+      for (const name of paths.flatMap(photoObjectPaths)) db.objects.delete(name);
     },
 
     async stats(id) {

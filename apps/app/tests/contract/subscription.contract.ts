@@ -107,14 +107,14 @@ export function subscriptionContract(name: string, makeHarness: () => Promise<Su
         expect(await h.anon.getPublic(a.publicId)).not.toBeNull();
       });
 
-      it("volver a aprobar tras editar conserva la plaza y el fin de la oferta", async () => {
-        const a = await house();
+      it("volver a aprobar una casa reabierta (estado heredado) conserva la plaza y el fin de la oferta", async () => {
+        // Desde editar-casa una casa publicada ya no vuelve a borrador; las que lo hicieron antes siguen pudiendo enviarse.
+        const a = await house({ status: "reopened" });
         const before = await mine(a.id);
-        await h.owner("owner").reopenForEdit(a.id);
-        expect(await mine(a.id)).toMatchObject({ status: "draft", promoSlot: 1 });
+        expect(before).toMatchObject({ status: "draft", promoSlot: 1 });
         await h.owner("owner").submit(a.id);
         await h.admin("aal2").review(a.id, "approve", "");
-        expect(await mine(a.id)).toEqual(before);
+        expect(await mine(a.id)).toEqual({ ...before, status: "active" });
         expect(await h.anon.offerTaken()).toBe(1);
       });
 

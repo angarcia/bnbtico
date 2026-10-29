@@ -1,5 +1,5 @@
 // Arnés PostgREST: siembra por el camino real (dueño inserta y edita, sube fotos, envía con submit_listing; el admin
-// decide con review_listing; reabrir es el update a borrador que permite el trigger).
+// decide con review_listing; «reopened», un estado heredado, se siembra con SQL).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
 import { createPostgrestOwnerBilling } from "../../src/data/postgrest/billing";
@@ -66,7 +66,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       const d = decision[spec.status as keyof typeof decision];
       fail("revisar", (await admin.rpc("review_listing", { p_listing: id, p_decision: d, p_note: d === "approve" ? "" : "Faltan fotos del baño." })).error);
     }
-    if (spec.status === "reopened") fail("reabrir", (await db.from("listings").update({ status: "draft" }).eq("id", id)).error);
+    // Estado heredado (una casa activa vuelta a borrador): desde la migración editar_casa_publicada ningún propietario
+    // llega a él, así que se siembra como el servicio.
+    if (spec.status === "reopened") sql(`begin; select set_config('app.allow_status','on',true); update public.listings set status = 'draft' where id = '${id}'; commit;`);
     return { id, publicId, exact: { lat: draft.lat!, lng: draft.lng! }, photoPaths };
   }
 

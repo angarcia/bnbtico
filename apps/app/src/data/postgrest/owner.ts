@@ -8,10 +8,12 @@ import { CALENDAR_MESSAGES, isIsoDate } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
+import { photoObjectPaths } from "../../domain/image";
 import { DEFAULT_PROVINCE, planStep } from "../../domain/listing";
-import { fromListingRow, storagePhotoUrl, toListingUpdate } from "../../domain/rows";
+import { fromEditRow, fromListingRow, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch } from "../../domain/rows";
 
-const OWN_COLUMNS = "*, listing_photos(id, path, position)";
+const OWN_COLUMNS =
+  "*, listing_photos(id, path, position), listing_edits(status, review_note, title, kind, bathroom_shared, description, lat, lng, zone, zone_id, zone_source, submitted_at, listing_edit_photos(id, path, position))";
 const NOT_FOUND = "No encontramos ese anuncio.";
 /** El mensaje del trigger listings_protect; se adelanta aquí porque una pantalla sin cambios no llega a la base. */
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
@@ -38,14 +40,14 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
     if (!UUID.test(id)) return null;
     const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("id", id).eq("owner_id", await me()).maybeSingle();
     if (error) throw toDomainError(error);
-    return data ? fromListingRow(data, data.listing_photos, url) : null;
+    return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
   }
 
   return {
     async listOwn() {
       const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("owner_id", await me()).order("created_at", { ascending: false });
       if (error) throw toDomainError(error);
-      return data.map((row) => fromListingRow(row, row.listing_photos, url));
+      return data.map((row) => fromListingRow(row, row.listing_photos, url, row.listing_edits));
     },
 
     getOwn,
@@ -61,7 +63,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
         .limit(1)
         .maybeSingle();
       if (error) throw toDomainError(error);
-      return data ? fromListingRow(data, data.listing_photos, url) : null;
+      return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
     },
 
     async createDraft() {
@@ -95,7 +97,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       const { data, error } = await query.maybeSingle();
       if (error) throw toDomainError(error);
       if (!data) throw new DomainError(NOT_FOUND, "not_found");
-      return fromListingRow(data, data.listing_photos, url);
+      return fromListingRow(data, data.listing_photos, url, data.listing_edits);
     },
 
     async submit(id) {
@@ -116,6 +118,38 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       const { data, error } = await db.from("listings").update({ status: "draft" }).eq("id", id).eq("owner_id", await me()).select("id");
       if (error) throw toDomainError(error);
       if (data.length === 0) throw new DomainError(NOT_FOUND, "not_found");
+    },
+
+    async updateLive(id, patch) {
+      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
+      const { error } = await db.rpc("update_listing_live", { p_listing: id, p_patch: toLivePatch(patch) });
+      if (error) throw toDomainError(error);
+    },
+
+    async saveEdit(id, patch) {
+      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
+      const { data, error } = await db.rpc("save_edit", { p_listing: id, p_patch: toEditPatch(patch) });
+      if (error) throw toDomainError(error);
+      // Si la edición quedó vacía y se borró, la RPC devuelve null::listing_edits: PostgREST lo da con todo a null.
+      if (!data || data.listing_id === null) return null;
+      // save_edit devuelve la fila sin sus fotos nuevas: se leen aparte.
+      const photos = await db.from("listing_edits").select("listing_edit_photos(id, path, position)").eq("listing_id", id).maybeSingle();
+      if (photos.error) throw toDomainError(photos.error);
+      return fromEditRow({ ...data, listing_edit_photos: photos.data?.listing_edit_photos ?? [] }, url);
+    },
+
+    async submitEdit(id) {
+      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
+      const { error } = await db.rpc("submit_edit", { p_listing: id });
+      if (error) throw toDomainError(error);
+    },
+
+    async discardEdit(id) {
+      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
+      const { data: paths, error } = await db.rpc("discard_edit", { p_listing: id });
+      if (error) throw toDomainError(error);
+      // Ya sin filas que los enlacen, la política de Storage deja borrar los objetos de las fotos nuevas.
+      if (paths.length) await db.storage.from("listings").remove(paths.flatMap(photoObjectPaths));
     },
 
     async stats(id) {

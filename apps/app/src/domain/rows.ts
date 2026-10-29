@@ -3,6 +3,7 @@
 // es not null, y solo `true` cuenta como «Alquiler mensual».
 import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
+import type { EditLocation, EditPatch, EditStatus, ListingEdit, LivePatch } from "./edit";
 import { photoSrcSet, variantPath } from "./image";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type ListingStatus, type MonthlyMode, type Photo, type PublicListing } from "./listing";
 import type { ZoneSource } from "./zones";
@@ -13,6 +14,11 @@ export type ListingRow = Omit<Database["public"]["Tables"]["listings"]["Row"], "
 export type ListingUpdate = Database["public"]["Tables"]["listings"]["Update"];
 export type PhotoRow = Pick<Database["public"]["Tables"]["listing_photos"]["Row"], "id" | "path" | "position">;
 export type PublicRow = Database["public"]["Views"]["listings_public"]["Row"];
+type EditTableRow = Database["public"]["Tables"]["listing_edits"]["Row"];
+/** La edición pendiente tal como la embebe el adaptador del propietario (listing_edits con sus fotos nuevas). */
+export type EditRow = Pick<EditTableRow, "status" | "review_note" | "title" | "kind" | "bathroom_shared" | "description" | "lat" | "lng" | "zone" | "zone_id" | "zone_source" | "submitted_at"> & {
+  listing_edit_photos: PhotoRow[];
+};
 
 export type PhotoUrl = (path: string) => string;
 
@@ -58,7 +64,57 @@ export function fromPhotoRows(rows: readonly PhotoRow[], url: PhotoUrl): Photo[]
   return rows.map((p) => ({ id: p.id, path: p.path, position: p.position, url: url(variantPath(p.path, 800)) })).sort((a, b) => a.position - b.position);
 }
 
-export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], url: PhotoUrl): Listing {
+const editStatus = (v: string): EditStatus => (v === "review" || v === "changes" ? v : "open");
+
+/** null sin fila o con la fila vacía que devuelve PostgREST cuando save_edit borró la edición (todo null). */
+export function fromEditRow(row: EditRow | null | undefined, url: PhotoUrl): ListingEdit | null {
+  if (!row || (row.status as string | null) === null) return null;
+  const source = zoneSource(row.zone_source);
+  const location: EditLocation | null =
+    row.lat !== null && row.lng !== null && source !== null ? { lat: row.lat, lng: row.lng, zone: row.zone ?? "", zoneId: row.zone_id ?? null, zoneSource: source } : null;
+  return {
+    status: editStatus(row.status),
+    reviewNote: row.review_note ?? null,
+    title: row.title ?? null,
+    kind: row.kind ?? null,
+    bathroomShared: row.bathroom_shared ?? null,
+    description: row.description ?? null,
+    location,
+    submittedAt: row.submitted_at ?? null,
+    photos: fromPhotoRows(row.listing_edit_photos ?? [], url),
+  };
+}
+
+/** Claves de update_listing_live (snake_case), solo las que trae el parche. */
+export function toLivePatch(p: LivePatch): Record<string, Json> {
+  const row: Record<string, Json> = {};
+  if ("capacity" in p) row.capacity = num(p.capacity);
+  if ("bedrooms" in p) row.bedrooms = num(p.bedrooms);
+  if ("bathrooms" in p) row.bathrooms = num(p.bathrooms);
+  if ("features" in p) row.features = [...(p.features ?? [])];
+  if ("parkingPaid" in p) row.parking_paid = p.parkingPaid ?? null;
+  if ("nightlyPriceCrc" in p) row.nightly_price_crc = num(p.nightlyPriceCrc);
+  if ("acceptsMonthly" in p) row.accepts_monthly = p.acceptsMonthly === true;
+  if ("monthlyPriceCrc" in p) row.monthly_price_crc = num(p.monthlyPriceCrc);
+  return row;
+}
+
+/** Claves de save_edit (snake_case), solo las que trae el parche. */
+export function toEditPatch(p: EditPatch): Record<string, Json> {
+  const row: Record<string, Json> = {};
+  if ("title" in p) row.title = p.title ?? null;
+  if ("kind" in p) row.kind = p.kind ?? null;
+  if ("bathroomShared" in p) row.bathroom_shared = p.bathroomShared ?? null;
+  if ("description" in p) row.description = p.description ?? null;
+  if ("lat" in p) row.lat = num(p.lat);
+  if ("lng" in p) row.lng = num(p.lng);
+  if ("zone" in p) row.zone = p.zone ?? null;
+  if ("zoneId" in p) row.zone_id = p.zoneId ?? null;
+  if ("zoneSource" in p) row.zone_source = p.zoneSource ?? null;
+  return row;
+}
+
+export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], url: PhotoUrl, editRow?: EditRow | null): Listing {
   const photos = fromPhotoRows(photoRows, url);
   return {
     id: row.id,
@@ -95,8 +151,8 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
     reviewNote: row.review_note ?? null,
     reviewedAt: row.reviewed_at ?? null,
     firstPublishedAt: row.first_published_at ?? null,
-    // La edición pendiente la lee el adaptador del propietario (tarea 5 de editar-casa).
-    edit: null,
+    // La edición pendiente: solo la embebe el adaptador del propietario; las demás lecturas no la piden.
+    edit: fromEditRow(editRow, url),
     whatsappPhone: row.whatsapp_phone ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,

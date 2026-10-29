@@ -5,7 +5,9 @@ import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/geo";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { costaRicaToday } from "../../domain/inquiry";
-import { emptyDraft, type ListingDraft, type ListingStatus } from "../../domain/listing";
+import type { EditStatus } from "../../domain/edit-label";
+import { emptyDraft, type Kind, type ListingDraft, type ListingStatus } from "../../domain/listing";
+import type { ZoneSource } from "../../domain/zones";
 import type { PaymentProviderName, ReminderDays, ReminderStatus } from "../../domain/subscription";
 
 export interface FakeProfile {
@@ -44,6 +46,24 @@ export interface FakePhoto {
   listingId: string;
   path: string;
   position: number;
+}
+
+/** listing_edits: la edición pendiente de una casa publicada (una por casa); null = sin cambio en ese dato. */
+export interface FakeEdit {
+  listingId: string;
+  status: EditStatus;
+  reviewNote: string | null;
+  title: string | null;
+  kind: Kind | null;
+  bathroomShared: boolean | null;
+  description: string | null;
+  lat: number | null;
+  lng: number | null;
+  zone: string | null;
+  zoneId: string | null;
+  zoneSource: ZoneSource | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
 }
 
 export interface FakeInquiry {
@@ -122,6 +142,9 @@ export class FakeDb {
   readonly profiles = new Map<string, FakeProfile>();
   readonly listings = new Map<string, FakeListing>();
   photos: FakePhoto[] = [];
+  /** listing_edits por casa y listing_edit_photos (las fotos nuevas de la edición; `listingId` es el de la edición). */
+  readonly edits = new Map<string, FakeEdit>();
+  editPhotos: FakePhoto[] = [];
   inquiries: FakeInquiry[] = [];
   /** Balizas `listing_view` (como la tabla events): la casa y cuándo. */
   views: { publicId: string; at: string }[] = [];
@@ -218,6 +241,10 @@ export class FakeDb {
     return this.photos.filter((p) => p.listingId === listingId).sort((a, b) => a.position - b.position);
   }
 
+  editPhotosOf(listingId: string): FakePhoto[] {
+    return this.editPhotos.filter((p) => p.listingId === listingId).sort((a, b) => a.position - b.position);
+  }
+
   profileByPhone(phone: string): FakeProfile | undefined {
     for (const p of this.profiles.values()) if (p.phone === phone) return p;
     return undefined;
@@ -241,6 +268,8 @@ export class FakeDb {
   clear(): void {
     this.listings.clear();
     this.photos = [];
+    this.edits.clear();
+    this.editPhotos = [];
     this.objects.clear();
     this.inquiries = [];
     this.views = [];

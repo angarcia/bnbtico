@@ -2,7 +2,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { DomainError } from "../../src/domain/errors";
 import { INQUIRY_MESSAGES } from "../../src/domain/inquiry";
-import type { InquiriesHarness, Seeded } from "./harness";
+import type { Seeded, SubscriptionHarness } from "./harness";
 
 async function rejection(p: Promise<unknown>): Promise<DomainError> {
   try {
@@ -14,9 +14,9 @@ async function rejection(p: Promise<unknown>): Promise<DomainError> {
   throw new Error("se esperaba un error");
 }
 
-export function favoritesContract(name: string, makeHarness: () => Promise<InquiriesHarness>) {
+export function favoritesContract(name: string, makeHarness: () => Promise<SubscriptionHarness>) {
   describe(`favoritos · ${name}`, () => {
-    let h: InquiriesHarness;
+    let h: SubscriptionHarness;
     let a: Seeded;
     let b: Seeded;
 
@@ -69,7 +69,8 @@ export function favoritesContract(name: string, makeHarness: () => Promise<Inqui
     it("una casa que deja de estar publicada no vuelve en la lista", async () => {
       await h.favorites("other").add(a.publicId);
       await h.favorites("other").add(b.publicId);
-      await h.owner("owner").reopenForEdit(a.id);
+      // Una casa publicada ya no vuelve a borrador: deja de estarlo al parar su suscripción.
+      await h.billing("owner").stop(a.id);
       expect(await ids("other")).toEqual([b.publicId]);
     });
 

@@ -1,4 +1,5 @@
-// Contrato de la zona del propietario: leer las casas propias, disponibilidad, reabrir para editar y descartar.
+// Contrato de la zona del propietario: leer las casas propias, disponibilidad, reabrir para editar (solo con cambios
+// pedidos o rechazada; una casa publicada se edita sin salir de Explorar, ver edit.contract.ts) y descartar.
 // Mismas reglas y mensajes en el fake y en la base (RLS, trigger listings_protect, política listings_owner_delete,
 // RPC set_listing_available).
 import { beforeAll, describe, expect, it } from "vitest";
@@ -116,13 +117,10 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         theirs = await h.seed({ status: "active", as: "other" });
       }, 90_000);
 
-      it("una casa activa vuelve a borrador, conserva su revisión y su enlace queda bloqueado", async () => {
-        await me.reopenForEdit(s.active.id);
-        const l = await me.getOwn(s.active.id);
-        expect(l).toMatchObject({ status: "draft", publicId: s.active.publicId });
-        expect(l!.reviewedAt).not.toBeNull();
-        expect(await h.anon.getPublic(s.active.publicId)).toBeNull();
-        expect(await h.anon.linkState(s.active.publicId)).toBe("blocked");
+      it("una casa activa ya no vuelve a borrador: solo bnbtico cambia ese estado", async () => {
+        expect((await rejection(me.reopenForEdit(s.active.id))).message).toBe(ONLY_BNBTICO);
+        expect((await me.getOwn(s.active.id))?.status).toBe("active");
+        expect(await h.anon.linkState(s.active.publicId)).toBe("active");
       });
 
       it("con cambios pedidos o rechazada también vuelve a borrador, con la nota del admin", async () => {

@@ -9,7 +9,7 @@ import { DomainError } from "../../src/domain/errors";
 import { parseFilters } from "../../src/domain/filters";
 import { costaRicaToday } from "../../src/domain/inquiry";
 import { PROVINCES } from "../../src/domain/listing";
-import type { CalendarHarness, SeedSpec } from "./harness";
+import type { SeedSpec, SubscriptionHarness } from "./harness";
 
 async function rejection(p: Promise<unknown>): Promise<DomainError> {
   try {
@@ -27,9 +27,9 @@ const occupied = (d: string, specialPriceCrc: number | null = null): CalendarDay
 const special = (d: string, specialPriceCrc: number): CalendarDay => ({ day: d, available: true, specialPriceCrc });
 const NO_NIGHTLY_PRICE: SeedSpec["draft"] = { nightlyPriceCrc: null };
 
-export function calendarContract(name: string, makeHarness: () => Promise<CalendarHarness>) {
+export function calendarContract(name: string, makeHarness: () => Promise<SubscriptionHarness>) {
   describe(`calendario · ${name}`, () => {
-    let h: CalendarHarness;
+    let h: SubscriptionHarness;
     const house = (spec: Partial<SeedSpec> = {}) => h.seed({ status: "active", ...spec });
 
     beforeAll(async () => {
@@ -199,11 +199,12 @@ export function calendarContract(name: string, makeHarness: () => Promise<Calend
       await owner.setAvailable(later.id, false, day(2));
       await owner.setAvailable(noDate.id, false);
       await owner.setAvailable(hidden.id, false, day(1));
-      await owner.reopenForEdit(hidden.id);
+      // Parada después de cerrarla (una casa publicada ya no vuelve a borrador): se abre igual y sigue parada.
+      await h.billing("owner").stop(hidden.id);
 
       expect(await h.reopenDue(day(1))).toBeGreaterThanOrEqual(2);
       expect(await owner.getOwn(due.id)).toMatchObject({ available: true, reopenAt: null, status: "active" });
-      expect(await owner.getOwn(hidden.id)).toMatchObject({ available: true, reopenAt: null, status: "draft" });
+      expect(await owner.getOwn(hidden.id)).toMatchObject({ available: true, reopenAt: null, status: "inactive" });
       expect(await owner.getOwn(later.id)).toMatchObject({ available: false, reopenAt: day(2), status: "active" });
       expect(await owner.getOwn(noDate.id)).toMatchObject({ available: false, reopenAt: null, status: "active" });
       expect(await h.anon.getPublic(hidden.publicId)).toBeNull();

@@ -2,6 +2,7 @@
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
 import type { CalendarChange, CalendarDay } from "./calendar";
+import type { EditPatch, ListingEdit, LivePatch } from "./edit";
 import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { FxRate } from "./fx";
@@ -93,8 +94,19 @@ export interface OwnerListingsApi {
   saveStep(id: string, step: Step, patch: Partial<ListingDraft>, known?: Listing): Promise<Listing>;
   /** Envía a revisión con la RPC submit_listing; sus mensajes en español pasan tal cual. */
   submit(id: string): Promise<void>;
-  /** Activa, con cambios pedidos o rechazada → borrador (deja de verse hasta la nueva aprobación). */
+  /**
+   * Con cambios pedidos o rechazada → borrador. Una casa publicada ya no vuelve a borrador (se edita con updateLive y
+   * saveEdit): falla con «Solo bnbtico puede cambiar el estado de un anuncio.».
+   */
   reopenForEdit(id: string): Promise<void>;
+  /** Datos al momento de una casa publicada (RPC update_listing_live). */
+  updateLive(id: string, patch: LivePatch): Promise<void>;
+  /** Guarda en la edición (la crea si no hay); null si quedó sin cambios y se borró (RPC save_edit). */
+  saveEdit(id: string, patch: EditPatch): Promise<ListingEdit | null>;
+  /** Envía la edición a revisión (RPC submit_edit), con las reglas de submit_listing para los datos revisados. */
+  submitEdit(id: string): Promise<void>;
+  /** Borra la edición en cualquier estado y después los objetos de sus fotos nuevas (RPC discard_edit + Storage). */
+  discardEdit(id: string): Promise<void>;
   /**
    * «Cerrar la casa hasta…» del Calendario (antes «Anuncio visible»), solo con la casa activa (RPC set_listing_available). Al cerrar, `reopenAt` opcional
    * (`YYYY-MM-DD`, de mañana a hoy + 365): esa noche la base la abre sola. Abrir a mano borra la fecha; una fecha al abrir
