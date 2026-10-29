@@ -64,3 +64,7 @@ export function isContactNext(next: string | null | undefined): boolean {
   const path = safeNext(next);
   return !!path && listingInNext(path) !== null && /[?&]contacto=1(?:[&#]|$)/.test(path);
 }
+
+/** La vuelta al asistente de publicar tras verificar el WhatsApp. */
+export const PUBLISH_NEXT = "/publicar/continuar";
+export const isPublishNext = (next: string | null | undefined): boolean => safeNext(next) === PUBLISH_NEXT;

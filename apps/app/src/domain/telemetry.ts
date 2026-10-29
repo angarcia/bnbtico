@@ -20,7 +20,7 @@ export function pageType(pathname: string): PageType {
   if (p.startsWith("/favoritos")) return "favoritos";
   if (p.startsWith("/cuenta")) return "cuenta";
   if (p.startsWith("/ayuda")) return "ayuda";
-  if (p.startsWith("/propietario/publicar")) return "publicar";
+  if (p.startsWith("/propietario/publicar") || p === "/publicar" || p.startsWith("/publicar/")) return "publicar";
   if (p.startsWith("/propietario")) return "propietario";
   if (p.startsWith("/admin")) return "admin";
   return "otra";
@@ -64,13 +64,13 @@ const errors = z.object({
 const PUBLIC_ID = /^CT-\d{4,}$/;
 const events = z.object({
   ...common,
-  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open", "map_marker_tap"]),
+  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open", "map_marker_tap", "publish_verify"]),
   listing: z.optional(z.string().check(z.regex(PUBLIC_ID))),
   /** Solo en search_submit: qué se indicó en la búsqueda, nunca los valores. */
   flags: z.optional(z.array(z.enum(["zona", "fechas", "personas"])).check(z.maxLength(3))),
 });
 /** Eventos sin casa: los demás la exigen. */
-const NO_LISTING: ReadonlySet<string> = new Set(["page_view", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open"]);
+const NO_LISTING: ReadonlySet<string> = new Set(["page_view", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open", "publish_verify"]);
 
 export type VitalsRow = { name: string; value: number; rating?: string; metric_id: string; navigation_type?: string; page: PageType; path: string; build: string };
 export type ErrorRow = {
