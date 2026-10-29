@@ -217,7 +217,7 @@ test("ficha editable: la tarjeta ocre de la pendiente, el bloque de la parada, s
 
   // En la ventana del aviso, la tarjeta ocre sale en Mis casas; en la ficha, la fila «Suscripción» al final.
   await page.goto(`/propietario/casas/${cerca.id}`);
-  await expect(page.getByRole("link", { name: /^Suscripción/ })).toHaveAttribute("href", payLink(cerca.publicId));
+  await expect(page.getByTestId("subscription-card").getByRole("link")).toHaveAttribute("href", payLink(cerca.publicId));
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await page.screenshot({ path: "test-results/capturas/detalle-ventana.png", fullPage: true });
   await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeEnabled();

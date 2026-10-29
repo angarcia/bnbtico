@@ -13,7 +13,7 @@ import { variantUrl } from "../../domain/image";
 import { resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
-import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft, subscriptionLine } from "../../domain/subscription";
+import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
 import { MonthlyLine } from "../../shared/monthly-line";
@@ -22,7 +22,7 @@ import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
-import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft } from "../owner";
+import { offerTakenQuery, ownListingQuery, ownListingsQuery, useDeleteDraft } from "../owner";
 import { useSession } from "../session";
 
 const base = () => window.location.origin;
@@ -70,11 +70,6 @@ export function ActivateButton({ publicId }: { publicId: string }) {
   );
 }
 
-/** Aviso de dinero cuando la casa está por pagar y aún no hay fila de cobro. */
-export function PaymentDueNote({ listing: l }: { listing: Listing }) {
-  return <div className="note note-sun">{describe(l, { base: "" }).situation}</div>;
-}
-
 /** Tarjeta ocre: la oferta terminó sin método (pendiente de pago) o termina dentro de 90 días; null si no toca avisar. */
 export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; title?: string }) {
   if (!payButtonDue(hb.sub, today)) return null;
@@ -105,21 +100,6 @@ export function SkeletonCard() {
       <span className="sk thumb" />
       <span className="sk sk-line" />
     </section>
-  );
-}
-
-/** Visitas y consultas de 30 días (revisión UX A2): si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
-export function StatsLine({ listing: l }: { listing: Listing }) {
-  const userId = useUserId();
-  const { data } = useQuery({ ...listingStatsQuery(userId, l.id), enabled: !!userId });
-  if (!data) return <span className="small stats-line" aria-hidden="true">&nbsp;</span>;
-  const { views, inquiries } = data;
-  return (
-    <span className="small strong primary stats-line" data-testid="listing-stats">
-      {views === 0 && inquiries === 0
-        ? "Comparta su enlace para que lleguen las primeras visitas"
-        : `${views} ${views === 1 ? "visita" : "visitas"} · ${inquiries} ${inquiries === 1 ? "consulta" : "consultas"} · últimos 30 días`}
-    </span>
   );
 }
 
@@ -301,9 +281,6 @@ export function CasaPropietarioScreen() {
 
 function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   const navigate = useNavigate();
-  const billing = useBilling(userId);
-  const hb = billing?.of(l.id);
-  const subLine = hb && billing ? subscriptionLine(hb.sub, billing.today) : null;
   const discard = useDeleteDraft(userId);
   const { mainPrice: price, monthly } = describe(l, { base: "" });
   const cover = l.photos[0];
@@ -328,10 +305,8 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
         ) : null}
       </div>
       {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
-      {l.status === "active" ? <StatsLine listing={l} /> : null}
 
       {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
-      {hb && billing ? <PayNotice hb={hb} today={billing.today} /> : l.status === "payment_due" ? <PaymentDueNote listing={l} /> : null}
       {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
         <section className="card-arena stack gap-10">
           <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
@@ -346,7 +321,6 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
       <section className="list">
         <ShareListItem listing={l} />
-        {subLine ? <SubscriptionRow publicId={l.publicId} line={subLine} /> : null}
         {l.status === "draft" ? (
           <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="list-item">
             <span className="muted-icon">
@@ -371,23 +345,6 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
         </button>
       ) : null}
     </>
-  );
-}
-
-/** «Suscripción» con su línea («Gratis hasta el 14 oct 2027»), que lleva a «Promoción y suscripción». */
-export function SubscriptionRow({ publicId, line }: { publicId: string; line: string }) {
-  return (
-    <SubscriptionLink publicId={publicId} className="list-item">
-      <span className="muted-icon">
-        <I.shield />
-      </span>
-      <span className="body">
-        Suscripción<small data-testid="subscription-row">{line}</small>
-      </span>
-      <span className="chev">
-        <I.chevron />
-      </span>
-    </SubscriptionLink>
   );
 }
 
@@ -418,7 +375,7 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
         Compartir ficha
         {/* La referencia CT-#### va aquí, dentro del enlace, y no sobre la foto (revisión UX N7). */}
         {enabled && !copied ? <small className="num primary share-url">{target.url.replace(/^https?:\/\//, "")}</small> : null}
-        <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : l.status === "payment_due" || l.status === "inactive" ? "Disponible cuando la casa vuelva a estar activa" : "Disponible cuando la casa esté activa"}</small>
+        <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
       </span>
       <span className="chev">
         <I.chevron />

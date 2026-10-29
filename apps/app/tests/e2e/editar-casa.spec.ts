@@ -50,7 +50,13 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(share).toHaveClass(/btn-primary/);
   await expect(page.getByTestId("share-url")).toHaveText(new RegExp(`/casa/${publicId}$`));
   await expect(page.getByText("WhatsApp de esta casa")).toBeVisible();
-  await expect(page.getByTestId("subscription-row")).toBeVisible();
+  const sub = page.getByTestId("subscription-card");
+  await expect(sub.getByRole("heading", { name: "Suscripción" })).toBeVisible();
+  await expect(sub).toContainText("Oferta de lanzamiento");
+  await expect(sub).toContainText("Al día");
+  await expect(sub.getByTestId("subscription-row")).toHaveText(/^Gratis hasta el /);
+  await expect(sub).toContainText(". Después, ₡2 900 al mes, sin permanencia.");
+  await expect(sub.getByRole("link")).toHaveAttribute("href", `/propietario/suscripcion#pago=${publicId}`);
   await expect(page.getByText("Editar la ficha")).toHaveCount(0);
   await expect(page.getByText("Anuncio visible")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Descartar borrador" })).toHaveCount(0);
@@ -100,12 +106,26 @@ test("enviar a revisión: el aviso cambia y los errores se ven", async ({ page }
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("No hay cambios que enviar.");
   await page.unroute("**/rest/v1/rpc/submit_edit");
+  // Se ve el error de la última acción: si después falla descartar, sale el suyo y no el de enviar.
+  await page.route("**/rest/v1/rpc/discard_edit", (route) =>
+    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "No encontramos esa edición.", details: null, hint: null }) }),
+  );
+  page.once("dialog", (d) => void d.accept());
+  await page.getByRole("button", { name: "Descartar cambios" }).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("No encontramos esa edición.");
+  await page.unroute("**/rest/v1/rpc/discard_edit");
 
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page.getByText("Edición en revisión: nombre · normalmente en menos de 24 horas")).toBeVisible();
   await expect(page.getByRole("button", { name: "Enviar a revisión" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Descartar cambios" })).toBeVisible();
-  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
+  // En revisión, la fila deja de ser un enlace (maqueta 08c): candado y la etiqueta invertida; las demás siguen abriéndose.
+  const locked = rows(page).locator(".list-item.is-locked");
+  await expect(locked).toHaveCount(1);
+  await expect(locked).toContainText("Casa Coco frente al mar");
+  await expect(locked.locator(".tag-rev.is-pending")).toHaveText("En revisión");
+  await expect(rows(page).locator(`a[href="/propietario/casas/${id}/editar/nombre"]`)).toHaveCount(0);
+  await expect(row(page, "Tipo")).toHaveAttribute("href", `/propietario/casas/${id}/editar/tipo`);
   await expect(page.locator(".detail-photo .state")).toHaveText("Edición en revisión");
   expect((await h.owner("owner").getOwn(id))!.edit?.status).toBe("review");
 });

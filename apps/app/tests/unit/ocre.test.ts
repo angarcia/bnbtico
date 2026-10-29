@@ -10,7 +10,7 @@ const OCRE = /\b(btn|card|note|tile|badge)-sun\b/g;
 const ALLOW = new Set([
   "client/screens/propietario.tsx#PayButton",
   "client/screens/propietario.tsx#PayNotice",
-  "client/screens/propietario.tsx#PaymentDueNote",
+  "client/screens/casa-editable.tsx#PaymentDueNote",
   "client/screens/propietario.tsx#ActivateButton",
   "client/screens/propietario.tsx#CasasScreen", // casilla «por pagar»
   "client/screens/casa-editable.tsx#StoppedNotice", // «Suscripción parada» en la ficha editable
