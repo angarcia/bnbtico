@@ -1,3 +1,16 @@
+## 2026-10-29 · Suscripción por casa, Cuenta y Actividad (Daniel, ronda de Ana, F y G)
+
+Decisión de Daniel. Especificación: `.scratch/cuenta-y-actividad/spec.md`.
+
+- **«Suscripción» desde una casa** es `/propietario/suscripcion?casa=CT-####`: solo esa casa, «Método de pago» y «Cómo funciona», sin la oferta de lanzamiento; con dos o más casas, el enlace «Ver todas sus casas» lleva a «Promoción y suscripción» (sin `casa`). `#pago=CT-####` sigue resaltando la casa. Al abrirla con `casa` se vuelve a leer `owner_billing` siempre, y `casa` solo se quita cuando los datos ya llegaron y la casa no está (una casa aprobada hace minutos puede faltar en la copia guardada en el teléfono). La pasarela vuelve a `?casa=CT-1042#pago=CT-1042` cuando se pagó desde una casa (`?pago=ok` se limpia al volver, sin perder `casa` ni el hash).
+- **«Activar suscripción»** en ocre sustituye a «Reactivar» en las casas paradas. Revierte en esto lo del 2026-10-27 («Fase 5, ticket 05»).
+- **Cuenta:** la fila «Método de pago» sale en ocre con «Falta · añádalo antes de que termine su oferta» cuando no hay método; las líneas de la suscripción pendientes o inactivas van en ocre y cada una lleva a la suscripción de su casa.
+- **«Cerrar sesión»** al final de Cuenta, discreto, con confirmación («¿Cerrar sesión?», «Tendrá que recibir un código nuevo para volver a entrar.»). La hoja de confirmación se comparte con «Parar suscripción» (`confirm-sheet`, con su propia entrada de `size-limit`, «Hoja de confirmación», y su exclusión del JS inicial); al cerrarla el foco vuelve al botón que la abrió.
+- **La sesión no caduca mientras se use:** sin `timebox` ni `inactivity_timeout` en `[auth.sessions]` (ver `docs/configuracion-supabase.md`). Passkeys, después del lanzamiento.
+- **Identidad:** la línea «Pronto podrá verificar también su identidad (opcional).» de Cuenta es el único texto de identidad de la v1.
+- **Actividad:** cada consulta lleva la etiqueta de su casa (miniatura redonda y nombre) y, con dos o más casas publicadas, chips «Todas · <casa>…» bajo «Últimas consultas», en la URL como `?casa=<uuid>`. El filtro se aplica antes de tomar las 20 más recientes, así una casa tranquila no sale vacía. Un borrador no lleva chip. Revierte la retirada de los chips del 2026-10-27 («Navegación simple»).
+- **Resoluciones:** `scopeBilling` y las reglas de los chips están en `src/domain` (archivos nuevos) para no engordar los trozos con presupuesto; el enlace «Cambiar»/«Añadir» de «Método de pago» en la pantalla sin `casa` vuelve sin `casa`; el botón de pago de una casa en esa pantalla vuelve con su `casa`.
+
 ## 2026-10-29 · Publicar v2: enviar sin fotos, verificar después del paso 1 (Daniel, ronda de Ana, E)
 
 Plan: `.scratch/publicar-v2/`. Sustituye al mínimo de 5 fotos y a la descripción obligatoria (fase 2, ticket 19; C4 del 2026-10-26) y al botón de WhatsApp de la portada (C1) cuando la portada no es solo-portada.

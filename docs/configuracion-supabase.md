@@ -61,6 +61,8 @@ Luego **Authentication → Rate Limits**: dejá el envío de SMS en 30 por hora 
 
 En **Authentication → URL Configuration**: Site URL `https://pruebas.bnbtico.com`. No hace falta nada más para OTP por teléfono.
 
+**Sesión:** `[auth.sessions] timebox` e `inactivity_timeout` se dejan sin poner en local, `bnbtico-pruebas` y producción: la sesión no caduca mientras se use (decisión 2026-10-29). Revisarlo en el panel de Auth → Sessions al crear un proyecto.
+
 ## 5. Variables en Vercel (app vieja, hasta el corte)
 
 Proyecto `bnbtico` → **Settings → Environment Variables**, entorno **Preview** (rama `develop`):
