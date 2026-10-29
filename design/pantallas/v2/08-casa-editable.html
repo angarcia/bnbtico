@@ -21,7 +21,7 @@ svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-l
 .cur span{min-width:40px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:999px;font-weight:700;font-size:16px;color:#5C6B69}
 .cur span.on{background:#7FA98A;color:#16331F}
 .cur.ov{background:#FFFBF2}
-.topbar{position:absolute;left:0;right:0;top:56px;height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#FFFBF2;z-index:4}
+.topbar{position:absolute;left:0;right:0;top:8px;height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#FFFBF2;z-index:4}
 .topbar img{height:34px;width:auto}
 .avatar{width:44px;height:44px;border-radius:999px;background:#DCE8DF;color:#2F5D45;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;text-decoration:none;flex:none}
 .tabbar{position:absolute;left:0;right:0;bottom:0;height:84px;padding:8px 6px 20px;display:flex;align-items:center;background:#FFFBF2;border-top:2px solid #EADFC8;z-index:6}
@@ -58,20 +58,20 @@ svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-l
 .fold{display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 20px;border-radius:20px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6;text-decoration:none;color:#1C2B2A}
 .fold span{color:#5C6B69;font-size:14px;font-weight:600}.fold b{font-weight:700;font-size:15px}
 .big{border-radius:28px;background:#FFFFFF;box-shadow:0 2px 0 #E6DCC6,0 16px 36px -22px rgba(28,43,42,.45);padding:20px}
-.xbtn{position:absolute;left:16px;top:60px;width:44px;height:44px;border-radius:999px;background:#FFFFFF;border:1.5px solid #E6DCC6;display:flex;align-items:center;justify-content:center;color:#1C2B2A;text-decoration:none}
+.xbtn{position:absolute;left:16px;top:12px;width:44px;height:44px;border-radius:999px;background:#FFFFFF;border:1.5px solid #E6DCC6;display:flex;align-items:center;justify-content:center;color:#1C2B2A;text-decoration:none}
 </style>
 </head>
 <body>
 <!-- Referencia visual de la ronda de Ana (2026-10-28). Decisiones: .scratch/ronda-ana-2026-10-28/decisiones.md -->
 <main class="wrap">
 <figure><figcaption>08a · Casa publicada y al día, pantalla entera: fotos arriba, cada dato se toca para editarlo; la suscripción, al final</figcaption>
-  <div class="ab" data-ab="08-casa-editable" style="height:1600px">
-    <div style="position:absolute;left:8px;right:16px;top:56px;height:56px;display:flex;align-items:center;gap:4px;z-index:4">
+  <div class="ab" data-ab="08-casa-editable" style="height:1552px">
+    <div style="position:absolute;left:8px;right:16px;top:8px;height:56px;display:flex;align-items:center;gap:4px;z-index:4">
       <a href="07-mis-casas.html" aria-label="Volver a Mis casas" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1C2B2A"><svg class="i" width="24" height="24" viewBox="0 0 24 24" stroke-width="2.2"><path d="M15 5l-7 7 7 7"></path></svg></a>
       <h1 class="o" style="flex:1;font-weight:800;font-size:24px;line-height:1.1">Casa Coco</h1>
       <a href="06-ficha.html" style="font-weight:700;font-size:14px;color:#2F5D45;text-decoration:none">Ver ficha</a>
     </div>
-    <div style="position:absolute;left:16px;right:16px;top:120px;display:flex;flex-direction:column;gap:16px">
+    <div style="position:absolute;left:16px;right:16px;top:72px;display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="photo" style="height:260px;border-radius:24px"><img src="../fotos/hero.jpg" alt=""><span class="state st-ok">Activa</span><span style="position:absolute;left:12px;bottom:12px;padding:6px 11px;border-radius:999px;background:rgba(28,43,42,.86);color:#FFFBF2;font-size:12px;font-weight:700">Portada</span><span class="num" style="position:absolute;right:12px;bottom:12px;padding:6px 11px;border-radius:999px;background:rgba(28,43,42,.86);color:#FFFBF2;font-size:12px;font-weight:700">5 fotos</span></div>
         <div style="display:flex;gap:9px"><span class="photo" style="width:64px;height:64px;border-radius:16px;flex:none"><img src="../fotos/kitchen.jpg" alt=""></span><span class="photo" style="width:64px;height:64px;border-radius:16px;flex:none"><img src="../fotos/bedroom.jpg" alt=""></span><span class="photo" style="width:64px;height:64px;border-radius:16px;flex:none"><img src="../fotos/garden.jpg" alt=""></span><span class="photo" style="width:64px;height:64px;border-radius:16px;flex:none"><img src="../fotos/beach.jpg" alt=""></span><a href="#" style="width:64px;height:64px;border-radius:16px;border:2px dashed #B9C7BC;color:#2F5D45;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;text-decoration:none;flex:none"><svg class="i" width="18" height="18" viewBox="0 0 24 24" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg>Añadir</a></div>
@@ -96,12 +96,12 @@ svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-l
   </div></figure>
 <figure><figcaption>08b · Suscripción pausada: el bloque ocre sube arriba con «Activar suscripción»</figcaption>
   <div class="ab" data-ab="08-casa-editable-pausada" style="height:844px">
-    <div style="position:absolute;left:8px;right:16px;top:56px;height:56px;display:flex;align-items:center;gap:4px;z-index:4">
+    <div style="position:absolute;left:8px;right:16px;top:8px;height:56px;display:flex;align-items:center;gap:4px;z-index:4">
       <a href="07-mis-casas.html" aria-label="Volver a Mis casas" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1C2B2A"><svg class="i" width="24" height="24" viewBox="0 0 24 24" stroke-width="2.2"><path d="M15 5l-7 7 7 7"></path></svg></a>
       <h1 class="o" style="flex:1;font-weight:800;font-size:24px;line-height:1.1">Casa Coco</h1>
       <a href="06-ficha.html" style="font-weight:700;font-size:14px;color:#2F5D45;text-decoration:none">Ver ficha</a>
     </div>
-    <div style="position:absolute;left:16px;right:16px;top:120px;display:flex;flex-direction:column;gap:16px">
+    <div style="position:absolute;left:16px;right:16px;top:72px;display:flex;flex-direction:column;gap:16px">
       <section style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:24px;background:#FBE8C2;color:#7A4E07">
         <h2 class="o" style="font-weight:700;font-size:18px">Suscripción pausada</h2>
         <p style="font-size:14px;color:#1C2B2A">Casa Coco no aparece en Explorar y el enlace de su ficha no funciona. Actívela para que vuelvan a escribirle.</p>
@@ -126,12 +126,12 @@ svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-l
   </div></figure>
 <figure><figcaption>08c · Con una edición en revisión: aviso arriba con «Descartar cambios»; lo que está en revisión no se puede tocar otra vez</figcaption>
   <div class="ab" data-ab="08-casa-editable-en-revision" style="height:844px">
-    <div style="position:absolute;left:8px;right:16px;top:56px;height:56px;display:flex;align-items:center;gap:4px;z-index:4">
+    <div style="position:absolute;left:8px;right:16px;top:8px;height:56px;display:flex;align-items:center;gap:4px;z-index:4">
       <a href="07-mis-casas.html" aria-label="Volver a Mis casas" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#1C2B2A"><svg class="i" width="24" height="24" viewBox="0 0 24 24" stroke-width="2.2"><path d="M15 5l-7 7 7 7"></path></svg></a>
       <h1 class="o" style="flex:1;font-weight:800;font-size:24px;line-height:1.1">Casa Coco</h1>
       <a href="06-ficha.html" style="font-weight:700;font-size:14px;color:#2F5D45;text-decoration:none">Ver ficha</a>
     </div>
-    <div style="position:absolute;left:16px;right:16px;top:120px;display:flex;flex-direction:column;gap:16px">
+    <div style="position:absolute;left:16px;right:16px;top:72px;display:flex;flex-direction:column;gap:16px">
       <section style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:24px;background:#F0E6D2">
         <h2 class="o" style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px"><svg class="i" width="20" height="20" viewBox="0 0 24 24" stroke="#5C6B69"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg>Edición en revisión</h2>
         <p style="font-size:14px">Revisamos el nombre y la descripción nuevos. Mientras tanto, los clientes ven la versión aprobada. Le avisamos por WhatsApp.</p>
