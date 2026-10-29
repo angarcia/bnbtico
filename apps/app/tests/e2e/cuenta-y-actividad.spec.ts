@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "./helpers/test";
 import { postgrestHarness } from "../db/postgrest-harness";
 import type { BillingHouse } from "../../src/domain/subscription";
-import { injectSession } from "./helpers/session";
+import { injectSession, signOut } from "./helpers/session";
 
 // Cuenta y actividad (plan F+G), contra Supabase local y la pasarela falsa del worker (PAYMENTS=fake de pnpm dev:vars).
 // Suscripción de una sola casa (`?casa=CT-####`): desde cualquier entrada de una casa se ve solo esa casa y su método de
@@ -202,5 +202,71 @@ test.describe("Cuenta", () => {
     await fresh(page, "/cuenta");
     await expect(page.getByTestId("payment-row")).toContainText("Visa ···· 4242");
     await expect(page.getByTestId("payment-row")).not.toHaveClass(/list-item-sun/);
+  });
+
+  test("Flujo 5: Cuenta: la línea de identidad bajo WhatsApp verificado", async ({ page }) => {
+    const check = async () => {
+      await page.goto("/cuenta");
+      const line = page.getByTestId("identity-soon");
+      await expect(line).toHaveText("Pronto podrá verificar también su identidad (opcional).", { useInnerText: true });
+      await expect(page.getByRole("link", { name: /identidad/ })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /identidad/ })).toHaveCount(0);
+      const verified = await page.getByText("WhatsApp verificado", { exact: false }).boundingBox();
+      expect((await line.boundingBox())!.y).toBeGreaterThan(verified!.y);
+      await expect(page.getByText(/identidad/)).toHaveCount(1);
+    };
+    await injectSession(page, "other");
+    await check();
+    await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    await owner(page);
+    await check();
+    await expect(page.getByTestId("subscription-card")).toBeVisible();
+    await expect(page.getByText(/identidad/)).toHaveCount(1);
+  });
+
+  test("Flujo 6: Cerrar sesión: lo último de la pantalla, con confirmación", async ({ page }) => {
+    await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    await owner(page);
+    await page.goto("/cuenta");
+    await expect(page.getByTestId("subscription-card")).toBeVisible();
+    await expect(page.getByTestId("payment-row")).toBeVisible();
+    const lowest = () =>
+      page.evaluate(() => {
+        const els = [...document.querySelectorAll("main *")].filter((e) => e.getClientRects().length && !e.children.length);
+        return els.sort((a, b) => b.getBoundingClientRect().bottom - a.getBoundingClientRect().bottom)[0]?.textContent;
+      });
+    expect(await lowest()).toBe("Cerrar sesión");
+    const logout = page.getByRole("button", { name: "Cerrar sesión" });
+    expect((await logout.boundingBox())!.y).toBeGreaterThan((await page.getByText("Términos y privacidad").boundingBox())!.y);
+    const dialog = page.getByRole("dialog");
+
+    await logout.click();
+    await expect(dialog.getByRole("heading", { name: "¿Cerrar sesión?" })).toBeVisible();
+    await expect(dialog).toContainText("Tendrá que recibir un código nuevo para volver a entrar.");
+    await page.screenshot({ path: "test-results/capturas/cuenta-cerrar-sesion.png" });
+    await dialog.getByRole("button", { name: "Cancelar" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(logout).toBeFocused();
+    await page.getByRole("link", { name: "Editar", exact: true }).click(); // #root ya no está inerte
+    await expect(page).toHaveURL(/\/cuenta\?editar=1$/);
+    await page.goto("/cuenta");
+
+    await logout.click();
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(logout).toBeFocused();
+
+    await logout.click();
+    await expect(dialog).toBeVisible();
+    await page.locator(".sheet-backdrop").click({ position: { x: 20, y: 20 } });
+    await expect(dialog).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Yorleny Prueba" })).toBeVisible();
+
+    await signOut(page);
+    await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).toBeNull();
   });
 });

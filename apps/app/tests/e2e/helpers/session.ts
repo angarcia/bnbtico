@@ -24,3 +24,9 @@ export async function expectNoCookies(page: Page) {
   expect(await page.evaluate(() => document.cookie)).toBe("");
   expect(await page.context().cookies()).toEqual([]);
 }
+
+/** «Cerrar sesión» de Cuenta y su confirmación en la hoja «¿Cerrar sesión?». */
+export async function signOut(page: Page) {
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cerrar sesión" }).click();
+}

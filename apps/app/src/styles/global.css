@@ -462,7 +462,9 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .verified{gap:6px;font-weight:600;flex-wrap:wrap}
 .account-skeleton{min-height:84px;display:flex;align-items:center}
 .account-skeleton .sk-line{width:60%}
-.foot-row{padding:0 4px}
+.account-foot{align-items:center;gap:0;padding-top:8px}
+.logout-link{font-size:12px;text-align:center}
+.logout-cancel{align-self:center}
 .is-hidden{visibility:hidden}
 .account-card .grow-col{min-width:0}
 .note svg{flex-shrink:0}

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { serviceClient, sql, TEST_NAMES, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
-import { enterCode, injectSession } from "./helpers/session";
+import { enterCode, injectSession, signOut } from "./helpers/session";
 import { catchWhatsApp } from "./helpers/whatsapp";
 
 // Navegación simple: una sola barra que crece con las casas (dos pestañas sin casas, cinco con al menos una), Cuenta a
@@ -197,7 +197,7 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
   await expect(page).toHaveURL(/\/cuenta$/);
   await expect(nav(page)).toHaveCount(0);
   await expect.poll(() => persistedCache(page)).toContain('"inquiries"');
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await signOut(page);
   await expect(page.getByRole("button", { name: "Cerrar sesión" })).toHaveCount(0);
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);

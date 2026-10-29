@@ -19,6 +19,7 @@ import { withTimeout } from "../../shared/timeout";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
 import { FlowFrame, FlowHeader } from "../chrome";
+import { ConfirmSheet } from "../confirm-sheet";
 import { ownListingsQuery, useListingsCount } from "../own-listings-query";
 import { authApi, pendingOtp, useSession } from "../session";
 import { SUPPORT, waLink } from "../support";
@@ -546,6 +547,7 @@ function MyAccount({ editing }: { editing: boolean }) {
   const canGoBack = useCanGoBack();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const [leaving, setLeaving] = useState(false);
+  const [asking, setAsking] = useState(false);
 
   async function logout() {
     setLeaving(true);
@@ -569,6 +571,9 @@ function MyAccount({ editing }: { editing: boolean }) {
             <h3 className="account-name">{a.name}</h3>
             <span className="row small primary verified">
               <I.check size={16} /> WhatsApp verificado · <span className="num">{formatPhone(a.phone)}</span>
+            </span>
+            <span className="xs muted" data-testid="identity-soon">
+              Pronto podrá verificar también su identidad (opcional).
             </span>
           </div>
           {/* Editar y Listo sustituyen la entrada del historial: la flecha de Cuenta sigue volviendo adonde se estaba. */}
@@ -651,12 +656,27 @@ function MyAccount({ editing }: { editing: boolean }) {
         </Link>
       </section>
 
-      <div className="row between foot-row">
-        <button type="button" className="btn-link muted" onClick={logout} disabled={leaving}>
+      {/* Lo último de la pantalla, pequeño y con confirmación: cerrar la sesión obliga a pedir un código nuevo. */}
+      <div className="stack account-foot">
+        <span className="xs muted">Términos y privacidad</span>
+        <button type="button" className="btn-link muted logout-link" onClick={() => setAsking(true)} disabled={leaving}>
           Cerrar sesión
         </button>
-        <span className="xs muted">Términos y privacidad</span>
       </div>
+      {asking ? (
+        <ConfirmSheet
+          title="¿Cerrar sesión?"
+          body="Tendrá que recibir un código nuevo para volver a entrar."
+          confirmLabel="Cerrar sesión"
+          confirmClassName="btn btn-ghost btn-lg"
+          cancelClassName="btn-link muted logout-cancel"
+          onClose={() => setAsking(false)}
+          onConfirm={() => {
+            setAsking(false);
+            void logout();
+          }}
+        />
+      ) : null}
     </>
   );
 }

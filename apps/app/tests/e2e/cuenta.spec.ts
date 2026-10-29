@@ -1,7 +1,7 @@
 import { expect, test } from "./helpers/test";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
 import { postgrestHarness } from "../db/postgrest-harness";
-import { enterCode, expectNoCookies, injectSession } from "./helpers/session";
+import { enterCode, expectNoCookies, injectSession, signOut } from "./helpers/session";
 
 // Cuenta con WhatsApp verificado por código (pantallas 06, 07, 08 y 20), en el navegador contra Supabase local.
 test.describe.configure({ mode: "serial" });
@@ -64,7 +64,9 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expect(nav).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expect(page.getByText(/WhatsApp verificado/)).toBeVisible();
-  await expect(page.getByText("Identidad", { exact: false })).toHaveCount(0);
+  // Veriff queda fuera de la v1: la única mención de la identidad es la línea «Pronto podrá…» de la tarjeta.
+  await expect(page.getByText("Identidad", { exact: false })).toHaveCount(1);
+  await expect(page.getByTestId("identity-soon")).toHaveText("Pronto podrá verificar también su identidad (opcional).");
 
   await page.getByRole("link", { name: "Editar", exact: true }).click();
   // «Guardar cambios» solo se activa con cambios y, al guardar, se desactiva con un aviso visible.
@@ -89,7 +91,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expectNoCookies(page);
 
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await signOut(page);
   await expect(entryHeading(page)).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).toBeNull();
 
@@ -110,7 +112,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
 
   // Volver a entrar con un número que ya tiene cuenta no ofrece «¡Listo!» (solo sale al crear una cuenta).
   await page.goto("/cuenta");
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await signOut(page);
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100);
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -159,7 +161,7 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await page.goto("/cuenta");
   await expect(page.getByText("WhatsApp verificado · +1 415 555 0100")).toBeVisible();
 
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await signOut(page);
   await page.getByLabel("País de su WhatsApp").selectOption("other");
   // El selector sigue a la vista (para volver a otro país) y dice «Otro».
   await expect(page.locator(".input-prefix .prefix-value")).toHaveText("Otro");
@@ -219,7 +221,7 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
 
   // Cerrar sesión deja la app sin sesión para la siguiente persona: dos pestañas y la zona del propietario pide ingresar.
   await page.goto("/cuenta");
-  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await signOut(page);
   await expect(entryHeading(page)).toBeVisible();
   await page.goto("/explorar");
   await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
