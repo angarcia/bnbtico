@@ -59,14 +59,14 @@ isOneToOne: false
                   ]
                 },"events": {
                   Row: {
-                    "build": string,"country": string | null,"created_at": string,"id": number,"listing_public_id": string | null,"name": string,"page": string,"path": string
+                    "build": string,"country": string | null,"created_at": string,"id": number,"listing_public_id": string | null,"name": string,"page": string,"path": string,"search_flags": (string)[] | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "build": string,"country"?: string | null,"created_at"?: string,"id"?: never,"listing_public_id"?: string | null,"name": string,"page": string,"path": string
+                    "build": string,"country"?: string | null,"created_at"?: string,"id"?: never,"listing_public_id"?: string | null,"name": string,"page": string,"path": string,"search_flags"?: (string)[] | null
                   }
                   Update: {
-                    "build"?: string,"country"?: string | null,"created_at"?: string,"id"?: never,"listing_public_id"?: string | null,"name"?: string,"page"?: string,"path"?: string
+                    "build"?: string,"country"?: string | null,"created_at"?: string,"id"?: never,"listing_public_id"?: string | null,"name"?: string,"page"?: string,"path"?: string,"search_flags"?: (string)[] | null
                   }
                   Relationships: [
                     
@@ -262,6 +262,12 @@ isOneToOne: false
       columns: ["zone_id"]
 isOneToOne: false
       referencedRelation: "zones"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listings_zone_id_fkey"
+      columns: ["zone_id"]
+isOneToOne: false
+      referencedRelation: "zones_with_listings"
       referencedColumns: ["id"]
     }
                   ]
@@ -496,6 +502,14 @@ isOneToOne: true
                   Relationships: [
                     
                   ]
+                },"zones_with_listings": {
+                  Row: {
+                    "canton": string | null,"canton_code": string | null,"id": string | null,"lat": number | null,"listings": number | null,"lng": number | null,"name": string | null,"province": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Functions: {
@@ -623,6 +637,45 @@ isOneToOne: true
 "save_payment_customer":
 { Args: { "p_owner": string,"p_provider": string,"p_ref": string }; Returns: undefined
                            },
+"search_listings":
+{ Args: { "p_from"?: string,"p_to"?: string,"p_zone"?: string }; Returns: {
+              "accepts_monthly": boolean | null,
+"accepts_nightly": boolean | null,
+"available": boolean | null,
+"bathroom_shared": boolean | null,
+"bathrooms": number | null,
+"bedrooms": number | null,
+"canton": string | null,
+"capacity": number | null,
+"created_at": string | null,
+"description": string | null,
+"features": (Database["public"]['Enums']["feature"])[] | null,
+"id": string | null,
+"kind": Database["public"]['Enums']["listing_kind"] | null,
+"lat": number | null,
+"lng": number | null,
+"min_months": number | null,
+"min_nights": number | null,
+"monthly_mode": string | null,
+"monthly_price_crc": number | null,
+"nightly_price_crc": number | null,
+"owner_name": string | null,
+"owner_whatsapp_verified": boolean | null,
+"parking_paid": boolean | null,
+"photos": Json | null,
+"province": string | null,
+"public_id": string | null,
+"reopen_at": string | null,
+"title": string | null,
+"updated_at": string | null,
+"zone": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "listings_public"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "seed_admin":
 { Args: { "p_phone": string }; Returns: undefined
                            },
