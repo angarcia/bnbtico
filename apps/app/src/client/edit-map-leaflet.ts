@@ -16,7 +16,7 @@ const text = (s: string) => {
 };
 
 export function drawTwoPoints(el: HTMLElement, before: Point, after: Point): () => void {
-  const map = L.map(el, { zoomControl: false, dragging: true, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false });
+  const map = L.map(el, { zoomControl: false, dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false });
   L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
   const dot = (p: Point, color: string, prefix: string, direction: "left" | "right") =>
     L.circleMarker([p.lat, p.lng], { radius: 8, color: "#FFFBF2", weight: 2, fillColor: color, fillOpacity: 1 })

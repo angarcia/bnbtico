@@ -478,3 +478,27 @@ test("el diff de la descripción, la ubicación y las fotos nuevas", async ({ pa
   await expect(diff(page, "Fotos nuevas").locator("img")).toHaveCount(1);
   await expect(diff(page, "Nombre")).toHaveCount(0);
 });
+
+test("si la base rechaza la decisión, la edición vuelve a la cola con su mensaje", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
+  await h.owner("owner").submitEdit(id);
+  await asAdmin(page, `/admin/ediciones/${id}`);
+  await page.route("**/rest/v1/rpc/review_edit", (route) =>
+    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Esta edición ya tiene una decisión.", details: null, hint: null }) }),
+  );
+  await page.getByRole("button", { name: "Aprobar cambios" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole("alert")).toHaveText("No se guardó la decisión sobre «Cabina Cahuita»: Esta edición ya tiene una decisión.");
+  await expect(editSection(page).getByRole("link", { name: /Cabina Cahuita/ })).toContainText("Edición: nombre");
+  expect((await h.owner("owner").getOwn(id))!.edit?.status).toBe("review");
+});
+
+test("una edición sin enviar no se puede decidir", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
+  await asAdmin(page, `/admin/ediciones/${id}`);
+  await expect(page.getByText("Esta edición todavía no se ha enviado a revisión.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Aprobar cambios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pedir cambios" })).toHaveCount(0);
+});

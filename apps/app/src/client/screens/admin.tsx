@@ -152,6 +152,11 @@ export function AnunciosScreen() {
           ))}
         </section>
       ) : null}
+      {editsQuery.isError && !edits && toDomainError(editsQuery.error).kind !== "forbidden" ? (
+        <p className="note" role="alert">
+          {message(editsQuery.error)}
+        </p>
+      ) : null}
       {queue.isError && !q ? (
         <p className="note" role="alert">
           {message(queue.error)}
@@ -514,14 +519,14 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
       {photos < MIN_PHOTOS ? <p className="note note-arena small">Faltan fotos: se requieren al menos {MIN_PHOTOS} para aprobar.</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={photos < MIN_PHOTOS}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={photos < MIN_PHOTOS || review.isPending}>
           <I.check size={18} /> Aprobar y publicar
         </button>
         <div className="row gap-8">
-          <button className="btn btn-ghost grow" type="button" onClick={() => void decide("changes")}>
+          <button className="btn btn-ghost grow" type="button" disabled={review.isPending} onClick={() => void decide("changes")}>
             Pedir cambios
           </button>
-          <button className="btn btn-outline-bad grow" type="button" onClick={() => void decide("reject")}>
+          <button className="btn btn-outline-bad grow" type="button" disabled={review.isPending} onClick={() => void decide("reject")}>
             Rechazar
           </button>
         </div>
@@ -622,14 +627,18 @@ export function RevisarEdicionScreen() {
             <span className="small muted">Edición: {editSummary(edit)}</span>
           </div>
           <EditDiff item={data} />
-          {edit.status === "review" ? (
-            <EditReviewForm item={data} userId={userId} />
-          ) : (
+          {edit.status === "review" ? <EditReviewForm item={data} userId={userId} /> : null}
+          {edit.status === "changes" ? (
             <div className="note stack gap-4" role="status">
               <b>Cambios pedidos</b>
               <span className="listing-description">{edit.reviewNote || "Sin nota adicional."}</span>
             </div>
-          )}
+          ) : null}
+          {edit.status === "open" ? (
+            <p className="note" role="status">
+              Esta edición todavía no se ha enviado a revisión.
+            </p>
+          ) : null}
         </>
       ) : null}
     </>
@@ -683,7 +692,11 @@ function EditDiff({ item }: { item: QueueItem }) {
       ) : null}
       {has("ubicacion") && e.location ? (
         <DiffBlock title="Ubicación">
-          <TwoPointsMap before={{ lat: l.lat ?? 0, lng: l.lng ?? 0, label: l.zone }} after={{ lat: e.location.lat, lng: e.location.lng, label: e.location.zone }} />
+          <TwoPointsMap
+            before={l.lat === null || l.lng === null ? null : { lat: l.lat, lng: l.lng, label: l.zone }}
+            beforeZone={l.zone}
+            after={{ lat: e.location.lat, lng: e.location.lng, label: e.location.zone }}
+          />
         </DiffBlock>
       ) : null}
       {has("descripcion") ? (
@@ -721,12 +734,13 @@ function EditDiff({ item }: { item: QueueItem }) {
 type MapPoint = { lat: number; lng: number; label: string };
 
 /** Caja de tamaño fijo; Leaflet llega bajo demanda. Sin red, la caja arena con las dos zonas. */
-function TwoPointsMap({ before, after }: { before: MapPoint; after: MapPoint }) {
+function TwoPointsMap({ before, beforeZone, after }: { before: MapPoint | null; beforeZone: string; after: MapPoint }) {
   const box = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let dispose: (() => void) | null = null;
     let cancelled = false;
+    if (!before) return;
     import("../edit-map-leaflet").then(
       ({ drawTwoPoints }) => {
         if (!cancelled && box.current) dispose = drawTwoPoints(box.current, before, after);
@@ -737,11 +751,11 @@ function TwoPointsMap({ before, after }: { before: MapPoint; after: MapPoint }) 
       cancelled = true;
       dispose?.();
     };
-  }, [before.lat, before.lng, before.label, after.lat, after.lng, after.label]); // eslint-disable-line react-hooks/exhaustive-deps
-  const label = `Mapa con la ubicación de antes (${before.label}) y la de ahora (${after.label})`;
-  return failed ? (
+  }, [before?.lat, before?.lng, before?.label, after.lat, after.lng, after.label]); // eslint-disable-line react-hooks/exhaustive-deps
+  const label = `Mapa con la ubicación de antes (${beforeZone}) y la de ahora (${after.label})`;
+  return failed || !before ? (
     <div className="map-box map-box-listing card-arena small" role="img" aria-label={label}>
-      Antes: {before.label} · Ahora: {after.label}
+      Antes: {beforeZone || "sin ubicación"} · Ahora: {after.label}
     </div>
   ) : (
     <div ref={box} className="map-box map-box-listing" role="img" aria-label={label} data-testid="edit-map" />
@@ -772,10 +786,10 @@ function EditReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
       <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
-        <button className="btn btn-primary btn-block" type="submit">
+        <button className="btn btn-primary btn-block" type="submit" disabled={review.isPending}>
           <I.check size={18} /> Aprobar cambios
         </button>
-        <button className="btn btn-ghost btn-block" type="button" onClick={() => void decide("changes")}>
+        <button className="btn btn-ghost btn-block" type="button" disabled={review.isPending} onClick={() => void decide("changes")}>
           Pedir cambios
         </button>
       </div>
