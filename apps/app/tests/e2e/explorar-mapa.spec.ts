@@ -69,7 +69,9 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect(countPill(page)).toBeVisible();
   const full = page.locator(".map-full");
   await expect(full.locator(".map-price")).toHaveCount(8);
-  await expect(full.getByRole("button", { name: "Volver a la lista" })).toBeVisible();
+  await expect(full.getByRole("button", { name: "Volver a la lista" })).toBeFocused();
+  // La lista de debajo no se enfoca ni se lee mientras el mapa está abierto.
+  expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
   await expect(full.locator(".search-pill")).toBeVisible();
   await expect(mapLabel(page)).toHaveCount(0);
 
@@ -87,6 +89,8 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
 
   await page.goBack();
   await expect(page.locator(".map-full")).toHaveCount(0);
+  await expect(mapLabel(page)).toBeFocused();
+  expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(false);
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThanOrEqual(598);
   expect(Math.abs((await page.evaluate(() => scrollY)) - 600)).toBeLessThanOrEqual(2);
   expect(searches).toBe(0);
@@ -97,6 +101,19 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await countPill(page).click();
   await expect(page.locator(".map-full")).toHaveCount(0);
   await expect(page).not.toHaveURL(/mapa=1/);
+  await expect(mapBox(page)).toBeFocused();
+});
+
+test("con teclado: Intro abre el mapa y, sobre un marcador, muestra su casa", async ({ page }) => {
+  await page.goto("/explorar");
+  await expect(mapBox(page).locator(".map-price")).toHaveCount(8);
+  await mapBox(page).press("Enter");
+  const marker = page.locator(".map-full .map-price", { hasText: "₡42 000" });
+  await marker.focus();
+  await marker.press("Enter");
+  await expect(page.locator(".map-full").getByRole("link", { name: new RegExp(COCO) })).toBeVisible();
+  await page.locator(".map-full .map-price", { hasText: "₡55 000" }).press(" ");
+  await expect(page.locator(".map-full").getByRole("link", { name: /Cabina 1/ })).toBeVisible();
 });
 
 test("un marcador del mapa pequeño abre el mapa grande con su casa; sin historial, «8 casas» vuelve a la lista", async ({ page }) => {

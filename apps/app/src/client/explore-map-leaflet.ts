@@ -37,6 +37,10 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
     show(markers, zone) {
       layer.clearLayers();
       icons.clear();
+      // Primero la vista: hasta tenerla, Leaflet no crea los elementos de los marcadores (getElement() sería undefined).
+      const view = exploreMapView(markers, zone);
+      if ("fit" in view) map.fitBounds(L.latLngBounds(view.fit.map((p) => [p.lat, p.lng] as [number, number])), { padding: [EXPLORE_MAP.padding, EXPLORE_MAP.padding], maxZoom: EXPLORE_MAP.maxZoom });
+      else map.setView([view.center.lat, view.center.lng], view.zoom);
       for (const m of markers) {
         const pill = document.createElement("span");
         pill.textContent = m.label;
@@ -47,12 +51,17 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
           opts.onMarker(m.publicId);
         });
         layer.addLayer(marker);
+        // Con teclado, Leaflet hace el marcador enfocable (role=button) pero Intro no llega como clic: se atiende aquí.
+        if (opts.interactive)
+          marker.getElement()?.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            e.stopPropagation();
+            opts.onMarker(m.publicId);
+          });
         icons.set(m.publicId, marker);
       }
       mark();
-      const view = exploreMapView(markers, zone);
-      if ("fit" in view) map.fitBounds(L.latLngBounds(view.fit.map((p) => [p.lat, p.lng] as [number, number])), { padding: [EXPLORE_MAP.padding, EXPLORE_MAP.padding], maxZoom: EXPLORE_MAP.maxZoom });
-      else map.setView([view.center.lat, view.center.lng], view.zoom);
     },
     select(publicId) {
       selected = publicId;

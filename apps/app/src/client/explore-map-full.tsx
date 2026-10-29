@@ -18,6 +18,8 @@ import { useExploreMap, useMapMarkers } from "./explore-map";
 
 export function MapScreen({ listings, zone, monthly, selected, onSelect, onClose, header }: { listings: PublicListing[]; zone: LatLng | null; monthly: boolean; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
+  const overlay = useRef<HTMLDivElement>(null);
+  const back = useRef<HTMLButtonElement>(null);
   const markers = useMapMarkers(listings, monthly);
   const handle = useExploreMap(
     box,
@@ -35,17 +37,24 @@ export function MapScreen({ listings, zone, monthly, selected, onSelect, onClose
   useEffect(() => {
     handle.current?.select(selected);
   });
+  // Mientras está abierto: la página no se mueve, lo de debajo no se enfoca ni se lee, y el foco empieza en «Volver».
   useEffect(() => {
     const root = document.documentElement;
     root.classList.add("map-open");
-    return () => root.classList.remove("map-open");
+    const below = [...(overlay.current?.parentElement?.children ?? [])].filter((el): el is HTMLElement => el !== overlay.current && el instanceof HTMLElement && !el.inert);
+    for (const el of below) el.inert = true;
+    back.current?.focus({ preventScroll: true });
+    return () => {
+      root.classList.remove("map-open");
+      for (const el of below) el.inert = false;
+    };
   }, []);
   const house = selected ? listings.find((l) => l.publicId === selected) : undefined;
   return (
-    <div className="map-full">
+    <div ref={overlay} className="map-full">
       <div ref={box} className="map-full-box" />
       <div className="map-full-top">
-        <button type="button" className="map-round" aria-label="Volver a la lista" onClick={onClose}>
+        <button ref={back} type="button" className="map-round" aria-label="Volver a la lista" onClick={onClose}>
           <I.back />
         </button>
         {header}

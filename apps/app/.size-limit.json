@@ -47,7 +47,7 @@
     "gzip": true
   },
   {
-    "name": "Mapa de Explorar · trozo diferido (los marcadores de precio y el mapa a pantalla completa; Leaflet aparte)",
+    "name": "Mapa de Explorar · trozo diferido (Leaflet con los marcadores de precio, para la caja de la lista y el mapa a pantalla completa; Leaflet aparte)",
     "path": [
       "dist/client/assets/explore-map-leaflet-*.js"
     ],

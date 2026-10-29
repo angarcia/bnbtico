@@ -88,7 +88,7 @@ export function ExploreMap({ listings, zone, monthly, onOpen, ref }: { listings:
 }
 
 /** «Mapa», flotando sobre la barra de pestañas mientras la caja del mapa quedó arriba, fuera de la pantalla. */
-export function MapLabel({ target, onOpen }: { target: RefObject<HTMLElement | null>; onOpen(): void }) {
+export function MapLabel({ target, onOpen, hidden = false }: { target: RefObject<HTMLElement | null>; onOpen(): void; hidden?: boolean }) {
   const [above, setAbove] = useState(false);
   useEffect(() => {
     const el = target.current;
@@ -97,7 +97,7 @@ export function MapLabel({ target, onOpen }: { target: RefObject<HTMLElement | n
     io.observe(el);
     return () => io.disconnect();
   }, [target]);
-  if (!above) return null;
+  if (!above || hidden) return null;
   return (
     <button type="button" className="map-label" onClick={onOpen}>
       Mapa

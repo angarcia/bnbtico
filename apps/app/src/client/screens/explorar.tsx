@@ -114,6 +114,12 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const mapOpen = search.mapa === "1";
   const mapBox = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  // Al cerrar el mapa (botón, «N casas» o Atrás) el foco vuelve a «Mapa» si está a la vista o, si no, a la caja.
+  const wasOpen = useRef(mapOpen);
+  useEffect(() => {
+    if (wasOpen.current && !mapOpen) (document.querySelector<HTMLElement>(".map-label") ?? mapBox.current)?.focus({ preventScroll: true });
+    wasOpen.current = mapOpen;
+  }, [mapOpen]);
   const currency = useCurrency();
   const { data: listings, isError } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
@@ -137,6 +143,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
     void navigate({ to: "/explorar", search: { ...search, mapa: "1" }, resetScroll: false });
   };
   const closeMap = () => {
+    setSelected(null);
     if (canGoBack) router.history.back();
     else void navigate({ to: "/explorar", search: ({ mapa: _mapa, ...rest }: ExploreSearch) => rest, replace: true, resetScroll: false });
   };
@@ -170,7 +177,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
               <ListingCard key={l.publicId} listing={l} monthly={f.monthly} priority={i === 0} />
             ))}
           </div>
-          {mapOpen ? null : <MapLabel target={mapBox} onOpen={() => openMap(null)} />}
+          <MapLabel target={mapBox} hidden={mapOpen} onOpen={() => openMap(null)} />
           <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} />
         </>
       )}
