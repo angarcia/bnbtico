@@ -23,11 +23,14 @@ Reglas de siempre: móvil primero (375 px), estilos y tokens de bnbtico (`design
 
 - Márgenes laterales más pequeños (≈ 16 px en vez de 20), fotos e iconos más grandes; iconos de la barra inferior más grandes (≈ 26–28 px).
 - **Una casa por fila** en Explorar y Mis casas.
-- **Ficha:** foto principal **cuadrada (1:1), sin márgenes, a todo el ancho**; botones volver / ₡|$ / compartir / corazón encima; contador «1 / 5».
+- **Ficha:** foto principal **cuadrada (1:1), sin márgenes, a todo el ancho**; botones volver / compartir / corazón encima; contador «1 / 5». **Sin selector ₡ | $ en la ficha** (2026-10-29, Daniel): la barra fija de abajo ya muestra las dos monedas, ordenada así: a la izquierda «₡42 000 / noche» y debajo «Mensual: ₡650 000 / mes»; a la derecha «≈ $82 / noche» y debajo «≈ $1 275 / mes»; después «Contactar por WhatsApp» y, debajo, «Precios orientativos: el precio final lo acuerda con el propietario.». Revierte el selector de la ficha de la navegación simple (2026-10-27).
 - **Mis casas** (lista, al estilo «Your listings» de Airbnb, estilos bnbtico): foto cuadrada grande con la **etiqueta de estado encima** («Activa», «En revisión», «Borrador», «Edición en revisión»…), debajo nombre y zona; **sin precio ni texto extra**; debajo los botones. Lo mismo para las tarjetas de **Actividad**.
 - **Colores de acción:** el **ocre** (`--sun`) solo para dinero y avisos de pago (pagar, «Activar suscripción», «Añadir método de pago», fila de suscripción/método de pago cuando falta algo). **«Compartir ficha» en verde oscuro relleno**; **«Seguir publicando» en contorno verde**. Una sola acción rellena por tarjeta.
 - El color del texto **no cambia** (`--fg` #1C2B2A).
 - Un borrador sale como **un solo elemento** en Mis casas con «Seguir publicando» y «Descartar» (sin tarjeta de aviso duplicada arriba para el mismo borrador).
+
+- **Terracota:** el de la marca `#D65C3C` sigue en el logo, los corazones y lo grande; el texto pequeño, contadores, «Nueva», marcadores del mapa y la pestaña activa usan `#B44C30` (contraste 5,1:1; sustituye a `#BF4D2E`).
+- **Calendario:** días libres en verde `#DCE8DF`, ocupados en terracota cálido `#F7E3D3` con texto `#9A4B2A`, rayas y «Ocupado»; en «¿Cuándo?» la selección en terracota suave `#D9775A` con el número oscuro.
 
 ## C · Calendario
 
