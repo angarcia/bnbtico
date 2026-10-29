@@ -102,6 +102,14 @@ export function calendarWindow(today: string): { first: string; last: string; fi
   return { first: today, last, firstMonth: today.slice(0, 7), lastMonth: last.slice(0, 7) };
 }
 
+/** Los meses del calendario del propietario, del actual al último de la ventana (hoy + 365), uno debajo de otro. */
+export function calendarMonths(today: string): string[] {
+  const { firstMonth, lastMonth } = calendarWindow(today);
+  const months: string[] = [];
+  for (let m = firstMonth; m <= lastMonth; m = addMonths(m, 1)) months.push(m);
+  return months;
+}
+
 const inWindow = (date: string, today: string) => toUtc(date) !== null && date >= today && date <= addDays(today, CALENDAR_WINDOW_DAYS);
 
 function lookup(days: CalendarDays, date: string): CalendarDay | undefined {
@@ -154,6 +162,12 @@ export function compactPrice(crc: number, currency: Currency, fx: number): strin
   const thousands = Math.round(crc / 1000);
   if (thousands < 1000) return `${thousands}k`;
   return `${String(Math.round(crc / 100_000) / 10).replace(".", ",")}M`;
+}
+
+/** El precio dentro de la casilla alta: «₡95k», «₡1,3M», «₡500»; en dólares, el de compactPrice («$186»). */
+export function cellPrice(crc: number, currency: Currency, fx: number): string {
+  const compact = compactPrice(crc, currency, fx);
+  return currency === "USD" ? compact : `₡${compact}`;
 }
 
 /** La casa vista por la regla de guardado; null = no es del usuario o no existe (también un invitado). */

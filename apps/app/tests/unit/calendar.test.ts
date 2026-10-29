@@ -5,9 +5,12 @@
 import { describe, expect, it } from "vitest";
 import {
   CALENDAR_MESSAGES as M,
+  addMonths,
   applyChange,
   availabilityUpdate,
+  calendarMonths,
   calendarWindow,
+  cellPrice,
   changeFromSelection,
   clearSelection,
   compactPrice,
@@ -429,5 +432,35 @@ describe("mensajes (los copian la migración fase4_calendario y el fake)", () =>
       reopenDate: "La fecha de reapertura debe ser a partir de mañana y dentro de un año.",
       notActive: "Solo puede cambiar la disponibilidad de una casa activa.",
     });
+  });
+});
+
+describe("calendario en vertical (densidad y tarjetas)", () => {
+  it("calendarMonths: del mes actual al último de la ventana, uno por mes", () => {
+    const months = calendarMonths("2026-10-28");
+    expect(months).toHaveLength(13);
+    expect(months[0]).toBe("2026-10");
+    expect(months.at(-1)).toBe("2027-10");
+    months.forEach((m, i) => expect(m).toBe(addMonths(months[0]!, i)));
+    const leap = calendarMonths("2028-01-01");
+    expect(leap).toHaveLength(12);
+    expect(leap.at(-1)).toBe("2028-12");
+    leap.forEach((m, i) => expect(m).toBe(addMonths(leap[0]!, i)));
+  });
+
+  it("cellPrice: «₡95k», «₡1,3M», «₡500»; en dólares, el de compactPrice", () => {
+    expect(cellPrice(95_000, "CRC", 510)).toBe("₡95k");
+    expect(cellPrice(1_250_000, "CRC", 510)).toBe("₡1,3M");
+    expect(cellPrice(500, "CRC", 510)).toBe("₡500");
+    expect(cellPrice(95_000, "USD", 510)).toBe(compactPrice(95_000, "USD", 510));
+  });
+
+  it("selección en dos meses", () => {
+    const ctx: SelectionContext = { days: [], base: 95_000, today: "2026-11-20" };
+    let s = selectDay(selectDay(emptySelection, "2026-12-02", ctx), "2026-11-30", ctx);
+    expect(s.days).toEqual(["2026-11-30", "2026-12-02"]);
+    s = setAvailability(s, false);
+    expect(changeFromSelection(s)).toEqual({ days: ["2026-11-30", "2026-12-02"], available: false });
+    expect(selectionLabel(s.days)).toBe("2 noches · 30 nov y 2 dic");
   });
 });
