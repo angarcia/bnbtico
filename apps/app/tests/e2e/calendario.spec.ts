@@ -3,7 +3,7 @@ import type { CalendarHarness } from "../contract/harness";
 import { serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { addDays, addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
+import { addDays, addMonths, calendarMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
 import { longDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
@@ -30,6 +30,8 @@ const shown = (page: Page, title: string) => page.getByRole("button", { name: ne
 const panel = (page: Page) => page.getByRole("region", { name: "Días seleccionados" });
 const saveBtn = (page: Page) => panel(page).getByRole("button", { name: "Guardar cambios" });
 const open = (page: Page, id: string, month = next()) => page.goto(`/propietario/calendario?casa=${id}&mes=${month}`);
+/** Los meses van uno debajo de otro: se lleva el que se quiere a la vista. */
+const showMonth = (page: Page, month: string) => page.locator(`[data-month="${month}"]`).scrollIntoViewIfNeeded();
 
 async function seedHouse(title: string, draft: Record<string, unknown> = {}) {
   return h.seed({ status: "active", draft: { title, nightlyPriceCrc: 95000, ...draft } });
@@ -79,7 +81,7 @@ test("una casa activa y un borrador más nuevo: abre la activa, sin selector, y 
   await expect(page.locator(".cal-house")).toHaveText("Casa Activa Cal");
   await expect(page.getByRole("button", { name: /Casa Activa Cal/ })).toHaveCount(0);
   await expect(page.getByText("Borrador Nuevo Cal")).toHaveCount(0);
-  await expect(grid(page)).toBeVisible();
+  await expect(grid(page).first()).toBeVisible();
   // Un enlace a un borrador cae en la casa activa.
   await page.goto(`/propietario/calendario?casa=${draft.id}`);
   await expect(page.locator(".cal-house")).toHaveText("Casa Activa Cal");
@@ -218,27 +220,69 @@ test("precios mezclados: el campo queda en «Varios precios» y cambiar solo la 
   await expect(day(page, on(21))).toHaveAttribute("aria-pressed", "false");
 });
 
-test("ventana de un año: flechas desactivadas en los extremos, días pasados desactivados y un mes fuera de la ventana vuelve al de apertura", async ({ page }) => {
+test("meses en vertical: sin flechas, del mes actual al último de la ventana; un mes fuera de la ventana abre en el de apertura", async ({ page }) => {
   const casa = await seedHouse("Casa Ventana");
   await open(page, casa.id, "2020-01");
   const now = today().slice(0, 7);
-  // Revisión UX A4: abre en el mes de apertura (a fin de mes, el siguiente) y «‹» lleva al actual.
-  const opening = openingMonth(today());
-  await expect(page.getByText(monthTitle(opening), { exact: true })).toBeVisible();
-  if (opening !== now) await page.getByRole("button", { name: "Mes anterior" }).click();
-  await expect(page.getByText(monthTitle(now), { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Mes anterior" })).toBeDisabled();
+  const months = calendarMonths(today());
+  const blocks = page.locator(".cal-month-block");
+  await expect(blocks).toHaveCount(months.length);
+  await expect(page.getByRole("button", { name: /Mes (anterior|siguiente)/ })).toHaveCount(0);
+  await expect(blocks.first()).toHaveAttribute("data-month", now);
+  await expect(blocks.last()).toHaveAttribute("data-month", addMonths(now, 12));
+  // Revisión UX A4: abre en el mes de apertura (a fin de mes, el siguiente); el actual queda encima.
+  await expect(page.getByRole("heading", { name: monthTitle(openingMonth(today())) })).toBeInViewport();
+  // Solo se montan las rejillas de los meses cerca de la vista.
+  expect(await page.locator(".cal-month-block .month-grid").count()).toBeLessThanOrEqual(4);
+
+  await showMonth(page, now);
   const yesterday = addDays(today(), -1);
   if (yesterday.startsWith(now)) await expect(day(page, yesterday)).toBeDisabled();
   await expect(day(page, today())).toBeEnabled();
 
-  for (let i = 0; i < 12; i++) await page.getByRole("button", { name: "Mes siguiente" }).click();
-  await expect(page.getByText(monthTitle(addMonths(now, 12)), { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Mes siguiente" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Mes anterior" })).toBeEnabled();
+  await page.getByRole("heading", { name: monthTitle(addMonths(now, 12)) }).scrollIntoViewIfNeeded();
   const beyond = addDays(today(), 366);
   if (beyond.startsWith(addMonths(now, 12))) await expect(day(page, beyond)).toBeDisabled();
-  await expect(page).toHaveURL(new RegExp(`mes=${addMonths(now, 12)}`));
+});
+
+test("un día en cada mes se elige y se guarda de una vez; ?mes= lleva a ese mes", async ({ page }) => {
+  const casa = await seedHouse("Casa Dos Meses");
+  await open(page, casa.id, next());
+  const title = page.getByRole("heading", { name: monthTitle(next()) });
+  await expect(title).toBeInViewport();
+  // El título del mes queda bajo la fila L K M J V S D, sin que esta lo tape.
+  const t = (await title.boundingBox())!;
+  const w = (await page.locator(".cal-weekdays").boundingBox())!;
+  expect(t.y).toBeGreaterThanOrEqual(w.y + w.height - 1);
+
+  const later = addMonths(next(), 1);
+  const ninth = (m: string) => `${m}-09`;
+  await day(page, on(9)).click();
+  await page.getByRole("heading", { name: monthTitle(later) }).scrollIntoViewIfNeeded();
+  await day(page, ninth(later)).click();
+  await expect(panel(page).locator("b").first()).toContainText("2 noches");
+  await panel(page).getByRole("button", { name: "Ocupado" }).click();
+  await saveBtn(page).click();
+  await expect
+    .poll(async () => (await h.calendar("owner").days(casa.id)).map((d) => [d.day, d.available]))
+    .toEqual([
+      [on(9), false],
+      [ninth(later), false],
+    ]);
+  // Desplazarse no reescribe la URL.
+  await expect(page).toHaveURL(new RegExp(`mes=${next()}`));
+});
+
+test("días altos: casillas de 64 px o más y el mes llena la pantalla", async ({ page }) => {
+  const casa = await seedHouse("Casa Alta");
+  await open(page, casa.id, next());
+  await expect(day(page, on(15))).toBeVisible();
+  expect((await day(page, on(15)).boundingBox())!.height).toBeGreaterThanOrEqual(64);
+  await expect(day(page, on(15))).toContainText("₡95k");
+  const block = (await page.locator(`[data-month="${next()}"]`).boundingBox())!;
+  const bar = (await page.locator(".tabbar").boundingBox())!;
+  expect(block.y + block.height).toBeGreaterThanOrEqual(bar.y - 1);
+  await page.screenshot({ path: "test-results/calendario-vertical.png" });
 });
 
 test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última elegida se recuerda", async ({ page }) => {
@@ -259,7 +303,7 @@ test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última el
   await expect(page).toHaveURL(new RegExp(`casa=${b.id}`));
   await expect(day(page, on(5))).toContainText("95k");
   await expect(panel(page)).toHaveCount(0);
-  await expect(grid(page)).toBeVisible();
+  await expect(grid(page).first()).toBeVisible();
 
   await page.goto("/propietario/calendario");
   await expect(page.getByRole("button", { name: /Casa Beta/ })).toBeVisible();
@@ -297,7 +341,7 @@ test("casa cerrada a consultas: nota con la fecha, días de solo lectura y «Abr
   await expect(page.getByText(`Esta casa está cerrada a consultas hasta el ${longDate(reopen)}. Ábrala para cambiar el calendario; sus noches y precios se conservan.`)).toBeVisible();
   await expect(cellOf(page, on(3))).toContainText("Ocupado");
   await expect(page.locator(".month-grid button")).toHaveCount(0);
-  await expect(page.locator(".month-grid.is-dimmed")).toBeVisible();
+  await expect(page.locator(".month-grid.is-dimmed").first()).toBeVisible();
   await page.screenshot({ path: "test-results/calendario-cerrada.png" });
 
   await page.getByRole("button", { name: "Abrir a consultas" }).click();
@@ -323,8 +367,8 @@ test("puntos de entrada: pestaña, Mis casas y «Marcar las noches ocupadas» ll
   await page.goto(`/propietario/casas/${sent.id}/enviada`);
   await page.getByRole("link", { name: "Marcar las noches ocupadas" }).click();
   await expect(shown(page, "Casa Enviada")).toBeVisible();
-  // Una casa en revisión también se puede preparar (a fin de mes abre en el siguiente: «‹» vuelve a hoy).
-  if (openingMonth(today()) !== today().slice(0, 7)) await page.getByRole("button", { name: "Mes anterior" }).click();
+  // Una casa en revisión también se puede preparar (a fin de mes abre en el siguiente: el actual queda encima).
+  await showMonth(page, today().slice(0, 7));
   await expect(day(page, today())).toBeEnabled();
 
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" }).click();

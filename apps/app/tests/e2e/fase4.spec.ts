@@ -128,8 +128,8 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await expect(owner).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${draft.id}`));
   // Una sola casa: su nombre como subtítulo, sin selector (revisión UX A5).
   await expect(owner.locator(".cal-house")).toHaveText(new RegExp(TITLE));
-  if (!opensOnNext()) await owner.getByRole("button", { name: "Mes siguiente" }).click();
-  await expect(owner.getByText(monthTitle(next()), { exact: true })).toBeVisible();
+  await owner.locator(`[data-month="${next()}"]`).scrollIntoViewIfNeeded();
+  await expect(owner.getByRole("heading", { name: monthTitle(next()) })).toBeVisible();
   const day = (iso: string) => owner.getByRole("button", { name: dayName(iso) });
   const panel = owner.getByRole("region", { name: "Días seleccionados" });
   for (const d of [10, 11, 12]) await day(on(d)).click();

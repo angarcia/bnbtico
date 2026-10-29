@@ -1,14 +1,15 @@
-// Calendario del propietario (pantalla 17 del diseño v1). Trozo diferido propio. Selección primero: se tocan uno o más
-// días y el panel de abajo cambia disponibilidad y precio de todos a la vez. Guardar es optimista: la rejilla cambia y el
+// Calendario del propietario (pantalla 17 del diseño v1). Trozo diferido propio. Los meses van uno debajo de otro, del
+// actual al último de la ventana, con casillas altas; solo se montan las rejillas cerca de la vista. Selección primero: se
+// tocan uno o más días (también de meses distintos) y el panel de abajo cambia disponibilidad y precio de todos a la vez. Guardar es optimista: la rejilla cambia y el
 // panel se cierra en el mismo toque; si la base se niega o no hay red, vuelve atrás y avisa. Las reglas son las del
 // dominio (domain/calendar.ts), las mismas que la RPC save_listing_days.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, type FocusEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import {
   addMonths,
   applyChange,
-  calendarWindow,
+  calendarMonths,
   changeFromSelection,
   clearSelection,
   effectiveDay,
@@ -30,7 +31,7 @@ import { costaRicaToday } from "../../domain/inquiry";
 import { resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { I } from "../../shared/icons";
-import { MonthGrid, MonthLegend } from "../../shared/month-grid";
+import { MonthGrid, MonthLegend, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { RootHeader } from "../chrome";
@@ -116,13 +117,7 @@ export function CalendarioScreen() {
         </section>
       ) : null}
       {current ? (
-        <Calendar
-          key={current.id}
-          listing={current}
-          userId={userId}
-          month={search.mes}
-          onMonth={(mes) => go(current.id, mes)}
-        />
+<Calendar key={current.id} listing={current} userId={userId} month={search.mes} />
       ) : null}
     </>
   );
@@ -172,12 +167,12 @@ function HousePicker({ houses, current, onPick }: { houses: Listing[]; current: 
   );
 }
 
-function Calendar({ listing: l, userId, month, onMonth }: { listing: Listing; userId: string; month: string | undefined; onMonth: (m: string) => void }) {
+function Calendar({ listing: l, userId, month }: { listing: Listing; userId: string; month: string | undefined }) {
   const client = useQueryClient();
   const today = costaRicaToday(Date.now());
-  const win = calendarWindow(today);
-  // Sin `?mes`, el mes con que abre: a fin de mes, el siguiente (revisión UX A4).
-  const shown = month && month >= win.firstMonth && month <= win.lastMonth ? month : openingMonth(today);
+  const months = useMemo(() => calendarMonths(today), [today]);
+  // `?mes=` lleva a ese mes; sin él (o fuera de la ventana), al de apertura: a fin de mes, el siguiente (revisión UX A4).
+  const target = month && months.includes(month) ? month : openingMonth(today);
   const options = calendarQuery(userId, l.id);
   const key = options.queryKey;
   const query = useQuery({ ...options, enabled: !!userId });
@@ -225,18 +220,7 @@ function Calendar({ listing: l, userId, month, onMonth }: { listing: Listing; us
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   return (
     <>
-      <div className="cal-month">
-        <div className="row gap-4">
-          <button type="button" className="icon-btn cal-arrow" aria-label="Mes anterior" disabled={shown <= win.firstMonth} onClick={() => onMonth(addMonths(shown, -1))}>
-            <I.back size={20} />
-          </button>
-          <b className="display cal-title">{monthTitle(shown)}</b>
-          <button type="button" className="icon-btn cal-arrow" aria-label="Mes siguiente" disabled={shown >= win.lastMonth} onClick={() => onMonth(addMonths(shown, 1))}>
-            <I.chevron size={20} />
-          </button>
-        </div>
-        {closed ? null : <span className="small muted">Toque los días para editarlos</span>}
-      </div>
+      {closed ? null : <p className="small muted cal-hint">Toque los días para editarlos</p>}
 
       {closed ? (
         <section className="note note-arena note-col">
@@ -259,20 +243,26 @@ function Calendar({ listing: l, userId, month, onMonth }: { listing: Listing; us
         </p>
       ) : null}
 
-      <div className="stack gap-4">
-        <MonthGrid
-          month={shown}
-          today={today}
-          days={days}
-          base={base}
-          prices={base === null ? "none" : "all"}
-          selected={sel.days}
-          onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
-          dimmed={closed}
-          label={monthTitle(shown)}
-        />
-        <MonthLegend special={base !== null} />
-      </div>
+      <MonthLegend special={base !== null} />
+      <WeekdayRow className="cal-weekdays" />
+      <CalendarMonths
+        months={months}
+        target={target}
+        render={(m) => (
+          <MonthGrid
+            size="tall"
+            month={m}
+            today={today}
+            days={days}
+            base={base}
+            prices={base === null ? "none" : "all"}
+            selected={sel.days}
+            onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
+            dimmed={closed}
+            label={monthTitle(m)}
+          />
+        )}
+      />
 
       {editable && sel.days.length > 0 ? (
         <Panel
@@ -287,6 +277,40 @@ function Calendar({ listing: l, userId, month, onMonth }: { listing: Listing; us
         />
       ) : null}
     </>
+  );
+}
+
+/** Los meses uno debajo de otro, cada uno con su título fijo arriba. Una rejilla se monta al acercarse su mes a la vista
+ *  (a una pantalla) y ya no se desmonta; al abrir, el mes pedido se lleva arriba. Desplazarse no cambia la URL. */
+function CalendarMonths({ months, target, render }: { months: string[]; target: string; render: (month: string) => ReactNode }) {
+  const [mounted, setMounted] = useState(() => new Set([target, addMonths(target, 1)].filter((m) => months.includes(m))));
+  const box = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (target !== months[0]) box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
+    // Solo al abrir: después manda el dedo.
+  }, []);
+  useEffect(() => {
+    const blocks = box.current?.querySelectorAll<HTMLElement>(".cal-month-block");
+    if (!blocks) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const seen = entries.filter((e) => e.isIntersecting).map((e) => (observer.unobserve(e.target), (e.target as HTMLElement).dataset.month!));
+        if (seen.length) setMounted((prev) => (seen.every((m) => prev.has(m)) ? prev : new Set([...prev, ...seen])));
+      },
+      { rootMargin: "100% 0px" },
+    );
+    blocks.forEach((b) => observer.observe(b));
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div className="cal-months" ref={box}>
+      {months.map((m) => (
+        <section key={m} className="cal-month-block" data-month={m} aria-label={monthTitle(m)}>
+          <h2 className="cal-month-title">{monthTitle(m)}</h2>
+          {mounted.has(m) ? render(m) : <div className="cal-month-placeholder" aria-hidden="true" />}
+        </section>
+      ))}
+    </div>
   );
 }
 

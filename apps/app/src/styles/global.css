@@ -684,7 +684,13 @@ small.swap-in{display:block}
 .cal-arrow{width:40px;height:40px;color:var(--muted)}
 .cal-arrow:disabled{opacity:.3;cursor:default}
 .cal-title{font-weight:700;font-size:17px;white-space:nowrap}
-.cal-month > .small{text-align:right;font-size:12px;line-height:1.25}
+/* Propietario: los meses uno debajo de otro. La fila L K M J V S D queda fija bajo la barra superior y el título de cada
+   mes, debajo de ella; cada mes llena el alto visible (sin la barra superior, esa fila y las pestañas). */
+.cal-hint{font-size:12px;margin-top:-6px}
+.cal-weekdays{position:sticky;top:calc(56px + env(safe-area-inset-top));z-index:3;background:var(--bg);padding:4px 0;margin-bottom:-14px}
+.cal-month-block{display:flex;flex-direction:column;min-height:calc(100dvh - 56px - 26px - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));scroll-margin-top:calc(56px + 26px + env(safe-area-inset-top))}
+.cal-month-title{position:sticky;top:calc(56px + 26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:18px;font-weight:700;padding:6px 0}
+.cal-month-placeholder{flex:1}
 .cal-open{align-self:flex-start}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(var(--nav-h) + 240px + env(safe-area-inset-bottom))}
