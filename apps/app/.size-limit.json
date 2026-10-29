@@ -37,7 +37,8 @@
       "!dist/client/assets/casa-editable-*.js",
       "!dist/client/assets/editar-*.js",
       "!dist/client/assets/edit-*.js",
-      "!dist/client/assets/step-forms-*.js"
+      "!dist/client/assets/step-forms-*.js",
+      "!dist/client/assets/fields-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -103,9 +104,18 @@
     "name": "Ficha editable · trozo diferido (la ficha de una casa publicada; se precarga con las pantallas del propietario)",
     "path": [
       "dist/client/assets/casa-editable-*.js",
-      "dist/client/assets/edit-*.js"
+      "dist/client/assets/edit-messages-*.js"
     ],
     "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Reglas y mutaciones de la edición · trozo compartido (las reglas de cada dato y las mutaciones de la edición, que leen la ficha editable y «Editar un dato»)",
+    "path": [
+      "dist/client/assets/edit-*.js",
+      "!dist/client/assets/edit-messages-*.js"
+    ],
+    "limit": "2 KB",
     "gzip": true
   },
   {
@@ -122,6 +132,14 @@
       "dist/client/assets/editar-*.js"
     ],
     "limit": "6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Campos del asistente · trozo diferido compartido por publicar y editar (los campos y el formulario de cada pantalla, y la ubicación con su buscador; sin Leaflet ni el paso de las fotos)",
+    "path": [
+      "dist/client/assets/fields-*.js"
+    ],
+    "limit": "11.5 KB",
     "gzip": true
   },
   {

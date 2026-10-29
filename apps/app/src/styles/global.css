@@ -213,6 +213,8 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
    «Otra…»), este hueco sigue debajo del último campo y la página deja subirlo por encima de la barra (revisión de Ana). */
 .publish-form::after{content:"";flex:none;height:calc(76px + var(--kb,0px) + env(safe-area-inset-bottom))}
 .publish-form h2{font-size:21px}
+/* Pantalla de un dato en revisión (editar.tsx): los campos desactivados sin cambiar la maqueta. */
+.edit-fieldset{display:contents;border:0;margin:0;padding:0;min-width:0}
 .publish-form input,.publish-form textarea{scroll-margin-top:88px;scroll-margin-bottom:calc(88px + env(safe-area-inset-bottom))}
 .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
 .map-wrap{position:relative;flex:1;min-height:180px;display:flex}

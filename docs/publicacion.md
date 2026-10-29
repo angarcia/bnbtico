@@ -32,6 +32,13 @@ Registro y borradores sin verificaciones iniciales. Antes de la primera publicac
 - En la revisión del admin una zona de «Otra…» sale marcada como «Zona propuesta por el dueño».
 - Consulta del admin para nombres propuestos repetidos: `select zone, count(*) from listings where zone_source = 'other' group by 1 having count(*) > 1 order by 2 desc;` — los que se repiten se añaden a `zones` con una migración.
 
+## Casa publicada (2026-10-29)
+
+Una casa publicada no vuelve a borrador ni sale de Explorar: se cambia dato a dato desde su ficha en Mis casas (cada fila abre su pantalla, `/propietario/casas/<id>/editar/<dato>`, con los mismos campos y reglas que el asistente y un botón «Guardar»). Volver sin guardar no guarda nada.
+
+- **Al momento, sin revisión:** personas, habitaciones y baños; características (con el tipo de parqueo); precio por noche, «¿Acepta alquiler por meses?» y su precio; el orden de las fotos y quitar una foto. Al guardar: «Guardado. Ya se ve en su ficha.»; la ficha pública y Explorar lo muestran ya.
+- **Con revisión del admin:** nombre, tipo (con el baño si es habitación), ubicación (pin y zona), descripción y las fotos nuevas. Se guardan en una sola edición por casa («Guardado. Envíelo a revisión cuando termine.») y se envían con «Enviar a revisión» desde la ficha; mientras tanto, los clientes ven la versión aprobada. Con la edición en revisión, esas pantallas se abren solo para leer («Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.»); lo inmediato se sigue cambiando. «Descartar cambios» borra la edición y deja la ficha como está.
+
 ## Estado real de la demo
 
 `design/prototype/publication.js` sustituye el recorrido de publicación desde `SCREENS['o-new']`: cinco pasos, validación, borrador conservado entre pasos/configuración de cuenta y resultado En revisión. Las fotos se simulan con un botón; no se suben archivos. Identidad y teléfono inicial son ejemplos. No se publican anuncios nuevos en el catálogo ni se envían datos, avisos o pagos. Recargar borra el estado.

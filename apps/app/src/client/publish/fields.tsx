@@ -72,9 +72,26 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
 }
 
 /** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
-function ChoiceCards({ name, type, options, selected }: { name: string; type: "checkbox" | "radio"; options: { value: string; label: string; hint: string }[]; selected: string[] }) {
+export function ChoiceCards({
+  name,
+  type,
+  options,
+  selected,
+  onChange,
+}: {
+  name: string;
+  type: "checkbox" | "radio";
+  options: { value: string; label: string; hint: string }[];
+  selected: string[];
+  /** Lo elegido tras cada toque (p. ej. el tipo de una casa publicada, que muestra el baño con «Habitación»). */
+  onChange?: (current: string[]) => void;
+}) {
   const [current, setCurrent] = useState<string[]>(selected);
-  const toggle = (v: string) => setCurrent((c) => (type === "radio" ? [v] : c.includes(v) ? c.filter((x) => x !== v) : [...c, v]));
+  const toggle = (v: string) => {
+    const next = type === "radio" ? [v] : current.includes(v) ? current.filter((x) => x !== v) : [...current, v];
+    setCurrent(next);
+    onChange?.(next);
+  };
   return (
     <div className="grid-2">
       {options.map((o) => {
@@ -92,7 +109,7 @@ function ChoiceCards({ name, type, options, selected }: { name: string; type: "c
 }
 
 /** Contador −/+ con el valor en un campo oculto. */
-function Counter({ name, label, value, min, max = 30 }: { name: string; label: string; value: number | null; min: number; max?: number }) {
+export function Counter({ name, label, value, min, max = 30 }: { name: string; label: string; value: number | null; min: number; max?: number }) {
   const [n, setN] = useState<number | null>(value);
   const current = n ?? min;
   return (
@@ -113,7 +130,7 @@ function Counter({ name, label, value, min, max = 30 }: { name: string; label: s
 }
 
 /** Chips de características; al marcar Parqueo aparece «Tipo de parqueo». */
-function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; parkingPaid: boolean | null }) {
+export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; parkingPaid: boolean | null }) {
   const [on, setOn] = useState<Feature[]>(selected);
   const toggle = (f: Feature) => setOn((c) => (c.includes(f) ? c.filter((x) => x !== f) : [...c, f]));
   return (
@@ -142,7 +159,7 @@ function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; parkingP
 }
 
 /** Baño privado o compartido (solo habitaciones). */
-function BathroomChoice({ shared }: { shared: boolean | null }) {
+export function BathroomChoice({ shared }: { shared: boolean | null }) {
   const [v, setV] = useState<string>(shared === null ? "" : shared ? "shared" : "private");
   return (
     <div className="stack gap-8">
@@ -165,7 +182,7 @@ function BathroomChoice({ shared }: { shared: boolean | null }) {
 }
 
 /** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí; con Sí, «Precio al mes (opcional)». Volver a No vacía el campo. */
-function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: number | null }) {
+export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: number | null }) {
   const [yes, setYes] = useState(accepts);
   const [text, setText] = useState(price === null ? "" : String(price));
   return (
@@ -229,7 +246,7 @@ function CharCount({ id, n, min, max, hint }: { id: string; n: number; min: numb
 }
 
 /** Nombre de la casa (5 a 60 caracteres) con contador. */
-function TitleField({ value }: { value: string }) {
+export function TitleField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   return (
     <div className="field">
@@ -243,7 +260,7 @@ function TitleField({ value }: { value: string }) {
 }
 
 /** Descripción (80 a 2000 caracteres) con contador; el área llena lo que queda de pantalla, con y sin teclado. */
-function DescriptionField({ value }: { value: string }) {
+export function DescriptionField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   const area = useRef<HTMLTextAreaElement>(null);
   useFillHeight(area);

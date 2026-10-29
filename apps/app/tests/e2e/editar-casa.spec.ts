@@ -124,6 +124,7 @@ test("enviar a revisión: el aviso cambia y los errores se ven", async ({ page }
   await expect(locked).toHaveCount(1);
   await expect(locked).toContainText("Casa Coco frente al mar");
   await expect(locked.locator(".tag-rev.is-pending")).toHaveText("En revisión");
+  await expect(rows(page).getByRole("group", { name: "Nombre: en revisión" })).toHaveCount(1);
   await expect(rows(page).locator(`a[href="/propietario/casas/${id}/editar/nombre"]`)).toHaveCount(0);
   await expect(row(page, "Tipo")).toHaveAttribute("href", `/propietario/casas/${id}/editar/tipo`);
   await expect(page.locator(".detail-photo .state")).toHaveText("Edición en revisión");
@@ -144,4 +145,112 @@ test("inactiva: el bloque ocre arriba", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveCount(0);
   await expect(page.getByTestId("subscription-row")).toHaveCount(0);
   await expect(page.locator(".detail-photo .state")).toHaveText("Inactiva");
+});
+
+// ---------- Las pantallas de cada dato ----------
+
+const save = (page: Page) => page.getByRole("button", { name: "Guardar" });
+const toastText = (page: Page) => page.getByRole("status").filter({ hasText: /^Guardado\./ });
+
+test("cambiar el precio: al momento, en la ficha pública y en Explorar", async ({ page }) => {
+  const { id, publicId } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}`);
+  await row(page, "Precio").click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/editar/precio$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Precio" })).toBeVisible();
+  await expect(page.getByLabel("Precio por noche")).toHaveValue("42000");
+  await page.getByLabel("Precio por noche").fill("55 000");
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha.");
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(row(page, "Precio")).toContainText("₡55 000 / noche");
+  await expect(page.getByText(/Cambios sin enviar/)).toHaveCount(0);
+  expect((await h.owner("owner").getOwn(id))!.nightlyPriceCrc).toBe(55000);
+  await page.goto(`/casa/${publicId}`);
+  await page.reload();
+  await expect(page.getByText("₡55 000").first()).toBeVisible();
+  await page.goto("/explorar");
+  await expect(page.getByRole("link", { name: /Cabina Cahuita/ })).toBeVisible();
+});
+
+test("cambiar el nombre: la ficha pública sigue igual hasta aprobar", async ({ page }) => {
+  const { id, publicId } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}`);
+  await row(page, "Nombre").click();
+  await expect(page.getByRole("heading", { level: 1, name: "Nombre" })).toBeVisible();
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina Cahuita");
+  await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Envíelo a revisión cuando termine.");
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(page.getByText("Cambios sin enviar: nombre")).toBeVisible();
+  await expect(row(page, "Nombre")).toContainText("Casa Coco frente al mar");
+
+  await page.goto(`/casa/${publicId}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cabina Cahuita");
+  await page.goto("/propietario/casas");
+  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Edición sin enviar");
+
+  await page.goto(`/propietario/casas/${id}`);
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page.getByText("Edición en revisión: nombre · normalmente en menos de 24 horas")).toBeVisible();
+  await page.goto("/propietario/casas");
+  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Edición en revisión");
+
+  // En revisión, la pantalla del nombre (p. ej. desde un enlace guardado) se abre solo para leer.
+  await page.goto(`/propietario/casas/${id}/editar/nombre`);
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Casa Coco frente al mar");
+  await expect(page.getByLabel("Nombre de la casa")).toBeDisabled();
+  await expect(page.getByText("Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.")).toBeVisible();
+  await expect(save(page)).toHaveCount(0);
+  // Lo inmediato se sigue cambiando.
+  await page.goto(`/propietario/casas/${id}/editar/precio`);
+  await expect(page.getByLabel("Precio por noche")).toBeEnabled();
+  await expect(save(page)).toBeEnabled();
+});
+
+test("si la base rechaza el precio, la pantalla lo dice y nada cambia", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.route("**/rest/v1/rpc/update_listing_live", (route) =>
+    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Indique el precio por noche en colones.", details: null, hint: null }) }),
+  );
+  await page.goto(`/propietario/casas/${id}/editar/precio`);
+  await page.getByLabel("Precio por noche").fill("55 000");
+  await save(page).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique el precio por noche en colones.");
+  await expect(page).toHaveURL(new RegExp(`/editar/precio$`));
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(row(page, "Precio")).toContainText("₡42 000 / noche");
+});
+
+test("tipo habitación pide el baño", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}/editar/tipo`);
+  await expect(page.getByRole("heading", { level: 1, name: "Tipo" })).toBeVisible();
+  await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
+  await page.locator("label.choice", { hasText: "Habitación" }).click();
+  await expect(page.getByText("Baño de la habitación")).toBeVisible();
+  await save(page).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique si el baño es privado o compartido.");
+  await page.locator("label.chip", { hasText: "Compartido" }).click();
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Envíelo a revisión cuando termine.");
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(row(page, "Tipo")).toContainText("Habitación · baño compartido");
+  expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: true });
+});
+
+test("la pantalla de un dato muestra lo del servidor aunque el teléfono guarde una versión vieja", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}/editar/precio`);
+  await expect(page.getByLabel("Precio por noche")).toHaveValue("42000");
+  await page.waitForTimeout(1500); // la caché se escribe en IndexedDB con retardo: que la próxima carga abra con ella
+  // Desde otro teléfono: la caché de este se queda con la versión de antes hasta releer.
+  await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
+  await h.owner("owner").updateLive(id, { nightlyPriceCrc: 48000 });
+  await page.goto(`/propietario/casas/${id}/editar/nombre`);
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Casa Coco frente al mar");
+  await page.goto(`/propietario/casas/${id}/editar/precio`);
+  await expect(page.getByLabel("Precio por noche")).toHaveValue("48000");
 });

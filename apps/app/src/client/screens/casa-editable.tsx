@@ -82,7 +82,7 @@ function FieldRow({ listing: l, field }: { listing: Listing; field: FormField })
   // En revisión no se vuelve a tocar (maqueta 08c): una fila sin enlace, con el candado.
   if (locked)
     return (
-      <div className="list-item is-locked">
+      <div className="list-item is-locked" role="group" aria-label={`${FIELD_TITLES[field]}: en revisión`}>
         {body}
         <span className="chev">
           <I.lock />
@@ -176,7 +176,7 @@ function SubscriptionCard({ listing: l, sub, today }: { listing: Listing; sub: H
         <SubscriptionLink publicId={l.publicId} className="list-item">
           <span className="body">
             <span className="row gap-8">
-              <b>{promo ? "Oferta de lanzamiento" : "Plan mensual"}</b>
+              <b>{promo ? "Oferta de lanzamiento" : "Suscripción mensual"}</b>
               <span className="badge badge-ok badge-tight xs">Al día</span>
             </span>
             <small>
