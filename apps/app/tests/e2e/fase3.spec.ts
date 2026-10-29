@@ -169,7 +169,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await later.goto("/propietario/actividad");
   await expect(later.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
   await expect(nav(later).getByRole("link", { name: /Actividad/ })).toHaveAttribute("aria-current", "page");
-  const card = later.getByRole("article");
+  const card = later.locator("article.inquiry-card");
   await expect(card).toHaveCount(1);
   await expect(card.getByRole("heading", { name: CLIENT })).toBeVisible();
   await expect(card).toContainText(`${TITLE} · `);
