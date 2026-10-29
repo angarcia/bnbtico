@@ -184,11 +184,11 @@ const inquiry = (o: Partial<OwnerInquiry>): OwnerInquiry => ({
   ...o,
 });
 
-describe("inquirySummary: casa · fechas · personas", () => {
+describe("inquirySummary: fechas · personas", () => {
   it("con fechas y personas, sin fechas, una persona, sin personas", () => {
-    expect(inquirySummary(inquiry({ arrival: "2026-12-20", departure: "2026-12-27", people: 4 }))).toBe("Casa Cocles · 20–27 dic · 4 personas");
-    expect(inquirySummary(inquiry({ people: 2 }))).toBe("Casa Cocles · sin fechas · 2 personas");
-    expect(inquirySummary(inquiry({ people: 1 }))).toBe("Casa Cocles · sin fechas · 1 persona");
-    expect(inquirySummary(inquiry({}))).toBe("Casa Cocles · sin fechas");
+    expect(inquirySummary(inquiry({ arrival: "2026-12-20", departure: "2026-12-27", people: 4 }))).toBe("20–27 dic · 4 personas");
+    expect(inquirySummary(inquiry({ people: 2 }))).toBe("sin fechas · 2 personas");
+    expect(inquirySummary(inquiry({ people: 1 }))).toBe("sin fechas · 1 persona");
+    expect(inquirySummary(inquiry({}))).toBe("sin fechas");
   });
 });

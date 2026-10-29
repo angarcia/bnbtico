@@ -222,9 +222,9 @@ export function relativeTime(iso: string, nowMs: number): string {
 }
 
 
-/** Línea de la tarjeta de una consulta en Actividad: «Casa Cocles · 20–27 dic · 4 personas» (sin personas, solo casa y fechas). */
-export function inquirySummary(i: Pick<OwnerInquiry, "listingTitle" | "arrival" | "departure" | "people">): string {
-  const parts = [i.listingTitle, formatInquiryDates(i.arrival, i.departure)];
+/** Línea de la tarjeta: «20–27 dic · 4 personas»; la casa va en su etiqueta. Sin personas, solo las fechas. */
+export function inquirySummary(i: Pick<OwnerInquiry, "arrival" | "departure" | "people">): string {
+  const parts = [formatInquiryDates(i.arrival, i.departure)];
   if (i.people) parts.push(i.people === 1 ? "1 persona" : `${i.people} personas`);
   return parts.join(" · ");
 }
