@@ -333,7 +333,9 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .gap-4{gap:4px}.gap-6{gap:6px}.gap-8{gap:8px}.wrap{flex-wrap:wrap}.baseline{align-items:baseline}
 .listing-view{padding-top:0}
 .listing-body{gap:16px;padding-top:4px}
-.listing-title{font-size:30px}
+/* 28 px como la maqueta v2 (06-ficha): con el tamaño anterior, 30 px, un nombre de ~19 letras pasaba a dos líneas a 320 px
+   con el render de fuentes de Linux (avances ~4 % más anchos) y la zona quedaba bajo la barra fija. */
+.listing-title{font-size:28px}
 .listing-title.is-long{font-size:24px}
 .listing-description{font-size:16px;white-space:pre-wrap;overflow-wrap:anywhere}
 .hero-counter{right:14px;bottom:14px}
@@ -871,6 +873,9 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .review-list{padding:0;display:flex;flex-direction:column}
 .review-row{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:8px;min-height:44px;padding:6px 12px 6px 14px;border-bottom:1px solid var(--line-soft);color:inherit;text-decoration:none;font-size:14px}
 .review-row:last-child{border-bottom:0}
+/* En pantallas bajas (iPhone SE, 667 px) las seis filas se aprietan 4 px cada una para que el paso 9 quepa sin scroll
+   también cuando la nota de la oferta ocupa tres líneas (render de fuentes de Linux). */
+@media (max-height:700px){.review-row{min-height:40px;padding-block:4px}}
 .review-label{color:var(--muted);font-size:12px;font-weight:600}
 .review-value{display:flex;flex-direction:column;min-width:0}
 .review-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
