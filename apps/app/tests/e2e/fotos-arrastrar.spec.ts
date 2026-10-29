@@ -90,7 +90,7 @@ test("si el servidor rechaza el orden, vuelve el anterior y lo dice (teclado)", 
 test("con una sola foto no sale la ayuda de arrastrar", async ({ page }) => {
   const { id } = await h.seed({ status: "draft", photos: 1 });
   await page.goto(`/propietario/publicar/${id}/7`);
-  await expect(page.getByRole("status")).toHaveText("1 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("1 de 15");
   await expect(page.getByText(/Mantenga pulsada una foto/)).toHaveCount(0);
 });
 
@@ -102,7 +102,7 @@ test("tras mover con el teclado, quitar otra foto no devuelve el foco a un «Mov
   await expect(page.getByRole("button", { name: "Mover foto 2 antes" })).toBeFocused();
   await expect(page.getByRole("button", { name: "Mover foto 2 antes" })).not.toHaveAttribute("aria-disabled", "true");
   await page.getByRole("button", { name: "Quitar foto 5" }).click();
-  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("5 de 15");
   await expect(page.getByRole("button", { name: "Quitar foto 1" })).toBeEnabled();
   expect(await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.move ?? null)).toBeNull();
 });
@@ -119,7 +119,7 @@ test("si el trozo de las fotos no carga, lo dice y «Reintentar» lo vuelve a pe
   await expect(page.locator('.field-error[role="alert"]')).toHaveText("No pudimos cargar las fotos. Revise su conexión.");
   await expect(page.getByRole("heading", { name: "Fotos" })).toBeVisible();
   await page.getByRole("button", { name: "Reintentar" }).click();
-  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("6 de 15");
   await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(6);
 });
 
@@ -145,7 +145,7 @@ test("si el paso de las fotos falla al pintarse, no culpa a la conexión y manda
 test("al volver al paso 7 las fotos salen sin pasar por la espera", async ({ page }) => {
   const { id } = await h.seed({ status: "draft", photos: 6 });
   await page.goto(`/propietario/publicar/${id}/7`);
-  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("6 de 15");
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/8$/);
   // Cada vez que aparece el título «Fotos», ¿ya está el contador al lado? Si no, se vio la espera.
@@ -158,7 +158,7 @@ test("al volver al paso 7 las fotos salen sin pasar por la espera", async ({ pag
   });
   await page.getByRole("link", { name: "Atrás" }).click();
   await expect(page).toHaveURL(/\/7$/);
-  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("6 de 15");
   expect(await page.evaluate(() => (window as unknown as { fallbacks: number }).fallbacks)).toBe(0);
 });
 
@@ -180,7 +180,7 @@ test("durante una subida, los botones «Mover…» quedan sin efecto", async ({ 
   await page.waitForTimeout(300);
   expect(await grid(page)).toEqual(before);
   expect(reorders).toHaveLength(0);
-  await expect(page.getByRole("status")).toHaveText("7 de 5–15", { timeout: 20_000 });
+  await expect(page.getByRole("status")).toHaveText("7 de 15", { timeout: 20_000 });
   await expect(move).not.toHaveAttribute("aria-disabled", "true");
 });
 
@@ -243,7 +243,7 @@ test("mantener pulsada levanta la foto sin mover la página; el ✕ no levanta",
   await page.waitForTimeout(600);
   await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
   await t.up();
-  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("6 de 15");
 });
 
 test("un segundo dedo durante la espera la cancela y no empieza otra", async ({ page }) => {
@@ -366,7 +366,7 @@ test("un segundo dedo: antes de levantar cancela; después se ignora y no quita 
   await t.move(cover.x, cover.y, 12); // mueve el dedo 0; el dedo 1 se queda
   await t.up();
   await expect.poll(() => grid(page)).toEqual([b[4], b[0], b[1], b[2], b[3], b[5]]);
-  await expect(page.getByRole("status")).toHaveText("6 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("6 de 15");
   expect(reorders).toHaveLength(1);
 });
 
@@ -387,7 +387,7 @@ test("durante una subida no se levanta; al terminar, el orden incluye la foto nu
   await page.waitForTimeout(600);
   await expect(page.locator(".photo.is-lifted")).toHaveCount(0);
   await t.up();
-  await expect(page.getByRole("status")).toHaveText("7 de 5–15", { timeout: 20_000 });
+  await expect(page.getByRole("status")).toHaveText("7 de 15", { timeout: 20_000 });
   await expect(page.getByRole("progressbar")).toHaveCount(0);
   await drag(page, 4, await t.center(page.locator(".photos-grid .photo.cover")));
   await expect.poll(() => reorders.length).toBe(1);

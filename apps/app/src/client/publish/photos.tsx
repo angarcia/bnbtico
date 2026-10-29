@@ -20,12 +20,14 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
     reorder: async (ids) => (await photosApi()).reorder(listing.id, ids),
     reread: rereadOwnListing(client, userId, listing.id),
   };
+  // Sin fotos también se envía (publicar v2): la ayuda lo dice y se va con la primera foto.
   const header = (
     <>
       <div className="row between baseline">
         <h2>Fotos</h2>
         <PhotoCounter counter={source.counter} />
       </div>
+      {n === 0 ? <p className="small muted photos-help">Puede enviarla sin fotos; para publicarla necesitamos al menos una.</p> : null}
     </>
   );
   return <PhotoGrid source={source} userId={userId} header={header} />;

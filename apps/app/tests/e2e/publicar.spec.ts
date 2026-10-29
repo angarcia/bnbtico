@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { ListingsHarness } from "../contract/harness";
+import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { SESSION_STORAGE_KEY } from "../../src/data/storage";
 import { injectSession } from "./helpers/session";
@@ -11,6 +12,7 @@ const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
 const TITLE = "Casa Manzanillo, a pie de playa";
 const LATE = "Descripción que no espera a la anterior: sale ya, con keepalive, aunque la página se vaya enseguida.";
 const alert = (page: Page) => page.locator('.note[role="alert"]');
+const NO_PHOTOS_HELP = "Puede enviarla sin fotos; para publicarla necesitamos al menos una.";
 let h: ListingsHarness;
 
 test.describe.configure({ mode: "serial" });
@@ -58,7 +60,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await page.goto("/propietario/publicar");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
-  await expect(page.locator(".ready-list li")).toHaveText(["5 fotos horizontales o más", "El precio por noche", "Unos 10 minutos"]);
+  await expect(page.locator(".ready-list li")).toHaveText(["Fotos horizontales, si ya las tiene", "El precio por noche", "Unos 10 minutos"]);
   await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
   await expect(page.locator(".stage-label")).toHaveAttribute("aria-label", "Su casa, 1 de 4. Paso 1 de 8.");
   await expect(page.locator(".progress span")).toHaveCount(8);
@@ -150,32 +152,36 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   expect((await h.owner("owner").listOwn()).length).toBe(1);
 
   await page.goto(`/propietario/publicar/${id}/6`);
-  // Ticket 19: nombre de 5 a 60 y descripción de 80 a 2000, con contador.
+  // Ticket 19 y publicar v2: nombre de 5 a 32 y descripción opcional (vacía, o de 80 a 2000), con contador.
   await title.fill("Casa");
-  await expect(page.locator("#pub-title-count")).toHaveText("4 / 60 · mínimo 5");
+  await expect(page.locator("#pub-title-count")).toHaveText("4 / 32 · mínimo 5");
+  await expect(page.locator("#pub-description-count")).toHaveText("Puede añadirla después");
   // Revisión UX N3: tres preguntas guía (sin texto para copiar) y, por debajo de 80, cuántos caracteres faltan.
   await expect(page.getByLabel("Descripción")).toHaveAttribute("placeholder", "¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa.");
   await expect(page.locator("#pub-description-count")).toHaveText("Faltan 46 caracteres");
   await continuar(page);
-  await expect(alert(page)).toHaveText("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+  await expect(alert(page)).toHaveText("El nombre de la casa debe tener entre 5 y 32 caracteres.");
   await expect(page).toHaveURL(/\/6$/);
   await title.fill(TITLE);
   await continuar(page);
-  await expect(alert(page)).toHaveText("La descripción debe tener entre 80 y 2000 caracteres.");
+  await expect(alert(page)).toHaveText("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.");
   await expect(page.locator("#pub-description-count")).toHaveText("93 / 2000");
-  await expect(page.getByLabel("Nombre de la casa")).toHaveAttribute("maxlength", "60");
+  await expect(page.getByLabel("Nombre de la casa")).toHaveAttribute("maxlength", "32");
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
 
-  // 7 Fotos: el recuento sale de la base; con 4 deja seguir y avisa de lo que falta (revisión UX C4): el mínimo de 5 se
-  // pide al enviar. La rejilla hace scroll por dentro, la página no.
-  await expect(page.getByRole("status")).toHaveText("0 de 5–15");
+  // 7 Fotos: el recuento sale de la base; sin fotos se puede seguir y enviar (publicar v2: para aprobarla basta una). La
+  // rejilla hace scroll por dentro, la página no.
+  await expect(page.getByRole("status")).toHaveText("0 de 15");
+  await expect(page.getByText(NO_PHOTOS_HELP)).toBeVisible();
   await h.addPhotos(id, 4);
   await page.reload();
-  await expect(page.getByRole("status")).toHaveText("4 de 5–15");
-  await expect(page.getByText("Falta 1 foto · puede añadirlas al final")).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("4 de 15");
+  await expect(page.getByText(NO_PHOTOS_HELP)).toBeHidden();
+  await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
+  await expectNoScroll(page, "paso 7 con 4 fotos");
   await continuar(page);
   await expect(page).toHaveURL(/\/8$/);
   await expectNoScroll(page, "paso 8");
@@ -213,16 +219,20 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page).toHaveURL(/\/9$/);
   await expectNoScroll(page, "paso 9");
 
-  // 9 Revisar y enviar (revisión UX C4): cinco filas que llevan a su pantalla, lo que falta, y la vista previa.
+  // 9 Revisar y enviar (revisión UX C4, publicar v2): seis filas que llevan a su pantalla, y la vista previa.
   await expect(page.getByRole("heading", { name: "Revisar y enviar" })).toBeVisible();
   const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
-  await expect(review.getByRole("link")).toHaveCount(5);
+  await expect(review.getByRole("link")).toHaveCount(6);
+  await expect(review.locator(".review-label")).toHaveText(["Alojamiento", "Dónde", "Capacidad", "Nombre", "Fotos", "Precio"]);
+  await expect(review.locator(".review-warn")).toHaveCount(0);
   const where = review.getByRole("link", { name: /Dónde/ });
   await expect(where.locator(".review-text")).toHaveText(`${zoneName} · Limón, Limón, Limón`);
   await expect(where).toHaveAttribute("href", `/propietario/publicar/${id}/2`);
-  const photosRow = review.getByRole("link", { name: /Nombre y fotos/ });
-  await expect(photosRow).toContainText(`${TITLE} · 4 fotos`);
-  await expect(photosRow.locator(".review-warn")).toHaveText("Falta 1 foto");
+  const nameRow = review.getByRole("link", { name: /Nombre/ });
+  await expect(nameRow.locator(".review-text")).toHaveText(`«${TITLE}»`);
+  await expect(nameRow).toHaveAttribute("href", `/propietario/publicar/${id}/6`);
+  const photosRow = review.getByRole("link", { name: /Fotos/ });
+  await expect(photosRow.locator(".review-text")).toHaveText("4 fotos");
   await expect(photosRow).toHaveAttribute("href", `/propietario/publicar/${id}/7`);
   await expect(review.getByRole("link", { name: /Precio/ }).locator(".review-text")).toHaveText("₡85 000 / noche");
   await page.getByRole("button", { name: "Ver cómo queda su ficha" }).click();
@@ -231,19 +241,6 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(preview.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await preview.getByRole("button", { name: "Cerrar" }).click();
   await expect(preview).toHaveCount(0);
-  // Enviar con 4 fotos: vuelve al paso 7 con el aviso; con la quinta, se envía.
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page).toHaveURL(/\/7$/);
-  await expect(alert(page)).toHaveText("Agregue al menos 5 fotos.");
-  await h.addPhotos(id, 1);
-  await page.reload();
-  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
-  await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
-  await expectNoScroll(page, "paso 7 con 5 fotos");
-  await continuar(page);
-  await expect(page).toHaveURL(/\/8$/);
-  await continuar(page);
-  await expect(page).toHaveURL(/\/9$/);
 
   // 9 Enviar: WhatsApp de la cuenta (solo lectura) y la oferta; relee el borrador, valida todo y envía.
   await expect(page.getByText("+506 8777 0001")).toBeVisible();
@@ -252,12 +249,74 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
-  expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null, photoCount: 5 });
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null, photoCount: 4 });
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
   // Una sola casa: Mis casas es la lista con su tarjeta, «En revisión» sobre la foto.
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByRole("article").getByRole("heading", { name: TITLE })).toBeVisible();
   await expect(page.getByRole("article").getByTestId("card-label")).toHaveText("En revisión");
+});
+
+test("nombre: se detiene en 32 y muestra 32 / 32", async ({ page }) => {
+  const { id } = await h.seed({ status: "draft" });
+  await page.goto(`/propietario/publicar/${id}/6`);
+  const title = page.getByLabel("Nombre de la casa");
+  await title.fill("");
+  await title.pressSequentially("a".repeat(40));
+  await expect(title).toHaveValue("a".repeat(32));
+  await expect(page.locator("#pub-title-count")).toContainText("32 / 32");
+});
+
+test("envía sin fotos ni descripción", async ({ page }) => {
+  // Con correo en la cuenta: la pregunta del correo (si la hay) no se interpone al enviar.
+  sql(`update public.profiles set email = 'yorleny@ejemplo.com' where phone = '${TEST_PHONES.owner}'`);
+  try {
+    await page.goto("/propietario/publicar");
+    await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
+    const id = idFrom(page);
+    await page.getByText("Alojamiento completo", { exact: true }).click();
+    await continuar(page);
+    await expect(page).toHaveURL(/\/2$/);
+    await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
+    const map = (await page.locator(".map-box").boundingBox())!;
+    await page.mouse.click(map.x + map.width / 2 - 10, map.y + map.height / 2);
+    await expect(page.locator(".place-line")).toHaveText("Limón, Limón");
+    await continuar(page);
+    await expect(page).toHaveURL(/\/4$/);
+    await count(page, "personas", 2);
+    await count(page, "habitaciones", 1);
+    await count(page, "baños", 1);
+    await continuar(page);
+    await expect(page).toHaveURL(/\/5$/);
+    await continuar(page);
+    await expect(page).toHaveURL(/\/6$/);
+
+    // 6: solo el nombre; la descripción queda vacía.
+    await page.getByLabel("Nombre de la casa").fill(TITLE);
+    await expect(page.getByLabel("Descripción (opcional)")).toHaveValue("");
+    await continuar(page);
+    await expect(page).toHaveURL(/\/7$/);
+
+    // 7: sin fotos se puede seguir.
+    await expect(page.getByRole("status")).toHaveText("0 de 15");
+    await expect(page.getByText(NO_PHOTOS_HELP)).toBeVisible();
+    await continuar(page);
+    await expect(page).toHaveURL(/\/8$/);
+    await page.getByLabel("Precio por noche").fill("40000");
+    await continuar(page);
+    await expect(page).toHaveURL(/\/9$/);
+
+    // 9: el resumen dice lo que no hay, sin avisos que frenen.
+    const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
+    await expect(review.getByRole("link", { name: /Fotos/ }).locator(".review-text")).toHaveText("Ninguna todavía");
+    await expect(review.getByRole("link", { name: /Nombre/ }).locator(".review-text")).toHaveText(`«${TITLE}» · sin descripción`);
+    await expectNoScroll(page, "paso 9 sin fotos ni descripción");
+    await page.getByRole("button", { name: "Enviar a revisión" }).click();
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
+    expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, description: "", photoCount: 0 });
+  } finally {
+    sql(`update public.profiles set email = null where phone = '${TEST_PHONES.owner}'`);
+  }
 });
 
 // Revisión de Ana: con el teclado abierto la descripción dejaba un hueco vacío debajo. Llena lo que queda de la pantalla con
@@ -416,8 +475,8 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await expect(page.getByText(/«Borrador del otro teléfono»/)).toBeVisible();
   await page.getByRole("link", { name: "Seguir con el borrador" }).click();
-  // El borrador sembrado solo tiene pendientes las fotos: abre en el paso 7 (revisión UX A1/C4).
-  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/7$`));
+  // El borrador sembrado no tiene fotos, que ya no son obligatorias para enviar (publicar v2): abre en «Revisar y enviar».
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/9$`));
   await page.goto(`/propietario/publicar/${pending.id}/1`);
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Habitación/]);
   await expect(page.locator(".ready-list")).toHaveCount(0); // con algo ya rellenado, no repite qué tener a mano

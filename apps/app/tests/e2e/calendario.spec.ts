@@ -69,7 +69,7 @@ test("solo un borrador sin enviar: el aviso y «Seguir publicando» al paso dond
   await page.goto("/propietario/calendario");
   await expect(page.getByText("Su calendario se activa cuando envíe su casa a revisión.")).toBeVisible();
   await expect(grid(page)).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Seguir publicando" })).toHaveAttribute("href", `/propietario/publicar/${draft.id}/7`);
+  await expect(page.getByRole("link", { name: "Seguir publicando" })).toHaveAttribute("href", `/propietario/publicar/${draft.id}/8`); // sin precio (las fotos ya no son obligatorias)
 });
 
 test("una casa activa y un borrador más nuevo: abre la activa, sin selector, y el borrador no aparece", async ({ page }) => {

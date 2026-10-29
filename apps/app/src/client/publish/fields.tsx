@@ -273,7 +273,7 @@ function CharCount({ id, n, min, max, hint }: { id: string; n: number; min: numb
   );
 }
 
-/** Nombre de la casa (5 a 60 caracteres) con contador. */
+/** Nombre de la casa (5 a 32 caracteres) con contador. */
 export function TitleField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   return (
@@ -287,7 +287,7 @@ export function TitleField({ value }: { value: string }) {
   );
 }
 
-/** Descripción (80 a 2000 caracteres) con contador; el área llena lo que queda de pantalla, con y sin teclado. */
+/** Descripción opcional (vacía, o de 80 a 2000 caracteres) con contador; el área llena lo que queda de pantalla, con y sin teclado. */
 export function DescriptionField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   const area = useRef<HTMLTextAreaElement>(null);
@@ -295,9 +295,14 @@ export function DescriptionField({ value }: { value: string }) {
   return (
     <div className="field grow-col">
       <div className="row between baseline">
-        <label htmlFor="pub-description">Descripción</label>
-        {/* Por debajo del mínimo, cuántos faltan en ocre (revisión UX N3); después, el contador normal. */}
-        {n < DESCRIPTION_MIN ? (
+        <label htmlFor="pub-description">Descripción (opcional)</label>
+        {/* Vacía, que se puede añadir después; por debajo del mínimo, cuántos faltan en ocre (revisión UX N3); después, el
+            contador normal. */}
+        {n === 0 ? (
+          <span id="pub-description-count" className="xs muted" aria-live="polite">
+            Puede añadirla después
+          </span>
+        ) : n < DESCRIPTION_MIN ? (
           <span id="pub-description-count" className="xs num description-short" aria-live="polite">
             {DESCRIPTION_MIN - n === 1 ? "Falta 1 carácter" : `Faltan ${DESCRIPTION_MIN - n} caracteres`}
           </span>
@@ -321,8 +326,9 @@ export function DescriptionField({ value }: { value: string }) {
   );
 }
 
-/** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5): lo escrito en cinco filas que llevan a su pantalla, lo que falta
- *  (las fotos), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin scroll en un teléfono pequeño. */
+/** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5; publicar v2): lo escrito en seis filas que llevan a su pantalla
+ *  (sin fotos ni descripción también se envía), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin
+ *  scroll en un teléfono pequeño. */
 function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing: Listing; userId: string }) {
   const count = useQuery(offerTakenQuery);
   const account = useQuery({ ...accountQuery(userId), enabled: !!userId });
@@ -334,15 +340,14 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
     d.nightlyPriceCrc ? `${formatCRC(d.nightlyPriceCrc)} / noche` : null,
     d.acceptsMonthly ? (d.monthlyPriceCrc ? `${formatCRC(d.monthlyPriceCrc)} / mes` : "mensual a negociar") : null,
   ].filter(Boolean);
-  const rows: { step: Step; label: string; value: string; warn?: string }[] = [
+  const title = d.title.trim();
+  const photos = listing.photoCount;
+  const rows: { step: Step; label: string; value: string }[] = [
     { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
     { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
     { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.bedrooms ?? 0} hab. · ${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
-    {
-      step: 6,
-      label: "Nombre y fotos",
-      value: `${d.title.trim() || "Sin nombre"} · ${listing.photoCount} ${listing.photoCount === 1 ? "foto" : "fotos"}`,
-    },
+    { step: 6, label: "Nombre", value: title ? `«${title}»${d.description.trim() ? "" : " · sin descripción"}` : "Sin nombre" },
+    { step: 7, label: "Fotos", value: photos ? `${photos} ${photos === 1 ? "foto" : "fotos"}` : "Ninguna todavía" },
     { step: 8, label: "Precio", value: prices.join(" · ") || "Falta el precio" },
   ];
   return (
@@ -354,7 +359,6 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
             <span className="review-label">{r.label}</span>
             <span className="review-value">
               <span className="review-text">{r.value}</span>
-              {r.warn ? <b className="review-warn">{r.warn}</b> : null}
             </span>
             <I.chevron size={16} />
           </Link>
@@ -404,11 +408,11 @@ function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing
   );
 }
 
-/** Lo que pide el asistente (revisión UX C4): las fotos son lo que más frena. */
+/** Lo que pide el asistente (revisión UX C4; publicar v2: las fotos ya no son obligatorias para enviar). */
 export function ReadyList() {
   return (
     <ul className="ready-list small">
-      <li>5 fotos horizontales o más</li>
+      <li>Fotos horizontales, si ya las tiene</li>
       <li>El precio por noche</li>
       <li>Unos 10 minutos</li>
     </ul>

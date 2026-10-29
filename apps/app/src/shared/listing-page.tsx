@@ -289,7 +289,8 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               {plural(l.capacity, "persona", "personas")} · {plural(l.bedrooms, "habitación", "habitaciones")} · {plural(l.bathrooms, "baño", "baños")}
             </span>
           </div>
-          <p className="listing-description">{l.description}</p>
+          {/* Sin descripción (publicar v2: es opcional), nada en su lugar. */}
+          {l.description.trim() ? <p className="listing-description">{l.description}</p> : null}
 
           {l.features.length || d.monthly ? (
             <div className="feature-tiles">

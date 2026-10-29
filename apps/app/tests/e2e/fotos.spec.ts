@@ -42,15 +42,16 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
     await route.continue();
   });
   await page.goto(`/propietario/publicar/${id}/7`);
-  await expect(page.getByRole("status")).toHaveText("0 de 5–15");
-  // Revisión UX C4: con menos de 5 se puede seguir; el aviso dice cuántas faltan.
-  await expect(page.getByText("Faltan 5 fotos · puede añadirlas al final")).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("0 de 15");
+  // Publicar v2: sin fotos se puede enviar; la ayuda lo dice y se va con la primera foto.
+  const help = page.getByText("Puede enviarla sin fotos; para publicarla necesitamos al menos una.");
+  await expect(help).toBeVisible();
 
   await pick(page).setInputFiles(SEIS);
   await expect(page.getByRole("progressbar", { name: "Subiendo hero.jpg" })).toBeVisible();
-  await expect(page.getByRole("status")).toHaveText("6 de 5–15", { timeout: 20_000 });
+  await expect(page.getByRole("status")).toHaveText("6 de 15", { timeout: 20_000 });
   await expect(page.getByRole("progressbar")).toHaveCount(0);
-  await expect(page.getByText("Añada al menos 5 fotos.")).toBeHidden();
+  await expect(help).toBeHidden();
 
   // En la base: seis carpetas en el orden elegido, tres objetos por foto con caché de un año, sin agrandar.
   const l = await own(id);
@@ -86,7 +87,7 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   // Quitar la segunda: fila y tres objetos fuera.
   const before = await own(id);
   await page.getByRole("button", { name: "Quitar foto 2" }).click();
-  await expect(page.getByRole("status")).toHaveText("5 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("5 de 15");
   const after = await own(id);
   expect(after.photos.map((p) => p.id)).toEqual(before.photos.filter((_, i) => i !== 1).map((p) => p.id));
   await expect.poll(async () => (await h.objects(id)).length).toBe(15);
@@ -114,10 +115,10 @@ test("no pasa de 15: sube solo las que caben y lo dice", async ({ page }) => {
   const { id } = await h.seed({ status: "draft", photos: 13 });
   await page.route("**/storage/v1/object/public/**", (route) => route.fulfill({ body: readFileSync(`${FOTOS}loft.jpg`), contentType: "image/jpeg" }));
   await page.goto(`/propietario/publicar/${id}/7`);
-  await expect(page.getByRole("status")).toHaveText("13 de 5–15");
+  await expect(page.getByRole("status")).toHaveText("13 de 15");
   await pick(page).setInputFiles(SEIS.slice(0, 4));
   await expect(fieldAlert(page)).toHaveText("Máximo 15 fotos.");
-  await expect(page.getByRole("status")).toHaveText("15 de 5–15", { timeout: 20_000 });
+  await expect(page.getByRole("status")).toHaveText("15 de 15", { timeout: 20_000 });
   await expect(pick(page)).toHaveCount(0);
   expect((await own(id)).photoCount).toBe(15);
   expect(await h.objects(id)).toHaveLength(6);

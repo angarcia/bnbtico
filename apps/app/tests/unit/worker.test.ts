@@ -140,6 +140,14 @@ describe("worker · ficha /casa/CT-####", () => {
     expect((await t.request("/casa/CT-999999")).headers.get("link")).toBeNull();
   });
 
+  it("sin descripción y con una foto: ni párrafo de descripción ni contador «1 / 1»", async () => {
+    const sola = await t.h.seed({ status: "active", photos: 1, draft: { description: "" } });
+    const html = await (await t.request(`/casa/${sola.publicId}`)).text();
+    expect(html).toContain("<h1");
+    expect(html).not.toContain('class="listing-description"');
+    expect(html).not.toContain("1 / 1");
+  });
+
   it("incrusta la casa en un JSON no ejecutable y escapado", async () => {
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const raw = /<script type="application\/json" id="ssr-data">([\s\S]*?)<\/script>/.exec(html)![1]!;

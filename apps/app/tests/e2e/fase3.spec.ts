@@ -90,7 +90,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(owner).toHaveURL(/\/7$/);
   await h.addPhotos(id, 5);
   await owner.reload();
-  await expect(owner.getByRole("status")).toHaveText("5 de 5–15");
+  await expect(owner.getByRole("status")).toHaveText("5 de 15");
   await continuar();
   await expect(owner).toHaveURL(/\/8$/);
   await owner.getByLabel("Precio por noche").fill("75.000");

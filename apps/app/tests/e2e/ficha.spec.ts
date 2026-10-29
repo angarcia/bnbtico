@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
-import { serviceClient } from "../db/local";
+import { serviceClient, sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 
 const PHOTO = readFileSync(new URL("../../../../design/pantallas/fotos/beach.jpg", import.meta.url));
@@ -33,7 +33,9 @@ test.beforeAll(async () => {
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
   cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", zoneSource: "other", zoneId: null, nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyPriceCrc: 2500000 } });
   negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
-  larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo con piscina y rancho frente al mar Caribe", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
+  larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
+  // Un nombre largo de antes del tope de 32 caracteres (publicar v2): las casas ya publicadas lo conservan.
+  sql(`begin; set local app.allow_status = 'on'; update public.listings set title = 'Villa Manzanillo con piscina y rancho frente al mar Caribe' where id = '${larga.id}'; commit;`);
   const storage = serviceClient().storage.from("listings");
   for (const path of casa.photoPaths) {
     const { error } = await storage.upload(path, PHOTO, { contentType: "image/jpeg", upsert: true });

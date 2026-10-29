@@ -5,9 +5,9 @@ import { houseSubscription } from "../../src/domain/subscription";
 
 describe("toDomainError", () => {
   it("los mensajes que lanza la base pasan tal cual", () => {
-    const e = toDomainError({ code: "P0001", message: "Agregue al menos 5 fotos." });
+    const e = toDomainError({ code: "P0001", message: "Para aprobarla hace falta al menos una foto." });
     expect(e).toBeInstanceOf(DomainError);
-    expect(e.message).toBe("Agregue al menos 5 fotos.");
+    expect(e.message).toBe("Para aprobarla hace falta al menos una foto.");
     expect(e.kind).toBe("validation");
   });
 
