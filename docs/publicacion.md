@@ -50,7 +50,7 @@ Una casa publicada no vuelve a borrador ni sale de Explorar: se cambia dato a da
 
 `design/prototype/publication.js` sustituye el recorrido de publicación desde `SCREENS['o-new']`: cinco pasos, validación, borrador conservado entre pasos/configuración de cuenta y resultado En revisión. Las fotos se simulan con un botón; no se suben archivos. Identidad y teléfono inicial son ejemplos. No se publican anuncios nuevos en el catálogo ni se envían datos, avisos o pagos. Recargar borra el estado.
 
-Los envíos aparecen también en **Admin → Anuncios → Revisar anuncio**, una vez por envío. La revisión muestra todos los campos y permite ampliar las fotos de ejemplo. Aprobar exige identidad aprobada y cinco fotos; pedir cambios o rechazar exige motivo. La decisión cambia el estado visible en Mis casas, pero no añade la casa al catálogo público. El motivo queda disponible en admin; mostrarlo al propietario y permitir corregir/reenviar siguen pendientes.
+Los envíos aparecen también en **Admin → Anuncios → Revisar anuncio**, una vez por envío. La revisión muestra todos los campos y permite ampliar las fotos de ejemplo. Aprobar exige identidad aprobada y cinco fotos (en el prototipo; en la app, desde publicar v2 del 2026-10-29, basta una foto y la identidad no se pide en v1); pedir cambios o rechazar exige motivo. La decisión cambia el estado visible en Mis casas, pero no añade la casa al catálogo público. El motivo queda disponible en admin; mostrarlo al propietario y permitir corregir/reenviar siguen pendientes.
 
 Pruebas: `node tests/prototype/publication.cjs` y `node tests/prototype/admin-review.cjs`.
 

@@ -52,6 +52,8 @@ group by 1 order by 1;
 
 -- Embudo de publicar sin cuenta (2026-10-29): page_view de /publicar -> publish_verify -> wizard_step en el paso 2
 -- (/propietario/publicar/:id/2). La caída entre cada par dice dónde se pierde la gente antes y después de verificar.
+-- «paso_2» es aproximado: cuenta también los borradores de propietarios que ya tenían sesión (no pasan por
+-- publish_verify), así que puede salir mayor que «verificacion»; léalo como techo, no como conversión exacta.
 select 'entrada' as etapa, count(*) from public.events where name = 'page_view' and path = '/publicar' and created_at > now() - interval '30 days'
 union all select 'verificacion', count(*) from public.events where name = 'publish_verify' and created_at > now() - interval '30 days'
 union all select 'paso_2', count(distinct listing_public_id) from public.events

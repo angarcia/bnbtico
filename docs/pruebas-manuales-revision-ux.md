@@ -62,14 +62,14 @@ Con una cuenta sin casas (p. ej. `8888 9999` recién creada en U6, o borre las s
 
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
-| U20 | Mi cuenta → «Publicar mi casa» → Inicio | Tarjeta «Publique su casa en pocos pasos» con la lista **5 fotos horizontales o más · El precio por noche o por mes · Unos 10 minutos** y el botón «Publicar casa» | ☐ |
+| U20 | Mi cuenta → «Publicar mi casa» → Inicio | Tarjeta «Publique su casa en pocos pasos» con la lista **Fotos horizontales, si ya las tiene · El precio por noche · Unos 10 minutos** (actualizado 2026-10-29, publicar v2: las fotos ya no son obligatorias para enviar) y el botón «Publicar casa» | ☐ |
 | U21 | Tocar «Publicar casa» | Entra **directo al paso 1** (sin la pantalla intermedia «Empezar») | ☐ |
 | U22 | Mirar la cabecera y la barra en varios pasos | Arriba a la derecha la etapa en dos líneas: **«Su casa · 1 de 4»** … «Su casa · 4 de 4», «Fotos y texto · 1 de 2», «Precio · 2 de 2» (actualizado 2026-10-28: con la ubicación por punto el mapa va dentro de «¿Dónde está su casa?»). La barra tiene 8 tramos agrupados 4 · 2 · 2, con un hueco mayor entre etapas | ☐ |
 | U23 | Paso 6, descripción vacía | Dentro de la caja, tres preguntas guía («¿Cómo es por dentro? ¿Qué hay cerca…? ¿Qué incluye…?») que desaparecen al escribir. Con menos de 80 caracteres el contador dice **«Faltan N caracteres»** en ocre; desde 80, «n / 2000» | ☐ |
 | U24 | Paso 7 con **2 fotos** → «Continuar» | Arriba en ocre «Faltan 3 fotos · puede añadirlas al final» y el contador «2 de 5–15» en ocre. **Deja seguir** al paso 8 | ☐ |
 | U25 | Paso 9 | Título **«Revisar y enviar»**; cinco filas (Alojamiento, Dónde, Capacidad, Nombre y fotos, Precio) que llevan a su pantalla; en «Nombre y fotos», debajo y en ocre, «Faltan 3 fotos». Todo cabe sin scroll | ☐ |
 | U26 | Tocar «Ver cómo queda su ficha» | La ficha tal como la verán los clientes, con la banda «Vista previa · así la verán los clientes» y «Cerrar»; el botón de WhatsApp se ve pero apagado. «Cerrar» vuelve al paso 9 | ☐ |
-| U27 | Con 2 fotos, tocar «Enviar a revisión» | Vuelve al paso 7 con «Agregue al menos 5 fotos.» (no se envía nada sin 5 fotos) | ☐ |
+| U27 | Con 2 fotos (o ninguna), tocar «Enviar a revisión» (actualizado 2026-10-29, publicar v2) | Se envía: ya no hace falta un mínimo de fotos para enviar. Para aprobarla, el admin necesita al menos una; sin fotos solo puede pedir cambios | ☐ |
 | U28 | «✕ Cerrar» → Inicio | Arriba del todo, la tarjeta del borrador con su nombre, «Fotos y texto · faltan 3 fotos» y el único botón relleno **«Seguir publicando»**, que abre el paso 7 | ☐ |
 | U29 | Añadir fotos hasta 5, ir al paso 9 y «Enviar a revisión» | «¡Listo! Su casa está en revisión» como antes | ☐ |
 | U54 | Paso 7 con 6+ fotos (iPhone y Android): mantener pulsada una foto ~½ s | Se agranda un poco con sombra. **En Android vibra** (en iPhone no). **No** sale el menú de la imagen ni la lupa o selección de texto | ☐ |
