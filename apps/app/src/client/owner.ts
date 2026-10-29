@@ -68,7 +68,9 @@ export const ownListingQuery = (userId: string, id: string, client: QueryClient)
     },
     staleTime: OWNER_STALE_MS,
     initialData: () => (list?.data as Listing[] | undefined)?.find((l) => l.id === id),
-    initialDataUpdatedAt: list?.dataUpdatedAt,
+    // Una lista invalidada (la restaurada del dispositivo, que puede ser de antes del último cambio, o una a mitad de
+    // refrescarse) pinta el detalle al instante pero no le presta su frescura: el detalle se vuelve a pedir al montarse.
+    initialDataUpdatedAt: list?.isInvalidated ? 0 : list?.dataUpdatedAt,
   });
 };
 
