@@ -38,8 +38,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
     <header className="explore-top">
       <h1 className="sr-only">Explorar casas</h1>
       <div className="explore-search">
-        {/* TODO(tarea 8): a /explorar/buscar cuando exista la ruta de la búsqueda. */}
-        <Link to="/explorar/filtros" search={search} className="search-pill" onPointerDown={prefetchZones} onFocus={prefetchZones}>
+        <Link to="/explorar/buscar" search={search} className="search-pill" onPointerDown={prefetchZones} onFocus={prefetchZones}>
           <I.search size={22} />
           <span className="search-pill-text">{searchSummary(f, zoneName) ?? "Empiece su búsqueda"}</span>
         </Link>

@@ -3,7 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { costaRicaToday } from "../domain/dates";
-import { normalizeSearch, searchFromString, searchToString, type SearchParams } from "../domain/filters";
+import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, type SearchParams } from "../domain/filters";
 import { track } from "../shared/beacon";
 import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
@@ -32,6 +32,12 @@ type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 /** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica. */
 const exploreSearch = (p: SearchParams) => normalizeSearch(p, costaRicaToday(Date.now()));
+/** La búsqueda (`/explorar/buscar`): la de Explorar y `abrir`, la tarjeta abierta al llegar (no pasa a Explorar). */
+type BuscarSearch = ExploreSearch & { abrir?: "donde" | "cuando" | "quienes" };
+const buscarSearch = (p: SearchParams): BuscarSearch => ({
+  ...exploreSearch(p),
+  ...(p.abrir === "donde" || p.abrir === "cuando" || p.abrir === "quienes" ? { abrir: p.abrir } : {}),
+});
 const ownerScreen = (name: OwnerScreen) => lazyRouteComponent(ownerScreens, name);
 const cuentaScreen = (name: CuentaScreenName) => lazyRouteComponent(cuentaScreens, name);
 
@@ -185,6 +191,8 @@ const routeTree = rootRoute.addChildren([
     createRoute({ getParentRoute: () => flow, path: "/cuenta/lista", validateSearch: nextSearch, component: cuentaScreen("ListaScreen") }),
     createRoute({ getParentRoute: () => flow, path: "/cuenta/recuperar", component: cuentaScreen("RecuperarScreen") }),
     createRoute({ getParentRoute: () => flow, path: "/ayuda", component: cuentaScreen("AyudaScreen") }),
+    // La búsqueda de Explorar, a pantalla completa y en su propio trozo (se precarga al tocar la píldora).
+    createRoute({ getParentRoute: () => flow, path: "/explorar/buscar", validateSearch: buscarSearch, component: lazyRouteComponent(() => import("./screens/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),

@@ -139,7 +139,7 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
     await ctx.setOffline(true);
     const times: number[] = [];
     for (let i = 0; i < 5; i++) {
-      times.push(await navTime(page, 'a[href^="/explorar/filtros"]', "h1", "Filtros"));
+      times.push(await navTime(page, "a.filters-btn", "h1", "Filtros"));
       await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible();
       await page.goBack();
       await expect(page.getByTestId("results-count")).toBeVisible();
@@ -149,13 +149,13 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
     await ctx.setOffline(false);
     await page.getByRole("link", { name: "Favoritos" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible({ timeout: 30_000 });
-    await page.getByRole("link", { name: "Explorar" }).click();
+    await page.getByRole("link", { name: "Explorar", exact: true }).click();
     await expect(page.getByTestId("results-count")).toBeVisible();
     await ctx.setOffline(true);
     const tabs: number[] = [];
     for (let i = 0; i < 5; i++) {
       tabs.push(await navTime(page, 'nav a[href="/favoritos"]', "h1", "Favoritos"));
-      await page.getByRole("link", { name: "Explorar" }).click();
+      await page.getByRole("link", { name: "Explorar", exact: true }).click();
       await expect(page.getByTestId("results-count")).toBeVisible();
     }
     report("Pestaña visitada sin red (Explorar → Favoritos, pantalla diferida)", tabs, "< 100 ms");

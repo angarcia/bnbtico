@@ -30,9 +30,18 @@
       "!dist/client/assets/month-grid-*.js",
       "!dist/client/assets/listing-calendar-*.js",
       "!dist/client/assets/suscripcion-*.js",
-      "!dist/client/assets/close-sheet-*.js"
+      "!dist/client/assets/close-sheet-*.js",
+      "!dist/client/assets/buscar-*.js"
     ],
     "limit": "150 KB",
+    "gzip": true
+  },
+  {
+    "name": "Búsqueda de Explorar · trozo diferido (la pantalla de buscar: ¿Dónde?, el calendario de llegada y salida y ¿Quiénes?; se precarga al tocar la píldora)",
+    "path": [
+      "dist/client/assets/buscar-*.js"
+    ],
+    "limit": "6 KB",
     "gzip": true
   },
   {

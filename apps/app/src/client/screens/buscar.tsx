@@ -1,0 +1,249 @@
+// Búsqueda de Explorar a pantalla completa (pantallas v2 02–04): ¿Dónde? · ¿Cuándo? · ¿Quiénes?, una tarjeta abierta a la
+// vez, y abajo «Borrar todo» y «Buscar». Todo queda en un borrador hasta «Buscar», que lleva a Explorar con la búsqueda
+// (sustituyendo esta entrada del historial); ✕ vuelve sin aplicar. Trozo diferido (buscar-*.js): se precarga al tocar la
+// píldora de Explorar.
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { useId, useState, type ReactNode } from "react";
+import { costaRicaToday, formatInquiryDates, shortDate } from "../../domain/dates";
+import { SEARCH_MAX_PEOPLE, parseFilters, searchFor } from "../../domain/filters";
+import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
+import { monthlyWindowLabel, nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
+import { trackSearch } from "../../shared/beacon";
+import { I } from "../../shared/icons";
+import { provincesQuery, zonesQuery } from "../queries";
+import { RangeCalendar } from "../range-calendar";
+
+const route = getRouteApi("/_flow/explorar/buscar");
+
+type Card = "donde" | "cuando" | "quienes";
+
+interface SearchDraft {
+  zone: string | null;
+  arrival: string | null;
+  departure: string | null;
+  monthlyFrom: string | null;
+  ppl: number;
+}
+
+const EMPTY: SearchDraft = { zone: null, arrival: null, departure: null, monthlyFrom: null, ppl: 0 };
+
+const Minus = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <path d="M5 12h14" />
+  </svg>
+);
+
+/** Una tarjeta plegable: cerrada, un botón con el título y el valor; abierta, el título (que la pliega) y su contenido. */
+function Fold({ title, value, open, onToggle, aside, children }: { title: string; value: string; open: boolean; onToggle(): void; aside?: ReactNode; children: ReactNode }) {
+  const id = useId();
+  if (!open)
+    return (
+      <button type="button" className="search-fold" aria-expanded="false" aria-controls={id} onClick={onToggle}>
+        <span>{title}</span>
+        <b className="num">{value}</b>
+      </button>
+    );
+  return (
+    <section className="search-card" id={id}>
+      <div className="search-card-head">
+        <h2>
+          <button type="button" className="search-card-title" aria-expanded="true" onClick={onToggle}>
+            {title}
+          </button>
+        </h2>
+        {aside}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Donde({ zone, onPick, onClear }: { zone: string | null; onPick(id: string): void; onClear(): void }) {
+  const { data: zones = [] } = useQuery(zonesQuery);
+  const [text, setText] = useState(() => zones.find((z) => z.id === zone)?.name ?? "");
+  const [active, setActive] = useState(0);
+  const list = zoneSuggestions(zones, text);
+  const listId = useId();
+  const optionId = (i: number) => `${listId}-${i}`;
+  return (
+    <>
+      <div className="zone-input">
+        <I.search size={20} />
+        <input
+          role="combobox"
+          aria-label="Busque una zona"
+          placeholder="Busque una zona"
+          aria-expanded={list.length > 0}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={list.length ? optionId(Math.min(active, list.length - 1)) : undefined}
+          autoComplete="off"
+          enterKeyHint="search"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            setActive(0);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              e.preventDefault();
+              setActive((i) => (list.length ? (i + (e.key === "ArrowDown" ? 1 : list.length - 1)) % list.length : 0));
+            } else if (e.key === "Enter" && list.length) {
+              e.preventDefault();
+              onPick(list[Math.min(active, list.length - 1)]!.id);
+            }
+          }}
+        />
+        {zone ? (
+          <button type="button" className="btn-text" onClick={onClear}>
+            Quitar
+          </button>
+        ) : null}
+      </div>
+      <ul className="zone-list" role="listbox" id={listId} aria-label="Zonas con casas">
+        {list.map((z, i) => (
+          <li key={z.id} id={optionId(i)} role="option" aria-selected={z.id === zone} className={`zone-option${i === active ? " is-active" : ""}`} onClick={() => onPick(z.id)}>
+            <span className="zone-icon" aria-hidden="true">
+              <I.pin size={20} />
+            </span>
+            <span className="zone-text">
+              <b>{z.name}</b> <span className="small muted">{zonePlace(z)}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {text && !list.length ? <p className="small">Todavía no hay casas en esa zona.</p> : null}
+      <p className="small muted">Le mostramos las casas de la zona y las que están a 5 km o menos.</p>
+    </>
+  );
+}
+
+export function BuscarScreen() {
+  const search = route.useSearch();
+  const navigate = useNavigate();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  const queryClient = useQueryClient();
+  const { abrir, ...rest } = search;
+  const monthly = search.mensual === "1";
+  const [today] = useState(() => costaRicaToday(Date.now()));
+  const [draft, setDraft] = useState<SearchDraft>(() => {
+    const f = parseFilters(rest, []);
+    return { zone: f.zone, arrival: f.arrival, departure: f.departure, monthlyFrom: f.monthlyFrom, ppl: f.ppl };
+  });
+  const [open, setOpen] = useState<Card | null>(abrir ?? "donde");
+  const set = (patch: Partial<SearchDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  const toggle = (card: Card) => () => setOpen((o) => (o === card ? null : card));
+  const { data: zones } = useQuery(zonesQuery);
+  const zoneName = draft.zone ? (zones?.find((z) => z.id === draft.zone)?.name ?? "…") : null;
+  const nightly = !!draft.arrival && !!draft.departure;
+  const hasDates = monthly ? !!draft.monthlyFrom : nightly;
+  const datesValue = monthly ? (draft.monthlyFrom ? `Desde el ${shortDate(draft.monthlyFrom)}` : null) : nightly ? formatInquiryDates(draft.arrival, draft.departure) : null;
+
+  const close = () => (canGoBack ? router.history.back() : void navigate({ to: "/explorar", search: rest, replace: true }));
+  const submit = async () => {
+    trackSearch({ zona: !!draft.zone, fechas: hasDates, personas: draft.ppl > 0 });
+    const provinces = await queryClient.ensureQueryData(provincesQuery).catch(() => [] as string[]);
+    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces), ...draft }, provinces), replace: true, resetScroll: true });
+    window.scrollTo(0, 0);
+  };
+
+  return (
+    <div className="search-screen">
+      <h1 className="sr-only">Buscar casas</h1>
+      <button type="button" className="icon-btn search-close" aria-label="Cerrar la búsqueda" onClick={close}>
+        <I.x size={22} />
+      </button>
+      <Fold title="¿Dónde?" value={zoneName ?? "Añadir zona"} open={open === "donde"} onToggle={toggle("donde")}>
+        {/* Con otra zona (o sin ella, tras «Quitar» o «Borrar todo») el campo vuelve a empezar con su nombre. */}
+        <Donde
+          key={draft.zone ?? ""}
+          zone={draft.zone}
+          onPick={(zone) => {
+            set({ zone });
+            setOpen("cuando");
+          }}
+          onClear={() => set({ zone: null })}
+        />
+      </Fold>
+      <Fold
+        title="¿Cuándo?"
+        value={datesValue ?? "Añadir fechas"}
+        open={open === "cuando"}
+        onToggle={toggle("cuando")}
+        aside={monthly ? <span className="badge badge-sel">{MONTHLY_FILTER_LABEL}</span> : null}
+      >
+        <div className="range-scroll">
+          {monthly ? (
+            <RangeCalendar today={today} mode="from" value={draft.monthlyFrom} onChange={(monthlyFrom) => set({ monthlyFrom })} />
+          ) : (
+            <RangeCalendar today={today} mode="range" value={{ arrival: draft.arrival, departure: draft.departure }} onChange={(r) => set(r)} />
+          )}
+        </div>
+        <div className="range-foot">
+          <span className="range-summary" aria-live="polite">
+            {monthly ? (
+              draft.monthlyFrom ? (
+                <>
+                  <b className="num">{datesValue}</b>
+                  <span className="xs muted num">{monthlyWindowLabel(draft.monthlyFrom)}</span>
+                </>
+              ) : (
+                <b>Elija desde cuándo</b>
+              )
+            ) : nightly ? (
+              <>
+                <b className="num">{datesValue}</b>
+                <span className="xs muted num">{nightsLabel(nightsBetween(draft.arrival!, draft.departure!))}</span>
+              </>
+            ) : (
+              <b>{draft.arrival ? "Elija la salida" : "Elija la llegada"}</b>
+            )}
+          </span>
+          <button type="button" className="btn btn-outline" onClick={() => setOpen("quienes")}>
+            Siguiente
+          </button>
+        </div>
+        <div className="row between">
+          {monthly ? <span /> : <span className="xs muted">Le mostramos las casas libres esas noches.</span>}
+          {draft.arrival || draft.monthlyFrom ? (
+            <button type="button" className="btn-text" onClick={() => set(monthly ? { monthlyFrom: null } : { arrival: null, departure: null })}>
+              Quitar fechas
+            </button>
+          ) : null}
+        </div>
+      </Fold>
+      <Fold title="¿Quiénes?" value={peopleLabel(draft.ppl) ?? "Añadir personas"} open={open === "quienes"} onToggle={toggle("quienes")}>
+        <div className="row between">
+          <span className="stack gap-0">
+            <b>Personas</b>
+            <span className="small muted">Todas las que se van a quedar</span>
+          </span>
+          <span className="people-stepper">
+            <button type="button" aria-label="Una persona menos" disabled={draft.ppl <= 0} onClick={() => set({ ppl: draft.ppl - 1 })}>
+              <Minus />
+            </button>
+            <b className={draft.ppl ? "num" : "is-empty"} aria-live="polite">
+              {draft.ppl || "Sin indicar"}
+            </b>
+            <button type="button" aria-label="Una persona más" disabled={draft.ppl >= SEARCH_MAX_PEOPLE} onClick={() => set({ ppl: draft.ppl + 1 })}>
+              <I.plus size={20} />
+            </button>
+          </span>
+        </div>
+        <p className="note small">Las fechas y las personas van en el mensaje de WhatsApp que le preparamos para el propietario.</p>
+      </Fold>
+      <div className="sticky-spacer" aria-hidden="true" />
+      <div className="sticky-actions">
+        <button type="button" className="btn-text" onClick={() => setDraft(EMPTY)}>
+          Borrar todo
+        </button>
+        <button type="button" className="btn btn-primary grow" onClick={() => void submit()}>
+          <I.search size={20} />
+          Buscar
+        </button>
+      </div>
+    </div>
+  );
+}
