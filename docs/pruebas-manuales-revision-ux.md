@@ -1,12 +1,14 @@
 # Plan de pruebas manual · revisión UX (2026-10-26/27)
 
+> **2026-10-29 · ronda de Ana:** las secciones «Ronda de Ana…», «Explorar al estilo Airbnb», «Editar una casa publicada», «Publicar v2» y «Cuenta, suscripción por casa y Actividad» (U59–U103) son lo más reciente y **mandan** sobre el resto de este plan, sobre `docs/pruebas-manuales-mejoras-2026-10-27.md` y sobre `docs/pruebas-manuales-fase-r.md` donde no coincidan.
+>
 > **2026-10-28:** las mejoras del 2026-10-27 (navegación simple, alquiler mensual, ubicación por punto y fotos arrastrando) se prueban con `docs/pruebas-manuales-mejoras-2026-10-27.md`, que manda sobre este plan donde no coincidan.
 
 Comprueba desde el teléfono todo lo cambiado por la revisión UX acordada con Daniel (`.scratch/revision-ux/2026-10-26-revision-ux.md`). Entorno: `https://nueva.bnbtico.com` (rama `develop`, worker `bnbtico-pruebas`, Supabase `bnbtico-pruebas`). Desde la red de Rivian, la misma app está en `https://bnbtico-pruebas.ana-garcia-saiz.workers.dev`. Se hace **de una vez, desde el teléfono**, después de desplegar. Marque cada casilla y, si algo falla, anote el número del paso (ver C).
 
 Números de prueba con código `123456`: `8888 1234` (cliente), `8777 0001` (propietaria «Yorleny Prueba»), `8888 9999` (libre). Los admins (Daniel y Ana) también entran con `123456`. Conviene un segundo teléfono o una pestaña privada para hacer de cliente y de propietaria a la vez.
 
-Lo que **no** cambió y no hace falta repetir: Explorar con filtros, moneda y tipo de cambio, el admin, el calendario por dentro (marcar noches, precios ★), Anuncio visible. Para eso sigue valiendo `docs/pruebas-manuales-fase-r.md`.
+Lo que **no** cambió y no hace falta repetir: moneda y tipo de cambio, el calendario por dentro (marcar noches, precios ★). Explorar, el admin, «Anuncio visible» (ahora «Cerrar la casa hasta…» en el Calendario), la publicación y Cuenta sí cambiaron en la ronda de Ana: ver sus secciones. Para eso sigue valiendo `docs/pruebas-manuales-fase-r.md`.
 
 ---
 
@@ -163,6 +165,8 @@ Las filas A5 son las acordadas en la revisión. Para tener una segunda casa acti
 | U64 | Crear un borrador y volver a Mis casas | El borrador sale **una sola vez**, en su tarjeta, con «Seguir publicando» y «Descartar» | ☐ |
 | U65 | Calendario: bajar entre meses con el dedo, elegir un día de este mes y otro del siguiente, «Ocupado» y «Guardar cambios» | Los meses van uno debajo de otro, sin flechas; el panel dice las dos noches y al guardar las dos salen «Ocupado» | ☐ |
 | U66 | Calendario de una casa activa: «Cerrar la casa hasta…», poner una fecha y «Cerrar la casa»; mirar Explorar desde otro teléfono; volver y «Abrir la casa» | Arriba dice «Cerrada hasta el …» y los días se atenúan; la casa no sale en Explorar y su ficha dice «No disponible por ahora». «Abrir la casa» la devuelve en un toque y vuelve a salir en Explorar. El detalle de la casa ya no tiene el interruptor «Anuncio visible» | ☐ |
+| U66b | Mirar el Calendario de una casa con noches libres y ocupadas | Libres en verde claro; ocupadas en terracota cálido con rayas, el número en terracota oscuro y «Ocupado»; cada día lleva su precio dentro | ☐ |
+| U66c | Mirar la ficha | No hay selector «₡ \| $» en la ficha (solo en Explorar); los precios en dólares salen en la barra de abajo | ☐ |
 
 ### Explorar al estilo Airbnb (2026-10-29)
 
@@ -196,7 +200,11 @@ Con dos teléfonos: el de la propietaria (una casa activa) y el del admin (con s
 | U83 | Propietaria: en su casa, tocar «Precio», cambiarlo y «Guardar»; luego «Características», marcar una más y «Guardar». Mirar la ficha pública desde el otro teléfono | «Guardado. Ya se ve en su ficha.» las dos veces, sin aviso de edición; la ficha pública ya muestra el precio y la característica nuevos | ☐ |
 | U84 | Propietaria: cambiar «Nombre», «Guardar»; en la píldora de fotos añadir una foto y «Listo»; «Enviar a revisión». Abrir Mis casas | Arriba «Cambios sin enviar: nombre, 1 foto nueva» y, tras enviar, «Edición en revisión: nombre, 1 foto nueva · normalmente en menos de 24 horas»; la tarjeta dice «Edición en revisión»; la ficha pública sigue con el nombre de antes | ☐ |
 | U85 | Admin, en su teléfono: Anuncios → «Ediciones por revisar» → la casa; mirar «Antes» / «Ahora» y la foto nueva; «Aprobar cambios». Propietaria: abrir su casa | Sin «Rechazar»; al aprobar, «Cambios aprobados. La ficha ya los muestra.» y la sección desaparece. La propietaria ya no ve aviso; la tarjeta dice «Activa»; la ficha pública tiene el nombre nuevo y la foto nueva **al final** | ☐ |
-| U86 | Propietaria: cambiar otra vez el nombre y enviarlo. Admin: «Pedir cambios» sin mensaje, luego con un mensaje. Propietaria: corregir el nombre y «Enviar a revisión». Admin: «Aprobar cambios». Después, la propietaria añade una foto nueva (edición nueva) y «Descartar cambios» | Sin mensaje: «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.». Con él, la propietaria ve «Le pedimos cambios en la edición» con el mensaje y la tarjeta «Cambios pedidos en la edición»; al reenviar, «Edición en revisión: nombre…». Al descartar la segunda edición pregunta «¿Descartar los cambios sin aplicar? Su ficha sigue como está.», el aviso desaparece y la foto nueva no queda en la ficha | ☐ |
+| U86 | Propietaria: cambiar otra vez el nombre y enviarlo. Admin: «Pedir cambios» sin mensaje, luego con un mensaje. Propietaria: corregir el nombre y «Enviar a revisión». Admin: «Aprobar cambios». Después, la propietaria añade una foto nueva (edición nueva) y «Descartar cambios» | Sin mensaje: «Escriba una nota para pedir cambios.». Con él, la propietaria ve «Le pedimos cambios en la edición» con el mensaje y la tarjeta «Cambios pedidos en la edición»; al reenviar, «Edición en revisión: nombre…». Al descartar la segunda edición pregunta «¿Descartar los cambios sin aplicar? Su ficha sigue como está.», el aviso desaparece y la foto nueva no queda en la ficha | ☐ |
+| U86b | Propietaria: abrir cada dato de la ficha editable (Nombre, Tipo, Personas, Características, Descripción, Precio, Ubicación); cambiar uno y volver sin guardar | Cada uno abre su pantalla con «Guardar»; volver sin guardar no cambia nada; el gesto Atrás del teléfono vuelve a la ficha (no al formulario) | ☐ |
+| U86c | Con una edición en revisión, abrir «Nombre» y «Ubicación» | Las filas en revisión salen con candado y «En revisión»; dentro: «Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.», sin «Guardar», y el punto del mapa no se mueve | ☐ |
+| U86d | Editor de fotos (píldora «N fotos · Editar»): arrastrar una foto aprobada a la portada; quitar otra; intentar quitar todas | Ordenar y quitar se aplican al momento (la ficha pública cambia sin revisión); la última foto aprobada no se deja quitar: «Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.» | ☐ |
+| U86e | Escribir un precio nuevo con el teléfono sin red y «Guardar» | Sale el error y el precio escrito **se conserva** en el campo | ☐ |
 
 ### Publicar v2 (2026-10-29)
 
@@ -211,6 +219,13 @@ Con un teléfono sin sesión y un número de prueba libre (`8888 9999`); el admi
 | U91 | Admin: abrir esa casa sin fotos en Anuncios | La nota arena «Sin fotos: solo puede pedir cambios.»; «Aprobar y publicar» no funciona («Para aprobarla hace falta al menos una foto.»); «Pedir cambios» propone «Para publicarla necesitamos al menos una foto de la casa.» | ☐ |
 | U92 | Cuenta nueva (otro número libre) desde Ingresar, sin `next`: tras el código mirar «¡Listo! Su cuenta está creada»; probar «Sí, quiero publicarla» y, con otra cuenta, «No, busco casa» | La pregunta «¿Tiene una casa para alquilar?»: «Sí» lleva a publicar y «No» a Explorar; el enlace «Añadir un correo de recuperación» abre el correo. Una cuenta que llegó desde una ficha vuelve a la ficha sin ver la pregunta | ☐ |
 | U93 | En el paso 6 escribir un nombre de 33 caracteres | El contador para en 32 y no deja pasar de ahí; con 4 caracteres, «El nombre de la casa debe tener entre 5 y 32 caracteres.» | ☐ |
+
+### Cuenta, suscripción por casa y Actividad (2026-10-29)
+
+Con la propietaria «Yorleny Prueba» (`8777 0001`) con dos casas publicadas y consultas en las dos.
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
 | U94 | Propietaria con dos casas: Cuenta → una línea de la suscripción de una casa | Abre «Suscripción» con solo esa casa, «Método de pago» y «Cómo funciona», sin la oferta; abajo, al final de la pantalla, «Ver todas sus casas», que lleva a «Promoción y suscripción» con todas | ☐ |
 | U95 | Abrir el enlace de un aviso por WhatsApp, `/propietario/suscripcion#pago=CT-1042` (sin `casa`), con dos o más casas | «Promoción y suscripción» con todas las casas y la CT-1042 resaltada | ☐ |
 | U95b | En Mis casas, tocar el botón de pago de una casa por pagar (`/propietario/suscripcion?casa=CT-1042#pago=CT-1042`) | «Suscripción» con solo esa casa, resaltada; la URL conserva `casa`. Sin red y con una casa recién aprobada que aún no estaba en el teléfono, la URL sigue con `casa` y no se ven las demás casas | ☐ |
@@ -221,6 +236,7 @@ Con un teléfono sin sesión y un número de prueba libre (`8888 9999`); el admi
 | U100 | Cuenta → al final «Cerrar sesión»: tocar «Cancelar»; repetir y tocar el fondo; repetir y confirmar | «¿Cerrar sesión?» con «Tendrá que recibir un código nuevo para volver a entrar.»; cancelar o tocar fuera cierra y sigue con sesión, con el foco en «Cerrar sesión»; confirmar sale y pide el código otra vez | ☐ |
 | U101 | Actividad con dos casas publicadas y consultas de ambas | Cada consulta lleva arriba la etiqueta de su casa; bajo «Últimas consultas» los chips «Todas · <casa>»; tocar uno deja solo sus consultas | ☐ |
 | U102 | Con un chip elegido, recargar; tocar «Todas»; elegir una casa sin consultas | La URL lleva `?casa=` y la recarga mantiene el filtro; «Todas» lo quita; la casa sin consultas dice «Todavía no hay consultas de esta casa.» | ☐ |
+| U103 | Actividad con una sola casa; luego con dos o más | Con una, su tarjeta ocupa toda la fila (foto cuadrada con la etiqueta de estado y las tres cifras grandes); con dos o más, de dos en dos | ☐ |
 
 ---
 

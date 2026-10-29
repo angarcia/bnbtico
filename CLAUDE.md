@@ -66,7 +66,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - `docs/corte-fase-r.md` — guion del corte de la fase R: pasos en orden con su vuelta atrás, renombrado `apps/app` → `apps/web`, migración pendiente de fotos (`supabase/migrations-pendientes/`) y decisiones abiertas (Google Analytics en la portada).
 - `docs/pruebas-manuales-fase-r.md` — plan de pruebas manual único de la fase R desde el teléfono (acciones previas de Daniel y recorridos).
 - `docs/pruebas-manuales-mejoras-2026-10-27.md` — plan de pruebas manual de las mejoras del 2026-10-27 (navegación simple, alquiler mensual, ubicación por punto, fotos arrastrando); manda sobre los de la fase R y la revisión UX donde no coincidan.
-- `docs/pruebas-manuales-revision-ux.md` — plan de pruebas manual de la revisión UX del 2026-10-26/27 (`.scratch/revision-ux/`); manda sobre el de la fase R donde no coincidan.
+- `docs/pruebas-manuales-revision-ux.md` — plan de pruebas manual de la revisión UX del 2026-10-26/27 (`.scratch/revision-ux/`) y de la ronda de Ana del 2026-10-29 (U59–U103, que mandan sobre todos los demás planes donde no coincidan); manda sobre el de la fase R donde no coincidan.
 - `docs/telemetria.md` — balizas de Web Vitals, errores y eventos, consultas p75, CSP, Turnstile y cron.
 - `docs/copias-de-seguridad.md` — copia diaria con `pg_dump` a R2 y prueba mensual de restauración.
 - `docs/design.md` — pantallas, flujos, calendario, sistema de diseño.
