@@ -1,6 +1,6 @@
 # Spec · Suscripción por casa, Cuenta más clara y Actividad con la casa de cada consulta
 
-Status: needs-triage
+Status: ready-for-agent (approved by Daniel 2026-10-29, with mockups design/pantallas/v2/)
 Date: 2026-10-28
 Decided by: Daniel, question by question on 2026-10-28/29, from Ana's emails of 2026-10-28. Authority: `.scratch/ronda-ana-2026-10-28/decisiones.md`, sections **F** (suscripción y cuenta) and **G** (actividad).
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.

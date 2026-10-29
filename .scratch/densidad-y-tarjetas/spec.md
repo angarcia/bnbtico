@@ -1,6 +1,6 @@
 # Spec · Densidad, tarjetas con la etiqueta en la foto y un calendario más alto
 
-Status: needs-triage
+Status: ready-for-agent (approved by Daniel 2026-10-29, with mockups design/pantallas/v2/)
 Date: 2026-10-28
 Decided by: Daniel, question by question on 2026-10-28/29, from Ana's emails of 2026-10-28 («Cambios bnbtico»). Authority: `.scratch/ronda-ana-2026-10-28/decisiones.md`, sections **B** (densidad y diseño) and **C** (calendario).
 Language note: technical artifact in English; all UI copy in Spanish de Costa Rica, treating the user as **usted**.
