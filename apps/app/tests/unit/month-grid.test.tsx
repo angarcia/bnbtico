@@ -3,7 +3,7 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { CalendarDay } from "../../src/domain/calendar";
-import { MonthGrid, MonthLegend } from "../../src/shared/month-grid";
+import { MonthGrid, MonthLegend, WeekdayRow } from "../../src/shared/month-grid";
 
 const TODAY = "2026-12-10";
 const days = (rows: CalendarDay[]) => new Map(rows.map((r) => [r.day, r]));
@@ -32,7 +32,7 @@ describe("MonthGrid", () => {
     expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible, ₡95\u00a0000"');
     expect(cell(out, 20)).toContain("95k");
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
-    expect(cell(out, 12)).toContain("ocupado");
+    expect(cell(out, 12)).toContain(">Ocupado<");
     expect(cell(out, 12)).toMatch(/class="day is-busy"/);
     expect(cell(out, 24)).toContain("<b>24 ★</b>");
     expect(cell(out, 24)).toContain("180k");
@@ -55,7 +55,7 @@ describe("MonthGrid", () => {
     expect(out).not.toMatch(/\dk</);
     expect(out).not.toContain("★");
     expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible"');
-    expect(cell(out, 12)).toContain("ocupado");
+    expect(cell(out, 12)).toContain(">Ocupado<");
   });
 
   it("solo lectura (ficha): rejilla con celdas etiquetadas, sin botones; cifra solo en los días ★ y en la moneda elegida", () => {
@@ -72,6 +72,40 @@ describe("MonthGrid", () => {
     const out = html({ onSelect: undefined, dimmed: true });
     expect(out).toMatch(/class="month-grid is-dimmed"/);
     expect(out).not.toContain("<button");
+  });
+
+  it("alta (calendario del propietario): sin cabecera propia, «₡95k» dentro de la casilla y «Ocupado» en los ocupados", () => {
+    const out = renderToString(
+      <MonthGrid
+        size="tall"
+        month="2026-12"
+        today="2026-12-01"
+        days={days([{ day: "2026-12-12", available: false, specialPriceCrc: null }])}
+        base={95000}
+        prices="all"
+        onSelect={() => {}}
+        label="Diciembre 2026"
+      />,
+    );
+    expect(out).toContain('class="month-grid is-tall"');
+    expect(out).not.toContain("month-head");
+    expect(cell(out, 9)).toContain("₡95k");
+    expect(cell(out, 12)).toContain(">Ocupado<");
+    expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
+  });
+
+  it("compacta (por defecto): cabecera propia y «95k» sin ₡", () => {
+    const out = html();
+    expect(out).toContain("month-head");
+    expect(out).not.toContain("is-tall");
+    expect(cell(out, 20)).toContain(">95k<");
+    expect(out).not.toContain("₡95k");
+  });
+
+  it("fila de los días de la semana: L K M J V S D, oculta a los lectores de pantalla", () => {
+    const out = renderToString(<WeekdayRow />);
+    expect(out).toContain('aria-hidden="true"');
+    expect(out.replace(/<[^>]+>/g, "")).toBe("LKMJVSD");
   });
 
   it("leyenda: Disponible · Ocupado · ★ Precio distinto (sin ★ en una casa solo mensual)", () => {

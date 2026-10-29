@@ -640,21 +640,29 @@ small.swap-in{display:block}
 .month-grid{display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
 .month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .month-head{font-size:11px;font-weight:700;color:var(--muted);text-align:center}
-.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:46px;border:2px solid transparent;border-radius:12px;background:var(--state-soft);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
+.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:46px;border:2px solid transparent;border-radius:12px;background:var(--cal-free);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
 .month-grid .day b{font-size:13px;font-weight:700;line-height:1.1}
 .month-grid .day-sub{font-size:9px;line-height:1.1;min-height:10px;color:var(--state-ink)}
-.month-grid .day.is-busy{background:var(--busy);color:var(--busy-ink)}
-.month-grid .day.is-busy .day-sub{color:var(--busy-ink)}
+/* Ocupado: terracota claro con rayas finas y «Ocupado» (no depende solo del color). */
+.month-grid .day.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px);color:var(--cal-busy-ink)}
+.month-grid .day.is-busy .day-sub{color:var(--cal-busy-ink)}
 .month-grid .day[aria-pressed="true"]{border-color:var(--brand-ink)}
 /* Días pasados: solo el número en gris tenue, sin fondo ni precio (revisión UX A4). */
 .month-grid .day.is-past{background:none;color:var(--muted);opacity:.55}
 .month-grid button.day:disabled{cursor:default}
 .month-grid button.day:active:not(:disabled){transform:scale(0.94)}
 .month-grid.is-dimmed{opacity:.6}
+/* Alta (calendario del propietario): el mes llena la pantalla y sus semanas se reparten el alto; número arriba a la
+   izquierda y precio dentro. */
+.month-grid.is-tall{flex:1;gap:3px}
+.month-grid.is-tall .month-week{flex:1;gap:3px}
+.month-grid.is-tall .day{height:auto;min-height:64px;align-items:flex-start;justify-content:space-between;padding:7px 4px 7px 7px;border-radius:14px}
+.month-grid.is-tall .day b{font-size:14px}
+.month-grid.is-tall .day-sub{font-size:10.5px;font-weight:600;align-self:center}
 .month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);padding-top:4px}
 .month-legend span{display:inline-flex;align-items:center;gap:6px}
-.month-legend .swatch{width:12px;height:12px;border-radius:4px;background:var(--state-soft)}
-.month-legend .swatch.is-busy{background:var(--busy)}
+.month-legend .swatch{width:12px;height:12px;border-radius:4px;background:var(--cal-free)}
+.month-legend .swatch.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px)}
 /* Ficha: «Disponibilidad». Caja de alto fijo (mes + 6 semanas + leyenda + línea del precio base): mide lo mismo vacía en
    el HTML del servidor que con la rejilla montada tras hidratar. Disponible en blanco; ocupado en terracota claro. */
 .listing-calendar{display:flex;flex-direction:column;gap:8px;height:432px;overflow:hidden}

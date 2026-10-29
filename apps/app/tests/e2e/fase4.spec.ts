@@ -135,7 +135,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   for (const d of [10, 11, 12]) await day(on(d)).click();
   await panel.getByRole("button", { name: "Ocupado" }).click();
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
-  await expect(day(on(11))).toContainText("ocupado");
+  await expect(day(on(11))).toContainText("Ocupado");
   await day(on(20)).click();
   await panel.getByLabel("Precio por noche").fill("150000");
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
@@ -230,6 +230,6 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
 
   await owner.reload();
   await expect(owner.getByRole("button", { name: "Abrir a consultas" })).toHaveCount(0);
-  await expect(day(on(12))).toContainText("ocupado");
+  await expect(day(on(12))).toContainText("Ocupado");
   await owner.context().close();
 });

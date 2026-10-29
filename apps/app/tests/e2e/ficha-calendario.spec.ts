@@ -101,7 +101,7 @@ test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base
   await toNextMonth(page);
   await expect(grid(page, next())).toBeVisible();
   await expect(cell(page, on(10))).toHaveAttribute("aria-label", `${longDate(on(10))} de ${on(10).slice(0, 4)}, ocupado`);
-  await expect(cell(page, on(10))).toContainText("ocupado");
+  await expect(cell(page, on(10))).toContainText("Ocupado");
   await expect(cell(page, on(10))).toHaveClass(/is-busy/);
   await expect(cell(page, on(20))).toHaveText("20 ★150k");
   await expect(cell(page, on(20))).toHaveAttribute("aria-label", /disponible, ₡150\s000, precio distinto$/);
@@ -153,7 +153,7 @@ test("con alquiler mensual a negociar, el calendario sigue siendo por noches con
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await toNextMonth(page);
-  await expect(cell(page, on(10))).toContainText("ocupado");
+  await expect(cell(page, on(10))).toContainText("Ocupado");
   await expect(cell(page, on(20))).toContainText("★");
   await expect(section(page).getByText("Precio base ₡95 000 por noche; los días con ★ tienen otro precio.")).toBeVisible();
 });
@@ -185,7 +185,7 @@ test("ficha dentro de la SPA: pide los días una vez y muestra el calendario", a
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
   await expect(section(page).getByRole("grid", { name: monthTitle(opening()) })).toBeVisible();
   await toNextMonth(page);
-  await expect(cell(page, on(11))).toContainText("ocupado");
+  await expect(cell(page, on(11))).toContainText("Ocupado");
   await expect(cell(page, on(20))).toHaveText("20 ★150k");
   expect(days).toHaveLength(1);
 });

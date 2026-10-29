@@ -137,7 +137,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
     return performance.now() - t;
   }, label);
   expect(ms).toBeLessThan(50);
-  await expect(day(page, on(12))).toContainText("ocupado");
+  await expect(day(page, on(12))).toContainText("Ocupado");
   release();
   await expect
     .poll(async () => (await h.calendar("owner").days(casa.id)).filter((d) => d.day.startsWith(next())))
@@ -146,7 +146,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   await page.screenshot({ path: "test-results/calendario-ocupado.png" });
 
   await page.reload();
-  await expect(day(page, on(11))).toContainText("ocupado");
+  await expect(day(page, on(11))).toContainText("Ocupado");
 
   await day(page, on(10)).click();
   await expect(panel(page).getByText(`1 noche · 10 ${shortMonth(next())}`)).toBeVisible();
@@ -247,7 +247,7 @@ test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última el
   await h.seed({ status: "rejected", draft: { title: "Casa Rechazada" } });
   await h.putDay(a.id, { day: on(5), available: false, specialPriceCrc: null });
   await open(page, a.id);
-  await expect(day(page, on(5))).toContainText("ocupado");
+  await expect(day(page, on(5))).toContainText("Ocupado");
   await day(page, on(6)).click();
   await expect(panel(page)).toBeVisible();
 
@@ -295,13 +295,13 @@ test("casa cerrada a consultas: nota con la fecha, días de solo lectura y «Abr
   await h.owner("owner").setAvailable(casa.id, false, reopen);
   await open(page, casa.id);
   await expect(page.getByText(`Esta casa está cerrada a consultas hasta el ${longDate(reopen)}. Ábrala para cambiar el calendario; sus noches y precios se conservan.`)).toBeVisible();
-  await expect(cellOf(page, on(3))).toContainText("ocupado");
+  await expect(cellOf(page, on(3))).toContainText("Ocupado");
   await expect(page.locator(".month-grid button")).toHaveCount(0);
   await expect(page.locator(".month-grid.is-dimmed")).toBeVisible();
   await page.screenshot({ path: "test-results/calendario-cerrada.png" });
 
   await page.getByRole("button", { name: "Abrir a consultas" }).click();
-  await expect(day(page, on(3))).toContainText("ocupado");
+  await expect(day(page, on(3))).toContainText("Ocupado");
   await expect(page.getByRole("button", { name: "Abrir a consultas" })).toHaveCount(0);
   await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(true);
 });

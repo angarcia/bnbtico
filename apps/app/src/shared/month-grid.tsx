@@ -1,8 +1,10 @@
 // Rejilla de un mes (pantalla 17 del diseño v1): lunes primero, un día por casilla con su precio («95k»), ocupados en
-// terracota claro y ★ en los de precio distinto al base. Con `onSelect` los días son botones (calendario del propietario);
+// terracota claro con rayas y «Ocupado», y ★ en los de precio distinto al base. Dos tamaños: «compact» (la ficha, con su
+// cabecera L K M J V S D) y «tall» (el calendario del propietario: casillas altas con «₡95k»; la pantalla pinta una sola
+// `WeekdayRow` fija arriba para todos los meses). Con `onSelect` los días son botones (calendario del propietario);
 // sin él es una rejilla de solo lectura (la ficha pública, ticket 05). Solo React y el dominio: la ficha la carga en su
 // propio trozo, sin router, Query ni supabase.
-import { compactPrice, effectiveDay, monthGrid, type CalendarDays } from "../domain/calendar";
+import { cellPrice, compactPrice, effectiveDay, monthGrid, type CalendarDays } from "../domain/calendar";
 import type { Currency } from "../domain/currency";
 import { longDate } from "../domain/dates";
 import { FX_INITIAL } from "../domain/fx";
@@ -30,21 +32,32 @@ export interface MonthGridProps {
   dimmed?: boolean;
   /** Nombre accesible de la rejilla («Diciembre 2026»). */
   label: string;
+  /** «tall»: casillas altas, sin cabecera propia y precio con ₡ («₡95k»). Por defecto «compact». */
+  size?: "compact" | "tall";
 }
 
-export function MonthGrid({ month, today, days, base, prices, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], onSelect, dimmed, label }: MonthGridProps) {
+/** La fila «L K M J V S D». */
+export function WeekdayRow({ className }: { className?: string }) {
+  return (
+    <div className={`month-week month-head${className ? ` ${className}` : ""}`} aria-hidden="true">
+      {WEEKDAYS.map((d) => (
+        <span key={d} className="wd">
+          {d}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function MonthGrid({ month, today, days, base, prices, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], onSelect, dimmed, label, size = "compact" }: MonthGridProps) {
   const { weeks } = monthGrid(month, today);
   const year = month.slice(0, 4);
   const interactive = !!onSelect && !dimmed;
+  const tall = size === "tall";
+  const price = tall ? cellPrice : compactPrice;
   return (
-    <div className={`month-grid${dimmed ? " is-dimmed" : ""}`} role={interactive ? "group" : "grid"} aria-label={label}>
-      <div className="month-week month-head" aria-hidden="true">
-        {WEEKDAYS.map((d) => (
-          <span key={d} className="wd">
-            {d}
-          </span>
-        ))}
-      </div>
+    <div className={`month-grid${tall ? " is-tall" : ""}${dimmed ? " is-dimmed" : ""}`} role={interactive ? "group" : "grid"} aria-label={label}>
+      {tall ? null : <WeekdayRow />}
       {weeks.map((week, w) => (
         <div key={w} className="month-week" role={interactive ? undefined : "row"}>
           {week.map((g, i) => {
@@ -66,7 +79,7 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
             const body = (
               <>
                 <b>{off ? `${g.date}` : `${g.date}${mark}`}</b>
-                <span className="day-sub">{off ? "" : !s.available ? "ocupado" : showPrice ? compactPrice(s.priceCrc!, currency, fx) : ""}</span>
+                <span className="day-sub">{off ? "" : !s.available ? "Ocupado" : showPrice ? price(s.priceCrc!, currency, fx) : ""}</span>
               </>
             );
             return interactive ? (
