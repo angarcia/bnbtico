@@ -33,7 +33,7 @@ test.describe("con violaciones esperadas", () => {
 
   test("la CSP se aplica: un script en línea inyectado no corre y se registra la violación", async ({ page, cspViolations }) => {
     await page.goto("/explorar");
-    await expect(page.getByRole("heading", { name: "¿Para dónde va?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Explorar casas" })).toBeVisible();
     const ran = await page.evaluate(async () => {
       const s = document.createElement("script");
       s.textContent = "window.__inline = true";
@@ -51,7 +51,7 @@ test("Turnstile se carga solo en Ingresar y su token llega a Supabase Auth al pe
   const turnstile: string[] = [];
   page.on("request", (r) => r.url().startsWith("https://challenges.cloudflare.com/") && turnstile.push(r.url()));
   await page.goto("/explorar");
-  await expect(page.getByRole("heading", { name: "¿Para dónde va?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explorar casas" })).toBeVisible();
   expect(turnstile).toEqual([]);
 
   await deleteAccount(FREE_PHONE);

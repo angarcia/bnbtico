@@ -10,12 +10,12 @@ import { I } from "../shared/icons";
  * Sin resultados (`onClear`): tarjeta «No hay casas con esos filtros», la nota si hay número y «Quitar filtros» si hay
  * filtros puestos. Con resultados: solo la nota arena, al final de la rejilla.
  */
-export function SearchHelp({ filters, number, onClear }: { filters: Filters; number: string; onClear?: (() => void) | null }) {
+export function SearchHelp({ filters, zoneName = null, number, onClear }: { filters: Filters; zoneName?: string | null; number: string; onClear?: (() => void) | null }) {
   const help = number ? (
     <>
       <p>¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.</p>
       {/* Se abre como «Abrir WhatsApp» de Ayuda; la baliza no lleva el mensaje ni los filtros (solo ruta, build y país). */}
-      <a className="btn btn-outline btn-block" href={waUrl(number, searchHelpMessage(filters))} target="_blank" rel="noopener" onClick={() => track("search_help_tap")}>
+      <a className="btn btn-outline btn-block" href={waUrl(number, searchHelpMessage(filters, zoneName))} target="_blank" rel="noopener" onClick={() => track("search_help_tap")}>
         <I.wa size={20} /> Escribir a bnbtico por WhatsApp
       </a>
     </>

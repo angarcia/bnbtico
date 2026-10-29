@@ -34,7 +34,7 @@ test("`/?pronto=1` muestra la portada sin JavaScript, con su imagen, su CSP y su
 test("`/` sigue llevando a Explorar fuera de producción", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(page.getByRole("heading", { name: "¿Para dónde va?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explorar casas" })).toBeVisible();
 });
 
 test("HEAD / responde 200, también con ?pronto=1", async ({ request }) => {

@@ -16,7 +16,8 @@ let h: Awaited<ReturnType<typeof postgrestHarness>>;
 let casa: Seeded;
 
 const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
-const accountButton = (page: Page) => page.getByRole("banner").getByRole("link", { name: /Cuenta|^[A-Z]{1,2}$/ });
+// Arriba a la derecha: en la barra superior o, en Explorar (sin barra), en su cabecera.
+const accountButton = (page: Page) => page.getByRole("link", { name: "Cuenta", exact: true });
 // Con una casa la pestaña dice «Mi casa»; con dos o más, «Mis casas».
 const OWNER_TABS = ["Explorar", "Favoritos", "Mi casa", "Calendario", /^Actividad\d*$/];
 const OWNER_TABS_MANY = ["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/];
@@ -264,6 +265,8 @@ test("1 · sin sesión: dos pestañas e «Ingresar» arriba", async ({ page }) =
   await page.evaluate(() => localStorage.clear());
   await page.goto("/explorar");
   await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(page.locator(".explore-top").getByRole("link", { name: "Ingresar" })).toBeVisible();
+  await page.goto("/favoritos");
   await expect(page.getByRole("banner").getByRole("link", { name: "Ingresar" })).toBeVisible();
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
@@ -386,11 +389,11 @@ test("Cuenta se abre a pantalla completa, sin barra inferior, y la flecha vuelve
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
 
-test("5 · ₡ → $ arriba cambia los precios de Explorar y se mantiene al recargar; la ficha muestra las dos monedas", async ({ page }) => {
+test("5 · ₡ → $ en la fila de chips cambia los precios de Explorar y se mantiene al recargar; la ficha muestra las dos monedas", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Playa Negra", nightlyPriceCrc: 95000 } });
   await page.goto("/explorar");
-  await page.getByRole("banner").getByRole("button", { name: "Dólares" }).click();
+  await page.locator(".chiprow").getByRole("button", { name: "Dólares" }).click();
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
   await page.getByRole("link", { name: /Casa Playa Negra/ }).click();
   await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
@@ -399,11 +402,11 @@ test("5 · ₡ → $ arriba cambia los precios de Explorar y se mantiene al reca
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
   await page.reload();
-  await expect(page.getByRole("banner").getByRole("button", { name: "Dólares" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".chiprow").getByRole("button", { name: "Dólares" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
 });
 
-test("la barra superior: 56 px más el área segura, y los botones de al menos 44 px", async ({ page }) => {
+test("la barra superior: 56 px más el área segura, y los botones de al menos 44 px; Explorar no la lleva", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   const banner = page.getByRole("banner");
@@ -417,10 +420,12 @@ test("la barra superior: 56 px más el área segura, y los botones de al menos 4
       expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     }
   };
+  // Explorar trae su propia cabecera: la cuenta junto a la píldora y «₡ | $» en la fila de chips.
   await page.goto("/explorar");
-  await expect(banner.getByRole("link", { name: "Cuenta" })).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}$/);
-  await checkBar();
-  // Las cinco pestañas la llevan; Cuenta (pantalla de flujo), no.
+  await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}$/);
+  await expect(page.locator(".topbar")).toHaveCount(0);
+  await expect(banner).toHaveCount(0);
+  // Las otras cuatro pestañas la llevan; Cuenta (pantalla de flujo), no.
   for (const path of ["/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]) {
     await page.goto(path);
     await expect(banner.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
@@ -436,7 +441,7 @@ test("la barra superior: 56 px más el área segura, y los botones de al menos 4
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
   // Sin sesión, «Ingresar».
   await page.evaluate(() => localStorage.clear());
-  await page.goto("/explorar");
+  await page.goto("/favoritos");
   await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
   await checkBar();
 });
@@ -448,8 +453,11 @@ test("densidad: márgenes de 16 px e iconos de 26 px en la barra", async ({ page
   await expect(nav(page).getByRole("link")).toHaveCount(5);
   const padding = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).paddingLeft);
   expect(await padding("main.view")).toBe("16px");
-  expect(await padding(".topbar")).toBe("16px");
+  expect(await padding(".explore-top")).toBe("16px");
   for (const svg of await page.locator(".tabbar .nav svg").all()) await expect(svg).toHaveAttribute("width", "26");
+  await page.goto("/favoritos");
+  expect(await padding(".topbar")).toBe("16px");
+  await page.goto("/explorar");
   const active = page.locator('.tabbar .nav[aria-current="page"]');
   await expect(active).toHaveCount(1);
   expect(await active.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(180, 76, 48)");
@@ -478,11 +486,28 @@ test.describe("en un teléfono de 375 px", () => {
       for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
+    // La cabecera de Explorar: la píldora y la cuenta en una fila, dentro de los 375 px.
+    const exploreFits = async (account: string) => {
+      const top = page.locator(".explore-top");
+      const pill = (await top.locator(".search-pill").boundingBox())!;
+      const last = (await top.getByRole("link", { name: account }).boundingBox())!;
+      expect(pill.x).toBeGreaterThanOrEqual(16);
+      expect(pill.x + pill.width).toBeLessThanOrEqual(last.x);
+      expect(last.x + last.width).toBeLessThanOrEqual(375 - 16);
+      expect(Math.min(last.width, last.height)).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+    };
     await page.goto("/explorar");
+    await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toBeVisible();
+    await exploreFits("Cuenta");
+    await page.goto("/favoritos");
     await expect(banner.getByRole("link", { name: "Cuenta" })).toBeVisible();
     await fits("Cuenta");
     await page.evaluate(() => localStorage.clear());
     await page.goto("/explorar");
+    await expect(page.locator(".explore-top").getByRole("link", { name: "Ingresar" })).toBeVisible();
+    await exploreFits("Ingresar");
+    await page.goto("/favoritos");
     await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
     await fits("Ingresar");
     await page.screenshot({ path: "test-results/barra-375-sin-sesion.png" });

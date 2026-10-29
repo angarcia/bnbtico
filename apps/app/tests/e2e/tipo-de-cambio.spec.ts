@@ -52,14 +52,14 @@ test("Explorar y Filtros en dólares usan el tipo sembrado, con su día y la atr
   await expect(note).toContainText(/colones\. · Rates By Exchange Rate API$/);
   await expect(note.getByRole("link", { name: "Rates By Exchange Rate API" })).toHaveAttribute("href", "https://www.exchangerate-api.com");
 
-  await page.getByRole("link", { name: /Más filtros/ }).click();
+  await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(page.locator("#f-price-help")).toContainText("≈ ₡400 por US$1 (tipo de referencia del 2 nov.).");
   await page.getByLabel("Precio mínimo por noche").fill("200");
   await page.getByLabel("Precio máximo por noche").fill("250");
   await page.getByRole("button", { name: "Ver 1 casa" }).click();
   // $200 y $250 a ₡400 = ₡80 000 y ₡100 000 (la búsqueda va en colones).
   await expect(page).toHaveURL(/min=80000&max=100000/);
-  await page.getByRole("link", { name: /Más filtros/ }).click();
+  await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("200");
 });
 

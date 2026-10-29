@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { parseFilters } from "../../src/domain/filters";
 import { monthlyWindowLabel, nightsBetween, nightsLabel, peopleLabel, resultsText, searchSummary, stayLabel, tapRange, zonePlace, zoneSuggestions } from "../../src/domain/search";
 import type { ZoneWithListings } from "../../src/domain/zones";
+import { cardFacts, mapPriceLabel } from "../../src/domain/describe";
+import type { PublicListing } from "../../src/domain/listing";
+import { formatMoney } from "../../src/domain/money";
 
 const base = parseFilters({}, ["Limón"]);
 const n = { ...base, zone: "704-cocles", arrival: "2026-11-23", departure: "2026-11-27", ppl: 4 };
@@ -71,5 +74,21 @@ describe("zoneSuggestions", () => {
   });
   it("cantón y provincia", () => {
     expect(zonePlace({ canton: "Talamanca", province: "Limón" })).toBe("Talamanca, Limón");
+  });
+});
+
+describe("cardFacts y mapPriceLabel (tarjeta y marcador de Explorar)", () => {
+  const house = (over: Partial<PublicListing> = {}) =>
+    ({ capacity: 4, bedrooms: 2, acceptsNightly: true, nightlyPriceCrc: 42000, acceptsMonthly: false, monthlyPriceCrc: null, ...over }) as PublicListing;
+  it("personas y habitaciones; 0 habitaciones es «Estudio»", () => {
+    expect(cardFacts({ capacity: 4, bedrooms: 2 })).toBe("4 personas · 2 habitaciones");
+    expect(cardFacts({ capacity: 1, bedrooms: 1 })).toBe("1 persona · 1 habitación");
+    expect(cardFacts({ capacity: 2, bedrooms: 0 })).toBe("2 personas · Estudio");
+  });
+  it("el precio de la noche, en la moneda elegida; con el mensual, el del mes o «A negociar»", () => {
+    expect(mapPriceLabel(house(), false, "CRC", 525)).toBe("₡42 000");
+    expect(mapPriceLabel(house(), false, "USD", 525)).toBe(formatMoney(42000, "USD", 525));
+    expect(mapPriceLabel(house({ acceptsMonthly: true, monthlyPriceCrc: 350000 }), true, "CRC", 525)).toBe("₡350 000");
+    expect(mapPriceLabel(house({ acceptsMonthly: true, monthlyPriceCrc: null }), true, "CRC", 525)).toBe("A negociar");
   });
 });

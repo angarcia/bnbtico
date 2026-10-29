@@ -132,7 +132,7 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
     const { page } = await throttled(ctx);
     await page.goto(`${base}/explorar`);
     await expect(page.getByTestId("results-count")).toHaveText("6 casas en Limón", { timeout: 30_000 });
-    await page.getByRole("link", { name: /Más filtros/ }).click();
+    await page.getByRole("link", { name: /^Filtros/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible({ timeout: 30_000 });
     await page.goBack();
     await expect(page.getByTestId("results-count")).toBeVisible();

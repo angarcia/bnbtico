@@ -23,6 +23,13 @@ describe("Picture", () => {
     expect(a.sizes).toBeUndefined();
     expect(a.loading).toBe("lazy");
   });
+  it("con priority (la primera tarjeta de Explorar): carga en seguida, con prioridad alta y sin fundido", () => {
+    const html = renderToString(<Picture photo={{ path: "l1/abc", url: "https://s/l1/abc/800.jpg", srcSet: null }} alt="" sizes="100vw" width={800} height={600} priority />);
+    const a = attrs(html);
+    expect(a.loading).toBe("eager");
+    expect(a.fetchpriority).toBe("high");
+    expect(html).not.toContain("data-fade");
+  });
 });
 
 describe("fadeIn", () => {

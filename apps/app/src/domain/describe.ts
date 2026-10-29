@@ -2,7 +2,8 @@
 // Sustituye a las seis copias que tenía la app anterior (tarjetas, ficha, detalle del propietario, admin, metadatos).
 import { relativeDate } from "./dates";
 import { KIND_LABELS, STATUS_LABELS, type Listing, type PublicListing } from "./listing";
-import { formatCRC } from "./money";
+import type { Currency } from "./currency";
+import { formatCRC, formatMoney } from "./money";
 import { publicUrl } from "./share";
 
 export type PriceUnit = "noche" | "mes";
@@ -43,6 +44,20 @@ export function cardPrice(d: Pick<ListingDescription, "mainPrice" | "monthly">, 
 }
 
 export const NEGOTIABLE_CARD = "Precio a negociar";
+
+/** «4 personas · 2 habitaciones», «1 persona · 1 habitación», «2 personas · Estudio» (sin habitaciones aparte). */
+export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms">): string {
+  const people = `${l.capacity} ${l.capacity === 1 ? "persona" : "personas"}`;
+  const rooms = l.bedrooms > 0 ? `${l.bedrooms} ${l.bedrooms === 1 ? "habitación" : "habitaciones"}` : "Estudio";
+  return `${people} · ${rooms}`;
+}
+
+/** El marcador del mapa de Explorar: «₡42 000» o «$80» (el de la tarjeta, sin unidad); con el mensual, «A negociar». */
+export function mapPriceLabel(l: PublicListing, monthly: boolean, currency: Currency, fx: number): string {
+  const [mainPrice, monthlyPrice] = prices(l);
+  const price = cardPrice({ mainPrice, monthly: monthlyPrice }, monthly);
+  return price && !("negotiable" in price) ? formatMoney(price.amount, currency, fx) : "A negociar";
+}
 export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
 
 function situation(l: Listing, now: number): string {

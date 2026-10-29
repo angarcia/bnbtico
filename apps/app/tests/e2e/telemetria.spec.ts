@@ -42,7 +42,7 @@ test("la ficha SSR manda vista de página, vista de ficha y su LCP", async ({ pa
 
 test("el shell manda una vista por ruta y la ficha abierta desde una tarjeta", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(page.getByRole("heading", { name: "¿Para dónde va?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explorar casas" })).toBeVisible();
   await page.getByRole("link", { name: /Cabina Cahuita/ }).first().click();
   await expect(page).toHaveURL(`/casa/${casa.publicId}`);
   await expect
@@ -75,7 +75,7 @@ test("el asistente manda «wizard_step» con la casa y la ruta sin el id del bor
 test("errores no capturados y promesas rechazadas llegan con ruta y build; una baliza ajena se rechaza", async ({ page }) => {
   test.info().annotations.push({ type: "nota", description: "Los errores se provocan a propósito." });
   await page.goto("/explorar");
-  await expect(page.getByRole("heading", { name: "¿Para dónde va?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explorar casas" })).toBeVisible();
   await page.evaluate(() => {
     setTimeout(() => {
       throw new Error("error de prueba e2e");

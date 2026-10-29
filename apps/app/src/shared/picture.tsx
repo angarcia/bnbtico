@@ -23,7 +23,9 @@ export const fadeIn = {
 };
 
 /** Foto con variantes 480/800 (`srcset` + `sizes`), dimensiones explícitas para no mover el diseño y carga diferida.
- *  Una foto anterior es un solo archivo: va sin `srcset`. */
-export function Picture({ photo, alt, sizes, width, height }: { photo: PublicPhoto; alt: string; sizes: string; width: number; height: number }) {
-  return <img src={photo.url} srcSet={photo.srcSet ?? undefined} sizes={photo.srcSet ? sizes : undefined} alt={alt} width={width} height={height} loading="lazy" decoding="async" {...fadeIn} />;
+ *  Una foto anterior es un solo archivo: va sin `srcset`. `priority`: la foto que será el LCP (la primera tarjeta de
+ *  Explorar): carga en seguida, con prioridad alta y sin fundido. */
+export function Picture({ photo, alt, sizes, width, height, priority = false }: { photo: PublicPhoto; alt: string; sizes: string; width: number; height: number; priority?: boolean }) {
+  const load = priority ? ({ loading: "eager", fetchPriority: "high" } as const) : ({ loading: "lazy", ...fadeIn } as const);
+  return <img src={photo.url} srcSet={photo.srcSet ?? undefined} sizes={photo.srcSet ? sizes : undefined} alt={alt} width={width} height={height} decoding="async" {...load} />;
 }

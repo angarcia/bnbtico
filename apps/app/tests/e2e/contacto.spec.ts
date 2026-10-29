@@ -170,7 +170,6 @@ test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «des
   s = sheet(page);
   await expect(s.getByLabel("Llegada (opcional)")).toHaveValue("");
   await expect(s.getByLabel("Su mensaje")).toHaveValue(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(10) }));
-  await page.screenshot({ path: "test-results/contacto-mensual.png" });
 });
 
 test("modal: el foco no sale de la hoja, el resto de la página queda inerte y «Cerrar» cierra", async ({ page }) => {

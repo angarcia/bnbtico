@@ -1,14 +1,17 @@
-// Explorar (pantalla 01): Limón por defecto, solo provincias con casas, filtros en la URL, rejilla de dos columnas.
-import { useQuery } from "@tanstack/react-query";
+// Explorar (pantalla 01, maqueta v2): sin barra superior; arriba la píldora de búsqueda y la cuenta, y la fila de chips
+// («Solo alquiler mensual», filtros y «₡ | $»), fijas al bajar. Limón por defecto, filtros en la URL, una casa por fila.
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
-import { resultsText } from "../../domain/search";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, stayRange, type Filters } from "../../domain/filters";
+import { costaRicaToday } from "../../domain/dates";
+import { resultsText, searchSummary } from "../../domain/search";
+import { extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
 import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
+import { CurrencySwitch } from "../../shared/currency-switch";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { I } from "../../shared/icons";
@@ -16,27 +19,58 @@ import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { SUPPORT_NUMBERS } from "../support-numbers";
-import { listingsQuery, provincesQuery } from "../queries";
-import { RootHeader } from "../chrome";
+import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
+import { AccountButton } from "../chrome";
 
 const route = getRouteApi("/_tabs/explorar");
 
-function Header() {
+const filtersLabel = (n: number) => (n ? `Filtros (${n} ${n === 1 ? "activo" : "activos"})` : "Filtros");
+
+/** Cabecera de Explorar: la píldora (abre la búsqueda) y la cuenta; debajo, el mensual, los filtros y «₡ | $». */
+function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { data: provinces = [] } = useQuery(provincesQuery);
+  // Las zonas de «¿Dónde?», pedidas al tocar la píldora; la ruta se precarga por `defaultPreload: "intent"`.
+  const prefetchZones = () => void queryClient.prefetchQuery(zonesQuery);
+  const extras = extrasCount(f);
   return (
-    <RootHeader
-      title={
-        <>
-          ¿Para dónde <span className="primary">va</span>?
-        </>
-      }
-    />
+    <header className="explore-top">
+      <h1 className="sr-only">Explorar casas</h1>
+      <div className="explore-search">
+        {/* TODO(tarea 8): a /explorar/buscar cuando exista la ruta de la búsqueda. */}
+        <Link to="/explorar/filtros" search={search} className="search-pill" onPointerDown={prefetchZones} onFocus={prefetchZones}>
+          <I.search size={22} />
+          <span className="search-pill-text">{searchSummary(f, zoneName) ?? "Empiece su búsqueda"}</span>
+        </Link>
+        <AccountButton />
+      </div>
+      <div className="chiprow fit">
+        <button
+          type="button"
+          className="chip"
+          aria-pressed={f.monthly}
+          onClick={() => {
+            track("monthly_filter_tap");
+            void navigate({ to: "/explorar", search: searchFor({ ...f, monthly: !f.monthly }, provinces), replace: true });
+          }}
+        >
+          {MONTHLY_FILTER_LABEL}
+        </button>
+        <Link to="/explorar/filtros" search={search} className="chip filters-btn" aria-label={filtersLabel(extras)}>
+          <I.sliders size={22} />
+          {extras ? <span className="badge badge-ok badge-count num">{extras}</span> : null}
+        </Link>
+        <CurrencySwitch />
+      </div>
+    </header>
   );
 }
 
 function SkeletonGrid() {
   return (
     <div className="listing-grid skeleton" aria-hidden="true">
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2].map((i) => (
         <div key={i} className="listing-card">
           <span className="sk photo" />
           <span className="sk sk-line" />
@@ -55,7 +89,7 @@ function useReveal(loading: boolean, filtersKey: string): string {
   return revealClass({ loading, waited: waited.current, firstFilters: filtersKey === firstKey });
 }
 
-function Results({ filters: f, provinces }: { filters: Filters; provinces: string[] }) {
+function Results({ filters: f, provinces, zoneName }: { filters: Filters; provinces: string[]; zoneName: string | null }) {
   const navigate = useNavigate();
   const currency = useCurrency();
   const { data: listings, isError } = useQuery(listingsQuery(f));
@@ -71,61 +105,36 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
   }, [f.ppl, dates]);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
   const extras = extrasCount(f);
-  const search = searchFor(f, provinces);
-  // Sin «Cualquier fecha»: no hay filtro de fechas hasta que los calendarios sean fiables (revisión UX A11).
-  const summaryBottom = [f.ppl ? `${f.ppl}+ personas` : "Cualquier grupo", extras ? `${extras} ${extras === 1 ? "filtro" : "filtros"}` : null].filter(Boolean).join(" · ");
   return (
     <>
-      <div className="stack explore-head">
-        <Link to="/explorar/filtros" search={search} className="row search-pill">
-          <I.search size={22} />
-          <span className="stack gap-0">
-            <b>{f.prov === ALL_PROVINCES ? "Todas las zonas" : f.prov}</b>
-            <span className="small muted">{summaryBottom}</span>
-          </span>
-        </Link>
-        {/* Una fila sin scroll lateral a 360 px (ticket 16): «Solo alquiler mensual» y «Más filtros»; las características van en Filtros. */}
-        <div className="chiprow fit">
-          <button type="button" className="chip" aria-pressed={f.monthly} onClick={() => {
-              track("monthly_filter_tap");
-              void go({ ...f, monthly: !f.monthly });
-            }}
-          >
-            {MONTHLY_FILTER_LABEL}
-          </button>
-          <Link to="/explorar/filtros" search={search} className="chip chip-strong">
-            Más filtros{extras ? <span className="badge badge-ok badge-tight">{extras}</span> : null}
-          </Link>
-        </div>
-        <div className="row between small muted">
-          <span data-testid="results-count">
-            {listings
-              ? (() => {
-                  const r = resultsText(listings.length, f);
-                  return (
-                    <>
-                      <b className="ink num">{r.count}</b>
-                      {r.rest}
-                    </>
-                  );
-                })()
-              : "Buscando casas…"}
-          </span>
-        </div>
+      <div className="stack gap-4">
+        <span className="small muted" data-testid="results-count">
+          {listings
+            ? (() => {
+                const r = resultsText(listings.length, f, zoneName);
+                return (
+                  <>
+                    <b className="ink num">{r.count}</b>
+                    {r.rest}
+                  </>
+                );
+              })()
+            : "Buscando casas…"}
+        </span>
         {currency === "USD" ? <UsdNote /> : null}
       </div>
       {!listings ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonGrid />
       ) : listings.length === 0 ? (
-        <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} onClear={f.monthly || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
+        <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} onClear={f.monthly || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
       ) : (
         <>
           <div className={`listing-grid${reveal}`}>
-            {listings.map((l) => (
-              <ListingCard key={l.publicId} listing={l} monthly={f.monthly} />
+            {listings.map((l, i) => (
+              <ListingCard key={l.publicId} listing={l} monthly={f.monthly} priority={i === 0} />
             ))}
           </div>
-          <SearchHelp filters={f} number={SUPPORT_NUMBERS.guest} />
+          <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} />
         </>
       )}
     </>
@@ -135,18 +144,24 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
 export function ExplorarScreen() {
   const search = route.useSearch();
   const { data: provinces, isError } = useQuery(provincesQuery);
+  const zones = useQuery({ ...zonesQuery, enabled: !!search.zona });
+  const f = parseFilters(search, provinces ?? [], { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id) });
+  const zoneName = zones.data?.find((z) => z.id === f.zone)?.name ?? null;
+  const loading = !provinces || (!!search.zona && zones.isPending);
   return (
     <>
-      <Header />
-      {!provinces ? (
-        isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonGrid />
+      <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f, provinces) : search} />
+      {isError ? (
+        <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
+      ) : loading ? (
+        <SkeletonGrid />
       ) : provinces.length === 0 ? (
         <section className="card stack">
           <h3>Todavía no hay casas publicadas</h3>
           <p className="small muted">Las primeras casas del Caribe sur están en camino.</p>
         </section>
       ) : (
-        <Results filters={parseFilters(search, provinces)} provinces={provinces} />
+        <Results filters={f} provinces={provinces} zoneName={zoneName} />
       )}
     </>
   );

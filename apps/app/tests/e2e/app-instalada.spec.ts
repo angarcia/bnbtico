@@ -49,7 +49,7 @@ test("segunda apertura sin red: el shell sale del service worker y Explorar visi
   await goOffline(context, page);
   const response = await page.goto("/explorar");
   expect(response?.fromServiceWorker()).toBe(true);
-  await expect(page.getByRole("heading", { level: 1, name: "¿Para dónde va?" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeVisible();
   await expect(results(page)).toHaveText("2 casas en Limón");
   await page.getByRole("link", { name: /Casa Manzanillo/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo" })).toBeVisible();

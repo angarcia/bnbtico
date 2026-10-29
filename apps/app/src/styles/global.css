@@ -186,7 +186,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .topbar-home{display:inline-flex;align-items:center;min-height:44px;min-width:0;flex:0 1 auto}
 .topbar .logo{height:auto;max-height:38px;width:auto;max-width:100%;display:block}
 .topbar-slot{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
-.topbar .topbar-account{width:44px;height:44px;text-decoration:none}
+.topbar-slot .topbar-account{width:44px;height:44px;text-decoration:none}
 .view.has-topbar{padding-top:calc(56px + 12px + env(safe-area-inset-top))}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -244,9 +244,12 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .return-thumb{width:56px;height:56px;border-radius:14px;overflow:hidden;flex-shrink:0;background:var(--state-soft)}
 .return-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .listing-card{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit}
-.listing-card .photo{height:168px;border-radius:var(--r)}
-.listing-card h2,.listing-card h3{font-size:17px;font-weight:700;letter-spacing:-0.02em}
-.listing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:20px}
+.listing-card h2,.listing-card h3{font-family:var(--display);font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-0.02em}
+.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:0 4px}
+.card-price{margin-top:3px}
+.card-price b{font-weight:700}
+.listing-grid{display:grid;grid-template-columns:1fr;gap:24px}
 .listing-cell{position:relative;min-width:0}
 .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .pills-tl .pill{position:static}
@@ -254,7 +257,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .heart{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;padding:0;background:transparent;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:transform 160ms var(--ease-out)}
 .heart:active{transform:scale(0.9)}
 .heart[aria-pressed="true"] svg{fill:var(--brand);stroke:var(--brand)}
-.heart-card{position:absolute;right:6px;top:6px;color:#FFFFFF}
+.heart-card{position:absolute;right:8px;top:8px;color:#FFFFFF}
 .heart-card svg{filter:drop-shadow(0 1px 2px rgba(28,43,42,.45))}
 .heart-card[aria-pressed="true"] svg{filter:none}
 .heart-hero{border-radius:999px;background:var(--overlay-btn)}
@@ -338,9 +341,17 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 /* ---------- Explorar y Filtros (pantallas 01 y 02, en el navegador) ---------- */
 .gap-0{gap:0}
 .btn-header{min-height:44px;font-size:14px}
-.explore-head{gap:16px}
-.search-pill{gap:12px;min-height:56px;padding:0 18px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-float);color:inherit;text-decoration:none}
-.search-pill .stack{line-height:1.15}
+/* Cabecera de Explorar (maqueta v2 01): fija arriba al bajar, sin barra superior; la píldora y la cuenta en una fila y,
+   debajo, el mensual, los filtros y «₡ | $» al final. Anula el relleno de arriba de .view para pegarse al borde. */
+.explore-top{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:10px;margin:calc(-12px - env(safe-area-inset-top)) calc(-1 * var(--gutter)) 0;padding:calc(10px + env(safe-area-inset-top)) var(--gutter) 10px;background:var(--bg)}
+.explore-search{display:flex;gap:8px;align-items:center}
+.explore-search .search-pill{flex:1;min-width:0}
+.search-pill{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-float);color:inherit;text-decoration:none;font-weight:700}
+.search-pill svg{flex:none;color:var(--primary)}
+.search-pill-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chiprow .currency-switch{margin-left:auto}
+.filters-btn{position:relative;justify-content:center;width:44px;padding:0;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
+.filters-btn .badge-count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;justify-content:center;font-size:11px;background:var(--primary);color:var(--primary-on);border:2px solid var(--bg)}
 .chip{border:0;cursor:pointer}
 .chip-strong{font-weight:700}
 .badge-tight{padding:2px 8px}
@@ -350,7 +361,6 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 /* En la barra superior, botones de 44 px. */
 .topbar .currency-switch button{min-height:44px}
 .pill-bl{left:10px;bottom:10px}
-.listing-card .sk.photo{height:168px;border-radius:var(--r)}
 .sk-line{height:18px;width:70%}
 .filters-form{gap:22px}
 
@@ -789,7 +799,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
   .app:has(.listing-grid){max-width:1120px}
   .app:has(.listing-grid) .tabbar,.app:has(.listing-grid) .topbar{max-width:1120px}
   .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-  .listing-grid .listing-card .photo{height:200px}
 }
 @media (min-width:1200px){
   .listing-grid{grid-template-columns:repeat(4,minmax(0,1fr))}

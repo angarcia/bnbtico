@@ -1,7 +1,7 @@
 // Marcos de pantalla del diseño v1: pantallas raíz con una sola barra inferior que crece con las casas
 // (domain/navigation.ts tabsFor: dos pestañas sin casas, cinco con al menos una; la del admin solo en /admin) y pantallas
 // de flujo sin barra (Ingresar, código, Cuenta, ayuda…), con su cabecera. Las pestañas llevan además la barra superior
-// (logo · ₡ | $ · cuenta), salvo la zona del admin.
+// (logo · ₡ | $ · cuenta), salvo Explorar (que trae su propia cabecera) y la zona del admin.
 import { useQuery } from "@tanstack/react-query";
 import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, type MouseEvent, type ReactNode } from "react";
@@ -29,9 +29,9 @@ function useNewInquiries(enabled: boolean): number {
   return enabled ? (data ?? 0) : 0;
 }
 
-/** Las cinco pestañas llevan la barra superior; Filtros (pantalla completa con su cabecera), la zona del admin y la página
- *  de «no encontrada», no. */
-const TOP_BAR_PATHS = new Set(["/explorar", "/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]);
+/** Las pestañas llevan la barra superior, salvo Explorar (su cabecera trae la búsqueda, la cuenta y «₡ | $»); Filtros
+ *  (pantalla completa con su cabecera), la zona del admin y la página de «no encontrada», tampoco. */
+const TOP_BAR_PATHS = new Set(["/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]);
 
 export function TabsFrame({ children }: { children: ReactNode }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
@@ -75,22 +75,39 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Bajo la barra superior (las cinco pestañas): el logo y la cuenta ya están arriba. */
+/** Bajo la barra superior: el logo y la cuenta ya están arriba. */
 const UnderTopBar = createContext(false);
 
 /** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
 const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
 
 /**
- * Barra superior fija de las cinco pestañas: logo, «₡ | $» y la cuenta. Sin sesión, «Ingresar»; con sesión, las
+ * La cuenta, arriba a la derecha (barra superior y cabecera de Explorar). Sin sesión, «Ingresar»; con sesión, las
  * iniciales en un círculo (vacío mientras llega la cuenta). Mientras se lee la sesión guardada, la misma caja sin verse,
  * y nada salta. La cuenta se abre a pantalla completa, no como pestaña.
  */
-export function TopBar() {
+export function AccountButton() {
   const { status, session } = useSession();
   const next = useLocation({ select: (l) => nextFor(l.pathname) });
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const out = status === "signed-out";
+  return (
+    <span className="topbar-slot">
+      {status === "signed-in" ? (
+        <Link to="/cuenta" className="avatar avatar-sm topbar-account" aria-label="Cuenta">
+          {account.data ? initials(account.data.name) : null}
+        </Link>
+      ) : (
+        <Link to="/cuenta" search={next ? { next } : {}} className={`btn btn-ghost btn-header${out ? "" : " is-hidden"}`} aria-hidden={!out} tabIndex={out ? undefined : -1}>
+          Ingresar
+        </Link>
+      )}
+    </span>
+  );
+}
+
+/** Barra superior fija de las pestañas (no la de Explorar): logo, «₡ | $» y la cuenta. */
+export function TopBar() {
   return (
     <header className="topbar">
       <Link to="/explorar" className="topbar-home" aria-label="bnbtico, inicio">
@@ -98,17 +115,7 @@ export function TopBar() {
       </Link>
       <span className="row gap-8">
         <CurrencySwitch />
-        <span className="topbar-slot">
-          {status === "signed-in" ? (
-            <Link to="/cuenta" className="avatar avatar-sm topbar-account" aria-label="Cuenta">
-              {account.data ? initials(account.data.name) : null}
-            </Link>
-          ) : (
-            <Link to="/cuenta" search={next ? { next } : {}} className={`btn btn-ghost btn-header${out ? "" : " is-hidden"}`} aria-hidden={!out} tabIndex={out ? undefined : -1}>
-              Ingresar
-            </Link>
-          )}
-        </span>
+        <AccountButton />
       </span>
     </header>
   );
