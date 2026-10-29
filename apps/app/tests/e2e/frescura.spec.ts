@@ -6,7 +6,7 @@ import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { addDays, addMonths, monthTitle } from "../../src/domain/calendar";
-import { longDate } from "../../src/domain/dates";
+import { longDate, shortDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
 // Frescura de punta a punta (fase 4, ticket 05): el worker local (vite preview + miniflare) guarda la ficha en su Cache API
@@ -88,8 +88,8 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-const toggle = (page: Page) => page.getByRole("switch", { name: /Anuncio visible/ });
-const sheet = (page: Page) => page.getByRole("dialog", { name: "Pausar anuncio" });
+const closeRow = (page: Page) => page.getByRole("button", { name: /Cerrar la casa hasta…/ });
+const sheet = (page: Page) => page.getByRole("dialog", { name: "Cerrar la casa" });
 
 test("el worker local cachea la ficha; guardar el calendario, cerrar y la reapertura nocturna la refrescan en ≤ 5 s", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Frescura", nightlyPriceCrc: 95000 } });
@@ -116,13 +116,12 @@ test("el worker local cachea la ficha; guardar el calendario, cerrar y la reaper
   // pg_net escribe la respuesta cuando la procesa, a veces después de que la ficha nueva ya se vea: se espera.
   await expect.poll(() => statusesAfter(from), { message: "la purga de pg_net llegó al worker con 200" }).toContain("200");
 
-  // 3. Cerrar a consultas con fecha (trigger de listings) → «Calendario cerrado» en el HTML.
+  // 3. Cerrar la casa con fecha desde el Calendario (trigger de listings) → «Calendario cerrado» en el HTML.
   const reopen = addDays(today(), 9);
-  await page.goto(`/propietario/casas/${casa.id}`);
-  await toggle(page).click();
-  await sheet(page).getByLabel("¿Cuándo vuelve a verse? (opcional)").fill(reopen);
-  await sheet(page).getByRole("button", { name: "Pausar anuncio" }).click();
-  await expect(toggle(page)).toHaveAttribute("aria-checked", "false");
+  await closeRow(page).click();
+  await sheet(page).getByLabel("Abrir de nuevo el (opcional)").fill(reopen);
+  await sheet(page).getByRole("button", { name: "Cerrar la casa" }).click();
+  await expect(page.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
   await expect.poll(() => freshHtml(casa.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario cerrado");
   expect(await freshHtml(casa.publicId)).toContain(`Vuelve a estar disponible el ${longDate(reopen)}`);
 

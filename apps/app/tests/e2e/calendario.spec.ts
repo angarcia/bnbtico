@@ -4,7 +4,7 @@ import { serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { addDays, addMonths, calendarMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
-import { longDate } from "../../src/domain/dates";
+import { longDate, shortDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
 // Calendario del propietario (pantalla 17, fase 4 ticket 03) contra Supabase local. Cada prueba siembra sus propias casas
@@ -332,21 +332,23 @@ test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo 
   expect(await h.calendar("owner").days(casa.id)).toEqual([]);
 });
 
-test("casa cerrada a consultas: nota con la fecha, días de solo lectura y «Abrir a consultas»", async ({ page }) => {
+test("casa cerrada: «Cerrada hasta el …», días de solo lectura y «Abrir la casa»", async ({ page }) => {
   const casa = await seedHouse("Casa Cerrada");
   await h.putDay(casa.id, { day: on(3), available: false, specialPriceCrc: null });
   const reopen = addDays(today(), 40);
   await h.owner("owner").setAvailable(casa.id, false, reopen);
   await open(page, casa.id);
-  await expect(page.getByText(`Esta casa está cerrada a consultas hasta el ${longDate(reopen)}. Ábrala para cambiar el calendario; sus noches y precios se conservan.`)).toBeVisible();
+  await expect(page.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toHaveCount(0);
   await expect(cellOf(page, on(3))).toContainText("Ocupado");
   await expect(page.locator(".month-grid button")).toHaveCount(0);
   await expect(page.locator(".month-grid.is-dimmed").first()).toBeVisible();
   await page.screenshot({ path: "test-results/calendario-cerrada.png" });
 
-  await page.getByRole("button", { name: "Abrir a consultas" }).click();
+  await page.getByRole("button", { name: "Abrir la casa" }).click();
   await expect(day(page, on(3))).toContainText("Ocupado");
-  await expect(page.getByRole("button", { name: "Abrir a consultas" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Abrir la casa" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
   await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(true);
 });
 

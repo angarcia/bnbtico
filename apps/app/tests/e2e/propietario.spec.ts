@@ -205,37 +205,42 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await expect(page.getByRole("button", { name: /Editar la ficha/ })).toHaveCount(0);
 });
 
-test("disponible para consultas responde al instante y vuelve atrás con el mensaje de la base si falla", async ({ page }) => {
-  await page.goto(`/propietario/casas/${active.id}`);
-  const toggle = page.getByRole("switch", { name: /Anuncio visible/ });
-  await expect(toggle).toHaveAttribute("aria-checked", "true");
+test("cerrar la casa responde al instante desde el Calendario y vuelve atrás si la base se niega", async ({ page }) => {
+  await page.goto(`/propietario/calendario?casa=${active.id}`);
+  const row = page.getByRole("button", { name: /Cerrar la casa hasta…/ });
+  const closed = page.locator(".close-row.is-closed");
+  const open = page.getByRole("button", { name: "Abrir la casa" });
+  await expect(row).toBeVisible();
 
-  // La respuesta tarda: el interruptor ya cambió antes de que llegue.
+  // La respuesta tarda: la fila ya cambió antes de que llegue.
   let release = () => {};
   const held = new Promise<void>((r) => (release = r));
   await page.route("**/rest/v1/rpc/set_listing_available", async (route) => {
     await held;
     await route.continue();
   });
-  // Apagar pide la fecha opcional en una hoja (ticket 04 de la fase 4); sin fecha, «Cerrar a consultas».
-  await toggle.click();
-  await page.getByRole("dialog", { name: "Pausar anuncio" }).getByRole("button", { name: "Pausar anuncio" }).click();
-  await expect(toggle).toHaveAttribute("aria-checked", "false");
-  await expect(page.locator(".detail-photo .state")).toHaveText("Cerrada"); // la misma etiqueta que la tarjeta
+  // Cerrar pide la fecha opcional en una hoja (ticket 04 de la fase 4); sin fecha, cerrada hasta que la abra.
+  await row.click();
+  await page.getByRole("dialog", { name: "Cerrar la casa" }).getByRole("button", { name: "Cerrar la casa" }).click();
+  await expect(closed).toContainText("Cerrada: no aparece en Explorar ni recibe consultas");
   release();
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(false);
   await page.unroute("**/rest/v1/rpc/set_listing_available");
+  // La misma etiqueta que la tarjeta en el detalle.
+  await page.goto(`/propietario/casas/${active.id}`);
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cerrada");
+  await page.goto(`/propietario/calendario?casa=${active.id}`);
 
   await page.route("**/rest/v1/rpc/set_listing_available", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Solo puede cambiar la disponibilidad de una casa activa.", details: null, hint: null }) }),
   );
-  await toggle.click();
+  await open.click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("Solo puede cambiar la disponibilidad de una casa activa.");
-  await expect(toggle).toHaveAttribute("aria-checked", "false");
+  await expect(closed).toBeVisible();
   await page.unroute("**/rest/v1/rpc/set_listing_available");
 
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-checked", "true");
+  await open.click();
+  await expect(row).toBeVisible();
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(true);
 });
 

@@ -170,10 +170,6 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 /* El tramo se llena de izquierda a derecha al avanzar y se vacía al volver (la barra se conserva entre pantallas). */
 .progress span::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--primary);transform:scaleX(0);transform-origin:left;transition:transform 320ms var(--ease-out)}
 .progress span.on::after{transform:scaleX(1)}
-.switch{width:48px;height:28px;border-radius:999px;background:var(--line);position:relative;flex-shrink:0;transition:background .15s}
-.switch[aria-checked="true"]{background:var(--primary)}
-.switch span{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:#FFFBF2;transition:transform 150ms var(--ease-out)}
-.switch[aria-checked="true"] span{transform:translateX(20px)}
 
 /* ---------- App (móvil) ---------- */
 .app{min-height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
@@ -691,7 +687,10 @@ small.swap-in{display:block}
 .cal-month-block{display:flex;flex-direction:column;min-height:calc(100dvh - 56px - 26px - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));scroll-margin-top:calc(56px + 26px + env(safe-area-inset-top))}
 .cal-month-title{position:sticky;top:calc(56px + 26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:18px;font-weight:700;padding:6px 0}
 .cal-month-placeholder{flex:1}
-.cal-open{align-self:flex-start}
+.close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
+.close-row-icon{width:40px;height:40px;border-radius:12px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.close-row .body{flex:1;display:flex;flex-direction:column}
+.close-row.is-closed{justify-content:space-between}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(var(--nav-h) + 240px + env(safe-area-inset-bottom))}
 .cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));width:100%;max-width:560px;z-index:7;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter);background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
@@ -709,7 +708,7 @@ small.swap-in{display:block}
 .cal-panel .btn-lg{min-height:48px;font-size:15px}
 
 @media (prefers-reduced-motion:reduce){
-  .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove,.switch span{transition-property:background-color,color,opacity}
+  .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition-property:background-color,color,opacity}
   .btn:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
   @starting-style{.update-banner{transform:translateX(-50%)}}
   .heart:active{transform:none}

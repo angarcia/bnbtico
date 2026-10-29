@@ -23,7 +23,7 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
     async searchPublic(f: Filters) {
       const x = effectiveFilters(f); // con el mensual no se aplica el rango por noche
       let q = db.from("listings_public").select(PUBLIC_COLUMNS).order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
-      // Un anuncio pausado («Anuncio visible» apagado, ticket 20) no sale en Explorar; su ficha sí se abre.
+      // Una casa cerrada («Cerrar la casa hasta…» del Calendario, ticket 20) no sale en Explorar; su ficha sí se abre.
       q = q.eq("available", true);
       if (x.prov !== ALL_PROVINCES) q = q.eq("province", x.prov);
       if (x.monthly) q = q.eq("accepts_monthly", true);

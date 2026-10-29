@@ -2,10 +2,11 @@
 // actual al último de la ventana, con casillas altas; solo se montan las rejillas cerca de la vista. Selección primero: se
 // tocan uno o más días (también de meses distintos) y el panel de abajo cambia disponibilidad y precio de todos a la vez. Guardar es optimista: la rejilla cambia y el
 // panel se cierra en el mismo toque; si la base se niega o no hay red, vuelve atrás y avisa. Las reglas son las del
-// dominio (domain/calendar.ts), las mismas que la RPC save_listing_days.
+// dominio (domain/calendar.ts), las mismas que la RPC save_listing_days. Arriba, en una casa activa, «Cerrar la casa
+// hasta…» (set_listing_available) abre la hoja «Cerrar la casa», en su propio trozo diferido.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import {
   addMonths,
   applyChange,
@@ -25,12 +26,14 @@ import {
   type CalendarDay,
   type Selection,
 } from "../../domain/calendar";
-import { longDate } from "../../domain/dates";
+import { can } from "../../domain/can";
+import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
 import { resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { I } from "../../shared/icons";
+import { whenIdle } from "../../shared/idle";
 import { MonthGrid, MonthLegend, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
@@ -41,6 +44,8 @@ import { useSession } from "../session";
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "bnbtico-calendario-casa";
 const KB_RELEASE_MS = 400;
+const loadCloseSheet = () => import("../close-sheet");
+const CloseSheet = lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
 
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
 /** Casas con calendario (revisión UX A5): todo lo enviado alguna vez (en revisión, con cambios pedidos, activa, pausada) y
@@ -182,7 +187,6 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   const [sel, setSel] = useState<Selection>(emptySelection);
   const [problem, setProblem] = useState<string | null>(null);
   const closed = !l.available;
-  const reopen = useSetAvailable(userId, l);
 
   const save = useMutation({
     mutationKey: ["calendar-save", l.id],
@@ -220,23 +224,9 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   return (
     <>
+      {can(l, "available") ? <CloseRow listing={l} userId={userId} /> : null}
       {closed ? null : <p className="small muted cal-hint">Toque los días para editarlos</p>}
 
-      {closed ? (
-        <section className="note note-arena note-col">
-          <span>
-            Esta casa está cerrada a consultas{l.reopenAt ? ` hasta el ${longDate(l.reopenAt)}` : ""}. Ábrala para cambiar el calendario; sus noches y precios se conservan.
-          </span>
-          <button type="button" className="btn btn-ghost btn-sm cal-open" disabled={reopen.isPending} onClick={() => reopen.mutate({ available: true })}>
-            Abrir a consultas
-          </button>
-        </section>
-      ) : null}
-      {reopen.error ? (
-        <p className="note" role="alert">
-          {toDomainError(reopen.error).message}
-        </p>
-      ) : null}
       {query.isError && !query.data ? (
         <p className="note" role="alert">
           {toDomainError(query.error).message}
@@ -275,6 +265,67 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
           onCancel={() => (setSel(clearSelection()), setProblem(null))}
           onSave={onSave}
         />
+      ) : null}
+    </>
+  );
+}
+
+/** Arriba del calendario de una casa activa (can(l,"available")): abierta, la fila abre la hoja «Cerrar la casa»;
+ *  cerrada, dice hasta cuándo y «Abrir la casa» la abre en un toque. Las dos escrituras son optimistas (useSetAvailable). */
+function CloseRow({ listing: l, userId }: { listing: Listing; userId: string }) {
+  const available = useSetAvailable(userId, l);
+  const [closing, setClosing] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef(false);
+  useEffect(() => {
+    whenIdle(() => void loadCloseSheet());
+  }, []);
+  // El foco vuelve a la fila cuando la hoja ya se desmontó y la página dejó de estar inerte.
+  useEffect(() => {
+    if (closing || !returnFocus.current) return;
+    returnFocus.current = false;
+    button.current?.focus();
+  }, [closing]);
+  const endClosing = () => {
+    returnFocus.current = true;
+    setClosing(false);
+  };
+  return (
+    <>
+      {l.available ? (
+        <button ref={button} type="button" className="card close-row" aria-haspopup="dialog" onClick={() => setClosing(true)}>
+          <span className="close-row-icon">
+            <I.lock size={20} />
+          </span>
+          <span className="body">
+            <b>Cerrar la casa hasta…</b>
+            <span className="small muted">Sale de Explorar y no recibe consultas</span>
+          </span>
+          <I.chevron />
+        </button>
+      ) : (
+        <section className="card close-row is-closed">
+          <span>{l.reopenAt ? `Cerrada hasta el ${shortDate(l.reopenAt)}` : "Cerrada: no aparece en Explorar ni recibe consultas"}</span>
+          <button ref={button} type="button" className="btn btn-ghost btn-sm" onClick={() => available.mutate({ available: true })}>
+            Abrir la casa
+          </button>
+        </section>
+      )}
+      {available.error ? (
+        <p className="note" role="alert">
+          {toDomainError(available.error).message}
+        </p>
+      ) : null}
+      {closing ? (
+        <Suspense fallback={<div className="sheet-backdrop" />}>
+          <CloseSheet
+            onClose={endClosing}
+            onConfirm={(reopenAt) => {
+              endClosing();
+              available.mutate({ available: false, reopenAt });
+            }}
+          />
+        </Suspense>
       ) : null}
     </>
   );

@@ -219,8 +219,9 @@ test("detalle: la tarjeta ocre de la pendiente y de la que está en la ventana, 
   await page.screenshot({ path: "test-results/capturas/detalle-ventana.png", fullPage: true });
   await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeEnabled();
   await expect(page.getByTestId("subscription-row")).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
-  // «Anuncio visible» no depende de la suscripción.
-  await expect(page.getByRole("switch", { name: /Anuncio visible/ })).toHaveAttribute("aria-checked", "true");
+  // «Cerrar la casa hasta…» (en el Calendario) no depende de la suscripción.
+  await page.goto(`/propietario/calendario?casa=${cerca.id}`);
+  await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
 
   await page.goto(`/propietario/casas/${parada.id}`);
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);

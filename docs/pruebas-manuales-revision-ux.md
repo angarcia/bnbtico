@@ -126,7 +126,7 @@ Las filas A5 son las acordadas en la revisión. Para tener una segunda casa acti
 | A5-5 | Dos casas activas («Casa A» y «Casa B») y un borrador | Calendario → selector | Solo «Casa A» y «Casa B» | ☐ |
 | A5-6 | Igual que A5-5 | Elegir «Casa B» → Inicio → Calendario | Abre «Casa B» (la última usada). Cerrar la app y volver: sigue en «Casa B» | ☐ |
 | A5-7 | Igual que A5-5 | Mis casas → «Calendario» de «Casa A» | Abre «Casa A», aunque la última fuera «Casa B» | ☐ |
-| A5-8 | «Casa B» con «Anuncio visible» apagado | Calendario → selector | «Casa B» sigue y se pueden marcar noches | ☐ |
+| A5-8 | «Casa B» cerrada («Cerrar la casa hasta…» en su Calendario; antes «Anuncio visible» apagado) | Calendario → selector | «Casa B» sigue en el selector, con los días atenuados y «Abrir la casa» arriba | ☐ |
 | A5-9 | Dos activas; en «Casa B», detalle → «Editar la ficha» y confirmar (vuelve a revisión) | Calendario → selector | «Casa B» **sigue** en el selector y se pueden marcar noches mientras se revisa; un borrador nuevo nunca enviado sigue sin aparecer | ☐ |
 
 ### Escritorio (N5)
@@ -150,6 +150,19 @@ Las filas A5 son las acordadas en la revisión. Para tener una segunda casa acti
 | # | Paso | Esperado | ✓ |
 |---|---|---|---|
 | U43 | Tras recorrer el asistente, en el SQL Editor la consulta «Asistente de publicar» de `docs/telemetria.md` | Una fila por paso alcanzado con el número de borradores; la ruta guardada es `/propietario/publicar/:id/<paso>` (sin el id real) | ☐ |
+
+### Ronda de Ana · densidad, tarjetas y calendario (2026-10-29)
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U59 | Recorrer todas las pestañas en un iPhone y en un Android | El margen a los lados es de **16 px** en todas (pantallas, filas de chips, tira de fotos y barras fijas) | ☐ |
+| U60 | Mirar la barra de abajo | Iconos de **26 px**; la pestaña activa en terracota `#B44C30` | ☐ |
+| U61 | Abrir una ficha con 5 fotos | La foto es **cuadrada**, a todo el ancho y pegada arriba (bajo la muesca); los botones de volver, compartir y corazón se ven enteros y abajo dice «1 / 5» | ☐ |
+| U62 | Mirar la barra de abajo de la ficha | Colones a la izquierda («₡42 000 / noche» y el mensual si lo hay) y «≈ $» a la derecha; debajo del botón, «Precios orientativos: el precio final lo acuerda con el propietario.» | ☐ |
+| U63 | Mis casas con una sola casa | Una tarjeta con la foto cuadrada y «Activa» encima; tocarla (fuera de los botones) abre el detalle | ☐ |
+| U64 | Crear un borrador y volver a Mis casas | El borrador sale **una sola vez**, en su tarjeta, con «Seguir publicando» y «Descartar» | ☐ |
+| U65 | Calendario: bajar entre meses con el dedo, elegir un día de este mes y otro del siguiente, «Ocupado» y «Guardar cambios» | Los meses van uno debajo de otro, sin flechas; el panel dice las dos noches y al guardar las dos salen «Ocupado» | ☐ |
+| U66 | Calendario de una casa activa: «Cerrar la casa hasta…», poner una fecha y «Cerrar la casa»; mirar Explorar desde otro teléfono; volver y «Abrir la casa» | Arriba dice «Cerrada hasta el …» y los días se atenúan; la casa no sale en Explorar y su ficha dice «No disponible por ahora». «Abrir la casa» la devuelve en un toque y vuelve a salir en Explorar. El detalle de la casa ya no tiene el interruptor «Anuncio visible» | ☐ |
 
 ---
 

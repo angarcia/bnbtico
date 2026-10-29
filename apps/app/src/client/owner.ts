@@ -118,7 +118,7 @@ export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "i
 /** Abrir (borra la fecha de reapertura) o cerrar a consultas con una fecha opcional. */
 export type AvailabilityChange = { available: true } | { available: false; reopenAt: string | null };
 
-/** «Anuncio visible» (antes «Disponible para consultas»): responde al instante y vuelve atrás si la base lo rechaza. */
+/** «Cerrar la casa hasta…» / «Abrir la casa» del Calendario: responde al instante y vuelve atrás si la base lo rechaza. */
 export function useSetAvailable(userId: string, listing: Pick<Listing, "id" | "publicId">) {
   const client = useQueryClient();
   return useMutation({

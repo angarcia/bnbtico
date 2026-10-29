@@ -5,9 +5,8 @@
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { can } from "../../domain/can";
-import { longDate } from "../../domain/dates";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
@@ -21,10 +20,9 @@ import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
-import { CloseSheet } from "../close-sheet";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
-import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen, useSetAvailable } from "../owner";
+import { offerTakenQuery, listingStatsQuery, ownListingQuery, ownListingsQuery, useDeleteDraft, useReopen } from "../owner";
 import { useSession } from "../session";
 
 const base = () => window.location.origin;
@@ -297,25 +295,11 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   const billing = useBilling(userId);
   const hb = billing?.of(l.id);
   const subLine = hb && billing ? subscriptionLine(hb.sub, billing.today) : null;
-  const available = useSetAvailable(userId, l);
   const reopen = useReopen(userId, l);
   const discard = useDeleteDraft(userId);
   const { mainPrice: price, monthly } = describe(l, { base: "" });
   const cover = l.photos[0];
   const label = cardLabel(l);
-  const [closing, setClosing] = useState(false);
-  const toggle = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef(false);
-  // El foco vuelve al interruptor cuando la hoja ya se desmontó y la página dejó de estar inerte.
-  useEffect(() => {
-    if (closing || !returnFocus.current) return;
-    returnFocus.current = false;
-    toggle.current?.focus();
-  }, [closing]);
-  const endClosing = () => {
-    returnFocus.current = true;
-    setClosing(false);
-  };
   const toWizard = () => navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } });
 
   function edit() {
@@ -328,7 +312,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
     discard.mutate(l.id, { onSuccess: () => void navigate({ to: "/propietario/casas", replace: true }) });
   }
 
-  const error = available.error ?? reopen.error ?? discard.error;
+  const error = reopen.error ?? discard.error;
   return (
     <>
       <div className="photo detail-photo">
@@ -407,46 +391,9 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             WhatsApp de esta casa<small className="num">{formatPhone(l.whatsappPhone)} · verificado</small>
           </span>
         </div>
-        {can(l, "available") ? (
-          <div className="list-item">
-            <span className="muted-icon">
-              <I.chat />
-            </span>
-            <span className="body">
-              <span id="available-label">Anuncio visible</span>
-              <small>
-                {l.available
-                  ? "Si lo apaga, la casa no aparece en Explorar y su ficha dice que no está disponible por ahora. Su calendario no cambia."
-                  : l.reopenAt
-                    ? `Pausado hasta el ${longDate(l.reopenAt)}: no aparece en Explorar`
-                    : "Pausado: no aparece en Explorar hasta que lo encienda"}
-              </small>
-            </span>
-            <button
-              ref={toggle}
-              type="button"
-              role="switch"
-              className="switch"
-              aria-checked={l.available}
-              aria-labelledby="available-label"
-              onClick={() => (l.available ? setClosing(true) : available.mutate({ available: true }))}
-            >
-              <span />
-            </button>
-          </div>
-        ) : null}
       </section>
 
       {error ? <p className="note" role="alert">{message(error)}</p> : null}
-      {closing ? (
-        <CloseSheet
-          onClose={endClosing}
-          onConfirm={(reopenAt) => {
-            endClosing();
-            available.mutate({ available: false, reopenAt });
-          }}
-        />
-      ) : null}
 
       {can(l, "discard") ? (
         <button type="button" className="btn btn-outline-bad" onClick={remove} disabled={discard.isPending}>

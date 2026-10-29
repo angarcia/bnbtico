@@ -93,7 +93,7 @@ export interface OwnerListingsApi {
   /** Activa, con cambios pedidos o rechazada → borrador (deja de verse hasta la nueva aprobación). */
   reopenForEdit(id: string): Promise<void>;
   /**
-   * «Anuncio visible» (antes «Disponible para consultas»), solo con la casa activa (RPC set_listing_available). Al cerrar, `reopenAt` opcional
+   * «Cerrar la casa hasta…» del Calendario (antes «Anuncio visible»), solo con la casa activa (RPC set_listing_available). Al cerrar, `reopenAt` opcional
    * (`YYYY-MM-DD`, de mañana a hoy + 365): esa noche la base la abre sola. Abrir a mano borra la fecha; una fecha al abrir
    * se rechaza. Ninguna de las dos cosas cambia el estado de la casa.
    */
