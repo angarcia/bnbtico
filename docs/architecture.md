@@ -17,6 +17,8 @@ El navegador es el cliente de Postgres. La app es un shell estático que habla c
 | Storage | Bucket `listings` público para leer, escritura del dueño por carpeta con RLS; tres variantes JPEG por foto | Supabase |
 | Despliegue | GitHub Actions: pruebas → build → `wrangler deploy`; `develop` → `nueva.bnbtico.com` (luego `pruebas.bnbtico.com`), `main` → `bnbtico.com` | GitHub + Cloudflare |
 
+**Editar una casa publicada (2026-10-29).** Una casa publicada no vuelve a borrador: los datos al momento (capacidad, características, precios) cambian con `update_listing_live`, y los que pasan por revisión (nombre, tipo, descripción, ubicación y fotos nuevas) van a una edición: `listing_edits` (una por casa, clave `listing_id`; estados `open` → `review` → `changes`, y al aprobarse se borra) y `listing_edit_photos` (sus fotos nuevas, en la misma carpeta de Storage que las aprobadas). Las dos tablas solo se leen por RLS (el dueño y el admin con `aal2`); toda escritura va por RPCs `security definer` (`start_edit`, `save_edit`, `add_edit_photo`, `remove_edit_photo`, `reorder_edit_photos`, `submit_edit`, `discard_edit` y, del admin, `review_edit`, que aplica la edición a `listings` y `listing_photos` en una transacción). Mientras tanto la versión aprobada sigue pública: `listings_public`, el SSR y la búsqueda no leen las tablas de la edición.
+
 No hay API intermedia, ni server actions, ni cookies de sesión en el servidor, ni servicio propio. La service role key solo existe en el entorno del worker.
 
 ## Cuatro caminos de petición

@@ -151,6 +151,18 @@ describe("purga de la ficha con pg_net", () => {
     expect(lastJson(edited)).toEqual([]);
   });
 
+  it("aprobar una edición de una casa activa encola la purga de su ficha", async () => {
+    await h.reset();
+    const { id, publicId } = await h.seed({ status: "active" });
+    const owner = await signIn("owner");
+    expect((await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco frente al mar" } })).error).toBeNull();
+    expect((await owner.rpc("submit_edit", { p_listing: id })).error).toBeNull();
+    const out = inTransaction(`${withSecrets}${asAdminAal2(adminId)}
+      select public.review_edit('${id}', 'approve', '') is not null;
+      ${queueOf(publicId)}`);
+    expect(lastJson(out).length).toBeGreaterThanOrEqual(1);
+  });
+
   it("sin secretos en Vault, aprobar no encola nada y no falla", async () => {
     await h.reset();
     const { id, publicId } = await h.seed({ status: "review" });

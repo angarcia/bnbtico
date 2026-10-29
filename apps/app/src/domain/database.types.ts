@@ -774,6 +774,9 @@ isOneToOne: true
 "resume_subscription":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"review_edit":
+{ Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: string
+                           },
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },

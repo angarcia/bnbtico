@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Database } from "../../src/domain/database.types";
 import type { ListingsHarness } from "../contract/harness";
-import { anonClient, serviceClient, signIn, sql } from "./local";
+import { anonClient, serviceClient, signIn, signInAdmin, sql } from "./local";
 import { postgrestHarness } from "./postgrest-harness";
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
@@ -304,5 +304,130 @@ describe("ediciones del propietario", () => {
     expect((await up()).error).not.toBeNull();
     await owner.rpc("discard_edit", { p_listing: id });
     expect((await up()).error).toBeNull();
+  });
+});
+
+describe("revisión de una edición", () => {
+  let h: ListingsHarness;
+  let owner: SupabaseClient<Database>;
+  let other: SupabaseClient<Database>;
+  let admin: SupabaseClient<Database>;
+  let adminAal1: SupabaseClient<Database>;
+
+  beforeAll(async () => {
+    h = await postgrestHarness();
+    owner = await signIn("owner");
+    other = await signIn("other");
+    admin = await signInAdmin();
+    adminAal1 = await signIn("admin");
+  });
+  beforeEach(() => h.reset());
+
+  const review = (id: string, decision: string, note = "", db = admin) => db.rpc("review_edit", { p_listing: id, p_decision: decision, p_note: note });
+  /** Una edición del nombre enviada a revisión. */
+  async function sent() {
+    const seeded = await h.seed({ status: "active" });
+    await owner.rpc("save_edit", { p_listing: seeded.id, p_patch: { title: "Casa Coco frente al mar" } });
+    expect((await owner.rpc("submit_edit", { p_listing: seeded.id })).error).toBeNull();
+    return seeded;
+  }
+
+  // Zona: Puerto Viejo (704-puerto-viejo, a 132 m del pin 9.6553, -82.7536 según zones_near de 20261028070328_zonas.sql).
+  it("aprobar aplica nombre, descripción, tipo y ubicación, recalcula el lugar y conserva estado y primera publicación", async () => {
+    const { id, publicId } = await h.seed({ status: "active", photos: 5 });
+    const before = (await serviceClient().from("listings").select("status, first_published_at").eq("id", id).single()).data!;
+    const desc = "Casa de madera frente a Playa Cocles, con terraza y hamacas, a cinco minutos a pie del pueblo y del arrecife.";
+    await owner.rpc("save_edit", {
+      p_listing: id,
+      p_patch: { title: "Casa Coco frente al mar", description: desc, kind: "habitacion", bathroom_shared: true, lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zone_id: "704-puerto-viejo", zone_source: "list" },
+    });
+    const paths = [`${id}/${crypto.randomUUID()}`, `${id}/${crypto.randomUUID()}`];
+    for (const path of paths) await owner.rpc("add_edit_photo", { p_listing: id, p_path: path });
+    expect((await owner.rpc("submit_edit", { p_listing: id })).error).toBeNull();
+    const decided = await review(id, "approve");
+    expect(decided.error).toBeNull();
+    expect(decided.data).toBe("approved");
+    const after = (await serviceClient().from("listings").select("*").eq("id", id).single()).data!;
+    expect(after).toMatchObject({
+      title: "Casa Coco frente al mar", description: desc, kind: "habitacion", bathroom_shared: true, lat: 9.6553, lng: -82.7536,
+      zone: "Puerto Viejo", zone_id: "704-puerto-viejo", zone_source: "list", canton: "Talamanca", province: "Limón", district: "Cahuita",
+      status: before.status, first_published_at: before.first_published_at,
+    });
+    const photos = (await serviceClient().from("listing_photos").select("path, position").eq("listing_id", id).order("position")).data!;
+    expect(photos).toHaveLength(7);
+    expect(photos.slice(5)).toEqual([{ path: paths[0], position: 5 }, { path: paths[1], position: 6 }]);
+    expect((await serviceClient().from("listing_edits").select("listing_id").eq("listing_id", id)).data).toEqual([]);
+    expect((await h.anon.getPublic(publicId))?.title).toBe("Casa Coco frente al mar");
+    expect((await serviceClient().from("admin_actions").select("action").eq("target_listing_id", id).eq("action", "edit.approve")).data).toHaveLength(1);
+  });
+
+  it("aprobar un cambio a alojamiento completo borra el baño y deja lo que no cambia", async () => {
+    const { id } = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true } });
+    await owner.rpc("save_edit", { p_listing: id, p_patch: { kind: "completo" } });
+    await owner.rpc("submit_edit", { p_listing: id });
+    expect((await review(id, "approve")).data).toBe("approved");
+    const after = (await serviceClient().from("listings").select("kind, bathroom_shared, title, zone, lat").eq("id", id).single()).data;
+    expect(after).toEqual({ kind: "completo", bathroom_shared: null, title: "Cabina Cahuita", zone: "Cahuita", lat: 9.7366 });
+  });
+
+  it("approve vuelve a validar: un cambio de tipo con 0 habitaciones se rechaza", async () => {
+    // Carrera: se envía con 1 habitación; mientras espera, el dueño baja a 0 al momento (lo permite el tipo aprobado, completo).
+    const { id } = await h.seed({ status: "active", draft: { kind: "completo", bedrooms: 1 } });
+    await owner.rpc("save_edit", { p_listing: id, p_patch: { kind: "habitacion", bathroom_shared: false } });
+    expect((await owner.rpc("submit_edit", { p_listing: id })).error).toBeNull();
+    expect((await owner.rpc("update_listing_live", { p_listing: id, p_patch: { bedrooms: 0 } })).error).toBeNull();
+    expect((await review(id, "approve")).error?.message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
+    expect((await serviceClient().from("listings").select("kind").eq("id", id).single()).data?.kind).toBe("completo");
+    expect((await serviceClient().from("listing_edits").select("status").eq("listing_id", id).single()).data?.status).toBe("review");
+  });
+
+  it("aprobar más de 15 fotos entre aprobadas y nuevas se rechaza", async () => {
+    const { id } = await h.seed({ status: "active", photos: 14 });
+    await owner.rpc("add_edit_photo", { p_listing: id, p_path: `${id}/${crypto.randomUUID()}` });
+    await owner.rpc("submit_edit", { p_listing: id });
+    await serviceClient().from("listing_photos").insert({ listing_id: id, path: `${id}/${crypto.randomUUID()}`, position: 14 });
+    expect((await review(id, "approve")).error?.message).toBe("Máximo 15 fotos.");
+  });
+
+  it("pedir cambios exige nota; el propietario la ve y puede reenviar", async () => {
+    const { id } = await sent();
+    expect((await review(id, "changes", "  ")).error?.message).toBe("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.");
+    expect((await review(id, "reject", "No.")).error?.message).toBe("Decisión no válida.");
+    expect((await review(id, "changes", " La foto 2 tiene un teléfono. ")).data).toBe("changes");
+    expect((await owner.from("listing_edits").select("status, review_note").eq("listing_id", id).single()).data).toEqual({
+      status: "changes", review_note: "La foto 2 tiene un teléfono.",
+    });
+    const action = (await serviceClient().from("admin_actions").select("reason").eq("target_listing_id", id).eq("action", "edit.changes")).data;
+    expect(action).toEqual([{ reason: "La foto 2 tiene un teléfono." }]);
+    expect((await serviceClient().from("listings").select("title, status").eq("id", id).single()).data).toEqual({ title: "Cabina Cahuita", status: "active" });
+    expect((await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco del Caribe" } })).error).toBeNull();
+    expect((await owner.rpc("submit_edit", { p_listing: id })).data).toBe("review");
+    expect((await owner.from("listing_edits").select("status, review_note").eq("listing_id", id).single()).data).toEqual({ status: "review", review_note: null });
+  });
+
+  it("quien no es admin y el admin sin segundo código no deciden", async () => {
+    const { id } = await sent();
+    expect((await review(id, "approve", "", other)).error?.message).toBe("Solo bnbtico puede revisar anuncios.");
+    expect((await review(id, "approve", "", owner)).error?.message).toBe("Solo bnbtico puede revisar anuncios.");
+    expect((await review(id, "approve", "", adminAal1)).error?.message).toBe("Confirme el segundo código para revisar anuncios.");
+    expect((await review(id, "approve", "", anonClient())).error).not.toBeNull();
+    expect((await review(crypto.randomUUID(), "approve")).error?.message).toBe("No encontramos esa edición.");
+    const open = await h.seed({ status: "active" });
+    await owner.rpc("save_edit", { p_listing: open.id, p_patch: { title: "Casa Coco frente al mar" } });
+    expect((await review(open.id, "approve")).error?.message).toBe("Esta edición ya tiene una decisión.");
+    expect((await review(id, "changes", "Cambie el nombre.")).error).toBeNull();
+    expect((await review(id, "approve")).error?.message).toBe("Esta edición ya tiene una decisión.");
+  });
+
+  it("el admin lee ediciones y sus fotos; con aal1 no", async () => {
+    const { id } = await sent();
+    await owner.rpc("discard_edit", { p_listing: id });
+    await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco frente al mar" } });
+    await owner.rpc("add_edit_photo", { p_listing: id, p_path: `${id}/${crypto.randomUUID()}` });
+    await owner.rpc("submit_edit", { p_listing: id });
+    expect((await admin.from("listing_edits").select("status, title").eq("listing_id", id)).data).toEqual([{ status: "review", title: "Casa Coco frente al mar" }]);
+    expect((await admin.from("listing_edit_photos").select("id").eq("listing_id", id)).data).toHaveLength(1);
+    expect((await adminAal1.from("listing_edits").select("listing_id").eq("listing_id", id)).data).toEqual([]);
+    expect((await adminAal1.from("listing_edit_photos").select("id").eq("listing_id", id)).data).toEqual([]);
   });
 });
