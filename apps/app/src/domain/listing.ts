@@ -66,7 +66,8 @@ export const KIND_HINTS: Record<"completo" | "habitacion", string> = {
 };
 
 export const STEP_NAMES = ["Alojamiento", "Ubicación", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"] as const;
-export const MIN_PHOTOS = 5;
+/** Fotos que hacen falta para aprobar (el dueño puede enviar sin fotos). */
+export const MIN_PHOTOS_TO_APPROVE = 1;
 
 /** «Alquiler mensual»: característica de la ficha y resumen del admin. */
 export const MONTHLY_LABEL = "Alquiler mensual";
@@ -210,11 +211,12 @@ export function normalize(d: ListingDraft): ListingDraft {
 
 /** Paso 6 (ticket 19): la misma regla en el dominio, el fake y `submit_listing`. Se cuentan caracteres (como char_length). */
 export const TITLE_MIN = 5;
-export const TITLE_MAX = 60;
+export const TITLE_MAX = 32;
 export const DESCRIPTION_MIN = 80;
 export const DESCRIPTION_MAX = 2000;
 export const TITLE_LENGTH_ERROR = `El nombre de la casa debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.`;
-export const DESCRIPTION_LENGTH_ERROR = `La descripción debe tener entre ${DESCRIPTION_MIN} y ${DESCRIPTION_MAX} caracteres.`;
+export const TITLE_EMPTY_ERROR = "Póngale un nombre a la casa.";
+export const DESCRIPTION_LENGTH_ERROR = `La descripción debe tener entre ${DESCRIPTION_MIN} y ${DESCRIPTION_MAX} caracteres o quedar vacía.`;
 /** Caracteres (puntos de código) de un texto sin los espacios de los extremos. */
 export const charCount = (text: string) => [...text.trim()].length;
 const between = (n: number, min: number, max: number) => n >= min && n <= max;
@@ -252,13 +254,13 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       if (d.features.includes("parking") && d.parkingPaid === null) return "Indique si el parqueo es gratuito o de pago.";
       return null;
     case 6:
-      if (!d.title.trim()) return "Póngale un nombre a la casa.";
+      if (!d.title.trim()) return TITLE_EMPTY_ERROR;
       if (!between(charCount(d.title), TITLE_MIN, TITLE_MAX)) return TITLE_LENGTH_ERROR;
-      if (!d.description.trim()) return "Escriba una descripción.";
-      if (!between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX)) return DESCRIPTION_LENGTH_ERROR;
+      // Descripción opcional: vacía pasa; si se escribe, de 80 a 2000.
+      if (d.description.trim() && !between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX)) return DESCRIPTION_LENGTH_ERROR;
       return null;
     case 7:
-      // Con menos de 5 fotos se puede seguir (revisión UX C4): el mínimo se exige al enviar (validateAll y submit_listing).
+      // Las fotos no son obligatorias para enviar (publicar v2): para aprobar hace falta una, lo exige el admin.
       if (d.photoCount > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
       return null;
     case 8:
@@ -271,16 +273,10 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
   }
 }
 
-/** «Faltan 3 fotos» / «Falta 1 foto» (revisión UX C4). */
-export const missingPhotosLabel = (n: number) => (n === 1 ? "Falta 1 foto" : `Faltan ${n} fotos`);
-
-/** Mensaje del mínimo de fotos, que se exige al enviar a revisión (no para pasar del paso 7). */
-export const photosMissing = (count: number) => (count < MIN_PHOTOS ? `Agregue al menos ${MIN_PHOTOS} fotos.` : null);
-
-/** Todo lo necesario para enviar a revisión, en el orden de las pantallas (incluido el mínimo de fotos en el paso 7). */
+/** Todo lo necesario para enviar a revisión, en el orden de las pantallas (sin fotos ni descripción, que son opcionales). */
 export function validateAll(d: ListingDraft): { step: Step; error: string } | null {
   for (const step of STEPS) {
-    const error = validateStep(step, d) ?? (step === 7 ? photosMissing(d.photoCount) : null);
+    const error = validateStep(step, d);
     if (error) return { step, error };
   }
   return null;

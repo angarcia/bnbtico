@@ -4,7 +4,7 @@ import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi, Session } from "../../domain/api";
 import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError } from "../../domain/errors";
-import { MAX_PHOTOS, MIN_PHOTOS, type Listing } from "../../domain/listing";
+import { MAX_PHOTOS, MIN_PHOTOS_TO_APPROVE, type Listing } from "../../domain/listing";
 import { DECISION_STATUS, REVIEW_MESSAGES as M, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import { approveSubscription } from "./billing";
@@ -144,7 +144,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       const l = db.listings.get(id);
       if (!l) throw new DomainError(M.notFound, "validation");
       if (l.status !== "review") throw new DomainError(M.decided, "validation");
-      if (decision === "approve" && db.photosOf(id).length < MIN_PHOTOS) throw new DomainError(M.fewPhotos, "validation");
+      if (decision === "approve" && db.photosOf(id).length < MIN_PHOTOS_TO_APPROVE) throw new DomainError(M.fewPhotos, "validation");
       const text = note.trim().slice(0, 2000);
       const at = db.now();
       // Aprobar toma la plaza de la oferta la primera vez y decide entre activa y pendiente de pago (fase 5).

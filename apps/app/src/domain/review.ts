@@ -17,8 +17,11 @@ export const REVIEW_MESSAGES = {
   decided: "Este anuncio ya tiene una decisión.",
   noteRequired: "Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.",
   noteTooLong: `El motivo puede tener como mucho ${REVIEW_NOTE_MAX} caracteres.`,
-  fewPhotos: "Pida al menos 5 fotos antes de aprobar.",
+  fewPhotos: "Para aprobarla hace falta al menos una foto.",
 } as const;
+
+/** Nota de «Pedir cambios» cuando la casa no tiene fotos (la usa el panel del admin). */
+export const NO_PHOTOS_NOTE = "Para publicarla necesitamos al menos una foto de la casa.";
 
 /** Lo que se puede rechazar sin preguntar a la base. La base recorta a 2000; aquí se avisa antes de perder texto. */
 export function reviewNoteRefusal(decision: ReviewDecision, note: string): string | null {

@@ -11,10 +11,10 @@ import type { ListingEdit } from "../../domain/edit";
 import { editSummary, editedFields } from "../../domain/edit-summary";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
+import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS_TO_APPROVE, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
-import { REVIEW_NOTE_MAX, editNoteRefusal, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
+import { REVIEW_MESSAGES, REVIEW_NOTE_MAX, editNoteRefusal, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
 import {
@@ -516,10 +516,10 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
     <form className="stack gap-14" onSubmit={onSubmit} noValidate>
       <Checklist />
       <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios o rechaza)" error={error} />
-      {photos < MIN_PHOTOS ? <p className="note note-arena small">Faltan fotos: se requieren al menos {MIN_PHOTOS} para aprobar.</p> : null}
+      {photos < MIN_PHOTOS_TO_APPROVE ? <p className="note note-arena small">{REVIEW_MESSAGES.fewPhotos}</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={photos < MIN_PHOTOS || review.isPending}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={photos < MIN_PHOTOS_TO_APPROVE || review.isPending}>
           <I.check size={18} /> Aprobar y publicar
         </button>
         <div className="row gap-8">

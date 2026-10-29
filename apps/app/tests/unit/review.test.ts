@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emptyDraft, type Listing } from "../../src/domain/listing";
 import { EDIT_MESSAGES } from "../../src/domain/edit-messages";
-import { REVIEW_MESSAGES, applyDecision, editNoteRefusal, queueBadge, reviewNoteRefusal, splitQueue, type QueueItem } from "../../src/domain/review";
+import { NO_PHOTOS_NOTE, REVIEW_MESSAGES, applyDecision, editNoteRefusal, queueBadge, reviewNoteRefusal, splitQueue, type QueueItem } from "../../src/domain/review";
 
 const item = (id: string, patch: Partial<Listing>): QueueItem => ({
   ownerName: "Ana",
@@ -9,6 +9,11 @@ const item = (id: string, patch: Partial<Listing>): QueueItem => ({
 });
 
 describe("revisión del admin", () => {
+  it("mensajes de las fotos al aprobar", () => {
+    expect(REVIEW_MESSAGES.fewPhotos).toBe("Para aprobarla hace falta al menos una foto.");
+    expect(NO_PHOTOS_NOTE).toBe("Para publicarla necesitamos al menos una foto de la casa.");
+  });
+
   it("motivo: obligatorio para pedir cambios o rechazar, como mucho 2000 caracteres", () => {
     expect(reviewNoteRefusal("approve", "")).toBeNull();
     expect(reviewNoteRefusal("changes", "  ")).toBe(REVIEW_MESSAGES.noteRequired);

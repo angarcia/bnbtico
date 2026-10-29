@@ -11,10 +11,10 @@ import {
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
   MAX_PHOTOS,
-  MIN_PHOTOS,
   MONTHLY_PRICE_ERROR,
   NIGHTLY_PRICE_ERROR,
   planStep,
+  TITLE_EMPTY_ERROR,
   TITLE_LENGTH_ERROR,
   TITLE_MAX,
   TITLE_MIN,
@@ -42,13 +42,12 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
   if (l.bedrooms === null || (l.bedrooms < 1 && l.kind !== "completo" && l.kind !== "apartamento")) return "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
   if ((l.bathrooms ?? 0) < 1) return "Indique el número de baños (mínimo 1).";
   if (l.kind === "habitacion" && l.bathroomShared === null) return "Indique si el baño es privado o compartido.";
-  if (!l.title || !l.description) return "Complete el nombre de la casa y la descripción.";
+  if (!l.title.trim()) return TITLE_EMPTY_ERROR;
   if (charCount(l.title) < TITLE_MIN || charCount(l.title) > TITLE_MAX) return TITLE_LENGTH_ERROR;
-  if (charCount(l.description) < DESCRIPTION_MIN || charCount(l.description) > DESCRIPTION_MAX) return DESCRIPTION_LENGTH_ERROR;
+  if (l.description.trim() && (charCount(l.description) < DESCRIPTION_MIN || charCount(l.description) > DESCRIPTION_MAX)) return DESCRIPTION_LENGTH_ERROR;
   if (l.features.includes("parking")) {
     if (l.parkingPaid === null) return "Indique si el parqueo es gratuito o de pago.";
   } else if (l.parkingPaid !== null) return "El tipo de parqueo solo aplica si el anuncio tiene parqueo.";
-  if (photos < MIN_PHOTOS) return `Agregue al menos ${MIN_PHOTOS} fotos.`;
   if (photos > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
   if ((l.nightlyPriceCrc ?? 0) <= 0) return NIGHTLY_PRICE_ERROR;
   // Precio al mes opcional: vacío es «Precio a negociar con el dueño».

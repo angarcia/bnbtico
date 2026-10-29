@@ -106,10 +106,10 @@ export function adminContract(name: string, makeHarness: () => Promise<ListingsH
       expect((await rejection(admin.review(s.id, "approve", ""))).message).toBe(REVIEW_MESSAGES.decided);
 
       const few = await h.seed({ status: "review" });
-      await h.dropPhoto(few.id);
+      for (let i = 0; i < 5; i++) await h.dropPhoto(few.id);
       expect((await rejection(admin.review(few.id, "approve", ""))).message).toBe(REVIEW_MESSAGES.fewPhotos);
       expect((await admin.get(few.id))?.listing.status).toBe("review");
-      await admin.review(few.id, "changes", "Suba al menos 5 fotos.");
+      await admin.review(few.id, "changes", "Suba al menos una foto.");
 
       expect((await rejection(admin.review("00000000-0000-4000-8000-999999999999", "approve", ""))).message).toBe(REVIEW_MESSAGES.notFound);
     });

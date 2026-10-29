@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PROVINCE,
+  DESCRIPTION_LENGTH_ERROR,
+  MIN_PHOTOS_TO_APPROVE,
+  TITLE_LENGTH_ERROR,
   FEATURES,
   KINDS,
   KIND_LABELS,
@@ -177,28 +180,36 @@ describe("validateStep", () => {
     expect(validateStep(5, { ...d, features: [] })).toBeNull();
   });
 
-  it("paso 6: nombre y descripción", () => {
+  it("paso 6: la descripción es opcional; si se escribe, de 80 a 2000", () => {
     const d = validDraft();
     expect(validateStep(6, d)).toBeNull();
-    expect(validateStep(6, { ...d, title: " " })).toBe("Póngale un nombre a la casa.");
-    expect(validateStep(6, { ...d, description: " " })).toBe("Escriba una descripción.");
-    expect(validateStep(6, { ...d, title: "Casa" })).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
-    expect(validateStep(6, { ...d, title: "C".repeat(5) })).toBeNull();
-    expect(validateStep(6, { ...d, title: "C".repeat(61) })).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
-    expect(validateStep(6, { ...d, description: "x".repeat(79) })).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+    expect(validateStep(6, { ...d, description: "" })).toBeNull();
+    expect(validateStep(6, { ...d, description: "   " })).toBeNull();
+    expect(validateStep(6, { ...d, description: "a".repeat(79) })).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+    expect(validateStep(6, { ...d, description: "a".repeat(80) })).toBeNull();
     expect(validateStep(6, { ...d, description: ` ${"x".repeat(80)} ` })).toBeNull();
-    expect(validateStep(6, { ...d, description: "x".repeat(2001) })).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
-    // Se cuentan caracteres, no unidades UTF-16 (como char_length en SQL): un emoji es uno.
-    expect(validateStep(6, { ...d, title: `${"C".repeat(59)}🌴` })).toBeNull();
+    expect(validateStep(6, { ...d, description: "a".repeat(2001) })).toBe(DESCRIPTION_LENGTH_ERROR);
   });
 
-  it("paso 7: 4 fotos falla, 5 pasa, 16 falla", () => {
+  it("paso 6: nombre de 5 a 32 caracteres", () => {
+    expect(validateStep(6, { ...validDraft(), title: "" })).toBe("Póngale un nombre a la casa.");
+    expect(validateStep(6, { ...validDraft(), title: " " })).toBe("Póngale un nombre a la casa.");
+    expect(validateStep(6, { ...validDraft(), title: "Casa" })).toBe("El nombre de la casa debe tener entre 5 y 32 caracteres.");
+    expect(validateStep(6, { ...validDraft(), title: "C".repeat(5) })).toBeNull();
+    expect(validateStep(6, { ...validDraft(), title: "a".repeat(32) })).toBeNull();
+    expect(validateStep(6, { ...validDraft(), title: "a".repeat(33) })).toBe(TITLE_LENGTH_ERROR);
+    // Se cuentan caracteres, no unidades UTF-16 (como char_length en SQL): un emoji es uno.
+    expect(validateStep(6, { ...validDraft(), title: `${"C".repeat(31)}🌴` })).toBeNull();
+  });
+
+  it("paso 7: con 0 y con 15 fotos pasa; con 16 falla", () => {
     const d = validDraft();
-    // Revisión UX C4: con menos de 5 se puede seguir; el mínimo lo exige validateAll (al enviar).
-    expect(validateStep(7, { ...d, photoCount: 4 })).toBeNull();
-    expect(validateStep(7, { ...d, photoCount: 5 })).toBeNull();
+    expect(validateStep(7, { ...d, photoCount: 0 })).toBeNull();
+    expect(validateStep(7, { ...d, photoCount: 15 })).toBeNull();
     expect(validateStep(7, { ...d, photoCount: 16 })).toBe("Máximo 15 fotos.");
   });
+
+  it("aprobar pide al menos una foto", () => expect(MIN_PHOTOS_TO_APPROVE).toBe(1));
 
   it("paso 8: el precio por noche siempre es obligatorio", () => {
     const d = validDraft();
@@ -277,7 +288,7 @@ describe("parseStep (zod, misma semántica que el parser anterior)", () => {
   });
   it("paso 6 recorta nombre y descripción", () => {
     expect(parseStep(6, fd([["title", " Casa "], ["description", " Linda "]]))).toEqual({ title: "Casa", description: "Linda" });
-    expect(parseStep(6, fd([["title", "x".repeat(120)], ["description", "y".repeat(2100)]]))).toEqual({ title: "x".repeat(60), description: "y".repeat(2000) });
+    expect(parseStep(6, fd([["title", "x".repeat(120)], ["description", "y".repeat(2100)]]))).toEqual({ title: "x".repeat(32), description: "y".repeat(2000) });
   });
   it("paso 8: precio por noche, «¿Acepta alquiler por meses?» (No por defecto) y precio al mes opcional", () => {
     expect(parseStep(8, fd([["nightlyPriceCrc", "85.000"]]))).toEqual({ nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null });
@@ -298,9 +309,15 @@ describe("parseStep (zod, misma semántica que el parser anterior)", () => {
 });
 
 describe("validateAll", () => {
+  it("sin fotos y sin descripción se puede enviar; más de 15, no", () => {
+    expect(validateAll({ ...validDraft(), photoCount: 0, description: "" })).toBeNull();
+    expect(validateAll({ ...validDraft(), photoCount: 16 })).toEqual({ step: 7, error: "Máximo 15 fotos." });
+    expect(resumeStep({ ...validDraft(), photoCount: 0 })).toBe(9);
+  });
+
   it("devuelve el primer paso con error", () => {
     expect(validateAll(emptyDraft())).toEqual({ step: 1, error: "Elija Alojamiento completo o Habitación." });
-    expect(validateAll({ ...validDraft(), photoCount: 2 })).toEqual({ step: 7, error: "Agregue al menos 5 fotos." });
+    expect(validateAll({ ...validDraft(), photoCount: 16 })).toEqual({ step: 7, error: "Máximo 15 fotos." });
     expect(validateAll({ ...validDraft(), zoneSource: null })).toEqual({ step: 2, error: "Elija la zona." });
     expect(validateAll({ ...validDraft(), lat: null })).toEqual({ step: 2, error: "Marque en el mapa la ubicación aproximada." });
     expect(validateAll(validDraft())).toBeNull();
@@ -348,7 +365,7 @@ describe("paso donde retomar un borrador", () => {
     expect(resumeStep(emptyDraft())).toBe(1);
     expect(resumeStep({ ...validDraft(), zone: "" })).toBe(2);
     expect(resumeStep({ ...validDraft(), lat: null, lng: null })).toBe(2); // con zona pero sin pin: el 2, nunca el 3
-    expect(resumeStep({ ...validDraft(), photoCount: 2 })).toBe(7);
+    expect(resumeStep({ ...validDraft(), photoCount: 0 })).toBe(9);
     expect(resumeStep({ ...validDraft(), nightlyPriceCrc: null })).toBe(8);
     expect(resumeStep(validDraft())).toBe(9);
   });

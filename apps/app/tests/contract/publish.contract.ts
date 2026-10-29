@@ -4,7 +4,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
-import { MONTHLY_PRICE_ERROR, NIGHTLY_PRICE_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
+import { DESCRIPTION_LENGTH_ERROR, MONTHLY_PRICE_ERROR, NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
 import type { ListingsHarness, Seeded } from "./harness";
 import { COCLES, MAR } from "./points";
 
@@ -65,10 +65,9 @@ const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Par
     step: 6,
     invalid: [
       [{ title: " ", description: "Linda" }, "Póngale un nombre a la casa."],
-      [{ title: "Cabina", description: "" }, "Escriba una descripción."],
-      // Ticket 19: nombre de 5 a 60 caracteres y descripción de 80 a 2000.
-      [{ title: "Casa", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." }, "El nombre de la casa debe tener entre 5 y 60 caracteres."],
-      [{ title: "Cabina", description: "Cabina frente al parque." }, "La descripción debe tener entre 80 y 2000 caracteres."],
+      // Publicar v2: nombre de 5 a 32 caracteres; descripción vacía o de 80 a 2000.
+      [{ title: "Casa", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." }, TITLE_LENGTH_ERROR],
+      [{ title: "Cabina", description: "Cabina frente al parque." }, DESCRIPTION_LENGTH_ERROR],
     ],
     valid: { title: "Cabina Cahuita", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." },
   },
@@ -263,14 +262,14 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
     });
 
     describe("enviar a revisión", () => {
-      const s = {} as Record<"ready" | "fewPhotos" | "noKind" | "parkingWithout" | "shortTitle" | "shortText" | "review" | "active" | "changes" | "theirs", Seeded>;
+      const s = {} as Record<"ready" | "noPhotos" | "noKind" | "parkingWithout" | "shortTitle" | "shortText" | "review" | "active" | "changes" | "theirs", Seeded>;
 
       beforeAll(async () => {
         h = await makeHarness();
         me = h.owner("owner");
         await h.reset();
         s.ready = await h.seed({ status: "draft", photos: 5 });
-        s.fewPhotos = await h.seed({ status: "draft", photos: 4 });
+        s.noPhotos = await h.seed({ status: "draft", photos: 0, draft: { description: "" } });
         s.noKind = await h.seed({ status: "draft", photos: 5, draft: { kind: null } });
         s.parkingWithout = await h.seed({ status: "draft", photos: 5, draft: { features: ["wifi"], parkingPaid: true } });
         s.review = await h.seed({ status: "review" });
@@ -287,18 +286,22 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
       });
 
       it("la base exige lo mismo que el asistente y explica en español lo que falta", async () => {
-        expect((await rejection(me.submit(s.fewPhotos.id))).message).toBe("Agregue al menos 5 fotos.");
         expect((await rejection(me.submit(s.noKind.id))).message).toBe("Elija Alojamiento completo o Habitación.");
         expect((await rejection(me.submit(s.parkingWithout.id))).message).toBe("El tipo de parqueo solo aplica si el anuncio tiene parqueo.");
-        for (const x of [s.fewPhotos, s.noKind, s.parkingWithout]) expect((await me.getOwn(x.id))?.status).toBe("draft");
+        for (const x of [s.noKind, s.parkingWithout]) expect((await me.getOwn(x.id))?.status).toBe("draft");
       });
 
-      it("nombre de 5 a 60 caracteres y descripción de 80 a 2000 al enviar", async () => {
+      it("sin fotos y sin descripción se envía a revisión", async () => {
+        await me.submit(s.noPhotos.id);
+        expect(await me.getOwn(s.noPhotos.id)).toMatchObject({ status: "review", description: "", photoCount: 0 });
+      });
+
+      it("nombre de 5 a 32 caracteres y descripción vacía o de 80 a 2000 al enviar", async () => {
         // Aquí y no en beforeAll: como mucho cinco borradores sin enviar (el primero ya se envió).
         s.shortTitle = await h.seed({ status: "draft", photos: 5, draft: { title: "Casa" } });
         s.shortText = await h.seed({ status: "draft", photos: 5, draft: { description: "Cabina frente al parque." } });
-        expect((await rejection(me.submit(s.shortTitle.id))).message).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
-        expect((await rejection(me.submit(s.shortText.id))).message).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+        expect((await rejection(me.submit(s.shortTitle.id))).message).toBe(TITLE_LENGTH_ERROR);
+        expect((await rejection(me.submit(s.shortText.id))).message).toBe(DESCRIPTION_LENGTH_ERROR);
         for (const x of [s.shortTitle, s.shortText]) expect((await me.getOwn(x.id))?.status).toBe("draft");
       });
 

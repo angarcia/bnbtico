@@ -5,6 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { OwnerListingsApi, PhotoVariants } from "../../src/domain/api";
 import { EDIT_MESSAGES, editSummary } from "../../src/domain/edit";
 import { DomainError } from "../../src/domain/errors";
+import { TITLE_LENGTH_ERROR } from "../../src/domain/listing";
 import { REVIEW_MESSAGES } from "../../src/domain/review";
 import type { ListingsHarness } from "./harness";
 import { PUERTO_VIEJO } from "./points";
@@ -103,7 +104,7 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
 
     it("submitEdit rechaza un nombre corto y una zona lejana", async () => {
       const s = await h.seed({ status: "active" });
-      expect((await rejection(me.saveEdit(s.id, { title: "Casa" }))).message).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+      expect((await rejection(me.saveEdit(s.id, { title: "Casa" }))).message).toBe(TITLE_LENGTH_ERROR);
       expect((await me.getOwn(s.id))?.edit).toBeNull();
       // Zona Cahuita con el pin en Puerto Viejo, a más de 5 km: se guarda, pero no se envía.
       await me.saveEdit(s.id, { lat: PUERTO_VIEJO.lat, lng: PUERTO_VIEJO.lng, zone: "Cahuita", zoneId: "704-cahuita", zoneSource: "list" });

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, MIN_PHOTOS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, missingPhotosLabel, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -330,7 +330,6 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   const offer = count.data === undefined ? undefined : launchOffer(count.data);
   const fee = formatCRC(MONTHLY_FEE_CRC);
   const d = { ...draft, photoCount: listing.photoCount };
-  const missing = MIN_PHOTOS - listing.photoCount;
   const prices = [
     d.nightlyPriceCrc ? `${formatCRC(d.nightlyPriceCrc)} / noche` : null,
     d.acceptsMonthly ? (d.monthlyPriceCrc ? `${formatCRC(d.monthlyPriceCrc)} / mes` : "mensual a negociar") : null,
@@ -340,10 +339,9 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
     { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
     { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.bedrooms ?? 0} hab. · ${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
     {
-      step: missing > 0 ? 7 : 6,
+      step: 6,
       label: "Nombre y fotos",
       value: `${d.title.trim() || "Sin nombre"} · ${listing.photoCount} ${listing.photoCount === 1 ? "foto" : "fotos"}`,
-      warn: missing > 0 ? missingPhotosLabel(missing) : undefined,
     },
     { step: 8, label: "Precio", value: prices.join(" · ") || "Falta el precio" },
   ];
