@@ -45,7 +45,7 @@ Last project (B+C → A → D → E → **F+G**). Depends on **B** (ocre rule an
 
 - **«Activar suscripción»** replaces «Reactivar» on a stopped (`inactive`) house: `btn-sun` (ocre), same mutation (`change.mutate("resume")`). Same label on B's Mis casas card and D's top block.
 - «Añadir método de pago» stays ocre (`PayButton`). «Parar suscripción» stays outline. «Cambiar» (method) stays the small outline button.
-- **Cuenta «Método de pago» row** (`CuentaPaymentRow`): when there is **no method**, the row is ocre (`list-item-sun`: `--sun-soft` background, `--sun-ink` text and icon) with the small line «Falta · añádalo antes de que termine su oferta»; with a method, as today (neutral). A new class `.list-item-sun` in `global.css`, and both components are in B's ocre allowlist.
+- **Cuenta «Método de pago» row** (`CuentaPaymentRow`): when there is **no method and some house already needs it** (`payButtonDue`, the rule of «Añadir método de pago»; controller ruling 2026-10-29), the row is ocre (`list-item-sun`: `--sun-soft` background, `--sun-ink` text and icon) with the small line «Falta · añádalo antes de que termine su oferta»; with no method and nothing due, neutral with «Ninguno todavía»; with a method, as today (neutral). A new class `.list-item-sun` in `global.css`, and both components are in B's ocre allowlist.
 - **Cuenta subscription card** (`CuentaSubscriptionCard`): a line for a `payment_due` or `inactive` house is ocre (sun-ink text with the «Pendiente de pago» / «Inactiva» badge); others stay neutral.
 
 ### 3. Cuenta: identity line and «Cerrar sesión» at the end
