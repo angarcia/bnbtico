@@ -5,7 +5,7 @@
 // envía a revisión desde la ficha. Con la edición en revisión, esos cuatro se abren solo para leer. Volver sin guardar no
 // guarda nada.
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, editFieldFromParam, mergeEdit, parseField, planEdit, type FormField } from "../../domain/edit";
@@ -24,6 +24,15 @@ import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/editar/$campo");
 
+/** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
+ *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */
+function useBackToFicha(id: string) {
+  const router = useRouter();
+  const navigate = useNavigate();
+  const canGoBack = useCanGoBack();
+  return () => (canGoBack ? router.history.back() : void navigate({ to: "/propietario/casas/$id", params: { id }, replace: true }));
+}
+
 export function EditarCampoScreen() {
   const { id, campo } = route.useParams();
   const field = editFieldFromParam(campo);
@@ -31,7 +40,7 @@ export function EditarCampoScreen() {
   const l = query.data;
   const ficha = <Navigate to="/propietario/casas/$id" params={{ id }} replace />;
   if (!field || (l && !isPublished(l))) return ficha;
-  const header = <FlowHeader title={FIELD_TITLES[field]} back={`/propietario/casas/${id}`} />;
+  const header = <FlowHeader title={FIELD_TITLES[field]} back={`/propietario/casas/${id}`} historyBack />;
   if (l === null)
     return (
       <>
@@ -62,7 +71,7 @@ export function EditarCampoScreen() {
 }
 
 function EditFieldForm({ listing, field, userId }: { listing: Listing; field: FormField; userId: string }) {
-  const navigate = useNavigate();
+  const toFicha = useBackToFicha(listing.id);
   const live = useUpdateLive(userId, listing);
   const edit = useSaveEdit(userId, listing);
   const reviewed = REVIEWED_FIELDS.includes(field);
@@ -78,7 +87,6 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(true);
   const saving = live.isPending || edit.isPending;
-  const toFicha = () => navigate({ to: "/propietario/casas/$id", params: { id: listing.id }, replace: true });
   const failed = (e: unknown) => setError(toDomainError(e).message);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -89,11 +97,11 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
     if ("error" in plan) return setError(plan.error);
     setError(null);
     if ("immediate" in plan) {
-      if (Object.keys(plan.immediate).length === 0) return void toFicha();
+      if (Object.keys(plan.immediate).length === 0) return toFicha();
       return live.mutate(plan.immediate, {
         onSuccess: () => {
           toast(EDIT_COPY.savedLive);
-          void toFicha();
+          toFicha();
         },
         onError: failed,
       });
@@ -101,7 +109,7 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
     edit.mutate(plan.reviewed, {
       onSuccess: () => {
         toast(EDIT_COPY.savedEdit);
-        void toFicha();
+        toFicha();
       },
       onError: failed,
     });
@@ -145,6 +153,7 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
  * nuevas. El contador cuenta aprobadas y nuevas. */
 function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
+  const toFicha = useBackToFicha(listing.id);
   const pending = listing.edit?.photos ?? [];
   const total = listing.photos.length + pending.length;
   const inReview = listing.edit?.status === "review";
@@ -170,13 +179,22 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   };
   return (
     <>
-      <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} action={<PhotoCounter counter={source.counter} />} />
+      <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} historyBack action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
         {/* Explica por qué no hay «Añadir» ni ✕ en las nuevas: la edición espera la respuesta del admin. */}
         <PhotoGrid source={source} userId={userId} header={inReview ? <p className="note note-arena">{EDIT_COPY.readOnly}</p> : undefined} />
         <p className="note note-arena small">El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas.</p>
         <div className="sticky-actions">
-          <Link className="btn btn-primary btn-block" to="/propietario/casas/$id" params={{ id: listing.id }} replace>
+          <Link
+            className="btn btn-primary btn-block"
+            to="/propietario/casas/$id"
+            params={{ id: listing.id }}
+            replace
+            onClick={(e) => {
+              e.preventDefault();
+              toFicha();
+            }}
+          >
             Listo
           </Link>
         </div>

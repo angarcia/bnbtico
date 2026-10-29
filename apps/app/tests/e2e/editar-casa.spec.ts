@@ -177,6 +177,35 @@ test("cambiar el precio: al momento, en la ficha pública y en Explorar", async 
   await expect(page.getByRole("link", { name: /Cabina Cahuita/ })).toBeVisible();
 });
 
+test("historial: guardar un dato, volver de un dato o de las fotos regresa a la ficha sin apilarla", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  const ficha = new RegExp(`/propietario/casas/${id}$`);
+  await page.goto("/propietario/casas");
+  await card(page, "Cabina Cahuita").getByRole("link").first().click();
+  await expect(page).toHaveURL(ficha);
+  // Guardar: la ficha, y «atrás» del navegador sale de ella (a Mis casas), no al formulario.
+  await row(page, "Precio").click();
+  await page.getByLabel("Precio por noche").fill("55 000");
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha.");
+  await expect(page).toHaveURL(ficha);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  // La flecha de la cabecera de un dato y «Listo» de las fotos, igual.
+  await card(page, "Cabina Cahuita").getByRole("link").first().click();
+  await row(page, "Nombre").click();
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(ficha);
+  await page.getByRole("link", { name: "5 fotos · Editar" }).click();
+  await page.getByRole("link", { name: "Listo" }).click();
+  await expect(page).toHaveURL(ficha);
+  await page.getByRole("link", { name: "5 fotos · Editar" }).click();
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(ficha);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+});
+
 test("cambiar el nombre: la ficha pública sigue igual hasta aprobar", async ({ page }) => {
   const { id, publicId } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}`);
