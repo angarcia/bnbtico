@@ -66,5 +66,25 @@ export function createPostgrestPhotos(db: SupabaseClient<Database>, opts: { supa
       const { error } = await db.rpc("reorder_listing_photos", { p_listing: listingId, p_ids: photoIds });
       if (error) throw toDomainError(error);
     },
+
+    async addEditPhoto(listingId, folder) {
+      if (!UUID.test(listingId)) throw new DomainError("No encontramos ese anuncio.", "not_found");
+      const { data, error } = await db.rpc("add_edit_photo", { p_listing: listingId, p_path: folder }).single();
+      if (error) throw toDomainError(error);
+      return fromPhotoRows([data], url)[0]!;
+    },
+
+    async removeEditPhoto(photoId) {
+      if (!UUID.test(photoId)) throw new DomainError("No encontramos esa foto.", "not_found");
+      const { data: path, error } = await db.rpc("remove_edit_photo", { p_photo: photoId });
+      if (error) throw toDomainError(error);
+      await bucket().remove(photoObjectPaths(path));
+    },
+
+    async reorderEditPhotos(listingId, photoIds) {
+      if (!UUID.test(listingId)) throw new DomainError("No encontramos ese anuncio.", "not_found");
+      const { error } = await db.rpc("reorder_edit_photos", { p_listing: listingId, p_ids: photoIds });
+      if (error) throw toDomainError(error);
+    },
   };
 }

@@ -150,6 +150,12 @@ export interface PhotosApi {
   remove(photoId: string): Promise<void>;
   /** El orden completo de una vez; la primera es la portada. Una lista que no es la de la casa falla sin cambiar nada. */
   reorder(listingId: string, photoIds: string[]): Promise<void>;
+  /** Registra una carpeta subida como foto nueva de la edición (la crea si no hay). Aprobadas + nuevas ≤ 15. */
+  addEditPhoto(listingId: string, folder: string): Promise<Photo>;
+  /** Quita una foto nueva (las demás se recompactan) y después sus objetos; si la edición queda vacía, se borra. */
+  removeEditPhoto(photoId: string): Promise<void>;
+  /** El orden completo de las fotos nuevas de una vez. */
+  reorderEditPhotos(listingId: string, photoIds: string[]): Promise<void>;
 }
 
 /**

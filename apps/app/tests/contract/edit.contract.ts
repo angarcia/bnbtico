@@ -2,10 +2,14 @@
 // (update_listing_live) y edición revisada (save_edit, submit_edit, discard_edit). Mismas reglas y mensajes en el fake y
 // en la base; mientras la edición no se apruebe, la ficha pública sigue con la versión aprobada.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { OwnerListingsApi } from "../../src/domain/api";
+import type { OwnerListingsApi, PhotoVariants } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
 import type { ListingsHarness } from "./harness";
 import { PUERTO_VIEJO } from "./points";
+
+const jpeg = (n: number) => new Blob([new Uint8Array([0xff, 0xd8, n, 0xff, 0xd9])], { type: "image/jpeg" });
+const variants = (): PhotoVariants => ({ 480: jpeg(1), 800: jpeg(2), 1600: jpeg(3) });
+const UPLOAD_FAILED = "No pudimos subir esa foto. Intente de nuevo.";
 
 async function rejection(p: Promise<unknown>): Promise<DomainError> {
   try {
@@ -119,6 +123,112 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       expect((await rejection(other.submitEdit(mine.id))).message).toBe("No encontramos ese anuncio.");
       expect((await rejection(other.discardEdit(mine.id))).message).toBe("No encontramos ese anuncio.");
       expect(await me.getOwn(mine.id)).toMatchObject({ capacity: 2, edit: null });
+    });
+
+    // ---------- Fotos nuevas de la edición ----------
+    describe("fotos", () => {
+      const ph = () => h.photos("owner");
+      const names = async (id: string) => (await h.objects(id)).map((o) => o.name);
+
+      it("una foto nueva se sube y registra en la edición; la ficha pública no la ve", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const folder = await ph().upload(s.id, variants());
+        const p = await ph().addEditPhoto(s.id, folder);
+        expect(p).toMatchObject({ path: folder, position: 0 });
+        expect((await me.getOwn(s.id))?.edit?.photos.map((x) => x.path)).toEqual([folder]);
+        expect((await h.anon.getPublic(s.publicId))?.photos).toHaveLength(5);
+      });
+
+      it("quitar la única foto nueva borra la edición y los tres objetos", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const folder = await ph().upload(s.id, variants());
+        const p = await ph().addEditPhoto(s.id, folder);
+        await ph().removeEditPhoto(p.id);
+        expect((await me.getOwn(s.id))?.edit).toBeNull();
+        expect((await names(s.id)).filter((n) => n.startsWith(folder))).toEqual([]);
+      });
+
+      it("quitar una de dos fotos nuevas recompacta y deja la edición", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const a = await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
+        const b = await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
+        await ph().removeEditPhoto(a.id);
+        expect((await me.getOwn(s.id))?.edit?.photos.map((x) => [x.id, x.position])).toEqual([[b.id, 0]]);
+      });
+
+      it("reordenar las fotos nuevas es al momento y exige el conjunto completo", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const a = await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
+        const b = await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
+        await ph().reorderEditPhotos(s.id, [b.id, a.id]);
+        expect((await me.getOwn(s.id))?.edit?.photos.map((x) => x.id)).toEqual([b.id, a.id]);
+        expect((await rejection(ph().reorderEditPhotos(s.id, [a.id]))).message).toBe("La lista de fotos cambió. Vuelva a intentarlo.");
+      });
+
+      it("descartar con dos fotos nuevas borra sus objetos y deja los de las aprobadas", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const before = await names(s.id);
+        const f1 = await ph().upload(s.id, variants());
+        const f2 = await ph().upload(s.id, variants());
+        await ph().addEditPhoto(s.id, f1);
+        await ph().addEditPhoto(s.id, f2);
+        expect((await names(s.id)).filter((n) => n.startsWith(f1) || n.startsWith(f2))).toHaveLength(6);
+        await me.discardEdit(s.id);
+        const after = await names(s.id);
+        expect(after.filter((n) => n.startsWith(f1) || n.startsWith(f2))).toEqual([]);
+        expect(after).toEqual(before);
+        expect((await me.getOwn(s.id))?.edit).toBeNull();
+      });
+
+      it("en una casa publicada se ordena y se quita al momento, pero no la última foto ni con add", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const all = (await me.getOwn(s.id))!.photos.map((p) => p.id);
+        for (const id of all.slice(2)) await ph().remove(id); // publicada: quitar hasta que quede una foto es válido
+        const ids = all.slice(0, 2);
+        const kept = (await me.getOwn(s.id))!.photos.map((p) => p.path);
+        await ph().reorder(s.id, [...ids].reverse());
+        expect((await h.anon.getPublic(s.publicId))?.photos.map((p) => p.path)).toEqual([...kept].reverse());
+        await ph().remove(ids[0]!);
+        expect((await rejection(ph().remove(ids[1]!))).message).toBe("Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.");
+        expect((await rejection(ph().add(s.id, await ph().upload(s.id, variants())))).message).toBe("Las fotos nuevas pasan por revisión. Añádalas desde la ficha de su casa.");
+      });
+
+      it("con la edición en revisión no se suben ni registran fotos nuevas", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const folder = await ph().upload(s.id, variants());
+        await ph().addEditPhoto(s.id, folder);
+        await me.submitEdit(s.id);
+        expect((await rejection(ph().upload(s.id, variants()))).message).toBe(UPLOAD_FAILED);
+        expect((await rejection(ph().addEditPhoto(s.id, `${s.id}/${crypto.randomUUID()}`))).message).toBe("Ya hay una edición en revisión. Espere la respuesta o descártela.");
+      });
+
+      it("aprobadas + nuevas no pasan de 15", async () => {
+        const s = await h.seed({ status: "active", photos: 14 });
+        await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
+        expect((await rejection(ph().addEditPhoto(s.id, await ph().upload(s.id, variants())))).message).toBe("Máximo 15 fotos.");
+      });
+
+      it("una carpeta ya usada o ajena no se registra", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const folder = await ph().upload(s.id, variants());
+        await ph().addEditPhoto(s.id, folder);
+        expect((await rejection(ph().addEditPhoto(s.id, folder))).message).toBe("Ruta de foto no válida.");
+        expect((await rejection(ph().addEditPhoto(s.id, s.photoPaths[0]!))).message).toBe("Ruta de foto no válida.");
+      });
+
+      it("un intruso no registra, quita ni ordena fotos nuevas de una casa ajena", async () => {
+        const s = await h.seed({ status: "active", photos: 5 });
+        const p = await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
+        const intruder = h.photos("other");
+        expect((await rejection(intruder.addEditPhoto(s.id, `${s.id}/${crypto.randomUUID()}`))).message).toBe("No encontramos ese anuncio.");
+        expect((await rejection(intruder.removeEditPhoto(p.id))).message).toBe("No encontramos esa foto.");
+        expect((await rejection(intruder.reorderEditPhotos(s.id, [p.id]))).message).toBe("No encontramos ese anuncio.");
+      });
+
+      it("addEditPhoto en un borrador falla", async () => {
+        const s = await h.seed({ status: "draft" });
+        expect((await rejection(ph().addEditPhoto(s.id, `${s.id}/${crypto.randomUUID()}`))).message).toBe("Solo puede cambiar así una casa publicada.");
+      });
     });
   });
 }

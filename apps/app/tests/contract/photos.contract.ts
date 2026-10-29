@@ -115,7 +115,7 @@ export function photosContract(name: string, makeHarness: () => Promise<Listings
     });
 
     it("fuera de borrador o cambios pedidos no se toca nada", async () => {
-      // En revisión. Una casa publicada ordena y quita fotos (editar_casa_publicada): sus casos van con la edición.
+      // En revisión. Una casa publicada ordena y quita fotos: sus casos van con la edición (edit.contract.ts).
       const { id } = await h.seed({ status: "review" });
       const l = await own(id);
       expect((await rejection(photos().upload(id, variants()))).message).toBe(UPLOAD_FAILED);
