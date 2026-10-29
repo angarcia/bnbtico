@@ -134,4 +134,4 @@ Tokens (`design/tokens/tokens.json`): `color.sun.role` becomes «Dinero y avisos
 
 ## Questions for triage
 
-- Mis casas with **one** house becomes the list (one card) instead of opening its detail directly. Decision B describes Mis casas as a list «al estilo Your listings» and D says «al tocar una casa se abre su ficha editable», which only reads well with a list; this spec takes that reading. If Daniel prefers the single house to open straight into its editable ficha, `casasView` keeps `"single"` and §3 applies from two houses.
+- Resolved 2026-10-29 (Daniel): Mis casas with **one** house shows the **list with one card** (§3); tapping it opens the house detail (the editable ficha after D).
