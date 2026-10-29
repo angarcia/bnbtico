@@ -1,9 +1,9 @@
 import { setCurrency, useCurrency } from "./currency";
-import { useHydrated } from "./hydration";
 
 /**
- * Selector único de moneda: «₡ | $» en la barra superior de las pestañas y en la ficha. Cambia cómo se ven todos los
- * precios de la app (tarjetas, ficha, Favoritos, calendario y filtros); los propietarios fijan y cobran en colones.
+ * Selector único de moneda: «₡ | $» en la barra superior de las pestañas. Cambia cómo se ven los precios de Explorar,
+ * Favoritos, los calendarios y los filtros; la ficha no lo lleva y muestra las dos monedas (2026-10-29). Los propietarios
+ * fijan y cobran en colones.
  */
 export function CurrencySwitch({ className }: { className?: string }) {
   const currency = useCurrency();
@@ -17,11 +17,4 @@ export function CurrencySwitch({ className }: { className?: string }) {
       </button>
     </div>
   );
-}
-
-/** En el servidor y al hidratar, una caja del mismo tamaño; después, el selector (la moneda elegida vive en el navegador). */
-export function CurrencySwitchSlot({ className }: { className?: string }) {
-  const hydrated = useHydrated();
-  if (!hydrated) return <span className={`currency-switch currency-switch-box${className ? ` ${className}` : ""}`} aria-hidden="true" />;
-  return <CurrencySwitch className={className} />;
 }

@@ -67,18 +67,15 @@ test("la ficha del servidor convierte con el tipo vigente, hidrata sin avisos y 
   const problems = watch(page);
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ $238");
-  await expect(page.getByTestId("price-reference")).toHaveAttribute("title", "Orientativo: ≈ ₡400 por US$1, tipo de referencia del 2 nov.");
-  await page.evaluate(() => {
-    localStorage.setItem("bnbtico_currency", "USD");
-    dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
-  });
-  await expect(page.getByTestId("main-price")).toHaveText("$238 / noche");
+  await expect(page.getByTestId("price-usd")).toHaveText("≈ $238 / noche");
+  await expect(page.getByTestId("price-usd")).toHaveAttribute("title", "Orientativo: ≈ ₡400 por US$1, tipo de referencia del 2 nov.");
   await expect(page.getByText("Exchange Rate API")).toHaveCount(0);
-  // En dólares desde el principio: el servidor pinta colones y la hidratación cambia sin desajuste.
+  // En dólares desde el principio: la ficha no sigue la moneda, así que el servidor y la hidratación pintan lo mismo.
+  await page.evaluate(() => localStorage.setItem("bnbtico_currency", "USD"));
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("main-price")).toHaveText("$238 / noche");
+  await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+  await expect(page.getByTestId("price-usd")).toHaveText("≈ $238 / noche");
   expect(problems, problems.join("\n")).toEqual([]);
 });
 

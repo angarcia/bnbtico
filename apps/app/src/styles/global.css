@@ -226,19 +226,18 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .place-line .place-off{color:var(--sun-ink);font-size:14px}
 .place-line .btn{flex-shrink:0}
 .photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
-.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;padding:12px var(--gutter) calc(24px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
+.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
 .cta-bar .price{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .cta-bar .price small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
 .cta-spacer{height:141px}
-/* Dos contenidos apilados en la misma celda; el oculto reserva su ancho (precio en colones y en dólares). */
-.both{display:inline-grid}
-.both > *{grid-area:1/1}
-.both > .ghost{visibility:hidden}
-.both{justify-items:start;text-align:start}
-/* La nota del precio va a la derecha (como en el diseño) y su cifra se alinea al final del hueco: lo que sobra queda a la
-   izquierda, donde no se nota, también cuando la nota baja a otra línea. */
-.price-note{margin-left:auto;text-align:right}
-.price-note .both{justify-items:end}
+/* Colones a la izquierda (noche y mensual), dólares a la derecha (≈ noche, ≈ mes): las dos monedas siempre, sin selector. */
+.cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:end}
+.cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cta-prices .price{line-height:1.1}
+.cta-usd{text-align:right;align-items:flex-end}
+.price-usd{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.price-usd small{font-size:12px;font-weight:600;color:var(--muted)}
+.price-disclaimer{text-align:center;line-height:1.3;margin-top:-4px}
 
 /* ---------- Fotos y tarjetas de casa ---------- */
 .photo{position:relative;background:var(--state-soft);overflow:hidden;display:grid;place-items:center;color:var(--state-ink)}
@@ -351,11 +350,8 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .currency-switch{display:inline-flex;padding:3px;border-radius:999px;background:var(--surface-2);gap:2px;flex:none}
 .currency-switch button{min-width:44px;min-height:36px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;font-size:16px;cursor:pointer;font-variant-numeric:tabular-nums}
 .currency-switch button[aria-pressed="true"]{background:var(--selection);color:var(--selection-ink);font-weight:800}
-/* Arriba y en la ficha, botones de 44 px; en la ficha, sobre la foto, el fondo de los botones redondos. Antes de hidratar,
-   la ficha pinta una caja del mismo tamaño (medido: 3 + 44 + 2 + 44 + 3 de ancho, 3 + 44 + 3 de alto). */
-.topbar .currency-switch button,.listing-view .currency-switch button{min-height:44px}
-.currency-switch.overlay{background:var(--overlay-btn)}
-.currency-switch-box{display:inline-block;width:96px;height:50px}
+/* En la barra superior, botones de 44 px. */
+.topbar .currency-switch button{min-height:44px}
 .pill-bl{left:10px;bottom:10px}
 .listing-card .sk.photo{height:168px;border-radius:var(--r)}
 .sk-line{height:18px;width:70%}

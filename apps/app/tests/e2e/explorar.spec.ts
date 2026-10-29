@@ -197,7 +197,7 @@ test("Explorar en escritorio: 3 y 4 columnas; en el móvil, 2", async ({ page })
   expect(await columns()).toBe(2);
 });
 
-test("la moneda cambia al instante y se comparte con la ficha", async ({ page }) => {
+test("la moneda cambia al instante en Explorar y la ficha muestra las dos", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("₡85 000");
   const moneda = page.getByRole("banner").getByRole("group", { name: "Moneda de los precios" });
@@ -206,9 +206,9 @@ test("la moneda cambia al instante y se comparte con la ficha", async ({ page })
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("$167");
   await page.getByRole("link", { name: /Casa Manzanillo/ }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${manzanillo.publicId}$`));
-  await expect(page.getByTestId("main-price")).toHaveText("$167 / noche");
-  // La otra cifra va debajo como referencia, nunca como botón «Ver en…».
-  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ ₡85\u00a0000");
+  // La ficha no sigue la moneda: colones a la izquierda y dólares a la derecha, nunca un botón «Ver en…».
+  await expect(page.getByTestId("main-price")).toHaveText("₡85 000 / noche");
+  await expect(page.getByTestId("price-usd")).toHaveText("≈ $167 / noche");
   await expect(page.getByRole("button", { name: /Ver en (colones|dólares)/ })).toHaveCount(0);
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("$167");

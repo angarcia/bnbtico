@@ -60,8 +60,9 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+ · WhatsApp verificado$/u);
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
-  // La moneda, compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño.
-  expect(source).toContain('<div class="row gap-8"><span class="currency-switch currency-switch-box overlay" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span></div>');
+  // Compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño. Sin «₡ | $».
+  expect(source).toContain('<div class="row gap-8"><span class="icon-btn" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span></div>');
+  expect(source).not.toContain("currency-switch");
   expect(source).not.toContain("favoritos");
   const heart = page.getByRole("button", { name: "Guardar en favoritos" });
   await expect(heart).toHaveAttribute("aria-pressed", "false");
@@ -107,30 +108,28 @@ test("una casa con mensual a negociar llega del servidor con la línea y la cara
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-test("una casa con precio al mes lo muestra en la línea mensual, en la moneda elegida", async ({ page }) => {
+test("una casa con precio al mes lo muestra en la línea mensual en colones y, a la derecha, en dólares", async ({ page }) => {
   await page.goto(`/casa/${cara.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡1 250 000 / noche");
   await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
+  await expect(page.getByTestId("monthly-usd")).toHaveText(/^≈ \$[\d,]+ \/ mes$/);
   await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
   await chooseCurrency(page, "USD");
-  await expect(page.getByTestId("monthly-line")).toHaveText(/^Mensual: \$[\d,]+ \/ mes$/);
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
 });
 
-test("la ficha sigue la moneda elegida y muestra la otra como referencia, sin botón", async ({ page }) => {
+// Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.
+test("la ficha muestra las dos monedas, sin selector", async ({ page }) => {
   const seen = watch(page);
+  await page.addInitScript(() => localStorage.setItem("bnbtico_currency", "USD"));
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
-  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ $186");
+  await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
+  await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el propietario.");
+  await expect(page.locator(".listing-view .currency-switch")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Ver en (dólares|colones)/ })).toHaveCount(0);
-  await chooseCurrency(page, "USD");
-  await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
-  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ ₡95 000");
-
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
@@ -181,14 +180,14 @@ test("si la portada no carga, la ficha hidrata igual", async ({ page }) => {
   await page.route(`**/listings/${casa.photoPaths[0]}*`, (route) => route.abort());
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await chooseCurrency(page, "USD");
-  await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
+  await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+  await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
 });
 
 const barHeight = (page: Page) => page.evaluate(() => document.querySelector(".cta-bar")!.getBoundingClientRect().height);
 
-// Revisión del movimiento: la ficha hidrata cuando la portada cargó (o a los 3 s). La referencia en la otra moneda nunca es
-// un botón (ticket 15) y apila las dos cifras, así que nada se mueve al hidratar ni al cambiar de moneda.
+// Revisión del movimiento: la ficha hidrata cuando la portada cargó (o a los 3 s). La barra lleva las dos monedas y no
+// depende de la elegida, así que nada se mueve al hidratar ni al cambiar de moneda en otra pantalla.
 test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ page }) => {
   let release!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve));
@@ -205,35 +204,45 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
   const before = await barHeight(page);
-  // El selector de moneda, antes de hidratar, es una caja del mismo tamaño.
-  await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
-  const box = await page.locator(".currency-switch-box").boundingBox();
+  const text = await page.locator(".cta-prices").innerText();
 
   release();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("price-reference").locator("span").first()).toHaveText("≈ $186");
+  await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeEnabled();
   expect(await barHeight(page), "al hidratar").toBe(before);
-  expect(await page.getByRole("group", { name: "Moneda de los precios" }).boundingBox(), "el selector ocupa su caja").toEqual(box);
   await chooseCurrency(page, "USD");
-  await expect(page.getByTestId("main-price")).toHaveText("$186 / noche");
+  // Comprobación negativa: un margen para que un cambio indebido se pinte.
+  await page.waitForTimeout(100);
+  await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+  expect(await page.locator(".cta-prices").innerText(), "el texto no cambia con la moneda").toBe(text);
   expect(await barHeight(page), "en dólares").toBe(before);
 });
 
-test("a 320 px la barra mide lo mismo en colones y en dólares y no tapa el final de la ficha", async ({ page }) => {
+/** La barra no se desborda a lo ancho: las dos columnas de precio caben, también con ₡1 250 000 y su mensual. */
+const barOverflows = (page: Page) =>
+  page.evaluate(() => [".cta-bar", ".cta-prices"].some((q) => {
+    const el = document.querySelector(q)!;
+    return el.scrollWidth > el.clientWidth;
+  }));
+
+test("a 320 px la barra cabe a lo ancho, mide lo mismo en cualquier moneda y no tapa el final de la ficha", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   for (const publicId of [casa.publicId, cara.publicId, negociable.publicId]) {
     await page.goto(`/casa/${publicId}`);
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    expect(await barOverflows(page), `${publicId}: la barra se desborda`).toBe(false);
+    const [zoneBottom, top] = await page.evaluate(() => [
+      document.querySelector('[data-testid="listing-capacity"]')!.previousElementSibling!.getBoundingClientRect().bottom,
+      document.querySelector(".cta-bar")!.getBoundingClientRect().top,
+    ]);
+    expect(zoneBottom, `${publicId}: la zona por encima de la barra sin scroll`).toBeLessThanOrEqual(top!);
     const first = await barHeight(page);
     await chooseCurrency(page, "USD");
-    await expect(page.getByTestId("main-price")).not.toHaveText(/^₡/);
-    expect(await barHeight(page), `${publicId} en dólares`).toBe(first);
-    await chooseCurrency(page, "CRC");
     await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
-    expect(await barHeight(page), `${publicId} de vuelta en colones`).toBe(first);
+    expect(await barHeight(page), `${publicId} en dólares`).toBe(first);
 
     await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
     const [textBottom, barTop] = await page.evaluate(() => [
@@ -245,15 +254,16 @@ test("a 320 px la barra mide lo mismo en colones y en dólares y no tapa el fina
 });
 
 // Revisión UX C3: en un iPhone SE la barra fija no se come la ficha; sin hacer scroll se ven la zona y las personas.
-test("en un iPhone SE la barra cabe en una línea de precio y deja ver la zona y las personas", async ({ page }) => {
+test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   for (const publicId of [casa.publicId, larga.publicId]) {
     await page.goto(`/casa/${publicId}`);
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     expect(await barHeight(page), `${publicId}: alto de la barra`).toBeLessThanOrEqual(150);
-    await expect(page.locator(".cta-bar")).not.toContainText("el precio final");
-    await expect(page.locator(".cta-bar .price-note")).toHaveText(/^≈ \$\d+\s*· orientativo$/, { useInnerText: true });
+    expect(await barOverflows(page), `${publicId}: la barra se desborda`).toBe(false);
+    await expect(page.getByTestId("price-usd")).toHaveText(/^≈ \$\d+ \/ noche$/);
+    await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el propietario.");
     const [capacityBottom, barTop] = await page.evaluate(() => [
       document.querySelector('[data-testid="listing-capacity"]')!.getBoundingClientRect().bottom,
       document.querySelector(".cta-bar")!.getBoundingClientRect().top,

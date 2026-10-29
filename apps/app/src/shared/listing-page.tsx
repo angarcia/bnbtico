@@ -1,16 +1,16 @@
-// Ficha pública (pantalla 03 del diseño v1). La renderiza el worker y la hidrata el navegador: el mapa y la moneda
-// dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo.
+// Ficha pública (pantalla 03 del diseño v1). La renderiza el worker y la hidrata el navegador: el mapa, compartir y el
+// corazón dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo. La barra de precios no depende
+// de la moneda elegida (lleva las dos) y el tipo de cambio lo siembra el worker: el servidor y el navegador pintan lo mismo.
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
-import { describe } from "../domain/describe";
+import { describe, isNegotiable, type MonthlyPrice, type Price } from "../domain/describe";
 import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
-import { formatCRC, formatMoney, formatUSD } from "../domain/money";
+import { formatCRC, formatUSD } from "../domain/money";
 import { ApproxMap } from "./approx-map";
 import { useCurrency } from "./currency";
-import { CurrencySwitchSlot } from "./currency-switch";
 import { useFx } from "./fx";
 import { FavoriteButton } from "./favorite-button";
 import { HeroGallery } from "./hero-gallery";
@@ -172,18 +172,37 @@ function Availability({ listing, currency, fx }: { listing: PublicListing; curre
   );
 }
 
-/** La otra moneda como referencia, sin botón (ticket 15: la moneda se elige en Explorar o en Cuenta). Ocupa siempre lo
- *  mismo (las dos cifras apiladas, la que no se ve queda oculta debajo): hidratar o cambiar de moneda no mueve la barra. */
-function PriceReference({ amountCrc, currency, fx }: { amountCrc: number; currency: Currency; fx: FxRate }) {
-  const usd = `≈ ${formatUSD(amountCrc, fx.crcPerUsd)}`;
-  const crc = `≈ ${formatCRC(amountCrc)}`;
+/** La barra fija de la ficha: colones a la izquierda (noche y, debajo, mensual), dólares a la derecha (≈ noche, ≈ mes).
+ *  No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al hidratar. */
+function PriceColumns({ main, monthly, fx }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate }) {
+  if (!main && !monthly) return null;
+  const monthlyAmount = monthly && !isNegotiable(monthly) ? monthly.amount : null;
+  const rate = `Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`;
   return (
-    <span className="xs both price-ref" data-testid="price-reference" title={`Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`}>
-      <span>{currency === "CRC" ? usd : crc}</span>
-      <span className="ghost" aria-hidden="true">
-        {currency === "CRC" ? crc : usd}
-      </span>
-    </span>
+    <div className="cta-prices">
+      <div>
+        {main ? (
+          <span className="price" data-testid="main-price">
+            {formatCRC(main.amount)} <small>/ {main.unit}</small>
+          </span>
+        ) : null}
+        {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
+      </div>
+      {main || monthlyAmount !== null ? (
+        <div className="cta-usd">
+          {main ? (
+            <span className="price-usd" data-testid="price-usd" title={rate}>
+              {`≈ ${formatUSD(main.amount, fx.crcPerUsd)}`} <small>/ {main.unit}</small>
+            </span>
+          ) : null}
+          {monthlyAmount !== null ? (
+            <span className="xs muted num" data-testid="monthly-usd" title={rate}>
+              {`≈ ${formatUSD(monthlyAmount, fx.crcPerUsd)}`} <small>/ mes</small>
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -237,9 +256,8 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             <I.back />
           </a>
           )}
-          {/* La moneda, compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
+          {/* Compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
           <div className="row gap-8">
-            {preview ? null : <CurrencySwitchSlot className="overlay" />}
             {hydrated && !preview ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
             {hydrated && !preview ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
           </div>
@@ -310,22 +328,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
         <div className="cta-spacer" aria-hidden="true" ref={spacer} />
         <div className="cta-bar" ref={bar}>
-          {main ? (
-            <div className="row between wrap baseline gap-4">
-              <span className="price both">
-                <span data-testid="main-price">
-                  {formatMoney(main.amount, currency, fx.crcPerUsd)} <small>/ {main.unit}</small>
-                </span>
-                <span className="ghost" aria-hidden="true">
-                  {formatMoney(main.amount, currency === "CRC" ? "USD" : "CRC", fx.crcPerUsd)} <small>/ {main.unit}</small>
-                </span>
-              </span>
-              <span className="xs muted price-note">
-                <PriceReference amountCrc={main.amount} currency={currency} fx={fx} /> · orientativo
-              </span>
-            </div>
-          ) : null}
-          {d.monthly ? <MonthlyLine monthly={d.monthly} format={(crc) => formatMoney(crc, currency, fx.crcPerUsd)} /> : null}
+          <PriceColumns main={main} monthly={d.monthly} fx={fx} />
           {preview ? (
             <span className="btn btn-wa is-pending" aria-disabled="true">
               <I.wa size={22} /> Contactar por WhatsApp
@@ -333,6 +336,9 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           ) : (
             <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
+          <p className="xs muted price-disclaimer" data-testid="price-note">
+            Precios orientativos: el precio final lo acuerda con el propietario.
+          </p>
         </div>
       </main>
     </div>

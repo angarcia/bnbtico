@@ -386,20 +386,21 @@ test("Cuenta se abre a pantalla completa, sin barra inferior, y la flecha vuelve
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
 
-test("5 · ₡ → $ arriba cambia los precios de Explorar y de la ficha y se mantiene al recargar", async ({ page }) => {
+test("5 · ₡ → $ arriba cambia los precios de Explorar y se mantiene al recargar; la ficha muestra las dos monedas", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Playa Negra", nightlyPriceCrc: 95000 } });
   await page.goto("/explorar");
   await page.getByRole("banner").getByRole("button", { name: "Dólares" }).click();
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
   await page.getByRole("link", { name: /Casa Playa Negra/ }).click();
-  await expect(page.getByTestId("main-price")).toHaveText(/^\$/);
-  await expect(page.getByRole("button", { name: "Dólares" })).toHaveAttribute("aria-pressed", "true");
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("main-price")).toHaveText(/^\$/);
-  await page.getByRole("button", { name: "Colones" }).click();
   await expect(page.getByTestId("main-price")).toHaveText(/^₡/);
+  await expect(page.getByTestId("price-usd")).toHaveText(/^≈ \$/);
+  await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
+  await page.goto("/explorar");
+  await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
+  await page.reload();
+  await expect(page.getByRole("banner").getByRole("button", { name: "Dólares" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
 });
 
 test("la barra superior: 56 px más el área segura, y los botones de al menos 44 px", async ({ page }) => {
