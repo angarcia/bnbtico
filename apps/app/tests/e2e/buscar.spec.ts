@@ -114,3 +114,36 @@ test("?abrir=quienes abre «¿Quiénes?»", async ({ page }) => {
   await page.getByRole("button", { name: "Buscar", exact: true }).click();
   await expect(page).toHaveURL(/\/explorar\?ppl=1$/);
 });
+
+test("con el teclado: Enter abre una tarjeta sin perder el foco, y elegir una zona con Enter lo lleva a «¿Cuándo?»", async ({ page }) => {
+  await page.goto("/explorar/buscar");
+  const focusedCard = () => page.evaluate(() => document.activeElement?.closest("section")?.querySelector("h2")?.textContent ?? null);
+  await page.getByRole("button", { name: "¿Cuándo? Añadir fechas" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "¿Cuándo?", exact: true })).toHaveAttribute("aria-expanded", "true");
+  await expect.poll(focusedCard).toBe("¿Cuándo?");
+  await page.getByRole("button", { name: "¿Dónde? Añadir zona" }).focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Tab");
+  await page.keyboard.type("coc");
+  await expect(page.getByRole("option")).toHaveText([/^Cocles/]);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "¿Dónde? Cocles" })).toBeVisible();
+  await expect.poll(focusedCard).toBe("¿Cuándo?");
+});
+
+test("límites: hoy + 365 solo como salida, el «Desde» del mensual hasta hoy + 335 y 50 personas", async ({ page }) => {
+  await page.goto("/explorar/buscar?abrir=cuando");
+  const dayButton = (n: number) => page.getByRole("button", { name: longDateWithYear(day(n))!, exact: true });
+  await expect(dayButton(365)).toBeDisabled();
+  await expect(dayButton(366)).toBeDisabled();
+  await dayButton(360).click();
+  await expect(dayButton(365)).toBeEnabled();
+  await page.goto("/explorar/buscar?mensual=1&abrir=cuando");
+  await expect(dayButton(335)).toBeEnabled();
+  await expect(dayButton(336)).toBeDisabled();
+  await page.goto("/explorar/buscar?ppl=49&abrir=quienes");
+  await page.getByRole("button", { name: "Una persona más" }).click();
+  await expect(page.getByText("50", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Una persona más" })).toBeDisabled();
+});

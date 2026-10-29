@@ -16,6 +16,8 @@ export function RangeCalendar(props: RangeProps | FromProps) {
   const lastDay = addDays(today, props.mode === "from" ? MONTHLY_FROM_MAX_DAYS : STAY_MAX_DAYS);
   const start = props.mode === "from" ? props.value : props.value.arrival;
   const end = props.mode === "from" ? null : props.value.departure;
+  // Hoy + 365 solo vale como salida (por noches): sin una llegada pendiente antes, no se puede elegir.
+  const departurePending = props.mode === "from" || (!!start && !end);
   const tap = (day: string) => (props.mode === "from" ? props.onChange(day) : props.onChange(tapRange(props.value, day)));
   return (
     <div className="range-calendar">
@@ -36,7 +38,7 @@ export function RangeCalendar(props: RangeProps | FromProps) {
                 const inside = !!start && !!end && g.day > start && g.day < end;
                 const cls = `range-day${isEnd ? " range-end" : ""}${inside ? " in-range" : ""}${start && end && g.day === start ? " is-start" : ""}${start && end && g.day === end ? " is-last" : ""}`;
                 return (
-                  <button key={g.day} type="button" className={cls} aria-label={longDateWithYear(g.day) ?? g.day} aria-pressed={isEnd} disabled={g.day < today || g.day > lastDay} onClick={() => tap(g.day)}>
+                  <button key={g.day} type="button" className={cls} aria-label={longDateWithYear(g.day) ?? g.day} aria-pressed={isEnd} disabled={g.day < today || g.day > lastDay || (g.day === lastDay && !departurePending)} onClick={() => tap(g.day)}>
                     <b>{g.date}</b>
                   </button>
                 );

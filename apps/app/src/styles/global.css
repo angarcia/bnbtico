@@ -354,7 +354,10 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .badge-sel{background:var(--selection);color:var(--selection-ink)}
 .search-screen{display:flex;flex-direction:column;gap:10px}
 .search-close{align-self:flex-start;background:var(--surface);border:1.5px solid var(--line)}
-.search-fold{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;padding:0 20px;border-radius:var(--r-tile);background:var(--surface);box-shadow:var(--shadow);text-align:left}
+.search-closed .search-card-head h2{flex:1;min-width:0}
+.search-fold{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;padding:0 20px;border-radius:var(--r-tile);background:var(--surface);box-shadow:var(--shadow);font-family:var(--body);font-size:15px;font-weight:400;letter-spacing:normal;line-height:1.45;text-align:left}
+.search-fold b{font-weight:700}
+.search-card-body{display:flex;flex-direction:column;gap:14px}
 .search-fold span{color:var(--muted);font-size:14px;font-weight:600}
 .search-fold b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .search-card{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:var(--r-sheet);background:var(--surface);box-shadow:0 2px 0 var(--line),0 16px 36px -22px rgba(28,43,42,.45)}

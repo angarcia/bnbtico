@@ -4,7 +4,7 @@
 // píldora de Explorar.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { costaRicaToday, formatInquiryDates, shortDate } from "../../domain/dates";
 import { SEARCH_MAX_PEOPLE, parseFilters, searchFor } from "../../domain/filters";
 import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
@@ -34,34 +34,49 @@ const Minus = () => (
   </svg>
 );
 
-/** Una tarjeta plegable: cerrada, un botón con el título y el valor; abierta, el título (que la pliega) y su contenido. */
+/** Una tarjeta plegable: el mismo botón de título en los dos estados (no se desmonta: el foco sigue en él al abrirla con
+ *  Enter); cerrada lleva también el valor. Si se abre desde otra tarjeta (elegir una zona), el foco pasa a su título. */
 function Fold({ title, value, open, onToggle, aside, children }: { title: string; value: string; open: boolean; onToggle(): void; aside?: ReactNode; children: ReactNode }) {
   const id = useId();
-  if (!open)
-    return (
-      <button type="button" className="search-fold" aria-expanded="false" aria-controls={id} onClick={onToggle}>
-        <span>{title}</span>
-        <b className="num">{value}</b>
-      </button>
-    );
+  const card = useRef<HTMLElement>(null);
+  const title_ = useRef<HTMLButtonElement>(null);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (open && !card.current?.contains(document.activeElement)) title_.current?.focus();
+  }, [open]);
   return (
-    <section className="search-card" id={id}>
+    <section ref={card} className={open ? "search-card" : "search-closed"}>
       <div className="search-card-head">
         <h2>
-          <button type="button" className="search-card-title" aria-expanded="true" onClick={onToggle}>
-            {title}
+          <button ref={title_} type="button" className={open ? "search-card-title" : "search-fold"} aria-expanded={open} aria-controls={open ? id : undefined} onClick={onToggle}>
+            <span>{title}</span>
+            {open ? null : <b className="num">{value}</b>}
           </button>
         </h2>
-        {aside}
+        {open ? aside : null}
       </div>
-      {children}
+      {open ? (
+        <div className="search-card-body" id={id}>
+          {children}
+        </div>
+      ) : null}
     </section>
   );
 }
 
 function Donde({ zone, onPick, onClear }: { zone: string | null; onPick(id: string): void; onClear(): void }) {
   const { data: zones = [] } = useQuery(zonesQuery);
-  const [text, setText] = useState(() => zones.find((z) => z.id === zone)?.name ?? "");
+  const name = zones.find((z) => z.id === zone)?.name ?? "";
+  const [text, setText] = useState(name);
+  // Con la caché fría (`?zona=` sin las zonas aún), el nombre llega después: se pone mientras no se haya escrito nada.
+  const typed = useRef(false);
+  useEffect(() => {
+    if (!typed.current && name) setText(name);
+  }, [name]);
   const [active, setActive] = useState(0);
   const list = zoneSuggestions(zones, text);
   const listId = useId();
@@ -82,6 +97,7 @@ function Donde({ zone, onPick, onClear }: { zone: string | null; onPick(id: stri
           enterKeyHint="search"
           value={text}
           onChange={(e) => {
+            typed.current = true;
             setText(e.target.value);
             setActive(0);
           }}
@@ -207,7 +223,7 @@ export function BuscarScreen() {
         </div>
         <div className="row between">
           {monthly ? <span /> : <span className="xs muted">Le mostramos las casas libres esas noches.</span>}
-          {draft.arrival || draft.monthlyFrom ? (
+          {(monthly ? draft.monthlyFrom : draft.arrival) ? (
             <button type="button" className="btn-text" onClick={() => set(monthly ? { monthlyFrom: null } : { arrival: null, departure: null })}>
               Quitar fechas
             </button>
