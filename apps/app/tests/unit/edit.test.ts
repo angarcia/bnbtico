@@ -70,6 +70,13 @@ describe("editar una casa publicada · dominio", () => {
     expect(planEdit(pending, "descripcion", { description: "Corta" })).toMatchObject({ error: expect.stringContaining("descripción") });
     expect(planEdit({ ...activeListing, edit: edit({ title: "Casa" }) }, "precio", { nightlyPriceCrc: 50000 })).toEqual({ immediate: { nightlyPriceCrc: 50000 } });
   });
+  it("planEdit: un nombre aprobado de más de 32 caracteres no impide cambiar otro dato; uno nuevo de 33 sí falla", () => {
+    const legacy = { ...activeListing, title: "N".repeat(40) };
+    expect(planEdit(legacy, "descripcion", { description: "D".repeat(100) })).toEqual({ reviewed: { description: "D".repeat(100) } });
+    expect(planEdit(legacy, "descripcion", { description: "Corta" })).toMatchObject({ error: expect.stringContaining("descripción") });
+    expect(planEdit(legacy, "tipo", { kind: "completo", bathroomShared: null })).toEqual({ reviewed: { kind: "completo", bathroomShared: null } });
+    expect(planEdit(legacy, "nombre", { title: "T".repeat(33) })).toEqual({ error: TITLE_LENGTH_ERROR });
+  });
   it("parseField solo devuelve las claves de su dato", () => {
     expect(parseField("nombre", formInput([["title", " Casa Coco "], ["description", "x"]]))).toEqual({ title: "Casa Coco" });
     expect(parseField("tipo", formInput([["kind", "habitacion"], ["bathroomShared", "shared"]]))).toEqual({ kind: "habitacion", bathroomShared: true });

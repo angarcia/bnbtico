@@ -165,8 +165,8 @@ export function editStore(db: FakeDb) {
       const kind = e.kind ?? l.kind;
       if (l.bedrooms === null || (l.bedrooms < 1 && kind !== "completo" && kind !== "apartamento")) throw invalid(BEDROOMS_ERROR);
       if (kind === "habitacion" && (e.bathroomShared ?? l.bathroomShared) === null) throw invalid(BATHROOM_ERROR);
-      const title = (e.title ?? l.title).trim();
-      if (charCount(title) < TITLE_MIN || charCount(title) > TITLE_MAX) throw invalid(TITLE_LENGTH_ERROR);
+      // Solo el nombre nuevo: una casa publicada con un nombre de más de 32 lo conserva hasta que su dueño lo cambie.
+      if (e.title !== null && (charCount(e.title.trim()) < TITLE_MIN || charCount(e.title.trim()) > TITLE_MAX)) throw invalid(TITLE_LENGTH_ERROR);
       const description = (e.description ?? l.description).trim();
       if (description !== "" && (charCount(description) < DESCRIPTION_MIN || charCount(description) > DESCRIPTION_MAX)) throw invalid(DESCRIPTION_LENGTH_ERROR);
       return place;

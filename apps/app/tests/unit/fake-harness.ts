@@ -131,6 +131,9 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
       const last = db.photosOf(listingId).at(-1);
       db.photos = db.photos.filter((p) => p !== last);
     },
+    async setLegacyTitle(listingId, title) {
+      db.listings.get(listingId)!.title = title;
+    },
     async objects(listingId) {
       return [...db.objects.entries()]
         .filter(([name]) => name.startsWith(`${listingId}/`))

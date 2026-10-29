@@ -2,8 +2,8 @@
 -- 1) submit_listing: se envía a revisión sin fotos y sin descripción; nombre de 5 a 32 caracteres; descripción vacía o
 --    de 80 a 2000. El tope de 15 fotos se queda.
 -- 2) review_listing: aprobar exige al menos una foto («Para aprobarla hace falta al menos una foto.»).
--- 3) Ediciones de una casa publicada (listing_edit_check, save_edit): la misma regla de nombre (5 a 32) y el mensaje
---    nuevo de la descripción. save_edit solo pone el tope de 2000; el mínimo de 80 se exige al enviar (submit_edit) y al
+-- 3) Ediciones de una casa publicada (listing_edit_check, save_edit): la misma regla de nombre (5 a 32), solo para el
+--    nombre nuevo (un nombre aprobado más largo no bloquea otros cambios), y el mensaje nuevo de la descripción. save_edit solo pone el tope de 2000; el mínimo de 80 se exige al enviar (submit_edit) y al
 --    aprobar (review_edit), que llaman a listing_edit_check. El check de la tabla listing_edits (5 a 60) se queda: la
 --    regla la ponen las RPCs.
 -- 4) Evento publish_verify (sin casa) en events_name_check.
@@ -147,7 +147,6 @@ create or replace function public.listing_edit_check(l public.listings, e public
 AS $function$
 declare
   k public.listing_kind := coalesce(e.kind, l.kind);
-  t text := btrim(coalesce(e.title, l.title, ''));
   d text := btrim(coalesce(e.description, l.description, ''));
 begin
   if e.lat is not null then perform public.edit_place(e.lat, e.lng, e.zone, e.zone_id, e.zone_source); end if;
@@ -157,7 +156,8 @@ begin
   if k = 'habitacion' and coalesce(e.bathroom_shared, l.bathroom_shared) is null then
     raise exception 'Indique si el baño es privado o compartido.';
   end if;
-  if char_length(t) not between 5 and 32 then raise exception 'El nombre de la casa debe tener entre 5 y 32 caracteres.'; end if;
+  -- Solo el nombre nuevo: una casa publicada con un nombre de más de 32 lo conserva hasta que su dueño lo cambie.
+  if e.title is not null and char_length(btrim(e.title)) not between 5 and 32 then raise exception 'El nombre de la casa debe tener entre 5 y 32 caracteres.'; end if;
   if d <> '' and char_length(d) not between 80 and 2000 then raise exception 'La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.'; end if;
 end $function$;
 

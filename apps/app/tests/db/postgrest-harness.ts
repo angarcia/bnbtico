@@ -184,6 +184,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       const { data } = await service.from("listing_photos").select("id").eq("listing_id", listingId).order("position", { ascending: false }).limit(1).single();
       fail("quitar foto", (await service.from("listing_photos").delete().eq("id", data!.id)).error);
     },
+    async setLegacyTitle(listingId, title) {
+      sql(`begin; select set_config('app.allow_status','on',true); update public.listings set title = '${title.replace(/'/g, "''")}' where id = '${listingId}'; commit;`);
+    },
     async objects(listingId) {
       const found: { name: string; cacheControl: string | null }[] = [];
       const walk = async (prefix: string) => {

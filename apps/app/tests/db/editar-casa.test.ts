@@ -261,6 +261,15 @@ describe("ediciones del propietario", () => {
     expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("No hay cambios que enviar.");
   });
 
+  it("un nombre aprobado de 40 caracteres no bloquea otra edición; un nombre nuevo de 33 sí se rechaza", async () => {
+    const { id } = await h.seed({ status: "active" });
+    sql(`begin; select set_config('app.allow_status','on',true); update public.listings set title = '${"N".repeat(40)}' where id = '${id}'; commit;`);
+    expect((await save(id, { description: "D".repeat(100) })).error).toBeNull();
+    expect((await owner.rpc("submit_edit", { p_listing: id })).data).toBe("review");
+    await owner.rpc("discard_edit", { p_listing: id });
+    expect((await save(id, { title: "T".repeat(33) })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 32 caracteres.");
+  });
+
   it("submit_edit valida la casa resultante: baño de la habitación, descripción y habitaciones", async () => {
     const { id } = await h.seed({ status: "active", draft: { bedrooms: 0 } });
     await save(id, { kind: "habitacion" });

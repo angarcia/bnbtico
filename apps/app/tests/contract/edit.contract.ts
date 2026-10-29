@@ -112,6 +112,16 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       expect((await me.getOwn(s.id))?.edit?.status).toBe("open");
     });
 
+    it("un nombre aprobado de más de 32 caracteres no impide enviar otro cambio; un nombre nuevo de 33 sí se rechaza", async () => {
+      const s = await h.seed({ status: "active" });
+      await h.setLegacyTitle(s.id, "Casa grande con vista al mar en Cahuita!");
+      await me.saveEdit(s.id, { description: "Casa amplia ".repeat(9).trim() + " junto al mar." });
+      await me.submitEdit(s.id);
+      expect((await me.getOwn(s.id))?.edit?.status).toBe("review");
+      await me.discardEdit(s.id);
+      expect((await rejection(me.saveEdit(s.id, { title: "x".repeat(33) }))).message).toBe(TITLE_LENGTH_ERROR);
+    });
+
     it("descartar sin edición no falla; en un borrador, sí", async () => {
       const s = await h.seed({ status: "active" });
       await me.discardEdit(s.id);

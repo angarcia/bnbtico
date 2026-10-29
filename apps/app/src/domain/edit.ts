@@ -3,7 +3,7 @@
 // edición por casa, mientras los clientes siguen viendo la versión aprobada. Las reglas de cada dato son las del
 // asistente (validateStep, parseStep, normalize); los mensajes, los mismos en SQL, el dominio y el fake.
 // Módulo de dominio: sin imports de framework.
-import { emptyDraft, normalize, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
+import { emptyDraft, normalize, TITLE_MIN, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
 import { parseStep, type FormInput } from "./step-forms";
 import type { ZoneSource } from "./zones";
 import type { EditStatus } from "./edit-label";
@@ -136,8 +136,10 @@ const same = (a: unknown, b: unknown) => (Array.isArray(a) && Array.isArray(b) ?
 /** El tipo también se comprueba con la regla del baño y las habitaciones (pantalla 4). */
 const checkSteps = (field: FormField): Step[] => (field === "tipo" ? [1, 4] : [FIELD_STEP[field]]);
 const firstError = (field: FormField, d: ListingDraft): string | null => {
+  // Solo el nombre nuevo: un nombre aprobado de más de 32 (anterior a publicar v2) no bloquea los otros datos.
+  const checked = field === "nombre" ? d : { ...d, title: "x".repeat(TITLE_MIN) };
   for (const step of checkSteps(field)) {
-    const error = validateStep(step, d);
+    const error = validateStep(step, checked);
     if (error) return error;
   }
   return null;

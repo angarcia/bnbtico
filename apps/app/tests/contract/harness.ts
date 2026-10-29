@@ -42,6 +42,8 @@ export interface ListingsHarness {
   admin(as: "aal2" | "aal1" | SeedOwner): AdminListingsApi;
   /** Quita la última foto de una casa saltándose las reglas (como el servicio), para aprobar con menos de 5. */
   dropPhoto(listingId: string): Promise<void>;
+  /** Pone a una casa un nombre de antes de publicar v2 (más de 32 caracteres) saltándose las reglas, como el servicio. */
+  setLegacyTitle(listingId: string, title: string): Promise<void>;
 }
 
 /** Borrador completo y válido (Cahuita, Limón), base de cada siembra. */
