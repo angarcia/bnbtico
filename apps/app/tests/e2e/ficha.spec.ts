@@ -70,6 +70,23 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
+// Densidad y tarjetas (2026-10-29): en el teléfono la foto es el producto: cuadrada, de borde a borde y pegada arriba
+// (detrás del notch, como el diseño); solo los botones se apartan del área segura.
+test("a 375 px la foto es cuadrada, a todo el ancho y pegada arriba, e hidrata sin avisos", async ({ page }) => {
+  const seen = watch(page);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  const hero = (await page.locator(".hero").boundingBox())!;
+  expect(hero.x).toBeCloseTo(0, 0);
+  expect(hero.y).toBeCloseTo(0, 0);
+  expect(Math.abs(hero.width - 375)).toBeLessThanOrEqual(1);
+  expect(Math.abs(hero.height - 375)).toBeLessThanOrEqual(1);
+  expect((await page.locator(".hero .top").boundingBox())!.y).toBeGreaterThanOrEqual(12);
+  await expect(page.locator(".hero-counter")).toHaveText("1 / 5");
+  expect(seen.problems, seen.problems.join("\n")).toEqual([]);
+});
+
 /** Cambia la moneda como lo haría el selector de otra pantalla u otra pestaña del navegador (mismo almacenamiento y aviso). */
 const chooseCurrency = (page: Page, currency: "USD" | "CRC") =>
   page.evaluate((c) => {

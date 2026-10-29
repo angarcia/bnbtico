@@ -280,8 +280,10 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .note-col{flex-direction:column;gap:8px}
 .note-col b{font-family:var(--display);font-weight:700}
 .toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:600;box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
-.hero{position:relative;height:320px;border-radius:var(--r-sheet);overflow:hidden;background:var(--selection);margin:0 -8px}
-.hero .top{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between}
+/* La foto de la ficha es cuadrada y de borde a borde, pegada arriba (detrás del notch); solo los botones se apartan del
+   área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
+.hero{position:relative;aspect-ratio:1/1;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
+.hero .top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between}
 .hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .hero .strip::-webkit-scrollbar{display:none}
 .hero .strip img,.hero .strip .slot{flex:0 0 100%;height:100%;object-fit:cover;scroll-snap-align:start}
@@ -326,7 +328,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 
 /* ---------- Ficha pública (pantalla 03, renderizada en el worker) ---------- */
 .gap-4{gap:4px}.gap-6{gap:6px}.gap-8{gap:8px}.wrap{flex-wrap:wrap}.baseline{align-items:baseline}
-.listing-view{padding-top:calc(8px + env(safe-area-inset-top))}
+.listing-view{padding-top:0}
 .listing-body{gap:16px;padding-top:4px}
 .listing-title{font-size:30px}
 .listing-title.is-long{font-size:24px}
@@ -782,8 +784,8 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 }
 @media (min-width:1024px){
   .app:has(.listing-view){max-width:1120px}
-  .listing-view{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:40px;align-items:start}
-  .listing-view > .hero{grid-column:1;grid-row:1;height:480px;margin:0}
+  .listing-view{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:40px;align-items:start;padding-top:calc(8px + env(safe-area-inset-top))}
+  .listing-view > .hero{grid-column:1;grid-row:1;height:480px;aspect-ratio:auto;border-radius:var(--r-sheet);margin:0}
   .listing-view > .listing-body{grid-column:1;grid-row:2}
   .listing-view > .cta-spacer{display:none}
   .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;transform:none;width:auto;max-width:none;border:0;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
