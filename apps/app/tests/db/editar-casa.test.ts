@@ -225,9 +225,9 @@ describe("ediciones del propietario", () => {
     expect((await save(id, { lat: 9.6553, lng: -82.7536 })).error?.message).toBe(notHere);
     expect((await save(id, { kind: "castillo" })).error?.message).toBe(notHere);
     expect((await save(id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zone_source: "mapa" })).error?.message).toBe(notHere);
-    expect((await save(id, { description: "x".repeat(2001) })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+    expect((await save(id, { description: "x".repeat(2001) })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
     expect((await save(id, { lat: 9.6553, lng: -82.7536, zone: "z".repeat(61), zone_source: "other" })).error?.message).toBe("La zona puede tener como mucho 60 caracteres.");
-    expect((await save(id, { title: "C".repeat(61) })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+    expect((await save(id, { title: "C".repeat(33) })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 32 caracteres.");
     expect((await owner.from("listing_edits").select("listing_id").eq("listing_id", id)).data).toEqual([]);
   });
 
@@ -255,7 +255,7 @@ describe("ediciones del propietario", () => {
     await save(id, { lat: 9.6553, lng: -82.7536, zone: "Cahuita", zone_id: "704-cahuita", zone_source: "list" });
     expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("La zona elegida queda a más de 5 km del punto. Elija otra.");
     await owner.rpc("discard_edit", { p_listing: id });
-    expect((await save(id, { title: "Casa" })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 60 caracteres.");
+    expect((await save(id, { title: "Casa" })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 32 caracteres.");
     expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("No encontramos esa edición.");
     await owner.rpc("start_edit", { p_listing: id });
     expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("No hay cambios que enviar.");
@@ -268,7 +268,7 @@ describe("ediciones del propietario", () => {
     expect((await owner.rpc("update_listing_live", { p_listing: id, p_patch: { bedrooms: 1 } })).error).toBeNull();
     expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("Indique si el baño es privado o compartido.");
     await save(id, { bathroom_shared: false, description: "Muy corta." });
-    expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres.");
+    expect((await owner.rpc("submit_edit", { p_listing: id })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
     await save(id, { description: "" });
     expect((await owner.rpc("submit_edit", { p_listing: id })).data).toBe("review");
   });
