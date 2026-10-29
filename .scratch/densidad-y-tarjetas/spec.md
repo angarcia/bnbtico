@@ -78,7 +78,7 @@ Ana compared the app with Airbnb on her phone:
 
 ### 5. Actividad house cards
 
-`client/screens/actividad.tsx` `ActivityCard` (two or more houses) uses the **same card** as Mis casas: square photo with the status label, name and zone, and below, instead of buttons, the three figures (visitas · toques en WhatsApp · consultas, `Figures`). Extract the photo + label + name block as `HouseCardTop` in `client/house-card.tsx`, used by Mis casas and Actividad (and D's list state). The single-house view (`SingleActivity`, big figures) does not change. Inquiry cards are specified in F+G.
+`client/screens/actividad.tsx` `ActivityCard` (two or more houses) uses the **same card** as Mis casas: square photo with the status label, name and zone, and below, instead of buttons, the three figures (visitas · toques en WhatsApp · consultas, `Figures`). Extract the photo + label + name block as `HouseCardTop` in `client/house-card.tsx`, used by Mis casas and Actividad (and D's list state). Layout (Daniel, 2026-10-29): with two or more houses the cards go **two per row** (as in mockup 10-actividad); with **one** house the card takes the **full row** — the same `HouseCardTop` at full width with the three figures in large type below (replaces today's `SingleActivity` block without photo). Inquiry cards are specified in F+G.
 
 ### 6. Calendario: taller days, months one under another, «Cerrar la casa hasta…» on top
 

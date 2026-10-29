@@ -64,6 +64,8 @@ Reglas de siempre: móvil primero (375 px), estilos y tokens de bnbtico (`design
 
 ## G · Actividad
 
+- **Tarjetas de las casas** (2026-10-29, Daniel): de **dos en dos** con dos casas o más; con **una sola casa**, la tarjeta ocupa **toda la fila** (foto cuadrada grande con la etiqueta de estado y, debajo, las tres cifras en grande).
+
 - Cada consulta lleva arriba una **etiqueta con miniatura y nombre de la casa**.
 - Con **dos casas o más**, chips «Todas · <casa> · <casa>» encima de «Últimas consultas» para filtrar.
 
