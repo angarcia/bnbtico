@@ -18,7 +18,8 @@ export interface PickerMap {
   dispose(): void;
 }
 
-export function drawPicker(el: HTMLElement, start: { point: LatLng | null; center: LatLng; zoom: number }, onPick: (p: LatLng) => void): PickerMap {
+/** `readOnly`: solo se ve el pin (una edición en revisión): ni se arrastra ni un toque lo mueve. */
+export function drawPicker(el: HTMLElement, start: { point: LatLng | null; center: LatLng; zoom: number }, onPick: (p: LatLng) => void, readOnly = false): PickerMap {
   const at = start.point ?? start.center;
   const map = L.map(el, { zoomControl: true, attributionControl: true, maxBounds: COSTA_RICA, maxBoundsViscosity: 1, minZoom: 7 }).setView([at.lat, at.lng], start.point ? 13 : start.zoom);
   L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
@@ -34,7 +35,7 @@ export function drawPicker(el: HTMLElement, start: { point: LatLng | null; cente
     }
     last = { lat: p.lat, lng: p.lng };
     if (!marker) {
-      marker = L.marker([p.lat, p.lng], { draggable: true, icon, keyboard: false }).addTo(map);
+      marker = L.marker([p.lat, p.lng], { draggable: !readOnly, icon, keyboard: false }).addTo(map);
       marker.on("dragend", () => place(marker!.getLatLng()));
       circle = L.circle([p.lat, p.lng], { radius: APPROX_MAX_METERS, color: "#2F5D45", weight: 1.5, fillColor: "#2F5D45", fillOpacity: 0.14 }).addTo(map);
     } else {
@@ -47,7 +48,7 @@ export function drawPicker(el: HTMLElement, start: { point: LatLng | null; cente
   };
 
   if (start.point) place(start.point);
-  map.on("click", (e) => place(e.latlng));
+  if (!readOnly) map.on("click", (e) => place(e.latlng));
   // La caja del mapa ocupa lo que sobra de la pantalla: si cambia de alto (fuentes, teclado), Leaflet recalcula su tamaño
   // (si no, un toque caería en otro punto que el que se ve).
   const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => map.invalidateSize({ animate: false }));

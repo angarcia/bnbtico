@@ -14,7 +14,7 @@ import { formInput } from "../../domain/step-forms";
 import { toast } from "../../shared/toast";
 import { FlowHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
-import { BathroomChoice, ChoiceCards, Counter, DescriptionField, FeatureChips, MonthlyQuestion, TitleField } from "../publish/fields";
+import { BathroomChoice, CapacityCounters, ChoiceCards, DescriptionField, FeatureChips, PriceFields, TitleField } from "../publish/fields";
 import { LocationStep } from "../publish/location-step";
 import { ReadyScope } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
@@ -66,10 +66,13 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const reviewed = REVIEWED_FIELDS.includes(field);
   const readOnly = reviewed && listing.edit?.status === "review";
   // Lo que se ve: con revisión, lo pendiente de la edición encima de lo aprobado; inmediato, lo aprobado. La caché del
-  // teléfono puede abrir la pantalla con datos viejos: cuando llega lo del servidor y cambia, los campos (sin controlar)
-  // se vuelven a montar con ello (key); las mutaciones y su aviso siguen aquí, fuera de lo que se vuelve a montar.
+  // teléfono puede abrir la pantalla con datos viejos: mientras el propietario no toque nada, cuando llega lo del servidor
+  // y cambia, los campos (sin controlar) se vuelven a montar con ello (key). Desde el primer toque o «Guardar», la key se
+  // queda: ni una relectura al volver a la app ni el cambio optimista (y su vuelta atrás si falla) pisan lo escrito.
   const draft = useMemo(() => mergeEdit(listing, reviewed ? listing.edit : null), [listing, reviewed]);
   const version = JSON.stringify(draft);
+  const [frozen, setFrozen] = useState<string | null>(null);
+  const touch = () => setFrozen((f) => f ?? version);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(true);
   const saving = live.isPending || edit.isPending;
@@ -78,6 +81,7 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    touch();
     if (readOnly || saving || !ready) return;
     const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget))));
     if ("error" in plan) return setError(plan.error);
@@ -103,11 +107,11 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
 
   const inputs = (
     <ReadyScope onReady={setReady}>
-      <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
+      <FieldInputs field={field} draft={draft} listing={listing} userId={userId} readOnly={readOnly} />
     </ReadyScope>
   );
   return (
-    <form key={version} onSubmit={onSubmit} className="publish-form" noValidate>
+    <form key={frozen ?? version} onSubmit={onSubmit} onInputCapture={touch} onClickCapture={touch} className="publish-form" noValidate>
       {error ? (
         <div className="note" role="alert">
           {error}
@@ -155,7 +159,7 @@ function KindInputs({ draft }: { draft: ListingDraft }) {
 }
 
 /** Los campos de un dato: los del asistente para esa pantalla. `draft` trae los valores a mostrar. */
-function FieldInputs({ field, draft, listing }: { field: FormField; draft: ListingDraft; listing: Listing; userId: string }) {
+function FieldInputs({ field, draft, listing, readOnly = false }: { field: FormField; draft: ListingDraft; listing: Listing; userId: string; readOnly?: boolean }) {
   switch (field) {
     case "nombre":
       return <TitleField value={draft.title} />;
@@ -164,30 +168,12 @@ function FieldInputs({ field, draft, listing }: { field: FormField; draft: Listi
     case "tipo":
       return <KindInputs draft={draft} />;
     case "ubicacion":
-      return <LocationStep listing={listing} draft={draft} />;
+      return <LocationStep listing={listing} draft={draft} readOnly={readOnly} />;
     case "capacidad":
-      return (
-        <div className="card counters">
-          <Counter name="capacity" label="Personas" value={draft.capacity} min={1} />
-          <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={draft.kind === "habitacion" ? 1 : 0} />
-          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} />
-        </div>
-      );
+      return <CapacityCounters draft={draft} />;
     case "caracteristicas":
       return <FeatureChips selected={draft.features} parkingPaid={draft.parkingPaid} />;
     case "precio":
-      return (
-        <>
-          <div className="field">
-            <label htmlFor="pub-nightlyPriceCrc">Precio por noche</label>
-            <div className="input-money">
-              <span className="cur">₡</span>
-              <input id="pub-nightlyPriceCrc" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />
-            </div>
-          </div>
-          <MonthlyQuestion accepts={draft.acceptsMonthly} price={draft.monthlyPriceCrc} />
-          <span className="small muted">En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.</span>
-        </>
-      );
+      return <PriceFields draft={draft} />;
   }
 }

@@ -39,7 +39,8 @@ function PlaceLine({ state, onRetry }: { state: LookupState; onRetry(): void }) 
   );
 }
 
-export function LocationStep({ listing: _listing, draft }: { listing: Listing; draft: ListingDraft }) {
+/** `readOnly` (una edición en revisión): el mapa solo muestra el pin y no sale la indicación de tocarlo. */
+export function LocationStep({ listing: _listing, draft, readOnly = false }: { listing: Listing; draft: ListingDraft; readOnly?: boolean }) {
   const start = draft.lat !== null && draft.lng !== null ? { lat: draft.lat, lng: draft.lng } : null;
   const [pin, setPin] = useState<LatLng | null>(start);
   const [state, setState] = useState<LookupState>(start ? { status: "loading", point: start } : { status: "idle" });
@@ -94,10 +95,12 @@ export function LocationStep({ listing: _listing, draft }: { listing: Listing; d
         near={() => picker.current?.center() ?? pin ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!}
         onChoose={(item) => item.point && picker.current?.view(item.point, ZONE_ZOOM)}
       />
-      <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} />
-      <p className="small muted location-hint">
-        Toque el mapa o arrastre el punto hasta su casa. <span className="xs">En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.</span>
-      </p>
+      <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} readOnly={readOnly} />
+      {readOnly ? null : (
+        <p className="small muted location-hint">
+          Toque el mapa o arrastre el punto hasta su casa. <span className="xs">En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.</span>
+        </p>
+      )}
       <PlaceLine state={state} onRetry={() => lookup.current?.retry()} />
       <ZoneSelect options={options} value={choice} other={otherOpen && !!pin} onChange={(c) => (setChoice(c), setOtherOpen(false))} onOther={() => pin && setOtherOpen(true)} />
       {otherOpen && pin ? (

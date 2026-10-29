@@ -219,6 +219,12 @@ test("si la base rechaza el precio, la pantalla lo dice y nada cambia", async ({
   await save(page).click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("Indique el precio por noche en colones.");
   await expect(page).toHaveURL(new RegExp(`/editar/precio$`));
+  // Lo escrito se queda (la caché vuelve atrás, el campo no) y una relectura al volver a la app tampoco lo pisa.
+  await expect(page.getByLabel("Precio por noche")).toHaveValue("55 000");
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await page.waitForTimeout(500);
+  await expect(page.getByLabel("Precio por noche")).toHaveValue("55 000");
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   await expect(row(page, "Precio")).toContainText("₡42 000 / noche");
@@ -253,4 +259,23 @@ test("la pantalla de un dato muestra lo del servidor aunque el teléfono guarde 
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Casa Coco frente al mar");
   await page.goto(`/propietario/casas/${id}/editar/precio`);
   await expect(page.getByLabel("Precio por noche")).toHaveValue("48000");
+});
+
+test("ubicación con la edición en revisión: el mapa no se mueve", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
+  await h.owner("owner").submitEdit(id);
+  await page.goto(`/propietario/casas/${id}/editar/ubicacion`);
+  await expect(page.getByText("Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Guardar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Usar mi ubicación" })).toHaveCount(0);
+  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toHaveCount(0);
+  await expect(page.locator(".leaflet-marker-icon")).toBeVisible();
+  await expect(page.locator(".place-line")).toHaveText("Talamanca, Limón");
+  const box = (await page.locator(".map-box").boundingBox())!;
+  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.8);
+  await page.waitForTimeout(500);
+  await expect(page.locator('input[name="lat"]')).toHaveValue("9.7366");
+  await expect(page.locator('input[name="lng"]')).toHaveValue("-82.8431");
+  await expect(page.locator(".place-line")).toHaveText("Talamanca, Limón");
 });

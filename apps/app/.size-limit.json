@@ -110,10 +110,9 @@
     "gzip": true
   },
   {
-    "name": "Reglas y mutaciones de la edición · trozo compartido (las reglas de cada dato y las mutaciones de la edición, que leen la ficha editable y «Editar un dato»)",
+    "name": "Reglas y mutaciones de la edición · trozo compartido (las reglas de cada dato y las mutaciones de la edición, que leen la ficha editable y «Editar un dato»; edit-<hash de 8>, para que no entren edit-messages ni edit-label)",
     "path": [
-      "dist/client/assets/edit-*.js",
-      "!dist/client/assets/edit-messages-*.js"
+      "dist/client/assets/edit-????????.js"
     ],
     "limit": "2 KB",
     "gzip": true

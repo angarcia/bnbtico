@@ -17,8 +17,9 @@ export interface PickerHandle {
 }
 
 /** Mapa del paso 2: pin arrastrable con el círculo de ~500 m y «Usar mi ubicación». Abre en el pin o, sin pin, en Limón
- *  (Caribe por defecto). Cada toque o arrastre que deja el pin en Costa Rica llama a `onPick` con el punto redondeado. */
-export function LocationPicker({ lat, lng, onPick, ref }: { lat: number | null; lng: number | null; onPick: (p: LatLng) => void; ref?: Ref<PickerHandle> }) {
+ *  (Caribe por defecto). Cada toque o arrastre que deja el pin en Costa Rica llama a `onPick` con el punto redondeado.
+ *  `readOnly`: el pin no se mueve y no hay «Usar mi ubicación». */
+export function LocationPicker({ lat, lng, onPick, readOnly = false, ref }: { lat: number | null; lng: number | null; onPick: (p: LatLng) => void; readOnly?: boolean; ref?: Ref<PickerHandle> }) {
   const box = useRef<HTMLDivElement>(null);
   const picker = useRef<PickerMap | null>(null);
   const pick = useRef(onPick);
@@ -30,7 +31,7 @@ export function LocationPicker({ lat, lng, onPick, ref }: { lat: number | null; 
     const point = lat !== null && lng !== null ? { lat, lng } : null;
     import("./location-leaflet").then(({ drawPicker }) => {
       if (cancelled || !box.current) return;
-      picker.current = drawPicker(box.current, { point, center: PROVINCE_CENTERS[DEFAULT_PROVINCE]!, zoom: 9 }, (p) => pick.current(roundPoint(p)));
+      picker.current = drawPicker(box.current, { point, center: PROVINCE_CENTERS[DEFAULT_PROVINCE]!, zoom: 9 }, (p) => pick.current(roundPoint(p)), readOnly);
     });
     return () => {
       cancelled = true;
@@ -47,9 +48,11 @@ export function LocationPicker({ lat, lng, onPick, ref }: { lat: number | null; 
   return (
     <div className="map-wrap">
       <div ref={box} className="map-box" role="application" aria-label="Mapa para marcar la ubicación aproximada" />
-      <button type="button" className="icon-btn overlay map-locate" aria-label="Usar mi ubicación" onClick={locate}>
-        <Locate />
-      </button>
+      {readOnly ? null : (
+        <button type="button" className="icon-btn overlay map-locate" aria-label="Usar mi ubicación" onClick={locate}>
+          <Locate />
+        </button>
+      )}
     </div>
   );
 }

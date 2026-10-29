@@ -234,6 +234,34 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
   );
 }
 
+/** Personas, habitaciones (al menos una si es habitación) y baños: la pantalla 4 y la capacidad de una casa publicada. */
+export function CapacityCounters({ draft }: { draft: ListingDraft }) {
+  return (
+    <div className="card counters">
+      <Counter name="capacity" label="Personas" value={draft.capacity} min={1} />
+      <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={draft.kind === "habitacion" ? 1 : 0} />
+      <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} />
+    </div>
+  );
+}
+
+/** Precio por noche y alquiler mensual: la pantalla 8 y el precio de una casa publicada. */
+export function PriceFields({ draft }: { draft: ListingDraft }) {
+  return (
+    <>
+      <div className="field">
+        <label htmlFor="pub-nightlyPriceCrc">Precio por noche</label>
+        <div className="input-money">
+          <span className="cur">₡</span>
+          <input id="pub-nightlyPriceCrc" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />
+        </div>
+      </div>
+      <MonthlyQuestion accepts={draft.acceptsMonthly} price={draft.monthlyPriceCrc} />
+      <span className="small muted">En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.</span>
+    </>
+  );
+}
+
 /** Contador «n / máx» (ticket 19): en caracteres, como la regla del dominio; en rojo suave fuera del rango. */
 function CharCount({ id, n, min, max, hint }: { id: string; n: number; min: number; max: number; hint?: string }) {
   const out = n > 0 && (n < min || n > max);
@@ -428,11 +456,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>¿Cuántos caben?</h2>
-          <div className="card counters">
-            <Counter name="capacity" label="Personas" value={draft.capacity} min={1} />
-            <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={draft.kind === "habitacion" ? 1 : 0} />
-            <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} />
-          </div>
+          <CapacityCounters draft={draft} />
           {draft.kind === "habitacion" ? <BathroomChoice shared={draft.bathroomShared} /> : null}
         </>
       );
@@ -463,15 +487,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>Precio</h2>
-          <div className="field">
-            <label htmlFor="pub-nightlyPriceCrc">Precio por noche</label>
-            <div className="input-money">
-              <span className="cur">₡</span>
-              <input id="pub-nightlyPriceCrc" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />
-            </div>
-          </div>
-          <MonthlyQuestion accepts={draft.acceptsMonthly} price={draft.monthlyPriceCrc} />
-          <span className="small muted">En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.</span>
+          <PriceFields draft={draft} />
         </>
       );
     case 9:
