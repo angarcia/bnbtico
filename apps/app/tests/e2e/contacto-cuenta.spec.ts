@@ -5,7 +5,7 @@ import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
 import { enterCode, injectSession } from "./helpers/session";
-import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
+import { backFromWhatsApp, catchWhatsApp, waExpected } from "./helpers/whatsapp";
 
 // Fase 3, ticket 03: sin sesión, la hoja guarda lo escrito, pasa por la verificación del WhatsApp y vuelve a la ficha.
 // Revisión UX C2: sin sesión el botón dice «Continuar»; la verificación se lee como «Escribirle a <nombre>» (nunca
@@ -95,7 +95,7 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   await enterCode(page);
   await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, "Hola, ¿aceptan perros pequeños?")]);
   // Volver atrás desde WhatsApp: la ficha con la hoja cerrada (el parámetro se quitó con replace y lo escrito se borró).
-  await page.goBack();
+  await backFromWhatsApp(page);
   await expect(page).toHaveURL(listingUrl());
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(s).toHaveCount(0);

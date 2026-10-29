@@ -3,7 +3,7 @@ import type { Seeded } from "../contract/harness";
 import { serviceClient, sql, TEST_NAMES, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { enterCode, injectSession, signOut } from "./helpers/session";
-import { catchWhatsApp } from "./helpers/whatsapp";
+import { backFromWhatsApp, catchWhatsApp } from "./helpers/whatsapp";
 
 // Navegación simple: una sola barra que crece con las casas (dos pestañas sin casas, cinco con al menos una), Cuenta a
 // pantalla completa, Mis casas (siempre en lista, también con una sola casa), Actividad (cifras de 30 días por casa y últimas
@@ -124,7 +124,7 @@ test("7 · con una casa activa: las tres cifras en grande y las últimas consult
   await inquiry.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect.poll(() => wa).toEqual([`https://wa.me/${TEST_PHONES.other.replace(/\D/g, "")}`]);
   await expect.poll(() => opened(casa.publicId)).toBe("1");
-  await page.goBack();
+  await backFromWhatsApp(page);
   await expect(page.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
   await expect(inquiry.getByText("Nueva", { exact: true })).toHaveCount(0);
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveCount(0);

@@ -3,7 +3,7 @@ import type { Seeded } from "../contract/harness";
 import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
+import { backFromWhatsApp, catchWhatsApp, waExpected } from "./helpers/whatsapp";
 
 // Fase 3, ticket 04: con sesión, «Abrir WhatsApp» registra la consulta (create_inquiry) y abre wa.me con el número de la
 // casa, que solo entrega esa RPC. Contra Supabase local; las sesiones se inyectan (sin gastar SMS).
@@ -122,7 +122,7 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
 
   // Atrás desde WhatsApp: la ficha, sin la hoja, sin el borrador y sin el número en ningún almacenamiento.
   await page.unroute("**/rest/v1/rpc/create_inquiry");
-  await page.goBack();
+  await backFromWhatsApp(page);
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(s).toHaveCount(0);
@@ -151,7 +151,7 @@ test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la ca
   await openButton(page).click();
   await expect.poll(() => wa).toEqual([waExpected(HOUSE_PHONE, "Hola, vi Cabina Cocles en bnbtico y me interesa. ¿Está disponible? Gracias.")]);
   expect(inquiries(otra.publicId, "i.whatsapp_phone")).toBe(HOUSE_PHONE);
-  await page.goBack();
+  await backFromWhatsApp(page);
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   expect(await storedEverywhere(page)).not.toContain(digits(HOUSE_PHONE));
 });

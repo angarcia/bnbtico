@@ -13,5 +13,15 @@ export async function catchWhatsApp(page: Page): Promise<string[]> {
   return urls;
 }
 
+/**
+ * Atrás desde la página falsa de WhatsApp. Las URLs de `catchWhatsApp` se apuntan al interceptar la petición, antes de que
+ * la navegación a wa.me (otro sitio, otro proceso del navegador) se confirme: un `goBack` en ese hueco falla con
+ * «Not attached to an active page» o `ERR_ABORTED`. Primero se espera a estar en wa.me, con la página cargada.
+ */
+export async function backFromWhatsApp(page: Page): Promise<void> {
+  await page.waitForURL(/^https:\/\/wa\.me\//);
+  await page.goBack();
+}
+
 /** La URL exacta que debe abrir «Abrir WhatsApp»: el número de la casa en dígitos y el mensaje codificado. */
 export const waExpected = (e164: string, text: string) => `https://wa.me/${e164.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
