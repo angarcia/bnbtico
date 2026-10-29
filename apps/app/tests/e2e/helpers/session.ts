@@ -2,12 +2,16 @@ import { expect, type Page } from "@playwright/test";
 import { SESSION_STORAGE_KEY } from "../../../src/data/storage";
 import { signIn, type TEST_PHONES } from "../../db/local";
 
-/** Abre sesión desde Node con un número de prueba y la deja en el localStorage del navegador, como si ya hubiera ingresado. */
-export async function injectSession(page: Page, who: keyof typeof TEST_PHONES) {
+/** «Ahora no» de la pregunta del correo tras enviar una casa (src/domain/publish-return.ts): las pruebas de siempre no la ven. */
+export const EMAIL_SKIPPED_KEY = "bnbtico-correo-omitido";
+
+/** Abre sesión desde Node con un número de prueba y la deja en el localStorage del navegador, como si ya hubiera ingresado. Marca «Ahora no» del correo; `askEmail` la quita. */
+export async function injectSession(page: Page, who: keyof typeof TEST_PHONES, opts: { askEmail?: boolean } = {}) {
   const client = await signIn(who);
   const { data } = await client.auth.getSession();
   await page.goto("/robots.txt");
   await page.evaluate(([key, value]) => localStorage.setItem(key!, value!), [SESSION_STORAGE_KEY, JSON.stringify(data.session)]);
+  await page.evaluate(([key, ask]) => (ask ? localStorage.removeItem(key!) : localStorage.setItem(key!, "1")), [EMAIL_SKIPPED_KEY, opts.askEmail ? "1" : ""]);
 }
 
 /** Registro o ingreso por la interfaz con el código de prueba 123456. */

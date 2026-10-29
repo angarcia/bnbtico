@@ -217,6 +217,7 @@ const routeTree = rootRoute.addChildren([
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/correo", component: lazyRouteComponent(publicarEntrada, "CorreoScreen") }),
       // Cada dato de una casa publicada, en su propio trozo (editar-*).
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("./screens/editar"), "EditarCampoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/suscripcion", validateSearch: suscripcionSearch, component: lazyRouteComponent(suscripcionScreen, "SuscripcionScreen") }),

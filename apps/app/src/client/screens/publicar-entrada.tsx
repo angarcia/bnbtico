@@ -2,18 +2,19 @@
 // el WhatsApp y /publicar/continuar, ya con sesión, crea la casa con esa respuesta y sigue en «¿Dónde está su casa?».
 // Trozo propio (publicar-entrada-*), medido en «Entrada de publicar»: no descarga el asistente ni sus campos.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { Link, Navigate, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { DomainError } from "../../domain/errors";
 import { emptyDraft, isFreshDraft, resumeStep, validateStep, type Listing } from "../../domain/listing";
-import { PUBLISH_STEP1_KEY, readStep1, storeStep1, type Step1Kind } from "../../domain/publish-return";
+import { EMAIL_SKIPPED_KEY, PUBLISH_STEP1_KEY, readStep1, storeStep1, type Step1Kind } from "../../domain/publish-return";
 import { track } from "../../shared/beacon";
 import { I } from "../../shared/icons";
+import { accountQuery } from "../account";
 import { FlowHeader } from "../chrome";
 import { addOwnCached, api, resumableQuery } from "../owner";
 import { KindChoice, ReadyList, StageLabel } from "../publish/wizard-parts";
-import { useSession } from "../session";
+import { authApi, useSession } from "../session";
 import { SignInForm } from "./cuenta";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
@@ -194,6 +195,64 @@ export function ContinuarScreen() {
           </button>
         </div>
       ) : null}
+    </>
+  );
+}
+
+// ---------- /propietario/casas/$id/correo (tras enviar la casa) ----------
+
+/** «¿Quiere añadir un correo?»: una vez, tras enviar; «Ahora no» se recuerda en el teléfono. */
+export function CorreoScreen() {
+  const { id = "" } = useParams({ strict: false });
+  const client = useQueryClient();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const done = () => navigate({ to: "/propietario/casas/$id/enviada", params: { id }, replace: true });
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (busy) return;
+    const email = String(new FormData(e.currentTarget).get("email") ?? "").trim();
+    if (!email) return setError("Escriba su correo o toque «Ahora no».");
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await (await authApi()).updateProfile({ email }); // la misma validación que Mi perfil
+      client.setQueryData(accountQuery(updated.id).queryKey, updated);
+      await done();
+    } catch (err) {
+      setError(message(err));
+      setBusy(false);
+    }
+  }
+  function skip() {
+    localStorage.setItem(EMAIL_SKIPPED_KEY, "1");
+    void done();
+  }
+  return (
+    <>
+      <header className="header-flow">
+        <h1>Publicar casa</h1>
+      </header>
+      <form onSubmit={(e) => void save(e)} className="stack flow" noValidate>
+        <h2>¿Quiere añadir un correo?</h2>
+        <div className="field">
+          <label htmlFor="pub-email">Correo</label>
+          <input id="pub-email" name="email" type="email" autoComplete="email" inputMode="email" />
+          <span className="small muted">Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.</span>
+        </div>
+        {error ? (
+          <p className="note" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
+          Guardar correo
+        </button>
+        <button type="button" className="btn btn-block btn-ghost" onClick={skip}>
+          Ahora no
+        </button>
+      </form>
     </>
   );
 }

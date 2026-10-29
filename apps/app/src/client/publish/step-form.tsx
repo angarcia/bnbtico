@@ -18,7 +18,9 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
+import { accountQuery } from "../account";
 import { api, loadedApi, patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
@@ -122,7 +124,10 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
     return null;
   }
   await (await api()).submit(id);
-  await router.navigate({ to: "/propietario/casas/$id/enviada", params: { id }, replace: true });
+  // Cuenta sin correo que aún no dijo «Ahora no»: antes de «Enviada», la pregunta del correo de recuperación.
+  const account = client.getQueryData(accountQuery(userId).queryKey) ?? (await client.fetchQuery(accountQuery(userId)).catch(() => undefined)) ?? undefined;
+  const ask = shouldAskEmail(account, localStorage.getItem(EMAIL_SKIPPED_KEY));
+  await router.navigate({ to: ask ? "/propietario/casas/$id/correo" : "/propietario/casas/$id/enviada", params: { id }, replace: true });
   patchCached(client, userId, id, { status: "review", reviewNote: null });
   refresh(client, userId, fresh);
   void client.invalidateQueries({ queryKey: ["own-resumable", userId] });

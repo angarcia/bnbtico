@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { ListingsHarness } from "../contract/harness";
-import { serviceClient, TEST_PHONES } from "../db/local";
+import { serviceClient, sql, TEST_PHONES } from "../db/local";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { userIdOf } from "./helpers/admin";
@@ -208,4 +208,57 @@ test("una recarga entre crear la casa y guardar el tipo usa ese borrador vacío"
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${orphan.id}/2$`));
   await expect(page.getByText("Tiene un borrador sin enviar")).toHaveCount(0);
   expect((await listingsOf(TEST_PHONES.owner)).map((l) => [l.id, l.kind])).toEqual([[orphan.id, "habitacion"]]);
+});
+
+// ---------- «¿Quiere añadir un correo?» tras enviar ----------
+
+const EMAIL_KEY = "bnbtico-correo-omitido";
+const ownerEmail = () => sql(`select coalesce(email, '') from public.profiles where phone = '${TEST_PHONES.owner}'`);
+const setOwnerEmail = (email: string) => sql(`update public.profiles set email = ${email ? `'${email}'` : "null"} where phone = '${TEST_PHONES.owner}'`);
+
+/** Una casa completa sin fotos ni descripción, lista para enviar desde el paso 9. */
+async function sendFromStep9(page: Page) {
+  const { id } = await h.seed({ status: "draft", photos: 0, draft: { description: "" } });
+  await page.goto(`/propietario/publicar/${id}/9`);
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  return id;
+}
+
+test("envía sin fotos ni descripción; el correo se puede saltar una vez", async ({ page }) => {
+  const before = ownerEmail();
+  setOwnerEmail("");
+  try {
+    await injectSession(page, "owner", { askEmail: true });
+    const first = await sendFromStep9(page);
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${first}/correo$`));
+    await expect(page.getByRole("heading", { name: "¿Quiere añadir un correo?" })).toBeVisible();
+    await page.getByRole("button", { name: "Ahora no" }).click();
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${first}/enviada$`));
+    expect(await page.evaluate((k) => localStorage.getItem(k), EMAIL_KEY)).toBe("1");
+    const second = await sendFromStep9(page);
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${second}/enviada$`));
+  } finally {
+    setOwnerEmail(before);
+  }
+});
+
+test("guarda el correo desde la pregunta de después de enviar", async ({ page }) => {
+  const before = ownerEmail();
+  setOwnerEmail("");
+  try {
+    await injectSession(page, "owner", { askEmail: true });
+    const id = await sendFromStep9(page);
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/correo$`));
+    await page.getByRole("button", { name: "Guardar correo" }).click();
+    await expect(page.getByText("Escriba su correo o toque «Ahora no».")).toBeVisible();
+    await page.getByLabel("Correo").fill("ana@");
+    await page.getByRole("button", { name: "Guardar correo" }).click();
+    await expect(page.getByText("Ese correo no parece válido.")).toBeVisible();
+    await page.getByLabel("Correo").fill("ana@ejemplo.cr");
+    await page.getByRole("button", { name: "Guardar correo" }).click();
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
+    expect(ownerEmail()).toBe("ana@ejemplo.cr");
+  } finally {
+    setOwnerEmail(before);
+  }
 });
