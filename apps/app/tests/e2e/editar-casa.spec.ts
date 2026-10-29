@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "./helpers/test";
 import { readFileSync } from "node:fs";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { realPhotos } from "./helpers/real-photos";
 import { injectSession } from "./helpers/session";
+import { touch } from "./helpers/touch";
 
 // Editar una casa publicada sin sacarla de Explorar (spec .scratch/editar-casa, maquetas 08a–08c), contra Supabase local.
 // La ficha editable: cada dato es una fila que abre su pantalla; lo que pasa por revisión lleva la etiqueta «Revisión» y,
@@ -278,4 +280,73 @@ test("ubicación con la edición en revisión: el mapa no se mueve", async ({ pa
   await expect(page.locator('input[name="lat"]')).toHaveValue("9.7366");
   await expect(page.locator('input[name="lng"]')).toHaveValue("-82.8431");
   await expect(page.locator(".place-line")).toHaveText("Talamanca, Limón");
+});
+
+// ---------- Las fotos (maqueta 08d) ----------
+
+const foto = (name: string) => ({ name, mimeType: "image/jpeg", buffer: readFileSync(`${FOTOS}${name}`) });
+const tiles = (page: Page) => page.locator(".photos-grid > .photo");
+const counter = (page: Page) => page.locator(".photos-count");
+
+test("descartar con dos fotos nuevas borra la edición y sus objetos", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}/editar/fotos`);
+  await expect(page.getByRole("heading", { level: 1, name: "Fotos" })).toBeVisible();
+  await expect(counter(page)).toHaveText("5 de 15");
+  await expect(page.getByText("El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas.")).toBeVisible();
+  await page.getByLabel("Añadir fotos").setInputFiles([foto("beach.jpg"), foto("loft.jpg")]);
+  await expect(counter(page)).toHaveText("7 de 15", { timeout: 20_000 });
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
+  // Las nuevas, al final y con «En revisión»; no se arrastran (sin data-photo).
+  await expect.poll(() => tiles(page).evaluateAll((els) => els.map((e) => e.classList.contains("is-pending")))).toEqual([false, false, false, false, false, true, true]);
+  await expect(page.locator(".photos-grid .photo.is-pending .tag")).toHaveText(["En revisión", "En revisión"]);
+  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(5);
+  const folders = (await h.owner("owner").getOwn(id))!.edit!.photos.map((p) => p.path);
+  expect(folders).toHaveLength(2);
+
+  await page.getByRole("link", { name: "Listo" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(page.getByRole("link", { name: "5 fotos · 2 nuevas en revisión · Editar" })).toBeVisible();
+  await expect(page.getByText("Cambios sin enviar: 2 fotos nuevas")).toBeVisible();
+  page.once("dialog", (d) => void d.accept());
+  await page.getByRole("button", { name: "Descartar cambios" }).click();
+  await expect(page.getByText(/Cambios sin enviar/)).toHaveCount(0);
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit).toBeNull();
+  await expect.poll(async () => (await h.objects(id)).filter((o) => folders.some((f) => o.name.startsWith(`${f}/`))).length).toBe(0);
+});
+
+test.describe("arrastrar en el editor", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+  test("ordenar arrastrando en una casa activa se ve al momento en la ficha pública", async ({ page }) => {
+    const { id, publicId } = await h.seed({ status: "active" });
+    await realPhotos(id);
+    const before = (await h.owner("owner").getOwn(id))!.photos;
+    await page.goto(`/propietario/casas/${id}/editar/fotos`);
+    await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(5);
+    const t = await touch(page);
+    const cover = await t.center(page.locator(".photos-grid .photo.cover"));
+    const tile = page.locator(".photos-grid [data-photo]").nth(2);
+    const p = await t.center(tile);
+    const saved = page.waitForResponse((r) => r.url().includes("/rest/v1/rpc/reorder_listing_photos"));
+    await t.down(p.x, p.y);
+    await expect(tile).toHaveClass(/is-lifted/);
+    await t.move(cover.x, cover.y, 12);
+    await t.up();
+    expect((await saved).ok()).toBe(true);
+    const expected = [before[2]!.id, before[0]!.id, before[1]!.id, before[3]!.id, before[4]!.id];
+    await expect.poll(async () => (await h.owner("owner").getOwn(id))!.photos.map((x) => x.id)).toEqual(expected);
+    expect((await h.owner("owner").getOwn(id))!.edit).toBeNull();
+    await page.goto(`/casa/${publicId}`);
+    await expect(page.locator(".hero .strip img").first()).toHaveAttribute("src", before[2]!.url);
+  });
+});
+
+test("quitar la última foto aprobada se rechaza", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  for (let i = 0; i < 4; i++) await h.dropPhoto(id); // una casa activa con una sola foto
+  await page.goto(`/propietario/casas/${id}/editar/fotos`);
+  await expect(counter(page)).toHaveText("1 de 15");
+  await page.getByRole("button", { name: "Quitar foto 1" }).click();
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.");
+  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(1);
 });

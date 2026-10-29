@@ -564,6 +564,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .photos-count{font-weight:700}
 .photos-grid .remove{border:0;cursor:pointer;z-index:1}
 .photos-grid .tag{pointer-events:none}
+/* Foto nueva de una edición: «En revisión» abajo, para no chocar con el ✕ en las casillas pequeñas. */
+.photos-grid .photo.is-pending .tag{top:auto;bottom:8px;left:8px}
 .photos-grid .photo.uploading{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 12px}
 /* Arrastrar fotos: deslizar en vertical hace scroll hasta levantar la foto; levantada, el navegador ya no se queda el gesto. */
 .photos-grid .photo:not(.uploading){touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transform-origin:0 0}

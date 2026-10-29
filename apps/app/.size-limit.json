@@ -38,7 +38,8 @@
       "!dist/client/assets/editar-*.js",
       "!dist/client/assets/edit-*.js",
       "!dist/client/assets/step-forms-*.js",
-      "!dist/client/assets/fields-*.js"
+      "!dist/client/assets/fields-*.js",
+      "!dist/client/assets/photo-grid-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -148,6 +149,14 @@
       "dist/client/assets/location-leaflet-*.js"
     ],
     "limit": "15 KB",
+    "gzip": true
+  },
+  {
+    "name": "Rejilla de fotos · trozo diferido compartido por el paso 7 y el editor de fotos (la rejilla, la cola de subida y el arrastre; la leen photos-* y editar-*)",
+    "path": [
+      "dist/client/assets/photo-grid-*.js"
+    ],
+    "limit": "4.5 KB",
     "gzip": true
   },
   {

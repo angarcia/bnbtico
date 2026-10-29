@@ -4,18 +4,21 @@
 // (update_listing_live, optimista); nombre, tipo, ubicación y descripción van a la edición de la casa (save_edit), que se
 // envía a revisión desde la ficha. Con la edición en revisión, esos cuatro se abren solo para leer. Volver sin guardar no
 // guarda nada.
-import { Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, editFieldFromParam, mergeEdit, parseField, planEdit, type FormField } from "../../domain/edit";
 import { toDomainError } from "../../domain/errors";
-import { KIND_HINTS, KIND_LABELS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
+import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
 import { toast } from "../../shared/toast";
 import { FlowHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
+import { photosApi } from "../owner";
 import { BathroomChoice, CapacityCounters, ChoiceCards, DescriptionField, FeatureChips, PriceFields, TitleField } from "../publish/fields";
 import { LocationStep } from "../publish/location-step";
+import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
 import { ReadyScope } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
 
@@ -49,8 +52,7 @@ export function EditarCampoScreen() {
         )}
       </>
     );
-  // Las fotos llegan con su propia pantalla (tarea 11).
-  if (field === "fotos") return header;
+  if (field === "fotos") return <EditPhotos listing={l} userId={userId} />;
   return (
     <>
       {header}
@@ -135,6 +137,47 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
         </>
       )}
     </form>
+  );
+}
+
+/** Las fotos de una casa publicada (maqueta 08d): la rejilla del paso 7. Ordenar y quitar las aprobadas va al momento;
+ * las nuevas van a la edición y salen detrás con «En revisión». Con la edición en revisión no se añaden ni se quitan
+ * nuevas. El contador cuenta aprobadas y nuevas. */
+function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
+  const client = useQueryClient();
+  const pending = listing.edit?.photos ?? [];
+  const total = listing.photos.length + pending.length;
+  const source: PhotoSource = {
+    listingId: listing.id,
+    photos: listing.photos,
+    pending,
+    counter: { text: `${total} de ${MAX_PHOTOS}`, short: false },
+    room: MAX_PHOTOS - total,
+    canAdd: listing.edit?.status !== "review",
+    register: async (folder) => (await photosApi()).addEditPhoto(listing.id, folder),
+    remove: async (photo, isPending) => {
+      const api = await photosApi();
+      await (isPending ? api.removeEditPhoto(photo.id) : api.remove(photo.id));
+    },
+    reorder: async (ids) => (await photosApi()).reorder(listing.id, ids),
+    reread: async () => {
+      void client.invalidateQueries({ queryKey: ["own-listings", userId] });
+      await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] });
+    },
+  };
+  return (
+    <>
+      <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} action={<PhotoCounter counter={source.counter} />} />
+      <div className="publish-form">
+        <PhotoGrid source={source} userId={userId} />
+        <p className="note note-arena small">El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas.</p>
+        <div className="sticky-actions">
+          <Link className="btn btn-primary btn-block" to="/propietario/casas/$id" params={{ id: listing.id }} replace>
+            Listo
+          </Link>
+        </div>
+      </div>
+    </>
   );
 }
 
