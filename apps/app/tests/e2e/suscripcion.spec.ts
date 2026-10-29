@@ -145,6 +145,7 @@ test("parar con confirmación y reactivar, optimistas; si la base se niega, vuel
   await page.screenshot({ path: "test-results/capturas/suscripcion-confirmar.png" });
   await dialog.getByRole("button", { name: "Cancelar" }).click();
   await expect(dialog).toHaveCount(0);
+  await expect(a.getByRole("button", { name: "Parar suscripción" })).toBeFocused(); // el foco vuelve a quien abrió la hoja
   expect(await statusOf(casa.id)).toBe("active");
 
   // Optimista: la tarjeta cambia antes de que responda la base (respuesta retenida).

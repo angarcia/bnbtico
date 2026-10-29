@@ -5,8 +5,7 @@
 // Parar y reactivar son optimistas con vuelta atrás; «Añadir método de pago» pide al worker la página de la pasarela.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { STATUS_LABELS, type Listing, type ListingStatus } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -30,6 +29,7 @@ import {
 import { I } from "../../shared/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
 import { FlowHeader } from "../chrome";
+import { ConfirmSheet } from "../confirm-sheet";
 import { offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
 import { useSession } from "../session";
 
@@ -86,55 +86,6 @@ function PayButton({ publicId, label = "Añadir método de pago", ghost }: { pub
         </p>
       ) : null}
     </>
-  );
-}
-
-// ---------- Confirmación de «Parar suscripción» (hoja modal como la de pausar el anuncio) ----------
-
-function ConfirmSheet({ title, onConfirm, onClose }: { title: string; onConfirm: () => void; onClose: () => void }) {
-  const sheet = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const root = document.getElementById("root");
-    document.documentElement.classList.add("sheet-open");
-    if (root) root.inert = true;
-    sheet.current?.focus();
-    return () => {
-      document.documentElement.classList.remove("sheet-open");
-      if (root) root.inert = false;
-    };
-  }, []);
-  function onKeyDown(e: KeyboardEvent<HTMLElement>) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      return onClose();
-    }
-    if (e.key !== "Tab" || !sheet.current) return;
-    const items = Array.from(sheet.current.querySelectorAll<HTMLElement>("button"));
-    const [first, last] = [items[0], items[items.length - 1]];
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet.current)) {
-      e.preventDefault();
-      last?.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first?.focus();
-    }
-  }
-  return createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={onClose} />
-      <section ref={sheet} className="sheet stack" role="dialog" aria-modal="true" aria-labelledby="stop-title" aria-describedby="stop-text" tabIndex={-1} onKeyDown={onKeyDown}>
-        <span className="grabber" aria-hidden="true" />
-        <h2 id="stop-title">Parar suscripción</h2>
-        <p id="stop-text">¿Parar la suscripción de {title}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.</p>
-        <button type="button" className="btn btn-primary btn-lg" onClick={onConfirm}>
-          Parar suscripción
-        </button>
-        <button type="button" className="btn btn-ghost btn-lg" onClick={onClose}>
-          Cancelar
-        </button>
-      </section>
-    </>,
-    document.body,
   );
 }
 
@@ -245,7 +196,11 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
       ) : null}
       {confirming ? (
         <ConfirmSheet
-          title={house.title || "esta casa"}
+          title="Parar suscripción"
+          body={`¿Parar la suscripción de ${house.title || "esta casa"}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.`}
+          confirmLabel="Parar suscripción"
+          confirmClassName="btn btn-primary btn-lg"
+          cancelClassName="btn btn-ghost btn-lg"
           onClose={() => setConfirming(false)}
           onConfirm={() => {
             setConfirming(false);
