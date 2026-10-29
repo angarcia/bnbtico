@@ -6,13 +6,14 @@ import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
-import { STEP_COUNT, STEPS, resumeStep, stepFromParam, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
+import { STEPS, resumeStep, stepFromParam, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
 import { addOwnCached, api, ownListingQuery, resumableQuery } from "../owner";
-import { ReadyList, StepFields } from "../publish/fields";
+import { StepFields } from "../publish/fields";
+import { ReadyList, StageLabel } from "../publish/wizard-parts";
 import { StepForm } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing, useUserId } from "./propietario";
 
@@ -113,24 +114,11 @@ function CloseWizard({ id }: { id: string }) {
   );
 }
 
-function StageLabel({ step }: { step: Step }) {
-  const stage = wizardStage(step);
-  return (
-    <span className="right stage-label" aria-label={`${stage.name}, ${stage.position} de ${stage.size}. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
-      <b>{stage.name}</b>
-      <span>
-        {stage.position} de {stage.size}
-      </span>
-    </span>
-  );
-}
-
 function StepHeader({ id, step }: { id: string; step: Step | null }) {
   return (
     <header className="header-flow">
       <CloseWizard id={id} />
       <h1>Publicar casa</h1>
-      {/* La etapa en vez de «Paso n de 8» (revisión UX C4): tres tramos que se leen más cortos que ocho pasos. */}
       {step ? <StageLabel step={step} /> : null}
     </header>
   );

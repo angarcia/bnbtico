@@ -72,6 +72,17 @@ test("el asistente manda «wizard_step» con la casa y la ruta sin el id del bor
     .toEqual([`wizard_step ${draft.publicId} publicar /propietario/publicar/:id/4`]);
 });
 
+// Publicar v2 (§E): cuántos llegan a la verificación tras el paso 1, sin casa.
+test("la verificación de publicar manda «publish_verify», una vez y sin casa", async ({ page }) => {
+  await page.goto("/publicar");
+  await page.locator("label.choice", { hasText: "Habitación" }).click();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByRole("heading", { name: "Para guardar su casa, verifique su WhatsApp" })).toBeVisible();
+  await expect
+    .poll(() => rows(`select name || ' ' || coalesce(listing_public_id, '-') || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'publish_verify'`))
+    .toEqual(["publish_verify - publicar /publicar/verificar"]);
+});
+
 test("errores no capturados y promesas rechazadas llegan con ruta y build; una baliza ajena se rechaza", async ({ page }) => {
   test.info().annotations.push({ type: "nota", description: "Los errores se provocan a propósito." });
   await page.goto("/explorar");

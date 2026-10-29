@@ -29,6 +29,8 @@ const favoritosScreen = () => import("./screens/favoritos");
 const actividadScreen = () => import("./screens/actividad");
 const calendarioScreen = () => import("./screens/calendario");
 const casaEditable = () => import("./screens/casa-editable");
+// Publicar sin cuenta (§E): el paso 1, la verificación y la vuelta tras el código, en su propio trozo.
+const publicarEntrada = () => import("./screens/publicar-entrada");
 type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 /** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica. */
@@ -193,6 +195,23 @@ const routeTree = rootRoute.addChildren([
     createRoute({ getParentRoute: () => flow, path: "/cuenta/lista", validateSearch: nextSearch, component: cuentaScreen("ListaScreen") }),
     createRoute({ getParentRoute: () => flow, path: "/cuenta/recuperar", component: cuentaScreen("RecuperarScreen") }),
     createRoute({ getParentRoute: () => flow, path: "/ayuda", component: cuentaScreen("AyudaScreen") }),
+    // Con sesión, /publicar es la entrada de siempre; sin ella, el paso 1 en el teléfono y luego verificar el WhatsApp.
+    createRoute({
+      getParentRoute: () => flow,
+      path: "/publicar",
+      beforeLoad: async () => {
+        if (await currentSession()) throw redirect({ to: "/propietario/publicar", replace: true });
+      },
+      component: lazyRouteComponent(publicarEntrada, "PublicarEntradaScreen"),
+    }),
+    createRoute({
+      getParentRoute: () => flow,
+      path: "/publicar/verificar",
+      beforeLoad: async () => {
+        if (await currentSession()) throw redirect({ to: "/publicar/continuar", replace: true });
+      },
+      component: lazyRouteComponent(publicarEntrada, "VerificarScreen"),
+    }),
     // La búsqueda de Explorar, a pantalla completa y en su propio trozo (se precarga al tocar la píldora).
     createRoute({ getParentRoute: () => flow, path: "/explorar/buscar", validateSearch: buscarSearch, component: lazyRouteComponent(() => import("./screens/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
@@ -201,6 +220,8 @@ const routeTree = rootRoute.addChildren([
       // Cada dato de una casa publicada, en su propio trozo (editar-*).
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("./screens/editar"), "EditarCampoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/suscripcion", validateSearch: suscripcionSearch, component: lazyRouteComponent(suscripcionScreen, "SuscripcionScreen") }),
+      // Tras el código de /publicar/verificar: crea la casa con la respuesta del paso 1 guardada en el teléfono.
+      createRoute({ getParentRoute: () => privateFlow, path: "/publicar/continuar", component: lazyRouteComponent(publicarEntrada, "ContinuarScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),

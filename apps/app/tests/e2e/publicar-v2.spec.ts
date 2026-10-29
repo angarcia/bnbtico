@@ -1,12 +1,36 @@
 import { expect, test, type Page } from "./helpers/test";
+import type { ListingsHarness } from "../contract/harness";
+import { serviceClient, TEST_PHONES } from "../db/local";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
-import { enterCode } from "./helpers/session";
+import { postgrestHarness } from "../db/postgrest-harness";
+import { userIdOf } from "./helpers/admin";
+import { enterCode, injectSession } from "./helpers/session";
 
 // Publicar v2 (decisiones §E): la cuenta nueva pregunta por la casa y la verificación desde publicar habla de guardar la
 // casa. Contra Supabase local con los números de prueba (código 123456).
 test.describe.configure({ mode: "serial" });
 
 const READY = "¡Listo! Su cuenta está creada";
+const STEP1_KEY = "bnbtico-publicar-paso1";
+const UUID = "[0-9a-f-]{36}";
+const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
+let h: ListingsHarness;
+
+test.beforeAll(async () => {
+  h = await postgrestHarness();
+});
+
+test.beforeEach(async ({ page }) => {
+  await h.reset();
+  await page.route("https://tile.openstreetmap.org/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
+});
+
+/** Las casas de una cuenta, leídas con la clave de servicio. */
+async function listingsOf(phone: string) {
+  const { data, error } = await serviceClient().from("listings").select("id, status, kind").eq("owner_id", await userIdOf(phone)).order("created_at");
+  if (error) throw error;
+  return data;
+}
 
 async function register(page: Page, phone: string, name: string, country?: string) {
   if (country) await page.getByLabel("País de su WhatsApp").selectOption({ label: country });
@@ -68,7 +92,8 @@ test("verificar desde publicar habla de guardar la casa y nunca pasa por «¡Lis
     await expect(page.getByText("Después seguimos con su casa")).toBeVisible();
     await expect(page.getByText(/Después de verificar vuelve/)).toHaveCount(0);
     await enterCode(page);
-    await expect(page).toHaveURL(/\/publicar\/continuar$/);
+    // Sin respuesta del paso 1 guardada, /publicar/continuar sigue a la entrada de siempre (crea el borrador, paso 1).
+    await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/1$`));
     await expect(page.getByRole("heading", { name: READY })).toHaveCount(0);
   } finally {
     await deleteAccount(FREE_PHONE);
@@ -82,9 +107,85 @@ test("un enlace viejo a «¡Listo!» con la vuelta a publicar sigue hacia ella",
     await register(page, "8888 9999", "Ana Prueba");
     await expect(page).toHaveURL(/\/cuenta\/lista/);
     await page.goto(`/cuenta/lista?next=${encodeURIComponent("/publicar/continuar")}`);
-    await expect(page).toHaveURL(/\/publicar\/continuar$/);
+    await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/1$`));
     await expect(page.getByRole("heading", { name: READY })).toHaveCount(0);
   } finally {
     await deleteAccount(FREE_PHONE);
   }
+});
+
+// §E.3: /publicar sin cuenta. El paso 1 se responde en el teléfono, se verifica el WhatsApp y la casa se crea al volver.
+test("desde la portada sin cuenta: paso 1, verificación y «¿Dónde está su casa?»", async ({ page }) => {
+  await deleteAccount(FREE_PHONE);
+  try {
+    await page.goto("/publicar");
+    await expect(page.getByRole("heading", { name: "¿Qué es?" })).toBeVisible();
+    await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+    await expect(page.locator(".ready-list")).toBeVisible();
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page.locator('.note[role="alert"]')).toHaveText("Elija Alojamiento completo o Habitación.");
+    await page.locator("label.choice", { hasText: "Habitación" }).click();
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page).toHaveURL(/\/publicar\/verificar$/);
+    await expect(page.getByRole("heading", { name: "Para guardar su casa, verifique su WhatsApp" })).toBeVisible();
+    await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+    await page.getByLabel("Número de WhatsApp").fill("8888 9999");
+    await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+    await page.getByLabel("Nombre").fill("Ana Prueba");
+    await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+    await expect(page).toHaveURL(/\/cuenta\/codigo\?next=%2Fpublicar%2Fcontinuar$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Publicar casa" })).toBeVisible();
+    await expect(page.getByText("Después seguimos con su casa")).toBeVisible();
+    // La respuesta sigue guardada hasta que la casa existe.
+    expect(await page.evaluate((k) => localStorage.getItem(k), STEP1_KEY)).not.toBeNull();
+    await enterCode(page);
+    await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/2$`));
+    expect(await page.evaluate((k) => localStorage.getItem(k), STEP1_KEY)).toBeNull();
+    await expect(page.getByRole("heading", { name: READY })).toHaveCount(0);
+    // Exactamente una casa (el modo estricto de React monta dos veces: un solo intento por visita), con lo del paso 1.
+    await page.waitForTimeout(500);
+    const mine = await listingsOf(FREE_PHONE);
+    expect(mine.map((l) => [l.status, l.kind])).toEqual([["draft", "habitacion"]]);
+    expect(page.url()).toContain(mine[0]!.id);
+  } finally {
+    await deleteAccount(FREE_PHONE);
+  }
+});
+
+test("con un borrador ya empezado, elige; «Empezar otra» usa lo guardado", async ({ page }) => {
+  const seeded = await h.seed({ status: "draft" });
+  await page.goto("/publicar");
+  await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/publicar\/verificar$/);
+  await page.getByLabel("Número de WhatsApp").fill("8777 0001");
+  await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
+  await enterCode(page);
+  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Seguir con el borrador" })).toBeVisible();
+  await page.getByRole("button", { name: "Empezar otra" }).click();
+  await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/2$`));
+  expect(page.url()).not.toContain(seeded.id);
+  expect(await page.evaluate((k) => localStorage.getItem(k), STEP1_KEY)).toBeNull();
+  const mine = await listingsOf(TEST_PHONES.owner);
+  expect(mine).toHaveLength(2);
+  const created = mine.find((l) => l.id !== seeded.id)!;
+  expect([created.status, created.kind]).toEqual(["draft", "completo"]);
+  expect(page.url()).toContain(created.id);
+});
+
+test("con sesión, /publicar lleva al asistente de siempre", async ({ page }) => {
+  await injectSession(page, "owner");
+  await page.goto("/publicar");
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/1$`));
+});
+
+test("un paso 1 caducado no se usa", async ({ page }) => {
+  await injectSession(page, "owner");
+  await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ kind: "habitacion", savedAt: 0 })), STEP1_KEY);
+  await page.goto("/publicar/continuar");
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/1$`));
+  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
 });

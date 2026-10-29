@@ -9,7 +9,9 @@ export const PUBLISH_STEP1_TTL_MS = 604_800_000;
 
 export type Step1Kind = "completo" | "habitacion";
 
-const Step1 = z.object({ kind: z.enum(["completo", "habitacion"]), savedAt: z.number() });
+// `kind` como texto y comprobado a mano: z.enum metería su código en el zod del JS inicial (~0,4 KB) solo por esto.
+const Step1 = z.object({ kind: z.string(), savedAt: z.number() });
+const isStep1Kind = (k: string): k is Step1Kind => k === "completo" || k === "habitacion";
 
 export function storeStep1(kind: Step1Kind, now: number): string {
   return JSON.stringify({ kind, savedAt: now });
@@ -25,7 +27,7 @@ export function readStep1(raw: string | null, now: number): { kind: Step1Kind } 
     return null;
   }
   const r = Step1.safeParse(v);
-  if (!r.success || r.data.savedAt > now || now - r.data.savedAt > PUBLISH_STEP1_TTL_MS) return null;
+  if (!r.success || !isStep1Kind(r.data.kind) || r.data.savedAt > now || now - r.data.savedAt > PUBLISH_STEP1_TTL_MS) return null;
   return { kind: r.data.kind };
 }
 

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_HINTS, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -18,6 +18,7 @@ import { isChunkLoadError } from "../chunk-error";
 import { offerTakenQuery } from "../owner";
 import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
+import { KindChoice, ReadyList } from "./wizard-parts";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
  * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Un solo componente para
@@ -69,43 +70,6 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
       </Suspense>
     );
   }
-}
-
-/** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
-export function ChoiceCards({
-  name,
-  type,
-  options,
-  selected,
-  onChange,
-}: {
-  name: string;
-  type: "checkbox" | "radio";
-  options: { value: string; label: string; hint: string }[];
-  selected: string[];
-  /** Lo elegido tras cada toque (p. ej. el tipo de una casa publicada, que muestra el baño con «Habitación»). */
-  onChange?: (current: string[]) => void;
-}) {
-  const [current, setCurrent] = useState<string[]>(selected);
-  const toggle = (v: string) => {
-    const next = type === "radio" ? [v] : current.includes(v) ? current.filter((x) => x !== v) : [...current, v];
-    setCurrent(next);
-    onChange?.(next);
-  };
-  return (
-    <div className="grid-2">
-      {options.map((o) => {
-        const on = current.includes(o.value);
-        return (
-          <label key={o.value} className="choice" aria-pressed={on}>
-            <input type={type} name={name} value={o.value} checked={on} onChange={() => toggle(o.value)} className="sr-input" />
-            <b>{o.label}</b>
-            <span>{o.hint}</span>
-          </label>
-        );
-      })}
-    </div>
-  );
 }
 
 /** Contador −/+ con el valor en un campo oculto. */
@@ -408,17 +372,6 @@ function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing
   );
 }
 
-/** Lo que pide el asistente (revisión UX C4; publicar v2: las fotos ya no son obligatorias para enviar). */
-export function ReadyList() {
-  return (
-    <ul className="ready-list small">
-      <li>Fotos horizontales, si ya las tiene</li>
-      <li>El precio por noche</li>
-      <li>Unos 10 minutos</li>
-    </ul>
-  );
-}
-
 /** Campos de cada pantalla. `draft` trae los valores a mostrar; `listing`, lo que solo da el servidor (fotos, WhatsApp). */
 export function StepFields({ step, draft, listing, userId }: { step: Step; draft: ListingDraft; listing: Listing; userId: string }) {
   switch (step) {
@@ -432,18 +385,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
               <ReadyList />
             </section>
           ) : null}
-          <section className="stack">
-            <h2>¿Qué es?</h2>
-            <ChoiceCards
-              name="kind"
-              type="radio"
-              selected={draft.kind === "habitacion" ? ["habitacion"] : draft.kind ? ["completo"] : []}
-              options={[
-                { value: "completo", label: KIND_LABELS.completo, hint: KIND_HINTS.completo },
-                { value: "habitacion", label: KIND_LABELS.habitacion, hint: KIND_HINTS.habitacion },
-              ]}
-            />
-          </section>
+          <KindChoice kind={draft.kind} />
           <span className="small muted">Guardamos el borrador en cada paso; puede seguir después desde Mis casas.</span>
         </>
       );

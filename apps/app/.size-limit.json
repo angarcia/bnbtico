@@ -41,7 +41,10 @@
       "!dist/client/assets/edit-summary-*.js",
       "!dist/client/assets/step-forms-*.js",
       "!dist/client/assets/fields-*.js",
-      "!dist/client/assets/photo-grid-*.js"
+      "!dist/client/assets/photo-grid-*.js",
+      "!dist/client/assets/publicar-entrada-*.js",
+      "!dist/client/assets/wizard-parts-*.js",
+      "!dist/client/assets/publish-return-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -164,9 +167,20 @@
     "name": "Asistente de publicar · trozo diferido (sin Leaflet ni el paso de las fotos)",
     "path": [
       "dist/client/assets/publicar-*.js",
-      "dist/client/assets/location-leaflet-*.js"
+      "dist/client/assets/location-leaflet-*.js",
+      "!dist/client/assets/publicar-entrada-*.js"
     ],
     "limit": "15 KB",
+    "gzip": true
+  },
+  {
+    "name": "Entrada de publicar · trozo diferido (/publicar sin cuenta, la verificación, la vuelta tras el código y «¿Quiere añadir un correo?»; las piezas del paso 1 que comparte con el asistente)",
+    "path": [
+      "dist/client/assets/publicar-entrada-*.js",
+      "dist/client/assets/wizard-parts-*.js",
+      "dist/client/assets/publish-return-*.js"
+    ],
+    "limit": "5 KB",
     "gzip": true
   },
   {
