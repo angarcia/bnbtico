@@ -41,3 +41,13 @@ export function bboxAround(p: LatLng, meters: number): [west: number, south: num
   const dLng = dLat / Math.cos((p.lat * Math.PI) / 180);
   return [p.lng - dLng, p.lat - dLat, p.lng + dLng, p.lat + dLat];
 }
+
+/** Mapa de Explorar: encaja los marcadores con 24 px de margen sin pasar del zoom 15; sin marcadores, la zona elegida a
+ *  zoom 13 y, sin zona, Limón (el Caribe por defecto) a zoom 10. */
+export const EXPLORE_MAP = { padding: 24, maxZoom: 15, zoneZoom: 13, provinceZoom: 10 } as const;
+
+export function exploreMapView(points: readonly LatLng[], zone: LatLng | null): { fit: LatLng[] } | { center: LatLng; zoom: number } {
+  if (points.length) return { fit: [...points] };
+  if (zone) return { center: zone, zoom: EXPLORE_MAP.zoneZoom };
+  return { center: PROVINCE_CENTERS.Limón!, zoom: EXPLORE_MAP.provinceZoom };
+}

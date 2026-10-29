@@ -29,12 +29,15 @@ export function searchSummary(f: Filters, zoneName: string | null): string | nul
 }
 
 /** Línea de resultados: { count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" }. */
+/** «8 casas», «1 casa»: la cifra de los resultados y la píldora del mapa a pantalla completa. */
+export const housesCount = (n: number): string => `${n} ${n === 1 ? "casa" : "casas"}`;
+
 export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "zone">, zoneName: string | null = null): { count: string; rest: string } {
   const one = n === 1;
   const monthly = f.monthly ? (one ? " acepta alquiler mensual" : " aceptan alquiler mensual") : "";
   const place = f.zone && zoneName ? ` en ${zoneName} y alrededores` : f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
   const stay = stayLabel(f);
-  return { count: `${n} ${one ? "casa" : "casas"}`, rest: monthly + place + (stay ? ` · ${stay}` : "") };
+  return { count: housesCount(n), rest: monthly + place + (stay ? ` · ${stay}` : "") };
 }
 
 export interface RangeState { arrival: string | null; departure: string | null }

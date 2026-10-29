@@ -31,7 +31,9 @@
       "!dist/client/assets/listing-calendar-*.js",
       "!dist/client/assets/suscripcion-*.js",
       "!dist/client/assets/close-sheet-*.js",
-      "!dist/client/assets/buscar-*.js"
+      "!dist/client/assets/buscar-*.js",
+      "!dist/client/assets/explore-map-leaflet-*.js",
+      "!dist/client/assets/explore-map-full-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -42,6 +44,30 @@
       "dist/client/assets/buscar-*.js"
     ],
     "limit": "6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mapa de Explorar · trozo diferido (los marcadores de precio y el mapa a pantalla completa; Leaflet aparte)",
+    "path": [
+      "dist/client/assets/explore-map-leaflet-*.js"
+    ],
+    "limit": "2.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mapa de Explorar a pantalla completa · trozo diferido",
+    "path": [
+      "dist/client/assets/explore-map-full-*.js"
+    ],
+    "limit": "1.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Leaflet · trozo compartido (la ficha, el asistente de publicar y Explorar)",
+    "path": [
+      "dist/client/assets/leaflet-*.js"
+    ],
+    "limit": "44 KB",
     "gzip": true
   },
   {
