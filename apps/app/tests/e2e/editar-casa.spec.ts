@@ -353,6 +353,24 @@ test("quitar la última foto aprobada se rechaza", async ({ page }) => {
   await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(1);
 });
 
+test("quitar la portada aprobada: «Ver ficha», sin recargar, ya muestra la nueva portada", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  const before = (await h.owner("owner").getOwn(id))!.photos;
+  const cover = page.locator(".hero .strip img").first();
+  await page.goto(`/propietario/casas/${id}`);
+  // La ficha pública ya leída queda en la caché del teléfono.
+  await page.getByRole("link", { name: "Ver ficha" }).click();
+  await expect(cover).toHaveAttribute("src", before[0]!.url);
+  await page.goBack();
+  await page.getByRole("link", { name: "5 fotos · Editar" }).click();
+  await page.getByRole("button", { name: "Quitar foto 1" }).click();
+  await expect(counter(page)).toHaveText("4 de 15");
+  await page.getByRole("link", { name: "Listo" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await page.getByRole("link", { name: "Ver ficha" }).click();
+  await expect(cover).toHaveAttribute("src", before[1]!.url);
+});
+
 test("quitar una foto nueva: el contador baja y sus objetos se borran", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/fotos`);

@@ -15,10 +15,10 @@ import { formInput } from "../../domain/step-forms";
 import { toast } from "../../shared/toast";
 import { FlowHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
-import { photosApi } from "../owner";
+import { photosApi, refresh } from "../owner";
 import { BathroomChoice, CapacityCounters, ChoiceCards, DescriptionField, FeatureChips, PriceFields, TitleField } from "../publish/fields";
 import { LocationStep } from "../publish/location-step";
-import { PhotoCounter, PhotoGrid, rereadOwnListing, type PhotoSource } from "../publish/photo-grid";
+import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
 import { ReadyScope } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
 
@@ -161,7 +161,12 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
       await (isPending ? api.removeEditPhoto(photo.id) : api.remove(photo.id));
     },
     reorder: async (ids) => (await photosApi()).reorder(listing.id, ids),
-    reread: rereadOwnListing(client, userId, listing.id),
+    // Ordenar o quitar una aprobada cambia la ficha pública y Explorar: como useUpdateLive, se relee también lo público
+    // (la caché del teléfono, persistida, no lo pediría hasta que venza). Se espera al detalle, como en el asistente.
+    reread: async () => {
+      refresh(client, userId, listing);
+      await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] }, { cancelRefetch: false });
+    },
   };
   return (
     <>
