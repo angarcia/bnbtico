@@ -4,7 +4,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 ## Lo primero
 
-1. **El diseño v1 manda** (desde 2026-10-20): `docs/diseno-v1.md` y las pantallas de `design/pantallas/` fijan aspecto, estructura y copy de cada pantalla; tokens en `design/tokens/tokens.json` 0.2.0 y logo en `design/logo/`. El prototipo (`design/prototype/casatica-prototipo.html` + módulos, vista **Móvil**) sigue siendo la referencia de comportamiento donde el diseño no diga otra cosa; sus pruebas en `tests/prototype/*.cjs` deben pasar. Si dos documentos se contradicen, manda el más reciente.
+1. **El diseño v1 manda** (desde 2026-10-20): `docs/diseno-v1.md` y las pantallas de `design/pantallas/` fijan aspecto, estructura y copy de cada pantalla; tokens en `design/tokens/tokens.json` 0.2.1 y logo en `design/logo/`. El prototipo (`design/prototype/casatica-prototipo.html` + módulos, vista **Móvil**) sigue siendo la referencia de comportamiento donde el diseño no diga otra cosa; sus pruebas en `tests/prototype/*.cjs` deben pasar. Si dos documentos se contradicen, manda el más reciente.
 2. **Móvil primero.** Web para el teléfono en bnbtico.com (PWA); la vista web es un derivado. App en tiendas después del lanzamiento, envolviendo la misma web.
 3. **El plan de construcción está en `docs/plan-implementacion.md`.** Fases 0–7, qué entra en v1 y qué no. No lanzar a trozos: todo se prueba en `pruebas.bnbtico.com` y bnbtico.com se abre cuando la v1 esté completa.
 4. **Las decisiones y su porqué están en `docs/decisiones.md`** (la más reciente arriba). Si cambias una decisión, anótala ahí el mismo día.

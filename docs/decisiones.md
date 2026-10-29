@@ -1,3 +1,11 @@
+## 2026-10-29 · Densidad, tarjetas con la etiqueta en la foto y calendario en vertical (ronda de Ana, B y C)
+
+- **Margen 16 px:** las pantallas, las filas de chips, la tira de fotos y las barras fijas (superior, «Atrás / Continuar», la de la ficha y el panel del calendario) usan `--gutter` (16 px, antes 20). La portada no cambia.
+- **Iconos más grandes:** pestañas 26 px (antes 22), iconos de las filas 24 px, características de la ficha 26 px.
+- **Terracota de texto `#B44C30`** (blanco encima 5,1:1; sustituye a `#BF4D2E`) para el texto pequeño terracota, contadores, «Nueva», marcadores del mapa y la pestaña activa; `#D65C3C` queda solo para el logo, los corazones y lo grande.
+- **La selección no depende solo del color:** ✓ delante de los chips elegidos (los de `aria-pressed`; no los de navegación) y el lado elegido de «₡ | $» en negrita.
+- **Prueba de contraste en CI** (`tests/unit/contrast.test.ts`): los pares de colores con texto del tema claro, ≥ 4,5:1. Colores del calendario: libre `#DCE8DF`, ocupado `#F7E3D3` con texto `#9A4B2A`; «¿Cuándo?» `#D9775A` con número `#1C2B2A` y banda `#F7E6D8`. Tokens 0.2.1.
+
 ## 2026-10-28 · Arreglos de la revisión de Ana
 
 Decisión de Daniel, tras las pruebas de Ana desde el teléfono.

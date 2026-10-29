@@ -418,6 +418,26 @@ test("la barra superior: 56 px más el área segura, y los botones de al menos 4
   await checkBar();
 });
 
+test("densidad: márgenes de 16 px e iconos de 26 px en la barra", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
+  await page.goto("/explorar");
+  await expect(nav(page).getByRole("link")).toHaveCount(5);
+  const padding = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).paddingLeft);
+  expect(await padding("main.view")).toBe("16px");
+  expect(await padding(".topbar")).toBe("16px");
+  for (const svg of await page.locator(".tabbar .nav svg").all()) await expect(svg).toHaveAttribute("width", "26");
+  const active = page.locator('.tabbar .nav[aria-current="page"]');
+  await expect(active).toHaveCount(1);
+  expect(await active.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(180, 76, 48)");
+  const monthly = page.getByRole("button", { name: "Solo alquiler mensual" });
+  await monthly.click();
+  await expect(monthly).toHaveAttribute("aria-pressed", "true");
+  // El ✓ se ve pero no entra en el nombre accesible (texto alternativo vacío).
+  expect(await monthly.evaluate((el) => getComputedStyle(el, "::before").content)).toMatch(/^"✓ "/);
+  await expect(page.getByRole("button", { name: "Solo alquiler mensual", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
 test.describe("en un teléfono de 375 px", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 

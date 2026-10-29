@@ -279,14 +279,14 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                 const Icon = I[FEATURE_ICON[f]];
                 return (
                   <div key={f}>
-                    <Icon size={22} />
+                    <Icon size={26} />
                     {f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratis"}` : FEATURE_SHORT[f]}
                   </div>
                 );
               })}
               {d.monthly ? (
                 <div>
-                  <I.calendar size={22} />
+                  <I.calendar size={26} />
                   {MONTHLY_LABEL}
                 </div>
               ) : null}

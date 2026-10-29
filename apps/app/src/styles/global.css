@@ -1,4 +1,4 @@
-/* bnbtico · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.2.0 */
+/* bnbtico · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.2.1 */
 /* Fuentes alojadas aquí (variables, subconjuntos latin y latin-ext): Outfit para títulos y cifras, Figtree para el resto. */
 @font-face{font-family:Outfit;font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/outfit-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:Outfit;font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/outfit-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -10,7 +10,7 @@
 :root{--display:Outfit,"Outfit Fallback",system-ui,sans-serif;--body:Figtree,"Figtree Fallback",system-ui,sans-serif}
 :root{
   --bg:#FFFBF2;--surface:#FFFFFF;--surface-2:#F6E7C8;--fg:#1C2B2A;--muted:#5C6B69;--line:#E6DCC6;--line-nav:#EADFC8;--line-soft:#F0E6D2;
-  --brand:#D65C3C;--brand-ink:#BF4D2E;
+  --brand:#D65C3C;--brand-ink:#B44C30;
   --primary:#2F5D45;--primary-on:#FFFBF2;--primary-ink:#1F4231;
   --selection:#7FA98A;--selection-ink:#16331F;
   --state-soft:#DCE8DF;--state-ink:#2F5D45;
@@ -20,7 +20,8 @@
   --ok:#2F5D45;--warn:#C97A12;--bad:#C2432F;--bad-soft:#FBE3DF;--busy:#F5DDD4;--busy-ink:#9E3D22;
   --shadow:0 2px 0 var(--line);--shadow-float:0 2px 0 var(--line),0 10px 24px -14px rgba(28,43,42,.35);
   --r:24px;--r-thumb:18px;--r-tile:20px;--r-input:16px;--r-cta:18px;--r-sheet:28px;
-  --nav-h:84px;
+  --nav-h:84px;--gutter:16px;
+  --cal-free:#DCE8DF;--cal-busy:#F7E3D3;--cal-busy-ink:#9A4B2A;--when-pick:#D9775A;--when-pick-ink:#1C2B2A;--when-band:#F7E6D8;
   --ease-out:cubic-bezier(0.23,1,0.32,1);--ease-drawer:cubic-bezier(0.32,0.72,0,1);
   color-scheme:light;
 }
@@ -29,7 +30,7 @@
   --brand:#E8785A;--brand-ink:#F0A48C;--primary:#7FA98A;--primary-on:#16331F;--primary-ink:#B9D2BF;
   --selection:#3E6B52;--selection-ink:#DCE8DF;--state-soft:#1F3A2C;--state-ink:#B9D2BF;
   --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--review-soft:#2B2A22;--overlay:rgba(11,11,12,.86);--overlay-btn:#1C2320;
-  --bad:#E8785A;--bad-soft:#4A2521;--ochre:#F0B24F;--shadow:0 2px 0 var(--line);color-scheme:dark}}
+  --bad:#E8785A;--bad-soft:#4A2521;--ochre:#F0B24F;--cal-busy:#4A2521;--cal-busy-ink:#F0A48C;--cal-free:#1F3A2C;--shadow:0 2px 0 var(--line);color-scheme:dark}}
 
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -111,8 +112,10 @@ a{color:var(--primary)}
 /* ---------- Chips, píldoras, etiquetas ---------- */
 .chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 16px;border-radius:999px;background:var(--surface-2);color:var(--fg);font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap}
 .chip[aria-pressed="true"],.chip[aria-current="true"],.chip[aria-current="page"]{background:var(--selection);color:var(--selection-ink);font-weight:700}
+/* La selección no depende solo del color (spec «Densidad y tarjetas», § Accessibility); los chips de navegación, sin ✓. Texto alternativo vacío: el nombre accesible no cambia (ya dice «pulsado»). */
+.chip[aria-pressed="true"]::before{content:"✓ ";content:"✓ " / ""}
 .chip-sm{min-height:36px;padding:0 14px;font-size:13px}
-.chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px}
+.chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter)}
 .chiprow::-webkit-scrollbar{display:none}
 .chiprow.fit{overflow-x:visible;margin:0;padding:0;flex-wrap:nowrap}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--surface-2);color:var(--fg);align-self:flex-start}
@@ -124,7 +127,7 @@ a{color:var(--primary)}
 .pill{position:absolute;padding:6px 10px;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
 .pill span{font-weight:500;opacity:.8}
 .pill-sm{font-size:12px;padding:5px 10px}
-.count-badge{position:absolute;top:2px;right:14px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:#FFFBF2;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.count-badge{position:absolute;top:2px;right:14px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--brand-ink);color:#FFFBF2;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 
 /* ---------- Formularios ---------- */
 label{font-size:13px;font-weight:600;color:var(--muted);display:block}
@@ -172,13 +175,13 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 
 /* ---------- App (móvil) ---------- */
 .app{min-height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
-.view{flex:1;padding:calc(12px + env(safe-area-inset-top)) 20px calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.view{flex:1;padding:calc(12px + env(safe-area-inset-top)) var(--gutter) calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
 .view.no-nav{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .header-root{display:flex;flex-direction:column;gap:14px}
 .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
 .header-root .logo{height:38px;width:auto}
 /* Barra superior fija de las pestañas (logo · ₡ | $ · cuenta): 56 px más el área segura, centrada como la de abajo. */
-.topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 20px 0;display:flex;justify-content:space-between;align-items:center;background:var(--bg);z-index:6}
+.topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) var(--gutter) 0;display:flex;justify-content:space-between;align-items:center;background:var(--bg);z-index:6}
 /* A 375 px sin sesión (logo, «₡ | $» e «Ingresar») no sobra sitio: el logo es lo que encoge, nunca los botones. */
 .topbar{gap:8px}
 .topbar > .row{flex:none}
@@ -199,7 +202,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .tabbar.two .nav{font-size:12px}
 /* En pantallas de flujo con botones fijos (publicar, filtros, revisar, ficha) no hay barra de pestañas. */
 .app:has(.sticky-actions) .tabbar,.app:has(.cta-bar) .tabbar{display:none}
-.sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px 20px calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
+.sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
 .sticky-actions .btn{min-height:48px;font-size:16px;font-family:var(--display)}
 .sticky-actions .grow{flex:1}
 .sticky-spacer{height:76px}
@@ -221,7 +224,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .place-line .place-off{color:var(--sun-ink);font-size:14px}
 .place-line .btn{flex-shrink:0}
 .photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
-.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;padding:12px 20px calc(24px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
+.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;padding:12px var(--gutter) calc(24px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
 .cta-bar .price{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .cta-bar .price small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
 .cta-spacer{height:141px}
@@ -290,7 +293,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .photos-grid .add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:108px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer}
 .photos-grid .remove{position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:999px;background:var(--overlay-btn);color:var(--fg);display:inline-flex;align-items:center;justify-content:center}
 .photos-grid .tag{position:absolute;left:10px;top:10px;padding:5px 10px;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-size:12px;font-weight:700}
-.photo-strip{display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:0 20px;scrollbar-width:none}
+.photo-strip{display:flex;gap:8px;overflow-x:auto;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);scrollbar-width:none}
 .photo-strip::-webkit-scrollbar{display:none}
 .photo-strip .photo{flex:0 0 auto;height:140px;border-radius:var(--r-tile)}
 .avatar{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:800;font-size:20px;flex-shrink:0}
@@ -343,8 +346,8 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .chip-strong{font-weight:700}
 .badge-tight{padding:2px 8px}
 .currency-switch{display:inline-flex;padding:3px;border-radius:999px;background:var(--surface-2);gap:2px;flex:none}
-.currency-switch button{min-width:44px;min-height:36px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:700;font-size:16px;cursor:pointer;font-variant-numeric:tabular-nums}
-.currency-switch button[aria-pressed="true"]{background:var(--selection);color:var(--selection-ink)}
+.currency-switch button{min-width:44px;min-height:36px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;font-size:16px;cursor:pointer;font-variant-numeric:tabular-nums}
+.currency-switch button[aria-pressed="true"]{background:var(--selection);color:var(--selection-ink);font-weight:800}
 /* Arriba y en la ficha, botones de 44 px; en la ficha, sobre la foto, el fondo de los botones redondos. Antes de hidratar,
    la ficha pinta una caja del mismo tamaño (medido: 3 + 44 + 2 + 44 + 3 de ancho, 3 + 44 + 3 de alto). */
 .topbar .currency-switch button,.listing-view .currency-switch button{min-height:44px}
@@ -433,6 +436,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .detail-photo .pill-bl{left:12px;bottom:12px}
 .detail-photo .pill-tl{left:12px;top:12px}
 .muted-icon{color:var(--muted);display:inline-flex;flex-shrink:0}
+.list-item .muted-icon svg{width:24px;height:24px}
 button.list-item{cursor:pointer}
 button.list-item:disabled{color:#A3ADA6;cursor:not-allowed}
 button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inherit}
@@ -667,7 +671,7 @@ small.swap-in{display:block}
 .cal-open{align-self:flex-start}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(var(--nav-h) + 240px + env(safe-area-inset-bottom))}
-.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));width:100%;max-width:560px;z-index:7;display:flex;flex-direction:column;gap:10px;padding:14px 20px;background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
+.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));width:100%;max-width:560px;z-index:7;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter);background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
 /* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
 .cal-panel.kb{padding-bottom:calc(14px + 320px)}
 .cal-cancel{font-size:13px;font-weight:600;color:var(--muted);min-height:32px}

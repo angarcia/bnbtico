@@ -60,7 +60,7 @@ export function TabsFrame({ children }: { children: ReactNode }) {
               activeProps={{ "aria-current": "page" }}
               aria-label={badge === "inquiries" && n > 0 ? `${label}, ${n} ${n === 1 ? "nueva" : "nuevas"}` : undefined}
             >
-              <Icon size={22} />
+              <Icon size={26} />
               <span>{label}</span>
               {n > 0 ? (
                 <b className="nav-count num" data-testid={badge === "inquiries" ? "inquiries-badge" : undefined}>
