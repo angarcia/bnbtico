@@ -1,7 +1,7 @@
 // Actividad (navegación simple): visitas, toques en WhatsApp y consultas de 30 días por casa, y las últimas consultas, que
 // abren WhatsApp con el cliente; cada consulta lleva su casa y, con dos o más casas, chips para filtrarlas (`?casa=<uuid>`).
 // Trozo diferido. Se pinta desde la caché (persistida con la sesión) y se refresca por detrás.
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useIsRestoring, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import type { ListingActivity } from "../../domain/api";
@@ -33,7 +33,9 @@ export function ActividadScreen() {
   const userId = useSession().session?.userId ?? "";
   const search = route.useSearch();
   const navigate = useNavigate();
-  const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
+  // Con `?casa=` se vuelve a leer siempre al abrir: una casa publicada hace un momento aún no está en la caché.
+  const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId, refetchOnMount: search.casa ? "always" : true });
+  const restoring = useIsRestoring();
   const activity = useQuery({ ...activityQuery(userId), enabled: !!userId });
   const inquiries = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
   const list = listings.data;
@@ -43,13 +45,15 @@ export function ActividadScreen() {
   const anyActive = !!list?.some((l) => l.status === "active");
   const chips = list ? inquiryChips(list) : null;
   const selected = chips?.some((c) => c.id === search.casa) ? search.casa! : null;
-  // Una casa desconocida, o una sola casa: «Todas». Las cifras de arriba no se filtran nunca.
-  const dropCasa = !!list && !!search.casa && !selected;
+  // Una casa desconocida, o una sola casa: «Todas», pero solo con la lista leída de la base tras abrir y sin error (sin red,
+  // la casa puede faltar en la copia del teléfono: `casa` se queda y se ven sus consultas). Las cifras no se filtran nunca.
+  const settled = listings.isFetchedAfterMount && listings.isSuccess && !listings.isFetching && !restoring;
+  const dropCasa = !!list && !!search.casa && !selected && settled;
   useEffect(() => {
     if (dropCasa) void navigate({ to: "/propietario/actividad", search: {}, replace: true });
   }, [dropCasa, navigate]);
   // Primero la casa, luego las últimas: una casa tranquila no se queda sin sus consultas.
-  const latest = filterInquiries(inquiries.data ?? [], selected).slice(0, LATEST);
+  const latest = filterInquiries(inquiries.data ?? [], selected ?? (settled ? null : (search.casa ?? null))).slice(0, LATEST);
   const houses = new Map((list ?? []).map((l) => [l.id, l]));
   // Sin casa activa, hasta saber si hay consultas no se sabe si toca el mensaje de «vacío».
   const waiting = !list || (!anyActive && !inquiries.data && !inquiriesFailed);

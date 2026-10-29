@@ -133,6 +133,27 @@ test.describe("Suscripción de una casa", () => {
     await expect(page).toHaveURL(new RegExp(`\\?casa=${b.publicId}$`));
   });
 
+  test("sin red, con ?casa= de una casa que no está en la caché: conserva casa y no enseña las demás", async ({ page }) => {
+    await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    await owner(page);
+    await page.goto(SCREEN);
+    await expect(houses(page)).toHaveCount(1);
+    await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con A sola
+    const b = await h.seed({ status: "active", draft: { title: "Cabina Punta Uva" } });
+    let hits = 0;
+    await page.route("**/rest/v1/rpc/owner_billing", (route) => {
+      hits++;
+      return route.abort("internetdisconnected");
+    });
+    await page.goto(`${SCREEN}?casa=${b.publicId}`);
+    await expect.poll(() => hits, { timeout: 10_000 }).toBeGreaterThanOrEqual(2); // la lectura y su reintento fallan
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(new RegExp(`\\?casa=${b.publicId}$`));
+    await expect(page.getByRole("heading", { level: 1, name: "Suscripción" })).toBeVisible();
+    await expect(houses(page)).toHaveCount(0);
+    await expect(page.locator('.note[role="alert"]')).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
+  });
+
   test("caché fresca sin la casa, dentro de la app: vuelve a leer antes de quitar casa", async ({ page }) => {
     await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
     const b = await h.seed({ status: "active", draft: { title: "Cabina Punta Uva" } });
@@ -202,6 +223,69 @@ test.describe("Cuenta", () => {
     await fresh(page, "/cuenta");
     await expect(page.getByTestId("payment-row")).toContainText("Visa ···· 4242");
     await expect(page.getByTestId("payment-row")).not.toHaveClass(/list-item-sun/);
+  });
+
+  test("la fila Método de pago va en ocre solo cuando toca avisar; si no, «Ninguno todavía»", async ({ page }) => {
+    const pay = page.getByTestId("payment-row");
+    const neutral = async () => {
+      await expect(pay).toContainText("Ninguno todavía");
+      await expect(pay).not.toHaveClass(/list-item-sun/);
+      await expect(pay).not.toContainText("Falta");
+    };
+    // Solo un borrador: nada que pagar todavía.
+    await h.seed({ status: "draft", draft: { title: "Borrador" } });
+    await owner(page);
+    await ownerCuenta(page);
+    await neutral();
+    // Una casa en su oferta gratuita, lejos del final.
+    const a = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    await fresh(page, "/cuenta");
+    await expect(page.getByTestId("sub-row").filter({ hasText: "Casa Cocles" })).toBeVisible();
+    await neutral();
+    // Toca el aviso de los 7 días: ya sale «Añadir método de pago» en la casa, y la fila en ocre.
+    await h.setDaysLeft(a.id, 7);
+    await fresh(page, "/cuenta");
+    await expect(pay).toHaveClass(/list-item-sun/);
+    await expect(pay).toContainText("Falta · añádalo antes de que termine su oferta");
+  });
+
+  test("una casa parada: su línea de la suscripción en ocre con «Inactiva»", async ({ page }) => {
+    const a = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    await h.billing("owner").stop(a.id);
+    await owner(page);
+    await fresh(page, "/cuenta");
+    const row = page.getByTestId("sub-row").filter({ hasText: "Casa Cocles" });
+    await expect(row).toHaveAttribute("data-ocre", "1");
+    await expect(row.locator(".sun-ink")).toHaveText("Casa Cocles");
+    await expect(row.locator(".badge.badge-sun")).toHaveText("Inactiva");
+    await expect(row).toHaveAttribute("href", `${SCREEN}?casa=${a.publicId}`);
+  });
+
+  test("Cerrar sesión: el enlace mide al menos 44 px de alto", async ({ page }) => {
+    await owner(page);
+    await page.goto("/cuenta");
+    const box = (await page.getByRole("button", { name: "Cerrar sesión" }).boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test("Cerrar sesión falla: aviso, el botón vuelve y el foco va al título", async ({ page }) => {
+    await owner(page);
+    await page.goto("/cuenta");
+    await expect(page.getByRole("heading", { name: "Yorleny Prueba" })).toBeVisible();
+    // Sin red para revocarla en el servidor y sin poder borrarla del teléfono: la sesión no se cierra.
+    await page.route("**/auth/v1/logout*", (route) => route.abort("internetdisconnected"));
+    await page.evaluate(() => {
+      const remove = Storage.prototype.removeItem;
+      Storage.prototype.removeItem = function (this: Storage, key: string) {
+        if (key === "bnbtico-auth") throw new Error("storage");
+        return remove.call(this, key);
+      };
+    });
+    await signOut(page);
+    await expect(page.locator('.note[role="alert"]')).toHaveText("No pudimos cerrar la sesión. Intente de nuevo.");
+    await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeEnabled();
+    await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).not.toBeNull();
   });
 
   test("Flujo 5: Cuenta: la línea de identidad bajo WhatsApp verificado", async ({ page }) => {
@@ -336,6 +420,29 @@ test.describe("Actividad por casa", () => {
     await expect(page).toHaveURL(new RegExp(`\\?casa=${vacia.id}$`));
     await expect(page.getByText("Todavía no hay consultas de esta casa.")).toBeVisible();
     await expect(inquiryCards(page)).toHaveCount(0);
+  });
+
+  test("sin red, con ?casa= de una casa que no está en la caché: conserva casa y enseña sus consultas", async ({ page }) => {
+    const cabina = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Punta Uva" } });
+    await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
+    await inquiry(cabina.publicId, "Hola Cabina 0", 1);
+    await owner(page);
+    await page.goto("/propietario/actividad");
+    await expect(chips(page).getByRole("link")).toHaveCount(3);
+    await page.waitForTimeout(1500); // la caché se guarda en IndexedDB sin la casa nueva
+    const nueva = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Nueva" } });
+    await inquiry(nueva.publicId, "Hola Cocles nueva", 0);
+    let hits = 0;
+    await page.route("**/rest/v1/listings?**", (route) => {
+      hits++;
+      return route.abort("internetdisconnected");
+    });
+    await page.goto(`/propietario/actividad?casa=${nueva.id}`);
+    await expect.poll(() => hits, { timeout: 15_000 }).toBeGreaterThanOrEqual(4); // la lectura y sus tres reintentos fallan
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(new RegExp(`\\?casa=${nueva.id}$`));
+    await expect(inquiryCards(page)).toHaveCount(1);
+    await expect(inquiryCards(page)).toContainText("Hola Cocles nueva");
   });
 
   test("con una sola casa: la etiqueta de la casa y sin chips", async ({ page }) => {

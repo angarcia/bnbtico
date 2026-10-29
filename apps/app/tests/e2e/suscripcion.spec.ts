@@ -159,6 +159,7 @@ test("parar con confirmación y reactivar, optimistas; si la base se niega, vuel
   await page.getByRole("dialog").getByRole("button", { name: "Parar suscripción" }).click();
   await expect(a.getByText("Inactiva", { exact: true })).toBeVisible();
   await expect(a.getByRole("button", { name: "Activar suscripción" })).toBeVisible();
+  await expect(page.locator(`[data-house="${casa.publicId}"]`)).toBeFocused(); // el botón que abrió la hoja ya no está: el foco va a la casa
   release();
   await expect.poll(() => statusOf(casa.id)).toBe("inactive");
   expect(await statusOf(otra.id)).toBe("active"); // las demás casas no cambian

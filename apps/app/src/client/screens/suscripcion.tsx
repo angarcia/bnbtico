@@ -202,6 +202,7 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           confirmLabel="Parar suscripción"
           confirmClassName="btn btn-primary btn-lg"
           cancelClassName="btn btn-ghost btn-lg"
+          returnFocus={ref}
           onClose={() => setConfirming(false)}
           onConfirm={() => {
             setConfirming(false);
@@ -267,7 +268,8 @@ export function SuscripcionScreen() {
   const target = parsePayHash(hash ? `#${hash}` : "");
   const [saving, dismissSaving] = useSavingMethod(userId, search.pago);
   const scope = indexed ? scopeBilling(indexed.all, search.casa) : null;
-  const settled = !!indexed && !billing.isFetching && !restoring;
+  // Asentado = leído de la base tras abrir la pantalla y sin error: sin red (o si falló), `casa` se queda y no se ven las demás.
+  const settled = !!indexed && billing.isFetchedAfterMount && billing.isSuccess && !billing.isFetching && !restoring;
   // Una sola corrección de la URL: fuera `pago=ok` siempre y `casa` si no es suya (con los datos ya leídos); el hash se queda.
   useEffect(() => {
     const fix = scopeFix(search, { unknown: !!scope?.unknown, settled });
@@ -328,6 +330,10 @@ export function SuscripcionScreen() {
             <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en bnbtico nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
           </section>
         </>
+      ) : single && billing.isError && !billing.isFetching ? (
+        <p className="note" role="alert">
+          {message(billing.error)}
+        </p>
       ) : userId && (billing.isPending || single) ? (
         <section className="card skeleton sub-skeleton" aria-busy="true" aria-label="Cargando su suscripción">
           <span className="sk sk-line" />
@@ -435,18 +441,20 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
   );
 }
 
-/** La fila «Método de pago» de Cuenta; nada sin datos de facturación (Cuenta como antes). */
+/** La fila «Método de pago» de Cuenta; nada sin datos de facturación (Cuenta como antes). En ocre solo si falta y alguna
+ *  casa ya lo necesita (la misma regla que «Añadir método de pago»); si falta pero aún no toca, «Ninguno todavía». */
 export function CuentaPaymentRow() {
   const userId = useSession().session?.userId ?? "";
   const billing = useBilling(userId);
   if (!billing) return null;
+  const due = !billing.method && billing.all.some((x) => payButtonDue(x.sub, billing.today));
   return (
-    <Link to="/propietario/suscripcion" className={billing.method ? "list-item" : "list-item list-item-sun"} data-testid="payment-row">
+    <Link to="/propietario/suscripcion" className={due ? "list-item list-item-sun" : "list-item"} data-testid="payment-row">
       <span className="primary">
         <CardIcon />
       </span>
       <span className="body">
-        Método de pago<small className="num">{billing.method ? `${methodName(billing.method)} · vence ${expiry(billing.method)}` : "Falta · añádalo antes de que termine su oferta"}</small>
+        Método de pago<small className="num">{billing.method ? `${methodName(billing.method)} · vence ${expiry(billing.method)}` : due ? "Falta · añádalo antes de que termine su oferta" : "Ninguno todavía"}</small>
       </span>
       <span className="chev">
         <I.chevron />

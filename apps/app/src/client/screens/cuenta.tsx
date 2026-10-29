@@ -548,10 +548,18 @@ function MyAccount({ editing }: { editing: boolean }) {
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const [leaving, setLeaving] = useState(false);
   const [asking, setAsking] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   async function logout() {
     setLeaving(true);
-    await (await authApi()).logout();
+    setLogoutError(null);
+    try {
+      await (await authApi()).logout();
+    } catch (e) {
+      const err = toDomainError(e);
+      setLogoutError(err.kind === "unknown" ? "No pudimos cerrar la sesión. Intente de nuevo." : err.message);
+      return setLeaving(false);
+    }
     await navigate({ to: "/cuenta", replace: true });
   }
 
@@ -662,6 +670,11 @@ function MyAccount({ editing }: { editing: boolean }) {
         <button type="button" className="btn-link muted logout-link" onClick={() => setAsking(true)} disabled={leaving}>
           Cerrar sesión
         </button>
+        {logoutError ? (
+          <p className="note small" role="alert">
+            {logoutError}
+          </p>
+        ) : null}
       </div>
       {asking ? (
         <ConfirmSheet
