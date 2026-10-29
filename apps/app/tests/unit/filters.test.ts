@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, effectiveFilters, resultsText, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, effectiveFilters, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
 import { listingsQuery } from "../../src/client/queries";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
@@ -151,12 +151,6 @@ describe("alquiler mensual (?mensual=1)", () => {
   it("extrasCount no cuenta el rango con el mensual, ni el mensual mismo", () => {
     expect(extrasCount({ ...base, monthly: true, min: 40000, max: 90000, beds: 2 })).toBe(1);
     expect(extrasCount({ ...base, monthly: false, min: 40000, max: 90000, beds: 2 })).toBe(3);
-  });
-  it("línea de resultados", () => {
-    expect(resultsText(2, { prov: "Limón", monthly: true })).toEqual({ count: "2 casas", rest: " aceptan alquiler mensual en Limón" });
-    expect(resultsText(1, { prov: "Todas", monthly: true })).toEqual({ count: "1 casa", rest: " acepta alquiler mensual" });
-    expect(resultsText(8, { prov: "Limón", monthly: false })).toEqual({ count: "8 casas", rest: " en Limón" });
-    expect(resultsText(9, { prov: "Todas", monthly: false })).toEqual({ count: "9 casas", rest: "" });
   });
   it("ida y vuelta por searchFor", () => {
     expect(searchFor(parseFilters({ mensual: "1", prov: "Limón" }, ["Limón"]), ["Limón"])).toEqual({ mensual: "1" });

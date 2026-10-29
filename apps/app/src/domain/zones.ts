@@ -23,8 +23,10 @@ export interface Place { province: string; canton: string; district: string; dis
 export interface NearZone { id: string; name: string; distanceM: number }
 /** Una zona de la tabla `zones` (para el buscador). */
 export interface Zone { id: string; name: string; cantonCode: string; lat: number; lng: number }
+/** Una zona con su cantón, su provincia y las casas que tiene (`zones_with_listings`, para el buscador de Explorar). */
+export interface ZoneWithListings { id: string; name: string; cantonCode: string; canton: string; province: string; lat: number; lng: number; listings: number }
 /** Caribe (código de cantón 7xx, Limón) primero; el resto del orden se respeta. */
-export const caribeFirst = (zones: readonly Zone[]): Zone[] =>
+export const caribeFirst = <T extends Pick<Zone, "cantonCode">>(zones: readonly T[]): T[] =>
   [...zones].sort((a, b) => Number(!a.cantonCode.startsWith("7")) - Number(!b.cantonCode.startsWith("7")));
 /** La zona elegida. `anchor`: donde estaba el pin al elegirla con «Otra…» (null en las demás). */
 export interface ZoneChoice { name: string; source: ZoneSource; zoneId: string | null; anchor: LatLng | null }

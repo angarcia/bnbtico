@@ -183,14 +183,6 @@ export function extrasCount(f: Filters): number {
   return (q.beds > 0 ? 1 : 0) + q.features.length + (q.min > 0 ? 1 : 0) + (q.max > 0 ? 1 : 0);
 }
 
-/** Línea de resultados: { count: "2 casas", rest: " aceptan alquiler mensual en Limón" }. */
-export function resultsText(n: number, f: Pick<Filters, "prov" | "monthly">): { count: string; rest: string } {
-  const one = n === 1;
-  const monthly = f.monthly ? (one ? " acepta alquiler mensual" : " aceptan alquiler mensual") : "";
-  const zone = f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
-  return { count: `${n} ${one ? "casa" : "casas"}`, rest: monthly + zone };
-}
-
 /** «Todas» y las provincias con casas, en el orden del prototipo. */
 export function provinceChips(provinces: readonly string[]): string[] {
   return [ALL_PROVINCES, ...PROVINCES.filter((p) => provinces.includes(p))];

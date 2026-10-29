@@ -16,6 +16,18 @@ describe("searchHelpMessage", () => {
     expect(searchHelpMessage({ ...none, prov: "Todas" })).not.toMatch(/Zona|Todas/);
   });
 
+  it("con zona: «Zona: Cocles.» en vez de la provincia; con fechas, «Fechas: 23–27 nov.»", () => {
+    const f: Partial<Filters> = { prov: "Limón", zone: "704-cocles", arrival: "2026-11-23", departure: "2026-11-27", ppl: 4 };
+    const l = searchHelpMessage({ ...none, ...f }, "Cocles").split("\n");
+    expect(l).toContain("Zona: Cocles.");
+    expect(l).not.toContain("Zona: Limón.");
+    expect(l.at(-1)).toBe("Fechas: 23–27 nov.");
+  });
+
+  it("mensual con «desde»: «Fechas: desde el 1 dic.»", () => {
+    expect(lines({ monthly: true, monthlyFrom: "2026-12-01" }).at(-1)).toBe("Fechas: desde el 1 dic.");
+  });
+
   it("personas", () => {
     expect(lines({ ppl: 4 })).toContain("Personas: 4.");
     expect(searchHelpMessage(none)).not.toContain("Personas");
