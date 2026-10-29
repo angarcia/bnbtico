@@ -1,7 +1,7 @@
 // Consultas por WhatsApp (fase 3): el mensaje que redacta la hoja de contacto, su validación (los mismos mensajes que la
 // RPC create_inquiry), la regla de redacción automática, y lo que muestra la tarjeta de una consulta en Actividad.
 // `waUrl` vive en su propio módulo para que el soporte (zona privada inicial) no arrastre el resto de este.
-import { costaRicaToday, formatInquiryDates, isoParts } from "./dates";
+import { costaRicaToday, formatInquiryDates, isoParts, longDate } from "./dates";
 export { waUrl } from "./whatsapp";
 export { costaRicaToday, formatInquiryDates } from "./dates";
 
@@ -41,6 +41,8 @@ export interface InquiryFields {
   arrival?: string | null;
   departure?: string | null;
   people?: number | null;
+  /** «Desde» de una búsqueda de alquiler mensual: solo cambia el mensaje (la consulta no lo guarda). */
+  monthlyFrom?: string | null;
 }
 
 /** Una consulta vista por el propietario (RPC owner_inquiries): con el nombre y el WhatsApp del cliente. */
@@ -86,6 +88,9 @@ export function composeInquiryMessage(title: string, f: InquiryFields): string {
   const dates = messageDates(f);
   const n = f.people && f.people > 0 ? Math.floor(f.people) : 0;
   const people = n > 0 ? `${n} persona${n === 1 ? "" : "s"}` : "";
+  // Llegada y salida válidas mandan; si no, el «desde» del mensual.
+  const from = !dates && f.monthlyFrom && isoParts(f.monthlyFrom) ? longDate(f.monthlyFrom) : null;
+  if (from) return `Hola, vi ${title} en bnbtico. Me interesa alquilar por meses desde el ${from}${people ? `, para ${people}` : ""}. ¿Está disponible? Gracias.`;
   const ask = dates && people ? `¿Está disponible ${dates} para ${people}?` : dates ? `¿Está disponible ${dates}?` : people ? `¿Está disponible para ${people}?` : "¿Está disponible?";
   return `Hola, vi ${title} en bnbtico y me interesa. ${ask} Gracias.`;
 }
@@ -115,6 +120,7 @@ export interface ContactDraftState {
   arrival: string | null;
   departure: string | null;
   people: number | null;
+  monthlyFrom: string | null;
   message: string;
   /** El último texto redactado: mientras `message` sea igual, el mensaje sigue a fechas y personas. */
   composed: string;
@@ -125,7 +131,15 @@ export type ContactDraftAction = { type: "fields"; patch: InquiryFields } | { ty
 
 export function startDraft(title: string, fields: InquiryFields = {}): ContactDraftState {
   const composed = composeInquiryMessage(title, fields);
-  return { arrival: fields.arrival ?? null, departure: fields.departure ?? null, people: fields.people ?? null, message: composed, composed, edited: false };
+  return {
+    arrival: fields.arrival ?? null,
+    departure: fields.departure ?? null,
+    people: fields.people ?? null,
+    monthlyFrom: fields.monthlyFrom ?? null,
+    message: composed,
+    composed,
+    edited: false,
+  };
 }
 
 /** Reductor puro de la hoja: el texto editado a mano se queda; el redactado se rehace al cambiar fechas o personas. */
@@ -156,6 +170,8 @@ interface StoredContactDraft {
   arrival: string | null;
   departure: string | null;
   people: number | null;
+  /** Falta en los borradores anteriores al mensual: vale null. */
+  monthlyFrom?: string | null;
   message: string;
   edited: boolean;
   open: boolean;
@@ -163,7 +179,7 @@ interface StoredContactDraft {
 }
 
 export function storeContactDraft(s: ContactDraftState, open: boolean, now: number): string {
-  const stored: StoredContactDraft = { arrival: s.arrival, departure: s.departure, people: s.people, message: s.message, edited: s.edited, open, savedAt: now };
+  const stored: StoredContactDraft = { arrival: s.arrival, departure: s.departure, people: s.people, monthlyFrom: s.monthlyFrom, message: s.message, edited: s.edited, open, savedAt: now };
   return JSON.stringify(stored);
 }
 
@@ -181,8 +197,9 @@ export function restoreContactDraft(raw: string | null, title: string, now: numb
   if (!v || typeof v !== "object") return null;
   if (typeof v.savedAt !== "number" || now - v.savedAt > CONTACT_DRAFT_TTL_MS) return null;
   if (!isDateOrNull(v.arrival) || !isDateOrNull(v.departure) || !(v.people === null || typeof v.people === "number")) return null;
+  if (!(v.monthlyFrom === undefined || isDateOrNull(v.monthlyFrom))) return null;
   if (typeof v.message !== "string" || typeof v.edited !== "boolean") return null;
-  const fields = { arrival: v.arrival as string | null, departure: v.departure as string | null, people: v.people as number | null };
+  const fields = { arrival: v.arrival as string | null, departure: v.departure as string | null, people: v.people as number | null, monthlyFrom: (v.monthlyFrom ?? null) as string | null };
   const fresh = startDraft(title, fields);
   const state = v.edited ? { ...fresh, message: v.message, edited: v.message !== fresh.composed } : fresh;
   return { state, open: v.open === true };

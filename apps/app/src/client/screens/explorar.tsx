@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
-import { PEOPLE_FILTER_KEY } from "../../domain/contact-return";
+import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { resultsText } from "../../domain/search";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, stayRange, type Filters } from "../../domain/filters";
 import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
@@ -60,12 +60,15 @@ function Results({ filters: f, provinces }: { filters: Filters; provinces: strin
   const currency = useCurrency();
   const { data: listings, isError } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
-  // La hoja de contacto de la ficha arranca con estas personas (revisión UX A3); en la pestaña, no en la URL de la ficha.
+  // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
+  const dates = searchDatesValue(stayRange(f), f.monthly);
   useEffect(() => {
     const store = webStore("session");
     if (f.ppl > 0) store.setItem(PEOPLE_FILTER_KEY, String(f.ppl));
     else store.removeItem(PEOPLE_FILTER_KEY);
-  }, [f.ppl]);
+    if (dates) store.setItem(DATES_FILTER_KEY, dates);
+    else store.removeItem(DATES_FILTER_KEY);
+  }, [f.ppl, dates]);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
   const extras = extrasCount(f);
   const search = searchFor(f, provinces);

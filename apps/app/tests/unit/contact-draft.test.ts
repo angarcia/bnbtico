@@ -26,6 +26,7 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
       arrival: "2026-12-20",
       departure: "2026-12-27",
       people: 4,
+      monthlyFrom: null,
       message: composeInquiryMessage(TITLE, { arrival: "2026-12-20", departure: "2026-12-27", people: 4 }),
       edited: false,
       open: true,
@@ -47,6 +48,16 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     const back = restoreContactDraft(storeContactDraft(s, true, NOW), TITLE, NOW)!;
     expect(back.state).toMatchObject({ message: "Hola, ¿aceptan perros?", edited: true });
     expect(redraft(back.state, { type: "fields", patch: { people: 5 } }, TITLE).message).toBe("Hola, ¿aceptan perros?");
+  });
+
+  it("guarda el «desde» del mensual; un borrador anterior sin él vuelve con null", () => {
+    const back = restoreContactDraft(storeContactDraft(startDraft("Casa", { monthlyFrom: "2026-12-01" }), true, 0), "Casa", 1)!;
+    expect(back.state.monthlyFrom).toBe("2026-12-01");
+    expect(back.state.message).toBe(composeInquiryMessage("Casa", { monthlyFrom: "2026-12-01" }));
+    const old = JSON.stringify({ arrival: null, departure: null, people: 2, message: "x", edited: false, open: true, savedAt: NOW });
+    const restored = restoreContactDraft(old, TITLE, NOW)!;
+    expect(restored.state).toMatchObject({ monthlyFrom: null, people: 2, message: composeInquiryMessage(TITLE, { people: 2 }) });
+    expect(restoreContactDraft(JSON.stringify({ arrival: null, departure: null, people: null, monthlyFrom: 5, message: "x", edited: false, open: true, savedAt: NOW }), TITLE, NOW)).toBeNull();
   });
 
   it("caduca a los 30 minutos y descarta lo que no entiende", () => {

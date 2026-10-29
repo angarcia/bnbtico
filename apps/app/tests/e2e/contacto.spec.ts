@@ -12,6 +12,7 @@ const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
 const TITLE = "Casa Playa Negra";
 let casa: Seeded;
 let cerrada: Seeded;
+const MONTHLY_TITLE = "Casa Mensual Contacto";
 let owner: string;
 
 /** Una fecha `YYYY-MM-DD` a `days` días de hoy (Costa Rica, UTC−6). */
@@ -29,6 +30,7 @@ test.beforeAll(async () => {
   casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, capacity: 6 } });
   cerrada = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina cerrada", zone: "Cocles", zoneSource: "other", zoneId: null } });
   await h.owner("owner").setAvailable(cerrada.id, false);
+  await h.seed({ status: "active", photos: 5, draft: { title: MONTHLY_TITLE, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 4, acceptsMonthly: true, monthlyPriceCrc: 450000 } });
   owner = h.ownerName("owner").split(" ")[0]!;
 });
 
@@ -148,6 +150,27 @@ test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y 
   await people.fill("9");
   await s.getByRole("button", { name: "Continuar" }).click();
   await expect(s.getByRole("alert")).toHaveText("Esta casa es para 6 personas como máximo.");
+});
+
+// Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`bnbtico-fechas`).
+test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «desde el…»", async ({ page }) => {
+  const [A, S] = [day(20), day(24)];
+  await page.goto(`/explorar?prov=Todas&llegada=${A}&salida=${S}&ppl=2`);
+  await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  let s = sheet(page);
+  await expect(s.getByLabel("Llegada (opcional)")).toHaveValue(A);
+  await expect(s.getByLabel("Salida (opcional)")).toHaveValue(S);
+  await expect(s.getByLabel("Su mensaje")).toHaveValue(composeInquiryMessage(TITLE, { arrival: A, departure: S, people: 2 }));
+
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto(`/explorar?prov=Todas&mensual=1&desde=${day(10)}`);
+  await page.getByRole("link", { name: new RegExp(MONTHLY_TITLE) }).first().click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  s = sheet(page);
+  await expect(s.getByLabel("Llegada (opcional)")).toHaveValue("");
+  await expect(s.getByLabel("Su mensaje")).toHaveValue(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(10) }));
+  await page.screenshot({ path: "test-results/contacto-mensual.png" });
 });
 
 test("modal: el foco no sale de la hoja, el resto de la página queda inerte y «Cerrar» cierra", async ({ page }) => {

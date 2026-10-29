@@ -42,6 +42,27 @@ describe("composeInquiryMessage (casos del prototipo, tests/prototype/contacto-h
   });
 });
 
+describe("composeInquiryMessage · alquiler mensual («desde el…»)", () => {
+  it("con y sin personas", () => {
+    expect(composeInquiryMessage("Casa Cocles", { monthlyFrom: "2026-12-01", people: 4 })).toBe(
+      "Hola, vi Casa Cocles en bnbtico. Me interesa alquilar por meses desde el 1 de diciembre, para 4 personas. ¿Está disponible? Gracias.",
+    );
+    expect(composeInquiryMessage("Casa Cocles", { monthlyFrom: "2026-12-01" })).toBe(
+      "Hola, vi Casa Cocles en bnbtico. Me interesa alquilar por meses desde el 1 de diciembre. ¿Está disponible? Gracias.",
+    );
+  });
+  it("con llegada y salida válidas manda la frase por noches", () => {
+    expect(composeInquiryMessage("Casa Cocles", { arrival: "2026-11-23", departure: "2026-11-27", people: 4, monthlyFrom: "2026-12-01" })).toBe(
+      "Hola, vi Casa Cocles en bnbtico y me interesa. ¿Está disponible del 23 al 27 de noviembre para 4 personas? Gracias.",
+    );
+  });
+  it("al poner llegada y salida en un borrador mensual, pasa a la frase por noches", () => {
+    const s = redraft(startDraft("Casa Cocles", { monthlyFrom: "2026-12-01" }), { type: "fields", patch: { arrival: "2026-11-23", departure: "2026-11-27" } }, "Casa Cocles");
+    expect(s.message).toBe("Hola, vi Casa Cocles en bnbtico y me interesa. ¿Está disponible del 23 al 27 de noviembre? Gracias.");
+    expect(s.edited).toBe(false);
+  });
+});
+
 describe("costaRicaToday", () => {
   it("la fecha de Costa Rica (UTC−6, sin horario de verano)", () => {
     expect(costaRicaToday(Date.parse("2026-10-24T05:59:00Z"))).toBe("2026-10-23");

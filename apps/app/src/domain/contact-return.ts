@@ -1,9 +1,40 @@
 // Ida y vuelta de la hoja de contacto por Ingresar (fase 3, ticket 03). Aparte de `inquiry.ts` para que la ficha de la SPA
 // (JS inicial de la zona privada) sepa si reabrir la hoja sin arrastrar el resto de las consultas.
 import { safeNext } from "./account";
+import { isoParts } from "./dates";
 
 /** Personas del filtro de Explorar, en la pestaña: la hoja de contacto arranca con ellas (revisión UX A3). */
 export const PEOPLE_FILTER_KEY = "bnbtico-personas";
+
+/** Fechas de la búsqueda de Explorar, en la pestaña: `{"llegada","salida"}` o, con el mensual, `{"desde"}`. */
+export const DATES_FILTER_KEY = "bnbtico-fechas";
+
+export type SearchDates = { arrival: string; departure: string } | { monthlyFrom: string };
+
+/** Lo que Explorar guarda en `DATES_FILTER_KEY` para estas noches; null = quitar la clave (sin fechas). */
+export function searchDatesValue(range: { from: string; to: string } | null, monthly: boolean): string | null {
+  if (!range) return null;
+  return JSON.stringify(monthly ? { desde: range.from } : { llegada: range.from, salida: range.to });
+}
+
+const validDay = (v: unknown, today: string): v is string => typeof v === "string" && isoParts(v) !== null && v >= today;
+
+/** Las fechas guardadas por Explorar, si se entienden y no han pasado; si no, null. */
+export function readSearchDates(raw: string | null, today: string): SearchDates | null {
+  if (!raw) return null;
+  let v: unknown;
+  try {
+    v = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+  const o = v as Record<string, unknown>;
+  const keys = Object.keys(o).sort().join(",");
+  if (keys === "llegada,salida" && validDay(o.llegada, today) && validDay(o.salida, today) && o.salida > o.llegada) return { arrival: o.llegada, departure: o.salida };
+  if (keys === "desde" && validDay(o.desde, today)) return { monthlyFrom: o.desde };
+  return null;
+}
 
 /** Lo escrito en la hoja de una casa, en la pestaña (sessionStorage, 30 min). */
 export const contactDraftKey = (publicId: string) => `bnbtico-contacto:${publicId}`;

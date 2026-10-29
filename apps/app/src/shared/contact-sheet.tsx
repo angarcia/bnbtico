@@ -26,7 +26,7 @@ import {
 } from "../domain/inquiry";
 import type { PublicListing } from "../domain/listing";
 import { hasStoredSession, webStore } from "../data/storage";
-import { PEOPLE_FILTER_KEY } from "../domain/contact-return";
+import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, readSearchDates } from "../domain/contact-return";
 import { proceedToWhatsApp } from "./contact-flow";
 import { I } from "./icons";
 
@@ -69,8 +69,8 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
   const [draft, dispatch] = useReducer(
     (s: ContactDraftState, a: ContactDraftAction) => redraft(s, a, title),
     null,
-    // Sin borrador, las personas del filtro de Explorar si caben en la casa (revisión UX A3).
-    () => restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople) }),
+    // Sin borrador, las personas (si caben en la casa) y las fechas de la búsqueda de Explorar (revisión UX A3).
+    () => restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople), ...readSearchDates(store.getItem(DATES_FILTER_KEY), costaRicaToday(Date.now())) }),
   );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
