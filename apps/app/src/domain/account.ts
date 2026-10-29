@@ -60,8 +60,9 @@ export function validateProfilePatch(patch: ProfilePatch): ProfilePatch {
   return out;
 }
 
-/** Destino al que volver tras ingresar. Solo rutas internas: evita redirecciones abiertas (`//otro.com`, `https://…`). */
+/** Destino al que volver tras ingresar. Solo rutas internas: evita redirecciones abiertas (`//otro.com`, `https://…`,
+ *  y tabuladores o saltos de línea, que el navegador quita: `/<tab>/otro.com` acabaría en `//otro.com`). */
 export function safeNext(next: string | null | undefined): string | null {
-  if (!next || !/^\/(?![/\\])/.test(next)) return null;
+  if (!next || !/^\/(?![/\\])/.test(next) || /[\t\n\r]/.test(next)) return null;
   return next;
 }

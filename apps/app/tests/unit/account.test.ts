@@ -72,4 +72,7 @@ describe("safeNext", () => {
     expect(safeNext("/explorar?prov=Todas")).toBe("/explorar?prov=Todas");
     for (const bad of ["//otro.com", "https://otro.com", "/\\otro.com", "propietario", "", undefined]) expect(safeNext(bad)).toBeNull();
   });
+  it("rechaza tabuladores y saltos de línea, que el navegador quita de la URL y dejarían una ruta //otro.com", () => {
+    for (const bad of ["/\t/evil.example", "/\n/evil.example", "/\r/evil.example", "/propietario\n", "/a\tb"]) expect(safeNext(bad)).toBeNull();
+  });
 });
