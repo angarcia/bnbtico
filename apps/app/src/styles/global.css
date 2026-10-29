@@ -485,6 +485,9 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .activity-grid .activity-figures{display:flex;flex-direction:column;gap:2px}
 .activity-h2{font-size:20px;margin-top:8px}
 .inquiry-card{padding:14px}
+.inquiry-house{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;height:32px;max-width:100%;padding:0 12px 0 4px;border-radius:999px;background:var(--surface-2)}
+.inquiry-house-photo{width:24px;height:24px;border-radius:999px;object-fit:cover;flex-shrink:0;background:var(--line-soft)}
+.inquiry-house-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .inquiry-avatar{width:44px;height:44px;border-radius:999px;font-size:15px}
 .inquiry-avatar.is-read{background:var(--line-soft);color:var(--muted)}
 .inquiry-body{gap:2px;min-width:0}

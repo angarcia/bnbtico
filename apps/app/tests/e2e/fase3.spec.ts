@@ -172,7 +172,8 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   const card = later.locator("article.inquiry-card");
   await expect(card).toHaveCount(1);
   await expect(card.getByRole("heading", { name: CLIENT })).toBeVisible();
-  await expect(card).toContainText(`${TITLE} · `);
+  await expect(card.getByTestId("inquiry-house")).toHaveText(TITLE);
+  await expect(card).not.toContainText(`${TITLE} · `);
   await expect(card).toContainText("3 personas");
   await expect(card).toContainText(`“${message}”`);
   await expect(card.getByText("Nueva", { exact: true })).toBeVisible();

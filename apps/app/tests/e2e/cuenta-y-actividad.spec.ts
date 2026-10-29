@@ -270,3 +270,80 @@ test.describe("Cuenta", () => {
     expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).toBeNull();
   });
 });
+
+test.describe("Actividad por casa", () => {
+  // «Cerrar sesión» (Flujo 6) cierra también la sesión del arnés para ese propietario: un arnés nuevo, con sesiones nuevas.
+  test.beforeAll(async () => {
+    h = await postgrestHarness();
+  });
+
+  /** Una consulta nueva del cliente «other»; la base junta las de 7 días a la misma casa, así que se atrasa cada una. */
+  async function inquiry(publicId: string, message: string, days: number) {
+    const { inquiryId } = await h.inquiries("other").create(publicId, { people: 2, message, arrival: null, departure: null });
+    await h.backdateInquiry(inquiryId, days);
+  }
+  const inquiryCards = (page: Page) => page.getByRole("article").filter({ hasText: /Hola (Cocles|Cabina)/ });
+  const chips = (page: Page) => page.getByRole("group", { name: "Filtrar por casa" });
+
+  test("Flujo 7: Actividad con dos casas: cada consulta con su casa; el chip filtra y queda en la URL", async ({ page }) => {
+    // Los chips siguen el orden de Mis casas (la más nueva primero): Cabina se crea antes que Cocles.
+    await h.seed({ status: "draft", draft: { title: "Borrador" } });
+    const cabina = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Punta Uva" } });
+    const cocles = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
+    // La de Cabina es la más vieja: con 21 de Cocles más recientes, quedaría fuera de las 20 últimas si se filtrara después.
+    await inquiry(cabina.publicId, "Hola Cabina 0", 400);
+    for (let n = 0; n < 21; n++) await inquiry(cocles.publicId, `Hola Cocles ${n}`, 8 * (21 - n));
+    await owner(page);
+    await page.goto("/propietario/actividad");
+
+    await expect(inquiryCards(page)).toHaveCount(20);
+    for (const card of await inquiryCards(page).all()) {
+      const tag = card.getByTestId("inquiry-house");
+      await expect(tag.locator("img")).toHaveCount(1);
+      await expect(tag).toHaveText("Casa Cocles");
+    }
+    const first = inquiryCards(page).filter({ hasText: "Hola Cocles 20" });
+    await expect(first).toContainText("sin fechas · 2 personas");
+    await expect(first).not.toContainText("Casa Cocles ·");
+
+    const links = chips(page).getByRole("link");
+    await expect(links).toHaveText(["Todas", "Casa Cocles", "Cabina Punta Uva"]);
+    await expect(links.first()).toHaveAttribute("aria-current", "page");
+    const heading = page.getByRole("heading", { level: 2, name: "Últimas consultas" });
+    expect((await chips(page).boundingBox())!.y).toBeGreaterThan((await heading.boundingBox())!.y);
+    const figures = page.locator("article.activity-card");
+    const houseCards = await figures.count();
+    await heading.evaluate((e) => e.scrollIntoView({ block: "center" }));
+    await page.screenshot({ path: "test-results/capturas/actividad-chips.png" });
+
+    await chips(page).getByRole("link", { name: "Cabina Punta Uva" }).click();
+    await expect(page).toHaveURL(new RegExp(`/propietario/actividad\\?casa=${cabina.id}$`));
+    await expect(inquiryCards(page)).toHaveCount(1);
+    await expect(inquiryCards(page)).toContainText("Hola Cabina 0");
+    await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveText("Cabina Punta Uva");
+    await expect(figures).toHaveCount(houseCards);
+    await page.reload();
+    await expect(inquiryCards(page)).toHaveCount(1);
+    await expect(chips(page).getByRole("link", { name: "Cabina Punta Uva" })).toHaveAttribute("aria-current", "page");
+
+    await page.goto("/propietario/actividad?casa=00000000-0000-4000-8000-000000000000");
+    await expect(page).toHaveURL(/\/propietario\/actividad$/);
+    await expect(chips(page).getByRole("link", { name: "Todas" })).toHaveAttribute("aria-current", "page");
+
+    const vacia = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Vacía" } });
+    await fresh(page, "/propietario/actividad");
+    await chips(page).getByRole("link", { name: "Casa Vacía" }).click();
+    await expect(page).toHaveURL(new RegExp(`\\?casa=${vacia.id}$`));
+    await expect(page.getByText("Todavía no hay consultas de esta casa.")).toBeVisible();
+    await expect(inquiryCards(page)).toHaveCount(0);
+  });
+
+  test("con una sola casa: la etiqueta de la casa y sin chips", async ({ page }) => {
+    const cocles = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
+    await inquiry(cocles.publicId, "Hola Cocles 0", 0);
+    await owner(page);
+    await page.goto("/propietario/actividad");
+    await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveText("Casa Cocles");
+    await expect(chips(page)).toHaveCount(0);
+  });
+});

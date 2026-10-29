@@ -1,10 +1,14 @@
 // Actividad (navegación simple): visitas, toques en WhatsApp y consultas de 30 días por casa, y las últimas consultas, que
-// abren WhatsApp con el cliente. Trozo diferido. Se pinta desde la caché (persistida con la sesión) y se refresca por detrás.
+// abren WhatsApp con el cliente; cada consulta lleva su casa y, con dos o más casas, chips para filtrarlas (`?casa=<uuid>`).
+// Trozo diferido. Se pinta desde la caché (persistida con la sesión) y se refresca por detrás.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
+import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import type { ListingActivity } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
+import { variantUrl } from "../../domain/image";
 import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../../domain/inquiry";
+import { filterInquiries, inquiryChips } from "../../domain/inquiry-filter";
 import type { Listing } from "../../domain/listing";
 import { activityEmpty } from "../../domain/navigation";
 import { I } from "../../shared/icons";
@@ -23,8 +27,12 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 /** Las cifras van aparte de la lista y de las consultas: si no llegan, las consultas (el camino al cliente) siguen. */
 type FiguresState = "ready" | "loading" | "failed";
 
+const route = getRouteApi("/_tabs/_private/_owner/propietario/actividad");
+
 export function ActividadScreen() {
   const userId = useSession().session?.userId ?? "";
+  const search = route.useSearch();
+  const navigate = useNavigate();
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const activity = useQuery({ ...activityQuery(userId), enabled: !!userId });
   const inquiries = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
@@ -33,7 +41,16 @@ export function ActividadScreen() {
   const figures: FiguresState = activity.data ? "ready" : activity.isError ? "failed" : "loading";
   const inquiriesFailed = inquiries.isError && !inquiries.data;
   const anyActive = !!list?.some((l) => l.status === "active");
-  const latest = inquiries.data?.slice(0, LATEST) ?? [];
+  const chips = list ? inquiryChips(list) : null;
+  const selected = chips?.some((c) => c.id === search.casa) ? search.casa! : null;
+  // Una casa desconocida, o una sola casa: «Todas». Las cifras de arriba no se filtran nunca.
+  const dropCasa = !!list && !!search.casa && !selected;
+  useEffect(() => {
+    if (dropCasa) void navigate({ to: "/propietario/actividad", search: {}, replace: true });
+  }, [dropCasa, navigate]);
+  // Primero la casa, luego las últimas: una casa tranquila no se queda sin sus consultas.
+  const latest = filterInquiries(inquiries.data ?? [], selected).slice(0, LATEST);
+  const houses = new Map((list ?? []).map((l) => [l.id, l]));
   // Sin casa activa, hasta saber si hay consultas no se sabe si toca el mensaje de «vacío».
   const waiting = !list || (!anyActive && !inquiries.data && !inquiriesFailed);
 
@@ -68,12 +85,34 @@ export function ActividadScreen() {
             <p className="note" role="alert">
               {toDomainError(inquiries.error).message}
             </p>
-          ) : latest.length > 0 ? (
+          ) : inquiries.data && inquiries.data.length > 0 ? (
             <section className="stack gap-12">
               <h2 className="activity-h2">Últimas consultas</h2>
-              {latest.map((i) => (
-                <InquiryCard key={i.id} inquiry={i} userId={userId} />
-              ))}
+              {chips ? (
+                <div className="chiprow" role="group" aria-label="Filtrar por casa">
+                  <Link to="/propietario/actividad" search={{}} replace className="chip chip-sm" activeOptions={{ exact: true, includeSearch: true }}>
+                    Todas
+                  </Link>
+                  {chips.map((c) => (
+                    <Link
+                      key={c.id}
+                      to="/propietario/actividad"
+                      search={{ casa: c.id }}
+                      replace
+                      className="chip chip-sm"
+                      activeOptions={{ exact: true, includeSearch: true }}
+                      aria-label={c.name}
+                    >
+                      {c.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+              {latest.length > 0 ? (
+                latest.map((i) => <InquiryCard key={i.id} inquiry={i} userId={userId} house={houses.get(i.listingId)} />)
+              ) : (
+                <p className="small muted">Todavía no hay consultas de esta casa.</p>
+              )}
               <p className="xs muted inquiries-foot">Es un registro de quién le escribió; la conversación completa está en su WhatsApp.</p>
             </section>
           ) : null}
@@ -130,7 +169,8 @@ function ActivityCard({
   );
 }
 
-function InquiryCard({ inquiry: i, userId }: { inquiry: OwnerInquiry; userId: string }) {
+function InquiryCard({ inquiry: i, userId, house }: { inquiry: OwnerInquiry; userId: string; house: Listing | undefined }) {
+  const cover = house?.photos[0];
   const client = useQueryClient();
   const opening = useRef(false);
   const isNew = !i.openedAt;
@@ -142,6 +182,14 @@ function InquiryCard({ inquiry: i, userId }: { inquiry: OwnerInquiry; userId: st
   }
   return (
     <article className={`card stack gap-10 inquiry-card${isNew ? " is-new" : ""}`} aria-labelledby={nameId}>
+      <span className="inquiry-house" data-testid="inquiry-house">
+        {cover ? (
+          <img src={variantUrl(cover, 480)} alt="" width={24} height={24} className="inquiry-house-photo" loading="lazy" decoding="async" />
+        ) : (
+          <span className="inquiry-house-photo" aria-hidden="true" />
+        )}
+        <span className="inquiry-house-name small strong">{house?.title || i.listingTitle || "Casa sin título"}</span>
+      </span>
       <div className="row gap-12 align-top">
         <span className={`avatar inquiry-avatar${isNew ? "" : " is-read"}`} aria-hidden="true">
           {initials(i.clientName)}

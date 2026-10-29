@@ -111,7 +111,8 @@ test("7 · con una casa activa: las tres cifras en grande y las últimas consult
   const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
   await expect(inquiry.getByRole("heading", { name: TEST_NAMES.other })).toBeVisible();
   await expect(inquiry).toContainText("AP");
-  await expect(inquiry).toContainText("Casa Cocles · sin fechas · 2 personas");
+  await expect(inquiry).toContainText("sin fechas · 2 personas");
+  await expect(inquiry.getByTestId("inquiry-house")).toHaveText("Casa Cocles");
   await expect(inquiry.getByText("Nueva", { exact: true })).toBeVisible();
   await expect(page.getByRole("group", { name: "Filtrar por casa" })).toHaveCount(0);
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
