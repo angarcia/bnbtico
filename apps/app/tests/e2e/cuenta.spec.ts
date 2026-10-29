@@ -55,7 +55,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await enterCode(page);
   await expect(page).toHaveURL(/\/cuenta\/lista/);
   await expect(page.getByRole("heading", { name: "¡Listo! Su cuenta está creada" })).toBeVisible();
-  await page.getByRole("link", { name: "Ahora no · continuar" }).click();
+  await page.getByRole("link", { name: "No, busco casa" }).click();
   await expect(page).toHaveURL(/\/explorar/);
   await expect(page.getByRole("link", { name: "Ingresar" })).toHaveCount(0);
 
@@ -108,7 +108,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expect(page.getByLabel("Descripción (opcional)")).toHaveValue("Viajo con mi familia");
   await expectNoCookies(page);
 
-  // Volver a entrar con un número que ya tiene cuenta no ofrece «¡Listo!» (solo sale al crear una cuenta sin correo).
+  // Volver a entrar con un número que ya tiene cuenta no ofrece «¡Listo!» (solo sale al crear una cuenta).
   await page.goto("/cuenta");
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");

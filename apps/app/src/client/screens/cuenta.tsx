@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useState, type FormEvent } from "react";
 import { RESEND_COOLDOWN_MS, resendWaitSeconds } from "../../domain/account";
-import { isContactNext, listingInNext } from "../../domain/contact-return";
+import { isContactNext, isPublishNext, listingInNext } from "../../domain/contact-return";
 import { firstName, initials } from "../../domain/person";
 import type { Account } from "../../domain/api";
 import { toDomainError } from "../../domain/errors";
@@ -51,12 +51,17 @@ function useReturnListing(next?: string) {
   return useQuery({ ...listingQuery(publicId ?? ""), enabled: !!publicId }).data ?? undefined;
 }
 
-/** Verificar el WhatsApp para escribirle a un propietario (revisión UX C2): la pantalla habla de escribirle, no de ingresar. */
+/**
+ * Verificar el WhatsApp para escribirle a un propietario (revisión UX C2) o para guardar la casa que se publica (§E): la
+ * pantalla habla de eso, no de ingresar.
+ */
 function useContactMode(next?: string) {
   const contact = isContactNext(next);
+  const publish = isPublishNext(next);
   const listing = useReturnListing(contact ? next : undefined);
   const owner = listing ? firstName(listing.ownerName) : null;
-  return { contact, listing, header: contact ? `Escribirle a ${owner ?? "el propietario"}` : "Ingresar", owner };
+  const header = contact ? `Escribirle a ${owner ?? "el propietario"}` : publish ? "Publicar casa" : "Ingresar";
+  return { contact, publish, listing, header, owner };
 }
 
 /** La casa a la que se escribe, arriba de la verificación: foto, nombre y quién la alquila. */
@@ -128,11 +133,22 @@ export function CuentaScreen() {
   );
 }
 
-/**
- * Ingresar en un único flujo (ticket 18): primero el WhatsApp. Si el número tiene cuenta se envía el código; si no, se
- * pide el nombre y entonces se envía (un solo código por número; ver AuthApi.start).
- */
+/** Ingresar a pantalla completa: la cabecera del modo y el formulario. */
 function EntryForm({ next }: { next?: string }) {
+  const { contact, publish, header } = useContactMode(next);
+  return (
+    <>
+      <FlowHeader title={header} back={backFrom(next)} />
+      <SignInForm next={next} mode={contact ? "contact" : publish ? "publish" : "account"} />
+    </>
+  );
+}
+
+/**
+ * Cuerpo de Ingresar, sin cabecera, en un único flujo (ticket 18): primero el WhatsApp. Si el número tiene cuenta se envía
+ * el código; si no, se pide el nombre y entonces se envía (un solo código por número; ver AuthApi.start).
+ */
+export function SignInForm({ next, mode }: { next?: string; mode: "account" | "contact" | "publish" }) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   // Error de un campo (revisión UX A6): debajo de ese campo y con el foco en él.
@@ -143,7 +159,10 @@ function EntryForm({ next }: { next?: string }) {
   const [newPhone, setNewPhone] = useState<string | null>(null);
   const captcha = useTurnstile();
   const other = country === OTHER_COUNTRY;
-  const { contact, header, owner } = useContactMode(next);
+  const contact = mode === "contact";
+  const publish = mode === "publish";
+  const listing = useReturnListing(contact ? next : undefined);
+  const owner = listing ? firstName(listing.ownerName) : null;
 
   function invalid(fieldName: "phone" | "name", text: string) {
     setError(null);
@@ -188,124 +207,127 @@ function EntryForm({ next }: { next?: string }) {
   const errorOf = (f: "phone" | "name") => (fieldError?.field === f ? fieldError.message : null);
 
   return (
-    <>
-      <FlowHeader title={header} back={backFrom(next)} />
-      <div className="stack flow">
-        {contact ? <ContactCard next={next} /> : null}
-        <div className="stack gap-8">
-          <h2 className="flow-title">{newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el propietario"}` : "Entre con su WhatsApp"}</h2>
-          <p className="muted">
-            {newPhone ? (
-              <>
-                Díganos su nombre para crear su cuenta. Le mandamos el código al <b className="ink num">{formatPhone(newPhone)}</b>.
-              </>
-            ) : (
-              "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Si es su primera vez, le pedimos también su nombre. Sin contraseña ni correo."
-            )}
-          </p>
-        </div>
-        {/* Sin `key`: el contenedor de Turnstile tiene que seguir montado entre los dos pasos (un token por envío). */}
-        <form onSubmit={submit} className="stack gap-14" noValidate>
+    <div className="stack flow">
+      {contact ? <ContactCard next={next} /> : null}
+      <div className="stack gap-8">
+        <h2 className="flow-title">
+          {newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el propietario"}` : publish ? "Para guardar su casa, verifique su WhatsApp" : "Entre con su WhatsApp"}
+        </h2>
+        <p className="muted">
           {newPhone ? (
+            <>
+              Díganos su nombre para crear su cuenta. Le mandamos el código al <b className="ink num">{formatPhone(newPhone)}</b>.
+            </>
+          ) : publish ? (
+            "Le enviamos un código por WhatsApp. Así nadie más puede publicar en su nombre."
+          ) : (
+            "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Si es su primera vez, le pedimos también su nombre. Sin contraseña ni correo."
+          )}
+        </p>
+      </div>
+      {/* Sin `key`: el contenedor de Turnstile tiene que seguir montado entre los dos pasos (un token por envío). */}
+      <form onSubmit={submit} className="stack gap-14" noValidate>
+        {newPhone ? (
+          <div className="field">
+            <label htmlFor="account-name">Nombre</label>
+            <input
+              id="account-name"
+              name="name"
+              autoComplete="name"
+              maxLength={80}
+              placeholder="Su nombre"
+              required
+              autoFocus
+              aria-invalid={errorOf("name") ? true : undefined}
+              aria-describedby={errorOf("name") ? "account-name-error" : undefined}
+            />
+            {errorOf("name") ? (
+              <p className="field-error" id="account-name-error" role="alert">
+                {errorOf("name")}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <>
             <div className="field">
-              <label htmlFor="account-name">Nombre</label>
-              <input
-                id="account-name"
-                name="name"
-                autoComplete="name"
-                maxLength={80}
-                placeholder="Su nombre"
-                required
-                autoFocus
-                aria-invalid={errorOf("name") ? true : undefined}
-                aria-describedby={errorOf("name") ? "account-name-error" : undefined}
-              />
-              {errorOf("name") ? (
-                <p className="field-error" id="account-name-error" role="alert">
-                  {errorOf("name")}
+              <label htmlFor="account-phone">Número de WhatsApp</label>
+              <div className="input-prefix">
+                {/* Un solo control de país (revisión UX A6): la caja del prefijo es el selector; al abrirlo se ven los
+                    países con su código. El select invisible ocupa toda la caja, así que tocar «+506 ▾» lo abre. */}
+                <span className="prefix prefix-select">
+                  <span className="prefix-value" aria-hidden="true">
+                    {other ? "Otro" : `+${country}`}
+                  </span>
+                  <I.chevronDown size={16} />
+                  <select
+                    id="account-country"
+                    name="country"
+                    aria-label="País de su WhatsApp"
+                    autoComplete="tel-country-code"
+                    value={country}
+                    onChange={(e) => {
+                      setCountry(e.currentTarget.value);
+                      setFieldError(null);
+                    }}
+                  >
+                    {PHONE_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name} (+{c.code})
+                      </option>
+                    ))}
+                    <option value={OTHER_COUNTRY}>Otro país</option>
+                  </select>
+                </span>
+                <input
+                  id="account-phone"
+                  name="phone"
+                  type="tel"
+                  autoComplete={other ? "tel" : "tel-national"}
+                  inputMode="tel"
+                  placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
+                  aria-describedby={errorOf("phone") ? "account-phone-error account-phone-help" : "account-phone-help"}
+                  aria-invalid={errorOf("phone") ? true : undefined}
+                  required
+                />
+              </div>
+              {errorOf("phone") ? (
+                <p className="field-error" id="account-phone-error" role="alert">
+                  {errorOf("phone")}
                 </p>
               ) : null}
+              <span id="account-phone-help" className="xs muted">
+                {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
+              </span>
             </div>
-          ) : (
-            <>
-              <div className="field">
-                <label htmlFor="account-phone">Número de WhatsApp</label>
-                <div className="input-prefix">
-                  {/* Un solo control de país (revisión UX A6): la caja del prefijo es el selector; al abrirlo se ven los
-                      países con su código. El select invisible ocupa toda la caja, así que tocar «+506 ▾» lo abre. */}
-                  <span className="prefix prefix-select">
-                    <span className="prefix-value" aria-hidden="true">
-                      {other ? "Otro" : `+${country}`}
-                    </span>
-                    <I.chevronDown size={16} />
-                    <select
-                      id="account-country"
-                      name="country"
-                      aria-label="País de su WhatsApp"
-                      autoComplete="tel-country-code"
-                      value={country}
-                      onChange={(e) => {
-                        setCountry(e.currentTarget.value);
-                        setFieldError(null);
-                      }}
-                    >
-                      {PHONE_COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.name} (+{c.code})
-                        </option>
-                      ))}
-                      <option value={OTHER_COUNTRY}>Otro país</option>
-                    </select>
-                  </span>
-                  <input
-                    id="account-phone"
-                    name="phone"
-                    type="tel"
-                    autoComplete={other ? "tel" : "tel-national"}
-                    inputMode="tel"
-                    placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
-                    aria-describedby={errorOf("phone") ? "account-phone-error account-phone-help" : "account-phone-help"}
-                    aria-invalid={errorOf("phone") ? true : undefined}
-                    required
-                  />
-                </div>
-                {errorOf("phone") ? (
-                  <p className="field-error" id="account-phone-error" role="alert">
-                    {errorOf("phone")}
-                  </p>
-                ) : null}
-                <span id="account-phone-help" className="xs muted">
-                  {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
-                </span>
-              </div>
-            </>
-          )}
-          <div ref={captcha.container} className="captcha" />
-          {error ? <p className="field-error" role="alert">{error}</p> : null}
-          <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
-            <I.wa size={20} /> {busy ? "Un momento…" : "Recibir código por WhatsApp"}
+          </>
+        )}
+        <div ref={captcha.container} className="captcha" />
+        {error ? <p className="field-error" role="alert">{error}</p> : null}
+        <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
+          <I.wa size={20} /> {busy ? "Un momento…" : "Recibir código por WhatsApp"}
+        </button>
+      </form>
+      <div className="stack small">
+        {newPhone ? (
+          <button type="button" className="btn-link" onClick={changeNumber}>
+            Cambiar número
           </button>
-        </form>
-        <div className="stack small">
-          {newPhone ? (
-            <button type="button" className="btn-link" onClick={changeNumber}>
-              Cambiar número
-            </button>
-          ) : null}
-          {contact ? null : (
-            <Link to="/cuenta/recuperar" className="link muted">
-              No tengo acceso a mi WhatsApp
-            </Link>
-          )}
-        </div>
+        ) : null}
+        {contact ? null : (
+          <Link to="/cuenta/recuperar" className="link muted">
+            No tengo acceso a mi WhatsApp
+          </Link>
+        )}
+      </div>
+      {publish ? null : (
         <div className="note">
           <I.shield size={22} />
           <span>Su número solo se comparte con el propietario cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
         </div>
-        {listingInNext(next) && !contact ? <ReturnCard next={next} /> : null}
-        <p className="xs muted center">Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.</p>
-      </div>
-    </>
+      )}
+      {listingInNext(next) && mode === "account" ? <ReturnCard next={next} /> : null}
+      <p className="xs muted center">Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.</p>
+    </div>
   );
 }
 
@@ -331,7 +353,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
   const [resent, setResent] = useState<string | null>(null);
   const [wait, setWait] = useState(() => resendWaitSeconds(sentAt, Date.now()));
   const captcha = useTurnstile();
-  const { contact, header } = useContactMode(next);
+  const { contact, publish, header } = useContactMode(next);
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -351,9 +373,9 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
       // Mis casas con casas o a Explorar sin ellas. Si la lectura falla o tarda más de 5 s, Explorar (la barra crece cuando
       // llegue la lista, que sigue leyéndose).
       const list = await withTimeout(queryClient.fetchQuery(ownListingsQuery(account.id)), LIST_WAIT_MS, []).catch(() => []);
-      // La pantalla «¡Listo!» invita a añadir un correo: no tiene sentido si la cuenta ya tiene uno.
-      // Para escribirle a un propietario no se interpone «¡Listo!»: la invitación al correo queda en Cuenta (revisión UX C2).
-      if (mode === "register" && !account.email && !contact) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
+      // Una cuenta nueva pasa por «¡Listo!», que pregunta si tiene una casa para alquilar (§E), salvo si se venía a
+      // escribirle a un propietario (revisión UX C2) o a guardar la casa que se publica: ahí se sigue sin interponerse.
+      if (mode === "register" && !contact && !publish) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
       else await goTo(next ?? (list.length ? "/propietario/casas" : "/explorar"));
     } catch (err) {
       setError(message(err));
@@ -441,7 +463,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
             Cambiar número
           </button>
         </div>
-        {contact ? null : <ReturnCard next={next} />}
+        {contact ? null : publish ? <p className="note small">Después seguimos con su casa</p> : <ReturnCard next={next} />}
       </div>
     </>
   );
@@ -455,10 +477,11 @@ export function ListaScreen() {
   const { status, session } = useSession();
   const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
   const router = useRouter();
-  // `next` puede llevar su propia búsqueda (`/casa/CT-####?contacto=1`): se navega con `href`, no con `to`.
-  const target = next ?? "/explorar";
   if (status === "signed-out") return <Navigate to="/cuenta" replace />;
-  if (account.data?.email) return <Replace href={target} />;
+  // Enlaces viejos: la vuelta a la hoja de contacto o al asistente de publicar no se detiene en «¡Listo!».
+  if (next && (isContactNext(next) || isPublishNext(next))) return <Replace href={next} />;
+  // `next` puede llevar su propia búsqueda: se navega con `href`, no con `to`.
+  const target = next ?? "/explorar";
   return (
     <>
       <FlowHeader title="Ingresar" back="/explorar" />
@@ -468,10 +491,10 @@ export function ListaScreen() {
             <I.check size={26} />
           </span>
           <h2 className="flow-title">¡Listo! Su cuenta está creada</h2>
-          <p className="muted">Su WhatsApp ya está verificado. Si quiere, añada un correo para recuperar la cuenta si pierde el acceso a ese número. Puede añadirlo después en Cuenta.</p>
         </div>
-        <Link to="/cuenta" search={{ editar: "1" }} className="btn btn-primary btn-xl">
-          Añadir correo a mi perfil
+        <h3>¿Tiene una casa para alquilar?</h3>
+        <Link to="/propietario/publicar" className="btn btn-primary btn-xl">
+          Sí, quiero publicarla
         </Link>
         <a
           href={target}
@@ -481,8 +504,13 @@ export function ListaScreen() {
             void router.navigate({ href: target });
           }}
         >
-          Ahora no · continuar
+          No, busco casa
         </a>
+        {account.data && !account.data.email ? (
+          <Link to="/cuenta" search={{ editar: "1" }} className="link small">
+            Añadir un correo de recuperación
+          </Link>
+        ) : null}
       </div>
     </>
   );
