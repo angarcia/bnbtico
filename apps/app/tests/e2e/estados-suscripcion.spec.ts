@@ -55,13 +55,14 @@ async function fresh(page: Page, path: string) {
   await page.goto(path);
 }
 
-test("Mis casas: un solo aviso arriba, primero el pago (la pendiente antes que la ventana de 90 días) y luego seguir publicando", async ({ page }) => {
+test("Mis casas: arriba solo el pago (la pendiente antes que la ventana de 90 días); el borrador sale una sola vez, en su tarjeta", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
   await h.seed({ status: "draft", draft: { title: "Borrador del Caribe" } });
 
   await owner(page);
   await page.goto("/propietario/casas");
-  await expect(page.getByTestId("resume-card")).toContainText("Borrador del Caribe");
+  await expect(card(page, "Borrador del Caribe").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
+  await expect(page.getByTestId("resume-card")).toHaveCount(0);
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await expect(page.locator(".offer-card")).toHaveCount(0); // sin tarjeta de la oferta de lanzamiento (spec)
 
@@ -72,7 +73,10 @@ test("Mis casas: un solo aviso arriba, primero el pago (la pendiente antes que l
   await expect(notice).toContainText("Su oferta gratuita termina en 30 días");
   await expect(notice).toContainText(`No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en bnbtico; después, ${FEE} al mes por casa, sin permanencia. También se lo recordamos por WhatsApp.`);
   await expect(notice).not.toContainText("Hola,"); // nunca el texto del WhatsApp
-  await expect(page.getByTestId("resume-card")).toHaveCount(0);
+  await expect(page.locator("[data-testid=pay-notice], [data-testid=resume-card]")).toHaveCount(1);
+  await expect(card(page, "Borrador del Caribe").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
+  // La casa de la ventana no repite el botón de pago en su tarjeta: lo lleva el aviso de arriba.
+  await expect(card(page, "Casa Cocles").getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/capturas/mis-casas-aviso.png", fullPage: true });
   const pay = notice.getByRole("link", { name: "Añadir método de pago" });
   await expect(pay).toHaveClass(/btn-sun/);
@@ -91,24 +95,29 @@ test("Mis casas: un solo aviso arriba, primero el pago (la pendiente antes que l
   await addCard();
   await fresh(page, "/propietario/casas");
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
-  await expect(page.getByTestId("resume-card")).toContainText("Borrador del Caribe");
+  await expect(card(page, "Borrador del Caribe").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
 });
 
-test("una sola casa: el aviso de pago arriba, sin repetirlo en su detalle", async ({ page }) => {
+test("una sola casa: el aviso de pago arriba de su tarjeta y no dentro de ella; el detalle lo dice sin el nombre", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
   await h.setDaysLeft(casa.id, 30);
   await owner(page);
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByTestId("pay-notice")).toHaveCount(1);
   await expect(page.getByTestId("pay-notice")).toContainText("Casa Cocles");
-  await expect(page.getByTestId("subscription-row")).toBeVisible();
+  const only = card(page, "Casa Cocles");
+  await expect(only.getByTestId("pay-notice")).toHaveCount(0);
+  await expect(only.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
+  expect((await page.getByTestId("pay-notice").boundingBox())!.y).toBeLessThan((await only.boundingBox())!.y);
+  await expect(page.getByTestId("subscription-row")).toHaveCount(0); // la línea de la suscripción va en el detalle
   await page.goto(`/propietario/casas/${casa.id}`);
+  await expect(page.getByTestId("subscription-row")).toBeVisible();
   await expect(page.getByTestId("pay-notice")).toHaveCount(1);
   await expect(page.getByTestId("pay-notice")).not.toContainText("Casa Cocles");
 });
 
-test("Mis casas: casillas y tarjetas de cada estado; con método, el botón ocre desaparece y la pendiente vuelve", async ({ page }) => {
+test("Mis casas: casillas, etiqueta y botones de cada estado y su línea en el detalle; con método, el botón ocre desaparece y la pendiente vuelve", async ({ page }) => {
   const lejos = await h.seed({ status: "active", draft: { title: "Casa sin prisa" } });
   const cerca = await h.seed({ status: "active", draft: { title: "Casa en la ventana" } });
   await h.setDaysLeft(cerca.id, 30);
@@ -116,7 +125,7 @@ test("Mis casas: casillas y tarjetas de cada estado; con método, el botón ocre
   await expire(debe.id);
   const parada = await h.seed({ status: "active", draft: { title: "Casa parada" } });
   await h.billing("owner").stop(parada.id);
-  await h.seed({ status: "review", draft: { title: "Casa en revisión" } });
+  const review = await h.seed({ status: "review", draft: { title: "Casa en revisión" } });
   const [subLejos, subCerca] = [await mine(lejos.id), await mine(cerca.id)];
   expect((await mine(debe.id)).status).toBe("payment_due");
 
@@ -124,48 +133,60 @@ test("Mis casas: casillas y tarjetas de cada estado; con método, el botón ocre
   await page.goto("/propietario/casas");
   await expect(page.locator(".tile")).toHaveText(["2activas", "1por pagar", "1en revisión"]);
 
+  // Solo la etiqueta y los botones en la tarjeta; las líneas de la suscripción, en el detalle.
   const a = card(page, "Casa sin prisa");
-  await expect(a.getByTestId("card-line")).toHaveText(`Gratis hasta el ${cardDate(subLejos.promoEndsOn!)}`);
+  await expect(a.getByTestId("card-label")).toHaveText("Activa");
+  await expect(a.getByTestId("card-line")).toHaveCount(0);
   await expect(a.getByRole("button", { name: "Compartir ficha" })).toBeVisible();
   await expect(a.getByRole("link", { name: "Calendario" })).toBeVisible();
   await expect(a.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
 
   const b = card(page, "Casa en la ventana");
-  await expect(b.getByTestId("card-line")).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
+  await expect(b.getByTestId("card-label")).toHaveText("Activa");
   await expect(b.getByRole("button", { name: "Compartir ficha" })).toBeVisible();
   await expect(b.getByRole("link", { name: "Calendario" })).toBeVisible();
-  await expect(b.getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(cerca.publicId));
-  await expect(b.getByRole("link", { name: "Añadir método de pago" })).toHaveClass(/btn-sun/);
+  await expect(b.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0); // lo cubre el aviso de arriba
 
   const c = card(page, "Casa por pagar");
-  await expect(c.getByText("Pendiente de pago", { exact: true })).toBeVisible();
-  await expect(c.getByTestId("card-line")).toHaveText("La ficha vuelve a verse al pagar.");
+  await expect(c.getByTestId("card-label")).toHaveText("Pendiente de pago");
   await expect(c.getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(debe.publicId));
+  await expect(c.getByRole("link", { name: "Añadir método de pago" })).toHaveClass(/btn-sun/);
   await expect(c.getByRole("button")).toHaveCount(0);
   await expect(c.getByRole("link", { name: "Calendario" })).toHaveCount(0);
 
   const d = card(page, "Casa parada");
-  await expect(d.getByText("Inactiva", { exact: true })).toBeVisible();
-  await expect(d.getByTestId("card-line")).toHaveText("Parada · no aparece en Explorar");
-  await expect(d.getByRole("link", { name: "Reactivar" })).toHaveAttribute("href", payLink(parada.publicId));
-  await expect(d.getByRole("link", { name: "Reactivar" })).toHaveClass(/btn-ghost/);
+  await expect(d.getByTestId("card-label")).toHaveText("Inactiva");
+  await expect(d.getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", payLink(parada.publicId));
+  await expect(d.getByRole("link", { name: "Activar suscripción" })).toHaveClass(/btn-sun/);
   await expect(d.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
   await expect(d.getByRole("button")).toHaveCount(0);
 
   const r = card(page, "Casa en revisión");
-  await expect(r.getByTestId("card-line")).toHaveText("Enviada hoy. Le avisamos por WhatsApp.");
-  await expect(r.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
-  // Sigue habiendo un solo botón relleno (revisión UX N1): el ocre es del dinero, no compite con él.
-  await expect(page.locator("main .btn-primary")).toHaveCount(1);
+  await expect(r.getByTestId("card-label")).toHaveText("En revisión");
+  await expect(r.locator(".btn")).toHaveCount(0);
+  // Como mucho un botón relleno por tarjeta (revisión UX N1): el ocre es del dinero y cuenta como relleno.
+  for (const article of await page.getByRole("article").all()) expect(await article.locator(".btn-primary, .btn-sun").count()).toBeLessThanOrEqual(1);
   await page.screenshot({ path: "test-results/capturas/mis-casas-estados.png", fullPage: true });
+
+  const row = async (id: string) => {
+    await page.goto(`/propietario/casas/${id}`);
+    return page.getByTestId("subscription-row");
+  };
+  await expect(await row(lejos.id)).toHaveText(`Gratis hasta el ${cardDate(subLejos.promoEndsOn!)}`);
+  await expect(await row(cerca.id)).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
+  await expect(await row(debe.id)).toHaveText("Pendiente de pago");
+  await expect(await row(parada.id)).toHaveText(`Parada el ${dayOf(await today(), await today())} · no se cobra`);
+  await page.goto(`/propietario/casas/${review.id}`);
+  await expect(page.getByText("La estamos revisando")).toBeVisible();
 
   await addCard();
   const now = await today();
   await fresh(page, "/propietario/casas");
   await expect(page.locator(".tile")).toHaveText(["3activas", "1en revisión"]);
-  await expect(card(page, "Casa por pagar").getByTestId("card-line")).toHaveText(`Suscripción activa desde el ${cardDate(now)} · ${FEE} al mes`);
+  await expect(card(page, "Casa por pagar").getByTestId("card-label")).toHaveText("Activa");
   await expect(page.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
-  await expect(card(page, "Casa en la ventana").getByTestId("card-line")).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
+  await expect(await row(debe.id)).toHaveText(`Suscripción activa desde el ${cardDate(now)} · ${FEE} al mes`);
+  await expect(await row(cerca.id)).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
 });
 
 test("detalle: la tarjeta ocre de la pendiente y de la que está en la ventana, compartir apagado y la fila «Suscripción»", async ({ page }) => {
@@ -224,8 +245,8 @@ test("sin owner_billing ni launch_offer_taken (despliegue antes de la migración
   await page.goto("/propietario/casas");
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await expect(page.locator(".tile")).toHaveText(["1activa", "1por pagar"]);
-  await expect(card(page, "Casa Cocles").getByTestId("card-line")).toHaveText("Visible en Explorar y con su enlace");
-  await expect(card(page, "Casa por pagar").getByTestId("card-line")).toHaveText("La ficha vuelve a verse al pagar.");
+  await expect(card(page, "Casa Cocles").getByTestId("card-label")).toHaveText("Activa");
+  await expect(card(page, "Casa por pagar").getByTestId("card-label")).toHaveText("Pendiente de pago");
   await expect(page.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
 
   await card(page, "Casa por pagar").getByRole("link", { name: "Casa por pagar" }).click();

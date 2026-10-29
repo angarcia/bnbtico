@@ -3,6 +3,7 @@ import type { Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { touch } from "./helpers/touch";
+import { resumeStep } from "../../src/domain/listing";
 
 const HOST = `127.0.0.1:${process.env.E2E_PORT ?? 4173}`;
 
@@ -35,43 +36,66 @@ test.beforeEach(async ({ page }) => {
 
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
-test("Mis casas: estado, nota del admin y, sin red, desde la caché", async ({ page }) => {
+test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno por tarjeta", async ({ page }) => {
   await page.goto("/propietario/casas");
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/]);
-  // Revisión UX A1: lo que falta por publicar va arriba (aquí, la casa con cambios más reciente), como único aviso y con el
-  // único botón relleno; el botón de su tarjeta y el de compartir la casa activa van en contorno.
-  const resume = page.getByTestId("resume-card");
-  await expect(resume).toContainText("Cabina con cambios");
-  await expect(resume).toContainText("Faltan fotos del baño.");
-  await expect(resume.getByRole("link", { name: "Corregir y reenviar" })).toHaveAttribute("href", `/propietario/publicar/${changes.id}/1`);
-  await expect(resume).not.toContainText("borradores más");
-  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
-  await expect(page.getByTestId("offer-left")).toHaveCount(0); // sin tarjeta de la oferta de lanzamiento
-  // Revisión UX N1: sin casillas a 0; un solo relleno y «Nueva» en contorno.
-  await expect(page.locator(".tile")).toHaveText(["1activa", "1en revisión"]);
-  await expect(page.locator("main .btn-primary")).toHaveCount(1);
-  await expect(card(page, "Cabina con cambios").getByRole("button", { name: "Corregir y reenviar" })).toHaveClass(/btn-ghost/);
-  await expect(card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-ghost/);
-  await expect(card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" })).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
-  await expect(page.getByRole("link", { name: "Nueva" })).toHaveClass(/btn-ghost/);
   await expect(page.getByRole("article")).toHaveCount(5);
   await expect(page.getByRole("heading", { name: "Casa de Ana" })).toHaveCount(0);
-  await expect(card(page, "Cabina con cambios").getByText("Cambios pedidos", { exact: true })).toBeVisible();
-  await expect(card(page, "Cabina con cambios").getByText("Nota de bnbtico: Faltan fotos del baño.")).toBeVisible();
-  await expect(card(page, "Casa en revisión").getByText(/^Enviada hoy\. Le avisamos por WhatsApp\.$/)).toBeVisible();
-  await expect(card(page, "Casa Cocles").getByText("₡55 000 / noche")).toBeVisible();
+  // Un borrador es un solo elemento (decisión B): nada arriba salvo el pago, y aquí no toca pagar.
+  await expect(page.getByTestId("resume-card")).toHaveCount(0);
+  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
+  await expect(page.getByTestId("offer-left")).toHaveCount(0); // sin tarjeta de la oferta de lanzamiento
+  // Revisión UX N1: sin casillas a 0; «Nueva» en contorno.
+  await expect(page.locator(".tile")).toHaveText(["1activa", "1en revisión"]);
+  await expect(page.getByRole("link", { name: "Nueva" })).toHaveClass(/btn-ghost/);
+
+  const cocles = card(page, "Casa Cocles");
+  await expect(cocles.getByTestId("card-label")).toHaveText("Activa");
+  await expect(cocles.getByTestId("card-zone")).toHaveText("Cocles");
+  await expect(cocles).not.toContainText("₡");
+  const share = cocles.getByRole("button", { name: "Compartir ficha" });
+  await expect(share).toHaveClass(/btn-primary/);
+  await expect(share).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
+  await expect(cocles.getByRole("link", { name: "Calendario" })).toHaveClass(/btn-ghost/);
+
+  const cambios = card(page, "Cabina con cambios");
+  await expect(cambios.getByTestId("card-label")).toHaveText("Cambios pedidos");
+  await expect(cambios.getByText("Nota de bnbtico: Faltan fotos del baño.")).toHaveClass(/note-arena/);
+  await expect(cambios.getByRole("link", { name: "Corregir y reenviar" })).toHaveClass(/btn-primary/);
+  await expect(cambios.getByRole("link", { name: "Corregir y reenviar" })).toHaveAttribute("href", `/propietario/publicar/${changes.id}/1`);
+
+  const enRevision = card(page, "Casa en revisión");
+  await expect(enRevision.getByTestId("card-label")).toHaveText("En revisión");
+  await expect(enRevision.getByRole("button")).toHaveCount(0);
+  await expect(enRevision.locator(".btn")).toHaveCount(0);
+
+  const borrador = card(page, "Borrador nuevo");
+  await expect(borrador.getByTestId("card-label")).toHaveText("Borrador");
+  const seguir = borrador.getByRole("link", { name: "Seguir publicando" });
+  await expect(seguir).toHaveClass(/btn-ghost/);
+  await expect(seguir).toHaveAttribute("href", `/propietario/publicar/${draft.id}/${resumeStep((await h.owner("owner").getOwn(draft.id))!)}`);
+  await expect(borrador.getByRole("button", { name: "Descartar" })).toBeVisible();
+
+  // Como mucho un botón relleno (verde o, si es dinero, ocre) por tarjeta.
+  for (const article of await page.getByRole("article").all()) expect(await article.locator(".btn-primary, .btn-sun").count()).toBeLessThanOrEqual(1);
+  // La primera foto se pide enseguida; las demás, al acercarse. La caja de la foto es cuadrada.
+  const photos = page.locator("article .house-photo");
+  await expect(photos.first().locator("img")).toHaveAttribute("loading", "eager");
+  await expect(photos.nth(1).locator("img")).toHaveAttribute("loading", "lazy");
+  const box = (await photos.first().boundingBox())!;
+  expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1);
 
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());
   await page.reload();
   await expect(page.getByRole("article")).toHaveCount(5);
-  await expect(page.getByTestId("resume-card")).toContainText("Cabina con cambios");
+  await expect(card(page, "Cabina con cambios").getByTestId("card-label")).toHaveText("Cambios pedidos");
 });
 
 // Revisión de Ana: toda la tarjeta abre el detalle (enlace estirado del título); sus botones siguen haciendo lo suyo y
 // arrastrar sobre una tarjeta desplaza la lista.
-test("Mis casas: tocar la foto o el precio abre el detalle; «Compartir ficha», «Calendario» y «Seguir» siguen; arrastrar desplaza", async ({ page }) => {
+test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha», «Calendario» y «Seguir publicando» siguen; arrastrar desplaza", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.addInitScript(() => {
     const w = window as unknown as { shared: unknown[] };
@@ -85,14 +109,14 @@ test("Mis casas: tocar la foto o el precio abre el detalle; «Compartir ficha»,
     const b = (await target.boundingBox())!;
     await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
   };
-  await tap(card(page, "Casa Cocles").locator(".thumb"));
+  await tap(card(page, "Casa Cocles").locator(".house-photo"));
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
   await page.goBack();
-  await tap(card(page, "Casa Cocles").locator(".price-line"));
-  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
-  await page.goBack();
-  await tap(card(page, "Casa en revisión").getByTestId("card-line"));
+  await tap(card(page, "Casa en revisión").locator(".house-photo"));
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${review.id}$`));
+  await page.goBack();
+  await tap(card(page, "Casa Cocles").getByTestId("card-zone"));
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
   await page.goBack();
 
   await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).click();
@@ -101,7 +125,7 @@ test("Mis casas: tocar la foto o el precio abre el detalle; «Compartir ficha»,
   await card(page, "Casa Cocles").getByRole("link", { name: "Calendario" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${active.id}`));
   await page.goBack();
-  await card(page, "Borrador nuevo").getByRole("link", { name: "Seguir" }).click();
+  await card(page, "Borrador nuevo").getByRole("link", { name: "Seguir publicando" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/\\d+$`));
   await page.goto("/propietario/casas");
 
@@ -197,7 +221,7 @@ test("disponible para consultas responde al instante y vuelve atrás con el mens
   await toggle.click();
   await page.getByRole("dialog", { name: "Pausar anuncio" }).getByRole("button", { name: "Pausar anuncio" }).click();
   await expect(toggle).toHaveAttribute("aria-checked", "false");
-  await expect(page.getByText("Pausado", { exact: true })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cerrada"); // la misma etiqueta que la tarjeta
   release();
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(false);
   await page.unroute("**/rest/v1/rpc/set_listing_available");
@@ -235,8 +259,7 @@ test("editar una casa activa pide confirmación, la reabre y deja de verse", asy
   // El borrador de una casa que ya estuvo publicada no se descarta.
   await page.goto("/propietario/casas");
   const reopened = card(page, "Casa Cocles");
-  await expect(reopened.getByText("Borrador", { exact: true })).toBeVisible();
-  await expect(reopened.getByText(/Estuvo publicada/)).toBeVisible();
+  await expect(reopened.getByTestId("card-label")).toHaveText("Borrador");
   await expect(reopened.getByRole("button", { name: "Descartar" })).toHaveCount(0);
   await reopened.getByRole("link", { name: "Casa Cocles" }).click();
   await expect(page.getByText("Estuvo publicada. Está editándola")).toBeVisible();

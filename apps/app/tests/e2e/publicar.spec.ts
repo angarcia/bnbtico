@@ -138,9 +138,9 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page).toHaveURL(/\/5$/);
   await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveCount(2);
 
-  // «Añadir otra casa» (Mis casas con una sola casa) con un borrador pendiente ofrece seguirlo; abrir esa pantalla no crea borradores.
+  // «Nueva casa» (el «+» de Mis casas) con un borrador pendiente ofrece seguirlo; abrir esa pantalla no crea borradores.
   await page.goto("/propietario/casas");
-  await page.getByRole("link", { name: "Añadir otra casa" }).click();
+  await page.getByRole("link", { name: "Nueva casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar$/);
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await page.reload();
@@ -254,9 +254,10 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
   expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null, photoCount: 5 });
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
-  // Una sola casa: Mis casas es su detalle.
-  await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
-  await expect(page.locator(".detail-badge").getByText("En revisión", { exact: true })).toBeVisible();
+  // Una sola casa: Mis casas es la lista con su tarjeta, «En revisión» sobre la foto.
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("article").getByRole("heading", { name: TITLE })).toBeVisible();
+  await expect(page.getByRole("article").getByTestId("card-label")).toHaveText("En revisión");
 });
 
 // Revisión de Ana: con el teclado abierto la descripción dejaba un hueco vacío debajo. Llena lo que queda de la pantalla con
@@ -396,7 +397,7 @@ test("cerrar o recargar la app justo al tocar «Continuar» no pierde el paso", 
 test("«Volver» de Publicar casa: atrás si se abrió desde la app; abierta directamente, a Cuenta", async ({ page }) => {
   await h.seed({ status: "draft", draft: { title: "Borrador pendiente" } }); // con un borrador pendiente no se crea otro
   await page.goto("/propietario/casas");
-  await page.getByRole("link", { name: "Añadir otra casa" }).click();
+  await page.getByRole("link", { name: "Nueva casa" }).click();
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
@@ -462,8 +463,8 @@ test("«Cerrar» en la cabecera espera al guardado en curso y vuelve a Mis casas
   await expect(page).toHaveURL(/\/7$/);
   release();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  // Una sola casa: Mis casas es el detalle del borrador, ya con el nombre guardado.
-  await expect(page.getByRole("heading", { level: 1, name: "Cabina que se cierra" })).toBeVisible();
+  // Mis casas: la tarjeta del borrador, ya con el nombre guardado.
+  await expect(page.getByRole("article").getByRole("heading", { name: "Cabina que se cierra" })).toBeVisible();
   expect((await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina que se cierra");
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await page.goto("/propietario/publicar");

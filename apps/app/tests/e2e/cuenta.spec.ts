@@ -187,7 +187,8 @@ test("una ruta privada sin sesión lleva a Ingresar y, tras el código, vuelve a
   await expect(page.getByText("Después de verificar vuelve adonde estaba.")).toBeVisible();
   await enterCode(page);
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Casa de vuelta" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("article").getByRole("heading", { name: "Casa de vuelta" })).toBeVisible();
 });
 
 test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, el de propietarios (sesión inyectada)", async ({ page }) => {

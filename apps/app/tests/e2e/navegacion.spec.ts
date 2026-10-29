@@ -6,7 +6,7 @@ import { enterCode, injectSession } from "./helpers/session";
 import { catchWhatsApp } from "./helpers/whatsapp";
 
 // Navegación simple: una sola barra que crece con las casas (dos pestañas sin casas, cinco con al menos una), Cuenta a
-// pantalla completa, Mis casas (una casa directa, dos o más en lista), Actividad (cifras de 30 días por casa y últimas
+// pantalla completa, Mis casas (siempre en lista, también con una sola casa), Actividad (cifras de 30 días por casa y últimas
 // consultas) y la vuelta de /propietario y /propietario/consultas.
 // Contra Supabase local con las sesiones inyectadas (sin gastar SMS).
 test.describe.configure({ mode: "serial" });
@@ -204,24 +204,32 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
   await expect(page.getByTestId("inquiries-badge")).toHaveCount(0);
 });
 
-test("3 · una casa: su detalle como raíz de la pestaña; con una segunda, la lista", async ({ page }) => {
+test("3 · una casa: la lista con una sola tarjeta; tocarla abre su detalle", async ({ page }) => {
   h = await postgrestHarness(); // la prueba anterior cerró la sesión del propietario también en el servidor
   await h.reset();
-  await h.seed({ status: "draft", draft: { title: "Casa Puerto Viejo" } });
+  const casa = await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Puerto Viejo" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
-  await expect(page.getByTestId("resume-card").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Descartar borrador" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveAttribute("href", "/propietario/publicar");
+  await expect(page.getByRole("article")).toHaveCount(1);
+  const only = page.getByRole("article");
+  await expect(only.getByTestId("card-label")).toHaveText("Activa");
+  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-primary/);
+  await expect(only.getByRole("link", { name: "Calendario" })).toHaveClass(/btn-ghost/);
+  await expect(page.getByRole("link", { name: "Nueva" })).toHaveAttribute("href", "/propietario/publicar");
+  await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/mis-casas-una.png", fullPage: true });
-  await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
-  await page.reload();
+  await only.getByRole("link", { name: "Casa Puerto Viejo" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${casa.id}$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Puerto Viejo" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveAttribute("href", `/casa/${casa.publicId}`);
+
+  await h.seed({ status: "draft", draft: { title: "Casa Cocles" } });
+  await page.goto("/propietario/casas");
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(2);
-  await expect(page.locator("[data-testid=resume-card], [data-testid=pay-notice]")).toHaveCount(1);
-  await expect(page.getByTestId("resume-card")).toContainText("Casa Puerto Viejo");
-  await expect(page.locator("main .btn-primary")).toHaveCount(1);
+  await expect(page.getByTestId("resume-card")).toHaveCount(0);
+  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await page.screenshot({ path: "test-results/mis-casas-lista.png", fullPage: true });
 });
 
@@ -230,17 +238,17 @@ test("la casa abierta desde la lista se queda aunque se descarte la otra", async
   const active = data!.find((l) => l.status === "active")!;
   const draft = data!.find((l) => l.status === "draft")!;
   await page.goto("/propietario/casas");
-  await page.getByRole("article").filter({ hasText: "Casa Cocles" }).getByRole("link", { name: "Casa Cocles" }).click();
+  await page.getByRole("article").filter({ hasText: "Casa Puerto Viejo" }).getByRole("link", { name: "Casa Puerto Viejo" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
   await serviceClient().from("listings").delete().eq("id", draft.id);
   await page.reload();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Puerto Viejo" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Volver" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveCount(0);
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
 });
 
@@ -269,9 +277,13 @@ test("2 · sin casas: dos pestañas; «Publicar mi casa» crea un borrador, cinc
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   await page.goto("/propietario/casas");
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
-  await expect(page.getByTestId("resume-card").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
-  // El aviso de arriba ya lleva al borrador: el detalle no repite «Seguir con el borrador».
-  await expect(page.getByRole("link", { name: /Seguir con el borrador/ })).toHaveCount(0);
+  // Una casa borrador: la lista con su tarjeta, que es el único sitio donde sale (sin aviso arriba).
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("article").getByRole("link", { name: "Seguir publicando" })).toHaveClass(/btn-ghost/);
+  await expect(page.getByRole("article").getByRole("button", { name: "Descartar" })).toBeVisible();
+  await expect(page.getByTestId("resume-card")).toHaveCount(0);
+  await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await page.goto("/cuenta");
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
   await expect(page.getByText("Próximo cobro")).toBeVisible();
@@ -287,7 +299,8 @@ test("el propietario entra y la barra no salta; al volver a abrir, cinco desde e
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
   expect(await tabCountsAt(page, "/propietario/casas")).toEqual([5]);
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1, name: "Casa Cahuita" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Casa Cahuita" })).toBeVisible();
   expect(await tabCountsAt(page, "/")).toEqual([5]);
 });
 
@@ -317,9 +330,10 @@ test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", asyn
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS_MANY);
   await expect(page.getByRole("article")).toHaveCount(2);
   await page.getByRole("article").filter({ hasText: "Borrador uno" }).getByRole("button", { name: "Descartar" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Borrador dos" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Borrador dos" })).toBeVisible();
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
-  await page.getByRole("button", { name: "Descartar borrador" }).click();
+  await page.getByRole("article").getByRole("button", { name: "Descartar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
 });

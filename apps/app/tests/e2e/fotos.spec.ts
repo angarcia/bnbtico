@@ -103,9 +103,11 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/8$/);
 
-  // La ficha (al publicarse) y Mis casas usan las variantes: la portada nueva en Mis casas es la de 480.
+  // La ficha (al publicarse) y Mis casas usan las variantes: la portada nueva en Mis casas es la de 800 con la de 480 en srcset.
   await page.goto("/propietario/casas");
-  await expect(page.locator(`img[src="${after.photos[0]!.url.replace(/800\.jpg$/, "480.jpg")}"]`).first()).toBeVisible();
+  const cover = page.locator(`.house-photo img[src="${after.photos[0]!.url}"]`).first();
+  await expect(cover).toBeVisible();
+  await expect(cover).toHaveAttribute("srcset", `${after.photos[0]!.url.replace(/800\.jpg$/, "480.jpg")} 480w, ${after.photos[0]!.url} 800w`);
 });
 
 test("no pasa de 15: sube solo las que caben y lo dice", async ({ page }) => {

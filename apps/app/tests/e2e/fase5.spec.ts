@@ -178,7 +178,9 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   expect(approved).toMatchObject({ plan: "promo", promoMonths: 12 });
   expect(approved.promoSlot).toBeGreaterThan(0);
   await fresh(owner, "/propietario/casas");
-  // Una sola casa: Mis casas es su detalle, con la fila «Suscripción».
+  // Una sola casa: Mis casas es la lista con su tarjeta; la fila «Suscripción» está en el detalle.
+  await expect(owner.getByRole("article").getByTestId("card-label")).toHaveText("Activa");
+  await owner.getByRole("article").getByRole("link", { name: TITLE }).click();
   await expect(owner.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
   await expect(owner.getByTestId("subscription-row")).toHaveText(`Gratis hasta el ${cardDate(approved.promoEndsOn!)}`);
   await capture(owner, "mis-casas-activa");
