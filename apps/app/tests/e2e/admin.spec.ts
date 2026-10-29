@@ -179,6 +179,22 @@ test("quien no es admin no entra: no se le pide código ni se le inscribe ningú
   await expect(page.getByRole("link", { name: /Revisión de anuncios/ })).toHaveCount(0);
 });
 
+test("sin fotos, «Rechazar» no manda la nota de las fotos sin que el admin la cambie", async ({ page }) => {
+  const bare = await h.seed({ status: "review", as: "other", draft: { title: "Casa sin fotos", zone: "Cocles", zoneSource: "other", zoneId: null, description: "" }, photos: 0 });
+  await injectSession(page, "admin");
+  await page.goto(`/admin/anuncios/${bare.id}`);
+  await secondCode(page);
+  await expect(page.locator("#admin-review-note")).toHaveValue(NO_PHOTOS_NOTE);
+  await page.getByRole("button", { name: "Rechazar" }).click();
+  await expect(page.getByText("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.")).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${bare.id}$`));
+  await page.locator("#admin-review-note").fill("Las fotos no son de esta casa.");
+  await page.getByRole("button", { name: "Rechazar" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect.poll(async () => (await h.owner("other").getOwn(bare.id))?.status).toBe("rejected");
+  expect((await h.owner("other").getOwn(bare.id))?.reviewNote).toBe("Las fotos no son de esta casa.");
+});
+
 test("el admin no aprueba sin fotos y pide una con el mensaje", async ({ page }) => {
   const bare = await h.seed({ status: "review", as: "other", draft: { title: "Casa sin fotos", zone: "Cocles", zoneSource: "other", zoneId: null, description: "" }, photos: 0 });
   await injectSession(page, "admin");

@@ -501,7 +501,8 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   async function decide(decision: ReviewDecision) {
-    const refusal = reviewNoteRefusal(decision, note);
+    // La nota de las fotos va con «Pedir cambios»: para rechazar, el admin escribe su propio motivo.
+    const refusal = reviewNoteRefusal(decision, decision === "reject" && note.trim() === NO_PHOTOS_NOTE ? "" : note);
     if (refusal) return setError(refusal);
     setError(null);
     review.mutate({ item, decision, note });
