@@ -2,7 +2,7 @@
 // (is_admin() de la migración admin_aal2_y_purga); quien no es admin no ve nada; review_listing con sus comprobaciones.
 import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi, Session } from "../../domain/api";
-import { EDIT_MESSAGES } from "../../domain/edit";
+import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError } from "../../domain/errors";
 import { MAX_PHOTOS, MIN_PHOTOS, type Listing } from "../../domain/listing";
 import { DECISION_STATUS, REVIEW_MESSAGES as M, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";

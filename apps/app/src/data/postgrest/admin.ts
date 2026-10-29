@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
-import { EDIT_MESSAGES } from "../../domain/edit";
+import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { REVIEW_MESSAGES as M, REJECTED_SHOWN, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { costaRicaToday } from "../../domain/inquiry";

@@ -5,7 +5,7 @@ import { UPLOAD_FAILED_MESSAGE, type PhotosApi } from "../../domain/api";
 import { createLimiter } from "../../domain/concurrency";
 import { DomainError } from "../../domain/errors";
 import { PHOTO_CACHE_SECONDS, VARIANT_SIZES, isPhotoFolder, photoFolder, photoObjectPaths, variantPath } from "../../domain/image";
-import { EDIT_MESSAGES } from "../../domain/edit";
+import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { MAX_PHOTOS } from "../../domain/listing";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";

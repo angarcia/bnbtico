@@ -20,7 +20,7 @@ import {
   TITLE_MIN,
   type Listing,
 } from "../../domain/listing";
-import { EDIT_MESSAGES } from "../../domain/edit";
+import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { photoObjectPaths } from "../../domain/image";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";

@@ -3,13 +3,15 @@
 // edición por casa, mientras los clientes siguen viendo la versión aprobada. Las reglas de cada dato son las del
 // asistente (validateStep, parseStep, normalize); los mensajes, los mismos en SQL, el dominio y el fake.
 // Módulo de dominio: sin imports de framework.
-import { MAX_PHOTOS, emptyDraft, normalize, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
+import { emptyDraft, normalize, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
 import { parseStep, type FormInput } from "./step-forms";
 import type { ZoneSource } from "./zones";
 import type { EditStatus } from "./edit-label";
+import { EDIT_MESSAGES } from "./edit-messages";
 
 export type { EditStatus } from "./edit-label";
 export { editLabel, EDIT_LABELS } from "./edit-label";
+export { EDIT_MESSAGES } from "./edit-messages";
 
 export interface EditLocation {
   lat: number;
@@ -33,19 +35,6 @@ export interface ListingEdit {
   /** Fotos nuevas, por posición; al aprobar van al final de la ficha. */
   photos: Photo[];
 }
-
-export const EDIT_MESSAGES = {
-  notHere: "Ese dato no se puede cambiar aquí.",
-  notPublished: "Solo puede cambiar así una casa publicada.",
-  inReview: "Ya hay una edición en revisión. Espere la respuesta o descártela.",
-  empty: "No hay cambios que enviar.",
-  decided: "Esta edición ya tiene una decisión.",
-  notFound: "No encontramos esa edición.",
-  lastPhoto: "Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.",
-  newPhotosReviewed: "Las fotos nuevas pasan por revisión. Añádalas desde la ficha de su casa.",
-  frozen: "Esta casa está publicada: cambie sus datos desde Mis casas.",
-  maxPhotos: `Máximo ${MAX_PHOTOS} fotos.`,
-} as const;
 
 export const EDIT_COPY = {
   savedLive: "Guardado. Ya se ve en su ficha.",
