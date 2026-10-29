@@ -203,9 +203,9 @@ isOneToOne: false
                   ]
                 },"listing_edits": {
                   Row: {
-                    "bathroom_shared": boolean | null,"created_at": string,"description": string | null,"kind": Database["public"]['Enums']["listing_kind"] | null,"lat": number | null,"listing_id": string,"lng": number | null,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": string,"submitted_at": string | null,"title": string | null,"updated_at": string,"zone": string | null,"zone_id": string | null,"zone_source": string | null
+                    "bathroom_shared": boolean | null,"created_at": string,"description": string | null,"kind": Database["public"]['Enums']["listing_kind"] | null,"lat": number | null,"listing_id": string,"lng": number | null,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": string,"submitted_at": string | null,"title": string | null,"updated_at": string,"zone": string | null,"zone_id": string | null,"zone_source": string | null,"listing_edit_empty": boolean | null
                   }
-                  ComputedFields: never
+                  ComputedFields: "listing_edit_empty"
                   Insert: {
                     "bathroom_shared"?: boolean | null,"created_at"?: string,"description"?: string | null,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"listing_id": string,"lng"?: number | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"submitted_at"?: string | null,"title"?: string | null,"updated_at"?: string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
                   }
@@ -577,7 +577,12 @@ isOneToOne: true
                 }
           }
           Functions: {
-            "add_listing_photo":
+            "add_edit_photo":
+{ Args: { "p_listing": string,"p_path": string }; Returns: {
+              "id": string,"path": string,"position": number
+            }[]
+                           },
+"add_listing_photo":
 { Args: { "p_listing": string,"p_path": string }; Returns: {
               "id": string,"path": string,"position": number
             }[]
@@ -601,6 +606,14 @@ isOneToOne: true
               "inquiry_id": string,"whatsapp_phone": string
             }[]
                            },
+"discard_edit":
+{ Args: { "p_listing": string }; Returns: (string)[]
+                           },
+"edit_place":
+{ Args: { "p_lat": number,"p_lng": number,"p_zone": string,"p_zone_id": string,"p_zone_source": string }; Returns: {
+              "canton": string,"district": string,"province": string,"zone": string
+            }[]
+                           },
 "finish_reminders":
 { Args: { "p_results": Json }; Returns: number
                            },
@@ -613,6 +626,12 @@ isOneToOne: true
 "listing_blocked_reason":
 { Args: { "p_public_id": string }; Returns: string
                            },
+"listing_edit_check":
+{ Args: { "e": Omit<Database["public"]['Tables']["listing_edits"]['Row'], Database["public"]['Tables']["listing_edits"]['ComputedFields']>,"l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']> }; Returns: undefined
+                           },
+"listing_edit_empty":
+{ Args: { "e": Omit<Database["public"]['Tables']["listing_edits"]['Row'], Database["public"]['Tables']["listing_edits"]['ComputedFields']> }; Returns: boolean
+                           },
 "listing_editable":
 { Args: { "p_listing": string }; Returns: boolean
                            },
@@ -624,8 +643,6 @@ isOneToOne: true
                            },
 "listing_is_published":
 { Args: { "p_listing": string }; Returns: boolean
-                           } |
-{ Args: { "p_first": string,"p_status": Database["public"]['Enums']["listing_status"] }; Returns: boolean
                            },
 "listing_link_state":
 { Args: { "p_public_id": string }; Returns: string
@@ -638,6 +655,9 @@ isOneToOne: true
                            },
 "listing_photos_owner_guard":
 { Args: { "p_listing": string }; Returns: boolean
+                           },
+"listing_status_published":
+{ Args: { "p_first": string,"p_status": Database["public"]['Enums']["listing_status"] }; Returns: boolean
                            },
 "listing_visible":
 { Args: { "p_listing": string }; Returns: boolean
@@ -736,11 +756,17 @@ isOneToOne: true
 "purge_listing_page":
 { Args: { "p_public_id": string }; Returns: undefined
                            },
+"remove_edit_photo":
+{ Args: { "p_photo": string }; Returns: string
+                           },
 "remove_listing_photo":
 { Args: { "p_photo": string }; Returns: string
                            },
 "reopen_due_listings":
 { Args: { "p_today"?: string }; Returns: number
+                           },
+"reorder_edit_photos":
+{ Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
                            },
 "reorder_listing_photos":
 { Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
@@ -754,6 +780,32 @@ isOneToOne: true
 "run_subscription_day":
 { Args: { "p_today"?: string }; Returns: Json
                            },
+"save_edit":
+{ Args: { "p_listing": string,"p_patch": Json }; Returns: {
+              "bathroom_shared": boolean | null,
+"created_at": string,
+"description": string | null,
+"kind": Database["public"]['Enums']["listing_kind"] | null,
+"lat": number | null,
+"listing_id": string,
+"lng": number | null,
+"review_note": string | null,
+"reviewed_at": string | null,
+"reviewed_by": string | null,
+"status": string,
+"submitted_at": string | null,
+"title": string | null,
+"updated_at": string,
+"zone": string | null,
+"zone_id": string | null,
+"zone_source": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "listing_edits"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "save_listing_days":
 { Args: { "p_available"?: boolean,"p_days": (string)[],"p_listing": string,"p_price_crc"?: number }; Returns: undefined
                            },
@@ -805,8 +857,37 @@ isOneToOne: true
 "set_listing_available":
 { Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined
                            },
+"start_edit":
+{ Args: { "p_listing": string }; Returns: {
+              "bathroom_shared": boolean | null,
+"created_at": string,
+"description": string | null,
+"kind": Database["public"]['Enums']["listing_kind"] | null,
+"lat": number | null,
+"listing_id": string,
+"lng": number | null,
+"review_note": string | null,
+"reviewed_at": string | null,
+"reviewed_by": string | null,
+"status": string,
+"submitted_at": string | null,
+"title": string | null,
+"updated_at": string,
+"zone": string | null,
+"zone_id": string | null,
+"zone_source": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "listing_edits"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "stop_subscription":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
+"submit_edit":
+{ Args: { "p_listing": string }; Returns: string
                            },
 "submit_listing":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
