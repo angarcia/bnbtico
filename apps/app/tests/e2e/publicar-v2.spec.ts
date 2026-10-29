@@ -189,3 +189,23 @@ test("un paso 1 caducado no se usa", async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/1$`));
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
 });
+
+test("sin respuesta guardada, /publicar/verificar vuelve al paso 1; con sesión, sigue a /publicar/continuar", async ({ page }) => {
+  await page.goto("/publicar/verificar");
+  await expect(page).toHaveURL(/\/publicar$/);
+  await expect(page.getByRole("heading", { name: "¿Qué es?" })).toBeVisible();
+  await injectSession(page, "owner");
+  await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ kind: "completo", savedAt: Date.now() })), STEP1_KEY);
+  await page.goto("/publicar/verificar");
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/2$`));
+});
+
+test("una recarga entre crear la casa y guardar el tipo usa ese borrador vacío", async ({ page }) => {
+  const orphan = await h.owner("owner").createDraft();
+  await injectSession(page, "owner");
+  await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ kind: "habitacion", savedAt: Date.now() })), STEP1_KEY);
+  await page.goto("/publicar/continuar");
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${orphan.id}/2$`));
+  await expect(page.getByText("Tiene un borrador sin enviar")).toHaveCount(0);
+  expect((await listingsOf(TEST_PHONES.owner)).map((l) => [l.id, l.kind])).toEqual([[orphan.id, "habitacion"]]);
+});

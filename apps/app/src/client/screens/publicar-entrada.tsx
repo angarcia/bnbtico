@@ -6,7 +6,7 @@ import { Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { DomainError } from "../../domain/errors";
-import { emptyDraft, resumeStep, validateStep, type Listing } from "../../domain/listing";
+import { emptyDraft, isFreshDraft, resumeStep, validateStep, type Listing } from "../../domain/listing";
 import { PUBLISH_STEP1_KEY, readStep1, storeStep1, type Step1Kind } from "../../domain/publish-return";
 import { track } from "../../shared/beacon";
 import { I } from "../../shared/icons";
@@ -17,6 +17,8 @@ import { useSession } from "../session";
 import { SignInForm } from "./cuenta";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
+/** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
+const ORPHAN_MS = 10 * 60_000;
 const storedStep1 = () => readStep1(localStorage.getItem(PUBLISH_STEP1_KEY), Date.now());
 
 /** La cabecera del asistente en el paso 1, sin borrador todavía: «Cerrar» vuelve a Explorar. */
@@ -96,7 +98,8 @@ export function VerificarScreen() {
 
 /**
  * Tras el código: con la respuesta del paso 1 crea la casa, guarda el tipo y sigue en el paso 2. Si la cuenta ya tiene un
- * borrador pendiente, elige como en la entrada de siempre. La respuesta se borra solo cuando la casa ya la tiene guardada.
+ * borrador pendiente, elige como en la entrada de siempre; si ese borrador está vacío y es de hace unos minutos (se recargó
+ * entre crearlo y guardar el tipo), se usa sin preguntar. La respuesta se borra solo cuando la casa ya la tiene guardada.
  */
 export function ContinuarScreen() {
   const userId = useSession().session?.userId ?? "";
@@ -122,28 +125,38 @@ export function ContinuarScreen() {
     },
   });
   const draft = resumable.data;
+  const orphan = draft && isFreshDraft(draft) && Date.now() - Date.parse(draft.createdAt) < ORPHAN_MS ? draft : null;
   // Un solo intento por visita (el modo estricto de React monta dos veces), y solo con una lectura de esta visita: un
   // «sin borrador» de la caché del teléfono podría estar desfasado.
   const autoStarted = useRef(false);
   const fresh = resumable.isFetchedAfterMount && !resumable.isFetching;
   useEffect(() => {
-    if (!stored || !fresh || draft !== null || autoStarted.current) return;
+    if (!stored || !fresh || (draft !== null && !orphan) || autoStarted.current) return;
     autoStarted.current = true;
+    if (orphan) created.current = orphan.id;
     create.mutate(stored.kind);
-  }, [stored, fresh, draft, create]);
+  }, [stored, fresh, draft, orphan, create]);
 
   if (!stored) return <Navigate to="/propietario/publicar" replace />;
-  const start = () => create.mutate(stored.kind);
-  const choosing = !!draft && !create.isPending && !create.isSuccess;
+  const start = () => {
+    if (create.isPending) return;
+    create.mutate(stored.kind);
+  };
+  const choosing = !!draft && !orphan && !create.isPending && !create.isSuccess;
   const readFailed = resumable.isError && draft === undefined;
 
   return (
     <>
       <FlowHeader title="Publicar casa" back="/propietario/casas" />
       {readFailed ? (
-        <p className="note" role="alert">
-          {message(resumable.error)}
-        </p>
+        <div className="stack gap-12">
+          <p className="note" role="alert">
+            {message(resumable.error)}
+          </p>
+          <button type="button" className="btn btn-primary btn-lg btn-block" disabled={resumable.isFetching} onClick={() => void resumable.refetch()}>
+            Intentar de nuevo
+          </button>
+        </div>
       ) : null}
       {choosing && draft ? (
         <section className="card stack gap-12">

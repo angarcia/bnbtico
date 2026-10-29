@@ -17,6 +17,13 @@ describe("vuelta a publicar", () => {
     expect(readStep1(JSON.stringify({ kind: "completo" }), NOW)).toBeNull();
     expect(readStep1(JSON.stringify({ kind: "completo", savedAt: NOW + 5 }), NOW)).toBeNull();
     expect(readStep1(null, NOW)).toBeNull();
+    // Sin zod: lo que antes rechazaba el esquema, a mano.
+    expect(readStep1(JSON.stringify({ kind: "completo", savedAt: String(NOW) }), NOW)).toBeNull();
+    expect(readStep1(JSON.stringify(["completo", NOW]), NOW)).toBeNull();
+    expect(readStep1("null", NOW)).toBeNull();
+    expect(readStep1("42", NOW)).toBeNull();
+    expect(readStep1(JSON.stringify({ kind: null, savedAt: NOW }), NOW)).toBeNull();
+    expect(readStep1(JSON.stringify({ kind: "habitacion", savedAt: NOW, extra: 1 }), NOW)).toEqual({ kind: "habitacion" });
   });
 
   it("reconoce la vuelta a publicar; nada más", () => {
