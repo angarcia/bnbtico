@@ -20,10 +20,17 @@ Demo: `listing-whatsapp.js`, paso Precio al crear y sección WhatsApp de esta ca
 1. Alojamiento: tipo y respuesta explícita a largo plazo.
 2. Ubicación (ubicación por punto, 2026-10-28): un punto en el mapa obligatorio, del que Postgres calcula provincia, cantón y distrito (`place_at`, no se editan), y una zona elegida entre las cercanas (a 5 km o menos), el distrito o «Otra…»; sin dirección exacta pública (la ficha solo muestra una zona aproximada de unos 500 m).
 3. Detalles: capacidad, habitaciones, baños, uso de baños, título y descripción. Casillas inicialmente desmarcadas para **Acepta mascotas, Piscina, Wifi, Aire acondicionado y Parqueo**; se marca lo que ofrece el alojamiento. Si se marca Parqueo, aparece un menú obligatorio **Gratuito / De pago**, sin preselección. Desmarcarlo borra la tarifa elegida. **Está amueblado** se elimina, también para largo plazo. Los datos históricos de tarifa de parqueo desconocida no se convierten automáticamente en gratuito.
-4. Fotos: mínimo 5 y portada. Sin contactos, enlaces o publicidad de agencias; moderación antes de publicación.
+4. Fotos: mínimo 1 para publicar (0 para enviar; 2026-10-29) y portada. Sin contactos, enlaces o publicidad de agencias; moderación antes de publicación.
 5. Precio: moneda CRC/USD, importe orientativo por noche y mínimo de noches; opciones mensuales condicionales. Mostrar el contacto de la cuenta y acceso a configurarlo, sin teléfono propio del anuncio.
 
 Registro y borradores sin verificaciones iniciales. Antes de la primera publicación se requieren **Veriff aprobado y WhatsApp verificado mediante OTP**; reutilizar ambos para anuncios posteriores mientras sigan vigentes. Un nuevo número debe verificarse antes de usarlo como contacto. Ver [identidad-y-seguridad.md](identidad-y-seguridad.md); OTP y permisos reales aún no implementados. Verificación registral fuera de v1. Suscripción/promoción por casa sigue [business-model.md](business-model.md); esta iteración no implementa cobros ni asignación de plazas.
+
+## Mínimos para enviar y para publicar (2026-10-29)
+
+- **Enviar a revisión:** WhatsApp verificado, tipo, punto en el mapa y zona, capacidad, **nombre de 5 a 32 caracteres** y **precio por noche** (obligatorio). **Sin fotos y sin descripción se puede enviar.**
+- **Descripción:** opcional; si se escribe, de 80 a 2000 caracteres.
+- **Fotos:** 0 para enviar, **al menos 1 para que el admin apruebe** (máximo 15). Sin fotos el admin solo puede pedir cambios, con la nota «Para publicarla necesitamos al menos una foto de la casa.».
+- Los mínimos de arriba sustituyen al «mínimo 5» fotos de los campos del recorrido. Ver `docs/decisiones.md`, 2026-10-29 · Publicar v2.
 
 ## Ubicación (2026-10-27)
 
@@ -52,4 +59,4 @@ Pruebas: `node tests/prototype/publication.cjs` y `node tests/prototype/admin-re
 - Catálogo, filtros, Pedir casa y Búsqueda asistida conservan el modelo antiguo vacacional/largo plazo y datos de ejemplo. Deben pasar a catálogo vacacional con filtro Acepta largo plazo; esta iteración está acotada al formulario de publicación y la cuenta.
 - Al filtrar por presupuesto mensual, una tarifa Consultar no debe contarse como precio confirmado compatible. Definir su presentación aparte, sin inventar importe.
 - Esquema, matching y permisos backend todavía no implementados. Mantener WhatsApp privado a nivel de usuario, referencia desde cada anuncio y acceso solo tras consentimiento/aceptación.
-- Autenticación, Veriff, moderación, suscripciones, fotos reales, ubicación en mapa y edición de anuncios existentes siguen pendientes de implementación real.
+- Autenticación, Veriff, moderación, suscripciones, fotos reales y ubicación en mapa siguen pendientes de implementación real en esta demo; la edición de casas publicadas ya está construida en la app (ver «Casa publicada», arriba).

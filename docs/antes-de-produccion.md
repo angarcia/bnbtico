@@ -70,3 +70,7 @@ Desde la fase de Explorar al estilo Airbnb el mapa con precios es el primer elem
 1. Leer la política de uso de teselas de la fundación OSM (`tile.openstreetmap.org`: sin uso intensivo, atribución visible, `Referer` válido, sin precarga masiva) y compararla con el tráfico esperado del lanzamiento.
 2. Decidir si se sigue con las teselas de OSM o se pasa a un proveedor de teselas (con clave y plan propio), y dejar la decisión en `docs/decisiones.md`.
 3. Si se cambia de proveedor, actualizar la CSP (`img-src`) y la prueba de Lighthouse, que hoy bloquea las teselas en la medición.
+
+## Portada → asistente de publicar (2026-10-29)
+
+El día del lanzamiento, comprobar que «Publicar mi casa» de la portada abre el asistente (`/publicar`). Antes del lanzamiento la portada de producción conserva el botón de WhatsApp de propietarios (`landingOnly`).

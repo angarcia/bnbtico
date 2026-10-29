@@ -198,6 +198,20 @@ Con dos teléfonos: el de la propietaria (una casa activa) y el del admin (con s
 | U85 | Admin, en su teléfono: Anuncios → «Ediciones por revisar» → la casa; mirar «Antes» / «Ahora» y la foto nueva; «Aprobar cambios». Propietaria: abrir su casa | Sin «Rechazar»; al aprobar, «Cambios aprobados. La ficha ya los muestra.» y la sección desaparece. La propietaria ya no ve aviso; la tarjeta dice «Activa»; la ficha pública tiene el nombre nuevo y la foto nueva **al final** | ☐ |
 | U86 | Propietaria: cambiar otra vez el nombre y enviarlo. Admin: «Pedir cambios» sin mensaje, luego con un mensaje. Propietaria: corregir el nombre y «Enviar a revisión». Admin: «Aprobar cambios». Después, la propietaria añade una foto nueva (edición nueva) y «Descartar cambios» | Sin mensaje: «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.». Con él, la propietaria ve «Le pedimos cambios en la edición» con el mensaje y la tarjeta «Cambios pedidos en la edición»; al reenviar, «Edición en revisión: nombre…». Al descartar la segunda edición pregunta «¿Descartar los cambios sin aplicar? Su ficha sigue como está.», el aviso desaparece y la foto nueva no queda en la ficha | ☐ |
 
+### Publicar v2 (2026-10-29)
+
+Con un teléfono sin sesión y un número de prueba libre (`8888 9999`); el admin, en su teléfono.
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U87 | Sin cuenta: en la portada (`/?pronto=1`) tocar «Publicar mi casa»; responder el paso 1 y «Continuar» | La portada abre `/publicar` (en producción antes del lanzamiento sigue el botón de WhatsApp). El paso 1 se responde sin cuenta; al continuar sale «Para guardar su casa, verifique su WhatsApp» | ☐ |
+| U88 | Escribir el número y el nombre, recibir el código, «Verificar y continuar» (probar también recargar la página en medio) | Cabecera «Publicar casa» y «Después seguimos con su casa»; tras el código, directo al paso 2 de su casa (sin «¡Listo!»), con un solo borrador y el tipo elegido en el paso 1; recargar no crea otro | ☐ |
+| U89 | Avanzar hasta el paso 6 sin descripción y hasta el 7 sin fotos; en el 9 mirar las filas; «Enviar a revisión» | «Descripción (opcional)» y «Puede enviarla sin fotos; para publicarla necesitamos al menos una.»; en el resumen «Ninguna todavía» y el nombre con « · sin descripción»; se envía. Después sale «¿Quiere añadir un correo?» con «Guardar correo» y «Ahora no» | ☐ |
+| U90 | Tocar «Ahora no»; enviar otra casa con la misma cuenta | La pregunta del correo no vuelve a salir; si guarda un correo válido, tampoco | ☐ |
+| U91 | Admin: abrir esa casa sin fotos en Anuncios | La nota arena «Sin fotos: solo puede pedir cambios.»; «Aprobar y publicar» no funciona («Para aprobarla hace falta al menos una foto.»); «Pedir cambios» propone «Para publicarla necesitamos al menos una foto de la casa.» | ☐ |
+| U92 | Cuenta nueva (otro número libre) desde Ingresar, sin `next`: tras el código mirar «¡Listo! Su cuenta está creada»; probar «Sí, quiero publicarla» y, con otra cuenta, «No, busco casa» | La pregunta «¿Tiene una casa para alquilar?»: «Sí» lleva a publicar y «No» a Explorar; el enlace «Añadir un correo de recuperación» abre el correo. Una cuenta que llegó desde una ficha vuelve a la ficha sin ver la pregunta | ☐ |
+| U93 | En el paso 6 escribir un nombre de 33 caracteres | El contador para en 32 y no deja pasar de ahí; con 4 caracteres, «El nombre de la casa debe tener entre 5 y 32 caracteres.» | ☐ |
+
 ---
 
 ## C. Si algo falla
