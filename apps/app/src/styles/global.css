@@ -460,7 +460,7 @@ html.map-open{overflow:hidden}
 .people-stepper button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
 .people-stepper button:disabled{border-color:var(--line);color:#A3ADA6;cursor:default}
 .people-stepper b{min-width:24px;font-family:var(--display);font-size:24px;text-align:center}
-.people-stepper b.is-empty{color:var(--muted)}
+.people-stepper b.is-empty{color:var(--muted);font-family:var(--body);font-weight:400;font-size:18px}
 .explore-top .chiprow{align-items:center}
 .chiprow .currency-switch{margin-left:auto}
 /* El mensual encendido (negrita y «✓ ») no cabe entero a 360 px junto a los filtros y «₡ | $»: se acorta con «…» y los

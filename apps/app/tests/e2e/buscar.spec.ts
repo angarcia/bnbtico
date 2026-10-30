@@ -107,8 +107,8 @@ test("?abrir=quienes abre «¿Quiénes?»", async ({ page }) => {
   await page.goto("/explorar/buscar?abrir=quienes");
   await expect(page.getByRole("button", { name: "¿Quiénes?", exact: true })).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("button", { name: "¿Dónde? Añadir zona" })).toHaveAttribute("aria-expanded", "false");
-  // Sin personas, «0» (Daniel, 2026-10-29; antes «Sin indicar»), en gris.
-  await expect(page.locator(".people-stepper b")).toHaveText("0");
+  // Sin personas, «–» en gris, como la hoja de contacto y el asistente (Daniel, 2026-10-29; antes «Sin indicar»).
+  await expect(page.locator(".people-stepper b")).toHaveText("–");
   await expect(page.locator(".people-stepper b")).toHaveClass(/is-empty/);
   await expect(page.getByRole("button", { name: "Una persona menos" })).toBeDisabled();
   // `abrir` no pasa a la URL de Explorar.
