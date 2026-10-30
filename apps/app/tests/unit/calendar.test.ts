@@ -394,13 +394,13 @@ describe("rejilla del mes (lunes primero, días pasados) y ventana de 12 meses",
 });
 
 describe("precio compacto de la rejilla", () => {
-  it("«95k», «180k», «1,2M», «1M»", () => {
-    expect(compactPrice(95_000, "CRC", 510)).toBe("95k");
-    expect(compactPrice(180_000, "CRC", 510)).toBe("180k");
-    expect(compactPrice(1_200_000, "CRC", 510)).toBe("1,2M");
-    expect(compactPrice(1_000_000, "CRC", 510)).toBe("1M");
-    expect(compactPrice(999_600, "CRC", 510)).toBe("1M");
-    expect(compactPrice(95_400, "CRC", 510)).toBe("95k");
+  it("«95 mil», «180 mil», «1,2 M», «1 M» (como se dice en Costa Rica; sin la «k» inglesa), con espacio que no se parte", () => {
+    expect(compactPrice(95_000, "CRC", 510)).toBe("95\u00a0mil");
+    expect(compactPrice(180_000, "CRC", 510)).toBe("180\u00a0mil");
+    expect(compactPrice(1_200_000, "CRC", 510)).toBe("1,2\u00a0M");
+    expect(compactPrice(1_000_000, "CRC", 510)).toBe("1\u00a0M");
+    expect(compactPrice(999_600, "CRC", 510)).toBe("1\u00a0M");
+    expect(compactPrice(95_400, "CRC", 510)).toBe("95\u00a0mil");
     expect(compactPrice(500, "CRC", 510)).toBe("500");
   });
   it("en dólares (solo visualización, ficha pública): el redondeo de money.ts", () => {
@@ -448,9 +448,9 @@ describe("calendario en vertical (densidad y tarjetas)", () => {
     leap.forEach((m, i) => expect(m).toBe(addMonths(leap[0]!, i)));
   });
 
-  it("cellPrice: «₡95k», «₡1,3M», «₡500»; en dólares, el de compactPrice", () => {
-    expect(cellPrice(95_000, "CRC", 510)).toBe("₡95k");
-    expect(cellPrice(1_250_000, "CRC", 510)).toBe("₡1,3M");
+  it("cellPrice: «₡95 mil», «₡1,3 M», «₡500»; en dólares, el de compactPrice", () => {
+    expect(cellPrice(95_000, "CRC", 510)).toBe("₡95\u00a0mil");
+    expect(cellPrice(1_250_000, "CRC", 510)).toBe("₡1,3\u00a0M");
     expect(cellPrice(500, "CRC", 510)).toBe("₡500");
     expect(cellPrice(95_000, "USD", 510)).toBe(compactPrice(95_000, "USD", 510));
   });

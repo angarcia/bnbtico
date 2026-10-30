@@ -29,6 +29,7 @@ import { hasStoredSession, webStore } from "../data/storage";
 import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, readSearchDates } from "../domain/contact-return";
 import { proceedToWhatsApp } from "./contact-flow";
 import { I } from "./icons";
+import { useModal } from "./modal";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 /** Campos que sacan el teclado (las fechas abren un selector). */
@@ -42,19 +43,6 @@ type Status = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message:
 function filteredPeople(max: number): number | null {
   const n = Number(webStore("session").getItem(PEOPLE_FILTER_KEY));
   return Number.isInteger(n) && n >= 1 && n <= max ? n : null;
-}
-
-/** Bloquea el scroll y deja inerte la página mientras la hoja está abierta. */
-function useModal() {
-  useEffect(() => {
-    const root = document.getElementById("root");
-    document.documentElement.classList.add("sheet-open");
-    if (root) root.inert = true;
-    return () => {
-      document.documentElement.classList.remove("sheet-open");
-      if (root) root.inert = false;
-    };
-  }, []);
 }
 
 /** `autoSend`: la hoja reabre al volver de verificar el WhatsApp y sigue sola hacia WhatsApp (revisión UX C2), solo si lo

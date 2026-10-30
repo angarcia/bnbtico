@@ -26,16 +26,16 @@ describe("MonthGrid", () => {
     expect(cells(out)).toHaveLength(31);
   });
 
-  it("interactiva: botones con aria-label (fecha, estado y precio), «95k» en los disponibles, «ocupado» en los ocupados y ★ en los distintos", () => {
+  it("interactiva: botones con aria-label (fecha, estado y precio), «₡95 mil» en los disponibles, «ocupado» en los ocupados y ★ en los distintos", () => {
     const out = html();
     expect(cell(out, 20)).toMatch(/^<button/);
     expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible, ₡95\u00a0000"');
-    expect(cell(out, 20)).toContain("95k");
+    expect(cell(out, 20)).toContain("95\u00a0mil");
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
     expect(cell(out, 12)).toContain(">Ocupado<");
     expect(cell(out, 12)).toMatch(/class="day is-busy"/);
     expect(cell(out, 24)).toContain("<b>24 ★</b>");
-    expect(cell(out, 24)).toContain("180k");
+    expect(cell(out, 24)).toContain("180\u00a0mil");
     expect(cell(out, 24)).toContain('aria-label="24 de diciembre de 2026, disponible, ₡180\u00a0000, precio distinto"');
     // Ocupado con precio especial: conserva la ★ (el precio vuelve al liberarlo).
     expect(cell(out, 31)).toContain("<b>31 ★</b>");
@@ -74,7 +74,7 @@ describe("MonthGrid", () => {
     expect(out).not.toContain("<button");
   });
 
-  it("alta (calendario del propietario): sin cabecera propia, «₡95k» dentro de la casilla y «Ocupado» en los ocupados", () => {
+  it("alta (calendario del propietario): sin cabecera propia, «₡95 mil» dentro de la casilla (el «₡» aparte, que se oculta por debajo de 360 px) y «Ocupado» en los ocupados", () => {
     const out = renderToString(
       <MonthGrid
         size="tall"
@@ -89,7 +89,7 @@ describe("MonthGrid", () => {
     );
     expect(out).toContain('class="month-grid is-tall"');
     expect(out).not.toContain("month-head");
-    expect(cell(out, 9)).toContain("₡95k");
+    expect(cell(out, 9)).toContain('<span class="day-cur">₡</span>95\u00a0mil');
     expect(cell(out, 12)).toContain(">Ocupado<");
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
   });
@@ -106,12 +106,14 @@ describe("MonthGrid", () => {
     expect(cells(html({ today: "2026-12-16" }))).toHaveLength(31);
   });
 
-  it("compacta (por defecto): cabecera propia y «95k» sin ₡", () => {
+  it("compacta (por defecto): cabecera propia; con cifra en todos los días (la ficha) «₡95 mil», solo en los ★ «95 mil»", () => {
     const out = html();
     expect(out).toContain("month-head");
     expect(out).not.toContain("is-tall");
-    expect(cell(out, 20)).toContain(">95k<");
-    expect(out).not.toContain("₡95k");
+    expect(cell(out, 20)).toContain('<span class="day-cur">₡</span>95\u00a0mil<');
+    const special = html({ prices: "special" });
+    expect(cell(special, 24)).toContain(">180\u00a0mil<");
+    expect(special).not.toContain("day-cur");
   });
 
   it("fila de los días de la semana: L K M J V S D, oculta a los lectores de pantalla", () => {

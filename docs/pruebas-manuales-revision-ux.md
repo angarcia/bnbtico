@@ -238,6 +238,25 @@ Con la propietaria «Yorleny Prueba» (`8777 0001`) con dos casas publicadas y c
 | U102 | Con un chip elegido, recargar; tocar «Todas»; elegir una casa sin consultas | La URL lleva `?casa=` y la recarga mantiene el filtro; «Todas» lo quita; la casa sin consultas dice «Todavía no hay consultas de esta casa.» | ☐ |
 | U103 | Actividad con una sola casa; luego con dos o más | Con una, su tarjeta ocupa toda la fila (foto cuadrada con la etiqueta de estado y las tres cifras grandes); con dos o más, de dos en dos | ☐ |
 
+### Letra más grande, ficha y botones (2026-10-29)
+
+Con un iPhone SE (o 375 px) y un Android. Hace falta una casa con una descripción larga en varios párrafos, noches ocupadas y un día con precio distinto.
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U104 | Recorrer Explorar, la ficha, Favoritos y Mis casas | La letra se lee más grande que antes (como en Airbnb); nada se corta ni se sale | ☐ |
+| U105 | Abrir la ficha en el iPhone SE sin bajar | Nombre, zona y personas **centrados** y visibles por encima de la barra fija; la barra no pasa de un cuarto de pantalla y «Precios orientativos…» cabe en una línea | ☐ |
+| U106 | Bajar un poco | Una línea; la persona («Yorleny», debajo «WhatsApp verificado») en su fila; otra línea; la descripción en **párrafos separados** | ☐ |
+| U107 | Con la descripción larga: tocar «Ver más»; luego el botón atrás del teléfono | Se ve recortada en 8 líneas con la última difuminada; «Ver más» abre la descripción entera a pantalla completa; atrás la cierra y la ficha sigue donde estaba (otro atrás sale de la ficha) | ☐ |
+| U108 | Con una descripción corta | Se ve entera, sin «Ver más» | ☐ |
+| U109 | Mirar «Disponibilidad» en la ficha | Cada noche lleva su precio («₡55 mil», sin «k»); ★ y su cifra en los de precio distinto; disponibles en verde muy suave y ocupadas en terracota suave con rayas y «Ocupado»; casillas juntas con esquinas poco redondeadas. En un teléfono de 320 px, «55 mil» sin «₡» | ☐ |
+| U110 | Mirar botones en Favoritos vacío, publicar, Mis casas y una casa por pagar | Esquinas de 8 px, ningún contorno; «Continuar» y «Compartir ficha» en verde lleno algo más suave; los demás («Explorar casas», «Ver más», «Atrás», «Calendario», «Ingresar») en verde muy claro; «Añadir método de pago» en ocre más suave | ☐ |
+| U111 | Favoritos vacío y el final de Explorar | «Compare y escriba directo» y «¿No encuentra lo que busca?» en blanco, sin verde ni arena | ☐ |
+| U112 | Filtros: elegir Piscina y Wifi; mirar «₡ \| $» | Lo elegido en verde claro sin borde, con ✓; lo no elegido en beige claro; ningún salvia | ☐ |
+| U113 | Títulos en Explorar, la ficha, Mis casas y publicar | La misma letra que el texto, más fina que antes (no «tipo cómic») | ☐ |
+| U114 | «¿Cuándo?»: elegir llegada y salida | Los dos extremos en cuadrados terracota suave (no círculos naranjas) y la banda entre ellos casi crema; la pestaña activa de abajo en el terracota del logo | ☐ |
+| U115 | Hoja de contacto, «¿Quiénes?» y el paso 4 de publicar | Los − / + en verde claro sin contorno; los campos de texto sin línea, que se marca al escribir | ☐ |
+| U116 | Ficha: los botones sobre la foto | Volver, compartir y corazón cuadrados y crema semitransparente; se leen sobre cualquier foto | ☐ |
 ---
 
 ## C. Si algo falla

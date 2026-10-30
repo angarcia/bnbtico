@@ -114,7 +114,7 @@ export function FavoritosScreen() {
       {favs.length === 0 ? (
         <section className="stack fav-empty">
           <p className="muted">Toque el corazón de una casa para guardarla aquí.</p>
-          <Link to="/explorar" className="btn btn-primary btn-lg">
+          <Link to="/explorar" className="btn btn-soft btn-lg">
             Explorar casas
           </Link>
         </section>
@@ -128,7 +128,7 @@ export function FavoritosScreen() {
         </div>
       )}
 
-      <div className="note note-col">
+      <div className="note note-col note-plain">
         <b>Compare y escriba directo</b>
         <span>Escriba directo desde aquí. Guardar casas no necesita cuenta; para escribir solo verifica su WhatsApp con un código.</span>
       </div>

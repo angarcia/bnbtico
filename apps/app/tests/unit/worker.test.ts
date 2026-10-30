@@ -293,7 +293,7 @@ describe("worker · enlaces que no se muestran", () => {
     const html = await res.text();
     expect(html).toContain("Este enlace no existe");
     expect(html).toContain('<meta name="robots" content="noindex" />');
-    expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
+    expect(html).toMatch(/<a href="\/explorar" class="btn btn-soft">Ver otras casas en el Caribe<\/a>/);
     expect(ssrData(html)).toEqual({ page: "missing" });
   });
 
@@ -320,7 +320,7 @@ describe("worker · enlaces que no se muestran", () => {
       expect(html).toContain("Este enlace ya no está activo");
       expect(ssrData(html)).toEqual({ page: "blocked", reason: "other" });
       expect(html).toContain("Este anuncio no está disponible en este momento.");
-      expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
+      expect(html).toMatch(/<a href="\/explorar" class="btn btn-soft">Ver otras casas en el Caribe<\/a>/);
     }
   });
 

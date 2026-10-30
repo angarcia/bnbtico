@@ -20,7 +20,7 @@ export function SearchHelp({ filters, zoneName = null, number, onClear }: { filt
       </a>
     </>
   ) : null;
-  if (onClear === undefined) return help && <div className="note note-arena note-col">{help}</div>;
+  if (onClear === undefined) return help && <div className="note note-plain note-col">{help}</div>;
   return (
     <section className="card stack gap-14">
       <h3>No hay casas con esos filtros</h3>

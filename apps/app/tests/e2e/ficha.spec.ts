@@ -25,6 +25,13 @@ let oculta: Seeded;
 let cara: Seeded;
 let larga: Seeded;
 let negociable: Seeded;
+let descrita: Seeded;
+const LARGA = [
+  "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho.",
+  "La casa tiene dos habitaciones con abanico y mosquiteros, cocina equipada y una terraza grande con vista al jardín.",
+  "Estamos a 300 metros de la playa de Cocles, buena para surfear, y a diez minutos en bici de Puerto Viejo.",
+  "Acceso: le damos las llaves en persona y le explicamos todo. Parqueo dentro de la propiedad, con portón.",
+].join("\n\n");
 
 test.beforeAll(async () => {
   const h = await postgrestHarness();
@@ -33,6 +40,7 @@ test.beforeAll(async () => {
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
   cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", zoneSource: "other", zoneId: null, nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyPriceCrc: 2500000 } });
   negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
+  descrita = await h.seed({ status: "active", draft: { title: "Casa Descrita", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 60000, description: LARGA } });
   larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
   // Un nombre largo de antes del tope de 32 caracteres (publicar v2): las casas ya publicadas lo conservan.
   sql(`begin; set local app.allow_status = 'on'; update public.listings set title = 'Villa Manzanillo con piscina y rancho frente al mar Caribe' where id = '${larga.id}'; commit;`);
@@ -59,7 +67,15 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Playa Negra" })).toBeVisible();
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
-  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+ · WhatsApp verificado$/u);
+  // Cabecera como en Airbnb: nombre, zona y personas; una línea; la persona en su fila (nombre y debajo «WhatsApp verificado»); otra línea; la descripción.
+  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+\s*WhatsApp verificado$/u);
+  expect(
+    await page.evaluate(() => {
+      const host = document.querySelector('[data-testid="host-line"]')!;
+      return [host.previousElementSibling?.tagName, host.nextElementSibling?.tagName, host.nextElementSibling?.nextElementSibling?.className];
+    }),
+  ).toEqual(["HR", "HR", "stack description-block"]);
+  expect(await page.getByTestId("listing-capacity").evaluate((el) => getComputedStyle(el).fontSize)).toBe("17px");
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
   // Compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño. Sin «₡ | $».
@@ -327,4 +343,60 @@ test("compartir y el contador de fotos no se animan al abrir la ficha, solo al c
   expect(await animatedAfter("share", ".icon-btn .swap-in"), "«Enlace copiado»").toBeGreaterThan(0);
   expect(await animatedAfter("scroll", ".hero-counter .tick"), "contador 2 / 5").toBeGreaterThan(0);
   await expect(page.locator(".hero-counter")).toHaveText("2 / 5");
+});
+
+// Como en Airbnb: párrafos separados y, si es larga, 8 líneas con «Ver más», que abre la descripción entera a pantalla completa.
+test("descripción larga: párrafos, «Ver más» a pantalla completa y atrás la cierra sin salir de la ficha", async ({ page }) => {
+  const res = await page.goto(`/casa/${descrita.publicId}`);
+  const source = await res!.text();
+  expect(source).toContain('<div class="listing-description is-clamped" data-testid="listing-description"><p>Cabina de madera');
+  expect(source).toContain('<span class="btn btn-soft btn-more is-pending" aria-hidden="true">Ver más</span>');
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  const text = page.getByTestId("listing-description");
+  await expect(text.locator("p")).toHaveCount(4);
+  const [shown, full] = await text.evaluate((el) => [el.clientHeight, el.scrollHeight]);
+  expect(shown, "recortada").toBeLessThan(full);
+  expect(shown).toBeCloseTo(8 * 18 * 1.45, -1);
+
+  const more = page.getByRole("button", { name: "Ver más" });
+  await more.click();
+  const screen = page.getByRole("dialog", { name: "Descripción" });
+  await expect(screen).toBeVisible();
+  await expect(screen.locator("p")).toHaveCount(4);
+  await expect(screen.getByText("Acceso: le damos las llaves en persona")).toBeVisible();
+  // El botón atrás del teléfono cierra la descripción y deja la ficha.
+  await page.goBack();
+  await expect(screen).toHaveCount(0);
+  await expect(page).toHaveURL(new RegExp(`/casa/${descrita.publicId}$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Descrita" })).toBeVisible();
+
+  // La flecha también, y el foco vuelve a «Ver más»; Escape igual.
+  await more.click();
+  await screen.getByRole("button", { name: "Cerrar" }).click();
+  await expect(screen).toHaveCount(0);
+  await expect(more).toBeFocused();
+  await more.click();
+  await page.keyboard.press("Escape");
+  await expect(screen).toHaveCount(0);
+  await expect(page).toHaveURL(new RegExp(`/casa/${descrita.publicId}$`));
+
+  // En la ficha de la SPA (desde Explorar), atrás cierra la descripción y un segundo atrás vuelve a Explorar.
+  await page.goto("/explorar");
+  await page.getByRole("link", { name: /Casa Descrita/ }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/casa/${descrita.publicId}`));
+  await page.getByRole("button", { name: "Ver más" }).click();
+  await expect(screen).toBeVisible();
+  await page.goBack();
+  await expect(screen).toHaveCount(0);
+  await expect(page).toHaveURL(new RegExp(`/casa/${descrita.publicId}`));
+  await page.goBack();
+  await expect(page).toHaveURL(/\/explorar/);
+});
+
+test("descripción corta: entera, sin «Ver más»; cabecera centrada", async ({ page }) => {
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("listing-description")).not.toHaveClass(/is-clamped/);
+  await expect(page.getByRole("button", { name: "Ver más" })).toHaveCount(0);
+  expect(await page.locator(".listing-head").evaluate((el) => getComputedStyle(el).textAlign)).toBe("center");
 });

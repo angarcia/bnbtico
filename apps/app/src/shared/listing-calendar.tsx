@@ -38,7 +38,7 @@ export function ListingCalendar({ listing: l, currency, fx }: { listing: PublicL
       </div>
       {days ? (
         <>
-          <MonthGrid month={month} today={today} days={days} base={base} prices={base === null ? "none" : "special"} currency={currency} fx={fx} label={title} />
+          <MonthGrid month={month} today={today} days={days} base={base} prices={base === null ? "none" : "all"} currency={currency} fx={fx} label={title} />
           <MonthLegend special={base !== null} />
           {base !== null ? <p className="xs muted">Precio base {formatMoney(base, currency, fx)} por noche; los días con ★ tienen otro precio.</p> : null}
         </>

@@ -70,7 +70,7 @@ const rootRoute = createRootRoute({
         title="No encontramos esta página"
         text="Revise el enlace o vuelva a Explorar."
         action={
-          <Link to="/explorar" className="btn btn-primary">
+          <Link to="/explorar" className="btn btn-soft">
             Ir a Explorar
           </Link>
         }

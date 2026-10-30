@@ -171,7 +171,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
       </div>
       {!listings ? (
         isDatesError(error) ? (
-          <div className="note note-arena note-col" role="alert">
+          <div className="note note-plain note-col" role="alert">
             <span>Revise las fechas de su búsqueda.</span>
             <button type="button" className="btn btn-outline btn-block" onClick={() => go({ ...f, arrival: null, departure: null, monthlyFrom: null })}>
               Quitar fechas

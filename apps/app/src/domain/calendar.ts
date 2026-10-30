@@ -153,16 +153,17 @@ export function monthGrid(month: string, today: string): { month: string; title:
   return { month, title: monthTitle(month), weeks };
 }
 
-/** El precio dentro de la casilla: «95k», «180k», «1,2M»; en dólares, el redondeo de la ficha («$186»). */
+/** El precio dentro de la casilla: «95 mil», «180 mil», «1,2 M», como se dice en Costa Rica (sin la «k» inglesa; Daniel,
+ *  2026-10-29), con espacio que no se parte; en dólares, el redondeo de la ficha («$186»). */
 export function compactPrice(crc: number, currency: Currency, fx: number): string {
   if (currency === "USD") return formatUSD(crc, fx);
   if (crc < 1000) return String(Math.round(crc));
   const thousands = Math.round(crc / 1000);
-  if (thousands < 1000) return `${thousands}k`;
-  return `${String(Math.round(crc / 100_000) / 10).replace(".", ",")}M`;
+  if (thousands < 1000) return `${thousands}\u00a0mil`;
+  return `${String(Math.round(crc / 100_000) / 10).replace(".", ",")}\u00a0M`;
 }
 
-/** El precio dentro de la casilla alta: «₡95k», «₡1,3M», «₡500»; en dólares, el de compactPrice («$186»). */
+/** El precio con colones delante: «₡95 mil», «₡1,3 M», «₡500»; en dólares, el de compactPrice («$186»). */
 export function cellPrice(crc: number, currency: Currency, fx: number): string {
   const compact = compactPrice(crc, currency, fx);
   return currency === "USD" ? compact : `₡${compact}`;

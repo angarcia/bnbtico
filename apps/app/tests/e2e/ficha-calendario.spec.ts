@@ -68,7 +68,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://tile.openstreetmap.org/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
 });
 
-test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base; sin rejilla en el HTML ni peticiones", async ({ page }) => {
+test("tras hidratar: ocupados, la cifra de cada noche (★ en las de precio distinto) y la línea del precio base; sin rejilla en el HTML ni peticiones", async ({ page }) => {
   const casa = await seedWithDays("Casa Calendario Ficha");
   const seen = watch(page);
   const scripts: string[] = [];
@@ -103,10 +103,10 @@ test("tras hidratar: ocupados, cifra solo en los ★ y la línea del precio base
   await expect(cell(page, on(10))).toHaveAttribute("aria-label", `${longDate(on(10))} de ${on(10).slice(0, 4)}, ocupado`);
   await expect(cell(page, on(10))).toContainText("Ocupado");
   await expect(cell(page, on(10))).toHaveClass(/is-busy/);
-  await expect(cell(page, on(20))).toHaveText("20 ★150k");
+  await expect(cell(page, on(20))).toHaveText("20 ★₡150\u00a0mil");
   await expect(cell(page, on(20))).toHaveAttribute("aria-label", /disponible, ₡150\s000, precio distinto$/);
-  // Un día normal: sin cifra.
-  await expect(cell(page, on(15))).toHaveText("15");
+  // Un día normal: su cifra, la del precio base (Daniel, 2026-10-29; antes sin cifra).
+  await expect(cell(page, on(15))).toHaveText("15₡95\u00a0mil");
   await expect(section(page).getByText("Precio base ₡95 000 por noche; los días con ★ tienen otro precio.")).toBeVisible();
   await expect(section(page).getByText("★ Precio distinto")).toBeVisible();
   expect(await boxHeight(page), "en otro mes, el mismo alto").toBe(before);
@@ -186,7 +186,7 @@ test("ficha dentro de la SPA: pide los días una vez y muestra el calendario", a
   await expect(section(page).getByRole("grid", { name: monthTitle(opening()) })).toBeVisible();
   await toNextMonth(page);
   await expect(cell(page, on(11))).toContainText("Ocupado");
-  await expect(cell(page, on(20))).toHaveText("20 ★150k");
+  await expect(cell(page, on(20))).toHaveText("20 ★₡150\u00a0mil");
   expect(days).toHaveLength(1);
 });
 

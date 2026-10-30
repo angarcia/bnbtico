@@ -18,11 +18,23 @@ function rootVars(source: string): Record<string, string> {
 
 const vars = rootVars(css);
 
-/** Un color `#RRGGBB` o una variable del :root que lo sea. */
-function hex(token: string): string {
-  const value = token.startsWith("--") ? vars[token] : token;
-  if (!value || !/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${token} no es un color #RRGGBB (${value})`);
-  return value;
+/** Un color `#RRGGBB`, una variable del :root, `var(--x)` o `color-mix(in srgb, A p%, B)` (con «transparent», sobre el
+ *  crema de `--bg`, que es el fondo de la app): se resuelve a `#RRGGBB`. */
+function hex(token: string, map: Record<string, string> = vars): string {
+  const value = (token.startsWith("--") ? map[token] : token)?.trim();
+  if (!value) throw new Error(`${token} no está en el :root`);
+  if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+  const ref = /^var\((--[\w-]+)\)$/.exec(value);
+  if (ref) return hex(ref[1]!, map);
+  const mix = /^color-mix\(in srgb,\s*(.+?)\s+(\d+(?:\.\d+)?)%,\s*(.+)\)$/.exec(value);
+  if (mix) {
+    const a = hex(mix[1]!, map);
+    const b = hex(mix[3]!.trim() === "transparent" ? "--bg" : mix[3]!.trim(), map);
+    const p = Number(mix[2]) / 100;
+    const ch = (c: string, i: number) => parseInt(c.slice(i, i + 2), 16);
+    return `#${[1, 3, 5].map((i) => Math.round(ch(a, i) * p + ch(b, i) * (1 - p)).toString(16).padStart(2, "0")).join("")}`;
+  }
+  throw new Error(`${token} no es un color #RRGGBB (${value})`);
 }
 
 function luminance(color: string): number {
@@ -93,7 +105,7 @@ describe("contraste de los colores de texto (tema claro)", () => {
 describe("contraste del tema oscuro", () => {
   const dark = darkVars(css);
   /** En el tema oscuro, la variable del bloque oscuro o, si no la cambia, la del claro. */
-  const darkHex = (token: string) => dark[token] ?? hex(token);
+  const darkHex = (token: string) => hex(token, { ...vars, ...dark });
   const darkContrast = (a: string, b: string) => {
     const [l1, l2] = [luminance(darkHex(a)), luminance(darkHex(b))].sort((x, y) => y - x) as [number, number];
     return (l1 + 0.05) / (l2 + 0.05);

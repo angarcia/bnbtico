@@ -4,7 +4,7 @@
 // enteras; la pantalla pinta una sola `WeekdayRow` fija arriba para todos los meses). Con `onSelect` los días son botones
 // (calendario del propietario); sin él es una rejilla de solo lectura (la ficha pública, ticket 05). Solo React y el
 // dominio: la ficha la carga en su propio trozo, sin router, Query ni supabase.
-import { cellPrice, compactPrice, effectiveDay, monthGrid, type CalendarDays } from "../domain/calendar";
+import { compactPrice, effectiveDay, monthGrid, type CalendarDays } from "../domain/calendar";
 import type { Currency } from "../domain/currency";
 import { longDate } from "../domain/dates";
 import { FX_INITIAL } from "../domain/fx";
@@ -20,7 +20,7 @@ export interface MonthGridProps {
   days: CalendarDays;
   /** Precio por noche de la casa; null = solo mensual. */
   base: number | null;
-  /** Qué cifra lleva cada casilla: todas (propietario), solo las ★ (ficha) o ninguna. */
+  /** Qué cifra lleva cada casilla: todas (propietario y ficha), solo las ★ o ninguna (solo mensual). */
   prices: "all" | "special" | "none";
   currency?: Currency;
   /** Colones por dólar (tipo vigente); solo cuenta en dólares. */
@@ -35,6 +35,10 @@ export interface MonthGridProps {
   /** «tall»: casillas altas, sin cabecera propia y precio con ₡ («₡95k»). Por defecto «compact». */
   size?: "compact" | "tall";
 }
+
+/** El «₡» de las casillas va aparte: en pantallas estrechas (menos de 360 px) se oculta y queda «95 mil»; el precio base
+ *  con su «₡» está debajo de la rejilla. */
+const CUR = <span className="day-cur">₡</span>;
 
 /** La fila «L K M J V S D». */
 export function WeekdayRow({ className }: { className?: string }) {
@@ -56,7 +60,8 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
   const weeks = tall ? all.filter((week) => week.some((g) => g && !g.past)) : all;
   const year = month.slice(0, 4);
   const interactive = !!onSelect && !dimmed;
-  const price = tall ? cellPrice : compactPrice;
+  // Con cifra en todos los días (propietario y ficha), «₡95 mil»; solo en los ★, «95 mil».
+  const withCur = tall || prices === "all";
   return (
     <div className={`month-grid${tall ? " is-tall" : ""}${dimmed ? " is-dimmed" : ""}`} role={interactive ? "group" : "grid"} aria-label={label}>
       {tall ? null : <WeekdayRow />}
@@ -73,7 +78,8 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
             const name = [
               `${longDate(g.day)} de ${year}`,
               s.available ? "disponible" : "ocupado",
-              (prices === "all" || mark) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
+              // Un día ocupado de la ficha (solo lectura) no dice su precio, que no enseña; en el calendario del propietario, sí.
+              ((prices === "all" && (interactive || s.available)) || mark) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
               mark ? "precio distinto" : null,
             ]
               .filter(Boolean)
@@ -81,7 +87,7 @@ export function MonthGrid({ month, today, days, base, prices, currency = "CRC", 
             const body = (
               <>
                 <b>{off ? `${g.date}` : `${g.date}${mark}`}</b>
-                <span className="day-sub">{off ? "" : !s.available ? "Ocupado" : showPrice ? price(s.priceCrc!, currency, fx) : ""}</span>
+                <span className="day-sub">{off ? "" : !s.available ? "Ocupado" : showPrice ? <>{withCur && currency === "CRC" && CUR}{compactPrice(s.priceCrc!, currency, fx)}</> : ""}</span>
               </>
             );
             return interactive ? (

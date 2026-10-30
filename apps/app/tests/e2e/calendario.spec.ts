@@ -110,7 +110,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   await expect(page.getByText(monthTitle(next()), { exact: true })).toBeVisible();
   await expect(page.getByText("Toque los días para editarlos")).toBeVisible();
   await expect(panel(page)).toHaveCount(0);
-  await expect(day(page, on(10))).toContainText("95k");
+  await expect(day(page, on(10))).toContainText("95\u00a0mil");
 
   for (const d of [10, 11, 12]) await day(page, on(d)).click();
   await expect(day(page, on(11))).toHaveAttribute("aria-pressed", "true");
@@ -155,7 +155,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   await expect(panel(page).getByRole("button", { name: "Ocupado" })).toHaveAttribute("aria-pressed", "true");
   await panel(page).getByRole("button", { name: "Disponible" }).click();
   await saveBtn(page).click();
-  await expect(day(page, on(10))).toContainText("95k");
+  await expect(day(page, on(10))).toContainText("95\u00a0mil");
   await expect.poll(async () => (await h.calendar("owner").days(casa.id)).map((d) => d.day)).toEqual([on(11), on(12)]);
 });
 
@@ -172,7 +172,7 @@ test("precio distinto ★ y, con el precio base («Usar el precio base»), la �
   await expect(panel(page)).toHaveClass(/\bkb\b/);
   await saveBtn(page).click();
   await expect(day(page, on(15))).toContainText("15 ★");
-  await expect(day(page, on(15))).toContainText("120k");
+  await expect(day(page, on(15))).toContainText("120\u00a0mil");
   await expect(day(page, on(15))).toHaveAccessibleName(/precio distinto$/);
   await expect.poll(async () => (await h.calendar("owner").days(casa.id)).find((d) => d.day === on(15))?.specialPriceCrc).toBe(120000);
 
@@ -182,7 +182,7 @@ test("precio distinto ★ y, con el precio base («Usar el precio base»), la �
   await expect(price).toHaveValue("95 000");
   await saveBtn(page).click();
   await expect(day(page, on(15))).not.toContainText("★");
-  await expect(day(page, on(15))).toContainText("95k");
+  await expect(day(page, on(15))).toContainText("95\u00a0mil");
   await expect.poll(async () => (await h.calendar("owner").days(casa.id)).find((d) => d.day === on(15))).toBeUndefined();
 
   // Escribir el precio base a mano hace lo mismo; un precio que no vale se queda en el panel con el mensaje.
@@ -278,7 +278,7 @@ test("días altos: casillas de 64 px o más y el mes llena la pantalla", async (
   await open(page, casa.id, next());
   await expect(day(page, on(15))).toBeVisible();
   expect((await day(page, on(15)).boundingBox())!.height).toBeGreaterThanOrEqual(64);
-  await expect(day(page, on(15))).toContainText("₡95k");
+  await expect(day(page, on(15))).toContainText("₡95\u00a0mil");
   const block = (await page.locator(`[data-month="${next()}"]`).boundingBox())!;
   const bar = (await page.locator(".tabbar").boundingBox())!;
   expect(block.y + block.height).toBeGreaterThanOrEqual(bar.y - 1);
@@ -359,7 +359,7 @@ test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última el
   await list.getByRole("option", { name: "Casa Beta" }).click();
   await expect(page.getByRole("button", { name: /Casa Beta/ })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`casa=${b.id}`));
-  await expect(day(page, on(5))).toContainText("95k");
+  await expect(day(page, on(5))).toContainText("95\u00a0mil");
   await expect(panel(page)).toHaveCount(0);
   await expect(grid(page).first()).toBeVisible();
 
@@ -370,13 +370,13 @@ test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última el
 test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo de la base muestra su mensaje", async ({ page, context }) => {
   const casa = await seedHouse("Casa Sin Red");
   await open(page, casa.id);
-  await expect(day(page, on(8))).toContainText("95k");
+  await expect(day(page, on(8))).toContainText("95\u00a0mil");
   await day(page, on(8)).click();
   await panel(page).getByRole("button", { name: "Ocupado" }).click();
   await context.setOffline(true);
   await saveBtn(page).click();
   await expect(page.locator(".toast")).toHaveText(OFFLINE);
-  await expect(day(page, on(8))).toContainText("95k");
+  await expect(day(page, on(8))).toContainText("95\u00a0mil");
   await context.setOffline(false);
 
   await page.route("**/rest/v1/rpc/save_listing_days", (route) =>
@@ -386,7 +386,7 @@ test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo 
   await panel(page).getByRole("button", { name: "Ocupado" }).click();
   await saveBtn(page).click();
   await expect(page.locator(".toast").last()).toHaveText("La casa está cerrada a consultas. Ábrala para cambiar el calendario.");
-  await expect(day(page, on(9))).toContainText("95k");
+  await expect(day(page, on(9))).toContainText("95\u00a0mil");
   expect(await h.calendar("owner").days(casa.id)).toEqual([]);
 });
 

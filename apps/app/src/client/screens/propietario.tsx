@@ -247,7 +247,7 @@ export function NotFoundCard() {
     <section className="card stack gap-12">
       <h3>No encontramos esta casa</h3>
       <p className="small muted">Puede que la haya descartado o que el enlace no sea suyo.</p>
-      <Link to="/propietario/casas" className="btn btn-primary">
+      <Link to="/propietario/casas" className="btn btn-soft">
         Ir a Mis casas
       </Link>
     </section>

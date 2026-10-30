@@ -22,6 +22,7 @@ import { I, type IconName } from "./icons";
 import { whenIdle } from "./idle";
 import { listingDaysQuery, listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
+import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
 
@@ -270,27 +271,29 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               {!l.available ? <span className="badge badge-mute">No disponible por ahora</span> : null}
             </div>
           ) : null}
-          <div className="stack gap-4">
+          <div className="stack listing-head">
             <h1 className={`listing-title${l.title.length > LONG_TITLE ? " is-long" : ""}`}>{l.title}</h1>
-            {/* Sin reseñas, la persona verificada es la confianza: va arriba, no al final (revisión UX A10). */}
-            <span className="row gap-8 host-line" data-testid="host-line">
-              <span className="avatar avatar-xs" aria-hidden="true">
-                {initials(l.ownerName)}
-              </span>
-              <span className="small">
-                <b className="ink">{firstName(l.ownerName)}</b>
-                {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
-              </span>
-            </span>
-            <span className="row muted gap-6">
+            <span className="row gap-6">
               <I.pin size={18} /> {[l.zone, l.canton].filter(Boolean).join(", ")} · ubicación aproximada
             </span>
-            <span className="small muted" data-testid="listing-capacity">
+            <span className="muted" data-testid="listing-capacity">
               {plural(l.capacity, "persona", "personas")} · {plural(l.bedrooms, "habitación", "habitaciones")} · {plural(l.bathrooms, "baño", "baños")}
             </span>
           </div>
+          {/* Sin reseñas, la persona verificada es la confianza: justo bajo la cabecera, en su fila entre dos líneas (revisión UX A10; como en Airbnb). */}
+          <hr className="divider" />
+          <div className="row gap-12 host-line" data-testid="host-line">
+            <span className="avatar avatar-sm" aria-hidden="true">
+              {initials(l.ownerName)}
+            </span>
+            <span className="stack host-text">
+              <b className="host-name">{firstName(l.ownerName)}</b>
+              {l.ownerWhatsappVerified ? <span className="muted">WhatsApp verificado</span> : null}
+            </span>
+          </div>
+          <hr className="divider" />
           {/* Sin descripción (publicar v2: es opcional), nada en su lugar. */}
-          {l.description.trim() ? <p className="listing-description">{l.description}</p> : null}
+          <ListingDescription text={l.description} hydrated={hydrated} />
 
           {l.features.length || d.monthly ? (
             <div className="feature-tiles">
