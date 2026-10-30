@@ -178,7 +178,7 @@ test("una casa vuelta a borrador con la fecha vencida se abre a consultas pero s
   expect(await h.anon.getPublic(casa.publicId)).toBeNull();
 
   await page.goto(`/propietario/casas/${casa.id}`);
-  await expect(page.getByRole("link", { name: /Seguir con el borrador/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Seguir publicando" })).toBeVisible(); // revisión UX 2026-10-29, A4
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(page.getByText("Anuncio visible")).toHaveCount(0);
 });

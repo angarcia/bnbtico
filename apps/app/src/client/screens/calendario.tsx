@@ -1,5 +1,7 @@
-// Calendario del propietario (pantalla 17 del diseño v1). Trozo diferido propio. Los meses van uno debajo de otro, del
-// actual al último de la ventana, con casillas altas; solo se montan las rejillas cerca de la vista. Selección primero: se
+// Calendario del propietario (pantalla 17 del diseño v1; revisión UX 2026-10-29, A1 y C4). Trozo diferido propio. Abre arriba
+// del todo: la casa (o su selector, a todo el ancho), «Cerrar la casa hasta…», ₡ | $ y el mes actual entero. Los meses van uno
+// debajo de otro, del actual al último de la ventana; solo se montan las rejillas cerca de la vista. La barra de pestañas se
+// esconde al bajar y vuelve al subir, y no está mientras hay días seleccionados. Selección primero: se
 // tocan uno o más días (también de meses distintos) y el panel de abajo cambia disponibilidad y precio de todos a la vez. Guardar es optimista: la rejilla cambia y el
 // panel se cierra en el mismo toque; si la base se niega o no hay red, vuelve atrás y avisa. Las reglas son las del
 // dominio (domain/calendar.ts), las mismas que la RPC save_listing_days. Arriba, en una casa activa, «Cerrar la casa
@@ -16,7 +18,6 @@ import {
   effectiveDay,
   emptySelection,
   monthTitle,
-  openingMonth,
   selectDay,
   selectionLabel,
   setAvailability,
@@ -35,6 +36,9 @@ import { resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { I } from "../../shared/icons";
 import { whenIdle } from "../../shared/idle";
+import { useCurrency } from "../../shared/currency";
+import { CurrencySwitch } from "../../shared/currency-switch";
+import { useFx } from "../../shared/fx";
 import { MonthGrid, MonthLegend, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
@@ -97,19 +101,19 @@ export function CalendarioScreen() {
     // `go` cambia en cada render: basta con depender de la casa corregida.
   }, [corrected]);
 
-  // Con una sola casa no hay nada que elegir: su nombre como subtítulo.
-  const picker =
-    current && houses && houses.length > 1 ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : undefined;
+  useHidingTabBar();
   return (
     <>
-      <RootHeader title="Calendario" aside={picker} />
+      <RootHeader title="Calendario" />
       {listings.isError && !houses ? (
         <p className="note" role="alert">
           {toDomainError(listings.error).message}
         </p>
       ) : null}
       {!houses && !listings.isError ? <section className="card skeleton cal-skeleton" aria-busy="true" aria-label="Cargando su calendario" /> : null}
-      {current && houses && houses.length === 1 ? <p className="muted cal-house">{titleOf(current)}</p> : null}
+      {/* Con una sola casa no hay nada que elegir: su nombre. */}
+      {current && houses && houses.length > 1 ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : null}
+      {current && houses && houses.length === 1 ? <p className="cal-house">{titleOf(current)}</p> : null}
       {houses && houses.length === 0 ? (
         <section className="card stack gap-12">
           <p>Su calendario se activa cuando envíe su casa a revisión.</p>
@@ -177,8 +181,10 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   const client = useQueryClient();
   const today = costaRicaToday(Date.now());
   const months = useMemo(() => calendarMonths(today), [today]);
-  // `?mes=` lleva a ese mes; sin él (o fuera de la ventana), al de apertura: a fin de mes, el siguiente (revisión UX A4).
-  const target = month && months.includes(month) ? month : openingMonth(today);
+  // `?mes=` lleva a ese mes; sin él (o fuera de la ventana), arriba del todo con el mes actual entero (revisión UX A1).
+  const target = month && months.includes(month) ? month : null;
+  const currency = useCurrency();
+  const fx = useFx(currency === "USD");
   const options = calendarQuery(userId, l.id);
   const key = options.queryKey;
   const query = useQuery({ ...options, enabled: !!userId });
@@ -218,6 +224,7 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
     if (client.isFetching({ queryKey: key })) void client.cancelQueries({ queryKey: key }).then(apply);
     setSel(clearSelection());
     setProblem(null);
+    showTabBar();
     save.mutate({ change, previous });
   }
 
@@ -226,7 +233,10 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   return (
     <>
       {can(l, "available") ? <CloseRow listing={l} userId={userId} /> : null}
-      {closed ? null : <p className="small muted cal-hint">Toque los días para editarlos</p>}
+      <div className="row between gap-8 cal-hint-row">
+        {closed ? <span /> : <p className="small muted">Toque los días para editarlos</p>}
+        <CurrencySwitch />
+      </div>
 
       {query.isError && !query.data ? (
         <p className="note" role="alert">
@@ -234,19 +244,19 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
         </p>
       ) : null}
 
-      <MonthLegend special={base !== null} />
+      <MonthLegend />
       <WeekdayRow className="cal-weekdays" />
       <CalendarMonths
         months={months}
         target={target}
         render={(m) => (
           <MonthGrid
-            size="tall"
             month={m}
             today={today}
             days={days}
             base={base}
-            prices={base === null ? "none" : "all"}
+            currency={currency}
+            fx={fx.crcPerUsd}
             selected={sel.days}
             onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
             dimmed={closed}
@@ -263,12 +273,39 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
           problem={problem}
           canSave={change !== null}
           onChange={(s) => (setSel(s), setProblem(null))}
-          onCancel={() => (setSel(clearSelection()), setProblem(null))}
+          onCancel={() => (setSel(clearSelection()), setProblem(null), showTabBar())}
           onSave={onSave}
         />
       ) : null}
     </>
   );
+}
+
+/** La barra de pestañas sale por abajo al desplazarse hacia delante y vuelve al desplazarse hacia atrás o arriba del todo
+ *  (revisión UX C4, como Airbnb). Un umbral de 8 px para que no parpadee; la animación y su ausencia con movimiento
+ *  reducido, en CSS (`html.tabbar-away`). */
+const TABBAR_THRESHOLD = 8;
+/** Hasta cuándo no cuenta el desplazamiento: el que hace la pantalla al llevar el mes pedido arriba no es del dedo. */
+let ignoreScrollUntil = 0;
+const showTabBar = () => document.documentElement.classList.remove("tabbar-away");
+function useHidingTabBar() {
+  useEffect(() => {
+    const root = document.documentElement;
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (performance.now() < ignoreScrollUntil) last = y;
+      else if (y <= 0) root.classList.remove("tabbar-away");
+      else if (Math.abs(y - last) < TABBAR_THRESHOLD) return;
+      else root.classList.toggle("tabbar-away", y > last);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      root.classList.remove("tabbar-away");
+    };
+  }, []);
 }
 
 /** Arriba del calendario de una casa activa (can(l,"available")): abierta, la fila abre la hoja «Cerrar la casa»;
@@ -383,15 +420,19 @@ class SheetBoundary extends Component<{ children: () => ReactNode }, { failed: b
 }
 
 /** Los meses uno debajo de otro, cada uno con su título fijo arriba. Una rejilla se monta al acercarse su mes a la vista
- *  (a una pantalla) y ya no se desmonta; el primer mes y el pedido van montados desde el principio, para que nada crezca
- *  encima del pedido. Al abrir, el mes pedido se lleva arriba. Desplazarse no cambia la URL. */
-function CalendarMonths({ months, target, render }: { months: string[]; target: string; render: (month: string) => ReactNode }) {
-  const [mounted, setMounted] = useState(() => new Set([months[0]!, target, addMonths(target, 1)].filter((m) => months.includes(m))));
+ *  (a una pantalla) y ya no se desmonta; los dos primeros meses y el pedido (`?mes=`) van montados desde el principio, para
+ *  que nada crezca encima del pedido. Con mes pedido, se lleva arriba; sin él, la pantalla abre arriba del todo. Desplazarse
+ *  no cambia la URL. */
+function CalendarMonths({ months, target, render }: { months: string[]; target: string | null; render: (month: string) => ReactNode }) {
+  const [mounted, setMounted] = useState(() => new Set([months[0]!, months[1]!, ...(target ? [target, addMonths(target, 1)] : [])].filter((m) => months.includes(m))));
   const box = useRef<HTMLDivElement>(null);
   const router = useRouter();
   useLayoutEffect(() => {
-    if (target === months[0]) return;
-    const toTarget = () => box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
+    if (!target || target === months[0]) return;
+    const toTarget = () => {
+      ignoreScrollUntil = performance.now() + 300;
+      box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
+    };
     toTarget();
     // Al llegar desde la app, la restauración del desplazamiento del router corre en su onRendered, después de este
     // efecto, y devuelve la página arriba: se lleva el mes otra vez justo después (una sola vez; luego manda el dedo).
@@ -499,7 +540,7 @@ function Panel({ sel, base, hasSpecial, problem, canSave, onChange, onCancel, on
           {problem}
         </p>
       ) : null}
-      <button type="button" className="btn btn-primary btn-lg btn-block" disabled={!canSave} onClick={onSave}>
+      <button type="button" className="btn btn-primary btn-block cal-save" disabled={!canSave} onClick={onSave}>
         Guardar cambios
       </button>
     </section>

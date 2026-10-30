@@ -135,12 +135,12 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   for (const d of [10, 11, 12]) await day(on(d)).click();
   await panel.getByRole("button", { name: "Ocupado" }).click();
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
-  await expect(day(on(11))).toContainText("Ocupado");
+  await expect(day(on(11))).toHaveAccessibleName(/, ocupado/);
   await day(on(20)).click();
   await panel.getByLabel("Precio por noche").fill("150000");
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
-  await expect(day(on(20))).toContainText("20 ★");
-  await expect(day(on(20))).toContainText("150\u00a0mil");
+  await expect(day(on(20))).toHaveAccessibleName(/precio distinto$/);
+  await expect(day(on(20))).toContainText("150\u00a0000");
   const saved = [dayJson(on(10), false), dayJson(on(11), false), dayJson(on(12), false), dayJson(on(20), true, 150000)];
   await expect
     .poll(async () => (await h.calendar("owner").days(draft.id)).map((d) => JSON.stringify(d)))
@@ -164,8 +164,8 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   // 4. Un cliente anónimo abre la ficha: las 3 noches ocupadas y la ★, tras hidratar.
   const first = await clientCalendar(draft.publicId);
   for (const d of [10, 11, 12]) await expect(first.cell(on(d))).toHaveClass(/is-busy/);
-  await expect(first.cell(on(20))).toHaveText("20 ★₡150\u00a0mil");
-  await expect(first.cell(on(15))).toHaveText("15₡95\u00a0mil");
+  await expect(first.cell(on(20))).toHaveText("20150\u00a0000");
+  await expect(first.cell(on(15))).toHaveText("1595\u00a0000");
   await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await first.page.context().close();
 
@@ -174,18 +174,18 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await day(on(11)).click();
   await panel.getByRole("button", { name: "Disponible" }).click();
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
-  await expect(day(on(11))).toContainText("95\u00a0mil");
+  await expect(day(on(11))).toContainText("95\u00a0000");
   await day(on(20)).click();
   await panel.getByLabel("Precio por noche").fill("180000");
   await panel.getByRole("button", { name: "Guardar cambios" }).click();
-  await expect(day(on(20))).toContainText("180\u00a0mil");
+  await expect(day(on(20))).toContainText("180\u00a0000");
   await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain(dayJson(on(20), true, 180000));
   expect(await freshHtml(draft.publicId)).not.toContain(dayJson(on(11), false));
   await expect.poll(() => statusesAfter(from), { message: "la purga de pg_net llegó al worker con 200" }).toContain("200");
   const second = await clientCalendar(draft.publicId);
   await expect(second.cell(on(11))).not.toHaveClass(/is-busy/);
   await expect(second.cell(on(10))).toHaveClass(/is-busy/);
-  await expect(second.cell(on(20))).toHaveText("20 ★₡180\u00a0mil");
+  await expect(second.cell(on(20))).toHaveText("20180\u00a0000");
   await second.page.context().close();
 
   // 6. La cierra a consultas con fecha de reapertura: el cliente ve «No disponible…» y «Calendario cerrado».
@@ -221,7 +221,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await expect(reopened.page.getByText(/Vuelve a estar disponible/)).toHaveCount(0);
   for (const d of [10, 12]) await expect(reopened.cell(on(d))).toHaveClass(/is-busy/);
   await expect(reopened.cell(on(11))).not.toHaveClass(/is-busy/);
-  await expect(reopened.cell(on(20))).toHaveText("20 ★₡180\u00a0mil");
+  await expect(reopened.cell(on(20))).toHaveText("20180\u00a0000");
   await reopened.page.context().close();
   expect(await h.owner("owner").getOwn(draft.id)).toMatchObject({ status: "active", available: true, reopenAt: null, nightlyPriceCrc: 95000 });
   expect((await h.calendar("owner").days(draft.id)).map((d) => JSON.stringify(d))).toEqual([dayJson(on(10), false), dayJson(on(12), false), dayJson(on(20), true, 180000)]);
@@ -229,6 +229,6 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await owner.reload();
   await expect(owner.getByRole("button", { name: "Abrir la casa" })).toHaveCount(0);
   await expect(owner.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
-  await expect(day(on(12))).toContainText("Ocupado");
+  await expect(day(on(12))).toHaveAccessibleName(/, ocupado/);
   await owner.context().close();
 });

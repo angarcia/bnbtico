@@ -10,10 +10,9 @@ import {
   availabilityUpdate,
   calendarMonths,
   calendarWindow,
-  cellPrice,
   changeFromSelection,
   clearSelection,
-  compactPrice,
+  dayPrice,
   effectiveDay,
   emptySelection,
   monthGrid,
@@ -393,18 +392,15 @@ describe("rejilla del mes (lunes primero, días pasados) y ventana de 12 meses",
   });
 });
 
-describe("precio compacto de la rejilla", () => {
-  it("«95 mil», «180 mil», «1,2 M», «1 M» (como se dice en Costa Rica; sin la «k» inglesa), con espacio que no se parte", () => {
-    expect(compactPrice(95_000, "CRC", 510)).toBe("95\u00a0mil");
-    expect(compactPrice(180_000, "CRC", 510)).toBe("180\u00a0mil");
-    expect(compactPrice(1_200_000, "CRC", 510)).toBe("1,2\u00a0M");
-    expect(compactPrice(1_000_000, "CRC", 510)).toBe("1\u00a0M");
-    expect(compactPrice(999_600, "CRC", 510)).toBe("1\u00a0M");
-    expect(compactPrice(95_400, "CRC", 510)).toBe("95\u00a0mil");
-    expect(compactPrice(500, "CRC", 510)).toBe("500");
+describe("precio de la casilla", () => {
+  it("completo, sin «₡» ni redondeo, con espacio que no se parte («38 900», «120 000», «500»)", () => {
+    expect(dayPrice(38_900, "CRC", 510)).toBe("38\u00a0900");
+    expect(dayPrice(120_000, "CRC", 510)).toBe("120\u00a0000");
+    expect(dayPrice(1_250_000, "CRC", 510)).toBe("1\u00a0250\u00a0000");
+    expect(dayPrice(500, "CRC", 510)).toBe("500");
   });
-  it("en dólares (solo visualización, ficha pública): el redondeo de money.ts", () => {
-    expect(compactPrice(95_000, "USD", 510)).toBe("$186");
+  it("en dólares (solo visualización): el redondeo de money.ts", () => {
+    expect(dayPrice(95_000, "USD", 510)).toBe("$186");
   });
 });
 
@@ -446,13 +442,6 @@ describe("calendario en vertical (densidad y tarjetas)", () => {
     expect(leap).toHaveLength(12);
     expect(leap.at(-1)).toBe("2028-12");
     leap.forEach((m, i) => expect(m).toBe(addMonths(leap[0]!, i)));
-  });
-
-  it("cellPrice: «₡95 mil», «₡1,3 M», «₡500»; en dólares, el de compactPrice", () => {
-    expect(cellPrice(95_000, "CRC", 510)).toBe("₡95\u00a0mil");
-    expect(cellPrice(1_250_000, "CRC", 510)).toBe("₡1,3\u00a0M");
-    expect(cellPrice(500, "CRC", 510)).toBe("₡500");
-    expect(cellPrice(95_000, "USD", 510)).toBe(compactPrice(95_000, "USD", 510));
   });
 
   it("selección en dos meses", () => {

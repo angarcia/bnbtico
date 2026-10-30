@@ -5,7 +5,7 @@
 import type { Currency } from "./currency";
 import { parseColones, type ListingStatus } from "./listing";
 import { addDays } from "./dates";
-import { formatUSD } from "./money";
+import { formatCRC, formatUSD } from "./money";
 
 /** Una fila de listing_days: solo existe si el día difiere del habitual (ocupado y/o con precio especial). */
 export interface CalendarDay {
@@ -153,20 +153,10 @@ export function monthGrid(month: string, today: string): { month: string; title:
   return { month, title: monthTitle(month), weeks };
 }
 
-/** El precio dentro de la casilla: «95 mil», «180 mil», «1,2 M», como se dice en Costa Rica (sin la «k» inglesa; Daniel,
- *  2026-10-29), con espacio que no se parte; en dólares, el redondeo de la ficha («$186»). */
-export function compactPrice(crc: number, currency: Currency, fx: number): string {
-  if (currency === "USD") return formatUSD(crc, fx);
-  if (crc < 1000) return String(Math.round(crc));
-  const thousands = Math.round(crc / 1000);
-  if (thousands < 1000) return `${thousands}\u00a0mil`;
-  return `${String(Math.round(crc / 100_000) / 10).replace(".", ",")}\u00a0M`;
-}
-
-/** El precio con colones delante: «₡95 mil», «₡1,3 M», «₡500»; en dólares, el de compactPrice («$186»). */
-export function cellPrice(crc: number, currency: Currency, fx: number): string {
-  const compact = compactPrice(crc, currency, fx);
-  return currency === "USD" ? compact : `₡${compact}`;
+/** El precio dentro de la casilla: completo, sin «₡» ni redondeo («38 900»; «38 mil» escondería un precio especial) y con
+ *  espacio que no se parte; en dólares, el redondeo de la ficha («$76»). Revisión UX 2026-10-29, C4. */
+export function dayPrice(crc: number, currency: Currency, fx: number): string {
+  return currency === "USD" ? formatUSD(crc, fx) : formatCRC(crc).slice(1);
 }
 
 /** La casa vista por la regla de guardado; null = no es del usuario o no existe (también un invitado). */

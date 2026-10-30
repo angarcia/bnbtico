@@ -232,13 +232,13 @@
     "gzip": true
   },
   {
-    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, la rejilla del mes, que comparte con la ficha, y su consulta; se precarga con las pantallas del propietario)",
+    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, la rejilla del mes, que comparte con la ficha, su consulta, el selector ₡ | $ y la barra de pestañas que se esconde al bajar; se precarga con las pantallas del propietario)",
     "path": [
       "dist/client/assets/calendario-*.js",
       "dist/client/assets/calendar-*.js",
       "dist/client/assets/month-grid-*.js"
     ],
-    "limit": "8 KB",
+    "limit": "8.5 kB",
     "gzip": true
   },
   {

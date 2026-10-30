@@ -1,3 +1,20 @@
+## 2026-10-29 · Revisión UX, segunda ronda: navegación, Cuenta, calendarios y negritas (Ana)
+
+Decisión de Ana, punto por punto sobre la app y maquetas hechas con ella. Detalle, maquetas y estado de cada punto: `.scratch/revision-ux/2026-10-29-revision-ux.md`. Construido el 2026-10-30 salvo lo marcado como pendiente.
+
+- **Pestañas (C4):** viajero, **Explorar · Favoritos · Ingresar** («Cuenta» con sesión); propietario, **Explorar · Mis casas · Calendario · Consultas · Cuenta**, con Favoritos como fila de Cuenta. Fuera la barra superior con el logo salvo en Favoritos (logo y ₡ | $). «Ingresar» sale de la cabecera de Explorar. El selector ₡ | $ solo en Explorar, Favoritos y el Calendario del propietario.
+- **Cuenta (C5):** pestaña sin flecha ni título; el número en su línea con «WhatsApp verificado» debajo; la fila del método de pago solo cuando toca.
+- **Puertas para publicar (A8):** tarjeta al final de Explorar para quien no tiene casas y fila en ocre «¿Quiere publicar su casa gratis?» en Ingresar y en Cuenta. Sin botón de publicar en la cabecera de Explorar.
+- **Consultas (C1):** la pestaña «Actividad» pasa a **«Consultas»**, solo las consultas, las nuevas primero, «Todas» por defecto; las cifras de 30 días van al detalle de cada casa. Sustituye en esto lo del 2026-10-29 de Daniel (Actividad).
+- **Mis casas (A3, A4):** ordenada por acción pendiente (cambios pedidos, pago, borrador; luego activas; al final en revisión); el borrador abre con «Seguir publicando» y lo que falta; una casa no activa no ofrece «Compartir ficha».
+- **Suscripción (A2):** oferta arriba; las casas que necesitan algo, primero; «Parar suscripción» como texto al final; «¿Cómo funciona el cobro?» plegado; sin método, el próximo cobro dice «Nada hasta el …».
+- **Paso 9 (A9):** lo que falta es una acción que lleva a su pantalla, y «Enviar a revisión» espera a que esté todo.
+- **Calendario del propietario (A1, C4):** abre arriba del todo con la casa (selector a todo el ancho), «Cerrar la casa hasta…», ₡ | $ y el mes actual entero. Casillas de 47 × 92 px, 6 px entre ellas y 14 px de margen; número arriba y **precio completo sin «₡» ni redondeo** («38 900»; sustituye «₡38 mil» del 2026-10-29 de Daniel); fondo verde al 6 %; ocupados en terracota con rayas y solo el número; días pasados tachados; **sin ★** (solo se ve la cifra distinta); selección con un marco terracota al 60 %, sin relleno. Con días seleccionados el panel va pegado abajo y se van las pestañas; «Guardar cambios» de 44 px y en gris hasta que hay un cambio. La barra de pestañas se esconde al bajar y vuelve al subir (solo en el Calendario).
+- **Calendario de la ficha (N4):** el mismo formato, un mes a la vez con ‹ ›, solo para mirar. Elegir días ahí queda para la siguiente revisión.
+- **«¿Cuándo?» (N9):** el calendario mide lo que queda libre para que «Siguiente» se vea siempre encima de la barra de abajo.
+- **Negritas (T1):** 600 para títulos de pantalla y de casa, precios principales y el botón principal; 500 para lo demás (variables `--w-strong` y `--w-medium`). Títulos en `--fg` al 85 % (`--fg-title`).
+- **Pendiente:** revisión por dato de los cambios de una casa publicada (A5, con migración), la hoja de contacto con el calendario de rango (N2) y el mapa de Explorar en Safari (C2).
+
 ## 2026-10-29 · Letra, ficha, calendarios y un sistema de color más sobrio (Daniel)
 
 Decisión de Daniel, comparando con Airbnb en el teléfono, sobre capturas y muestras de cada opción. Tokens 0.2.2.

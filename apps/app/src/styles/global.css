@@ -7,7 +7,9 @@
 @font-face{font-family:"Figtree Fallback";src:local(Arial);ascent-override:94.32%;descent-override:24.82%;line-gap-override:0%;size-adjust:100.72%}
 :root{--display:Figtree,"Figtree Fallback",system-ui,sans-serif;--body:Figtree,"Figtree Fallback",system-ui,sans-serif}
 :root{
-  --bg:#FFFBF2;--surface:#FFFFFF;--surface-soft:color-mix(in srgb,var(--surface) 70%,transparent);--surface-2:#F6E7C8;--beige-soft:color-mix(in srgb,var(--surface-2) 55%,transparent);--chosen:color-mix(in srgb,var(--primary) 26%,transparent);--fg:#1C2B2A;--muted:#5C6B69;--line:#E6DCC6;--line-nav:#EADFC8;--line-soft:#F0E6D2;
+  --bg:#FFFBF2;--surface:#FFFFFF;--surface-soft:color-mix(in srgb,var(--surface) 70%,transparent);--surface-2:#F6E7C8;--beige-soft:color-mix(in srgb,var(--surface-2) 55%,transparent);--chosen:color-mix(in srgb,var(--primary) 26%,transparent);--fg:#1C2B2A;--fg-title:#3E4A48;--muted:#5C6B69;--line:#E6DCC6;--line-nav:#EADFC8;--line-soft:#F0E6D2;
+  /* Pesos (revisión UX 2026-10-29, T1): 600 para títulos de pantalla y de casa, precios principales y el botón principal; 500 para el resto. */
+  --w-strong:600;--w-medium:500;
   --brand:#D65C3C;--brand-ink:#B44C30;
   --primary:#2F5D45;--primary-on:#FFFBF2;--primary-ink:#1F4231;
   --selection:#7FA98A;--selection-ink:#16331F;
@@ -29,7 +31,7 @@
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#141917;--surface:#1C2320;--surface-soft:color-mix(in srgb,var(--surface) 70%,transparent);--surface-2:#2B2A22;--beige-soft:color-mix(in srgb,var(--surface-2) 55%,transparent);--chosen:color-mix(in srgb,var(--primary) 26%,transparent);--fg:#EDEFEA;--muted:#A3ADA6;--line:#2F3934;--line-nav:#2F3934;--line-soft:#2F3934;
+  --bg:#141917;--surface:#1C2320;--surface-soft:color-mix(in srgb,var(--surface) 70%,transparent);--surface-2:#2B2A22;--beige-soft:color-mix(in srgb,var(--surface-2) 55%,transparent);--chosen:color-mix(in srgb,var(--primary) 26%,transparent);--fg:#EDEFEA;--fg-title:#CCCFCA;--muted:#A3ADA6;--line:#2F3934;--line-nav:#2F3934;--line-soft:#2F3934;
   --brand:#E8785A;--brand-ink:#F0A48C;--primary:#7FA98A;--primary-on:#16331F;--primary-ink:#B9D2BF;
   --selection:#3E6B52;--selection-ink:#DCE8DF;--state-soft:color-mix(in srgb,var(--primary) 18%,var(--bg));--state-ink:#B9D2BF;
   --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--review-soft:#2B2A22;--overlay:rgba(11,11,12,.86);--overlay-btn:rgba(28,35,32,.7);
@@ -39,9 +41,9 @@
 html,body{margin:0;min-height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
 h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-0.01em;line-height:1.1;text-wrap:balance}
-h1{font-size:34px;font-weight:600;line-height:1.05}
-h2{font-size:24px;font-weight:600}
-h3{font-size:19px;font-weight:600}
+h1{font-size:34px;font-weight:var(--w-strong);line-height:1.05}
+h2{font-size:24px;font-weight:var(--w-strong)}
+h3{font-size:19px;font-weight:var(--w-strong)}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 /* Sin líneas en reposo (Daniel, 2026-10-29): el campo con el cursor se marca con el borde verde. */
@@ -55,13 +57,13 @@ a{color:var(--primary)}
 
 /* ---------- Texto ---------- */
 .small{font-size:15px}.xs{font-size:14px}.muted{color:var(--muted)}.center{text-align:center}
-.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:var(--w-medium)}
 .ink{color:var(--fg)}.primary{color:var(--primary)}
-.link{color:var(--primary);font-weight:600;text-decoration:none}
-.btn-link{color:var(--primary);font-weight:600;text-decoration:none;padding:6px 0;text-align:left;min-height:44px;display:inline-flex;align-items:center}
+.link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none}
+.btn-link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none;padding:6px 0;text-align:left;min-height:44px;display:inline-flex;align-items:center}
 .btn-link.muted{color:var(--muted)}
-.field-error{color:var(--bad);font-size:15px;font-weight:600}
-.counter-out{color:var(--bad);font-weight:600}
+.field-error{color:var(--bad);font-size:15px;font-weight:var(--w-medium)}
+.counter-out{color:var(--bad);font-weight:var(--w-medium)}
 /* Turnstile: invisible salvo que Cloudflare pida interacción. */
 .captcha{display:flex;justify-content:center}
 .captcha:empty{display:none}
@@ -83,8 +85,8 @@ a{color:var(--primary)}
 .note-arena{background:var(--surface);box-shadow:var(--shadow);color:var(--fg)}
 .note[role="alert"]{background:var(--bad-soft);color:var(--bad)}
 .tile{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:var(--r-tile)}
-.tile b{font-family:var(--display);font-weight:600;font-size:24px;line-height:1}
-.tile span{font-size:14px;font-weight:600}
+.tile b{font-family:var(--display);font-weight:var(--w-medium);font-size:24px;line-height:1}
+.tile span{font-size:14px;font-weight:var(--w-medium)}
 .tile-soft{background:var(--state-soft);color:var(--state-ink)}
 .tile-sun{background:var(--sun-soft);color:var(--sun-ink)}
 .tile-review{background:var(--review-soft);color:var(--muted)}
@@ -104,7 +106,7 @@ a{color:var(--primary)}
 .divider{border:0;border-top:1px solid var(--line-soft);margin:0}
 
 /* ---------- Botones ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-input);font-weight:700;font-size:17px;text-decoration:none;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-input);font-weight:var(--w-medium);font-size:17px;text-decoration:none;white-space:nowrap}
 /* Botones más suaves sobre el crema (Daniel, 2026-10-29): el principal al 85 %, el tonal para acciones secundarias
    («Explorar casas», «Ver más»), el ocre del pago al 70 % y el beige de chips y selectores (lo que se elige) al 55 %. Esquinas de 16 px
    (12 px los pequeños), no de píldora: los chips y los botones redondos de icono siguen siendo píldora o círculo. */
@@ -114,7 +116,7 @@ a{color:var(--primary)}
 .btn-ghost,.btn-outline{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
 .btn-outline-bad{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
 .btn-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)}
-.btn-wa{background:var(--wa);color:var(--wa-ink);min-height:56px;border-radius:var(--r-cta);font-family:var(--display);font-weight:600;font-size:18px;width:100%}
+.btn-wa{background:var(--wa);color:var(--wa-ink);min-height:56px;border-radius:var(--r-cta);font-family:var(--display);font-weight:var(--w-medium);font-size:18px;width:100%}
 .btn-lg{min-height:52px;font-size:18px;font-family:var(--display)}
 .btn-xl{min-height:56px;font-size:18px;font-family:var(--display);border-radius:var(--r-cta)}
 .btn-sm{min-height:36px;padding:0 14px;font-size:15px;border-radius:8px}
@@ -126,9 +128,9 @@ a{color:var(--primary)}
 .icon-btn.overlay{background:var(--overlay-btn)}
 
 /* ---------- Chips, píldoras, etiquetas ---------- */
-.chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 16px;border-radius:8px;background:var(--beige-soft);color:var(--fg);font-weight:600;font-size:16px;text-decoration:none;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 16px;border-radius:8px;background:var(--beige-soft);color:var(--fg);font-weight:var(--w-medium);font-size:16px;text-decoration:none;white-space:nowrap}
 /* Lo elegido, en verde tonal al 26 %, sin borde (sustituye al salvia; Daniel, 2026-10-29: sin líneas, fondos semitransparentes). */
-.chip[aria-pressed="true"],.chip[aria-current="true"],.chip[aria-current="page"]{background:var(--chosen);color:var(--primary-ink);font-weight:700}
+.chip[aria-pressed="true"],.chip[aria-current="true"],.chip[aria-current="page"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
 /* La selección no depende solo del color (spec «Densidad y tarjetas», § Accessibility); los chips de navegación, sin ✓. Texto alternativo vacío: el nombre accesible no cambia (ya dice «pulsado»). */
 /* La primera declaración es el respaldo para navegadores sin texto alternativo en `content` (la segunda los deja leer sin la marca). */
 .chip[aria-pressed="true"]::before{content:"✓ ";content:"✓ " / ""}
@@ -136,33 +138,33 @@ a{color:var(--primary)}
 .chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter)}
 .chiprow::-webkit-scrollbar{display:none}
 .chiprow.fit{overflow-x:visible;margin:0;padding:0;flex-wrap:nowrap}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:700;background:var(--surface-2);color:var(--fg);align-self:flex-start}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:var(--w-medium);background:var(--surface-2);color:var(--fg);align-self:flex-start}
 .badge-ok{background:var(--state-soft);color:var(--state-ink)}
 .badge-warn,.badge-sun{background:var(--sun-soft);color:var(--sun-ink)}
 .badge-review,.badge-mute{background:var(--review-soft);color:var(--muted)}
 .badge-bad{background:var(--busy);color:var(--busy-ink)}
 .badge-admin{background:var(--state-soft);color:var(--state-ink);padding:6px 12px}
-.pill{position:absolute;padding:6px 10px;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.pill{position:absolute;padding:6px 10px;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-weight:var(--w-medium);font-size:15px;font-variant-numeric:tabular-nums}
 .pill span{font-weight:500;opacity:.8}
 .pill-sm{font-size:14px;padding:5px 10px}
-.count-badge{position:absolute;top:2px;right:14px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand-ink);color:#FFFBF2;font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.count-badge{position:absolute;top:2px;right:14px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand-ink);color:#FFFBF2;font-size:13px;font-weight:var(--w-medium);display:inline-flex;align-items:center;justify-content:center}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .count-badge{color:var(--bg)}}
 
 /* ---------- Formularios ---------- */
-label{font-size:15px;font-weight:600;color:var(--muted);display:block}
+label{font-size:15px;font-weight:var(--w-medium);color:var(--muted);display:block}
 .field{display:flex;flex-direction:column;gap:6px}
 input:not([type=checkbox]):not([type=file]):not([type=radio]),select,textarea{width:100%;min-height:52px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface);color:var(--fg);font-size:18px}
 textarea{padding:12px 16px;line-height:1.4;resize:vertical;min-height:96px}
-select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6B69' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6B69' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
 .input-prefix{display:flex;gap:8px}
-.input-prefix .prefix{display:flex;align-items:center;min-height:52px;padding:0 14px;border:1.5px solid transparent;border-radius:var(--r-input);background:var(--surface-2);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.input-prefix .prefix{display:flex;align-items:center;min-height:52px;padding:0 14px;border:1.5px solid transparent;border-radius:var(--r-input);background:var(--surface-2);font-size:18px;font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
 .input-money{display:flex;align-items:center;gap:8px;min-height:56px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface)}
-.input-money .cur{font-weight:700;color:var(--muted);font-size:20px}
-.input-money input{border:0;background:transparent;min-height:0;padding:0;font-size:24px;font-weight:600;font-family:var(--display)}
+.input-money .cur{font-weight:var(--w-medium);color:var(--muted);font-size:20px}
+.input-money input{border:0;background:transparent;min-height:0;padding:0;font-size:24px;font-weight:var(--w-medium);font-family:var(--display)}
 .check{display:flex;align-items:center;gap:10px;font-size:16px;color:var(--fg);font-weight:500;min-height:28px}
 .check input{width:20px;height:20px;accent-color:var(--primary);margin:0}
 .choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:84px;padding:14px;border:2px solid transparent;border-radius:var(--r-tile);background:var(--surface-soft);text-align:left;color:var(--fg)}
-.choice b{font-weight:700;font-size:18px}
+.choice b{font-weight:var(--w-medium);font-size:18px}
 .choice span{font-size:15px;color:var(--muted)}
 .choice[aria-pressed="true"]{background:var(--chosen)}
 .choice[aria-pressed="true"] span{color:var(--primary)}
@@ -174,7 +176,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .counter .ctl .plus{background:var(--chosen);color:var(--primary-ink)}
 .counter .ctl b{width:32px;text-align:center;font-variant-numeric:tabular-nums}
 .code-boxes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-.code-boxes span{display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid transparent;border-radius:var(--r-input);background:var(--surface);font-family:var(--display);font-weight:600;font-size:26px;font-variant-numeric:tabular-nums}
+.code-boxes span{display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid transparent;border-radius:var(--r-input);background:var(--surface);font-family:var(--display);font-weight:var(--w-medium);font-size:26px;font-variant-numeric:tabular-nums}
 .code-boxes span.filled{border-color:var(--primary)}
 .code-boxes span.active{border:2px solid var(--primary);background:var(--state-soft)}
 .sr-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
@@ -205,13 +207,13 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .view.has-topbar{padding-top:calc(56px + 12px + env(safe-area-inset-top))}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:17px;font-weight:700;color:var(--fg);text-decoration:none}
+.header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:17px;font-weight:var(--w-medium);color:var(--fg);text-decoration:none}
 .header-close:disabled{opacity:.6}
 .header-flow .right{margin-left:auto;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:6}
-.tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}
 /* Pestaña activa: el icono en el terracota del logo; la etiqueta en --brand-ink, que es texto pequeño y necesita 4,5:1. */
-.tabbar .nav[aria-current="page"]{color:var(--brand-ink);font-weight:700}
+.tabbar .nav[aria-current="page"]{color:var(--brand-ink);font-weight:var(--w-medium)}
 .tabbar .nav[aria-current="page"] svg{color:var(--brand)}
 .tabbar .nav[aria-current="page"] svg{stroke-width:2.4}
 .tabbar.three .nav{font-size:14px}
@@ -245,8 +247,8 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .place-line .btn{flex-shrink:0}
 .photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
 .cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
-.cta-bar .price{font-family:var(--display);font-weight:600;font-size:24px;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
-.cta-bar .price small{font-family:var(--body);font-size:14px;font-weight:600;color:var(--muted);letter-spacing:0}
+.cta-bar .price{font-family:var(--display);font-weight:var(--w-strong);font-size:24px;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
+.cta-bar .price small{font-family:var(--body);font-size:14px;font-weight:var(--w-medium);color:var(--muted);letter-spacing:0}
 /* Alto de partida (antes de medir la barra): el de una casa solo por noches, 140 px de barra menos 16 px de margen. */
 .cta-spacer{height:124px}
 /* Colones a la izquierda (noche y mensual), dólares a la derecha (≈ noche, ≈ mes): las dos monedas siempre, sin selector. */
@@ -254,8 +256,8 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cta-prices .price{line-height:1.1}
 .cta-usd{text-align:right;align-items:flex-end}
-.price-usd{font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
-.price-usd small{font-size:14px;font-weight:600;color:var(--muted)}
+.price-usd{font-weight:var(--w-strong);font-size:17px;font-variant-numeric:tabular-nums}
+.price-usd small{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .price-disclaimer{text-align:center;line-height:1.3;margin-top:-4px;font-size:13px}
 /* En pantallas de menos de 400 px (iPhone SE), la nota en una sola línea para que la barra no pase de 150 px (revisión UX C3). */
 @media (max-width:399px){.price-disclaimer{font-size:12px}}
@@ -269,10 +271,10 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .return-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .listing-card{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit}
 .listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:8px}
-.listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:600;line-height:1.2;letter-spacing:-0.01em}
+.listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
 .listing-card-text{display:flex;flex-direction:column;gap:1px;padding:0 4px}
 .card-price{margin-top:3px}
-.card-price b{font-weight:700}
+.card-price b{font-weight:var(--w-strong)}
 .listing-grid{display:grid;grid-template-columns:1fr;gap:24px}
 .listing-cell{position:relative;min-width:0}
 .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
@@ -292,21 +294,21 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .fav-photo{width:116px;height:116px;flex-shrink:0;border-radius:var(--r-thumb)}
 .fav-body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
 .fav-title{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
-.fav-title h2{font-size:20px;font-weight:600;line-height:1.1}
+.fav-title h2{font-size:20px;font-weight:var(--w-strong);line-height:1.1}
 .fav-title .heart{position:relative;z-index:1}
 .stretched{color:inherit;text-decoration:none}
 .stretched::after{content:"";position:absolute;inset:0;border-radius:var(--r)}
-.fav-price{margin-top:auto;font-weight:700}
+.fav-price{margin-top:auto;font-weight:var(--w-strong)}
 .fav-price span{font-weight:400}
 .fav-empty{align-items:flex-start;gap:14px}
 .fav-card.sk-card,.skeleton .fav-card{align-items:center}
 .note-col{flex-direction:column;gap:8px}
-.note-col b{font-family:var(--display);font-weight:600}
+.note-col b{font-family:var(--display);font-weight:var(--w-medium)}
 /* Nota informativa en blanco con borde, como las tarjetas de características: sin verde (Favoritos; Daniel, 2026-10-29).
    Las tarjetas y recuadros blancos fijos de la página van en `--surface-soft` (blanco al 70 %); los campos, las hojas
    y lo que flota sobre mapas o fotos siguen en blanco opaco. */
 .note-plain{background:var(--surface-soft);color:var(--fg)}
-.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:600;box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
+.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
 /* La foto de la ficha es cuadrada y de borde a borde, pegada arriba (detrás del notch); solo los botones se apartan del
    área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
 .hero{position:relative;aspect-ratio:1/1;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
@@ -315,18 +317,18 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .hero .strip::-webkit-scrollbar{display:none}
 .hero .strip img,.hero .strip .slot{flex:0 0 100%;height:100%;object-fit:cover;scroll-snap-align:start}
 .feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.feature-tiles div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--r-tile);background:var(--surface-soft);box-shadow:var(--shadow);font-size:14px;font-weight:600;text-align:center}
+.feature-tiles div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--r-tile);background:var(--surface-soft);box-shadow:var(--shadow);font-size:14px;font-weight:var(--w-medium);text-align:center}
 .feature-tiles svg{color:var(--primary)}
 .photos-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .photos-grid .photo{min-height:108px;border-radius:var(--r-input)}
 .photos-grid .photo.cover{grid-column:span 2;grid-row:span 2;min-height:224px;border-radius:var(--r-tile)}
-.photos-grid .add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:108px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface-soft);color:var(--primary);font-size:14px;font-weight:700;cursor:pointer}
+.photos-grid .add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:108px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface-soft);color:var(--primary);font-size:14px;font-weight:var(--w-medium);cursor:pointer}
 .photos-grid .remove{position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:8px;background:var(--overlay-btn);color:var(--fg);display:inline-flex;align-items:center;justify-content:center}
-.photos-grid .tag{position:absolute;left:10px;top:10px;padding:5px 10px;border-radius:6px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:700}
+.photos-grid .tag{position:absolute;left:10px;top:10px;padding:5px 10px;border-radius:6px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:var(--w-medium)}
 .photo-strip{display:flex;gap:8px;overflow-x:auto;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);scrollbar-width:none}
 .photo-strip::-webkit-scrollbar{display:none}
 .photo-strip .photo{flex:0 0 auto;height:140px;border-radius:var(--r-tile)}
-.avatar{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:600;font-size:22px;flex-shrink:0}
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:var(--w-medium);font-size:22px;flex-shrink:0}
 .avatar-sm{width:40px;height:40px;font-size:16px}
 .map-box{height:220px;border-radius:var(--r-tile);overflow:hidden;background:#E9EFE4;position:relative}
 .leaflet-container{font:inherit}
@@ -334,7 +336,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .steps-list{display:flex;flex-direction:column;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;text-align:left}
 .steps-list > div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line-soft);font-size:16px}
 .steps-list > div:last-child{border-bottom:0}
-.steps-list .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:600;font-size:15px;flex-shrink:0}
+.steps-list .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:var(--w-medium);font-size:15px;flex-shrink:0}
 .steps-list .n.done{background:var(--primary);color:var(--primary-on)}
 
 /* ---------- Portada «Muy pronto» ---------- */
@@ -343,7 +345,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .soon-bg img{object-fit:cover;object-position:74% 50%}
 .soon-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(28,43,42,.10) 0%,rgba(28,43,42,.22) 40%,rgba(28,43,42,.70) 72%,rgba(28,43,42,.92) 100%)}
 .soon-card{position:relative;z-index:1;max-width:420px;width:100%;text-align:center;display:grid;gap:14px;justify-items:center}
-.soon-eyebrow{display:inline-flex;align-items:center;padding:6px 12px;border-radius:6px;background:var(--sun-soft);color:var(--sun-ink);font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.soon-eyebrow{display:inline-flex;align-items:center;padding:6px 12px;border-radius:6px;background:var(--sun-soft);color:var(--sun-ink);font-size:14px;font-weight:var(--w-medium);letter-spacing:.04em;text-transform:uppercase}
 .soon-title{color:#FFFBF2;font-size:30px;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .soon-text{color:rgba(255,251,242,.92);font-size:18px;line-height:1.45;text-wrap:balance;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 .soon-place{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,251,242,.7)}
@@ -378,7 +380,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 @media (prefers-reduced-motion:reduce){.description-screen{animation-name:fade-in}}
 .hero-counter{right:14px;bottom:14px}
 .map-box-listing{height:180px}
-.btn-note{font-family:var(--body);font-weight:600;font-size:14px;opacity:.8}
+.btn-note{font-family:var(--body);font-weight:var(--w-medium);font-size:14px;opacity:.8}
 .status-title{font-size:24px}
 .map-box{isolation:isolate}
 
@@ -391,7 +393,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .explore-top{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:12px;margin:calc(-12px - env(safe-area-inset-top)) calc(-1 * var(--gutter)) 6px;padding:calc(10px + env(safe-area-inset-top)) var(--gutter) 14px;background:var(--bg);border-bottom:1px solid var(--line)}
 .explore-search{display:flex;gap:8px;align-items:center}
 .explore-search .search-pill{flex:1;min-width:0}
-.search-pill{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:8px;background:var(--surface);box-shadow:var(--shadow-float);color:inherit;text-decoration:none;font-weight:700}
+.search-pill{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:8px;background:var(--surface);box-shadow:var(--shadow-float);color:inherit;text-decoration:none;font-weight:var(--w-medium)}
 .search-pill svg{flex:none;color:var(--primary)}
 .search-pill-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Mapa de Explorar (maquetas v2 01 y 05): la caja es el primer elemento de la lista, de alto fijo y con fondo arena
@@ -417,28 +419,28 @@ html.map-open{overflow:hidden}
 .map-card-link{display:flex;color:inherit;text-decoration:none}
 .map-card .photo{flex:none;width:96px;height:96px}
 .map-card-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:10px 48px 10px 14px;font-size:16px}
-.map-card h2{font-family:var(--display);font-size:19px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.map-card h2{font-family:var(--display);font-size:19px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .map-card .card-price{margin-top:auto}
 .map-card .heart-card{right:4px;top:4px;color:var(--fg)}
 .map-card .heart-card svg{filter:none}
 /* Búsqueda a pantalla completa (/explorar/buscar, pantallas v2 02–04): tarjetas plegables, una abierta a la vez. */
-.btn-text{min-height:44px;white-space:nowrap;padding:0 8px;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.btn-text{min-height:44px;white-space:nowrap;padding:0 8px;color:var(--muted);font-weight:var(--w-medium);text-decoration:underline;text-underline-offset:3px}
 .badge-sel{background:var(--chosen);color:var(--primary-ink)}
 .search-screen{display:flex;flex-direction:column;gap:10px}
 .search-close{align-self:flex-start;background:transparent;color:var(--fg)}
 .search-closed .search-card-head h2{flex:1;min-width:0}
 .search-fold{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;padding:0 20px;border-radius:var(--r-tile);background:var(--surface);box-shadow:var(--shadow);font-family:var(--body);font-size:17px;font-weight:400;letter-spacing:normal;line-height:1.45;text-align:left}
-.search-fold b{font-weight:700}
+.search-fold b{font-weight:var(--w-medium)}
 .search-card-body{display:flex;flex-direction:column;gap:14px}
-.search-fold span{color:var(--muted);font-size:16px;font-weight:600}
+.search-fold span{color:var(--muted);font-size:16px;font-weight:var(--w-medium)}
 .search-fold b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .search-card{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:var(--r-sheet);background:var(--surface);box-shadow:0 2px 0 var(--line),0 16px 36px -22px rgba(28,43,42,.45)}
 .search-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.search-card-title{min-height:44px;font-size:26px;font-weight:600;text-align:left}
+.search-card-title{min-height:44px;font-size:26px;font-weight:var(--w-strong);text-align:left}
 .search-card-head .badge{align-self:center;padding:7px 12px;font-size:15px;white-space:nowrap}
 .zone-input{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 6px 0 16px;border:2px solid var(--primary);border-radius:var(--r-input);background:var(--surface)}
 .zone-input svg{flex:none;color:var(--primary)}
-.zone-input input:not([type=checkbox]):not([type=file]):not([type=radio]){flex:1;min-width:0;min-height:48px;padding:0;border:0;border-radius:0;background:transparent;font-weight:600;outline:none}
+.zone-input input:not([type=checkbox]):not([type=file]):not([type=radio]){flex:1;min-width:0;min-height:48px;padding:0;border:0;border-radius:0;background:transparent;font-weight:var(--w-medium);outline:none}
 .zone-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;max-height:300px;overflow-y:auto}
 .zone-option{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 6px;border-radius:10px;cursor:pointer}
 .zone-input:focus-within ~ .zone-list .zone-option.is-active,.zone-option:hover{background:var(--line-soft)}
@@ -446,18 +448,18 @@ html.map-open{overflow:hidden}
 .zone-text{display:flex;flex-direction:column;line-height:1.25}
 .range-scroll{max-height:min(52dvh,420px);overflow-y:auto;overscroll-behavior:contain}
 .range-weekdays,.range-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.range-weekdays{position:sticky;top:0;z-index:1;padding:4px 0;background:var(--surface);font-size:14px;font-weight:700;color:var(--muted);text-align:center}
+.range-weekdays{position:sticky;top:0;z-index:1;padding:4px 0;background:var(--surface);font-size:14px;font-weight:var(--w-medium);color:var(--muted);text-align:center}
 .range-month{content-visibility:auto;contain-intrinsic-size:auto 340px;padding-top:8px}
-.range-title{padding:2px 6px 6px;font-size:19px;font-weight:700}
+.range-title{padding:2px 6px 6px;font-size:19px;font-weight:var(--w-medium)}
 .range-grid{row-gap:2px;font-variant-numeric:tabular-nums}
-.range-day{display:flex;align-items:center;justify-content:center;height:44px;font-size:17px;font-weight:600;-webkit-tap-highlight-color:transparent}
+.range-day{display:flex;align-items:center;justify-content:center;height:44px;font-size:17px;font-weight:var(--w-medium);-webkit-tap-highlight-color:transparent}
 .range-day b{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:8px;font-weight:inherit;transition:transform 120ms var(--ease-out)}
 .range-day:disabled{color:var(--muted);opacity:.45;cursor:default}
 .range-day:active:not(:disabled) b{transform:scale(0.94)}
 .range-day.in-range{background:var(--when-band);color:var(--when-pick-ink)}
 .range-day.is-start{background:linear-gradient(90deg,transparent 50%,var(--when-band) 50%)}
 .range-day.is-last{background:linear-gradient(90deg,var(--when-band) 50%,transparent 50%)}
-.range-day.range-end b{background:var(--when-pick);color:var(--when-pick-ink);font-weight:700}
+.range-day.range-end b{background:var(--when-pick);color:var(--when-pick-ink);font-weight:var(--w-medium)}
 .range-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1.5px solid var(--line-soft)}
 .range-summary{display:flex;flex-direction:column;min-width:0;line-height:1.25}
 .people-stepper{display:flex;align-items:center;gap:14px}
@@ -474,11 +476,11 @@ html.map-open{overflow:hidden}
 .filters-btn{position:relative;flex:none;justify-content:center;width:44px;height:44px;padding:0;background:var(--beige-soft)}
 .filters-btn .badge-count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;justify-content:center;font-size:13px;background:var(--primary);color:var(--primary-on);border:2px solid var(--bg)}
 .chip{border:0;cursor:pointer}
-.chip-strong{font-weight:700}
+.chip-strong{font-weight:var(--w-medium)}
 .badge-tight{padding:2px 8px}
 .currency-switch{display:inline-flex;padding:3px;border-radius:8px;background:var(--beige-soft);gap:2px;flex:none}
-.currency-switch button{min-width:44px;min-height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:600;font-size:18px;cursor:pointer;font-variant-numeric:tabular-nums}
-.currency-switch button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:800}
+.currency-switch button{min-width:44px;min-height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:var(--w-medium);font-size:18px;cursor:pointer;font-variant-numeric:tabular-nums}
+.currency-switch button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
 /* En la barra superior, botones de 44 px. */
 .topbar .currency-switch button{min-height:44px}
 .pill-bl{left:10px;bottom:10px}
@@ -500,7 +502,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .totp-secret{font-size:17px;letter-spacing:.06em;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
 .account-card{gap:14px}
 .account-name{font-size:21px}
-.verified{gap:6px;font-weight:600;flex-wrap:wrap}
+.verified{gap:6px;font-weight:var(--w-medium);flex-wrap:wrap}
 .account-skeleton{min-height:84px;display:flex;align-items:center}
 .account-skeleton .sk-line{width:60%}
 .account-foot{align-items:center;gap:0;padding-top:8px}
@@ -518,7 +520,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 /* Actividad: cifras de 30 días (tres columnas; en grande con una sola casa) y las últimas consultas */
 .activity-figures{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .activity-figures p{margin:0;display:flex;flex-direction:column;gap:2px;font-size:14px;color:var(--muted);line-height:1.25}
-.activity-figures b{font-family:var(--display);font-weight:600;font-size:22px;color:var(--fg);line-height:1.1}
+.activity-figures b{font-family:var(--display);font-weight:var(--w-medium);font-size:22px;color:var(--fg);line-height:1.1}
 .activity-figures.lg{gap:12px}
 .activity-figures.lg p{font-size:16px}
 .activity-figures.lg b{font-size:40px;letter-spacing:-0.02em}
@@ -532,27 +534,27 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .inquiry-avatar{width:44px;height:44px;border-radius:999px;font-size:17px}
 .inquiry-avatar.is-read{background:var(--line-soft);color:var(--muted)}
 .inquiry-body{gap:2px;min-width:0}
-.inquiry-name{margin:0;font-family:var(--display);font-weight:600;font-size:19px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
+.inquiry-name{margin:0;font-family:var(--display);font-weight:var(--w-medium);font-size:19px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
 .inquiry-message{margin:4px 0 0;font-size:16px;overflow-wrap:anywhere}
 .badge-new{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink);padding:2px 8px;font-size:13px}
 .nowrap{white-space:nowrap;flex-shrink:0}
-.btn-wa.inquiry-wa{min-height:44px;border-radius:var(--r-input);font-family:inherit;font-weight:700;font-size:16px;gap:8px}
+.btn-wa.inquiry-wa{min-height:44px;border-radius:var(--r-input);font-family:inherit;font-weight:var(--w-strong);font-size:16px;gap:8px}
 .inquiries-foot{margin:0;padding:0 4px}
-.featured-title{font-weight:700;font-size:20px;line-height:1.1;color:inherit;text-decoration:none}
-.share-url{font-weight:700;overflow-wrap:anywhere}
+.featured-title{font-weight:var(--w-strong);font-size:20px;line-height:1.1;color:inherit;text-decoration:none}
+.share-url{font-weight:var(--w-medium);overflow-wrap:anywhere}
 .offer-card{color:var(--sun-ink);padding:14px 16px}
 .offer-title{font-size:18px}
-.offer-left{font-weight:700}
+.offer-left{font-weight:var(--w-medium)}
 /* Tarjeta de una casa (diseño v2, 07-mis-casas): foto cuadrada con la etiqueta de estado encima, nombre y zona. En Mis casas
    toda la tarjeta abre el detalle (el título es un enlace estirado); sus botones quedan por encima y se pueden tocar. */
 .house-card{position:relative;display:flex;flex-direction:column;gap:10px;padding:12px}
 .house-card .btn{position:relative;z-index:1}
 .house-photo{aspect-ratio:1/1;border-radius:8px;width:100%}
 .house-photo-empty{display:grid;place-items:center;width:100%;height:100%;background:var(--surface-2);color:var(--state-ink)}
-.house-card-title{font-size:20px;font-weight:700}
+.house-card-title{font-size:20px;font-weight:var(--w-strong)}
 .house-card-title a{color:inherit;text-decoration:none}
 /* La etiqueta del estado, sobre la foto: una pastilla con su punto. */
-.state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:15px;font-weight:700;line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
+.state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:15px;font-weight:var(--w-medium);line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
 .state-ok{background:var(--state-soft);color:var(--state-ink)}
 .state-draft{background:var(--surface-2);color:var(--fg)}
 .state-review{background:var(--review-soft);color:var(--muted)}
@@ -561,26 +563,26 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .state-bad{background:var(--busy);color:var(--busy-ink)}
 .btn-round{width:44px;padding:0;border-radius:var(--r-input)}
 /* Promoción y suscripción (fase 5): una casa por bloque; la del enlace #pago=CT-#### resaltada. */
-.card-title{font-size:20px;font-weight:700}
+.card-title{font-size:20px;font-weight:var(--w-strong)}
 .sub-house{padding-top:12px;border-top:1px solid var(--line-soft);outline:none}
 .sub-house:first-of-type{border-top:0;padding-top:0}
 .sub-house.is-target{margin:0 -8px;padding:10px 8px;border-radius:10px;box-shadow:0 0 0 2px var(--primary)}
-.sub-house-title{font-size:19px;font-weight:700;margin:0}
+.sub-house-title{font-size:19px;font-weight:var(--w-strong);margin:0}
 .sub-skeleton{min-height:160px}
 .sub-scope{margin:-8px 0 4px}
 .sun-ink{color:var(--sun-ink)}
 .align-end{text-align:right}
 .owner-skeleton{display:flex;gap:12px;align-items:center}
 .owner-skeleton .sk-line{flex:1}
-.header-action{margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:16px;font-weight:700;white-space:nowrap}
+.header-action{margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:16px;font-weight:var(--w-medium);white-space:nowrap}
 .detail-photo{aspect-ratio:4/3;height:auto;border-radius:var(--r)}/* portada 4:3 (revisión UX 2026-10-29, C1) */
 /* Ficha editable (maqueta 08a): la píldora de las fotos sobre la portada y la etiqueta de lo que pasa por revisión. */
 .photo-pill{right:12px;bottom:12px;border-radius:8px;font-size:14px;line-height:1;padding:7px 12px;text-decoration:none}
-.tag-rev{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:var(--review-soft);color:var(--muted);font-size:13px;font-weight:700;line-height:1.5;white-space:nowrap}
+.tag-rev{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:var(--review-soft);color:var(--muted);font-size:13px;font-weight:var(--w-medium);line-height:1.5;white-space:nowrap}
 .tag-rev.is-pending{background:var(--muted);color:var(--bg)}
 .note .tag-rev{}
 .list-item.is-locked{background:var(--bg)}
-.field-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--muted)}
+.field-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:var(--w-medium);color:var(--muted)}
 .pill-br{right:12px;bottom:12px}
 .detail-photo .pill-bl{left:12px;bottom:12px}
 .muted-icon{color:var(--muted);display:inline-flex;flex-shrink:0}
@@ -598,8 +600,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .sent-link{justify-content:center;width:100%}
 
 /* ---------- Asistente de publicar (ticket 07; decisión 2026-10-21) ---------- */
-.strong{font-weight:600}
-.label-plain{font-size:14px;font-weight:700;color:var(--muted)}
+.strong{font-weight:var(--w-medium)}
+.label-plain{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .choice{cursor:pointer}
 .counters{padding:0;border-radius:var(--r-tile)}
 .btn.is-disabled{border-color:var(--line);color:#A3ADA6;opacity:1;cursor:default}
@@ -609,7 +611,7 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .publish-form .grow-col:focus-within{flex:1 0 auto}
 .map-hint{left:12px;bottom:12px;z-index:500}
 .map-locate{position:absolute;right:10px;bottom:10px;z-index:500;box-shadow:var(--shadow);color:var(--primary)}
-.photos-count{font-weight:700}
+.photos-count{font-weight:var(--w-medium)}
 .photos-grid .remove{border:0;cursor:pointer;z-index:1}
 .photos-grid .tag{pointer-events:none}
 /* Foto nueva de una edición: «En revisión» abajo, para no chocar con el ✕ en las casillas pequeñas. */
@@ -627,7 +629,7 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .photos-grid .photo.is-lifted{z-index:2;transform-origin:50% 50%;box-shadow:var(--shadow-lift, 0 12px 28px rgba(28,43,42,.28))}
 /* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
 .sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:8px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:700}
+.photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:8px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:var(--w-medium)}
 .wa-card{gap:12px;padding:12px 14px;border-radius:var(--r-input)}
 .input-money input:not([type=checkbox]):not([type=file]):not([type=radio]){border:0;background:transparent;min-height:0;padding:0}
 
@@ -658,10 +660,10 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .diff-photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .diff-photos img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:var(--r-input)}
 .tabbar .nav{position:relative}
-.nav-count{position:absolute;top:2px;right:16px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.nav-count{position:absolute;top:2px;right:16px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:var(--w-medium);display:flex;align-items:center;justify-content:center}
 
 /* Aviso de versión nueva (service worker): flota sobre la barra inferior. */
-.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--r-input);background:var(--fg);color:var(--bg);font-size:16px;font-weight:600;box-shadow:var(--shadow-float);z-index:7}
+.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--r-input);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:7}
 
 /* ---------- Hoja de contacto (pantalla 04): sobre la ficha atenuada, 28 px arriba ---------- */
 /* Antes de hidratar el botón es una caja del mismo tamaño que todavía no responde: se ve, pero apagado. */
@@ -684,7 +686,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet-head > div{display:flex;flex-direction:column;gap:2px}
 .sheet-head .icon-btn{margin:-6px -8px 0 0;background:transparent;box-shadow:none}
 .sheet form{display:flex;flex-direction:column;gap:14px}
-.sheet label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600;color:var(--muted)}
+.sheet label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .sheet input:not([type=checkbox]),.sheet textarea{min-height:48px;padding:0 12px;font-size:18px}
 .sheet textarea{padding:12px 14px;resize:none;min-height:0}
 .sheet input[type=date]{min-width:0;-webkit-appearance:none;appearance:none;display:flex;align-items:center}
@@ -692,7 +694,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]){width:72px;text-align:center;font-variant-numeric:tabular-nums}
 .sheet .hint{font-size:14px;color:var(--muted);margin-top:-8px}
 .sheet .consent{text-align:center;font-size:14px;color:var(--muted);margin-top:-6px}
-.sheet .safety{text-align:center;font-size:14px;font-weight:600;color:var(--ochre)}
+.sheet .safety{text-align:center;font-size:14px;font-weight:var(--w-medium);color:var(--ochre)}
 .sheet [aria-invalid="true"]{border-color:var(--bad)}
 @media (prefers-reduced-motion:reduce){.sheet{animation-name:fade-in}}
 
@@ -785,93 +787,89 @@ small.swap-in{display:block}
 ::view-transition-new(listing-cta){animation:vt-cta-in 340ms var(--ease-drawer) both}
 ::view-transition-old(listing-cta){animation:vt-cta-out 200ms var(--ease-out) both}
 
-/* ---------- Calendario (pantalla 17) y rejilla del mes (también la de la ficha, ticket 05) ---------- */
-.month-grid{display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
-.month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.month-head{font-size:13px;font-weight:700;color:var(--muted);text-align:center}
-.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:46px;border:2px solid transparent;border-radius:8px;background:var(--cal-free);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
-.month-grid .day b{font-size:14px;font-weight:700;line-height:1.1}
-.month-grid .day-sub{font-size:10px;line-height:1.1;min-height:10px;color:var(--state-ink)}
-/* Ocupado: terracota claro con rayas finas y «Ocupado» (no depende solo del color). */
+/* ---------- Calendario (pantalla 17) y rejilla del mes, la misma en la ficha (revisión UX 2026-10-29, C4 y N4) ---------- */
+/* Casillas de 47 × 92 px (a 390 px de ancho), 6 px entre ellas y 14 px de margen lateral; número arriba y precio completo
+   debajo, los dos centrados y con transparencia; fondo verde al 6 %. */
+.month-grid{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+.month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.month-grid,.month-head{margin-inline:calc(14px - var(--gutter))}
+.month-head{font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-align:center}
+.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;height:92px;padding:14px 0 0;border:2px solid transparent;border-radius:12px;background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
+.month-grid .day b{font-size:14px;font-weight:500;line-height:1.2;color:color-mix(in srgb,currentColor 70%,transparent)}
+.month-grid .day-sub{font-size:12px;font-weight:400;line-height:1.2;white-space:nowrap;color:color-mix(in srgb,var(--fg) 75%,transparent)}
+/* Seis cifras («120 000») en 11 px para que quepan en la casilla. */
+.month-grid .day-sub.is-long{font-size:11px;letter-spacing:-0.02em}
+/* Ocupado: terracota claro con rayas finas y solo el número, en terracota. */
 .month-grid .day.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px);color:var(--cal-busy-ink)}
-.month-grid .day.is-busy .day-sub{color:var(--cal-busy-ink)}
-.month-grid .day[aria-pressed="true"]{border-color:var(--brand-ink)}
-/* Días pasados: solo el número en gris tenue, sin fondo ni precio (revisión UX A4). */
-.month-grid .day.is-past{background:none;color:var(--muted);opacity:.55}
+/* Seleccionado para editar: solo un marco terracota (2 px, al 60 %), sin relleno. */
+.month-grid .day[aria-pressed="true"]{border-color:color-mix(in srgb,var(--brand-ink) 60%,transparent)}
+/* Días pasados del mes: del mismo tamaño, con el número tachado y todo más claro. */
+.month-grid .day.is-past{opacity:.5}
+.month-grid .day.is-past b{text-decoration:line-through}
 .month-grid button.day:disabled{cursor:default}
 .month-grid button.day:active:not(:disabled){transform:scale(0.94)}
 .month-grid.is-dimmed{opacity:.6}
-/* Alta (calendario del propietario): el mes llena la pantalla y sus semanas se reparten el alto; número arriba a la
-   izquierda y precio dentro. */
-.month-grid.is-tall{flex:1;gap:3px}
-.month-grid.is-tall .month-week{flex:1;gap:3px}
-.month-grid.is-tall .day{height:auto;min-height:64px;align-items:flex-start;justify-content:space-between;padding:7px 4px 7px 7px;border-radius:10px}
-.month-grid.is-tall .day b{font-size:15px}
-.month-grid.is-tall .day-sub{font-size:11.5px;font-weight:600;align-self:center}
 .month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);padding-top:4px}
 .month-legend span{display:inline-flex;align-items:center;gap:6px}
-.month-legend .swatch{width:12px;height:12px;border-radius:4px;background:var(--cal-free)}
+.month-legend .swatch{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 6%,transparent)}
+.month-legend .swatch:not(.is-busy){background:color-mix(in srgb,var(--primary) 12%,transparent)}
 .month-legend .swatch.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px)}
-/* Ficha: «Disponibilidad». Caja de alto fijo (mes + 6 semanas + leyenda + línea del precio base): mide lo mismo vacía en
-   el HTML del servidor que con la rejilla montada tras hidratar. Disponible en blanco; ocupado en terracota claro. */
-.listing-calendar{display:flex;flex-direction:column;gap:8px;height:536px;overflow:hidden}
-/* Casillas grandes y juntas (2 px), esquinas de 8 px, el precio de cada noche («₡95k») y fondos suaves: verde tonal los
-   disponibles y terracota del logo los ocupados (--cal-busy, como el calendario del propietario), con sus rayas (Daniel, 2026-10-29). */
-.listing-calendar .month-grid,.listing-calendar .month-week{gap:2px}
-.listing-calendar .day{height:58px;border-radius:8px;gap:3px}
-.listing-calendar .day:not(.is-busy):not(.is-past){background:color-mix(in srgb,var(--primary) 9%,transparent)}
-.listing-calendar .day b{font-size:16px}
-.listing-calendar .day-sub{font-size:12px;font-weight:600;white-space:nowrap}
-.listing-calendar .day.is-busy .day-sub{font-size:10.5px}
-.listing-calendar .month-legend .swatch{border-radius:3px}
-.listing-calendar .month-legend .swatch:not(.is-busy){background:color-mix(in srgb,var(--primary) 9%,transparent)}
-.listing-calendar .day b{white-space:nowrap}
-/* A menos de 360 px las casillas miden ~38 px: «Ocupado» y «₡150k» en pequeño para que quepan. */
-@media (max-width:359px){.month-grid .day-cur{display:none}.listing-calendar{height:552px}.listing-calendar .day-sub{font-size:11px;letter-spacing:-0.02em}.listing-calendar .day.is-busy .day-sub{font-size:8.5px}.listing-calendar .day b{font-size:15px}}
+/* Ficha: «Disponibilidad», un mes a la vez con ‹ ›. Caja de alto fijo (título, fila de los días, 6 semanas y leyenda): mide
+   lo mismo vacía en el HTML del servidor que con la rejilla montada tras hidratar. */
+.listing-calendar{display:flex;flex-direction:column;gap:8px;height:700px;overflow:hidden}
 .listing-calendar .cal-month{margin:-6px 0 0 -10px}
+/* La caja corta lo que sale: en la ficha, la rejilla va dentro del margen de la página. */
+.listing-calendar .month-grid,.listing-calendar .month-head{margin-inline:0}
 .header-root > div:has(> .btn-round){align-items:center}
 .header-root > div:has(> .house-picker){align-items:center;flex-wrap:nowrap;gap:10px}
 .header-root:has(.house-picker) h1{font-size:28px}
 .house-picker{position:relative;min-width:0}
-.picker-pill{display:flex;align-items:center;gap:6px;min-height:40px;max-width:200px;padding:0 14px;border-radius:8px;background:var(--beige-soft);font-weight:700;font-size:15px}
+/* Selector de casa del Calendario, a todo el ancho arriba (revisión UX 2026-10-29, C4). */
+.picker-pill{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:52px;padding:0 16px;border-radius:var(--r-input);background:var(--beige-soft);font-weight:var(--w-strong);font-size:18px;text-align:left}
 .picker-pill .ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .picker-pill svg{transform:rotate(90deg);flex-shrink:0}
 .picker-pill[aria-expanded="true"] svg{transform:rotate(-90deg)}
-.picker-list{position:absolute;right:0;top:calc(100% + 6px);z-index:8;min-width:200px;max-width:280px;margin:0;padding:6px;list-style:none;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float);animation:fade-in 140ms var(--ease-out)}
-.picker-list li{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
-.picker-list li[aria-selected="true"]{color:var(--primary);font-weight:700;background:var(--state-soft)}
+.picker-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:8;margin:0;padding:6px;list-style:none;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float);animation:fade-in 140ms var(--ease-out)}
+.picker-list li{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;font-size:16px;font-weight:var(--w-medium);cursor:pointer}
+.picker-list li[aria-selected="true"]{color:var(--primary);font-weight:var(--w-medium);background:var(--state-soft)}
 .cal-month{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 0 -10px}
 .cal-arrow{width:40px;height:40px;color:var(--muted)}
 .cal-arrow:disabled{opacity:.3;cursor:default}
-.cal-title{font-weight:700;font-size:19px;white-space:nowrap}
-/* Propietario: los meses uno debajo de otro. La fila L K M J V S D queda fija bajo la barra superior y el título de cada
-   mes, debajo de ella; cada mes llena el alto visible (sin la barra superior, esa fila y las pestañas). */
-.cal-hint{font-size:14px;margin-top:-6px}
-.cal-weekdays{position:sticky;top:calc(56px + env(safe-area-inset-top));z-index:3;background:var(--bg);padding:4px 0;margin-bottom:-14px}
-/* 26 px justos: el título del mes y el scroll de cada mes cuentan con ese alto (calc de abajo), también con la letra más grande. */
+.cal-title{font-weight:400;font-size:19px;white-space:nowrap}
+/* Propietario: los meses uno debajo de otro. La fila L K M J V S D queda fija arriba (sin barra superior) y el título de
+   cada mes, debajo de ella. */
+.cal-hint-row{align-items:center;margin-top:-4px}
+.cal-weekdays{position:sticky;top:env(safe-area-inset-top);z-index:3;background:var(--bg);padding:4px 0;margin-bottom:-14px}
+/* 26 px justos: el título del mes cuenta con ese alto (calc de abajo), también con la letra más grande. */
 .cal-weekdays{height:26px;line-height:18px;box-sizing:border-box}
-.cal-month-block{display:flex;flex-direction:column;min-height:calc(100dvh - 56px - 26px - var(--nav-h) - env(safe-area-inset-top) - env(safe-area-inset-bottom));scroll-margin-top:calc(56px + 26px + env(safe-area-inset-top))}
-.cal-month-title{position:sticky;top:calc(56px + 26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:700;padding:6px 0}
-/* El primer mes (el actual, sin sus semanas ya pasadas) no se estira: el siguiente empieza enseguida. */
-.cal-month-block:first-child{min-height:0}
-.cal-month-placeholder{flex:1}
+.cal-month-block{display:flex;flex-direction:column;scroll-margin-top:calc(26px + env(safe-area-inset-top))}
+.cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px 0}
+.cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
 .close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
 .close-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
 .close-row .body{flex:1;display:flex;flex-direction:column}
 .close-row.is-closed{justify-content:space-between}
 .cal-skeleton{height:320px}
-.view:has(.cal-panel){padding-bottom:calc(var(--nav-h) + 240px + env(safe-area-inset-bottom))}
-.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));width:100%;max-width:560px;z-index:7;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter);background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
+.view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
+/* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */
+.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:9;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
 /* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
 .cal-panel.kb{padding-bottom:calc(14px + 320px)}
-.cal-cancel{font-size:15px;font-weight:600;color:var(--muted);min-height:32px}
+/* «Guardar cambios» más bajo (44 px) y en gris mientras no hay cambios. */
+.cal-panel .cal-save{min-height:44px;font-size:16px}
+.cal-panel .cal-save:disabled{background:color-mix(in srgb,var(--fg) 8%,var(--surface));color:var(--muted);opacity:1}
+/* La barra de pestañas: fuera mientras hay días seleccionados; en el Calendario sale al bajar y vuelve al subir. */
+.tabbar{transition:transform 200ms var(--ease-out)}
+html.tabbar-away .tabbar,.app:has(.cal-panel) .tabbar{transform:translate(-50%,100%)}
+@media (prefers-reduced-motion:reduce){.tabbar{transition:none}}
+.cal-cancel{font-size:15px;font-weight:var(--w-medium);color:var(--muted);min-height:32px}
 .seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
-.seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:600;transition:background-color 120ms ease,color 120ms ease}
-.seg button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:700}
+.seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
+.seg button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
 .cal-price{display:flex;align-items:center;gap:4px;min-height:44px;padding:0 12px;border:1.5px solid transparent;border-radius:8px;background:var(--surface);font-size:15px;color:var(--muted);font-weight:500}
 /* 16 px y no los 14 del diseño: con menos, el iPhone amplía la página al enfocar el campo. */
-.cal-price input:not([type=checkbox]):not([type=file]):not([type=radio]){width:104px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fg)}
-.cal-price input::placeholder{font-size:16px;font-weight:600;color:var(--muted)}
+.cal-price input:not([type=checkbox]):not([type=file]):not([type=radio]){width:104px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:18px;font-weight:var(--w-strong);font-variant-numeric:tabular-nums;color:var(--fg)}
+.cal-price input::placeholder{font-size:16px;font-weight:var(--w-medium);color:var(--muted)}
 .cal-base{min-height:32px;padding:0;font-size:15px;align-self:flex-start}
 .cal-panel .btn-lg{min-height:48px;font-size:17px}
 
@@ -899,7 +897,7 @@ small.swap-in{display:block}
 .zone-credit{margin:4px 12px 2px;font-size:13px;color:var(--muted)}
 .zone-options li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:8px;cursor:pointer}
 .zone-options li[aria-selected="true"],.zone-options li:hover{background:var(--surface-2)}
-.cal-house{font-weight:600;margin-top:-6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-house{font-size:18px;font-weight:var(--w-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Selector de país dentro de la caja del prefijo (revisión UX A6): el select va invisible encima de toda la caja. */
 .prefix-select{position:relative;gap:4px;cursor:pointer}
 .prefix-select svg{color:var(--muted);flex-shrink:0}
@@ -928,7 +926,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
    del WhatsApp y la de la oferta a 14 px y con menos relleno) para que el paso 9 quepa sin scroll
    también cuando la nota de la oferta ocupa tres líneas (render de fuentes de Linux). */
 @media (max-height:700px){.review-row{min-height:40px;padding-block:4px}.offer-line{padding-block:8px}.publish-form>.small,.offer-line .small{font-size:14px;line-height:1.35}}
-.review-label{color:var(--muted);font-size:14px;font-weight:600}
+.review-label{color:var(--muted);font-size:14px;font-weight:var(--w-medium)}
 .review-value{display:flex;flex-direction:column;min-width:0}
 .review-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .offer-line b{white-space:nowrap}
@@ -941,7 +939,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 /* Mis casas: solo las casillas con algo (revisión UX N1); se reparten el ancho. */
 .grid-3:has(> .tile){grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
 /* Descripción por debajo del mínimo (revisión UX N3). */
-.description-short{color:var(--sun-ink);font-weight:600}
+.description-short{color:var(--sun-ink);font-weight:var(--w-medium)}
 /* Cabecera de la ficha: nombre, zona y personas, y la persona que alquila en su fila entre dos líneas (revisión UX A10; tamaños como en Airbnb). */
 .listing-head{gap:4px;align-items:center;text-align:center;line-height:1.25}
 .listing-head > .row{justify-content:center}
@@ -995,3 +993,10 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .btn-back{flex:0 0 56px;width:56px;padding:0}
 .review-row.is-missing{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
 .review-row.is-missing .review-label,.review-row.is-missing .review-text{color:var(--brand-ink)}
+
+/* ---------- Tipografía (revisión UX 2026-10-29, T1) ---------- */
+/* Negritas sueltas del texto (<b>, <strong>) a 600 como mucho; títulos de pantalla y de casa en --fg al 85 % (un hex fijo,
+   para que contrast.test.ts lo mida), para que no compitan con el precio ni con los botones. */
+b,strong{font-weight:var(--w-strong)}
+.btn-primary,.btn-wa,.btn-sun{font-weight:var(--w-strong)}
+h1,h2,h3,.house-card-title,.sub-house-title,.listing-card h2,.listing-card h3,.fav-title h2,.cal-house{color:var(--fg-title)}

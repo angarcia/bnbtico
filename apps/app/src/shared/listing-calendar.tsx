@@ -1,14 +1,14 @@
 // Calendario de la ficha pública (trozo diferido `listing-calendar-*`): la rejilla del mes en solo lectura con los días
-// que trajo el worker (ssr-data) o la consulta pública de la SPA. Cifra solo en los días ★, en la moneda de la página.
+// que trajo el worker (ssr-data) o la consulta pública de la SPA. El formato del calendario del propietario (revisión UX
+// 2026-10-29, N4), un mes a la vez con ‹ ›, con el precio de cada noche en la moneda de la página.
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { addMonths, calendarWindow, monthTitle, openingMonth } from "../domain/calendar";
 import type { Currency } from "../domain/currency";
 import type { PublicListing } from "../domain/listing";
-import { formatMoney } from "../domain/money";
 import { I } from "./icons";
 import { listingDaysQuery } from "./listing-query";
-import { MonthGrid, MonthLegend } from "./month-grid";
+import { MonthGrid, MonthLegend, WeekdayRow } from "./month-grid";
 
 /** Hoy en Costa Rica (UTC−6, sin horario de verano), igual que `costaRicaToday` de domain/inquiry: importarla desde allí
  *  ata este trozo al de la consulta y Rolldown vuelve a partir los de la hoja de contacto (medido: +0,07 KB en la zona
@@ -38,9 +38,9 @@ export function ListingCalendar({ listing: l, currency, fx }: { listing: PublicL
       </div>
       {days ? (
         <>
-          <MonthGrid month={month} today={today} days={days} base={base} prices={base === null ? "none" : "all"} currency={currency} fx={fx} label={title} />
-          <MonthLegend special={base !== null} />
-          {base !== null ? <p className="xs muted">Precio base {formatMoney(base, currency, fx)} por noche; los días con ★ tienen otro precio.</p> : null}
+          <WeekdayRow />
+          <MonthGrid month={month} today={today} days={days} base={base} currency={currency} fx={fx} label={title} />
+          <MonthLegend />
         </>
       ) : null}
     </>

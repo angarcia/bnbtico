@@ -14,58 +14,63 @@ const DAYS = days([
 ]);
 
 const html = (props: Partial<Parameters<typeof MonthGrid>[0]> = {}) =>
-  renderToString(<MonthGrid month="2026-12" today={TODAY} days={DAYS} base={95000} prices="all" label="Diciembre 2026" onSelect={() => {}} {...props} />);
+  renderToString(<MonthGrid month="2026-12" today={TODAY} days={DAYS} base={95000} label="Diciembre 2026" onSelect={() => {}} {...props} />);
 const cells = (out: string) => [...out.matchAll(/<(button|div)[^>]*class="day[^"]*"[^>]*>[\s\S]*?<\/\1>/g)].map((m) => m[0]);
-const cell = (out: string, n: number) => cells(out).find((c) => new RegExp(`<b>${n}( ★)?</b>`).test(c))!;
+const cell = (out: string, n: number) => cells(out).find((c) => new RegExp(`<b>${n}</b>`).test(c))!;
+const sub = (c: string) => c.match(/<span class="day-sub[^"]*">([^<]*)<\/span>/)![1];
 
+// Formato de la revisión UX 2026-10-29 (C4 y N4): el mismo en el calendario del propietario y en la ficha.
 describe("MonthGrid", () => {
-  it("lunes primero: cabecera L K M J V S D y huecos antes del 1 (diciembre 2026 empieza en martes)", () => {
-    const out = html();
-    expect([...out.matchAll(/<span class="wd">(.)<\/span>/g)].map((m) => m[1])).toEqual(["L", "K", "M", "J", "V", "S", "D"]);
+  it("lunes primero: huecos antes del 1 (diciembre 2026 empieza en martes) y el mes entero, también las semanas pasadas", () => {
+    const out = html({ today: "2026-12-16" });
     expect(out.indexOf('class="day-blank"')).toBeLessThan(out.indexOf("<b>1</b>"));
     expect(cells(out)).toHaveLength(31);
+    expect(out).not.toContain("month-head");
   });
 
-  it("interactiva: botones con aria-label (fecha, estado y precio), «₡95 mil» en los disponibles, «ocupado» en los ocupados y ★ en los distintos", () => {
+  it("interactiva: botones con aria-label (fecha, estado y precio); precio completo sin «₡» en los disponibles, solo el número en los ocupados y sin ★", () => {
     const out = html();
     expect(cell(out, 20)).toMatch(/^<button/);
     expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible, ₡95\u00a0000"');
-    expect(cell(out, 20)).toContain("95\u00a0mil");
+    expect(sub(cell(out, 20))).toBe("95\u00a0000");
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
-    expect(cell(out, 12)).toContain(">Ocupado<");
+    expect(sub(cell(out, 12))).toBe("");
     expect(cell(out, 12)).toMatch(/class="day is-busy"/);
-    expect(cell(out, 24)).toContain("<b>24 ★</b>");
-    expect(cell(out, 24)).toContain("180\u00a0mil");
+    // Precio especial: solo la cifra distinta (el lector de pantalla lo dice).
+    expect(sub(cell(out, 24))).toBe("180\u00a0000");
+    expect(cell(out, 24)).toContain("is-long");
     expect(cell(out, 24)).toContain('aria-label="24 de diciembre de 2026, disponible, ₡180\u00a0000, precio distinto"');
-    // Ocupado con precio especial: conserva la ★ (el precio vuelve al liberarlo).
-    expect(cell(out, 31)).toContain("<b>31 ★</b>");
+    expect(sub(cell(out, 31))).toBe("");
+    expect(out).not.toContain("★");
+    expect(out).not.toContain("₡</span>");
   });
 
-  it("los días pasados están desactivados y atenuados; los seleccionados llevan aria-pressed", () => {
+  it("los días pasados están desactivados y tachados (is-past), con su precio; los seleccionados llevan aria-pressed", () => {
     const out = html({ selected: ["2026-12-20", "2026-12-21"] });
     expect(cell(out, 9)).toMatch(/disabled=""/);
     expect(cell(out, 9)).toMatch(/is-past/);
+    expect(cell(out, 9)).toContain('aria-label="9 de diciembre de 2026"');
+    expect(sub(cell(out, 9))).toBe("95\u00a0000");
     expect(cell(out, 10)).not.toMatch(/disabled=""/);
     expect(cell(out, 20)).toContain('aria-pressed="true"');
     expect(cell(out, 22)).toContain('aria-pressed="false"');
   });
 
-  it("casa solo mensual (sin precio base): ni precios ni ★", () => {
-    const out = html({ base: null, prices: "none", days: days([{ day: "2026-12-12", available: false, specialPriceCrc: null }]) });
-    expect(out).not.toMatch(/\dk</);
-    expect(out).not.toContain("★");
+  it("casa solo mensual (sin precio base): sin cifras", () => {
+    const out = html({ base: null, days: days([{ day: "2026-12-12", available: false, specialPriceCrc: null }]) });
+    expect(sub(cell(out, 20))).toBe("");
     expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible"');
-    expect(cell(out, 12)).toContain(">Ocupado<");
+    expect(cell(out, 12)).toMatch(/is-busy/);
   });
 
-  it("solo lectura (ficha): rejilla con celdas etiquetadas, sin botones; cifra solo en los días ★ y en la moneda elegida", () => {
-    const out = html({ onSelect: undefined, prices: "special", currency: "USD" });
+  it("solo lectura (ficha): rejilla con celdas etiquetadas, sin botones; precio de cada noche en la moneda elegida, sin decir el de los ocupados", () => {
+    const out = html({ onSelect: undefined, currency: "USD", fx: 500 });
     expect(out).toContain('role="grid"');
     expect(out).not.toContain("<button");
     expect(cell(out, 20)).toContain('role="gridcell"');
-    expect(cell(out, 20)).toContain('<span class="day-sub"></span>');
-    expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible"');
-    expect(cell(out, 24)).toMatch(/\$\d+/);
+    expect(sub(cell(out, 20))).toBe("$190");
+    expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible, $190"');
+    expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado"');
   });
 
   it("atenuada (casa cerrada): clase is-dimmed y sin botones", () => {
@@ -74,56 +79,15 @@ describe("MonthGrid", () => {
     expect(out).not.toContain("<button");
   });
 
-  it("alta (calendario del propietario): sin cabecera propia, «₡95 mil» dentro de la casilla (el «₡» aparte, que se oculta por debajo de 360 px) y «Ocupado» en los ocupados", () => {
-    const out = renderToString(
-      <MonthGrid
-        size="tall"
-        month="2026-12"
-        today="2026-12-01"
-        days={days([{ day: "2026-12-12", available: false, specialPriceCrc: null }])}
-        base={95000}
-        prices="all"
-        onSelect={() => {}}
-        label="Diciembre 2026"
-      />,
-    );
-    expect(out).toContain('class="month-grid is-tall"');
-    expect(out).not.toContain("month-head");
-    expect(cell(out, 9)).toContain('<span class="day-cur">₡</span>95\u00a0mil');
-    expect(cell(out, 12)).toContain(">Ocupado<");
-    expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
-  });
-
-  it("alta: no pinta las semanas ya pasadas enteras; la de hoy es la primera fila, con los días anteriores atenuados", () => {
-    // Diciembre 2026 empieza en martes; hoy, miércoles 16: las semanas del 1 al 6 y del 7 al 13 ya pasaron.
-    const out = html({ size: "tall", today: "2026-12-16" });
-    expect(out.match(/class="month-week"/g)).toHaveLength(3);
-    expect(cells(out)).toHaveLength(31 - 13);
-    expect(cells(out)[0]).toContain("<b>14</b>");
-    expect(cell(out, 14)).toContain("is-past");
-    expect(cell(out, 16)).not.toContain("is-past");
-    // La compacta (la ficha) sigue con el mes entero.
-    expect(cells(html({ today: "2026-12-16" }))).toHaveLength(31);
-  });
-
-  it("compacta (por defecto): cabecera propia; con cifra en todos los días (la ficha) «₡95 mil», solo en los ★ «95 mil»", () => {
-    const out = html();
-    expect(out).toContain("month-head");
-    expect(out).not.toContain("is-tall");
-    expect(cell(out, 20)).toContain('<span class="day-cur">₡</span>95\u00a0mil<');
-    const special = html({ prices: "special" });
-    expect(cell(special, 24)).toContain(">180\u00a0mil<");
-    expect(special).not.toContain("day-cur");
-  });
-
   it("fila de los días de la semana: L K M J V S D, oculta a los lectores de pantalla", () => {
     const out = renderToString(<WeekdayRow />);
     expect(out).toContain('aria-hidden="true"');
     expect(out.replace(/<[^>]+>/g, "")).toBe("LKMJVSD");
   });
 
-  it("leyenda: Disponible · Ocupado · ★ Precio distinto (sin ★ en una casa solo mensual)", () => {
-    expect(renderToString(<MonthLegend special />)).toMatch(/Disponible.*Ocupado.*★ Precio distinto/);
-    expect(renderToString(<MonthLegend special={false} />)).not.toContain("★");
+  it("leyenda: Disponible · Ocupado, sin ★", () => {
+    const out = renderToString(<MonthLegend />);
+    expect(out).toMatch(/Disponible.*Ocupado/);
+    expect(out).not.toContain("★");
   });
 });

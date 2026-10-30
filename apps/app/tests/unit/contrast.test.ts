@@ -52,6 +52,7 @@ function contrast(a: string, b: string): number {
 
 const PAIRS: [string, string][] = [
   ["--fg", "--bg"],
+  ["--fg-title", "--bg"],
   ["--primary-on", "--primary"],
   ["#FFFBF2", "--brand-ink"],
   ["--brand-ink", "--bg"],

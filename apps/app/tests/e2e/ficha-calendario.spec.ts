@@ -24,7 +24,7 @@ const toNextMonth = async (page: Page) => {
 const on = (d: number) => `${next()}-${String(d).padStart(2, "0")}`;
 const section = (page: Page) => page.locator(".listing-calendar");
 const grid = (page: Page, month: string) => section(page).getByRole("grid", { name: monthTitle(month) });
-const cell = (page: Page, iso: string) => section(page).getByRole("gridcell", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)},`) });
+const cell = (page: Page, iso: string) => section(page).getByRole("gridcell", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)}(,|$)`) });
 const boxHeight = (page: Page) => section(page).evaluate((el) => el.getBoundingClientRect().height);
 
 function watch(page: Page) {
@@ -68,7 +68,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://tile.openstreetmap.org/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
 });
 
-test("tras hidratar: ocupados, la cifra de cada noche (★ en las de precio distinto) y la línea del precio base; sin rejilla en el HTML ni peticiones", async ({ page }) => {
+test("tras hidratar: el formato del calendario del propietario (N4): ocupados solo con el número y el precio completo de cada noche, sin ★; sin rejilla en el HTML ni peticiones", async ({ page }) => {
   const casa = await seedWithDays("Casa Calendario Ficha");
   const seen = watch(page);
   const scripts: string[] = [];
@@ -101,14 +101,15 @@ test("tras hidratar: ocupados, la cifra de cada noche (★ en las de precio dist
   await toNextMonth(page);
   await expect(grid(page, next())).toBeVisible();
   await expect(cell(page, on(10))).toHaveAttribute("aria-label", `${longDate(on(10))} de ${on(10).slice(0, 4)}, ocupado`);
-  await expect(cell(page, on(10))).toContainText("Ocupado");
+  await expect(cell(page, on(10))).toHaveText("10");
   await expect(cell(page, on(10))).toHaveClass(/is-busy/);
-  await expect(cell(page, on(20))).toHaveText("20 ★₡150\u00a0mil");
+  // Precio especial: solo la cifra distinta, completa y sin «₡» (revisión UX 2026-10-29, N4).
+  await expect(cell(page, on(20))).toHaveText("20150\u00a0000");
   await expect(cell(page, on(20))).toHaveAttribute("aria-label", /disponible, ₡150\s000, precio distinto$/);
-  // Un día normal: su cifra, la del precio base (Daniel, 2026-10-29; antes sin cifra).
-  await expect(cell(page, on(15))).toHaveText("15₡95\u00a0mil");
-  await expect(section(page).getByText("Precio base ₡95 000 por noche; los días con ★ tienen otro precio.")).toBeVisible();
-  await expect(section(page).getByText("★ Precio distinto")).toBeVisible();
+  await expect(cell(page, on(15))).toHaveText("1595\u00a0000");
+  expect(Math.round((await cell(page, on(15)).boundingBox())!.height)).toBe(92);
+  await expect(section(page).locator(".month-legend")).toHaveText("DisponibleOcupado");
+  await expect(section(page).getByText("★")).toHaveCount(0);
   expect(await boxHeight(page), "en otro mes, el mismo alto").toBe(before);
   await section(page).evaluate((el) => el.scrollIntoView({ block: "center" }));
   await page.screenshot({ path: "test-results/ficha-calendario.png" });
@@ -118,15 +119,14 @@ test("tras hidratar: ocupados, la cifra de cada noche (★ en las de precio dist
     localStorage.setItem("bnbtico_currency", "USD");
     dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
   });
-  await expect(cell(page, on(20))).toHaveText(`20 ★${formatUSD(150000, 510)}`);
-  await expect(section(page).getByText(`Precio base ${formatUSD(95000, 510)} por noche; los días con ★ tienen otro precio.`)).toBeVisible();
+  await expect(cell(page, on(20))).toHaveText(`20${formatUSD(150000, 510)}`);
   expect(await boxHeight(page), "en dólares, el mismo alto").toBe(before);
 
   expect(seen.rest, "ni la hidratación ni el calendario piden datos").toEqual([]);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-test("meses: abre en el de apertura, del actual a doce más; los días pasados se atenúan", async ({ page }) => {
+test("meses: abre en el de apertura, del actual a doce más; los días pasados se tachan", async ({ page }) => {
   const casa = await seedWithDays("Casa Meses Ficha");
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
@@ -153,9 +153,9 @@ test("con alquiler mensual a negociar, el calendario sigue siendo por noches con
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await toNextMonth(page);
-  await expect(cell(page, on(10))).toContainText("Ocupado");
-  await expect(cell(page, on(20))).toContainText("★");
-  await expect(section(page).getByText("Precio base ₡95 000 por noche; los días con ★ tienen otro precio.")).toBeVisible();
+  await expect(cell(page, on(10))).toHaveClass(/is-busy/);
+  await expect(cell(page, on(20))).toHaveText("20150\u00a0000");
+  await expect(cell(page, on(15))).toHaveText("1595\u00a0000");
 });
 
 test("casa cerrada a consultas: «Calendario cerrado» y cuándo vuelve, ya en el HTML y sin rejilla", async ({ page }) => {
@@ -185,8 +185,8 @@ test("ficha dentro de la SPA: pide los días una vez y muestra el calendario", a
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
   await expect(section(page).getByRole("grid", { name: monthTitle(opening()) })).toBeVisible();
   await toNextMonth(page);
-  await expect(cell(page, on(11))).toContainText("Ocupado");
-  await expect(cell(page, on(20))).toHaveText("20 ★₡150\u00a0mil");
+  await expect(cell(page, on(11))).toHaveClass(/is-busy/);
+  await expect(cell(page, on(20))).toHaveText("20150\u00a0000");
   expect(days).toHaveLength(1);
 });
 

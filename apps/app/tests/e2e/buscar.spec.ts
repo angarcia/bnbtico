@@ -1,3 +1,4 @@
+import { webkit } from "@playwright/test";
 import { expect, test, type Page } from "./helpers/test";
 import { addDays, costaRicaToday, formatInquiryDates, longDateWithYear, shortDate } from "../../src/domain/dates";
 import { monthlyWindowLabel } from "../../src/domain/search";
@@ -189,4 +190,51 @@ test("si la base rechaza las fechas, Explorar lo dice y ofrece quitarlas", async
   await page.getByRole("button", { name: "Quitar fechas" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(house(page, "Casa Coco")).toBeVisible();
+});
+
+// Revisión UX 2026-10-29 (N9): «Siguiente» de «¿Cuándo?» siempre encima de la barra «Borrar todo · Buscar»; el calendario
+// se desplaza por dentro. Los tamaños son el espacio útil de Safari en un iPhone 13 (390 × 664) y un SE (375 × 553).
+const SAFARI_SIZES = [
+  { width: 390, height: 664 },
+  { width: 375, height: 553 },
+];
+async function expectNextAboveBar(page: Page) {
+  const next = page.getByRole("button", { name: "Siguiente" });
+  await expect(next).toBeVisible();
+  const n = (await next.boundingBox())!;
+  const bar = (await page.locator(".sticky-actions").boundingBox())!;
+  expect(n.y + n.height).toBeLessThanOrEqual(bar.y);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  // El calendario sigue siendo de varios meses: se desplaza por dentro.
+  expect(await page.locator(".range-scroll").evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+}
+
+test("«Siguiente» de «¿Cuándo?» no queda bajo la barra de abajo (iPhone 13 y SE en Safari)", async ({ page }) => {
+  for (const size of SAFARI_SIZES) {
+    await page.setViewportSize(size);
+    await page.goto("/explorar/buscar?abrir=cuando");
+    await expectNextAboveBar(page);
+  }
+});
+
+test("lo mismo en WebKit (si está instalado; en CI solo hay Chromium)", async ({ baseURL }) => {
+  let browser;
+  try {
+    // La ruta de Chrome de la configuración (CHROMIUM_PATH) se aplicaría también aquí: WebKit con la suya.
+    browser = await webkit.launch({ executablePath: webkit.executablePath() });
+  } catch {
+    test.skip(true, "WebKit no está instalado");
+    return;
+  }
+  try {
+    for (const size of SAFARI_SIZES) {
+      const page = await browser.newPage({ viewport: size, isMobile: true, hasTouch: true, deviceScaleFactor: 3 });
+      await page.goto(`${baseURL}/explorar/buscar?abrir=cuando`);
+      await expectNextAboveBar(page);
+      await page.screenshot({ path: `test-results/buscar-siguiente-${size.width}x${size.height}.png` });
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
 });

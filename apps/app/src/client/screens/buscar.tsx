@@ -4,7 +4,7 @@
 // píldora de Explorar.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { costaRicaToday, formatInquiryDates, shortDate } from "../../domain/dates";
 import { SEARCH_MAX_PEOPLE, parseFilters, searchFor } from "../../domain/filters";
 import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
@@ -36,6 +36,38 @@ const Minus = () => (
 
 /** Una tarjeta plegable: el mismo botón de título en los dos estados (no se desmonta: el foco sigue en él al abrirla con
  *  Enter); cerrada lleva también el valor. Si se abre desde otra tarjeta (elegir una zona), el foco pasa a su título. */
+/** El calendario de «¿Cuándo?» mide lo que queda libre encima de la barra «Borrar todo · Buscar», para que su pie con
+ *  «Siguiente» se vea siempre sin desplazar la página; el calendario se desplaza por dentro (revisión UX 2026-10-29, N9:
+ *  en un iPhone SE con Safari, «Siguiente» quedaba entero bajo la barra). Tope el de CSS, `min(52dvh, 420px)`. */
+const MIN_CALENDAR_PX = 180;
+function FitAboveBar({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const fit = () => {
+      const bar = document.querySelector(".sticky-actions");
+      const foot = el.nextElementSibling;
+      if (!bar || !foot) return;
+      el.style.maxHeight = "";
+      const rect = el.getBoundingClientRect();
+      // Con la página arriba del todo: la barra es fija, el calendario y su pie están en la página.
+      const top = rect.top + window.scrollY;
+      const below = foot.getBoundingClientRect().bottom - rect.bottom;
+      const room = bar.getBoundingClientRect().top - 8 - top - below;
+      if (room < rect.height) el.style.maxHeight = `${Math.max(MIN_CALENDAR_PX, Math.floor(room))}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+  return (
+    <div ref={box} className="range-scroll">
+      {children}
+    </div>
+  );
+}
+
 function Fold({ title, value, open, onToggle, aside, children }: { title: string; value: string; open: boolean; onToggle(): void; aside?: ReactNode; children: ReactNode }) {
   const id = useId();
   const card = useRef<HTMLElement>(null);
@@ -201,13 +233,13 @@ export function BuscarScreen() {
         onToggle={toggle("cuando")}
         aside={monthly ? <span className="badge badge-sel">{MONTHLY_FILTER_LABEL}</span> : null}
       >
-        <div className="range-scroll">
+        <FitAboveBar>
           {monthly ? (
             <RangeCalendar today={today} mode="from" value={draft.monthlyFrom} onChange={(monthlyFrom) => set({ monthlyFrom })} />
           ) : (
             <RangeCalendar today={today} mode="range" value={{ arrival: draft.arrival, departure: draft.departure }} onChange={(r) => set(r)} />
           )}
-        </div>
+        </FitAboveBar>
         <div className="range-foot">
           <span className="range-summary" aria-live="polite">
             {monthly ? (
