@@ -8,12 +8,11 @@ import { CALENDAR_MESSAGES, isIsoDate } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
-import { photoObjectPaths } from "../../domain/image";
 import { DEFAULT_PROVINCE, planStep } from "../../domain/listing";
-import { fromEditRow, fromListingRow, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch } from "../../domain/rows";
+import { EDIT_SELECT, fromEditRow, fromListingRow, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
+import { FIELD_COLUMN } from "../../domain/edit-summary";
 
-const OWN_COLUMNS =
-  "*, listing_photos(id, path, position), listing_edits(status, review_note, title, kind, bathroom_shared, description, lat, lng, zone, zone_id, zone_source, submitted_at, listing_edit_photos(id, path, position))";
+const OWN_COLUMNS = `*, listing_photos(id, path, position), listing_edits(${EDIT_SELECT})`;
 const NOT_FOUND = "No encontramos ese anuncio.";
 /** El mensaje del trigger listings_protect; se adelanta aquí porque una pantalla sin cambios no llega a la base. */
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
@@ -132,24 +131,16 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       if (error) throw toDomainError(error);
       // Si la edición quedó vacía y se borró, la RPC devuelve null::listing_edits: PostgREST lo da con todo a null.
       if (!data || data.listing_id === null) return null;
-      // save_edit devuelve la fila sin sus fotos nuevas: se leen aparte.
-      const photos = await db.from("listing_edits").select("listing_edit_photos(id, path, position)").eq("listing_id", id).maybeSingle();
-      if (photos.error) throw toDomainError(photos.error);
-      return fromEditRow({ ...data, listing_edit_photos: photos.data?.listing_edit_photos ?? [] }, url);
+      // save_edit devuelve la fila sin el estado de cada dato ni sus fotos nuevas: se lee entera.
+      const full = await db.from("listing_edits").select(EDIT_SELECT).eq("listing_id", id).maybeSingle<EditRow>();
+      if (full.error) throw toDomainError(full.error);
+      return fromEditRow(full.data, url);
     },
 
-    async submitEdit(id) {
+    async discardEditField(id, field) {
       if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
-      const { error } = await db.rpc("submit_edit", { p_listing: id });
+      const { error } = await db.rpc("discard_edit_field", { p_listing: id, p_field: FIELD_COLUMN[field] });
       if (error) throw toDomainError(error);
-    },
-
-    async discardEdit(id) {
-      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
-      const { data: paths, error } = await db.rpc("discard_edit", { p_listing: id });
-      if (error) throw toDomainError(error);
-      // Ya sin filas que los enlacen, la política de Storage deja borrar los objetos de las fotos nuevas.
-      if (paths.length) await db.storage.from("listings").remove(paths.flatMap(photoObjectPaths));
     },
 
     async stats(id) {

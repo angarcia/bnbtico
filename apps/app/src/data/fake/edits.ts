@@ -2,7 +2,7 @@
 // save_edit, listing_edit_check y update_listing_live, en su orden y con sus mensajes. Las usan el fake del propietario,
 // el de las fotos y el del admin. También la ubicación por punto de submit_listing (locationOf), que comparten el envío
 // de un borrador y el de una edición.
-import { EDIT_MESSAGES, LIVE_KEYS, type EditPatch, type ListingEdit, type LivePatch } from "../../domain/edit";
+import { EDIT_MESSAGES, editedFields, editOverview, LIVE_KEYS, type EditPatch, type ListingEdit, type LivePatch, type ReviewedField } from "../../domain/edit";
 import { DomainError } from "../../domain/errors";
 import {
   charCount,
@@ -58,11 +58,18 @@ const EDIT_FIELDS = ["title", "kind", "bathroomShared", "description", "lat", "l
 const LOCATION_KEYS = ["lat", "lng", "zone", "zoneSource"] as const;
 const KNOWN_FEATURES = new Set(FEATURES.map(([f]) => f));
 
+/** Los valores de un dato a null (sin cambio). */
+function clearField(field: ReviewedField): Partial<FakeEdit> {
+  if (field === "nombre") return { title: null };
+  if (field === "descripcion") return { description: null };
+  if (field === "tipo") return { kind: null, bathroomShared: null };
+  return { lat: null, lng: null, zone: null, zoneId: null, zoneSource: null };
+}
+
 export function editStore(db: FakeDb) {
   const emptyEdit = (listingId: string): FakeEdit => ({
     listingId,
-    status: "open",
-    reviewNote: null,
+    fields: {},
     title: null,
     kind: null,
     bathroomShared: null,
@@ -72,20 +79,26 @@ export function editStore(db: FakeDb) {
     zone: null,
     zoneId: null,
     zoneSource: null,
-    submittedAt: null,
-    reviewedAt: null,
   });
 
   /** listing_edit_empty. */
   const isEmpty = (e: FakeEdit) =>
     e.title === null && e.kind === null && e.bathroomShared === null && e.description === null && e.lat === null && db.editPhotosOf(e.listingId).length === 0;
 
-  /** La edición que hay (abierta o con cambios pedidos) o una vacía sin guardar; en revisión, congelada. */
+  /** La edición que hay (en cualquier estado) o una vacía sin guardar. */
   function current(l: FakeListing): FakeEdit {
-    const e = db.edits.get(l.id);
-    if (e?.status === "review") throw invalid(EDIT_MESSAGES.inReview);
-    return e ?? emptyEdit(l.id);
+    return db.edits.get(l.id) ?? emptyEdit(l.id);
   }
+
+  /** La edición con solo ese dato (los demás a null), para comprobarlo con check (listing_edit_only). */
+  const only = (e: FakeEdit, field: ReviewedField): FakeEdit => ({
+    ...e,
+    title: field === "nombre" ? e.title : null,
+    kind: field === "tipo" ? e.kind : null,
+    bathroomShared: field === "tipo" ? e.bathroomShared : null,
+    description: field === "descripcion" ? e.description : null,
+    ...(field === "ubicacion" ? {} : { lat: null, lng: null, zone: null, zoneId: null, zoneSource: null }),
+  });
 
   return {
     /** own_published_listing: mía y publicada (aprobada alguna vez y activa, pendiente de pago o inactiva). */
@@ -103,14 +116,20 @@ export function editStore(db: FakeDb) {
       return e;
     },
 
-    /** save_edit: comprobaciones ligeras; lo igual a lo aprobado queda como null; sin cambios, la edición se borra. */
+    /** save_edit: lo igual a lo aprobado queda como null y sale de la revisión; cada dato que cambia se comprueba y va a
+     *  revisión con su fecha; sin cambios, la edición se borra. */
     save(l: FakeListing, patch: EditPatch): FakeEdit | null {
       const keys = Object.keys(patch);
       const hasLocation = keys.some((k) => (LOCATION_KEYS as readonly string[]).includes(k) || k === "zoneId");
       if (keys.some((k) => !(EDIT_FIELDS as readonly string[]).includes(k)) || (hasLocation && !LOCATION_KEYS.every((k) => k in patch))) {
         throw invalid(EDIT_MESSAGES.notHere);
       }
-      const m: FakeEdit = { ...current(l) };
+      const m: FakeEdit = { ...current(l), fields: { ...current(l).fields } };
+      const touched: ReviewedField[] = [];
+      if ("title" in patch) touched.push("nombre");
+      if ("kind" in patch || "bathroomShared" in patch) touched.push("tipo");
+      if ("description" in patch) touched.push("descripcion");
+      if (hasLocation) touched.push("ubicacion");
       for (const k of EDIT_FIELDS) if (k in patch) (m as unknown as Record<string, unknown>)[k] = patch[k] ?? null;
 
       if (m.title !== null) {
@@ -145,12 +164,44 @@ export function editStore(db: FakeDb) {
         }
       }
 
+      const changed = editedFields({ ...m, location: m.lat !== null ? {} : null } as unknown as ListingEdit);
+      for (const f of touched) if (changed.includes(f)) this.check(l, only(m, f));
+      const at = db.now();
+      for (const f of touched) {
+        if (changed.includes(f)) m.fields[f] = { status: "review", reviewNote: null, submittedAt: at };
+        else delete m.fields[f];
+      }
       if (isEmpty(m)) {
         db.edits.delete(l.id);
         return null;
       }
       db.edits.set(l.id, m);
       return m;
+    },
+
+    /** discard_edit_field: el dato vuelve a lo aprobado; sin nada más, la edición se borra. */
+    discardField(listingId: string, field: ReviewedField): void {
+      const e = db.edits.get(listingId);
+      if (!e) return;
+      Object.assign(e, clearField(field));
+      delete e.fields[field];
+      this.dropIfEmpty(listingId);
+    },
+
+    /** Copia a la casa un dato aprobado y lo quita de la edición (review_edit_field). */
+    applyField(l: FakeListing, field: ReviewedField): void {
+      const e = db.edits.get(l.id)!;
+      const place = this.check(l, only(e, field));
+      if (field === "nombre") l.title = e.title!;
+      else if (field === "descripcion") l.description = e.description!;
+      else if (field === "tipo") {
+        const kind = e.kind ?? l.kind;
+        Object.assign(l, { kind, bathroomShared: kind === "habitacion" ? (e.bathroomShared ?? l.bathroomShared) : null });
+      } else Object.assign(l, { lat: e.lat, lng: e.lng, zoneId: e.zoneId, zoneSource: e.zoneSource, ...place });
+      l.updatedAt = db.now();
+      Object.assign(e, clearField(field));
+      delete e.fields[field];
+      this.dropIfEmpty(l.id);
     },
 
     /** listing_edit_check: la casa resultante con las reglas de submit_listing de los datos revisados, en su orden.
@@ -167,8 +218,9 @@ export function editStore(db: FakeDb) {
       if (kind === "habitacion" && (e.bathroomShared ?? l.bathroomShared) === null) throw invalid(BATHROOM_ERROR);
       // Solo el nombre nuevo: una casa publicada con un nombre de más de 32 lo conserva hasta que su dueño lo cambie.
       if (e.title !== null && (charCount(e.title.trim()) < TITLE_MIN || charCount(e.title.trim()) > TITLE_MAX)) throw invalid(TITLE_LENGTH_ERROR);
-      const description = (e.description ?? l.description).trim();
-      if (description !== "" && (charCount(description) < DESCRIPTION_MIN || charCount(description) > DESCRIPTION_MAX)) throw invalid(DESCRIPTION_LENGTH_ERROR);
+      // La descripción, como el nombre, solo si cambia: una anterior fuera de la regla no bloquea otros datos.
+      const description = (e.description ?? "").trim();
+      if (e.description !== null && description !== "" && (charCount(description) < DESCRIPTION_MIN || charCount(description) > DESCRIPTION_MAX)) throw invalid(DESCRIPTION_LENGTH_ERROR);
       return place;
     },
 
@@ -200,21 +252,26 @@ export function editStore(db: FakeDb) {
       });
     },
 
-    /** La edición de una casa como la lee el propietario (o el admin), con sus fotos nuevas en orden. */
+    /** La edición de una casa como la lee el propietario (o el admin), con el estado de cada dato y sus fotos nuevas. */
     toEdit(listingId: string, url: PhotoUrl): ListingEdit | null {
       const e = db.edits.get(listingId);
       if (!e) return null;
       const location = e.lat !== null && e.lng !== null && e.zoneSource !== null ? { lat: e.lat, lng: e.lng, zone: e.zone ?? "", zoneId: e.zoneId, zoneSource: e.zoneSource } : null;
+      const rows = db.editPhotosOf(listingId);
+      const photos = fromPhotoRows(rows, url).map((p) => {
+        const r = rows.find((x) => x.id === p.id)!;
+        return { ...p, status: r.status, reviewNote: r.reviewNote, submittedAt: r.submittedAt };
+      });
+      const fields = Object.fromEntries(Object.entries(e.fields).map(([k, v]) => [k, { ...v }]));
       return {
-        status: e.status,
-        reviewNote: e.reviewNote,
+        ...editOverview([...Object.values(fields), ...photos]),
+        fields,
         title: e.title,
         kind: e.kind,
         bathroomShared: e.bathroomShared,
         description: e.description,
         location,
-        submittedAt: e.submittedAt,
-        photos: fromPhotoRows(db.editPhotosOf(listingId), url),
+        photos,
       };
     },
 

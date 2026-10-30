@@ -5,7 +5,9 @@ import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/geo";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { costaRicaToday } from "../../domain/inquiry";
+import type { EditItemState } from "../../domain/edit";
 import type { EditStatus } from "../../domain/edit-label";
+import type { ReviewedField } from "../../domain/edit-summary";
 import { emptyDraft, type Kind, type ListingDraft, type ListingStatus } from "../../domain/listing";
 import type { ZoneSource } from "../../domain/zones";
 import type { PaymentProviderName, ReminderDays, ReminderStatus } from "../../domain/subscription";
@@ -48,11 +50,18 @@ export interface FakePhoto {
   position: number;
 }
 
-/** listing_edits: la edición pendiente de una casa publicada (una por casa); null = sin cambio en ese dato. */
-export interface FakeEdit {
-  listingId: string;
+/** listing_edit_photos: una foto nueva con su estado (revisión por dato, A5). */
+export interface FakeEditPhoto extends FakePhoto {
   status: EditStatus;
   reviewNote: string | null;
+  submittedAt: string;
+}
+
+/** listing_edits y listing_edit_fields: los valores pendientes de una casa publicada (null = sin cambio en ese dato) y el
+ *  estado de cada dato que cambia. */
+export interface FakeEdit {
+  listingId: string;
+  fields: Partial<Record<ReviewedField, EditItemState>>;
   title: string | null;
   kind: Kind | null;
   bathroomShared: boolean | null;
@@ -62,8 +71,6 @@ export interface FakeEdit {
   zone: string | null;
   zoneId: string | null;
   zoneSource: ZoneSource | null;
-  submittedAt: string | null;
-  reviewedAt: string | null;
 }
 
 export interface FakeInquiry {
@@ -144,7 +151,7 @@ export class FakeDb {
   photos: FakePhoto[] = [];
   /** listing_edits por casa y listing_edit_photos (las fotos nuevas de la edición; `listingId` es el de la edición). */
   readonly edits = new Map<string, FakeEdit>();
-  editPhotos: FakePhoto[] = [];
+  editPhotos: FakeEditPhoto[] = [];
   inquiries: FakeInquiry[] = [];
   /** Balizas `listing_view` (como la tabla events): la casa y cuándo. */
   views: { publicId: string; at: string }[] = [];
@@ -241,7 +248,7 @@ export class FakeDb {
     return this.photos.filter((p) => p.listingId === listingId).sort((a, b) => a.position - b.position);
   }
 
-  editPhotosOf(listingId: string): FakePhoto[] {
+  editPhotosOf(listingId: string): FakeEditPhoto[] {
     return this.editPhotos.filter((p) => p.listingId === listingId).sort((a, b) => a.position - b.position);
   }
 

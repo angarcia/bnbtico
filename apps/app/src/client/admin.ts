@@ -4,6 +4,9 @@
 import { queryOptions, useMutation, useMutationState, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import type { AdminListingsApi, MfaFactor } from "../domain/api";
+import type { ListingEdit } from "../domain/edit";
+import { editOverview } from "../domain/edit-label";
+import type { ReviewedField } from "../domain/edit-summary";
 import { toDomainError } from "../domain/errors";
 import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
 import { authApi } from "./session";
@@ -142,39 +145,91 @@ export const adminEditQuery = (userId: string, id: string, client?: QueryClient)
   });
 };
 
+/** Qué se decide: un dato con revisión o una foto nueva (revisión por dato, A5). */
+export type EditTarget = { field: ReviewedField } | { photoId: string };
+
 export interface EditReviewInput {
   item: QueueItem;
+  target: EditTarget;
   decision: EditDecision;
   note: string;
 }
 
 const editReviewKey = (userId: string) => ["admin-review-edit", userId] as const;
 
-/** La cola de ediciones sin las que tienen una decisión en curso (como useQueueWithPending). */
+/** La cola de ediciones sin las que se quedan sin nada en revisión por una decisión en curso (como useQueueWithPending). */
 export function useEditsWithPending(userId: string, edits: QueueItem[] | undefined): QueueItem[] | undefined {
   const pending = useMutationState({
     filters: { mutationKey: editReviewKey(userId), status: "pending" },
-    select: (m) => (m.state.variables as EditReviewInput).item.listing.id,
+    select: (m) => m.state.variables as EditReviewInput,
   });
-  return edits && pending.length ? edits.filter((i) => !pending.includes(i.listing.id)) : edits;
+  if (!edits || !pending.length) return edits;
+  return edits.filter((i) => {
+    const mine = pending.filter((p) => p.item.listing.id === i.listing.id);
+    return !mine.length || !!decided(i, mine)?.listing.edit && decided(i, mine)!.listing.edit!.status === "review";
+  });
 }
 
-/** Decisión optimista sobre una edición: sale de la cola al instante y, si la base se niega, vuelve con su mensaje. */
+/** Si tras esta decisión ya no queda nada de la casa en revisión (la pantalla vuelve entonces a la cola). */
+export const lastInReview = (input: EditReviewInput): boolean => decided(input.item, [input]).listing.edit?.status !== "review";
+
+/** La casa con las decisiones ya tomadas aplicadas: lo aprobado sale de la edición; lo de cambios pedidos queda con su nota. */
+function decided(item: QueueItem, inputs: readonly EditReviewInput[]): QueueItem {
+  const e = item.listing.edit;
+  if (!e) return item;
+  const fields = { ...e.fields };
+  let photos = [...e.photos];
+  let next: ListingEdit = { ...e };
+  for (const { target, decision, note } of inputs) {
+    if ("field" in target) {
+      const state = fields[target.field];
+      if (!state) continue;
+      if (decision === "approve") {
+        delete fields[target.field];
+        next = { ...next, ...clearedField(target.field) };
+      } else fields[target.field] = { ...state, status: "changes", reviewNote: note.trim() };
+    } else {
+      photos = decision === "approve" ? photos.filter((p) => p.id !== target.photoId) : photos.map((p) => (p.id === target.photoId ? { ...p, status: "changes", reviewNote: note.trim() } : p));
+    }
+  }
+  const items = [...Object.values(fields), ...photos];
+  const edit = items.length ? { ...next, fields, photos, ...editOverview(items) } : null;
+  return { ...item, listing: { ...item.listing, edit } };
+}
+
+const clearedField = (field: ReviewedField): Partial<ListingEdit> =>
+  field === "nombre" ? { title: null } : field === "descripcion" ? { description: null } : field === "tipo" ? { kind: null, bathroomShared: null } : { location: null };
+
+/** Decisión optimista sobre un dato o una foto: el bloque cambia al instante (aprobado sale; cambios pedidos, con su nota) y,
+ *  si ya no queda nada en revisión, la casa sale de la cola. Si la base se niega, vuelve atrás y el bloque dice por qué. */
 export function useReviewEdit(userId: string) {
   const client = useQueryClient();
   const editsKey = adminEditsQuery(userId).queryKey;
-  return useMutation<void, Error, EditReviewInput, { edits: QueueItem[] | undefined }>({
+  return useMutation<void, Error, EditReviewInput, { edits: QueueItem[] | undefined; item: QueueItem | null | undefined }>({
     mutationKey: editReviewKey(userId),
-    mutationFn: async ({ item, decision, note }) => (await adminApi()).reviewEdit(item.listing.id, decision, note, item.listing.edit?.submittedAt ?? null),
-    onMutate: async ({ item, decision }) => {
+    mutationFn: async ({ item, target, decision, note }) => {
+      const api = await adminApi();
+      const e = item.listing.edit;
+      if ("field" in target) return api.reviewEditField(item.listing.id, target.field, decision, note, e?.fields[target.field]?.submittedAt ?? null);
+      return api.reviewEditPhoto(target.photoId, decision, note, e?.photos.find((p) => p.id === target.photoId)?.submittedAt ?? null);
+    },
+    onMutate: async (input) => {
+      const itemKey = ["admin-edit", userId, input.item.listing.id] as const;
       await client.cancelQueries({ queryKey: editsKey });
+      await client.cancelQueries({ queryKey: itemKey });
       const edits = client.getQueryData<QueueItem[]>(editsKey);
-      client.setQueryData<QueueItem[]>(editsKey, (q) => q?.filter((i) => i.listing.id !== item.listing.id));
-      setOutcome({ kind: "saved", title: item.listing.title, text: EDIT_REVIEW_SAVED[decision] });
-      return { edits };
+      const item = client.getQueryData<QueueItem | null>(itemKey);
+      const next = decided(item ?? input.item, [input]);
+      client.setQueryData(itemKey, next);
+      client.setQueryData<QueueItem[]>(editsKey, (q) =>
+        next.listing.edit?.status === "review" ? q?.map((i) => (i.listing.id === next.listing.id ? next : i)) : q?.filter((i) => i.listing.id !== next.listing.id),
+      );
+      if (!next.listing.edit || next.listing.edit.status !== "review") setOutcome({ kind: "saved", title: input.item.listing.title, text: EDIT_REVIEW_SAVED[input.decision] });
+      return { edits, item };
     },
     onError: (error, { item }, previous) => {
       if (previous?.edits) client.setQueryData(editsKey, previous.edits);
+      if (previous?.item !== undefined) client.setQueryData(["admin-edit", userId, item.listing.id], previous.item);
       setOutcome({ kind: "failed", title: item.listing.title, text: toDomainError(error).message });
     },
     onSettled: (_data, _error, { item }) => {

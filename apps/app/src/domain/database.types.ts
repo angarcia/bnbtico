@@ -181,16 +181,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"listing_edit_photos": {
+                },"listing_edit_fields": {
                   Row: {
-                    "created_at": string,"id": string,"listing_id": string,"path": string,"position": number
+                    "field": string,"listing_id": string,"review_note": string | null,"status": string,"submitted_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number
+                    "field": string,"listing_id": string,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number
+                    "field"?: string,"listing_id"?: string,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_edit_fields_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listing_edits"
+      referencedColumns: ["listing_id"]
+    }
+                  ]
+                },"listing_edit_photos": {
+                  Row: {
+                    "created_at": string,"id": string,"listing_id": string,"path": string,"position": number,"review_note": string | null,"status": string,"submitted_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
                   }
                   Relationships: [
                     {
@@ -609,6 +629,12 @@ isOneToOne: true
 "discard_edit":
 { Args: { "p_listing": string }; Returns: (string)[]
                            },
+"discard_edit_field":
+{ Args: { "p_field": string,"p_listing": string }; Returns: undefined
+                           },
+"edit_admin_guard":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "edit_place":
 { Args: { "p_lat": number,"p_lng": number,"p_zone": string,"p_zone_id": string,"p_zone_source": string }; Returns: {
               "canton": string,"district": string,"province": string,"zone": string
@@ -631,6 +657,38 @@ isOneToOne: true
                            },
 "listing_edit_empty":
 { Args: { "e": Omit<Database["public"]['Tables']["listing_edits"]['Row'], Database["public"]['Tables']["listing_edits"]['ComputedFields']> }; Returns: boolean
+                           },
+"listing_edit_has":
+{ Args: { "e": Omit<Database["public"]['Tables']["listing_edits"]['Row'], Database["public"]['Tables']["listing_edits"]['ComputedFields']>,"p_field": string }; Returns: boolean
+                           },
+"listing_edit_only":
+{ Args: { "e": Omit<Database["public"]['Tables']["listing_edits"]['Row'], Database["public"]['Tables']["listing_edits"]['ComputedFields']>,"p_field": string }; Returns: {
+              "bathroom_shared": boolean | null,
+"created_at": string,
+"description": string | null,
+"kind": Database["public"]['Enums']["listing_kind"] | null,
+"lat": number | null,
+"listing_id": string,
+"lng": number | null,
+"review_note": string | null,
+"reviewed_at": string | null,
+"reviewed_by": string | null,
+"status": string,
+"submitted_at": string | null,
+"title": string | null,
+"updated_at": string,
+"zone": string | null,
+"zone_id": string | null,
+"zone_source": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "listing_edits"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"listing_edit_sync":
+{ Args: { "p_listing": string }; Returns: undefined
                            },
 "listing_editable":
 { Args: { "p_listing": string }; Returns: boolean
@@ -774,8 +832,11 @@ isOneToOne: true
 "resume_subscription":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
-"review_edit":
-{ Args: { "p_decision": string,"p_listing": string,"p_note": string,"p_submitted_at": string }; Returns: string
+"review_edit_field":
+{ Args: { "p_decision": string,"p_field": string,"p_listing": string,"p_note": string,"p_submitted_at": string }; Returns: string
+                           },
+"review_edit_photo":
+{ Args: { "p_decision": string,"p_note": string,"p_photo": string,"p_submitted_at": string }; Returns: string
                            },
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]
@@ -888,9 +949,6 @@ isOneToOne: true
       } },
 "stop_subscription":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
-                           },
-"submit_edit":
-{ Args: { "p_listing": string }; Returns: string
                            },
 "submit_listing":
 { Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]

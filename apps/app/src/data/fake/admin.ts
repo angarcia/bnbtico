@@ -53,7 +53,9 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       const a = access();
       if (a === "none") return [];
       if (a === "mfa") throw mfa();
-      return editQueueOrder([...db.edits.values()].filter((e) => e.status === "review").map((e) => toItem(db.listings.get(e.listingId)!)));
+      return editQueueOrder(
+        [...db.edits.keys()].map((id) => toItem(db.listings.get(id)!)).filter((item) => item.listing.edit?.status === "review"),
+      );
     },
 
     async getEdit(id) {
@@ -64,40 +66,48 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       return l && db.edits.has(id) ? toItem(l) : null;
     },
 
-    /** review_edit: aprobar copia cada dato cambiado a la casa y añade las fotos nuevas tras las aprobadas; no toca estado,
-     *  suscripción ni first_published_at. Pedir cambios deja la edición con la nota. */
-    async reviewEdit(id, decision, note, submittedAt) {
+    /** review_edit_field: aprobar copia el dato a la casa (sin tocar estado, suscripción ni first_published_at) y lo quita de
+     *  la edición; pedir cambios lo deja con la nota. Lo demás de la edición no cambia. */
+    async reviewEditField(id, field, decision, note, submittedAt) {
       const refusal = editNoteRefusal(decision, note);
       if (refusal) throw new DomainError(refusal, "validation");
       const a = access();
       if (a === "none") throw new DomainError(M.adminOnly, "validation");
       if (a === "mfa") throw mfa();
       const l = db.listings.get(id);
-      const e = db.edits.get(id);
-      if (!l || !e) throw new DomainError(submittedAt === null ? EDIT_MESSAGES.notFound : EDIT_MESSAGES.changed, "validation");
-      if (e.submittedAt !== submittedAt) throw new DomainError(EDIT_MESSAGES.changed, "validation");
-      if (e.status !== "review") throw new DomainError(EDIT_MESSAGES.decided, "validation");
-      const at = db.now();
+      const state = db.edits.get(id)?.fields[field];
+      if (!l || !state) throw new DomainError(submittedAt === null ? EDIT_MESSAGES.notFound : EDIT_MESSAGES.changed, "validation");
+      if (state.submittedAt !== submittedAt) throw new DomainError(EDIT_MESSAGES.changed, "validation");
+      if (state.status !== "review") throw new DomainError(EDIT_MESSAGES.decided, "validation");
       if (decision === "changes") {
-        Object.assign(e, { status: "changes", reviewNote: note.trim().slice(0, 2000), reviewedAt: at });
+        Object.assign(state, { status: "changes", reviewNote: note.trim().slice(0, 2000) });
         return;
       }
-      const place = edits.check(l, e);
-      const fresh = db.editPhotosOf(id);
-      if (db.photosOf(id).length + fresh.length > MAX_PHOTOS) throw new DomainError(EDIT_MESSAGES.maxPhotos, "validation");
-      const kind = e.kind ?? l.kind;
-      Object.assign(l, {
-        title: e.title ?? l.title,
-        kind,
-        bathroomShared: kind === "habitacion" ? (e.bathroomShared ?? l.bathroomShared) : null,
-        description: e.description ?? l.description,
-        ...(e.lat !== null && place ? { lat: e.lat, lng: e.lng, zoneId: e.zoneId, zoneSource: e.zoneSource, ...place } : {}),
-        updatedAt: at,
-      });
+      edits.applyField(l, field);
+    },
+
+    /** review_edit_photo: aprobada, va tras la última aprobada; con cambios pedidos, queda con la nota. */
+    async reviewEditPhoto(photoId, decision, note, submittedAt) {
+      const refusal = editNoteRefusal(decision, note);
+      if (refusal) throw new DomainError(refusal, "validation");
+      const a = access();
+      if (a === "none") throw new DomainError(M.adminOnly, "validation");
+      if (a === "mfa") throw mfa();
+      const photo = db.editPhotos.find((p) => p.id === photoId);
+      if (!photo) throw new DomainError(submittedAt === null ? EDIT_MESSAGES.photoNotFound : EDIT_MESSAGES.changed, "validation");
+      if (photo.submittedAt !== submittedAt) throw new DomainError(EDIT_MESSAGES.changed, "validation");
+      if (photo.status !== "review") throw new DomainError(EDIT_MESSAGES.decided, "validation");
+      if (decision === "changes") {
+        Object.assign(photo, { status: "changes", reviewNote: note.trim().slice(0, 2000) });
+        return;
+      }
+      const id = photo.listingId;
+      if (db.photosOf(id).length >= MAX_PHOTOS) throw new DomainError(EDIT_MESSAGES.maxPhotos, "validation");
       const last = Math.max(-1, ...db.photosOf(id).map((p) => p.position));
-      fresh.forEach((p, i) => db.photos.push({ ...p, position: last + 1 + i }));
-      db.editPhotos = db.editPhotos.filter((p) => p.listingId !== id);
-      db.edits.delete(id);
+      db.photos.push({ id: photo.id, listingId: id, path: photo.path, position: last + 1 });
+      db.editPhotos = db.editPhotos.filter((p) => p.id !== photoId);
+      db.editPhotosOf(id).forEach((p, i) => (p.position = i));
+      edits.dropIfEmpty(id);
     },
 
     async houses() {

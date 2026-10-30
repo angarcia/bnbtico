@@ -20,8 +20,6 @@ import {
   TITLE_MIN,
   type Listing,
 } from "../../domain/listing";
-import { EDIT_MESSAGES } from "../../domain/edit-messages";
-import { photoObjectPaths } from "../../domain/image";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { FakeDb, FakeListing } from "./db";
 import { editStore, locationOf, type Located } from "./edits";
@@ -155,23 +153,9 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       return edits.save(l, patch) ? edits.toEdit(id, url) : null;
     },
 
-    async submitEdit(id) {
-      const l = edits.published(id, me());
-      const e = db.edits.get(id);
-      if (!e) throw new DomainError(EDIT_MESSAGES.notFound, "not_found");
-      if (e.status === "review") throw new DomainError(EDIT_MESSAGES.inReview, "validation");
-      if (edits.isEmpty(e)) throw new DomainError(EDIT_MESSAGES.empty, "validation");
-      edits.check(l, e);
-      Object.assign(e, { status: "review", submittedAt: db.now(), reviewNote: null });
-    },
-
-    async discardEdit(id) {
+    async discardEditField(id, field) {
       edits.published(id, me());
-      const paths = db.editPhotosOf(id).map((p) => p.path);
-      db.edits.delete(id);
-      db.editPhotos = db.editPhotos.filter((p) => p.listingId !== id);
-      // Como el navegador tras discard_edit: ya sin filas que los enlacen, se borran los objetos de las fotos nuevas.
-      for (const name of paths.flatMap(photoObjectPaths)) db.objects.delete(name);
+      edits.discardField(id, field);
     },
 
     async stats(id) {

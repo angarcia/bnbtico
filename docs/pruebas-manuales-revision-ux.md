@@ -1,5 +1,7 @@
 # Plan de pruebas manual · revisión UX (2026-10-26/27)
 
+> **2026-10-30 · segunda revisión UX (Ana):** la sección «Segunda revisión UX (2026-10-29, construida el 30)» (U117–U140) es lo más reciente y **manda** sobre todo lo demás donde no coincidan; antes, el paso A4 (migración `revision_por_dato`).
+>
 > **2026-10-29 · ronda de Ana:** las secciones «Ronda de Ana…», «Explorar al estilo Airbnb», «Editar una casa publicada», «Publicar v2» y «Cuenta, suscripción por casa y Actividad» (U59–U103) son lo más reciente y **mandan** sobre el resto de este plan, sobre `docs/pruebas-manuales-mejoras-2026-10-27.md` y sobre `docs/pruebas-manuales-fase-r.md` donde no coincidan.
 >
 > **2026-10-28:** las mejoras del 2026-10-27 (navegación simple, alquiler mensual, ubicación por punto y fotos arrastrando) se prueban con `docs/pruebas-manuales-mejoras-2026-10-27.md`, que manda sobre este plan donde no coincidan.
@@ -18,6 +20,7 @@ Lo que **no** cambió y no hace falta repetir: moneda y tipo de cambio, el calen
 |---|---|---|
 | A1 | ✅ **Hecho el 2026-10-27** (las tres aplicadas y comprobadas: 2 de 2 casas activas con fecha de publicación, `wizard_step` permitido, `owner_listing_stats` solo con sesión y solo para el dueño). **Migraciones nuevas en `bnbtico-pruebas`**, en este orden, desde la raíz del repo en `develop` al día: `pnpm exec supabase migration list` (deben salir solo en «Local») y `pnpm exec supabase db push`. 1) `20261027060732_primera_publicacion` (fecha de primera publicación; el calendario la usa). 2) `20261027073701_evento_paso_asistente` (la baliza `wizard_step`). 3) `20261027074733_estadisticas_casa` (visitas y consultas de cada casa). | pruebas: sin la 1 el calendario no ve las casas reabiertas; sin la 2 el asistente funciona pero sus balizas se rechazan; sin la 3 Inicio no muestra las cifras |
 | A2 | **Despliegue de `develop` en verde** (GitHub → Actions, o `gh run list`). En el log del paso «Build para desplegar» debe salir el aviso `WA_OWNERS / WA_GUESTS sin configurar: Ayuda sale desactivada.` mientras no haya números de bnbtico: es lo esperado (A12) | despliegue |
+| A4 | **Migración nueva en `bnbtico-pruebas` antes de desplegar la revisión del 29** (desde la raíz del repo en `develop`): `pnpm exec supabase migration list` (debe salir `20261030092712_revision_por_dato` solo en «Local») y `pnpm exec supabase db push`. Pasa las ediciones abiertas a revisión por dato (las que tenían cambios pedidos los conservan con su nota) | pruebas: sin ella, guardar un nombre o revisar una edición falla |
 | A3 | **Cerrar la app instalada y volver a abrirla** (o recargar) para que tome la versión nueva | pruebas |
 
 ---
@@ -257,6 +260,37 @@ Con un iPhone SE (o 375 px) y un Android. Hace falta una casa con una descripci�
 | U114 | «¿Cuándo?»: elegir llegada y salida | Los dos extremos en cuadrados terracota suave (no círculos naranjas) y la banda entre ellos casi crema; la pestaña activa de abajo en el terracota del logo | ☐ |
 | U115 | Hoja de contacto, «¿Quiénes?» y el paso 4 de publicar | Los − / + sin fondo, solo el signo en verde; la ✕ sin fondo; en «¿Quiénes?», la hoja de contacto y el asistente, sin personas pone «–»; los campos de texto sin línea, que se marca al escribir | ☐ |
 | U116 | Ficha: los botones sobre la foto | Volver, compartir y corazón cuadrados y crema semitransparente; se leen sobre cualquier foto | ☐ |
+### Segunda revisión UX (2026-10-29, construida el 30)
+
+Detalle y maquetas: `.scratch/revision-ux/2026-10-29-revision-ux.md`; decisiones en `docs/decisiones.md` (2026-10-29, Ana).
+
+| # | Paso | Esperado | ✓ |
+|---|---|---|---|
+| U117 | Sin sesión, abrir la app | Abajo **Explorar · Favoritos · Ingresar**; sin «Ingresar» arriba en Explorar; la píldora de búsqueda a todo el ancho | ☐ |
+| U118 | Explorar, bajar hasta el final | Tras las casas, la tarjeta «¿Tiene una casa en el Caribe?» con «Publicar mi casa gratis» en ocre y, debajo, «¿No encuentra lo que busca?» | ☐ |
+| U119 | Pestaña Ingresar | El formulario del código y la fila ocre «¿Quiere publicar su casa gratis?»; sin flecha ni título arriba | ☐ |
+| U120 | Entrar como propietaria (`8777 0001`) | Abajo **Explorar · Mis casas · Calendario · Consultas · Cuenta**; sin barra con el logo en Mis casas, Calendario ni Consultas | ☐ |
+| U121 | Cuenta | El número en su línea con «✓ WhatsApp verificado» debajo; fila «Favoritos» con su contador; la fila del método de pago solo si toca pagar | ☐ |
+| U122 | Mis casas con un borrador, una activa y una en revisión | Primero lo que pide algo (borrador), luego las activas, al final la de revisión; casilla «borradores» junto a las cifras; «Nueva casa» en contorno | ☐ |
+| U123 | Abrir el borrador | «Seguir publicando» arriba y «Falta: …» con lo que queda; sin «Compartir ficha» | ☐ |
+| U124 | Consultas | Solo consultas, las nuevas primero, «N consultas nuevas» arriba y los chips por casa; las cifras de 30 días están en el detalle de cada casa, bajo la portada 4:3 | ☐ |
+| U125 | Promoción y suscripción | La oferta arriba; si una casa necesita algo, va primero; cada casa con «N visitas · M consultas en 30 días»; «Parar suscripción» como texto al final; «¿Cómo funciona el cobro?» plegado; sin método, «Nada hasta el …» | ☐ |
+| U126 | Publicar, paso 9 con un dato sin rellenar | La fila que falta dice qué hacer («Añadir precio», …) y lleva a su pantalla; «Enviar a revisión» no se puede tocar hasta completar; «Atrás» cuadrado y «Continuar ›» | ☐ |
+| U127 | Calendario | Abre arriba del todo: la casa (selector a todo el ancho si hay varias), «Cerrar la casa hasta…», «Toque los días para editarlos» con ₡ \| $ a la derecha y el mes actual entero, con los días pasados tachados | ☐ |
+| U128 | Calendario, mirar las casillas | Altas y estrechas, número arriba y precio completo debajo («42 000», sin «₡» ni «mil»); ocupados en terracota con rayas y solo el número; ningún ★ | ☐ |
+| U129 | Tocar $ en el Calendario | Los precios pasan a dólares («$82»); ₡ los devuelve | ☐ |
+| U130 | Seleccionar dos días | Marco terracota alrededor, sin relleno; el panel pegado abajo y la barra de pestañas fuera; «Guardar cambios» gris hasta cambiar algo; al guardar o cancelar vuelven las pestañas | ☐ |
+| U131 | Bajar y subir por el Calendario | Al bajar se va la barra de pestañas; al subir vuelve | ☐ |
+| U132 | Ficha pública, «Disponibilidad» | El mismo formato del Calendario, un mes con ‹ ›; leyenda «Disponible · Ocupado» | ☐ |
+| U133 | iPhone (Safari), buscar → «¿Cuándo?» | «Siguiente» se ve sin desplazar, encima de «Borrar todo · Buscar»; el calendario se desplaza por dentro | ☐ |
+| U134 | iPhone (Safari), Explorar recién abierto | La caja del mapa nunca se ve lisa: los precios salen enseguida; ningún precio tapado ni cortado; dos casas juntas salen como «2 casas» y, en el mapa grande, tocarlo acerca el mapa | ☐ |
+| U135 | Hoja de contacto | Fechas con casillas «Elegir fecha» que abren el calendario de «¿Cuándo?» (con el mensual, «Desde»); el mensaje en gris, sin caja, que cambia con fechas y personas; «Podrá añadir lo que quiera en WhatsApp antes de enviarlo.» | ☐ |
+| U136 | Cambiar el nombre de una casa activa | Botón «Enviar a revisión»; debajo de los campos, el aviso «… Mientras tanto los clientes ven «…».»; al volver, el nombre nuevo con «En revisión» y «Descartar»; sin bloque ocre ni botón general | ☐ |
+| U137 | Con el nombre en revisión, cambiar la descripción y otra vez el nombre | Se puede: cada uno con su «En revisión»; Mis casas dice «Cambios en revisión» | ☐ |
+| U138 | Como admin, abrir la edición | Cada dato y cada foto con su «Aprobar» / «Pedir cambios»; aprobar el nombre lo publica al momento y lo demás sigue pendiente; con lo último, vuelve a la cola | ☐ |
+| U139 | Pedir cambios en una foto con nota | La propietaria la ve en sus fotos con «Cambios pedidos» y la nota; la puede quitar | ☐ |
+| U140 | Mirar la letra en Explorar, la ficha y Mis casas | Menos negrita: títulos y precios principales a 600, lo demás a 500; títulos algo más suaves que el precio | ☐ |
+
 ---
 
 ## C. Si algo falla

@@ -64,14 +64,14 @@ describe("migración publicar_v2", () => {
     await expect(h.owner("owner").saveEdit(s.id, { title: "a".repeat(33) })).rejects.toThrow(NAME);
   });
 
-  it("una edición con un nombre de 33 caracteres no se envía; con descripción vacía, sí", async () => {
+  it("un nombre de 33 caracteres no se guarda; con descripción vacía, el cambio va a revisión", async () => {
     const me = h.owner("owner");
     const s = await h.seed({ status: "active" });
     // save_edit ya no lo deja guardar: la fila se siembra como el servicio (la tabla admite hasta 60).
     sql(`insert into public.listing_edits (listing_id, title) values ('${s.id}', '${"a".repeat(33)}')`);
-    await expect(me.submitEdit(s.id)).rejects.toThrow(NAME);
+    // Revisión por dato (A5): el nombre largo no impide guardar otro dato, que va a revisión; el nombre se corrige al guardarlo.
+    await expect(me.saveEdit(s.id, { title: "a".repeat(33) })).rejects.toThrow(NAME);
     await me.saveEdit(s.id, { title: "Casa Cahuita", description: "" });
-    expect(await me.submitEdit(s.id)).toBeUndefined();
     expect(await me.getOwn(s.id)).toMatchObject({ status: "active", edit: { status: "review", title: "Casa Cahuita" } });
   });
 });

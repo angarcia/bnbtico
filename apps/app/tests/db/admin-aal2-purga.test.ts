@@ -151,14 +151,13 @@ describe("purga de la ficha con pg_net", () => {
     expect(lastJson(edited)).toEqual([]);
   });
 
-  it("aprobar una edición de una casa activa encola la purga de su ficha", async () => {
+  it("aprobar un dato de una casa activa encola la purga de su ficha", async () => {
     await h.reset();
     const { id, publicId } = await h.seed({ status: "active" });
     const owner = await signIn("owner");
     expect((await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco frente al mar" } })).error).toBeNull();
-    expect((await owner.rpc("submit_edit", { p_listing: id })).error).toBeNull();
     const out = inTransaction(`${withSecrets}${asAdminAal2(adminId)}
-      select public.review_edit('${id}', 'approve', '', (select submitted_at from public.listing_edits where listing_id = '${id}')) is not null;
+      select public.review_edit_field('${id}', 'title', 'approve', '', (select submitted_at from public.listing_edit_fields where listing_id = '${id}' and field = 'title')) is not null;
       ${queueOf(publicId)}`);
     expect(lastJson(out).length).toBeGreaterThanOrEqual(1);
   });

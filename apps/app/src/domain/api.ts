@@ -2,7 +2,7 @@
 // y un fake en memoria que aplica las mismas reglas de propiedad y estado. Una suite de contrato corre contra las dos.
 // Todas las operaciones fallan con DomainError (mensaje en español).
 import type { CalendarChange, CalendarDay } from "./calendar";
-import type { EditPatch, ListingEdit, LivePatch } from "./edit";
+import type { EditPatch, ListingEdit, LivePatch, ReviewedField } from "./edit";
 import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { FxRate } from "./fx";
@@ -101,12 +101,13 @@ export interface OwnerListingsApi {
   reopenForEdit(id: string): Promise<void>;
   /** Datos al momento de una casa publicada (RPC update_listing_live). */
   updateLive(id: string, patch: LivePatch): Promise<void>;
-  /** Guarda en la edición (la crea si no hay); null si quedó sin cambios y se borró (RPC save_edit). */
+  /**
+   * Guarda un dato con revisión y lo envía a revisión en el mismo paso (RPC save_edit; revisión UX 2026-10-29, A5), con las
+   * reglas de submit_listing para ese dato; lo igual a lo aprobado sale de la revisión. null si la edición quedó vacía.
+   */
   saveEdit(id: string, patch: EditPatch): Promise<ListingEdit | null>;
-  /** Envía la edición a revisión (RPC submit_edit), con las reglas de submit_listing para los datos revisados. */
-  submitEdit(id: string): Promise<void>;
-  /** Borra la edición en cualquier estado y después los objetos de sus fotos nuevas (RPC discard_edit + Storage). */
-  discardEdit(id: string): Promise<void>;
+  /** Descarta un dato pendiente (en revisión o con cambios pedidos): la ficha sigue con lo aprobado (RPC discard_edit_field). */
+  discardEditField(id: string, field: ReviewedField): Promise<void>;
   /**
    * «Cerrar la casa hasta…» del Calendario (antes «Anuncio visible»), solo con la casa activa (RPC set_listing_available). Al cerrar, `reopenAt` opcional
    * (`YYYY-MM-DD`, de mañana a hoy + 365): esa noche la base la abre sola. Abrir a mano borra la fecha; una fecha al abrir
@@ -150,9 +151,9 @@ export interface PhotosApi {
   remove(photoId: string): Promise<void>;
   /** El orden completo de una vez; la primera es la portada. Una lista que no es la de la casa falla sin cambiar nada. */
   reorder(listingId: string, photoIds: string[]): Promise<void>;
-  /** Registra una carpeta subida como foto nueva de la edición (la crea si no hay). Aprobadas + nuevas ≤ 15. */
+  /** Registra una carpeta subida como foto nueva, que va a revisión al momento (la edición se crea si no hay). Aprobadas + nuevas ≤ 15. */
   addEditPhoto(listingId: string, folder: string): Promise<Photo>;
-  /** Quita una foto nueva (las demás se recompactan) y después sus objetos; si la edición queda vacía, se borra. */
+  /** Quita (descarta) una foto nueva en cualquier estado (las demás se recompactan) y después sus objetos; si la edición queda vacía, se borra. */
   removeEditPhoto(photoId: string): Promise<void>;
   /** El orden completo de las fotos nuevas de una vez. */
   reorderEditPhotos(listingId: string, photoIds: string[]): Promise<void>;
@@ -170,15 +171,18 @@ export interface AdminListingsApi {
   get(id: string): Promise<QueueItem | null>;
   /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
-  /** Ediciones en revisión, la que más espera primero; cada casa con su edición (listing.edit). Sin ser admin, []. */
+  /** Casas con algún dato o foto en revisión, la que más espera primero; cada una con su edición (listing.edit). Sin ser admin, []. */
   editQueue(): Promise<QueueItem[]>;
   /** La casa aprobada con su edición y las fotos de las dos; null si no hay edición o no es admin. */
   getEdit(listingId: string): Promise<QueueItem | null>;
   /**
-   * RPC review_edit. Motivo obligatorio para pedir cambios (editNoteRefusal). `submittedAt` es el envío que el admin abrió
-   * (listing.edit.submittedAt): si el propietario descartó o reenvió la edición, EDIT_MESSAGES.changed y no se aplica nada.
+   * Decide un dato (RPC review_edit_field): aprobar lo publica al momento; pedir cambios exige nota (editNoteRefusal).
+   * `submittedAt` es el envío de ese dato que el admin abrió: si el propietario lo descartó o lo volvió a enviar,
+   * EDIT_MESSAGES.changed y no se aplica nada.
    */
-  reviewEdit(listingId: string, decision: EditDecision, note: string, submittedAt: string | null): Promise<void>;
+  reviewEditField(listingId: string, field: ReviewedField, decision: EditDecision, note: string, submittedAt: string | null): Promise<void>;
+  /** Lo mismo con una foto nueva (RPC review_edit_photo): aprobada, va tras la última aprobada. */
+  reviewEditPhoto(photoId: string, decision: EditDecision, note: string, submittedAt: string | null): Promise<void>;
   /**
    * Casas del admin (fase 5, ticket 07): las aprobadas alguna vez (las que tienen suscripción), en cualquier estado, con
    * propietario, zona, portada y suscripción; la aprobada más recientemente primero. Sin ser admin, lista vacía.

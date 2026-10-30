@@ -1,19 +1,19 @@
 // Edición de una casa publicada (spec .scratch/editar-casa): unos datos cambian al momento (capacidad, características,
-// precio) y otros pasan por la revisión del admin (nombre, tipo, ubicación, descripción y fotos nuevas) en una sola
-// edición por casa, mientras los clientes siguen viendo la versión aprobada. Las reglas de cada dato son las del
+// precio) y otros pasan por la revisión del admin (nombre, tipo, ubicación, descripción y fotos nuevas), mientras los
+// clientes siguen viendo la versión aprobada. Desde la revisión UX 2026-10-29 (A5), cada dato y cada foto nueva va a
+// revisión en cuanto se guarda y el admin decide uno a uno; para cada dato cuenta el último valor enviado. Las reglas de cada dato son las del
 // asistente (validateStep, parseStep, normalize); los mensajes, los mismos en SQL, el dominio y el fake.
 // Módulo de dominio: sin imports de framework.
-import { emptyDraft, normalize, TITLE_MIN, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
+import { emptyDraft, KIND_LABELS, normalize, TITLE_MIN, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
 import { parseStep, type FormInput } from "./step-forms";
 import type { ZoneSource } from "./zones";
 import type { EditStatus } from "./edit-label";
-import { EDIT_MESSAGES } from "./edit-messages";
 import { editedFields, type ReviewedField } from "./edit-summary";
 
 export type { EditStatus } from "./edit-label";
-export { editLabel, EDIT_LABELS } from "./edit-label";
+export { editLabel, editOverview, EDIT_LABELS } from "./edit-label";
 export { EDIT_MESSAGES } from "./edit-messages";
-export { editSummary, editedFields } from "./edit-summary";
+export { editSummary, editedFields, FIELD_COLUMN, COLUMN_FIELD, type EditFieldColumn, type ReviewedField } from "./edit-summary";
 
 export interface EditLocation {
   lat: number;
@@ -23,9 +23,21 @@ export interface EditLocation {
   zoneSource: ZoneSource;
 }
 
-export interface ListingEdit {
+/** Estado de un dato o una foto pendiente: en revisión o con cambios pedidos (y la nota del admin). */
+export interface EditItemState {
   status: EditStatus;
   reviewNote: string | null;
+  /** El envío que el admin abre (y con el que decide). */
+  submittedAt: string;
+}
+
+export type EditPhoto = Photo & EditItemState;
+
+export interface ListingEdit {
+  /** Resumen: «review» si algo espera al admin; si no, «changes». */
+  status: EditStatus;
+  /** Cada dato con revisión que cambia, con su estado. */
+  fields: Partial<Record<ReviewedField, EditItemState>>;
   title: string | null;
   kind: Kind | null;
   /** Va con el tipo: solo cuenta si el tipo resultante es habitación. */
@@ -33,17 +45,33 @@ export interface ListingEdit {
   /** "" = borrar la descripción; null = sin cambio. */
   description: string | null;
   location: EditLocation | null;
+  /** El envío más antiguo de lo que espera al admin (orden de su cola); null si nada espera. */
   submittedAt: string | null;
-  /** Fotos nuevas, por posición; al aprobar van al final de la ficha. */
-  photos: Photo[];
+  /** Fotos nuevas, por posición, cada una con su estado; al aprobarla va al final de la ficha. */
+  photos: EditPhoto[];
 }
+
+
 
 export const EDIT_COPY = {
   savedLive: "Guardado. Ya se ve en su ficha.",
-  savedEdit: "Guardado. Envíelo a revisión cuando termine.",
-  discardConfirm: "¿Descartar los cambios sin aplicar? Su ficha sigue como está.",
-  readOnly: "Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.",
+  sentToReview: "Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos.",
+  discardConfirm: "¿Descartar este cambio? Su ficha sigue como está.",
+  photosNotice: "Las fotos nuevas las revisamos antes de publicarlas, normalmente en menos de 24 horas.",
 } as const;
+
+/** Lo que el cliente ve mientras tanto, en el aviso de la pantalla de un dato con revisión. */
+function approvedValue(field: ReviewedField, l: Listing): string {
+  if (field === "nombre") return `«${l.title}»`;
+  if (field === "tipo") return `«${l.kind ? KIND_LABELS[l.kind] : ""}»`;
+  if (field === "ubicacion") return `«${l.zone}»`;
+  return l.description.trim() ? "la descripción de ahora" : "la ficha sin descripción";
+}
+
+/** «Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven «…».» */
+export function reviewNotice(field: ReviewedField, l: Listing): string {
+  return `Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven ${approvedValue(field, l)}.`;
+}
 
 export type EditField = "fotos" | "nombre" | "tipo" | "ubicacion" | "capacidad" | "caracteristicas" | "descripcion" | "precio";
 export type FormField = Exclude<EditField, "fotos">;
@@ -150,8 +178,7 @@ export type EditPlan = { error: string } | { immediate: LivePatch } | { reviewed
 /**
  * Guardar un dato de una casa publicada. Los inmediatos se validan sobre la versión aprobada y devuelven solo las columnas
  * que cambian (también las que limpia `normalize`). Los de revisión se validan sobre la edición pendiente y devuelven las
- * columnas de ese dato tal cual (la base guarda como null lo que coincide con lo aprobado); con la edición en revisión se
- * rechazan.
+ * columnas de ese dato tal cual (la base guarda como null lo que coincide con lo aprobado) y van a revisión al guardarse.
  */
 export function planEdit(l: Listing, field: FormField, patch: Partial<ListingDraft>): EditPlan {
   if ((IMMEDIATE_FIELDS as readonly string[]).includes(field)) {
@@ -163,7 +190,6 @@ export function planEdit(l: Listing, field: FormField, patch: Partial<ListingDra
     for (const key of LIVE_KEYS) if (!same(next[key], l[key])) immediate[key] = next[key];
     return { immediate: immediate as LivePatch };
   }
-  if (l.edit?.status === "review") return { error: EDIT_MESSAGES.inReview };
   const merged: ListingDraft = { ...mergeEdit(l, l.edit), ...patch };
   const error = firstError(field, merged);
   if (error) return { error };

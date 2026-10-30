@@ -3,7 +3,9 @@
 // es not null, y solo `true` cuenta como «Alquiler mensual».
 import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
-import type { EditLocation, EditPatch, EditStatus, ListingEdit, LivePatch } from "./edit";
+import type { EditFieldColumn, EditItemState, EditLocation, EditPatch, EditPhoto, ListingEdit, LivePatch } from "./edit";
+import { editOverview } from "./edit-label";
+import { COLUMN_FIELD } from "./edit-summary";
 import { photoSrcSet, variantPath } from "./image";
 import { DEFAULT_PROVINCE, type Listing, type ListingDraft, type ListingStatus, type MonthlyMode, type Photo, type PublicListing } from "./listing";
 import type { ZoneSource } from "./zones";
@@ -15,10 +17,16 @@ export type ListingUpdate = Database["public"]["Tables"]["listings"]["Update"];
 export type PhotoRow = Pick<Database["public"]["Tables"]["listing_photos"]["Row"], "id" | "path" | "position">;
 export type PublicRow = Database["public"]["Views"]["listings_public"]["Row"];
 type EditTableRow = Database["public"]["Tables"]["listing_edits"]["Row"];
-/** La edición pendiente tal como la embebe el adaptador del propietario (listing_edits con sus fotos nuevas). */
-export type EditRow = Pick<EditTableRow, "status" | "review_note" | "title" | "kind" | "bathroom_shared" | "description" | "lat" | "lng" | "zone" | "zone_id" | "zone_source" | "submitted_at"> & {
-  listing_edit_photos: PhotoRow[];
+type EditFieldRow = Pick<Database["public"]["Tables"]["listing_edit_fields"]["Row"], "field" | "status" | "review_note" | "submitted_at">;
+export type EditPhotoRow = PhotoRow & Pick<Database["public"]["Tables"]["listing_edit_photos"]["Row"], "status" | "review_note" | "submitted_at">;
+/** La edición pendiente tal como la embeben los adaptadores (listing_edits con el estado de cada dato y sus fotos nuevas). */
+export type EditRow = Pick<EditTableRow, "status" | "title" | "kind" | "bathroom_shared" | "description" | "lat" | "lng" | "zone" | "zone_id" | "zone_source"> & {
+  listing_edit_fields: EditFieldRow[];
+  listing_edit_photos: EditPhotoRow[];
 };
+/** Lo que se pide de listing_edits para armar la edición. */
+export const EDIT_SELECT =
+  "status, title, kind, bathroom_shared, description, lat, lng, zone, zone_id, zone_source, listing_edit_fields(field, status, review_note, submitted_at), listing_edit_photos(id, path, position, status, review_note, submitted_at)";
 
 export type PhotoUrl = (path: string) => string;
 
@@ -64,7 +72,11 @@ export function fromPhotoRows(rows: readonly PhotoRow[], url: PhotoUrl): Photo[]
   return rows.map((p) => ({ id: p.id, path: p.path, position: p.position, url: url(variantPath(p.path, 800)) })).sort((a, b) => a.position - b.position);
 }
 
-const editStatus = (v: string): EditStatus => (v === "review" || v === "changes" ? v : "open");
+const itemState = (r: { status: string; review_note: string | null; submitted_at: string }): EditItemState => ({
+  status: r.status === "changes" ? "changes" : "review",
+  reviewNote: r.review_note ?? null,
+  submittedAt: r.submitted_at,
+});
 
 /** null sin fila o con la fila vacía que devuelve PostgREST cuando save_edit borró la edición (todo null). */
 export function fromEditRow(row: EditRow | null | undefined, url: PhotoUrl): ListingEdit | null {
@@ -72,16 +84,19 @@ export function fromEditRow(row: EditRow | null | undefined, url: PhotoUrl): Lis
   const source = zoneSource(row.zone_source);
   const location: EditLocation | null =
     row.lat !== null && row.lng !== null && source !== null ? { lat: row.lat, lng: row.lng, zone: row.zone ?? "", zoneId: row.zone_id ?? null, zoneSource: source } : null;
+  const fields: ListingEdit["fields"] = {};
+  for (const f of row.listing_edit_fields ?? []) fields[COLUMN_FIELD[f.field as EditFieldColumn]] = itemState(f);
+  const states = new Map((row.listing_edit_photos ?? []).map((p) => [p.id, itemState(p)]));
+  const photos: EditPhoto[] = fromPhotoRows(row.listing_edit_photos ?? [], url).map((p) => ({ ...p, ...states.get(p.id)! }));
   return {
-    status: editStatus(row.status),
-    reviewNote: row.review_note ?? null,
+    ...editOverview([...Object.values(fields), ...photos]),
+    fields,
     title: row.title ?? null,
     kind: row.kind ?? null,
     bathroomShared: row.bathroom_shared ?? null,
     description: row.description ?? null,
     location,
-    submittedAt: row.submitted_at ?? null,
-    photos: fromPhotoRows(row.listing_edit_photos ?? [], url),
+    photos,
   };
 }
 

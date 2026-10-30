@@ -136,19 +136,19 @@
     "gzip": true
   },
   {
-    "name": "Reglas y mutaciones de la edición · trozo compartido (las reglas de cada dato y las mutaciones de la edición, que leen la ficha editable y «Editar un dato»; edit-<hash de 8>, para que no entren edit-messages ni edit-label)",
+    "name": "Reglas y mutaciones de la edición · trozo compartido (las reglas de cada dato, el aviso de revisión y las mutaciones de la edición, también descartar un dato, que leen la ficha editable y «Editar un dato»; edit-<hash de 8>, para que no entren edit-messages ni edit-label)",
     "path": [
       "dist/client/assets/edit-????????.js"
     ],
-    "limit": "2 KB",
+    "limit": "2.25 kB",
     "gzip": true
   },
   {
-    "name": "Resumen de la edición · trozo compartido (qué cambia una edición, «nombre, descripción, 2 fotos nuevas»; lo leen la ficha editable, las reglas de la edición y la zona del admin)",
+    "name": "Resumen, mensajes y estado de la edición · trozo compartido (qué cambia una edición, «nombre, descripción, 2 fotos nuevas», cada dato en la base, los mensajes y la etiqueta; lo leen la ficha editable, las reglas de la edición, los adaptadores de datos y la zona del admin; edit-messages-*)",
     "path": [
-      "dist/client/assets/edit-summary-*.js"
+      "dist/client/assets/edit-messages-*.js"
     ],
-    "limit": "0.5 KB",
+    "limit": "0.75 KB",
     "gzip": true
   },
   {
@@ -196,11 +196,11 @@
     "gzip": true
   },
   {
-    "name": "Rejilla de fotos · trozo diferido compartido por el paso 7 y el editor de fotos (la rejilla, la cola de subida y el arrastre; la leen photos-* y editar-*)",
+    "name": "Rejilla de fotos · trozo diferido compartido por el paso 7 y el editor de fotos (la rejilla, la cola de subida, el arrastre y el estado de cada foto nueva; la leen photos-* y editar-*)",
     "path": [
       "dist/client/assets/photo-grid-*.js"
     ],
-    "limit": "4.5 KB",
+    "limit": "4.75 kB",
     "gzip": true
   },
   {

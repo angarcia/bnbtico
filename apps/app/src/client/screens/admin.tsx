@@ -8,7 +8,7 @@ import { relativeDate } from "../../domain/dates";
 import type { MfaFactor } from "../../domain/api";
 import { describe, isNegotiable } from "../../domain/describe";
 import type { ListingEdit } from "../../domain/edit";
-import { editSummary, editedFields } from "../../domain/edit-summary";
+import { editSummary, type ReviewedField } from "../../domain/edit-summary";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, MIN_PHOTOS_TO_APPROVE, MONTHLY_LABEL, STATUS_LABELS, isProposedZone, locationLine, type Listing } from "../../domain/listing";
@@ -28,9 +28,11 @@ import {
   useEditsWithPending,
   useQueueWithPending,
   useReview,
+  lastInReview,
   useReviewEdit,
   useReviewOutcome,
   verifySecondCode,
+  type EditTarget,
 } from "../admin";
 import { FlowHeader, RootHeader } from "../chrome";
 import { useSession } from "../session";
@@ -627,17 +629,12 @@ export function RevisarEdicionScreen() {
             </div>
             <span className="small muted">Edición: {editSummary(edit)}</span>
           </div>
-          <EditDiff item={data} />
-          {edit.status === "review" ? <EditReviewForm item={data} userId={userId} /> : null}
+          {/* Revisión dato a dato (revisión UX 2026-10-29, A5): cada bloque lleva su decisión. */}
+          {edit.status === "review" ? <Checklist /> : null}
+          <EditDiff item={data} userId={userId} />
           {edit.status === "changes" ? (
-            <div className="note stack gap-4" role="status">
-              <b>Cambios pedidos</b>
-              <span className="listing-description">{edit.reviewNote || "Sin nota adicional."}</span>
-            </div>
-          ) : null}
-          {edit.status === "open" ? (
             <p className="note" role="status">
-              Esta edición todavía no se ha enviado a revisión.
+              Lo pendiente tiene cambios pedidos: espera al propietario.
             </p>
           ) : null}
         </>
@@ -670,11 +667,11 @@ function SideBySide({ before, after }: { before: string; after: string }) {
 
 const kindText = (l: Pick<Listing, "kind" | "bathroomShared">) => [l.kind ? KIND_LABELS[l.kind] : "Sin tipo", bathText(l)].filter(Boolean).join(" · ");
 
-/** Lo que cambia la edición, dato por dato («Antes» / «Ahora»), y lo demás plegado. */
-function EditDiff({ item }: { item: QueueItem }) {
+/** Lo que cambia la edición, dato por dato («Antes» / «Ahora») y con su decisión, y lo demás plegado. */
+function EditDiff({ item, userId }: { item: QueueItem; userId: string }) {
   const { listing: l, ownerName } = item;
   const e: ListingEdit = l.edit!;
-  const fields = editedFields(e);
+  const fields = Object.keys(e.fields) as ReviewedField[];
   // Lo nuevo encima de lo aprobado (como mergeEdit, sin traer las reglas del formulario a la zona del admin).
   const kind = e.kind ?? l.kind;
   const after = { kind, bathroomShared: kind === "habitacion" ? (e.bathroomShared ?? l.bathroomShared) : null };
@@ -684,11 +681,13 @@ function EditDiff({ item }: { item: QueueItem }) {
       {has("nombre") ? (
         <DiffBlock title="Nombre">
           <SideBySide before={titleOf(l)} after={e.title ?? ""} />
+          <Decide item={item} target={{ field: "nombre" }} userId={userId} />
         </DiffBlock>
       ) : null}
       {has("tipo") ? (
         <DiffBlock title="Tipo">
           <SideBySide before={kindText(l)} after={kindText(after)} />
+          <Decide item={item} target={{ field: "tipo" }} userId={userId} />
         </DiffBlock>
       ) : null}
       {has("ubicacion") && e.location ? (
@@ -698,6 +697,7 @@ function EditDiff({ item }: { item: QueueItem }) {
             beforeZone={l.zone}
             after={{ lat: e.location.lat, lng: e.location.lng, label: e.location.zone }}
           />
+          <Decide item={item} target={{ field: "ubicacion" }} userId={userId} />
         </DiffBlock>
       ) : null}
       {has("descripcion") ? (
@@ -707,13 +707,17 @@ function EditDiff({ item }: { item: QueueItem }) {
             <summary className="link small">Antes</summary>
             <p className="small muted listing-description">{l.description || "Sin descripción."}</p>
           </details>
+          <Decide item={item} target={{ field: "descripcion" }} userId={userId} />
         </DiffBlock>
       ) : null}
       {e.photos.length ? (
         <DiffBlock title="Fotos nuevas">
-          <div className="diff-photos">
+          <div className="stack gap-12">
             {e.photos.map((p, i) => (
-              <img key={p.id} src={variantUrl(p, 480)} alt={`Foto nueva ${i + 1}`} width={110} height={110} loading="lazy" decoding="async" />
+              <section key={p.id} className="row gap-12 diff-photo" aria-label={`Foto nueva ${i + 1}`}>
+                <img src={variantUrl(p, 480)} alt={`Foto nueva ${i + 1}`} width={110} height={110} loading="lazy" decoding="async" />
+                <Decide item={item} target={{ photoId: p.id }} userId={userId} />
+              </section>
             ))}
           </div>
         </DiffBlock>
@@ -763,38 +767,57 @@ function TwoPointsMap({ before, beforeZone, after }: { before: MapPoint | null; 
   );
 }
 
-function EditReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
+/** La decisión de un dato o una foto: en revisión, la nota y «Aprobar» / «Pedir cambios»; con cambios pedidos, su nota. */
+function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget; userId: string }) {
   const navigate = useNavigate();
   const review = useReviewEdit(userId);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  async function decide(decision: EditDecision) {
+  const e = item.listing.edit;
+  const state = "field" in target ? e?.fields[target.field] : e?.photos.find((p) => p.id === target.photoId);
+  if (!state) return null;
+  if (state.status === "changes")
+    return (
+      <p className="small note-review" role="status">
+        Cambios pedidos: {state.reviewNote || "sin nota adicional."}
+      </p>
+    );
+  function decide(decision: EditDecision) {
     const refusal = editNoteRefusal(decision, note);
     if (refusal) return setError(refusal);
     setError(null);
-    review.mutate({ item, decision, note });
-    await navigate({ to: "/admin" });
+    const input = { item, target, decision, note };
+    // Lo último en revisión de la casa: de vuelta a la cola, como con la decisión de una casa nueva (allí se ve el resultado).
+    if (lastInReview(input)) {
+      review.mutate(input);
+      void navigate({ to: "/admin" });
+    } else review.mutate(input, { onError: (err) => setError(toDomainError(err).message) });
   }
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    void decide("approve");
-  };
-
   return (
-    <form className="stack gap-14" onSubmit={onSubmit} noValidate>
-      <Checklist />
-      <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
-      <div className="sticky-spacer review-spacer" aria-hidden="true" />
-      <div className="sticky-actions review-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={review.isPending}>
-          <I.check size={18} /> Aprobar cambios
+    <div className="stack gap-8 decide">
+      <textarea
+        aria-label="Mensaje para el propietario (obligatorio si pide cambios)"
+        name="note"
+        rows={2}
+        maxLength={REVIEW_NOTE_MAX}
+        placeholder="Mensaje para el propietario si pide cambios"
+        value={note}
+        onChange={(ev) => setNote(ev.currentTarget.value)}
+      />
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <div className="row gap-8">
+        <button type="button" className="btn btn-primary btn-sm" disabled={review.isPending} onClick={() => decide("approve")}>
+          <I.check size={16} /> Aprobar
         </button>
-        <button className="btn btn-ghost btn-block" type="button" disabled={review.isPending} onClick={() => void decide("changes")}>
+        <button type="button" className="btn btn-ghost btn-sm" disabled={review.isPending} onClick={() => decide("changes")}>
           Pedir cambios
         </button>
       </div>
-    </form>
+    </div>
   );
 }
 

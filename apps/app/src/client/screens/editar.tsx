@@ -1,14 +1,14 @@
 // Las pantallas de cada dato de una casa publicada (`/propietario/casas/$id/editar/$campo`, spec .scratch/editar-casa §2).
 // Trozo diferido. Reutilizan los campos y las reglas del asistente (fields.tsx, step-forms, location-step); «Guardar» lee
 // el formulario con parseField y decide con planEdit: capacidad, características y precio cambian al momento
-// (update_listing_live, optimista); nombre, tipo, ubicación y descripción van a la edición de la casa (save_edit), que se
-// envía a revisión desde la ficha. Con la edición en revisión, esos cuatro se abren solo para leer. Volver sin guardar no
-// guarda nada.
+// (update_listing_live, optimista); nombre, tipo, ubicación y descripción van a revisión con «Enviar a revisión»
+// (save_edit), cada uno por su cuenta, con un aviso que nombra lo que los clientes siguen viendo (revisión UX 2026-10-29,
+// A5). Se pueden volver a cambiar mientras están en revisión: cuenta el último. Volver sin guardar no guarda nada.
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { isPublished } from "../../domain/can";
-import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, editFieldFromParam, mergeEdit, parseField, planEdit, type FormField } from "../../domain/edit";
+import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, editFieldFromParam, mergeEdit, parseField, planEdit, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
 import { toDomainError } from "../../domain/errors";
 import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
@@ -76,7 +76,6 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const live = useUpdateLive(userId, listing);
   const edit = useSaveEdit(userId, listing);
   const reviewed = REVIEWED_FIELDS.includes(field);
-  const readOnly = reviewed && listing.edit?.status === "review";
   // Lo que se ve: con revisión, lo pendiente de la edición encima de lo aprobado; inmediato, lo aprobado. La caché del
   // teléfono puede abrir la pantalla con datos viejos: mientras el propietario no toque nada, cuando llega lo del servidor
   // y cambia, los campos (sin controlar) se vuelven a montar con ello (key). Desde el primer toque o «Guardar», la key se
@@ -93,7 +92,7 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     touch();
-    if (readOnly || saving || !ready) return;
+    if (saving || !ready) return;
     const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget))));
     if ("error" in plan) return setError(plan.error);
     setError(null);
@@ -109,62 +108,54 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
     }
     edit.mutate(plan.reviewed, {
       onSuccess: () => {
-        toast(EDIT_COPY.savedEdit);
+        toast(EDIT_COPY.sentToReview);
         toFicha();
       },
       onError: failed,
     });
   }
 
-  const inputs = (
-    <ReadyScope onReady={setReady}>
-      <FieldInputs field={field} draft={draft} listing={listing} userId={userId} readOnly={readOnly} />
-    </ReadyScope>
-  );
   return (
     <form key={frozen ?? version} onSubmit={onSubmit} onInputCapture={touch} onClickCapture={touch} className="publish-form" noValidate>
+      {/* De qué casa es el cambio, bajo el título. */}
+      <p className="small muted edit-house">{listing.title}</p>
       {error ? (
         <div className="note" role="alert">
           {error}
         </div>
       ) : null}
-      {readOnly ? (
-        <>
-          <p className="note note-arena">{EDIT_COPY.readOnly}</p>
-          <fieldset disabled className="edit-fieldset">
-            {inputs}
-          </fieldset>
-        </>
-      ) : (
-        <>
-          {inputs}
-          <div className="sticky-actions">
-            <button className="btn btn-primary btn-block" type="submit" disabled={saving || !ready}>
-              Guardar
-            </button>
-          </div>
-        </>
-      )}
+      <ReadyScope onReady={setReady}>
+        <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
+      </ReadyScope>
+      {reviewed ? (
+        <p className="note small" data-testid="review-notice">
+          {reviewNotice(field as ReviewedField, listing)}
+        </p>
+      ) : null}
+      <div className="sticky-actions">
+        <button className="btn btn-primary btn-block" type="submit" disabled={saving || !ready}>
+          {reviewed ? "Enviar a revisión" : "Guardar"}
+        </button>
+      </div>
     </form>
   );
 }
 
 /** Las fotos de una casa publicada (maqueta 08d): la rejilla del paso 7. Ordenar y quitar las aprobadas va al momento;
- * las nuevas van a la edición y salen detrás con «En revisión». Con la edición en revisión no se añaden ni se quitan
- * nuevas. El contador cuenta aprobadas y nuevas. */
+ * las nuevas van a revisión al subirlas, cada una por su cuenta, y salen detrás con «En revisión» (o «Cambios pedidos»);
+ * quitar una nueva la descarta. El contador cuenta aprobadas y nuevas. */
 function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
   const toFicha = useBackToFicha(listing.id);
   const pending = listing.edit?.photos ?? [];
   const total = listing.photos.length + pending.length;
-  const inReview = listing.edit?.status === "review";
   const source: PhotoSource = {
     listingId: listing.id,
     photos: listing.photos,
     pending,
     counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "muted" },
     room: MAX_PHOTOS - total,
-    canAdd: !inReview,
+    canAdd: true,
     register: async (folder) => (await photosApi()).addEditPhoto(listing.id, folder),
     remove: async (photo, isPending) => {
       const api = await photosApi();
@@ -182,9 +173,8 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
     <>
       <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} historyBack action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
-        {/* Explica por qué no hay «Añadir» ni ✕ en las nuevas: la edición espera la respuesta del admin. */}
-        <PhotoGrid source={source} userId={userId} header={inReview ? <p className="note note-arena">{EDIT_COPY.readOnly}</p> : undefined} />
-        <p className="note note-arena small">El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas.</p>
+        <PhotoGrid source={source} userId={userId} />
+        <p className="note small">El orden y las fotos que quite se guardan al momento. {EDIT_COPY.photosNotice}</p>
         <div className="sticky-actions">
           <Link
             className="btn btn-primary btn-block"
@@ -225,7 +215,7 @@ function KindInputs({ draft }: { draft: ListingDraft }) {
 }
 
 /** Los campos de un dato: los del asistente para esa pantalla. `draft` trae los valores a mostrar. */
-function FieldInputs({ field, draft, listing, readOnly = false }: { field: FormField; draft: ListingDraft; listing: Listing; userId: string; readOnly?: boolean }) {
+function FieldInputs({ field, draft, listing }: { field: FormField; draft: ListingDraft; listing: Listing; userId: string }) {
   switch (field) {
     case "nombre":
       return <TitleField value={draft.title} />;
@@ -234,7 +224,7 @@ function FieldInputs({ field, draft, listing, readOnly = false }: { field: FormF
     case "tipo":
       return <KindInputs draft={draft} />;
     case "ubicacion":
-      return <LocationStep listing={listing} draft={draft} readOnly={readOnly} />;
+      return <LocationStep listing={listing} draft={draft} />;
     case "capacidad":
       return <CapacityCounters draft={draft} />;
     case "caracteristicas":

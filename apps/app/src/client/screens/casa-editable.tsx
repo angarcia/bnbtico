@@ -1,14 +1,14 @@
 // La ficha editable de una casa publicada (spec .scratch/editar-casa, maquetas 08a–08c): se lee como la ficha pública, sin
 // calendario, y cada dato es una fila que abre su pantalla (/propietario/casas/$id/editar/$campo). Lo marcado con
-// «Revisión» pasa por el admin en la edición de la casa; mientras tanto los clientes ven la versión aprobada. Trozo
+// «Revisión» va al admin al guardarlo, dato a dato (revisión UX 2026-10-29, A5): cada dato pendiente enseña su valor nuevo
+// con «En revisión» o «Cambios pedidos» (y la nota) y su propio «Descartar»; mientras tanto los clientes ven lo aprobado. Trozo
 // diferido: se precarga con las pantallas del propietario. Las casas que nunca se publicaron siguen con el detalle de
 // propietario.tsx y el asistente.
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { can } from "../../domain/can";
 import { describe } from "../../domain/describe";
-import { EDIT_COPY, FIELD_ORDER, FIELD_TITLES, REVIEWED_FIELDS, editSummary, editedFields, isEmptyEdit, mergeEdit, photoPill, type FormField } from "../../domain/edit";
-import { toDomainError } from "../../domain/errors";
+import { EDIT_COPY, FIELD_ORDER, FIELD_TITLES, REVIEWED_FIELDS, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, locationLine, type Listing, type ListingDraft } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -16,7 +16,7 @@ import { cardLabel } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
 import { useBilling } from "../billing";
-import { useDiscardEdit, useSubmitEdit } from "../edit";
+import { useDiscardEditField } from "../edit";
 import { activityQuery } from "../owner";
 import { ActivateButton, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./propietario";
 
@@ -62,86 +62,57 @@ const ReviewTag = () => (
   </span>
 );
 
-/** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si la edición lo cambia). */
-function FieldRow({ listing: l, field }: { listing: Listing; field: FormField }) {
+/** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si está en revisión). Un dato pendiente
+ *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar». */
+function FieldRow({ listing: l, field, userId }: { listing: Listing; field: FormField; userId: string }) {
   const e = l.edit;
-  const pending = !!e && (editedFields(e) as FormField[]).includes(field);
+  const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
-  const value = pending && field === "ubicacion" && e.location ? e.location.zone : fieldValue(mergeEdit(l, e), field);
-  const locked = pending && e.status === "review";
-  const tag = pending ? <span className={`tag-rev${locked ? " is-pending" : ""}`}>{locked ? "En revisión" : "Sin enviar"}</span> : isReviewed(field) ? <ReviewTag /> : null;
-  const body = (
-    <span className="body">
-      <span className="field-title">
-        {FIELD_TITLES[field]}
-        {tag}
-      </span>
-      <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}`}>{value}</span>
-    </span>
-  );
-  // En revisión no se vuelve a tocar (maqueta 08c): una fila sin enlace, con el candado.
-  if (locked)
-    return (
-      <div className="list-item is-locked" role="group" aria-label={`${FIELD_TITLES[field]}: en revisión`}>
-        {body}
-        <span className="chev">
-          <I.lock />
-        </span>
-      </div>
-    );
-  return (
+  const value = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field);
+  const tag = state ? (
+    <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
+  ) : isReviewed(field) ? (
+    <ReviewTag />
+  ) : null;
+  const row = (
     <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: field }} className="list-item">
-      {body}
+      <span className="body">
+        <span className="field-title">
+          {FIELD_TITLES[field]}
+          {tag}
+        </span>
+        <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}`}>{value}</span>
+      </span>
       <span className="chev">
         <I.chevron />
       </span>
     </Link>
   );
+  if (!state) return row;
+  return (
+    <div className="field-pending" data-testid={`pending-${field}`}>
+      {row}
+      <PendingFoot listing={l} field={field as ReviewedField} note={state.status === "changes" ? state.reviewNote : null} userId={userId} />
+    </div>
+  );
 }
 
-/** El aviso de la edición (arena, nunca ocre): sin enviar, en revisión o con cambios pedidos. Sin edición, nada. */
-function EditBanner({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const submit = useSubmitEdit(userId, l);
-  const discard = useDiscardEdit(userId, l);
-  const e = l.edit;
-  if (!e || isEmptyEdit(e)) return null;
-  const summary = editSummary(e);
-  const title =
-    e.status === "open" ? `Cambios sin enviar: ${summary}` : e.status === "review" ? `Edición en revisión: ${summary} · normalmente en menos de 24 horas` : "Le pedimos cambios en la edición";
-  const line = e.status === "changes" ? e.reviewNote : "Mientras tanto, los clientes ven la versión aprobada.";
-  // Antes de cada acción se limpia el error de la otra: se ve el de la última.
-  const error = submit.error ?? discard.error;
-  const busy = submit.isPending || discard.isPending;
+/** Debajo de un dato pendiente: la nota del admin (si pidió cambios) y «Descartar», que deja la ficha como está. */
+function PendingFoot({ listing: l, field, note, userId }: { listing: Listing; field: ReviewedField; note: string | null; userId: string }) {
+  const discard = useDiscardEditField(userId, l);
   return (
-    <section className="card-arena stack gap-10" data-testid="edit-banner">
-      <b className="display offer-title">{title}</b>
-      {line ? <span className="small ink">{line}</span> : null}
-      {e.status !== "review" ? (
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
-          disabled={busy}
-          onClick={() => {
-            discard.reset();
-            submit.mutate();
-          }}
-        >
-          Enviar a revisión
-        </button>
-      ) : null}
-      <button type="button" className="btn-link" disabled={busy} onClick={() => {
-          if (!window.confirm(EDIT_COPY.discardConfirm)) return;
-          submit.reset();
-          discard.mutate();
-        }}>
-        Descartar cambios
+    <div className="pending-foot">
+      {note ? <p className="small note-review">Le pedimos cambios: {note}</p> : <span className="xs muted">Los clientes ven lo de antes hasta que lo aprobemos.</span>}
+      <button
+        type="button"
+        className="btn-text"
+        aria-label={`Descartar el cambio de ${FIELD_TITLES[field].toLowerCase()}`}
+        disabled={discard.isPending}
+        onClick={() => window.confirm(EDIT_COPY.discardConfirm) && discard.mutate(field)}
+      >
+        Descartar
       </button>
-      {error ? (
-        <p className="note" role="alert">
-          {toDomainError(error).message}
-        </p>
-      ) : null}
-    </section>
+    </div>
   );
 }
 
@@ -232,7 +203,6 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
     <>
       {l.status === "payment_due" ? hb && billing ? <PayNotice hb={hb} today={billing.today} /> : <PaymentDueNote listing={l} /> : null}
       {l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
-      <EditBanner listing={l} userId={userId} />
 
       <div className="photo detail-photo">
         {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
@@ -252,7 +222,7 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
 
       <section className="list" data-testid="field-rows">
         {FIELD_ORDER.map((field) => (
-          <FieldRow key={field} listing={l} field={field} />
+          <FieldRow key={field} listing={l} field={field} userId={userId} />
         ))}
       </section>
 

@@ -6,10 +6,9 @@ import { MAX_PHOTOS } from "./listing";
 export const EDIT_MESSAGES = {
   notHere: "Ese dato no se puede cambiar aquí.",
   notPublished: "Solo puede cambiar así una casa publicada.",
-  inReview: "Ya hay una edición en revisión. Espere la respuesta o descártela.",
-  empty: "No hay cambios que enviar.",
   decided: "Esta edición ya tiene una decisión.",
   notFound: "No encontramos esa edición.",
+  photoNotFound: "No encontramos esa foto.",
   changed: "La edición cambió. Vuelva a abrirla.",
   noteRequired: "Escriba una nota para pedir cambios.",
   lastPhoto: "Su ficha necesita al menos una foto. Añada otra y, cuando la aprobemos, podrá quitar esta.",

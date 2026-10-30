@@ -23,26 +23,28 @@ describe("migración nombre_y_descripcion", () => {
     expect(await h.owner("owner").getOwn(old.id)).toMatchObject({ title: "Ola", status: "active" });
   });
 
-  it("al editarla cambian al momento otros datos; el nombre viejo no bloquea, la descripción sí y, corregida, pasa", async () => {
-    // Desde editar-casa una casa publicada no vuelve a borrador: se edita con datos al momento y una edición revisada.
-    // Publicar v2: del nombre solo se valida el nuevo; un nombre aprobado fuera de la regla se queda hasta que se cambie.
+  it("al editarla cambian al momento otros datos; ni el nombre ni la descripción viejos bloquean otro dato; los nuevos se validan", async () => {
+    // Desde editar-casa una casa publicada no vuelve a borrador: se edita con datos al momento y datos con revisión.
+    // Publicar v2: del nombre solo se valida el nuevo. Revisión por dato (A5): cada dato se valida al guardarlo, solo él.
     const me = h.owner("owner");
     await me.updateLive(old.id, { features: ["wifi", "pool"] });
     expect((await me.getOwn(old.id))?.features).toEqual(["wifi", "pool"]);
     await me.saveEdit(old.id, { kind: "habitacion", bathroomShared: false });
-    await expect(me.submitEdit(old.id)).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
     await expect(me.saveEdit(old.id, { title: "Ola!" })).rejects.toThrow("El nombre de la casa debe tener entre 5 y 32 caracteres.");
     await expect(me.saveEdit(old.id, { description: "a".repeat(2001) })).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+    await expect(me.saveEdit(old.id, { description: "Muy corta." })).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
     await me.saveEdit(old.id, { description: `  ${"a".repeat(80)}  ` });
-    expect(await me.submitEdit(old.id)).toBeUndefined();
-    expect(await me.getOwn(old.id)).toMatchObject({ status: "active", title: "Ola", edit: { status: "review", title: null, kind: "habitacion" } });
+    expect(await me.getOwn(old.id)).toMatchObject({
+      status: "active",
+      title: "Ola",
+      edit: { status: "review", title: null, kind: "habitacion", fields: { tipo: { status: "review" }, descripcion: { status: "review" } } },
+    });
   });
 
   it("descripción vacía pasa", async () => {
     const me = h.owner("owner");
     const s = await h.seed({ status: "active" });
-    await me.saveEdit(s.id, { description: "" });
-    expect(await me.submitEdit(s.id)).toBeUndefined();
+    expect(await me.saveEdit(s.id, { description: "" })).toMatchObject({ fields: { descripcion: { status: "review" } } });
     const draft = await h.seed({ status: "draft", draft: { description: "" } });
     expect(await me.submit(draft.id)).toBeUndefined();
   });

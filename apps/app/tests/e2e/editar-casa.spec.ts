@@ -9,7 +9,8 @@ import { touch } from "./helpers/touch";
 
 // Editar una casa publicada sin sacarla de Explorar (spec .scratch/editar-casa, maquetas 08a–08c), contra Supabase local.
 // La ficha editable: cada dato es una fila que abre su pantalla; lo que pasa por revisión lleva la etiqueta «Revisión» y,
-// con un cambio pendiente, el valor nuevo con «Sin enviar» o «En revisión»; la edición se avisa arriba y en Mis casas.
+// con un cambio pendiente (revisión por dato, revisión UX 2026-10-29, A5), el valor nuevo con «En revisión» o «Cambios
+// pedidos», su nota y su propio «Descartar»; en Mis casas, «Cambios en revisión».
 const FOTOS = new URL("../../../../design/pantallas/fotos/", import.meta.url).pathname;
 let h: Awaited<ReturnType<typeof postgrestHarness>>;
 
@@ -27,6 +28,7 @@ test.beforeEach(async ({ page }) => {
 
 const rows = (page: Page) => page.getByTestId("field-rows");
 const row = (page: Page, title: string) => rows(page).getByRole("link").filter({ has: page.locator(".field-title", { hasText: new RegExp(`^${title}`) }) });
+const discardButton = (page: Page, field: string) => page.getByRole("button", { name: `Descartar el cambio de ${field}` });
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
 test("la ficha editable de una casa activa", async ({ page }) => {
@@ -68,71 +70,62 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   // La suscripción al día va al final, no arriba.
   expect((await page.getByTestId("subscription-row").boundingBox())!.y).toBeGreaterThan((await share.boundingBox())!.y);
 
-  // Un nombre nuevo guardado en la edición: aviso arriba, el valor nuevo en su fila; la ficha pública no cambia.
+  // Un nombre nuevo, ya en revisión: el valor nuevo en su fila con «En revisión» y su «Descartar»; sin bloque arriba ni
+  // «Enviar a revisión» general; la ficha pública no cambia.
   await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
   await page.reload();
-  await expect(page.getByText("Cambios sin enviar: nombre")).toBeVisible();
-  await expect(page.getByText("Mientras tanto, los clientes ven la versión aprobada.")).toBeVisible();
   await expect(row(page, "Nombre")).toContainText("Casa Coco frente al mar");
-  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Sin enviar");
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
+  await expect(page.getByTestId("pending-nombre")).toContainText("Los clientes ven lo de antes hasta que lo aprobemos.");
   await expect(rows(page).locator(".tag-rev", { hasText: /^Revisión$/ })).toHaveCount(3);
-  await expect(page.locator(".detail-photo .state")).toHaveText("Edición sin enviar");
+  await expect(page.getByTestId("edit-banner")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Enviar a revisión" })).toHaveCount(0);
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cambios en revisión");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Coco" })).toBeVisible();
+  // Se puede volver a cambiar mientras está en revisión: la fila sigue siendo un enlace.
+  await expect(row(page, "Nombre")).toHaveAttribute("href", `/propietario/casas/${id}/editar/nombre`);
 
   await page.goto("/propietario/casas");
   await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(card(page, "Casa Coco").getByTestId("card-label")).toHaveText("Edición sin enviar");
+  await expect(card(page, "Casa Coco").getByTestId("card-label")).toHaveText("Cambios en revisión");
   await card(page, "Casa Coco").getByRole("link", { name: "Casa Coco" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
 
-  // «Descartar cambios» pregunta; al cancelar no pasa nada, al aceptar la edición desaparece.
+  // «Descartar» pregunta; al cancelar no pasa nada, al aceptar el cambio desaparece.
   page.once("dialog", (d) => {
-    expect(d.message()).toBe("¿Descartar los cambios sin aplicar? Su ficha sigue como está.");
+    expect(d.message()).toBe("¿Descartar este cambio? Su ficha sigue como está.");
     void d.dismiss();
   });
-  await page.getByRole("button", { name: "Descartar cambios" }).click();
-  await expect(page.getByText("Cambios sin enviar: nombre")).toBeVisible();
+  await discardButton(page, "nombre").click();
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
   page.once("dialog", (d) => void d.accept());
-  await page.getByRole("button", { name: "Descartar cambios" }).click();
-  await expect(page.getByText(/Cambios sin enviar/)).toHaveCount(0);
+  await discardButton(page, "nombre").click();
   await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Revisión");
+  await expect(row(page, "Nombre")).toContainText("Casa Coco");
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit).toBeNull();
 });
 
-test("enviar a revisión: el aviso cambia y los errores se ven", async ({ page }) => {
+test("descartar un dato: si la base se niega, vuelve con su mensaje; con cambios pedidos, la nota del admin", async ({ page }) => {
   const { id } = await h.seed({ status: "active", draft: { title: "Casa Coco" } });
   await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
   await page.goto(`/propietario/casas/${id}`);
-  // La base se niega (p. ej. una edición vacía): el mensaje en el aviso de error.
-  await page.route("**/rest/v1/rpc/submit_edit", (route) =>
-    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "No hay cambios que enviar.", details: null, hint: null }) }),
-  );
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("No hay cambios que enviar.");
-  await page.unroute("**/rest/v1/rpc/submit_edit");
-  // Se ve el error de la última acción: si después falla descartar, sale el suyo y no el de enviar.
-  await page.route("**/rest/v1/rpc/discard_edit", (route) =>
+  await page.route("**/rest/v1/rpc/discard_edit_field", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "No encontramos esa edición.", details: null, hint: null }) }),
   );
   page.once("dialog", (d) => void d.accept());
-  await page.getByRole("button", { name: "Descartar cambios" }).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("No encontramos esa edición.");
-  await page.unroute("**/rest/v1/rpc/discard_edit");
+  await discardButton(page, "nombre").click();
+  await expect(page.locator(".toast")).toHaveText("No encontramos esa edición.");
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
+  await page.unroute("**/rest/v1/rpc/discard_edit_field");
 
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page.getByText("Edición en revisión: nombre · normalmente en menos de 24 horas")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Enviar a revisión" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Descartar cambios" })).toBeVisible();
-  // En revisión, la fila deja de ser un enlace (maqueta 08c): candado y la etiqueta invertida; las demás siguen abriéndose.
-  const locked = rows(page).locator(".list-item.is-locked");
-  await expect(locked).toHaveCount(1);
-  await expect(locked).toContainText("Casa Coco frente al mar");
-  await expect(locked.locator(".tag-rev.is-pending")).toHaveText("En revisión");
-  await expect(rows(page).getByRole("group", { name: "Nombre: en revisión" })).toHaveCount(1);
-  await expect(rows(page).locator(`a[href="/propietario/casas/${id}/editar/nombre"]`)).toHaveCount(0);
-  await expect(row(page, "Tipo")).toHaveAttribute("href", `/propietario/casas/${id}/editar/tipo`);
-  await expect(page.locator(".detail-photo .state")).toHaveText("Edición en revisión");
-  expect((await h.owner("owner").getOwn(id))!.edit?.status).toBe("review");
+  // El admin pide cambios en el nombre: la fila lo dice con su nota, y la etiqueta de la casa también.
+  const admin = h.admin("aal2");
+  await admin.reviewEditField(id, "nombre", "changes", "Sin mayúsculas, por favor.", (await admin.getEdit(id))!.listing.edit!.fields.nombre!.submittedAt);
+  await page.reload();
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Cambios pedidos");
+  await expect(page.getByTestId("pending-nombre")).toContainText("Le pedimos cambios: Sin mayúsculas, por favor.");
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cambios pedidos");
+  expect((await h.owner("owner").getOwn(id))!.edit?.status).toBe("changes");
 });
 
 test("inactiva: el bloque ocre arriba", async ({ page }) => {
@@ -154,7 +147,11 @@ test("inactiva: el bloque ocre arriba", async ({ page }) => {
 // ---------- Las pantallas de cada dato ----------
 
 const save = (page: Page) => page.getByRole("button", { name: "Guardar" });
-const toastText = (page: Page) => page.getByRole("status").filter({ hasText: /^Guardado\./ });
+/** Los datos con revisión se mandan con «Enviar a revisión» (revisión UX 2026-10-29, A5). */
+const send = (page: Page) => page.getByRole("button", { name: "Enviar a revisión" });
+const toastText = (page: Page) => page.getByRole("status").filter({ hasText: /^(Guardado|Enviado a revisión)\./ });
+const SENT = "Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos.";
+const NOTICE = "Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven";
 
 test("cambiar el precio: al momento, en la ficha pública y en Explorar", async ({ page }) => {
   const { id, publicId } = await h.seed({ status: "active" });
@@ -206,39 +203,40 @@ test("historial: guardar un dato, volver de un dato o de las fotos regresa a la 
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
 
-test("cambiar el nombre: la ficha pública sigue igual hasta aprobar", async ({ page }) => {
+test("cambiar el nombre: «Enviar a revisión» con el aviso; la ficha pública sigue igual hasta aprobar y se puede volver a cambiar", async ({ page }) => {
   const { id, publicId } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}`);
   await row(page, "Nombre").click();
   await expect(page.getByRole("heading", { level: 1, name: "Nombre" })).toBeVisible();
+  // La casa bajo el título y el aviso que nombra lo que siguen viendo los clientes; sin «Guardar».
+  await expect(page.locator(".edit-house")).toHaveText("Cabina Cahuita");
+  await expect(page.getByTestId("review-notice")).toHaveText(`${NOTICE} «Cabina Cahuita».`);
+  await expect(save(page)).toHaveCount(0);
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina Cahuita");
   await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");
-  await save(page).click();
-  await expect(toastText(page)).toHaveText("Guardado. Envíelo a revisión cuando termine.");
+  await send(page).click();
+  await expect(toastText(page)).toHaveText(SENT);
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
-  await expect(page.getByText("Cambios sin enviar: nombre")).toBeVisible();
   await expect(row(page, "Nombre")).toContainText("Casa Coco frente al mar");
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
+  expect((await h.owner("owner").getOwn(id))!.edit?.fields.nombre?.status).toBe("review");
 
   await page.goto(`/casa/${publicId}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cabina Cahuita");
   await page.goto("/propietario/casas");
-  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Edición sin enviar");
+  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Cambios en revisión");
 
-  await page.goto(`/propietario/casas/${id}`);
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page.getByText("Edición en revisión: nombre · normalmente en menos de 24 horas")).toBeVisible();
-  await page.goto("/propietario/casas");
-  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Edición en revisión");
-
-  // En revisión, la pantalla del nombre (p. ej. desde un enlace guardado) se abre solo para leer.
+  // En revisión se puede volver a cambiar: cuenta el último valor enviado.
   await page.goto(`/propietario/casas/${id}/editar/nombre`);
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Casa Coco frente al mar");
-  await expect(page.getByLabel("Nombre de la casa")).toBeDisabled();
-  await expect(page.getByText("Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.")).toBeVisible();
-  await expect(save(page)).toHaveCount(0);
-  // Lo inmediato se sigue cambiando.
+  await expect(page.getByLabel("Nombre de la casa")).toBeEnabled();
+  await page.getByLabel("Nombre de la casa").fill("Casa Coco del Caribe");
+  await send(page).click();
+  await expect(toastText(page)).toHaveText(SENT);
+  await expect(row(page, "Nombre")).toContainText("Casa Coco del Caribe");
+  // Lo inmediato se sigue cambiando con «Guardar».
   await page.goto(`/propietario/casas/${id}/editar/precio`);
-  await expect(page.getByLabel("Precio por noche")).toBeEnabled();
+  await expect(page.getByTestId("review-notice")).toHaveCount(0);
   await expect(save(page)).toBeEnabled();
 });
 
@@ -270,11 +268,12 @@ test("tipo habitación pide el baño", async ({ page }) => {
   await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
   await page.locator("label.choice", { hasText: "Habitación" }).click();
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
-  await save(page).click();
+  await expect(page.getByTestId("review-notice")).toHaveText(`${NOTICE} «Alojamiento completo».`);
+  await send(page).click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("Indique si el baño es privado o compartido.");
   await page.locator("label.chip", { hasText: "Compartido" }).click();
-  await save(page).click();
-  await expect(toastText(page)).toHaveText("Guardado. Envíelo a revisión cuando termine.");
+  await send(page).click();
+  await expect(toastText(page)).toHaveText(SENT);
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   await expect(row(page, "Tipo")).toContainText("Habitación · baño compartido");
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: true });
@@ -294,23 +293,15 @@ test("la pantalla de un dato muestra lo del servidor aunque el teléfono guarde 
   await expect(page.getByLabel("Precio por noche")).toHaveValue("48000");
 });
 
-test("ubicación con la edición en revisión: el mapa no se mueve", async ({ page }) => {
+test("ubicación con otro dato en revisión: el aviso nombra la zona y el mapa se puede mover", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
-  await h.owner("owner").submitEdit(id);
   await page.goto(`/propietario/casas/${id}/editar/ubicacion`);
-  await expect(page.getByText("Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Guardar" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Usar mi ubicación" })).toHaveCount(0);
-  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toHaveCount(0);
+  await expect(page.getByTestId("review-notice")).toHaveText(`${NOTICE} «Cahuita».`);
+  await expect(send(page)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Usar mi ubicación" })).toBeVisible();
+  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
   await expect(page.locator(".leaflet-marker-icon")).toBeVisible();
-  await expect(page.locator(".place-line")).toHaveText("Talamanca, Limón");
-  const box = (await page.locator(".map-box").boundingBox())!;
-  await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.8);
-  await page.waitForTimeout(500);
-  await expect(page.locator('input[name="lat"]')).toHaveValue("9.7366");
-  await expect(page.locator('input[name="lng"]')).toHaveValue("-82.8431");
-  await expect(page.locator(".place-line")).toHaveText("Talamanca, Limón");
 });
 
 // ---------- Las fotos (maqueta 08d) ----------
@@ -319,12 +310,12 @@ const foto = (name: string) => ({ name, mimeType: "image/jpeg", buffer: readFile
 const tiles = (page: Page) => page.locator(".photos-grid > .photo");
 const counter = (page: Page) => page.locator(".photos-count");
 
-test("descartar con dos fotos nuevas borra la edición y sus objetos", async ({ page }) => {
+test("dos fotos nuevas van a revisión al subirlas; quitarlas las descarta y borra sus objetos", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/fotos`);
   await expect(page.getByRole("heading", { level: 1, name: "Fotos" })).toBeVisible();
   await expect(counter(page)).toHaveText("5 de 15");
-  await expect(page.getByText("El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas.")).toBeVisible();
+  await expect(page.getByText("El orden y las fotos que quite se guardan al momento. Las fotos nuevas las revisamos antes de publicarlas, normalmente en menos de 24 horas.")).toBeVisible();
   await page.getByLabel("Añadir fotos").setInputFiles([foto("beach.jpg"), foto("loft.jpg")]);
   await expect(counter(page)).toHaveText("7 de 15", { timeout: 20_000 });
   await expect(page.getByRole("progressbar")).toHaveCount(0);
@@ -338,10 +329,13 @@ test("descartar con dos fotos nuevas borra la edición y sus objetos", async ({ 
   await page.getByRole("link", { name: "Listo" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   await expect(page.getByRole("link", { name: "5 fotos · 2 nuevas en revisión · Editar" })).toBeVisible();
-  await expect(page.getByText("Cambios sin enviar: 2 fotos nuevas")).toBeVisible();
-  page.once("dialog", (d) => void d.accept());
-  await page.getByRole("button", { name: "Descartar cambios" }).click();
-  await expect(page.getByText(/Cambios sin enviar/)).toHaveCount(0);
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cambios en revisión");
+  expect((await h.owner("owner").getOwn(id))!.edit!.photos.map((p) => p.status)).toEqual(["review", "review"]);
+  await page.getByRole("link", { name: "5 fotos · 2 nuevas en revisión · Editar" }).click();
+  await page.getByRole("button", { name: "Quitar foto 7" }).click();
+  await expect(counter(page)).toHaveText("6 de 15");
+  await page.getByRole("button", { name: "Quitar foto 6" }).click();
+  await expect(counter(page)).toHaveText("5 de 15");
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit).toBeNull();
   await expect.poll(async () => (await h.objects(id)).filter((o) => folders.some((f) => o.name.startsWith(`${f}/`))).length).toBe(0);
 });
@@ -416,19 +410,22 @@ test("quitar una foto nueva: el contador baja y sus objetos se borran", async ({
   await expect.poll(async () => (await h.objects(id)).filter((o) => o.name.startsWith(`${last}/`)).length).toBe(0);
 });
 
-test("con la edición en revisión: sin «Añadir» ni ✕ en las nuevas, se explica, y las aprobadas se quitan", async ({ page }) => {
+test("con fotos nuevas en revisión se añade y se quita; una con cambios pedidos lleva su nota", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
+  const photo = await h.photos("owner").addEditPhoto(id, `${id}/${randomUUID()}`);
   await h.photos("owner").addEditPhoto(id, `${id}/${randomUUID()}`);
-  await h.owner("owner").submitEdit(id);
+  const admin = h.admin("aal2");
+  await admin.reviewEditPhoto(photo.id, "changes", "Se ve un teléfono.", (await admin.getEdit(id))!.listing.edit!.photos[0]!.submittedAt);
   await page.goto(`/propietario/casas/${id}/editar/fotos`);
+  await expect(counter(page)).toHaveText("7 de 15");
+  await expect(page.locator(".photos-grid .photo.is-pending .tag")).toHaveText(["Cambios pedidos", "En revisión"]);
+  await expect(page.locator(".photos-grid .photo.is-pending").first()).toContainText("Se ve un teléfono.");
+  await expect(page.getByLabel("Añadir fotos")).toHaveCount(1);
+  await expect(page.locator(".photos-grid .photo.is-pending .remove")).toHaveCount(2);
+  await page.getByRole("button", { name: "Quitar foto 6" }).click();
   await expect(counter(page)).toHaveText("6 de 15");
-  await expect(page.getByText("Este cambio está en revisión. Si quiere cambiar algo, descarte la edición y empiece otra.")).toBeVisible();
-  await expect(page.locator(".photos-grid .photo.is-pending .tag")).toHaveText("En revisión");
-  await expect(page.locator(".photos-grid .photo.is-pending .remove")).toHaveCount(0);
-  await expect(page.getByLabel("Añadir fotos")).toHaveCount(0);
   await page.getByRole("button", { name: "Quitar foto 5" }).click();
   await expect(counter(page)).toHaveText("5 de 15");
-  await expect(page.locator(".photos-grid [data-photo]")).toHaveCount(4);
   expect((await h.owner("owner").getOwn(id))!.photos).toHaveLength(4);
 });
 
@@ -444,10 +441,9 @@ async function asAdmin(page: Page, path: string) {
   await expect(page).toHaveURL(new RegExp(`${path}$`));
 }
 
-test("el admin aprueba: la ficha muestra el nombre nuevo y el aviso desaparece", async ({ page }) => {
+test("el admin aprueba el nombre: la ficha lo muestra al momento y la casa sale de la cola", async ({ page }) => {
   const { id, publicId } = await h.seed({ status: "active" });
   await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
-  await h.owner("owner").submitEdit(id);
   await asAdmin(page, "/admin");
   await expect(editSection(page).getByRole("heading", { name: "Ediciones por revisar" })).toBeVisible();
   const item = editSection(page).getByRole("link", { name: /Cabina Cahuita/ });
@@ -460,7 +456,7 @@ test("el admin aprueba: la ficha muestra el nombre nuevo y el aviso desaparece",
   await expect(diff(page, "Nombre").locator(".diff-col")).toHaveText(["Antes Cabina Cahuita", "Ahora Casa Coco frente al mar"]);
   await expect(page.locator("details > summary", { hasText: "Lo que no cambia" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Rechazar" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Aprobar cambios" }).click();
+  await diff(page, "Nombre").getByRole("button", { name: "Aprobar" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("status")).toContainText("«Cabina Cahuita»: Cambios aprobados. La ficha ya los muestra.");
   await expect(editSection(page)).toHaveCount(0);
@@ -471,38 +467,38 @@ test("el admin aprueba: la ficha muestra el nombre nuevo y el aviso desaparece",
   await injectSession(page, "owner");
   await page.goto(`/propietario/casas/${id}`);
   await expect(page.getByRole("heading", { level: 1, name: "Casa Coco frente al mar" })).toBeVisible();
-  await expect(page.getByText(/Edición en revisión|Cambios sin enviar|Le pedimos cambios/)).toHaveCount(0);
+  await expect(page.locator(".tag-rev", { hasText: /En revisión|Cambios pedidos/ })).toHaveCount(0);
   await page.goto("/propietario/casas");
   await expect(card(page, "Casa Coco frente al mar").getByTestId("card-label")).toHaveText("Activa");
 });
 
-test("el admin pide cambios: el propietario ve la nota, corrige y reenvía", async ({ page }) => {
+test("el admin pide cambios en el nombre: el propietario ve la nota, corrige y vuelve a revisión", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await h.owner("owner").saveEdit(id, { title: "CASA COCO FRENTE AL MAR" });
-  await h.owner("owner").submitEdit(id);
   await asAdmin(page, `/admin/ediciones/${id}`);
-  await page.getByRole("button", { name: "Pedir cambios" }).click();
-  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Escriba una nota para pedir cambios.");
+  const name = diff(page, "Nombre");
+  await name.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(name.locator('.field-error[role="alert"]')).toHaveText("Escriba una nota para pedir cambios.");
   await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
-  await page.getByLabel(/Mensaje para el propietario/).fill("Use un nombre sin mayúsculas sostenidas.");
-  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  await name.getByLabel(/Mensaje para el propietario/).fill("Use un nombre sin mayúsculas sostenidas.");
+  await name.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("status")).toContainText("Cambios pedidos. El propietario verá su mensaje.");
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit?.status).toBe("changes");
 
   await injectSession(page, "owner");
   await page.goto(`/propietario/casas/${id}`);
-  await expect(page.getByText("Le pedimos cambios en la edición")).toBeVisible();
-  await expect(page.getByText("Use un nombre sin mayúsculas sostenidas.")).toBeVisible();
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Cambios pedidos");
+  await expect(page.getByTestId("pending-nombre")).toContainText("Le pedimos cambios: Use un nombre sin mayúsculas sostenidas.");
   await page.goto("/propietario/casas");
-  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Cambios pedidos en la edición");
+  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Cambios pedidos");
   await page.goto(`/propietario/casas/${id}`);
   await row(page, "Nombre").click();
   await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");
-  await save(page).click();
-  await expect(toastText(page)).toHaveText("Guardado. Envíelo a revisión cuando termine.");
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
-  await expect(page.getByText("Edición en revisión: nombre · normalmente en menos de 24 horas")).toBeVisible();
+  await send(page).click();
+  await expect(toastText(page)).toHaveText(SENT);
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
+  await expect(page.getByTestId("pending-nombre")).not.toContainText("Le pedimos cambios");
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ status: "review", title: "Casa Coco frente al mar" });
 });
 
@@ -511,7 +507,6 @@ test("el diff de la descripción, la ubicación y las fotos nuevas", async ({ pa
   await h.owner("owner").saveEdit(id, { description: "Casa de madera nueva frente al parque nacional Cahuita, con hamacas, rancho y wifi." });
   await h.owner("owner").saveEdit(id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zoneId: "704-puerto-viejo", zoneSource: "list" });
   await h.photos("owner").addEditPhoto(id, `${id}/${randomUUID()}`);
-  await h.owner("owner").submitEdit(id);
   await asAdmin(page, "/admin");
   await expect(editSection(page).getByRole("link")).toContainText("Edición: ubicación, descripción, 1 foto nueva");
   await editSection(page).getByRole("link").click();
@@ -524,28 +519,42 @@ test("el diff de la descripción, la ubicación y las fotos nuevas", async ({ pa
   await expect(map.locator(".leaflet-tooltip")).toHaveText(["Antes: Cahuita", "Ahora: Puerto Viejo"]);
   await expect(diff(page, "Fotos nuevas").locator("img")).toHaveCount(1);
   await expect(diff(page, "Nombre")).toHaveCount(0);
+  // Cada dato y cada foto con su decisión: aprobar la descripción deja lo demás pendiente, en la misma pantalla.
+  for (const t of ["Descripción", "Ubicación", "Foto nueva 1"]) await expect(diff(page, t).getByRole("button", { name: "Aprobar" })).toBeVisible();
+  await desc.getByRole("button", { name: "Aprobar" }).click();
+  await expect(diff(page, "Descripción")).toHaveCount(0);
+  await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))!.description).toContain("Casa de madera nueva");
+  await diff(page, "Foto nueva 1").getByLabel(/Mensaje para el propietario/).fill("Se ve un teléfono.");
+  await diff(page, "Foto nueva 1").getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(diff(page, "Foto nueva 1")).toContainText("Cambios pedidos: Se ve un teléfono.");
+  await map.getByRole("button", { name: "Aprobar" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))!.zone).toBe("Puerto Viejo");
 });
 
-test("si la base rechaza la decisión, la edición vuelve a la cola con su mensaje", async ({ page }) => {
+test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
-  await h.owner("owner").submitEdit(id);
   await asAdmin(page, `/admin/ediciones/${id}`);
-  await page.route("**/rest/v1/rpc/review_edit", (route) =>
+  await page.route("**/rest/v1/rpc/review_edit_field", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Esta edición ya tiene una decisión.", details: null, hint: null }) }),
   );
-  await page.getByRole("button", { name: "Aprobar cambios" }).click();
+  await diff(page, "Nombre").getByRole("button", { name: "Aprobar" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("alert")).toHaveText("No se guardó la decisión sobre «Cabina Cahuita»: Esta edición ya tiene una decisión.");
   await expect(editSection(page).getByRole("link", { name: /Cabina Cahuita/ })).toContainText("Edición: nombre");
   expect((await h.owner("owner").getOwn(id))!.edit?.status).toBe("review");
 });
 
-test("una edición sin enviar no se puede decidir", async ({ page }) => {
+test("lo que tiene cambios pedidos no se vuelve a decidir: espera al propietario", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await h.owner("owner").saveEdit(id, { title: "Casa Coco frente al mar" });
+  const admin = h.admin("aal2");
+  await admin.reviewEditField(id, "nombre", "changes", "Otro nombre, por favor.", (await admin.getEdit(id))!.listing.edit!.fields.nombre!.submittedAt);
   await asAdmin(page, `/admin/ediciones/${id}`);
-  await expect(page.getByText("Esta edición todavía no se ha enviado a revisión.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Aprobar cambios" })).toHaveCount(0);
+  await expect(diff(page, "Nombre")).toContainText("Cambios pedidos: Otro nombre, por favor.");
+  await expect(page.getByText("Lo pendiente tiene cambios pedidos: espera al propietario.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Aprobar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Pedir cambios" })).toHaveCount(0);
 });

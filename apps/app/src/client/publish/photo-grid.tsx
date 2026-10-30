@@ -181,8 +181,9 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
           {pending.map((p, j) => (
             <div key={p.id} className="photo is-pending">
               <img draggable={false} src={variantUrl(p, 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
-              <span className="tag tag-pending">En revisión</span>
-              {/* Con la edición en revisión, sus fotos nuevas tampoco se quitan (la base lo rechaza). */}
+              {/* Cada foto nueva con su estado (revisión por dato, A5): en revisión o con cambios pedidos y la nota. */}
+              <span className="tag tag-pending">{"status" in p && p.status === "changes" ? "Cambios pedidos" : "En revisión"}</span>
+              {"reviewNote" in p && p.reviewNote ? <span className="photo-note xs">{String(p.reviewNote)}</span> : null}
               {source.canAdd ? (
                 <button type="button" className="remove" aria-label={`Quitar foto ${photos.length + j + 1}`} disabled={busy || drag.dragging} onClick={() => remove(p, true)}>
                   <I.x size={16} />

@@ -1,9 +1,12 @@
 // Mutaciones de la edición de una casa publicada (spec .scratch/editar-casa). Los datos inmediatos (capacidad,
 // características, precio) se pintan al momento en la lista y en el detalle y vuelven atrás si la base los rechaza; los
-// que pasan por revisión se guardan en la edición de la casa (`Listing.edit`) y la caché toma la que devuelve la base.
+// que pasan por revisión van a revisión al guardarse, cada uno con su estado, en la edición de la casa (`Listing.edit`), y
+// la caché toma la que devuelve la base.
 import { useMutation, useQueryClient, type QueryClient, type UseMutationOptions } from "@tanstack/react-query";
-import type { EditPatch, ListingEdit, LivePatch } from "../domain/edit";
+import type { EditPatch, ListingEdit, LivePatch, ReviewedField } from "../domain/edit";
 import type { Listing } from "../domain/listing";
+import { toDomainError } from "../domain/errors";
+import { toast } from "../shared/toast";
 import { api, ownListingsQuery, patchCached, refresh } from "./owner";
 
 type Target = Pick<Listing, "id" | "publicId">;
@@ -45,7 +48,7 @@ const invalidateOwn = (client: QueryClient, userId: string, id: string) => {
   void client.invalidateQueries({ queryKey: detailKey(userId, id) });
 };
 
-/** Nombre, tipo, ubicación o descripción: a la edición de la casa (null si ya no cambia nada). */
+/** Nombre, tipo, ubicación o descripción: a revisión, en la edición de la casa (null si ya no cambia nada). */
 export function useSaveEdit(userId: string, l: Target) {
   const client = useQueryClient();
   return useMutation<ListingEdit | null, Error, EditPatch>({
@@ -58,25 +61,26 @@ export function useSaveEdit(userId: string, l: Target) {
 const cachedEdit = (client: QueryClient, userId: string, id: string): ListingEdit | null =>
   (client.getQueryData<Listing | null>(detailKey(userId, id)) ?? client.getQueryData<Listing[]>(ownListingsQuery(userId).queryKey)?.find((x) => x.id === id))?.edit ?? null;
 
-/** «Enviar a revisión». */
-export function useSubmitEdit(userId: string, l: Target) {
+/** «Descartar» un dato pendiente (revisión por dato, A5): sale de la ficha editable al momento; la ficha pública sigue igual. */
+export function useDiscardEditField(userId: string, l: Target) {
   const client = useQueryClient();
-  return useMutation<void, Error, void>({
-    mutationFn: async () => (await api()).submitEdit(l.id),
-    onSuccess: () => {
+  return useMutation<void, Error, ReviewedField, { edit: ListingEdit | null }>({
+    mutationFn: async (field) => (await api()).discardEditField(l.id, field),
+    onMutate: (field) => {
       const edit = cachedEdit(client, userId, l.id);
-      if (edit) patchCached(client, userId, l.id, { edit: { ...edit, status: "review", reviewNote: null } });
+      if (!edit) return { edit };
+      const fields = { ...edit.fields };
+      delete fields[field];
+      const cleared = field === "nombre" ? { title: null } : field === "descripcion" ? { description: null } : field === "tipo" ? { kind: null, bathroomShared: null } : { location: null };
+      const next = { ...edit, ...cleared, fields };
+      patchCached(client, userId, l.id, { edit: Object.keys(fields).length || next.photos.length ? next : null });
+      return { edit };
     },
-    onSettled: () => invalidateOwn(client, userId, l.id),
-  });
-}
-
-/** «Descartar cambios»: la ficha sigue como está. */
-export function useDiscardEdit(userId: string, l: Target) {
-  const client = useQueryClient();
-  return useMutation<void, Error, void>({
-    mutationFn: async () => (await api()).discardEdit(l.id),
-    onSuccess: () => patchCached(client, userId, l.id, { edit: null }),
+    // La fila ya se fue: vuelve, y el aviso de la base sale en un toast.
+    onError: (error, _field, context) => {
+      if (context) patchCached(client, userId, l.id, { edit: context.edit });
+      toast(toDomainError(error).message);
+    },
     onSettled: () => invalidateOwn(client, userId, l.id),
   });
 }

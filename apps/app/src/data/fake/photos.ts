@@ -36,10 +36,10 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
   /** listing_is_published: aprobada alguna vez y activa, pendiente de pago o inactiva. */
   const isPublished = (l: FakeListing) => ["active", "payment_due", "inactive"].includes(l.status) && l.firstPublishedAt !== null;
 
-  /** listing_photo_uploadable: editable, o publicada sin una edición en revisión. */
+  /** listing_photo_uploadable: editable, o publicada (cada foto nueva va a revisión por su cuenta). */
   const uploadable = (listingId: string) => {
     const l = db.listings.get(listingId);
-    return editable(listingId) || (!!l && l.ownerId === opts.userId() && isPublished(l) && db.edits.get(listingId)?.status !== "review");
+    return editable(listingId) || (!!l && l.ownerId === opts.userId() && isPublished(l));
   };
 
   /** listing_photos_guard: añadir fotos aprobadas, solo en borrador o con cambios. */
@@ -138,14 +138,14 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
 
     async addEditPhoto(listingId, folder) {
       const l = edits.published(listingId, me());
-      if (db.edits.get(listingId)?.status === "review") throw new DomainError(EDIT_MESSAGES.inReview, "validation");
       const invalid = () => new DomainError("Ruta de foto no válida.", "validation");
       if (!isPhotoFolder(listingId, folder)) throw invalid();
       if (db.photos.some((p) => p.path === folder) || db.editPhotos.some((p) => p.path === folder)) throw invalid();
       const mine = db.editPhotosOf(listingId);
       if (db.photosOf(listingId).length + mine.length >= MAX_PHOTOS) throw new DomainError(EDIT_MESSAGES.maxPhotos, "validation");
       edits.start(l);
-      const row = { id: db.newId(), listingId, path: folder, position: mine.length ? Math.max(...mine.map((p) => p.position)) + 1 : 0 };
+      // Va a revisión al registrarla (revisión por dato, A5).
+      const row = { id: db.newId(), listingId, path: folder, position: mine.length ? Math.max(...mine.map((p) => p.position)) + 1 : 0, status: "review" as const, reviewNote: null, submittedAt: db.now() };
       db.editPhotos.push(row);
       return fromPhotoRows([row], url)[0]!;
     },
@@ -154,7 +154,6 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
       const photo = db.editPhotos.find((p) => p.id === photoId);
       if (!photo || db.listings.get(photo.listingId)?.ownerId !== me()) throw new DomainError("No encontramos esa foto.", "not_found");
       edits.published(photo.listingId, me());
-      if (db.edits.get(photo.listingId)?.status === "review") throw new DomainError(EDIT_MESSAGES.inReview, "validation");
       db.editPhotos = db.editPhotos.filter((p) => p.id !== photoId);
       db.editPhotosOf(photo.listingId).forEach((p, i) => (p.position = i));
       edits.dropIfEmpty(photo.listingId);
@@ -165,7 +164,6 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
       edits.published(listingId, me());
       const e = db.edits.get(listingId);
       if (!e) throw new DomainError(EDIT_MESSAGES.notFound, "not_found");
-      if (e.status === "review") throw new DomainError(EDIT_MESSAGES.inReview, "validation");
       const current = db.editPhotosOf(listingId);
       const same = photoIds.length === current.length && new Set(photoIds).size === photoIds.length && photoIds.every((id) => current.some((p) => p.id === id));
       if (!same) throw new DomainError("La lista de fotos cambió. Vuelva a intentarlo.", "conflict");

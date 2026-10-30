@@ -99,10 +99,9 @@ describe("cardLabel", () => {
   const l = (status: Listing["status"], available = true, reopenAt: string | null = null) => ({ status, available, reopenAt });
   it("pendiente de pago", () => expect(cardLabel(l("payment_due"))).toEqual({ text: "Pendiente de pago", cls: "state-pay" }));
   it("inactiva", () => expect(cardLabel(l("inactive"))).toEqual({ text: "Inactiva", cls: "state-off" }));
-  it("edición sin enviar", () => expect(cardLabel(l("active"), { status: "open" })).toEqual({ text: "Edición sin enviar", cls: "state-draft" }));
-  it("edición en revisión", () => expect(cardLabel(l("active"), { status: "review" })).toEqual({ text: "Edición en revisión", cls: "state-review" }));
-  it("cambios pedidos en la edición", () =>
-    expect(cardLabel(l("active"), { status: "changes" })).toEqual({ text: "Cambios pedidos en la edición", cls: "state-review" }));
+  // Revisión por dato (A5): sin «Edición sin enviar»; lo pendiente está en revisión o con cambios pedidos.
+  it("cambios en revisión", () => expect(cardLabel(l("active"), { status: "review" })).toEqual({ text: "Cambios en revisión", cls: "state-review" }));
+  it("cambios pedidos en una casa publicada", () => expect(cardLabel(l("active"), { status: "changes" })).toEqual({ text: "Cambios pedidos", cls: "state-review" }));
   it("cerrada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Cerrada hasta el 3 dic", cls: "state-off" }));
   it("cerrada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Cerrada", cls: "state-off" }));
   it("activa", () => expect(cardLabel(l("active"))).toEqual({ text: "Activa", cls: "state-ok" }));
@@ -112,8 +111,8 @@ describe("cardLabel", () => {
   it("rechazada", () => expect(cardLabel(l("rejected"))).toEqual({ text: "Rechazada", cls: "state-bad" }));
   it("prioridad: pago > edición > cerrada > estado", () => {
     expect(cardLabel({ status: "payment_due", available: false, reopenAt: "2026-12-03" }, { status: "review" }).text).toBe("Pendiente de pago");
-    expect(cardLabel({ status: "active", available: false, reopenAt: null }, { status: "review" }).text).toBe("Edición en revisión");
-    expect(cardLabel({ status: "inactive", available: true, reopenAt: null }, { status: "open" }).text).toBe("Inactiva");
+    expect(cardLabel({ status: "active", available: false, reopenAt: null }, { status: "review" }).text).toBe("Cambios en revisión");
+    expect(cardLabel({ status: "inactive", available: true, reopenAt: null }, { status: "review" }).text).toBe("Inactiva");
   });
 });
 

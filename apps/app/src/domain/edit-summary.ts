@@ -5,6 +5,11 @@ import type { ListingEdit } from "./edit";
 
 export type ReviewedField = "nombre" | "tipo" | "ubicacion" | "descripcion";
 
+/** Cada dato con revisión en la base (listing_edit_fields.field). */
+export type EditFieldColumn = "title" | "kind" | "description" | "location";
+export const FIELD_COLUMN: Record<ReviewedField, EditFieldColumn> = { nombre: "title", tipo: "kind", descripcion: "description", ubicacion: "location" };
+export const COLUMN_FIELD: Record<EditFieldColumn, ReviewedField> = { title: "nombre", kind: "tipo", description: "descripcion", location: "ubicacion" };
+
 const SUMMARY_NAMES: Record<ReviewedField, string> = { nombre: "nombre", tipo: "tipo", ubicacion: "ubicación", descripcion: "descripción" };
 
 /** Datos con revisión que cambia la edición, en el orden nombre, tipo, ubicación, descripción. */
