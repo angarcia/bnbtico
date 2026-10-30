@@ -43,8 +43,8 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   });
   await page.goto(`/propietario/publicar/${id}/7`);
   await expect(page.getByRole("status")).toHaveText("0 de 15");
-  // Publicar v2: sin fotos se puede enviar; la ayuda lo dice y se va con la primera foto.
-  const help = page.getByText("Puede enviarla sin fotos; para publicarla necesitamos al menos una.");
+  // Hace falta al menos una foto para enviar (2026-10-30): la ayuda lo dice y se va con la primera foto.
+  const help = page.getByText("Necesita al menos una foto para enviarla a revisión.");
   await expect(help).toBeVisible();
 
   await pick(page).setInputFiles(SEIS);

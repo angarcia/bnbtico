@@ -269,13 +269,16 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .return-card{align-items:center}
 .return-thumb{width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--state-soft)}
 .return-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.listing-card{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit}
-.listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:8px}
+/* Ronda de Ana 2026-10-30: cada casa en su tarjeta (como Airbnb, con nuestras esquinas pequeñas): superficie y sombra de `.card`,
+   foto a sangre arriba (la tarjeta recorta con su radio) y el texto con relleno. */
+.listing-card{display:flex;flex-direction:column;gap:0;text-decoration:none;color:inherit;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:0}
+.listing-card .sk-line{margin:12px 14px 14px}
 .listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
-.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:0 4px}
+.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
 .card-price{margin-top:3px}
 .card-price b{font-weight:var(--w-strong)}
-.listing-grid{display:grid;grid-template-columns:1fr;gap:24px}
+.listing-grid{display:grid;grid-template-columns:1fr;gap:32px}
 .listing-cell{position:relative;min-width:0}
 .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .pills-tl .pill{position:static}
@@ -408,8 +411,11 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .map-preview .map-price{position:absolute}
 .map-price.is-selected{background:var(--brand-ink);color:#FFFBF2;box-shadow:0 6px 14px -4px rgba(180,76,48,.6)}
 .map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
-/* La nota del final de la lista sube por encima de «Mapa» (48 px más 16 de aire). */
-.listing-grid ~ .note-col{margin-bottom:64px}
+/* Baja con la barra de pestañas (`html.tabbar-away`), con su misma transición. */
+.map-label{transition:transform 200ms var(--ease-out)}
+/* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
+.map-label-end{display:block;height:0;margin-top:-14px}
+html.tabbar-away .map-label{transform:translate(-50%,calc(var(--nav-h) + env(safe-area-inset-bottom)))}
 .map-label{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:5;animation:fade-in 160ms var(--ease-out)}
 .map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:5;background:var(--surface-2)}
 html.map-open{overflow:hidden}
@@ -555,6 +561,12 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .house-photo{aspect-ratio:1/1;border-radius:8px;width:100%}
 .house-photo-empty{display:grid;place-items:center;width:100%;height:100%;background:var(--surface-2);color:var(--state-ink)}
 .house-card-title{font-size:20px;font-weight:var(--w-strong)}
+/* Mis casas (ronda de Ana 2026-10-30): el mismo lenguaje que Explorar: foto a sangre arriba, texto con relleno y más aire entre
+   tarjetas. Actividad comparte la cabeza de la tarjeta y no cambia. */
+.house-list{gap:28px}
+.house-list .house-card{padding:0 0 14px;overflow:hidden}
+.house-list .house-photo{border-radius:0}
+.house-list .house-card > :not(.house-photo){margin-inline:14px}
 .house-card-title a{color:inherit;text-decoration:none}
 /* La etiqueta del estado, sobre la foto: una pastilla con su punto. */
 .state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:15px;font-weight:var(--w-medium);line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
@@ -886,7 +898,7 @@ small.swap-in{display:block}
 /* La barra de pestañas: fuera mientras hay días seleccionados; en el Calendario sale al bajar y vuelve al subir. */
 .tabbar{transition:transform 200ms var(--ease-out)}
 html.tabbar-away .tabbar,.app:has(.cal-panel) .tabbar{transform:translate(-50%,100%)}
-@media (prefers-reduced-motion:reduce){.tabbar{transition:none}}
+@media (prefers-reduced-motion:reduce){.tabbar,.map-label{transition:none}}
 .cal-cancel{font-size:15px;font-weight:var(--w-medium);color:var(--muted);min-height:32px}
 .seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
 .seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
@@ -980,7 +992,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 @media (min-width:900px){
   .app:has(.listing-grid){max-width:1120px}
   .app:has(.listing-grid) .tabbar,.app:has(.listing-grid) .topbar{max-width:1120px}
-  .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+  .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
 }
 @media (min-width:1200px){
   .listing-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -1018,6 +1030,9 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .btn-back{flex:0 0 56px;width:56px;padding:0}
 .review-row.is-missing{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
 .review-row.is-missing .review-label,.review-row.is-missing .review-text{color:var(--brand-ink)}
+/* Publicar avanza siempre (2026-10-30): lo no obligatorio que falta, en ocre (aviso); lo obligatorio, en terracota. */
+.review-row.is-warn{background:var(--sun-soft);color:var(--sun-ink)}
+.review-row.is-warn .review-label,.review-row.is-warn .review-text,.review-row.is-warn svg{color:var(--sun-ink)}
 
 /* ---------- Tipografía (revisión UX 2026-10-29, T1) ---------- */
 /* Negritas sueltas del texto (<b>, <strong>) a 600 como mucho; títulos de pantalla y de casa en --fg al 85 % (un hex fijo,

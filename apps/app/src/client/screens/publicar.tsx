@@ -6,7 +6,8 @@ import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
-import { LAST_STEP, STEPS, resumeStep, stepFromParam, validateStep, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
+import { LAST_STEP, STEPS, stepFromParam, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
+import { requiredProblems, resumeStep } from "../../domain/publish-rules";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
@@ -185,7 +186,7 @@ export function PasoScreen() {
         {/* Los 8 tramos agrupados por etapa: un hueco mayor donde empieza la siguiente. */}
         {/* En el último paso, el tramo de lo obligatorio que falta queda vacío (revisión UX 2026-10-29, A9). */}
         {STEPS.map((s) => (
-          <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && s !== 7 && validateStep(s, l)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
+          <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && requiredProblems(l).some((p) => p.step === s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
         ))}
       </div>
       <StepForm key={step} userId={userId} listing={l} step={step} enter={enter}>

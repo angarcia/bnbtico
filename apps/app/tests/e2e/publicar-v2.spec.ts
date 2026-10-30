@@ -228,15 +228,15 @@ test("un borrador vacío con fecha del futuro (reloj desfasado) no se toma por e
 const ownerEmail = () => sql(`select coalesce(email, '') from public.profiles where phone = '${TEST_PHONES.owner}'`);
 const setOwnerEmail = (email: string) => sql(`update public.profiles set email = ${email ? `'${email}'` : "null"} where phone = '${TEST_PHONES.owner}'`);
 
-/** Una casa completa sin fotos ni descripción, lista para enviar desde el paso 9. */
+/** Una casa completa con una sola foto y sin descripción, lista para enviar desde el paso 9. */
 async function sendFromStep9(page: Page) {
-  const { id } = await h.seed({ status: "draft", photos: 0, draft: { description: "" } });
+  const { id } = await h.seed({ status: "draft", photos: 1, draft: { description: "" } });
   await page.goto(`/propietario/publicar/${id}/9`);
   await page.getByRole("button", { name: "Enviar a revisión" }).click();
   return id;
 }
 
-test("envía sin fotos ni descripción; el correo se puede saltar una vez", async ({ page }) => {
+test("envía con una foto y sin descripción; el correo se puede saltar una vez", async ({ page }) => {
   const before = ownerEmail();
   setOwnerEmail("");
   try {

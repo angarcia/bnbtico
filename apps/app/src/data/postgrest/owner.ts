@@ -8,7 +8,8 @@ import { CALENDAR_MESSAGES, isIsoDate } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
-import { DEFAULT_PROVINCE, planStep } from "../../domain/listing";
+import { DEFAULT_PROVINCE } from "../../domain/listing";
+import { planStep } from "../../domain/publish-rules";
 import { EDIT_SELECT, fromEditRow, fromListingRow, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
 import { FIELD_COLUMN } from "../../domain/edit-summary";
 

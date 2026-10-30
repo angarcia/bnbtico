@@ -12,7 +12,7 @@ const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQV
 const TITLE = "Casa Manzanillo, a pie de playa";
 const LATE = "Descripción que no espera a la anterior: sale ya, con keepalive, aunque la página se vaya enseguida.";
 const alert = (page: Page) => page.locator('.note[role="alert"]');
-const NO_PHOTOS_HELP = "Puede enviarla sin fotos; para publicarla necesitamos al menos una.";
+const NO_PHOTOS_HELP = "Necesita al menos una foto para enviarla a revisión.";
 let h: ListingsHarness;
 
 test.describe.configure({ mode: "serial" });
@@ -80,8 +80,8 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
   await expectNoScroll(page, "paso 2");
 
-  // 2 ¿Dónde está su casa?: sin pin no se sigue; un toque en el mapa (abre en Limón) da el cantón y la zona más cercana.
-  await expect(page.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  // 2 ¿Dónde está su casa?: sin pin se puede seguir (avanza siempre); un toque en el mapa (abre en Limón) da el cantón y la zona más cercana.
+  await expect(page.getByRole("button", { name: "Continuar" })).toBeEnabled();
   await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
   // El mapa abre en Limón a zoom 9, con la costa a unos 3 px al este del centro: el toque va 10 px al oeste, en tierra.
   await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
@@ -99,9 +99,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
   await expectNoScroll(page, "paso 4");
 
-  // 4 Capacidad.
-  await continuar(page);
-  await expect(alert(page)).toContainText("Indique cuántas personas");
+  // 4 Capacidad (no bloquea: sin rellenar también se sigue; aquí se rellena).
   await count(page, "personas", 5);
   await count(page, "habitaciones", 2);
   await count(page, "baños", 2);
@@ -114,8 +112,6 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await page.getByText("Parqueo", { exact: true }).click();
   await expect(page.getByLabel("Tipo de parqueo")).toBeVisible();
   await expectNoScroll(page, "paso 5 con parqueo");
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Indique si el parqueo es gratuito o de pago.");
   await page.getByLabel("Tipo de parqueo").selectOption("free");
   await page.getByText("Frente al mar", { exact: true }).click();
   await continuar(page);
@@ -160,19 +156,15 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.getByLabel("Descripción")).toHaveAttribute("placeholder", "¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa.");
   await expect(page.locator("#pub-description-count")).toHaveText("Faltan 46 caracteres");
-  await continuar(page);
-  await expect(alert(page)).toHaveText("El nombre de la casa debe tener entre 5 y 32 caracteres.");
-  await expect(page).toHaveURL(/\/6$/);
+  // Un nombre o una descripción fuera de regla tampoco frenan «Continuar»: se avisa en «Revisar y enviar».
   await title.fill(TITLE);
-  await continuar(page);
-  await expect(alert(page)).toHaveText("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.");
   await expect(page.locator("#pub-description-count")).toHaveText("93 / 2000");
   await expect(page.getByLabel("Nombre de la casa")).toHaveAttribute("maxlength", "32");
   await continuar(page);
   await expect(page).toHaveURL(/\/7$/);
 
-  // 7 Fotos: el recuento sale de la base; sin fotos se puede seguir y enviar (publicar v2: para aprobarla basta una). La
+  // 7 Fotos: el recuento sale de la base; sin fotos se puede seguir, pero para enviar hace falta una. La
   // rejilla hace scroll por dentro, la página no.
   await expect(page.getByRole("status")).toHaveText("0 de 15");
   await expect(page.getByText(NO_PHOTOS_HELP)).toBeVisible();
@@ -195,8 +187,6 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(accepts.getByRole("radio", { name: "No" })).toBeChecked();
   await expect(monthly).toHaveCount(0);
   await expect(nightly).toHaveAttribute("enterkeyhint", "done");
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Indique el precio por noche en colones.");
   await nightly.fill("85.000");
   await accepts.getByText("Sí", { exact: true }).tap();
   await expect(monthly).toBeVisible();
@@ -204,9 +194,6 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(nightly).toHaveAttribute("enterkeyhint", "next");
   await expect(monthly).toHaveAttribute("enterkeyhint", "done");
   await expectKeyboardRoom(page, "pub-monthlyPriceCrc");
-  await monthly.fill("0");
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
   await monthly.fill("480.000");
   await accepts.getByText("No", { exact: true }).tap();
   await expect(monthly).toHaveCount(0);
@@ -266,7 +253,7 @@ test("nombre: se detiene en 32 y muestra 32 / 32", async ({ page }) => {
   await expect(page.locator("#pub-title-count")).toContainText("32 / 32");
 });
 
-test("envía sin fotos ni descripción", async ({ page }) => {
+test("sin fotos no se envía; sin descripción sí (aviso en ocre)", async ({ page }) => {
   // Con correo en la cuenta: la pregunta del correo (si la hay) no se interpone al enviar.
   sql(`update public.profiles set email = 'yorleny@ejemplo.com' where phone = '${TEST_PHONES.owner}'`);
   try {
@@ -305,14 +292,27 @@ test("envía sin fotos ni descripción", async ({ page }) => {
     await continuar(page);
     await expect(page).toHaveURL(/\/9$/);
 
-    // 9: el resumen dice lo que no hay, sin avisos que frenen.
+    // 9: sin fotos, la fila de Fotos queda en terracota (obligatoria) y «Enviar a revisión» espera; sin descripción es solo un
+    // aviso en ocre en la fila del nombre, que no frena nada.
     const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
-    await expect(review.getByRole("link", { name: /Fotos/ }).locator(".review-text")).toHaveText("Ninguna todavía");
-    await expect(review.getByRole("link", { name: /Nombre/ }).locator(".review-text")).toHaveText(`«${TITLE}» · sin descripción`);
+    const photosRow = review.getByRole("link", { name: /Fotos/ });
+    await expect(photosRow).toHaveClass(/is-missing/);
+    await expect(photosRow.locator(".review-text")).toHaveText("Añadir una foto");
+    await expect(page.getByRole("button", { name: "Enviar a revisión" })).toBeDisabled();
+    const nameRow = review.getByRole("link", { name: /Nombre/ });
+    await expect(nameRow).toHaveClass(/is-warn/);
+    await expect(nameRow).not.toHaveClass(/is-missing/);
+    await expect(nameRow.locator(".review-text")).toHaveText("Añadir una descripción");
+    await expect(review.getByRole("link", { name: /Capacidad/ })).not.toHaveClass(/is-warn|is-missing/);
     await expectNoScroll(page, "paso 9 sin fotos ni descripción");
+
+    await h.addPhotos(id, 1);
+    await page.reload();
+    await expect(photosRow.locator(".review-text")).toHaveText("1 foto");
+    await expectNoScroll(page, "paso 9 con una foto y sin descripción");
     await page.getByRole("button", { name: "Enviar a revisión" }).click();
     await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/enviada$`));
-    expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, description: "", photoCount: 0 });
+    expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, description: "", photoCount: 1 });
   } finally {
     sql(`update public.profiles set email = null where phone = '${TEST_PHONES.owner}'`);
   }
@@ -474,8 +474,8 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await expect(page.getByText(/«Borrador del otro teléfono»/)).toBeVisible();
   await page.getByRole("link", { name: "Seguir con el borrador" }).click();
-  // El borrador sembrado no tiene fotos, que ya no son obligatorias para enviar (publicar v2): abre en «Revisar y enviar».
-  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/9$`));
+  // El borrador sembrado no tiene fotos, que son obligatorias para enviar (2026-10-30): abre en la pantalla de las fotos.
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/7$`));
   await page.goto(`/propietario/publicar/${pending.id}/1`);
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Habitación/]);
   await expect(page.locator(".ready-list")).toHaveCount(0); // con algo ya rellenado, no repite qué tener a mano
@@ -529,17 +529,31 @@ test("«Cerrar» en la cabecera espera al guardado en curso y vuelve a Mis casas
   await expect(page.getByText(/«Cabina que se cierra»/)).toBeVisible();
 });
 
-test("con un dato que falta, «Enviar» no se puede tocar y la fila que falta lleva a la pantalla que lo pide", async ({ page }) => {
-  const draft = await h.seed({ status: "draft", photos: 5, draft: { capacity: null } });
+test("con un obligatorio que falta, «Enviar» no se puede tocar y la fila terracota lleva a la pantalla que lo pide", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 0 });
   await page.goto(`/propietario/publicar/${draft.id}/9`);
-  // Revisión UX 2026-10-29 (A9): lo que falta es una acción («Indicar la capacidad»), no un dato más.
+  // Publicar avanza siempre (2026-10-30): lo obligatorio que falta es una acción en terracota; «Enviar a revisión» espera.
   await expect(page.getByRole("button", { name: "Enviar a revisión" })).toBeDisabled();
   const missing = page.locator(".review-row.is-missing");
   await expect(missing).toHaveCount(1);
-  await expect(missing).toContainText("Indicar la capacidad");
+  await expect(missing).toContainText("Añadir una foto");
   await missing.click();
-  await expect(page).toHaveURL(/\/4$/);
+  await expect(page).toHaveURL(/\/7$/);
   expect((await h.owner("owner").getOwn(draft.id))?.status).toBe("draft");
+});
+
+test("lo que no es obligatorio (capacidad, parqueo, descripción) sale en ocre y no impide enviar", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 2, draft: { capacity: null, features: ["parking"], parkingPaid: null, description: "Corta." } });
+  await page.goto(`/propietario/publicar/${draft.id}/9`);
+  await expect(page.locator(".review-row.is-missing")).toHaveCount(0);
+  const warned = page.locator(".review-row.is-warn");
+  await expect(warned).toHaveCount(3);
+  await expect(warned.locator(".review-text")).toHaveText(["Completar la capacidad", "Indicar si se paga", "Revisar la descripción"]);
+  // Progreso: ningún tramo vacío, porque no falta nada obligatorio.
+  await expect(page.locator(".progress span.on")).toHaveCount(8);
+  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${draft.id}/enviada$`));
+  expect((await h.owner("owner").getOwn(draft.id))?.status).toBe("review");
 });
 
 // Revisión del movimiento: la pantalla nueva entra de lado (±16 px) y no debe ensanchar la página mientras entra.

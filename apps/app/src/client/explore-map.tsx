@@ -109,21 +109,34 @@ export function ExploreMap({ listings, zone, monthly, onOpen, ref }: { listings:
   );
 }
 
-/** «Mapa», flotando sobre la barra de pestañas mientras la caja del mapa quedó arriba, fuera de la pantalla. */
+/** «Mapa», flotando sobre la barra de pestañas mientras la caja del mapa quedó arriba, fuera de la pantalla, y la lista de
+ *  casas sigue pasando por debajo. Se va al acabarse la lista (ronda de Ana 2026-10-30: tapaba «Publicar mi casa gratis»):
+ *  una marca sin alto, justo detrás de la rejilla, dice cuándo el final de la lista sube por encima de la zona del botón. */
+const LABEL_ZONE = 160;
 export function MapLabel({ target, onOpen, hidden = false }: { target: RefObject<HTMLElement | null>; onOpen(): void; hidden?: boolean }) {
   const [above, setAbove] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const end = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const el = target.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (!el || !end.current || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(([entry]) => setAbove(!!entry && !entry.isIntersecting && entry.boundingClientRect.bottom < 0));
     io.observe(el);
-    return () => io.disconnect();
+    const past = new IntersectionObserver(([entry]) => setEnded(!!entry && (entry.isIntersecting || entry.boundingClientRect.top < 0)), {
+      rootMargin: `0px 0px -${LABEL_ZONE}px 0px`,
+    });
+    past.observe(end.current);
+    return () => (io.disconnect(), past.disconnect());
   }, [target]);
-  if (!above || hidden) return null;
+  const sentinel = <span ref={end} className="map-label-end" aria-hidden="true" />;
+  if (!above || ended || hidden) return sentinel;
   return (
-    <button type="button" className="map-label" onClick={onOpen}>
-      Mapa
-      <I.map size={20} />
-    </button>
+    <>
+      {sentinel}
+      <button type="button" className="map-label" onClick={onOpen}>
+        Mapa
+        <I.map size={20} />
+      </button>
+    </>
   );
 }

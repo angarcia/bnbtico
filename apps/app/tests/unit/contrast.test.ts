@@ -76,6 +76,8 @@ const STATE_LABELS: [string, string, string][] = [
   ["state-pay", "--sun-ink", "--sun-soft"],
   ["state-off", "--muted", "--surface-2"],
   ["state-bad", "--busy-ink", "--busy"],
+  // «Revisar y enviar»: los avisos no obligatorios van en ocre (publicar avanza siempre, 2026-10-30).
+  ["review-row.is-warn", "--sun-ink", "--sun-soft"],
 ];
 
 // Tema oscuro: el contador sobre --brand-ink lleva texto --bg (override de `.count-badge` en global.css).
@@ -95,6 +97,10 @@ describe("contraste de los colores de texto (tema claro)", () => {
   it.each(STATE_LABELS)(".%s: %s sobre %s", (cls, fg, bg) => {
     expect(css).toContain(`.${cls}{background:var(${bg});color:var(${fg})}`);
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("las filas de aviso de «Revisar y enviar» pintan etiqueta, texto y flecha en --sun-ink", () => {
+    expect(css).toContain(".review-row.is-warn .review-label,.review-row.is-warn .review-text,.review-row.is-warn svg{color:var(--sun-ink)}");
   });
 
   it("terracota de texto #B44C30 y margen de 16 px", () => {

@@ -28,11 +28,13 @@ import {
   type Selection,
 } from "../../domain/calendar";
 import { can } from "../../domain/can";
+import { ignoreTabBarScroll, showTabBar } from "../hiding-tabbar";
 import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
 import { reportError } from "../../shared/beacon";
 import { costaRicaToday } from "../../domain/inquiry";
-import { resumeStep, type Listing } from "../../domain/listing";
+import { type Listing } from "../../domain/listing";
+import { resumeStep } from "../../domain/publish-rules";
 import { formatCRC } from "../../domain/money";
 import { I } from "../../shared/icons";
 import { whenIdle } from "../../shared/idle";
@@ -101,7 +103,6 @@ export function CalendarioScreen() {
     // `go` cambia en cada render: basta con depender de la casa corregida.
   }, [corrected]);
 
-  useHidingTabBar();
   return (
     <>
       <RootHeader title="Calendario" />
@@ -281,33 +282,6 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   );
 }
 
-/** La barra de pestañas sale por abajo al desplazarse hacia delante y vuelve al desplazarse hacia atrás o arriba del todo
- *  (revisión UX C4, como Airbnb). Un umbral de 8 px para que no parpadee; la animación y su ausencia con movimiento
- *  reducido, en CSS (`html.tabbar-away`). */
-const TABBAR_THRESHOLD = 8;
-/** Hasta cuándo no cuenta el desplazamiento: el que hace la pantalla al llevar el mes pedido arriba no es del dedo. */
-let ignoreScrollUntil = 0;
-const showTabBar = () => document.documentElement.classList.remove("tabbar-away");
-function useHidingTabBar() {
-  useEffect(() => {
-    const root = document.documentElement;
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (performance.now() < ignoreScrollUntil) last = y;
-      else if (y <= 0) root.classList.remove("tabbar-away");
-      else if (Math.abs(y - last) < TABBAR_THRESHOLD) return;
-      else root.classList.toggle("tabbar-away", y > last);
-      last = y;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      root.classList.remove("tabbar-away");
-    };
-  }, []);
-}
-
 /** Arriba del calendario de una casa activa (can(l,"available")): abierta, la fila abre la hoja «Cerrar la casa»;
  *  cerrada, dice hasta cuándo y «Abrir la casa» la abre en un toque. Las dos escrituras son optimistas (useSetAvailable);
  *  mientras la base no contesta, «Abrir la casa» no hace nada (sigue enfocable, con aria-disabled). */
@@ -430,7 +404,7 @@ function CalendarMonths({ months, target, render }: { months: string[]; target: 
   useLayoutEffect(() => {
     if (!target || target === months[0]) return;
     const toTarget = () => {
-      ignoreScrollUntil = performance.now() + 300;
+      ignoreTabBarScroll(300);
       box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
     };
     toTarget();

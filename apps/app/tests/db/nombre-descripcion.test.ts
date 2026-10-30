@@ -45,7 +45,7 @@ describe("migración nombre_y_descripcion", () => {
     const me = h.owner("owner");
     const s = await h.seed({ status: "active" });
     expect(await me.saveEdit(s.id, { description: "" })).toMatchObject({ fields: { descripcion: { status: "review" } } });
-    const draft = await h.seed({ status: "draft", draft: { description: "" } });
+    const draft = await h.seed({ status: "draft", photos: 1, draft: { description: "" } });
     expect(await me.submit(draft.id)).toBeUndefined();
   });
 });

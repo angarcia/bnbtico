@@ -66,7 +66,7 @@ export const KIND_HINTS: Record<"completo" | "habitacion", string> = {
 };
 
 export const STEP_NAMES = ["Alojamiento", "Ubicación", "Capacidad", "Características", "Nombre", "Fotos", "Precio", "Enviar"] as const;
-/** Fotos que hacen falta para aprobar (el dueño puede enviar sin fotos). */
+/** Fotos que hacen falta para enviar a revisión y para aprobar. */
 export const MIN_PHOTOS_TO_APPROVE = 1;
 
 /** «Alquiler mensual»: característica de la ficha y resumen del admin. */
@@ -197,7 +197,7 @@ export function parseColones(input: string): number | null {
   return Number.NaN;
 }
 
-const isInt = (v: number | null, min: number) => v !== null && Number.isInteger(v) && v >= min;
+export const isInt = (v: number | null, min: number) => v !== null && Number.isInteger(v) && v >= min;
 
 /** Limpia dependencias: toda casa se alquila por noches; sin parqueo no hay tipo; sin «Alquiler mensual» no hay precio al
  *  mes; sin habitación no hay dato del baño; solo una zona de la lista lleva `zoneId`. Las columnas antiguas (monthlyMode,
@@ -233,6 +233,19 @@ export const LOCATION_MESSAGES = {
   longZone: `La zona puede tener como mucho ${OTHER_ZONE_MAX} caracteres.`,
 } as const;
 
+export const titleError = (d: ListingDraft): string | null => {
+  if (!d.title.trim()) return TITLE_EMPTY_ERROR;
+  return between(charCount(d.title), TITLE_MIN, TITLE_MAX) ? null : TITLE_LENGTH_ERROR;
+};
+// Descripción opcional: vacía pasa; si se escribe, de 80 a 2000.
+export const descriptionError = (d: ListingDraft): string | null =>
+  d.description.trim() && !between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX) ? DESCRIPTION_LENGTH_ERROR : null;
+export const nightlyError = (d: ListingDraft): string | null => (isInt(d.nightlyPriceCrc, 1) ? null : NIGHTLY_PRICE_ERROR);
+// Precio al mes opcional: vacío es «Precio a negociar con el dueño».
+export const monthlyError = (d: ListingDraft): string | null => (d.acceptsMonthly && d.monthlyPriceCrc !== null && !isInt(d.monthlyPriceCrc, 1) ? MONTHLY_PRICE_ERROR : null);
+
+/** Validación de una pantalla: la que usa la edición de una casa publicada (domain/edit.ts). El asistente de publicar solo
+ *  exige lo de `requiredProblems`; lo demás de estas reglas sale como aviso (`warnings`). */
 export function validateStep(step: Step, d: ListingDraft): string | null {
   switch (step) {
     case 1:
@@ -256,32 +269,16 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       if (d.features.includes("parking") && d.parkingPaid === null) return "Indique si el parqueo es gratuito o de pago.";
       return null;
     case 6:
-      if (!d.title.trim()) return TITLE_EMPTY_ERROR;
-      if (!between(charCount(d.title), TITLE_MIN, TITLE_MAX)) return TITLE_LENGTH_ERROR;
-      // Descripción opcional: vacía pasa; si se escribe, de 80 a 2000.
-      if (d.description.trim() && !between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX)) return DESCRIPTION_LENGTH_ERROR;
-      return null;
+      return titleError(d) ?? descriptionError(d);
     case 7:
       // Las fotos no son obligatorias para enviar (publicar v2): para aprobar hace falta una, lo exige el admin.
       if (d.photoCount > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
       return null;
     case 8:
-      if (!isInt(d.nightlyPriceCrc, 1)) return NIGHTLY_PRICE_ERROR;
-      // Precio al mes opcional: vacío es «Precio a negociar con el dueño».
-      if (d.acceptsMonthly && d.monthlyPriceCrc !== null && !isInt(d.monthlyPriceCrc, 1)) return MONTHLY_PRICE_ERROR;
-      return null;
+      return nightlyError(d) ?? monthlyError(d);
     case 9:
       return null;
   }
-}
-
-/** Todo lo necesario para enviar a revisión, en el orden de las pantallas (sin fotos ni descripción, que son opcionales). */
-export function validateAll(d: ListingDraft): { step: Step; error: string } | null {
-  for (const step of STEPS) {
-    const error = validateStep(step, d);
-    if (error) return { step, error };
-  }
-  return null;
 }
 
 /** Las pantallas en tres etapas (revisión UX C4): la cabecera y el aviso «Seguir publicando» hablan de la etapa, no del paso. */
@@ -309,33 +306,6 @@ export function locationLine(l: { zone: string; district: string; canton: string
 
 /** Zona propuesta por el dueño con «Otra…» (el admin la revisa con una marca). */
 export const isProposedZone = (l: { zoneSource: ZoneSource | null }) => l.zoneSource === "other";
-
-/** Paso donde retomar un borrador (revisión UX A1/A5): el primero con algo pendiente; si no falta nada, el último. */
-/** Lo que le falta a un borrador, en corto, para el botón «Seguir publicando» de su detalle (revisión UX 2026-10-29, A4):
- *  «Falta: fotos y precio». Las fotos no son obligatorias para enviar, pero sí para publicarla (al menos una). */
-const MISSING_LABEL: Partial<Record<Step, string>> = { 1: "tipo", 2: "ubicación", 4: "personas", 5: "características", 6: "nombre", 8: "precio" };
-export function missingParts(d: ListingDraft): string[] {
-  const out: string[] = [];
-  for (const step of STEPS) {
-    if (step === 7) {
-      if (d.photoCount === 0) out.push("fotos");
-      continue;
-    }
-    const label = MISSING_LABEL[step];
-    if (label && validateStep(step, d)) out.push(label);
-  }
-  return out;
-}
-
-/** «fotos y precio», «tipo, nombre y precio». */
-export function missingLine(parts: readonly string[]): string | null {
-  if (!parts.length) return null;
-  return parts.length === 1 ? `Falta: ${parts[0]}` : `Falta: ${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
-}
-
-export function resumeStep(d: ListingDraft): Step {
-  return validateAll(d)?.step ?? LAST_STEP;
-}
 
 /** Casa tal como la ve el público (vista listings_public): sin WhatsApp y con el punto desplazado 150–499 m. */
 export interface PublicListing {
@@ -386,24 +356,3 @@ export interface SitemapEntry {
 /** Estado del enlace público: se muestra, «ya no está activo», o no existe (404). */
 export type LinkState = "active" | "blocked" | null;
 
-/** Columnas del borrador que se guardan (el número de fotos no es columna: sale de la lista de fotos). */
-const DRAFT_COLUMNS = Object.keys(emptyDraft()).filter((k) => k !== "photoCount") as (keyof ListingDraft)[];
-
-const same = (a: unknown, b: unknown) => (Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => x === b[i]) : Object.is(a, b));
-
-export type StepPlan = { error: string } | { changes: Partial<ListingDraft>; next: ListingDraft };
-
-/**
- * Guardar una pantalla del asistente: mezcla el parche sobre el borrador actual (el del servidor), valida esa pantalla y
- * devuelve todas las columnas que cambian, también las que limpia `normalize` (baño sin habitación, tipo de parqueo sin
- * parqueo, precio al mes sin «Alquiler mensual»). El número de fotos es siempre el del borrador.
- */
-export function planStep(current: ListingDraft, step: Step, patch: Partial<ListingDraft>): StepPlan {
-  const merged: ListingDraft = { ...current, ...patch, photoCount: current.photoCount };
-  const error = validateStep(step, merged);
-  if (error) return { error };
-  const next = normalize(merged);
-  const changes: Partial<ListingDraft> = {};
-  for (const key of DRAFT_COLUMNS) if (!same(next[key], current[key])) (changes as Record<string, unknown>)[key] = next[key];
-  return { changes, next };
-}

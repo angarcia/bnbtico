@@ -18,22 +18,28 @@ import {
   isFreshDraft,
   isProposedZone,
   locationLine,
-  missingLine,
-  missingParts,
   nextStep,
   normalize,
   previousStep,
   parseColones,
-  planStep,
-  resumeStep,
   stepFromParam,
   stepPosition,
   wizardStage,
-  validateAll,
   validateStep,
   type Feature,
   type ListingDraft,
 } from "../../src/domain/listing";
+import {
+  PHOTO_REQUIRED_ERROR,
+  missingLine,
+  missingParts,
+  planStep,
+  requiredProblems,
+  resumeStep,
+  storable,
+  validateAll,
+  warnings,
+} from "../../src/domain/publish-rules";
 import { formInput, parseStep } from "../../src/domain/step-forms";
 
 // Modelo del diseño v1 (docs/diseno-v1.md, punto 11) con «Alquiler mensual» como característica (2026-10-27): toda casa
@@ -310,26 +316,80 @@ describe("parseStep (zod, misma semántica que el parser anterior)", () => {
   });
 });
 
-describe("validateAll", () => {
-  it("sin fotos y sin descripción se puede enviar; más de 15, no", () => {
-    expect(validateAll({ ...validDraft(), photoCount: 0, description: "" })).toBeNull();
+describe("validateAll (lo obligatorio para enviar, 2026-10-30)", () => {
+  it("sin descripción, capacidad ni parqueo se puede enviar; sin fotos, no", () => {
+    expect(validateAll({ ...validDraft(), description: "", capacity: null, bedrooms: null, bathrooms: null })).toBeNull();
+    expect(validateAll({ ...validDraft(), photoCount: 0 })).toEqual({ step: 7, error: PHOTO_REQUIRED_ERROR });
     expect(validateAll({ ...validDraft(), photoCount: 16 })).toEqual({ step: 7, error: "Máximo 15 fotos." });
-    expect(resumeStep({ ...validDraft(), photoCount: 0 })).toBe(9);
+    expect(resumeStep({ ...validDraft(), photoCount: 0 })).toBe(7);
   });
 
-  it("devuelve el primer paso con error", () => {
+  it("devuelve el primer paso con un obligatorio sin cumplir", () => {
     expect(validateAll(emptyDraft())).toEqual({ step: 1, error: "Elija Alojamiento completo o Habitación." });
-    expect(validateAll({ ...validDraft(), photoCount: 16 })).toEqual({ step: 7, error: "Máximo 15 fotos." });
     expect(validateAll({ ...validDraft(), zoneSource: null })).toEqual({ step: 2, error: "Elija la zona." });
     expect(validateAll({ ...validDraft(), lat: null })).toEqual({ step: 2, error: "Marque en el mapa la ubicación aproximada." });
     expect(validateAll(validDraft())).toBeNull();
   });
 });
 
+describe("requiredProblems y warnings (publicar avanza siempre, 2026-10-30)", () => {
+  it("obligatorios: tipo, ubicación, nombre, fotos y precio por noche, en el orden de las pantallas", () => {
+    expect(requiredProblems(validDraft())).toEqual([]);
+    expect(requiredProblems(emptyDraft()).map((p) => p.step)).toEqual([1, 2, 6, 7, 8]);
+    expect(requiredProblems({ ...validDraft(), title: "Casa" })).toEqual([{ step: 6, error: TITLE_LENGTH_ERROR }]);
+    expect(requiredProblems({ ...validDraft(), title: " " })).toEqual([{ step: 6, error: "Póngale un nombre a la casa." }]);
+    expect(requiredProblems({ ...validDraft(), nightlyPriceCrc: null })).toEqual([{ step: 8, error: NIGHTLY_PRICE_ERROR }]);
+    expect(requiredProblems({ ...validDraft(), photoCount: 0 })).toEqual([{ step: 7, error: PHOTO_REQUIRED_ERROR }]);
+  });
+
+  it("capacidad, descripción, parqueo y precio al mes no son obligatorios", () => {
+    const loose = { ...validDraft(), capacity: null, bedrooms: null, bathrooms: null, description: "corta", features: ["parking"] as Feature[], parkingPaid: null, acceptsMonthly: true, monthlyPriceCrc: 0 };
+    expect(requiredProblems(loose)).toEqual([]);
+    expect(validateAll(loose)).toBeNull();
+  });
+
+  it("avisos: lo no obligatorio que está mal o sin decir; nada con un borrador completo", () => {
+    expect(warnings(validDraft())).toEqual([]);
+    expect(warnings({ ...validDraft(), capacity: null }).map((w) => w.step)).toEqual([4]);
+    expect(warnings({ ...validDraft(), kind: "habitacion", bedrooms: 1, bathroomShared: null }).map((w) => w.step)).toEqual([4]);
+    expect(warnings({ ...validDraft(), features: ["parking"], parkingPaid: null }).map((w) => w.step)).toEqual([5]);
+    expect(warnings({ ...validDraft(), description: "corta" }).map((w) => w.step)).toEqual([6]);
+    expect(warnings({ ...validDraft(), description: "" }).map((w) => w.step)).toEqual([6]); // vacía: aviso, no error
+    expect(warnings({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: 0 }).map((w) => w.step)).toEqual([8]);
+    expect(warnings({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: null })).toEqual([]);
+  });
+
+  it("un problema obligatorio no se repite como aviso (nombre mal y descripción corta: solo el obligatorio)", () => {
+    const d = { ...validDraft(), title: "Casa", description: "corta" };
+    expect(requiredProblems(d).map((p) => p.step)).toEqual([6]);
+    expect(warnings(d).map((w) => w.step)).not.toContain(6);
+  });
+});
+
+describe("storable (lo que la base puede guardar)", () => {
+  it("lo que rompería un CHECK de la tabla se guarda como null", () => {
+    const d = { ...validDraft(), capacity: 0, bedrooms: -1, bathrooms: Number.NaN, nightlyPriceCrc: 0, monthlyPriceCrc: -5, minNights: 0, minMonths: 0 };
+    expect(storable(d)).toMatchObject({ capacity: null, bedrooms: null, bathrooms: null, nightlyPriceCrc: null, monthlyPriceCrc: null, minNights: null, minMonths: null });
+  });
+  it("lo válido y lo demás no se toca (0 habitaciones y 0 baños caben en la tabla)", () => {
+    const d = { ...validDraft(), bedrooms: 0, bathrooms: 0, capacity: 3, nightlyPriceCrc: 90000 };
+    expect(storable(d)).toEqual(d);
+    expect(storable({ ...d, capacity: 2.5 }).capacity).toBeNull();
+  });
+});
+
 describe("planStep (guardar una pantalla)", () => {
-  it("valida la pantalla sobre el borrador mezclado y no devuelve cambios si falla", () => {
+  it("solo el tipo (paso 1) bloquea; el resto de pantallas guarda lo que se pueda", () => {
     expect(planStep(emptyDraft(), 1, { kind: null })).toEqual({ error: "Elija Alojamiento completo o Habitación." });
-    expect(planStep({ ...validDraft(), kind: "habitacion", bathroomShared: null }, 4, { capacity: 2, bedrooms: 1, bathrooms: 1 })).toEqual({ error: "Indique si el baño es privado o compartido." });
+    expect(planStep({ ...validDraft(), kind: "habitacion", bathroomShared: null }, 4, { capacity: 2, bedrooms: 1, bathrooms: 1 })).toEqual({ changes: { capacity: 2, bedrooms: 1, bathrooms: 1 }, next: expect.anything() });
+    expect(planStep(emptyDraft(), 2, { lat: null, lng: null })).toEqual({ changes: {}, next: expect.anything() });
+    expect(planStep(emptyDraft(), 6, { title: "", description: "x" })).toEqual({ changes: { description: "x" }, next: expect.anything() });
+    expect(planStep(emptyDraft(), 8, { nightlyPriceCrc: null, acceptsMonthly: false, monthlyPriceCrc: null })).toEqual({ changes: {}, next: expect.anything() });
+  });
+
+  it("un valor que rompería la tabla se guarda como null en vez de fallar", () => {
+    expect(planStep(validDraft(), 4, { capacity: 0, bedrooms: 2, bathrooms: 2, bathroomShared: null })).toEqual({ changes: { capacity: null }, next: expect.anything() });
+    expect(planStep(validDraft(), 8, { nightlyPriceCrc: Number.NaN, acceptsMonthly: false, monthlyPriceCrc: null })).toEqual({ changes: { nightlyPriceCrc: null }, next: expect.anything() });
   });
 
   it("devuelve solo las columnas que cambian, incluidas las que limpia normalize", () => {
@@ -367,8 +427,9 @@ describe("paso donde retomar un borrador", () => {
     expect(resumeStep(emptyDraft())).toBe(1);
     expect(resumeStep({ ...validDraft(), zone: "" })).toBe(2);
     expect(resumeStep({ ...validDraft(), lat: null, lng: null })).toBe(2); // con zona pero sin pin: el 2, nunca el 3
-    expect(resumeStep({ ...validDraft(), photoCount: 0 })).toBe(9);
+    expect(resumeStep({ ...validDraft(), photoCount: 0 })).toBe(7);
     expect(resumeStep({ ...validDraft(), nightlyPriceCrc: null })).toBe(8);
+    expect(resumeStep({ ...validDraft(), capacity: null, description: "corta" })).toBe(9); // solo avisos: a revisar y enviar
     expect(resumeStep(validDraft())).toBe(9);
   });
 });
@@ -427,6 +488,10 @@ describe("missingParts y missingLine (revisión UX 2026-10-29, A4)", () => {
     const parts = missingParts({ ...validDraft(), photoCount: 0, nightlyPriceCrc: null });
     expect(parts).toEqual(["fotos", "precio"]);
     expect(missingLine(parts)).toBe("Falta: fotos y precio");
+  });
+  it("solo cuentan los obligatorios: sin capacidad ni descripción no «falta» nada", () => {
+    expect(missingParts({ ...validDraft(), capacity: null, bedrooms: null, bathrooms: null, description: "corta", features: ["parking"], parkingPaid: null })).toEqual([]);
+    expect(missingParts(emptyDraft())).toEqual(["tipo", "ubicación", "nombre", "fotos", "precio"]);
   });
   it("tres cosas: con comas y «y»", () => {
     expect(missingLine(["tipo", "nombre", "precio"])).toBe("Falta: tipo, nombre y precio");

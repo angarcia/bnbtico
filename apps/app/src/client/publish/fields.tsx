@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, validateAll, validateStep, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { requiredProblems, warnings } from "../../domain/publish-rules";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -291,11 +292,14 @@ export function DescriptionField({ value }: { value: string }) {
   );
 }
 
-const MISSING_ACTION: Partial<Record<Step, string>> = { 1: "Elegir el tipo", 2: "Añadir la ubicación", 4: "Indicar la capacidad", 6: "Añadir el nombre", 8: "Añadir precio" };
+/** Lo obligatorio que falta (terracota) y lo no obligatorio que se puede mejorar (ocre), en corto, con la acción. */
+const MISSING_ACTION: Partial<Record<Step, string>> = { 1: "Elegir el tipo", 2: "Añadir la ubicación", 6: "Añadir el nombre", 7: "Añadir una foto", 8: "Añadir precio" };
+const WARN_ACTION: Partial<Record<Step, string>> = { 4: "Completar la capacidad", 5: "Indicar si se paga", 6: "Revisar la descripción", 8: "Revisar el precio mensual" };
 
-/** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5; publicar v2): lo escrito en seis filas que llevan a su pantalla
- *  (sin fotos ni descripción también se envía), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin
- *  scroll en un teléfono pequeño. */
+/** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5; publicar avanza siempre, 2026-10-30): lo escrito en filas que llevan
+ *  a su pantalla, la vista previa de la ficha, el WhatsApp de la casa y la oferta. En terracota lo obligatorio que falta
+ *  (tipo, ubicación, nombre, una foto, precio por noche): «Enviar a revisión» espera a que no quede ninguno. En ocre, los
+ *  avisos (capacidad, descripción, parqueo, precio al mes): no bloquean. */
 function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing: Listing; userId: string }) {
   const count = useQuery(offerTakenQuery);
   const account = useQuery({ ...accountQuery(userId), enabled: !!userId });
@@ -309,13 +313,15 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   ].filter(Boolean);
   const title = d.title.trim();
   const photos = listing.photoCount;
-  // Revisión UX 2026-10-29 (A9): lo obligatorio que falta, en terracota con su acción; «Enviar a revisión» desactivado mientras.
-  const missingStep = (step: Step) => step !== 7 && !!validateStep(step, d);
-  useStepReady(validateAll(d) === null);
+  const required = requiredProblems(d);
+  const warned = warnings(d);
+  useStepReady(required.length === 0);
   const rows: { step: Step; label: string; value: string }[] = [
     { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
     { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
     { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.bedrooms ?? 0} hab. · ${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
+    // El parqueo no tiene fila propia: solo aparece cuando hay que decir si se paga.
+    ...(warned.some((w) => w.step === 5) ? [{ step: 5 as Step, label: "Parqueo", value: "Falta indicar si se paga" }] : []),
     { step: 6, label: "Nombre", value: title ? `«${title}»${d.description.trim() ? "" : " · sin descripción"}` : "Sin nombre" },
     { step: 7, label: "Fotos", value: photos ? `${photos} ${photos === 1 ? "foto" : "fotos"}` : "Ninguna todavía" },
     { step: 8, label: "Precio", value: prices.join(" · ") || "Falta el precio" },
@@ -325,12 +331,20 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
       <h2>Revisar y enviar</h2>
       <nav className="card review-list" aria-label="Lo que va a enviar">
         {rows.map((r) => {
-          const missing = missingStep(r.step);
+          const missing = required.some((p) => p.step === r.step);
+          const warn = !missing && warned.some((w) => w.step === r.step);
           return (
-            <Link key={r.label} to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(r.step) }} className={`review-row${missing ? " is-missing" : ""}`} data-missing={missing || undefined}>
+            <Link
+              key={r.label}
+              to="/propietario/publicar/$id/$paso"
+              params={{ id: listing.id, paso: String(r.step) }}
+              className={`review-row${missing ? " is-missing" : warn ? " is-warn" : ""}`}
+              data-missing={missing || undefined}
+              data-warn={warn || undefined}
+            >
               <span className="review-label">{r.label}</span>
               <span className="review-value">
-                <span className="review-text">{missing ? MISSING_ACTION[r.step] : r.value}</span>
+                <span className="review-text">{missing ? MISSING_ACTION[r.step] : warn ? (r.step === 6 && !d.description.trim() ? "Añadir una descripción" : WARN_ACTION[r.step]) : r.value}</span>
               </span>
               <I.chevron size={16} />
             </Link>

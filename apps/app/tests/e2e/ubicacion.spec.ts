@@ -154,8 +154,8 @@ test("el paso 3 viejo lleva a la pantalla nueva", async ({ page }) => {
   await page.goto(`/propietario/publicar/${id}/3`);
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${id}/2$`));
   await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
-  // Sin pin: Continuar espera, y el mapa abre en Limón.
-  await expect(continuar(page)).toBeDisabled();
+  // Sin pin: Continuar no espera (publicar avanza siempre, 2026-10-30), y el mapa abre en Limón.
+  await expect(continuar(page)).toBeEnabled();
   await expect(line(page)).toHaveText("");
   // Un número que no es un paso no abre nada.
   await page.goto(`/propietario/publicar/${id}/10`);
@@ -183,7 +183,7 @@ test("la primera respuesta llega tarde y no pisa a la segunda", async ({ page })
   await expect(chosen(page)).toHaveText("Limón centro");
 });
 
-test("sin red al mover el punto: aviso, Continuar deshabilitado y se recupera", async ({ page, context }) => {
+test("sin red al mover el punto: aviso, Continuar sigue activo y se recupera", async ({ page, context }) => {
   const id = await draftAt(LIMON_CENTRO);
   await page.goto(`/propietario/publicar/${id}/2`);
   await expect(line(page)).toHaveText("Limón, Limón");
@@ -192,7 +192,7 @@ test("sin red al mover el punto: aviso, Continuar deshabilitado y se recupera", 
   await tapMap(page, -60, 0);
   await expect(line(page)).toContainText("No pudimos ubicar el punto. Revise su conexión.");
   await expect(line(page).getByRole("button", { name: "Reintentar" })).toBeVisible();
-  await expect(continuar(page)).toBeDisabled();
+  await expect(continuar(page)).toBeEnabled();
   await context.setOffline(false);
   await expect(line(page)).toHaveText("Limón, Limón");
   await expect(continuar(page)).toBeEnabled();
@@ -265,7 +265,7 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await zone(page).selectOption({ label: "Otra…" });
   await expect(other).toBeFocused();
   await expect(chosen(page)).toHaveText("Otra…");
-  await expect(continuar(page)).toBeDisabled(); // lo que dice la lista es lo que se guarda
+  await expect(continuar(page)).toBeEnabled(); // «Continuar» ya no espera a la zona: se avisa al revisar y enviar
   await expectAboveBar("con el teclado", true);
   // Tocar el campo ya enfocado (en el iPhone es cuando sale el teclado) lo vuelve a subir.
   await page.evaluate(() => window.scrollTo(0, 0));

@@ -41,6 +41,7 @@
       "!dist/client/assets/edit-map-leaflet-*.js",
       "!dist/client/assets/edit-summary-*.js",
       "!dist/client/assets/step-forms-*.js",
+      "!dist/client/assets/publish-rules-*.js",
       "!dist/client/assets/fields-*.js",
       "!dist/client/assets/photo-grid-*.js",
       "!dist/client/assets/publicar-entrada-*.js",
@@ -157,6 +158,14 @@
       "dist/client/assets/step-forms-*.js"
     ],
     "limit": "1 KB",
+    "gzip": true
+  },
+  {
+    "name": "Reglas de publicar · trozo compartido (qué es obligatorio para enviar, los avisos, lo que cabe en la tabla y guardar cada pantalla; las leen el asistente, Mis casas y los adaptadores de datos)",
+    "path": [
+      "dist/client/assets/publish-rules-*.js"
+    ],
+    "limit": "1.25 KB",
     "gzip": true
   },
   {

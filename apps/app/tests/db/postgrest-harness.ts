@@ -60,7 +60,14 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       // supabase/migrations-pendientes/). Los nombres antiguos sin objeto no pasarían por add_listing_photo.
       fail("fotos", (await service.from("listing_photos").insert(rows)).error);
     }
-    if (spec.status !== "draft") fail("enviar", (await db.rpc("submit_listing", { p_listing: id })).error);
+    if (spec.status !== "draft") {
+      // submit_listing exige una foto (publicar avanza siempre, 2026-10-30): una casa «en revisión sin fotos» (que el admin
+      // no puede aprobar) se siembra con una foto provisional que se quita justo después de enviar.
+      const placeholder = n === 0 ? await service.from("listing_photos").insert({ listing_id: id, path: `${id}/provisional.jpg`, position: 0 }).select("id").single() : null;
+      if (placeholder) fail("foto provisional", placeholder.error);
+      fail("enviar", (await db.rpc("submit_listing", { p_listing: id })).error);
+      if (placeholder) fail("quitar la foto provisional", (await service.from("listing_photos").delete().eq("id", placeholder.data!.id)).error);
+    }
     const decision = { active: "approve", reopened: "approve", changes: "changes", rejected: "reject" } as const;
     if (spec.status in decision) {
       const d = decision[spec.status as keyof typeof decision];

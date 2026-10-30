@@ -18,7 +18,8 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { I } from "../../shared/icons";
-import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { LAST_STEP, nextStep, normalize, previousStep, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { planStep, validateAll } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
 import { accountQuery } from "../account";
@@ -121,9 +122,9 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   const fresh = await (await api()).getOwn(id);
   if (!fresh) return "No encontramos ese anuncio.";
   client.setQueryData(detailKey(userId, id), fresh);
+  // Solo lo obligatorio manda a otra pantalla (2026-10-30); los avisos no bloquean.
   const invalid = validateAll(fresh);
   if (invalid) {
-    if (invalid.step === LAST_STEP) return invalid.error;
     setFailure({ listingId: id, step: invalid.step, patch: {}, message: invalid.error });
     void toStep(router, id, invalid.step);
     return null;
@@ -187,6 +188,7 @@ function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
 
 // ---------- «Continuar» listo o no ----------
 
+const noReady = () => undefined;
 const ReadyContext = createContext<(ready: boolean) => void>(() => undefined);
 
 /** «Continuar» deshabilitado mientras `ready` sea false (dentro de un StepForm). Antes de pintar: si no, se vería un
@@ -313,7 +315,8 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
           {shown}
         </div>
       ) : null}
-      <ReadyContext.Provider value={setReady}>{children(values)}</ReadyContext.Provider>
+      {/* «Continuar» nunca espera a una pantalla (2026-10-30): solo «Enviar a revisión», cuando falta algo obligatorio. */}
+      <ReadyContext.Provider value={step === LAST_STEP ? setReady : noReady}>{children(values)}</ReadyContext.Provider>
       <div className="sticky-actions">
         {/* «Atrás» como botón cuadrado con la flecha y «Continuar ›»; en el último paso, la acción sin flecha (A9). */}
         {step === 1 ? (

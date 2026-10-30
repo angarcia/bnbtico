@@ -8,6 +8,7 @@ import { createContext, useContext, type MouseEvent, type ReactNode } from "reac
 import { tabsFor } from "../domain/tabs";
 import { CurrencySwitch } from "../shared/currency-switch";
 import { I } from "../shared/icons";
+import { useHidingTabBar } from "./hiding-tabbar";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
@@ -40,6 +41,7 @@ const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" 
 export function TabsFrame({ children }: { children: ReactNode }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
   const pathname = useLocation({ select: (l) => l.pathname });
+  useHidingTabBar();
   const topBar = TOP_BAR_PATHS.has(pathname);
   const bare = BARE_PATHS.has(pathname);
   const { status } = useSession();

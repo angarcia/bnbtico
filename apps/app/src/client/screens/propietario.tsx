@@ -10,7 +10,8 @@ import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { missingLine, missingParts, resumeStep, type Listing } from "../../domain/listing";
+import { type Listing } from "../../domain/listing";
+import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { formatCRC } from "../../domain/money";
 import { byPendingAction, cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft } from "../../domain/subscription";
@@ -164,7 +165,7 @@ export function CasasScreen() {
               <I.plus size={22} />
             </Link>
           </div>
-          <div className="stack gap-14">
+          <div className="stack house-list">
             {byPendingAction(list!).map((l, i) => (
               <OwnerCard key={l.id} listing={l} userId={userId} eager={i === 0} />
             ))}

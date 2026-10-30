@@ -4,9 +4,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
-import { DESCRIPTION_LENGTH_ERROR, MONTHLY_PRICE_ERROR, NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
+import { NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
 import type { ListingsHarness, Seeded } from "./harness";
-import { COCLES, MAR } from "./points";
+import { MAR } from "./points";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
@@ -28,60 +28,41 @@ const TEXT = "Descripción de prueba con lo justo para pasar el mínimo de ochen
 /** Paso 2 válido: el pin de COMPLETE (Cahuita) con lo que da place_at y la zona Cahuita de la lista. */
 const LOCATION_OK: Partial<ListingDraft> = { lat: 9.7366, lng: -82.8431, province: "Limón", canton: "Talamanca", district: "Cahuita", zone: "Cahuita", zoneId: "704-cahuita", zoneSource: "list" };
 
+// Publicar avanza siempre (2026-10-30): solo el tipo del paso 1 rechaza; las demás pantallas guardan lo que se pueda (ver
+// PARTIAL). Lo obligatorio se exige al enviar.
 const WALK: { step: Step; invalid: [Partial<ListingDraft>, string][]; valid: Partial<ListingDraft> }[] = [
   {
     step: 1,
     invalid: [[{ kind: null }, "Elija Alojamiento completo o Habitación."]],
     valid: { kind: "habitacion" },
   },
-  {
-    // Ubicación por punto: el mapa, el cantón y la provincia que da el pin, y la zona (con su origen) en una pantalla.
-    step: 2,
-    invalid: [
-      [{ ...LOCATION_OK, lat: null, lng: null }, "Marque en el mapa la ubicación aproximada."],
-      [{ ...LOCATION_OK, lat: 40.4, lng: -3.7 }, "Ponga el punto sobre tierra, dentro de Costa Rica."],
-      [{ ...LOCATION_OK, ...COCLES, province: "", canton: "" }, "Ponga el punto sobre tierra, dentro de Costa Rica."],
-      [{ ...LOCATION_OK, zone: " " }, "Elija la zona."],
-      [{ ...LOCATION_OK, zone: "x".repeat(61), zoneSource: "other", zoneId: null }, "La zona puede tener como mucho 60 caracteres."],
-    ],
-    valid: LOCATION_OK,
-  },
-  {
-    step: 4,
-    invalid: [
-      [{ capacity: 0, bedrooms: 1, bathrooms: 1, bathroomShared: true }, "Indique cuántas personas pueden alojarse (mínimo 1)."],
-      [{ capacity: 2, bedrooms: 0, bathrooms: 1, bathroomShared: true }, "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0."],
-      [{ capacity: 2, bedrooms: 1, bathrooms: 0, bathroomShared: true }, "Indique el número de baños (mínimo 1)."],
-      [{ capacity: 2, bedrooms: 1, bathrooms: 1, bathroomShared: null }, "Indique si el baño es privado o compartido."],
-    ],
-    valid: { capacity: 2, bedrooms: 1, bathrooms: 1, bathroomShared: true },
-  },
-  {
-    step: 5,
-    invalid: [[{ features: ["parking"], parkingPaid: null }, "Indique si el parqueo es gratuito o de pago."]],
-    valid: { features: ["wifi", "parking"], parkingPaid: false },
-  },
+  // Ubicación por punto: el mapa, el cantón y la provincia que da el pin, y la zona (con su origen) en una pantalla.
+  { step: 2, invalid: [], valid: LOCATION_OK },
+  { step: 4, invalid: [], valid: { capacity: 2, bedrooms: 1, bathrooms: 1, bathroomShared: true } },
+  { step: 5, invalid: [], valid: { features: ["wifi", "parking"], parkingPaid: false } },
   {
     step: 6,
-    invalid: [
-      [{ title: " ", description: "Linda" }, "Póngale un nombre a la casa."],
-      // Publicar v2: nombre de 5 a 32 caracteres; descripción vacía o de 80 a 2000.
-      [{ title: "Casa", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." }, TITLE_LENGTH_ERROR],
-      [{ title: "Cabina", description: "Cabina frente al parque." }, DESCRIPTION_LENGTH_ERROR],
-    ],
+    invalid: [],
     valid: { title: "Cabina Cahuita", description: "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho." },
   },
-  // Revisión UX C4: el paso 7 deja seguir con menos de 5 fotos; el mínimo se exige al enviar (submit).
+  // Revisión UX C4: el paso 7 deja seguir con menos de 5 fotos; el mínimo (una) se exige al enviar (submit).
   { step: 7, invalid: [], valid: {} },
-  {
-    step: 8,
-    invalid: [
-      [{ nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, NIGHTLY_PRICE_ERROR],
-      [{ nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: 0 }, MONTHLY_PRICE_ERROR],
-    ],
-    valid: { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: 480000 },
-  },
+  { step: 8, invalid: [], valid: { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: 480000 } },
   { step: 9, invalid: [], valid: {} },
+];
+
+/** Parches incompletos o mal escritos que antes se rechazaban: ahora se guardan (lo que no cabe en la tabla, como null). */
+const PARTIAL: { step: Step; patch: Partial<ListingDraft>; stored: Partial<ListingDraft> }[] = [
+  { step: 2, patch: { lat: null, lng: null, province: "", canton: "", district: "", zone: "", zoneId: null, zoneSource: null }, stored: { lat: null, lng: null, canton: "", zone: "", zoneSource: null } },
+  { step: 2, patch: { ...LOCATION_OK, lat: 40.4, lng: -3.7, canton: "" }, stored: { lat: 40.4, lng: -3.7, canton: "" } },
+  { step: 2, patch: { ...LOCATION_OK, zone: " ", zoneId: null, zoneSource: null }, stored: { zoneSource: null, zoneId: null } },
+  { step: 4, patch: { capacity: 0, bedrooms: 1, bathrooms: 1, bathroomShared: true }, stored: { capacity: null, bedrooms: 1, bathrooms: 1 } },
+  { step: 4, patch: { capacity: Number.NaN, bedrooms: null, bathrooms: 0, bathroomShared: null }, stored: { capacity: null, bedrooms: null, bathrooms: 0, bathroomShared: null } },
+  { step: 5, patch: { features: ["parking"], parkingPaid: null }, stored: { features: ["parking"], parkingPaid: null } },
+  { step: 6, patch: { title: "", description: "Linda" }, stored: { title: "", description: "Linda" } },
+  { step: 6, patch: { title: "Casa", description: "Cabina frente al parque." }, stored: { title: "Casa", description: "Cabina frente al parque." } },
+  { step: 8, patch: { nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: 480000 }, stored: { nightlyPriceCrc: null, monthlyPriceCrc: 480000 } },
+  { step: 8, patch: { nightlyPriceCrc: 0, acceptsMonthly: true, monthlyPriceCrc: 0 }, stored: { nightlyPriceCrc: null, acceptsMonthly: true, monthlyPriceCrc: null } },
 ];
 
 export function publishContract(name: string, makeHarness: () => Promise<ListingsHarness>) {
@@ -214,6 +195,24 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         });
       });
 
+      it("«Continuar» avanza siempre: lo incompleto o mal escrito se guarda (lo que rompería la tabla, como null)", async () => {
+        for (const { step, patch, stored } of PARTIAL) {
+          const draft = await me.createDraft();
+          const saved = await me.saveStep(draft.id, step, patch);
+          expect(saved, `paso ${step} ${JSON.stringify(patch)}`).toMatchObject(stored);
+          expect(await me.getOwn(draft.id)).toEqual(saved);
+          await me.deleteDraft(draft.id);
+        }
+      });
+
+      it("el tipo (paso 1) sigue siendo obligatorio para guardar, y tampoco cambia nada si falta", async () => {
+        const draft = await me.createDraft();
+        await me.saveStep(draft.id, 1, { kind: "completo" });
+        expect((await rejection(me.saveStep(draft.id, 1, { kind: null }))).message).toBe("Elija Alojamiento completo o Habitación.");
+        expect((await me.getOwn(draft.id))?.kind).toBe("completo");
+        await me.deleteDraft(draft.id);
+      });
+
       it("Sí sin precio se guarda; Sí con precio y luego No no guarda el precio", async () => {
         await me.saveStep(id, 8, { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: null });
         expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });
@@ -229,7 +228,7 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
 
       it("con el borrador que ya tiene el navegador guarda sin releerlo, con las mismas reglas", async () => {
         const known = (await me.getOwn(id))!;
-        expect((await rejection(me.saveStep(id, 6, { title: " ", description: "x" }, known))).message).toBe("Póngale un nombre a la casa.");
+        expect((await rejection(me.saveStep(id, 1, { kind: null }, known))).message).toBe("Elija Alojamiento completo o Habitación.");
         const saved = await me.saveStep(id, 6, { title: "Con lo del navegador", description: TEXT }, known);
         expect(saved).toMatchObject({ title: "Con lo del navegador", description: TEXT, status: "draft" });
         expect(await me.getOwn(id)).toEqual(saved);
@@ -262,16 +261,15 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
     });
 
     describe("enviar a revisión", () => {
-      const s = {} as Record<"ready" | "noPhotos" | "noKind" | "parkingWithout" | "shortTitle" | "shortText" | "review" | "active" | "changes" | "theirs", Seeded>;
+      const s = {} as Record<"ready" | "noPhotos" | "noKind" | "loose" | "shortTitle" | "review" | "active" | "changes" | "theirs", Seeded>;
 
       beforeAll(async () => {
         h = await makeHarness();
         me = h.owner("owner");
         await h.reset();
         s.ready = await h.seed({ status: "draft", photos: 5 });
-        s.noPhotos = await h.seed({ status: "draft", photos: 0, draft: { description: "" } });
+        s.noPhotos = await h.seed({ status: "draft", photos: 0 });
         s.noKind = await h.seed({ status: "draft", photos: 5, draft: { kind: null } });
-        s.parkingWithout = await h.seed({ status: "draft", photos: 5, draft: { features: ["wifi"], parkingPaid: true } });
         s.review = await h.seed({ status: "review" });
         s.active = await h.seed({ status: "active" });
         s.changes = await h.seed({ status: "changes" });
@@ -285,24 +283,34 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         expect((await me.findResumable())?.id).not.toBe(s.ready.id);
       });
 
-      it("la base exige lo mismo que el asistente y explica en español lo que falta", async () => {
+      it("la base exige lo obligatorio y explica en español lo que falta: tipo y fotos", async () => {
         expect((await rejection(me.submit(s.noKind.id))).message).toBe("Elija Alojamiento completo o Habitación.");
-        expect((await rejection(me.submit(s.parkingWithout.id))).message).toBe("El tipo de parqueo solo aplica si el anuncio tiene parqueo.");
-        for (const x of [s.noKind, s.parkingWithout]) expect((await me.getOwn(x.id))?.status).toBe("draft");
+        expect((await rejection(me.submit(s.noPhotos.id))).message).toBe("Añada al menos una foto.");
+        for (const x of [s.noKind, s.noPhotos]) expect((await me.getOwn(x.id))?.status).toBe("draft");
       });
 
-      it("sin fotos y sin descripción se envía a revisión", async () => {
+      it("con una sola foto se envía a revisión", async () => {
+        await h.addPhotos(s.noPhotos.id, 1);
         await me.submit(s.noPhotos.id);
-        expect(await me.getOwn(s.noPhotos.id)).toMatchObject({ status: "review", description: "", photoCount: 0 });
+        expect(await me.getOwn(s.noPhotos.id)).toMatchObject({ status: "review", photoCount: 1 });
       });
 
-      it("nombre de 5 a 32 caracteres y descripción vacía o de 80 a 2000 al enviar", async () => {
-        // Aquí y no en beforeAll: como mucho cinco borradores sin enviar (el primero ya se envió).
+      it("capacidad, habitaciones, baños, baño, descripción y parqueo sin decir no bloquean el envío (publicar avanza siempre)", async () => {
+        s.loose = await h.seed({
+          status: "draft",
+          photos: 1,
+          draft: { kind: "habitacion", capacity: null, bedrooms: null, bathrooms: null, bathroomShared: null, description: "Cabina frente al parque.", features: ["parking"], parkingPaid: null, acceptsMonthly: true, monthlyPriceCrc: null },
+        });
+        await me.submit(s.loose.id);
+        expect(await me.getOwn(s.loose.id)).toMatchObject({ status: "review", capacity: null, bathroomShared: null, parkingPaid: null });
+      });
+
+      it("el nombre de 5 a 32 caracteres sigue siendo obligatorio", async () => {
         s.shortTitle = await h.seed({ status: "draft", photos: 5, draft: { title: "Casa" } });
-        s.shortText = await h.seed({ status: "draft", photos: 5, draft: { description: "Cabina frente al parque." } });
         expect((await rejection(me.submit(s.shortTitle.id))).message).toBe(TITLE_LENGTH_ERROR);
-        expect((await rejection(me.submit(s.shortText.id))).message).toBe(DESCRIPTION_LENGTH_ERROR);
-        for (const x of [s.shortTitle, s.shortText]) expect((await me.getOwn(x.id))?.status).toBe("draft");
+        const blank = await h.seed({ status: "draft", photos: 5, draft: { title: "" } });
+        expect((await rejection(me.submit(blank.id))).message).toBe("Póngale un nombre a la casa.");
+        for (const x of [s.shortTitle, blank]) expect((await me.getOwn(x.id))?.status).toBe("draft");
       });
 
       it("en revisión, activa o ajena no se envía; con cambios pedidos, sí", async () => {

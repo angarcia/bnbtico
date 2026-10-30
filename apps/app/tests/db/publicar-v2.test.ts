@@ -7,7 +7,6 @@ import { postgrestHarness } from "./postgrest-harness";
 import { sql } from "./local";
 
 const NAME = "El nombre de la casa debe tener entre 5 y 32 caracteres.";
-const DESCRIPTION = "La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.";
 
 describe("migración publicar_v2", () => {
   let h: ListingsHarness;
@@ -17,22 +16,34 @@ describe("migración publicar_v2", () => {
     await h.reset();
   }, 60_000);
 
-  it("envía sin fotos y sin descripción", async () => {
-    const s = await h.seed({ status: "draft", photos: 0, draft: { description: "" } });
+  it("envía sin descripción; sin fotos no (publicar avanza siempre, 2026-10-30)", async () => {
+    const s = await h.seed({ status: "draft", photos: 1, draft: { description: "" } });
     expect(await h.owner("owner").submit(s.id)).toBeUndefined();
     expect((await h.owner("owner").getOwn(s.id))?.status).toBe("review");
+    const bare = await h.seed({ status: "draft", photos: 0 });
+    await expect(h.owner("owner").submit(bare.id)).rejects.toThrow("Añada al menos una foto.");
   });
 
-  it("rechaza descripción de 79, nombre de 33 y nombre vacío", async () => {
+  it("rechaza nombre de 33 y nombre vacío; una descripción de 79 ya no bloquea", async () => {
     const me = h.owner("owner");
-    const short = await h.seed({ status: "draft", photos: 0, draft: { description: "a".repeat(79) } });
-    await expect(me.submit(short.id)).rejects.toThrow(DESCRIPTION);
-    const long = await h.seed({ status: "draft", photos: 0, draft: { title: "a".repeat(33) } });
+    const short = await h.seed({ status: "draft", photos: 1, draft: { description: "a".repeat(79) } });
+    expect(await me.submit(short.id)).toBeUndefined();
+    const long = await h.seed({ status: "draft", photos: 1, draft: { title: "a".repeat(33) } });
     await expect(me.submit(long.id)).rejects.toThrow(NAME);
-    const blank = await h.seed({ status: "draft", photos: 0, draft: { title: "   " } });
+    const blank = await h.seed({ status: "draft", photos: 1, draft: { title: "   " } });
     await expect(me.submit(blank.id)).rejects.toThrow("Póngale un nombre a la casa.");
-    const fits = await h.seed({ status: "draft", photos: 0, draft: { title: ` ${"a".repeat(32)} `, description: "a".repeat(80) } });
+    const fits = await h.seed({ status: "draft", photos: 1, draft: { title: ` ${"a".repeat(32)} `, description: "a".repeat(80) } });
     expect(await me.submit(fits.id)).toBeUndefined();
+  });
+
+  it("capacidad, habitaciones, baños, baño compartido, parqueo y precio al mes sin decir no bloquean el envío", async () => {
+    const s = await h.seed({
+      status: "draft",
+      photos: 1,
+      draft: { kind: "habitacion", capacity: null, bedrooms: null, bathrooms: null, bathroomShared: null, features: ["parking"], parkingPaid: null, acceptsMonthly: true, monthlyPriceCrc: null },
+    });
+    expect(await h.owner("owner").submit(s.id)).toBeUndefined();
+    expect(await h.owner("owner").getOwn(s.id)).toMatchObject({ status: "review", capacity: null, bathroomShared: null, parkingPaid: null });
   });
 
   it("15 fotos se envían; la 16.ª no llega a guardarse", async () => {

@@ -3,7 +3,7 @@ import type { Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { touch } from "./helpers/touch";
-import { resumeStep } from "../../src/domain/listing";
+import { resumeStep } from "../../src/domain/publish-rules";
 
 const HOST = `127.0.0.1:${process.env.E2E_PORT ?? 4173}`;
 

@@ -1,3 +1,24 @@
+## 2026-10-30 · Barra de abajo que se esconde en toda la app, casas en tarjeta y «Mapa» (Ana y Daniel)
+
+Ronda de Ana del 2026-10-30 (grupos 1–3; `.scratch/ronda-ana-2026-10-30/`, ticket 01).
+
+- **La barra de abajo se esconde al desplazarse hacia delante y vuelve hacia atrás en todas las pantallas que la tienen** (Explorar, Favoritos, Mis casas, Calendario, Consultas, Cuenta), no solo en el calendario: un solo sitio (`client/hiding-tabbar.ts`, llamado en `TabsFrame`). Solo la barra de abajo; las cabeceras se quedan. «Mapa» baja con ella.
+- **«Mapa» se va al acabarse la lista de casas:** tapaba «Publicar mi casa gratis».
+- **Casas en tarjeta con más aire** en Explorar y Mis casas (foto a sangre, texto con relleno, esquinas pequeñas; 32 px entre casas).
+- **Icono de «Mis casas»:** una casa en vez del pin del mapa.
+- «¿No encuentra lo que busca?» no salía en nueva.bnbtico.com porque faltaban `WA_GUESTS`/`WA_OWNERS` en GitHub; Daniel las puso el 2026-10-30.
+
+## 2026-10-30 · Publicar avanza siempre: obligatorios en terracota, avisos en ocre (Ana y Daniel)
+
+Ronda de Ana del 2026-10-30 (grupo 5; `.scratch/ronda-ana-2026-10-30/spec.md`, ticket 02). Sustituye lo del paso 9 del 2026-10-29 (A9: «Enviar a revisión» espera a que esté todo).
+
+- **«Continuar» nunca bloquea**, salvo el tipo en el paso 1 (crea el borrador y decide los demás campos). Los pasos guardan lo que se pueda; lo que no cabe en la tabla (personas o precio menores que 1, número vacío o mal escrito) se guarda como vacío en vez de fallar (`storable` en `domain/publish-rules.ts`; el fake y PostgREST coinciden, con prueba de contrato).
+- **Obligatorio para enviar a revisión:** tipo, ubicación en el mapa (reglas de zona de siempre), nombre (5–32 caracteres), precio por noche y **al menos una foto**. `submit_listing` exige solo eso (migración `publicar_avanzar_siempre`; el tope de 15 fotos se queda).
+- **Todo lo demás es aviso en ocre y no bloquea:** capacidad, habitaciones y baños, baño compartido, descripción fuera de 80–2000, parqueo sin decir si se paga, precio al mes mal escrito. «Revisar y enviar» pinta lo obligatorio que falta en terracota (con su acción) y los avisos en ocre; «Enviar a revisión» se activa en cuanto no queda ningún terracota.
+- **La capacidad deja de ser obligatoria:** si falta, el admin la pide con «Pedir cambios» al revisar.
+- **Las fotos pasan a ser obligatorias al enviar** (antes bastaba con una al aprobar; el admin sigue sin poder aprobar una casa sin foto).
+- «Falta: …» de Mis casas y el paso donde se retoma un borrador cuentan solo los obligatorios. La edición de una casa publicada no cambia: sigue con las reglas por dato (`validateStep`).
+
 ## 2026-10-29 · Revisión UX, segunda ronda: navegación, Cuenta, calendarios y negritas (Ana)
 
 Decisión de Ana, punto por punto sobre la app y maquetas hechas con ella. Detalle, maquetas y estado de cada punto: `.scratch/revision-ux/2026-10-29-revision-ux.md`. Construido el 2026-10-30 salvo lo marcado como pendiente.
