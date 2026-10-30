@@ -4,18 +4,20 @@
 // Módulo de dominio: sin imports de framework.
 import {
   emptyDraft,
-  isInt,
   LAST_STEP,
   MIN_PHOTOS_TO_APPROVE,
-  descriptionError,
-  monthlyError,
-  nightlyError,
   normalize,
-  titleError,
-  validateStep,
   type ListingDraft,
   type Step,
 } from "./listing";
+import {
+  isInt,
+  descriptionError,
+  monthlyError,
+  nightlyError,
+  titleError,
+  validateStep,
+} from "./listing-rules";
 
 export type Problem = { step: Step; error: string };
 export const PHOTO_REQUIRED_ERROR = "Añada al menos una foto.";

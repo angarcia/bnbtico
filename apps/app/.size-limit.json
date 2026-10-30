@@ -161,11 +161,11 @@
     "gzip": true
   },
   {
-    "name": "Reglas de publicar · trozo compartido (qué es obligatorio para enviar, los avisos, lo que cabe en la tabla y guardar cada pantalla; las leen el asistente, Mis casas y los adaptadores de datos)",
+    "name": "Reglas de publicar y de validación de las casas · trozo compartido (los mensajes y la validación de cada pantalla, qué es obligatorio para enviar, los avisos, lo que cabe en la tabla y guardar cada pantalla; las leen el asistente, Mis casas y los adaptadores de datos)",
     "path": [
       "dist/client/assets/publish-rules-*.js"
     ],
-    "limit": "1.25 KB",
+    "limit": "2 KB",
     "gzip": true
   },
   {

@@ -4,7 +4,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
-import { NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR, type ListingDraft, type Step } from "../../src/domain/listing";
+import { type ListingDraft, type Step } from "../../src/domain/listing";
+import { NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import type { ListingsHarness, Seeded } from "./harness";
 import { MAR } from "./points";
 

@@ -5,18 +5,20 @@
 import { EDIT_MESSAGES, editedFields, editOverview, LIVE_KEYS, type EditPatch, type ListingEdit, type LivePatch, type ReviewedField } from "../../domain/edit";
 import { DomainError } from "../../domain/errors";
 import {
-  charCount,
-  DESCRIPTION_LENGTH_ERROR,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
   FEATURES,
+  TITLE_MAX,
+  TITLE_MIN,
+} from "../../domain/listing";
+import {
+  charCount,
+  DESCRIPTION_LENGTH_ERROR,
   LOCATION_MESSAGES as LOC,
   MONTHLY_PRICE_ERROR,
   NIGHTLY_PRICE_ERROR,
   TITLE_LENGTH_ERROR,
-  TITLE_MAX,
-  TITLE_MIN,
-} from "../../domain/listing";
+} from "../../domain/listing-rules";
 import { fromPhotoRows, type PhotoUrl } from "../../domain/rows";
 import { OTHER_ZONE_MAX, ZONE_RADIUS_M } from "../../domain/zones";
 import type { FakeDb, FakeEdit, FakeListing } from "./db";

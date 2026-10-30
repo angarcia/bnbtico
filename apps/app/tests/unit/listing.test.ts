@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PROVINCE,
-  DESCRIPTION_LENGTH_ERROR,
   MIN_PHOTOS_TO_APPROVE,
-  TITLE_LENGTH_ERROR,
   FEATURES,
   KINDS,
   KIND_LABELS,
-  MONTHLY_PRICE_ERROR,
-  NIGHTLY_PRICE_ERROR,
   PROVINCES,
   STATUS_LABELS,
   STEP_COUNT,
@@ -25,10 +21,16 @@ import {
   stepFromParam,
   stepPosition,
   wizardStage,
-  validateStep,
   type Feature,
   type ListingDraft,
 } from "../../src/domain/listing";
+import {
+  DESCRIPTION_LENGTH_ERROR,
+  TITLE_LENGTH_ERROR,
+  MONTHLY_PRICE_ERROR,
+  NIGHTLY_PRICE_ERROR,
+  validateStep,
+} from "../../src/domain/listing-rules";
 import {
   PHOTO_REQUIRED_ERROR,
   missingLine,

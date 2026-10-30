@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { editLabel, editOverview, editSummary, editedFields, editFieldFromParam, mergeEdit, parseField, planEdit, photoPill, reviewNotice, type ListingEdit } from "../../src/domain/edit";
 import { isPublished, can } from "../../src/domain/can";
-import { TITLE_LENGTH_ERROR } from "../../src/domain/listing";
+import { TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import { formInput } from "../../src/domain/step-forms";
 import { activeListing } from "./fixtures";
 

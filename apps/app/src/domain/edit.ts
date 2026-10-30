@@ -4,7 +4,8 @@
 // revisión en cuanto se guarda y el admin decide uno a uno; para cada dato cuenta el último valor enviado. Las reglas de cada dato son las del
 // asistente (validateStep, parseStep, normalize); los mensajes, los mismos en SQL, el dominio y el fake.
 // Módulo de dominio: sin imports de framework.
-import { emptyDraft, KIND_LABELS, normalize, TITLE_MIN, validateStep, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
+import { emptyDraft, KIND_LABELS, normalize, TITLE_MIN, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
+import { validateStep } from "./listing-rules";
 import { parseStep, type FormInput } from "./step-forms";
 import type { ZoneSource } from "./zones";
 import type { EditStatus } from "./edit-label";

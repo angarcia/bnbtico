@@ -6,7 +6,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { OwnerListingsApi, PhotoVariants } from "../../src/domain/api";
 import { EDIT_MESSAGES, editSummary } from "../../src/domain/edit";
 import { DomainError } from "../../src/domain/errors";
-import { TITLE_LENGTH_ERROR } from "../../src/domain/listing";
+import { TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import { REVIEW_MESSAGES } from "../../src/domain/review";
 import type { ListingsHarness } from "./harness";
 import { PUERTO_VIEJO } from "./points";

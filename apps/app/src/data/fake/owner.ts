@@ -6,15 +6,17 @@ import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
-  charCount,
   MAX_PHOTOS,
-  NIGHTLY_PRICE_ERROR,
-  TITLE_EMPTY_ERROR,
-  TITLE_LENGTH_ERROR,
   TITLE_MAX,
   TITLE_MIN,
   type Listing,
 } from "../../domain/listing";
+import {
+  charCount,
+  NIGHTLY_PRICE_ERROR,
+  TITLE_EMPTY_ERROR,
+  TITLE_LENGTH_ERROR,
+} from "../../domain/listing-rules";
 import {
   PHOTO_REQUIRED_ERROR,
   planStep,
