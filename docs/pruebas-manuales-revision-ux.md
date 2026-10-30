@@ -255,7 +255,7 @@ Con un iPhone SE (o 375 px) y un Android. Hace falta una casa con una descripci�
 | U112 | Filtros: elegir Piscina y Wifi; mirar «₡ \| $» | Lo elegido en verde claro sin borde, con ✓; lo no elegido en beige claro; ningún salvia | ☐ |
 | U113 | Títulos en Explorar, la ficha, Mis casas y publicar | La misma letra que el texto, más fina que antes (no «tipo cómic») | ☐ |
 | U114 | «¿Cuándo?»: elegir llegada y salida | Los dos extremos en cuadrados terracota suave (no círculos naranjas) y la banda entre ellos casi crema; la pestaña activa de abajo en el terracota del logo | ☐ |
-| U115 | Hoja de contacto, «¿Quiénes?» y el paso 4 de publicar | Los − / + en verde claro sin contorno; los campos de texto sin línea, que se marca al escribir | ☐ |
+| U115 | Hoja de contacto, «¿Quiénes?» y el paso 4 de publicar | Los − / + sin fondo, solo el signo en verde; la ✕ sin fondo; en «¿Quiénes?» sin personas pone «0»; los campos de texto sin línea, que se marca al escribir | ☐ |
 | U116 | Ficha: los botones sobre la foto | Volver, compartir y corazón cuadrados y crema semitransparente; se leen sobre cualquier foto | ☐ |
 ---
 

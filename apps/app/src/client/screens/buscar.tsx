@@ -241,8 +241,8 @@ export function BuscarScreen() {
             <button type="button" aria-label="Una persona menos" disabled={draft.ppl <= 0} onClick={() => set({ ppl: draft.ppl - 1 })}>
               <Minus />
             </button>
-            <b className={draft.ppl ? "num" : "is-empty"} aria-live="polite">
-              {draft.ppl || "Sin indicar"}
+            <b className={draft.ppl ? "num" : "num is-empty"} aria-live="polite">
+              {draft.ppl}
             </b>
             <button type="button" aria-label="Una persona más" disabled={draft.ppl >= SEARCH_MAX_PEOPLE} onClick={() => set({ ppl: draft.ppl + 1 })}>
               <I.plus size={20} />

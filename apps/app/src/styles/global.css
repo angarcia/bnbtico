@@ -421,7 +421,7 @@ html.map-open{overflow:hidden}
 .btn-text{min-height:44px;white-space:nowrap;padding:0 8px;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .badge-sel{background:var(--chosen);color:var(--primary-ink)}
 .search-screen{display:flex;flex-direction:column;gap:10px}
-.search-close{align-self:flex-start;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
+.search-close{align-self:flex-start;background:transparent;color:var(--fg)}
 .search-closed .search-card-head h2{flex:1;min-width:0}
 .search-fold{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;padding:0 20px;border-radius:var(--r-tile);background:var(--surface);box-shadow:var(--shadow);font-family:var(--body);font-size:17px;font-weight:400;letter-spacing:normal;line-height:1.45;text-align:left}
 .search-fold b{font-weight:700}
@@ -460,7 +460,7 @@ html.map-open{overflow:hidden}
 .people-stepper button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
 .people-stepper button:disabled{border-color:var(--line);color:#A3ADA6;cursor:default}
 .people-stepper b{min-width:24px;font-family:var(--display);font-size:24px;text-align:center}
-.people-stepper b.is-empty{font-family:var(--body);font-size:16px;color:var(--muted)}
+.people-stepper b.is-empty{color:var(--muted)}
 .explore-top .chiprow{align-items:center}
 .chiprow .currency-switch{margin-left:auto}
 /* El mensual encendido (negrita y «✓ ») no cabe entero a 360 px junto a los filtros y «₡ | $»: se acorta con «…» y los
@@ -966,3 +966,8 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
   .listing-view > .cta-spacer{display:none}
   .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;transform:none;width:auto;max-width:none;border:0;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
 }
+/* + / − sin fondo (Daniel, 2026-10-29): solo el signo en verde, la zona táctil de siempre; al tocar, un fondo
+   tonal un instante. Desactivado, tenue. */
+.counter .ctl button,.counter .ctl .minus,.counter .ctl .plus,.people-stepper button,.people-stepper .minus,.people-stepper .plus{background:transparent;color:var(--primary);font-size:26px;line-height:1;border-radius:999px}
+.counter .ctl button:active:not(:disabled),.people-stepper button:active:not(:disabled){background:var(--chosen)}
+.counter .ctl button:disabled,.people-stepper button:disabled{color:var(--muted);opacity:.35}
