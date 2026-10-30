@@ -17,6 +17,7 @@ import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-q
 import { Link, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
+import { I } from "../../shared/icons";
 import { LAST_STEP, nextStep, normalize, planStep, previousStep, validateAll, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
@@ -314,17 +315,26 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
       ) : null}
       <ReadyContext.Provider value={setReady}>{children(values)}</ReadyContext.Provider>
       <div className="sticky-actions">
+        {/* «Atrás» como botón cuadrado con la flecha y «Continuar ›»; en el último paso, la acción sin flecha (A9). */}
         {step === 1 ? (
-          <span className="btn btn-ghost is-disabled" aria-disabled="true">
-            Atrás
+          <span className="btn btn-ghost btn-back is-disabled" aria-disabled="true" aria-label="Atrás">
+            <I.back size={22} />
           </span>
         ) : (
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(previousStep(step) ?? 1) }} className="btn btn-ghost">
-            Atrás
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(previousStep(step) ?? 1) }} className="btn btn-ghost btn-back" aria-label="Atrás">
+            <I.back size={22} />
           </Link>
         )}
         <button className="btn btn-primary grow" type="submit" disabled={sending || !ready}>
-          {step < LAST_STEP ? "Continuar" : sending ? "Un momento…" : "Enviar a revisión"}
+          {step < LAST_STEP ? (
+            <>
+              Continuar <I.chevron size={20} />
+            </>
+          ) : sending ? (
+            "Un momento…"
+          ) : (
+            "Enviar a revisión"
+          )}
         </button>
       </div>
     </form>

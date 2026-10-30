@@ -17,7 +17,7 @@ import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../..
 import { I } from "../../shared/icons";
 import { useBilling } from "../billing";
 import { useDiscardEdit, useSubmitEdit } from "../edit";
-import { listingStatsQuery } from "../owner";
+import { activityQuery } from "../owner";
 import { ActivateButton, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./propietario";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -150,17 +150,33 @@ function PaymentDueNote({ listing: l }: { listing: Listing }) {
   return <div className="note note-sun">{describe(l, { base: "" }).situation}</div>;
 }
 
-/** Visitas y consultas de 30 días (revisión UX A2): si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
-function StatsLine({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const { data } = useQuery({ ...listingStatsQuery(userId, l.id), enabled: !!userId });
-  if (!data) return <span className="small stats-line" aria-hidden="true">&nbsp;</span>;
-  const { views, inquiries } = data;
+/** Las cifras de 30 días de la casa (visitas, toques en WhatsApp y consultas), bajo la portada: salieron de Consultas para
+ *  quedarse aquí (revisión UX 2026-10-29, C1, Ana). Si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
+function StatsCard({ listing: l, userId }: { listing: Listing; userId: string }) {
+  const { data } = useQuery({ ...activityQuery(userId), enabled: !!userId });
+  const a = data?.find((x) => x.listingId === l.id);
+  const views = a?.views ?? 0;
+  const taps = a?.whatsappTaps ?? 0;
+  const inquiries = a?.inquiries ?? 0;
   return (
-    <span className="small strong primary stats-line" data-testid="listing-stats">
-      {views === 0 && inquiries === 0
-        ? "Comparta su enlace para que lleguen las primeras visitas"
-        : `${views} ${views === 1 ? "visita" : "visitas"} · ${inquiries} ${inquiries === 1 ? "consulta" : "consultas"} · últimos 30 días`}
-    </span>
+    <section className="card stack gap-8" data-testid="listing-stats" aria-busy={!data || undefined}>
+      <span className="small muted">Últimos 30 días</span>
+      {data ? (
+        <div className="activity-figures">
+          <p>
+            <b className="num">{views}</b> <span>{views === 1 ? "visita" : "visitas"}</span>
+          </p>
+          <p>
+            <b className="num">{taps}</b> <span>{taps === 1 ? "toque en WhatsApp" : "toques en WhatsApp"}</span>
+          </p>
+          <p>
+            <b className="num">{inquiries}</b> <span>{inquiries === 1 ? "consulta" : "consultas"}</span>
+          </p>
+        </div>
+      ) : (
+        <span className="sk sk-line" />
+      )}
+    </section>
   );
 }
 
@@ -219,12 +235,14 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
       <EditBanner listing={l} userId={userId} />
 
       <div className="photo detail-photo">
-        {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={340} /> : <span className="small">Sin fotos</span>}
+        {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
         <span className={`state ${label.cls}`}>{label.text}</span>
         <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num">
           {photoPill(l.photos.length, l.edit?.photos.length ?? 0)}
         </Link>
       </div>
+
+      {l.status === "active" ? <StatsCard listing={l} userId={userId} /> : null}
 
       <p className="note note-arena">
         <span>
@@ -250,7 +268,6 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
       <section className="list">
         <WhatsAppItem listing={l} />
       </section>
-      {l.status === "active" ? <StatsLine listing={l} userId={userId} /> : null}
       {!onTop && hb && billing ? <SubscriptionCard listing={l} sub={hb.sub} today={billing.today} /> : null}
     </>
   );

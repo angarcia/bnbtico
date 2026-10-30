@@ -5,11 +5,9 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, type MouseEvent, type ReactNode } from "react";
-import { initials } from "../domain/person";
 import { tabsFor } from "../domain/tabs";
 import { CurrencySwitch } from "../shared/currency-switch";
 import { I } from "../shared/icons";
-import { accountQuery } from "./account";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
@@ -30,25 +28,34 @@ function useNewInquiries(enabled: boolean): number {
   return enabled ? (data ?? 0) : 0;
 }
 
-/** Las pestañas llevan la barra superior, salvo Explorar (su cabecera trae la búsqueda, la cuenta y «₡ | $»); Filtros
- *  (pantalla completa con su cabecera), la zona del admin y la página de «no encontrada», tampoco. */
-const TOP_BAR_PATHS = new Set(["/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]);
+/** Revisión UX 2026-10-29 (C4, T2, Ana): solo Favoritos conserva la barra de arriba (logo y «₡ | $»); Mis casas, Calendario,
+ *  Consultas y Cuenta van sin barra ni título visible (la pestaña de abajo ya dice dónde se está). Explorar trae su propia
+ *  cabecera; la zona del admin y «no encontrada» siguen con el logo y el título. */
+const TOP_BAR_PATHS = new Set(["/favoritos"]);
+const BARE_PATHS = new Set(["/propietario/casas", "/propietario/calendario", "/propietario/actividad", "/cuenta"]);
+
+/** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
+const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
 
 export function TabsFrame({ children }: { children: ReactNode }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
-  const topBar = useLocation({ select: (l) => TOP_BAR_PATHS.has(l.pathname) });
+  const pathname = useLocation({ select: (l) => l.pathname });
+  const topBar = TOP_BAR_PATHS.has(pathname);
+  const bare = BARE_PATHS.has(pathname);
   const { status } = useSession();
   const { count } = useListingsCount();
   const tabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count });
   const pending = useReviewCount(tabs.some((t) => t.badge === "review"));
   const fresh = useNewInquiries(tabs.some((t) => t.badge === "inquiries"));
+  // «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta).
+  const next = status === "signed-out" ? nextFor(pathname) : undefined;
   return (
     <div className="app">
       {topBar ? <TopBar /> : null}
-      <UnderTopBar.Provider value={topBar}>
-        <main className={topBar ? "view has-topbar" : "view"}>{children}</main>
+      <UnderTopBar.Provider value={topBar || bare}>
+        <main className={topBar ? "view has-topbar" : bare ? "view is-bare" : "view"}>{children}</main>
       </UnderTopBar.Provider>
-      <nav className={`tabbar${tabs.length === 2 ? " two" : ""}`} aria-label="Navegación principal">
+      <nav className={`tabbar${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon, exact, badge }) => {
           const Icon = I[icon];
           const n = badge === "review" ? pending : badge === "inquiries" ? fresh : 0;
@@ -56,6 +63,7 @@ export function TabsFrame({ children }: { children: ReactNode }) {
             <Link
               key={to}
               to={to}
+              search={to === "/cuenta" && next ? { next } : undefined}
               className="nav"
               activeOptions={{ exact, includeSearch: false }}
               activeProps={{ "aria-current": "page" }}
@@ -76,48 +84,19 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Bajo la barra superior: el logo y la cuenta ya están arriba. */
+/** En una pestaña con la barra de arriba (Favoritos) o sin ella (Mis casas, Calendario, Consultas, Cuenta): sin logo propio y con
+ *  el título solo para lectores de pantalla. */
 const UnderTopBar = createContext(false);
 
-/** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
-const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
 
-/**
- * La cuenta, arriba a la derecha (barra superior y cabecera de Explorar). Sin sesión, «Ingresar»; con sesión, las
- * iniciales en un círculo (vacío mientras llega la cuenta). Mientras se lee la sesión guardada, la misma caja sin verse,
- * y nada salta. La cuenta se abre a pantalla completa, no como pestaña.
- */
-export function AccountButton() {
-  const { status, session } = useSession();
-  const next = useLocation({ select: (l) => nextFor(l.pathname) });
-  const account = useQuery({ ...accountQuery(session?.userId ?? ""), enabled: !!session });
-  const out = status === "signed-out";
-  return (
-    <span className="topbar-slot">
-      {status === "signed-in" ? (
-        <Link to="/cuenta" className="avatar avatar-sm topbar-account" aria-label="Cuenta">
-          {account.data ? initials(account.data.name) : null}
-        </Link>
-      ) : (
-        <Link to="/cuenta" search={next ? { next } : {}} className={`btn btn-ghost btn-header${out ? "" : " is-hidden"}`} aria-hidden={!out} tabIndex={out ? undefined : -1}>
-          Ingresar
-        </Link>
-      )}
-    </span>
-  );
-}
-
-/** Barra superior fija de las pestañas (no la de Explorar): logo, «₡ | $» y la cuenta. */
+/** Barra superior fija de Favoritos: logo y «₡ | $» (la cuenta ya es una pestaña). */
 export function TopBar() {
   return (
     <header className="topbar">
       <Link to="/explorar" className="topbar-home" aria-label="bnbtico, inicio">
         <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
       </Link>
-      <span className="row gap-8">
-        <CurrencySwitch />
-        <AccountButton />
-      </span>
+      <CurrencySwitch />
     </header>
   );
 }
@@ -146,8 +125,9 @@ export function RootHeader({ title, home = "/explorar", action, aside }: { title
           {action}
         </div>
       )}
+      {/* En las pestañas el título solo lo leen los lectores de pantalla (T2); lo de al lado se queda. */}
       <div className={aside ? "row between baseline wrap gap-4" : undefined}>
-        <h1>{title}</h1>
+        <h1 className={under ? "sr-only" : undefined}>{title}</h1>
         {aside}
       </div>
     </header>

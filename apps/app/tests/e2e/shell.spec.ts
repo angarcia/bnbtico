@@ -23,12 +23,12 @@ test("el shell muestra la barra inferior y cambia de pestaña sin recargar", asy
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page).toHaveURL(/\/favoritos$/);
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
-  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
-  // Sin sesión, «Ingresar» arriba abre Ingresar a pantalla completa, sin la barra inferior.
-  await page.getByRole("banner").getByRole("link", { name: "Ingresar" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeVisible();
-  await expect(nav).toHaveCount(0);
-  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
+  // Revisión UX 2026-10-29 (C4): sin sesión, «Ingresar» es la pestaña de la derecha y abre Ingresar con la barra a la vista.
+  await nav.getByRole("link", { name: "Ingresar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeAttached();
+  await expect(nav.getByRole("link", { name: "Ingresar" })).toHaveAttribute("aria-current", "page");
+  await nav.getByRole("link", { name: "Explorar" }).click();
   await expect(nav.getByRole("link", { name: "Explorar" })).toHaveAttribute("aria-current", "page");
   expect(await page.evaluate(() => (window as unknown as { __sinRecargar?: boolean }).__sinRecargar)).toBe(true);
   expect(problems, problems.join("\n")).toEqual([]);

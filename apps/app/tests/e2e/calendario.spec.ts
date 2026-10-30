@@ -53,12 +53,12 @@ async function clearOther() {
   await serviceClient().from("listings").delete().eq("owner_id", other!.id);
 }
 
-test("sin casas no hay Calendario: lleva a Explorar, con dos pestañas", async ({ page }) => {
+test("sin casas no hay Calendario: lleva a Explorar, con las pestañas del cliente", async ({ page }) => {
   await clearOther();
   await injectSession(page, "other");
   await page.goto("/propietario/calendario");
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
 });
 
 // Revisión UX A5: el calendario nunca abre un borrador; con una sola casa no hay selector.

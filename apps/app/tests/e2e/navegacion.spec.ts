@@ -5,9 +5,9 @@ import { postgrestHarness } from "../db/postgrest-harness";
 import { enterCode, injectSession, signOut } from "./helpers/session";
 import { backFromWhatsApp, catchWhatsApp } from "./helpers/whatsapp";
 
-// Navegación simple: una sola barra que crece con las casas (dos pestañas sin casas, cinco con al menos una), Cuenta a
-// pantalla completa, Mis casas (siempre en lista, también con una sola casa), Actividad (cifras de 30 días por casa y últimas
-// consultas) y la vuelta de /propietario y /propietario/consultas.
+// Navegación simple: una sola barra que crece con las casas (tres pestañas sin casas, cinco con al menos una) con la cuenta
+// a la derecha, Mis casas (siempre en lista, también con una sola casa), Consultas (solo las consultas; las cifras de 30 días
+// están en el detalle de cada casa) y la vuelta de /propietario y /propietario/consultas. Revisión UX 2026-10-29 (C1, C4).
 // Contra Supabase local con las sesiones inyectadas (sin gastar SMS).
 test.describe.configure({ mode: "serial" });
 
@@ -16,11 +16,11 @@ let h: Awaited<ReturnType<typeof postgrestHarness>>;
 let casa: Seeded;
 
 const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
-// Arriba a la derecha: en la barra superior o, en Explorar (sin barra), en su cabecera.
-const accountButton = (page: Page) => page.getByRole("link", { name: "Cuenta", exact: true });
-// Con una casa la pestaña dice «Mi casa»; con dos o más, «Mis casas».
-const OWNER_TABS = ["Explorar", "Favoritos", "Mi casa", "Calendario", /^Actividad\d*$/];
-const OWNER_TABS_MANY = ["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/];
+// La cuenta es la pestaña de la derecha.
+const accountButton = (page: Page) => nav(page).getByRole("link", { name: "Cuenta", exact: true });
+// Con una casa la pestaña dice «Mi casa»; con dos o más, «Mis casas». Favoritos pasa a Cuenta.
+const OWNER_TABS = ["Explorar", "Mi casa", "Calendario", /^Consultas\d*$/, "Cuenta"];
+const OWNER_TABS_MANY = ["Explorar", "Mis casas", "Calendario", /^Consultas\d*$/, "Cuenta"];
 
 /** Ingresar por la interfaz con un número de prueba que ya tiene cuenta (código 123456). */
 async function signInByUi(page: Page, phone: string) {
@@ -74,13 +74,13 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-test("6 · /propietario/consultas lleva a Actividad sin quedar en el historial", async ({ page }) => {
+test("6 · /propietario/consultas lleva a Consultas sin quedar en el historial", async ({ page }) => {
   await h.seed({ status: "draft", draft: { title: "Borrador del propietario" } }); // sin casas, la zona lleva a Explorar
   await page.goto("/explorar");
   const before = await page.evaluate(() => history.length);
   await page.goto("/propietario/consultas");
   await expect(page).toHaveURL(/\/propietario\/actividad$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Consultas" })).toBeAttached();
   expect(await page.evaluate(() => history.length)).toBe(before + 1);
 });
 
@@ -92,22 +92,17 @@ test("/propietario lleva a Mis casas sin quedar en el historial", async ({ page 
   expect(await page.evaluate(() => history.length)).toBe(before + 1);
 });
 
-test("7 · con una casa activa: las tres cifras en grande y las últimas consultas", async ({ page }) => {
+test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en el detalle de la casa", async ({ page }) => {
   await h.reset();
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
   await h.recordViews(casa.publicId, 4);
   await h.recordTaps(casa.publicId, 2);
   await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: 2, message: "Hola, ¿está libre?" });
   await page.goto("/propietario/actividad");
-  await expect(page.getByText("Últimos 30 días")).toBeVisible();
-  await expect(page.getByTestId("activity-figures")).toHaveText(/4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
-  const own = page.locator("article.activity-card");
-  await expect(own).toHaveCount(1);
-  await expect(own.getByTestId("card-label")).toHaveText("Activa");
-  const box = await own.locator(".house-photo").boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width * 0.85); // toda la fila menos 16 px de margen y 12 de relleno por lado
-  await expect(page.getByTestId("activity-figures")).toHaveClass(/\blg\b/);
-  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
+  await expect(page.getByTestId("inquiries-new")).toHaveText("1 consulta nueva");
+  await expect(page.getByTestId("activity-figures")).toHaveCount(0);
+  await expect(page.locator("article.activity-card")).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toHaveCount(0);
   const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
   await expect(inquiry.getByRole("heading", { name: TEST_NAMES.other })).toBeVisible();
   await expect(inquiry).toContainText("AP");
@@ -116,8 +111,8 @@ test("7 · con una casa activa: las tres cifras en grande y las últimas consult
   await expect(inquiry.getByText("Nueva", { exact: true })).toBeVisible();
   await expect(page.getByRole("group", { name: "Filtrar por casa" })).toHaveCount(0);
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
-  await expect(nav(page).getByRole("link", { name: "Actividad, 1 nueva" })).toHaveAttribute("aria-current", "page");
-  await page.screenshot({ path: "test-results/actividad-una-casa.png", fullPage: true });
+  await expect(nav(page).getByRole("link", { name: "Consultas, 1 nueva" })).toHaveAttribute("aria-current", "page");
+  await page.screenshot({ path: "test-results/consultas-una-casa.png", fullPage: true });
 
   // «Abrir WhatsApp»: el chat con el cliente, sin texto; la consulta deja de ser nueva y el contador de la pestaña se va.
   const wa = await catchWhatsApp(page);
@@ -125,83 +120,69 @@ test("7 · con una casa activa: las tres cifras en grande y las últimas consult
   await expect.poll(() => wa).toEqual([`https://wa.me/${TEST_PHONES.other.replace(/\D/g, "")}`]);
   await expect.poll(() => opened(casa.publicId)).toBe("1");
   await backFromWhatsApp(page);
-  await expect(page.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Consultas" })).toBeAttached();
   await expect(inquiry.getByText("Nueva", { exact: true })).toHaveCount(0);
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveCount(0);
-  await expect(nav(page).getByRole("link", { name: "Actividad" })).toBeVisible();
+  await expect(nav(page).getByRole("link", { name: "Consultas" })).toBeVisible();
 
   // Sin red: la pantalla visitada se pinta desde la caché del dispositivo.
   await page.reload();
-  await expect(page.getByTestId("activity-figures")).toHaveText(/4\s*visitas/);
+  await expect(inquiry).toBeVisible();
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
-  await expect(page.getByTestId("activity-figures")).toHaveText(/4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
   await expect(page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" })).toBeVisible();
   await page.unroute("**/rest/v1/**");
+
+  // Las cifras de 30 días, en el detalle de la casa, bajo la portada.
+  await page.goto(`/propietario/casas/${casa.id}`);
+  await expect(page.getByTestId("listing-stats")).toHaveText(/Últimos 30 días.*4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
 });
 
-test("7a · si las cifras no cargan, las últimas consultas y «Abrir WhatsApp» siguen", async ({ page }) => {
+test("7a · si las cifras no cargan, Consultas no se entera", async ({ page }) => {
   // P. ej. la app desplegada antes que la migración: la función no existe (404 de PostgREST).
   await page.route("**/rest/v1/rpc/owner_activity*", (route) =>
     route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ code: "PGRST202", message: "Could not find the function public.owner_activity" }) }),
   );
   await page.goto("/propietario/actividad");
   const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
-  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
   await expect(inquiry.getByRole("button", { name: "Abrir WhatsApp" })).toBeVisible();
-  await expect(page.getByText("No pudimos cargar las cifras. Intente de nuevo.")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByTestId("activity-figures")).toHaveCount(0);
-  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
-  await expect(inquiry.getByRole("button", { name: "Abrir WhatsApp" })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
-test("7b · con dos casas: una tarjeta por casa; la que no está activa muestra solo su estado", async ({ page }) => {
+test("7b · con dos casas: ninguna tarjeta de casa en Consultas; la que no está activa no aparece", async ({ page }) => {
   await h.seed({ status: "review", draft: { title: "Casa en revisión" } });
   await page.goto("/propietario/actividad");
-  const cards = page.locator(".activity-card");
-  await expect(cards).toHaveCount(2);
-  const active = cards.filter({ hasText: "Casa Cocles" });
-  await expect(active.getByTestId("card-label")).toHaveText("Activa");
-  await expect(active.getByTestId("activity-figures")).toHaveText(/4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
-  await expect(active.locator(".house-photo img")).toHaveCount(1);
-  const review = cards.filter({ hasText: "Casa en revisión" });
-  await expect(review.getByTestId("card-label")).toHaveText("En revisión");
-  const [b1, b2] = [await active.boundingBox(), await review.boundingBox()];
-  expect(Math.abs(b1!.y - b2!.y)).toBeLessThan(2);
-  expect(b1!.x).not.toBe(b2!.x);
-  await expect(review.getByTestId("activity-figures")).toHaveCount(0);
-  await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toBeVisible();
-  await page.screenshot({ path: "test-results/actividad-dos-casas.png", fullPage: true });
+  await expect(page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" })).toBeVisible();
+  await expect(page.locator(".activity-card")).toHaveCount(0);
+  await expect(page.getByText("Casa en revisión")).toHaveCount(0);
+  await page.screenshot({ path: "test-results/consultas-dos-casas.png", fullPage: true });
 });
 
-test("7c · sin casa activa ni consultas: un único mensaje", async ({ page }) => {
+test("7c · sin consultas: un único mensaje", async ({ page }) => {
   const { data: other } = await serviceClient().from("profiles").select("id").eq("phone", TEST_PHONES.other).single();
   await serviceClient().from("listings").delete().eq("owner_id", other!.id);
   await h.seed({ status: "draft", as: "other", draft: { title: "Borrador de Ana" } });
   await injectSession(page, "other");
   await page.goto("/propietario/actividad");
-  await expect(page.getByText("Cuando su casa esté activa verá aquí cuántas personas la visitan y le escriben")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Últimas consultas" })).toHaveCount(0);
+  await expect(page.getByText("Cuando alguien le escriba por WhatsApp desde la ficha de su casa, aparecerá aquí.")).toBeVisible();
   await expect(page.getByTestId("activity-figures")).toHaveCount(0);
   await expect(page.getByText("Borrador", { exact: true })).toHaveCount(0);
-  await page.screenshot({ path: "test-results/actividad-vacia.png" });
+  await page.screenshot({ path: "test-results/consultas-vacia.png" });
 });
 
 test("el contador se va con la sesión y la consulta privada sale de la caché del dispositivo", async ({ page }) => {
   await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: null, message: "Otra pregunta" });
   await page.goto("/propietario/actividad");
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
-  // Cuenta se abre a pantalla completa desde arriba, sin barra inferior.
+  // Cuenta es la pestaña de la derecha (C4): la barra sigue a la vista.
   await accountButton(page).click();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await expect(nav(page)).toHaveCount(0);
+  await expect(accountButton(page)).toHaveAttribute("aria-current", "page");
   await expect.poll(() => persistedCache(page)).toContain('"inquiries"');
   await signOut(page);
   await expect(page.getByRole("button", { name: "Cerrar sesión" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Volver" }).click();
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
   await expect
     .poll(
       async () => {
@@ -262,30 +243,30 @@ test("la casa abierta desde la lista se queda aunque se descarte la otra", async
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
 });
 
-test("1 · sin sesión: dos pestañas e «Ingresar» arriba", async ({ page }) => {
+test("1 · sin sesión: tres pestañas, «Ingresar» a la derecha", async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/explorar");
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
-  await expect(page.locator(".explore-top").getByRole("link", { name: "Ingresar" })).toBeVisible();
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" })).toBeVisible();
   await page.goto("/favoritos");
-  await expect(page.getByRole("banner").getByRole("link", { name: "Ingresar" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" })).toBeVisible();
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
 });
 
-test("2 · sin casas: dos pestañas; «Publicar mi casa» crea un borrador, cinco pestañas y Mis casas muestra el borrador", async ({ page }) => {
+test("2 · sin casas: tres pestañas; «¿Quiere publicar su casa gratis?» crea un borrador, cinco pestañas y Mis casas muestra el borrador", async ({ page }) => {
   await h.reset(); // ninguna casa de «other»
   await signInByUi(page, "8888 1234");
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
   // Sin casas, la zona del propietario lleva a Explorar.
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/explorar$/);
   await accountButton(page).click();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await expect(page.getByRole("link", { name: /Favoritos/ })).toHaveCount(0);
+  await expect(page.locator("main").getByRole("link", { name: /Favoritos/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Buscar una casa/ })).toHaveCount(0);
-  await page.getByRole("link", { name: /Publicar mi casa/ }).click();
+  await page.getByTestId("publish-promo-row").click();
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   await page.goto("/propietario/casas");
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
@@ -297,9 +278,11 @@ test("2 · sin casas: dos pestañas; «Publicar mi casa» crea un borrador, cinc
   await expect(page.getByTestId("resume-card")).toHaveCount(0);
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await page.goto("/cuenta");
-  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeAttached();
   await expect(page.getByText("Próximo cobro")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Publicar mi casa/ })).toHaveCount(0);
+  await expect(page.getByTestId("publish-promo-row")).toHaveCount(0);
+  // El propietario tiene Favoritos dentro de Cuenta (C4).
+  await expect(page.getByTestId("favorites-row")).toBeVisible();
 });
 
 test("el propietario entra y la barra no salta; al volver a abrir, cinco desde el primer pintado", async ({ page }) => {
@@ -347,47 +330,34 @@ test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", asyn
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
   await page.getByRole("article").getByRole("button", { name: "Descartar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
 });
 
-test("Cuenta se abre a pantalla completa, sin barra inferior, y la flecha vuelve adonde estaba", async ({ page }) => {
+test("Cuenta es la pestaña de la derecha; lo que se abre desde ella vuelve a Cuenta", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Manzanillo" } });
   await page.goto("/propietario/calendario");
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
   await accountButton(page).click();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
-  await expect(nav(page)).toHaveCount(0);
-  await page.getByRole("link", { name: "Volver" }).click();
-  await expect(page).toHaveURL(/\/propietario\/calendario$/);
-  // Las pantallas que se abren desde Cuenta vuelven atrás: dos «Volver» llevan a la pestaña, sin rebotar con Cuenta.
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeAttached();
+  await expect(accountButton(page)).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
   const volver = () => page.getByRole("link", { name: "Volver" }).click();
-  await accountButton(page).click();
   await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
   await expect(page).toHaveURL(/\/ayuda$/);
   await volver();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await volver();
-  await expect(page).toHaveURL(/\/propietario\/calendario$/);
-  await accountButton(page).click();
   await page.getByTestId("subscription-card").getByRole("link", { name: "Ver detalle" }).click();
   await expect(page).toHaveURL(/\/propietario\/suscripcion$/);
   await volver();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await volver();
-  await expect(page).toHaveURL(/\/propietario\/calendario$/);
-  // Editar y Listo no apilan Cuenta.
-  await accountButton(page).click();
+  // Editar abre los datos a pantalla completa y «Listo» vuelve a la pestaña.
   await page.getByRole("link", { name: "Editar", exact: true }).click();
+  await expect(nav(page)).toHaveCount(0);
   await page.getByRole("link", { name: "Listo", exact: true }).click();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await volver();
-  await expect(page).toHaveURL(/\/propietario\/calendario$/);
-  // Abierta directamente (sin historial en la app), la flecha lleva a Mis casas.
-  await page.goto("/cuenta");
-  await page.getByRole("link", { name: "Volver" }).click();
-  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await expect(accountButton(page)).toHaveAttribute("aria-current", "page");
 });
 
 test("5 · ₡ → $ en la fila de chips cambia los precios de Explorar y se mantiene al recargar; la ficha muestra las dos monedas", async ({ page }) => {
@@ -407,7 +377,9 @@ test("5 · ₡ → $ en la fila de chips cambia los precios de Explorar y se man
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
 });
 
-test("la barra superior: 56 px más el área segura, y los botones de al menos 44 px; Explorar no la lleva", async ({ page }) => {
+// Revisión UX 2026-10-29 (C4, T2): solo Favoritos lleva la barra de arriba (logo y «₡ | $»); Mis casas, Calendario, Consultas
+// y Cuenta van sin ella ni título visible; Explorar trae su cabecera con la búsqueda a todo el ancho.
+test("la barra superior: solo en Favoritos, 56 px más el área segura, con el logo y «₡ | $»", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   const banner = page.getByRole("banner");
@@ -415,35 +387,27 @@ test("la barra superior: 56 px más el área segura, y los botones de al menos 4
     await expect(banner).toHaveCount(1);
     expect((await banner.boundingBox())?.height).toBe(56);
     await expect(banner.getByRole("img", { name: "bnbtico" })).toBeVisible();
-    for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    for (const l of await banner.getByRole("link").all()) {
-      const box = (await l.boundingBox())!;
-      expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
-    }
-  };
-  // Explorar trae su propia cabecera: la cuenta junto a la píldora y «₡ | $» en la fila de chips.
-  await page.goto("/explorar");
-  await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}$/);
-  await expect(page.locator(".topbar")).toHaveCount(0);
-  await expect(banner).toHaveCount(0);
-  // Las otras cuatro pestañas la llevan; Cuenta (pantalla de flujo), no.
-  for (const path of ["/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad"]) {
-    await page.goto(path);
     await expect(banner.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
-    await checkBar();
-  }
-  await page.goto("/cuenta");
-  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
+    for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  };
+  await page.goto("/explorar");
+  await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toHaveCount(0);
   await expect(banner).toHaveCount(0);
+  await page.goto("/favoritos");
+  await checkBar();
+  for (const path of ["/propietario/casas", "/propietario/calendario", "/propietario/actividad", "/cuenta"]) {
+    await page.goto(path);
+    await expect(page.locator("main h1")).toHaveClass(/sr-only/);
+    await expect(banner).toHaveCount(0);
+  }
   // Filtros es una pantalla completa con su cabecera: sin barra superior ni selector.
   await page.goto("/explorar/filtros");
   await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible();
   await expect(banner).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
-  // Sin sesión, «Ingresar».
+  // Sin sesión, la misma barra en Favoritos (la cuenta va abajo).
   await page.evaluate(() => localStorage.clear());
   await page.goto("/favoritos");
-  await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
   await checkBar();
 });
 
@@ -473,44 +437,32 @@ test("densidad: márgenes de 16 px e iconos de 26 px en la barra", async ({ page
 test.describe("en un teléfono de 375 px", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
-  test("la barra superior cabe entera, con y sin sesión, sin scroll horizontal", async ({ page }) => {
+  test("Explorar: la búsqueda a todo el ancho y la barra de Favoritos caben, con y sin sesión, sin scroll horizontal", async ({ page }) => {
     const banner = page.getByRole("banner");
-    const fits = async (account: RegExp | string) => {
+    const fits = async () => {
       const logo = (await banner.getByRole("img", { name: "bnbtico" }).boundingBox())!;
       const currency = (await banner.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
-      const last = (await banner.getByRole("link", { name: account }).boundingBox())!;
       expect(logo.x).toBeGreaterThanOrEqual(0);
       expect(logo.x + logo.width).toBeLessThanOrEqual(currency.x);
-      expect(currency.x + currency.width).toBeLessThanOrEqual(last.x);
-      expect(last.x + last.width).toBeLessThanOrEqual(375);
-      expect(Math.min(last.width, last.height)).toBeGreaterThanOrEqual(44);
-      for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      expect(currency.x + currency.width).toBeLessThanOrEqual(375);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
-    // La cabecera de Explorar: la píldora y la cuenta en una fila, dentro de los 375 px.
-    const exploreFits = async (account: string) => {
-      const top = page.locator(".explore-top");
-      const pill = (await top.locator(".search-pill").boundingBox())!;
-      const last = (await top.getByRole("link", { name: account }).boundingBox())!;
+    const exploreFits = async () => {
+      const pill = (await page.locator(".explore-top .search-pill").boundingBox())!;
       expect(pill.x).toBeGreaterThanOrEqual(16);
-      expect(pill.x + pill.width).toBeLessThanOrEqual(last.x);
-      expect(last.x + last.width).toBeLessThanOrEqual(375 - 16);
-      expect(Math.min(last.width, last.height)).toBeGreaterThanOrEqual(44);
+      expect(pill.x + pill.width).toBeGreaterThan(375 - 16 - 2);
+      expect(pill.x + pill.width).toBeLessThanOrEqual(375 - 16 + 1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
     await page.goto("/explorar");
-    await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toBeVisible();
-    await exploreFits("Cuenta");
+    await exploreFits();
     await page.goto("/favoritos");
-    await expect(banner.getByRole("link", { name: "Cuenta" })).toBeVisible();
-    await fits("Cuenta");
+    await fits();
     await page.evaluate(() => localStorage.clear());
     await page.goto("/explorar");
-    await expect(page.locator(".explore-top").getByRole("link", { name: "Ingresar" })).toBeVisible();
-    await exploreFits("Ingresar");
+    await exploreFits();
     await page.goto("/favoritos");
-    await expect(banner.getByRole("link", { name: "Ingresar" })).toBeVisible();
-    await fits("Ingresar");
+    await fits();
     await page.screenshot({ path: "test-results/barra-375-sin-sesion.png" });
   });
 });

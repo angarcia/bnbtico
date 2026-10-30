@@ -76,14 +76,7 @@ export const ownListingQuery = (userId: string, id: string, client: QueryClient)
 
 /** Plazas asignadas de la oferta de lanzamiento (lectura pública, launch_offer_taken). Si la RPC falla (un despliegue
  *  antes de la migración de la fase 5, un error pasajero), las casas activas, como antes. */
-export const offerTakenQuery = queryOptions({
-  queryKey: ["offer-taken"] as const,
-  queryFn: async () => {
-    const listings = (await import("./supabase-data")).publicListings();
-    return listings.offerTaken().catch(() => listings.countActive());
-  },
-  staleTime: 5 * 60_000,
-});
+export { offerTakenQuery } from "./offer-query";
 
 /** El borrador pendiente para retomar (pantalla de entrada a publicar). Siempre se pide de nuevo: puede venir de otro dispositivo. */
 export const resumableQuery = (userId: string) =>

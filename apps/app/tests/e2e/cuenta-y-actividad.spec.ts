@@ -44,8 +44,9 @@ const addCard = () =>
 /** De Mis casas a Cuenta por el botón de arriba. */
 async function ownerCuenta(page: Page) {
   await page.goto("/propietario/casas");
-  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
-  await expect(page.getByRole("heading", { name: "Cuenta", level: 1 })).toBeVisible();
+  // La cuenta es la pestaña de la derecha (revisión UX 2026-10-29, C4).
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Cuenta" }).click();
+  await expect(page.getByRole("heading", { name: "Cuenta", level: 1 })).toBeAttached();
 }
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /** La caché de Query vive en IndexedDB (fresca 30 s): tras cambiar algo como el servicio, se abre la pantalla sin ella. */
@@ -221,16 +222,17 @@ test.describe("Cuenta", () => {
 
     await addCard();
     await fresh(page, "/cuenta");
-    await expect(page.getByTestId("payment-row")).toContainText("Visa ···· 4242");
-    await expect(page.getByTestId("payment-row")).not.toHaveClass(/list-item-sun/);
+    // Revisión UX 2026-10-29 (C5): con método, la fila no sale; el método se ve en «Ver detalle».
+    await expect(page.getByTestId("sub-row").first()).toBeVisible();
+    await expect(page.getByTestId("payment-row")).toHaveCount(0);
   });
 
-  test("la fila Método de pago va en ocre solo cuando toca avisar; si no, «Ninguno todavía»", async ({ page }) => {
+  // Revisión UX 2026-10-29 (C5, Ana): la fila solo sale cuando falta el método y toca avisar, en ocre.
+  test("la fila del método de pago solo sale, en ocre, cuando toca avisar", async ({ page }) => {
     const pay = page.getByTestId("payment-row");
     const neutral = async () => {
-      await expect(pay).toContainText("Ninguno todavía");
-      await expect(pay).not.toHaveClass(/list-item-sun/);
-      await expect(pay).not.toContainText("Falta");
+      await expect(page.getByRole("link", { name: /Ayuda por WhatsApp/ })).toBeVisible();
+      await expect(pay).toHaveCount(0);
     };
     // Solo un borrador: nada que pagar todavía.
     await h.seed({ status: "draft", draft: { title: "Borrador" } });
@@ -313,7 +315,7 @@ test.describe("Cuenta", () => {
     await owner(page);
     await page.goto("/cuenta");
     await expect(page.getByTestId("subscription-card")).toBeVisible();
-    await expect(page.getByTestId("payment-row")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Ayuda por WhatsApp/ })).toBeVisible();
     const lowest = () =>
       page.evaluate(() => {
         const els = [...document.querySelectorAll("main *")].filter((e) => e.getClientRects().length && !e.children.length);
@@ -393,11 +395,12 @@ test.describe("Actividad por casa", () => {
     const links = chips(page).getByRole("link");
     await expect(links).toHaveText(["Todas", "Casa Cocles", "Cabina Punta Uva"]);
     await expect(links.first()).toHaveAttribute("aria-current", "page");
-    const heading = page.getByRole("heading", { level: 2, name: "Últimas consultas" });
-    expect((await chips(page).boundingBox())!.y).toBeGreaterThan((await heading.boundingBox())!.y);
+    // Revisión UX 2026-10-29 (C1): Consultas solo con consultas; arriba cuántas nuevas, y los chips debajo.
+    const fresh_ = page.getByTestId("inquiries-new");
+    await expect(fresh_).toHaveText("22 consultas nuevas");
+    expect((await chips(page).boundingBox())!.y).toBeGreaterThan((await fresh_.boundingBox())!.y);
     const figures = page.locator("article.activity-card");
-    const houseCards = await figures.count();
-    await heading.evaluate((e) => e.scrollIntoView({ block: "center" }));
+    await expect(figures).toHaveCount(0);
     await page.screenshot({ path: "test-results/capturas/actividad-chips.png" });
 
     await chips(page).getByRole("link", { name: "Cabina Punta Uva" }).click();
@@ -405,7 +408,7 @@ test.describe("Actividad por casa", () => {
     await expect(inquiryCards(page)).toHaveCount(1);
     await expect(inquiryCards(page)).toContainText("Hola Cabina 0");
     await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveText("Cabina Punta Uva");
-    await expect(figures).toHaveCount(houseCards);
+    await expect(figures).toHaveCount(0);
     await page.reload();
     await expect(inquiryCards(page)).toHaveCount(1);
     await expect(chips(page).getByRole("link", { name: "Cabina Punta Uva" })).toHaveAttribute("aria-current", "page");

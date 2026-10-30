@@ -5,7 +5,7 @@
 // Parar y reactivar son optimistas con vuelta atrás; «Añadir método de pago» pide al worker la página de la pasarela.
 import { useIsRestoring, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { STATUS_LABELS, type Listing, type ListingStatus } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -31,7 +31,7 @@ import { I } from "../../shared/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
 import { FlowHeader } from "../chrome";
 import { ConfirmSheet } from "../confirm-sheet";
-import { offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
+import { activityQuery, offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
 import { useSession } from "../session";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
@@ -169,20 +169,22 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           {line}
         </span>
       ) : null}
+      {/* Lo que la casa le ha dado (visitas y consultas): lo que retiene, no el botón para irse (revisión UX 2026-10-29, A2). */}
+      {sub.status === "active" ? <HouseFigures userId={userId} listingId={house.listingId} /> : null}
       {pay ? <PayNotice hb={hb} today={today} /> : null}
       {pay ? <PayButton publicId={house.publicId} /> : null}
-      {sub.status === "active" || sub.status === "payment_due" ? (
-        <button type="button" className="btn btn-ghost btn-block" disabled={change.isPending} onClick={() => setConfirming(true)}>
-          Parar suscripción
-        </button>
-      ) : null}
       {sub.status === "inactive" ? (
-        <button type="button" className="btn btn-sun btn-block" disabled={change.isPending} onClick={() => {
-            onAction();
-            change.mutate("resume");
-          }}>
-          Activar suscripción
-        </button>
+        <>
+          <button type="button" className="btn btn-sun btn-block" disabled={change.isPending} onClick={() => {
+              onAction();
+              change.mutate("resume");
+            }}>
+            Activar suscripción
+          </button>
+          {sub.plan === "promo" && sub.promoEndsOn && today <= sub.promoEndsOn ? (
+            <span className="xs muted num">Mantiene su plaza de la oferta: gratis hasta el {shortDate(sub.promoEndsOn, today)}.</span>
+          ) : null}
+        </>
       ) : null}
       {change.isError ? (
         <p className="note small" role="alert">
@@ -195,12 +197,18 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           {sent.map((r) => ` Aviso ${REMINDER_LABEL[r.daysBefore]} enviado el ${shortDate(r.sentAt!.slice(0, 10), today)}.`).join("")}
         </span>
       ) : null}
+      {/* «Parar suscripción» como texto, centrado y al final; la confirmación sigue igual (A2). */}
+      {sub.status === "active" || sub.status === "payment_due" ? (
+        <button type="button" className="btn-text sub-stop" disabled={change.isPending} onClick={() => setConfirming(true)}>
+          Parar suscripción
+        </button>
+      ) : null}
       {confirming ? (
         <ConfirmSheet
           title="Parar suscripción"
           body={`¿Parar la suscripción de ${house.title || "esta casa"}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.`}
           confirmLabel="Parar suscripción"
-          confirmClassName="btn btn-primary btn-lg"
+          confirmClassName="btn btn-outline-bad btn-lg"
           cancelClassName="btn btn-ghost btn-lg"
           returnFocus={ref}
           onClose={() => setConfirming(false)}
@@ -212,6 +220,20 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
         />
       ) : null}
     </article>
+  );
+}
+
+/** «44 visitas · 1 consulta en 30 días» de una casa activa (A2). */
+function HouseFigures({ userId, listingId }: { userId: string; listingId: string }) {
+  const { data } = useQuery({ ...activityQuery(userId), enabled: !!userId });
+  const a = data?.find((x) => x.listingId === listingId);
+  if (!data) return null;
+  const views = a?.views ?? 0;
+  const inquiries = a?.inquiries ?? 0;
+  return (
+    <span className="small strong num" data-testid="sub-figures">
+      {views} {views === 1 ? "visita" : "visitas"} · {inquiries} {inquiries === 1 ? "consulta" : "consultas"} en 30 días
+    </span>
   );
 }
 
@@ -284,6 +306,51 @@ export function SuscripcionScreen() {
   const card = (hb: HouseBilling) => (
     <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} onAction={dismissSaving} />
   );
+  // Revisión UX 2026-10-29 (A2, Ana): si alguna casa necesita algo (parada o pendiente de pago), «Sus casas» va arriba, con
+  // esas primero; si todas están al día, abajo del todo.
+  const needsSomething = (hb: HouseBilling) => hb.sub.status === "inactive" || hb.sub.status === "payment_due";
+  const needs = scoped ? needsSomething(scoped) : (indexed?.all.some(needsSomething) ?? false);
+  const ordered = indexed ? [...indexed.all.filter(needsSomething), ...indexed.all.filter((x) => !needsSomething(x))] : [];
+  const houses = scoped ? (
+    <section className="card stack gap-12">{card(scoped)}</section>
+  ) : indexed ? (
+    <section className="card stack gap-12">
+      <h2 className="card-title">Sus casas</h2>
+      {ordered.length ? ordered.map(card) : <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>}
+    </section>
+  ) : null;
+  const methodCard = (
+    <section className="card stack gap-8" data-testid="method-card">
+      <h2 className="card-title">Método de pago</h2>
+      {method ? (
+        <div className="row between baseline gap-8">
+          <span className="row gap-8 num">
+            <CardIcon /> {methodName(method)} · vence {expiry(method)}
+          </span>
+          <PayButton label="Cambiar" ghost publicId={scoped?.house.publicId} />
+        </div>
+      ) : (
+        <>
+          <span className="row gap-8">
+            <CardIcon /> Ninguno todavía
+          </span>
+          {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">Puede añadirlo cuando le avisemos.</span>}
+        </>
+      )}
+      <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en bnbtico nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
+    </section>
+  );
+  // «Cómo funciona», plegado y en blanco (A2, A6).
+  const howItWorks = (
+    <details className="card small how-it-works" data-testid="how-it-works">
+      <summary className="strong">¿Cómo funciona el cobro?</summary>
+      <span>
+        Cuando aprobamos su casa, empieza su oferta gratuita (si le tocó plaza). Le avisamos por WhatsApp y aquí a los 90, 30 y 7 días y el último día. Si al terminar tiene
+        un método de pago, la casa sigue activa por {fee()} al mes; si no, queda pendiente de pago y deja de mostrarse hasta que lo añada. Puede parar la suscripción
+        de una casa cuando quiera (queda inactiva y no se cobra) y reactivarla después con el mismo enlace. Sin permanencia y sin comisiones por alquiler.
+      </span>
+    </details>
+  );
 
   return (
     <>
@@ -299,37 +366,12 @@ export function SuscripcionScreen() {
         </p>
       ) : null}
 
-      {indexed && (!single || scoped) ? (
-        <>
-          {scoped ? (
-            <section className="card stack gap-12">{card(scoped)}</section>
-          ) : (
-            <section className="card stack gap-12">
-              <h2 className="card-title">Sus casas</h2>
-              {indexed.all.length ? indexed.all.map(card) : <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>}
-            </section>
-          )}
+      {/* La oferta, arriba del todo mientras queden plazas (A2). */}
+      {single ? null : <TiersCard />}
 
-          <section className="card stack gap-8" data-testid="method-card">
-            <h2 className="card-title">Método de pago</h2>
-            {method ? (
-              <div className="row between baseline gap-8">
-                <span className="row gap-8 num">
-                  <CardIcon /> {methodName(method)} · vence {expiry(method)}
-                </span>
-                <PayButton label="Cambiar" ghost publicId={scoped?.house.publicId} />
-              </div>
-            ) : (
-              <>
-                <span className="row gap-8">
-                  <CardIcon /> Ninguno todavía
-                </span>
-                {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">Puede añadirlo cuando le avisemos.</span>}
-              </>
-            )}
-            <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en bnbtico nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
-          </section>
-        </>
+      {indexed && (!single || scoped) ? (
+        // Con claves, React mueve las tarjetas en vez de montarlas otra vez: al parar una casa el foco sigue en ella.
+        (needs ? [houses, methodCard, howItWorks] : [methodCard, howItWorks, houses]).map((el) => <Fragment key={el === houses ? "houses" : el === methodCard ? "method" : "how"}>{el}</Fragment>)
       ) : single && billing.isError && !billing.isFetching ? (
         <p className="note" role="alert">
           {message(billing.error)}
@@ -338,18 +380,9 @@ export function SuscripcionScreen() {
         <section className="card skeleton sub-skeleton" aria-busy="true" aria-label="Cargando su suscripción">
           <span className="sk sk-line" />
         </section>
-      ) : null}
-
-      {single ? null : <TiersCard />}
-
-      <section className="card-arena stack gap-4 small" data-testid="how-it-works">
-        <b>Cómo funciona</b>
-        <span>
-          Cuando aprobamos su casa, empieza su oferta gratuita (si le tocó plaza). Le avisamos por WhatsApp y aquí a los 90, 30 y 7 días y el último día. Si al terminar tiene
-          un método de pago, la casa sigue activa por {fee()} al mes; si no, queda pendiente de pago y deja de mostrarse hasta que lo añada. Puede parar la suscripción
-          de una casa cuando quiera (queda inactiva y no se cobra) y reactivarla después con el mismo enlace. Sin permanencia y sin comisiones por alquiler.
-        </span>
-      </section>
+      ) : (
+        howItWorks
+      )}
       {scoped && indexed && indexed.all.length >= 2 ? (
         <Link to="/propietario/suscripcion" className="link small center">
           Ver todas sus casas
@@ -388,9 +421,9 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
   if (!billing) return <>{fallback}</>;
   const { today } = billing;
   const rows: { id: string; publicId?: string; title: string; status: ListingStatus; line: string; promo: boolean }[] = billing.all.map(({ house, sub }) => ({ id: house.listingId, publicId: house.publicId, title: house.title, status: sub.status, line: subscriptionLine(sub, today) ?? STATUS_LABELS[sub.status].label, promo: sub.status === "active" && sub.plan === "promo" }));
-  // Las casas en revisión que aún no tienen suscripción (nunca aprobadas): «En revisión · ₡0», sin enlace.
+  // Las casas en revisión que aún no tienen suscripción (nunca aprobadas): «En revisión», sin enlace.
   for (const l of (own.data ?? []) as Listing[]) {
-    if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: `En revisión · ${formatCRC(0)}`, promo: false });
+    if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: "En revisión", promo: false });
   }
   return (
     <section className="card stack gap-10" data-testid="subscription-card">
@@ -428,33 +461,41 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
       <hr className="divider" />
       <div className="row between baseline">
         <span className="small muted">Próximo cobro</span>
-        <b className="num" data-testid="next-charge">
-          {nextCharge(
+        {/* «Nada hasta el …» sin negrita: en plena oferta no hay nada que pagar (C5). */}
+        {(() => {
+          const line = nextCharge(
             billing.all.map((x) => x.sub),
             billing.method,
             today,
-          )}
-        </b>
+          );
+          return (
+            <span className={line.startsWith("Nada") ? "num" : "num strong"} data-testid="next-charge">
+              {line}
+            </span>
+          );
+        })()}
       </div>
       <span className="xs muted">{fee()} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
     </section>
   );
 }
 
-/** La fila «Método de pago» de Cuenta; nada sin datos de facturación (Cuenta como antes). En ocre solo si falta y alguna
- *  casa ya lo necesita (la misma regla que «Añadir método de pago»); si falta pero aún no toca, «Ninguno todavía». */
+/** La fila «Añadir método de pago» de Cuenta, en ocre, solo cuando falta y alguna casa ya lo necesita (la misma regla que
+ *  «Añadir método de pago» de Suscripción). Si no falta o aún no toca, no sale: el método se ve en «Ver detalle» (revisión
+ *  UX 2026-10-29, C5, Ana). */
 export function CuentaPaymentRow() {
   const userId = useSession().session?.userId ?? "";
   const billing = useBilling(userId);
   if (!billing) return null;
   const due = !billing.method && billing.all.some((x) => payButtonDue(x.sub, billing.today));
+  if (!due) return null;
   return (
-    <Link to="/propietario/suscripcion" className={due ? "list-item list-item-sun" : "list-item"} data-testid="payment-row">
+    <Link to="/propietario/suscripcion" className="list-item list-item-sun" data-testid="payment-row">
       <span className="primary">
         <CardIcon />
       </span>
       <span className="body">
-        Método de pago<small className="num">{billing.method ? `${methodName(billing.method)} · vence ${expiry(billing.method)}` : due ? "Falta · añádalo antes de que termine su oferta" : "Ninguno todavía"}</small>
+        Añadir método de pago<small className="num">Falta · añádalo antes de que termine su oferta</small>
       </span>
       <span className="chev">
         <I.chevron />

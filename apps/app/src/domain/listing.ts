@@ -311,6 +311,28 @@ export function locationLine(l: { zone: string; district: string; canton: string
 export const isProposedZone = (l: { zoneSource: ZoneSource | null }) => l.zoneSource === "other";
 
 /** Paso donde retomar un borrador (revisión UX A1/A5): el primero con algo pendiente; si no falta nada, el último. */
+/** Lo que le falta a un borrador, en corto, para el botón «Seguir publicando» de su detalle (revisión UX 2026-10-29, A4):
+ *  «Falta: fotos y precio». Las fotos no son obligatorias para enviar, pero sí para publicarla (al menos una). */
+const MISSING_LABEL: Partial<Record<Step, string>> = { 1: "tipo", 2: "ubicación", 4: "personas", 5: "características", 6: "nombre", 8: "precio" };
+export function missingParts(d: ListingDraft): string[] {
+  const out: string[] = [];
+  for (const step of STEPS) {
+    if (step === 7) {
+      if (d.photoCount === 0) out.push("fotos");
+      continue;
+    }
+    const label = MISSING_LABEL[step];
+    if (label && validateStep(step, d)) out.push(label);
+  }
+  return out;
+}
+
+/** «fotos y precio», «tipo, nombre y precio». */
+export function missingLine(parts: readonly string[]): string | null {
+  if (!parts.length) return null;
+  return parts.length === 1 ? `Falta: ${parts[0]}` : `Falta: ${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
+}
+
 export function resumeStep(d: ListingDraft): Step {
   return validateAll(d)?.step ?? LAST_STEP;
 }

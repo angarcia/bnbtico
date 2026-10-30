@@ -75,8 +75,10 @@ test("con resultados: la nota al final de la rejilla, con la zona en el mensaje"
   await expect(card).toBeVisible();
   const note = page.locator(".note", { hasText: "¿No encuentra lo que busca?" });
   await expect(note).toHaveText(/^¿No encuentra lo que busca\? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa\./);
-  // Después de la última tarjeta de la rejilla.
-  expect(await note.evaluate((el) => el.previousElementSibling?.classList.contains("listing-grid"))).toBe(true);
+  // Después de la rejilla y de la tarjeta para publicar (revisión UX 2026-10-29, A8; llega en su trozo), al final de todo.
+  await expect(page.getByTestId("publish-promo")).toBeVisible();
+  expect(await note.evaluate((el) => (el.previousElementSibling as HTMLElement | null)?.dataset.testid)).toBe("publish-promo");
+  expect(await page.getByTestId("publish-promo").evaluate((el) => !!el.parentElement?.querySelector(".listing-grid"))).toBe(true);
   await note.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/resultados-412.png` });
   await page.setViewportSize({ width: 360, height: 800 });

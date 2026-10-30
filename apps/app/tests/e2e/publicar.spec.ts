@@ -529,12 +529,16 @@ test("«Cerrar» en la cabecera espera al guardado en curso y vuelve a Mis casas
   await expect(page.getByText(/«Cabina que se cierra»/)).toBeVisible();
 });
 
-test("enviar con un dato que falta lleva a la pantalla que lo pide", async ({ page }) => {
+test("con un dato que falta, «Enviar» no se puede tocar y la fila que falta lleva a la pantalla que lo pide", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5, draft: { capacity: null } });
   await page.goto(`/propietario/publicar/${draft.id}/9`);
-  await page.getByRole("button", { name: "Enviar a revisión" }).click();
+  // Revisión UX 2026-10-29 (A9): lo que falta es una acción («Indicar la capacidad»), no un dato más.
+  await expect(page.getByRole("button", { name: "Enviar a revisión" })).toBeDisabled();
+  const missing = page.locator(".review-row.is-missing");
+  await expect(missing).toHaveCount(1);
+  await expect(missing).toContainText("Indicar la capacidad");
+  await missing.click();
   await expect(page).toHaveURL(/\/4$/);
-  await expect(alert(page)).toHaveText("Indique cuántas personas pueden alojarse (mínimo 1).");
   expect((await h.owner("owner").getOwn(draft.id))?.status).toBe("draft");
 });
 

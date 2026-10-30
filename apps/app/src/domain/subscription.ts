@@ -224,7 +224,12 @@ function nextChargeDay(sub: HouseSubscription, today: string): string | null {
 
 /** «Próximo cobro» de Cuenta (informativo: en v1 no se cobra nada). */
 export function nextCharge(houses: readonly HouseSubscription[], method: object | null, today: string): string {
-  if (!method) return `${formatCRC(0)} · sin método de pago`;
+  if (!method) {
+    // En plena oferta no hay nada que cobrar: hasta cuándo (revisión UX 2026-10-29, C5), no «₡0 · sin método de pago».
+    const ends = houses.filter((h) => h.status === "active" && promoRunning(h, today)).map((h) => h.promoEndsOn!);
+    if (ends.length) return `Nada hasta el ${cardDate(ends.reduce((a, b) => (b < a ? b : a)))}`;
+    return `${formatCRC(0)} · sin método de pago`;
+  }
   const due = houses.filter((h) => h.status === "active").map((h) => ({ h, day: nextChargeDay(h, today) })).filter((x): x is { h: HouseSubscription; day: string } => x.day !== null);
   if (!due.length) return `${formatCRC(0)} · ninguna casa activa`;
   const first = due.reduce((min, x) => (x.day < min ? x.day : min), due[0]!.day);

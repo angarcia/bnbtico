@@ -10,9 +10,9 @@ import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { resumeStep, type Listing } from "../../domain/listing";
+import { missingLine, missingParts, resumeStep, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
-import { cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
+import { byPendingAction, cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
 import { I } from "../../shared/icons";
@@ -125,40 +125,47 @@ export function CasasScreen() {
   const view = list ? casasView(list.length) : null;
   const count = (s: Listing["status"]) => list?.filter((l) => l.status === s).length ?? 0;
   // Casillas a 0 fuera: no llaman la atención sobre nada (revisión UX N1).
+  // El borrador también cuenta y lleva a él (A3).
+  const firstDraft = list?.find((l) => l.status === "draft");
   const tiles = [
     { n: count("active"), label: count("active") === 1 ? "activa" : "activas", cls: "tile-soft" },
     { n: count("payment_due"), label: "por pagar", cls: "tile-sun" },
     { n: count("review"), label: "en revisión", cls: "tile-review" },
+    { n: count("draft"), label: count("draft") === 1 ? "borrador" : "borradores", cls: "tile-draft", to: firstDraft?.id },
   ].filter((t) => t.n > 0);
   return (
     <>
-      <RootHeader
-        title="Mis casas"
-        aside={
-          view === "list" ? (
-            <Link to="/propietario/publicar" className="btn btn-ghost btn-round" aria-label="Nueva casa">
-              <I.plus size={20} />
-            </Link>
-          ) : undefined
-        }
-      />
+      <RootHeader title="Mis casas" />
       {listings.isError && !list ? <p className="note" role="alert">{message(listings.error)}</p> : null}
       {!list && !listings.isError ? <SkeletonCard /> : null}
       {view === "list" ? (
         <>
           <NoticeCard notice={notice} billing={billing} />
-          {tiles.length ? (
-            <div className="grid-3">
-              {tiles.map((t) => (
-                <div key={t.label} className={`tile ${t.cls}`}>
-                  <b className="num">{t.n}</b>
-                  <span>{t.label}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
+          {/* «Nueva casa» junto a las cifras, sin fondo verde: recuadro con la línea fina (revisión UX 2026-10-29, T2). */}
+          <div className="tiles-row">
+            {tiles.length ? (
+              <div className="grid-3">
+                {tiles.map((t) =>
+                  t.to ? (
+                    <Link key={t.label} to="/propietario/casas/$id" params={{ id: t.to }} className={`tile ${t.cls}`}>
+                      <b className="num">{t.n}</b>
+                      <span>{t.label}</span>
+                    </Link>
+                  ) : (
+                    <div key={t.label} className={`tile ${t.cls}`}>
+                      <b className="num">{t.n}</b>
+                      <span>{t.label}</span>
+                    </div>
+                  ),
+                )}
+              </div>
+            ) : null}
+            <Link to="/propietario/publicar" className="new-house" aria-label="Nueva casa">
+              <I.plus size={22} />
+            </Link>
+          </div>
           <div className="stack gap-14">
-            {list!.map((l, i) => (
+            {byPendingAction(list!).map((l, i) => (
               <OwnerCard key={l.id} listing={l} userId={userId} eager={i === 0} />
             ))}
           </div>
@@ -311,7 +318,20 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       </div>
       {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
 
-      {l.status === "review" ? <div className="note">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
+      {/* Borrador: «Seguir publicando» como acción principal, con lo que falta (revisión UX 2026-10-29, A4). */}
+      {l.status === "draft" ? (
+        <div className="stack gap-8">
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} className="btn btn-primary btn-lg btn-block">
+            Seguir publicando
+          </Link>
+          {missingLine(missingParts(l)) ? (
+            <span className="small muted center" data-testid="draft-missing">
+              {missingLine(missingParts(l))}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {l.status === "review" ? <div className="note note-review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
       {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
         <section className="card-arena stack gap-10">
           <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
@@ -325,20 +345,8 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       ) : null}
 
       <section className="list">
-        <ShareListItem listing={l} />
-        {l.status === "draft" ? (
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="list-item">
-            <span className="muted-icon">
-              <I.edit />
-            </span>
-            <span className="body">
-              Seguir con el borrador<small>Fotos, descripción, características y precio</small>
-            </span>
-            <span className="chev">
-              <I.chevron />
-            </span>
-          </Link>
-        ) : null}
+        {/* «Compartir ficha» solo con la casa activa: desactivado parecía roto (A4). */}
+        {can(l, "share") ? <ShareListItem listing={l} /> : null}
         <WhatsAppItem listing={l} />
       </section>
 

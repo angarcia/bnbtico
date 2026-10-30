@@ -88,6 +88,7 @@ a{color:var(--primary)}
 .tile-soft{background:var(--state-soft);color:var(--state-ink)}
 .tile-sun{background:var(--sun-soft);color:var(--sun-ink)}
 .tile-review{background:var(--review-soft);color:var(--muted)}
+.tile-draft{background:var(--beige-soft);color:var(--fg);text-decoration:none}
 .tile-arena{background:var(--surface-2);color:var(--muted)}
 .list{display:flex;flex-direction:column;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .list-item{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 16px;border-bottom:1px solid var(--line-soft);text-decoration:none;color:inherit;text-align:left;width:100%}
@@ -96,7 +97,9 @@ a{color:var(--primary)}
 .list-item .body small{display:block;font-size:14px;color:var(--muted)}
 .list-item[aria-disabled="true"]{color:#A3ADA6}
 .list-item .chev{color:var(--muted);flex-shrink:0}
-.list-item-sun{background:var(--sun-soft);color:var(--sun-ink)} .list-item-sun .body small,.list-item-sun .chev,.list-item-sun .primary{color:var(--sun-ink)}
+/* En ocre, como «Activar suscripción» (`btn-sun`): falta un método de pago o es la puerta para publicar (revisión UX 2026-10-29). */
+.list-item-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)} .list-item-sun .body small,.list-item-sun .chev,.list-item-sun .primary{color:var(--fg)}
+.list-item.list-item-sun{border-radius:var(--r-input)}
 .sub-row-link{color:inherit;text-decoration:none}
 .divider{border:0;border-top:1px solid var(--line-soft);margin:0}
 
@@ -199,8 +202,6 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .topbar > .row{flex:none}
 .topbar-home{display:inline-flex;align-items:center;min-height:44px;min-width:0;flex:0 1 auto}
 .topbar .logo{height:auto;max-height:38px;width:auto;max-width:100%;display:block}
-.topbar-slot{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
-.topbar-slot .topbar-account{width:44px;height:44px;text-decoration:none}
 .view.has-topbar{padding-top:calc(56px + 12px + env(safe-area-inset-top))}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -213,7 +214,7 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .tabbar .nav[aria-current="page"]{color:var(--brand-ink);font-weight:700}
 .tabbar .nav[aria-current="page"] svg{color:var(--brand)}
 .tabbar .nav[aria-current="page"] svg{stroke-width:2.4}
-.tabbar.two .nav{font-size:14px}
+.tabbar.three .nav{font-size:14px}
 /* En pantallas de flujo con botones fijos (publicar, filtros, revisar, ficha) no hay barra de pestañas. */
 .app:has(.sticky-actions) .tabbar,.app:has(.cta-bar) .tabbar{display:none}
 .sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
@@ -572,7 +573,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .owner-skeleton{display:flex;gap:12px;align-items:center}
 .owner-skeleton .sk-line{flex:1}
 .header-action{margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:16px;font-weight:700;white-space:nowrap}
-.detail-photo{height:170px;border-radius:var(--r)}
+.detail-photo{aspect-ratio:4/3;height:auto;border-radius:var(--r)}/* portada 4:3 (revisión UX 2026-10-29, C1) */
 /* Ficha editable (maqueta 08a): la píldora de las fotos sobre la portada y la etiqueta de lo que pasa por revisión. */
 .photo-pill{right:12px;bottom:12px;border-radius:8px;font-size:14px;line-height:1;padding:7px 12px;text-decoration:none}
 .tag-rev{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:var(--review-soft);color:var(--muted);font-size:13px;font-weight:700;line-height:1.5;white-space:nowrap}
@@ -974,3 +975,23 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .counter .ctl button,.counter .ctl .minus,.counter .ctl .plus,.people-stepper button,.people-stepper .minus,.people-stepper .plus{background:transparent;color:var(--primary);font-size:26px;line-height:1;border-radius:999px}
 .counter .ctl button:active:not(:disabled),.people-stepper button:active:not(:disabled){background:var(--chosen)}
 .counter .ctl button:disabled,.people-stepper button:disabled{color:var(--muted);opacity:.35}
+/* Revisión UX 2026-10-29 (A8): la tarjeta para publicar al final de Explorar. */
+.publish-promo .btn{margin-top:4px}
+/* Mis casas (T2): las cifras y «Nueva casa» en una fila; el «+» sin fondo, con la línea fina de los campos. */
+.tiles-row{display:flex;gap:10px;align-items:stretch}
+.tiles-row .grid-3{flex:1;min-width:0}
+.new-house{flex:0 0 56px;min-height:56px;display:flex;align-items:center;justify-content:center;margin-left:auto;border:1px solid var(--line);border-radius:var(--r-tile);color:var(--primary);background:transparent;transition:transform 160ms var(--ease-out)}
+.new-house:active{transform:scale(0.97)}
+/* La nota «La estamos revisando…» con el beige grisáceo de «Revisión» (revisión UX 2026-10-29, A4). */
+.note-review{background:var(--review-soft);color:var(--fg)}
+/* Suscripción (revisión UX 2026-10-29, A2): «Parar suscripción» como texto centrado; «¿Cómo funciona el cobro?» plegado. */
+.sub-stop{align-self:center}
+.how-it-works summary{cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;list-style:none}
+.how-it-works summary::-webkit-details-marker{display:none}
+.how-it-works summary::after{content:"›";font-size:22px;color:var(--muted);transition:transform 160ms var(--ease-out)}
+.how-it-works[open] summary::after{transform:rotate(90deg)}
+.how-it-works[open]{display:flex;flex-direction:column;gap:4px}
+/* Asistente (A9): «Atrás» cuadrado con la flecha; la fila obligatoria que falta, en terracota. */
+.btn-back{flex:0 0 56px;width:56px;padding:0}
+.review-row.is-missing{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
+.review-row.is-missing .review-label,.review-row.is-missing .review-text{color:var(--brand-ink)}

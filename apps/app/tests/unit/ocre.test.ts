@@ -16,6 +16,7 @@ const ALLOW = new Set([
   "client/screens/casa-editable.tsx#StoppedNotice", // «Suscripción parada» en la ficha editable
   "client/screens/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
   "shared/contact-sheet.tsx#*", // «no pague por adelantado»
+  "client/publish-promo.tsx#*", // la oferta de lanzamiento: publicar gratis (revisión UX 2026-10-29, A8)
 ]);
 
 function files(dir: string): string[] {

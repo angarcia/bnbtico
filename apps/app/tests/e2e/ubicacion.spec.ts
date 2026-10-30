@@ -354,9 +354,13 @@ test("Otra…: las sugerencias de Photon que llegan después no cambian lo marca
   await expect(chosen(page)).toHaveText("Playa Ch");
 });
 
-test("Ayuda cita los límites de OpenStreetMap con su licencia", async ({ page }) => {
+// Revisión UX 2026-10-29 (N7): la atribución sale de Ayuda (no tiene mapa) y va al pie de Cuenta, junto a «Términos y privacidad».
+test("Cuenta cita los límites de OpenStreetMap con su licencia; Ayuda ya no", async ({ page }) => {
   await page.goto("/ayuda");
+  await expect(page.getByRole("link", { name: "colaboradores de OpenStreetMap" })).toHaveCount(0);
+  await injectSession(page, "owner");
+  await page.goto("/cuenta");
   const link = page.getByRole("link", { name: "colaboradores de OpenStreetMap" });
   await expect(link).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
-  await expect(page.getByText("Open Database License (ODbL)")).toBeVisible();
+  await expect(page.getByText("(ODbL)")).toBeVisible();
 });

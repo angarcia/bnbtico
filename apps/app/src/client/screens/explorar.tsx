@@ -18,13 +18,15 @@ import { I } from "../../shared/icons";
 import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
+import { useListingsCount } from "../own-listings-query";
 import { SUPPORT_NUMBERS } from "../support-numbers";
 import { isDatesError, listingsQuery, provincesQuery, zonesQuery } from "../queries";
-import { AccountButton } from "../chrome";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
+// Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
+const PublishPromoCard = lazy(() => import("../publish-promo").then((m) => ({ default: m.PublishPromoCard })));
 const MapScreen = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapScreen })));
 
 const route = getRouteApi("/_tabs/explorar");
@@ -54,7 +56,8 @@ function FiltersLink({ filters: f, search }: { filters: Filters; search: Explore
   );
 }
 
-/** Cabecera de Explorar: la píldora (abre la búsqueda) y la cuenta; debajo, el mensual, los filtros y «₡ | $». */
+/** Cabecera de Explorar: la píldora (abre la búsqueda) a todo el ancho (la cuenta es una pestaña, C4); debajo, el mensual,
+ *  los filtros y «₡ | $». */
 function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
   const navigate = useNavigate();
   const { data: provinces = [] } = useQuery(provincesQuery);
@@ -63,7 +66,6 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
       <h1 className="sr-only">Explorar casas</h1>
       <div className="explore-search">
         <SearchPill filters={f} zoneName={zoneName} search={search} />
-        <AccountButton />
       </div>
       <div className="chiprow fit">
         <button
@@ -113,6 +115,8 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const canGoBack = useCanGoBack();
   const search = route.useSearch();
   const mapOpen = search.mapa === "1";
+  // La tarjeta para publicar (A8) no se le enseña a quien ya tiene casas.
+  const owner = (useListingsCount().count ?? 0) > 0;
   const mapBox = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
   // Al cerrar el mapa (botón, «N casas» o Atrás) el foco vuelve a «Mapa» si está a la vista o, si no, a la caja.
@@ -194,6 +198,11 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
             ))}
           </div>
           <MapLabel target={mapBox} hidden={mapOpen} onOpen={() => openMap(null)} />
+          {owner ? null : (
+            <Suspense fallback={null}>
+              <PublishPromoCard />
+            </Suspense>
+          )}
           <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} />
         </>
       )}

@@ -10,6 +10,17 @@ import { payButtonDue, type HouseSubscription } from "./subscription";
 export * from "./tabs";
 
 /** Mis casas es siempre la lista, también con una sola casa. */
+/** Orden de Mis casas por lo que pide algo al propietario (revisión UX 2026-10-29, A3): primero cambios pedidos, rechazadas,
+ *  pendientes de pago, paradas y borradores; luego las activas; al final las que están en revisión (no hay nada que hacer).
+ *  Dentro de cada grupo, el orden de la lista (la más nueva primero). */
+const ACTION_RANK: Record<Listing["status"], number> = { changes: 0, rejected: 0, payment_due: 1, inactive: 1, draft: 2, active: 3, review: 4 };
+export function byPendingAction<T extends Pick<Listing, "status">>(listings: readonly T[]): T[] {
+  return listings
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => ACTION_RANK[a.l.status] - ACTION_RANK[b.l.status] || a.i - b.i)
+    .map((x) => x.l);
+}
+
 export function casasView(listingsCount: number): "list" | "none" {
   return listingsCount <= 0 ? "none" : "list";
 }
@@ -56,9 +67,4 @@ export function cardLabel(l: Pick<Listing, "status" | "available" | "reopenAt">,
     return { text: d ? `Cerrada hasta el ${d}` : "Cerrada", cls: "state-off" };
   }
   return STATUS_CARD_LABELS[l.status];
-}
-
-/** Actividad vacía: ninguna casa activa y ninguna consulta. */
-export function activityEmpty(listings: readonly Pick<Listing, "status">[], inquiries: number): boolean {
-  return inquiries === 0 && !listings.some((l) => l.status === "active");
 }

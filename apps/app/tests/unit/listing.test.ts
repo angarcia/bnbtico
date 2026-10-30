@@ -18,6 +18,8 @@ import {
   isFreshDraft,
   isProposedZone,
   locationLine,
+  missingLine,
+  missingParts,
   nextStep,
   normalize,
   previousStep,
@@ -413,5 +415,20 @@ describe("isFreshDraft (qué tener a mano, arriba del paso 1)", () => {
     expect(isFreshDraft({ ...emptyDraft(), photoCount: 1 })).toBe(false);
     expect(isFreshDraft({ ...emptyDraft(), features: ["wifi"] })).toBe(false);
     expect(isFreshDraft(validDraft())).toBe(false);
+  });
+});
+
+describe("missingParts y missingLine (revisión UX 2026-10-29, A4)", () => {
+  it("un borrador completo con fotos no tiene nada que falte", () => {
+    expect(missingParts({ ...validDraft(), photoCount: 3 })).toEqual([]);
+    expect(missingLine([])).toBeNull();
+  });
+  it("sin fotos ni precio: «Falta: fotos y precio»", () => {
+    const parts = missingParts({ ...validDraft(), photoCount: 0, nightlyPriceCrc: null });
+    expect(parts).toEqual(["fotos", "precio"]);
+    expect(missingLine(parts)).toBe("Falta: fotos y precio");
+  });
+  it("tres cosas: con comas y «y»", () => {
+    expect(missingLine(["tipo", "nombre", "precio"])).toBe("Falta: tipo, nombre y precio");
   });
 });

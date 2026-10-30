@@ -28,7 +28,7 @@ const mine = async (id: string): Promise<BillingHouse> => (await h.billing("owne
 /** De Mis casas a Cuenta por el botón de arriba. */
 async function ownerCuenta(page: Page) {
   await page.goto("/propietario/casas");
-  await page.getByRole("banner").getByRole("link", { name: "Cuenta" }).click();
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Cuenta" }).click();
   await expect(page.getByRole("heading", { name: "Cuenta", level: 1 })).toBeVisible();
 }
 const statusOf = async (id: string) => (await mine(id)).status;
@@ -72,7 +72,7 @@ test("cada estado con su línea, aviso y botones; «Añadir método de pago» so
   await expect(a.getByTestId("sub-line")).toHaveText(`Gratis hasta el ${cardDate((await mine(lejos.id)).promoEndsOn!)}`);
   await expect(a.getByText("Avisos por WhatsApp: 90, 30 y 7 días antes y el último día.")).toBeVisible();
   await expect(a.getByRole("button", { name: "Añadir método de pago" })).toHaveCount(0);
-  await expect(a.getByRole("button", { name: "Parar suscripción" })).toHaveClass(/btn-ghost/);
+  await expect(a.getByRole("button", { name: "Parar suscripción" })).toHaveClass(/sub-stop/);
   const method = page.getByTestId("method-card");
   await expect(method).toContainText("Ninguno todavía");
   await expect(method).toContainText("Puede añadirlo cuando le avisemos.");
@@ -280,10 +280,11 @@ test("Cuenta del propietario: una línea por casa, próximo cobro, «Ver detalle
   await expect(sub.getByTestId("sub-row")).toHaveText([
     `Rancho ManzanilloPendiente de pago`,
     `Crystal Jungle VillaGratis hasta el ${cardDate((await mine(gratis.id)).promoEndsOn!)}`,
-    "Cabina Punta UvaEn revisión · ₡0",
+    "Cabina Punta UvaEn revisión",
   ]);
-  await expect(sub.getByTestId("next-charge")).toHaveText("₡0 · sin método de pago");
-  const row = page.getByRole("link", { name: /Método de pago/ });
+  // Revisión UX 2026-10-29 (C5): en plena oferta, hasta cuándo no paga nada; la fila del método, en ocre, porque toca.
+  await expect(sub.getByTestId("next-charge")).toHaveText(`Nada hasta el ${cardDate((await mine(gratis.id)).promoEndsOn!)}`);
+  const row = page.getByRole("link", { name: /Añadir método de pago/ });
   await expect(row).toContainText("Falta · añádalo antes de que termine su oferta");
   await expect(row).toHaveAttribute("href", SCREEN);
   await page.screenshot({ path: "test-results/capturas/cuenta-suscripcion.png", fullPage: true });
@@ -297,7 +298,8 @@ test("Cuenta del propietario: una línea por casa, próximo cobro, «Ver detalle
   await fresh(page, "/cuenta");
   const o = await h.billing("owner").overview();
   await expect(sub.getByTestId("next-charge")).toHaveText(nextCharge(o.houses.map((x) => houseSubscription(x, o.method)), o.method, o.today));
-  await expect(page.getByRole("link", { name: /Método de pago/ })).toContainText("Visa ···· 4242");
+  // Con método, la fila no sale: el método se ve en «Ver detalle».
+  await expect(page.getByTestId("payment-row")).toHaveCount(0);
 });
 
 test("sin owner_billing ni launch_offer_taken (base sin la migración), Cuenta y la pantalla salen sin la suscripción y sin errores", async ({ page }) => {

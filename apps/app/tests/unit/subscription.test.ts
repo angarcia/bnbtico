@@ -442,8 +442,12 @@ describe("payLink y parsePayHash", () => {
 });
 
 describe("nextCharge (informativo: en v1 no se cobra)", () => {
-  it("sin método de pago", () => {
-    expect(nextCharge([house()], null, TODAY)).toBe("₡0 · sin método de pago");
+  // Revisión UX 2026-10-29 (C5): en plena oferta, sin método, no suena a problema: hasta cuándo no paga nada.
+  it("sin método de pago, en plena oferta: «Nada hasta el …» con la oferta que termina antes", () => {
+    expect(nextCharge([house(), house({ promoEndsOn: "2026-12-01" })], null, TODAY)).toBe("Nada hasta el 1 dic 2026");
+  });
+  it("sin método de pago y sin oferta en curso", () => {
+    expect(nextCharge([house({ status: "payment_due", plan: "paid", promoEndsOn: null })], null, TODAY)).toBe("₡0 · sin método de pago");
   });
 
   it("con método pero ninguna casa activa", () => {

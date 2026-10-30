@@ -167,8 +167,8 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await later.goto("/propietario/casas");
   await expect(nav(later).getByTestId("inquiries-badge")).toHaveText("1");
   await later.goto("/propietario/actividad");
-  await expect(later.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
-  await expect(nav(later).getByRole("link", { name: /Actividad/ })).toHaveAttribute("aria-current", "page");
+  await expect(later.getByRole("heading", { level: 1, name: "Consultas" })).toBeAttached();
+  await expect(nav(later).getByRole("link", { name: /Consultas/ })).toHaveAttribute("aria-current", "page");
   const card = later.locator("article.inquiry-card");
   await expect(card).toHaveCount(1);
   await expect(card.getByRole("heading", { name: CLIENT })).toBeVisible();
@@ -181,9 +181,9 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await card.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect.poll(() => waOwner).toEqual([`https://wa.me/${FREE_PHONE.replace(/\D/g, "")}`]);
   await later.goBack();
-  await expect(later.getByRole("heading", { level: 1, name: "Actividad" })).toBeVisible();
+  await expect(later.getByRole("heading", { level: 1, name: "Consultas" })).toBeAttached();
   await expect(card.getByText("Nueva", { exact: true })).toHaveCount(0);
   await expect(nav(later).getByTestId("inquiries-badge")).toHaveCount(0);
-  await expect(nav(later).getByRole("link", { name: /Actividad/ })).toBeVisible();
+  await expect(nav(later).getByRole("link", { name: /Consultas/ })).toBeVisible();
   await later.context().close();
 });

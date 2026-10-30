@@ -33,7 +33,9 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeAttached();
   await expect(page.locator(".topbar")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Empiece su búsqueda" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Ingresar" })).toBeVisible();
+  // La cuenta es una pestaña (C4): en la cabecera de Explorar ya no hay «Ingresar».
+  await expect(page.locator(".explore-top").getByRole("link", { name: "Ingresar" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" })).toBeVisible();
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Filtros", exact: true })).toBeVisible();
   await expect(results(page)).toHaveText("9 casas en Limón");
@@ -365,10 +367,10 @@ test("sin resultados lo dice, y las pestañas cambian sin red", async ({ page })
   await page.route("**/*", (route) => route.abort());
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
-  await page.getByRole("banner").getByRole("link", { name: "Ingresar" }).click();
-  // Sin sesión, «Ingresar» arriba abre Ingresar a pantalla completa; se pinta sin red porque no descarga supabase-js.
-  await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeVisible();
-  await expect(nav).toHaveCount(0);
-  await page.getByRole("link", { name: "Volver" }).click();
+  await nav.getByRole("link", { name: "Ingresar" }).click();
+  // Sin sesión, la pestaña «Ingresar» (C4) se pinta sin red porque no descarga supabase-js.
+  await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeAttached();
+  await expect(page.getByLabel("Número de WhatsApp")).toBeVisible();
+  await nav.getByRole("link", { name: "Explorar" }).click();
   await expect(results(page)).toHaveText("9 casas en Limón");
 });

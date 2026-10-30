@@ -46,7 +46,7 @@ test("una cuenta nueva desde Ingresar responde Sí y entra al asistente", async 
   await deleteAccount(FREE_PHONE);
   try {
     await page.goto("/explorar");
-    await page.locator(".explore-top").getByRole("link", { name: "Ingresar" }).click();
+    await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" }).click();
     await register(page, "8888 9999", "Ana Prueba");
     await expect(page).toHaveURL(/\/cuenta\/lista/);
     await expect(page.getByRole("heading", { name: READY })).toBeVisible();
@@ -63,7 +63,7 @@ test("otra cuenta nueva responde No y va a Explorar", async ({ page }) => {
   await deleteAccount(INTL_PHONE);
   try {
     await page.goto("/explorar");
-    await page.locator(".explore-top").getByRole("link", { name: "Ingresar" }).click();
+    await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" }).click();
     await register(page, "+1 415 555 0100", "John Test", "Otro país");
     await expect(page).toHaveURL(/\/cuenta\/lista/);
     await expect(page.getByRole("heading", { name: "¿Tiene una casa para alquilar?" })).toBeVisible();

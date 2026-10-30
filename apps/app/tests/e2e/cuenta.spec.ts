@@ -11,11 +11,11 @@ const entryHeading = (page: import("@playwright/test").Page) => page.getByRole("
 test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin una sola cookie", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   await page.goto("/explorar");
-  await page.locator(".explore-top").getByRole("link", { name: "Ingresar" }).click();
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" }).click();
   await expect(entryHeading(page)).toBeVisible();
-  // Ingresar, el código y Cuenta van a pantalla completa, sin la barra inferior.
+  // Ingresar y Cuenta son la pestaña de la derecha (revisión UX 2026-10-29, C4); el código, a pantalla completa.
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
-  await expect(nav).toHaveCount(0);
+  await expect(nav.getByRole("link", { name: "Ingresar" })).toHaveAttribute("aria-current", "page");
 
   // Un único flujo (ticket 18): primero el número; sin cuenta, el nombre y entonces el código.
   await expect(page.getByRole("link", { name: /Ya tengo cuenta/ })).toHaveCount(0);
@@ -59,9 +59,9 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expect(page).toHaveURL(/\/explorar/);
   await expect(page.getByRole("link", { name: "Ingresar" })).toHaveCount(0);
 
-  await page.locator(".explore-top").getByRole("link", { name: "Cuenta" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
-  await expect(nav).toHaveCount(0);
+  await nav.getByRole("link", { name: "Cuenta" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeAttached();
+  await expect(nav.getByRole("link", { name: "Cuenta" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expect(page.getByText(/WhatsApp verificado/)).toBeVisible();
   // Veriff queda fuera de la v1: la única mención de la identidad es la línea «Pronto podrá…» de la tarjeta.
@@ -103,7 +103,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await enterCode(page);
   // Sin casas, se llega a Explorar.
   await expect(page).toHaveURL(/\/explorar$/);
-  await page.locator(".explore-top").getByRole("link", { name: "Cuenta" }).click();
+  await nav.getByRole("link", { name: "Cuenta" }).click();
   await expect(page.getByRole("heading", { name: "Ana Prueba" })).toBeVisible();
   await expect(page.getByLabel("Descripción (opcional)")).toHaveCount(0);
   await page.getByRole("link", { name: "Editar", exact: true }).click();
@@ -159,7 +159,9 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await enterCode(page);
   await expect(page).toHaveURL(/\/cuenta\/lista/);
   await page.goto("/cuenta");
-  await expect(page.getByText("WhatsApp verificado · +1 415 555 0100")).toBeVisible();
+  // El número en su línea y la verificación debajo (revisión UX 2026-10-29, C5).
+  await expect(page.getByText("+1 415 555 0100")).toBeVisible();
+  await expect(page.getByText("WhatsApp verificado", { exact: true })).toBeVisible();
 
   await signOut(page);
   await page.getByLabel("País de su WhatsApp").selectOption("other");
@@ -198,11 +200,12 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
   await h.reset();
   await injectSession(page, "owner");
   await page.goto("/cuenta");
-  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
-  const nav = page.getByRole("navigation", { name: "Navegación principal" });
-  await expect(nav).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeAttached();
+  // Cuenta es una pestaña (revisión UX 2026-10-29, C4).
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Cuenta" })).toHaveAttribute("aria-current", "page");
   // Sin casas: «Publicar mi casa», «Mi perfil» y la línea de clientes; nada de suscripción ni de cambiar de modo.
-  await expect(page.getByRole("link", { name: /Publicar mi casa/ })).toHaveAttribute("href", "/propietario/publicar");
+  // La puerta para publicar es la fila en ocre (revisión UX 2026-10-29, A8).
+  await expect(page.getByTestId("publish-promo-row")).toHaveAttribute("href", "/publicar");
   await expect(page.getByRole("link", { name: /Mi perfil/ })).toBeVisible();
   await expect(page.getByText("Próximo cobro")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Buscar una casa/ })).toHaveCount(0);
@@ -214,17 +217,17 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
   await h.seed({ status: "draft", draft: { title: "Casa de la ayuda" } });
   await page.goto("/cuenta");
   await expect(page.getByText("Próximo cobro")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Publicar mi casa/ })).toHaveCount(0);
+  await expect(page.getByTestId("publish-promo-row")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Mi perfil/ })).toHaveCount(0);
   await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
   await expect(page.getByText("atención a propietarios")).toBeVisible();
 
-  // Cerrar sesión deja la app sin sesión para la siguiente persona: dos pestañas y la zona del propietario pide ingresar.
+  // Cerrar sesión deja la app sin sesión para la siguiente persona: tres pestañas con «Ingresar» y la zona del propietario pide ingresar.
   await page.goto("/cuenta");
   await signOut(page);
   await expect(entryHeading(page)).toBeVisible();
   await page.goto("/explorar");
-  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
   await page.goto("/propietario");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
   await expectNoCookies(page);

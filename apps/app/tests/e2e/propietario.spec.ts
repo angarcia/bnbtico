@@ -39,7 +39,7 @@ const card = (page: Page, title: string) => page.getByRole("article").filter({ h
 test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno por tarjeta", async ({ page }) => {
   await page.goto("/propietario/casas");
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mis casas", "Calendario", /^Actividad\d*$/]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Mis casas", "Calendario", /^Consultas\d*$/, "Cuenta"]);
   await expect(page.getByRole("article")).toHaveCount(5);
   await expect(page.getByRole("heading", { name: "Casa de Ana" })).toHaveCount(0);
   // Un borrador es un solo elemento (decisión B): nada arriba salvo el pago, y aquí no toca pagar.
@@ -47,8 +47,10 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await expect(page.getByTestId("offer-left")).toHaveCount(0); // sin tarjeta de la oferta de lanzamiento
   // Revisión UX N1: sin casillas a 0; «Nueva» en contorno.
-  await expect(page.locator(".tile")).toHaveText(["1activa", "1en revisión"]);
-  await expect(page.getByRole("link", { name: "Nueva" })).toHaveClass(/btn-ghost/);
+  await expect(page.locator(".tile")).toHaveText(["1activa", "1en revisión", "2borradores"]);
+  // Revisión UX 2026-10-29 (T2): «Nueva casa» junto a las cifras, sin fondo verde (recuadro con la línea fina).
+  await expect(page.getByRole("link", { name: "Nueva casa" })).toHaveClass(/new-house/);
+  expect(await page.getByRole("link", { name: "Nueva casa" }).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
 
   const cocles = card(page, "Casa Cocles");
   await expect(cocles.getByTestId("card-label")).toHaveText("Activa");
@@ -82,7 +84,7 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
   // La primera foto se pide enseguida; las demás, al acercarse. La caja de la foto es cuadrada.
   const photos = page.locator("article .house-photo");
   await expect(photos.first().locator("img")).toHaveAttribute("loading", "eager");
-  await expect(photos.nth(1).locator("img")).toHaveAttribute("loading", "lazy");
+  await expect(page.locator("article .house-photo img").nth(1)).toHaveAttribute("loading", "lazy");
   const box = (await photos.first().boundingBox())!;
   expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1);
 
@@ -150,10 +152,13 @@ test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha»,
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
 
-test("visitas y consultas de 30 días en el detalle de la casa", async ({ page }) => {
+test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la portada", async ({ page }) => {
   await page.goto(`/propietario/casas/${active.id}`);
-  // Revisión UX A2: sin visitas ni consultas, la invitación a compartir; con ellas, las cifras de 30 días.
-  await expect(page.getByTestId("listing-stats")).toHaveText("Comparta su enlace para que lleguen las primeras visitas");
+  // Revisión UX 2026-10-29 (C1): las tres cifras, en una tarjeta bajo la portada (salieron de Consultas).
+  const stats = page.getByTestId("listing-stats");
+  await expect(stats).toHaveText(/Últimos 30 días\s*0\s*visitas\s*0\s*toques en WhatsApp\s*0\s*consultas/);
+  expect((await stats.boundingBox())!.y).toBeGreaterThan((await page.locator(".detail-photo").boundingBox())!.y);
+  expect((await stats.boundingBox())!.y).toBeLessThan((await page.getByTestId("field-rows").boundingBox())!.y);
   await h.recordViews(active.publicId, 4);
   await h.recordViews(active.publicId, 2, 45);
   await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });
@@ -163,7 +168,7 @@ test("visitas y consultas de 30 días en el detalle de la casa", async ({ page }
     req.onsuccess = req.onerror = req.onblocked = () => resolve();
   }));
   await page.goto(`/propietario/casas/${active.id}`);
-  await expect(page.getByTestId("listing-stats")).toHaveText("4 visitas · 1 consulta · últimos 30 días");
+  await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
 });
 
 test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", async ({ page }) => {
@@ -197,10 +202,10 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await expect(page.locator(".swap-in.changed").first()).toHaveText("Enlace copiado");
   expect(await page.evaluate(() => (window as unknown as { copied: string[] }).copied)).toEqual([`http://${HOST}/casa/${active.publicId}`]);
 
-  // Una casa que no está activa no se comparte: su enlace no funcionaría.
+  // Una casa que no está activa no se comparte: su enlace no funcionaría, y la fila no sale (revisión UX 2026-10-29, A4).
   await page.goto(`/propietario/casas/${review.id}`);
   await expect(page.getByText("La estamos revisando")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toHaveCount(0);
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Editar la ficha/ })).toHaveCount(0);
 });

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, validateAll, validateStep, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
@@ -18,6 +18,7 @@ import { isChunkLoadError } from "../chunk-error";
 import { offerTakenQuery } from "../owner";
 import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
+import { useStepReady } from "./step-form";
 import { KindChoice, ReadyList } from "./wizard-parts";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
@@ -290,6 +291,8 @@ export function DescriptionField({ value }: { value: string }) {
   );
 }
 
+const MISSING_ACTION: Partial<Record<Step, string>> = { 1: "Elegir el tipo", 2: "Añadir la ubicación", 4: "Indicar la capacidad", 6: "Añadir el nombre", 8: "Añadir precio" };
+
 /** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5; publicar v2): lo escrito en seis filas que llevan a su pantalla
  *  (sin fotos ni descripción también se envía), la vista previa de la ficha, el WhatsApp de la casa y la oferta. Cabe sin
  *  scroll en un teléfono pequeño. */
@@ -306,6 +309,9 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   ].filter(Boolean);
   const title = d.title.trim();
   const photos = listing.photoCount;
+  // Revisión UX 2026-10-29 (A9): lo obligatorio que falta, en terracota con su acción; «Enviar a revisión» desactivado mientras.
+  const missingStep = (step: Step) => step !== 7 && !!validateStep(step, d);
+  useStepReady(validateAll(d) === null);
   const rows: { step: Step; label: string; value: string }[] = [
     { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
     { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
@@ -318,15 +324,18 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
     <>
       <h2>Revisar y enviar</h2>
       <nav className="card review-list" aria-label="Lo que va a enviar">
-        {rows.map((r) => (
-          <Link key={r.label} to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(r.step) }} className="review-row">
-            <span className="review-label">{r.label}</span>
-            <span className="review-value">
-              <span className="review-text">{r.value}</span>
-            </span>
-            <I.chevron size={16} />
-          </Link>
-        ))}
+        {rows.map((r) => {
+          const missing = missingStep(r.step);
+          return (
+            <Link key={r.label} to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(r.step) }} className={`review-row${missing ? " is-missing" : ""}`} data-missing={missing || undefined}>
+              <span className="review-label">{r.label}</span>
+              <span className="review-value">
+                <span className="review-text">{missing ? MISSING_ACTION[r.step] : r.value}</span>
+              </span>
+              <I.chevron size={16} />
+            </Link>
+          );
+        })}
       </nav>
       <button type="button" className="btn btn-ghost btn-block" onClick={() => setPreview(true)}>
         Ver cómo queda su ficha

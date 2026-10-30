@@ -18,7 +18,9 @@ import { Picture } from "../../shared/picture";
 import { withTimeout } from "../../shared/timeout";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
-import { FlowFrame, FlowHeader } from "../chrome";
+import { FlowFrame, FlowHeader, TabsFrame } from "../chrome";
+import { PublishPromoRow } from "../publish-promo";
+import { useFavorites } from "../../shared/favorites-store";
 import { ConfirmSheet } from "../confirm-sheet";
 import { ownListingsQuery, useListingsCount } from "../own-listings-query";
 import { authApi, pendingOtp, useSession } from "../session";
@@ -118,19 +120,35 @@ const cuentaRoute = getRouteApi("/cuenta");
 export function CuentaScreen() {
   const { status } = useSession();
   const search = cuentaRoute.useSearch();
-  // Ingresar y Cuenta, a pantalla completa (sin pestaña de Cuenta): se llega desde la esquina de arriba.
+  // Revisión UX 2026-10-29 (C4, C5): Ingresar y Cuenta son la pestaña de la derecha. A pantalla completa, con su cabecera,
+  // solo cuando se llega desde un flujo (escribir al propietario, publicar…) o al editar los datos.
+  const fromFlow = !!search.next && search.next !== "/favoritos";
   if (status === "signed-out") {
+    if (fromFlow)
+      return (
+        <FlowFrame>
+          {/* Un enlace viejo con `?modo=entrar` abre el mismo flujo único. */}
+          <EntryForm next={search.next} />
+        </FlowFrame>
+      );
     return (
-      <FlowFrame>
-        {/* Un enlace viejo con `?modo=entrar` abre el mismo flujo único. */}
-        <EntryForm next={search.next} />
-      </FlowFrame>
+      <TabsFrame>
+        <h1 className="sr-only">Ingresar</h1>
+        <SignInForm next={search.next} mode="account" />
+      </TabsFrame>
     );
   }
+  const editing = search.editar === "1";
+  if (editing || fromFlow)
+    return (
+      <FlowFrame>
+        <MyAccount editing={editing} />
+      </FlowFrame>
+    );
   return (
-    <FlowFrame>
-      <MyAccount editing={search.editar === "1"} />
-    </FlowFrame>
+    <TabsFrame>
+      <MyAccount editing={false} tab />
+    </TabsFrame>
   );
 }
 
@@ -320,6 +338,8 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
           </Link>
         )}
       </div>
+      {/* Puerta para publicar sin cuenta (A8): solo en el Ingresar de la pestaña, no desde un flujo. */}
+      {mode === "account" && !newPhone ? <PublishPromoRow /> : null}
       {publish ? null : (
         <div className="note">
           <I.shield size={22} />
@@ -538,7 +558,7 @@ const SUBSCRIPTION_PLACEHOLDER = (
   </section>
 );
 
-function MyAccount({ editing }: { editing: boolean }) {
+function MyAccount({ editing, tab = false }: { editing: boolean; tab?: boolean }) {
   const { session } = useSession();
   const { count } = useListingsCount();
   const owner = (count ?? 0) > 0;
@@ -569,7 +589,8 @@ function MyAccount({ editing }: { editing: boolean }) {
   const a = account.data;
   return (
     <>
-      <FlowHeader title="Cuenta" back="/explorar" onBack={back} />
+      {/* Como pestaña (C4), sin flecha ni título visible; al editar o desde un flujo, con su cabecera. */}
+      {tab ? <h1 className="sr-only">Cuenta</h1> : <FlowHeader title="Cuenta" back="/explorar" onBack={back} />}
       {a ? (
         <section className="card row account-card">
           <span className="avatar" aria-hidden="true">
@@ -577,8 +598,10 @@ function MyAccount({ editing }: { editing: boolean }) {
           </span>
           <div className="stack gap-4 grow-col">
             <h3 className="account-name">{a.name}</h3>
+            {/* El número en su línea y la verificación debajo: «WhatsApp verificado ·» se cortaba (C5). */}
+            <span className="num account-phone">{formatPhone(a.phone)}</span>
             <span className="row small primary verified">
-              <I.check size={16} /> WhatsApp verificado · <span className="num">{formatPhone(a.phone)}</span>
+              <I.check size={16} /> WhatsApp verificado
             </span>
             <span className="xs muted" data-testid="identity-soon">
               Pronto podrá verificar también su identidad (opcional).
@@ -631,17 +654,9 @@ function MyAccount({ editing }: { editing: boolean }) {
             </span>
           </Link>
         ) : null}
-        {count === 0 ? (
-          <Link to="/propietario/publicar" className="list-item">
-            <I.house />
-            <span className="body">
-              Publicar mi casa<small>Sin comisiones: los clientes le escriben por WhatsApp</small>
-            </span>
-            <span className="chev">
-              <I.chevron />
-            </span>
-          </Link>
-        ) : null}
+        {/* Favoritos sale de la barra del propietario y pasa aquí (C4). */}
+        {owner ? <FavoritesRow /> : null}
+        {count === 0 ? <PublishPromoRow /> : null}
         {a?.isAdmin ? (
           <Link to="/admin" className="list-item">
             <I.inbox />
@@ -695,6 +710,22 @@ function MyAccount({ editing }: { editing: boolean }) {
         />
       ) : null}
     </>
+  );
+}
+
+/** Favoritos dentro de Cuenta para el propietario (su barra ya tiene cinco pestañas). */
+function FavoritesRow() {
+  const n = useFavorites().length;
+  return (
+    <Link to="/favoritos" className="list-item" data-testid="favorites-row">
+      <I.heart />
+      <span className="body">
+        Favoritos<small className="num">{n === 0 ? "Ninguna casa guardada" : n === 1 ? "1 casa guardada" : `${n} casas guardadas`}</small>
+      </span>
+      <span className="chev">
+        <I.chevron />
+      </span>
+    </Link>
   );
 }
 

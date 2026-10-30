@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_TABS,
-  activityEmpty,
   cardLabel,
   casasView,
   noticeFor,
   ownerZoneRedirect,
   tabsFor,
+  byPendingAction,
   type Tab,
 } from "../../src/domain/navigation";
 import type { Listing } from "../../src/domain/listing";
@@ -25,25 +25,38 @@ const sub = (over: Partial<HouseSubscription> = {}): HouseSubscription => ({
   ...over,
 });
 
+describe("byPendingAction (revisión UX 2026-10-29, A3)", () => {
+  it("lo que pide algo primero, luego las activas y al final las de revisión; dentro, el orden de la lista", () => {
+    const l = (id: string, status: Listing["status"]) => ({ id, status });
+    const out = byPendingAction([l("r", "review"), l("d1", "draft"), l("a1", "active"), l("c", "changes"), l("p", "payment_due"), l("a2", "active"), l("d2", "draft")]);
+    expect(out.map((x) => x.id)).toEqual(["c", "p", "d1", "d2", "a1", "a2", "r"]);
+  });
+});
+
 describe("tabsFor", () => {
-  it("sin sesión: Explorar y Favoritos", () =>
-    expect(labels(tabsFor({ session: false, isAdmin: false, listingsCount: undefined }))).toEqual(["Explorar", "Favoritos"]));
-  it("cliente (cero casas) y lista aún sin leer: dos pestañas", () => {
-    expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: 0 }))).toEqual(["Explorar", "Favoritos"]);
-    expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: undefined }))).toEqual(["Explorar", "Favoritos"]);
+  // Revisión UX 2026-10-29 (C4): la cuenta pasa a la barra de abajo; el propietario deja Favoritos dentro de Cuenta.
+  it("sin sesión: Explorar, Favoritos e Ingresar", () =>
+    expect(labels(tabsFor({ session: false, isAdmin: false, listingsCount: undefined }))).toEqual(["Explorar", "Favoritos", "Ingresar"]));
+  it("cliente (cero casas) y lista aún sin leer: Explorar, Favoritos y Cuenta", () => {
+    expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: 0 }))).toEqual(["Explorar", "Favoritos", "Cuenta"]);
+    expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: undefined }))).toEqual(["Explorar", "Favoritos", "Cuenta"]);
   });
-  it("propietario con un borrador: cinco, Actividad con el contador", () => {
+  it("propietario con un borrador: cinco, sin Favoritos, Consultas con el contador y Cuenta al final", () => {
     const t = tabsFor({ session: true, isAdmin: false, listingsCount: 1 });
-    expect(labels(t)).toEqual(["Explorar", "Favoritos", "Mi casa", "Calendario", "Actividad"]);
+    expect(labels(t)).toEqual(["Explorar", "Mi casa", "Calendario", "Consultas", "Cuenta"]);
     expect(t.find((x) => x.badge === "inquiries")?.to).toBe("/propietario/actividad");
+    expect(t.at(-1)?.to).toBe("/cuenta");
   });
-  it("una casa → «Mi casa»; dos o más → «Mis casas» (misma ruta)", () => {
-    for (const [n, label] of [[1, "Mi casa"], [2, "Mis casas"], [9, "Mis casas"]] as const) {
+  it("«Mi casa» con una, «Mis casas» con dos o más", () => {
+    for (const [n, label] of [
+      [1, "Mi casa"],
+      [2, "Mis casas"],
+    ] as const) {
       const tab = tabsFor({ session: true, isAdmin: false, listingsCount: n }).find((x) => x.icon === "house");
       expect(tab).toMatchObject({ to: "/propietario/casas", label });
     }
   });
-  it("admin (con o sin casas): la barra del admin", () => {
+  it("admin: su barra", () => {
     for (const n of [0, 3]) expect(labels(tabsFor({ session: true, isAdmin: true, listingsCount: n }))).toEqual(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
   });
   it("nunca más de cinco", () => {
@@ -112,9 +125,3 @@ describe("ownerZoneRedirect", () =>
     expect(ownerZoneRedirect(1, false)).toBe(false);
   }));
 
-describe("activityEmpty", () =>
-  it("sin casa activa y sin consultas", () => {
-    expect(activityEmpty([{ status: "review" }], 0)).toBe(true);
-    expect(activityEmpty([{ status: "review" }], 2)).toBe(false);
-    expect(activityEmpty([{ status: "active" }], 0)).toBe(false);
-  }));

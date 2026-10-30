@@ -157,14 +157,15 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
   await nav(page).getByRole("link", { name: "Cuenta" }).click();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeVisible();
-  await expect(nav(page)).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Revisión de anuncios · admin/ })).toBeVisible();
-  await page.getByRole("link", { name: "Volver" }).click();
+  // Cuenta es una pestaña (revisión UX 2026-10-29, C4): fuera de /admin, con la barra que le dan sus casas; vuelve a la
+  // revisión por su fila.
+  await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeAttached();
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Mi casa", "Calendario", /^Consultas\d*$/, "Cuenta"]);
+  await page.getByRole("link", { name: /Revisión de anuncios · admin/ }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(nav(page).getByRole("link")).toHaveText(["Anuncios", "Casas", "Usuarios", "Cuenta"]);
   await page.goto("/explorar");
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Mi casa", "Calendario", /^Actividad\d*$/]);
+  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Mi casa", "Calendario", /^Consultas\d*$/, "Cuenta"]);
   await serviceClient().from("listings").delete().eq("id", own.data!.id);
 });
 
