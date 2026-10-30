@@ -234,6 +234,9 @@ select{font-weight:600;appearance:none;-webkit-appearance:none;background-image:
 .publish-form input,.publish-form textarea{scroll-margin-top:88px;scroll-margin-bottom:calc(88px + env(safe-area-inset-bottom))}
 .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
 .map-wrap{position:relative;flex:1;min-height:160px;display:flex}
+/* En pantallas bajas (iPhone SE) el mapa puede encoger más y la ayuda va a 14 px: con las fuentes de Linux (CI) los textos
+   ocupan una línea más y el paso 2 se pasaba 12 px. */
+@media (max-height:700px){.map-wrap{min-height:120px}.location-hint,.location-hint .xs{font-size:14px;line-height:1.35}}
 .map-wrap .map-box{flex:1;height:auto}
 /* Ubicación por punto: la línea «{cantón}, {provincia}» en una caja de alto fijo (no salta al cambiar). */
 .place-line{min-height:2.75rem;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:18px}
