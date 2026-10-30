@@ -458,7 +458,7 @@ test("el admin aprueba el nombre: la ficha lo muestra al momento y la casa sale 
   await expect(page.getByRole("button", { name: "Rechazar" })).toHaveCount(0);
   await diff(page, "Nombre").getByRole("button", { name: "Aprobar" }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole("status")).toContainText("«Cabina Cahuita»: Cambios aprobados. La ficha ya los muestra.");
+  await expect(page.getByRole("status").filter({ hasText: "«Cabina Cahuita»: Cambios aprobados. La ficha ya los muestra." })).toBeVisible();
   await expect(editSection(page)).toHaveCount(0);
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.title).toBe("Casa Coco frente al mar");
 
@@ -483,7 +483,7 @@ test("el admin pide cambios en el nombre: el propietario ve la nota, corrige y v
   await name.getByLabel(/Mensaje para el propietario/).fill("Use un nombre sin mayúsculas sostenidas.");
   await name.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole("status")).toContainText("Cambios pedidos. El propietario verá su mensaje.");
+  await expect(page.getByRole("status").filter({ hasText: "Cambios pedidos. El propietario verá su mensaje." })).toBeVisible();
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit?.status).toBe("changes");
 
   await injectSession(page, "owner");

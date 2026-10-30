@@ -788,10 +788,9 @@ function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget;
     setError(null);
     const input = { item, target, decision, note };
     // Lo último en revisión de la casa: de vuelta a la cola, como con la decisión de una casa nueva (allí se ve el resultado).
-    if (lastInReview(input)) {
-      review.mutate(input);
-      void navigate({ to: "/admin" });
-    } else review.mutate(input, { onError: (err) => setError(toDomainError(err).message) });
+    // Primero a la cola y después la decisión: el detalle no se vuelve a pintar a medias con el cambio optimista.
+    if (lastInReview(input)) void navigate({ to: "/admin" }).then(() => review.mutate(input));
+    else review.mutate(input, { onError: (err) => setError(toDomainError(err).message) });
   }
   return (
     <div className="stack gap-8 decide">
