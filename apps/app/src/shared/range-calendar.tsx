@@ -1,6 +1,7 @@
 // Calendario de «¿Cuándo?» (pantalla v2 03): los meses apilados de hoy a hoy + 365, lunes primero. Por noches, llegada y
 // salida con la banda entre las dos; con el mensual, un solo día («Desde»), hasta hoy + 335. Sobre `monthGrid()` del
-// dominio, no sobre `MonthGrid` (precios y semántica del propietario). Solo lo importa la pantalla de buscar.
+// dominio, no sobre `MonthGrid` (precios y semántica del propietario). Lo usan la pantalla de buscar y la hoja de contacto
+// (revisión UX 2026-10-29, N2): solo React y el dominio, para la ficha del servidor.
 import { calendarMonths, monthGrid } from "../domain/calendar";
 import { addDays, longDateWithYear } from "../domain/dates";
 import { MONTHLY_FROM_MAX_DAYS, STAY_MAX_DAYS } from "../domain/filters";

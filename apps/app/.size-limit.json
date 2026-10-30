@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto, la hoja «Cerrar la casa», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, la hoja «Cerrar la casa», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -47,7 +47,10 @@
       "!dist/client/assets/wizard-parts-*.js",
       "!dist/client/assets/publish-return-*.js",
       "!dist/client/assets/publish-promo-*.js",
-      "!dist/client/assets/offer-*.js"
+      "!dist/client/assets/offer-*.js",
+      "!dist/client/assets/range-calendar-*.js",
+      "!dist/client/assets/map-preview-*.js",
+      "!dist/client/assets/map-pins-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -55,15 +58,18 @@
   {
     "name": "Búsqueda de Explorar · trozo diferido (la pantalla de buscar: ¿Dónde?, el calendario de llegada y salida y ¿Quiénes?; se precarga al tocar la píldora)",
     "path": [
-      "dist/client/assets/buscar-*.js"
+      "dist/client/assets/buscar-*.js",
+      "dist/client/assets/range-calendar-*.js"
     ],
     "limit": "6 KB",
     "gzip": true
   },
   {
-    "name": "Mapa de Explorar · trozo diferido (Leaflet con los marcadores de precio, para la caja de la lista y el mapa a pantalla completa; Leaflet aparte)",
+    "name": "Mapa de Explorar · trozo diferido (Leaflet con los marcadores de precio, para la caja de la lista y el mapa a pantalla completa; los marcadores que se pisan juntos, map-pins-*, y los precios antes de Leaflet, map-preview-*; Leaflet aparte)",
     "path": [
-      "dist/client/assets/explore-map-leaflet-*.js"
+      "dist/client/assets/explore-map-leaflet-*.js",
+      "dist/client/assets/map-preview-*.js",
+      "dist/client/assets/map-pins-*.js"
     ],
     "limit": "2.5 KB",
     "gzip": true
@@ -93,12 +99,13 @@
     "gzip": true
   },
   {
-    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha)",
+    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda)",
     "path": [
       "dist/client/assets/contact-sheet-*.js",
-      "dist/client/assets/inquiry-*.js"
+      "dist/client/assets/inquiry-*.js",
+      "dist/client/assets/range-calendar-*.js"
     ],
-    "limit": "5.5 KB",
+    "limit": "6.5 KB",
     "gzip": true
   },
   {

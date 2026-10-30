@@ -402,9 +402,12 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .explore-map{height:220px;border-radius:var(--r-tile);background:var(--surface-2);cursor:pointer;grid-column:1/-1}
 .explore-map.leaflet-container,.map-full-box.leaflet-container{background:var(--surface-2)}
 .explore-map:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
-.map-price{translate:-50% -50%;padding:6px 10px;border-radius:6px;background:var(--surface);color:var(--fg);font:700 13px/1.2 var(--body);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 0 var(--line),0 6px 14px -6px rgba(28,43,42,.5);cursor:pointer}
+.map-price{translate:-50% -50%;padding:6px 10px;border-radius:6px;background:var(--surface);color:var(--fg);font:600 13px/1.2 var(--body);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 0 var(--line),0 6px 14px -6px rgba(28,43,42,.5);cursor:pointer}
+/* Mientras llega Leaflet (C2): los precios sobre el fondo de la caja, en su sitio aproximado. */
+.map-preview{position:absolute;inset:0;pointer-events:none}
+.map-preview .map-price{position:absolute}
 .map-price.is-selected{background:var(--brand-ink);color:#FFFBF2;box-shadow:0 6px 14px -4px rgba(180,76,48,.6)}
-.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:700 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
+.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
 /* La nota del final de la lista sube por encima de «Mapa» (48 px más 16 de aire). */
 .listing-grid ~ .note-col{margin-bottom:64px}
 .map-label{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:5;animation:fade-in 160ms var(--ease-out)}
@@ -689,7 +692,20 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .sheet input:not([type=checkbox]),.sheet textarea{min-height:48px;padding:0 12px;font-size:18px}
 .sheet textarea{padding:12px 14px;resize:none;min-height:0}
-.sheet input[type=date]{min-width:0;-webkit-appearance:none;appearance:none;display:flex;align-items:center}
+/* Fechas de la hoja (revisión UX 2026-10-29, N2): casillas como un campo, que abren el calendario de «¿Cuándo?». */
+.sheet .date-box{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;min-height:56px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface);text-align:left}
+.sheet .date-box-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.sheet .date-box b{font-size:17px;font-weight:var(--w-medium)}
+.sheet .date-box.is-empty b{color:var(--muted)}
+.sheet .date-box[aria-expanded="true"]{border-color:var(--primary)}
+.sheet .contact-calendar{display:flex;flex-direction:column;gap:6px;margin-top:-6px}
+.sheet .contact-calendar .range-scroll{max-height:min(44dvh,340px)}
+/* Todos los meses pintados: con su alto estimado (content-visibility), llevar el mes elegido arriba se quedaba corto. */
+.sheet .contact-calendar .range-month{content-visibility:visible}
+/* El mensaje, como vista previa: gris claro y sin caja de texto. */
+.sheet .field-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.sheet .message-preview + .hint{margin-top:0}
+.sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:16px;white-space:pre-line}
 .sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]){width:72px;text-align:center;font-variant-numeric:tabular-nums}
 .sheet .hint{font-size:14px;color:var(--muted);margin-top:-8px}

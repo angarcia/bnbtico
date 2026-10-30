@@ -42,9 +42,10 @@ export function bboxAround(p: LatLng, meters: number): [west: number, south: num
   return [p.lng - dLng, p.lat - dLat, p.lng + dLng, p.lat + dLat];
 }
 
-/** Mapa de Explorar: encaja los marcadores con 24 px de margen sin pasar del zoom 15; sin marcadores, la zona elegida a
- *  zoom 13 y, sin zona, Limón (el Caribe por defecto) a zoom 10. */
-export const EXPLORE_MAP = { padding: 24, maxZoom: 15, zoneZoom: 13, provinceZoom: 10 } as const;
+/** Mapa de Explorar: encaja los marcadores sin pasar del zoom 15, con un relleno [horizontal, vertical] de medio marcador
+ *  y algo más para que ningún precio quede cortado en el borde (revisión UX 2026-10-29, C2); sin marcadores, la zona
+ *  elegida a zoom 13 y, sin zona, Limón (el Caribe por defecto) a zoom 10. */
+export const EXPLORE_MAP = { padding: [48, 24], maxZoom: 15, zoneZoom: 13, provinceZoom: 10 } as const;
 
 export function exploreMapView(points: readonly LatLng[], zone: LatLng | null): { fit: LatLng[] } | { center: LatLng; zoom: number } {
   if (points.length) return { fit: [...points] };

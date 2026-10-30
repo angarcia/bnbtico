@@ -1,3 +1,4 @@
+import { messagePreview, pickDates } from "./helpers/contact-sheet";
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
@@ -6,6 +7,7 @@ import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
 import { enterCode, injectSession } from "./helpers/session";
 import { backFromWhatsApp, catchWhatsApp, waExpected } from "./helpers/whatsapp";
+import { composeInquiryMessage } from "../../src/domain/inquiry";
 
 // Fase 3, ticket 03: sin sesión, la hoja guarda lo escrito, pasa por la verificación del WhatsApp y vuelve a la ficha.
 // Revisión UX C2: sin sesión el botón dice «Continuar»; la verificación se lee como «Escribirle a <nombre>» (nunca
@@ -23,7 +25,7 @@ let owner: string;
 
 const day = (days: number) => new Date(Date.now() - 6 * 3_600_000 + days * 86_400_000).toISOString().slice(0, 10);
 const sheet = (page: Page) => page.getByRole("dialog", { name: `Escríbale a ${owner}` });
-const message = (page: Page) => sheet(page).getByLabel("Su mensaje");
+const message = (page: Page) => messagePreview(sheet(page));
 const accountUrl = () => new RegExp(`/cuenta\\?next=%2Fcasa%2F${casa.publicId}%3Fcontacto%3D1$`);
 const listingUrl = () => new RegExp(`/casa/${casa.publicId}$`);
 const defaultMessage = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`;
@@ -55,11 +57,11 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   const s = sheet(page);
   await expect(s.getByText(SIGNED_OUT)).toBeVisible();
   const [a, b] = [day(30), day(37)];
-  await s.getByLabel("Llegada (opcional)").fill(a);
-  await s.getByLabel("Salida (opcional)").fill(b);
+  await pickDates(s, a, b);
   await s.getByLabel("Personas (opcional)").fill("4");
-  await message(page).fill("Hola, ¿aceptan perros pequeños?");
-  await message(page).blur();
+  await s.getByLabel("Personas (opcional)").blur();
+  const written = composeInquiryMessage(TITLE, { arrival: a, departure: b, people: 4 });
+  await expect(message(page)).toHaveText(written);
   await expect(s).not.toHaveClass(/\bkb\b/); // sin el sitio del teclado, para la captura
   await page.screenshot({ path: "test-results/contacto-sin-sesion.png" });
   await expect(s.getByRole("button", { name: "Abrir WhatsApp" })).toHaveCount(0);
@@ -93,7 +95,7 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   // Tras el código: de vuelta en la ficha, la hoja reabre con lo escrito y abre WhatsApp sola (sin segundo toque).
   const wa = await catchWhatsApp(page);
   await enterCode(page);
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, "Hola, ¿aceptan perros pequeños?")]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, written)]);
   // Volver atrás desde WhatsApp: la ficha con la hoja cerrada (el parámetro se quitó con replace y lo escrito se borró).
   await backFromWhatsApp(page);
   await expect(page).toHaveURL(listingUrl());
@@ -110,7 +112,7 @@ test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → Wh
   await expect(sheet(page).getByText(SIGNED_OUT)).toBeVisible();
   await sheet(page).getByLabel("Personas (opcional)").fill("2");
   const twoPeople = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`;
-  await expect(message(page)).toHaveValue(twoPeople);
+  await expect(message(page)).toHaveText(twoPeople);
   await sheet(page).getByRole("button", { name: "Continuar" }).click();
 
   await expect(page).toHaveURL(accountUrl());
@@ -135,7 +137,7 @@ test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → Wh
 test("WhatsApp de otro país (+1 415 555 0100); con el borrador caducado (más de 30 min) la hoja vuelve con el mensaje por defecto y no se envía sola", async ({ page }) => {
   await deleteAccount(INTL_PHONE);
   await openSsrListing(page);
-  await message(page).fill("Hello, is it free?");
+  await sheet(page).getByLabel("Personas (opcional)").fill("2");
   await sheet(page).getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(accountUrl());
   await page.getByLabel("País de su WhatsApp").selectOption({ label: "Estados Unidos / Canadá (+1)" });
@@ -154,7 +156,7 @@ test("WhatsApp de otro país (+1 415 555 0100); con el borrador caducado (más d
   await enterCode(page);
   await expect(page).toHaveURL(listingUrl());
   await expect(sheet(page)).toBeVisible();
-  await expect(message(page)).toHaveValue(defaultMessage);
+  await expect(message(page)).toHaveText(defaultMessage);
   // Lo escrito se perdió: no se manda un mensaje que la persona no confirmó.
   await page.waitForTimeout(800);
   expect(wa).toEqual([]);

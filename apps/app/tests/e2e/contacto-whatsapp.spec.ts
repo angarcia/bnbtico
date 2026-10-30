@@ -1,3 +1,4 @@
+import { messagePreview, pickDates } from "./helpers/contact-sheet";
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { sql, TEST_PHONES } from "../db/local";
@@ -81,12 +82,11 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   await openSheet(page, casa.publicId);
   const s = sheet(page);
   const [a, b] = [day(30), day(37)];
-  await s.getByLabel("Llegada (opcional)").fill(a);
-  await s.getByLabel("Salida (opcional)").fill(b);
+  await pickDates(s, a, b);
   await s.getByLabel("Personas (opcional)").fill("3");
   await s.getByLabel("Personas (opcional)").blur();
   await expect(s).not.toHaveClass(/\bkb\b/);
-  const text = await s.getByLabel("Su mensaje").inputValue();
+  const text = (await messagePreview(s).textContent())!;
 
   // La RPC tarda: se ve «Abriendo WhatsApp…» y un doble toque no hace dos llamadas.
   const rpc: string[] = [];
@@ -132,7 +132,7 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   // Repetir en menos de 7 días renueva la misma consulta (sin fechas ahora: el mensaje por defecto).
   await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   const fresh = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`;
-  await expect(s.getByLabel("Su mensaje")).toHaveValue(fresh);
+  await expect(messagePreview(s)).toHaveText(fresh);
   await openButton(page).click();
   await expect.poll(() => wa.length).toBe(2);
   expect(wa[1]).toBe(waExpected(TEST_PHONES.owner, fresh));
@@ -193,10 +193,10 @@ test("sesión vencida (la base la rechaza): a Ingresar con la vuelta a la hoja y
     route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ code: "PGRST303", message: "JWT expired", details: null, hint: null }) }),
   );
   await openSheet(page, casa.publicId);
-  await sheet(page).getByLabel("Su mensaje").fill("Hola, ¿hay parqueo?");
+  await sheet(page).getByLabel("Personas (opcional)").fill("5");
   await openButton(page).click();
   await expect(page).toHaveURL(new RegExp(`/cuenta\\?next=%2Fcasa%2F${casa.publicId}%3Fcontacto%3D1$`));
   expect(wa).toEqual([]);
   const stored = await page.evaluate((k) => sessionStorage.getItem(k), `bnbtico-contacto:${casa.publicId}`);
-  expect(stored).toContain("Hola, ¿hay parqueo?");
+  expect(stored).toContain('"people":5');
 });

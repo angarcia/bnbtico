@@ -40,5 +40,5 @@ describe("exploreMapView (mapa de Explorar)", () => {
     const p2 = { lat: 9.62, lng: -82.68 };
     expect(exploreMapView([p1, p2], { lat: 9.64, lng: -82.73 })).toEqual({ fit: [p1, p2] });
   });
-  it("relleno de 24 px y zoom máximo 15", () => expect(EXPLORE_MAP).toEqual({ padding: 24, maxZoom: 15, zoneZoom: 13, provinceZoom: 10 }));
+  it("relleno de 48 × 24 px (medio marcador) y zoom máximo 15", () => expect(EXPLORE_MAP).toEqual({ padding: [48, 24], maxZoom: 15, zoneZoom: 13, provinceZoom: 10 }));
 });

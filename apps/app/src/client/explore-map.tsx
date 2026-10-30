@@ -1,7 +1,7 @@
 // El mapa de Explorar en el JS inicial: solo la caja de alto fijo (220 px, nada salta al cargar), su cargador en reposo y
 // la etiqueta flotante «Mapa». Leaflet y los marcadores van en explore-map-leaflet (trozo diferido); el mapa a pantalla
 // completa, en explore-map-full (otro trozo, al abrirlo).
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { mapPriceLabel } from "../domain/describe";
 import type { LatLng } from "../domain/geo";
 import type { PublicListing } from "../domain/listing";
@@ -9,11 +9,11 @@ import type { Currency } from "../domain/currency";
 import { useCurrency } from "../shared/currency";
 import { useFx } from "../shared/fx";
 import { I } from "../shared/icons";
-import { whenIdle } from "../shared/idle";
+import { afterPaint, whenIdle } from "../shared/idle";
 
 // Los tipos del trozo de Leaflet sin importarlo (ni siquiera como tipo: la prueba de arquitectura lo vigila).
 type ExploreMapHandle = ReturnType<typeof import("./explore-map-leaflet")["drawExploreMap"]>;
-type MapMarker = Parameters<ExploreMapHandle["show"]>[0][number];
+export type MapMarker = Parameters<ExploreMapHandle["show"]>[0][number];
 
 /** Las casas con punto aproximado, con su precio como en la tarjeta («₡42 000», «$80», el del mes o «A negociar»). */
 export function mapMarkers(listings: readonly PublicListing[], monthly: boolean, currency: Currency, fx: number): MapMarker[] {
@@ -28,7 +28,12 @@ export function useMapMarkers(listings: readonly PublicListing[], monthly: boole
 }
 
 /** Dibuja el mapa en `box` cuando Leaflet llega (en reposo); sin red no pasa nada: queda el fondo de la caja. */
-export function useExploreMap(box: RefObject<HTMLElement | null>, opts: { interactive: boolean; onMarker(id: string): void; onMap(): void }, markers: MapMarker[], zone: LatLng | null): RefObject<ExploreMapHandle | null> {
+export function useExploreMap(
+  box: RefObject<HTMLElement | null>,
+  opts: { interactive: boolean; onMarker(id: string): void; onMap(): void },
+  markers: MapMarker[],
+  zone: LatLng | null,
+): { handle: RefObject<ExploreMapHandle | null>; ready: boolean } {
   const handle = useRef<ExploreMapHandle | null>(null);
   const callbacks = useRef(opts);
   callbacks.current = opts;
@@ -43,8 +48,11 @@ export function useExploreMap(box: RefObject<HTMLElement | null>, opts: { intera
           setReady(true);
         })
         .catch(() => undefined);
+    // Safari no tiene requestIdleCallback y whenIdle esperaba 1,5 s con la caja vacía (revisión UX 2026-10-29, C2): allí,
+    // en cuanto se pinta la lista.
     if (opts.interactive) void load();
-    else whenIdle(() => void load());
+    else if (typeof requestIdleCallback === "function") whenIdle(() => void load());
+    else afterPaint(() => void load());
     return () => {
       cancelled = true;
       handle.current?.dispose();
@@ -56,15 +64,23 @@ export function useExploreMap(box: RefObject<HTMLElement | null>, opts: { intera
   useEffect(() => {
     if (ready) handle.current?.show(markers, zone);
   }, [ready, markers, zoneKey]);
-  return handle;
+  return { handle, ready };
 }
+
+// Los precios antes de Leaflet, en su propio trozo pequeño (fuera del JS inicial): se pide al montar la caja.
+const PricePreview = lazy(() => import("./map-preview").then((m) => ({ default: m.PricePreview })));
 
 /** El primer elemento de la lista: tocarlo (o Intro/Espacio) abre el mapa grande; un marcador, con su casa. */
 export function ExploreMap({ listings, zone, monthly, onOpen, ref }: { listings: PublicListing[]; zone: LatLng | null; monthly: boolean; onOpen(publicId: string | null): void; ref?: RefObject<HTMLDivElement | null> }) {
   const own = useRef<HTMLDivElement>(null);
   const box = ref ?? own;
   const markers = useMapMarkers(listings, monthly);
-  useExploreMap(box, { interactive: false, onMarker: (id) => onOpen(id), onMap: () => undefined }, markers, zone);
+  const { ready } = useExploreMap(box, { interactive: false, onMarker: (id) => onOpen(id), onMap: () => undefined }, markers, zone);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (el) setSize({ width: el.clientWidth, height: el.clientHeight });
+  }, [box]);
   return (
     <div
       ref={box}
@@ -74,8 +90,8 @@ export function ExploreMap({ listings, zone, monthly, onOpen, ref }: { listings:
       aria-label="Abrir el mapa de las casas"
       data-testid="explore-map"
       onClick={(e) => {
-        // Los marcadores los atiende Leaflet; la atribución es un enlace.
-        if ((e.target as Element).closest(".leaflet-marker-icon, .leaflet-control")) return;
+        // Los marcadores los atiende Leaflet (un grupo, «N casas», no: abre el mapa grande); la atribución es un enlace.
+        if ((e.target as Element).closest(".leaflet-marker-icon:not(.is-group), .leaflet-control")) return;
         onOpen(null);
       }}
       onKeyDown={(e) => {
@@ -83,7 +99,13 @@ export function ExploreMap({ listings, zone, monthly, onOpen, ref }: { listings:
         e.preventDefault();
         onOpen(null);
       }}
-    />
+    >
+      {ready ? null : (
+        <Suspense fallback={null}>
+          <PricePreview markers={markers} width={size.width} height={size.height} />
+        </Suspense>
+      )}
+    </div>
   );
 }
 

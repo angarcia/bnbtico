@@ -1,4 +1,5 @@
 import { devices, type Browser, type TestInfo } from "@playwright/test";
+import { messagePreview, pickDates } from "./helpers/contact-sheet";
 import { expect, test, type Page } from "./helpers/test";
 import type { ListingsHarness } from "../contract/harness";
 import { totp } from "../contract/totp";
@@ -134,11 +135,10 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   const sheet = page.getByRole("dialog", { name: "Escríbale a Yorleny" });
   await expect(sheet).toBeVisible();
   const [arrival, departure] = [day(40), day(45)];
-  await sheet.getByLabel("Llegada (opcional)").fill(arrival);
-  await sheet.getByLabel("Salida (opcional)").fill(departure);
+  await pickDates(sheet, arrival, departure);
   await sheet.getByLabel("Personas (opcional)").fill("3");
   const message = composeInquiryMessage(TITLE, { arrival, departure, people: 3 });
-  await expect(sheet.getByLabel("Su mensaje")).toHaveValue(message);
+  await expect(messagePreview(sheet)).toHaveText(message);
   await sheet.getByLabel("Personas (opcional)").blur();
   await expect(sheet).not.toHaveClass(/\bkb\b/);
   await sheet.getByRole("button", { name: "Continuar" }).click();

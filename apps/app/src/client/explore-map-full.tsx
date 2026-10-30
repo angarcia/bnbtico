@@ -21,7 +21,7 @@ export function MapScreen({ listings, zone, monthly, selected, onSelect, onClose
   const overlay = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLButtonElement>(null);
   const markers = useMapMarkers(listings, monthly);
-  const handle = useExploreMap(
+  const { handle } = useExploreMap(
     box,
     {
       interactive: true,

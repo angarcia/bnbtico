@@ -12,7 +12,7 @@ import { monthlyWindowLabel, nightsBetween, nightsLabel, peopleLabel, zonePlace,
 import { trackSearch } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { provincesQuery, zonesQuery } from "../queries";
-import { RangeCalendar } from "../range-calendar";
+import { RangeCalendar } from "../../shared/range-calendar";
 
 const route = getRouteApi("/_flow/explorar/buscar");
 

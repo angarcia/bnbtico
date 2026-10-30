@@ -39,6 +39,29 @@ test.beforeEach(async ({ page }) => {
 const mapBox = (page: Page) => page.getByTestId("explore-map");
 const mapLabel = (page: Page) => page.getByRole("button", { name: "Mapa", exact: true });
 const countPill = (page: Page) => page.getByRole("button", { name: "8 casas", exact: true });
+/** Revisión UX 2026-10-29 (C2): las siete cabinas, a unos 7 km entre sí, se pisan en el mapa pequeño y van juntas. */
+const ready = (page: Page) => expect(mapBox(page).locator(".leaflet-marker-pane .map-price", { hasText: "₡42 000" })).toBeVisible();
+/** Ningún precio tapa a otro ni se sale de la caja. */
+async function expectPinsClear(box: import("@playwright/test").Locator, pinsOf = ".leaflet-marker-pane .map-price") {
+  const area = (await box.boundingBox())!;
+  const pins = await box.locator(pinsOf).evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON() as DOMRect));
+  for (const r of pins) {
+    expect(r.left).toBeGreaterThanOrEqual(area.x);
+    expect(r.right).toBeLessThanOrEqual(area.x + area.width);
+    expect(r.top).toBeGreaterThanOrEqual(area.y);
+    expect(r.bottom).toBeLessThanOrEqual(area.y + area.height);
+  }
+  for (const [i, a] of pins.entries()) for (const b of pins.slice(i + 1)) expect(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top).toBe(true);
+}
+/** En el mapa grande, tocar los grupos hasta que todas las casas salen solas. */
+async function expandGroups(full: import("@playwright/test").Locator) {
+  // Acercar el mapa anima el zoom y rehace los marcadores al terminar: se reintenta hasta que no queda ningún grupo.
+  const groups = full.locator(".map-price.is-group");
+  await expect(async () => {
+    if (await groups.count()) await groups.first().click({ timeout: 1000 });
+    await expect(groups).toHaveCount(0, { timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
+}
 
 test("el mapa es el primer elemento de la lista y lleva precios", async ({ page }) => {
   await page.goto("/explorar");
@@ -46,7 +69,11 @@ test("el mapa es el primer elemento de la lista y lleva precios", async ({ page 
   const box = await mapBox(page).boundingBox();
   expect(Math.abs(box!.height - 220)).toBeLessThanOrEqual(1);
   await expect(mapBox(page)).toHaveAttribute("aria-label", "Abrir el mapa de las casas");
-  await expect(mapBox(page).locator(".map-price")).toHaveCount(8);
+  await ready(page);
+  await expect(mapBox(page).locator(".leaflet-marker-pane .map-price")).toHaveCount(2);
+  await expect(mapBox(page).locator(".leaflet-marker-pane .map-price").filter({ hasText: /^7 casas$/ })).toHaveCount(1);
+  await expect(mapBox(page).locator(".leaflet-marker-pane .map-price").filter({ hasText: /^₡42\s000$/ })).toHaveCount(1);
+  await expectPinsClear(mapBox(page));
   await expect(mapBox(page).getByText("₡42 000", { exact: true })).toBeVisible();
   await expect(mapBox(page).getByText("₡42 000", { exact: true })).toHaveAttribute("title", COCO);
   await expect(mapBox(page).locator(".leaflet-control-attribution")).toBeVisible();
@@ -56,7 +83,7 @@ test("el mapa es el primer elemento de la lista y lleva precios", async ({ page 
 
 test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador muestra su casa; Atrás cierra y conserva el scroll", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(mapBox(page).locator(".map-price")).toHaveCount(8);
+  await ready(page);
   await expect(mapLabel(page)).toHaveCount(0);
   await page.evaluate(() => window.scrollTo(0, 600));
   await expect(mapLabel(page)).toBeVisible();
@@ -69,7 +96,8 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect(page).toHaveURL(/[?&]mapa=1/);
   await expect(countPill(page)).toBeVisible();
   const full = page.locator(".map-full");
-  await expect(full.locator(".map-price")).toHaveCount(8);
+  await expect(full.locator(".map-price", { hasText: "₡42 000" })).toBeVisible();
+  await expectPinsClear(full.locator(".leaflet-container"));
   await expect(full.getByRole("button", { name: "Volver a la lista" })).toBeFocused();
   // La lista de debajo no se enfoca ni se lee mientras el mapa está abierto.
   expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
@@ -99,7 +127,7 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   expect(Math.abs((await page.evaluate(() => scrollY)) - 600)).toBeLessThanOrEqual(2);
   expect(searches).toBe(0);
   await page.goForward();
-  await expect(full.locator(".map-price")).toHaveCount(8);
+  await expect(full.locator(".map-price", { hasText: "₡42 000" })).toBeVisible();
   await expect(full.locator(".map-card")).toHaveCount(0);
   await page.goBack();
   await expect(page.locator(".map-full")).toHaveCount(0);
@@ -115,9 +143,14 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
 
 test("con teclado: Intro abre el mapa y, sobre un marcador, muestra su casa", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(mapBox(page).locator(".map-price")).toHaveCount(8);
+  await ready(page);
   await mapBox(page).press("Enter");
   const marker = page.locator(".map-full .map-price", { hasText: "₡42 000" });
+  // Un grupo, con Intro, acerca el mapa a sus casas.
+  const group = page.locator(".map-full .map-price.is-group").first();
+  await group.focus();
+  await group.press("Enter");
+  await expandGroups(page.locator(".map-full"));
   await marker.focus();
   await marker.press("Enter");
   await expect(page.locator(".map-full").getByRole("link", { name: new RegExp(COCO) })).toBeVisible();
@@ -125,13 +158,18 @@ test("con teclado: Intro abre el mapa y, sobre un marcador, muestra su casa", as
   await expect(page.locator(".map-full").getByRole("link", { name: /Cabina 1/ })).toBeVisible();
 });
 
-test("un marcador del mapa pequeño abre el mapa grande con su casa; sin historial, «8 casas» vuelve a la lista", async ({ page }) => {
+test("un marcador del mapa pequeño abre el mapa grande con su casa; un grupo, el mapa grande; sin historial, «8 casas» vuelve a la lista", async ({ page }) => {
   await page.goto("/explorar");
-  // En la caja pequeña los marcadores del medio se solapan: el toque va directo al de ₡68 000.
-  await mapBox(page).locator(".map-price", { hasText: "₡68 000" }).dispatchEvent("click");
+  await ready(page);
+  await mapBox(page).locator(".map-price", { hasText: "₡42 000" }).click();
   await expect(page).toHaveURL(/[?&]mapa=1/);
-  await expect(page.locator(".map-full").getByRole("link", { name: /Cabina 4/ })).toBeVisible();
-  await expect(page.locator(".map-full .map-price.is-selected")).toHaveText("₡68 000");
+  await expect(page.locator(".map-full").getByRole("link", { name: new RegExp(COCO) })).toBeVisible();
+  await expect(page.locator(".map-full .map-price.is-selected")).toHaveText("₡42 000");
+  await page.goBack();
+  await expect(page.locator(".map-full")).toHaveCount(0);
+  await mapBox(page).locator(".map-price", { hasText: "7 casas" }).click();
+  await expect(page).toHaveURL(/[?&]mapa=1/);
+  await expect(page.locator(".map-full .map-card")).toHaveCount(0);
   // Abierto desde un enlace (sin entrada anterior en la app): «8 casas» sustituye la entrada.
   await page.goto("/explorar?mapa=1");
   await expect(countPill(page)).toBeVisible();
@@ -140,7 +178,7 @@ test("un marcador del mapa pequeño abre el mapa grande con su casa; sin histori
   await expect(page).toHaveURL(/\/explorar$/);
 });
 
-test("sin red para el mapa, la caja se queda y la lista funciona", async ({ page }) => {
+test("sin red para el mapa, la caja se queda con los precios y la lista funciona", async ({ page }) => {
   await page.route("**/assets/explore-map-leaflet-*.js", (r) => r.abort());
   await page.route("**/assets/leaflet-*.js", (r) => r.abort());
   const aborted = page.waitForEvent("requestfailed", (r) => /\/assets\/(explore-map-)?leaflet-/.test(r.url()));
@@ -149,7 +187,10 @@ test("sin red para el mapa, la caja se queda y la lista funciona", async ({ page
   await expect(mapBox(page)).toBeVisible();
   await aborted;
   await expect(mapBox(page).locator(".leaflet-container")).toHaveCount(0);
-  await expect(mapBox(page)).toHaveText("");
+  // La caja no se queda lisa: los precios, ya juntos si se pisan, sobre su fondo (revisión UX 2026-10-29, C2).
+  await expect(mapBox(page).locator(".map-preview .map-price").filter({ hasText: /^₡42\s000$/ })).toHaveCount(1);
+  await expect(mapBox(page).locator(".map-preview .map-price").filter({ hasText: /casas$/ }).first()).toBeVisible();
+  await expectPinsClear(mapBox(page), ".map-preview .map-price");
   const first = page.locator(".listing-grid .listing-card").first();
   await expect(first).toBeVisible();
   await first.click();
@@ -159,7 +200,7 @@ test("sin red para el mapa, la caja se queda y la lista funciona", async ({ page
 test("telemetría: se cuentan la apertura del mapa y el toque en un marcador", async ({ page }) => {
   const since = sql("select now()::text");
   await page.goto("/explorar");
-  await expect(mapBox(page).locator(".map-price")).toHaveCount(8);
+  await ready(page);
   await mapBox(page).press("Enter");
   await page.locator(".map-full .map-price", { hasText: "₡42 000" }).click();
   await expect(page.locator(".map-full .map-card")).toBeVisible();
