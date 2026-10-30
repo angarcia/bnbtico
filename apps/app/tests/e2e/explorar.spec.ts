@@ -171,13 +171,17 @@ test("Solo alquiler mensual: un chip, la línea y los precios por mes; al quitar
   // El rango por noche queda sin efecto: el contador de los filtros no lo cuenta.
   await expect(badge).toHaveCount(0);
 
+  // Revisión UX 2026-10-29: activo, el chip dice «Mensual» (cabe en un SE); «Solo alquiler mensual» ya no se repite en Filtros.
+  await expect(chip).toHaveText("Mensual");
   await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveCount(0);
   const needs = page.locator("section", { has: page.getByText("Qué necesitan", { exact: true }) }).locator(".chip");
-  await expect(needs.last()).toHaveText("Solo alquiler mensual");
-  await expect(needs.last()).toHaveAttribute("aria-pressed", "true");
-  await needs.last().click();
-  await expect(needs.last()).toHaveAttribute("aria-pressed", "false");
+  await expect(needs.filter({ hasText: "mensual" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Volver" }).click();
+  await chip.click();
+  await expect(chip).toHaveAttribute("aria-pressed", "false");
+  await expect(chip).toHaveText("Solo alquiler mensual");
+  await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("40000");
   await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("90000");
   await page.getByRole("button", { name: "Ver 9 casas" }).click();
@@ -210,7 +214,7 @@ test("un enlace viejo /explorar?modo=monthly llega con el chip encendido", async
   await page.getByLabel("Precio mínimo por noche").fill("50000");
   await page.getByLabel("Precio máximo por noche").fill("44000");
   await expect(page.getByRole("button", { name: /^Ver/ })).toBeDisabled();
-  await page.getByRole("button", { name: "Solo alquiler mensual", exact: true }).click();
+  await page.goto("/explorar/filtros?min=50000&max=44000&mensual=1");
   await expect(page.getByRole("button", { name: "Ver 2 casas" })).toBeEnabled();
   await page.getByRole("button", { name: "Ver 2 casas" }).click();
   await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual en Limón");

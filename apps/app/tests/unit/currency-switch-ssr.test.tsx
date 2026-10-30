@@ -61,7 +61,7 @@ describe("barra de la ficha en el servidor", () => {
     expect(html).toContain(`data-testid="main-price">${formatCRC(85000)}`);
     expect(html).toContain(`data-testid="price-usd" title="Orientativo: ≈ ₡510 por US$1, tipo de referencia del 26 oct.">≈ ${formatUSD(85000, FX_INITIAL.crcPerUsd)}`);
     expect(html).toContain(`Mensual: <b class="ink num">${formatCRC(650000)}</b>`);
-    expect(html).toContain(`data-testid="monthly-usd" title="Orientativo: ≈ ₡510 por US$1, tipo de referencia del 26 oct.">≈ ${formatUSD(650000, FX_INITIAL.crcPerUsd)}`);
+    expect(html).toContain(`data-testid="monthly-usd" title="Orientativo: ≈ ₡510 por US$1, tipo de referencia del 26 oct.">≈ <b class="ink num">${formatUSD(650000, FX_INITIAL.crcPerUsd)}</b>`);
     expect(html).toContain("Precios orientativos: el precio final lo acuerda con el propietario.");
     expect(html).not.toContain("currency-switch");
     expect(html).not.toContain("orientativo</span>");

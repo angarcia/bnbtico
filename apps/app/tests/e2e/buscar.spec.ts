@@ -150,7 +150,7 @@ test("límites: hoy + 365 solo como salida, el «Desde» del mensual hasta hoy +
   await expect(page.getByRole("button", { name: "Una persona más" })).toBeDisabled();
 });
 
-test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta y una provincia quita la zona", async ({ page }) => {
+test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; con una sola provincia no sale el bloque de provincias", async ({ page }) => {
   await page.goto("/explorar/filtros?zona=704-cocles&ppl=4");
   const mine = page.getByRole("group", { name: "Su búsqueda" });
   await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/, /^Personas\s*4 personas$/]);
@@ -159,12 +159,10 @@ test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta y una provincia 
   await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=quienes/);
   await expect(page.getByRole("button", { name: /¿Quiénes\?/ })).toHaveAttribute("aria-expanded", "true");
   await page.goBack();
-  const zona = page.getByRole("group", { name: "Zona", exact: true });
-  await expect(zona.locator('[aria-pressed="true"]')).toHaveCount(0);
-  await zona.getByRole("button", { name: "Todas" }).click();
-  await page.getByRole("button", { name: /^Ver \d+ casas?$/ }).click();
-  await expect(page).toHaveURL(/prov=Todas/);
-  await expect(page).not.toHaveURL(/zona=/);
+  // Revisión UX 2026-10-29 (A7): con casas solo en Limón, la zona sale una vez, en «Su búsqueda»; sin zona, «Todo Limón».
+  await expect(page.getByRole("group", { name: "Zona", exact: true })).toHaveCount(0);
+  await page.goto("/explorar/filtros");
+  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todo Limón$/);
 });
 
 test("al volver a abrir «¿Dónde?» con una zona de dos palabras, la zona sigue en la lista", async ({ page }) => {

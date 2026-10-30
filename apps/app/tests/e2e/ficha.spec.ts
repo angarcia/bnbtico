@@ -131,7 +131,7 @@ test("una casa con precio al mes lo muestra en la línea mensual en colones y, a
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡1 250 000 / noche");
   await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
-  await expect(page.getByTestId("monthly-usd")).toHaveText(/^≈ \$[\d,]+ \/ mes$/);
+  await expect(page.getByTestId("monthly-usd")).toHaveText(/^≈ \$[\d\u00a0]+ \/ mes$/);
   await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
   await chooseCurrency(page, "USD");
   await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");

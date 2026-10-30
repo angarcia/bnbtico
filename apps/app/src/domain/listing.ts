@@ -73,6 +73,8 @@ export const MIN_PHOTOS_TO_APPROVE = 1;
 export const MONTHLY_LABEL = "Alquiler mensual";
 /** El filtro: chip de Explorar e interruptor de Filtros (revisión de Ana, 2026-10-28). */
 export const MONTHLY_FILTER_LABEL = "Solo alquiler mensual";
+/** El chip de Explorar ya activo: corto, para que «✓» y el texto quepan en un iPhone SE (revisión UX 2026-10-29, N1). */
+export const MONTHLY_FILTER_SHORT = "Mensual";
 /** Paso del precio: los mismos mensajes en el dominio, el fake y `submit_listing`. */
 export const NIGHTLY_PRICE_ERROR = "Indique el precio por noche en colones.";
 export const MONTHLY_PRICE_ERROR = "Indique el precio al mes en colones o déjelo vacío.";

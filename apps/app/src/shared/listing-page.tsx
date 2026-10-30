@@ -198,7 +198,7 @@ function PriceColumns({ main, monthly, fx }: { main: Price | null; monthly: Mont
           ) : null}
           {monthlyAmount !== null ? (
             <span className="xs muted num" data-testid="monthly-usd" title={rate}>
-              {`≈ ${formatUSD(monthlyAmount, fx.crcPerUsd)}`} <small>/ mes</small>
+              ≈ <b className="ink num">{formatUSD(monthlyAmount, fx.crcPerUsd)}</b> / mes
             </span>
           ) : null}
         </div>

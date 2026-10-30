@@ -9,9 +9,10 @@ export function formatCRC(amount: number): string {
   return "₡" + n.toLocaleString("es-CR").replace(/[.,\s\u00a0\u202f]/g, nbsp);
 }
 
-/** $186 — conversión orientativa redondeada al dólar. */
+/** $186, $2 843 — conversión orientativa redondeada al dólar; miles con espacio, como los colones (la coma se lee como
+ *  decimal en español y el punto en inglés; revisión UX 2026-10-29, N3). */
 export function formatUSD(amountCRC: number, fx: number): string {
-  return "$" + Math.round(amountCRC / fx).toLocaleString("en-US");
+  return "$" + String(Math.round(amountCRC / fx)).replace(/\B(?=(\d{3})+(?!\d))/g, nbsp);
 }
 
 export function formatMoney(amountCRC: number, currency: "CRC" | "USD", fx: number): string {

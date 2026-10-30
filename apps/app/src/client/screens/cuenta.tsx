@@ -667,6 +667,10 @@ function MyAccount({ editing }: { editing: boolean }) {
       {/* Lo último de la pantalla, pequeño y con confirmación: cerrar la sesión obliga a pedir un código nuevo. */}
       <div className="stack account-foot">
         <span className="xs muted">Términos y privacidad</span>
+        {/* Atribución de la licencia ODbL de los límites administrativos (zonas); antes al pie de Ayuda (revisión UX 2026-10-29, N7). */}
+        <span className="xs muted">
+          Límites administrativos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL).
+        </span>
         <button type="button" className="btn-link muted logout-link" onClick={() => setAsking(true)} disabled={leaving}>
           Cerrar sesión
         </button>
@@ -816,9 +820,6 @@ export function AyudaScreen() {
           </>
         )}
       </section>
-      <p className="xs muted">
-        Límites administrativos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a>, disponibles bajo la Open Database License (ODbL).
-      </p>
     </>
   );
 }

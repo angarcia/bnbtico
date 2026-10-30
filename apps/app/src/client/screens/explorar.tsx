@@ -8,7 +8,7 @@ import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../dom
 import { costaRicaToday } from "../../domain/dates";
 import { resultsText, searchSummary } from "../../domain/search";
 import { extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
-import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
+import { MONTHLY_FILTER_LABEL, MONTHLY_FILTER_SHORT } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { CurrencySwitch } from "../../shared/currency-switch";
@@ -70,12 +70,13 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
           type="button"
           className="chip monthly-chip"
           aria-pressed={f.monthly}
+          aria-label={MONTHLY_FILTER_LABEL}
           onClick={() => {
             track("monthly_filter_tap");
             void navigate({ to: "/explorar", search: searchFor({ ...f, monthly: !f.monthly }, provinces), replace: true });
           }}
         >
-          <span>{MONTHLY_FILTER_LABEL}</span>
+          <span>{f.monthly ? MONTHLY_FILTER_SHORT : MONTHLY_FILTER_LABEL}</span>
         </button>
         <FiltersLink filters={f} search={search} />
         <CurrencySwitch />

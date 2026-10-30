@@ -40,12 +40,12 @@ function Fold({ title, value, open, onToggle, aside, children }: { title: string
   const id = useId();
   const card = useRef<HTMLElement>(null);
   const title_ = useRef<HTMLButtonElement>(null);
-  const first = useRef(true);
+  // Solo al cambiar de tarjeta, no al montar: con el modo estricto de React el efecto corre dos veces al montar y el
+  // título se quedaba con el foco y el anillo de teclado al abrir la búsqueda (revisión UX 2026-10-29, N6).
+  const prev = useRef(open);
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (prev.current === open) return;
+    prev.current = open;
     if (open && !card.current?.contains(document.activeElement)) title_.current?.focus();
   }, [open]);
   return (
@@ -68,7 +68,14 @@ function Fold({ title, value, open, onToggle, aside, children }: { title: string
   );
 }
 
-function Donde({ zone, onPick, onClear }: { zone: string | null; onPick(id: string): void; onClear(): void }) {
+function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPick(id: string): void; onClear(): void; focusOnce?: { current: boolean } }) {
+  const input = useRef<HTMLInputElement>(null);
+  // Al abrir la búsqueda en «¿Dónde?», el foco va al campo (abre el teclado), sin el anillo del título (N6).
+  useEffect(() => {
+    if (!focusOnce?.current) return;
+    focusOnce.current = false;
+    input.current?.focus({ preventScroll: true });
+  }, [focusOnce]);
   const { data: zones = [] } = useQuery(zonesQuery);
   const name = zones.find((z) => z.id === zone)?.name ?? "";
   const [text, setText] = useState(name);
@@ -86,6 +93,7 @@ function Donde({ zone, onPick, onClear }: { zone: string | null; onPick(id: stri
       <div className="zone-input">
         <I.search size={20} />
         <input
+          ref={input}
           role="combobox"
           aria-label="Busque una zona"
           placeholder="Busque una zona"
@@ -149,6 +157,7 @@ export function BuscarScreen() {
     return { zone: f.zone, arrival: f.arrival, departure: f.departure, monthlyFrom: f.monthlyFrom, ppl: f.ppl };
   });
   const [open, setOpen] = useState<Card | null>(abrir ?? "donde");
+  const focusZone = useRef(!abrir || abrir === "donde");
   const set = (patch: Partial<SearchDraft>) => setDraft((d) => ({ ...d, ...patch }));
   const toggle = (card: Card) => () => setOpen((o) => (o === card ? null : card));
   const { data: zones } = useQuery(zonesQuery);
@@ -182,6 +191,7 @@ export function BuscarScreen() {
             setOpen("cuando");
           }}
           onClear={() => set({ zone: null })}
+          focusOnce={focusZone}
         />
       </Fold>
       <Fold
