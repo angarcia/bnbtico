@@ -5,7 +5,7 @@
 import { calendarMonths, monthGrid } from "../domain/calendar";
 import { addDays, longDateWithYear } from "../domain/dates";
 import { MONTHLY_FROM_MAX_DAYS, STAY_MAX_DAYS } from "../domain/filters";
-import { tapRange, type RangeState } from "../domain/search";
+import { tapRange, type RangeState } from "../domain/range";
 
 const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
 

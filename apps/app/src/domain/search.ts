@@ -40,14 +40,7 @@ export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "
   return { count: housesCount(n), rest: monthly + place + (stay ? ` · ${stay}` : "") };
 }
 
-export interface RangeState { arrival: string | null; departure: string | null }
-
-/** Un toque en un día del calendario: primero la llegada, luego la salida (posterior); un día igual o anterior a la
- *  llegada la reemplaza, y con el rango completo se empieza de nuevo. */
-export function tapRange(s: RangeState, day: string): RangeState {
-  if (s.arrival && !s.departure && day > s.arrival) return { arrival: s.arrival, departure: day };
-  return { arrival: day, departure: null };
-}
+export { tapRange, type RangeState } from "./range";
 
 /** Noches entre dos fechas `YYYY-MM-DD`. */
 export function nightsBetween(arrival: string, departure: string): number {
