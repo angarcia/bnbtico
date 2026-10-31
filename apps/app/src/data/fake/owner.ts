@@ -3,6 +3,7 @@
 // valida con planStep, como el adaptador PostgREST. La edición de una casa publicada sigue las reglas de ./edits.
 import type { OwnerListingsApi } from "../../domain/api";
 import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
+import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
@@ -60,7 +61,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
   /** Como la RLS de select: solo las propias (también para el admin, porque listOwn filtra por dueño). */
   function own(id: string): FakeListing | undefined {
     const l = db.listings.get(id);
-    return l && l.ownerId === me() ? l : undefined;
+    return l && l.ownerId === me() && l.deletedAt === null ? l : undefined;
   }
 
   const toListing = (l: FakeListing): Listing => {
@@ -74,7 +75,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
     async listOwn() {
       const owner = me();
       return [...db.listings.values()]
-        .filter((l) => l.ownerId === owner)
+        .filter((l) => l.ownerId === owner && l.deletedAt === null)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map(toListing);
     },
@@ -86,14 +87,14 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
 
     async findResumable() {
       const owner = me();
-      const drafts = [...db.listings.values()].filter((l) => l.ownerId === owner && l.status === "draft" && l.reviewedAt === null);
+      const drafts = [...db.listings.values()].filter((l) => l.ownerId === owner && l.deletedAt === null && l.status === "draft" && l.reviewedAt === null);
       const newest = drafts.sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
       return newest ? toListing(newest) : null;
     },
 
     async createDraft() {
       const owner = me();
-      const open = [...db.listings.values()].filter((l) => l.ownerId === owner && l.status === "draft" && l.reviewedAt === null).length;
+      const open = [...db.listings.values()].filter((l) => l.ownerId === owner && l.deletedAt === null && l.status === "draft" && l.reviewedAt === null).length;
       if (open >= MAX_OPEN_DRAFTS) throw new DomainError(`Ya tiene ${MAX_OPEN_DRAFTS} borradores sin enviar. Termine o descarte uno antes de empezar otro.`, "validation");
       const l = db.insertListing(owner);
       return { id: l.id, publicId: l.publicId };
@@ -124,6 +125,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
     async setAvailable(id, available, reopenAt = null) {
       const l = own(id);
       if (!l) throw new DomainError(CALENDAR_MESSAGES.notActive, "validation");
+      if (l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
       const next = availabilityUpdate(l, available, reopenAt, db.today());
       if ("error" in next) throw new DomainError(next.error, "validation");
       touch(l, next);
@@ -167,7 +169,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       const since = Date.now() - 30 * 86_400_000;
       const recent = (rows: { publicId: string; at: string }[], publicId: string) => rows.filter((r) => r.publicId === publicId && Date.parse(r.at) > since).length;
       return [...db.listings.values()]
-        .filter((l) => l.ownerId === owner)
+        .filter((l) => l.ownerId === owner && l.deletedAt === null)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map((l) => ({
           listingId: l.id,

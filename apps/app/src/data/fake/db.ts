@@ -1,6 +1,7 @@
 // Base en memoria del fake: mismas tablas que importan a la app y las mismas reglas de visibilidad que la vista
 // listings_public y la función listing_link_state. Sirve a las pruebas unitarias, a la prueba HTTP del worker y a
 // la suite de contrato (que lo compara con PostgREST).
+import type { AdminHold } from "../../domain/admin-hold";
 import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/geo";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
@@ -41,7 +42,16 @@ export interface FakeListing extends Omit<ListingDraft, "photoCount"> {
   whatsappPhone: string;
   createdAt: string;
   updatedAt: string;
+  /** Pausada o bloqueada por el admin (admin_hold, admin_hold_reason) y desde cuándo (admin_hold_at). */
+  adminHold: AdminHold | null;
+  adminHoldAt: string | null;
+  /** Borrado lógico del admin (deleted_at, deleted_reason): para todos es como si no existiera. */
+  deletedAt: string | null;
+  deletedReason: string | null;
 }
+
+/** Lo que ve el público: activa, sin retención del admin y sin borrar (la vista listings_public). */
+export const isPublicListing = (l: Pick<FakeListing, "status" | "adminHold" | "deletedAt">) => l.status === "active" && l.adminHold === null && l.deletedAt === null;
 
 export interface FakePhoto {
   id: string;
@@ -175,6 +185,8 @@ export class FakeDb {
   /** Suscripción (fase 5): por casa, outbox de avisos, método de pago y cliente de la pasarela por propietario, eventos. */
   readonly subscriptions = new Map<string, FakeSubscription>();
   reminders: FakeReminder[] = [];
+  /** admin_actions de las acciones sobre casas (pausar, reanudar, bloquear, desbloquear, eliminar). */
+  adminActions: { action: string; listingId: string; reason: string | null }[] = [];
   readonly paymentMethods = new Map<string, FakePaymentMethod>();
   /** payment_customers: `${owner}|${provider}` → referencia del cliente. */
   readonly paymentCustomers = new Map<string, string>();
@@ -221,6 +233,10 @@ export class FakeDb {
       whatsappPhone: this.profiles.get(ownerId)?.phone ?? "",
       createdAt: at,
       updatedAt: at,
+      adminHold: null,
+      adminHoldAt: null,
+      deletedAt: null,
+      deletedReason: null,
       ...patch,
     };
     this.listings.set(listing.id, listing);
@@ -285,6 +301,7 @@ export class FakeDb {
     this.days.clear();
     this.subscriptions.clear();
     this.reminders = [];
+    this.adminActions = [];
     this.paymentMethods.clear();
     this.paymentCustomers.clear();
     this.paymentEvents.clear();

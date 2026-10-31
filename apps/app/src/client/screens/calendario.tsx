@@ -27,7 +27,7 @@ import {
   type CalendarDay,
   type Selection,
 } from "../../domain/calendar";
-import { can } from "../../domain/can";
+import { can, isBlocked } from "../../domain/can";
 import { ignoreTabBarScroll, showTabBar } from "../hiding-tabbar";
 import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
@@ -229,13 +229,15 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
     save.mutate({ change, previous });
   }
 
-  const editable = !closed && query.data !== undefined;
+  // Una casa bloqueada por bnbtico se ve, no se edita.
+  const blocked = isBlocked(l);
+  const editable = !closed && !blocked && query.data !== undefined;
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   return (
     <>
       {can(l, "available") ? <CloseRow listing={l} userId={userId} /> : null}
       <div className="row between gap-8 cal-hint-row">
-        {closed ? <span /> : <p className="small muted">Toque los días para editarlos</p>}
+        {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por bnbtico: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
         <CurrencySwitch />
       </div>
 

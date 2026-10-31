@@ -6,7 +6,7 @@
 // propietario.tsx y el asistente.
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { can } from "../../domain/can";
+import { can, isBlocked } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { EDIT_COPY, FIELD_ORDER, FIELD_TITLES, REVIEWED_FIELDS, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
 import { variantUrl } from "../../domain/image";
@@ -18,7 +18,7 @@ import { I } from "../../shared/icons";
 import { useBilling } from "../billing";
 import { useDiscardEditField } from "../edit";
 import { activityQuery } from "../owner";
-import { ActivateButton, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./propietario";
+import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./propietario";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -66,16 +66,17 @@ const ReviewTag = () => (
  *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar». */
 function FieldRow({ listing: l, field, userId }: { listing: Listing; field: FormField; userId: string }) {
   const e = l.edit;
+  const readOnly = isBlocked(l);
   const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
   const value = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field);
-  const tag = state ? (
+  const tag = readOnly ? null : state ? (
     <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
   ) : isReviewed(field) ? (
     <ReviewTag />
   ) : null;
-  const row = (
-    <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: field }} className="list-item">
+  const content = (
+    <>
       <span className="body">
         <span className="field-title">
           {FIELD_TITLES[field]}
@@ -83,9 +84,21 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
         </span>
         <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}`}>{value}</span>
       </span>
-      <span className="chev">
-        <I.chevron />
-      </span>
+      {readOnly ? null : (
+        <span className="chev">
+          <I.chevron />
+        </span>
+      )}
+    </>
+  );
+  // Bloqueada por bnbtico: se lee, no se toca.
+  const row = readOnly ? (
+    <div className="list-item" aria-disabled="true">
+      {content}
+    </div>
+  ) : (
+    <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: field }} className="list-item">
+      {content}
     </Link>
   );
   if (!state) return row;
@@ -155,7 +168,9 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
 function SubscriptionCard({ listing: l, sub, today }: { listing: Listing; sub: HouseSubscription; today: string }) {
   const line = subscriptionLine(sub, today);
   if (!line) return null;
-  const promo = sub.plan === "promo" && !!sub.promoEndsOn && (today <= sub.promoEndsOn || !sub.hasMethod);
+  // Bloqueada: la suscripción está parada y no se cobra.
+  const stopped = sub.hold === "blocked";
+  const promo = !stopped && sub.plan === "promo" && !!sub.promoEndsOn && (today <= sub.promoEndsOn || !sub.hasMethod);
   return (
     <section className="stack gap-8" data-testid="subscription-card">
       <h2 className="display offer-title">Suscripción</h2>
@@ -164,7 +179,7 @@ function SubscriptionCard({ listing: l, sub, today }: { listing: Listing; sub: H
           <span className="body">
             <span className="row gap-8">
               <b>{promo ? "Oferta de lanzamiento" : "Suscripción mensual"}</b>
-              <span className="badge badge-ok badge-tight xs">Al día</span>
+              {stopped ? <span className="badge badge-mute badge-tight xs">Parada</span> : <span className="badge badge-ok badge-tight xs">Al día</span>}
             </span>
             <small>
               <span data-testid="subscription-row">{line}</span>
@@ -195,30 +210,38 @@ function StoppedNotice({ listing: l }: { listing: Listing }) {
 export function EditableFicha({ listing: l, userId }: { listing: Listing; userId: string }) {
   const billing = useBilling(userId);
   const hb = billing?.of(l.id);
-  const onTop = l.status === "payment_due" || l.status === "inactive";
+  const blocked = isBlocked(l);
+  const onTop = !blocked && (l.status === "payment_due" || l.status === "inactive");
   const cover = l.photos[0];
   const label = cardLabel(l, l.edit);
   const shareUrl = shareOf(l).url.replace(/^https?:\/\//, "");
   return (
     <>
-      {l.status === "payment_due" ? hb && billing ? <PayNotice hb={hb} today={billing.today} /> : <PaymentDueNote listing={l} /> : null}
-      {l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
+      <HoldNotice listing={l} />
+      {onTop && l.status === "payment_due" ? hb && billing ? <PayNotice hb={hb} today={billing.today} /> : <PaymentDueNote listing={l} /> : null}
+      {onTop && l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
 
       <div className="photo detail-photo">
         {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
         <span className={`state ${label.cls}`}>{label.text}</span>
-        <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num">
-          {photoPill(l.photos.length, l.edit?.photos.length ?? 0)}
-        </Link>
+        {blocked ? (
+          <span className="pill photo-pill num">{photoPill(l.photos.length, l.edit?.photos.length ?? 0)}</span>
+        ) : (
+          <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num">
+            {photoPill(l.photos.length, l.edit?.photos.length ?? 0)}
+          </Link>
+        )}
       </div>
 
       {l.status === "active" ? <StatsCard listing={l} userId={userId} /> : null}
 
-      <p className="note note-arena">
-        <span>
-          Toque un dato para cambiarlo. Lo marcado con <ReviewTag /> lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.
-        </span>
-      </p>
+      {blocked ? null : (
+        <p className="note note-arena">
+          <span>
+            Toque un dato para cambiarlo. Lo marcado con <ReviewTag /> lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.
+          </span>
+        </p>
+      )}
 
       <section className="list" data-testid="field-rows">
         {FIELD_ORDER.map((field) => (

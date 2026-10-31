@@ -1,5 +1,6 @@
 // Fake en memoria de la suscripción (fase 5): las RPCs de fase5_suscripcion con los mismos mensajes
 // (SUBSCRIPTION_MESSAGES) y los estados de nextStatus del dominio. «Hoy» sale del reloj de la base (FakeDb.today()).
+import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import type { BillingServiceApi, OwnerBillingApi } from "../../domain/api";
 import { addDays } from "../../domain/calendar";
 import { DomainError } from "../../domain/errors";
@@ -60,7 +61,9 @@ export function createFakeOwnerBilling(db: FakeDb, opts: { userId: () => string 
 
   function transition(listingId: string, event: "stop" | "resume"): ListingStatus {
     const uid = me();
-    const l = db.listings.get(listingId);
+    const found = db.listings.get(listingId);
+    const l = found && found.deletedAt === null ? found : undefined;
+    if (l && l.ownerId === uid && l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
     const isOwner = l !== undefined && l.ownerId === uid;
     const accountActive = db.profiles.get(uid)?.isActive !== false;
     const sub = l ? db.subscriptions.get(l.id) : undefined;
@@ -87,7 +90,7 @@ export function createFakeOwnerBilling(db: FakeDb, opts: { userId: () => string 
     async overview() {
       const uid = me();
       const houses: BillingHouse[] = [...db.listings.values()]
-        .filter((l) => l.ownerId === uid && db.subscriptions.has(l.id))
+        .filter((l) => l.ownerId === uid && l.deletedAt === null && db.subscriptions.has(l.id))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map((l) => {
           const s = db.subscriptions.get(l.id)!;
@@ -103,6 +106,7 @@ export function createFakeOwnerBilling(db: FakeDb, opts: { userId: () => string 
             paidSince: s.paidSince,
             stoppedOn: s.stoppedOn,
             monthlyPriceCrc: s.monthlyPriceCrc,
+            hold: l.adminHold?.kind ?? null,
             reminders: db.reminders
               .filter((r) => r.listingId === l.id)
               .sort((a, b) => b.daysBefore - a.daysBefore)
@@ -124,9 +128,12 @@ export function createFakeOwnerBilling(db: FakeDb, opts: { userId: () => string 
 /** Plazas asignadas (launch_offer_taken): la más alta, porque una plaza no se reutiliza. */
 export const offerTaken = (db: FakeDb): number => Math.max(0, ...[...db.subscriptions.values()].map((s) => s.promoSlot ?? 0));
 
+/** Bloqueada o eliminada: su suscripción está parada (ni fin de oferta, ni avisos, ni cobro). */
+export const subscriptionFrozen = (l: Pick<FakeListing, "adminHold" | "deletedAt">) => l.adminHold?.kind === "blocked" || l.deletedAt !== null;
+
 /** Activa con oferta y sin método: la única casa que recibe avisos. */
 const awaitingMethod = (db: FakeDb, l: FakeListing, s: FakeSubscription | undefined) =>
-  l.status === "active" && s?.plan === "promo" && !hasMethod(db, l.ownerId);
+  l.status === "active" && !subscriptionFrozen(l) && s?.plan === "promo" && !hasMethod(db, l.ownerId);
 
 export function createFakeBillingService(db: FakeDb): BillingServiceApi {
   return {
@@ -136,7 +143,7 @@ export function createFakeBillingService(db: FakeDb): BillingServiceApi {
       let queued = 0;
       for (const l of db.listings.values()) {
         const s = db.subscriptions.get(l.id);
-        if (l.status !== "active" || s?.plan !== "promo" || !s.promoEndsOn || s.promoEndsOn >= today) continue;
+        if (l.status !== "active" || subscriptionFrozen(l) || s?.plan !== "promo" || !s.promoEndsOn || s.promoEndsOn >= today) continue;
         if (hasMethod(db, l.ownerId)) {
           Object.assign(s, { plan: "paid", paidSince: addDays(s.promoEndsOn, 1) });
           paid += 1;
@@ -251,7 +258,7 @@ export function createFakeBillingService(db: FakeDb): BillingServiceApi {
       });
       const today = db.today();
       for (const l of db.listings.values()) {
-        if (l.ownerId !== ownerId || l.status !== "payment_due") continue;
+        if (l.ownerId !== ownerId || l.status !== "payment_due" || subscriptionFrozen(l)) continue;
         const s = db.subscriptions.get(l.id);
         if (s) Object.assign(s, { plan: "paid", paidSince: s.paidSince ?? today });
         Object.assign(l, { status: statusOf(nextStatus("payment_due", "methodAdded", { promoRunning: false, hasMethod: true })), updatedAt: db.now() });

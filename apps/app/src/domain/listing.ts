@@ -10,6 +10,7 @@
 import type { LatLng } from "./geo";
 import type { ZoneSource } from "./zones";
 import type { ListingEdit } from "./edit";
+import type { AdminHold } from "./admin-hold";
 
 export type Kind = "completo" | "habitacion" | "casa" | "apartamento"; // casa/apartamento: filas anteriores al diseño v1
 export type Feature = "pool" | "pets" | "wifi" | "ac" | "parking" | "ev" | "kids_free" | "beachfront" | "bbq";
@@ -148,6 +149,8 @@ export interface Listing extends ListingDraft {
   photos: Photo[];
   /** La edición pendiente de una casa publicada (una como mucho); null = sin edición. */
   edit: ListingEdit | null;
+  /** Pausada o bloqueada por el admin (con su motivo); null = sin retención. Va aparte de `status`. */
+  adminHold: AdminHold | null;
 }
 
 export const emptyDraft = (): ListingDraft => ({

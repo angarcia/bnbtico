@@ -1,3 +1,16 @@
+## 2026-10-30 · Admin · Casas: pausar, bloquear y eliminar, y aviso manual por WhatsApp (Daniel)
+
+Spec `.scratch/admin-casas-acciones/spec.md`; migración `admin_casas_acciones`. «Casas» del admin deja de ser solo una lista: tocar una casa abre una hoja con sus datos y las acciones.
+
+- **No se toca `status`:** la retención son columnas aparte de `listings` (`admin_hold` = `paused` | `blocked`, `admin_hold_reason`, `admin_hold_at`; `deleted_at`, `deleted_reason`). Cinco RPCs con `is_admin()` (aal2), motivo obligatorio y registro en `admin_actions` (`listing.pause|resume|block|unblock|delete`); cada una purga la ficha del borde con `purge_listing_page`.
+- **Pausar** (Activa, Pendiente de pago o Inactiva): sale de `listings_public`, Explorar, zonas, sitemap, favoritos y consultas nuevas; el enlace da 410 («Este enlace ya no está activo», motivo genérico). El propietario la sigue viendo y editando, con «Pausada por bnbtico» y el motivo; la reanuda solo el admin. La suscripción no cambia.
+- **Bloquear:** igual para el público; el propietario ve «Bloqueada por bnbtico», el motivo y «Escribir a bnbtico» (WhatsApp de propietarios) y no edita nada (guardas en `listings_protect`, `own_published_listing`, fotos, calendario, disponibilidad, Storage y suscripción). **La suscripción se para:** se borran los avisos en cola, `run_subscription_day` y `claim_reminders` la ignoran, un método de pago nuevo no la activa y la app no pide pagar. **Al desbloquear** vuelve al estado en que estaba y el último día gratis de la oferta se corre tantos días como duró el bloqueo (la oferta no se consume bloqueada); si estaba pendiente de pago y ya hay método, se activa. De pausada se puede pasar a bloqueada; de bloqueada solo se desbloquea.
+- **Eliminar** (cualquier estado): borrado lógico, confirmado escribiendo el `CT-####`. Desaparece para todos, propietario y admin incluidos (RLS de `listings` con `deleted_at is null`; las tablas que cuelgan lo heredan; `owner_billing`, `owner_inquiries`, `owner_activity` y `open_drafts` lo filtran). Datos, fotos, consultas y favoritos se conservan; se recupera por SQL (`deleted_at = null` con `app.allow_status`). El enlace público da 404. La plaza de la oferta no se reutiliza.
+- **Sin aviso automático por WhatsApp** (decisión del dueño del producto): el admin avisa a mano con el botón **«Avisar a <nombre> por WhatsApp»**, que abre `wa.me` con un texto en usted (`domain/owner-notice.ts`): tras decidir una casa nueva (en el aviso de Anuncios), en el detalle de una casa ya decidida y en la hoja de una pausada o bloqueada. El texto de Anuncios pasa a «El propietario ve la decisión en Mis casas; avísele por WhatsApp con el botón.»
+- Colores: la retención no usa ocre (es solo dinero): pausada en el tono de «en revisión», bloqueada en rojo.
+- Presupuesto: la zona privada inicial queda en ~149,6 kB gzip; el trozo del admin y el de las pantallas del propietario suben (límites de `.size-limit.json` ajustados).
+- Copia: «Puede verlos en dólares desde Explorar.» (Cuenta no tiene selector ₡|$).
+
 ## 2026-10-30 · Barra de abajo que se esconde en toda la app, casas en tarjeta y «Mapa» (Ana y Daniel)
 
 Ronda de Ana del 2026-10-30 (grupos 1–3; `.scratch/ronda-ana-2026-10-30/`, ticket 01).

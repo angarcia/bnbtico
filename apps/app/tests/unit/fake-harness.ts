@@ -57,6 +57,13 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
       db.testClock = on;
       return was;
     },
+    async adminActions(listingId) {
+      return db.adminActions.filter((a) => a.listingId === listingId).map(({ action, reason }) => ({ action, reason }));
+    },
+    async backdateHold(listingId, days) {
+      const l = db.listings.get(listingId)!;
+      l.adminHoldAt = new Date(Date.parse(l.adminHoldAt!) - days * 86_400_000).toISOString();
+    },
     inquiries: (who) => createFakeInquiries(db, as(who)),
     favorites: (who) => createFakeFavorites(db, as(who)),
     calendar: (who) => createFakeCalendar(db, as(who)),

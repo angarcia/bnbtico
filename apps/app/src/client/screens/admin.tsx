@@ -2,8 +2,11 @@
 // abre. Se descarga al entrar (no está en el JS inicial). Las rutas exigen sesión aal2 (solo UX): quien manda es la base.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { CHIP_LABELS, HOUSE_BADGES, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { HOLD_COPY, HOLD_REASON_MAX, deleteConfirmMatches, holdReasonRefusal } from "../../domain/admin-actions";
+import { CHIP_LABELS, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, houseBadge, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
+import { PUBLISHED_STATUSES } from "../../domain/can";
 import { relativeDate } from "../../domain/dates";
 import type { MfaFactor } from "../../domain/api";
 import { describe, isNegotiable } from "../../domain/describe";
@@ -16,6 +19,8 @@ import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
 import { NO_PHOTOS_NOTE, REVIEW_NOTE_MAX, editNoteRefusal, queueBadge, reviewNoteRefusal, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
+import { toast } from "../../shared/toast";
+import { decidedNoticeKind, firstName, ownerNoticeUrl, type OwnerNoticeInput } from "../../domain/owner-notice";
 import { accountQuery } from "../account";
 import {
   adminEditQuery,
@@ -23,9 +28,11 @@ import {
   adminHousesQuery,
   adminListingQuery,
   adminQueueQuery,
+  HOUSE_ACTION_DONE,
   clearReviewOutcome,
   loadSecondFactor,
   useEditsWithPending,
+  useHouseAction,
   useQueueWithPending,
   useReview,
   lastInReview,
@@ -144,6 +151,7 @@ export function AnunciosScreen() {
           {outcome.kind === "failed" ? `No se guardó la decisión sobre «${outcome.title}»: ${outcome.text}` : `«${outcome.title}»: ${outcome.text}`}
         </p>
       ) : null}
+      {outcome?.notice ? <NoticeLink href={outcome.notice.href} name={outcome.notice.name} /> : null}
       {edits?.length ? (
         <section className="stack gap-12" aria-labelledby="ediciones-por-revisar">
           <h2 id="ediciones-por-revisar" className="small strong">
@@ -182,7 +190,7 @@ export function AnunciosScreen() {
           ))}
         </div>
       ) : null}
-      <p className="xs muted queue-foot">Las más antiguas primero. El propietario recibe la decisión por WhatsApp y la ve en Mis casas.</p>
+      <p className="xs muted queue-foot">Las más antiguas primero. El propietario ve la decisión en Mis casas; avísele por WhatsApp con el botón.</p>
     </>
   );
 }
@@ -242,11 +250,12 @@ const casasRoute = getRouteApi("/_tabs/_admin/admin/casas");
 
 export function CasasAdminScreen() {
   const { ver } = casasRoute.useSearch();
-  const chip: HouseChip = ver ?? "todas";
+  const chip: HouseChip = HOUSE_CHIPS.find((c) => c === ver) ?? "todas";
   const userId = useUserId();
   const isAdmin = useIsAdmin();
   const houses = useQuery({ ...adminHousesQuery(userId), enabled: !!userId && isAdmin !== false });
   const [query, setQuery] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   if (isAdmin === false) {
     return (
@@ -302,19 +311,32 @@ export function CasasAdminScreen() {
       {data && shown.length > 0 ? (
         <section className="list" aria-label="Casas">
           {shown.map((h) => (
-            <HouseRow key={h.listingId} house={h} today={data.today} />
+            <HouseRow key={h.listingId} house={h} today={data.today} onOpen={() => setOpenId(h.listingId)} />
           ))}
         </section>
       ) : null}
-      <p className="xs muted queue-foot">Toque una casa activa para ver su ficha; las demás abren su revisión.</p>
+      <p className="xs muted queue-foot">Toque una casa para ver sus datos y pausarla, bloquearla o eliminarla.</p>
+      {/* La hoja sigue a la lista: al terminar una acción la casa cambia (o desaparece, y la hoja se cierra). */}
+      {data && openId && data.houses.some((h) => h.listingId === openId) ? (
+        <HouseSheet house={data.houses.find((h) => h.listingId === openId)!} today={data.today} userId={userId} onClose={() => setOpenId(null)} />
+      ) : null}
     </>
   );
 }
 
-function HouseRow({ house: h, today }: { house: AdminHouse; today: string }) {
-  const badge = HOUSE_BADGES[h.status];
-  const body = (
-    <>
+/** «Avisar a <nombre> por WhatsApp»: abre wa.me con el aviso escrito; bnbtico no manda nada solo. */
+function NoticeLink({ href, name }: { href: string; name: string }) {
+  return (
+    <a className="btn btn-wa btn-block" href={href} target="_blank" rel="noopener" data-testid="notice-link">
+      Avisar a {name || "el propietario"} por WhatsApp
+    </a>
+  );
+}
+
+function HouseRow({ house: h, today, onOpen }: { house: AdminHouse; today: string; onOpen(): void }) {
+  const badge = houseBadge(h);
+  return (
+    <button type="button" className="list-item house-row" aria-haspopup="dialog" onClick={onOpen}>
       {h.cover ? <img src={variantUrl(h.cover, 480)} alt="" className="thumb house-thumb" width={56} height={56} loading="lazy" decoding="async" /> : <span className="thumb house-thumb" />}
       <span className="body stack house-body">
         <b className="house-title">{h.title || "Sin nombre"}</b>
@@ -322,16 +344,234 @@ function HouseRow({ house: h, today }: { house: AdminHouse; today: string }) {
         <small className="num">{adminHouseLine(h.subscription, today)}</small>
       </span>
       <span className={`badge badge-tight ${badge.badge}`}>{badge.label}</span>
-    </>
+    </button>
   );
-  return h.status === "active" ? (
-    <Link to="/casa/$publicId" params={{ publicId: h.publicId }} className="list-item house-row">
-      {body}
-    </Link>
-  ) : (
-    <Link to="/admin/anuncios/$id" params={{ id: h.listingId }} className="list-item house-row">
-      {body}
-    </Link>
+}
+
+// ---------- Detalle de una casa: pausar, bloquear y eliminar (spec .scratch/admin-casas-acciones) ----------
+type SheetMode = "detail" | "pause" | "block" | "delete";
+
+/** Lo que cada acción hace, dicho al admin antes de confirmarla. */
+const MODE_COPY: Record<Exclude<SheetMode, "detail">, { title: string; body: string; label: string; confirm: string; field: string }> = {
+  pause: {
+    title: "Pausar casa",
+    body: "Sale de Explorar y su enlace deja de funcionar. El propietario la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.",
+    label: "Motivo (lo verá el propietario)",
+    confirm: "Pausar casa",
+    field: "pause-reason",
+  },
+  block: {
+    title: "Bloquear casa",
+    body: "Igual para el público. El propietario verá el motivo y «Escribir a bnbtico», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.",
+    label: "Motivo (lo verá el propietario)",
+    confirm: "Bloquear casa",
+    field: "block-reason",
+  },
+  delete: {
+    title: "Eliminar casa",
+    body: "Desaparece para todos, también para su propietario y de los favoritos de los clientes. Los datos, fotos y consultas quedan guardados, ocultos. No hay «deshacer» en la app.",
+    label: "Motivo (queda en el registro)",
+    confirm: "Eliminar casa",
+    field: "delete-reason",
+  },
+};
+
+/** Hoja con los datos de la casa y las acciones según su estado. Portal a <body>, #root inerte y foco atrapado, como ConfirmSheet. */
+function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; today: string; userId: string; onClose(): void }) {
+  const [mode, setMode] = useState<SheetMode>("detail");
+  const [reason, setReason] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const sheet = useRef<HTMLElement>(null);
+  const act = useHouseAction(userId);
+  const badge = houseBadge(h);
+  const published = PUBLISHED_STATUSES.includes(h.status);
+  const visible = h.status === "active" && !h.hold;
+
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const root = document.getElementById("root");
+    document.documentElement.classList.add("sheet-open");
+    if (root) root.inert = true;
+    sheet.current?.focus();
+    return () => {
+      document.documentElement.classList.remove("sheet-open");
+      if (root) root.inert = false;
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, []);
+
+  function go(next: SheetMode) {
+    setMode(next);
+    setReason("");
+    setConfirm("");
+    setError(null);
+    act.reset();
+  }
+
+  function run(a: Parameters<typeof act.mutate>[0]) {
+    setError(null);
+    act.mutate(a, {
+      onSuccess: () => {
+        toast(HOUSE_ACTION_DONE[a.kind]);
+        // Pausar y bloquear dejan la hoja abierta: ahí está el botón para avisar al propietario por WhatsApp.
+        if (a.kind === "pause" || a.kind === "block") go("detail");
+        else onClose();
+      },
+      onError: (e) => setError(message(e)),
+    });
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (mode === "detail") return;
+    const refusal = holdReasonRefusal(reason);
+    if (refusal) return setError(refusal);
+    const base = { id: h.listingId, publicId: h.publicId, reason: reason.trim() };
+    run(mode === "delete" ? { kind: "delete", ...base, confirm } : { kind: mode, ...base });
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLElement>) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      return onClose();
+    }
+    if (e.key !== "Tab" || !sheet.current) return;
+    const items = Array.from(sheet.current.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], textarea, input"));
+    const [first, last] = [items[0], items[items.length - 1]];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet.current)) {
+      e.preventDefault();
+      last?.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first?.focus();
+    }
+  }
+
+  const pending = act.isPending;
+  const copy = mode === "detail" ? null : MODE_COPY[mode];
+  return createPortal(
+    <>
+      <div className="sheet-backdrop" onClick={onClose} />
+      <section ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-label={h.title || "Casa"} tabIndex={-1} onKeyDown={onKeyDown} data-testid="house-sheet">
+        <span className="grabber" aria-hidden="true" />
+        <div className="sheet-head">
+          <div>
+            <h2>{h.title || "Sin nombre"}</h2>
+            <span className="small muted num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</span>
+          </div>
+          <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>
+            <I.x size={20} />
+          </button>
+        </div>
+
+        {!copy ? (
+          <>
+            <div className="row gap-8">
+              <span className={`badge badge-tight ${badge.badge}`}>{badge.label}</span>
+              <span className="small num">{adminHouseLine(h.subscription, today)}</span>
+            </div>
+            {h.hold ? (
+              <p className="note note-arena small stack gap-4" data-testid="hold-note">
+                <b>{HOLD_COPY[h.hold.kind].title}</b>
+                <span>{h.hold.reason}</span>
+              </p>
+            ) : null}
+            {h.hold ? (
+              <NoticeLink
+                name={firstName(h.ownerName)}
+                href={ownerNoticeUrl(h.ownerPhone, { kind: h.hold.kind, ownerName: h.ownerName, title: h.title, publicId: h.publicId, origin: window.location.origin, note: h.hold.reason })}
+              />
+            ) : null}
+            <section className="list">
+              {visible ? (
+                <Link to="/casa/$publicId" params={{ publicId: h.publicId }} className="list-item" onClick={onClose}>
+                  <span className="body">Ver ficha pública</span>
+                  <span className="chev">
+                    <I.chevron />
+                  </span>
+                </Link>
+              ) : null}
+              <Link to="/admin/anuncios/$id" params={{ id: h.listingId }} className="list-item" onClick={onClose}>
+                <span className="body">Ver datos del anuncio</span>
+                <span className="chev">
+                  <I.chevron />
+                </span>
+              </Link>
+            </section>
+            {error ? (
+              <p className="note" role="alert">
+                {error}
+              </p>
+            ) : null}
+            {published ? (
+              <div className="stack gap-8">
+                {h.hold?.kind === "paused" ? (
+                  <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={() => run({ kind: "resume", id: h.listingId, publicId: h.publicId })}>
+                    Reanudar
+                  </button>
+                ) : null}
+                {h.hold?.kind === "blocked" ? (
+                  <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={() => run({ kind: "unblock", id: h.listingId, publicId: h.publicId })}>
+                    Desbloquear
+                  </button>
+                ) : null}
+                {!h.hold ? (
+                  <button type="button" className="btn btn-soft btn-block" onClick={() => go("pause")}>
+                    Pausar
+                  </button>
+                ) : null}
+                {h.hold?.kind !== "blocked" ? (
+                  <button type="button" className="btn btn-soft btn-block" onClick={() => go("block")}>
+                    Bloquear
+                  </button>
+                ) : null}
+              </div>
+            ) : (
+              <p className="small muted">Solo se pausa o se bloquea una casa publicada.</p>
+            )}
+            <button type="button" className="btn btn-danger-outline btn-block" onClick={() => go("delete")}>
+              Eliminar casa
+            </button>
+          </>
+        ) : (
+          <form onSubmit={submit} noValidate>
+            <h3>{copy.title}</h3>
+            <p className="small muted">{copy.body}</p>
+            <label htmlFor={copy.field}>
+              {copy.label}
+              <textarea
+                id={copy.field}
+                name="reason"
+                rows={3}
+                maxLength={HOLD_REASON_MAX}
+                value={reason}
+                onChange={(e) => setReason(e.currentTarget.value)}
+                aria-invalid={error && !reason.trim() ? true : undefined}
+              />
+            </label>
+            {mode === "delete" ? (
+              <label htmlFor="delete-confirm">
+                Para confirmar, escriba <b className="num">{h.publicId}</b>
+                <input id="delete-confirm" name="confirm" autoComplete="off" autoCapitalize="characters" value={confirm} onChange={(e) => setConfirm(e.currentTarget.value)} />
+              </label>
+            ) : null}
+            {error ? (
+              <p className="field-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <button type="submit" className={mode === "delete" ? "btn btn-danger btn-block" : "btn btn-primary btn-block"} disabled={pending || (mode === "delete" && !deleteConfirmMatches(h.publicId, confirm))}>
+              {copy.confirm}
+            </button>
+            <button type="button" className="btn btn-ghost btn-block" disabled={pending} onClick={() => go("detail")}>
+              Cancelar
+            </button>
+          </form>
+        )}
+      </section>
+    </>,
+    document.body,
   );
 }
 
@@ -450,6 +690,15 @@ function OwnerCard({ l, ownerName }: { l: Listing; ownerName: string }) {
   );
 }
 
+const noticeInput = (l: Listing, ownerName: string, kind: OwnerNoticeInput["kind"]): OwnerNoticeInput => ({
+  kind,
+  ownerName,
+  title: l.title,
+  publicId: l.publicId,
+  origin: window.location.origin,
+  note: l.reviewNote ?? "",
+});
+
 function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
   const { listing: l, ownerName } = item;
   const facts = factsLine(l);
@@ -478,6 +727,12 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
         <PriceLine l={l} />
       </div>
       <OwnerCard l={l} ownerName={ownerName} />
+      {l.status !== "review" && decidedNoticeKind(l.status) ? (
+        <NoticeLink
+          name={firstName(ownerName)}
+          href={ownerNoticeUrl(l.whatsappPhone, noticeInput(l, ownerName, decidedNoticeKind(l.status)!))}
+        />
+      ) : null}
       <section className="card stack gap-8 review-owner">
         <b className="small muted">Descripción</b>
         {l.description.trim() ? <p className="small listing-description">{l.description}</p> : <p className="small muted">Sin descripción</p>}

@@ -5,7 +5,7 @@ import { NO_PHOTOS_NOTE, REVIEW_MESSAGES, applyDecision, editNoteRefusal, queueB
 
 const item = (id: string, patch: Partial<Listing>): QueueItem => ({
   ownerName: "Ana",
-  listing: { ...emptyDraft(), id, publicId: `CT-${id}`, ownerId: "o", status: "review", available: true, reopenAt: null, reviewNote: null, reviewedAt: null, firstPublishedAt: null, edit: null, whatsappPhone: "", createdAt: "2026-10-01", updatedAt: "2026-10-01", photos: [], ...patch },
+  listing: { ...emptyDraft(), id, publicId: `CT-${id}`, ownerId: "o", status: "review", available: true, reopenAt: null, reviewNote: null, reviewedAt: null, firstPublishedAt: null, edit: null, adminHold: null, whatsappPhone: "", createdAt: "2026-10-01", updatedAt: "2026-10-01", photos: [], ...patch },
 });
 
 describe("revisión del admin", () => {

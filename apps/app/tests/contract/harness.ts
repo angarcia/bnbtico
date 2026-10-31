@@ -160,4 +160,8 @@ export interface SubscriptionHarness extends CalendarHarness {
   storedMethod(who: SeedOwner): Promise<{ customerRef: string; methodRef: string } | null>;
   /** Crea o borra el secreto bnbtico_test_clock de Vault; devuelve si estaba. */
   setTestClock(on: boolean): Promise<boolean>;
+  /** admin_actions de una casa, en el orden en que ocurrieron (como el servicio). */
+  adminActions(listingId: string): Promise<{ action: string; reason: string | null }[]>;
+  /** Adelanta `days` días el momento en que el admin retuvo la casa (admin_hold_at), como si hubiera pasado el tiempo. */
+  backdateHold(listingId: string, days: number): Promise<void>;
 }

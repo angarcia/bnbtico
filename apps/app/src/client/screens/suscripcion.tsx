@@ -153,7 +153,9 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
     ref.current.scrollIntoView({ block: "center" });
     ref.current.focus({ preventScroll: true });
   }, [target]);
-  const label = STATUS_LABELS[sub.status];
+  // Bloqueada por bnbtico: la suscripción está parada; no hay nada que pagar, parar ni reactivar.
+  const blocked = sub.hold === "blocked";
+  const label = blocked ? { label: "Bloqueada", badge: "badge-bad" } : STATUS_LABELS[sub.status];
   // «Pendiente de pago» ya lo dice la etiqueta: la línea solo sale cuando añade algo.
   const line = subscriptionLine(sub, today);
   const pay = payButtonDue(sub, today);
@@ -173,7 +175,7 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
       {sub.status === "active" ? <HouseFigures userId={userId} listingId={house.listingId} /> : null}
       {pay ? <PayNotice hb={hb} today={today} /> : null}
       {pay ? <PayButton publicId={house.publicId} /> : null}
-      {sub.status === "inactive" ? (
+      {sub.status === "inactive" && !blocked ? (
         <>
           <button type="button" className="btn btn-sun btn-block" disabled={change.isPending} onClick={() => {
               onAction();
@@ -191,14 +193,14 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           {message(change.error)}
         </p>
       ) : null}
-      {house.plan === "promo" && house.promoEndsOn ? (
+      {house.plan === "promo" && house.promoEndsOn && !blocked ? (
         <span className="xs muted">
           Avisos por WhatsApp: 90, 30 y 7 días antes y el último día.
           {sent.map((r) => ` Aviso ${REMINDER_LABEL[r.daysBefore]} enviado el ${shortDate(r.sentAt!.slice(0, 10), today)}.`).join("")}
         </span>
       ) : null}
       {/* «Parar suscripción» como texto, centrado y al final; la confirmación sigue igual (A2). */}
-      {sub.status === "active" || sub.status === "payment_due" ? (
+      {!blocked && (sub.status === "active" || sub.status === "payment_due") ? (
         <button type="button" className="btn-text sub-stop" disabled={change.isPending} onClick={() => setConfirming(true)}>
           Parar suscripción
         </button>

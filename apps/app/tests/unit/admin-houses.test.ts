@@ -1,6 +1,6 @@
 // Casas del admin (fase 5, ticket 07, diseño 23): chip de cada estado, recuentos, buscador y línea de suscripción.
 import { describe, expect, it } from "vitest";
-import { HOUSE_BADGES, adminHouseLine, countHouses, filterHouses, houseChip, type AdminHouse } from "../../src/domain/admin-houses";
+import { HOUSE_BADGES, adminHouseLine, chipOf, countHouses, filterHouses, houseBadge, houseChip, type AdminHouse } from "../../src/domain/admin-houses";
 import type { ListingStatus } from "../../src/domain/listing";
 import type { HouseSubscription } from "../../src/domain/subscription";
 
@@ -23,9 +23,11 @@ const house = (status: ListingStatus, patch: Partial<AdminHouse> = {}): AdminHou
   title: "Casa",
   status,
   ownerName: "Ana López",
+  ownerPhone: "+50688881234",
   zone: "Cocles",
   cover: null,
   subscription: sub({ status }),
+  hold: null,
   ...patch,
 });
 
@@ -73,8 +75,35 @@ describe("chips", () => {
 
   it("recuentos por chip", () => {
     const list = [house("active"), house("active"), house("payment_due"), house("inactive"), house("review")];
-    expect(countHouses(list)).toEqual({ todas: 5, activas: 2, "por-pagar": 1, inactivas: 1 });
-    expect(countHouses([])).toEqual({ todas: 0, activas: 0, "por-pagar": 0, inactivas: 0 });
+    expect(countHouses(list)).toEqual({ todas: 5, activas: 2, "por-pagar": 1, inactivas: 1, pausadas: 0, bloqueadas: 0 });
+    expect(countHouses([])).toEqual({ todas: 0, activas: 0, "por-pagar": 0, inactivas: 0, pausadas: 0, bloqueadas: 0 });
+  });
+
+  it("la retención del admin manda sobre el estado: una pausada o bloqueada no cuenta como activa", () => {
+    const paused = house("active", { hold: { kind: "paused", reason: "Fotos engañosas" } });
+    const blocked = house("payment_due", { hold: { kind: "blocked", reason: "Incumplimiento" } });
+    expect(chipOf(paused)).toBe("pausadas");
+    expect(chipOf(blocked)).toBe("bloqueadas");
+    expect(chipOf(house("inactive"))).toBe("inactivas");
+    expect(countHouses([house("active"), paused, blocked, house("active", { hold: { kind: "paused", reason: "x" } })])).toEqual({
+      todas: 4,
+      activas: 1,
+      "por-pagar": 0,
+      inactivas: 0,
+      pausadas: 2,
+      bloqueadas: 1,
+    });
+    expect(houseBadge(paused)).toEqual({ label: "Pausada", badge: "badge-review" });
+    expect(houseBadge(blocked)).toEqual({ label: "Bloqueada", badge: "badge-bad" });
+    expect(houseBadge(house("active"))).toEqual(HOUSE_BADGES.active);
+    expect(filterHouses([paused, blocked, house("active")], "pausadas", "").map((x) => x.listingId)).toEqual([paused.listingId]);
+    expect(filterHouses([paused, blocked, house("active")], "bloqueadas", "").map((x) => x.listingId)).toEqual([blocked.listingId]);
+    expect(filterHouses([paused, blocked, house("active")], "activas", "")).toHaveLength(1);
+  });
+
+  it("la línea de una bloqueada dice que la suscripción está parada", () => {
+    expect(adminHouseLine(sub({ hold: "blocked" }), TODAY)).toBe("Suscripción parada mientras esté bloqueada");
+    expect(adminHouseLine(sub({ hold: "paused" }), TODAY)).toBe("Gratis hasta 14 oct 2027");
   });
 
   it("insignias del diseño: Activa salvia, Por pagar ocre, Inactiva arena", () => {

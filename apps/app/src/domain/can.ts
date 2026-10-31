@@ -5,7 +5,7 @@ import type { Listing, ListingStatus } from "./listing";
 /** `available`: «Cerrar la casa hasta…» del Calendario; `share`: el enlace público solo funciona con la casa activa. */
 export type ListingAction = "edit" | "discard" | "submit" | "reopen" | "available" | "share";
 
-export function can(l: Pick<Listing, "status" | "reviewedAt">, action: ListingAction): boolean {
+export function can(l: Pick<Listing, "status" | "reviewedAt"> & { adminHold?: Listing["adminHold"] }, action: ListingAction): boolean {
   switch (action) {
     case "edit":
     case "submit":
@@ -16,10 +16,16 @@ export function can(l: Pick<Listing, "status" | "reviewedAt">, action: ListingAc
       // Una casa publicada ya no vuelve a borrador: se edita desde su ficha (editar-casa).
       return l.status === "changes" || l.status === "rejected";
     case "available":
+      // Bloqueada por el admin: de solo lectura (una pausada se sigue editando).
+      return l.status === "active" && l.adminHold?.kind !== "blocked";
     case "share":
-      return l.status === "active";
+      // El enlace de una casa pausada o bloqueada no funciona: no se ofrece compartirlo.
+      return l.status === "active" && !l.adminHold;
   }
 }
+
+/** Una casa bloqueada por el admin es de solo lectura para su propietario. */
+export const isBlocked = (l: { adminHold: Listing["adminHold"] }) => l.adminHold?.kind === "blocked";
 
 /** Estados de una casa publicada: los clientes la ven (o la vieron) y se cambia con la edición, no con el asistente. */
 export const PUBLISHED_STATUSES: readonly ListingStatus[] = ["active", "payment_due", "inactive"];

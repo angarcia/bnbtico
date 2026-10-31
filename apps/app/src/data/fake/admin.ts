@@ -1,17 +1,23 @@
 // Fake en memoria de la revisión del admin: mismas reglas y mensajes que la base. Admin = profiles.is_admin y sesión aal2
 // (is_admin() de la migración admin_aal2_y_purga); quien no es admin no ve nada; review_listing con sus comprobaciones.
+import { ADMIN_HOLD_MESSAGES as H, deleteConfirmMatches, holdReasonRefusal } from "../../domain/admin-actions";
 import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi, Session } from "../../domain/api";
 import { EDIT_MESSAGES } from "../../domain/edit-messages";
+import { addDays } from "../../domain/calendar";
 import { DomainError } from "../../domain/errors";
 import { MAX_PHOTOS, MIN_PHOTOS_TO_APPROVE, type Listing } from "../../domain/listing";
+import { PUBLISHED_STATUSES } from "../../domain/can";
 import { DECISION_STATUS, REVIEW_MESSAGES as M, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import { approveSubscription } from "./billing";
+import { costaRicaToday } from "../../domain/inquiry";
 import type { FakeDb, FakeListing } from "./db";
 import { editStore } from "./edits";
 
 type Access = "admin" | "mfa" | "none";
+
+const daysBetween = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 
 export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session: () => Session | null }): AdminListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
@@ -24,6 +30,25 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
     return s.aal === "aal2" ? "admin" : "mfa";
   }
   const mfa = () => new DomainError(M.mfaRequired, "forbidden");
+  /** Como la RLS: una casa eliminada no la lee nadie por REST. */
+  const live = () => [...db.listings.values()].filter((l) => l.deletedAt === null);
+
+  /** admin_house_for_action: admin con aal2 y casa que existe (no eliminada). Va antes que el motivo, como en SQL. */
+  function target(id: string) {
+    const a = access();
+    if (a === "none") throw new DomainError(M.adminOnly, "validation");
+    if (a === "mfa") throw mfa();
+    const l = db.listings.get(id);
+    if (!l || l.deletedAt !== null) throw new DomainError(M.notFound, "validation");
+    return l;
+  }
+  const reasonOf = (reason: string) => {
+    const refusal = holdReasonRefusal(reason);
+    if (refusal) throw new DomainError(refusal, "validation");
+    return reason.trim().slice(0, 2000);
+  };
+  const published = (l: FakeListing) => PUBLISHED_STATUSES.includes(l.status) && l.firstPublishedAt !== null;
+  const dropQueued = (listingId: string) => (db.reminders = db.reminders.filter((r) => !(r.listingId === listingId && r.status === "queued")));
 
   const toItem = (l: FakeListing): QueueItem => {
     const photos = fromPhotoRows(db.photosOf(l.id), url);
@@ -36,7 +61,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       const a = access();
       if (a === "none") return emptyQueue();
       if (a === "mfa") throw mfa();
-      const all = [...db.listings.values()];
+      const all = live();
       const items = all.filter((l) => l.status === "review" || l.status === "changes" || l.status === "rejected").map(toItem);
       return splitQueue(items, all.filter((l) => l.status === "active").length);
     },
@@ -46,7 +71,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (a === "none") return null;
       if (a === "mfa") throw mfa();
       const l = db.listings.get(id);
-      return l ? toItem(l) : null;
+      return l && l.deletedAt === null ? toItem(l) : null;
     },
 
     async editQueue() {
@@ -54,7 +79,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (a === "none") return [];
       if (a === "mfa") throw mfa();
       return editQueueOrder(
-        [...db.edits.keys()].map((id) => toItem(db.listings.get(id)!)).filter((item) => item.listing.edit?.status === "review"),
+        [...db.edits.keys()].filter((id) => db.listings.get(id)!.deletedAt === null).map((id) => toItem(db.listings.get(id)!)).filter((item) => item.listing.edit?.status === "review"),
       );
     },
 
@@ -63,7 +88,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (a === "none") return null;
       if (a === "mfa") throw mfa();
       const l = db.listings.get(id);
-      return l && db.edits.has(id) ? toItem(l) : null;
+      return l && l.deletedAt === null && db.edits.has(id) ? toItem(l) : null;
     },
 
     /** review_edit_field: aprobar copia el dato a la casa (sin tocar estado, suscripción ni first_published_at) y lo quita de
@@ -115,7 +140,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       const a = access();
       if (a === "none") return { houses: [], today };
       if (a === "mfa") throw mfa();
-      const houses = [...db.listings.values()]
+      const houses = live()
         .flatMap((l) => {
           const sub = db.subscriptions.get(l.id);
           if (!sub) return [];
@@ -126,6 +151,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
             title: l.title,
             status: l.status,
             ownerName: db.profiles.get(l.ownerId)?.fullName ?? "",
+            ownerPhone: l.whatsappPhone,
             zone: l.zone,
             cover,
             subscription: {
@@ -136,13 +162,68 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
               stoppedOn: sub.stoppedOn,
               monthlyPriceCrc: sub.monthlyPriceCrc,
               hasMethod: db.paymentMethods.has(l.ownerId),
+              hold: l.adminHold?.kind ?? null,
             },
+            hold: l.adminHold,
           };
           return [{ house, at: l.firstPublishedAt ?? "" }];
         })
         .sort((x, y) => (x.at < y.at ? 1 : x.at > y.at ? -1 : 0))
         .map((x) => x.house);
       return { houses, today };
+    },
+
+    async pauseListing(id, reason) {
+      const text = reasonOf(reason);
+      const l = target(id);
+      if (!published(l)) throw new DomainError(H.notPublished, "validation");
+      if (l.adminHold?.kind === "blocked") throw new DomainError(H.blockedFirst, "validation");
+      if (l.adminHold?.kind === "paused") throw new DomainError(H.alreadyPaused, "validation");
+      Object.assign(l, { adminHold: { kind: "paused", reason: text }, adminHoldAt: new Date(db.clock()).toISOString() });
+      db.adminActions.push({ action: "listing.pause", listingId: l.id, reason: text });
+    },
+
+    async resumeListing(id) {
+      const l = target(id);
+      if (l.adminHold?.kind !== "paused") throw new DomainError(H.notPaused, "validation");
+      Object.assign(l, { adminHold: null, adminHoldAt: null });
+      db.adminActions.push({ action: "listing.resume", listingId: l.id, reason: null });
+    },
+
+    async blockListing(id, reason) {
+      const text = reasonOf(reason);
+      const l = target(id);
+      if (!published(l)) throw new DomainError(H.notPublished, "validation");
+      if (l.adminHold?.kind === "blocked") throw new DomainError(H.alreadyBlocked, "validation");
+      Object.assign(l, { adminHold: { kind: "blocked", reason: text }, adminHoldAt: new Date(db.clock()).toISOString() });
+      dropQueued(l.id);
+      db.adminActions.push({ action: "listing.block", listingId: l.id, reason: text });
+    },
+
+    /** admin_unblock_listing: la oferta gratuita no se consume mientras estuvo bloqueada, y una pendiente de pago cuyo
+     *  propietario puso método mientras tanto se activa. */
+    async unblockListing(id) {
+      const l = target(id);
+      if (l.adminHold?.kind !== "blocked") throw new DomainError(H.notBlocked, "validation");
+      const sub = db.subscriptions.get(l.id);
+      const today = db.today();
+      const days = Math.max(0, daysBetween(costaRicaToday(Date.parse(l.adminHoldAt!)), today));
+      if (sub?.plan === "promo" && sub.promoEndsOn) sub.promoEndsOn = addDays(sub.promoEndsOn, days);
+      if (l.status === "payment_due" && db.paymentMethods.has(l.ownerId)) {
+        if (sub) Object.assign(sub, { plan: "paid", paidSince: sub.paidSince ?? today });
+        l.status = "active";
+      }
+      Object.assign(l, { adminHold: null, adminHoldAt: null, updatedAt: db.now() });
+      db.adminActions.push({ action: "listing.unblock", listingId: l.id, reason: null });
+    },
+
+    async deleteListing(id, reason, confirm) {
+      const text = reasonOf(reason);
+      const l = target(id);
+      if (!deleteConfirmMatches(l.publicId, confirm)) throw new DomainError(H.confirmCode, "validation");
+      Object.assign(l, { deletedAt: db.now(), deletedReason: text });
+      dropQueued(l.id);
+      db.adminActions.push({ action: "listing.delete", listingId: l.id, reason: text });
     },
 
     async review(id, decision, note) {

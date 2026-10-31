@@ -4,7 +4,7 @@
 import type { FavoritesApi, InquiriesApi } from "../../domain/api";
 import { DomainError } from "../../domain/errors";
 import { INQUIRY_MESSAGES as M, costaRicaToday, validateInquiryDraft } from "../../domain/inquiry";
-import type { FakeDb, FakeListing } from "./db";
+import { isPublicListing, type FakeDb, type FakeListing } from "./db";
 
 const DAY = 86_400_000;
 const DEDUP_MS = 7 * DAY;
@@ -34,7 +34,7 @@ function clock(db: FakeDb, now: () => number): () => number {
 
 const published = (db: FakeDb, publicId: string): FakeListing | undefined => {
   const l = db.byPublicId(publicId);
-  return l && l.status === "active" ? l : undefined;
+  return l && isPublicListing(l) ? l : undefined;
 };
 
 export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
@@ -76,7 +76,7 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
     async listForOwner() {
       const uid = session(opts);
       return db.inquiries
-        .filter((i) => i.ownerId === uid)
+        .filter((i) => i.ownerId === uid && db.listings.get(i.listingId)!.deletedAt === null)
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id))
         .slice(0, 200)
         .map((i) => {
@@ -129,7 +129,7 @@ export function createFakeFavorites(db: FakeDb, opts: Opts): FavoritesApi {
         .filter((f) => f.userId === uid)
         .flatMap((f) => {
           const l = db.listings.get(f.listingId);
-          return l && l.status === "active" ? [{ publicId: l.publicId, savedAt: f.createdAt }] : [];
+          return l && isPublicListing(l) ? [{ publicId: l.publicId, savedAt: f.createdAt }] : [];
         })
         .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
     },

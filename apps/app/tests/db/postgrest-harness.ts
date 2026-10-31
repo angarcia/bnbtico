@@ -128,6 +128,14 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       if (on) sql("select vault.create_secret('on', 'bnbtico_test_clock')");
       return was;
     },
+    async adminActions(listingId) {
+      const { data, error } = await service.from("admin_actions").select("action, reason").eq("target_listing_id", listingId).like("action", "listing.%").not("action", "in", "(listing.approve,listing.changes,listing.reject)").order("created_at", { ascending: true });
+      fail("acciones del admin", error);
+      return data!;
+    },
+    async backdateHold(listingId, days) {
+      sql(`begin; select set_config('app.allow_status','on',true); update public.listings set admin_hold_at = admin_hold_at - interval '${days} days' where id = '${listingId}'; commit;`);
+    },
     inquiries: (who) => createPostgrestInquiries(who === "anon" ? anon : owners[who]),
     favorites: (who) => createPostgrestFavorites(who === "anon" ? anon : owners[who]),
     calendar: (who) => createPostgrestCalendar(who === "anon" ? anon : owners[who]),

@@ -115,6 +115,9 @@ a{color:var(--primary)}
 /* Los secundarios de contorno pasan a verde tonal, como «Ver más» (Daniel, 2026-10-29): sin borde. */
 .btn-ghost,.btn-outline{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
 .btn-outline-bad{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
+/* Eliminar casa (admin): contorno rojo, sin relleno; confirmado, relleno rojo. */
+.btn-danger-outline{background:transparent;border:1.5px solid var(--bad);color:var(--bad)}
+.btn-danger{background:var(--bad);color:var(--bg)}
 .btn-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)}
 .btn-wa{background:var(--wa);color:var(--wa-ink);min-height:56px;border-radius:var(--r-cta);font-family:var(--display);font-weight:var(--w-medium);font-size:18px;width:100%}
 .btn-lg{min-height:52px;font-size:18px;font-family:var(--display)}

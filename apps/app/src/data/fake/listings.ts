@@ -10,7 +10,7 @@ import { addDays } from "../../domain/dates";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
 import { offerTaken } from "./billing";
-import { approxPoint, type FakeDb, type FakeListing } from "./db";
+import { approxPoint, isPublicListing, type FakeDb, type FakeListing } from "./db";
 import { FAKE_ZONES, fakeCantonOf } from "./places";
 
 export const SEARCH_LIMIT = 60;
@@ -18,7 +18,7 @@ export const SITEMAP_LIMIT = 1000;
 
 export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): PublicListingsApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
-  const active = () => [...db.listings.values()].filter((l) => l.status === "active");
+  const active = () => [...db.listings.values()].filter(isPublicListing);
 
   function toPublic(l: FakeListing): PublicListing {
     const owner = db.profiles.get(l.ownerId);
@@ -57,8 +57,8 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
 
   function linkState(publicId: string): LinkState {
     const l = db.byPublicId(publicId);
-    if (!l) return null;
-    if (l.status === "active") return "active";
+    if (!l || l.deletedAt !== null) return null;
+    if (isPublicListing(l)) return "active";
     if (l.status === "draft" && l.reviewedAt === null) return null;
     return "blocked";
   }
@@ -109,7 +109,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
 
     async getPublic(publicId) {
       const l = db.byPublicId(publicId);
-      return l && l.status === "active" ? toPublic(l) : null;
+      return l && isPublicListing(l) ? toPublic(l) : null;
     },
 
     async getManyPublic(publicIds) {
@@ -132,7 +132,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
 
     async getPublicDays(publicId) {
       const l = db.byPublicId(publicId);
-      if (!l || l.status !== "active") return [];
+      if (!l || !isPublicListing(l)) return [];
       const { first, last } = calendarWindow(db.today());
       return (db.days.get(l.id) ?? []).filter((d) => d.day >= first && d.day <= last).map((d) => ({ ...d }));
     },
@@ -148,7 +148,9 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
 
     async blockedReason(publicId) {
       if (linkState(publicId) !== "blocked") return null;
-      const status = db.byPublicId(publicId)!.status;
+      const house = db.byPublicId(publicId)!;
+      if (house.adminHold) return "other";
+      const status = house.status;
       return status === "inactive" ? "stopped" : status === "payment_due" ? "payment" : "other";
     },
 

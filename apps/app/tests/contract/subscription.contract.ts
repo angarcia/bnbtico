@@ -74,6 +74,7 @@ export function subscriptionContract(name: string, makeHarness: () => Promise<Su
           paidSince: null,
           stoppedOn: null,
           monthlyPriceCrc: MONTHLY_FEE_CRC,
+          hold: null,
           reminders: [],
         });
         expect(await mine(b.id)).toMatchObject({ promoSlot: 51, promoMonths: 6, promoEndsOn: promoEndsOn(today(), 6), status: "active" });

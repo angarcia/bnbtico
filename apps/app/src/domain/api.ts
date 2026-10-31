@@ -188,6 +188,21 @@ export interface AdminListingsApi {
    * propietario, zona, portada y suscripción; la aprobada más recientemente primero. Sin ser admin, lista vacía.
    */
   houses(): Promise<AdminHouses>;
+  /**
+   * Pausar, bloquear y eliminar una casa (spec .scratch/admin-casas-acciones). Motivo obligatorio (holdReasonRefusal);
+   * todo queda en admin_actions y la ficha se purga del borde al momento. Mensajes de ADMIN_HOLD_MESSAGES.
+   * - pauseListing (RPC admin_pause_listing): casa publicada (Activa, Pendiente de pago, Inactiva); sale del público y el
+   *   propietario la sigue editando; la suscripción no cambia.
+   * - resumeListing: quita la pausa.
+   * - blockListing: igual para el público, el propietario no la edita y la suscripción se para (sin avisos ni fin de oferta).
+   * - unblockListing: la deja como estaba y corre la oferta gratuita los días que duró el bloqueo.
+   * - deleteListing: borrado lógico en cualquier estado; `confirm` es el `CT-####` de la casa.
+   */
+  pauseListing(listingId: string, reason: string): Promise<void>;
+  resumeListing(listingId: string): Promise<void>;
+  blockListing(listingId: string, reason: string): Promise<void>;
+  unblockListing(listingId: string): Promise<void>;
+  deleteListing(listingId: string, reason: string, confirm: string): Promise<void>;
 }
 
 /**

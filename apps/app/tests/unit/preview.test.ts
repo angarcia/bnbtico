@@ -14,7 +14,7 @@ const draft = (patch: Partial<Listing> = {}): Listing => ({
   reviewNote: null,
   reviewedAt: null,
   firstPublishedAt: null,
-  edit: null,
+  edit: null, adminHold: null,
   whatsappPhone: "+50687770001",
   createdAt: "2026-10-01",
   updatedAt: "2026-10-02",

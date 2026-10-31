@@ -2,6 +2,7 @@
 // save_edit, listing_edit_check y update_listing_live, en su orden y con sus mensajes. Las usan el fake del propietario,
 // el de las fotos y el del admin. También la ubicación por punto de submit_listing (locationOf), que comparten el envío
 // de un borrador y el de una edición.
+import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { EDIT_MESSAGES, editedFields, editOverview, LIVE_KEYS, type EditPatch, type ListingEdit, type LivePatch, type ReviewedField } from "../../domain/edit";
 import { DomainError } from "../../domain/errors";
 import {
@@ -106,7 +107,8 @@ export function editStore(db: FakeDb) {
     /** own_published_listing: mía y publicada (aprobada alguna vez y activa, pendiente de pago o inactiva). */
     published(listingId: string, owner: string): FakeListing {
       const l = db.listings.get(listingId);
-      if (!l || l.ownerId !== owner) throw new DomainError(NOT_FOUND, "not_found");
+      if (!l || l.ownerId !== owner || l.deletedAt !== null) throw new DomainError(NOT_FOUND, "not_found");
+      if (l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
       if (!(["active", "payment_due", "inactive"].includes(l.status) && l.firstPublishedAt !== null)) throw invalid(EDIT_MESSAGES.notPublished);
       return l;
     },

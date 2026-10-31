@@ -22,7 +22,7 @@ function owned(over: Partial<Listing> = {}): Listing {
     createdAt: "2026-10-18T10:00:00Z",
     updatedAt: "2026-10-21T10:00:00Z",
     photos: [],
-    edit: null,
+    edit: null, adminHold: null,
     kind: "completo",
     zone: "Manzanillo",
     province: "Limón",

@@ -9,6 +9,7 @@ import { editOverview } from "../domain/edit-label";
 import type { ReviewedField } from "../domain/edit-summary";
 import { toDomainError } from "../domain/errors";
 import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
+import { ownerNoticeUrl, firstName } from "../domain/owner-notice";
 import { authApi } from "./session";
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
@@ -45,7 +46,8 @@ export const adminListingQuery = (userId: string, id: string, client: QueryClien
 };
 
 // ---------- Resultado de la última decisión (lo muestra la cola, adonde se vuelve al decidir) ----------
-export type ReviewOutcome = { kind: "saved" | "failed"; title: string; text: string } | null;
+/** `notice`: el botón «Avisar a <nombre> por WhatsApp» con el wa.me ya escrito (solo si se guardó). */
+export type ReviewOutcome = { kind: "saved" | "failed"; title: string; text: string; notice?: { name: string; href: string } } | null;
 let outcome: ReviewOutcome = null;
 const outcomeListeners = new Set<() => void>();
 const setOutcome = (o: ReviewOutcome) => {
@@ -105,7 +107,18 @@ export function useReview(userId: string) {
       client.setQueryData<QueueItem | null>(itemKey(id), (i) =>
         i ? { ...i, listing: { ...i.listing, status: DECISION_STATUS[decision], reviewNote: note.trim() || null, reviewedAt: at } } : i,
       );
-      setOutcome({ kind: "saved", title: item.listing.title, text: SAVED[decision] });
+      const notice = {
+        name: firstName(item.ownerName),
+        href: ownerNoticeUrl(item.listing.whatsappPhone, {
+          kind: decision,
+          ownerName: item.ownerName,
+          title: item.listing.title,
+          publicId: item.listing.publicId,
+          origin: window.location.origin,
+          note,
+        }),
+      };
+      setOutcome({ kind: "saved", title: item.listing.title, text: SAVED[decision], notice });
       return previous;
     },
     onError: (error, { item }, previous) => {
@@ -120,6 +133,51 @@ export function useReview(userId: string) {
       void client.invalidateQueries({ queryKey: ["listings"] });
       void client.invalidateQueries({ queryKey: ["offer-taken"] });
       void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
+    },
+  });
+}
+
+// ---------- Pausar, bloquear y eliminar (spec .scratch/admin-casas-acciones) ----------
+export type HouseAction =
+  | { kind: "pause" | "block"; id: string; publicId: string; reason: string }
+  | { kind: "resume" | "unblock"; id: string; publicId: string }
+  | { kind: "delete"; id: string; publicId: string; reason: string; confirm: string };
+
+/** Lo que dice la lista al terminar la acción. */
+export const HOUSE_ACTION_DONE: Record<HouseAction["kind"], string> = {
+  pause: "Casa pausada",
+  resume: "Casa reanudada",
+  block: "Casa bloqueada",
+  unblock: "Casa desbloqueada",
+  delete: "Casa eliminada",
+};
+
+/** Una acción del admin sobre una casa: sin optimismo (el motivo y el código los comprueba la base), y al terminar se piden de
+ *  nuevo la lista, la cola y lo público de esa casa (la base ya purgó la ficha del borde). */
+export function useHouseAction(userId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (a: HouseAction): Promise<void> => {
+      const api = await adminApi();
+      switch (a.kind) {
+        case "pause":
+          return api.pauseListing(a.id, a.reason);
+        case "block":
+          return api.blockListing(a.id, a.reason);
+        case "resume":
+          return api.resumeListing(a.id);
+        case "unblock":
+          return api.unblockListing(a.id);
+        case "delete":
+          return api.deleteListing(a.id, a.reason, a.confirm);
+      }
+    },
+    onSettled: (_data, _error, a) => {
+      void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
+      void client.invalidateQueries({ queryKey: adminQueueQuery(userId).queryKey });
+      void client.invalidateQueries({ queryKey: ["listing", a.publicId] });
+      void client.invalidateQueries({ queryKey: ["listings"] });
+      void client.invalidateQueries({ queryKey: ["offer-taken"] });
     },
   });
 }

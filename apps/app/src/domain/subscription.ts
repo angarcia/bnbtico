@@ -2,6 +2,7 @@
 // estados (la misma que replican el SQL de fase5_suscripcion y el fake) y los textos de las pantallas y de WhatsApp.
 // Fechas como `YYYY-MM-DD` de Costa Rica (costaRicaToday): «hoy» llega siempre como argumento.
 // La tarifa sale de MONTHLY_FEE_CRC (₡2 900 desde la decisión del 2026-10-27; la especificación aún decía ₡9 900).
+import type { HoldKind } from "./admin-hold";
 import { longDate } from "./dates";
 import type { ListingStatus } from "./listing";
 import { formatCRC } from "./money";
@@ -30,6 +31,8 @@ export interface HouseSubscription {
   monthlyPriceCrc: number;
   /** El propietario tiene método de pago (uno por cuenta, vale para todas sus casas). */
   hasMethod: boolean;
+  /** Retención del admin: `blocked` para la suscripción (sin cobro ni avisos mientras dure); `paused` no la toca. */
+  hold?: HoldKind | null;
 }
 
 /** Mensajes de las RPCs de fase5_suscripcion, repetidos tal cual en la migración y en el fake. */
@@ -148,12 +151,13 @@ export function nextStatus(current: ListingStatus, event: SubscriptionEvent, ctx
 
 /** «Añadir método de pago» (en todas las vistas): sin método y pendiente de pago, o activa dentro de los 90 días. */
 export function payButtonDue(sub: HouseSubscription, today: string): boolean {
-  if (sub.hasMethod) return false;
+  if (sub.hasMethod || sub.hold === "blocked") return false;
   return sub.status === "payment_due" || (sub.status === "active" && reminderDaysLeft(sub, today) !== null);
 }
 
 /** Línea de la suscripción en las tarjetas y en Cuenta; null en borradores, con cambios pedidos o rechazadas. */
 export function subscriptionLine(sub: HouseSubscription, today: string): string | null {
+  if (sub.hold === "blocked") return BLOCKED_LINE;
   switch (sub.status) {
     case "review":
       return `En revisión · ${formatCRC(0)}`;
@@ -171,6 +175,9 @@ export function subscriptionLine(sub: HouseSubscription, today: string): string 
       return null;
   }
 }
+
+/** La línea de una casa bloqueada por el admin: la suscripción está parada y no se cobra. */
+export const BLOCKED_LINE = "Parada mientras la casa esté bloqueada · no se cobra";
 
 const FEE_LINE = () => `${formatCRC(MONTHLY_FEE_CRC)} al mes por casa, sin permanencia`;
 
@@ -226,11 +233,11 @@ function nextChargeDay(sub: HouseSubscription, today: string): string | null {
 export function nextCharge(houses: readonly HouseSubscription[], method: object | null, today: string): string {
   if (!method) {
     // En plena oferta no hay nada que cobrar: hasta cuándo (revisión UX 2026-10-29, C5), no «₡0 · sin método de pago».
-    const ends = houses.filter((h) => h.status === "active" && promoRunning(h, today)).map((h) => h.promoEndsOn!);
+    const ends = houses.filter((h) => h.status === "active" && h.hold !== "blocked" && promoRunning(h, today)).map((h) => h.promoEndsOn!);
     if (ends.length) return `Nada hasta el ${cardDate(ends.reduce((a, b) => (b < a ? b : a)))}`;
     return `${formatCRC(0)} · sin método de pago`;
   }
-  const due = houses.filter((h) => h.status === "active").map((h) => ({ h, day: nextChargeDay(h, today) })).filter((x): x is { h: HouseSubscription; day: string } => x.day !== null);
+  const due = houses.filter((h) => h.status === "active" && h.hold !== "blocked").map((h) => ({ h, day: nextChargeDay(h, today) })).filter((x): x is { h: HouseSubscription; day: string } => x.day !== null);
   if (!due.length) return `${formatCRC(0)} · ninguna casa activa`;
   const first = due.reduce((min, x) => (x.day < min ? x.day : min), due[0]!.day);
   const total = due.filter((x) => x.day === first).reduce((sum, x) => sum + x.h.monthlyPriceCrc, 0);
@@ -256,6 +263,8 @@ export interface BillingHouse {
   /** Día (Costa Rica) en que el propietario la paró; null si no está parada. */
   stoppedOn: string | null;
   monthlyPriceCrc: number;
+  /** Retención del admin (la RPC owner_billing la trae): null sin ella. */
+  hold?: HoldKind | null;
   /** Avisos de fin de oferta de esta casa, del umbral más alto al más bajo. */
   reminders: { daysBefore: ReminderDays; status: ReminderStatus; sentAt: string | null }[];
 }
@@ -287,6 +296,7 @@ export function houseSubscription(house: BillingHouse, method: PaymentMethodSumm
     stoppedOn: house.stoppedOn,
     monthlyPriceCrc: house.monthlyPriceCrc,
     hasMethod: method !== null,
+    hold: house.hold ?? null,
   };
 }
 

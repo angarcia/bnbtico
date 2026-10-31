@@ -1,6 +1,7 @@
 // Fake en memoria de las fotos: Storage simulado (FakeDb.objects) con la política de la base (casa propia en borrador o
 // con cambios, o publicada sin edición en revisión; nombres conocidos, 45 objetos por carpeta) y las RPCs add/remove/reorder
 // (y las de fotos nuevas de una edición, con las reglas de editStore) con sus mensajes.
+import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { UPLOAD_FAILED_MESSAGE, type PhotosApi } from "../../domain/api";
 import { createLimiter } from "../../domain/concurrency";
 import { DomainError } from "../../domain/errors";
@@ -39,13 +40,14 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
   /** listing_photo_uploadable: editable, o publicada (cada foto nueva va a revisión por su cuenta). */
   const uploadable = (listingId: string) => {
     const l = db.listings.get(listingId);
-    return editable(listingId) || (!!l && l.ownerId === opts.userId() && isPublished(l));
+    return editable(listingId) || (!!l && l.ownerId === opts.userId() && isPublished(l) && l.deletedAt === null && l.adminHold?.kind !== "blocked");
   };
 
   /** listing_photos_guard: añadir fotos aprobadas, solo en borrador o con cambios. */
   function guard(listingId: string) {
     const l = db.listings.get(listingId);
-    if (!l || l.ownerId !== me()) throw new DomainError(NOT_FOUND, "not_found");
+    if (!l || l.ownerId !== me() || l.deletedAt !== null) throw new DomainError(NOT_FOUND, "not_found");
+    if (l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
     if (isPublished(l)) throw new DomainError(EDIT_MESSAGES.newPhotosReviewed, "validation");
     if (l.status !== "draft" && l.status !== "changes") throw new DomainError(FROZEN, "validation");
   }
@@ -53,7 +55,8 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
   /** listing_photos_owner_guard: quitar y ordenar, también en una casa publicada. Devuelve si lo está. */
   function ownerGuard(listingId: string): boolean {
     const l = db.listings.get(listingId);
-    if (!l || l.ownerId !== me()) throw new DomainError(NOT_FOUND, "not_found");
+    if (!l || l.ownerId !== me() || l.deletedAt !== null) throw new DomainError(NOT_FOUND, "not_found");
+    if (l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
     if (isPublished(l)) return true;
     if (l.status !== "draft" && l.status !== "changes") throw new DomainError(FROZEN, "validation");
     return false;

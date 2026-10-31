@@ -241,7 +241,7 @@ function FiltrosForm({
             <span className="xs muted" id="f-price-help">
               {currency === "USD"
                 ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.`
-                : `En colones (${symbol}). Puede verlos en dólares desde Explorar o Cuenta.`}
+                : `En colones (${symbol}). Puede verlos en dólares desde Explorar.`}
             </span>
             {badRange ? (
               <p className="field-error" role="alert">

@@ -2,6 +2,8 @@
 // solo deja ver lo ajeno a un admin en aal2 (is_admin()) y review_listing lo vuelve a exigir. Aquí solo se distingue, para
 // la interfaz, «no es admin» (nada, en vez de sus propias casas, que la RLS sí le deja leer) de «falta el segundo código».
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ADMIN_HOLD_MESSAGES as H, holdReasonRefusal } from "../../domain/admin-actions";
+import { holdFromRow } from "../../domain/admin-hold";
 import type { AdminHouse } from "../../domain/admin-houses";
 import type { AdminListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
@@ -22,9 +24,9 @@ type AdminRow = ListingRow & { listing_photos: PhotoRow[]; owner: { full_name: s
 
 // Casas del admin: solo las que tienen suscripción (aprobadas alguna vez); la portada es la foto en la posición 0.
 const HOUSE_COLUMNS =
-  "id, public_id, title, status, zone, owner_id, first_published_at, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name), " +
+  "id, public_id, title, status, zone, owner_id, first_published_at, whatsapp_phone, admin_hold, admin_hold_reason, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name), " +
   "subscriptions!inner(plan, promo_ends_on, paid_since, stopped_at, monthly_price_crc)";
-type HouseRow = Pick<ListingRow, "id" | "public_id" | "title" | "status" | "zone" | "owner_id"> & {
+type HouseRow = Pick<ListingRow, "id" | "public_id" | "title" | "status" | "zone" | "owner_id" | "admin_hold" | "admin_hold_reason" | "whatsapp_phone"> & {
   listing_photos: PhotoRow[];
   owner: { full_name: string } | null;
   subscriptions: { plan: string; promo_ends_on: string | null; paid_since: string | null; stopped_at: string | null; monthly_price_crc: number };
@@ -44,6 +46,26 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
     if (error) throw toDomainError(error);
     if (!me?.is_admin) return "none";
     return aalOf(s.access_token) === "aal2" ? "admin" : "mfa";
+  }
+
+  /** Una RPC del admin: error de la base como DomainError, con el segundo código aparte. */
+  async function call(rpc: PromiseLike<{ error: { message: string } | null }>): Promise<void> {
+    const { error } = await rpc;
+    if (!error) return;
+    const e = toDomainError(error);
+    throw e.message === M.mfaRequired ? mfa() : e;
+  }
+
+  async function holdRpc(fn: "admin_pause_listing" | "admin_block_listing", id: string, reason: string): Promise<void>;
+  async function holdRpc(fn: "admin_resume_listing" | "admin_unblock_listing", id: string): Promise<void>;
+  async function holdRpc(fn: string, id: string, reason?: string): Promise<void> {
+    if (reason !== undefined) {
+      const refusal = holdReasonRefusal(reason);
+      if (refusal) throw new DomainError(refusal, "validation");
+    }
+    if (!UUID.test(id)) throw new DomainError(M.notFound, "validation");
+    if (fn === "admin_pause_listing" || fn === "admin_block_listing") return call(db.rpc(fn, { p_listing: id, p_reason: reason!.trim() }));
+    return call(db.rpc(fn as "admin_resume_listing" | "admin_unblock_listing", { p_listing: id }));
   }
 
   return {
@@ -125,12 +147,14 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       const withMethod = new Set((methods.data ?? []).map((m) => m.owner_id));
       const houses = (res.data ?? []).map((row): AdminHouse => {
         const s = row.subscriptions;
+        const hold = holdFromRow(row.admin_hold, row.admin_hold_reason);
         return {
           listingId: row.id,
           publicId: row.public_id,
           title: row.title,
           status: row.status,
           ownerName: row.owner?.full_name ?? "",
+          ownerPhone: row.whatsapp_phone,
           zone: row.zone ?? "",
           cover: fromPhotoRows(row.listing_photos, url)[0] ?? null,
           subscription: {
@@ -141,10 +165,24 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
             stoppedOn: s.stopped_at ? costaRicaToday(Date.parse(s.stopped_at)) : null,
             monthlyPriceCrc: s.monthly_price_crc,
             hasMethod: withMethod.has(row.owner_id),
+            hold: hold?.kind ?? null,
           },
+          hold,
         };
       });
       return { houses, today };
+    },
+
+    pauseListing: (id, reason) => holdRpc("admin_pause_listing", id, reason),
+    resumeListing: (id) => holdRpc("admin_resume_listing", id),
+    blockListing: (id, reason) => holdRpc("admin_block_listing", id, reason),
+    unblockListing: (id) => holdRpc("admin_unblock_listing", id),
+    async deleteListing(id, reason, confirm) {
+      const refusal = holdReasonRefusal(reason);
+      if (refusal) throw new DomainError(refusal, "validation");
+      if (!UUID.test(id)) throw new DomainError(M.notFound, "validation");
+      if (confirm.trim() === "") throw new DomainError(H.confirmCode, "validation");
+      return call(db.rpc("admin_delete_listing", { p_listing: id, p_reason: reason.trim(), p_confirm: confirm.trim() }));
     },
 
     async review(id, decision, note) {

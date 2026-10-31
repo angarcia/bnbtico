@@ -6,6 +6,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useState, type ReactNode } from "react";
+import { HOLD_COPY } from "../../domain/admin-actions";
 import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
@@ -16,6 +17,7 @@ import { formatCRC } from "../../domain/money";
 import { byPendingAction, cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft } from "../../domain/subscription";
 import { formatPhone } from "../../domain/phone";
+import { waUrl } from "../../domain/whatsapp";
 import { I } from "../../shared/icons";
 import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
@@ -25,6 +27,7 @@ import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
 import { offerTakenQuery, ownListingQuery, ownListingsQuery, useDeleteDraft } from "../owner";
 import { useSession } from "../session";
+import { SUPPORT_NUMBERS } from "../support-numbers";
 
 const base = () => window.location.origin;
 const message = (e: unknown) => toDomainError(e).message;
@@ -100,6 +103,46 @@ export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: strin
 
 // ---------- Avisos y piezas de Mis casas ----------
 
+/** Casa pausada o bloqueada por bnbtico (spec .scratch/admin-casas-acciones): el motivo que escribió el admin y, bloqueada,
+ *  «Escribir a bnbtico» (WhatsApp de propietarios). La etiqueta ya va sobre la foto. `card`: la versión corta de Mis casas. */
+export function HoldNotice({ listing: l, card = false }: { listing: Listing; card?: boolean }) {
+  const hold = l.adminHold;
+  if (!hold) return null;
+  const copy = HOLD_COPY[hold.kind];
+  const write =
+    hold.kind === "blocked" ? (
+      <a
+        className={`btn btn-block ${card ? "btn-ghost" : "btn-wa"}`}
+        href={waUrl(SUPPORT_NUMBERS.owner, `Hola, mi casa ${l.publicId} (${titleOf(l)}) está bloqueada y quisiera hablar con ustedes.`)}
+        target="_blank"
+        rel="noopener"
+      >
+        Escribir a bnbtico
+      </a>
+    ) : null;
+  if (card)
+    return (
+      <>
+        <p className="note note-arena small" data-testid="hold-note">
+          <span>
+            <b>{copy.title}.</b> Motivo: {hold.reason}
+          </span>
+        </p>
+        {write}
+      </>
+    );
+  return (
+    <section className="card-arena stack gap-10" data-testid="hold-notice">
+      <h2 className="display offer-title">{copy.title}</h2>
+      <span className="small ink">{copy.body}</span>
+      <span className="small ink">
+        <b>Motivo:</b> <span data-testid="hold-reason">{hold.reason}</span>
+      </span>
+      {write}
+    </section>
+  );
+}
+
 export function SkeletonCard() {
   return (
     <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando sus casas">
@@ -124,7 +167,8 @@ export function CasasScreen() {
   const billing = useBilling(userId);
   const notice = list ? noticeFor(list, billing && { today: billing.today, houses: billing.all.map((x) => ({ listingId: x.house.listingId, sub: x.sub })) }) : null;
   const view = list ? casasView(list.length) : null;
-  const count = (s: Listing["status"]) => list?.filter((l) => l.status === s).length ?? 0;
+  // Una casa pausada o bloqueada por bnbtico no cuenta como activa: no se ve en Explorar.
+  const count = (s: Listing["status"]) => list?.filter((l) => l.status === s && !l.adminHold).length ?? 0;
   // Casillas a 0 fuera: no llaman la atención sobre nada (revisión UX N1).
   // El borrador también cuenta y lleva a él (A3).
   const firstDraft = list?.find((l) => l.status === "draft");
@@ -186,6 +230,7 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de bnbtico: {l.reviewNote}</p> : null}
+      <HoldNotice listing={l} card />
       {can(l, "share") ? (
         <div className="row gap-8">
           <ShareButtonInline listing={l} />
@@ -193,6 +238,10 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
             Calendario
           </Link>
         </div>
+      ) : l.status === "active" && l.adminHold?.kind === "paused" ? (
+        <Link to="/propietario/calendario" search={{ casa: l.id }} className="btn btn-ghost btn-block">
+          Calendario
+        </Link>
       ) : null}
       {l.status === "changes" ? (
         <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="btn btn-primary btn-block">
@@ -216,8 +265,8 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
           ) : null}
         </div>
       ) : null}
-      {billed && l.status === "payment_due" ? <PayButton publicId={l.publicId} /> : null}
-      {billed && l.status === "inactive" ? <ActivateButton publicId={l.publicId} /> : null}
+      {billed && l.status === "payment_due" && l.adminHold?.kind !== "blocked" ? <PayButton publicId={l.publicId} /> : null}
+      {billed && l.status === "inactive" && l.adminHold?.kind !== "blocked" ? <ActivateButton publicId={l.publicId} /> : null}
       {discard.isError ? <p className="note" role="alert">{message(discard.error)}</p> : null}
     </article>
   );

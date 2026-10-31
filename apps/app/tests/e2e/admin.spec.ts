@@ -100,6 +100,14 @@ test("la primera vez el admin vincula su app con el QR, ve la cola y aprueba: la
   await expect(cards.first()).toContainText("Loft Cocles");
   await expect(page.locator(".tile")).toHaveText(["1por revisar", "0con cambios", "2activas"]);
   await expect(page.getByRole("status")).toContainText("«Cabina Punta Uva»: Aprobada y publicada.");
+  // El botón para avisar al propietario por WhatsApp: se comprueba el enlace, sin abrirlo.
+  const notice = page.getByTestId("notice-link");
+  await expect(notice).toHaveText(/^Avisar a \S+ por WhatsApp$/);
+  const href = (await notice.getAttribute("href"))!;
+  expect(href).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
+  const msg = decodeURIComponent(href.split("text=")[1]!);
+  expect(msg).toContain("su casa «Cabina Punta Uva» ya está aprobada y publicada.");
+  expect(msg).toContain(`${new URL(page.url()).origin}/casa/CT-`);
   release();
   await expect
     .poll(async () => (await serviceClient().from("listings").select("status").eq("id", first.id).single()).data?.status)

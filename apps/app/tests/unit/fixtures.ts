@@ -41,4 +41,5 @@ export const activeListing: Listing = {
   monthlyPriceCrc: null,
   photos: [1, 2, 3, 4, 5].map(photo),
   edit: null,
+  adminHold: null,
 };

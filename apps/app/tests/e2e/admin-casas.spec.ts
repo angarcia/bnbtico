@@ -2,6 +2,7 @@ import { expect, test, type Page } from "./helpers/test";
 import type { Seeded, SubscriptionHarness } from "../contract/harness";
 import { totp } from "../contract/totp";
 import { HOUSE_BADGES, adminHouseLine } from "../../src/domain/admin-houses";
+import { FIELD_TITLES } from "../../src/domain/edit";
 import { costaRicaToday } from "../../src/domain/inquiry";
 import type { ListingStatus } from "../../src/domain/listing";
 import { TEST_PHONES, serviceClient, totpSecretOf } from "../db/local";
@@ -127,18 +128,27 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
   await expect(row(due)).toHaveCount(1);
   await expect(row(active)).toHaveCount(0);
 
-  // Solo lectura: la activa abre su ficha pública; las demás, el detalle de revisión.
+  // Un toque abre el detalle de la casa: sus datos, la ficha pública si se ve y el detalle del anuncio.
   await search.fill(tag);
   await row(due).click();
+  const sheet = page.getByRole("dialog", { name: `Rancho Por Pagar ${tag}` });
+  await expect(sheet).toBeVisible();
+  await expect(sheet).toContainText(`${due.publicId} · Ana Prueba · Manzanillo`);
+  await expect(sheet.getByRole("link", { name: "Ver ficha pública" })).toHaveCount(0);
+  await sheet.getByRole("link", { name: "Ver datos del anuncio" }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${due.id}$`));
   await expect(page.getByRole("heading", { level: 2, name: `Rancho Por Pagar ${tag}` })).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(/\/admin\/casas$/);
   await page.getByRole("searchbox", { name: "Buscar casas" }).fill(tag);
   await row(active).click();
+  const activeSheet = page.getByRole("dialog", { name: `Villa Activa ${tag}` });
+  await expect(activeSheet.getByRole("button", { name: "Pausar", exact: true })).toBeVisible();
+  await expect(activeSheet.getByRole("button", { name: "Bloquear", exact: true })).toBeVisible();
+  await expect(activeSheet.getByRole("button", { name: "Eliminar casa" })).toBeVisible();
+  await activeSheet.getByRole("link", { name: "Ver ficha pública" }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${active.publicId}$`));
   await expect(page.getByRole("heading", { level: 1, name: `Villa Activa ${tag}` })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Pausar/ })).toHaveCount(0);
 });
 
 test("una casa recién aprobada aparece en Activas y el recuento sube; quien no es admin no ve la lista", async ({ page }) => {
@@ -161,4 +171,216 @@ test("una casa recién aprobada aparece en Activas y el recuento sube; quien no 
   await page.goto("/admin/casas");
   await expect(page.getByRole("heading", { name: "Esta sección es solo para el equipo de bnbtico" })).toBeVisible();
   await expect(page.locator(".house-row")).toHaveCount(0);
+});
+
+// ---------- Pausar, bloquear y eliminar (spec .scratch/admin-casas-acciones) ----------
+const cleanIndexedDb = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const req = indexedDB.deleteDatabase("bnbtico");
+        req.onsuccess = req.onerror = req.onblocked = () => resolve();
+      }),
+  );
+
+/** Abre una pantalla sin la caché de Query persistida (vive en IndexedDB): lo que el servicio cambió se ve ahora. */
+async function fresh(page: Page, path: string) {
+  await page.goto("/robots.txt");
+  await cleanIndexedDb(page);
+  await page.goto(path);
+}
+
+/** Cambia de sesión en el mismo navegador: el admin con su segundo código o un propietario. */
+async function asOwner(page: Page) {
+  await page.context().clearCookies();
+  await page.goto("/robots.txt");
+  await page.evaluate(() => localStorage.clear());
+  await injectSession(page, "owner");
+}
+
+/** Abre la hoja de una casa en Casas (buscándola por su nombre) y devuelve la hoja. */
+async function openSheet(page: Page, title: string) {
+  await page.getByRole("searchbox", { name: "Buscar casas" }).fill(title);
+  await page.locator(".house-row").filter({ hasText: title }).click();
+  const sheet = page.getByRole("dialog", { name: title });
+  await expect(sheet).toBeVisible();
+  return sheet;
+}
+
+test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada por bnbtico» con el motivo y la sigue editando; el admin la reanuda", async ({ page, request }) => {
+  const tag = `P${Date.now().toString(36)}`;
+  const title = `Casa Pausable ${tag}`;
+  const house = await h.seed({ status: "active", draft: { title } });
+  const reason = "Las fotos no son de la casa.";
+
+  // Explorar la muestra antes de pausarla.
+  await fresh(page, "/explorar");
+  await expect(page.locator(".listing-card", { hasText: title })).toBeVisible();
+
+  await openCasas(page);
+  const pausadas = await countOf(page, "Pausadas");
+  const sheet = await openSheet(page, title);
+  await sheet.getByRole("button", { name: "Pausar", exact: true }).click();
+  await expect(sheet.getByRole("heading", { name: "Pausar casa" })).toBeVisible();
+  // El motivo es obligatorio.
+  await sheet.getByRole("button", { name: "Pausar casa" }).click();
+  await expect(sheet.getByRole("alert")).toHaveText("Escriba el motivo (hasta 2000 caracteres).");
+  await sheet.getByLabel("Motivo (lo verá el propietario)").fill(reason);
+  await sheet.getByRole("button", { name: "Pausar casa" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Casa pausada" })).toBeVisible();
+  // La hoja sigue abierta con el botón para avisar al propietario por WhatsApp (sin abrirlo: se comprueba el enlace).
+  await expect(sheet.getByTestId("hold-note")).toContainText(reason);
+  const notice = sheet.getByTestId("notice-link");
+  await expect(notice).toHaveText("Avisar a Yorleny por WhatsApp");
+  const text = `Hola, Yorleny. Le escribimos de bnbtico: su casa «${title}» está pausada en bnbtico: ${reason.replace(/\.$/, "")}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
+  await expect(notice).toHaveAttribute("href", `https://wa.me/50687770001?text=${encodeURIComponent(text)}`);
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(chip(page, "Pausadas")).toHaveText(`Pausadas · ${pausadas + 1}`);
+  const rowEl = page.locator(".house-row").filter({ hasText: house.publicId });
+  await expect(rowEl.locator(".badge")).toHaveText("Pausada");
+  await page.screenshot({ path: "test-results/admin-casa-pausada.png" });
+  await chip(page, "Pausadas").click();
+  await expect(page).toHaveURL(/\/admin\/casas\?ver=pausadas$/);
+  await expect(page.locator(".house-row").filter({ hasText: house.publicId })).toHaveCount(1);
+
+  // El público: el enlace ya no está activo, ni en Explorar ni en el sitemap.
+  const res = await request.get(`/casa/${house.publicId}`);
+  expect(res.status()).toBe(410);
+  expect(await res.text()).toContain("Este enlace ya no está activo");
+  expect(await (await request.get("/sitemap.xml")).text()).not.toContain(house.publicId);
+  await fresh(page, "/explorar");
+  await expect(page.locator(".listing-card").first()).toBeVisible();
+  await expect(page.locator(".listing-card", { hasText: title })).toHaveCount(0);
+
+  // El propietario la sigue viendo, con el motivo, y la edita.
+  await asOwner(page);
+  await fresh(page, "/propietario/casas");
+  const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
+  await expect(card.getByTestId("card-label")).toHaveText("Pausada por bnbtico");
+  await expect(card.getByTestId("hold-note")).toContainText(reason);
+  await card.getByRole("link", { name: title }).click();
+  await expect(page.getByTestId("hold-notice")).toContainText("Pausada por bnbtico");
+  await expect(page.getByTestId("hold-reason")).toHaveText(reason);
+  await expect(page.getByRole("link", { name: "Escribir a bnbtico" })).toHaveCount(0);
+  await page.screenshot({ path: "test-results/propietario-casa-pausada.png", fullPage: true });
+  await page.goto(`/propietario/casas/${house.id}/editar/capacidad`);
+  await expect(page).toHaveURL(new RegExp(`/editar/capacidad$`));
+  await expect(page.getByRole("heading", { level: 1, name: FIELD_TITLES.capacidad })).toBeVisible();
+  expect((await h.owner("owner").getOwn(house.id))?.adminHold).toEqual({ kind: "paused", reason });
+
+  // El admin la reanuda.
+  await page.goto("/robots.txt");
+  await page.evaluate(() => localStorage.clear());
+  await openCasas(page);
+  const again = await openSheet(page, title);
+  await expect(again.getByTestId("hold-note")).toContainText(reason);
+  await again.getByRole("button", { name: "Reanudar" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Casa reanudada" })).toBeVisible();
+  await expect(page.locator(".house-row").filter({ hasText: house.publicId }).locator(".badge")).toHaveText("Activa");
+  expect(await h.anon.getPublic(house.publicId)).not.toBeNull();
+  expect((await h.owner("owner").getOwn(house.id))?.adminHold).toBeNull();
+});
+
+test("bloquear: el propietario ve «Bloqueada por bnbtico» con el motivo y «Escribir a bnbtico», no puede editarla y su suscripción se para", async ({ page, request }) => {
+  const tag = `B${Date.now().toString(36)}`;
+  const title = `Casa Bloqueable ${tag}`;
+  const house = await h.seed({ status: "active", draft: { title } });
+  const reason = "Publica un teléfono dentro de las fotos.";
+
+  await openCasas(page);
+  const bloqueadas = await countOf(page, "Bloqueadas");
+  const sheet = await openSheet(page, title);
+  await sheet.getByRole("button", { name: "Bloquear", exact: true }).click();
+  await expect(sheet.getByText("su suscripción se para")).toBeVisible();
+  await sheet.getByLabel("Motivo (lo verá el propietario)").fill(reason);
+  await sheet.getByRole("button", { name: "Bloquear casa" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Casa bloqueada" })).toBeVisible();
+  await expect(sheet.getByTestId("notice-link")).toHaveAttribute("href", /^https:\/\/wa\.me\/50687770001\?text=.*bloqueada%20en%20bnbtico/);
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+  await expect(chip(page, "Bloqueadas")).toHaveText(`Bloqueadas · ${bloqueadas + 1}`);
+  const rowEl = page.locator(".house-row").filter({ hasText: house.publicId });
+  await expect(rowEl.locator(".badge")).toHaveText("Bloqueada");
+  await expect(rowEl).toContainText("Suscripción parada mientras esté bloqueada");
+  expect((await request.get(`/casa/${house.publicId}`)).status()).toBe(410);
+
+  await asOwner(page);
+  await fresh(page, "/propietario/casas");
+  const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
+  await expect(card.getByTestId("card-label")).toHaveText("Bloqueada por bnbtico");
+  await expect(card.getByTestId("hold-note")).toContainText(reason);
+  await expect(card.getByRole("link", { name: "Compartir ficha" })).toHaveCount(0);
+  await card.getByRole("link", { name: title }).click();
+  await expect(page.getByTestId("hold-notice")).toContainText("Bloqueada por bnbtico");
+  await expect(page.getByTestId("hold-reason")).toHaveText(reason);
+  const write = page.getByTestId("hold-notice").getByRole("link", { name: "Escribir a bnbtico" });
+  await expect(write).toHaveAttribute("href", /^https:\/\/wa\.me\/.*text=.*CT-/);
+  // Solo lectura: ningún dato abre su pantalla, y el enlace directo vuelve a la ficha.
+  await expect(page.getByTestId("field-rows").getByRole("link")).toHaveCount(0);
+  await expect(page.getByText("Toque un dato para cambiarlo.")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Compartir ficha" })).toHaveCount(0);
+  await page.screenshot({ path: "test-results/propietario-casa-bloqueada.png", fullPage: true });
+  await page.goto(`/propietario/casas/${house.id}/editar/capacidad`);
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${house.id}$`));
+  // Su suscripción: parada, sin botones de pago ni de parar.
+  await page.goto(`/propietario/suscripcion?casa=${house.publicId}`);
+  const sub = page.locator(`[data-house="${house.publicId}"]`);
+  await expect(sub.locator(".badge").first()).toHaveText("Bloqueada");
+  await expect(sub.getByTestId("sub-line")).toContainText("Parada mientras la casa esté bloqueada · no se cobra");
+  await expect(sub.getByRole("button", { name: "Parar suscripción" })).toHaveCount(0);
+  await expect(sub.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
+
+  // El admin la desbloquea.
+  await page.goto("/robots.txt");
+  await page.evaluate(() => localStorage.clear());
+  await openCasas(page);
+  const again = await openSheet(page, title);
+  await expect(again.getByRole("button", { name: "Pausar", exact: true })).toHaveCount(0);
+  await again.getByRole("button", { name: "Desbloquear" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Casa desbloqueada" })).toBeVisible();
+  await expect(page.locator(".house-row").filter({ hasText: house.publicId }).locator(".badge")).toHaveText("Activa");
+  expect(await h.anon.getPublic(house.publicId)).not.toBeNull();
+});
+
+test("eliminar: pide escribir el CT-####; la casa desaparece para el propietario y para el público", async ({ page, request }) => {
+  const tag = `E${Date.now().toString(36)}`;
+  const title = `Casa Eliminable ${tag}`;
+  const house = await h.seed({ status: "active", draft: { title } });
+  const keep = await h.seed({ status: "active", draft: { title: `Casa Que Se Queda ${tag}` } });
+
+  await openCasas(page);
+  const todas = await countOf(page, "Todas");
+  const sheet = await openSheet(page, title);
+  await sheet.getByRole("button", { name: "Eliminar casa" }).click();
+  const confirm = sheet.getByRole("button", { name: "Eliminar casa" });
+  await expect(sheet.getByText(`Para confirmar, escriba ${house.publicId}`)).toBeVisible();
+  await expect(confirm).toBeDisabled();
+  await sheet.getByLabel("Motivo (queda en el registro)").fill("Anuncio duplicado.");
+  await sheet.getByLabel(/Para confirmar, escriba/).fill("CT-0000");
+  await expect(confirm).toBeDisabled();
+  await sheet.getByLabel(/Para confirmar, escriba/).fill(house.publicId.toLowerCase());
+  await expect(confirm).toBeEnabled();
+  await page.screenshot({ path: "test-results/admin-eliminar-casa.png" });
+  await confirm.click();
+  await expect(page.getByRole("status").filter({ hasText: "Casa eliminada" })).toBeVisible();
+  await expect(chip(page, "Todas")).toHaveText(`Todas · ${todas - 1}`);
+  await page.getByRole("searchbox", { name: "Buscar casas" }).fill(tag);
+  await expect(page.locator(".house-row")).toHaveCount(1);
+  await expect(page.locator(".house-row").filter({ hasText: keep.publicId })).toHaveCount(1);
+
+  // El público: ni ficha ni sitemap.
+  expect((await request.get(`/casa/${house.publicId}`)).status()).toBe(404);
+  expect(await (await request.get("/sitemap.xml")).text()).not.toContain(house.publicId);
+  expect(await h.anon.getPublic(house.publicId)).toBeNull();
+
+  // El propietario: ni en Mis casas ni por su enlace.
+  await asOwner(page);
+  await fresh(page, "/propietario/casas");
+  await expect(page.getByRole("article").filter({ has: page.getByRole("heading", { name: `Casa Que Se Queda ${tag}` }) })).toBeVisible();
+  await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
+  await page.goto(`/propietario/casas/${house.id}`);
+  await expect(page.getByRole("heading", { name: "No encontramos esta casa" })).toBeVisible();
+  // Los datos siguen en la base, ocultos.
+  const kept = await serviceClient().from("listings").select("deleted_reason, title").eq("id", house.id).single();
+  expect(kept.data).toEqual({ deleted_reason: "Anuncio duplicado.", title });
 });

@@ -147,8 +147,8 @@ const adminFlow = createRoute({ getParentRoute: () => flow, id: "_adminFlow", be
 const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
-const casasSearch = (params: Record<string, unknown>): { ver?: "activas" | "por-pagar" | "inactivas" } =>
-  params.ver === "activas" || params.ver === "por-pagar" || params.ver === "inactivas" ? { ver: params.ver } : {};
+// El filtro se valida en la pantalla (HOUSE_CHIPS, que vive en el trozo del admin): aquí solo se deja pasar un texto.
+const casasSearch = (params: Record<string, unknown>): { ver?: string } => (typeof params.ver === "string" ? { ver: params.ver } : {});
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */

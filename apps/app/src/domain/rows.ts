@@ -1,6 +1,7 @@
 // Mapeo tipado entre filas de la base y objetos del dominio, en un solo sitio.
 // `acceptsNightly` se lee igual en las dos vistas (siempre true: check en la base) y nunca se escribe; `acceptsMonthly`
 // es not null, y solo `true` cuenta como «Alquiler mensual».
+import { holdFromRow } from "./admin-hold";
 import type { CalendarDay } from "./calendar";
 import type { Database, Json } from "./database.types";
 import type { EditFieldColumn, EditItemState, EditLocation, EditPatch, EditPhoto, ListingEdit, LivePatch } from "./edit";
@@ -168,6 +169,7 @@ export function fromListingRow(row: ListingRow, photoRows: readonly PhotoRow[], 
     firstPublishedAt: row.first_published_at ?? null,
     // La edición pendiente: solo la embebe el adaptador del propietario; las demás lecturas no la piden.
     edit: fromEditRow(editRow, url),
+    adminHold: holdFromRow(row.admin_hold, row.admin_hold_reason),
     whatsappPhone: row.whatsapp_phone ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -242,6 +244,7 @@ function fromBillingHouse(v: unknown): BillingHouse {
     paidSince: str(h.paid_since),
     stoppedOn: str(h.stopped_on),
     monthlyPriceCrc: int(h.monthly_price_crc) ?? 0,
+    hold: h.admin_hold === "paused" ? "paused" : h.admin_hold === "blocked" ? "blocked" : null,
     reminders: (Array.isArray(h.reminders) ? h.reminders : []).map((r) => {
       const x = obj(r);
       return { daysBefore: (int(x.days_before) ?? 0) as ReminderDays, status: (str(x.status) ?? "queued") as ReminderStatus, sentAt: str(x.sent_at) };

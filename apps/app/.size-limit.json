@@ -124,7 +124,7 @@
       "dist/client/assets/publish-promo-*.js",
       "dist/client/assets/offer-*.js"
     ],
-    "limit": "24.5 KB",
+    "limit": "25.2 KB",
     "gzip": true
   },
   {
@@ -228,7 +228,7 @@
       "dist/client/assets/admin-*.js",
       "dist/client/assets/review-*.js"
     ],
-    "limit": "12 KB",
+    "limit": "14 KB",
     "gzip": true
   },
   {

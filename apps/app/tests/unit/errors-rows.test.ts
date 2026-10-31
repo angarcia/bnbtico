@@ -126,12 +126,12 @@ describe("fromBillingJson y fromSetupContextJson (fase 5)", () => {
     const o = fromBillingJson(json);
     expect(o).toEqual({
       houses: [
-        { listingId: "l1", publicId: "CT-1001", title: "Casa", status: "inactive", plan: "promo", promoSlot: 7, promoMonths: 12, promoEndsOn: "2027-10-14", paidSince: null, stoppedOn: "2026-10-27", monthlyPriceCrc: 2900, reminders: [{ daysBefore: 90, status: "sent", sentAt: "2027-07-16T14:00:00Z" }] },
+        { listingId: "l1", publicId: "CT-1001", title: "Casa", status: "inactive", plan: "promo", promoSlot: 7, promoMonths: 12, promoEndsOn: "2027-10-14", paidSince: null, stoppedOn: "2026-10-27", monthlyPriceCrc: 2900, hold: null, reminders: [{ daysBefore: 90, status: "sent", sentAt: "2027-07-16T14:00:00Z" }] },
       ],
       method: { brand: "visa", last4: "4242", expMonth: 12, expYear: 2029, addedAt: "2026-10-27T10:00:00Z" },
       today: "2026-10-27",
     });
-    expect(houseSubscription(o.houses[0]!, o.method)).toEqual({ status: "inactive", plan: "promo", promoEndsOn: "2027-10-14", paidSince: null, stoppedOn: "2026-10-27", monthlyPriceCrc: 2900, hasMethod: true });
+    expect(houseSubscription(o.houses[0]!, o.method)).toEqual({ status: "inactive", plan: "promo", promoEndsOn: "2027-10-14", paidSince: null, stoppedOn: "2026-10-27", monthlyPriceCrc: 2900, hasMethod: true, hold: null });
   });
 
   it("sin casas ni método, o con basura, no rompe", () => {
