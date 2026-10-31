@@ -89,6 +89,40 @@ Twilio Verify no manda SMS reales en pruebas: todo número que se use tiene que 
   - reseñas de casas y valoraciones de clientes;
   - aviso automático por WhatsApp de las decisiones del admin.
 
+### 1.5 Casas de prueba
+
+Sembradas el 2026-10-30 en `bnbtico-pruebas` por los mismos caminos que la app (script y créditos de las fotos en `.scratch/datos-prueba/`; fotos de Wikimedia Commons). Además de Crystal Jungle Villa solo existen estas. Dueños: **Yorleny Prueba** `8777 0001` y **Marco Prueba** `8777 0002` (código `123456`). Use cada casa para lo que dice su fila: así una prueba no estropea otra (sobre todo CT-1056, reservada para el reloj de pruebas).
+
+| CT | Nombre | Dueño | Estado | Zona (provincia) | Fotos | Qué sirve para probar |
+|---|---|---|---|---|---|---|
+| CT-1040 | Crystal Jungle Villa | Daniel | Activa | Playa Negra (Limón) | 5 | Casa que ya existía; ficha y favoritos (C46–C55, C69–C74) |
+| CT-1047 (a) | Casa Cocles frente al mar | Yorleny | Activa | Cocles (Limón) | 8 | Ficha completa con piscina, frente al mar, wifi, aire (C46–C55); filtros de características (C22–C30); consulta con fechas del cliente (C86–C92, A108–A112, X1); favorito; 3 noches ocupadas y una con precio especial (C31–C42, A94–A107) |
+| CT-1048 (b) | Cabaña Manzanillo con rancho | Yorleny | Activa | Manzanillo (Limón) | 6 | Acepta mensual con ₡900 000 (C22–C30 «Solo alquiler mensual»); mascotas y Rancho/BBQ; consulta con 30 noches «mensual» (C31–C42, C86–C92) |
+| CT-1049 (c) | Loft Puerto Viejo cerca de todo | Yorleny | Activa | Puerto Viejo (Limón) | 4 | Mensual «Precio a negociar con el dueño» (C46–C55); aire, wifi, cargador eléctrico; consulta sin fechas; 0 habitaciones (estudio) |
+| CT-1050 (d) | Habitación Playa Chiquita | Marco | Activa | Playa Chiquita (Limón) | 3 | Habitación con baño compartido, ₡25 000 (C4–C9, C46–C55, A21–A26); casa de otro dueño |
+| CT-1051 (e) | Habitación privada en Cahuita | Marco | Activa | Cahuita (Limón) | 4 | Habitación con baño privado y «Niños pequeños gratis» (C22–C30) |
+| CT-1052 (f) | Villa Punta Uva en la selva | Yorleny | Activa | Punta Uva (Limón) | 8 | 10 personas, ₡180 000, descripción larga de 14 líneas («Ver más», C46–C55); parqueo de pago; noches ocupadas el mes próximo y precios especiales con ★ (C31–C42, A94–A107); consulta de grupo; favorito |
+| CT-1053 (g) | Apartamento Limón centro | Marco | Activa | «Barrio Roosevelt» escrita a mano, Otra… (Limón) | 3 | Zona propuesta con la marca del admin (D20–D27); parqueo gratis; búsqueda por Limón (C31–C42) |
+| CT-1054 (h) | Casa Playa Negra tranquila | Yorleny | Activa, cerrada hasta 2026-11-20 | Playa Negra (Limón) | 4 | «Cerrar la casa hasta…» (A94–A107): no sale en Explorar pero su ficha abre; debe verse como cerrada a consultas (C56–C63, C86–C92); favorito |
+| CT-1055 (i) | Casa Santa Teresa cerca del mar | Marco | Activa | Santa Teresa, Otra… (Puntarenas) | 5 | Otra provincia: Explorar solo ofrece Puntarenas si hay casa aprobada allí (C22–C30, C31–C42) |
+| CT-1056 (j) | Casa Jaguar Puerto Viejo | Yorleny | Activa con oferta de lanzamiento (12 meses) | Puerto Viejo (Limón) | 5 | Para el reloj de pruebas (A124–A139, X6): cambiar sus días de oferta; no tocarla en otras pruebas |
+| CT-1057 (k) | Cabina Hone Creek | Yorleny | Borrador incompleto | Hone Creek (Limón) | 0 | Sin fotos ni precio: «Falta: fotos y precio», «Seguir publicando» (A57–A65, A42–A49) |
+| CT-1058 (l) | Cabaña Hone Creek con jardín | Yorleny | En revisión | Hone Creek (Limón) | 5 | Aprobar casa nueva (D28–D44, X1) |
+| CT-1059 (m) | Casa Playa Bite con hamaca | Yorleny | En revisión | Playa Bite (Limón) | 3 | Pedir cambios y rechazar (D28–D44, X2) |
+| CT-1060 (n) | Cabina Playa Grande Cahuita | Yorleny | Cambios pedidos | Playa Grande (Limón) | 4 | Nota «Necesitamos una foto del baño.»; «Corregir y reenviar» (A66–A76, X2) |
+| CT-1061 (o) | Casa Siquirres vista al río | Yorleny | Rechazada | Siquirres (Limón) | 3 | Nota «Las fotos no corresponden a la casa.»; sin reenviar (A66–A76) |
+| CT-1062 (p) | Casa Playa Chiquita jardín | Yorleny | Pendiente de pago | Playa Chiquita (Limón) | 4 | Oferta terminada (reloj en -1): «Añadir método de pago» con Stripe de prueba (A113–A139, X6); su enlace público no funciona (C64–C68) |
+| CT-1063 (q) | Cabaña Pocora junto al río | Yorleny | Inactiva | Pocora (Limón) | 3 | Suscripción parada por la propietaria; «Activar suscripción» (A113–A123); enlace parado (C64–C68) |
+| CT-1064 (r) | Casa Cocles con terraza | Marco | Activa, pausada por el admin | Cocles (Limón) | 4 | Pausa «Confirme que las fotos son de esta casa.»; el dueño la sigue editando (D58–D78, A66–A76); no sale al público |
+| CT-1065 (s) | Casa Guápiles con piscina | Yorleny | Activa, bloqueada por el admin | Guápiles (Limón) | 3 | Bloqueo «Publica un teléfono dentro de las fotos.»; dueño sin editar, enlace 410 (D58–D78, C64–C68) |
+| CT-1066 (t) | Casa Punta Uva bambú | Yorleny | Activa con cambios pendientes | Punta Uva (Limón) | 4 (+1 nueva) | Nombre y descripción enviados a revisión («Casa Punta Uva Bambú Lodge») más 1 foto nueva: aprobar y pedir cambios dato a dato (D45–D57, A81–A93) |
+
+Consultas del cliente `8888 1234` (pestaña «Consultas» de Yorleny, A108–A112): a CT-1047 (19 al 22 de noviembre, 3 personas), CT-1048 (29 de noviembre al 29 de diciembre, 30 noches, 2 personas), CT-1052 (14 al 18 de diciembre, 8 personas) y CT-1049 (sin fechas). Favoritos del cliente: CT-1047, CT-1052, CT-1054.
+
+Límites a tener en cuenta: Yorleny tiene 1 borrador (CT-1057) de los 5 permitidos. Las 15 casas aprobadas llevan oferta de lanzamiento 12 meses (plazas 5 a 19; CT-1040 tiene la 4), salvo CT-1062 (oferta terminada a propósito). El contador «quedan N de 50 plazas» baja en consecuencia.
+
+Para volver a sembrar (p. ej. después de gastar CT-1056 o de decidir CT-1058/CT-1059), pídaselo a Claude: el script salta las casas que ya existen por nombre.
+
 ---
 
 ## 2. Cliente (visitante y cliente con cuenta)
@@ -463,7 +497,7 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 
 ## 4. Admin
 
-Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 778 347 8492`, país «Estados Unidos/Canadá (+1)», código 123456), una app de autenticación en el teléfono y, de la parte 3, **dos casas en revisión** (una con 5 fotos y otra «sin fotos» si se pudo crear) y **una casa activa con una edición enviada** (nombre, descripción, ubicación y una foto nueva, sin decidir). Las casas de prueba son de «Yorleny Prueba» (`8777 0001`) y de una segunda propietaria; la guía las llama «la casa nueva», «la casa sin fotos» y «la casa editada». Todo desde `https://nueva.bnbtico.com`, vista de teléfono, salvo lo marcado `(escritorio)` o `(terminal)`.
+Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 778 347 8492`, país «Estados Unidos/Canadá (+1)», código 123456), una app de autenticación en el teléfono y las casas de prueba de 1.5: **CT-1058** («la casa nueva», en revisión con 5 fotos), **CT-1059** (en revisión, para pedir cambios y rechazar) y **CT-1066** («la casa editada», con nombre, descripción y una foto nueva sin decidir); para 4.7, **CT-1064** y **CT-1065** ya están pausada y bloqueada, y para pausar, bloquear y eliminar desde cero use casas que pueda perder (p. ej. las que publique en la parte 3). Todo desde `https://nueva.bnbtico.com`, vista de teléfono, salvo lo marcado `(escritorio)` o `(terminal)`.
 
 ### 4.1 Entrar a la zona del admin y segundo factor
 
@@ -508,14 +542,14 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 
 - [ ] **D28** Sin escribir nada, toque «Pedir cambios» → aviso rojo «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.» y se queda en la misma casa.
 - [ ] **D29** Con el campo vacío, toque «Rechazar» → el mismo aviso; no se rechaza nada.
-- [ ] **D30** (casa sin fotos) Abra la tarjeta de «Casa sin fotos» → «Aprobar y publicar» está desactivado, el mensaje viene escrito con «Para publicarla necesitamos al menos una foto de la casa.» y sale el aviso «Sin fotos: solo puede pedir cambios.».
-- [ ] **D31** (casa sin fotos) Toque «Rechazar» sin cambiar el mensaje → «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.» (el texto de las fotos no sirve de motivo para rechazar).
+- [ ] **D30** (no aplica desde el 2026-10-30: ya no se puede enviar una casa sin fotos; sáltela salvo que quede una de antes) (casa sin fotos) Abra la tarjeta de «Casa sin fotos» → «Aprobar y publicar» está desactivado, el mensaje viene escrito con «Para publicarla necesitamos al menos una foto de la casa.» y sale el aviso «Sin fotos: solo puede pedir cambios.».
+- [ ] **D31** (no aplica, como D30) (casa sin fotos) Toque «Rechazar» sin cambiar el mensaje → «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.» (el texto de las fotos no sirve de motivo para rechazar).
 - [ ] **D32** (casa nueva) Escriba «Necesitamos una foto de la cocina.» y toque «Pedir cambios» → vuelve a «Anuncios» con la nota ««<nombre>»: Cambios pedidos. El propietario verá su mensaje.»; la casa sale de «Por revisar» y las cifras bajan una y suben «con cambios».
 - [ ] **D33** En ese aviso toque «Avisar a Yorleny por WhatsApp» → abre WhatsApp con el número de la propietaria y el texto «Hola, Yorleny. Le escribimos de bnbtico: revisamos su casa «<nombre>» y necesitamos un cambio antes de publicarla: Necesitamos una foto de la cocina. Puede corregirla desde Mis casas → «Corregir y reenviar».»; vuelva a la app sin enviarlo.
 - [ ] **D34** Toque el chip «Cambios pedidos» → la casa está con la insignia «Cambios pedidos»; al abrirla se ve el recuadro «Cambios pedidos» con el texto «Necesitamos una foto de la cocina.» y ya no hay «Aprobar y publicar».
 - [ ] **D35** Cambie a la cuenta de la propietaria y abra **Mis casas** → la casa dice «Cambios pedidos», con «Nota de bnbtico: Necesitamos una foto de la cocina.» y el botón «Corregir y reenviar». (No llega ningún WhatsApp automático con la decisión: en v1 el admin avisa a mano si hace falta.)
-- [ ] **D36** (casa sin fotos) Con la cuenta admin, escriba «Las fotos no son de esta casa.» y toque «Rechazar» → ««Casa sin fotos»: Rechazada. El propietario verá el motivo.»; en el chip «Rechazados» aparece con «Rechazada».
-- [ ] **D37** Toque «Avisar a <nombre> por WhatsApp» en ese aviso → el texto es «Hola, <nombre>. Le escribimos de bnbtico: revisamos su casa «Casa sin fotos» y no podemos publicarla: Las fotos no son de esta casa. Si tiene dudas, respóndanos a este mensaje.».
+- [ ] **D36** (CT-1059 «Casa Playa Bite con hamaca») Con la cuenta admin, escriba «Las fotos no son de esta casa.» y toque «Rechazar» → ««Casa Playa Bite con hamaca»: Rechazada. El propietario verá el motivo.»; en el chip «Rechazados» aparece con «Rechazada».
+- [ ] **D37** Toque «Avisar a <nombre> por WhatsApp» en ese aviso → el texto es «Hola, <nombre>. Le escribimos de bnbtico: revisamos su casa «Casa Playa Bite con hamaca» y no podemos publicarla: Las fotos no son de esta casa. Si tiene dudas, respóndanos a este mensaje.».
 - [ ] **D38** (casa rechazada) Con la propietaria, abra Mis casas → «Rechazada» y «Nota de bnbtico: Las fotos no son de esta casa.»; al abrir el detalle: «Anuncio rechazado» con el motivo y sin botón de corregir.
 - [ ] **D39** (casa nueva, tras corregirla en 5.2) Con el admin, toque «Por revisar» → la tarjeta vuelve con la insignia «Corregida» (no «Nueva»).
 - [ ] **D40** Abra la casa corregida, deje el campo vacío y toque «Aprobar y publicar» (con la propietaria aún sin método de pago y en oferta de lanzamiento) → vuelve a «Anuncios» con ««<nombre>»: Aprobada y publicada. El enlace ya funciona.»; la cifra «activas» sube una y la casa sale de la lista al instante.

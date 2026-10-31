@@ -20,3 +20,6 @@ apps/web/AGENTS.md
 scripts/osm-limites/.cache/
 # Descargas de Overpass de scripts/osm-zonas/borrador.mjs
 scripts/osm-zonas/.cache/
+
+# Fotos de prueba descargadas por .scratch/datos-prueba (no se versionan)
+.scratch/datos-prueba/fotos/
