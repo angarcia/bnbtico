@@ -87,7 +87,7 @@ create or replace view public.zones_with_listings as
    FROM (((zones z
      JOIN geo.admin_names n ON ((n.code = z.canton_code)))
      JOIN geo.admin_names p ON ((p.code = "left"(z.canton_code, 1))))
-     JOIN listings l ON (((l.status = 'active'::listing_status) AND l.admin_hold IS NULL AND l.deleted_at IS NULL AND l.available AND (l.lat IS NOT NULL) AND ((l.zone_id = z.id) OR st_dwithin((st_setsrid(st_makepoint(l.lng, l.lat), 4326))::geography, (z.point)::geography, (5000)::double precision)))))
+     JOIN listings l ON (((l.status = 'active'::listing_status) AND l.admin_hold IS NULL AND l.deleted_at IS NULL AND l.available AND (l.lat IS NOT NULL) AND ((l.zone_id = z.id) OR extensions.st_dwithin((extensions.st_setsrid(extensions.st_makepoint(l.lng, l.lat), 4326))::extensions.geography, (z.point)::extensions.geography, (5000)::double precision)))))
   WHERE z.active
   GROUP BY z.id, z.name, z.canton_code, n.name, p.name, z.lat, z.lng;
 
