@@ -1,3 +1,8 @@
+## 2026-10-30 · Guía de pruebas única y valoraciones de clientes fuera de v1 (Daniel)
+
+- **Una sola guía de pruebas manual,** `docs/pruebas-manuales.md`, escrita desde cero tras los rediseños (preparación, cliente, anfitrión, admin y recorridos de punta a punta). Las guías por fase quedan como histórico. Al cambiar una pantalla se actualizan sus comprobaciones en la guía.
+- **Valorar clientes no entra en la v1** (Consultas solo tiene «Abrir WhatsApp»); queda para después del lanzamiento.
+
 ## 2026-10-30 · Admin · Casas: pausar, bloquear y eliminar, y aviso manual por WhatsApp (Daniel)
 
 Spec `.scratch/admin-casas-acciones/spec.md`; migración `admin_casas_acciones`. «Casas» del admin deja de ser solo una lista: tocar una casa abre una hoja con sus datos y las acciones.
