@@ -2,7 +2,7 @@
 
 Sembradas el 2026-10-30 con `sembrar.ts` (ver su cabecera para compilar y ejecutar) por los adaptadores reales de la app; fotos de `fotos/` (no versionadas; créditos en `creditos.md`). Solo hay estas casas: se borraron las demás (CT-1030, 1034, 1036, 1043, 1044, 1045) y sus objetos de Storage.
 
-Cuentas (código `123456`): Yorleny Prueba `8777 0001` (+50687770001), Marco Prueba `8777 0002` (+50687770002), cliente `8888 1234` (perfil «Ana»), admin Daniel (+17783479837, con segundo factor) y Ana. Las decisiones del admin se hicieron como Daniel con claims aal2.
+Cuentas (código `123456`): Yorleny Prueba `8777 0001` (+50687770001), Marco Prueba `8777 0002` (+50687770002), cliente «Cliente Prueba» `8888 1234`, admin Daniel (+17783479837, con segundo factor) y Ana. Las decisiones del admin se hicieron como Daniel con claims aal2.
 
 Los códigos son los de `docs/pruebas-manuales.md`: C = cliente, A = anfitrión, D = admin, X = recorridos.
 

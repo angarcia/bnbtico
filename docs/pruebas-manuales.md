@@ -40,7 +40,7 @@ Twilio Verify no manda SMS reales en pruebas: todo número que se use tiene que 
 
 | Cuenta | Número | Papel |
 |---|---|---|
-| Cliente | `8888 1234` (+506) | Ya existe |
+| «Cliente Prueba» | `8888 1234` (+506) | Cliente que ya existe |
 | Propietaria «Yorleny Prueba» | `8777 0001` (+506) | Dueña de las casas de prueba |
 | Libre | `8888 9999` (+506) | Para registros nuevos; si ya se usó, añada otro |
 | Admin | Daniel `+1 778 347 9837`, Ana `+1 778 347 8492` | País «Estados Unidos / Canadá (+1)» |
