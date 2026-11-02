@@ -16,10 +16,10 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - **WhatsApp verificado por código es lo único obligatorio** para publicar o contactar (al publicar se pide después del paso 1 del asistente). Explorar y guardar favoritos no requiere cuenta.
 - **Veriff (identidad) es opcional y queda fuera de la v1** (va en v1.1). En v1 no se muestra nada de identidad, salvo la línea informativa de Cuenta («Pronto podrá verificar también su identidad (opcional).»).
 - **Estados de una casa:** Pendiente de revisión → Pendiente de pago → Activa → Inactiva (si el propietario para la suscripción). Las casas con oferta gratuita saltan «Pendiente de pago» hasta que termina la oferta. Avisos por WhatsApp y en la app a 90/30/7/0 días del fin de la oferta, con enlace `#pago=CT-xxxx` a la pantalla de método de pago. El enlace de una ficha parada o pendiente de pago deja de funcionar. «Añadir método de pago» solo aparece mientras no hay método y toca avisar.
-- Explorar filtra por fechas libres (todas las noches de llegada a salida; mensual: 30 noches desde «Desde»); las casas cerradas nunca salen.
-- **Precios en colones**, siempre orientativos; el cliente puede verlos convertidos a dólares (solo visualización). Nunca «total a pagar».
-- **Caribe por defecto:** Explorar arranca en Limón; en los filtros solo aparecen provincias con casas; una casa aprobada de otra zona añade su provincia; con una zona elegida en la búsqueda, manda la zona (casas a 5 km o menos).
-- **Características (una sola lista, igual al publicar y al filtrar):** Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis, Frente al mar, Rancho/BBQ. Los filtros añaden «Solo alquiler mensual» (no se marca en características al publicar: se pregunta en el precio).
+- Explorar filtra por fechas libres (todas las noches de llegada a salida; siempre llegada y salida, sin modo mensual aparte desde el 2026-11-02); las casas cerradas nunca salen (desde el 2026-11-02 no se cierra la casa entera: el anfitrión marca reservas como noches ocupadas).
+- **Precios en colones**, siempre orientativos; el cliente puede verlos convertidos a dólares (solo visualización). Con fechas elegidas se muestra un **total orientativo** («≈ ₡180 000 por 4 noches»), la misma cifra en Explorar, ficha y hoja (suma noche a noche con los precios especiales); con 30 noches o más y precio al mes, el mensual prorrateado (mes × noches / 30). Nunca «total a pagar» (decisión 2026-11-02).
+- **Todo el país, con el Caribe primero** (decisión 2026-11-02; antes «Caribe por defecto»): con «¿Dónde?» en blanco Explorar enseña las casas de todas las provincias, las de Limón primero; sin chips de provincia en los filtros; con una zona elegida en la búsqueda, manda la zona (casas a 5 km o menos). Lista y mapa enseñan lo mismo.
+- **Características (una sola lista, igual al publicar y al filtrar):** Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Niños pequeños gratis, Frente al mar, Rancho/BBQ. Los filtros añaden baños y tipo (Alojamiento completo / Habitación); «Solo alquiler mensual» salió de Explorar el 2026-11-02 (al publicar se sigue preguntando en el precio).
 - **Alquiler y tipo:** toda casa se alquila por noches, con precio por noche obligatorio; «Acepta alquiler mensual» es opcional, con precio al mes opcional (vacío = «Precio a negociar con el dueño»); es Alojamiento completo o Habitación (con baño privado o compartido).
 - «Mensual» en vez de «Largo plazo» en toda la UI (la landing no se toca).
 - Los propietarios podrán valorar a los clientes **después de la v1** (fuera del lanzamiento, decisión 2026-10-30); no hay reseñas de casas.
@@ -78,7 +78,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 ## Dirección de producto fuera del lanzamiento
 
-Veriff opcional (v1.1), cobro real con pasarela local (Tilopay / ONVO / Greenpay), app en tiendas, valoraciones de clientes, comunidad entre propietarios (idea, no requisito), titularidad registral opcional (exploración, no v1).
+Veriff opcional (v1.1), cobro real con pasarela local (Tilopay / ONVO / Greenpay), app en tiendas (con suscripción de Apple y Google además de la web; login con Google, Apple o biometría se revisa entonces; decisión 2026-11-02), valoraciones de clientes, «casa del día» para redes (idea), comunidad entre propietarios (idea, no requisito), titularidad registral opcional (exploración, no v1).
 
 ## Agent skills
 

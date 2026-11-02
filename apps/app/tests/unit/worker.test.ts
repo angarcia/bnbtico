@@ -74,7 +74,8 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toContain("₡95\u00a0000");
     expect(html).toContain("· orientativo");
     // Revisión UX A10: la persona que alquila, bajo el nombre (iniciales y nombre de pila), en vez de la etiqueta suelta.
-    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?WhatsApp verificado/);
+    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?Anfitrión · WhatsApp verificado/);
+    expect(html).not.toContain(" · ubicación aproximada");
     expect(html).not.toMatch(/class="badge badge-ok"[^>]*>[\s\S]{0,200}WhatsApp verificado/);
     expect(html).toContain("fechas, precio y pago los acuerda directamente con el propietario");
     expect(html).toContain("Contactar por WhatsApp");
