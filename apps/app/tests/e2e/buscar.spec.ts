@@ -151,7 +151,7 @@ test("límites: hoy + 365 solo como salida, el «Desde» del mensual hasta hoy +
   await expect(page.getByRole("button", { name: "Una persona más" })).toBeDisabled();
 });
 
-test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; con una sola provincia no sale el bloque de provincias", async ({ page }) => {
+test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; ya no hay chips de provincia", async ({ page }) => {
   await page.goto("/explorar/filtros?zona=704-cocles&ppl=4");
   const mine = page.getByRole("group", { name: "Su búsqueda" });
   await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/, /^Personas\s*4 personas$/]);
@@ -160,10 +160,10 @@ test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; con una sola pr
   await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=quienes/);
   await expect(page.getByRole("button", { name: /¿Quiénes\?/ })).toHaveAttribute("aria-expanded", "true");
   await page.goBack();
-  // Revisión UX 2026-10-29 (A7): con casas solo en Limón, la zona sale una vez, en «Su búsqueda»; sin zona, «Todo Limón».
+  // Ticket 06 (2026-11-02): la zona sale una vez, en «Su búsqueda»; sin zona dice «Todas las provincias» (sin chips de provincia).
   await expect(page.getByRole("group", { name: "Zona", exact: true })).toHaveCount(0);
   await page.goto("/explorar/filtros");
-  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todo Limón$/);
+  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todas las provincias$/);
 });
 
 test("al volver a abrir «¿Dónde?» con una zona de dos palabras, la zona sigue en la lista", async ({ page }) => {

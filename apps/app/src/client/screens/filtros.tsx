@@ -1,21 +1,23 @@
-// Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Zona (solo con varias provincias) → Para quiénes → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
+// Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Para quiénes (habitaciones y baños) → Tipo de alojamiento → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
+  ALL_PROVINCES,
+  BATHS_OPTIONS,
   BEDS_OPTIONS,
+  KIND_FILTERS,
   colonesToPriceInput,
   parseFilters,
   priceInputToColones,
   priceRangeInvalid,
-  provinceChips,
   searchFor,
   type ExploreSearch,
   type SearchKey,
 } from "../../domain/filters";
 import { costaRicaToday } from "../../domain/dates";
 import { peopleLabel, stayLabel } from "../../domain/search";
-import { FEATURES } from "../../domain/listing";
+import { FEATURES, KIND_LABELS } from "../../domain/listing";
 import {
   FX_INITIAL,
   fxDayLabel,
@@ -66,17 +68,14 @@ function FiltrosForm({
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
   const symbol = currency === "USD" ? "$" : "₡";
-  // Chip de provincia: elegir una provincia quita la zona (la zona manda sobre la provincia).
-  const pickProvince = (prov: string) =>
-    setDraft((d) => ({ ...d, prov, zona: undefined }));
   const mineRows = [
-    // Una sola fila de zona que dice lo mismo que la búsqueda: «Todo Limón» sin zona (revisión UX 2026-10-29, A7).
+    // Una sola fila de zona que dice lo mismo que la búsqueda: sin zona, «Todas las provincias» (un `?prov=` viejo, «Todo Limón»).
     {
       abrir: "donde",
       label: "Zona",
       value: f.zone
         ? (zoneName ?? "")
-        : f.prov
+        : f.prov !== ALL_PROVINCES
           ? `Todo ${f.prov}`
           : "Todas las provincias",
     },
@@ -94,7 +93,7 @@ function FiltrosForm({
   const apply = () =>
     navigate({
       to: "/explorar",
-      search: searchFor(f, provinces),
+      search: searchFor(f),
       replace: true,
     });
   return (
@@ -131,7 +130,7 @@ function FiltrosForm({
               <Link
                 key={r.abrir}
                 to="/explorar/buscar"
-                search={{ ...searchFor(f, provinces), abrir: r.abrir }}
+                search={{ ...searchFor(f), abrir: r.abrir }}
                 className="list-item"
               >
                 <span className="body">
@@ -145,31 +144,6 @@ function FiltrosForm({
             ))}
           </div>
         </section>
-        {/* Las provincias solo cuando hay casas en más de una; con una (hoy, Limón) la fila «Zona» ya lo dice (A7). Cuando
-            haya varias, la provincia pasará a «¿Dónde?», con las zonas agrupadas por provincia. */}
-        {provinces.length > 1 ? (
-          <section className="stack" role="group" aria-labelledby="f-zona">
-            <span className="eyebrow" id="f-zona">
-              Zona
-            </span>
-            <div className="row wrap gap-8">
-              {provinceChips(provinces).map((prov) => (
-                <button
-                  key={prov}
-                  type="button"
-                  className="chip"
-                  aria-pressed={!f.zone && f.prov === prov}
-                  onClick={() => pickProvince(prov)}
-                >
-                  {prov}
-                </button>
-              ))}
-            </div>
-            <span className="xs muted">
-              Solo aparecen provincias con casas publicadas.
-            </span>
-          </section>
-        ) : null}
         <section className="stack">
           <span className="eyebrow">Para quiénes</span>
           <div className="grid-2">
@@ -187,6 +161,38 @@ function FiltrosForm({
                 ))}
               </select>
             </div>
+            <div className="field">
+              <label htmlFor="f-baths">Baños</label>
+              <select
+                id="f-baths"
+                value={f.baths}
+                onChange={(e) => set("banos", e.target.value)}
+              >
+                {BATHS_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n ? `${n}+` : "Cualquiera"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </section>
+        <section className="stack" role="group" aria-labelledby="f-tipo">
+          <span className="eyebrow" id="f-tipo">
+            Tipo de alojamiento
+          </span>
+          <div className="row wrap gap-8">
+            {[null, ...KIND_FILTERS].map((k) => (
+              <button
+                key={k ?? "cualquiera"}
+                type="button"
+                className="chip"
+                aria-pressed={f.kind === k}
+                onClick={() => set("tipo", k ?? undefined)}
+              >
+                {k ? KIND_LABELS[k] : "Cualquiera"}
+              </button>
+            ))}
           </div>
         </section>
         <section className="stack">

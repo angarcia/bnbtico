@@ -5,7 +5,7 @@ import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
-import { ALL_PROVINCES, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, KINDS_OF_FILTER, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 import { caribeFirst, type ZoneWithListings } from "../../domain/zones";
@@ -31,10 +31,13 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       if (x.monthly) q = q.eq("accepts_monthly", true);
       if (x.ppl) q = q.gte("capacity", x.ppl);
       if (x.beds) q = q.gte("bedrooms", x.beds);
+      if (x.baths) q = q.gte("bathrooms", x.baths);
+      if (x.kind) q = q.in("kind", [...KINDS_OF_FILTER[x.kind]]);
       if (x.features.length) q = q.contains("features", x.features);
       if (x.min) q = q.gte("nightly_price_crc", x.min);
       if (x.max) q = q.lte("nightly_price_crc", x.max);
-      const { data, error } = await q.order("created_at", { ascending: false }).limit(SEARCH_LIMIT);
+      // El orden (Limón primero, luego las más nuevas) lo pone search_listings: sin `.order()` aquí, que mandaría encima.
+      const { data, error } = await q.limit(SEARCH_LIMIT);
       if (error) throw toDomainError(error);
       return data.map(toPublic);
     },

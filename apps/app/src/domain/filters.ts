@@ -1,13 +1,20 @@
 // Filtros de Explorar, en la URL (prototipo explorar-filtros.js y zona-caribe.js).
-// Zona → Alquiler mensual → Para quiénes → Qué necesitan → Precio. Limón por defecto mientras tenga casas; solo provincias con casas.
+// Zona → Alquiler mensual → Para quiénes → Tipo → Qué necesitan → Precio. Sin provincia («Todas») por defecto: todo el país, con el
+// Caribe primero (lo ordena la búsqueda); `?prov=` de enlaces viejos sigue filtrando.
 // Explorar al estilo Airbnb: `zona`, `llegada`/`salida` (por noches), `desde` (mensual), `ppl` de 1 a 50 y `mapa`.
 // No importa calendar.ts ni inquiry.ts (trozos diferidos): las fechas salen de dates.ts.
 import * as z from "zod/mini";
 import type { Currency } from "./currency";
 import { addDays, isoParts } from "./dates";
-import { DEFAULT_PROVINCE, FEATURE_LABEL, PROVINCES, parseColones, type Feature } from "./listing";
+import { FEATURE_LABEL, parseColones, type Feature, type Kind } from "./listing";
 
 export const BEDS_OPTIONS = [0, 1, 2, 3, 4] as const;
+export const BATHS_OPTIONS = [0, 1, 2, 3] as const;
+/** Tipo de alojamiento al filtrar: «completo» incluye los valores viejos `casa` y `apartamento` (lo resuelve la consulta). */
+export const KIND_FILTERS = ["completo", "habitacion"] as const;
+export type KindFilter = (typeof KIND_FILTERS)[number];
+/** Los valores de `kind` que cubre cada tipo del filtro. */
+export const KINDS_OF_FILTER: Record<KindFilter, readonly Kind[]> = { completo: ["completo", "casa", "apartamento"], habitacion: ["habitacion"] };
 export const ALL_PROVINCES = "Todas";
 export const FEATURE_KEYS = Object.keys(FEATURE_LABEL) as Feature[];
 /** Personas en la búsqueda: las mismas que admite una consulta (INQUIRY_MAX_PEOPLE). */
@@ -30,6 +37,8 @@ export interface Filters {
   monthly: boolean; // «Alquiler mensual»: solo casas que aceptan alquiler por meses
   ppl: number; // 0 = sin indicar, 1–50
   beds: number;
+  baths: number; // 0 = cualquiera, 1–3 como mínimo
+  kind: KindFilter | null; // null = cualquiera
   features: Feature[];
   min: number; // 0 = sin límite
   max: number;
@@ -76,16 +85,14 @@ const searchSchema = z.looseObject({
   modo: z.pipe(first, z.transform((v) => v === "monthly")),
   ppl: people,
   beds: option(BEDS_OPTIONS),
+  banos: option(BATHS_OPTIONS),
+  tipo: z.pipe(first, z.transform((v) => (KIND_FILTERS.includes(v as KindFilter) ? (v as KindFilter) : ""))),
   min: money,
   max: money,
   mas: flag,
   mapa: flag,
   ...(Object.fromEntries(FEATURE_KEYS.map((f) => [f, flag])) as Record<Feature, typeof flag>),
 });
-
-export function defaultProvince(provinces: readonly string[]): string {
-  return provinces.includes(DEFAULT_PROVINCE) ? DEFAULT_PROVINCE : ALL_PROVINCES;
-}
 
 type Parsed = z.infer<typeof searchSchema> & Record<Feature, boolean>;
 
@@ -104,12 +111,14 @@ export function parseFilters(params: SearchParams, provinces: readonly string[],
   const min = invalid ? 0 : p.min;
   const max = invalid ? 0 : p.max;
   return {
-    prov: p.prov === ALL_PROVINCES || provinces.includes(p.prov) ? p.prov : defaultProvince(provinces),
+    prov: p.prov === ALL_PROVINCES || provinces.includes(p.prov) ? p.prov : ALL_PROVINCES,
     zone: p.zona && (!ctx.zoneIds || ctx.zoneIds.includes(p.zona)) ? p.zona : null,
     ...stayFrom(p, ctx.today),
     monthly: p.mensual || p.modo,
     ppl: p.ppl,
     beds: p.beds,
+    baths: p.banos,
+    kind: p.tipo || null,
     features: FEATURE_KEYS.filter((f) => p[f]),
     min,
     max,
@@ -142,13 +151,13 @@ export function colonesToPriceInput(crc: number, currency: Currency, fx: number)
   return String(currency === "USD" ? Math.round(crc / fx) : crc);
 }
 
-/** Solo lo que difiere del valor por defecto, para enlaces limpios. `open` no viaja: lo pone el botón «Más filtros»;
+/** Solo lo que difiere del valor por defecto (sin provincia), para enlaces limpios. `open` no viaja: lo pone el botón «Más filtros»;
  *  `mapa` tampoco: lo pone la pantalla del mapa. Con zona, la provincia sobra. Las fechas de las dos modalidades se
  *  conservan: vuelven al cambiar de modalidad. */
-export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearchParams {
+export function toSearchParams(f: Filters): URLSearchParams {
   const p = new URLSearchParams();
   if (f.zone) p.set("zona", f.zone);
-  else if (f.prov !== defaults.prov) p.set("prov", f.prov);
+  else if (f.prov !== ALL_PROVINCES) p.set("prov", f.prov);
   if (f.arrival && f.departure) {
     p.set("llegada", f.arrival);
     p.set("salida", f.departure);
@@ -157,6 +166,8 @@ export function toSearchParams(f: Filters, defaults: { prov: string }): URLSearc
   if (f.monthly) p.set("mensual", "1");
   if (f.ppl) p.set("ppl", String(f.ppl));
   if (f.beds) p.set("beds", String(f.beds));
+  if (f.baths) p.set("banos", String(f.baths));
+  if (f.kind) p.set("tipo", f.kind);
   for (const feature of f.features) p.set(feature, "1");
   // El rango viaja aunque el mensual lo oculte: vuelve al quitar el filtro.
   if (f.min) p.set("min", String(f.min));
@@ -180,17 +191,12 @@ export function stayRange(f: Filters): { from: string; to: string } | null {
  *  El mensual no cuenta (va en la fila de chips) y el rango tampoco mientras el mensual lo deja sin efecto. */
 export function extrasCount(f: Filters): number {
   const q = effectiveFilters(f);
-  return (q.beds > 0 ? 1 : 0) + q.features.length + (q.min > 0 ? 1 : 0) + (q.max > 0 ? 1 : 0);
-}
-
-/** «Todas» y las provincias con casas, en el orden del prototipo. */
-export function provinceChips(provinces: readonly string[]): string[] {
-  return [ALL_PROVINCES, ...PROVINCES.filter((p) => provinces.includes(p))];
+  return (q.beds > 0 ? 1 : 0) + (q.baths > 0 ? 1 : 0) + (q.kind ? 1 : 0) + q.features.length + (q.min > 0 ? 1 : 0) + (q.max > 0 ? 1 : 0);
 }
 
 // ---------- Búsqueda en la URL (rutas tipadas de Explorar y Filtros) ----------
 
-export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "desde" | "mensual" | "ppl" | "beds" | "min" | "max" | "mas" | "mapa" | Feature;
+export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "desde" | "mensual" | "ppl" | "beds" | "banos" | "tipo" | "min" | "max" | "mas" | "mapa" | Feature;
 /** Parámetros de Explorar tal como viajan en la URL: texto, solo claves conocidas y solo si no son el valor por defecto. */
 export type ExploreSearch = Partial<Record<SearchKey, string>>;
 
@@ -210,6 +216,8 @@ export function normalizeSearch(params: SearchParams, today?: string): ExploreSe
   if (p.mensual || p.modo) out.mensual = "1";
   if (p.ppl) out.ppl = String(p.ppl);
   if (p.beds) out.beds = String(p.beds);
+  if (p.banos) out.banos = String(p.banos);
+  if (p.tipo) out.tipo = p.tipo;
   for (const f of FEATURE_KEYS) if (p[f]) out[f] = "1";
   if (p.min) out.min = String(p.min);
   if (p.max) out.max = String(p.max);
@@ -219,8 +227,8 @@ export function normalizeSearch(params: SearchParams, today?: string): ExploreSe
 }
 
 /** La búsqueda limpia que corresponde a unos filtros (para navegar a Explorar con ellos). */
-export function searchFor(f: Filters, provinces: readonly string[]): ExploreSearch {
-  return Object.fromEntries(toSearchParams(f, { prov: defaultProvince(provinces) })) as ExploreSearch;
+export function searchFor(f: Filters): ExploreSearch {
+  return Object.fromEntries(toSearchParams(f)) as ExploreSearch;
 }
 
 /** Query string normal (`?prov=Todas&min=44000`), en el orden de las claves y sin vacíos. */

@@ -19,7 +19,7 @@ test("apertura instalada hasta Explorar interactivo", async ({ context }) => {
   // Primera visita: instala el SW y guarda Explorar en IndexedDB.
   const first = await context.newPage();
   await first.goto("/explorar");
-  await expect(first.getByTestId("results-count")).toHaveText("8 casas en Limón");
+  await expect(first.getByTestId("results-count")).toHaveText("8 casas");
   await first.evaluate(() => navigator.serviceWorker.ready);
   await first.waitForTimeout(1500);
   await first.close();
@@ -131,7 +131,7 @@ test("presupuestos con Slow 4G y CPU 4×", async ({ browser }) => {
     const ctx = await browser.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" as const });
     const { page } = await throttled(ctx);
     await page.goto(`${base}/explorar`);
-    await expect(page.getByTestId("results-count")).toHaveText("6 casas en Limón", { timeout: 30_000 });
+    await expect(page.getByTestId("results-count")).toHaveText("6 casas", { timeout: 30_000 });
     await page.getByRole("link", { name: /^Filtros/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible({ timeout: 30_000 });
     await page.goBack();
