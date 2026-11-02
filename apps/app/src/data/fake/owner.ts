@@ -1,9 +1,7 @@
 // Fake en memoria de las casas del propietario: mismas reglas y mensajes que la base (RLS de listings, trigger
-// listings_protect, política listings_owner_delete y RPCs set_listing_available y submit_listing). Guardar una pantalla
+// listings_protect, política listings_owner_delete y RPC submit_listing). Guardar una pantalla
 // valida con planStep, como el adaptador PostgREST. La edición de una casa publicada sigue las reglas de ./edits.
 import type { OwnerListingsApi } from "../../domain/api";
-import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
-import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
@@ -120,15 +118,6 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       const refusal = submitRefusal(l, db.photosOf(id).length);
       if (refusal) throw new DomainError(refusal, "validation");
       touch(l, { status: "review", reviewNote: null, ...(locationOf(l) as Located) });
-    },
-
-    async setAvailable(id, available, reopenAt = null) {
-      const l = own(id);
-      if (!l) throw new DomainError(CALENDAR_MESSAGES.notActive, "validation");
-      if (l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
-      const next = availabilityUpdate(l, available, reopenAt, db.today());
-      if ("error" in next) throw new DomainError(next.error, "validation");
-      touch(l, next);
     },
 
     async reopenForEdit(id) {

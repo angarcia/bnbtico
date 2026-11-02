@@ -56,12 +56,10 @@ describe("lo que ve el propietario", () => {
     expect(cardLabel(activeListing).text).toBe("Activa");
   });
 
-  it("el enlace de una pausada o bloqueada no se comparte; el calendario solo se cierra en una pausada", () => {
+  it("el enlace de una pausada o bloqueada no se comparte", () => {
     expect(can(activeListing, "share")).toBe(true);
     expect(can({ ...activeListing, adminHold: paused }, "share")).toBe(false);
     expect(can({ ...activeListing, adminHold: blocked }, "share")).toBe(false);
-    expect(can({ ...activeListing, adminHold: paused }, "available")).toBe(true);
-    expect(can({ ...activeListing, adminHold: blocked }, "available")).toBe(false);
   });
 });
 

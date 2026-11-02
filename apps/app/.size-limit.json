@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, la hoja «Cerrar la casa», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, la hoja «Marcar una reserva», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -30,7 +30,7 @@
       "!dist/client/assets/month-grid-*.js",
       "!dist/client/assets/listing-calendar-*.js",
       "!dist/client/assets/suscripcion-*.js",
-      "!dist/client/assets/close-sheet-*.js",
+      "!dist/client/assets/mark-sheet-*.js",
       "!dist/client/assets/confirm-sheet-*.js",
       "!dist/client/assets/buscar-*.js",
       "!dist/client/assets/explore-map-leaflet-*.js",
@@ -258,9 +258,9 @@
     "gzip": true
   },
   {
-    "name": "Hoja «Cerrar la casa» · trozo diferido (se pide al tocar «Cerrar la casa hasta…» o en reposo en el Calendario)",
+    "name": "Hoja «Marcar una reserva» · trozo diferido (se pide al tocar «Marcar una reserva» o en reposo en el Calendario; el calendario de rango, range-calendar-*, es el de la búsqueda y la hoja de contacto)",
     "path": [
-      "dist/client/assets/close-sheet-*.js"
+      "dist/client/assets/mark-sheet-*.js"
     ],
     "limit": "1.5 KB",
     "gzip": true

@@ -1,9 +1,9 @@
 // Qué puede hacer el propietario con una casa según su estado. Refleja las reglas de SQL (trigger listings_protect,
-// política listings_owner_delete y RPCs submit_listing y set_listing_available); la base sigue siendo quien decide.
+// política listings_owner_delete y RPC submit_listing); la base sigue siendo quien decide.
 import type { Listing, ListingStatus } from "./listing";
 
-/** `available`: «Cerrar la casa hasta…» del Calendario; `share`: el enlace público solo funciona con la casa activa. */
-export type ListingAction = "edit" | "discard" | "submit" | "reopen" | "available" | "share";
+/** `share`: el enlace público solo funciona con la casa activa. */
+export type ListingAction = "edit" | "discard" | "submit" | "reopen" | "share";
 
 export function can(l: Pick<Listing, "status" | "reviewedAt"> & { adminHold?: Listing["adminHold"] }, action: ListingAction): boolean {
   switch (action) {
@@ -15,9 +15,6 @@ export function can(l: Pick<Listing, "status" | "reviewedAt"> & { adminHold?: Li
     case "reopen":
       // Una casa publicada ya no vuelve a borrador: se edita desde su ficha (editar-casa).
       return l.status === "changes" || l.status === "rejected";
-    case "available":
-      // Bloqueada por el admin: de solo lectura (una pausada se sigue editando).
-      return l.status === "active" && l.adminHold?.kind !== "blocked";
     case "share":
       // El enlace de una casa pausada o bloqueada no funciona: no se ofrece compartirlo.
       return l.status === "active" && !l.adminHold;

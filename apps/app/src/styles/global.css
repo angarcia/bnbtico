@@ -885,10 +885,9 @@ small.swap-in{display:block}
 .cal-month-block{display:flex;flex-direction:column;scroll-margin-top:calc(26px + env(safe-area-inset-top))}
 .cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px 0}
 .cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
-.close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
-.close-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
-.close-row .body{flex:1;display:flex;flex-direction:column}
-.close-row.is-closed{justify-content:space-between}
+.mark-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
+.mark-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.mark-row .body{flex:1;display:flex;flex-direction:column}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
 /* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */

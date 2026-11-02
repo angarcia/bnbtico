@@ -176,9 +176,9 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(zones).toContainEqual(expect.objectContaining({ id: "704-cocles", name: "Cocles", canton: "Talamanca", province: "Limón" }));
         expect(zones).toContainEqual(expect.objectContaining({ id: "704-puerto-viejo" }));
         expect(zones.map((z) => z.id)).not.toContain("701-limon-centro");
-        await h.owner("owner").setAvailable(pv.id, false);
+        await h.setClosed(pv.id, true);
         expect((await h.anon.zonesWithListings()).map((z) => z.id)).not.toContain("704-cocles");
-        await h.owner("owner").setAvailable(pv.id, true);
+        await h.setClosed(pv.id, false);
       });
 
       it("un rango de fechas inválido se rechaza con «Revise las fechas.»", async () => {
@@ -195,11 +195,11 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         await h.reset();
         const shown = await h.seed({ status: "active", draft: { title: "Casa visible" } });
         const paused = await h.seed({ status: "active", draft: { title: "Casa pausada" } });
-        await h.owner("owner").setAvailable(paused.id, false);
+        await h.setClosed(paused.id, true);
         expect(await ids(filters())).toEqual([shown.publicId]);
         expect(await h.anon.getPublic(paused.publicId)).toMatchObject({ title: "Casa pausada", available: false });
         expect((await h.anon.getManyPublic([paused.publicId])).map((l) => l.available)).toEqual([false]);
-        await h.owner("owner").setAvailable(paused.id, true);
+        await h.setClosed(paused.id, false);
         expect(await ids(filters())).toEqual([paused.publicId, shown.publicId]);
       }, 60_000);
     });

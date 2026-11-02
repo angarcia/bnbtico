@@ -91,7 +91,7 @@ describe("worker · ficha /casa/CT-####", () => {
   });
 
   it("una casa que no recibe consultas llega con el botón deshabilitado «No disponible por ahora»", async () => {
-    await t.h.owner("owner").setAvailable(casa.id, false);
+    await t.h.setClosed(casa.id, true);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">[\s\S]*?No disponible por ahora<\/button>/);
     expect(html).not.toContain("Contactar por WhatsApp");
@@ -213,7 +213,7 @@ describe("worker · ficha /casa/CT-####", () => {
 
   it("una casa cerrada a consultas trae «Calendario cerrado» y su reapertura, sin caja del calendario", async () => {
     const reopen = addDays(costaRicaToday(Date.now()), 20);
-    await t.h.owner("owner").setAvailable(casa.id, false, reopen);
+    await t.h.setClosed(casa.id, true, reopen);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const body = html.slice(html.indexOf('<div id="root">'));
     expect(body).toContain("Calendario cerrado");

@@ -3,6 +3,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import type { ListingsHarness, Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
+import { addDays } from "../../src/domain/calendar";
+import { longDateWithYear } from "../../src/domain/dates";
+import { costaRicaToday } from "../../src/domain/inquiry";
 
 // App instalada: service worker, manifiesto, sin conexión y aviso de versión nueva. Contra `vite preview` (el build).
 test.use({ serviceWorkers: "allow" });
@@ -79,20 +82,27 @@ test("la ficha pública va a la red primero y, sin red, sale la copia guardada",
 test("una escritura sin red muestra «Sin conexión», vuelve atrás y no se encola", async ({ page, context }) => {
   await injectSession(page, "owner");
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /Cerrar la casa hasta…/ });
+  const row = page.getByRole("button", { name: /Marcar una reserva/ });
   await expect(row).toBeVisible();
   await controlled(page);
+  const arrival = addDays(costaRicaToday(Date.now()), 3);
+  const departure = addDays(arrival, 2);
+  const sheet = page.getByRole("dialog", { name: "Marcar una reserva" });
 
-  await goOffline(context, page);
+  // La hoja (un trozo aparte) se abre con red; la escritura se intenta sin ella.
   await row.click();
-  await page.getByRole("dialog", { name: "Cerrar la casa" }).getByRole("button", { name: "Cerrar la casa" }).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole("button", { name: longDateWithYear(arrival)! }).click();
+  await sheet.getByRole("button", { name: longDateWithYear(departure)! }).click();
+  await goOffline(context, page);
+  await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
+  await expect(page.locator(".toast").last()).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
   await expect(row).toBeVisible();
 
   await context.setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
   await page.waitForTimeout(1500);
-  expect((await h.anon.getPublic(active.publicId))?.available).toBe(true);
+  expect(await h.anon.getPublicDays(active.publicId)).toEqual([]);
 });
 
 test("manifiesto, iconos y cabeceras: instalable, abre en /explorar sin redirección", async ({ page, request }) => {

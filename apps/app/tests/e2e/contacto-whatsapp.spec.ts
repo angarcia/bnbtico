@@ -178,12 +178,12 @@ test("la casa deja de recibir consultas con la hoja abierta: el mensaje de la ba
   await injectSession(page, "other");
   const wa = await catchWhatsApp(page);
   await openSheet(page, otra.publicId);
-  await h.owner("owner").setAvailable(otra.id, false);
+  await h.setClosed(otra.id, true);
   await openButton(page).click();
   await expect(sheet(page).locator('.note[role="alert"]')).toHaveText("Esta casa no está disponible para consultas.");
   await page.screenshot({ path: "test-results/contacto-error-base.png" });
   expect(wa).toEqual([]);
-  await h.owner("owner").setAvailable(otra.id, true);
+  await h.setClosed(otra.id, false);
 });
 
 test("sesión vencida (la base la rechaza): a Ingresar con la vuelta a la hoja y lo escrito guardado", async ({ page }) => {

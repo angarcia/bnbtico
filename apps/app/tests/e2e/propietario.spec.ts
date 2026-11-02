@@ -3,6 +3,9 @@ import type { Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { touch } from "./helpers/touch";
+import { addDays } from "../../src/domain/calendar";
+import { longDate, longDateWithYear } from "../../src/domain/dates";
+import { costaRicaToday } from "../../src/domain/inquiry";
 import { resumeStep } from "../../src/domain/publish-rules";
 
 const HOST = `127.0.0.1:${process.env.E2E_PORT ?? 4173}`;
@@ -210,43 +213,49 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await expect(page.getByRole("button", { name: /Editar la ficha/ })).toHaveCount(0);
 });
 
-test("cerrar la casa responde al instante desde el Calendario y vuelve atrás si la base se niega", async ({ page }) => {
+test("marcar una reserva responde al instante desde el Calendario y vuelve atrás si la base se niega", async ({ page }) => {
+  const arrival = addDays(costaRicaToday(Date.now()), 3);
+  const departure = addDays(arrival, 2);
+  const night = (iso: string) => page.getByRole("button", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)}(,|$)`) });
+  const row = page.getByRole("button", { name: /Marcar una reserva/ });
+  const sheet = page.getByRole("dialog", { name: "Marcar una reserva" });
+  const mark = async () => {
+    await row.click();
+    await sheet.getByRole("button", { name: longDateWithYear(arrival)! }).click();
+    await sheet.getByRole("button", { name: longDateWithYear(departure)! }).click();
+    await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
+    await expect(sheet).toHaveCount(0);
+  };
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /Cerrar la casa hasta…/ });
-  const closed = page.locator(".close-row.is-closed");
-  const open = page.getByRole("button", { name: "Abrir la casa" });
   await expect(row).toBeVisible();
 
-  // La respuesta tarda: la fila ya cambió antes de que llegue.
+  // La respuesta tarda: las noches ya se ven ocupadas antes de que llegue.
   let release = () => {};
   const held = new Promise<void>((r) => (release = r));
-  await page.route("**/rest/v1/rpc/set_listing_available", async (route) => {
+  await page.route("**/rest/v1/rpc/save_listing_days", async (route) => {
     await held;
     await route.continue();
   });
-  // Cerrar pide la fecha opcional en una hoja (ticket 04 de la fase 4); sin fecha, cerrada hasta que la abra.
-  await row.click();
-  await page.getByRole("dialog", { name: "Cerrar la casa" }).getByRole("button", { name: "Cerrar la casa" }).click();
-  await expect(closed).toContainText("Cerrada: no aparece en Explorar ni recibe consultas");
+  await mark();
+  await expect(night(arrival)).toHaveAccessibleName(/, ocupado/);
+  await expect(night(addDays(arrival, 1))).toHaveAccessibleName(/, ocupado/);
+  await expect(night(departure)).not.toHaveAccessibleName(/ocupado/);
   release();
-  await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(false);
-  await page.unroute("**/rest/v1/rpc/set_listing_available");
-  // La misma etiqueta que la tarjeta en el detalle.
-  await page.goto(`/propietario/casas/${active.id}`);
-  await expect(page.locator(".detail-photo .state")).toHaveText("Cerrada");
-  await page.goto(`/propietario/calendario?casa=${active.id}`);
+  await expect.poll(async () => (await h.anon.getPublicDays(active.publicId)).filter((d) => !d.available).map((d) => d.day)).toEqual([arrival, addDays(arrival, 1)]);
+  await page.unroute("**/rest/v1/rpc/save_listing_days");
 
-  await page.route("**/rest/v1/rpc/set_listing_available", (route) =>
-    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Solo puede cambiar la disponibilidad de una casa activa.", details: null, hint: null }) }),
+  // Si la base se niega, vuelve atrás y avisa.
+  await page.route("**/rest/v1/rpc/save_listing_days", (route) =>
+    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Este anuncio fue rechazado; publique uno nuevo.", details: null, hint: null }) }),
   );
-  await open.click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Solo puede cambiar la disponibilidad de una casa activa.");
-  await expect(closed).toBeVisible();
-  await page.unroute("**/rest/v1/rpc/set_listing_available");
-
-  await open.click();
-  await expect(row).toBeVisible();
-  await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(true);
+  const otherArrival = addDays(arrival, 5);
+  await row.click();
+  await sheet.getByRole("button", { name: longDateWithYear(otherArrival)! }).click();
+  await sheet.getByRole("button", { name: longDateWithYear(addDays(otherArrival, 2))! }).click();
+  await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
+  await expect(page.locator(".toast").last()).toHaveText("Este anuncio fue rechazado; publique uno nuevo.");
+  await expect(night(otherArrival)).not.toHaveAccessibleName(/ocupado/);
+  await page.unroute("**/rest/v1/rpc/save_listing_days");
 });
 
 test("con cambios pedidos: la nota y «Corregir y reenviar» abre el asistente", async ({ page }) => {

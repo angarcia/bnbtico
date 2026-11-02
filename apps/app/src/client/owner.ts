@@ -110,28 +110,6 @@ export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "i
   void client.invalidateQueries({ queryKey: billingQuery(userId).queryKey });
 }
 
-/** Abrir (borra la fecha de reapertura) o cerrar a consultas con una fecha opcional. */
-export type AvailabilityChange = { available: true } | { available: false; reopenAt: string | null };
-
-/** «Cerrar la casa hasta…» / «Abrir la casa» del Calendario: responde al instante y vuelve atrás si la base lo rechaza. */
-export function useSetAvailable(userId: string, listing: Pick<Listing, "id" | "publicId">) {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: async (c: AvailabilityChange) => (await api()).setAvailable(listing.id, c.available, c.available ? null : c.reopenAt),
-    onMutate: async (c) => {
-      await client.cancelQueries({ queryKey: ["own-listings", userId] });
-      await client.cancelQueries({ queryKey: ["own-listing", userId, listing.id] });
-      const before = client.getQueryData<Listing | null>(["own-listing", userId, listing.id]);
-      patchCached(client, userId, listing.id, { available: c.available, reopenAt: c.available ? null : c.reopenAt });
-      return { previous: { available: !c.available, reopenAt: before?.reopenAt ?? null } };
-    },
-    onError: (_error, _c, context) => {
-      if (context) patchCached(client, userId, listing.id, context.previous);
-    },
-    onSettled: () => refresh(client, userId, listing),
-  });
-}
-
 /** Descartar un borrador que nunca se envió. */
 export function useDeleteDraft(userId: string) {
   const client = useQueryClient();

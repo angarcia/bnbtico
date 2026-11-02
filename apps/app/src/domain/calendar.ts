@@ -35,7 +35,7 @@ export const CALENDAR_WINDOW_DAYS = 365;
 export const CALENDAR_MAX_DAYS = 366;
 export const CALENDAR_MAX_PRICE_CRC = 100_000_000;
 
-/** Mensajes de save_listing_days / set_listing_available, repetidos tal cual en la migración fase4_calendario y en el fake. */
+/** Mensajes de save_listing_days, repetidos tal cual en la migración fase4_calendario y en el fake. */
 export const CALENDAR_MESSAGES = {
   notFound: "No encontramos ese anuncio.",
   rejected: "Este anuncio fue rechazado; publique uno nuevo.",
@@ -44,9 +44,6 @@ export const CALENDAR_MESSAGES = {
   nothing: "No hay cambios que guardar.",
   price: "Escriba un precio por noche en colones, mayor que cero y sin decimales.",
   noNightlyPrice: "Ponga primero el precio por noche de la casa para cambiar el de un día.",
-  reopenDate: "La fecha de reapertura debe ser a partir de mañana y dentro de un año.",
-  reopenWhileOpen: "La fecha de reapertura solo se pone al cerrar la casa.",
-  notActive: "Solo puede cambiar la disponibilidad de una casa activa.",
 } as const;
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -200,24 +197,21 @@ export function applyChange(days: readonly CalendarDay[], base: number | null, c
   return [...next.values()].sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
 }
 
-/** Fecha opcional de reapertura: de mañana a hoy + 365. Vacía o null = sin fecha (válido). */
-export function validateReopenDate(date: string | null, today: string): string | null {
-  if (!date) return null;
-  return toUtc(date) !== null && date > today && date <= addDays(today, CALENDAR_WINDOW_DAYS) ? null : CALENDAR_MESSAGES.reopenDate;
+/** «Marcar una reserva» (ticket 04 de la ronda del 2 nov): las noches de una reserva, de la llegada a la víspera de la
+ *  salida (la salida no se ocupa; misma regla que Explorar). Sin llegada, sin salida o con la salida igual o anterior a la
+ *  llegada, ninguna. Se guardan como «ocupado» (CalendarChange sin precio: los precios especiales se conservan). */
+export function reservationDays(arrival: string | null, departure: string | null): string[] {
+  if (!arrival || !departure || departure <= arrival) return [];
+  const days: string[] = [];
+  for (let d = arrival; d < departure; d = addDays(d, 1)) days.push(d);
+  return days;
 }
 
-/** «Cerrar la casa hasta…» del Calendario (antes el interruptor «Anuncio visible») (set_listing_available): solo casas activas; abrir a mano cancela la fecha.
- *  No toca el estado de la casa: cerrada sigue publicada; abierta no republica una oculta. */
-export function availabilityUpdate(
-  listing: { status: ListingStatus },
-  available: boolean,
-  reopenAt: string | null,
-  today: string,
-): { available: boolean; reopenAt: string | null } | { error: string } {
-  if (listing.status !== "active") return { error: CALENDAR_MESSAGES.notActive };
-  if (available) return reopenAt ? { error: CALENDAR_MESSAGES.reopenWhileOpen } : { available: true, reopenAt: null };
-  const error = validateReopenDate(reopenAt, today);
-  return error ? { error } : { available: false, reopenAt: reopenAt || null };
+/** «3 noches marcadas como ocupadas · 20–22 dic»: el aviso tras marcar una reserva (las fechas, como el panel de abajo). */
+export function reservationLabel(days: readonly string[]): string {
+  const n = new Set(days).size;
+  const [, where] = selectionLabel(days).split(" · ");
+  return `${n} noche${n === 1 ? " marcada como ocupada" : "s marcadas como ocupadas"} · ${where}`;
 }
 
 /** Reapertura automática (reopen_due_listings): si la fecha llegó, abre a consultas y borra la fecha. Nunca toca el

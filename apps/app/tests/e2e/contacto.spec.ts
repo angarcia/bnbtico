@@ -31,7 +31,7 @@ test.beforeAll(async () => {
   await h.reset();
   casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, capacity: 6 } });
   cerrada = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina cerrada", zone: "Cocles", zoneSource: "other", zoneId: null } });
-  await h.owner("owner").setAvailable(cerrada.id, false);
+  await h.setClosed(cerrada.id, true);
   await h.seed({ status: "active", photos: 5, draft: { title: MONTHLY_TITLE, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 4, acceptsMonthly: true, monthlyPriceCrc: 450000 } });
   owner = h.ownerName("owner").split(" ")[0]!;
 });

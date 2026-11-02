@@ -56,7 +56,7 @@ export interface PublicListingsApi {
 
 /**
  * Casas del propietario con sesión. Las reglas las pone la base (RLS, trigger listings_protect, política
- * listings_owner_delete, RPC set_listing_available); el fake las repite con los mismos mensajes.
+ * listings_owner_delete); el fake las repite con los mismos mensajes.
  */
 /** Lo que el propietario ve de su ficha en 30 días (revisión UX A2). */
 export interface ListingStats {
@@ -108,12 +108,6 @@ export interface OwnerListingsApi {
   saveEdit(id: string, patch: EditPatch): Promise<ListingEdit | null>;
   /** Descarta un dato pendiente (en revisión o con cambios pedidos): la ficha sigue con lo aprobado (RPC discard_edit_field). */
   discardEditField(id: string, field: ReviewedField): Promise<void>;
-  /**
-   * «Cerrar la casa hasta…» del Calendario (antes «Anuncio visible»), solo con la casa activa (RPC set_listing_available). Al cerrar, `reopenAt` opcional
-   * (`YYYY-MM-DD`, de mañana a hoy + 365): esa noche la base la abre sola. Abrir a mano borra la fecha; una fecha al abrir
-   * se rechaza. Ninguna de las dos cosas cambia el estado de la casa.
-   */
-  setAvailable(id: string, available: boolean, reopenAt?: string | null): Promise<void>;
   /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
   /**

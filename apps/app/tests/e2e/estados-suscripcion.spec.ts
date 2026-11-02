@@ -222,9 +222,9 @@ test("ficha editable: la tarjeta ocre de la pendiente, el bloque de la parada, s
   await page.screenshot({ path: "test-results/capturas/detalle-ventana.png", fullPage: true });
   await expect(page.getByRole("button", { name: /Compartir ficha/ })).toBeEnabled();
   await expect(page.getByTestId("subscription-row")).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
-  // «Cerrar la casa hasta…» (en el Calendario) no depende de la suscripción.
+  // «Marcar una reserva» (en el Calendario) no depende de la suscripción.
   await page.goto(`/propietario/calendario?casa=${cerca.id}`);
-  await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Marcar una reserva/ })).toBeVisible();
 
   await page.goto(`/propietario/casas/${parada.id}`);
   await expect(page.getByTestId("stopped-notice").getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", payLink(parada.publicId));
