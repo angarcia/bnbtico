@@ -69,6 +69,7 @@ interface SaveVars {
   step: Step;
   patch: Partial<ListingDraft>;
   seq: number;
+  volver?: Volver;
   /** El guardado ya lanzado (cola por casa) en el mismo tick de «Continuar». */
   request: Promise<Listing>;
 }
@@ -85,8 +86,10 @@ let saveSeq = 0;
 /** Último guardado pedido por casa: la respuesta de uno anterior no pisa en la caché lo que vino después. */
 const latestSave = new Map<string, number>();
 
-const toStep = (router: ReturnType<typeof useRouter>, id: string, step: Step, replace = false) =>
-  router.navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: String(step) }, replace });
+/** `volver`: el paso se abre desde «Revisar y enviar» (`?volver=revisar`) y «Continuar» y «Atrás» vuelven a ese resumen. */
+export type Volver = "revisar" | undefined;
+const toStep = (router: ReturnType<typeof useRouter>, id: string, step: Step, volver?: Volver) =>
+  router.navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: String(step) }, search: volver ? { volver } : {} });
 
 export function useSaveStep(userId: string, listingId: string) {
   const client = useQueryClient();
@@ -103,10 +106,10 @@ export function useSaveStep(userId: string, listingId: string) {
       if (latestSave.get(listingId) === seq) patchCached(client, userId, listingId, saved);
     },
     // Callbacks de useMutation: corren aunque la pantalla ya no esté montada (el propietario siguió adelante).
-    onError: (error, { step, patch }) => {
+    onError: (error, { step, patch, volver }) => {
       setFailure({ listingId, step, patch, message: messageOf(error) });
       void client.invalidateQueries({ queryKey: detailKey(userId, listingId) });
-      void toStep(router, listingId, step);
+      void toStep(router, listingId, step, volver);
     },
   });
 }
@@ -126,7 +129,7 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   const invalid = validateAll(fresh);
   if (invalid) {
     setFailure({ listingId: id, step: invalid.step, patch: {}, message: invalid.error });
-    void toStep(router, id, invalid.step);
+    void toStep(router, id, invalid.step, "revisar"); // arreglado, «Continuar» vuelve al resumen
     return null;
   }
   await (await api()).submit(id);
@@ -210,7 +213,7 @@ export function ReadyScope({ onReady, children }: { onReady: (ready: boolean) =>
 
 // ---------- El formulario ----------
 
-export function StepForm({ userId, listing, step, enter, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; children: (values: ListingDraft) => ReactNode }) {
+export function StepForm({ userId, listing, step, enter, volver, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; volver?: Volver; children: (values: ListingDraft) => ReactNode }) {
   // La dirección de entrada se fija al montar esta pantalla: los repintados posteriores no cortan la animación.
   const [entering] = useState(enter);
   const client = useQueryClient();
@@ -260,8 +263,8 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
     clearFailure(listing.id);
     const request = startSave(listing.id, step, patch, listing);
     request.catch(() => undefined); // el error lo recoge la mutación
-    save.mutate({ step, patch, seq: ++saveSeq, request });
-    void toStep(router, listing.id, nextStep(step) ?? LAST_STEP);
+    save.mutate({ step, patch, seq: ++saveSeq, volver, request });
+    void toStep(router, listing.id, volver ? LAST_STEP : (nextStep(step) ?? LAST_STEP));
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
@@ -324,7 +327,7 @@ export function StepForm({ userId, listing, step, enter, children }: { userId: s
             <I.back size={22} />
           </span>
         ) : (
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(previousStep(step) ?? 1) }} className="btn btn-ghost btn-back" aria-label="Atrás">
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(volver ? LAST_STEP : (previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
             <I.back size={22} />
           </Link>
         )}

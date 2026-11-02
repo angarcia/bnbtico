@@ -278,9 +278,8 @@ describe("ediciones del propietario", () => {
   });
 
   it("al guardar se valida la casa resultante: baño de la habitación, descripción y habitaciones", async () => {
+    // Un estudio (0 habitaciones) puede pasar a Habitación: las habitaciones ya no se piden (la base fija 1 al aprobar).
     const { id } = await h.seed({ status: "active", draft: { bedrooms: 0 } });
-    expect((await save(id, { kind: "habitacion", bathroom_shared: false })).error?.message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
-    expect((await owner.rpc("update_listing_live", { p_listing: id, p_patch: { bedrooms: 1 } })).error).toBeNull();
     expect((await save(id, { kind: "habitacion" })).error?.message).toBe("Indique si el baño es privado o compartido.");
     expect((await save(id, { kind: "habitacion", bathroom_shared: false })).error).toBeNull();
     expect((await save(id, { description: "Muy corta." })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
@@ -444,14 +443,13 @@ describe("revisión dato a dato", () => {
     expect(after).toEqual({ kind: "completo", bathroom_shared: null, title: "Cabina Cahuita", zone: "Cahuita", lat: 9.7366 });
   });
 
-  it("approve vuelve a validar: un cambio de tipo con 0 habitaciones se rechaza", async () => {
+  it("approve vuelve a validar el baño; las habitaciones ya no estorban: un cambio a Habitación con 0 se aprueba y deja 1", async () => {
     // Carrera: se envía con 1 habitación; mientras espera, el dueño baja a 0 al momento (lo permite el tipo aprobado, completo).
     const { id } = await h.seed({ status: "active", draft: { kind: "completo", bedrooms: 1 } });
     expect((await owner.rpc("save_edit", { p_listing: id, p_patch: { kind: "habitacion", bathroom_shared: false } })).error).toBeNull();
     expect((await owner.rpc("update_listing_live", { p_listing: id, p_patch: { bedrooms: 0 } })).error).toBeNull();
-    expect((await review(id, "kind", "approve")).error?.message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
-    expect((await serviceClient().from("listings").select("kind").eq("id", id).single()).data?.kind).toBe("completo");
-    expect((await serviceClient().from("listing_edit_fields").select("status").eq("listing_id", id).single()).data?.status).toBe("review");
+    expect((await review(id, "kind", "approve")).data).toBe("approved");
+    expect((await serviceClient().from("listings").select("kind, bedrooms").eq("id", id).single()).data).toEqual({ kind: "habitacion", bedrooms: 1 });
   });
 
   it("aprobar una foto con 15 aprobadas se rechaza", async () => {

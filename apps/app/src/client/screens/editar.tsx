@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { isBlocked, isPublished } from "../../domain/can";
-import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, editFieldFromParam, mergeEdit, parseField, planEdit, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
+import { EDIT_COPY, fieldTitle, FIELD_TITLES, REVIEWED_FIELDS, editFieldFromParam, mergeEdit, parseField, planEdit, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
 import { toDomainError } from "../../domain/errors";
 import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
@@ -41,7 +41,7 @@ export function EditarCampoScreen() {
   const l = query.data;
   const ficha = <Navigate to="/propietario/casas/$id" params={{ id }} replace />;
   if (!field || (l && (!isPublished(l) || isBlocked(l)))) return ficha;
-  const header = <FlowHeader title={FIELD_TITLES[field]} back={`/propietario/casas/${id}`} historyBack />;
+  const header = <FlowHeader title={fieldTitle(field, l?.kind)} back={`/propietario/casas/${id}`} historyBack />;
   if (l === null)
     return (
       <>

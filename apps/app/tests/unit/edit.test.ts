@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editLabel, editOverview, editSummary, editedFields, editFieldFromParam, mergeEdit, parseField, planEdit, photoPill, reviewNotice, type ListingEdit } from "../../src/domain/edit";
+import { editLabel, fieldTitle, editOverview, editSummary, editedFields, editFieldFromParam, mergeEdit, parseField, planEdit, photoPill, reviewNotice, type ListingEdit } from "../../src/domain/edit";
 import { isPublished, can } from "../../src/domain/can";
 import { TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import { formInput } from "../../src/domain/step-forms";
@@ -20,6 +20,12 @@ describe("editar una casa publicada · dominio", () => {
     expect(can({ status: "active", reviewedAt: "x" }, "reopen")).toBe(false);
     expect(can({ status: "changes", reviewedAt: "x" }, "reopen")).toBe(true);
     expect(can({ status: "rejected", reviewedAt: "x" }, "reopen")).toBe(true);
+  });
+  it("fieldTitle: una Habitación no tiene habitaciones que contar", () => {
+    expect(fieldTitle("capacidad", "habitacion")).toBe("Personas y baños");
+    expect(fieldTitle("capacidad", "completo")).toBe("Personas, habitaciones y baños");
+    expect(fieldTitle("capacidad", null)).toBe("Personas, habitaciones y baños");
+    expect(fieldTitle("nombre", "habitacion")).toBe("Nombre");
   });
   it("editLabel (revisión por dato, A5): «Cambios en revisión» o «Cambios pedidos»", () => {
     expect(editLabel(null)).toBeNull();

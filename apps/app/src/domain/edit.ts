@@ -94,6 +94,9 @@ export const FIELD_TITLES: Record<EditField, string> = {
   precio: "Precio",
 };
 
+/** Título de un dato; una Habitación no cuenta habitaciones (son 1). */
+export const fieldTitle = (field: EditField, kind?: ListingDraft["kind"]): string => (field === "capacidad" && kind === "habitacion" ? "Personas y baños" : FIELD_TITLES[field]);
+
 /** La pantalla del asistente cuyos campos y reglas reutiliza cada dato. */
 export const FIELD_STEP: Record<FormField, Step> = { tipo: 1, ubicacion: 2, capacidad: 4, caracteristicas: 5, nombre: 6, descripcion: 6, precio: 8 };
 

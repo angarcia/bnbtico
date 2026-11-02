@@ -89,6 +89,8 @@ describe("cardFacts y mapPriceLabel (tarjeta y marcador de Explorar)", () => {
     expect(cardFacts({ capacity: 4, bedrooms: 2 })).toBe("4 personas · 2 habitaciones");
     expect(cardFacts({ capacity: 1, bedrooms: 1 })).toBe("1 persona · 1 habitación");
     expect(cardFacts({ capacity: 2, bedrooms: 0 })).toBe("2 personas · Estudio");
+    // Una Habitación es 1 habitación, nunca «Estudio» (aunque venga sin dato).
+    expect(cardFacts({ capacity: 2, bedrooms: 0, kind: "habitacion" })).toBe("2 personas · 1 habitación");
   });
   it("el precio de la noche, en la moneda elegida; con el mensual, el del mes o «A negociar»", () => {
     expect(mapPriceLabel(house(), false, "CRC", 525)).toBe("₡42 000");

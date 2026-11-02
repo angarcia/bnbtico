@@ -198,13 +198,14 @@ export function parseColones(input: string): number | null {
 }
 
 /** Limpia dependencias: toda casa se alquila por noches; sin parqueo no hay tipo; sin «Alquiler mensual» no hay precio al
- *  mes; sin habitación no hay dato del baño; solo una zona de la lista lleva `zoneId`. Las columnas antiguas (monthlyMode,
+ *  mes; sin habitación no hay dato del baño y una Habitación son siempre 1 habitación; solo una zona de la lista lleva `zoneId`. Las columnas antiguas (monthlyMode,
  *  minNights, minMonths) no se tocan. */
 export function normalize(d: ListingDraft): ListingDraft {
   const n = { ...d, acceptsNightly: true };
   if (n.zoneSource !== "list") n.zoneId = null;
   if (!n.features.includes("parking")) n.parkingPaid = null;
   if (n.kind !== "habitacion") n.bathroomShared = null;
+  if (n.kind === "habitacion") n.bedrooms = 1; // una Habitación es una habitación: el asistente no lo pregunta
   if (!n.acceptsMonthly) n.monthlyPriceCrc = null;
   return n;
 }

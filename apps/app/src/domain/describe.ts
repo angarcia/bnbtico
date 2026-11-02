@@ -46,9 +46,10 @@ export function cardPrice(d: Pick<ListingDescription, "mainPrice" | "monthly">, 
 export const NEGOTIABLE_CARD = "Precio a negociar";
 
 /** «4 personas · 2 habitaciones», «1 persona · 1 habitación», «2 personas · Estudio» (sin habitaciones aparte). */
-export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms">): string {
+export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms"> & { kind?: PublicListing["kind"] }): string {
   const people = `${l.capacity} ${l.capacity === 1 ? "persona" : "personas"}`;
-  const rooms = l.bedrooms > 0 ? `${l.bedrooms} ${l.bedrooms === 1 ? "habitación" : "habitaciones"}` : "Estudio";
+  const bedrooms = l.kind === "habitacion" ? 1 : l.bedrooms; // una Habitación es 1 habitación, nunca «Estudio»
+  const rooms = bedrooms > 0 ? `${bedrooms} ${bedrooms === 1 ? "habitación" : "habitaciones"}` : "Estudio";
   return `${people} · ${rooms}`;
 }
 

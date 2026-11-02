@@ -33,7 +33,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       zone: l.zone,
       approx: l.lat !== null && l.lng !== null ? approxPoint(l.lat, l.lng, l.publicId) : null,
       capacity: l.capacity ?? 0,
-      bedrooms: l.bedrooms ?? 0,
+      bedrooms: l.kind === "habitacion" ? 1 : (l.bedrooms ?? 0),
       bathrooms: l.bathrooms ?? 0,
       bathroomShared: l.bathroomShared,
       features: [...l.features],
