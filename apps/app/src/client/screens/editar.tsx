@@ -20,7 +20,6 @@ import { BathroomChoice, CapacityCounters, DescriptionField, FeatureChips, Price
 import { ChoiceCards } from "../publish/wizard-parts";
 import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
-import { ReadyScope } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/editar/$campo");
@@ -85,34 +84,28 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const [frozen, setFrozen] = useState<string | null>(null);
   const touch = () => setFrozen((f) => f ?? version);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(true);
   const saving = live.isPending || edit.isPending;
   const failed = (e: unknown) => setError(toDomainError(e).message);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     touch();
-    if (saving || !ready) return;
-    const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget))));
+    if (saving) return;
+    // «Enviar a revisión» nunca espera a la pantalla (como «Continuar» al crear): solo lo obligatorio bloquea, con su mensaje.
+    const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget)), draft));
     if ("error" in plan) return setError(plan.error);
     setError(null);
+    // Lo que no es obligatorio se guarda y se avisa (el mismo aviso en ocre que «Revisar y enviar»; en la ficha, bajo el dato).
+    const saved = (text: string) => {
+      toast(plan.warning ? `${text} ${plan.warning}` : text);
+      toFicha();
+    };
     if ("immediate" in plan) {
       if (Object.keys(plan.immediate).length === 0) return toFicha();
-      return live.mutate(plan.immediate, {
-        onSuccess: () => {
-          toast(EDIT_COPY.savedLive);
-          toFicha();
-        },
-        onError: failed,
-      });
+      return live.mutate(plan.immediate, { onSuccess: () => saved(EDIT_COPY.savedLive), onError: failed });
     }
-    edit.mutate(plan.reviewed, {
-      onSuccess: () => {
-        toast(EDIT_COPY.sentToReview);
-        toFicha();
-      },
-      onError: failed,
-    });
+    if (Object.keys(plan.reviewed).length === 0) return toFicha();
+    edit.mutate(plan.reviewed, { onSuccess: () => saved(EDIT_COPY.sentToReview), onError: failed });
   }
 
   return (
@@ -124,16 +117,14 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
           {error}
         </div>
       ) : null}
-      <ReadyScope onReady={setReady}>
-        <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
-      </ReadyScope>
+      <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
       {reviewed ? (
         <p className="note small" data-testid="review-notice">
           {reviewNotice(field as ReviewedField, listing)}
         </p>
       ) : null}
       <div className="sticky-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={saving || !ready}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
           {reviewed ? "Enviar a revisión" : "Guardar"}
         </button>
       </div>
@@ -153,7 +144,7 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
     listingId: listing.id,
     photos: listing.photos,
     pending,
-    counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "muted" },
+    counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "ok" },
     room: MAX_PHOTOS - total,
     canAdd: true,
     register: async (folder) => (await photosApi()).addEditPhoto(listing.id, folder),
@@ -173,6 +164,8 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
     <>
       <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} historyBack action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
+        {/* Como el paso 7 del asistente: la ayuda de la primera foto se va con ella. */}
+        {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
         <p className="note small">El orden y las fotos que quite se guardan al momento. {EDIT_COPY.photosNotice}</p>
         <div className="sticky-actions">
@@ -196,7 +189,8 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
 
 /** El tipo: con «Habitación» elegida aparece el baño (que en el asistente se pide con la capacidad). */
 function KindInputs({ draft }: { draft: ListingDraft }) {
-  const [kind, setKind] = useState<Kind | null>(draft.kind);
+  // Un tipo de antes (casa, apartamento) cuenta como Alojamiento completo, como en el paso 1 del asistente.
+  const [kind, setKind] = useState<Kind | null>(draft.kind === "habitacion" ? "habitacion" : draft.kind ? "completo" : null);
   return (
     <>
       <ChoiceCards

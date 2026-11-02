@@ -48,8 +48,25 @@ export const nightlyError = (d: ListingDraft): string | null => (isInt(d.nightly
 // Precio al mes opcional: vacío es «Precio a negociar con el dueño».
 export const monthlyError = (d: ListingDraft): string | null => (d.acceptsMonthly && d.monthlyPriceCrc !== null && !isInt(d.monthlyPriceCrc, 1) ? MONTHLY_PRICE_ERROR : null);
 
-/** Validación de una pantalla: la que usa la edición de una casa publicada (domain/edit.ts). El asistente de publicar solo
- *  exige lo de `requiredProblems`; lo demás de estas reglas sale como aviso (`warnings`). */
+/** Paso 4 y 5, dato por dato (la edición de una casa publicada valida solo el dato que cambia): los mismos mensajes que
+ *  `update_listing_live`. */
+export const CAPACITY_ERROR = "Indique cuántas personas pueden alojarse (mínimo 1).";
+export const BEDROOMS_ERROR = "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
+export const BATHROOMS_ERROR = "Indique el número de baños (mínimo 1).";
+export const BATHROOM_SHARED_ERROR = "Indique si el baño es privado o compartido.";
+export const PARKING_ERROR = "Indique si el parqueo es gratuito o de pago.";
+export const capacityError = (d: ListingDraft): string | null => (isInt(d.capacity, 1) ? null : CAPACITY_ERROR);
+// Una Habitación no pregunta habitaciones (son 1, `normalize`).
+export const bedroomsError = (d: ListingDraft): string | null =>
+  d.kind === "habitacion" || isInt(d.bedrooms, d.kind === "completo" || d.kind === "apartamento" ? 0 : 1) ? null : BEDROOMS_ERROR;
+export const bathroomsError = (d: ListingDraft): string | null => (isInt(d.bathrooms, 1) ? null : BATHROOMS_ERROR);
+export const bathroomSharedError = (d: ListingDraft): string | null => (d.kind === "habitacion" && d.bathroomShared === null ? BATHROOM_SHARED_ERROR : null);
+export const parkingError = (d: ListingDraft): string | null => (d.features.includes("parking") && d.parkingPaid === null ? PARKING_ERROR : null);
+/** Tope duro de la descripción (el área no deja pasar de 2000): lo único de ella que bloquea. */
+export const descriptionTooLong = (d: ListingDraft): boolean => charCount(d.description) > DESCRIPTION_MAX;
+
+/** Validación de una pantalla. El asistente de publicar solo exige lo de `requiredProblems`; lo demás de estas reglas sale
+ *  como aviso (`warnings`). La edición de una casa publicada usa las mismas reglas dato por dato (domain/edit.ts). */
 export function validateStep(step: Step, d: ListingDraft): string | null {
   switch (step) {
     case 1:
@@ -64,15 +81,9 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       if (d.zoneSource === "other" && charCount(d.zone) > OTHER_ZONE_MAX) return LOCATION_MESSAGES.longZone;
       return null;
     case 4:
-      if (!isInt(d.capacity, 1)) return "Indique cuántas personas pueden alojarse (mínimo 1).";
-      // Una Habitación no pregunta habitaciones (son 1, `normalize`).
-      if (d.kind !== "habitacion" && !isInt(d.bedrooms, d.kind === "completo" || d.kind === "apartamento" ? 0 : 1)) return "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
-      if (!isInt(d.bathrooms, 1)) return "Indique el número de baños (mínimo 1).";
-      if (d.kind === "habitacion" && d.bathroomShared === null) return "Indique si el baño es privado o compartido.";
-      return null;
+      return capacityError(d) ?? bedroomsError(d) ?? bathroomsError(d) ?? bathroomSharedError(d);
     case 5:
-      if (d.features.includes("parking") && d.parkingPaid === null) return "Indique si el parqueo es gratuito o de pago.";
-      return null;
+      return parkingError(d);
     case 6:
       return titleError(d) ?? descriptionError(d);
     case 7:

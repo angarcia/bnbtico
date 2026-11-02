@@ -7,6 +7,7 @@ import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
+  DESCRIPTION_MAX,
   MAX_PHOTOS,
   TITLE_MAX,
   TITLE_MIN,
@@ -14,6 +15,7 @@ import {
 } from "../../domain/listing";
 import {
   charCount,
+  DESCRIPTION_LENGTH_ERROR,
   NIGHTLY_PRICE_ERROR,
   TITLE_EMPTY_ERROR,
   TITLE_LENGTH_ERROR,
@@ -42,6 +44,8 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
   // baños, descripción, parqueo y precio al mes ya no bloquean.
   if (!l.title.trim()) return TITLE_EMPTY_ERROR;
   if (charCount(l.title) < TITLE_MIN || charCount(l.title) > TITLE_MAX) return TITLE_LENGTH_ERROR;
+  // La descripción es opcional: solo tiene tope duro (2000), como submit_listing.
+  if (charCount(l.description) > DESCRIPTION_MAX) return DESCRIPTION_LENGTH_ERROR;
   if (photos < 1) return PHOTO_REQUIRED_ERROR;
   if (photos > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
   if ((l.nightlyPriceCrc ?? 0) <= 0) return NIGHTLY_PRICE_ERROR;

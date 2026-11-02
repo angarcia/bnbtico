@@ -403,6 +403,14 @@ describe("planStep (guardar una pantalla)", () => {
     expect(planStep(validDraft(), 8, { nightlyPriceCrc: Number.NaN, acceptsMonthly: false, monthlyPriceCrc: null })).toEqual({ changes: { nightlyPriceCrc: null }, next: expect.anything() });
   });
 
+  it("un precio al mes mal escrito se guarda vacío pero avisa (ocre), como al editar", () => {
+    const plan = planStep(validDraft(), 8, { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: Number.NaN });
+    expect(plan).toMatchObject({ warning: MONTHLY_PRICE_ERROR });
+    expect(plan).toMatchObject({ next: { monthlyPriceCrc: null, acceptsMonthly: true } });
+    expect(planStep(validDraft(), 8, { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 350000 })).not.toHaveProperty("warning");
+    expect(planStep(validDraft(), 8, { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: null })).not.toHaveProperty("warning");
+  });
+
   it("devuelve solo las columnas que cambian, incluidas las que limpia normalize", () => {
     const current = { ...validDraft(), kind: "habitacion" as const, bathroomShared: true, nightlyPriceCrc: 42000 };
     const plan = planStep(current, 1, { kind: "completo" });

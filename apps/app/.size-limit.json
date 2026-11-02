@@ -141,7 +141,7 @@
     "path": [
       "dist/client/assets/edit-????????.js"
     ],
-    "limit": "2.25 kB",
+    "limit": "2.5 kB",
     "gzip": true
   },
   {

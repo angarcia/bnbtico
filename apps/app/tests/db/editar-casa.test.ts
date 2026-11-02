@@ -46,9 +46,12 @@ describe("editar una casa publicada · al momento y guardas", () => {
     expect((await live(active.id, { title: "Casa nueva" })).error?.message).toBe("Ese dato no se puede cambiar aquí.");
     expect((await live(active.id, { status: "draft" })).error?.message).toBe("Ese dato no se puede cambiar aquí.");
     expect((await live(draft.id, { capacity: 3 })).error?.message).toBe("Solo puede cambiar así una casa publicada.");
-    expect((await live(active.id, { features: ["wifi", "parking"] })).error?.message).toBe("Indique si el parqueo es gratuito o de pago.");
+    // Antes sin parqueo: añadirlo sin decir si se paga se guarda (como al crear); con el tipo ya dicho, no se puede vaciar.
+    const parked = await h.seed({ status: "active", draft: { features: ["wifi", "parking"], parkingPaid: true } });
+    expect((await live(parked.id, { parking_paid: null })).error?.message).toBe("Indique si el parqueo es gratuito o de pago.");
     expect((await live(active.id, { parking_paid: true })).error?.message).toBe("El tipo de parqueo solo aplica si el anuncio tiene parqueo.");
-    expect((await live(active.id, { accepts_monthly: true, monthly_price_crc: 0 })).error?.message).toBe("Indique el precio al mes en colones o déjelo vacío.");
+    const monthly = await h.seed({ status: "active", draft: { acceptsMonthly: true, monthlyPriceCrc: 650000 } });
+    expect((await live(monthly.id, { monthly_price_crc: 0 })).error?.message).toBe("Indique el precio al mes en colones o déjelo vacío.");
     expect((await live(active.id, { nightly_price_crc: 0 })).error?.message).toBe("Indique el precio por noche en colones.");
     expect((await live(active.id, { capacity: 0 })).error?.message).toBe("Indique cuántas personas pueden alojarse (mínimo 1).");
     expect((await live(active.id, { features: ["jacuzzi"] })).error?.message).toBe("Ese dato no se puede cambiar aquí.");
@@ -62,6 +65,34 @@ describe("editar una casa publicada · al momento y guardas", () => {
     expect((await live(completo.id, { bedrooms: 0 })).error).toBeNull();
     const room = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true } });
     expect((await live(room.id, { bedrooms: 0 })).error?.message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
+  });
+
+  // ---- Editar sigue las reglas de crear (2026-11-02, ticket 12): cada dato valida solo ese dato ----
+  it("update_listing_live: una casa sin baños cambia el precio; vaciar un dato que tenía valor falla, uno vacío puede seguir vacío", async () => {
+    const nobath = await h.seed({ status: "active", draft: { bathrooms: null } });
+    expect((await live(nobath.id, { nightly_price_crc: 55000 })).error).toBeNull();
+    expect((await live(nobath.id, { capacity: 4, bathrooms: null })).error).toBeNull();
+    expect((await live(nobath.id, { bathrooms: 0 })).error).toBeNull(); // estaba vacío: lo inválido queda null
+    expect((await h.owner("owner").getOwn(nobath.id))).toMatchObject({ nightlyPriceCrc: 55000, capacity: 4, bathrooms: null });
+    const full = await h.seed({ status: "active" });
+    for (const [patch, message] of [
+      [{ capacity: null }, "Indique cuántas personas pueden alojarse (mínimo 1)."],
+      [{ bathrooms: null }, "Indique el número de baños (mínimo 1)."],
+      [{ bedrooms: null }, "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0."],
+      [{ nightly_price_crc: null }, "Indique el precio por noche en colones."],
+    ] as const) expect((await live(full.id, patch)).error?.message).toBe(message);
+    expect((await h.owner("owner").getOwn(full.id))).toMatchObject({ capacity: 2, bathrooms: 1, bedrooms: 1, nightlyPriceCrc: 42000 });
+    const room = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true } });
+    expect((await live(room.id, { bedrooms: 0 })).error?.message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
+  });
+
+  it("update_listing_live: el precio al mes a 0 con valor antes falla; sin valor antes queda vacío", async () => {
+    const withPrice = await h.seed({ status: "active", draft: { acceptsMonthly: true, monthlyPriceCrc: 650000 } });
+    expect((await live(withPrice.id, { monthly_price_crc: 0 })).error?.message).toBe("Indique el precio al mes en colones o déjelo vacío.");
+    expect((await live(withPrice.id, { monthly_price_crc: null })).error).toBeNull();
+    const negotiable = await h.seed({ status: "active", draft: { acceptsMonthly: true, monthlyPriceCrc: null } });
+    expect((await live(negotiable.id, { monthly_price_crc: 0 })).error).toBeNull();
+    expect((await h.owner("owner").getOwn(negotiable.id))?.monthlyPriceCrc).toBeNull();
   });
 
   it("accepts_monthly false borra el precio al mes", async () => {
@@ -277,14 +308,24 @@ describe("ediciones del propietario", () => {
     expect((await save(id, { title: "T".repeat(33) })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 32 caracteres.");
   });
 
-  it("al guardar se valida la casa resultante: baño de la habitación, descripción y habitaciones", async () => {
-    // Un estudio (0 habitaciones) puede pasar a Habitación: las habitaciones ya no se piden (la base fija 1 al aprobar).
+  it("al guardar se valida solo ese dato: el tipo y la descripción corta se guardan; el tope y el nombre vacío no", async () => {
+    // Un estudio (0 habitaciones) pasa a Habitación sin elegir baño: la capacidad no se comprueba con el tipo (aviso en la app).
     const { id } = await h.seed({ status: "active", draft: { bedrooms: 0 } });
-    expect((await save(id, { kind: "habitacion" })).error?.message).toBe("Indique si el baño es privado o compartido.");
+    expect((await save(id, { kind: "habitacion" })).error).toBeNull();
     expect((await save(id, { kind: "habitacion", bathroom_shared: false })).error).toBeNull();
-    expect((await save(id, { description: "Muy corta." })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+    expect((await save(id, { description: "Muy corta." })).error).toBeNull();
+    expect((await save(id, { description: "a".repeat(2001) })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+    expect((await save(id, { title: "   " })).error?.message).toBe("Póngale un nombre a la casa.");
     expect((await save(id, { description: "" })).error).toBeNull();
     expect(await fields(id)).toEqual([["description", "review"], ["kind", "review"]]);
+  });
+
+  it("renombrar con una descripción de 50 caracteres y guardar una descripción de 50 funcionan; la ubicación no pide habitaciones", async () => {
+    const { id } = await h.seed({ status: "active", draft: { description: "D".repeat(50), bedrooms: null } });
+    expect((await save(id, { title: "Casa Coco frente al mar" })).error).toBeNull();
+    expect((await save(id, { description: "E".repeat(50) })).error).toBeNull();
+    expect((await save(id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zone_id: "704-puerto-viejo", zone_source: "list" })).error).toBeNull();
+    expect(await fields(id)).toEqual([["description", "review"], ["location", "review"], ["title", "review"]]);
   });
 
   it("discard_edit_field descarta un dato y deja los demás; el último vacía la edición", async () => {

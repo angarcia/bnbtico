@@ -6,7 +6,7 @@ Decisión 2026-11-02 (Daniel, opción B), en `docs/decisiones.md`. Auditoría co
 
 ## Regla
 - **Mismos límites, mensajes, contadores y obligatorios que crear.** Obligatorios (bloquean): tipo, ubicación, nombre 5–32, precio por noche, ≥ 1 foto. Todo lo demás: aviso en ocre, no bloquea (mismas funciones `requiredProblems`/`warnings` de `domain/publish-rules.ts`, no una copia).
-- **Excepción (datos que se publican al momento, `update_listing_live`):** personas, habitaciones, baños, baño compartido, características/parqueo, precio por noche y al mes. Si el dato **ya tenía un valor válido**, el nuevo tiene que ser válido (no vacío, no inválido); si estaba vacío, se puede dejar vacío (aviso en ocre). Precio al mes vacío sigue valiendo siempre («a negociar»).
+- **Excepción (datos que se publican al momento, `update_listing_live`):** personas, habitaciones, baños, características/parqueo (el baño compartido va con el tipo, por revisión), precio por noche y al mes. Si el dato **ya tenía un valor válido**, el nuevo tiene que ser válido (no vacío, no inválido); si estaba vacío, se puede dejar vacío (aviso en ocre). Precio al mes vacío sigue valiendo siempre («a negociar»).
 - **Editar un dato valida solo ese dato**, en cliente y en SQL; nunca la casa entera.
 
 ## Cambios

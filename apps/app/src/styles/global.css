@@ -980,6 +980,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .grid-3:has(> .tile){grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
 /* Descripción por debajo del mínimo (revisión UX N3). */
 .description-short{color:var(--sun-ink);font-weight:var(--w-medium)}
+.row-warn{color:var(--sun-ink);font-weight:var(--w-medium)}
 /* Cabecera de la ficha: nombre, zona y personas, y la persona que alquila en su fila entre dos líneas (revisión UX A10; tamaños como en Airbnb). */
 .listing-head{gap:4px;align-items:center;text-align:center;line-height:1.25}
 .listing-head > .row{justify-content:center}

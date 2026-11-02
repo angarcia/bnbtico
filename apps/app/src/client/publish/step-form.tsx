@@ -18,6 +18,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { I } from "../../shared/icons";
+import { toast } from "../../shared/toast";
 import { LAST_STEP, nextStep, normalize, previousStep, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { planStep, validateAll } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
@@ -204,13 +205,6 @@ export function useStepReady(ready: boolean): void {
   }, [set, ready]);
 }
 
-/** Para un formulario fuera de StepForm (la pantalla de un dato de una casa publicada): `onReady` recibe lo que pidan sus
- *  campos con useStepReady (p. ej. el paso de la ubicación, mientras falta el cantón del pin). `onReady` estable (un
- *  setState). */
-export function ReadyScope({ onReady, children }: { onReady: (ready: boolean) => void; children: ReactNode }) {
-  return <ReadyContext.Provider value={onReady}>{children}</ReadyContext.Provider>;
-}
-
 // ---------- El formulario ----------
 
 export function StepForm({ userId, listing, step, enter, volver, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; volver?: Volver; children: (values: ListingDraft) => ReactNode }) {
@@ -261,6 +255,8 @@ export function StepForm({ userId, listing, step, enter, volver, children }: { u
     if ("error" in plan) return setError(plan.error);
     setError(null);
     clearFailure(listing.id);
+    // Un precio al mes mal escrito se guarda vacío: se dice en el momento (el resumen ya no lo ve).
+    if (plan.warning) toast(plan.warning);
     const request = startSave(listing.id, step, patch, listing);
     request.catch(() => undefined); // el error lo recoge la mutación
     save.mutate({ step, patch, seq: ++saveSeq, volver, request });

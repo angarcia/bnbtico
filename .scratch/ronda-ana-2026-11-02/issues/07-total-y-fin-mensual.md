@@ -31,3 +31,6 @@ Módulo nuevo `apps/app/src/domain/stay-price.ts`, sin imports de framework:
 - Reescribir: `explorar.spec.ts:122-210` (chip mensual) → tarjeta con total; `buscar.spec.ts:62-76` (modo «Desde») → quitar; `tests/unit/filters.test.ts:128-140`, `search.test.ts:17-36`; `contacto.spec.ts:164` (variante mensual del mensaje); `contact-draft.test.ts`.
 - `tests/db/`: `search_listings` con total.
 - Guía `docs/pruebas-manuales.md` (Explorar mensual → total); `docs/diseno-v1.md:21`.
+
+## Añadido tras el 06
+El 06 puso el orden «Limón primero» dentro de `search_listings` y quitó el `.order()` del adaptador; el orden depende de que PostgREST conserve el de la función (en la práctica sí, sin garantía). Ya que este ticket cambia lo que devuelve la función (`stay_total_crc`), añada también una columna de orden explícita (p. ej. `sort_rank`) y vuelva a ordenar en el adaptador con `.order()`, para que sea determinista. Mantenga `tests/db/caribe-primero.test.ts` en verde.

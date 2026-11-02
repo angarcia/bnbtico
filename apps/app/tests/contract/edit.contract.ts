@@ -6,7 +6,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { OwnerListingsApi, PhotoVariants } from "../../src/domain/api";
 import { EDIT_MESSAGES, editSummary } from "../../src/domain/edit";
 import { DomainError } from "../../src/domain/errors";
-import { TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
+import { DESCRIPTION_LENGTH_ERROR, MONTHLY_PRICE_ERROR, TITLE_EMPTY_ERROR, TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import { REVIEW_MESSAGES } from "../../src/domain/review";
 import type { ListingsHarness } from "./harness";
 import { PUERTO_VIEJO } from "./points";
@@ -51,9 +51,72 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       expect(await me.getOwn(s.id)).toMatchObject({ capacity: 6, bedrooms: 3, bathrooms: 2, features: ["wifi", "parking"], parkingPaid: false, acceptsMonthly: true, monthlyPriceCrc: null, status: "active" });
     });
 
-    it("updateLive rechaza un borrador y parqueo sin tipo, con los mensajes de la base", async () => {
+    it("updateLive rechaza un borrador y el tipo de parqueo vaciado en una casa que lo tenía, con los mensajes de la base", async () => {
       expect((await rejection(me.updateLive((await h.seed({ status: "draft" })).id, { capacity: 3 }))).message).toBe("Solo puede cambiar así una casa publicada.");
-      expect((await rejection(me.updateLive((await h.seed({ status: "active" })).id, { features: ["parking"], parkingPaid: null }))).message).toBe("Indique si el parqueo es gratuito o de pago.");
+      const withParking = await h.seed({ status: "active", draft: { features: ["wifi", "parking"], parkingPaid: true } });
+      expect((await rejection(me.updateLive(withParking.id, { parkingPaid: null }))).message).toBe("Indique si el parqueo es gratuito o de pago.");
+      expect(await me.getOwn(withParking.id)).toMatchObject({ features: ["wifi", "parking"], parkingPaid: true });
+    });
+
+    // ---- Editar sigue las reglas de crear (2026-11-02, ticket 12): cada dato valida solo ese dato ----
+    it("updateLive: una casa publicada sin baños cambia el precio (editar un dato no valida la casa entera)", async () => {
+      const s = await h.seed({ status: "active", draft: { bathrooms: null, capacity: null } });
+      await me.updateLive(s.id, { nightlyPriceCrc: 55000 });
+      expect(await me.getOwn(s.id)).toMatchObject({ nightlyPriceCrc: 55000, bathrooms: null, capacity: null, status: "active" });
+    });
+
+    it("updateLive: dejar vacío un dato que tenía valor falla; si ya estaba vacío, se puede dejar vacío", async () => {
+      const s = await h.seed({ status: "active", draft: { bathrooms: null } });
+      expect((await rejection(me.updateLive(s.id, { capacity: null }))).message).toBe("Indique cuántas personas pueden alojarse (mínimo 1).");
+      expect((await rejection(me.updateLive(s.id, { capacity: 0 }))).message).toBe("Indique cuántas personas pueden alojarse (mínimo 1).");
+      expect((await rejection(me.updateLive(s.id, { bedrooms: null }))).message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
+      expect(await me.getOwn(s.id)).toMatchObject({ capacity: 2, bedrooms: 1 });
+      // Los baños estaban vacíos: se puede cambiar otra cosa de la capacidad y dejarlos vacíos.
+      await me.updateLive(s.id, { capacity: 4, bathrooms: null });
+      expect(await me.getOwn(s.id)).toMatchObject({ capacity: 4, bathrooms: null });
+      expect((await rejection(me.updateLive((await h.seed({ status: "active" })).id, { bathrooms: null }))).message).toBe("Indique el número de baños (mínimo 1).");
+    });
+
+    it("updateLive: el parqueo sin decir si se paga se guarda si antes no había parqueo; el precio por noche bloquea siempre", async () => {
+      const s = await h.seed({ status: "active" });
+      await me.updateLive(s.id, { features: ["wifi", "parking"], parkingPaid: null });
+      expect(await me.getOwn(s.id)).toMatchObject({ features: ["wifi", "parking"], parkingPaid: null });
+      expect((await rejection(me.updateLive(s.id, { nightlyPriceCrc: null }))).message).toBe("Indique el precio por noche en colones.");
+      expect((await rejection(me.updateLive(s.id, { nightlyPriceCrc: 0 }))).message).toBe("Indique el precio por noche en colones.");
+    });
+
+    it("updateLive: el precio al mes malo con valor antes falla; vacío siempre vale", async () => {
+      const s = await h.seed({ status: "active", draft: { acceptsMonthly: true, monthlyPriceCrc: 600000 } });
+      expect((await rejection(me.updateLive(s.id, { monthlyPriceCrc: 0 }))).message).toBe(MONTHLY_PRICE_ERROR);
+      await me.updateLive(s.id, { monthlyPriceCrc: null });
+      expect(await me.getOwn(s.id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });
+      await me.updateLive(s.id, { monthlyPriceCrc: 0 });
+      expect(await me.getOwn(s.id)).toMatchObject({ monthlyPriceCrc: null });
+    });
+
+    it("saveEdit: renombrar con una descripción de 50 caracteres (sin tocar la descripción) se guarda", async () => {
+      const s = await h.seed({ status: "active", draft: { description: "D".repeat(50) } });
+      const e = await me.saveEdit(s.id, { title: "Casa Coco frente al mar" });
+      expect(e).toMatchObject({ title: "Casa Coco frente al mar", description: null });
+    });
+
+    it("saveEdit: una descripción de 50 caracteres se guarda (aviso en la app); de 2001 no; vacía borra", async () => {
+      const s = await h.seed({ status: "active" });
+      expect((await me.saveEdit(s.id, { description: "D".repeat(50) }))?.description).toBe("D".repeat(50));
+      expect((await rejection(me.saveEdit(s.id, { description: "D".repeat(2001) }))).message).toBe(DESCRIPTION_LENGTH_ERROR);
+      expect((await me.saveEdit(s.id, { description: "" }))?.description).toBe("");
+    });
+
+    it("saveEdit: un nombre vacío tiene su mensaje; el tipo Habitación sin baño elegido se guarda", async () => {
+      const s = await h.seed({ status: "active" });
+      expect((await rejection(me.saveEdit(s.id, { title: "  " }))).message).toBe(TITLE_EMPTY_ERROR);
+      expect((await me.saveEdit(s.id, { kind: "habitacion", bathroomShared: null }))?.kind).toBe("habitacion");
+    });
+
+    it("saveEdit: guardar la ubicación no pide habitaciones aunque la casa no las tenga", async () => {
+      const s = await h.seed({ status: "active", draft: { bedrooms: null } });
+      const e = await me.saveEdit(s.id, { lat: PUERTO_VIEJO.lat, lng: PUERTO_VIEJO.lng, zone: "Puerto Viejo", zoneId: "704-puerto-viejo", zoneSource: "list" });
+      expect(e?.location?.zone).toBe("Puerto Viejo");
     });
 
     it("saveEdit envía el dato a revisión; getOwn y listOwn lo traen con su estado; la ficha pública no cambia", async () => {

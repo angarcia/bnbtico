@@ -324,6 +324,15 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         for (const x of [s.shortTitle, blank]) expect((await me.getOwn(x.id))?.status).toBe("draft");
       });
 
+      it("la descripción solo tiene tope duro de 2000: corta se envía, de 2001 no", async () => {
+        const short = await h.seed({ status: "draft", photos: 1, draft: { description: "Corta." } });
+        await me.submit(short.id);
+        expect((await me.getOwn(short.id))?.status).toBe("review");
+        const long = await h.seed({ status: "draft", photos: 1, draft: { description: "D".repeat(2001) } });
+        expect((await rejection(me.submit(long.id))).message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+        expect((await me.getOwn(long.id))?.status).toBe("draft");
+      });
+
       it("en revisión, activa o ajena no se envía; con cambios pedidos, sí", async () => {
         expect((await rejection(me.submit(s.review.id))).message).toBe("Este anuncio ya está en revisión.");
         expect((await rejection(me.submit(s.active.id))).message).toBe("Este anuncio no se puede enviar en su estado actual.");

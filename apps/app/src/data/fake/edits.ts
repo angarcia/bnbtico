@@ -1,5 +1,5 @@
-// Reglas de la edición de una casa publicada en el fake (migraciones editar_casa_*): own_published_listing, start_edit,
-// save_edit, listing_edit_check y update_listing_live, en su orden y con sus mensajes. Las usan el fake del propietario,
+// Reglas de la edición de una casa publicada en el fake (migraciones editar_casa_* y editar_como_crear): own_published_listing,
+// start_edit, save_edit, listing_edit_check y update_listing_live, en su orden y con sus mensajes. Las usan el fake del propietario,
 // el de las fotos y el del admin. También la ubicación por punto de submit_listing (locationOf), que comparten el envío
 // de un borrador y el de una edición.
 import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
@@ -7,7 +7,6 @@ import { EDIT_MESSAGES, editedFields, editOverview, LIVE_KEYS, type EditPatch, t
 import { DomainError } from "../../domain/errors";
 import {
   DESCRIPTION_MAX,
-  DESCRIPTION_MIN,
   FEATURES,
   TITLE_MAX,
   TITLE_MIN,
@@ -16,8 +15,13 @@ import {
   charCount,
   DESCRIPTION_LENGTH_ERROR,
   LOCATION_MESSAGES as LOC,
+  BATHROOMS_ERROR,
+  BEDROOMS_ERROR,
+  CAPACITY_ERROR,
   MONTHLY_PRICE_ERROR,
   NIGHTLY_PRICE_ERROR,
+  PARKING_ERROR,
+  TITLE_EMPTY_ERROR,
   TITLE_LENGTH_ERROR,
 } from "../../domain/listing-rules";
 import { fromPhotoRows, type PhotoUrl } from "../../domain/rows";
@@ -26,9 +30,6 @@ import type { FakeDb, FakeEdit, FakeListing } from "./db";
 import { FAKE_ZONES, fakePlaceAt, fakeZonesNear } from "./places";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
-const BEDROOMS_ERROR = "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
-const BATHROOM_ERROR = "Indique si el baño es privado o compartido.";
-const PARKING_ERROR = "Indique si el parqueo es gratuito o de pago.";
 const PARKING_ONLY_ERROR = "El tipo de parqueo solo aplica si el anuncio tiene parqueo.";
 
 export type Located = Pick<FakeListing, "province" | "canton" | "district" | "zone">;
@@ -136,10 +137,12 @@ export function editStore(db: FakeDb) {
       if (hasLocation) touched.push("ubicacion");
       for (const k of EDIT_FIELDS) if (k in patch) (m as unknown as Record<string, unknown>)[k] = patch[k] ?? null;
 
+      // Lo igual a lo aprobado no cuenta ni se valida (un nombre viejo de más de 32 sin tocar no estorba); lo nuevo, de 5 a 32.
       if (m.title !== null) {
         m.title = m.title.trim();
-        if (charCount(m.title) < TITLE_MIN || charCount(m.title) > TITLE_MAX) throw invalid(TITLE_LENGTH_ERROR);
         if (m.title === l.title.trim()) m.title = null;
+        else if (m.title === "") throw invalid(TITLE_EMPTY_ERROR);
+        else if (charCount(m.title) < TITLE_MIN || charCount(m.title) > TITLE_MAX) throw invalid(TITLE_LENGTH_ERROR);
       }
       if (m.description !== null) {
         m.description = m.description.trim();
@@ -208,41 +211,59 @@ export function editStore(db: FakeDb) {
       this.dropIfEmpty(l.id);
     },
 
-    /** listing_edit_check: la casa resultante con las reglas de submit_listing de los datos revisados, en su orden.
-     *  Devuelve el lugar (provincia, cantón, distrito y nombre de zona) si la edición cambia la ubicación. */
-    check(l: FakeListing, e: FakeEdit): Located | null {
+    /** listing_edit_check: solo lo del dato que cambia, con las reglas de crear: nombre de 5 a 32 (vacío, con su mensaje),
+     *  descripción con tope de 2000 (de 1 a 79 no bloquea: la app avisa) y la ubicación. Las habitaciones y el baño son datos
+     *  de la capacidad y no se comprueban aquí. Devuelve el lugar (provincia, cantón, distrito y nombre de zona) si la edición
+     *  cambia la ubicación. */
+    check(_l: FakeListing, e: FakeEdit): Located | null {
       let place: Located | null = null;
       if (e.lat !== null) {
         const located = locationOf({ lat: e.lat, lng: e.lng, zone: e.zone ?? "", zoneId: e.zoneId, zoneSource: e.zoneSource });
         if ("error" in located) throw invalid(located.error);
         place = located;
       }
-      const kind = e.kind ?? l.kind;
-      if (l.bedrooms === null || (l.bedrooms < 1 && kind !== "completo" && kind !== "apartamento")) throw invalid(BEDROOMS_ERROR);
-      if (kind === "habitacion" && (e.bathroomShared ?? l.bathroomShared) === null) throw invalid(BATHROOM_ERROR);
-      // Solo el nombre nuevo: una casa publicada con un nombre de más de 32 lo conserva hasta que su dueño lo cambie.
-      if (e.title !== null && (charCount(e.title.trim()) < TITLE_MIN || charCount(e.title.trim()) > TITLE_MAX)) throw invalid(TITLE_LENGTH_ERROR);
-      // La descripción, como el nombre, solo si cambia: una anterior fuera de la regla no bloquea otros datos.
-      const description = (e.description ?? "").trim();
-      if (e.description !== null && description !== "" && (charCount(description) < DESCRIPTION_MIN || charCount(description) > DESCRIPTION_MAX)) throw invalid(DESCRIPTION_LENGTH_ERROR);
+      if (e.title !== null) {
+        if (!e.title.trim()) throw invalid(TITLE_EMPTY_ERROR);
+        if (charCount(e.title.trim()) < TITLE_MIN || charCount(e.title.trim()) > TITLE_MAX) throw invalid(TITLE_LENGTH_ERROR);
+      }
+      if (e.description !== null && charCount(e.description.trim()) > DESCRIPTION_MAX) throw invalid(DESCRIPTION_LENGTH_ERROR);
       return place;
     },
 
-    /** update_listing_live: la fila resultante con las reglas y mensajes de submit_listing; el tipo es el aprobado. */
+    /** update_listing_live: solo las claves del parche, con las reglas de crear. Un dato que ya tenía un valor válido (en la
+     *  fila actual) no se deja vacío ni inválido; uno que no lo tenía puede quedar vacío (lo inválido se guarda null). El
+     *  precio por noche bloquea siempre. */
     live(l: FakeListing, patch: LivePatch): void {
       const keys = Object.keys(patch);
       if (keys.some((k) => !(LIVE_KEYS as readonly string[]).includes(k))) throw invalid(EDIT_MESSAGES.notHere);
       const m = { ...l, ...patch };
       if (!Array.isArray(m.features) || m.features.some((f) => !KNOWN_FEATURES.has(f)) || typeof m.acceptsMonthly !== "boolean") throw invalid(EDIT_MESSAGES.notHere);
       if (!m.acceptsMonthly) m.monthlyPriceCrc = null;
-      if ((m.capacity ?? 0) < 1) throw invalid("Indique cuántas personas pueden alojarse (mínimo 1).");
-      if (m.bedrooms === null || (m.bedrooms < 1 && l.kind !== "completo" && l.kind !== "apartamento")) throw invalid(BEDROOMS_ERROR);
-      if ((m.bathrooms ?? 0) < 1) throw invalid("Indique el número de baños (mínimo 1).");
-      if (m.features.includes("parking")) {
-        if (m.parkingPaid === null) throw invalid(PARKING_ERROR);
-      } else if (m.parkingPaid !== null) throw invalid(PARKING_ONLY_ERROR);
-      if ((m.nightlyPriceCrc ?? 0) <= 0) throw invalid(NIGHTLY_PRICE_ERROR);
-      if (m.acceptsMonthly && m.monthlyPriceCrc !== null && m.monthlyPriceCrc <= 0) throw invalid(MONTHLY_PRICE_ERROR);
+      const has = (k: keyof LivePatch) => keys.includes(k);
+      const bedroomsOk = (n: number | null) => n !== null && (n >= 1 || l.kind === "completo" || l.kind === "apartamento");
+      if (has("capacity") && (m.capacity ?? 0) < 1) {
+        if ((l.capacity ?? 0) >= 1) throw invalid(CAPACITY_ERROR);
+        m.capacity = null;
+      }
+      // Una Habitación tiene 1 (trigger listings_habitacion_una): el asistente no lo manda, y 0 o vacío sigue rechazándose.
+      if (has("bedrooms") && !bedroomsOk(m.bedrooms)) {
+        if (bedroomsOk(l.bedrooms)) throw invalid(BEDROOMS_ERROR);
+        m.bedrooms = null;
+      }
+      if (has("bathrooms") && (m.bathrooms ?? 0) < 1) {
+        if ((l.bathrooms ?? 0) >= 1) throw invalid(BATHROOMS_ERROR);
+        m.bathrooms = null;
+      }
+      if (has("features") || has("parkingPaid")) {
+        if (m.features.includes("parking")) {
+          if (m.parkingPaid === null && l.features.includes("parking") && l.parkingPaid !== null) throw invalid(PARKING_ERROR);
+        } else if (m.parkingPaid !== null) throw invalid(PARKING_ONLY_ERROR);
+      }
+      if (has("nightlyPriceCrc") && (m.nightlyPriceCrc ?? 0) <= 0) throw invalid(NIGHTLY_PRICE_ERROR);
+      if ((has("acceptsMonthly") || has("monthlyPriceCrc")) && m.acceptsMonthly && m.monthlyPriceCrc !== null && m.monthlyPriceCrc <= 0) {
+        if (l.acceptsMonthly && (l.monthlyPriceCrc ?? 0) > 0) throw invalid(MONTHLY_PRICE_ERROR);
+        m.monthlyPriceCrc = null;
+      }
       Object.assign(l, {
         capacity: m.capacity,
         bedrooms: m.bedrooms,
