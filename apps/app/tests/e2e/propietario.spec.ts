@@ -171,6 +171,37 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
 });
 
+test("detalle: «Ver ficha» es un botón flotante con el aspecto de «Mapa», fuera de la cabecera y sin tapar el final", async ({ page }) => {
+  await page.goto(`/propietario/casas/${active.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  const ver = page.getByRole("link", { name: "Ver ficha", exact: true });
+  await expect(ver).toHaveCount(1);
+  await expect(ver).toHaveAttribute("href", `/casa/${active.publicId}`);
+  await expect(page.locator("header").getByRole("link", { name: "Ver ficha" })).toHaveCount(0);
+  await expect(ver.locator("svg")).toHaveCount(1); // el ojo, a la izquierda del texto
+  // Mismo aspecto que «Mapa» de Explorar (global.css: .float-pill comparte la regla con .map-label): fondo, esquinas, alto y texto.
+  const look = await ver.evaluate((el) => {
+    const c = getComputedStyle(el);
+    return { bg: c.backgroundColor, radius: c.borderTopLeftRadius, height: c.height, color: c.color, weight: c.fontWeight, size: c.fontSize, pos: c.position };
+  });
+  expect(look).toEqual({ bg: "rgba(28, 43, 42, 0.92)", radius: "6px", height: "48px", color: "rgb(255, 251, 242)", weight: "500", size: "15px", pos: "fixed" });
+  // Abajo y centrado.
+  const vp = page.viewportSize()!;
+  const box = (await ver.boundingBox())!;
+  expect(Math.abs(box.x + box.width / 2 - vp.width / 2)).toBeLessThan(2);
+  expect(vp.height - (box.y + box.height)).toBeGreaterThanOrEqual(15);
+  expect(vp.height - (box.y + box.height)).toBeLessThan(40);
+  // Al final de la pantalla lo último queda por encima del botón (alto del botón + 32 px de aire).
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const last = await page.locator(".view").evaluate((view) => {
+    const items = [...view.querySelectorAll("*")].filter((el) => !el.closest(".float-pill") && el.getBoundingClientRect().height > 0);
+    return Math.max(...items.map((el) => el.getBoundingClientRect().bottom));
+  });
+  expect(last).toBeLessThanOrEqual((await ver.boundingBox())!.y - 16);
+  await ver.click();
+  await expect(page).toHaveURL(new RegExp(`/casa/${active.publicId}$`));
+});
+
 test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as { shared: unknown[]; copied: string[] };
