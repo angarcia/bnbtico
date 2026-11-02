@@ -144,9 +144,9 @@ test("una casa con mensual a negociar llega del servidor con la línea y la cara
   const res = await page.goto(`/casa/${negociable.publicId}`);
   const source = await res!.text();
   expect(source).toContain("Alquiler mensual");
-  expect(source).toContain("Mensual: precio a negociar con el dueño");
+  expect(source).toContain("Mensual: precio a negociar con el anfitrión");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el anfitrión");
   await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
   await expect(page.locator(".badge").filter({ hasText: /^(Vacacional|Mensual)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
@@ -171,7 +171,7 @@ test("la ficha muestra las dos monedas, sin selector", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
   await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
-  await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el propietario.");
+  await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el anfitrión.");
   await expect(page.locator(".listing-view .currency-switch")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Ver en (dólares|colones)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
@@ -313,7 +313,7 @@ test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas
     expect(await barHeight(page), `${publicId}: alto de la barra`).toBeLessThanOrEqual(150);
     expect(await barOverflows(page), `${publicId}: la barra se desborda`).toBe(false);
     await expect(page.getByTestId("price-usd")).toHaveText(/^≈ \$\d+ \/ noche$/);
-    await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el propietario.");
+    await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el anfitrión.");
     const [capacityBottom, barTop] = await page.evaluate(() => [
       document.querySelector('[data-testid="listing-capacity"]')!.getBoundingClientRect().bottom,
       document.querySelector(".cta-bar")!.getBoundingClientRect().top,
@@ -321,7 +321,7 @@ test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas
     expect(capacityBottom, `${publicId}: «N personas» por encima de la barra sin scroll`).toBeLessThanOrEqual(barTop!);
   }
   await expect(page.locator("h1.listing-title")).toHaveClass(/is-long/);
-  await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el propietario");
+  await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el anfitrión");
 });
 
 // Revisión UX N5: en un ordenador, dos columnas (fotos y texto a la izquierda, precio y contacto fijos a la derecha).

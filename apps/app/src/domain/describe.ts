@@ -58,7 +58,7 @@ export function mapPriceLabel(l: PublicListing, monthly: boolean, currency: Curr
   const price = cardPrice({ mainPrice, monthly: monthlyPrice }, monthly);
   return price && !("negotiable" in price) ? formatMoney(price.amount, currency, fx) : "A negociar";
 }
-export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
+export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el anfitrión";
 
 function situation(l: Listing, now: number): string {
   switch (l.status) {

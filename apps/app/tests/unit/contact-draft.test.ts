@@ -81,7 +81,7 @@ describe("campos de la hoja", () => {
   it("nombre de pila del propietario", () => {
     expect(firstName("Daniel Aguado Muñoz")).toBe("Daniel");
     expect(firstName("  Yorleny ")).toBe("Yorleny");
-    expect(firstName("")).toBe("el propietario");
+    expect(firstName("")).toBe("el anfitrión");
   });
 });
 

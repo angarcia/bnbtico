@@ -220,7 +220,7 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
   await expect(page.getByTestId("publish-promo-row")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Mi perfil/ })).toHaveCount(0);
   await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
-  await expect(page.getByText("atención a propietarios")).toBeVisible();
+  await expect(page.getByText("atención a anfitriones")).toBeVisible();
 
   // Cerrar sesión deja la app sin sesión para la siguiente persona: tres pestañas con «Ingresar» y la zona del propietario pide ingresar.
   await page.goto("/cuenta");

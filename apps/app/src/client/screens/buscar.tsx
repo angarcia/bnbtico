@@ -291,7 +291,7 @@ export function BuscarScreen() {
             </button>
           </span>
         </div>
-        <p className="note small">Las fechas y las personas van en el mensaje de WhatsApp que le preparamos para el propietario.</p>
+        <p className="note small">Las fechas y las personas van en el mensaje de WhatsApp que le preparamos para el anfitrión.</p>
       </Fold>
       <div className="sticky-spacer" aria-hidden="true" />
       <div className="sticky-actions">

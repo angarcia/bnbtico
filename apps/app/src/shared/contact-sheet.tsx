@@ -191,7 +191,7 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
           <div>
             <h2 id="contact-title">Escríbale a {name}</h2>
             <span className="small muted">
-              Propietario de {title}
+              Anfitrión de {title}
               {listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
             </span>
           </div>

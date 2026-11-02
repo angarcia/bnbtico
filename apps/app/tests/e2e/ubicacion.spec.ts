@@ -239,7 +239,7 @@ test("Otra… con un nombre inventado y Usar", async ({ page }) => {
   await adminPage.goto(`/admin/anuncios/${id}`);
   await secondCode(adminPage);
   await expect(adminPage.getByText("Rancho Escondido · Cahuita, Talamanca, Limón")).toBeVisible();
-  await expect(adminPage.getByText("Zona propuesta por el dueño")).toBeVisible();
+  await expect(adminPage.getByText("Zona propuesta por el anfitrión")).toBeVisible();
   await admin.close();
 });
 

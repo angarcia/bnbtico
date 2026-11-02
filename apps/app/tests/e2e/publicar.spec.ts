@@ -190,7 +190,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await nightly.fill("85.000");
   await accepts.getByText("Sí", { exact: true }).tap();
   await expect(monthly).toBeVisible();
-  await expect(monthly).toHaveAccessibleDescription("Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».");
+  await expect(monthly).toHaveAccessibleDescription("Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».");
   await expect(nightly).toHaveAttribute("enterkeyhint", "next");
   await expect(monthly).toHaveAttribute("enterkeyhint", "done");
   await expectKeyboardRoom(page, "pub-monthlyPriceCrc");
@@ -371,7 +371,7 @@ test("publicar con mensual sin precio: tras aprobarla, la ficha dice «precio a 
   expect(await h.owner("owner").getOwn(draft.id)).toMatchObject({ nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null });
   await h.admin("aal2").review(draft.id, "approve", "");
   await page.goto(`/casa/${draft.publicId}`);
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el anfitrión");
   await expect(page.locator(".feature-tiles")).toContainText("Alquiler mensual");
 });
 

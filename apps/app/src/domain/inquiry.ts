@@ -12,9 +12,9 @@ export const INQUIRY_MAX_MESSAGE = 1000;
 
 /** Mensajes de create_inquiry / mark_inquiry_opened, repetidos tal cual en la migración fase3_consultas y en el fake. */
 export const INQUIRY_MESSAGES = {
-  signIn: "Ingrese con su WhatsApp para contactar al propietario.",
+  signIn: "Ingrese con su WhatsApp para contactar al anfitrión.",
   inactiveAccount: "Su cuenta está desactivada. Escríbanos por WhatsApp.",
-  unverified: "Verifique su WhatsApp para contactar al propietario.",
+  unverified: "Verifique su WhatsApp para contactar al anfitrión.",
   notPublished: "Esta casa ya no está publicada.",
   ownHouse: "Esta es su propia casa.",
   unavailable: "Esta casa no está disponible para consultas.",
@@ -23,7 +23,7 @@ export const INQUIRY_MESSAGES = {
   departureAfter: "La salida tiene que ser después de la llegada.",
   arrivalPast: "La llegada no puede ser antes de hoy.",
   people: `Indique entre 1 y ${INQUIRY_MAX_PEOPLE} personas.`,
-  messageEmpty: "Escriba un mensaje para el propietario.",
+  messageEmpty: "Escriba un mensaje para el anfitrión.",
   messageLong: `El mensaje no puede pasar de ${INQUIRY_MAX_MESSAGE} caracteres.`,
   rateLimit: "Ha contactado muchas casas hoy. Intente mañana o escríbanos por WhatsApp.",
   notFound: "No encontramos esa consulta.",

@@ -76,7 +76,7 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
   await h.billing("owner").stop(stopped.id);
 
   await openCasas(page);
-  await expect(page.getByRole("searchbox", { name: "Buscar casas" })).toHaveAttribute("placeholder", "Nombre, CT-#### o propietario");
+  await expect(page.getByRole("searchbox", { name: "Buscar casas" })).toHaveAttribute("placeholder", "Nombre, CT-#### o anfitrión");
   await expect(chip(page, "Todas")).toHaveAttribute("aria-current", "page");
   const before = { todas: await countOf(page, "Todas"), activas: await countOf(page, "Activas"), pagar: await countOf(page, "Por pagar"), inactivas: await countOf(page, "Inactivas") };
   expect(before.todas).toBeGreaterThanOrEqual(3);
@@ -100,7 +100,7 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
   await expect(row(due).locator(".badge")).toHaveText("Por pagar");
   await expect(row(due).locator(".badge")).toHaveCSS("background-color", "rgb(251, 232, 194)");
   await expect(row(stopped)).toContainText(await expectedLine(stopped, "inactive"));
-  await expect(row(stopped)).toContainText(/Parada por el propietario el \d{1,2} [a-z]{3}/);
+  await expect(row(stopped)).toContainText(/Parada por el anfitrión el \d{1,2} [a-z]{3}/);
   await expect(row(stopped).locator(".badge")).toHaveText("Inactiva");
   await page.screenshot({ path: "test-results/admin-casas-todas.png" });
 
@@ -225,7 +225,7 @@ test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada p
   // El motivo es obligatorio.
   await sheet.getByRole("button", { name: "Pausar casa" }).click();
   await expect(sheet.getByRole("alert")).toHaveText("Escriba el motivo (hasta 2000 caracteres).");
-  await sheet.getByLabel("Motivo (lo verá el propietario)").fill(reason);
+  await sheet.getByLabel("Motivo (lo verá el anfitrión)").fill(reason);
   await sheet.getByRole("button", { name: "Pausar casa" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Casa pausada" })).toBeVisible();
   // La hoja sigue abierta con el botón para avisar al propietario por WhatsApp (sin abrirlo: se comprueba el enlace).
@@ -293,7 +293,7 @@ test("bloquear: el propietario ve «Bloqueada por bnbtico» con el motivo y «Es
   const sheet = await openSheet(page, title);
   await sheet.getByRole("button", { name: "Bloquear", exact: true }).click();
   await expect(sheet.getByText("su suscripción se para")).toBeVisible();
-  await sheet.getByLabel("Motivo (lo verá el propietario)").fill(reason);
+  await sheet.getByLabel("Motivo (lo verá el anfitrión)").fill(reason);
   await sheet.getByRole("button", { name: "Bloquear casa" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Casa bloqueada" })).toBeVisible();
   await expect(sheet.getByTestId("notice-link")).toHaveAttribute("href", /^https:\/\/wa\.me\/50687770001\?text=.*bloqueada%20en%20bnbtico/);

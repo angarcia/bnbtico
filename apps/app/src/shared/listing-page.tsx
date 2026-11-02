@@ -327,7 +327,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
           <p className="small muted">
             Publicada por <b className="ink">{l.ownerName}</b>
-            {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}. Sin comisiones: fechas, precio y pago los acuerda directamente con el propietario. bnbtico no procesa pagos.
+            {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}. Sin comisiones: fechas, precio y pago los acuerda directamente con el anfitrión. bnbtico no procesa pagos.
           </p>
         </div>
 
@@ -342,7 +342,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
           <p className="xs muted price-disclaimer" data-testid="price-note">
-            Precios orientativos: el precio final lo acuerda con el propietario.
+            Precios orientativos: el precio final lo acuerda con el anfitrión.
           </p>
         </div>
       </main>

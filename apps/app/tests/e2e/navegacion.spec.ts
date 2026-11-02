@@ -196,7 +196,7 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
 });
 
 test("3 · una casa: la lista con una sola tarjeta; tocarla abre su detalle", async ({ page }) => {
-  h = await postgrestHarness(); // la prueba anterior cerró la sesión del propietario también en el servidor
+  h = await postgrestHarness(); // la prueba anterior cerró la sesión del anfitrión también en el servidor
   await h.reset();
   const casa = await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   await page.goto("/propietario/casas");

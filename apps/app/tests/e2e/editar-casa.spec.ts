@@ -480,10 +480,10 @@ test("el admin pide cambios en el nombre: el propietario ve la nota, corrige y v
   await name.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(name.locator('.field-error[role="alert"]')).toHaveText("Escriba una nota para pedir cambios.");
   await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
-  await name.getByLabel(/Mensaje para el propietario/).fill("Use un nombre sin mayúsculas sostenidas.");
+  await name.getByLabel(/Mensaje para el anfitrión/).fill("Use un nombre sin mayúsculas sostenidas.");
   await name.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole("status").filter({ hasText: "Cambios pedidos. El propietario verá su mensaje." })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Cambios pedidos. El anfitrión verá su mensaje." })).toBeVisible();
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit?.status).toBe("changes");
 
   await injectSession(page, "owner");
@@ -525,7 +525,7 @@ test("el diff de la descripción, la ubicación y las fotos nuevas", async ({ pa
   await expect(diff(page, "Descripción")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.description).toContain("Casa de madera nueva");
-  await diff(page, "Foto nueva 1").getByLabel(/Mensaje para el propietario/).fill("Se ve un teléfono.");
+  await diff(page, "Foto nueva 1").getByLabel(/Mensaje para el anfitrión/).fill("Se ve un teléfono.");
   await diff(page, "Foto nueva 1").getByRole("button", { name: "Pedir cambios" }).click();
   await expect(diff(page, "Foto nueva 1")).toContainText("Cambios pedidos: Se ve un teléfono.");
   await map.getByRole("button", { name: "Aprobar" }).click();
@@ -554,7 +554,7 @@ test("lo que tiene cambios pedidos no se vuelve a decidir: espera al propietario
   await admin.reviewEditField(id, "nombre", "changes", "Otro nombre, por favor.", (await admin.getEdit(id))!.listing.edit!.fields.nombre!.submittedAt);
   await asAdmin(page, `/admin/ediciones/${id}`);
   await expect(diff(page, "Nombre")).toContainText("Cambios pedidos: Otro nombre, por favor.");
-  await expect(page.getByText("Lo pendiente tiene cambios pedidos: espera al propietario.")).toBeVisible();
+  await expect(page.getByText("Lo pendiente tiene cambios pedidos: espera al anfitrión.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Aprobar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Pedir cambios" })).toHaveCount(0);
 });

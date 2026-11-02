@@ -64,7 +64,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   const s = sheet(page);
   await expect(s).toBeVisible();
   await expect(s).toHaveAttribute("aria-modal", "true");
-  await expect(s.getByText(`Propietario de ${TITLE} · WhatsApp verificado`)).toBeVisible();
+  await expect(s.getByText(`Anfitrión de ${TITLE} · WhatsApp verificado`)).toBeVisible();
   await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
   // Revisión UX 2026-10-29 (N2): el mensaje es una vista previa, sin caja de texto; las fechas, casillas «Elegir fecha».
   await expect(s.getByRole("textbox")).toHaveCount(0);

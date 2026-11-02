@@ -17,7 +17,7 @@ export function ApproxMap({ lat, lng }: { lat: number; lng: number }) {
   return (
     <div className="stack gap-6">
       <div ref={box} className="map-box map-box-listing" role="img" aria-label="Mapa con la zona aproximada" data-testid="approx-map" />
-      <p className="xs muted">Ubicación aproximada. La dirección exacta la comparte el propietario.</p>
+      <p className="xs muted">Ubicación aproximada. La dirección exacta la comparte el anfitrión.</p>
     </div>
   );
 }

@@ -77,7 +77,7 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?Anfitrión · WhatsApp verificado/);
     expect(html).not.toContain(" · ubicación aproximada");
     expect(html).not.toMatch(/class="badge badge-ok"[^>]*>[\s\S]{0,200}WhatsApp verificado/);
-    expect(html).toContain("fechas, precio y pago los acuerda directamente con el propietario");
+    expect(html).toContain("fechas, precio y pago los acuerda directamente con el anfitrión");
     expect(html).toContain("Contactar por WhatsApp");
     expect(html).toContain("1 / 6");
   });
@@ -338,15 +338,15 @@ describe("worker · enlaces que no se muestran", () => {
     expect(a.status).toBe(410);
     const ha = await a.text();
     expect(ssrData(ha)).toEqual({ page: "blocked", reason: "stopped" });
-    expect(ha).toContain("El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
-    expect(ha).toContain("Si ya habló con el propietario por WhatsApp");
+    expect(ha).toContain("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(ha).toContain("Si ya habló con el anfitrión por WhatsApp");
     expect(ha).not.toContain("Contactar por WhatsApp");
 
     const b = await t.request(`/casa/${unpaid.publicId}`);
     expect(b.status).toBe(410);
     const hb = await b.text();
     expect(ssrData(hb)).toEqual({ page: "blocked", reason: "payment" });
-    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.");
+    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.");
     expect(b.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
     expect(reason).toHaveBeenCalledTimes(2);
   });

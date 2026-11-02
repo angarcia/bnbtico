@@ -3,7 +3,7 @@
 
 /** «Escríbale a Daniel»: el nombre de pila del propietario. */
 export function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] || "el propietario";
+  return name.trim().split(/\s+/)[0] || "el anfitrión";
 }
 
 /** Iniciales para el avatar: primera letra del primer y del último nombre. */

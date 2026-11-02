@@ -98,7 +98,7 @@ Sembradas el 2026-10-30 en `bnbtico-pruebas` por los mismos caminos que la app (
 | CT-1040 | Crystal Jungle Villa | Daniel | Activa | Playa Negra (Limón) | 5 | Casa que ya existía; ficha y favoritos (C46–C55, C69–C74) |
 | CT-1047 (a) | Casa Cocles frente al mar | Yorleny | Activa | Cocles (Limón) | 8 | Ficha completa con piscina, frente al mar, wifi, aire (C46–C55); filtros de características (C22–C30); consulta con fechas del cliente (C86–C92, A108–A112, X1); favorito; 3 noches ocupadas y una con precio especial (C31–C42, A94–A107) |
 | CT-1048 (b) | Cabaña Manzanillo con rancho | Yorleny | Activa | Manzanillo (Limón) | 6 | Acepta mensual con ₡900 000 (C22–C30 «Solo alquiler mensual»); mascotas y Rancho/BBQ; consulta con 30 noches «mensual» (C31–C42, C86–C92) |
-| CT-1049 (c) | Loft Puerto Viejo cerca de todo | Yorleny | Activa | Puerto Viejo (Limón) | 4 | Mensual «Precio a negociar con el dueño» (C46–C55); aire, wifi, cargador eléctrico; consulta sin fechas; 0 habitaciones (estudio) |
+| CT-1049 (c) | Loft Puerto Viejo cerca de todo | Yorleny | Activa | Puerto Viejo (Limón) | 4 | Mensual «Precio a negociar con el anfitrión» (C46–C55); aire, wifi, cargador eléctrico; consulta sin fechas; 0 habitaciones (estudio) |
 | CT-1050 (d) | Habitación Playa Chiquita | Marco | Activa | Playa Chiquita (Limón) | 3 | Habitación con baño compartido, ₡25 000 (C4–C9, C46–C55, A21–A26); casa de otro dueño |
 | CT-1051 (e) | Habitación privada en Cahuita | Marco | Activa | Cahuita (Limón) | 4 | Habitación con baño privado y «Niños pequeños gratis» (C22–C30) |
 | CT-1052 (f) | Villa Punta Uva en la selva | Yorleny | Activa | Punta Uva (Limón) | 8 | 10 personas, ₡180 000, descripción larga de 14 líneas («Ver más», C46–C55); parqueo de pago; noches ocupadas el mes próximo y precios especiales con ★ (C31–C42, A94–A107); consulta de grupo; favorito |
@@ -146,7 +146,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 
 ### 2.3 Moneda ₡ | $ y tipo de cambio
 
-- [ ] **C10** En la fila de chips toque «$» → los precios pasan a dólares («$118 / noche»), aparece la nota «Dólares solo para orientarle: ≈ ₡… por US$1 (tipo de referencia del … ). Los propietarios fijan sus precios en colones.»; recargue → sigue en dólares; toque «₡» → vuelven los colones y la nota se va.
+- [ ] **C10** En la fila de chips toque «$» → los precios pasan a dólares («$118 / noche»), aparece la nota «Dólares solo para orientarle: ≈ ₡… por US$1 (tipo de referencia del … ). Los anfitriones fijan sus precios en colones.»; recargue → sigue en dólares; toque «₡» → vuelven los colones y la nota se va.
 - [ ] **C11** Con «$» elegido abra una ficha → la barra de abajo muestra las dos monedas a la vez (colones a la izquierda, «≈ $… / noche» a la derecha) y no hay selector ₡ | $ en la ficha; en Favoritos (con una casa guardada) el selector está arriba junto al logo y los precios siguen la moneda elegida.
 - [ ] **C12** Si la nota de dólares termina con una atribución (p. ej. «· Rates By Exchange Rate API»), toque el enlace → abre la web de la fuente en otra pestaña; si no hay atribución, la nota no tiene ningún enlace.
 
@@ -206,14 +206,14 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C49** Mire las características → un mosaico con icono por cada una que tenga la casa (Wifi, Piscina, Parqueo, Frente al mar, Mascotas…); en una casa con mensual aparece además «Alquiler mensual».
 - [ ] **C50** En «DISPONIBILIDAD» mire el calendario → cada noche libre trae su precio completo, las ocupadas solo el número y rayadas, los días pasados tachados y la leyenda «Disponible» / «Ocupado»; una noche con precio distinto muestra esa cifra.
 - [ ] **C51** Toque «Mes siguiente» y «Mes anterior» → cambia el mes (se puede ver hasta unos doce meses; «Mes anterior» está desactivado en el mes actual); tocar un día no hace nada, es solo para mirar; con «$» elegido en Explorar los precios del calendario salen en dólares.
-- [ ] **C52** Baje hasta «ZONA APROXIMADA» → hay un mapa con una zona (no un punto exacto) y debajo «Ubicación aproximada. La dirección exacta la comparte el propietario.»; al final, «Publicada por <nombre> · WhatsApp verificado. Sin comisiones: fechas, precio y pago los acuerda directamente con el propietario. bnbtico no procesa pagos.».
-- [ ] **C53** Mire la barra fija de abajo → colones a la izquierda («₡95 000 / noche» y, si lo hay, «Mensual: ₡450 000 / mes»), dólares a la derecha («≈ $186 / noche», «≈ $882 / mes»), el botón «Contactar por WhatsApp» y «Precios orientativos: el precio final lo acuerda con el propietario.»; en la casa con mensual a negociar la línea dice «Mensual: precio a negociar con el dueño» y no hay dólares del mes.
+- [ ] **C52** Baje hasta «ZONA APROXIMADA» → hay un mapa con una zona (no un punto exacto) y debajo «Ubicación aproximada. La dirección exacta la comparte el anfitrión.»; al final, «Publicada por <nombre> · WhatsApp verificado. Sin comisiones: fechas, precio y pago los acuerda directamente con el anfitrión. bnbtico no procesa pagos.».
+- [ ] **C53** Mire la barra fija de abajo → colones a la izquierda («₡95 000 / noche» y, si lo hay, «Mensual: ₡450 000 / mes»), dólares a la derecha («≈ $186 / noche», «≈ $882 / mes»), el botón «Contactar por WhatsApp» y «Precios orientativos: el precio final lo acuerda con el anfitrión.»; en la casa con mensual a negociar la línea dice «Mensual: precio a negociar con el dueño» y no hay dólares del mes.
 - [ ] **C54** Toque «Compartir ficha» → en el teléfono se abre la hoja nativa de compartir con el enlace `…/casa/CT-####`; si el navegador no tiene hoja nativa, el botón pasa un momento a «Enlace copiado».
 - [ ] **C55** Toque el corazón de la ficha → pasa a «Quitar de favoritos» y la casa aparece en Favoritos; vuelva a tocarlo → desaparece de Favoritos.
 
 ### 2.10 Hoja «Contactar por WhatsApp» sin cuenta
 
-- [ ] **C56** En una ficha toque «Contactar por WhatsApp» → sube una hoja «Escríbale a <nombre>» con «Propietario de <casa> · WhatsApp verificado», casillas «Llegada» y «Salida» («Elegir fecha»), «Personas (opcional)» con «−» y «+», «Su mensaje» y el botón «Continuar».
+- [ ] **C56** En una ficha toque «Contactar por WhatsApp» → sube una hoja «Escríbale a <nombre>» con «Anfitrión de <casa> · WhatsApp verificado», casillas «Llegada» y «Salida» («Elegir fecha»), «Personas (opcional)» con «−» y «+», «Su mensaje» y el botón «Continuar».
 - [ ] **C57** Mire «Su mensaje» → es solo lectura (no se puede escribir en él): «Hola, vi <casa> en bnbtico y me interesa. ¿Está disponible? Gracias.», con «Podrá añadir lo que quiera en WhatsApp antes de enviarlo.» debajo.
 - [ ] **C58** Toque «Llegada» → se abre el calendario de rango de «¿Cuándo?»; elija llegada y salida → se cierra, las casillas dicen p. ej. «9 dic» y «13 dic» y el mensaje pasa a «…¿Está disponible del 9 al 13 de diciembre? Gracias.».
 - [ ] **C59** Toque «+» tres veces en «Personas (opcional)» → el mensaje añade «para 3 personas»; siga tocando «+» → se detiene en la capacidad de la casa; «−» baja hasta dejarlo vacío («–»).
@@ -224,8 +224,8 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 
 ### 2.11 Enlaces de fichas no disponibles
 
-- [ ] **C64** Abra el enlace de la casa con la suscripción parada → «Este enlace ya no está activo», «El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.», «Si ya habló con el propietario por WhatsApp, puede seguir esa conversación por su cuenta.» y el botón «Ver otras casas en el Caribe», que lleva a Explorar.
-- [ ] **C65** Abra el enlace de la casa en revisión → «Este enlace ya no está activo» con «Este anuncio no está disponible en este momento.» (si en cambio está en «Pendiente de pago»: «Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.»).
+- [ ] **C64** Abra el enlace de la casa con la suscripción parada → «Este enlace ya no está activo», «El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.», «Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.» y el botón «Ver otras casas en el Caribe», que lleva a Explorar.
+- [ ] **C65** Abra el enlace de la casa en revisión → «Este enlace ya no está activo» con «Este anuncio no está disponible en este momento.» (si en cambio está en «Pendiente de pago»: «Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.»).
 - [ ] **C66** Abra `/casa/CT-9999` → «Este enlace no existe», «Revise que el enlace esté completo. Si se lo pasaron por WhatsApp, pida que se lo envíen de nuevo.» y «Ver otras casas en el Caribe».
 - [ ] **C67** Abra la ficha de la casa cerrada con «Cerrar la casa hasta…» → insignia «No disponible por ahora», botón gris «No disponible por ahora» que no se puede tocar, «Calendario cerrado» y «Vuelve a estar disponible el <fecha>»; esa casa no sale en Explorar.
 - [ ] **C68** Con la cuenta propietaria `8777 0001`, abra la ficha de una de sus casas, toque «Contactar por WhatsApp» y «Abrir WhatsApp» → aparece «Esta es su propia casa.» y no se abre WhatsApp.
@@ -253,7 +253,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C84** Cierre la sesión y entre otra vez con `8888 9999` → no pide el nombre, `123456` entra directo a Explorar y no vuelve a salir «¡Listo! Su cuenta está creada».
 - [ ] **C85** Toque «No tengo acceso a mi WhatsApp» → «Recuperar mi cuenta» con «Use el correo que añadió y confirmó en su perfil…», el campo «Correo confirmado», «Recuperar con mi correo», «La recuperación por correo se activa cuando confirme uno en su perfil.» y «¿No tiene un correo confirmado?» con «Escribir a bnbtico por WhatsApp», que abre Ayuda.
 
-### 2.14 Contactar al propietario, con y sin cuenta
+### 2.14 Contactar al anfitrión, con y sin cuenta
 
 - [ ] **C86** Sin sesión, en una ficha toque «Contactar por WhatsApp», elija fechas y personas y toque «Continuar» → pantalla «Escribirle a <nombre>» con la tarjeta de la casa (foto, nombre y «<nombre> · WhatsApp verificado») y «Un paso y le escribe a <nombre>»; no ofrece «No tengo acceso a mi WhatsApp» y la flecha «Volver» regresa a la ficha.
 - [ ] **C87** Escriba `8888 1234`, toque «Recibir código por WhatsApp» y luego `123456` → vuelve a la ficha con la hoja abierta y lo mismo escrito, «Abriendo WhatsApp…» y se abre WhatsApp sola, sin segundo toque, con el mensaje redactado y el número del propietario (`https://wa.me/50687770001?text=Hola, vi Casa Playa Negra en bnbtico y me interesa. ¿Está disponible del 9 al 13 de diciembre para 3 personas? Gracias.` para esa casa y fechas).
@@ -268,7 +268,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C93** Con sesión de `8888 1234` toque la pestaña «Cuenta» → sin flecha ni título visible; tarjeta con iniciales, nombre, el número en su propia línea («+506 8888 1234»), «WhatsApp verificado» y debajo «Pronto podrá verificar también su identidad (opcional).»; no hay nada más sobre identidad.
 - [ ] **C94** Mire la lista de Cuenta → «Mi perfil» («Descripción y correo de recuperación (opcionales)»), «¿Quiere publicar su casa gratis?» (con «Gratis 12 meses · quedan N de 50 plazas»), «Ayuda por WhatsApp» («Línea de bnbtico para clientes»); abajo «Términos y privacidad», la atribución de OpenStreetMap y «Cerrar sesión»; no hay suscripción ni método de pago.
 - [ ] **C95** Toque «Editar» → aparece «Mi perfil» con «Nombre», «Descripción (opcional)» y «Correo de recuperación (opcional)»; «Guardar cambios» está desactivado hasta que cambie algo (solo espacios no cuenta); escriba «ana@» y guarde → «Ese correo no parece válido.»; con «ana@ejemplo.com» → «Cambios guardados.» y el botón queda «Guardado»; toque «Listo».
-- [ ] **C96** Toque «Ayuda por WhatsApp» → «Ayuda por WhatsApp», «BNBTICO · ATENCIÓN A CLIENTES», «Para cualquier duda o problema con su cuenta, una casa o un propietario, escríbanos por WhatsApp…», el número de la línea de clientes («canal separado del de propietarios») y «Abrir WhatsApp», que abre `wa.me` con «Hola, estoy buscando casa en bnbtico y necesito ayuda con: ».
+- [ ] **C96** Toque «Ayuda por WhatsApp» → «Ayuda por WhatsApp», «BNBTICO · ATENCIÓN A CLIENTES», «Para cualquier duda o problema con su cuenta, una casa o un anfitrión, escríbanos por WhatsApp…», el número de la línea de clientes («canal separado del de anfitriones») y «Abrir WhatsApp», que abre `wa.me` con «Hola, estoy buscando casa en bnbtico y necesito ayuda con: ».
 - [ ] **C97** Toque «Cerrar sesión» → sube «¿Cerrar sesión?» con «Tendrá que recibir un código nuevo para volver a entrar.» y «Cerrar sesión» / «Cancelar»; «Cancelar» la cierra y sigue con sesión; confirme → vuelve a «Ingresar», la barra dice «Ingresar» y al recargar no hay sesión.
 - [ ] **C98** Con sesión de cliente, abra `/propietario/casas` y `/propietario/calendario` → ambas llevan a Explorar (un cliente sin casas no ve las pantallas del propietario); abra `/admin` → «Segundo código», «Esta sección es solo para el equipo de bnbtico», «Si busca una casa, vuelva a Explorar.» y «Ir a Explorar».
 - [ ] **C99** Sin sesión, abra a mano `/propietario/casas` → lleva a «Ingresar» y, tras el código con `8777 0001`, vuelve a «Mis casas»; la pantalla del código dice «Después de verificar vuelve adonde estaba.».
@@ -348,7 +348,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 ### 3.7 Asistente: precio (pantalla 8)
 
 - [ ] **A39** Revise la pantalla → etapa «Precio», «Precio por noche» con «₡», «¿Acepta alquiler por meses?» con «No» marcado y «Sí», y «En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.».
-- [ ] **A40** Toque «Sí» → aparece «Precio al mes (opcional)» y «Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».»; vuelva a «No» → el campo desaparece y se vacía.
+- [ ] **A40** Toque «Sí» → aparece «Precio al mes (opcional)» y «Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».»; vuelva a «No» → el campo desaparece y se vacía.
 - [ ] **A41** Escriba `85000` por noche y `480000` al mes y toque «Continuar» → llega a «Revisar y enviar».
 
 ### 3.8 Revisar y enviar (pantalla 9)
@@ -455,7 +455,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 - [ ] **A117** Desde el detalle de la casa toque la fila «Suscripción» («Oferta de lanzamiento», «Al día») → abre «Suscripción» solo de esa casa (con su nombre debajo del título) y, con dos o más casas, «Ver todas sus casas».
 - [ ] **A118** Toque «Parar suscripción» → hoja «Parar suscripción» con «¿Parar la suscripción de <casa>? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.»; toque «Cancelar» → no cambia nada.
 - [ ] **A119** Toque «Parar suscripción» y confirme → al instante «Inactiva», «Parada el <hoy> · no se cobra», botón «Activar suscripción» y «Mantiene su plaza de la oferta: gratis hasta el …».
-- [ ] **A120** Sin sesión, abra la ficha de esa casa → «Este enlace ya no está activo» y «El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.»; la casa no sale en Explorar.
+- [ ] **A120** Sin sesión, abra la ficha de esa casa → «Este enlace ya no está activo» y «El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.»; la casa no sale en Explorar.
 - [ ] **A121** Abra la casa parada desde Mis casas → arriba un bloque ocre «Suscripción parada» («… no aparece en Explorar y el enlace de su ficha no funciona. Actívela para que vuelvan a escribirle.») con «Activar suscripción» y «₡2 900 al mes, sin permanencia»; sin «Compartir ficha».
 - [ ] **A122** Toque «Activar suscripción» → vuelve a «Activa» con «Gratis hasta el …» y la ficha pública vuelve con «Contactar por WhatsApp».
 - [ ] **A123** Abra `/propietario/suscripcion?casa=CT-#####pago=CT-####` con sesión → la casa queda resaltada y a la vista; sin sesión, pide ingresar y, tras el código, vuelve a esa misma casa.
@@ -472,7 +472,7 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 - [ ] **A129** Toque el enlace del WhatsApp → abre «Suscripción» con esa casa resaltada y a la vista; el texto del WhatsApp («Hola, …») no se muestra en la app.
 - [ ] **A130** (terminal) Mande `diasRestantes` 30 y luego 7 → cada uno con `"sent":1`, un WhatsApp nuevo con la fecha, y en la app «Su oferta gratuita termina en 30 días» y «…en 7 días».
 - [ ] **A131** (terminal) Mande `diasRestantes` 0 → llega «Hola, <nombre>. Somos bnbtico. La oferta gratuita de «<casa>» termina hoy. Si no añade un método de pago, desde mañana su casa deja de mostrarse en bnbtico: <enlace> Hoy todavía no se le cobra nada; después, ₡2 900 al mes por casa, sin permanencia; puede pararla cuando quiera.»; en la app «Su oferta gratuita termina hoy» y la ficha sigue activa.
-- [ ] **A132** (terminal) Mande `diasRestantes` -1 → `"paymentDue":1` y ningún WhatsApp; a los pocos segundos la ficha sin sesión dice «Este enlace ya no está activo» y «Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.», sin botón de contacto, y la casa ya no sale en Explorar.
+- [ ] **A132** (terminal) Mande `diasRestantes` -1 → `"paymentDue":1` y ningún WhatsApp; a los pocos segundos la ficha sin sesión dice «Este enlace ya no está activo» y «Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.», sin botón de contacto, y la casa ya no sale en Explorar.
 - [ ] **A133** Abra Mis casas → casilla «1 por pagar», aviso ocre «Su oferta gratuita terminó el <ayer>» con «La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ₡2 900 al mes, sin permanencia; puede parar cuando quiera.», y la tarjeta con «Pendiente de pago» y «Añadir método de pago».
 - [ ] **A134** Toque «Añadir método de pago» → abre la página de Stripe en modo de prueba (`checkout.stripe.com`); escriba `4242 4242 4242 4242`, `12/30`, CVC `123` y guarde.
 - [ ] **A135** De vuelta en la app → «Guardando su método de pago…» y en pocos segundos «Método de pago guardado. No se cobra nada hasta que termine la oferta.»; «Método de pago» dice «Visa ···· 4242 · vence 12/30» con «Cambiar»; la casa «Activa» con «Suscripción activa desde el <hoy> · ₡2 900 al mes» y sin botón ocre.
@@ -485,8 +485,8 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 
 - [ ] **A140** Abra la pestaña «Cuenta» → sin título ni flecha; avatar con iniciales, nombre, número en su línea (`+506 8777 0001`), «WhatsApp verificado» debajo y «Pronto podrá verificar también su identidad (opcional).»; enlace «Editar».
 - [ ] **A141** Toque «Editar» → «Mi perfil» con «Nombre», «Descripción (opcional)» y «Correo de recuperación (opcional)» («Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.»); «Guardar cambios» solo se activa al cambiar algo y, al guardar, dice «Guardado»; toque «Listo» para salir.
-- [ ] **A142** Revise las filas → «Favoritos» («Ninguna casa guardada» o «N casas guardadas») y «Ayuda por WhatsApp» («Línea de bnbtico para propietarios»); con casas no sale «¿Quiere publicar su casa gratis?» y no hay verificación de identidad.
-- [ ] **A143** Toque «Ayuda por WhatsApp» → «bnbtico · atención a propietarios», «Para cualquier duda o problema con su cuenta, sus casas o una consulta recibida, escríbanos por WhatsApp. Es el único canal de atención de bnbtico.», el número de propietarios «· canal separado del de clientes.» y «Abrir WhatsApp» abre `wa.me` con «Hola, soy propietario en bnbtico y necesito ayuda con: ».
+- [ ] **A142** Revise las filas → «Favoritos» («Ninguna casa guardada» o «N casas guardadas») y «Ayuda por WhatsApp» («Línea de bnbtico para anfitriones»); con casas no sale «¿Quiere publicar su casa gratis?» y no hay verificación de identidad.
+- [ ] **A143** Toque «Ayuda por WhatsApp» → «bnbtico · atención a anfitriones», «Para cualquier duda o problema con su cuenta, sus casas o una consulta recibida, escríbanos por WhatsApp. Es el único canal de atención de bnbtico.», el número de anfitriones «· canal separado del de clientes.» y «Abrir WhatsApp» abre `wa.me` con «Hola, soy propietario en bnbtico y necesito ayuda con: ».
 - [ ] **A144** Toque «Cerrar sesión» → hoja «¿Cerrar sesión?» con «Tendrá que recibir un código nuevo para volver a entrar.»; confirme → la barra queda en «Explorar», «Favoritos» e «Ingresar».
 
 ### 3.19 Barra de abajo del propietario
@@ -523,7 +523,7 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 - [ ] **D14** Con la sesión admin en `/admin` mire la barra de abajo → cuatro pestañas: «Anuncios» (con un número = casas por revisar), «Casas», «Usuarios», «Cuenta».
 - [ ] **D15** Toque «Usuarios» → pantalla «Usuarios» con «Muy pronto: esta sección de la zona del admin llega en otra entrega.»; no es un error.
 - [ ] **D16** Vuelva a «Anuncios» → tres cifras arriba: «por revisar», «con cambios», «activas»; debajo tres chips: «Por revisar · N» (marcado), «Cambios pedidos», «Rechazados»; el número del chip y el de la barra coinciden con el de «por revisar».
-- [ ] **D17** Mire la lista de «Por revisar» → cada tarjeta lleva miniatura, `CT-#### · hoy`, la insignia «Nueva», el nombre de la casa, `<propietario> · WhatsApp verificado` y `<zona> · N personas · N fotos · ₡precio`; las más antiguas primero; al final «Las más antiguas primero. El propietario recibe la decisión por WhatsApp y la ve en Mis casas.».
+- [ ] **D17** Mire la lista de «Por revisar» → cada tarjeta lleva miniatura, `CT-#### · hoy`, la insignia «Nueva», el nombre de la casa, `<anfitrión> · WhatsApp verificado` y `<zona> · N personas · N fotos · ₡precio`; las más antiguas primero; al final «Las más antiguas primero. El anfitrión recibe la decisión por WhatsApp y la ve en Mis casas.».
 - [ ] **D18** Si hay una edición pendiente → encima de la lista aparece «Ediciones por revisar» con una tarjeta que dice `Edición: nombre, ubicación, descripción, 1 foto nueva` (según lo que se envió); no aparece en «Por revisar».
 - [ ] **D19** Toque «Cambios pedidos» y luego «Rechazados» → muestran sus casas o «Nada por aquí.»; con «Por revisar» vacío el texto es «No hay anuncios pendientes.».
 
@@ -534,9 +534,9 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 - [ ] **D22** Debajo de las fotos → el nombre de la casa con su `CT-####`, una línea con tipo, zona, personas, habitaciones y baños, y el precio `₡xx xxx / noche` (con `· mensual ₡…` o `· mensual a negociar` si acepta alquiler mensual).
 - [ ] **D23** Revise la tarjeta del propietario → iniciales, nombre y «WhatsApp verificado · +506 8777 0001». No aparece nada de identidad.
 - [ ] **D24** Revise la tarjeta «Descripción» → el texto completo de la casa y, debajo, insignias con las características marcadas (Wifi, Piscina…; «Parqueo de pago» o «Parqueo gratuito» si aplica) o «Sin características marcadas».
-- [ ] **D25** Si la zona la escribió el propietario en vez de elegirla de la lista → junto al nombre sale la insignia «Zona propuesta por el dueño».
+- [ ] **D25** Si la zona la escribió el propietario en vez de elegirla de la lista → junto al nombre sale la insignia «Zona propuesta por el anfitrión».
 - [ ] **D26** Mire el bloque «Antes de decidir» → tres casillas: «Las fotos son de la casa y sin teléfonos ni logos», «La descripción no tiene enlaces ni publicidad», «Zona y precio coherentes»; marcarlas o no **no** bloquea ningún botón.
-- [ ] **D27** Mire abajo → el campo «Mensaje para el propietario (obligatorio si pide cambios o rechaza)» y la barra fija con «Aprobar y publicar», «Pedir cambios» y «Rechazar».
+- [ ] **D27** Mire abajo → el campo «Mensaje para el anfitrión (obligatorio si pide cambios o rechaza)» y la barra fija con «Aprobar y publicar», «Pedir cambios» y «Rechazar».
 
 ### 4.5 Decidir una casa nueva
 
@@ -544,17 +544,17 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 - [ ] **D29** Con el campo vacío, toque «Rechazar» → el mismo aviso; no se rechaza nada.
 - [ ] **D30** (no aplica desde el 2026-10-30: ya no se puede enviar una casa sin fotos; sáltela salvo que quede una de antes) (casa sin fotos) Abra la tarjeta de «Casa sin fotos» → «Aprobar y publicar» está desactivado, el mensaje viene escrito con «Para publicarla necesitamos al menos una foto de la casa.» y sale el aviso «Sin fotos: solo puede pedir cambios.».
 - [ ] **D31** (no aplica, como D30) (casa sin fotos) Toque «Rechazar» sin cambiar el mensaje → «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.» (el texto de las fotos no sirve de motivo para rechazar).
-- [ ] **D32** (casa nueva) Escriba «Necesitamos una foto de la cocina.» y toque «Pedir cambios» → vuelve a «Anuncios» con la nota ««<nombre>»: Cambios pedidos. El propietario verá su mensaje.»; la casa sale de «Por revisar» y las cifras bajan una y suben «con cambios».
+- [ ] **D32** (casa nueva) Escriba «Necesitamos una foto de la cocina.» y toque «Pedir cambios» → vuelve a «Anuncios» con la nota ««<nombre>»: Cambios pedidos. El anfitrión verá su mensaje.»; la casa sale de «Por revisar» y las cifras bajan una y suben «con cambios».
 - [ ] **D33** En ese aviso toque «Avisar a Yorleny por WhatsApp» → abre WhatsApp con el número de la propietaria y el texto «Hola, Yorleny. Le escribimos de bnbtico: revisamos su casa «<nombre>» y necesitamos un cambio antes de publicarla: Necesitamos una foto de la cocina. Puede corregirla desde Mis casas → «Corregir y reenviar».»; vuelva a la app sin enviarlo.
 - [ ] **D34** Toque el chip «Cambios pedidos» → la casa está con la insignia «Cambios pedidos»; al abrirla se ve el recuadro «Cambios pedidos» con el texto «Necesitamos una foto de la cocina.» y ya no hay «Aprobar y publicar».
 - [ ] **D35** Cambie a la cuenta de la propietaria y abra **Mis casas** → la casa dice «Cambios pedidos», con «Nota de bnbtico: Necesitamos una foto de la cocina.» y el botón «Corregir y reenviar». (No llega ningún WhatsApp automático con la decisión: en v1 el admin avisa a mano si hace falta.)
-- [ ] **D36** (CT-1059 «Casa Playa Bite con hamaca») Con la cuenta admin, escriba «Las fotos no son de esta casa.» y toque «Rechazar» → ««Casa Playa Bite con hamaca»: Rechazada. El propietario verá el motivo.»; en el chip «Rechazados» aparece con «Rechazada».
+- [ ] **D36** (CT-1059 «Casa Playa Bite con hamaca») Con la cuenta admin, escriba «Las fotos no son de esta casa.» y toque «Rechazar» → ««Casa Playa Bite con hamaca»: Rechazada. El anfitrión verá el motivo.»; en el chip «Rechazados» aparece con «Rechazada».
 - [ ] **D37** Toque «Avisar a <nombre> por WhatsApp» en ese aviso → el texto es «Hola, <nombre>. Le escribimos de bnbtico: revisamos su casa «Casa Playa Bite con hamaca» y no podemos publicarla: Las fotos no son de esta casa. Si tiene dudas, respóndanos a este mensaje.».
 - [ ] **D38** (casa rechazada) Con la propietaria, abra Mis casas → «Rechazada» y «Nota de bnbtico: Las fotos no son de esta casa.»; al abrir el detalle: «Anuncio rechazado» con el motivo y sin botón de corregir.
 - [ ] **D39** (casa nueva, tras corregirla en 5.2) Con el admin, toque «Por revisar» → la tarjeta vuelve con la insignia «Corregida» (no «Nueva»).
 - [ ] **D40** Abra la casa corregida, deje el campo vacío y toque «Aprobar y publicar» (con la propietaria aún sin método de pago y en oferta de lanzamiento) → vuelve a «Anuncios» con ««<nombre>»: Aprobada y publicada. El enlace ya funciona.»; la cifra «activas» sube una y la casa sale de la lista al instante.
 - [ ] **D41** Toque «Avisar a Yorleny por WhatsApp» → el texto es «Hola, Yorleny. Le escribimos de bnbtico: su casa «<nombre>» ya está aprobada y publicada. Este es su enlace para compartir con sus clientes: https://nueva.bnbtico.com/casa/CT-####. Gracias por publicar con nosotros.»; envíelo y compruebe en el teléfono de la propietaria que el enlace abre la ficha.
-- [ ] **D42** Al pie de la cola → «El propietario ve la decisión en Mis casas; avísele por WhatsApp con el botón.» (ya no promete un aviso automático).
+- [ ] **D42** Al pie de la cola → «El anfitrión ve la decisión en Mis casas; avísele por WhatsApp con el botón.» (ya no promete un aviso automático).
 - [ ] **D43** Abra la ficha pública `https://nueva.bnbtico.com/casa/CT-####` de esa casa (cliente o ventana sin sesión) → se ve la ficha con el nombre, las fotos y el precio; «Contactar por WhatsApp» está disponible.
 - [ ] **D44** Con la propietaria, abra Mis casas → la casa dice «Activa»; en su detalle, «Suscripción» con «Gratis hasta …» (oferta de lanzamiento; no «Pendiente de pago»).
 
@@ -578,25 +578,25 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 
 Use dos casas activas de prueba que pueda perder: «la casa a pausar» y «la casa a bloquear», y una tercera para eliminar (puede ser un borrador o una casa rechazada).
 
-- [ ] **D58** Toque «Casas» en la barra → título «Casas» con «Admin», el buscador «Nombre, CT-#### o propietario», los chips «Todas · N», «Activas · N», «Por pagar · N», «Inactivas · N», «Pausadas · N» y «Bloqueadas · N» (Todas marcado) y al pie «Toque una casa para ver sus datos y pausarla, bloquearla o eliminarla.».
-- [ ] **D59** Mire una fila → miniatura, nombre, `CT-#### · <propietario> · <zona>`, la línea de suscripción («Gratis hasta 30 oct 2027», «Oferta vencida el 29 oct · sin método de pago», «Parada por el propietario el 30 oct» o «Pagando desde el … · ₡2 900 al mes») y la insignia («Activa», «Por pagar», «Inactiva», «En revisión»…).
+- [ ] **D58** Toque «Casas» en la barra → título «Casas» con «Admin», el buscador «Nombre, CT-#### o anfitrión», los chips «Todas · N», «Activas · N», «Por pagar · N», «Inactivas · N», «Pausadas · N» y «Bloqueadas · N» (Todas marcado) y al pie «Toque una casa para ver sus datos y pausarla, bloquearla o eliminarla.».
+- [ ] **D59** Mire una fila → miniatura, nombre, `CT-#### · <anfitrión> · <zona>`, la línea de suscripción («Gratis hasta 30 oct 2027», «Oferta vencida el 29 oct · sin método de pago», «Parada por el anfitrión el 30 oct» o «Pagando desde el … · ₡2 900 al mes») y la insignia («Activa», «Por pagar», «Inactiva», «En revisión»…).
 - [ ] **D60** Escriba en el buscador parte del nombre de una casa, sin tildes y en minúsculas → quedan solo las que coinciden y los números de los chips **no** cambian; borre y escriba su `CT-####` → queda esa casa.
 - [ ] **D61** Escriba el nombre de la propietaria (por ejemplo «yorleny») → salen sus casas; escriba «zzz-ninguna» → «Ninguna casa coincide con la búsqueda.».
 - [ ] **D62** Toque cada chip → la lista se filtra, la dirección cambia (`?ver=activas`, `?ver=por-pagar`, `?ver=inactivas`…) y cada chip muestra tantas filas como su número; un chip vacío dice «Nada por aquí.».
-- [ ] **D63** Toque una casa activa → sube una hoja con el nombre, `CT-#### · <propietario> · <zona>`, «Ver ficha pública», «Ver datos del anuncio», los botones «Pausar» y «Bloquear» y, al final, «Eliminar casa» en contorno rojo; la ✕ («Cerrar») la cierra.
+- [ ] **D63** Toque una casa activa → sube una hoja con el nombre, `CT-#### · <anfitrión> · <zona>`, «Ver ficha pública», «Ver datos del anuncio», los botones «Pausar» y «Bloquear» y, al final, «Eliminar casa» en contorno rojo; la ✕ («Cerrar») la cierra.
 - [ ] **D64** En la hoja toque «Ver ficha pública» → abre `/casa/CT-####` como la ve un cliente; vuelva y toque «Ver datos del anuncio» → «Revisar anuncio» en solo lectura, con el estado y el botón «Avisar a <nombre> por WhatsApp».
 - [ ] **D65** Toque una casa que no está publicada (en revisión o rechazada) → la hoja dice «Solo se pausa o se bloquea una casa publicada.» y solo ofrece «Eliminar casa».
-- [ ] **D66** (la casa a pausar) «Pausar» → «Pausar casa» con «Sale de Explorar y su enlace deja de funcionar. El propietario la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.» y el campo «Motivo (lo verá el propietario)»; toque «Pausar casa» con el motivo vacío → «Escriba el motivo (hasta 2000 caracteres).».
+- [ ] **D66** (la casa a pausar) «Pausar» → «Pausar casa» con «Sale de Explorar y su enlace deja de funcionar. El anfitrión la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.» y el campo «Motivo (lo verá el anfitrión)»; toque «Pausar casa» con el motivo vacío → «Escriba el motivo (hasta 2000 caracteres).».
 - [ ] **D67** Escriba «Confirme que las fotos son de esta casa.» y toque «Pausar casa» → aviso «Casa pausada», la hoja sigue abierta con «Reanudar» en lugar de «Pausar» y el botón «Avisar a <nombre> por WhatsApp», cuyo texto es «Hola, <nombre>. Le escribimos de bnbtico: su casa «<nombre>» está pausada en bnbtico: Confirme que las fotos son de esta casa. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.».
 - [ ] **D68** Cierre la hoja → la casa sale en el chip «Pausadas» y ya no en «Activas».
 - [ ] **D69** Cliente (sin sesión): abra su `/casa/CT-####` → «Este enlace ya no está activo»; en Explorar ya no aparece.
 - [ ] **D70** Propietaria: Mis casas → la tarjeta dice «Pausada por bnbtico»; en el detalle, el recuadro «Pausada por bnbtico» con «Su casa no aparece en Explorar y el enlace de su ficha no funciona por ahora. Puede seguir editándola; cuando todo esté en orden, la reanudamos nosotros.» y «Motivo: Confirme que las fotos son de esta casa.»; cambie el precio → se guarda (pausada se puede editar).
 - [ ] **D71** Admin: abra la casa pausada y toque «Reanudar» → «Casa reanudada», la hoja se cierra, vuelve al chip «Activas», su ficha abre otra vez (recargue) y sale en Explorar; la propietaria ya no ve el recuadro.
-- [ ] **D72** (la casa a bloquear) «Bloquear» → «Bloquear casa» con «Igual para el público. El propietario verá el motivo y «Escribir a bnbtico», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.»; escriba «Publica un teléfono dentro de las fotos.» y toque «Bloquear casa» → «Casa bloqueada», «Desbloquear» y el botón de WhatsApp con «…su casa «<nombre>» está bloqueada en bnbtico: Publica un teléfono dentro de las fotos. Si tiene dudas, respóndanos a este mensaje.»; la casa pasa al chip «Bloqueadas».
+- [ ] **D72** (la casa a bloquear) «Bloquear» → «Bloquear casa» con «Igual para el público. El anfitrión verá el motivo y «Escribir a bnbtico», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.»; escriba «Publica un teléfono dentro de las fotos.» y toque «Bloquear casa» → «Casa bloqueada», «Desbloquear» y el botón de WhatsApp con «…su casa «<nombre>» está bloqueada en bnbtico: Publica un teléfono dentro de las fotos. Si tiene dudas, respóndanos a este mensaje.»; la casa pasa al chip «Bloqueadas».
 - [ ] **D73** Propietaria: el detalle de la casa → recuadro «Bloqueada por bnbtico» con «Su casa no aparece en Explorar, el enlace de su ficha no funciona y no se puede editar. Mientras esté bloqueada no se cobra su suscripción.», el motivo y el botón verde «Escribir a bnbtico» (abre el WhatsApp de propietarios); los datos salen en gris sin poder tocarlos, no hay «Compartir ficha» y la suscripción dice «Parada mientras la casa esté bloqueada · no se cobra».
 - [ ] **D74** Propietaria: intente cambiar el calendario o una foto de la casa bloqueada → no deja, con «Esta casa está bloqueada por bnbtico. Escríbanos por WhatsApp.».
 - [ ] **D75** Admin: en la casa bloqueada solo hay «Desbloquear» (no «Pausar» ni «Bloquear»); tóquelo → «Casa desbloqueada»; la casa vuelve a su estado de antes (Activa si lo estaba; si estaba en oferta, la fecha del último día gratis se corre los días que duró el bloqueo) y la propietaria vuelve a poder editar.
-- [ ] **D76** (la casa a eliminar) «Eliminar casa» → «Eliminar casa» con «Desaparece para todos, también para su propietario y de los favoritos de los clientes. Los datos, fotos y consultas quedan guardados, ocultos. No hay «deshacer» en la app.», «Motivo (queda en el registro)» y «Para confirmar, escriba CT-####»; con un código distinto → «Escriba el código de la casa (CT-####) para confirmar.».
+- [ ] **D76** (la casa a eliminar) «Eliminar casa» → «Eliminar casa» con «Desaparece para todos, también para el anfitrión y de los favoritos de los clientes. Los datos, fotos y consultas quedan guardados, ocultos. No hay «deshacer» en la app.», «Motivo (queda en el registro)» y «Para confirmar, escriba CT-####»; con un código distinto → «Escriba el código de la casa (CT-####) para confirmar.».
 - [ ] **D77** Escriba el motivo y el código en minúsculas (`ct-1022`) y toque «Eliminar casa» → «Casa eliminada», la hoja se cierra y la casa desaparece de todos los chips.
 - [ ] **D78** Propietaria: la casa ya no está en Mis casas (bajan los contadores; si era su única casa, la barra vuelve a «Explorar · Favoritos · Cuenta»); Cliente: su enlace dice «Este enlace no existe» y desaparece de sus Favoritos.
 
@@ -627,7 +627,7 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
   6. Propietaria: la pestaña «Consultas» muestra un número y, dentro, «1 consulta nueva» con la tarjeta marcada «Nueva» y el botón «Abrir WhatsApp» que abre `wa.me/50688881234`.
 
 - [ ] **X2** Pedir cambios → la propietaria corrige y reenvía → el admin aprueba.
-  1. Admin: abra una casa nueva en revisión → mensaje «Cambie la foto de portada, se ve un número de teléfono.» → «Pedir cambios» → «Cambios pedidos. El propietario verá su mensaje.».
+  1. Admin: abra una casa nueva en revisión → mensaje «Cambie la foto de portada, se ve un número de teléfono.» → «Pedir cambios» → «Cambios pedidos. El anfitrión verá su mensaje.».
   2. Propietaria: Mis casas → «Cambios pedidos», «Nota de bnbtico: Cambie la foto de portada, se ve un número de teléfono.» y «Corregir y reenviar».
   3. Propietaria: «Corregir y reenviar» → arregla la foto en el asistente y envía a revisión → de nuevo «¡Listo! Su casa está en revisión»; Mis casas dice «En revisión».
   4. Admin: Anuncios → la casa sale con la insignia «Corregida» (no «Nueva») → «Aprobar y publicar».
@@ -666,14 +666,14 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
 
 - [ ] **X7** La propietaria para la suscripción → el enlace deja de funcionar → la reactiva. (Lo hace la propietaria; pausar, bloquear y eliminar desde el admin están en 4.7.)
   1. Propietaria: Mis casas → casa activa → Suscripción → «Parar suscripción» → confirmar → la casa queda «Inactiva» con «Parada el … · no se cobra».
-  2. Cliente: `/casa/CT-####` → «Este enlace ya no está activo» y «El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.»; Explorar ya no la lista.
-  3. Admin: Casas → chip «Inactivas» con «Parada por el propietario el …».
+  2. Cliente: `/casa/CT-####` → «Este enlace ya no está activo» y «El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.»; Explorar ya no la lista.
+  3. Admin: Casas → chip «Inactivas» con «Parada por el anfitrión el …».
   4. Propietaria: «Activar suscripción» → la casa vuelve a «Activa»; Cliente: la ficha vuelve a abrir.
 
 - [ ] **X8** Rechazar una casa → el enlace nunca funciona.
   1. Propietaria: publica una casa «Casa X8» y la envía a revisión; anote su `CT-####`.
   2. Cliente: `/casa/CT-####` → «Este enlace ya no está activo» y «Este anuncio no está disponible en este momento.»; no sale en Explorar.
-  3. Admin: abre la casa, escribe «Las fotos no son de esta casa.» y toca «Rechazar» → ««Casa X8»: Rechazada. El propietario verá el motivo.».
+  3. Admin: abre la casa, escribe «Las fotos no son de esta casa.» y toca «Rechazar» → ««Casa X8»: Rechazada. El anfitrión verá el motivo.».
   4. Propietaria: Mis casas → «Rechazada» con «Nota de bnbtico: Las fotos no son de esta casa.»; Cliente: el enlace sigue sin funcionar; Admin: chip «Rechazados» la lista.
 
 ---
