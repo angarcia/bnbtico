@@ -110,8 +110,9 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         nicoya = await h.seed({ status: "active", draft: { province: "Guanacaste", canton: "Nicoya", zone: "Sámara", zoneSource: "other", zoneId: null, lat: 9.88, lng: -85.53, nightlyPriceCrc: 60000 } });
       }, 60_000);
 
-      it("más recientes primero", async () => {
-        expect(await ids(filters())).toEqual([nicoya.publicId, grande.publicId, mensual.publicId, cahuita.publicId]);
+      it("las de Limón primero y, dentro de cada grupo, las más recientes primero (Caribe primero)", async () => {
+        // nicoya (Guanacaste) es la más reciente, pero va después de las tres de Limón.
+        expect(await ids(filters())).toEqual([grande.publicId, mensual.publicId, cahuita.publicId, nicoya.publicId]);
       });
 
       it("provincia", async () => {
@@ -141,8 +142,8 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
       });
 
       it("precio por noche: mínimo y máximo", async () => {
-        expect(await ids(filters({ min: "50000" }))).toEqual([nicoya.publicId, grande.publicId]);
-        expect(await ids(filters({ max: "60000" }))).toEqual([nicoya.publicId, mensual.publicId, cahuita.publicId]);
+        expect(await ids(filters({ min: "50000" }))).toEqual([grande.publicId, nicoya.publicId]);
+        expect(await ids(filters({ max: "60000" }))).toEqual([mensual.publicId, cahuita.publicId, nicoya.publicId]);
         expect(await ids(filters({ min: "45000", max: "100000" }))).toEqual([nicoya.publicId]);
       });
 
@@ -154,6 +155,32 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.countActive()).toBe(4);
       });
     });
+    describe("baños y tipo de alojamiento (ticket 06)", () => {
+      let uno: Seeded;
+      let tres: Seeded;
+      let cuarto: Seeded;
+
+      beforeAll(async () => {
+        h = await makeHarness();
+        await h.reset();
+        uno = await h.seed({ status: "active", draft: { bathrooms: 1 } });
+        tres = await h.seed({ status: "active", draft: { bathrooms: 3, bedrooms: 3, capacity: 6 } });
+        cuarto = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true, bathrooms: 1 } });
+      }, 60_000);
+
+      it("baños como mínimo", async () => {
+        expect(await ids(filters({ banos: "1" }))).toEqual([cuarto.publicId, tres.publicId, uno.publicId]);
+        expect(await ids(filters({ banos: "2" }))).toEqual([tres.publicId]);
+        expect(await ids(filters({ banos: "3" }))).toEqual([tres.publicId]);
+      });
+
+      it("tipo: «completo» deja fuera las habitaciones y «habitacion» solo las trae a ellas", async () => {
+        expect(await ids(filters({ tipo: "completo" }))).toEqual([tres.publicId, uno.publicId]);
+        expect(await ids(filters({ tipo: "habitacion" }))).toEqual([cuarto.publicId]);
+        expect(await ids(filters({ tipo: "completo", banos: "2" }))).toEqual([tres.publicId]);
+      });
+    });
+
     describe("zona (5 km)", () => {
       let pv: Seeded;
       let cahuita: Seeded;

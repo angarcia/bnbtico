@@ -1,5 +1,5 @@
 // Explorar (pantalla 01, maqueta v2): sin barra superior; arriba la píldora de búsqueda y la cuenta, y la fila de chips
-// («Solo alquiler mensual», filtros y «₡ | $»), fijas al bajar. Limón por defecto, filtros en la URL, una casa por fila.
+// («Solo alquiler mensual», filtros y «₡ | $»), fijas al bajar. todo el país con el Caribe primero (lo ordena la búsqueda), filtros en la URL, una casa por fila.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
@@ -60,7 +60,6 @@ function FiltersLink({ filters: f, search }: { filters: Filters; search: Explore
  *  los filtros y «₡ | $». */
 function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
   const navigate = useNavigate();
-  const { data: provinces = [] } = useQuery(provincesQuery);
   return (
     <header className="explore-top">
       <h1 className="sr-only">Explorar casas</h1>
@@ -75,7 +74,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
           aria-label={MONTHLY_FILTER_LABEL}
           onClick={() => {
             track("monthly_filter_tap");
-            void navigate({ to: "/explorar", search: searchFor({ ...f, monthly: !f.monthly }, provinces), replace: true });
+            void navigate({ to: "/explorar", search: searchFor({ ...f, monthly: !f.monthly }), replace: true });
           }}
         >
           <span>{f.monthly ? MONTHLY_FILTER_SHORT : MONTHLY_FILTER_LABEL}</span>
@@ -131,7 +130,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   }, [mapOpen]);
   const currency = useCurrency();
   const { data: listings, isError, error } = useQuery(listingsQuery(f));
-  const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
+  const reveal = useReveal(!listings, searchToString(searchFor(f)));
   // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
   const dates = searchDatesValue(stayRange(f), f.monthly);
   useEffect(() => {
@@ -141,9 +140,9 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
     if (dates) store.setItem(DATES_FILTER_KEY, dates);
     else store.removeItem(DATES_FILTER_KEY);
   }, [f.ppl, dates]);
-  const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
+  const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next), replace: true });
   const extras = extrasCount(f);
-  const linkSearch = searchFor(f, provinces);
+  const linkSearch = searchFor(f);
   // Abrir el mapa es una entrada del historial (Atrás lo cierra); la lista no se mueve debajo.
   const openMap = (publicId: string | null) => {
     setSelected(publicId);
@@ -239,7 +238,7 @@ export function ExplorarScreen() {
   const loading = !provinces || (!!search.zona && zones.isPending);
   return (
     <>
-      <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f, provinces) : search} />
+      <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f) : search} />
       {isError ? (
         <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
       ) : loading ? (

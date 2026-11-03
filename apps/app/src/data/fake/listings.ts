@@ -3,7 +3,7 @@ import type { PublicListingsApi } from "../../domain/api";
 import { calendarWindow } from "../../domain/calendar";
 import { FX_INITIAL } from "../../domain/fx";
 import { DomainError } from "../../domain/errors";
-import { ALL_PROVINCES, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, KINDS_OF_FILTER, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
 import { distanceMeters } from "../../domain/geo";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { addDays } from "../../domain/dates";
@@ -89,10 +89,13 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         .filter((l) => !q.monthly || l.acceptsMonthly === true)
         .filter((l) => !q.ppl || gte(l.capacity, q.ppl))
         .filter((l) => !q.beds || gte(l.bedrooms, q.beds))
+        .filter((l) => !q.baths || gte(l.bathrooms, q.baths))
+        .filter((l) => !q.kind || (l.kind !== null && KINDS_OF_FILTER[q.kind!].includes(l.kind)))
         .filter((l) => q.features.every((x) => l.features.includes(x)))
         .filter((l) => !q.min || gte(l.nightlyPriceCrc, q.min))
         .filter((l) => !q.max || lte(l.nightlyPriceCrc, q.max))
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        // Como search_listings: las de Limón primero y, dentro de cada grupo, las más nuevas.
+        .sort((a, b) => Number(b.province === "Limón") - Number(a.province === "Limón") || b.createdAt.localeCompare(a.createdAt))
         .slice(0, SEARCH_LIMIT)
         .map(toPublic);
     },

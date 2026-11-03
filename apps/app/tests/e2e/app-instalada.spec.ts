@@ -42,7 +42,7 @@ const results = (page: Page) => page.getByTestId("results-count");
 
 test("segunda apertura sin red: el shell sale del service worker y Explorar visitado se pinta", async ({ page, context }) => {
   await page.goto("/explorar");
-  await expect(results(page)).toHaveText("2 casas en Limón");
+  await expect(results(page)).toHaveText("2 casas");
   await controlled(page);
   await page.waitForTimeout(1500); // la caché de Query se guarda en IndexedDB con un pequeño retraso
 
@@ -50,7 +50,7 @@ test("segunda apertura sin red: el shell sale del service worker y Explorar visi
   const response = await page.goto("/explorar");
   expect(response?.fromServiceWorker()).toBe(true);
   await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeVisible();
-  await expect(results(page)).toHaveText("2 casas en Limón");
+  await expect(results(page)).toHaveText("2 casas");
   await page.getByRole("link", { name: /Casa Manzanillo/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo" })).toBeVisible();
 
