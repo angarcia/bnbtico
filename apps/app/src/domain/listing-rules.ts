@@ -65,7 +65,8 @@ export function validateStep(step: Step, d: ListingDraft): string | null {
       return null;
     case 4:
       if (!isInt(d.capacity, 1)) return "Indique cuántas personas pueden alojarse (mínimo 1).";
-      if (!isInt(d.bedrooms, d.kind === "completo" || d.kind === "apartamento" ? 0 : 1)) return "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
+      // Una Habitación no pregunta habitaciones: son 1 (`normalize`).
+      if (d.kind !== "habitacion" && !isInt(d.bedrooms, d.kind === "completo" || d.kind === "apartamento" ? 0 : 1)) return "Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.";
       if (!isInt(d.bathrooms, 1)) return "Indique el número de baños (mínimo 1).";
       if (d.kind === "habitacion" && d.bathroomShared === null) return "Indique si el baño es privado o compartido.";
       return null;

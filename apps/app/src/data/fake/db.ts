@@ -239,6 +239,7 @@ export class FakeDb {
       deletedReason: null,
       ...patch,
     };
+    oneRoom(listing);
     this.listings.set(listing.id, listing);
     return listing;
   }
@@ -306,6 +307,11 @@ export class FakeDb {
     this.paymentCustomers.clear();
     this.paymentEvents.clear();
   }
+}
+
+/** Trigger listings_habitacion_una: una Habitación es siempre 1 habitación, la escriba quien la escriba. */
+export function oneRoom(l: Pick<FakeListing, "kind" | "bedrooms">): void {
+  if (l.kind === "habitacion") l.bedrooms = 1;
 }
 
 /** Como approx_point en SQL: desplazamiento determinista por casa entre 150 y 499 m (el hash no tiene que coincidir). */

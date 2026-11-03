@@ -214,6 +214,24 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         await me.deleteDraft(draft.id);
       });
 
+      it("Habitación = 1 habitación: al elegir el tipo y aunque el paso 4 no mande habitaciones; de Habitación a completo se queda en 1, editable", async () => {
+        const draft = await me.createDraft();
+        expect(await me.saveStep(draft.id, 1, { kind: "habitacion" })).toMatchObject({ kind: "habitacion", bedrooms: 1 });
+        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: null, bathrooms: 1, bathroomShared: true })).toMatchObject({ capacity: 2, bedrooms: 1, bathroomShared: true });
+        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: 4, bathrooms: 1, bathroomShared: true })).toMatchObject({ bedrooms: 1 });
+        expect(await me.getOwn(draft.id)).toMatchObject({ kind: "habitacion", bedrooms: 1 });
+        expect(await me.saveStep(draft.id, 1, { kind: "completo" })).toMatchObject({ kind: "completo", bedrooms: 1, bathroomShared: null });
+        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: 3, bathrooms: 1, bathroomShared: null })).toMatchObject({ bedrooms: 3 });
+        expect(await me.getOwn(draft.id)).toMatchObject({ kind: "completo", bedrooms: 3 });
+        await me.deleteDraft(draft.id);
+      });
+
+      it("una Habitación guardada sin habitaciones (por cualquier camino) queda en 1", async () => {
+        const room = await h.seed({ status: "draft", draft: { kind: "habitacion", bedrooms: null, bathroomShared: true } });
+        expect((await me.getOwn(room.id))?.bedrooms).toBe(1);
+        await me.deleteDraft(room.id);
+      });
+
       it("Sí sin precio se guarda; Sí con precio y luego No no guarda el precio", async () => {
         await me.saveStep(id, 8, { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: null });
         expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });

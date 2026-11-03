@@ -213,13 +213,13 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(review.locator(".review-label")).toHaveText(["Alojamiento", "Dónde", "Capacidad", "Nombre", "Fotos", "Precio"]);
   const where = review.getByRole("link", { name: /Dónde/ });
   await expect(where.locator(".review-text")).toHaveText(`${zoneName} · Limón, Limón, Limón`);
-  await expect(where).toHaveAttribute("href", `/propietario/publicar/${id}/2`);
+  await expect(where).toHaveAttribute("href", `/propietario/publicar/${id}/2?volver=revisar`);
   const nameRow = review.getByRole("link", { name: /Nombre/ });
   await expect(nameRow.locator(".review-text")).toHaveText(`«${TITLE}»`);
-  await expect(nameRow).toHaveAttribute("href", `/propietario/publicar/${id}/6`);
+  await expect(nameRow).toHaveAttribute("href", `/propietario/publicar/${id}/6?volver=revisar`);
   const photosRow = review.getByRole("link", { name: /Fotos/ });
   await expect(photosRow.locator(".review-text")).toHaveText("4 fotos");
-  await expect(photosRow).toHaveAttribute("href", `/propietario/publicar/${id}/7`);
+  await expect(photosRow).toHaveAttribute("href", `/propietario/publicar/${id}/7?volver=revisar`);
   await expect(review.getByRole("link", { name: /Precio/ }).locator(".review-text")).toHaveText("₡85 000 / noche");
   await page.getByRole("button", { name: "Ver cómo queda su ficha" }).click();
   const preview = page.getByRole("dialog", { name: "Vista previa de su ficha" });
@@ -538,8 +538,84 @@ test("con un obligatorio que falta, «Enviar» no se puede tocar y la fila terra
   await expect(missing).toHaveCount(1);
   await expect(missing).toContainText("Añadir una foto");
   await missing.click();
-  await expect(page).toHaveURL(/\/7$/);
+  await expect(page).toHaveURL(/\/7\?volver=revisar$/);
   expect((await h.owner("owner").getOwn(draft.id))?.status).toBe("draft");
+  // Arreglado el dato, «Continuar» vuelve al resumen (no al paso 8) y el parámetro se pierde; la fila ya no es terracota.
+  await h.addPhotos(draft.id, 1);
+  await page.reload();
+  await expect(page.getByRole("status")).toHaveText("1 de 15");
+  await continuar(page);
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/9$`));
+  await expect(page.getByRole("heading", { name: "Revisar y enviar" })).toBeVisible();
+  await expect(page.locator(".review-row.is-missing")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Enviar a revisión" })).toBeEnabled();
+});
+
+test("corregir desde «Revisar y enviar»: «Continuar» guarda y vuelve al resumen, «Atrás» también; sin el parámetro, todo sigue su orden", async ({ page }) => {
+  const draft = await h.seed({ status: "draft", photos: 2, draft: { capacity: null } });
+  await page.goto(`/propietario/publicar/${draft.id}/9`);
+  const capacityRow = page.locator(".review-row.is-warn");
+  await expect(capacityRow).toHaveCount(1);
+  await expect(capacityRow).toHaveAttribute("href", `/propietario/publicar/${draft.id}/4?volver=revisar`);
+  // Desde el resumen, el paso entra por la derecha (avanza); al volver al resumen, éste entra por la izquierda.
+  await capacityRow.click();
+  await expect(page).toHaveURL(/\/4\?volver=revisar$/);
+  await expect(page.locator('.publish-form[data-enter="forward"]')).toBeVisible();
+  await expect(page.getByRole("link", { name: "Atrás" })).toHaveAttribute("href", `/propietario/publicar/${draft.id}/9`);
+  await count(page, "personas", 3);
+  await continuar(page);
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/9$`));
+  await expect(page.locator('.publish-form[data-enter="back"]')).toBeVisible();
+  // El paso se guarda por detrás: se espera a que llegue a la base.
+  await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.capacity).toBe(3);
+  await expect(page.locator(".review-row.is-warn")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Capacidad/ }).locator(".review-text")).toHaveText("3 pers. · 1 hab. · 1 baño");
+
+  // «Atrás» desde el paso 1 abierto desde el resumen (sin él, en el paso 1 «Atrás» no lleva a ningún sitio).
+  await page.getByRole("link", { name: /Alojamiento/ }).click();
+  await expect(page).toHaveURL(/\/1\?volver=revisar$/);
+  await page.getByRole("link", { name: "Atrás" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/9$`));
+  await expect(page.getByRole("heading", { name: "Revisar y enviar" })).toBeVisible();
+
+  // Sin el parámetro: «Atrás» y «Continuar» siguen el orden de siempre.
+  await page.goto(`/propietario/publicar/${draft.id}/4`);
+  await expect(page.getByRole("link", { name: "Atrás" })).toHaveAttribute("href", `/propietario/publicar/${draft.id}/2`);
+  await continuar(page);
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/5$`));
+  await page.goto(`/propietario/publicar/${draft.id}/1`);
+  await expect(page.locator(".btn-back")).toHaveAttribute("aria-disabled", "true");
+});
+
+test("Habitación no pregunta habitaciones (son 1); Alojamiento completo sí, y cambiar de tipo lo respeta", async ({ page }) => {
+  const room = await h.seed({ status: "draft", photos: 1, draft: { kind: "habitacion", bathroomShared: true, bedrooms: null, capacity: null } });
+  await page.goto(`/propietario/publicar/${room.id}/4`);
+  await expect(page.getByRole("heading", { name: "¿Cuántos caben?" })).toBeVisible();
+  await expect(page.getByText("Personas", { exact: true })).toBeVisible();
+  await expect(page.getByText("Baños", { exact: true })).toBeVisible();
+  await expect(page.getByText("Baño de la habitación")).toBeVisible();
+  await expect(page.getByText("Habitaciones", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Más habitaciones" })).toHaveCount(0);
+  await expectNoScroll(page, "paso 4 de una Habitación");
+  await count(page, "personas", 2);
+  await continuar(page);
+  await expect(page).toHaveURL(/\/5$/);
+  await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "habitacion", capacity: 2, bedrooms: 1 });
+  // En el resumen, la capacidad de una Habitación no cuenta habitaciones.
+  await page.goto(`/propietario/publicar/${room.id}/9`);
+  await expect(page.getByRole("link", { name: /Capacidad/ }).locator(".review-text")).toHaveText("2 pers. · 1 baño");
+
+  // De Habitación a Alojamiento completo: el contador vuelve, con la habitación que tenía (1), y se puede cambiar.
+  await page.goto(`/propietario/publicar/${room.id}/1`);
+  await page.getByText("Alojamiento completo", { exact: true }).click();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/2$/);
+  await page.goto(`/propietario/publicar/${room.id}/4`);
+  await expect(page.getByText("Habitaciones", { exact: true })).toBeVisible();
+  await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
+  await count(page, "habitaciones", 1);
+  await continuar(page);
+  await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "completo", bedrooms: 2 });
 });
 
 test("lo que no es obligatorio (capacidad, parqueo, descripción) sale en ocre y no impide enviar", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actividadSearch, calendarioSearch, suscripcionSearch } from "../../src/client/owner-search";
+import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "../../src/client/owner-search";
 
 const UUID = "6f1c2b9e-1d2a-4c3b-9a8e-0f1e2d3c4b5a";
 
@@ -30,5 +30,15 @@ describe("calendarioSearch", () => {
   });
   it("descarta mes 13 y casa no uuid", () => {
     expect(calendarioSearch({ casa: "x", mes: "2026-13" })).toEqual({});
+  });
+});
+
+describe("pasoSearch (corregir un dato desde «Revisar y enviar»)", () => {
+  it("solo acepta volver=revisar; lo demás se descarta", () => {
+    expect(pasoSearch({ volver: "revisar" })).toEqual({ volver: "revisar" });
+    expect(pasoSearch({ volver: "otra" })).toEqual({});
+    expect(pasoSearch({ volver: ["revisar"] })).toEqual({});
+    expect(pasoSearch({ otra: "x" })).toEqual({});
+    expect(pasoSearch({})).toEqual({});
   });
 });

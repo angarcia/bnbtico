@@ -144,6 +144,11 @@ describe("stepEnter: dirección de los pasos del asistente", () => {
     expect(stepEnter(1, 9)).toBe("forward");
     expect(stepEnter(5, 4)).toBe("back");
   });
+  it("al corregir desde «Revisar y enviar» (volver=revisar) el resumen queda detrás: abrir un paso avanza y volver al resumen retrocede", () => {
+    expect(stepEnter(9, 4, true)).toBe("forward");
+    expect(stepEnter(4, 9, true)).toBe("back");
+    expect(stepEnter(9, 9, true)).toBeUndefined();
+  });
   it("sin cambio, en la primera pantalla o en un paso que no existe, sin animación", () => {
     expect(stepEnter(3, 3)).toBeUndefined();
     expect(stepEnter(null, 3)).toBeUndefined();

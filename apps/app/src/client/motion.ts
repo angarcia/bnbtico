@@ -57,10 +57,12 @@ export function afterRender({ fromLocation }: { fromLocation?: Loc }) {
   closing = null;
 }
 
-/** Dirección de entrada de una pantalla del asistente: desde la derecha al avanzar, desde la izquierda al volver. */
-export function stepEnter(previous: number | null, step: number | null): "forward" | "back" | undefined {
+/** Dirección de entrada de una pantalla del asistente: desde la derecha al avanzar, desde la izquierda al volver. Con
+ *  `detour` (corregir un dato desde «Revisar y enviar», `?volver=revisar`) el resumen queda detrás: abrir el paso avanza y
+ *  volver al resumen, con «Continuar» o «Atrás», retrocede. */
+export function stepEnter(previous: number | null, step: number | null, detour = false): "forward" | "back" | undefined {
   if (previous === null || step === null || previous === step) return undefined;
-  return step > previous ? "forward" : "back";
+  return step > previous !== detour ? "forward" : "back";
 }
 
 /** Las tarjetas que sustituyen a los esqueletos aparecen con un fundido; en la primera carga, una tras otra. Si las casas

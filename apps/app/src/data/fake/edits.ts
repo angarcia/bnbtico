@@ -22,7 +22,7 @@ import {
 } from "../../domain/listing-rules";
 import { fromPhotoRows, type PhotoUrl } from "../../domain/rows";
 import { OTHER_ZONE_MAX, ZONE_RADIUS_M } from "../../domain/zones";
-import type { FakeDb, FakeEdit, FakeListing } from "./db";
+import { oneRoom, type FakeDb, type FakeEdit, type FakeListing } from "./db";
 import { FAKE_ZONES, fakePlaceAt, fakeZonesNear } from "./places";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
@@ -201,6 +201,7 @@ export function editStore(db: FakeDb) {
       else if (field === "tipo") {
         const kind = e.kind ?? l.kind;
         Object.assign(l, { kind, bathroomShared: kind === "habitacion" ? (e.bathroomShared ?? l.bathroomShared) : null });
+        oneRoom(l);
       } else Object.assign(l, { lat: e.lat, lng: e.lng, zoneId: e.zoneId, zoneSource: e.zoneSource, ...place });
       l.updatedAt = db.now();
       Object.assign(e, clearField(field));
@@ -218,7 +219,8 @@ export function editStore(db: FakeDb) {
         place = located;
       }
       const kind = e.kind ?? l.kind;
-      if (l.bedrooms === null || (l.bedrooms < 1 && kind !== "completo" && kind !== "apartamento")) throw invalid(BEDROOMS_ERROR);
+      // Una Habitación no pide habitaciones: al aprobar quedan en 1 (oneRoom).
+      if (kind !== "habitacion" && (l.bedrooms === null || (l.bedrooms < 1 && kind !== "completo" && kind !== "apartamento"))) throw invalid(BEDROOMS_ERROR);
       if (kind === "habitacion" && (e.bathroomShared ?? l.bathroomShared) === null) throw invalid(BATHROOM_ERROR);
       // Solo el nombre nuevo: una casa publicada con un nombre de más de 32 lo conserva hasta que su dueño lo cambie.
       if (e.title !== null && (charCount(e.title.trim()) < TITLE_MIN || charCount(e.title.trim()) > TITLE_MAX)) throw invalid(TITLE_LENGTH_ERROR);
@@ -254,6 +256,7 @@ export function editStore(db: FakeDb) {
         monthlyPriceCrc: m.monthlyPriceCrc,
         updatedAt: db.now(),
       });
+      oneRoom(l);
     },
 
     /** La edición de una casa como la lee el propietario (o el admin), con el estado de cada dato y sus fotos nuevas. */

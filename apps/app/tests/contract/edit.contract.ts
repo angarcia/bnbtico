@@ -51,6 +51,14 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       expect(await me.getOwn(s.id)).toMatchObject({ capacity: 6, bedrooms: 3, bathrooms: 2, features: ["wifi", "parking"], parkingPaid: false, acceptsMonthly: true, monthlyPriceCrc: null, status: "active" });
     });
 
+    it("updateLive en una Habitación: las habitaciones son siempre 1 (aunque se mande otro número)", async () => {
+      const s = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true, bedrooms: null } });
+      expect((await me.getOwn(s.id))?.bedrooms).toBe(1);
+      await me.updateLive(s.id, { capacity: 3, bedrooms: 4 });
+      expect(await me.getOwn(s.id)).toMatchObject({ capacity: 3, bedrooms: 1, status: "active" });
+      expect((await h.anon.getPublic(s.publicId))?.bedrooms).toBe(1);
+    });
+
     it("updateLive rechaza un borrador y parqueo sin tipo, con los mensajes de la base", async () => {
       expect((await rejection(me.updateLive((await h.seed({ status: "draft" })).id, { capacity: 3 }))).message).toBe("Solo puede cambiar así una casa publicada.");
       expect((await rejection(me.updateLive((await h.seed({ status: "active" })).id, { features: ["parking"], parkingPaid: null }))).message).toBe("Indique si el parqueo es gratuito o de pago.");
@@ -291,6 +299,18 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
         expect(await me.getOwn(s.id)).toMatchObject({ status: "active", title: "Casa Coco frente al mar", edit: null });
         expect(await admin().editQueue()).toEqual([]);
         expect(await admin().getEdit(s.id)).toBeNull();
+      });
+
+      it("un completo (de 3 o un estudio de 0) que pasa a Habitación: se envía sin pedir habitaciones y al aprobarlo queda en 1", async () => {
+        for (const bedrooms of [3, 0]) {
+          const s = await h.seed({ status: "active", draft: { kind: "completo", bedrooms } });
+          await me.saveEdit(s.id, { kind: "habitacion", bathroomShared: false });
+          expect((await me.getOwn(s.id))?.bedrooms, `${bedrooms} hab.`).toBe(bedrooms); // pendiente: aún no cambia
+          const at = (await admin().getEdit(s.id))?.listing.edit?.fields.tipo?.submittedAt ?? null;
+          await admin().reviewEditField(s.id, "tipo", "approve", "", at);
+          expect(await me.getOwn(s.id)).toMatchObject({ kind: "habitacion", bathroomShared: false, bedrooms: 1, status: "active", edit: null });
+          expect((await h.anon.getPublic(s.publicId))?.bedrooms).toBe(1);
+        }
       });
 
       it("pedir cambios en un dato guarda su nota; el propietario la ve y, al guardar otra vez, vuelve a revisión", async () => {

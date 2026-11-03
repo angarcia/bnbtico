@@ -13,7 +13,7 @@ import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { whenIdle } from "../shared/idle";
 import { cuentaSearch, nextSearch } from "./cuenta-search";
-import { actividadSearch, calendarioSearch, suscripcionSearch } from "./owner-search";
+import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "./owner-search";
 import { suscripcionScreen } from "./lazy-screens";
 import { useListingsCount } from "./own-listings-query";
 import { CasaScreen } from "./screens/casa";
@@ -216,7 +216,7 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/publicar/continuar", component: lazyRouteComponent(publicarEntrada, "ContinuarScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/admin/codigo", validateSearch: nextSearch, component: adminScreen("SegundoCodigoScreen") }),
     ]),
     adminFlow.addChildren([

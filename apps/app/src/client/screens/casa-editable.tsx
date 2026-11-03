@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { can, isBlocked } from "../../domain/can";
 import { describe } from "../../domain/describe";
-import { EDIT_COPY, FIELD_ORDER, FIELD_TITLES, REVIEWED_FIELDS, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
+import { EDIT_COPY, FIELD_ORDER, REVIEWED_FIELDS, fieldTitle, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, locationLine, type Listing, type ListingDraft } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -22,8 +22,9 @@ import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionL
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-/** El valor de un dato tal como lo verá el cliente (lo pendiente de la edición encima de lo aprobado). */
-function fieldValue(l: ListingDraft, field: FormField): string {
+/** El valor de un dato tal como lo verá el cliente (lo pendiente de la edición encima de lo aprobado). La capacidad sigue el
+ *  tipo aprobado (`approvedKind`), como su pantalla: un cambio de tipo en revisión aún no quita las habitaciones. */
+function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["kind"]): string {
   switch (field) {
     case "nombre":
       return l.title;
@@ -31,7 +32,12 @@ function fieldValue(l: ListingDraft, field: FormField): string {
       if (l.kind !== "habitacion") return l.kind ? KIND_LABELS[l.kind] : "";
       return `Habitación · baño ${l.bathroomShared ? "compartido" : "privado"}`;
     case "capacidad":
-      return [plural(l.capacity ?? 0, "persona", "personas"), plural(l.bedrooms ?? 0, "habitación", "habitaciones"), plural(l.bathrooms ?? 0, "baño", "baños")].join(" · ");
+      // Una Habitación no cuenta habitaciones (son 1): «2 personas · 1 baño», como su título «Personas y baños».
+      return [
+        plural(l.capacity ?? 0, "persona", "personas"),
+        ...(approvedKind === "habitacion" ? [] : [plural(l.bedrooms ?? 0, "habitación", "habitaciones")]),
+        plural(l.bathrooms ?? 0, "baño", "baños"),
+      ].join(" · ");
     case "caracteristicas":
       return l.features.length ? l.features.map((f) => FEATURE_LABEL[f]).join(", ") : "Ninguna marcada";
     case "descripcion":
@@ -69,7 +75,7 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
   const readOnly = isBlocked(l);
   const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
-  const value = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field);
+  const value = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field, l.kind);
   const tag = readOnly ? null : state ? (
     <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
   ) : isReviewed(field) ? (
@@ -79,7 +85,7 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
     <>
       <span className="body">
         <span className="field-title">
-          {FIELD_TITLES[field]}
+          {fieldTitle(field, l.kind)}
           {tag}
         </span>
         <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}`}>{value}</span>
@@ -119,7 +125,7 @@ function PendingFoot({ listing: l, field, note, userId }: { listing: Listing; fi
       <button
         type="button"
         className="btn-text"
-        aria-label={`Descartar el cambio de ${FIELD_TITLES[field].toLowerCase()}`}
+        aria-label={`Descartar el cambio de ${fieldTitle(field, l.kind).toLowerCase()}`}
         disabled={discard.isPending}
         onClick={() => window.confirm(EDIT_COPY.discardConfirm) && discard.mutate(field)}
       >

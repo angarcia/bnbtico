@@ -1,3 +1,8 @@
+## 2026-11-03 · Publicar: una Habitación es siempre 1 habitación y «Corregir» vuelve al resumen (ronda de Ana, ticket 03 rehecho; Daniel)
+
+- **Habitación = 1 habitación:** el asistente y la edición no preguntan habitaciones cuando el tipo es Habitación; se guarda 1, también en la base (trigger `listings_habitacion_una`, migración `habitacion_una_habitacion`), venga de donde venga el cambio (incluido aprobar un cambio de tipo). En la edición la fila dice «Personas y baños» (según el tipo aprobado). La ficha pública sigue diciendo «1 habitación».
+- **Corregir desde «Revisar y enviar»:** las filas abren su paso con `?volver=revisar`; «Continuar» y «Atrás» vuelven directo al resumen (sin recorrer los pasos siguientes). Sin el parámetro, el orden de siempre.
+
 ## 2026-11-03 · zod sale del JS inicial: los filtros de Explorar se leen a mano
 
 El CI marcó 150,03 KB en la zona privada inicial (límite 150) con el ticket 08. zod/mini (~5,2 KB gz) solo entraba por `domain/filters.ts`: su esquema de la URL pasa a una lectura escrita a mano (`parseSearch`, misma salida en 20 000 entradas aleatorias), como ya se hizo con la lista de favoritos y el paso 1 de publicar. zod va en su propio trozo diferido (`zod-*`, límite nuevo de 6 KB) y una prueba de arquitectura impide que vuelva al arranque. La zona privada inicial queda en 144,81 KB. Los demás esquemas zod (formularios del asistente y de la edición) no cambian.

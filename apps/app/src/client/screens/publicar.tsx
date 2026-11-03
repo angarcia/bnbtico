@@ -130,15 +130,19 @@ export function PasoScreen() {
   const { id, paso } = stepRoute.useParams();
   const parsed = stepFromParam(paso);
   const step = parsed && "step" in parsed ? parsed.step : null;
+  // Abierta desde «Revisar y enviar»: «Continuar» y «Atrás» vuelven a él (en el propio resumen no significa nada).
+  const search = stepRoute.useSearch();
+  const volver = step === LAST_STEP ? undefined : search.volver;
   const { userId, query } = useOwnListing(id);
   const client = useQueryClient();
   const l = query.data;
-  // Dirección del cambio de pantalla: la nueva entra desde la derecha al avanzar y desde la izquierda al volver.
-  const previous = useRef<Step | null>(null);
-  const enter = stepEnter(previous.current, step);
+  // Dirección del cambio de pantalla: la nueva entra desde la derecha al avanzar y desde la izquierda al volver. Al corregir
+  // desde «Revisar y enviar», el resumen queda detrás: abrir el paso avanza y volver a él retrocede.
+  const previous = useRef<{ step: Step | null; volver: boolean }>({ step: null, volver: false });
+  const enter = stepEnter(previous.current.step, step, !!volver || previous.current.volver);
   useEffect(() => {
-    previous.current = step;
-  }, [step]);
+    previous.current = { step, volver: !!volver };
+  }, [step, volver]);
 
   // Qué pantalla se abre (revisión UX C4): para ver dónde se abandona. La ruta lleva el paso y el id sale como :id.
   const publicId = l?.publicId;
@@ -189,7 +193,7 @@ export function PasoScreen() {
           <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && requiredProblems(l).some((p) => p.step === s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
         ))}
       </div>
-      <StepForm key={step} userId={userId} listing={l} step={step} enter={enter}>
+      <StepForm key={step} userId={userId} listing={l} step={step} enter={enter} volver={volver}>
         {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>
     </>

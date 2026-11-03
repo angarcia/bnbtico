@@ -94,6 +94,9 @@ export const FIELD_TITLES: Record<EditField, string> = {
   precio: "Precio",
 };
 
+/** Título de un dato en la ficha editable y en su pantalla: una Habitación no cuenta habitaciones (son 1). */
+export const fieldTitle = (field: EditField, kind?: Kind | null): string => (field === "capacidad" && kind === "habitacion" ? "Personas y baños" : FIELD_TITLES[field]);
+
 /** La pantalla del asistente cuyos campos y reglas reutiliza cada dato. */
 export const FIELD_STEP: Record<FormField, Step> = { tipo: 1, ubicacion: 2, capacidad: 4, caracteristicas: 5, nombre: 6, descripcion: 6, precio: 8 };
 
@@ -162,7 +165,7 @@ export function parseField(field: FormField, input: FormInput): Partial<ListingD
 
 const same = (a: unknown, b: unknown) => (Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => x === b[i]) : Object.is(a, b));
 
-/** El tipo también se comprueba con la regla del baño y las habitaciones (pantalla 4). */
+/** El tipo también se comprueba con la regla del baño y las habitaciones (pantalla 4; una Habitación no las pide). */
 const checkSteps = (field: FormField): Step[] => (field === "tipo" ? [1, 4] : [FIELD_STEP[field]]);
 const firstError = (field: FormField, d: ListingDraft): string | null => {
   // Solo el nombre nuevo: un nombre aprobado de más de 32 (anterior a publicar v2) no bloquea los otros datos.

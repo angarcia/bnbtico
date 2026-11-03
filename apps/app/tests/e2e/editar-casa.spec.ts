@@ -276,7 +276,30 @@ test("tipo habitación pide el baño", async ({ page }) => {
   await expect(toastText(page)).toHaveText(SENT);
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   await expect(row(page, "Tipo")).toContainText("Habitación · baño compartido");
+  // Mientras el cambio de tipo espera, la capacidad sigue la del tipo aprobado (con su contador de habitaciones).
+  await expect(row(page, "Personas, habitaciones y baños")).toContainText("2 personas · 1 habitación · 1 baño");
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: true });
+});
+
+test("una Habitación publicada: «Personas y baños», sin contador de habitaciones, y se queda en 1", async ({ page }) => {
+  const { id, publicId } = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true } });
+  await page.goto(`/propietario/casas/${id}`);
+  await expect(rows(page).locator(".field-title").nth(2)).toHaveText(/^Personas y baños/);
+  await expect(row(page, "Personas y baños")).toContainText("2 personas · 1 baño");
+  await row(page, "Personas y baños").click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/editar/capacidad$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Personas y baños" })).toBeVisible();
+  await expect(page.getByText("Personas", { exact: true })).toBeVisible();
+  await expect(page.getByText("Baños", { exact: true })).toBeVisible();
+  await expect(page.getByText("Habitaciones", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Más habitaciones" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Más personas" }).click();
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha.");
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(row(page, "Personas y baños")).toContainText("3 personas · 1 baño");
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ capacity: 3, bedrooms: 1, bathrooms: 1 });
+  expect((await h.anon.getPublic(publicId))?.bedrooms).toBe(1);
 });
 
 test("la pantalla de un dato muestra lo del servidor aunque el teléfono guarde una versión vieja", async ({ page }) => {
