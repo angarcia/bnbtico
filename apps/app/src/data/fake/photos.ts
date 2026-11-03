@@ -17,7 +17,9 @@ const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo par
 const MAX_OBJECTS_PER_LISTING = 45;
 const OBJECT_NAME = /^[0-9a-f-]{36}\/[0-9a-f-]{36}(\/(480|800|1600))?\.jpg$/;
 
-export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId: () => string | null }): PhotosApi {
+/** `admin`: la sesión es de un admin con aal2 (políticas listings_photos_admin_insert/delete: sube a la carpeta de cualquier
+ *  casa no eliminada y borra objetos sin foto que los enlace). */
+export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId: () => string | null; admin?: () => boolean }): PhotosApi {
   const url = storagePhotoUrl(opts.supabaseUrl);
   const limit = createLimiter(3);
   const edits = editStore(db);
@@ -40,6 +42,7 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
   /** listing_photo_uploadable: editable, o publicada (cada foto nueva va a revisión por su cuenta). */
   const uploadable = (listingId: string) => {
     const l = db.listings.get(listingId);
+    if (opts.admin?.() && l && l.deletedAt === null) return true;
     return editable(listingId) || (!!l && l.ownerId === opts.userId() && isPublished(l) && l.deletedAt === null && l.adminHold?.kind !== "blocked");
   };
 
@@ -78,7 +81,7 @@ export function createFakePhotos(db: FakeDb, opts: { supabaseUrl: string; userId
   /** Política de delete de storage.objects: casa del usuario y objeto sin enlazar; lo demás se ignora en silencio. */
   const deleteObjects = (names: string[]) =>
     names
-      .filter((n) => db.listings.get(n.split("/")[0]!)?.ownerId === opts.userId() && unreferenced(n))
+      .filter((n) => (opts.admin?.() || db.listings.get(n.split("/")[0]!)?.ownerId === opts.userId()) && unreferenced(n))
       .forEach((n) => db.objects.delete(n));
 
   const recompact = (listingId: string) => db.photosOf(listingId).forEach((p, i) => (p.position = i));

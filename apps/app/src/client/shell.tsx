@@ -149,6 +149,9 @@ const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "reje
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
 // El filtro se valida en la pantalla (HOUSE_CHIPS, que vive en el trozo del admin): aquí solo se deja pasar un texto.
 const casasSearch = (params: Record<string, unknown>): { ver?: string } => (typeof params.ver === "string" ? { ver: params.ver } : {});
+// Editar casas (ronda de Ana del 2 nov, ticket 10): las pantallas del anfitrión con el puerto del admin, en su propio trozo.
+const asistir = (name: "AsistirCasaScreen" | "AsistirPasoScreen" | "AsistirCampoScreen" | "AsistirCalendarioScreen" | "BorradoresScreen") =>
+  lazyRouteComponent(() => import("./screens/asistir"), name);
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
@@ -176,6 +179,7 @@ const routeTree = rootRoute.addChildren([
     adminTabs.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/casas", validateSearch: casasSearch, component: adminScreen("CasasAdminScreen") }),
+      createRoute({ getParentRoute: () => adminTabs, path: "/admin/borradores", component: asistir("BorradoresScreen") }),
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon("Usuarios") }),
     ]),
   ]),
@@ -222,6 +226,10 @@ const routeTree = rootRoute.addChildren([
     adminFlow.addChildren([
       createRoute({ getParentRoute: () => adminFlow, path: "/admin/anuncios/$id", component: adminScreen("RevisarScreen") }),
       createRoute({ getParentRoute: () => adminFlow, path: "/admin/ediciones/$id", component: adminScreen("RevisarEdicionScreen") }),
+      createRoute({ getParentRoute: () => adminFlow, path: "/admin/casas/$id", component: asistir("AsistirCasaScreen") }),
+      createRoute({ getParentRoute: () => adminFlow, path: "/admin/casas/$id/editar/$campo", component: asistir("AsistirCampoScreen") }),
+      createRoute({ getParentRoute: () => adminFlow, path: "/admin/casas/$id/publicar/$paso", validateSearch: pasoSearch, component: asistir("AsistirPasoScreen") }),
+      createRoute({ getParentRoute: () => adminFlow, path: "/admin/casas/$id/calendario", component: asistir("AsistirCalendarioScreen") }),
     ]),
   ]),
   createRoute({ getParentRoute: () => rootRoute, path: "/casa/$publicId", validateSearch: casaSearch, component: CasaScreen }),

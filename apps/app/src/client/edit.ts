@@ -7,6 +7,7 @@ import type { EditPatch, ListingEdit, LivePatch, ReviewedField } from "../domain
 import type { Listing } from "../domain/listing";
 import { toDomainError } from "../domain/errors";
 import { toast } from "../shared/toast";
+import { useEditor, type EditorListings } from "./editor-port";
 import { api, ownListingsQuery, patchCached, refresh } from "./owner";
 
 type Target = Pick<Listing, "id" | "publicId">;
@@ -14,10 +15,11 @@ type LiveContext = { previous: Listing | null | undefined };
 
 const detailKey = (userId: string, id: string) => ["own-listing", userId, id] as const;
 
-/** Las opciones de useUpdateLive, aparte para probar la caché sin React. */
-export function updateLiveOptions(client: QueryClient, userId: string, l: Target): UseMutationOptions<void, Error, LivePatch, LiveContext> {
+/** Las opciones de useUpdateLive, aparte para probar la caché sin React. `listings`: el adaptador del puerto (el del
+ *  anfitrión o, en las rutas del admin, el de Ana). */
+export function updateLiveOptions(client: QueryClient, userId: string, l: Target, listings: () => Promise<EditorListings> = api): UseMutationOptions<void, Error, LivePatch, LiveContext> {
   return {
-    mutationFn: async (patch) => (await api()).updateLive(l.id, patch),
+    mutationFn: async (patch) => (await listings()).updateLive(l.id, patch),
     onMutate: async (patch) => {
       await client.cancelQueries({ queryKey: detailKey(userId, l.id) });
       await client.cancelQueries({ queryKey: ["own-listings", userId] });
@@ -40,7 +42,7 @@ export function updateLiveOptions(client: QueryClient, userId: string, l: Target
 /** Capacidad, características o precio: se ven al momento en la ficha. */
 export function useUpdateLive(userId: string, l: Target) {
   const client = useQueryClient();
-  return useMutation(updateLiveOptions(client, userId, l));
+  return useMutation(updateLiveOptions(client, userId, l, useEditor().listings));
 }
 
 const invalidateOwn = (client: QueryClient, userId: string, id: string) => {
@@ -51,10 +53,12 @@ const invalidateOwn = (client: QueryClient, userId: string, id: string) => {
 /** Nombre, tipo, ubicación o descripción: a revisión, en la edición de la casa (null si ya no cambia nada). */
 export function useSaveEdit(userId: string, l: Target) {
   const client = useQueryClient();
+  const { listings, admin } = useEditor();
   return useMutation<ListingEdit | null, Error, EditPatch>({
-    mutationFn: async (patch) => (await api()).saveEdit(l.id, patch),
+    mutationFn: async (patch) => (await listings()).saveEdit(l.id, patch),
     onSuccess: (edit) => patchCached(client, userId, l.id, { edit }),
-    onSettled: () => invalidateOwn(client, userId, l.id),
+    // Lo que guarda el admin ya se ve en la ficha pública: se relee también lo público.
+    onSettled: () => (admin ? refresh(client, userId, l) : invalidateOwn(client, userId, l.id)),
   });
 }
 

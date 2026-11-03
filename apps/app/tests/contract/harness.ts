@@ -1,6 +1,6 @@
 // Arnés de la suite de contrato: el mismo archivo de pruebas corre contra el fake (unitarias) y contra PostgREST
 // (proyecto de base). Cada arnés sabe sembrar casas en un estado concreto siguiendo el camino real de ese adaptador.
-import type { AdminListingsApi, OwnerListingsApi, PhotosApi, PublicListingsApi } from "../../src/domain/api";
+import type { AdminEditApi, AdminListingsApi, OwnerListingsApi, PhotosApi, PublicListingsApi } from "../../src/domain/api";
 import type { LatLng } from "../../src/domain/geo";
 import type { ListingDraft } from "../../src/domain/listing";
 
@@ -40,6 +40,10 @@ export interface ListingsHarness {
   objects(listingId: string): Promise<{ name: string; cacheControl: string | null }[]>;
   /** Revisión vista por el admin de prueba con el segundo factor (aal2), sin él (aal1) o por un usuario que no es admin. */
   admin(as: "aal2" | "aal1" | SeedOwner): AdminListingsApi;
+  /** La edición del admin (ticket 10 de la ronda de Ana) con esa misma sesión. */
+  adminEdit(as: "aal2" | "aal1" | SeedOwner): AdminEditApi;
+  /** Subida directa a Storage con la sesión del admin en aal2 (políticas listings_photos_admin_*). */
+  adminPhotos(): PhotosApi;
   /** Quita la última foto de una casa saltándose las reglas (como el servicio), para aprobar con menos de 5. */
   dropPhoto(listingId: string): Promise<void>;
   /** Pone a una casa un nombre de antes de publicar v2 (más de 32 caracteres) saltándose las reglas, como el servicio. */

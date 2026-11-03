@@ -1,5 +1,6 @@
 import { FakeDb } from "../../src/data/fake/db";
 import { createFakeAdmin } from "../../src/data/fake/admin";
+import { createFakeAdminEdit } from "../../src/data/fake/admin-edit";
 import { approveSubscription, createFakeBillingService, createFakeOwnerBilling } from "../../src/data/fake/billing";
 import { createFakeCalendar } from "../../src/data/fake/calendar";
 import { createFakeFavorites, createFakeInquiries } from "../../src/data/fake/inquiries";
@@ -134,6 +135,12 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
         supabaseUrl: FAKE_SUPABASE_URL,
         session: () => (as === "aal2" || as === "aal1" ? { userId: adminId, aal: as } : { userId: owners[as], aal: "aal1" }),
       }),
+    adminEdit: (as) =>
+      createFakeAdminEdit(db, {
+        supabaseUrl: FAKE_SUPABASE_URL,
+        session: () => (as === "aal2" || as === "aal1" ? { userId: adminId, aal: as } : { userId: owners[as], aal: "aal1" }),
+      }),
+    adminPhotos: () => createFakePhotos(db, { supabaseUrl: FAKE_SUPABASE_URL, userId: () => adminId, admin: () => true }),
     async dropPhoto(listingId) {
       const last = db.photosOf(listingId).at(-1);
       db.photos = db.photos.filter((p) => p !== last);

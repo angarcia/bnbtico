@@ -6,16 +6,17 @@ import type { OwnerCalendarApi } from "../domain/api";
 import type { CalendarChange } from "../domain/calendar";
 import { authApi } from "./session";
 
-const api = async (): Promise<OwnerCalendarApi> => {
+export const calendarApi = async (): Promise<OwnerCalendarApi> => {
   await authApi();
   return (await import("./supabase-data")).calendarApi();
 };
 
-export const calendarQuery = (userId: string, listingId: string) =>
+/** `cal`: el calendario del anfitrión o, en las rutas del admin, el de Ana (client/editor-port.ts). */
+export const calendarQuery = (userId: string, listingId: string, cal = calendarApi) =>
   queryOptions({
     queryKey: ["calendar", userId, listingId] as const,
-    queryFn: async () => (await api()).days(listingId),
+    queryFn: async () => (await cal()).days(listingId),
     staleTime: 30_000,
   });
 
-export const saveCalendar = async (listingId: string, change: CalendarChange) => (await api()).save(listingId, change);
+export const saveCalendar = async (listingId: string, change: CalendarChange, cal = calendarApi) => (await cal()).save(listingId, change);

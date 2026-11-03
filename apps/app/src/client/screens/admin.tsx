@@ -315,7 +315,10 @@ export function CasasAdminScreen() {
           ))}
         </section>
       ) : null}
-      <p className="xs muted queue-foot">Toque una casa para ver sus datos y pausarla, bloquearla o eliminarla.</p>
+      <p className="xs muted queue-foot">Toque una casa para ver sus datos, editarla, pausarla, bloquearla o eliminarla.</p>
+      <Link to="/admin/borradores" className="btn btn-ghost btn-block">
+        Borradores sin enviar
+      </Link>
       {/* La hoja sigue a la lista: al terminar una acción la casa cambia (o desaparece, y la hoja se cierra). */}
       {data && openId && data.houses.some((h) => h.listingId === openId) ? (
         <HouseSheet house={data.houses.find((h) => h.listingId === openId)!} today={data.today} userId={userId} onClose={() => setOpenId(null)} />
@@ -498,6 +501,19 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
                   <I.chevron />
                 </span>
               </Link>
+              {/* Editar (ticket 10 de la ronda de Ana): al momento, sin revisión, con las pantallas del anfitrión. */}
+              <Link to="/admin/casas/$id" params={{ id: h.listingId }} className="list-item" onClick={onClose}>
+                <span className="body">Editar casa</span>
+                <span className="chev">
+                  <I.chevron />
+                </span>
+              </Link>
+              <Link to="/admin/casas/$id/calendario" params={{ id: h.listingId }} className="list-item" onClick={onClose}>
+                <span className="body">Editar calendario</span>
+                <span className="chev">
+                  <I.chevron />
+                </span>
+              </Link>
             </section>
             {error ? (
               <p className="note" role="alert">
@@ -604,6 +620,10 @@ export function RevisarScreen() {
           data?.listing.status === "active" ? (
             <Link to="/casa/$publicId" params={{ publicId: data.listing.publicId }} className="link header-action">
               Ver como cliente
+            </Link>
+          ) : data ? (
+            <Link to="/admin/casas/$id" params={{ id }} className="link header-action">
+              Editar
             </Link>
           ) : undefined
         }

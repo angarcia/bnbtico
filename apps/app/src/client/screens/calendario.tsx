@@ -46,6 +46,7 @@ import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { isChunkLoadError } from "../chunk-error";
 import { RootHeader } from "../chrome";
+import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";
 
@@ -178,15 +179,18 @@ function HousePicker({ houses, current, onPick }: { houses: Listing[]; current: 
   );
 }
 
-function Calendar({ listing: l, userId, month }: { listing: Listing; userId: string; month: string | undefined }) {
+/** El calendario de una casa. Lo reutiliza el admin con su puerto (screens/asistir.tsx): edita también una casa bloqueada
+ *  y no tiene «Cerrar la casa hasta…» (es del anfitrión). */
+export function Calendar({ listing: l, userId, month }: { listing: Listing; userId: string; month: string | undefined }) {
   const client = useQueryClient();
+  const port = useEditor();
   const today = costaRicaToday(Date.now());
   const months = useMemo(() => calendarMonths(today), [today]);
   // `?mes=` lleva a ese mes; sin él (o fuera de la ventana), arriba del todo con el mes actual entero (revisión UX A1).
   const target = month && months.includes(month) ? month : null;
   const currency = useCurrency();
   const fx = useFx(currency === "USD");
-  const options = calendarQuery(userId, l.id);
+  const options = calendarQuery(userId, l.id, port.calendar);
   const key = options.queryKey;
   const query = useQuery({ ...options, enabled: !!userId });
   const days = useMemo(() => new Map((query.data ?? []).map((d) => [d.day, d])), [query.data]);
@@ -198,7 +202,7 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
 
   const save = useMutation({
     mutationKey: ["calendar-save", l.id],
-    mutationFn: ({ change }: { change: CalendarChange; previous: CalendarDay[] | undefined }) => saveCalendar(l.id, change),
+    mutationFn: ({ change }: { change: CalendarChange; previous: CalendarDay[] | undefined }) => saveCalendar(l.id, change, port.calendar),
     onError: (error, { previous }) => {
       client.setQueryData(key, previous);
       toast(toDomainError(error).message);
@@ -230,12 +234,12 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   }
 
   // Una casa bloqueada por bnbtico se ve, no se edita.
-  const blocked = isBlocked(l);
+  const blocked = isBlocked(l) && !port.admin;
   const editable = !closed && !blocked && query.data !== undefined;
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   return (
     <>
-      {can(l, "available") ? <CloseRow listing={l} userId={userId} /> : null}
+      {can(l, "available") && !port.admin ? <CloseRow listing={l} userId={userId} /> : null}
       <div className="row between gap-8 cal-hint-row">
         {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por bnbtico: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
         <CurrencySwitch />

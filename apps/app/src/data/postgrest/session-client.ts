@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../../domain/database.types";
 import { SESSION_STORAGE_KEY, type KeyValueStore, type SessionStorageAdapter } from "../storage";
 import { createPostgrestAdmin } from "./admin";
+import { createPostgrestAdminEdit } from "./admin-edit";
 import { createPostgrestAuth, type OtpChannel } from "./auth";
 import { createPostgrestOwnerBilling } from "./billing";
 import { createPostgrestCalendar } from "./calendar";
@@ -68,6 +69,7 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     owner: createPostgrestOwnerListings(db, { supabaseUrl, quickWrite: quickWriter(supabaseUrl, anonKey, stores.session) }),
     photos: createPostgrestPhotos(db, { supabaseUrl }),
     admin: createPostgrestAdmin(db, { supabaseUrl }),
+    adminEdit: createPostgrestAdminEdit(db, { supabaseUrl }),
     places: createPostgrestPlaces(db),
     inquiries: createPostgrestInquiries(db),
     favorites: createPostgrestFavorites(db),

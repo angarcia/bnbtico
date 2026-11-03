@@ -2,6 +2,7 @@
 // decide con review_listing; «reopened», un estado heredado, se siembra con SQL).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createPostgrestAdmin } from "../../src/data/postgrest/admin";
+import { createPostgrestAdminEdit } from "../../src/data/postgrest/admin-edit";
 import { createPostgrestOwnerBilling } from "../../src/data/postgrest/billing";
 import { createBillingService } from "../../src/data/postgrest/billing-service";
 import { createPostgrestCalendar } from "../../src/data/postgrest/calendar";
@@ -195,6 +196,8 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     ownerName: (who) => names[who],
     photos: (who) => createPostgrestPhotos(owners[who], { supabaseUrl: localSupabase().url }),
     admin: (as) => createPostgrestAdmin(as === "aal2" ? admin : as === "aal1" ? adminAal1 : owners[as], { supabaseUrl: localSupabase().url }),
+    adminEdit: (as) => createPostgrestAdminEdit(as === "aal2" ? admin : as === "aal1" ? adminAal1 : owners[as], { supabaseUrl: localSupabase().url }),
+    adminPhotos: () => createPostgrestPhotos(admin, { supabaseUrl: localSupabase().url }),
     async dropPhoto(listingId) {
       const { data } = await service.from("listing_photos").select("id").eq("listing_id", listingId).order("position", { ascending: false }).limit(1).single();
       fail("quitar foto", (await service.from("listing_photos").delete().eq("id", data!.id)).error);

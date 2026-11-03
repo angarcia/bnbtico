@@ -33,8 +33,8 @@ const NOT_FOUND = "No encontramos ese anuncio.";
 const MAX_OPEN_DRAFTS = 5;
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
 
-/** Las comprobaciones de la RPC submit_listing, en su orden y con sus mensajes. */
-function submitRefusal(l: FakeListing, photos: number): string | null {
+/** Las comprobaciones de la RPC submit_listing (listing_submit), en su orden y con sus mensajes. */
+export function submitRefusal(l: FakeListing, photos: number): string | null {
   if (l.status === "review") return "Este anuncio ya está en revisión.";
   if (l.status !== "draft" && l.status !== "changes") return "Este anuncio no se puede enviar en su estado actual.";
   if (!l.kind) return "Elija Alojamiento completo o Habitación.";

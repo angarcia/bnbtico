@@ -18,6 +18,7 @@ import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../..
 import { I } from "../../shared/icons";
 import { useBilling } from "../billing";
 import { useDiscardEditField } from "../edit";
+import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
 import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./propietario";
 
@@ -71,18 +72,21 @@ const ReviewTag = () => (
 /** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si está en revisión). Un dato pendiente
  *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar». */
 function FieldRow({ listing: l, field, userId }: { listing: Listing; field: FormField; userId: string }) {
+  const { admin, field: to } = useEditor();
   const e = l.edit;
-  const readOnly = isBlocked(l);
+  // El admin edita también una casa bloqueada; ve lo publicado y, aparte, lo que el anfitrión tiene en revisión.
+  const readOnly = isBlocked(l) && !admin;
   const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
-  const value = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field, l.kind);
+  const pendingValue = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field, l.kind);
+  const value = admin ? fieldValue(mergeEdit(l, null), field, l.kind) : pendingValue;
   // Lo no obligatorio sin decir o mal escrito, en ocre bajo el dato: el mismo aviso que «Revisar y enviar» al crear (ticket
   // 12); no bloquea nada. Sin descripción, el valor («Sin descripción») ya lo dice: va en ocre, sin repetirlo.
-  const warning = readOnly ? null : fieldWarning(field, mergeEdit(l, isReviewed(field) ? e : null));
+  const warning = readOnly ? null : fieldWarning(field, mergeEdit(l, isReviewed(field) && !admin ? e : null));
   const empty = warning === DESCRIPTION_EMPTY_WARNING;
   const tag = readOnly ? null : state ? (
     <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
-  ) : isReviewed(field) ? (
+  ) : isReviewed(field) && !admin ? (
     <ReviewTag />
   ) : null;
   const content = (
@@ -96,6 +100,11 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
         {warning && !empty ? (
           <span className="block small sun-ink" data-testid={`warn-${field}`}>
             {warning}
+          </span>
+        ) : null}
+        {admin && state ? (
+          <span className="block small muted" data-testid={`theirs-${field}`}>
+            Pendiente del anfitrión: {pendingValue}
           </span>
         ) : null}
       </span>
@@ -112,11 +121,11 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
       {content}
     </div>
   ) : (
-    <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: field }} className="list-item">
+    <Link to={to} params={{ id: l.id, campo: field }} className="list-item">
       {content}
     </Link>
   );
-  if (!state) return row;
+  if (!state || admin) return row;
   return (
     <div className="field-pending" data-testid={`pending-${field}`}>
       {row}
@@ -223,10 +232,12 @@ function StoppedNotice({ listing: l }: { listing: Listing }) {
 }
 
 export function EditableFicha({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const billing = useBilling(userId);
+  const { admin, field } = useEditor();
+  // La suscripción y las cifras son de la cuenta de quien mira: en las rutas del admin no son las del anfitrión.
+  const billing = useBilling(admin ? "" : userId);
   const hb = billing?.of(l.id);
-  const blocked = isBlocked(l);
-  const onTop = !blocked && (l.status === "payment_due" || l.status === "inactive");
+  const blocked = isBlocked(l) && !admin;
+  const onTop = !admin && !blocked && (l.status === "payment_due" || l.status === "inactive");
   const cover = l.photos[0];
   const label = cardLabel(l, l.edit);
   const shareUrl = shareOf(l).url.replace(/^https?:\/\//, "");
@@ -242,19 +253,23 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
         {blocked ? (
           <span className="pill photo-pill num">{photoPill(l.photos.length, l.edit?.photos.length ?? 0)}</span>
         ) : (
-          <Link to="/propietario/casas/$id/editar/$campo" params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num">
+          <Link to={field} params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num">
             {photoPill(l.photos.length, l.edit?.photos.length ?? 0)}
           </Link>
         )}
       </div>
 
-      {l.status === "active" ? <StatsCard listing={l} userId={userId} /> : null}
+      {l.status === "active" && !admin ? <StatsCard listing={l} userId={userId} /> : null}
 
       {blocked ? null : (
         <p className="note note-arena">
-          <span>
-            Toque un dato para cambiarlo. Lo marcado con <ReviewTag /> lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.
-          </span>
+          {admin ? (
+            <span>Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión.</span>
+          ) : (
+            <span>
+              Toque un dato para cambiarlo. Lo marcado con <ReviewTag /> lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.
+            </span>
+          )}
         </p>
       )}
 

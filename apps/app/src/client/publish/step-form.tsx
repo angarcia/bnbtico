@@ -26,7 +26,8 @@ import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
 import { accountQuery } from "../account";
 import { authApi } from "../session";
-import { api, loadedApi, patchCached, refresh } from "../owner";
+import { useEditor, type EditorPort } from "../editor-port";
+import { patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
 
@@ -78,10 +79,10 @@ interface SaveVars {
 }
 
 /** Encola el guardado y, si la cola está libre, lanza ya la petición (sin esperar a cargar nada si el adaptador está). */
-function startSave(listingId: string, step: Step, patch: Partial<ListingDraft>, known: Listing): Promise<Listing> {
+function startSave(port: EditorPort, listingId: string, step: Step, patch: Partial<ListingDraft>, known: Listing): Promise<Listing> {
   return enqueueSave(listingId, () => {
-    const ready = loadedApi();
-    return ready ? ready.saveStep(listingId, step, patch, known) : api().then((a) => a.saveStep(listingId, step, patch, known));
+    const ready = port.loaded();
+    return ready ? ready.saveStep(listingId, step, patch, known) : port.listings().then((a) => a.saveStep(listingId, step, patch, known));
   });
 }
 
@@ -91,12 +92,13 @@ const latestSave = new Map<string, number>();
 
 /** `revisar`: la pantalla se abrió desde «Revisar y enviar» y «Continuar» y «Atrás» vuelven a ese resumen. */
 export type Volver = "revisar";
-const toStep = (router: ReturnType<typeof useRouter>, id: string, step: Step, volver?: Volver) =>
-  router.navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: String(step) }, search: volver ? { volver } : {} });
+const toStep = (router: ReturnType<typeof useRouter>, to: EditorPort["step"], id: string, step: Step, volver?: Volver) =>
+  router.navigate({ to, params: { id, paso: String(step) }, search: volver ? { volver } : {} });
 
 export function useSaveStep(userId: string, listingId: string) {
   const client = useQueryClient();
   const router = useRouter();
+  const port = useEditor();
   return useMutation({
     mutationFn: ({ request }: SaveVars) => request,
     onMutate: async ({ patch, seq }) => {
@@ -112,7 +114,7 @@ export function useSaveStep(userId: string, listingId: string) {
     onError: (error, { step, patch, volver }) => {
       setFailure({ listingId, step, patch, message: messageOf(error) });
       void client.invalidateQueries({ queryKey: detailKey(userId, listingId) });
-      void toStep(router, listingId, step, volver);
+      void toStep(router, port.step, listingId, step, volver);
     },
   });
 }
@@ -121,21 +123,28 @@ export function useSaveStep(userId: string, listingId: string) {
 const ACCOUNT_WAIT_MS = 2500;
 
 /** Última pantalla: espera los guardados, relee el borrador del servidor, valida todo y solo entonces envía. */
-async function sendForReview(client: QueryClient, router: ReturnType<typeof useRouter>, userId: string, id: string): Promise<string | null> {
+async function sendForReview(client: QueryClient, router: ReturnType<typeof useRouter>, port: EditorPort, userId: string, id: string): Promise<string | null> {
   clearFailure(id);
   await savesSettled(id);
   if (failure?.listingId === id) return null; // un guardado falló: ya volvimos a esa pantalla con su mensaje
-  const fresh = await (await api()).getOwn(id);
+  const fresh = await (await port.listings()).getOwn(id);
   if (!fresh) return "No encontramos ese anuncio.";
   client.setQueryData(detailKey(userId, id), fresh);
   // Solo lo obligatorio manda a otra pantalla (2026-10-30); los avisos no bloquean.
   const invalid = validateAll(fresh);
   if (invalid) {
     setFailure({ listingId: id, step: invalid.step, patch: {}, message: invalid.error });
-    void toStep(router, id, invalid.step, "revisar"); // arreglado, «Continuar» vuelve al resumen
+    void toStep(router, port.step, id, invalid.step, "revisar"); // arreglado, «Continuar» vuelve al resumen
     return null;
   }
-  await (await api()).submit(id);
+  await (await port.listings()).submit(id);
+  // El admin envió el borrador de otro (ticket 10, D1): a la revisión de esa casa, donde puede aprobarla.
+  if (port.admin) {
+    patchCached(client, userId, id, { status: "review", reviewNote: null });
+    refresh(client, userId, fresh);
+    await router.navigate({ to: "/admin/anuncios/$id", params: { id }, replace: true });
+    return null;
+  }
   // Cuenta sin correo que aún no dijo «Ahora no»: antes de «Enviada», la pregunta del correo de recuperación. Una sola
   // lectura, sin los reintentos de la consulta de la pantalla y con un tope de espera: si falla o tarda, la casa ya está
   // enviada y se pasa a «Enviada» sin la pregunta.
@@ -230,6 +239,7 @@ export function StepForm({
   const client = useQueryClient();
   const router = useRouter();
   const save = useSaveStep(userId, listing.id);
+  const port = useEditor();
   const failed = useFailure(listing.id, step);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -261,7 +271,7 @@ export function StepForm({
     if (step === LAST_STEP) {
       setSending(true);
       setError(null);
-      sendForReview(client, router, userId, listing.id)
+      sendForReview(client, router, port, userId, listing.id)
         .then((message) => setError(message))
         .catch((err: unknown) => setError(messageOf(err)))
         .finally(() => setSending(false));
@@ -272,10 +282,10 @@ export function StepForm({
     if ("error" in plan) return setError(plan.error);
     setError(null);
     clearFailure(listing.id);
-    const request = startSave(listing.id, step, patch, listing);
+    const request = startSave(port, listing.id, step, patch, listing);
     request.catch(() => undefined); // el error lo recoge la mutación
     save.mutate({ step, patch, seq: ++saveSeq, volver, request });
-    void toStep(router, listing.id, volver ? LAST_STEP : (nextStep(step) ?? LAST_STEP));
+    void toStep(router, port.step, listing.id, volver ? LAST_STEP : (nextStep(step) ?? LAST_STEP));
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
@@ -338,7 +348,7 @@ export function StepForm({
             <I.back size={22} />
           </span>
         ) : (
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(volver ? LAST_STEP : (previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
+          <Link to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
             <I.back size={22} />
           </Link>
         )}

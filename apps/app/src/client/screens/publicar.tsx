@@ -2,11 +2,14 @@
 // cortas sin scroll (ids de URL 1, 2 y 4–9; el 3 viejo lleva al 2). Se carga bajo demanda al abrir /propietario/publicar:
 // no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
 import { LAST_STEP, STEPS, stepFromParam, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
+import { isPublished } from "../../domain/can";
+import { useEditor } from "../editor-port";
+import type { Volver } from "../publish/step-form";
 import { requiredProblems, resumeStep } from "../../domain/publish-rules";
 import { FlowHeader } from "../chrome";
 import { I } from "../../shared/icons";
@@ -101,11 +104,12 @@ export function PublicarScreen() {
 /** «Cerrar» (B11f): espera a que salgan los guardados de esta casa y vuelve a Mis casas; el borrador se retoma después. */
 function CloseWizard({ id }: { id: string }) {
   const navigate = useNavigate();
+  const { close: to } = useEditor();
   const [saving, setSaving] = useState(false);
   async function close() {
     setSaving(true);
     await savesSettled(id);
-    await navigate({ to: "/propietario/casas" });
+    await navigate({ to });
   }
   return (
     <button type="button" className="btn-link header-close" onClick={close} disabled={saving} aria-label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"}>
@@ -116,22 +120,24 @@ function CloseWizard({ id }: { id: string }) {
 }
 
 function StepHeader({ id, step }: { id: string; step: Step | null }) {
+  const { admin } = useEditor();
   return (
     <header className="header-flow">
       <CloseWizard id={id} />
-      <h1>Publicar casa</h1>
+      <h1>{admin ? "Asistir casa" : "Publicar casa"}</h1>
       {step ? <StageLabel step={step} /> : null}
     </header>
   );
 }
 
-const stepRoute = getRouteApi("/_flow/_privateFlow/propietario/publicar/$id/$paso");
+/** También en las rutas del admin (/admin/casas/$id/publicar/$paso, mismos parámetros y búsqueda), con su puerto. */
 export function PasoScreen() {
-  const { id, paso } = stepRoute.useParams();
+  const { id, paso } = useParams({ strict: false }) as { id: string; paso: string };
+  const port = useEditor();
   const parsed = stepFromParam(paso);
   const step = parsed && "step" in parsed ? parsed.step : null;
   // Abierta desde «Revisar y enviar»: «Continuar» y «Atrás» vuelven a él (en el propio resumen no significa nada).
-  const search = stepRoute.useSearch();
+  const search = useSearch({ strict: false }) as { volver?: Volver };
   const volver = step === LAST_STEP ? undefined : search.volver;
   const { userId, query } = useOwnListing(id);
   const client = useQueryClient();
@@ -156,7 +162,7 @@ export function PasoScreen() {
   }, [step, client, userId, id]);
 
   // Un id de pantalla retirado (el 3, el mapa de antes) lleva a la que lo sustituye: los enlaces viejos siguen sirviendo.
-  if (parsed && "redirect" in parsed) return <Navigate to="/propietario/publicar/$id/$paso" params={{ id, paso: String(parsed.redirect) }} replace />;
+  if (parsed && "redirect" in parsed) return <Navigate to={port.step} params={{ id, paso: String(parsed.redirect) }} replace />;
   const header = <StepHeader id={id} step={step} />;
   if (!step || l === null) {
     return (
@@ -180,8 +186,9 @@ export function PasoScreen() {
       </>
     );
   }
-  // Solo un borrador o una casa con cambios pedidos se editan; lo demás se ve en su detalle.
-  if (l.status !== "draft" && l.status !== "changes") return <Navigate to="/propietario/casas/$id" params={{ id }} replace />;
+  // Solo un borrador o una casa con cambios pedidos se editan; lo demás se ve en su detalle. El admin edita así cualquier
+  // casa sin publicar (también en revisión o rechazada); una publicada, en su ficha editable.
+  if (port.admin ? isPublished(l) : l.status !== "draft" && l.status !== "changes") return <Navigate to={port.ficha} params={{ id }} replace />;
 
   return (
     <>

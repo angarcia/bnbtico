@@ -6,7 +6,7 @@
 // A5). Se pueden volver a cambiar mientras están en revisión: cuenta el último. Volver sin guardar no guarda nada.
 // Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { isBlocked, isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
@@ -17,14 +17,13 @@ import { formInput } from "../../domain/step-forms";
 import { toast } from "../../shared/toast";
 import { FlowHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
-import { photosApi, refresh } from "../owner";
+import { useEditor } from "../editor-port";
+import { refresh } from "../owner";
 import { BathroomChoice, CapacityCounters, DescriptionField, FeatureChips, PriceFields, TitleField } from "../publish/fields";
 import { ChoiceCards } from "../publish/wizard-parts";
 import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
-
-const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/editar/$campo");
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */
@@ -32,18 +31,22 @@ function useBackToFicha(id: string) {
   const router = useRouter();
   const navigate = useNavigate();
   const canGoBack = useCanGoBack();
-  return () => (canGoBack ? router.history.back() : void navigate({ to: "/propietario/casas/$id", params: { id }, replace: true }));
+  const { ficha } = useEditor();
+  return () => (canGoBack ? router.history.back() : void navigate({ to: ficha, params: { id }, replace: true }));
 }
 
+/** También en las rutas del admin (/admin/casas/$id/editar/$campo), con su puerto: guarda al momento y edita también una
+ *  casa bloqueada. */
 export function EditarCampoScreen() {
-  const { id, campo } = route.useParams();
+  const { id, campo } = useParams({ strict: false }) as { id: string; campo: string };
+  const port = useEditor();
   const field = editFieldFromParam(campo);
   const { userId, query } = useOwnListing(id);
   const l = query.data;
-  const ficha = <Navigate to="/propietario/casas/$id" params={{ id }} replace />;
-  if (!field || (l && (!isPublished(l) || isBlocked(l)))) return ficha;
+  const ficha = <Navigate to={port.ficha} params={{ id }} replace />;
+  if (!field || (l && (!isPublished(l) || (isBlocked(l) && !port.admin)))) return ficha;
   // Una Habitación solo pregunta personas: «Personas» (con el tipo aprobado, el de sus contadores).
-  const header = <FlowHeader title={fieldTitle(field, l?.kind)} back={`/propietario/casas/${id}`} historyBack />;
+  const header = <FlowHeader title={fieldTitle(field, l?.kind)} back={port.ficha.replace("$id", id)} historyBack />;
   if (l === null)
     return (
       <>
@@ -77,7 +80,9 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const toFicha = useBackToFicha(listing.id);
   const live = useUpdateLive(userId, listing);
   const edit = useSaveEdit(userId, listing);
-  const reviewed = REVIEWED_FIELDS.includes(field);
+  // El admin guarda al momento, sin revisión: parte de lo publicado (lo pendiente del anfitrión de ese dato se descarta).
+  const { admin } = useEditor();
+  const reviewed = REVIEWED_FIELDS.includes(field) && !admin;
   // Lo que se ve: con revisión, lo pendiente de la edición encima de lo aprobado; inmediato, lo aprobado. La caché del
   // teléfono puede abrir la pantalla con datos viejos: mientras el propietario no toque nada, cuando llega lo del servidor
   // y cambia, los campos (sin controlar) se vuelven a montar con ello (key). Desde el primer toque o «Guardar», la key se
@@ -107,7 +112,7 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
     const changes = "immediate" in plan ? plan.immediate : plan.reviewed;
     if (Object.keys(changes).length === 0) return toFicha();
     if ("immediate" in plan) return live.mutate(plan.immediate, { onSuccess: done(EDIT_COPY.savedLive), onError: failed });
-    edit.mutate(plan.reviewed, { onSuccess: done(EDIT_COPY.sentToReview), onError: failed });
+    edit.mutate(plan.reviewed, { onSuccess: done(admin ? EDIT_COPY.savedLive : EDIT_COPY.sentToReview), onError: failed });
   }
 
   return (
@@ -140,8 +145,11 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
 function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
   const toFicha = useBackToFicha(listing.id);
-  const pending = listing.edit?.photos ?? [];
-  const total = listing.photos.length + pending.length;
+  // El admin sube directo a la ficha; las fotos nuevas del anfitrión siguen en su revisión (cuentan para el tope).
+  const { admin, photos, ficha } = useEditor();
+  const theirs = listing.edit?.photos ?? [];
+  const pending = admin ? [] : theirs;
+  const total = listing.photos.length + theirs.length;
   const source: PhotoSource = {
     listingId: listing.id,
     photos: listing.photos,
@@ -150,12 +158,12 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
     counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "ok" },
     room: MAX_PHOTOS - total,
     canAdd: true,
-    register: async (folder) => (await photosApi()).addEditPhoto(listing.id, folder),
+    register: async (folder) => (await photos()).addEditPhoto(listing.id, folder),
     remove: async (photo, isPending) => {
-      const api = await photosApi();
+      const api = await photos();
       await (isPending ? api.removeEditPhoto(photo.id) : api.remove(photo.id));
     },
-    reorder: async (ids) => (await photosApi()).reorder(listing.id, ids),
+    reorder: async (ids) => (await photos()).reorder(listing.id, ids),
     // Ordenar o quitar una aprobada cambia la ficha pública y Explorar: como useUpdateLive, se relee también lo público
     // (la caché del teléfono, persistida, no lo pediría hasta que venza). Se espera al detalle, como en el asistente.
     reread: async () => {
@@ -165,16 +173,16 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   };
   return (
     <>
-      <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} historyBack action={<PhotoCounter counter={source.counter} />} />
+      <FlowHeader title={FIELD_TITLES.fotos} back={ficha.replace("$id", listing.id)} historyBack action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
         {/* Como el paso 7: la ayuda de la primera foto se va con ella. */}
         {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
-        <p className="note small">El orden y las fotos que quite se guardan al momento. {EDIT_COPY.photosNotice}</p>
+        <p className="note small">{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</p>
         <div className="sticky-actions">
           <Link
             className="btn btn-primary btn-block"
-            to="/propietario/casas/$id"
+            to={ficha}
             params={{ id: listing.id }}
             replace
             onClick={(e) => {

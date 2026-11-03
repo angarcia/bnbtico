@@ -18,6 +18,7 @@ import { formatPhone } from "../../domain/phone";
 import { reportError } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { isChunkLoadError } from "../chunk-error";
+import { useEditor } from "../editor-port";
 import { offerTakenQuery } from "../owner";
 import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
@@ -312,7 +313,9 @@ const WARN_ACTION: Partial<Record<Step, string>> = { 4: "Completar la capacidad"
  *  avisos (capacidad, descripción, parqueo, precio al mes): no bloquean. */
 function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing: Listing; userId: string }) {
   const count = useQuery(offerTakenQuery);
-  const account = useQuery({ ...accountQuery(userId), enabled: !!userId });
+  const port = useEditor();
+  // La cuenta es la de quien edita: en las rutas del admin no es la del anfitrión, y la vista previa va sin nombre.
+  const account = useQuery({ ...accountQuery(userId), enabled: !!userId && !port.admin });
   const [preview, setPreview] = useState(false);
   const offer = count.data === undefined ? undefined : launchOffer(count.data);
   const fee = formatCRC(MONTHLY_FEE_CRC);
@@ -347,7 +350,7 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
           return (
             <Link
               key={r.label}
-              to="/propietario/publicar/$id/$paso"
+              to={port.step}
               params={{ id: listing.id, paso: String(r.step) }}
               search={{ volver: "revisar" }}
               className={`review-row${missing ? " is-missing" : warn ? " is-warn" : ""}`}

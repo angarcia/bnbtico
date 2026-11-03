@@ -55,7 +55,9 @@
       "!dist/client/assets/stay-dates-*.js",
       "!dist/client/assets/map-preview-*.js",
       "!dist/client/assets/map-pins-*.js",
-      "!dist/client/assets/zod-*.js"
+      "!dist/client/assets/zod-*.js",
+      "!dist/client/assets/asistir-*.js",
+      "!dist/client/assets/editor-port-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -244,6 +246,22 @@
       "dist/client/assets/review-*.js"
     ],
     "limit": "14 KB",
+    "gzip": true
+  },
+  {
+    "name": "Editar casas del admin · trozo diferido (asistir-*, ticket 10 de la ronda de Ana: la ficha editable, el asistente, «Editar un dato» y el calendario de una casa ajena con el puerto del admin, y la lista de borradores; las pantallas son las del anfitrión, en sus trozos)",
+    "path": [
+      "dist/client/assets/asistir-*.js"
+    ],
+    "limit": "3 KB",
+    "gzip": true
+  },
+  {
+    "name": "Puerto de la edición · trozo compartido (editor-port-*: de quién se lee y con qué se guarda una casa en el asistente, la ficha editable, «Editar un dato», las fotos y el calendario, y la consulta del calendario; lo leen esas pantallas y la zona del admin)",
+    "path": [
+      "dist/client/assets/editor-port-*.js"
+    ],
+    "limit": "1.25 KB",
     "gzip": true
   },
   {

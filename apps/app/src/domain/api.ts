@@ -207,6 +207,41 @@ export interface AdminListingsApi {
 }
 
 /**
+ * El admin edita las casas (ronda de Ana del 2 nov, ticket 10, versión simple de Daniel del 2026-11-03): cualquier dato de
+ * cualquier casa salvo las eliminadas, borradores incluidos, al momento y sin revisión, con las mismas reglas que el
+ * anfitrión (planStep al guardar una pantalla del asistente; update_listing_live, save_edit y listing_edit_check en un dato
+ * de una casa publicada; las de las fotos y del calendario). RPCs admin_* con is_admin() en aal2; cada guardado deja una
+ * línea en admin_actions. Si el admin cambia un dato que el anfitrión tenía en revisión, manda lo suyo y ese pendiente se
+ * descarta. Sin ser admin, todo falla con REVIEW_MESSAGES.adminOnly (y `get` da null, `drafts` []); un admin en aal1
+ * recibe REVIEW_MESSAGES.mfaRequired.
+ */
+export interface AdminEditApi {
+  /** Una casa en cualquier estado (salvo eliminada), con sus fotos y la edición pendiente del anfitrión; null si no hay. */
+  get(id: string): Promise<Listing | null>;
+  /** Borradores sin enviar de todos los anfitriones (nunca publicados), el más reciente primero, con el nombre del anfitrión. */
+  drafts(): Promise<QueueItem[]>;
+  /** Una pantalla del asistente de una casa sin publicar (cualquier estado salvo publicada): planStep y admin_update_listing.
+   *  Devuelve la casa guardada. Con `known` (la que ya tiene el navegador) no la relee antes de guardar. */
+  saveStep(id: string, step: Step, patch: Partial<ListingDraft>, known?: Listing): Promise<Listing>;
+  /** Capacidad, características o precios de una casa publicada, al momento (las reglas de update_listing_live). */
+  updateLive(id: string, patch: LivePatch): Promise<void>;
+  /** Nombre, tipo, descripción o ubicación de una casa publicada, al momento y sin revisión (las reglas de save_edit); el
+   *  pendiente del anfitrión de ese dato se descarta. Devuelve lo que le queda en revisión al anfitrión (null si nada). */
+  saveEdit(id: string, patch: EditPatch): Promise<ListingEdit | null>;
+  /** Envía a revisión el borrador de otro (D1), con las comprobaciones de submit_listing (admin_submit_listing). */
+  submit(id: string): Promise<void>;
+  /** Registra una carpeta ya subida como foto al final, directo a la ficha (también en una casa publicada). 15 como mucho,
+   *  contando las nuevas del anfitrión en revisión. */
+  addPhoto(listingId: string, folder: string): Promise<Photo>;
+  /** Quita una foto (una casa publicada conserva al menos una) y después sus objetos de Storage. */
+  removePhoto(photoId: string): Promise<void>;
+  reorderPhotos(listingId: string, photoIds: string[]): Promise<void>;
+  /** El calendario de una casa ajena (hoy … hoy + 365) y su guardado, con las reglas de save_listing_days. */
+  days(listingId: string): Promise<CalendarDay[]>;
+  saveDays(listingId: string, change: CalendarChange): Promise<void>;
+}
+
+/**
  * Calendario del propietario (fase 4). Las filas de listing_days solo se escriben con la RPC save_listing_days, que
  * valida y guarda todo o nada (mismos mensajes que CALENDAR_MESSAGES y validateChange); el fake aplica applyChange.
  * Sin sesión, las dos fallan con «Su sesión venció. Ingrese de nuevo.» (kind `session`) antes de llegar a la red.

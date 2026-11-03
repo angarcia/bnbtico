@@ -5,6 +5,7 @@
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { editorListingQuery, useEditor } from "../editor-port";
 import { Suspense, lazy, useState, type ReactNode } from "react";
 import { HOLD_COPY } from "../../domain/admin-actions";
 import { can, isPublished } from "../../domain/can";
@@ -25,7 +26,7 @@ import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing, type HouseBilling } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
-import { offerTakenQuery, ownListingQuery, ownListingsQuery, useDeleteDraft } from "../owner";
+import { offerTakenQuery, ownListingsQuery, useDeleteDraft } from "../owner";
 import { useSession } from "../session";
 import { SUPPORT_NUMBERS } from "../support-numbers";
 
@@ -292,10 +293,12 @@ const EditableFicha = lazy(() => import("./casa-editable").then((m) => ({ defaul
 
 const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
 
+/** La casa que se edita: la propia o, en las rutas del admin, la de otro (client/editor-port.ts). */
 export function useOwnListing(id: string) {
   const userId = useUserId();
   const client = useQueryClient();
-  const [options] = useState(() => ownListingQuery(userId, id, client));
+  const port = useEditor();
+  const [options] = useState(() => editorListingQuery(port, userId, id, client));
   return { userId, query: useQuery({ ...options, enabled: !!userId }) };
 }
 

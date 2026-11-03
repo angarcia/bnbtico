@@ -607,6 +607,11 @@ isOneToOne: true
               "id": string,"path": string,"position": number
             }[]
                            },
+"admin_add_listing_photo":
+{ Args: { "p_listing": string,"p_path": string }; Returns: {
+              "id": string,"path": string,"position": number
+            }[]
+                           },
 "admin_block_listing":
 { Args: { "p_listing": string,"p_reason": string }; Returns: undefined
                            },
@@ -669,14 +674,32 @@ isOneToOne: true
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_log_edit":
+{ Args: { "p_action"?: string,"p_listing": string }; Returns: undefined
+                           },
 "admin_pause_listing":
 { Args: { "p_listing": string,"p_reason": string }; Returns: undefined
+                           },
+"admin_remove_listing_photo":
+{ Args: { "p_photo": string }; Returns: string
+                           },
+"admin_reorder_listing_photos":
+{ Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
                            },
 "admin_resume_listing":
 { Args: { "p_listing": string }; Returns: undefined
                            },
+"admin_save_listing_days":
+{ Args: { "p_available"?: boolean,"p_days": (string)[],"p_listing": string,"p_price_crc"?: number }; Returns: undefined
+                           },
+"admin_submit_listing":
+{ Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
 "admin_unblock_listing":
 { Args: { "p_listing": string }; Returns: undefined
+                           },
+"admin_update_listing":
+{ Args: { "p_listing": string,"p_patch": Json }; Returns: undefined
                            },
 "apply_payment_event":
 { Args: { "p_brand"?: string,"p_customer_ref"?: string,"p_event_id": string,"p_exp_month"?: number,"p_exp_year"?: number,"p_last4"?: string,"p_method_ref"?: string,"p_owner"?: string,"p_provider": string,"p_type": string }; Returns: string
@@ -725,6 +748,9 @@ isOneToOne: true
                            },
 "listing_blocked_reason":
 { Args: { "p_public_id": string }; Returns: string
+                           },
+"listing_days_update":
+{ Args: { "l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']>,"p_available": boolean,"p_days": (string)[],"p_price_crc": number }; Returns: undefined
                            },
 "listing_edit_check":
 { Args: { "e": Omit<Database["public"]['Tables']["listing_edits"]['Row'], Database["public"]['Tables']["listing_edits"]['ComputedFields']>,"l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']> }; Returns: undefined
@@ -779,17 +805,34 @@ isOneToOne: true
 "listing_link_state":
 { Args: { "p_public_id": string }; Returns: string
                            },
+"listing_live_update":
+{ Args: { "l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']>,"p_patch": Json }; Returns: undefined
+                           },
+"listing_photo_delete":
+{ Args: { "p_published": boolean,"ph": Omit<Database["public"]['Tables']["listing_photos"]['Row'], Database["public"]['Tables']["listing_photos"]['ComputedFields']> }; Returns: string
+                           },
+"listing_photo_insert":
+{ Args: { "p_listing": string,"p_path": string }; Returns: {
+              "id": string,"path": string,"position": number
+            }[]
+                           },
 "listing_photo_uploadable":
 { Args: { "p_listing": string }; Returns: boolean
                            },
 "listing_photos_guard":
 { Args: { "p_listing": string }; Returns: undefined
                            },
+"listing_photos_order":
+{ Args: { "p_ids": (string)[],"p_listing": string }; Returns: undefined
+                           },
 "listing_photos_owner_guard":
 { Args: { "p_listing": string }; Returns: boolean
                            },
 "listing_status_published":
 { Args: { "p_first": string,"p_status": Database["public"]['Enums']["listing_status"] }; Returns: boolean
+                           },
+"listing_submit":
+{ Args: { "p_listing": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
 "listing_visible":
 { Args: { "p_listing": string }; Returns: boolean

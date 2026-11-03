@@ -19,7 +19,7 @@ Se prueba **desde el teléfono**, en `https://nueva.bnbtico.com`. Marque cada ca
 3. Admin: entrar con el segundo código y decidirlas (4.1–4.5).
 4. Cliente, con casas ya activas (2).
 5. Anfitrión: gestionar las casas (3.11–3.19).
-6. Admin: ediciones, Casas, ficha y seguridad (4.6–4.9).
+6. Admin: ediciones, Casas, editar casas, ficha y seguridad (4.6–4.10).
 7. Recorridos de punta a punta (5).
 
 ---
@@ -584,12 +584,12 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 
 Use dos casas activas de prueba que pueda perder: «la casa a pausar» y «la casa a bloquear», y una tercera para eliminar (puede ser un borrador o una casa rechazada).
 
-- [ ] **D58** Toque «Casas» en la barra → título «Casas» con «Admin», el buscador «Nombre, CT-#### o anfitrión», los chips «Todas · N», «Activas · N», «Por pagar · N», «Inactivas · N», «Pausadas · N» y «Bloqueadas · N» (Todas marcado) y al pie «Toque una casa para ver sus datos y pausarla, bloquearla o eliminarla.».
+- [ ] **D58** Toque «Casas» en la barra → título «Casas» con «Admin», el buscador «Nombre, CT-#### o anfitrión», los chips «Todas · N», «Activas · N», «Por pagar · N», «Inactivas · N», «Pausadas · N» y «Bloqueadas · N» (Todas marcado) y al pie «Toque una casa para ver sus datos, editarla, pausarla, bloquearla o eliminarla.» con el botón «Borradores sin enviar».
 - [ ] **D59** Mire una fila → miniatura, nombre, `CT-#### · <propietario> · <zona>`, la línea de suscripción («Gratis hasta 30 oct 2027», «Oferta vencida el 29 oct · sin método de pago», «Parada por el anfitrión el 30 oct» o «Pagando desde el … · ₡2 900 al mes») y la insignia («Activa», «Por pagar», «Inactiva», «En revisión»…).
 - [ ] **D60** Escriba en el buscador parte del nombre de una casa, sin tildes y en minúsculas → quedan solo las que coinciden y los números de los chips **no** cambian; borre y escriba su `CT-####` → queda esa casa.
 - [ ] **D61** Escriba el nombre de la propietaria (por ejemplo «yorleny») → salen sus casas; escriba «zzz-ninguna» → «Ninguna casa coincide con la búsqueda.».
 - [ ] **D62** Toque cada chip → la lista se filtra, la dirección cambia (`?ver=activas`, `?ver=por-pagar`, `?ver=inactivas`…) y cada chip muestra tantas filas como su número; un chip vacío dice «Nada por aquí.».
-- [ ] **D63** Toque una casa activa → sube una hoja con el nombre, `CT-#### · <propietario> · <zona>`, «Ver ficha pública», «Ver datos del anuncio», los botones «Pausar» y «Bloquear» y, al final, «Eliminar casa» en contorno rojo; la ✕ («Cerrar») la cierra.
+- [ ] **D63** Toque una casa activa → sube una hoja con el nombre, `CT-#### · <propietario> · <zona>`, «Ver ficha pública», «Ver datos del anuncio», «Editar casa», «Editar calendario», los botones «Pausar» y «Bloquear» y, al final, «Eliminar casa» en contorno rojo; la ✕ («Cerrar») la cierra.
 - [ ] **D64** En la hoja toque «Ver ficha pública» → abre `/casa/CT-####` como la ve un cliente; vuelva y toque «Ver datos del anuncio» → «Revisar anuncio» en solo lectura, con el estado y el botón «Avisar a <nombre> por WhatsApp».
 - [ ] **D65** Toque una casa que no está publicada (en revisión o rechazada) → la hoja dice «Solo se pausa o se bloquea una casa publicada.» y solo ofrece «Eliminar casa».
 - [ ] **D66** (la casa a pausar) «Pausar» → «Pausar casa» con «Sale de Explorar y su enlace deja de funcionar. El anfitrión la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.» y el campo «Motivo (lo verá el anfitrión)»; toque «Pausar casa» con el motivo vacío → «Escriba el motivo (hasta 2000 caracteres).».
@@ -606,13 +606,31 @@ Use dos casas activas de prueba que pueda perder: «la casa a pausar» y «la ca
 - [ ] **D77** Escriba el motivo y el código en minúsculas (`ct-1022`) y toque «Eliminar casa» → «Casa eliminada», la hoja se cierra y la casa desaparece de todos los chips.
 - [ ] **D78** Propietaria: la casa ya no está en Mis casas (bajan los contadores; si era su única casa, la barra vuelve a «Explorar · Favoritos · Cuenta»); Cliente: su enlace dice «Este enlace no existe» y desaparece de sus Favoritos.
 
-### 4.8 La ficha pública tras decidir
+### 4.8 Editar casas (Ana)
+
+Ana edita cualquier dato de cualquier casa salvo las eliminadas, al momento y sin revisión, con las mismas pantallas y reglas que el anfitrión (ticket 10 de la ronda del 2 nov). Use una casa activa de la propietaria de prueba y un borrador de otra cuenta (empiece uno con la clienta y déjelo sin nombre ni fotos).
+
+- [ ] **D78a** Casas → toque la casa activa → «Editar casa» → «Editar casa» con `CT-#### · <nombre>` arriba, la ficha editable de siempre sin las etiquetas «Revisión», el aviso «Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión.» y, al final, la fila «Calendario»; no salen las cifras de 30 días ni la suscripción de la cuenta de Ana.
+- [ ] **D78b** Toque «Nombre» → la pantalla del dato con el nombre publicado, **sin** el aviso de revisión y con el botón «Guardar» (no «Enviar a revisión»); escriba «Abc» y guarde → «El nombre de la casa debe tener entre 5 y 32 caracteres.»; escriba un nombre válido y guarde → «Guardado. Ya se ve en su ficha.» y la fila lo muestra.
+- [ ] **D78c** Toque «Precio» → cambie el precio por noche y guarde → la fila lo muestra; en una pestaña sin sesión, `/casa/CT-####` (recargue) muestra el nombre y el precio nuevos.
+- [ ] **D78d** Propietaria: el detalle de la casa muestra lo que cambió Ana, sin nada «En revisión» por esos datos.
+- [ ] **D78e** Propietaria: cambie el nombre de la casa (queda «En revisión»). Ana: abra «Editar casa» → la fila «Nombre» muestra el nombre publicado y debajo «Pendiente del anfitrión: <el de la propietaria>»; cambie el nombre ella misma → manda el de Ana, la línea del pendiente desaparece, la casa ya no está en «Ediciones por revisar» y la propietaria deja de ver su cambio en revisión (sin aviso).
+- [ ] **D78f** «Fotos» (la píldora de la portada) → añada una foto → sale en la ficha pública al momento (sin revisión); quite fotos hasta dejar una → con la última, «Su ficha necesita al menos una foto…».
+- [ ] **D78g** La fila «Calendario» (o «Editar calendario» de la hoja) → «Calendario» con el nombre de la casa, sin «Cerrar la casa hasta…»; toque un día, «Ocupado», «Guardar cambios» → la propietaria lo ve en su Calendario y la ficha pública lo marca ocupado.
+- [ ] **D78h** Una casa bloqueada también se edita desde «Editar casa» (Ana puede; la propietaria no).
+- [ ] **D78i** Casas → «Borradores sin enviar» → «Borradores» con «Casas que su anfitrión empezó y aún no envió.» y, por borrador, la foto (o el hueco), el nombre («Sin nombre»), `CT-#### · <anfitrión> · empezado el …` y lo que falta en ocre («Falta: nombre y fotos») o «Listo para enviar».
+- [ ] **D78j** Toque el borrador → abre el asistente donde se quedó, con el título «Asistir casa»; escriba el nombre, «Continuar», suba una foto, «Continuar» hasta «Revisar y enviar» → las filas llevan a su paso y vuelven al resumen como al anfitrión.
+- [ ] **D78k** «Enviar a revisión» → lleva a «Revisar anuncio» de esa casa; apruébela como siempre. La dueña del borrador lo ve en revisión (o activo) en Mis casas.
+- [ ] **D78l** Revisar anuncio de una casa sin publicar (en revisión, con cambios o rechazada) → arriba a la derecha, «Editar»: abre el asistente de esa casa con el puerto de Ana.
+- [ ] **D78m** (terminal, base `bnbtico-pruebas`) `select action, target_listing_id, created_at from admin_actions where action in ('listing.edit','listing.submit') order by created_at desc limit 10;` → una fila `listing.edit` por cada guardado de esta parte (dato, foto, orden, calendario o pantalla del asistente) y una `listing.submit` por el envío.
+
+### 4.9 La ficha pública tras decidir
 
 - [ ] **D79** Abra `https://nueva.bnbtico.com/casa/CT-####` de la casa editada **antes** de aprobar el nombre y anote el título → es el nombre viejo.
 - [ ] **D80** Apruebe el nombre (D57) y espere hasta 1 minuto; recargue la ficha una vez → el título es el nombre nuevo. Si tarda más de un minuto, anote la hora (ver D85).
 - [ ] **D81** Apruebe una foto nueva y recargue la ficha → la foto está al final de la galería y el contador de la ficha sube en uno.
 
-### 4.9 Seguridad y telemetría
+### 4.10 Seguridad y telemetría
 
 - [ ] **D82** (escritorio) Abra `/admin`, `/admin/casas` y una revisión con la consola del navegador abierta (F12) → no aparece ningún aviso «Content Security Policy» ni «Refused to execute inline script».
 - [ ] **D83** (terminal) `curl -sI https://nueva.bnbtico.com/casa/CT-####` → la cabecera `content-security-policy` contiene `script-src 'self' https://challenges.cloudflare.com;` y no contiene `unsafe-inline`.
