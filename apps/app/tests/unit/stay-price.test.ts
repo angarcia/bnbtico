@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays } from "../../src/domain/dates";
 import { stayTotalLabel } from "../../src/domain/search";
-import { stayEstimate, stayNights } from "../../src/domain/stay-price";
+import { hasBusyNight, listingStay, stayEstimate, stayLine, stayNights } from "../../src/domain/stay-price";
 
 const ARRIVAL = "2026-12-01";
 /** Las `n` noches desde la llegada. */
@@ -84,5 +84,42 @@ describe("stayTotalLabel", () => {
   });
   it("nunca «total a pagar»", () => {
     expect(text(180_000, 4, "CRC", 515)).not.toMatch(/total|pagar/i);
+  });
+});
+
+// La ficha y la hoja de contacto (ticket 08): el total de una casa para las fechas de la pestaña, con los días ya cargados.
+describe("listingStay y hasBusyNight", () => {
+  const house = { acceptsNightly: true, nightlyPriceCrc: 45_000, acceptsMonthly: true, monthlyPriceCrc: 900_000 };
+  const busy = (day: string) => ({ day, available: false, specialPriceCrc: null });
+  const days = [special("2026-12-02", 60_000), busy("2026-12-10")];
+  const at = (n: number) => addDays(ARRIVAL, n);
+
+  it("las noches de llegada a salida con sus precios especiales, y cuántas son", () => {
+    expect(listingStay(house, days, { arrival: ARRIVAL, departure: at(4) })).toEqual({ totalCrc: 45_000 * 3 + 60_000, kind: "nightly", nights: 4 });
+  });
+
+  it("30 noches o más con precio al mes: por meses (la misma regla que Explorar)", () => {
+    expect(listingStay(house, [], { arrival: ARRIVAL, departure: at(35) })).toEqual({ totalCrc: 1_050_000, kind: "monthly", nights: 35 });
+  });
+
+  it("sin fechas, o con una noche ocupada: null; la salida sí puede caer en el ocupado", () => {
+    expect(listingStay(house, days, null)).toBeNull();
+    expect(hasBusyNight(days, null)).toBe(false);
+    // Ocupado el 10 de diciembre (at(9)): del 8 al 11 lo atraviesa; del 8 al 10, la salida cae en él.
+    expect(hasBusyNight(days, { arrival: at(7), departure: at(10) })).toBe(true);
+    expect(listingStay(house, days, { arrival: at(7), departure: at(10) })).toBeNull();
+    expect(hasBusyNight(days, { arrival: at(7), departure: at(9) })).toBe(false);
+    expect(listingStay(house, days, { arrival: at(7), departure: at(9) })).toEqual({ totalCrc: 90_000, kind: "nightly", nights: 2 });
+  });
+
+  it("una casa sin precio por noche: sin total por noches", () => {
+    expect(listingStay({ ...house, acceptsNightly: false }, [], { arrival: ARRIVAL, departure: at(3) })).toBeNull();
+  });
+
+  it("la línea: «≈ ₡180 000 por 4 noches · 1–5 dic», en la moneda de la página", () => {
+    const dates = { arrival: ARRIVAL, departure: at(4) };
+    expect(stayLine({ totalCrc: 180_000, nights: 4 }, dates, "CRC", 515)).toBe("≈ ₡180\u00a0000 por 4 noches · 1–5 dic");
+    expect(stayLine({ totalCrc: 180_000, nights: 4 }, dates, "USD", 515)).toBe("≈ $350 por 4 noches · 1–5 dic");
+    expect(stayLine({ totalCrc: 1_050_000, nights: 35 }, { arrival: "2026-12-20", departure: "2027-01-24" }, "CRC", 515)).toBe("≈ ₡1\u00a0050\u00a0000 por 35 noches · 20 dic – 24 ene");
   });
 });

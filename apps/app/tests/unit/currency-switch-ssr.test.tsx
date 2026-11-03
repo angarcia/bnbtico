@@ -58,10 +58,13 @@ describe("barra de la ficha en el servidor", () => {
         <ListingPage listing={l} base="https://bnbtico.com" />
       </Providers>,
     );
-    expect(html).toContain(`data-testid="main-price">${formatCRC(85000)}`);
+    expect(html).toContain(`data-testid="main-price"><span class="price-fig">${formatCRC(85000)}`);
     expect(html).toContain(`data-testid="price-usd" title="Orientativo: ≈ ₡510 por US$1, tipo de referencia del 26 oct.">≈ ${formatUSD(85000, FX_INITIAL.crcPerUsd)}`);
-    expect(html).toContain(`Mensual: <b class="ink num">${formatCRC(650000)}</b>`);
-    expect(html).toContain(`data-testid="monthly-usd" title="Orientativo: ≈ ₡510 por US$1, tipo de referencia del 26 oct.">≈ <b class="ink num">${formatUSD(650000, FX_INITIAL.crcPerUsd)}</b>`);
+    // Sin fechas (el servidor no las conoce) la barra lleva solo el precio por noche: «Mensual» va con 30 noches o más, y el
+    // precio al mes, en la casilla «Alquiler mensual» (ronda de Ana 2 nov, ticket 08).
+    expect(html).not.toContain("Mensual:");
+    expect(html).not.toContain('data-testid="monthly-usd"');
+    expect(html).toContain(`<span>Alquiler mensual</span><small>${formatCRC(650000)} / mes</small>`);
     expect(html).toContain("Precios orientativos: el precio final lo acuerda con el propietario.");
     expect(html).not.toContain("currency-switch");
     expect(html).not.toContain("orientativo</span>");

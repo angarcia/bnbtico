@@ -159,9 +159,9 @@ export { firstName, initials } from "./person";
 export const CONTACT_DRAFT_TTL_MS = 30 * 60_000;
 export { contactDraftKey } from "./contact-return";
 
+/** Sin fechas: son las de la pestaña (`bnbtico-fechas`, `shared/stay-dates.ts`), las mismas de Explorar, el calendario de la
+ *  ficha y la hoja (ronda de Ana 2 nov, ticket 08). Un borrador guardado antes con fechas vuelve sin ellas. */
 interface StoredContactDraft {
-  arrival: string | null;
-  departure: string | null;
   people: number | null;
   message: string;
   edited: boolean;
@@ -170,11 +170,9 @@ interface StoredContactDraft {
 }
 
 export function storeContactDraft(s: ContactDraftState, open: boolean, now: number): string {
-  const stored: StoredContactDraft = { arrival: s.arrival, departure: s.departure, people: s.people, message: s.message, edited: s.edited, open, savedAt: now };
+  const stored: StoredContactDraft = { people: s.people, message: s.message, edited: s.edited, open, savedAt: now };
   return JSON.stringify(stored);
 }
-
-const isDateOrNull = (v: unknown) => v === null || typeof v === "string";
 
 /** El borrador guardado, o null si no hay, caducó o no se entiende. Sin editar, el mensaje se vuelve a redactar. */
 export function restoreContactDraft(raw: string | null, title: string, now: number): { state: ContactDraftState; open: boolean } | null {
@@ -187,10 +185,9 @@ export function restoreContactDraft(raw: string | null, title: string, now: numb
   }
   if (!v || typeof v !== "object") return null;
   if (typeof v.savedAt !== "number" || now - v.savedAt > CONTACT_DRAFT_TTL_MS) return null;
-  if (!isDateOrNull(v.arrival) || !isDateOrNull(v.departure) || !(v.people === null || typeof v.people === "number")) return null;
+  if (!(v.people === null || typeof v.people === "number")) return null;
   if (typeof v.message !== "string" || typeof v.edited !== "boolean") return null;
-  const fields = { arrival: v.arrival as string | null, departure: v.departure as string | null, people: v.people as number | null };
-  const fresh = startDraft(title, fields);
+  const fresh = startDraft(title, { people: v.people as number | null });
   const state = v.edited ? { ...fresh, message: v.message, edited: v.message !== fresh.composed } : fresh;
   return { state, open: v.open === true };
 }

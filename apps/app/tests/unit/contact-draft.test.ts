@@ -20,17 +20,24 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     expect(contactDraftKey("CT-1015")).toBe("bnbtico-contacto:CT-1015");
   });
 
-  it("guarda fechas, personas, mensaje, si se editó y si la hoja estaba abierta", () => {
+  // Las fechas ya no van en el borrador: son las de la pestaña (`bnbtico-fechas`), que comparten Explorar, la ficha y la hoja
+  // (ronda de Ana 2 nov, ticket 08).
+  it("guarda personas, mensaje, si se editó y si la hoja estaba abierta; las fechas no", () => {
     const s = redraft(startDraft(TITLE), { type: "fields", patch: { arrival: "2026-12-20", departure: "2026-12-27", people: 4 } }, TITLE);
     expect(JSON.parse(storeContactDraft(s, true, NOW))).toEqual({
-      arrival: "2026-12-20",
-      departure: "2026-12-27",
       people: 4,
       message: composeInquiryMessage(TITLE, { arrival: "2026-12-20", departure: "2026-12-27", people: 4 }),
       edited: false,
       open: true,
       savedAt: NOW,
     });
+  });
+
+  it("un borrador guardado antes con fechas vuelve sin ellas, con sus personas y el mensaje redactado de nuevo", () => {
+    const old = JSON.stringify({ arrival: "2026-12-20", departure: "2026-12-27", people: 2, message: "x", edited: false, open: true, savedAt: NOW });
+    const restored = restoreContactDraft(old, TITLE, NOW)!;
+    expect(restored.state).toMatchObject({ arrival: null, departure: null, people: 2, message: composeInquiryMessage(TITLE, { people: 2 }) });
+    expect(restored.open).toBe(true);
   });
 
   it("vuelve igual y, sin editar, el mensaje sigue a las fechas", () => {
@@ -64,7 +71,7 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     expect(restoreContactDraft(null, TITLE, NOW)).toBeNull();
     expect(restoreContactDraft("{", TITLE, NOW)).toBeNull();
     expect(restoreContactDraft(JSON.stringify({ message: 3, savedAt: NOW }), TITLE, NOW)).toBeNull();
-    expect(restoreContactDraft(JSON.stringify({ arrival: 5, departure: null, people: null, message: "x", edited: true, open: false, savedAt: NOW }), TITLE, NOW)).toBeNull();
+    expect(restoreContactDraft(JSON.stringify({ people: "dos", message: "x", edited: true, open: false, savedAt: NOW }), TITLE, NOW)).toBeNull();
   });
 });
 

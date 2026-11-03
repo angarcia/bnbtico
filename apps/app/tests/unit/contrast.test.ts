@@ -62,6 +62,8 @@ const PAIRS: [string, string][] = [
   ["--state-ink", "--state-soft"],
   ["--cal-busy-ink", "--cal-busy"],
   ["--when-pick-ink", "--when-pick"],
+  // La banda del rango elegido en el calendario de la ficha (ronda de Ana 2 nov, ticket 08), translúcida sobre el crema.
+  ["--fg", "--stay-band"],
   ["--muted", "--review-soft"],
   ["--fg", "--surface-2"],
   ["--muted", "--surface-2"],

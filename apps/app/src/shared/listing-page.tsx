@@ -1,6 +1,7 @@
 // Ficha pública (pantalla 03 del diseño v1). La renderiza el worker y la hidrata el navegador: el mapa, compartir y el
 // corazón dependen del navegador y se montan después de hidratar, en cajas de tamaño fijo. La barra de precios no depende
 // de la moneda elegida (lleva las dos) y el tipo de cambio lo siembra el worker: el servidor y el navegador pintan lo mismo.
+// Las fechas de la pestaña (ronda de Ana 2 nov, ticket 08) solo cuentan tras hidratar: el HTML del servidor no las conoce.
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { Currency } from "../domain/currency";
@@ -9,6 +10,8 @@ import { describe, isNegotiable, type MonthlyPrice, type Price } from "../domain
 import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatUSD } from "../domain/money";
+import type { CalendarDay } from "../domain/calendar";
+import { nightsLabel } from "../domain/stay-label";
 import { ApproxMap } from "./approx-map";
 import { useCurrency } from "./currency";
 import { useFx } from "./fx";
@@ -25,6 +28,7 @@ import { ShareButton } from "./share-button";
 import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
+import type { BarStay } from "./listing-calendar";
 
 const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -60,7 +64,8 @@ const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactShe
 
 /** El botón de la barra. Mide lo mismo antes y después de hidratar: antes es una caja apagada que aún no responde.
  *  `openOnMount`: la ficha de la SPA al volver de Ingresar con lo escrito (`?contacto=1`). */
-function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: PublicListing; hydrated: boolean; navigate: Navigate; openOnMount?: OpenSheet }) {
+/** `days`: los de la casa para la hoja (undefined mientras se leen, null si no se pudieron leer). */
+function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { listing: PublicListing; days: CalendarDay[] | null | undefined; hydrated: boolean; navigate: Navigate; openOnMount?: OpenSheet }) {
   const [open, setOpen] = useState(!!openOnMount);
   // Solo la hoja que reabre al volver de verificar sigue sola hacia WhatsApp; si se cierra, la siguiente espera el toque.
   const [autoSend, setAutoSend] = useState(openOnMount === "return");
@@ -114,6 +119,7 @@ function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: 
         <Suspense fallback={<div className="sheet-backdrop" />}>
           <ContactSheet
             listing={listing}
+            days={days}
             navigate={navigate}
             autoSend={autoSend}
             onClose={() => {
@@ -133,13 +139,11 @@ const loadCalendar = () => import("./listing-calendar");
 const ListingCalendar = lazy(() => loadCalendar().then((m) => ({ default: m.ListingCalendar })));
 
 /** «Disponibilidad». En el HTML del servidor solo la caja, de alto fijo (sin la rejilla: los días van en ssr-data); la
- *  rejilla se monta dentro tras hidratar. Una casa cerrada a consultas muestra «Calendario cerrado» ya en el servidor. */
-function Availability({ listing, currency, fx }: { listing: PublicListing; currency: Currency; fx: number }) {
+ *  rejilla se monta dentro tras hidratar. Una casa cerrada a consultas muestra «Calendario cerrado» ya en el servidor.
+ *  `missing`: días que no se pudieron leer (null del servidor, o la consulta de la SPA falló): sin sección, ni caja ni error. */
+function Availability({ listing, missing, currency, fx, onStay }: { listing: PublicListing; missing: boolean; currency: Currency; fx: number; onStay: (stay: BarStay | null) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const [load, setLoad] = useState(false);
-  // Días que no se pudieron leer (null del servidor, o la consulta de la SPA falló): sin sección, ni caja ni error.
-  const days = useQuery({ ...listingDaysQuery(listing.publicId), enabled: listing.available });
-  const missing = days.data === null || days.isError;
   useEffect(() => {
     if (!listing.available || missing) return;
     const el = box.current;
@@ -159,7 +163,7 @@ function Availability({ listing, currency, fx }: { listing: PublicListing; curre
         <div className="listing-calendar" ref={box} aria-hidden={load ? undefined : "true"}>
           {load ? (
             <Suspense fallback={null}>
-              <ListingCalendar listing={listing} currency={currency} fx={fx} />
+              <ListingCalendar listing={listing} currency={currency} fx={fx} onStay={onStay} />
             </Suspense>
           ) : null}
         </div>
@@ -173,27 +177,37 @@ function Availability({ listing, currency, fx }: { listing: PublicListing; curre
   );
 }
 
-/** La barra fija de la ficha: colones a la izquierda (noche y, debajo, mensual), dólares a la derecha (≈ noche, ≈ mes).
- *  No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al hidratar. */
-function PriceColumns({ main, monthly, fx }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate }) {
+/** La barra fija de la ficha: colones a la izquierda, dólares a la derecha. Sin fechas, el precio por noche; con fechas, el
+ *  total orientativo («≈ ₡285 000 / 3 noches») en la misma línea, y con 30 noches o más, debajo, el mensual (ronda de Ana
+ *  2 nov, ticket 08). No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al
+ *  hidratar, donde aún no hay fechas. */
+function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate; stay: BarStay | null }) {
   if (!main && !monthly) return null;
-  const monthlyAmount = monthly && !isNegotiable(monthly) ? monthly.amount : null;
+  const showMonthly = !!monthly && (!main || !!stay?.monthly);
+  const monthlyAmount = showMonthly && monthly && !isNegotiable(monthly) ? monthly.amount : null;
   const rate = `Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`;
+  // Con fechas, el total de la estancia en lugar del precio por noche.
+  const price = main && (stay ? { amount: stay.totalCrc, unit: nightsLabel(stay.nights) } : main);
+  const is = stay ? " is-stay" : "";
   return (
     <div className="cta-prices">
       <div>
-        {main ? (
-          <span className="price" data-testid="main-price">
-            {formatCRC(main.amount)} <small>/ {main.unit}</small>
+        {price ? (
+          <span className={`price${is}`} data-testid="main-price">
+            {/* Con fechas la cifra baja de tamaño dentro de la misma línea: la barra mide lo mismo. */}
+            <span className="price-fig">
+              {stay ? "≈ " : ""}
+              {formatCRC(price.amount)} <small>/ {price.unit}</small>
+            </span>
           </span>
         ) : null}
-        {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
+        {showMonthly && monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
       </div>
-      {main || monthlyAmount !== null ? (
+      {price || monthlyAmount !== null ? (
         <div className="cta-usd">
-          {main ? (
-            <span className="price-usd" data-testid="price-usd" title={rate}>
-              {`≈ ${formatUSD(main.amount, fx.crcPerUsd)}`} <small>/ {main.unit}</small>
+          {price ? (
+            <span className={`price-usd${is}`} data-testid="price-usd" title={rate}>
+              {`≈ ${formatUSD(price.amount, fx.crcPerUsd)}`} <small>/ {price.unit}</small>
             </span>
           ) : null}
           {monthlyAmount !== null ? (
@@ -230,6 +244,11 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
   const currency = useCurrency();
   const fx = useFx();
   const d = describe(l, { base });
+  // Los días de la casa (en la caché: los trae el worker o la consulta de la ficha), para «Disponibilidad» y la hoja; null si
+  // no se pudieron leer. El total de las fechas de la pestaña para la barra lo calcula el calendario, que se monta tras hidratar.
+  const daysQuery = useQuery({ ...listingDaysQuery(l.publicId), enabled: l.available && !preview });
+  const days = daysQuery.isError ? null : daysQuery.data;
+  const [stay, setStay] = useState<BarStay | null>(null);
   useEffect(() => {
     // Ni la vista previa ni el propio dueño cuentan como visita (revisión UX A2).
     if (!preview && !isOwnListing(l.publicId)) track("listing_view", l.publicId);
@@ -299,6 +318,14 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
           {l.features.length || d.monthly ? (
             <div className="feature-tiles">
+              {/* «Alquiler mensual» con su precio debajo, en dos columnas: va la primera para no dejar huecos (ronda de Ana 2 nov, ticket 08). */}
+              {d.monthly ? (
+                <div className="tile-wide">
+                  <I.calendar size={26} />
+                  <span>{MONTHLY_LABEL}</span>
+                  <small>{isNegotiable(d.monthly) ? "A negociar" : `${formatCRC(d.monthly.amount)} / mes`}</small>
+                </div>
+              ) : null}
               {l.features.map((f) => {
                 const Icon = I[FEATURE_ICON[f]];
                 return (
@@ -308,16 +335,10 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                   </div>
                 );
               })}
-              {d.monthly ? (
-                <div>
-                  <I.calendar size={26} />
-                  {MONTHLY_LABEL}
-                </div>
-              ) : null}
             </div>
           ) : null}
 
-          {preview ? null : <Availability listing={l} currency={currency} fx={fx.crcPerUsd} />}
+          {preview ? null : <Availability listing={l} missing={days === null} currency={currency} fx={fx.crcPerUsd} onStay={setStay} />}
 
           {l.approx ? (
             <div className="stack gap-8">
@@ -334,13 +355,13 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
         <div className="cta-spacer" aria-hidden="true" ref={spacer} />
         <div className="cta-bar" ref={bar}>
-          <PriceColumns main={main} monthly={d.monthly} fx={fx} />
+          <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} />
           {preview ? (
             <span className="btn btn-wa is-pending" aria-disabled="true">
               <I.wa size={22} /> Contactar por WhatsApp
             </span>
           ) : (
-            <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
+            <ContactButton listing={l} days={days} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
           <p className="xs muted price-disclaimer" data-testid="price-note">
             Precios orientativos: el precio final lo acuerda con el propietario.

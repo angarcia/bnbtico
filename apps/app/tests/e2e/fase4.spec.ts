@@ -81,10 +81,11 @@ async function clientCalendar(publicId: string) {
   const { page } = await client(publicId);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const section = page.locator(".listing-calendar");
-  await expect(section.getByRole("grid", { name: monthTitle(openingMonth(today())) })).toBeVisible();
+  // Los días son botones (se eligen llegada y salida, ronda de Ana 2 nov, ticket 08) en un grupo con el nombre del mes.
+  await expect(section.getByRole("group", { name: monthTitle(openingMonth(today())) })).toBeVisible();
   if (!opensOnNext()) await section.getByRole("button", { name: "Mes siguiente" }).click();
-  await expect(section.getByRole("grid", { name: monthTitle(next()) })).toBeVisible();
-  return { page, cell: (iso: string) => section.getByRole("gridcell", { name: dayName(iso) }) };
+  await expect(section.getByRole("group", { name: monthTitle(next()) })).toBeVisible();
+  return { page, cell: (iso: string) => section.getByRole("button", { name: dayName(iso) }) };
 }
 
 test.beforeAll(async () => {
@@ -205,7 +206,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await expect(closed.page.locator(".cta-bar").getByText(`Vuelve a estar disponible el ${longDate(reopen)}`)).toBeVisible();
   const note = closed.page.locator(".note").filter({ hasText: "Calendario cerrado" });
   await expect(note).toContainText(`Vuelve a estar disponible el ${longDate(reopen)}`);
-  await expect(closed.page.getByRole("grid")).toHaveCount(0);
+  await expect(closed.page.locator(".month-grid")).toHaveCount(0);
   await closed.page.context().close();
 
   // El calendario de la propietaria lo dice y no se edita, pero conserva sus días.

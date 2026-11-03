@@ -1,10 +1,8 @@
 // Explorar al estilo Airbnb: el resumen de la búsqueda, la línea de resultados, el rango de llegada y salida del
 // calendario de «¿Cuándo?», el total orientativo de la tarjeta y las sugerencias de zona de «¿Dónde?». Puro y en el JS
 // inicial: no importa calendar.ts ni inquiry.ts (trozos diferidos); las fechas salen de dates.ts.
-import type { Currency } from "./currency";
 import { formatInquiryDates } from "./dates";
 import { ALL_PROVINCES, type Filters } from "./filters";
-import { formatMoney } from "./money";
 import { caribeFirst, norm, type ZoneWithListings } from "./zones";
 
 type StayFilters = Pick<Filters, "arrival" | "departure">;
@@ -42,14 +40,7 @@ export function nightsBetween(arrival: string, departure: string): number {
   return Math.round((Date.parse(departure) - Date.parse(arrival)) / 86_400_000);
 }
 
-export const nightsLabel = (n: number): string => `${n} ${n === 1 ? "noche" : "noches"}`;
-
-/** El total orientativo de la tarjeta de Explorar, «≈ ₡180 000 por 4 noches», en sus dos partes (la cifra va en negrita, como
- *  la de «₡45 000 / noche»), en la moneda elegida (en dólares, redondeado como el resto). Lo calcula la búsqueda
- *  (`stay_total_crc`, regla de domain/stay-price.ts). Nunca «total a pagar». */
-export function stayTotalLabel(totalCrc: number, nights: number, currency: Currency, fx: number): { amount: string; unit: string } {
-  return { amount: `≈ ${formatMoney(totalCrc, currency, fx)}`, unit: `por ${nightsLabel(nights)}` };
-}
+export { nightsLabel, stayTotalLabel } from "./stay-label";
 
 /** Zonas cuyo nombre (o una de sus palabras) empieza con lo escrito, espacios incluidos («puerto v»), sin tildes ni mayúsculas: Caribe primero y por nombre. */
 export function zoneSuggestions(zones: readonly ZoneWithListings[], query: string): ZoneWithListings[] {

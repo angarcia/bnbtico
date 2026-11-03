@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, la hoja «Cerrar la casa», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, las reglas del rango con días ocupados y las fechas de la pestaña con el total de la estancia, que comparte con el calendario de la ficha, la hoja «Cerrar la casa», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -50,6 +50,9 @@
       "!dist/client/assets/publish-promo-*.js",
       "!dist/client/assets/offer-*.js",
       "!dist/client/assets/range-calendar-*.js",
+      "!dist/client/assets/range-????????.js",
+      "!dist/client/assets/stay-price-*.js",
+      "!dist/client/assets/stay-dates-*.js",
       "!dist/client/assets/map-preview-*.js",
       "!dist/client/assets/map-pins-*.js"
     ],
@@ -100,13 +103,16 @@
     "gzip": true
   },
   {
-    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda)",
+    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda, y lo que comparte con el calendario de la ficha: las reglas del rango con días ocupados, range-*, y las fechas de la pestaña con el total de la estancia, stay-dates-* y stay-price-*; límite de 6,5 a 7,5 KB, ronda de Ana 2 nov, ticket 08, aprobado por Daniel)",
     "path": [
       "dist/client/assets/contact-sheet-*.js",
       "dist/client/assets/inquiry-*.js",
-      "dist/client/assets/range-calendar-*.js"
+      "dist/client/assets/range-calendar-*.js",
+      "dist/client/assets/range-????????.js",
+      "dist/client/assets/stay-dates-*.js",
+      "dist/client/assets/stay-price-*.js"
     ],
-    "limit": "6.5 KB",
+    "limit": "7.5 KB",
     "gzip": true
   },
   {

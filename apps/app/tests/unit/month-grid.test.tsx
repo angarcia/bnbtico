@@ -73,6 +73,39 @@ describe("MonthGrid", () => {
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado"');
   });
 
+  // Ficha (ronda de Ana 2 nov, ticket 08): se eligen llegada y salida; cada día es un botón con su fecha completa.
+  it("ficha con rango: botones con la fecha completa, extremos y banda de «¿Cuándo?», y los días que no se pueden tocar desactivados", () => {
+    const out = html({ range: { arrival: "2026-12-20", departure: "2026-12-23" }, canTap: (day) => day !== "2026-12-12" });
+    expect(out).toContain('role="group"');
+    expect(cell(out, 20)).toMatch(/^<button/);
+    expect(cell(out, 20)).toMatch(/class="day range-end is-start"/);
+    expect(cell(out, 21)).toMatch(/class="day in-range"/);
+    expect(cell(out, 22)).toMatch(/class="day in-range"/);
+    expect(cell(out, 23)).toMatch(/class="day range-end is-last"/);
+    expect(cell(out, 24)).toMatch(/class="day"/);
+    expect(cell(out, 20)).toContain('aria-pressed="true"');
+    expect(cell(out, 23)).toContain('aria-pressed="true"');
+    expect(cell(out, 21)).toContain('aria-pressed="false"');
+    // El nombre empieza por la fecha completa, como en la hoja; un ocupado no dice el precio, que no enseña.
+    expect(cell(out, 21)).toContain('aria-label="21 de diciembre de 2026, disponible, ₡95\u00a0000"');
+    expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado"');
+    expect(cell(out, 12)).toMatch(/disabled=""/);
+    expect(cell(out, 13)).not.toMatch(/disabled=""/);
+    expect(cell(out, 9)).toMatch(/disabled=""/);
+  });
+
+  it("ficha con solo la llegada: el extremo sin banda", () => {
+    const out = html({ range: { arrival: "2026-12-20", departure: null } });
+    expect(cell(out, 20)).toMatch(/class="day range-end"/);
+    expect(cell(out, 21)).toMatch(/class="day"/);
+  });
+
+  it("ficha con rango vacío: ningún extremo ni banda", () => {
+    const out = html({ range: { arrival: null, departure: null } });
+    expect(out).not.toMatch(/range-end|in-range/);
+    expect(out).not.toContain('aria-pressed="true"');
+  });
+
   it("atenuada (casa cerrada): clase is-dimmed y sin botones", () => {
     const out = html({ onSelect: undefined, dimmed: true });
     expect(out).toMatch(/class="month-grid is-dimmed"/);

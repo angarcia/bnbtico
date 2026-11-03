@@ -164,28 +164,35 @@ const chooseCurrency = (page: Page, currency: "USD" | "CRC") =>
     dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
   }, currency);
 
-test("una casa con mensual a negociar llega del servidor con la línea y la característica, e hidrata sin avisos", async ({ page }) => {
+// Ronda de Ana del 2 nov, ticket 08: sin fechas la barra lleva solo el precio por noche («Mensual» va con 30 noches o más, en
+// ficha-calendario.spec.ts) y el mensual se ve en la casilla «Alquiler mensual», la primera, con su precio debajo.
+test("una casa con mensual a negociar llega del servidor con «Alquiler mensual · A negociar» la primera de las características y sin «Mensual» en la barra, e hidrata sin avisos", async ({ page }) => {
   const seen = watch(page);
   const res = await page.goto(`/casa/${negociable.publicId}`);
   const source = await res!.text();
-  expect(source).toContain("Alquiler mensual");
-  expect(source).toContain("Mensual: precio a negociar con el dueño");
+  expect(source).toContain("<span>Alquiler mensual</span><small>A negociar</small>");
+  expect(source).not.toContain("Mensual: precio a negociar");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
-  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
+  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
+  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensualA negociar");
+  await expect(page.locator(".feature-tiles > .tile-wide")).toHaveCount(1);
   await expect(page.locator(".badge").filter({ hasText: /^(Vacacional|Mensual)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-test("una casa con precio al mes lo muestra en la línea mensual en colones y, a la derecha, en dólares", async ({ page }) => {
+test("una casa con precio al mes lo muestra en la casilla «Alquiler mensual», en colones y en un renglón aparte, la primera y a dos columnas", async ({ page }) => {
   await page.goto(`/casa/${cara.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡1 250 000 / noche");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
-  await expect(page.getByTestId("monthly-usd")).toHaveText(/^≈ \$[\d\u00a0]+ \/ mes$/);
-  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
+  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
+  await expect(page.getByTestId("monthly-usd")).toHaveCount(0);
+  const tile = page.locator(".feature-tiles > div").first();
+  await expect(tile).toHaveText("Alquiler mensual₡2 500 000 / mes");
+  await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes");
+  const [wide, grid] = await Promise.all([tile.boundingBox(), page.locator(".feature-tiles").boundingBox()]);
+  expect(wide!.width, "ocupa dos de las tres columnas").toBeGreaterThan(grid!.width / 2);
   await chooseCurrency(page, "USD");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
+  await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes");
 });
 
 // Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.

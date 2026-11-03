@@ -255,6 +255,8 @@ Cada día del mes lleva «$186» (o «₡95 mil»), aunque ninguno cambie; los d
 
 > **Sustituye lo anterior (Ana, 2026-10-29): la ficha reutiliza el formato del Calendario del propietario (C4)**, el mismo componente: casillas de 47 × 92 px, 6 px entre ellas y 14 px de margen; número centrado arriba y precio completo sin «₡» ni redondeo debajo, con sus transparencias; fondo de los días en verde al 6 %; ocupados en terracota con rayas y solo el número; sin ★ ni marca para el precio especial; días pasados del mes tachados y más claros; leyenda «Disponible · Ocupado». **La diferencia: en la ficha no se desplaza hacia abajo**: un mes a la vez, con ‹ › para cambiar de mes (como hoy), y solo para mirar. **Elegir días en el calendario de la ficha queda para la siguiente revisión** (Ana, 2026-10-29; sigue abierto lo de A3 de la revisión del 26). Quedan sin efecto el número en la esquina y el borde a borde de la versión anterior de N4.
 
+> **Cerrado el 2026-11-03 (ronda de Ana del 2 nov, ticket 08):** el calendario de la ficha ya elige llegada y salida tocando días, con el estilo de rango de «¿Cuándo?» (extremos terracota y banda translúcida sobre el verde de los libres), los días ocupados no valen de llegada y debajo va el total orientativo; las fechas son las de la pestaña, compartidas con Explorar y con la hoja de contacto. Con esto queda cerrado también lo de A3 (1–3) de la revisión del 26.
+
 ### N5. El selector ₡ | $ en las pantallas del propietario
 [p02b, p08-actividad]
 Mis casas y Actividad ya no enseñan precios y siguen con el selector de moneda en la cabecera. **Arreglo:** el selector solo donde hay precios (Explorar, Favoritos, Calendario).

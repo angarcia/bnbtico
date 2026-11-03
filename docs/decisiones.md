@@ -1,3 +1,13 @@
+## 2026-11-03 · Calendario de la ficha para elegir fechas, compartidas con la hoja de contacto (ronda de Ana, ticket 08 rehecho; Daniel)
+
+Cierra A3 (2026-10-26) y el «solo para mirar» de N4 (2026-10-29).
+- **Calendario de la ficha seleccionable,** con el estilo de rango de «¿Cuándo?»; abre con las fechas de la búsqueda. **Ficha y hoja comparten las fechas** (`sessionStorage["bnbtico-fechas"]`, `shared/stay-dates.ts`): cambiar unas cambia las otras y el total. Volver a Explorar vuelve a escribir las de su búsqueda (se deja así).
+- **No se llega en un día ocupado;** un rango con una noche ocupada se rechaza («Hay noches ocupadas entre esas fechas.»); la salida puede caer en el primer ocupado. Si las fechas ya traen noches ocupadas, ficha y hoja lo avisan y no hay total.
+- **Barra de precio (opción B):** con fechas, «≈ ₡285 000 / 3 noches»; **el mensual en la barra solo con 30 noches o más** (entonces crece ~20 px tras cargar; va fija abajo). Sin fechas, una sola línea.
+- **Casilla «Alquiler mensual»**, la primera de las características y a dos columnas, con el precio debajo («A negociar» si no hay).
+- **Hoja de contacto:** días ocupados deshabilitados, total encima del mensaje y **«Abrir WhatsApp» bloqueado** con noches ocupadas o mientras cargan los días. Su trozo pasa de 6,5 a 7,5 KB de límite (diferido).
+- Presupuesto: la zona privada inicial queda en 149,93 de 150 KB (casi sin margen).
+
 ## 2026-11-03 · Total orientativo en Explorar y fin del modo mensual (ronda de Ana, ticket 07 rehecho; Daniel)
 
 Sustituye «nunca un total» (2026-10-29), «precio siempre por noche aunque haya fechas» (ronda de Ana 2026-10-28) y el chip «Solo alquiler mensual» con «Desde» (2026-10-27/29).

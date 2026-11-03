@@ -356,7 +356,7 @@ test("paso 6: la descripción llena el alto que queda, con y sin teclado", async
   await expectFilled("al cerrar el teclado");
 });
 
-test("publicar con mensual sin precio: tras aprobarla, la ficha dice «precio a negociar con el dueño» y lleva «Alquiler mensual»", async ({ page }) => {
+test("publicar con mensual sin precio: tras aprobarla, la ficha lleva «Alquiler mensual» a negociar", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5 });
   await page.goto(`/propietario/publicar/${draft.id}/8`);
   await page.getByLabel("Precio por noche").fill("45000");
@@ -371,8 +371,8 @@ test("publicar con mensual sin precio: tras aprobarla, la ficha dice «precio a 
   expect(await h.owner("owner").getOwn(draft.id)).toMatchObject({ nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null });
   await h.admin("aal2").review(draft.id, "approve", "");
   await page.goto(`/casa/${draft.publicId}`);
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
-  await expect(page.locator(".feature-tiles")).toContainText("Alquiler mensual");
+  // La barra sin fechas va sin «Mensual» (ronda de Ana 2 nov, ticket 08): el mensual está en su casilla.
+  await expect(page.locator(".feature-tiles .tile-wide")).toHaveText("Alquiler mensualA negociar");
 });
 
 test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo escrito intacto", async ({ page }) => {
