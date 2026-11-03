@@ -460,6 +460,8 @@ test("la línea de capacidad: un completo cuenta los baños; una Habitación dic
   expect(await response!.text()).toContain("2 personas · 1 habitación · baño compartido");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 habitación · baño compartido");
+  // La etiqueta de arriba no repite el baño (Daniel, 2026-11-03): solo «Habitación».
+  await expect(page.locator(".listing-view .badge").filter({ hasText: "Habitación" })).toHaveText("Habitación");
 });
 
 test("descripción corta: entera, sin «Ver más»; cabecera centrada", async ({ page }) => {
