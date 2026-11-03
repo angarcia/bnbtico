@@ -42,6 +42,9 @@ export function nightsBetween(arrival: string, departure: string): number {
   return Math.round((Date.parse(departure) - Date.parse(arrival)) / 86_400_000);
 }
 
+/** Desde cuántas noches una casa con precio al mes se estima por mes, y desde cuántas la barra de la ficha enseña «Mensual». */
+export const MONTHLY_ESTIMATE_NIGHTS = 30;
+
 export const nightsLabel = (n: number): string => `${n} ${n === 1 ? "noche" : "noches"}`;
 
 /** El total orientativo de la estancia: «≈ ₡180 000 por 4 noches» (en dólares, redondeado como el resto). Nunca «total a pagar». */

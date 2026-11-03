@@ -5,10 +5,9 @@ import { effectiveDay, type CalendarDays } from "./calendar";
 import type { Currency } from "./currency";
 import { addDays, formatInquiryDates } from "./dates";
 import type { PublicListing } from "./listing";
-import { stayTotalLabel } from "./search";
+import { MONTHLY_ESTIMATE_NIGHTS, stayTotalLabel } from "./search";
 
-/** Desde cuántas noches una casa con precio al mes se estima por mes. */
-export const MONTHLY_ESTIMATE_NIGHTS = 30;
+export { MONTHLY_ESTIMATE_NIGHTS };
 
 export interface StayEstimate {
   totalCrc: number;

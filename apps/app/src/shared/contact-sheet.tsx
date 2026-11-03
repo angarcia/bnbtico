@@ -170,7 +170,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
   }, []);
 
   async function send() {
-    if (inFlight.current) return;
+    if (inFlight.current || blocked) return;
     // Siempre el mensaje redactado (un borrador guardado antes de N2 podía traer uno editado a mano).
     const fields = { arrival: draft.arrival, departure: draft.departure, people: draft.people, message: draft.composed };
     const problem = validateInquiryDraft(fields, today);
@@ -194,7 +194,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
   const stay = days && dates ? listingStay(listing, days, dates) : null;
   const stayText = stay && dates ? stayLine(stay, dates, currency, fx) : null;
   // Fechas que ya traen una noche ocupada (de Explorar o de un enlace viejo): el aviso en vez del total.
-  const blocked = !!days && hasBusyNight(listing, days, dates);
+  // Con esas fechas no se envía (ni «Continuar» sin sesión): hasta elegir otras o quitarlas, y mientras se leen los días.
+  const busyDates = !!days && hasBusyNight(listing, days, dates);
+  const blocked = !!dates && (days === undefined || busyDates);
   const invalid = (f: InquiryField) => (status.kind === "error" && status.field === f ? true : undefined);
 
   return createPortal(
@@ -302,9 +304,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
               </button>
             </div>
           </div>
-          {stayText || blocked ? (
-            <p className={`stay-line${blocked ? " is-busy" : ""}`} data-testid="stay-total" role={blocked ? "alert" : undefined}>
-              {blocked ? RANGE_BUSY_MESSAGE : stayText}
+          {stayText || busyDates ? (
+            <p className={`stay-line${busyDates ? " is-busy" : ""}`} data-testid="stay-total" role={busyDates ? "alert" : undefined}>
+              {busyDates ? RANGE_BUSY_MESSAGE : stayText}
             </p>
           ) : null}
           <div className="stack gap-4">
@@ -324,6 +326,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
           <button
             className={`btn btn-wa${status.kind === "sending" ? " is-sending" : ""}`}
             type="submit"
+            disabled={blocked}
             aria-disabled={status.kind === "sending" || undefined}
             aria-busy={status.kind === "sending" || undefined}
           >

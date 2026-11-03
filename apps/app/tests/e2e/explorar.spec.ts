@@ -66,6 +66,42 @@ test("Tarjeta: fotos deslizables con contador, cargadas al deslizar, y botón de
   await expect(wa).toBeFocused();
 });
 
+// Ticket 08 (ronda del 2 nov): con fechas que traen noches ocupadas, la hoja no envía; tampoco mientras se leen los días.
+test("Tarjeta: la hoja queda bloqueada mientras cargan los días de la casa y, si las fechas traen una noche ocupada, sigue bloqueada con el aviso", async ({ page }) => {
+  const h = await postgrestHarness();
+  const [a, b] = [day(20), day(24)];
+  await page.goto(`/explorar?llegada=${a}&salida=${b}`);
+  const cards = page.locator(".listing-grid:not(.skeleton) .listing-card");
+  await expect(cards.first()).toBeVisible();
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/rest/v1/rpc/public_listing_days*", async (route) => {
+    await held;
+    await route.continue();
+  });
+  const openSheet = async (title: string) => {
+    const card = cards.filter({ hasText: title });
+    await card.getByText(title).first().scrollIntoViewIfNeeded();
+    await card.locator("xpath=..").getByRole("button", { name: /^Contactar por WhatsApp a / }).click();
+    return page.getByRole("dialog");
+  };
+  // Una casa libre: bloqueada mientras llegan los días, y se habilita al llegar.
+  let sheet = await openSheet("Casa Manzanillo");
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-7c-hoja-cargando-dias.png" });
+  release();
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeEnabled();
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+  // Una casa con una noche ocupada dentro de las fechas (después de buscar): bloqueada con el aviso.
+  await h.putDay(ultima.id, { day: day(22), available: false, specialPriceCrc: null });
+  sheet = await openSheet("Casa Cocles 7");
+  await expect(sheet.getByTestId("stay-total")).toHaveText("Hay noches ocupadas entre esas fechas.");
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  await page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-7b-hoja-tarjeta-noches-ocupadas.png" });
+  await h.putDay(ultima.id, { day: day(22), available: true, specialPriceCrc: null });
+});
+
 test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, filtros y ₡ | $", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeAttached();

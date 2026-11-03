@@ -371,8 +371,8 @@ test("publicar con mensual sin precio: tras aprobarla, la ficha dice «precio a 
   expect(await h.owner("owner").getOwn(draft.id)).toMatchObject({ nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null });
   await h.admin("aal2").review(draft.id, "approve", "");
   await page.goto(`/casa/${draft.publicId}`);
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el anfitrión");
-  await expect(page.locator(".feature-tiles")).toContainText("Alquiler mensual");
+  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
+  await expect(page.locator(".feature-tiles")).toContainText("Alquiler mensualA negociar");
 });
 
 test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo escrito intacto", async ({ page }) => {

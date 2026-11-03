@@ -321,39 +321,68 @@ test("las fechas de Explorar: el HTML no las lleva; tras hidratar el calendario 
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-test("barra de precio: con fechas la línea principal es el total (colones y dólares), la del mensual sigue igual y la barra no cambia de alto, con o sin mensual", async ({ page }) => {
+test("barra de precio: sin fechas una línea; con fechas la principal es el total; «Mensual» solo con 30 noches o más; el alto no cambia salvo con el mensual de 30 noches", async ({ page: first }) => {
   const conMensual = await seedWithDays("Casa Barra Total", { acceptsMonthly: true, monthlyPriceCrc: 900000 });
   const soloNoches = await seedWithDays("Casa Barra Noches");
-  const mensualNegociable = await seedWithDays("Casa Barra Negociar", { acceptsMonthly: true, monthlyPriceCrc: null });
-  for (const [casa, monthly] of [[conMensual, "Mensual: ₡900 000 / mes"], [soloNoches, null], [mensualNegociable, "Mensual: precio a negociar con el anfitrión"]] as const) {
-    await page.addInitScript(([k, v]) => sessionStorage.setItem(k, v), [FECHAS, JSON.stringify({ llegada: on(13), salida: on(16) })] as const);
-    const release = await holdHero(page, casa);
-    await page.goto(`/casa/${casa.publicId}`, { waitUntil: "domcontentloaded" });
-    await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche"); // el servidor no conoce las fechas
-    const before = await barHeight(page);
-    release();
-    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-    await expect(page.getByTestId("main-price")).toHaveText("≈ ₡285 000 / 3 noches");
-    await expect(page.getByTestId("price-usd")).toContainText("/ 3 noches");
-    if (monthly) await expect(page.getByTestId("monthly-line")).toHaveText(monthly);
-    else await expect(page.getByTestId("monthly-line")).toHaveCount(0);
-    expect(await barHeight(page), "la barra mide lo mismo con total").toBe(before);
-    expect(await page.locator(".cta-prices").evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-    if (casa === conMensual) await page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-2-barra-total-con-mensual.png" });
-    if (casa === soloNoches) await page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-2b-barra-total-solo-noches.png" });
-    // Quitar las fechas: la barra de siempre y el mismo alto.
-    await section(page).evaluate((el) => el.scrollIntoView({ block: "center" }));
-    await section(page).getByRole("button", { name: "Quitar fechas" }).click();
-    await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
-    expect(await barHeight(page)).toBe(before);
-    await page.context().clearCookies();
-    await page.evaluate(() => sessionStorage.clear());
+  const negociable = await seedWithDays("Casa Barra Negociar", { acceptsMonthly: true, monthlyPriceCrc: null });
+  const largo = [on(12), addDays(on(12), 35)] as const; // 35 noches, con la del 20 a ₡150 000 y sin los ocupados
+  for (const [casa, total35, monthly] of [
+    [conMensual, "≈ ₡1 050 000 / 35 noches", "Mensual: ₡900 000 / mes"], // mensual prorrateado: 900 000 × 35 / 30
+    [soloNoches, "≈ ₡3 380 000 / 35 noches", null],
+    [negociable, "≈ ₡3 380 000 / 35 noches", "Mensual: precio a negociar con el anfitrión"],
+  ] as const) {
+    const visit = async (dates: readonly [string, string] | null, hold = false) => {
+      const page = await first.context().newPage();
+      await page.route("**/storage/v1/object/public/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
+      await page.route("https://tile.openstreetmap.org/**", (route) => route.fulfill({ body: TILE, contentType: "image/png" }));
+      if (dates) await page.addInitScript(([k, v]) => sessionStorage.setItem(k, v), [FECHAS, JSON.stringify({ llegada: dates[0], salida: dates[1] })] as const);
+      const release = hold ? await holdHero(page, casa) : () => {};
+      const res = await page.goto(`/casa/${casa.publicId}`, { waitUntil: "domcontentloaded" });
+      const html = await res!.text();
+      // El servidor no conoce las fechas: una sola línea, sin «Mensual», con o sin fechas en la pestaña.
+      expect(html).not.toContain("Mensual:");
+      const server = await barHeight(page);
+      release();
+      await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+      return { page, server };
+    };
+    // Sin fechas: igual al servidor.
+    const none = await visit(null, true);
+    await expect(none.page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
+    await expect(none.page.getByTestId("monthly-line")).toHaveCount(0);
+    await expect(none.page.getByTestId("monthly-usd")).toHaveCount(0);
+    expect(await barHeight(none.page), "sin fechas, la barra mide lo del servidor").toBe(none.server);
+    await none.page.close();
+
+    // 3 noches: una sola línea, mismo alto antes y después de hidratar.
+    const short = await visit([on(13), on(16)], true);
+    await expect(short.page.getByTestId("main-price")).toHaveText("≈ ₡285 000 / 3 noches");
+    await expect(short.page.getByTestId("price-usd")).toContainText("/ 3 noches");
+    await expect(short.page.getByTestId("monthly-line")).toHaveCount(0);
+    expect(await barHeight(short.page), "con 3 noches, la barra mide lo mismo").toBe(short.server);
+    expect(await short.page.locator(".cta-prices").evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    if (casa === conMensual) await short.page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-2-barra-3-noches.png" });
+    await short.page.close();
+
+    // 35 noches: el total y, si la casa acepta mensual, la segunda línea (la barra crece).
+    const long = await visit(largo, true);
+    // En un teléfono estrecho las dos cifras no se pisan.
+    await long.page.setViewportSize({ width: 375, height: 667 });
+    const [l, r] = await Promise.all([long.page.getByTestId("main-price").boundingBox(), long.page.getByTestId("price-usd").boundingBox()]);
+    expect(l!.x + l!.width, "los colones no pisan los dólares").toBeLessThanOrEqual(r!.x);
+    await long.page.setViewportSize({ width: 412, height: 915 });
+    await expect(long.page.getByTestId("main-price")).toHaveText(total35);
+    expect(await long.page.locator(".cta-prices").evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    if (monthly) {
+      await expect(long.page.getByTestId("monthly-line")).toHaveText(monthly);
+      expect(await barHeight(long.page), "con el mensual de 30 noches la barra crece").toBeGreaterThan(long.server + 10);
+    } else {
+      await expect(long.page.getByTestId("monthly-line")).toHaveCount(0);
+      expect(await barHeight(long.page)).toBe(long.server);
+    }
+    if (casa === conMensual) await long.page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-2-barra-35-noches.png" });
+    await long.page.close();
   }
-  // Una estancia más larga («≈ ₡665 000 / 7 noches») cabe en un renglón.
-  await page.addInitScript(([k, v]) => sessionStorage.setItem(k, v), [FECHAS, JSON.stringify({ llegada: on(21), salida: on(28) })] as const);
-  await page.goto(`/casa/${soloNoches.publicId}`);
-  await expect(page.getByTestId("main-price")).toHaveText("≈ ₡665 000 / 7 noches");
-  expect(await page.locator(".cta-prices").evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
 });
 
 test("fechas que ya traen una noche ocupada (de Explorar o de un enlace viejo): el aviso en vez de banda y total, la barra con el precio por noche, y se pueden elegir otras", async ({ page }) => {
@@ -375,10 +404,16 @@ test("fechas que ya traen una noche ocupada (de Explorar o de un enlace viejo): 
   const sheet = page.getByRole("dialog");
   await expect(dateBox(sheet, "Llegada")).toHaveText(boxText("Llegada", on(8)));
   await expect(sheet.getByTestId("stay-total")).toHaveText("Hay noches ocupadas entre esas fechas.");
+  // El envío queda bloqueado (aquí sin sesión: «Continuar») hasta elegir otras fechas o quitarlas.
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeDisabled();
   await page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-7-hoja-fechas-con-noches-ocupadas.png" });
+  await dateBox(sheet, "Llegada").click();
+  await sheet.getByRole("button", { name: "Quitar fechas" }).click();
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeEnabled();
+  await expect(sheet.getByTestId("stay-total")).toHaveCount(0);
   await sheet.getByRole("button", { name: "Cerrar" }).click();
 
-  // Elegir otras fechas devuelve la banda, el total y la barra con el total.
+  // Con las fechas quitadas, elegir otras devuelve la banda, el total y la barra con el total.
   await cell(page, on(14)).click();
   await cell(page, on(16)).click();
   await expect(total(page)).toHaveText(line(2, 190_000, on(14), on(16)));

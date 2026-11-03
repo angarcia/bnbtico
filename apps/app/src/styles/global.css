@@ -278,7 +278,9 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .cta-prices .price{line-height:1.1}
 /* Con fechas la línea principal es el total («≈ ₡665 000 / 7 noches»): 20 px y de un solo renglón. La línea sigue siendo la de 24 px (un span interno
    baja la letra) para que la base del texto y el alto de la barra no cambien. */
-.cta-bar .price.is-stay{white-space:nowrap}
+.cta-bar .price.is-stay,.price-usd.is-stay{white-space:nowrap}
+/* En teléfonos de menos de 440 px el total en dólares no lleva «/ N noches» (la cifra de colones ya lo dice): si no, las dos cifras se pisan. */
+@media (max-width:439px){.price-usd.is-stay small{display:none}}
 .cta-bar .price .stay-fs{font-size:20px}
 .cta-usd{text-align:right;align-items:flex-end}
 .price-usd{font-weight:var(--w-strong);font-size:17px;font-variant-numeric:tabular-nums}
@@ -359,6 +361,10 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .feature-tiles div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--r-tile);background:var(--surface-soft);box-shadow:var(--shadow);font-size:14px;font-weight:var(--w-medium);text-align:center}
 .feature-tiles svg{color:var(--primary)}
+/* «Alquiler mensual» con su precio en un renglón aparte y más pequeño: la casilla no es más alta que una de dos renglones. */
+/* «Alquiler mensual» ocupa dos columnas, con su precio en un renglón aparte y más pequeño: la casilla no es más alta que las de dos renglones. */
+.feature-tiles .tile-wide{grid-column:span 2}
+.feature-tiles small{font-size:13px;color:var(--muted);margin-top:-4px;white-space:nowrap}
 .photos-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .photos-grid .photo{min-height:108px;border-radius:var(--r-input)}
 .photos-grid .photo.cover{grid-column:span 2;grid-row:span 2;min-height:224px;border-radius:var(--r-tile)}

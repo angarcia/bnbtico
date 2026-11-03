@@ -10,7 +10,7 @@ import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatUSD } from "../domain/money";
 import type { CalendarDay } from "../domain/calendar";
-import { nightsLabel } from "../domain/search";
+import { MONTHLY_ESTIMATE_NIGHTS, nightsLabel } from "../domain/search";
 import type { SearchDates } from "../domain/contact-return";
 import { ApproxMap } from "./approx-map";
 import { useCurrency } from "./currency";
@@ -182,6 +182,8 @@ function Availability({ listing, currency, fx }: { listing: PublicListing; curre
  *  No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al hidratar. */
 function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate; stay: BarStay | null }) {
   if (!main && !monthly) return null;
+  // «Mensual» solo con 30 noches o más (Daniel, 2026-11-02): sin fechas o con menos, una sola línea.
+  const showMonthly = !!stay && stay.nights >= MONTHLY_ESTIMATE_NIGHTS;
   const monthlyAmount = monthly && !isNegotiable(monthly) ? monthly.amount : null;
   const rate = `Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`;
   return (
@@ -202,12 +204,12 @@ function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly
             )}
           </span>
         ) : null}
-        {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
+        {showMonthly && monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
       </div>
-      {main || monthlyAmount !== null ? (
+      {main || (showMonthly && monthlyAmount !== null) ? (
         <div className="cta-usd">
           {main ? (
-            <span className="price-usd" data-testid="price-usd" title={rate}>
+            <span className={`price-usd${stay ? " is-stay" : ""}`} data-testid="price-usd" title={rate}>
               {stay ? (
                 <>
                   {`≈ ${formatUSD(stay.totalCrc, fx.crcPerUsd)}`} <small>/ {nightsLabel(stay.nights)}</small>
@@ -219,7 +221,7 @@ function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly
               )}
             </span>
           ) : null}
-          {monthlyAmount !== null ? (
+          {showMonthly && monthlyAmount !== null ? (
             <span className="xs muted num" data-testid="monthly-usd" title={rate}>
               ≈ <b className="ink num">{formatUSD(monthlyAmount, fx.crcPerUsd)}</b> / mes
             </span>
@@ -345,6 +347,14 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
           {l.features.length || d.monthly ? (
             <div className="feature-tiles">
+              {/* La casilla del mensual ocupa dos columnas: va la primera para no dejar huecos en la rejilla. */}
+              {d.monthly ? (
+                <div className="tile-wide">
+                  <I.calendar size={26} />
+                  <span>{MONTHLY_LABEL}</span>
+                  <small>{isNegotiable(d.monthly) ? "A negociar" : `${formatCRC(d.monthly.amount)} / mes`}</small>
+                </div>
+              ) : null}
               {l.features.map((f) => {
                 const Icon = I[FEATURE_ICON[f]];
                 return (
@@ -354,12 +364,6 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                   </div>
                 );
               })}
-              {d.monthly ? (
-                <div>
-                  <I.calendar size={26} />
-                  {MONTHLY_LABEL}
-                </div>
-              ) : null}
             </div>
           ) : null}
 

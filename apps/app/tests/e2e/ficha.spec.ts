@@ -144,10 +144,11 @@ test("una casa con mensual a negociar llega del servidor con la línea y la cara
   const res = await page.goto(`/casa/${negociable.publicId}`);
   const source = await res!.text();
   expect(source).toContain("Alquiler mensual");
-  expect(source).toContain("Mensual: precio a negociar con el anfitrión");
+  expect(source).not.toContain("Mensual:"); // sin fechas, la barra es de una sola línea
+  expect(source).toContain("<small>A negociar</small>");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el anfitrión");
-  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
+  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
+  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensualA negociar");
   await expect(page.locator(".badge").filter({ hasText: /^(Vacacional|Mensual)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
@@ -156,11 +157,11 @@ test("una casa con precio al mes lo muestra en la línea mensual en colones y, a
   await page.goto(`/casa/${cara.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡1 250 000 / noche");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
-  await expect(page.getByTestId("monthly-usd")).toHaveText(/^≈ \$[\d\u00a0]+ \/ mes$/);
-  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
+  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
+  await expect(page.getByTestId("monthly-usd")).toHaveCount(0);
+  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensual₡2 500 000 / mes");
   await chooseCurrency(page, "USD");
-  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
+  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensual₡2 500 000 / mes");
 });
 
 // Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.

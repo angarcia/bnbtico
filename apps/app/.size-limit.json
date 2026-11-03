@@ -111,7 +111,7 @@
     "gzip": true
   },
   {
-    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda, y las reglas de rango y del total de la estancia, range-* y stay-price-*, que comparte con el calendario de la ficha: ~0,8 KB que estaban en la zona privada, ticket 08 de la ronda del 2 nov)",
+    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda, y las reglas de rango y del total de la estancia, range-* y stay-price-*, que comparte con el calendario de la ficha: ~0,8 KB que estaban en la zona privada, ticket 08 de la ronda del 2 nov; límite de 7 a 7,5 KB por el bloqueo del envío con noches ocupadas o con los días aún cargando, Daniel 2026-11-02)",
     "path": [
       "dist/client/assets/contact-sheet-*.js",
       "dist/client/assets/inquiry-*.js",
@@ -119,7 +119,7 @@
       "dist/client/assets/range-????????.js",
       "dist/client/assets/stay-price-*.js"
     ],
-    "limit": "7 KB",
+    "limit": "7.5 KB",
     "gzip": true
   },
   {

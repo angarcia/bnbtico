@@ -69,6 +69,8 @@ const PAIRS: [string, string][] = [
   ["--muted", "--review-soft"],
   ["--fg", "--surface-2"],
   ["--muted", "--surface-2"],
+  // El precio de la casilla «Alquiler mensual» de la ficha (13 px en --muted sobre la casilla, crema con 70 % de blanco).
+  ["--muted", "color-mix(in srgb, var(--surface) 70%, var(--bg))"],
   ["--busy-ink", "--busy"],
 ];
 
