@@ -1,6 +1,6 @@
 # 10 · El admin edita las casas
 
-Status: needs-info (plan escrito el 2026-11-02; faltan D1–D7 de Daniel)
+Status: ready-for-agent (versión simplificada, Daniel 2026-11-03: manda la sección final)
 
 ## Qué (decisión 2026-11-02)
 - El admin edita **cualquier dato de cualquier casa**, borradores incluidos (para asistir a anfitriones nuevos al crearla y con los cambios pedidos).
@@ -53,3 +53,15 @@ Status: needs-info (plan escrito el 2026-11-02; faltan D1–D7 de Daniel)
 - D5 Editar casas rechazadas, en revisión, pausadas o bloqueadas: **sí**; eliminadas no.
 - D6 Al descartar un cambio pendiente del anfitrión: **avisarle con «Editado por bnbtico»** nombrando el dato y ofrecer el botón de WhatsApp manual.
 - D7 Va después del 08 (todo el 04 y el 12 ya están).
+
+## Versión simplificada (Daniel, 2026-11-03) — MANDA sobre el plan y D1–D7 de arriba
+
+La única admin es Ana: no hace falta controlar al propio admin.
+- **Ana edita cualquier dato de cualquier casa** (cualquier estado salvo eliminada), **al momento y sin revisión**, con **las mismas pantallas** que el anfitrión: el asistente para borradores y la ficha editable / «Editar un dato» para casas publicadas, en «modo admin» (contexto o puerto, sin duplicar formularios). También fotos (subir, quitar, ordenar) y calendario de una casa ajena.
+- **Las reglas de datos son las de crear/editar** (ticket 12: `requiredProblems`, `warnings`, reglas por dato, la excepción de lo publicado al momento): reutilizarlas en cliente y en SQL; nada de reglas nuevas.
+- **D1:** Ana puede también **enviar a revisión** el borrador de otro (y aprobarlo con la revisión de siempre).
+- **D2:** sin nota. **D3:** no se cierra la vía directa del admin; **solo una línea** en `admin_actions` por guardado (`listing.edit`, con la casa; sin antes/después). **D4:** sin «Editado por bnbtico» ni aviso al anfitrión. **D5:** cualquier estado salvo eliminada.
+- **D6:** **la revisión dato a dato se queda como está** («Aprobar» / «Pedir cambios» con nota; sin «Rechazar»). Si Ana edita ella misma un dato que el anfitrión tenía pendiente, manda lo de Ana y el pendiente de ese dato se descarta, sin aviso.
+- **Entradas:** «Editar casa» en la hoja de la casa del admin, y una lista de **borradores** (hoy no se ven en «Casas» porque esa consulta exige suscripción) para asistir en la creación.
+- RPCs `admin_*` con `is_admin()` (aal2) que reutilizan las comprobaciones de las del anfitrión (extraer el núcleo compartido; no abrir las del anfitrión con una rama admin). Storage: políticas aparte para el admin. Purga de la ficha: la hacen los triggers.
+- Presupuesto: lo nuevo en el trozo del admin o en uno propio diferido; zona privada inicial ~145 de 150 KB.
