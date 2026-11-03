@@ -1,12 +1,14 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
-import { sql } from "../db/local";
+import { addDays, costaRicaToday } from "../../src/domain/dates";
 import { postgrestHarness } from "../db/postgrest-harness";
 
 // Explorar y Filtros en el navegador (pantallas 01 y 02), contra Supabase local.
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 let manzanillo: Seeded;
 let ultima: Seeded;
+const today = costaRicaToday(Date.now());
+const day = (n: number) => addDays(today, n);
 
 test.describe.configure({ mode: "serial" });
 
@@ -16,6 +18,8 @@ test.beforeAll(async () => {
   await h.seed({ status: "draft", draft: { province: "Cartago", canton: "Turrialba", zone: "Turrialba", zoneSource: "other", zoneId: null, lat: 9.9, lng: -83.68 } });
   await h.seed({ status: "active", draft: { title: "Cabina Sámara", province: "Guanacaste", canton: "Nicoya", zone: "Sámara", zoneSource: "other", zoneId: null, lat: 9.88, lng: -85.53, capacity: 2, features: ["pool"], nightlyPriceCrc: 60000 } });
   ultima = await h.seed({ status: "active", draft: { title: "Casa Cocles 7", zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 40000 } });
+  // Un precio especial en una noche de la búsqueda de 4 noches: el total lo cuenta.
+  await h.putDay(ultima.id, { day: day(21), available: true, specialPriceCrc: 100000 });
   for (let i = 6; i >= 1; i--) await h.seed({ status: "active", draft: { title: `Casa Cocles ${i}`, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 40000 + i * 1000 } });
   manzanillo = await h.seed({ status: "active", draft: { title: "Casa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, capacity: 5, acceptsMonthly: true, monthlyPriceCrc: 480000, nightlyPriceCrc: 85000, features: ["wifi", "beachfront"] } });
   await h.seed({ status: "active", draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null } });
@@ -163,32 +167,22 @@ test("con dólares elegidos, los precios de Filtros se escriben en dólares y se
   await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("98");
 });
 
-test("Solo alquiler mensual: un chip, la línea y los precios por mes; al quitarlo vuelven «/ noche» y el rango", async ({ page }) => {
+test("la cabecera ya no tiene el chip mensual: filtros y ₡ | $ en una fila, y el rango de precio siempre disponible", async ({ page }) => {
   const chips = page.locator(".chiprow");
   // Una sola fila, sin scroll lateral, a 360 y a 375 px.
   for (const width of [375, 360]) {
     await page.setViewportSize({ width, height: 740 });
     await page.goto("/explorar");
-    await expect(chips.getByRole("button", { name: "Solo alquiler mensual" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /mensual/i })).toHaveCount(0);
     await expect(chips.getByRole("link", { name: "Filtros", exact: true })).toBeVisible();
     await expect(chips.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
     const [scrollW, clientW, pageW] = await chips.evaluate((el) => [el.scrollWidth, el.clientWidth, document.documentElement.scrollWidth]);
     expect(scrollW, `sin scroll lateral en los chips a ${width} px`).toBeLessThanOrEqual(clientW!);
     expect(pageW, "la página no se ensancha").toBeLessThanOrEqual(width);
     const mids = await chips.locator(":scope > *").evaluateAll((els) => els.map((el) => { const r = el.getBoundingClientRect(); return Math.round(r.top + r.height / 2); }));
-    expect(new Set(mids).size, `el mensual, los filtros y ₡ | $ en una fila a ${width} px`).toBe(1);
-  }
-
-  // Con el mensual encendido (negrita y «✓ »), a 360 px: el chip se acorta y los filtros siguen de 44 × 44 sin desbordar.
-  for (const width of [360, 375]) {
-    await page.setViewportSize({ width, height: 740 });
-    await page.goto("/explorar?mensual=1");
-    await expect(chips.getByRole("button", { name: "Solo alquiler mensual" })).toHaveAttribute("aria-pressed", "true");
+    expect(new Set(mids).size, `los filtros y ₡ | $ en una fila a ${width} px`).toBe(1);
     const filters = (await chips.getByRole("link", { name: /^Filtros/ }).boundingBox())!;
     expect(Math.min(filters.width, filters.height), `filtros de 44 px a ${width} px`).toBeGreaterThanOrEqual(44);
-    const currency = (await chips.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
-    expect(currency.x + currency.width, `₡ | $ dentro de la fila a ${width} px`).toBeLessThanOrEqual(width - 16 + 0.5);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 
   // Las diez casas cuestan entre ₡40 000 y ₡85 000 la noche.
@@ -197,46 +191,16 @@ test("Solo alquiler mensual: un chip, la línea y los precios por mes; al quitar
   const badge = page.getByRole("link", { name: /^Filtros/ }).locator(".badge");
   await expect(badge).toHaveText("2");
   const pills = page.locator(".listing-card .card-price");
-  await expect(pills.first()).toContainText("/ noche");
-
-  const since = sql("select now()::text");
-  const chip = page.getByRole("button", { name: "Solo alquiler mensual", exact: true });
-  await chip.click();
-  await expect(chip).toHaveAttribute("aria-pressed", "true");
-  await expect(page).toHaveURL(/mensual=1/);
-  await expect(page).toHaveURL(/min=40000/);
-  await expect(page).toHaveURL(/max=90000/);
-  await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual");
-  await expect(page.getByRole("link", { name: /Casa Manzanillo/ }).locator(".card-price")).toHaveText("₡480 000 / mes");
-  await expect(page.getByRole("link", { name: /Casa Cocles mensual/ }).locator(".card-price")).toHaveText("Precio a negociar");
-  await expect(pills).toHaveCount(2);
-  for (const text of await pills.allTextContents()) expect(text).not.toContain("/ noche");
-  await expect
-    .poll(() => sql(`select name || ' ' || coalesce(listing_public_id, '-') || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'monthly_filter_tap'`).split("\n").filter(Boolean))
-    .toEqual(["monthly_filter_tap - explorar /explorar"]);
-  // El rango por noche queda sin efecto: el contador de los filtros no lo cuenta.
-  await expect(badge).toHaveCount(0);
-
-  // Revisión UX 2026-10-29: activo, el chip dice «Mensual» (cabe en un SE); «Solo alquiler mensual» ya no se repite en Filtros.
-  await expect(chip).toHaveText("Mensual");
-  await page.getByRole("link", { name: /^Filtros/ }).click();
-  await expect(page.getByLabel("Precio mínimo por noche")).toHaveCount(0);
-  const needs = page.locator("section", { has: page.getByText("Qué necesitan", { exact: true }) }).locator(".chip");
-  await expect(needs.filter({ hasText: "mensual" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Volver" }).click();
-  await chip.click();
-  await expect(chip).toHaveAttribute("aria-pressed", "false");
-  await expect(chip).toHaveText("Solo alquiler mensual");
+  await expect(pills).toHaveCount(10);
+  for (const text of await pills.allTextContents()) expect(text).toMatch(/\/ noche$/);
+  // Sin modo mensual, el rango por noche no se oculta nunca.
   await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("40000");
   await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("90000");
+  const needs = page.locator("section", { has: page.getByText("Qué necesitan", { exact: true }) }).locator(".chip");
+  await expect(needs.filter({ hasText: "mensual" })).toHaveCount(0);
   await page.getByRole("button", { name: "Ver 10 casas" }).click();
-
   await expect(page).toHaveURL(/\/explorar\?min=40000&max=90000$/);
-  await expect(results(page)).toHaveText("10 casas");
-  await expect(results(page)).not.toContainText("aceptan");
-  await expect(pills).toHaveCount(10);
-  for (const text of await pills.allTextContents()) expect(text).toMatch(/\/ noche$/);
 
   // Las características van en Filtros, con el contador.
   await page.goto("/explorar?prov=Guanacaste&pool=1");
@@ -246,24 +210,58 @@ test("Solo alquiler mensual: un chip, la línea y los precios por mes; al quitar
   await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
-test("un enlace viejo /explorar?modo=monthly llega con el chip encendido", async ({ page }) => {
-  const chip = page.getByRole("button", { name: "Solo alquiler mensual", exact: true });
-  await page.goto("/explorar?modo=monthly");
-  await expect(chip).toHaveAttribute("aria-pressed", "true");
-  await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual");
-  await page.goto("/explorar?modo=both");
-  await expect(chip).toHaveAttribute("aria-pressed", "false");
-  await expect(results(page)).toHaveText("10 casas");
+test("con llegada y salida, la tarjeta y el marcador del mapa enseñan el total orientativo (con precios especiales) y no «/ noche»", async ({ page }) => {
+  await page.goto(`/explorar?llegada=${day(20)}&salida=${day(24)}`);
+  await expect(results(page)).toContainText("10 casas");
+  const price = (title: RegExp) => page.getByRole("link", { name: title }).locator(".card-price");
+  // 4 noches a ₡40 000 + la noche especial de ₡100 000 (en vez de ₡40 000).
+  await expect(price(/Casa Cocles 7/)).toHaveText("≈ ₡220 000 por 4 noches");
+  await expect(price(/Casa Manzanillo/)).toHaveText("≈ ₡340 000 por 4 noches");
+  for (const text of await page.locator(".listing-card .card-price").allTextContents()) {
+    expect(text).toMatch(/^≈ ₡[\d\u00a0]+ por 4 noches$/);
+    expect(text).not.toContain("/ noche");
+    expect(text.toLowerCase()).not.toContain("total a pagar");
+  }
+  // En dólares, redondeado como el resto.
+  await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Dólares" }).click();
+  await expect(price(/Casa Manzanillo/)).toHaveText(/^≈ \$[\d\u00a0]+ por 4 noches$/);
+  await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Colones" }).click();
+  // El marcador del mapa enseña la misma cifra, sin «por N noches».
+  await page.goto(`/explorar?llegada=${day(20)}&salida=${day(24)}&mapa=1`);
+  // (Las casas de Limón comparten punto y se agrupan en un solo marcador «N casas»; la de Sámara va suelta: 4 × ₡60 000.)
+  const pins = page.locator(".map-full .map-price");
+  await expect(pins.filter({ hasText: /^₡240\u00a0000$/ })).toHaveCount(1);
+  await expect(pins.filter({ hasText: /^₡60\u00a0000$/ })).toHaveCount(0);
+  for (const text of await pins.allTextContents()) expect(text).not.toContain("noche");
+  // Sin fechas, el precio por noche, como siempre.
+  await page.goto("/explorar");
+  await expect(price(/Casa Cocles 7/)).toContainText("₡40 000 / noche");
+});
 
-  // En Filtros, un rango inválido que el mensual oculta no bloquea «Ver N casas».
-  await page.goto("/explorar/filtros");
-  await page.getByLabel("Precio mínimo por noche").fill("50000");
-  await page.getByLabel("Precio máximo por noche").fill("44000");
-  await expect(page.getByRole("button", { name: /^Ver/ })).toBeDisabled();
+test("con 35 noches, la casa con precio al mes enseña el mensual prorrateado y la que no lo tiene, el total por noches", async ({ page }) => {
+  await page.goto(`/explorar?llegada=${day(20)}&salida=${day(55)}`);
+  await expect(results(page)).toContainText("10 casas");
+  const price = (title: RegExp) => page.getByRole("link", { name: title }).locator(".card-price");
+  // ₡480 000 al mes × 35 / 30 (la noche suelta de ₡85 000 saldría ₡2 975 000).
+  await expect(price(/Casa Manzanillo/)).toHaveText("≈ ₡560 000 por 35 noches");
+  // Acepta mensual pero sin precio al mes: 35 × ₡45 000.
+  await expect(price(/Casa Cocles mensual/)).toHaveText("≈ ₡1 575 000 por 35 noches");
+  // Sin llegada y salida elegidas no hay modo mensual: con 29 noches, por noches aunque tenga precio al mes.
+  await page.goto(`/explorar?llegada=${day(20)}&salida=${day(49)}`);
+  await expect(price(/Casa Manzanillo/)).toHaveText("≈ ₡2 465 000 por 29 noches");
+});
+
+test("los enlaces viejos ?mensual=1, ?modo=monthly y ?desde= abren Explorar normal, sin error y sin chip", async ({ page }) => {
+  for (const query of ["mensual=1", "modo=monthly", `desde=${day(10)}`, `mensual=1&desde=${day(10)}&modo=monthly`]) {
+    await page.goto(`/explorar?${query}`);
+    await expect(results(page)).toHaveText("10 casas");
+    await expect(page.getByRole("button", { name: /mensual/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Filtros", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Casa Cocles mensual/ }).locator(".card-price")).toContainText("/ noche");
+  }
+  // Filtros con un rango inválido sigue bloqueando «Ver», con o sin el parámetro viejo.
   await page.goto("/explorar/filtros?min=50000&max=44000&mensual=1");
-  await expect(page.getByRole("button", { name: "Ver 2 casas" })).toBeEnabled();
-  await page.getByRole("button", { name: "Ver 2 casas" }).click();
-  await expect(results(page)).toHaveText("2 casas aceptan alquiler mensual");
+  await expect(page.getByRole("button", { name: /^Ver/ })).toBeDisabled();
 });
 
 // Revisión UX N5: en un ordenador, la rejilla de Explorar usa el ancho (3 columnas desde 900 px, 4 desde 1200 px); en el

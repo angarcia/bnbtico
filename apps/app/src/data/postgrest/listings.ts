@@ -5,7 +5,7 @@ import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
-import { ALL_PROVINCES, KINDS_OF_FILTER, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 import { caribeFirst, type ZoneWithListings } from "../../domain/zones";
@@ -22,24 +22,30 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
 
   return {
     async searchPublic(f: Filters) {
-      const x = effectiveFilters(f); // con el mensual no se aplica el rango por noche
       const r = stayRange(f);
-      // La RPC pone la zona (5 km con el punto real), las noches libres y deja fuera las casas cerradas (filas heredadas de «Cerrar la casa
-      // hasta…» del Calendario, ticket 20; su ficha sí se abre). El resto de filtros va encima.
-      let q = db.rpc("search_listings", { p_zone: x.zone ?? undefined, p_from: r?.from, p_to: r?.to }).select(PUBLIC_COLUMNS);
-      if (x.prov !== ALL_PROVINCES && !x.zone) q = q.eq("province", x.prov);
-      if (x.monthly) q = q.eq("accepts_monthly", true);
-      if (x.ppl) q = q.gte("capacity", x.ppl);
-      if (x.beds) q = q.gte("bedrooms", x.beds);
-      if (x.baths) q = q.gte("bathrooms", x.baths);
-      if (x.kind) q = q.in("kind", [...KINDS_OF_FILTER[x.kind]]);
-      if (x.features.length) q = q.contains("features", x.features);
-      if (x.min) q = q.gte("nightly_price_crc", x.min);
-      if (x.max) q = q.lte("nightly_price_crc", x.max);
-      // El orden (Limón primero, luego las más nuevas) lo pone search_listings: sin `.order()` aquí, que mandaría encima.
-      const { data, error } = await q.limit(SEARCH_LIMIT);
+      // Todo lo decide search_listings: zona (5 km con el punto real), noches libres, casas cerradas fuera (filas heredadas de
+      // «Cerrar la casa hasta…» del Calendario; su ficha sí se abre), provincia (solo sin zona), personas, habitaciones, baños,
+      // tipo, características y precio; ordena (Limón primero, luego las más nuevas: `sort_rank`), limita y solo entonces
+      // calcula `stay_total_crc` (total orientativo de las noches; null sin fechas) para las casas que devuelve.
+      const { data, error } = await db
+        .rpc("search_listings", {
+          p_zone: f.zone ?? undefined,
+          p_from: r?.from,
+          p_to: r?.to,
+          p_province: f.prov !== ALL_PROVINCES && !f.zone ? f.prov : undefined,
+          p_people: f.ppl || undefined,
+          p_bedrooms: f.beds || undefined,
+          p_bathrooms: f.baths || undefined,
+          p_kinds: f.kind ? [...KINDS_OF_FILTER[f.kind]] : undefined,
+          p_features: f.features.length ? f.features : undefined,
+          p_min: f.min || undefined,
+          p_max: f.max || undefined,
+          p_limit: SEARCH_LIMIT,
+        })
+        .select(`${PUBLIC_COLUMNS}, stay_total_crc, sort_rank`)
+        .order("sort_rank", { ascending: true });
       if (error) throw toDomainError(error);
-      return data.map(toPublic);
+      return data.map((row) => ({ ...toPublic(row), stayTotalCrc: row.stay_total_crc }));
     },
 
     async zonesWithListings() {

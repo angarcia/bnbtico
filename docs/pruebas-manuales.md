@@ -139,7 +139,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 
 - [ ] **C4** Abra `/explorar` sin sesión → la barra de abajo trae «Explorar», «Favoritos» e «Ingresar» (en ese orden); arriba solo la píldora «Empiece su búsqueda», sin logo ni botón «Ingresar» en la cabecera.
 - [ ] **C5** Mire la línea de resultados y las tarjetas → la línea dice «N casas en Limón» (con una sola, «1 casa en Limón») y N coincide con las tarjetas; cada tarjeta es una por fila, a todo el ancho, con foto, nombre, zona, «N personas · N habitación(es)» y precio «₡95 000 / noche», y un corazón sobre la foto.
-- [ ] **C6** Baje por la lista → la píldora «Empiece su búsqueda» y la fila de chips («Solo alquiler mensual», filtros, «₡ | $») se quedan fijas arriba y la barra de abajo no tapa la última tarjeta.
+- [ ] **C6** Baje por la lista → la píldora «Empiece su búsqueda» y la fila de chips (filtros y «₡ | $»; ya no hay chip «Solo alquiler mensual») se quedan fijas arriba y la barra de abajo no tapa la última tarjeta.
 - [ ] **C7** Al final de la lista → la tarjeta «¿Tiene una casa en el Caribe?» con «Publíquela gratis 12 meses. Quedan N de 50 plazas.» y el botón «Publicar mi casa gratis», que abre el asistente de publicar sin pedir cuenta; vuelva con Atrás y Explorar sigue donde estaba.
 - [ ] **C8** Toque una tarjeta lejos del principio de la lista y luego la flecha «Volver a Explorar» de la ficha → Explorar vuelve al mismo punto del desplazamiento y con esa tarjeta a la vista.
 - [ ] **C9** Toque el corazón de una tarjeta sin sesión → se rellena al instante, su nombre pasa a «Quitar de favoritos», no abre la ficha y no pide cuenta.
@@ -163,12 +163,12 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C18** En el mapa grande toque una burbuja de precio → se resalta y aparece una tarjeta compacta con foto cuadrada, nombre, zona, «₡… / noche» y corazón; toque un punto vacío → la tarjeta se quita; vuelva a elegir la burbuja y toque la tarjeta → abre la ficha, y Atrás regresa al mapa.
 - [ ] **C19** Toque una burbuja «N casas» del mapa grande → el mapa se acerca a esas casas sin abrir ninguna ficha.
 - [ ] **C20** Toque la píldora «N casas» (o la flecha «Volver a la lista» o Atrás del teléfono) → cierra el mapa y la lista queda exactamente donde estaba, con la barra de abajo en su sitio.
-- [ ] **C21** Con «$» o con «Mensual» activos abra el mapa → las burbujas muestran dólares («$75») o el precio del mes («A negociar» si no tiene).
+- [ ] **C21** Con «$» activo, o con llegada y salida elegidas, abra el mapa → las burbujas muestran dólares («$75») o el mismo total orientativo que la tarjeta (sin «por N noches»).
 
-### 2.6 «Solo alquiler mensual», Filtros y características
+### 2.6 Total orientativo, Filtros y características
 
-- [ ] **C22** Toque el chip «Solo alquiler mensual» → pasa a «Mensual», la línea dice «N casas aceptan alquiler mensual en Limón» (una sola: «1 casa acepta alquiler mensual en Limón»); las tarjetas muestran el precio del mes («₡450 000 / mes») o «Precio a negociar», y ninguna dice «/ noche».
-- [ ] **C23** Toque «Mensual» otra vez → vuelve a «Solo alquiler mensual», regresan los precios «/ noche» y la línea vuelve a «N casas en Limón».
+- [ ] **C22** En «¿Cuándo?» elija 4 noches y busque → cada tarjeta dice «≈ ₡180 000 por 4 noches» (suma de cada noche, con los precios especiales del calendario) en vez de «/ noche»; con «$» sale en dólares; nunca «total a pagar». Sin fechas vuelve «₡45 000 / noche».
+- [ ] **C23** Busque 35 noches → una casa con precio al mes enseña el mes prorrateado (₡480 000 × 35 / 30 = «≈ ₡560 000 por 35 noches»); una sin precio al mes o que no acepta mensual, el total por noches. Con 29 noches, siempre por noches. Un enlace viejo con `?mensual=1`, `?modo=monthly` o `?desde=` abre Explorar normal, sin error.
 - [ ] **C24** Toque el botón de filtros → abre «Filtros» con la flecha «Volver», «Limpiar», las secciones «SU BÚSQUEDA» (Zona, Fechas, Personas), «PARA QUIÉNES» (Habitaciones), «QUÉ NECESITAN» y «PRECIO ORIENTATIVO POR NOCHE» y el botón «Ver N casas»; en un teléfono angosto el botón de filtros, el chip mensual y «₡ | $» caben en una sola fila.
 - [ ] **C25** En «Qué necesitan» mire los chips → hay exactamente nueve: «Piscina», «Mascotas», «Wifi», «Aire acondicionado», «Parqueo», «Cargador eléctrico», «Niños pequeños gratis», «Frente al mar», «Rancho/BBQ» (ninguno dice «mensual»).
 - [ ] **C26** Marque «Piscina» y «Frente al mar» → el botón se actualiza solo («Ver 1 casa»); tóquelo → Explorar muestra solo esa casa y el botón de filtros trae la insignia «2» (nombre accesible «Filtros (2 activos)»); reabra Filtros → siguen marcados y «Limpiar» deja Explorar sin filtros.
@@ -189,14 +189,14 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C38** En ese resultado compruebe que todas las casas caben 4 personas, que ninguna tiene una noche ocupada entre la llegada y la salida y que aparecen también casas de zonas a 5 km o menos de la elegida.
 - [ ] **C39** Toque la píldora de nuevo → la búsqueda se abre con zona, fechas y personas puestas; toque «Borrar todo» y «Buscar» → Explorar vuelve a «Empiece su búsqueda» y conserva las características que hubiera marcadas.
 - [ ] **C40** Abra la búsqueda, elija una zona y toque la ✕ («Cerrar la búsqueda») → vuelve a Explorar sin aplicar nada.
-- [ ] **C41** Con «Mensual» activo abra «¿Cuándo?» → el calendario pide una sola fecha («Elija desde cuándo») y lleva la etiqueta «Solo alquiler mensual»; elija un día → dice «Desde el <fecha>» y «Casas libres del <fecha> al <fecha>» (30 noches); «Buscar» deja fuera las casas ocupadas en esa ventana.
+- [ ] **C41** Abra «¿Cuándo?» → siempre es el calendario de llegada y salida («Elija la llegada», «Elija la salida», «N noches»); ya no hay modo «Desde» ni etiqueta «Solo alquiler mensual».
 - [ ] **C42** Desde Filtros toque la fila «Fechas» de «Su búsqueda» → abre la búsqueda con «¿Cuándo?» abierto; cambie la fecha, toque «Buscar» y vuelva a Filtros → la fila muestra las fechas nuevas.
 
 ### 2.8 Sin resultados y «¿No encuentra lo que busca?»
 
 - [ ] **C43** En Explorar con resultados baje hasta el final → después de la tarjeta de publicar hay la nota «¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.» con el botón «Escribir a bnbtico por WhatsApp».
 - [ ] **C44** Toque «Escribir a bnbtico por WhatsApp» → abre WhatsApp (línea de clientes) con el mensaje «Hola, estoy buscando casa en bnbtico.», «Zona: Limón.» y, si hay filtros, líneas como «Personas: 12.», «Busca alquiler mensual.», «Necesito: Piscina.», terminando en «Fechas: » para que usted la escriba.
-- [ ] **C45** Fuerce cero resultados (50 personas en la búsqueda y «Mensual») → la línea dice «0 casas aceptan alquiler mensual en Limón», sale el recuadro «No hay casas con esos filtros» con la misma nota y botón de WhatsApp y el enlace «Quitar filtros»; tóquelo → vuelve la lista completa de Limón y el recuadro desaparece.
+- [ ] **C45** Fuerce cero resultados (50 personas en la búsqueda) → sale el recuadro «No hay casas con esos filtros» con la misma nota de ayuda por WhatsApp y «Quitar filtros».
 
 ### 2.9 Ficha de una casa (sin cuenta)
 
@@ -217,7 +217,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C57** Mire «Su mensaje» → es solo lectura (no se puede escribir en él): «Hola, vi <casa> en bnbtico y me interesa. ¿Está disponible? Gracias.», con «Podrá añadir lo que quiera en WhatsApp antes de enviarlo.» debajo.
 - [ ] **C58** Toque «Llegada» → se abre el calendario de rango de «¿Cuándo?»; elija llegada y salida → se cierra, las casillas dicen p. ej. «9 dic» y «13 dic» y el mensaje pasa a «…¿Está disponible del 9 al 13 de diciembre? Gracias.».
 - [ ] **C59** Toque «+» tres veces en «Personas (opcional)» → el mensaje añade «para 3 personas»; siga tocando «+» → se detiene en la capacidad de la casa; «−» baja hasta dejarlo vacío («–»).
-- [ ] **C60** Con «Solo alquiler mensual» y una fecha «Desde» elegida en la búsqueda, abra la hoja → una sola casilla «Desde» y el mensaje «Hola, vi <casa> en bnbtico. Me interesa alquilar por meses desde el <fecha>. ¿Está disponible? Gracias.».
+- [ ] **C60** Abra la hoja de contacto con fechas de la búsqueda → casillas «Llegada» y «Salida» y el mensaje «¿Está disponible del 23 al 27 de noviembre…?»; ya no existe la variante «alquilar por meses desde…».
 - [ ] **C61** Haga una búsqueda con fechas y 4 personas en Explorar y abra una ficha y su hoja → arranca con esas fechas y esas personas (si caben en la casa).
 - [ ] **C62** Mire el texto bajo el botón → «Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.», «<nombre> verá su nombre y su WhatsApp.» y «Por su seguridad, nunca envíe dinero antes de confirmar la casa. bnbtico no procesa ni pide pagos.».
 - [ ] **C63** Toque «Cerrar» (la ✕) o el fondo oscuro, y luego «Contactar por WhatsApp» otra vez → la hoja se cierra, el foco vuelve al botón y, al reabrir, conserva lo que había escrito.

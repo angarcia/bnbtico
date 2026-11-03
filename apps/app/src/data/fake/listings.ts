@@ -3,10 +3,11 @@ import type { PublicListingsApi } from "../../domain/api";
 import { calendarWindow } from "../../domain/calendar";
 import { FX_INITIAL } from "../../domain/fx";
 import { DomainError } from "../../domain/errors";
-import { ALL_PROVINCES, KINDS_OF_FILTER, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
 import { distanceMeters } from "../../domain/geo";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { addDays } from "../../domain/dates";
+import { stayEstimate, stayNights } from "../../domain/stay-price";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
 import { offerTaken } from "./billing";
@@ -69,13 +70,17 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
   // Alguna noche de [from, to) ocupada en el calendario del fake.
   const busy = (l: FakeListing, from: string, to: string) => (db.days.get(l.id) ?? []).some((d) => !d.available && d.day >= from && d.day < to);
 
+  // El total orientativo de las noches [from, to), con la regla única de `stayEstimate` (search_listings lo calcula igual en SQL).
+  const stayTotal = (l: FakeListing, from: string, to: string): number | null =>
+    stayEstimate({ nights: stayNights(from, to), days: db.days.get(l.id) ?? [], base: l.nightlyPriceCrc, acceptsMonthly: l.acceptsMonthly === true, monthlyCrc: l.monthlyPriceCrc })?.totalCrc ?? null;
+
   // Comparaciones con null fallan, como en SQL: una casa solo mensual no entra en un filtro de precio por noche.
   const gte = (v: number | null, min: number) => v !== null && v >= min;
   const lte = (v: number | null, max: number) => v !== null && v <= max;
 
   return {
     async searchPublic(f: Filters) {
-      const q = effectiveFilters(f); // con el mensual no se aplica el rango por noche
+      const q = f;
       const r = stayRange(f);
       const today = db.today();
       if (r && (r.to <= r.from || r.from < today || r.to > addDays(today, 366))) throw new DomainError("Revise las fechas.", "validation");
@@ -86,7 +91,6 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         .filter((l) => !zone || nearZone(l, zone))
         .filter((l) => !r || !busy(l, r.from, r.to))
         .filter((l) => !!zone || q.prov === ALL_PROVINCES || l.province === q.prov)
-        .filter((l) => !q.monthly || l.acceptsMonthly === true)
         .filter((l) => !q.ppl || gte(l.capacity, q.ppl))
         .filter((l) => !q.beds || gte(l.bedrooms, q.beds))
         .filter((l) => !q.baths || gte(l.bathrooms, q.baths))
@@ -97,7 +101,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         // Como search_listings: las de Limón primero y, dentro de cada grupo, las más nuevas.
         .sort((a, b) => Number(b.province === "Limón") - Number(a.province === "Limón") || b.createdAt.localeCompare(a.createdAt))
         .slice(0, SEARCH_LIMIT)
-        .map(toPublic);
+        .map((l) => ({ ...toPublic(l), stayTotalCrc: r ? stayTotal(l, r.from, r.to) : null }));
     },
 
     async zonesWithListings() {

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { Filters } from "../../src/domain/filters";
 import { SearchHelp } from "../../src/client/search-help";
 
-const f: Filters = { prov: "Limón", zone: null, arrival: null, departure: null, monthlyFrom: null, monthly: false, ppl: 4, beds: 0, baths: 0, kind: null, features: ["pool"], min: 0, max: 0, open: false };
+const f: Filters = { prov: "Limón", zone: null, arrival: null, departure: null, ppl: 4, beds: 0, baths: 0, kind: null, features: ["pool"], min: 0, max: 0, open: false };
 const noop = () => undefined;
 
 describe("Explorar · ¿No encuentra lo que busca?", () => {

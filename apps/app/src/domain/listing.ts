@@ -273,6 +273,9 @@ export interface PublicListing {
   createdAt: string;
   updatedAt: string;
   photos: PublicPhoto[];
+  /** Total orientativo de las noches buscadas (llegada–salida), en colones: solo lo trae `search_listings` y solo con fechas;
+   *  null si alguna noche no tiene precio. Regla única: `stayEstimate` (domain/stay-price.ts). */
+  stayTotalCrc?: number | null;
 }
 
 export interface PublicPhoto {

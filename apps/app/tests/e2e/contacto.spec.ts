@@ -161,7 +161,7 @@ test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y 
 });
 
 // Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`bnbtico-fechas`).
-test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «desde el…»", async ({ page }) => {
+test("fechas: la hoja arranca con las de la búsqueda y un enlace viejo con ?mensual=1&desde= se ignora", async ({ page }) => {
   const [A, S] = [day(20), day(24)];
   await page.goto(`/explorar?prov=Todas&llegada=${A}&salida=${S}&ppl=2`);
   await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();
@@ -176,13 +176,14 @@ test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «des
   await page.getByRole("link", { name: new RegExp(MONTHLY_TITLE) }).first().click();
   await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   s = sheet(page);
-  // Con el mensual, una sola casilla «Desde», con su calendario.
-  await expect(dateBox(s, "Llegada")).toHaveCount(0);
-  await expect(dateBox(s, "Desde")).toHaveText(boxText("Desde", day(10)));
-  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(10) }));
-  await pickDates(s, day(12));
-  await expect(dateBox(s, "Desde")).toHaveText(boxText("Desde", day(12)));
-  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(12) }));
+  // Fin del modo mensual (2026-11-02): ni casilla «Desde» ni «alquilar por meses»; llegada y salida vacías y el mensaje genérico.
+  await expect(s.getByRole("button", { name: /^Desde/ })).toHaveCount(0);
+  await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", null));
+  await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", null));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, {}));
+  await expect(message(page)).not.toContainText("meses");
+  await pickDates(s, day(12), day(14));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { arrival: day(12), departure: day(14) }));
 });
 
 test("modal: el foco no sale de la hoja, el resto de la página queda inerte y «Cerrar» cierra", async ({ page }) => {

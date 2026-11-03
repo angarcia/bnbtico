@@ -3,8 +3,8 @@
 import type { Locator } from "@playwright/test";
 import { longDateWithYear, shortDate } from "../../../src/domain/dates";
 
-/** La casilla «Llegada», «Salida» o «Desde» (botón que abre el calendario). */
-export const dateBox = (sheet: Locator, label: "Llegada" | "Salida" | "Desde") => sheet.getByRole("button", { name: new RegExp(`^${label}`) });
+/** La casilla «Llegada» o «Salida» (botón que abre el calendario). */
+export const dateBox = (sheet: Locator, label: "Llegada" | "Salida") => sheet.getByRole("button", { name: new RegExp(`^${label}`) });
 
 /** El texto que muestra una casilla para ese día («8 nov»). */
 export const boxText = (label: string, day: string | null) => `${label}${day ? shortDate(day) : "Elegir fecha"}`;
@@ -14,7 +14,7 @@ export const calendarDay = (sheet: Locator, day: string) => sheet.locator(".cont
 
 /** Abre el calendario (si no está abierto) y toca los días: llegada y salida, o solo uno. */
 export async function pickDates(sheet: Locator, ...days: string[]) {
-  if ((await sheet.locator(".contact-calendar").count()) === 0) await dateBox(sheet, "Llegada").or(dateBox(sheet, "Desde")).first().click();
+  if ((await sheet.locator(".contact-calendar").count()) === 0) await dateBox(sheet, "Llegada").click();
   for (const d of days) await calendarDay(sheet, d).click();
 }
 

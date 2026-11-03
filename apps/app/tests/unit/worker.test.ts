@@ -571,11 +571,11 @@ describe("worker · balizas /vitals, /errors y /events", () => {
     expect(b.written).toEqual([{ table: "events", row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
   });
 
-  it("/events: monthly_filter_tap se escribe sin casa y sin los filtros", async () => {
+  it("/events: monthly_filter_tap ya no se acepta (el chip se fue el 2026-11-02)", async () => {
     const b = beacons();
-    const res = await b.post("/events", JSON.stringify({ name: "monthly_filter_tap", path: "/explorar?mensual=1&min=40000", build: "abc" }), { origin: ORIGIN });
-    expect(res.status).toBe(204);
-    expect(b.written).toEqual([{ table: "events", row: { name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
+    const res = await b.post("/events", JSON.stringify({ name: "monthly_filter_tap", path: "/explorar", build: "abc" }), { origin: ORIGIN });
+    expect(res.status).toBe(400);
+    expect(b.written).toEqual([]);
   });
 
   it("/events: search_submit escribe search_flags y deja fuera la consulta", async () => {

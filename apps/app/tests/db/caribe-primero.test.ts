@@ -36,7 +36,18 @@ describe("migración caribe_primero", () => {
     expect(data!.map((r) => r.public_id)).toEqual([house.habitacion, house.casaVieja, house.limonNueva, house.limonVieja, house.guanacaste, house.puntarenas].map((x) => x.publicId));
   });
 
-  it("el adaptador conserva ese orden (sin su propio order) también con otros filtros", async () => {
+  it("search_listings numera el orden en sort_rank (1, 2, 3…) y el adaptador lo pide explícito", async () => {
+    const { data, error } = await anonClient().rpc("search_listings", {}).select("public_id, sort_rank, stay_total_crc");
+    expect(error).toBeNull();
+    expect(data!.map((r) => r.sort_rank)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(data!.map((r) => r.stay_total_crc)).toEqual([null, null, null, null, null, null]); // sin fechas, sin total
+    // Pedido al revés, PostgREST devuelve el orden contrario: el adaptador depende de `.order("sort_rank")`, no de la suerte.
+    const back = await anonClient().rpc("search_listings", {}).select("public_id, sort_rank").order("sort_rank", { ascending: false });
+    expect(back.error).toBeNull();
+    expect(back.data!.map((r) => r.public_id)).toEqual([...data!].reverse().map((r) => r.public_id));
+  });
+
+  it("el adaptador conserva ese orden (con su `.order(\"sort_rank\")`) también con otros filtros", async () => {
     expect(await ids()).toEqual([house.habitacion, house.casaVieja, house.limonNueva, house.limonVieja, house.guanacaste, house.puntarenas].map((x) => x.publicId));
     expect(await ids({ ppl: "2" })).toEqual(await ids());
   });
@@ -47,5 +58,23 @@ describe("migración caribe_primero", () => {
     expect(completo).not.toContain(house.habitacion.publicId);
     expect(await ids({ tipo: "habitacion" })).toEqual([house.habitacion.publicId]);
     expect(await ids({ banos: "2" })).toEqual([house.casaVieja.publicId]);
+  });
+
+  it("el total orientativo solo se calcula para las casas que se devuelven (después de filtros y límite)", () => {
+    const from = sql("select (public.costa_rica_today() + 10)::text");
+    const to = sql("select (public.costa_rica_today() + 14)::text");
+    // search_stay_total es plpgsql (no se expande en línea): sus llamadas se cuentan con las estadísticas de funciones de la transacción.
+    const calls = (args: string) =>
+      Number(
+        sql(`begin; set local track_functions = 'all';
+          select count(*) from public.search_listings(${args}) \\gset
+          select coalesce(pg_stat_get_xact_function_calls('public.search_stay_total(uuid,integer,boolean,integer,date,date)'::regprocedure::oid), 0);
+          rollback;`).split("\n").pop(),
+      );
+    const dates = `p_from => '${from}', p_to => '${to}'`;
+    expect(calls(dates)).toBe(6); // seis casas, sin límite
+    expect(calls(`${dates}, p_limit => 2`)).toBe(2); // límite: solo las dos que salen
+    expect(calls(`${dates}, p_province => 'Puntarenas'`)).toBe(1); // filtro: solo la de Puntarenas
+    expect(calls(`p_limit => 2`)).toBe(2); // sin fechas también solo por las devueltas (la llamada sale null)
   });
 });

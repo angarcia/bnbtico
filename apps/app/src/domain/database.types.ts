@@ -956,44 +956,13 @@ isOneToOne: true
 { Args: { "p_owner": string,"p_provider": string,"p_ref": string }; Returns: undefined
                            },
 "search_listings":
-{ Args: { "p_from"?: string,"p_to"?: string,"p_zone"?: string }; Returns: {
-              "accepts_monthly": boolean | null,
-"accepts_nightly": boolean | null,
-"available": boolean | null,
-"bathroom_shared": boolean | null,
-"bathrooms": number | null,
-"bedrooms": number | null,
-"canton": string | null,
-"capacity": number | null,
-"created_at": string | null,
-"description": string | null,
-"features": (Database["public"]['Enums']["feature"])[] | null,
-"id": string | null,
-"kind": Database["public"]['Enums']["listing_kind"] | null,
-"lat": number | null,
-"lng": number | null,
-"min_months": number | null,
-"min_nights": number | null,
-"monthly_mode": string | null,
-"monthly_price_crc": number | null,
-"nightly_price_crc": number | null,
-"owner_name": string | null,
-"owner_whatsapp_verified": boolean | null,
-"parking_paid": boolean | null,
-"photos": Json | null,
-"province": string | null,
-"public_id": string | null,
-"reopen_at": string | null,
-"title": string | null,
-"updated_at": string | null,
-"zone": string | null
+{ Args: { "p_bathrooms"?: number,"p_bedrooms"?: number,"p_features"?: (Database["public"]['Enums']["feature"])[],"p_from"?: string,"p_kinds"?: (string)[],"p_limit"?: number,"p_max"?: number,"p_min"?: number,"p_people"?: number,"p_province"?: string,"p_to"?: string,"p_zone"?: string }; Returns: {
+              "accepts_monthly": boolean,"accepts_nightly": boolean,"available": boolean,"bathroom_shared": boolean,"bathrooms": number,"bedrooms": number,"canton": string,"capacity": number,"created_at": string,"description": string,"features": (Database["public"]['Enums']["feature"])[],"id": string,"kind": Database["public"]['Enums']["listing_kind"],"lat": number,"lng": number,"min_months": number,"min_nights": number,"monthly_mode": string,"monthly_price_crc": number,"nightly_price_crc": number,"owner_name": string,"owner_whatsapp_verified": boolean,"parking_paid": boolean,"photos": Json,"province": string,"public_id": string,"reopen_at": string,"sort_rank": number,"stay_total_crc": number,"title": string,"updated_at": string,"zone": string
             }[]
-                          SetofOptions: {
-        from: "*"
-        to: "listings_public"
-        isOneToOne: false
-        isSetofReturn: true
-      } },
+                           },
+"search_stay_total":
+{ Args: { "p_accepts_monthly": boolean,"p_from": string,"p_listing": string,"p_monthly": number,"p_nightly": number,"p_to": string }; Returns: number
+                           },
 "seed_admin":
 { Args: { "p_phone": string }; Returns: undefined
                            },

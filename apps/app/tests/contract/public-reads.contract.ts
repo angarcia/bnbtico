@@ -6,14 +6,14 @@ import { parseFilters, type Filters } from "../../src/domain/filters";
 import { costaRicaToday } from "../../src/domain/inquiry";
 import { PROVINCES } from "../../src/domain/listing";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, distanceMeters } from "../../src/domain/geo";
-import type { ListingsHarness, Seeded } from "./harness";
+import type { CalendarHarness, Seeded } from "./harness";
 import { PUERTO_VIEJO } from "./points";
 
 const filters = (params: Record<string, string> = {}): Filters => parseFilters({ prov: "Todas", ...params }, PROVINCES);
 
-export function publicReadsContract(name: string, makeHarness: () => Promise<ListingsHarness>) {
+export function publicReadsContract(name: string, makeHarness: () => Promise<CalendarHarness>) {
   describe(`lecturas públicas · ${name}`, () => {
-    let h: ListingsHarness;
+    let h: CalendarHarness;
     const ids = async (f: Filters) => (await h.anon.searchPublic(f)).map((l) => l.publicId);
 
     describe("visibilidad y forma", () => {
@@ -120,14 +120,13 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await ids(parseFilters({ prov: "Limón" }, ["Limón"]))).toEqual([grande.publicId, mensual.publicId, cahuita.publicId]);
       });
 
-      it("alquiler mensual", async () => {
-        expect(await ids(filters({ mensual: "1" }))).toEqual([grande.publicId, mensual.publicId]);
-        // Enlaces viejos: modo=monthly es el mensual; nightly y both ya no filtran.
-        expect(await ids(filters({ modo: "monthly" }))).toEqual([grande.publicId, mensual.publicId]);
-        expect(await ids(filters({ modo: "both" }))).toEqual(await ids(filters()));
-        expect(await ids(filters({ modo: "nightly" }))).toEqual(await ids(filters()));
-        // Con el mensual no se aplica el rango por noche (mensual: 38 000 la noche; grande: 150 000).
-        expect(await ids(filters({ mensual: "1", min: "50000", max: "100000" }))).toEqual([grande.publicId, mensual.publicId]);
+      it("fin del modo mensual: ?mensual=1, ?modo=monthly y ?desde= se ignoran, y el rango por noche vale siempre", async () => {
+        const all = await ids(filters());
+        expect(await ids(filters({ mensual: "1" }))).toEqual(all);
+        expect(await ids(filters({ modo: "monthly" }))).toEqual(all);
+        expect(await ids(filters({ desde: addDays(costaRicaToday(Date.now()), 10) }))).toEqual(all);
+        // Con «mensual» en el enlace el rango por noche sigue filtrando (mensual: 38 000 la noche; grande: 150 000).
+        expect(await ids(filters({ mensual: "1", min: "50000", max: "100000" }))).toEqual([nicoya.publicId]);
         expect(await h.anon.getPublic(mensual.publicId)).toMatchObject({ acceptsNightly: true, acceptsMonthly: true, monthlyPriceCrc: null });
       });
 
@@ -155,6 +154,89 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Lis
         expect(await h.anon.countActive()).toBe(4);
       });
     });
+    describe("total orientativo de la estancia (ticket 07)", () => {
+      const today = costaRicaToday(Date.now());
+      const day = (n: number) => addDays(today, n);
+      const stay = async (from: number, to: number) => {
+        const list = await h.anon.searchPublic(parseFilters({ prov: "Todas", llegada: day(from), salida: day(to) }, PROVINCES, { today }));
+        return Object.fromEntries(list.map((l) => [l.publicId, l.stayTotalCrc ?? null]));
+      };
+      let nocturna: Seeded;
+      let sinMes: Seeded;
+      let conMes: Seeded;
+      let raro: Seeded;
+      let sinPrecioEspecial: Seeded;
+
+      beforeAll(async () => {
+        h = await makeHarness();
+        await h.reset();
+        nocturna = await h.seed({ status: "active", draft: { nightlyPriceCrc: 42000 } });
+        sinMes = await h.seed({ status: "active", draft: { nightlyPriceCrc: 38000, acceptsMonthly: true, monthlyPriceCrc: null } });
+        conMes = await h.seed({ status: "active", draft: { nightlyPriceCrc: 150000, acceptsMonthly: true, monthlyPriceCrc: 900000 } });
+        raro = await h.seed({ status: "active", draft: { nightlyPriceCrc: 100000, acceptsMonthly: true, monthlyPriceCrc: 1000001 } });
+        sinPrecioEspecial = await h.seed({ status: "active", draft: { nightlyPriceCrc: 60000, acceptsMonthly: false, monthlyPriceCrc: null } });
+        // Dos precios especiales en las noches de 20 a 24: uno más caro y uno más barato que el base.
+        await h.putDay(nocturna.id, { day: day(21), available: true, specialPriceCrc: 80000 });
+        await h.putDay(nocturna.id, { day: day(22), available: true, specialPriceCrc: 30000 });
+        // Una noche especial en la de la salida de las búsquedas de 4 noches: no cuenta ahí.
+        await h.putDay(sinPrecioEspecial.id, { day: day(24), available: true, specialPriceCrc: 1 });
+      }, 60_000);
+
+      it("sin fechas no hay total", async () => {
+        const list = await h.anon.searchPublic(filters());
+        expect(list).toHaveLength(5);
+        for (const l of list) expect(l.stayTotalCrc ?? null).toBeNull();
+      });
+
+      it("4 noches: la suma de cada noche con su precio especial; la noche de la salida no cuenta", async () => {
+        expect(await stay(20, 24)).toEqual({
+          [nocturna.publicId]: 42000 + 80000 + 30000 + 42000,
+          [sinMes.publicId]: 4 * 38000,
+          [conMes.publicId]: 4 * 150000, // 4 noches: aunque tenga precio al mes, por noches
+          [raro.publicId]: 4 * 100000,
+          [sinPrecioEspecial.publicId]: 4 * 60000,
+        });
+      });
+
+      it("29 noches: todavía por noches; 30 y 45 noches: el mes prorrateado si tiene precio al mes, y si no, por noches", async () => {
+        expect((await stay(20, 49))[conMes.publicId]).toBe(29 * 150000);
+        expect(await stay(20, 50)).toEqual({
+          [nocturna.publicId]: 28 * 42000 + 80000 + 30000,
+          [sinMes.publicId]: 30 * 38000,
+          [conMes.publicId]: 900000,
+          [raro.publicId]: 1000001,
+          [sinPrecioEspecial.publicId]: 29 * 60000 + 1, // la noche del día 24 ya cae dentro de las 30 noches
+        });
+        const forty5 = await stay(20, 65);
+        expect(forty5[conMes.publicId]).toBe(1350000);
+        expect(forty5[sinMes.publicId]).toBe(45 * 38000);
+        expect(forty5[nocturna.publicId]).toBe(43 * 42000 + 80000 + 30000);
+        expect(forty5[sinPrecioEspecial.publicId]).toBe(44 * 60000 + 1);
+      });
+
+      it("el mes prorrateado se redondea como Math.round (31 noches: 1 000 001 × 31 / 30)", async () => {
+        expect((await stay(20, 51))[raro.publicId]).toBe(Math.round((1000001 * 31) / 30));
+      });
+    });
+
+    describe("límite de 60 y total solo de las devueltas (ticket 07)", () => {
+      it("62 casas: salen 60 (las más nuevas, Limón primero) y todas con su total; sin fechas, sin total", async () => {
+        h = await makeHarness();
+        await h.reset();
+        const made: Seeded[] = [];
+        for (let i = 0; i < 62; i++) made.push(await h.seed({ status: "active", draft: { nightlyPriceCrc: 40000 + i } }));
+        const today = costaRicaToday(Date.now());
+        const list = await h.anon.searchPublic(parseFilters({ prov: "Todas", llegada: addDays(today, 10), salida: addDays(today, 13) }, PROVINCES, { today }));
+        expect(list).toHaveLength(60);
+        // Las más recientes primero: las dos más viejas quedan fuera.
+        expect(list.map((l) => l.publicId)).toEqual(made.slice(2).reverse().map((m) => m.publicId));
+        for (const l of list) expect(l.stayTotalCrc).toBe(3 * l.nightlyPriceCrc!);
+        const plain = await h.anon.searchPublic(filters());
+        expect(plain).toHaveLength(60);
+        for (const l of plain) expect(l.stayTotalCrc ?? null).toBeNull();
+      }, 180_000);
+    });
+
     describe("baños y tipo de alojamiento (ticket 06)", () => {
       let uno: Seeded;
       let tres: Seeded;

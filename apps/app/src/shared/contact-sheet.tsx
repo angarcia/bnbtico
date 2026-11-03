@@ -4,7 +4,7 @@
 //   (sin sesión, «Abrir WhatsApp» lleva a Ingresar y la ficha de la SPA reabre la hoja al volver: `contact-flow.ts`).
 // - El mensaje se redacta solo con fechas y personas (reductor `redraft` del dominio) y se ve como vista previa, sin caja
 //   de texto: lo que quiera añadir lo escribe en WhatsApp (revisión UX 2026-10-29, N2). Las fechas, con el mismo calendario
-//   de rango que «¿Cuándo?» (o «Desde», con el mensual), no con el selector del sistema.
+//   de rango que «¿Cuándo?», no con el selector del sistema.
 // - Diálogo modal: el resto de la página queda `inert`, el foco no sale de la hoja, Escape / fondo / «Cerrar» la cierran y el
 //   foco vuelve al botón. Sin scroll de fondo.
 import { useEffect, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from "react";
@@ -200,41 +200,25 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
           </button>
         </div>
         <form onSubmit={onSubmit} noValidate>
-          {/* Fechas con el calendario de «¿Cuándo?»: dos casillas que lo abren (con el mensual, una sola, «Desde»). */}
+          {/* Fechas con el calendario de «¿Cuándo?»: dos casillas que lo abren. */}
           <div className="dates">
-            {draft.monthlyFrom ? (
-              <DateBox label="Desde" value={draft.monthlyFrom} open={picking} onToggle={() => setPicking(!picking)} />
-            ) : (
-              <>
-                <DateBox label="Llegada" value={draft.arrival} open={picking} invalid={invalid("arrival")} onToggle={() => setPicking(!picking)} />
-                <DateBox label="Salida" value={draft.departure} open={picking} invalid={invalid("departure")} onToggle={() => setPicking(!picking)} />
-              </>
-            )}
+            <DateBox label="Llegada" value={draft.arrival} open={picking} invalid={invalid("arrival")} onToggle={() => setPicking(!picking)} />
+            <DateBox label="Salida" value={draft.departure} open={picking} invalid={invalid("departure")} onToggle={() => setPicking(!picking)} />
           </div>
           {picking ? (
             <div className="contact-calendar">
               <div className="range-scroll" ref={calendarBox}>
-                {draft.monthlyFrom ? (
-                  <RangeCalendar
-                    today={today}
-                    mode="from"
-                    value={draft.monthlyFrom}
-                    onChange={(monthlyFrom) => (change({ type: "fields", patch: { monthlyFrom } }), setPicking(false))}
-                  />
-                ) : (
-                  <RangeCalendar
-                    today={today}
-                    mode="range"
-                    value={{ arrival: draft.arrival, departure: draft.departure }}
-                    onChange={(r) => {
-                      change({ type: "fields", patch: r });
-                      if (r.arrival && r.departure) setPicking(false);
-                    }}
-                  />
-                )}
+                <RangeCalendar
+                  today={today}
+                  value={{ arrival: draft.arrival, departure: draft.departure }}
+                  onChange={(r) => {
+                    change({ type: "fields", patch: r });
+                    if (r.arrival && r.departure) setPicking(false);
+                  }}
+                />
               </div>
               <div className="row between">
-                {draft.arrival && !draft.monthlyFrom ? (
+                {draft.arrival ? (
                   <button type="button" className="btn-text" onClick={() => change({ type: "fields", patch: { arrival: null, departure: null } })}>
                     Quitar fechas
                   </button>

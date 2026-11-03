@@ -3,11 +3,11 @@
 // tarjeta compacta de su casa. La lista sigue montada debajo: al volver conserva su posición.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
-import { NEGOTIABLE_CARD, cardPrice, describe } from "../domain/describe";
+import { cardPrice, describe } from "../domain/describe";
 import type { LatLng } from "../domain/geo";
 import type { PublicListing } from "../domain/listing";
 import { formatMoney } from "../domain/money";
-import { housesCount } from "../domain/search";
+import { housesCount, stayTotalLabel } from "../domain/search";
 import { track } from "../shared/beacon";
 import { useCurrency } from "../shared/currency";
 import { FavoriteButton } from "../shared/favorite-button";
@@ -16,11 +16,11 @@ import { I } from "../shared/icons";
 import { Picture } from "../shared/picture";
 import { useExploreMap, useMapMarkers } from "./explore-map";
 
-export function MapScreen({ listings, zone, monthly, selected, onSelect, onClose, header }: { listings: PublicListing[]; zone: LatLng | null; monthly: boolean; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
+export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: PublicListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLButtonElement>(null);
-  const markers = useMapMarkers(listings, monthly);
+  const markers = useMapMarkers(listings, nights);
   const { handle } = useExploreMap(
     box,
     {
@@ -59,7 +59,7 @@ export function MapScreen({ listings, zone, monthly, selected, onSelect, onClose
         </button>
         {header}
       </div>
-      {house ? <MapCard listing={house} monthly={monthly} /> : null}
+      {house ? <MapCard listing={house} nights={nights} /> : null}
       <button type="button" className="map-count" onClick={onClose}>
         <I.list size={20} />
         {housesCount(listings.length)}
@@ -69,11 +69,11 @@ export function MapScreen({ listings, zone, monthly, selected, onSelect, onClose
 }
 
 /** La casa del marcador tocado: foto cuadrada a la izquierda, nombre, zona, precio y el corazón (fuera del enlace). */
-function MapCard({ listing: l, monthly }: { listing: PublicListing; monthly: boolean }) {
+function MapCard({ listing: l, nights }: { listing: PublicListing; nights: number }) {
   const currency = useCurrency();
   const fx = useFx(currency === "USD");
   const cover = l.photos[0];
-  const price = cardPrice(describe(l, { base: "" }), monthly);
+  const price = cardPrice(l, describe(l, { base: "" }).mainPrice, nights);
   return (
     <div className="map-card">
       <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="map-card-link">
@@ -83,8 +83,8 @@ function MapCard({ listing: l, monthly }: { listing: PublicListing; monthly: boo
           <span className="muted">{l.zone}</span>
           {price ? (
             <span className="card-price num">
-              {"negotiable" in price ? (
-                NEGOTIABLE_CARD
+              {"stayTotalCrc" in price ? (
+                <b>{stayTotalLabel(price.stayTotalCrc, price.nights, currency, fx.crcPerUsd)}</b>
               ) : (
                 <>
                   <b>{formatMoney(price.amount, currency, fx.crcPerUsd)}</b> <span className="muted">/ {price.unit}</span>

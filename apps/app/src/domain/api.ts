@@ -27,8 +27,10 @@ import type {
 export type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./review";
 
 export interface PublicListingsApi {
-  /** Catálogo con filtros: RPC search_listings (zona a 5 km y noches libres) y encima provincia (solo sin zona), mensual,
-   *  personas, habitaciones, características y precio; más recientes primero, como mucho 60. Rango inválido: «Revise las fechas.» */
+  /** Catálogo con filtros: RPC search_listings (zona a 5 km y noches libres) y encima provincia (solo sin zona),
+   *  personas, habitaciones, baños, tipo, características y precio; Limón primero y más recientes primero (`sort_rank`), como
+   *  mucho 60. Con llegada y salida cada casa trae `stayTotalCrc`, el total orientativo de esas noches (`stayEstimate`).
+   *  Rango inválido: «Revise las fechas.» */
   searchPublic(filters: Filters): Promise<PublicListing[]>;
   /** Zonas activas con alguna casa activa y abierta a 5 km o menos (o con esa zona), Caribe primero y por nombre. */
   zonesWithListings(): Promise<ZoneWithListings[]>;

@@ -1,25 +1,22 @@
-// Calendario de «¿Cuándo?» (pantalla v2 03): los meses apilados de hoy a hoy + 365, lunes primero. Por noches, llegada y
-// salida con la banda entre las dos; con el mensual, un solo día («Desde»), hasta hoy + 335. Sobre `monthGrid()` del
+// Calendario de «¿Cuándo?» (pantalla v2 03): los meses apilados de hoy a hoy + 365, lunes primero. Llegada y salida con la
+// banda entre las dos (el modo mensual «Desde» se fue el 2026-11-02). Sobre `monthGrid()` del
 // dominio, no sobre `MonthGrid` (precios y semántica del propietario). Lo usan la pantalla de buscar y la hoja de contacto
 // (revisión UX 2026-10-29, N2): solo React y el dominio, para la ficha del servidor.
 import { calendarMonths, monthGrid } from "../domain/calendar";
 import { addDays, longDateWithYear } from "../domain/dates";
-import { MONTHLY_FROM_MAX_DAYS, STAY_MAX_DAYS } from "../domain/filters";
+import { STAY_MAX_DAYS } from "../domain/filters";
 import { tapRange, type RangeState } from "../domain/range";
 
 const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
 
-type RangeProps = { today: string; mode: "range"; value: RangeState; onChange(v: RangeState): void };
-type FromProps = { today: string; mode: "from"; value: string | null; onChange(v: string): void };
-
-export function RangeCalendar(props: RangeProps | FromProps) {
+export function RangeCalendar(props: { today: string; value: RangeState; onChange(v: RangeState): void }) {
   const { today } = props;
-  const lastDay = addDays(today, props.mode === "from" ? MONTHLY_FROM_MAX_DAYS : STAY_MAX_DAYS);
-  const start = props.mode === "from" ? props.value : props.value.arrival;
-  const end = props.mode === "from" ? null : props.value.departure;
-  // Hoy + 365 solo vale como salida (por noches): sin una llegada pendiente antes, no se puede elegir.
-  const departurePending = props.mode === "from" || (!!start && !end);
-  const tap = (day: string) => (props.mode === "from" ? props.onChange(day) : props.onChange(tapRange(props.value, day)));
+  const lastDay = addDays(today, STAY_MAX_DAYS);
+  const start = props.value.arrival;
+  const end = props.value.departure;
+  // Hoy + 365 solo vale como salida: sin una llegada pendiente antes, no se puede elegir.
+  const departurePending = !!start && !end;
+  const tap = (day: string) => props.onChange(tapRange(props.value, day));
   return (
     <div className="range-calendar">
       <div className="range-weekdays" aria-hidden="true">

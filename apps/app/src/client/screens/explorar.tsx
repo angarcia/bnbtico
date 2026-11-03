@@ -1,14 +1,13 @@
 // Explorar (pantalla 01, maqueta v2): sin barra superior; arriba la píldora de búsqueda y la cuenta, y la fila de chips
-// («Solo alquiler mensual», filtros y «₡ | $»), fijas al bajar. todo el país con el Caribe primero (lo ordena la búsqueda), filtros en la URL, una casa por fila.
+// (filtros y «₡ | $»), fijas al bajar. Todo el país con el Caribe primero (lo ordena la búsqueda), filtros en la URL, una casa por fila.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
-import { resultsText, searchSummary } from "../../domain/search";
+import { nightsBetween, resultsText, searchSummary } from "../../domain/search";
 import { extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
-import { MONTHLY_FILTER_LABEL, MONTHLY_FILTER_SHORT } from "../../domain/listing";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { CurrencySwitch } from "../../shared/currency-switch";
@@ -56,10 +55,8 @@ function FiltersLink({ filters: f, search }: { filters: Filters; search: Explore
   );
 }
 
-/** Cabecera de Explorar: la píldora (abre la búsqueda) a todo el ancho (la cuenta es una pestaña, C4); debajo, el mensual,
- *  los filtros y «₡ | $». */
+/** Cabecera de Explorar: la píldora (abre la búsqueda) a todo el ancho (la cuenta es una pestaña, C4); debajo, los filtros y «₡ | $». */
 function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
-  const navigate = useNavigate();
   return (
     <header className="explore-top">
       <h1 className="sr-only">Explorar casas</h1>
@@ -67,18 +64,6 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
         <SearchPill filters={f} zoneName={zoneName} search={search} />
       </div>
       <div className="chiprow fit">
-        <button
-          type="button"
-          className="chip monthly-chip"
-          aria-pressed={f.monthly}
-          aria-label={MONTHLY_FILTER_LABEL}
-          onClick={() => {
-            track("monthly_filter_tap");
-            void navigate({ to: "/explorar", search: searchFor({ ...f, monthly: !f.monthly }), replace: true });
-          }}
-        >
-          <span>{f.monthly ? MONTHLY_FILTER_SHORT : MONTHLY_FILTER_LABEL}</span>
-        </button>
         <FiltersLink filters={f} search={search} />
         <CurrencySwitch />
       </div>
@@ -132,7 +117,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const { data: listings, isError, error } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f)));
   // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
-  const dates = searchDatesValue(stayRange(f), f.monthly);
+  const dates = searchDatesValue(stayRange(f));
   useEffect(() => {
     const store = webStore("session");
     if (f.ppl > 0) store.setItem(PEOPLE_FILTER_KEY, String(f.ppl));
@@ -142,6 +127,8 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   }, [f.ppl, dates]);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next), replace: true });
   const extras = extrasCount(f);
+  // Con llegada y salida, las tarjetas y el mapa muestran el total orientativo de esas noches (lo calcula la búsqueda).
+  const nights = f.arrival && f.departure ? nightsBetween(f.arrival, f.departure) : 0;
   const linkSearch = searchFor(f);
   // Abrir el mapa es una entrada del historial (Atrás lo cierra); la lista no se mueve debajo.
   const openMap = (publicId: string | null) => {
@@ -177,7 +164,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         isDatesError(error) ? (
           <div className="note note-plain note-col" role="alert">
             <span>Revise las fechas de su búsqueda.</span>
-            <button type="button" className="btn btn-outline btn-block" onClick={() => go({ ...f, arrival: null, departure: null, monthlyFrom: null })}>
+            <button type="button" className="btn btn-outline btn-block" onClick={() => go({ ...f, arrival: null, departure: null })}>
               Quitar fechas
             </button>
           </div>
@@ -187,13 +174,13 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
           <SkeletonGrid />
         )
       ) : listings.length === 0 ? (
-        <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} onClear={f.monthly || extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
+        <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} onClear={extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
       ) : (
         <>
           <div className={`listing-grid${reveal}`}>
-            <ExploreMap ref={mapBox} listings={listings} zone={zone} monthly={f.monthly} onOpen={openMap} />
+            <ExploreMap ref={mapBox} listings={listings} zone={zone} nights={nights} onOpen={openMap} />
             {listings.map((l, i) => (
-              <ListingCard key={l.publicId} listing={l} monthly={f.monthly} priority={i === 0} />
+              <ListingCard key={l.publicId} listing={l} nights={nights} priority={i === 0} />
             ))}
           </div>
           <MapLabel target={mapBox} hidden={mapOpen} onOpen={() => openMap(null)} />
@@ -210,7 +197,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
           <MapScreen
             listings={listings}
             zone={zone}
-            monthly={f.monthly}
+            nights={nights}
             selected={selected}
             onSelect={setSelected}
             onClose={closeMap}

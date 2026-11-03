@@ -1,7 +1,7 @@
 // Explorar al estilo Airbnb: resumen de la búsqueda, rango de llegada y salida, y sugerencias de zona.
 import { describe, expect, it } from "vitest";
 import { parseFilters } from "../../src/domain/filters";
-import { monthlyWindowLabel, nightsBetween, nightsLabel, peopleLabel, resultsText, searchSummary, stayLabel, tapRange, zonePlace, zoneSuggestions } from "../../src/domain/search";
+import { nightsBetween, nightsLabel, peopleLabel, resultsText, searchSummary, stayLabel, tapRange, zonePlace, zoneSuggestions } from "../../src/domain/search";
 import type { ZoneWithListings } from "../../src/domain/zones";
 import { cardFacts, mapPriceLabel } from "../../src/domain/describe";
 import type { PublicListing } from "../../src/domain/listing";
@@ -14,13 +14,11 @@ const z = (id: string, name: string, cantonCode: string): ZoneWithListings => ({
 describe("searchSummary", () => {
   it("une zona, fechas y personas", () => {
     expect(searchSummary(n, "Cocles")).toBe("Cocles · 23–27 nov · 4 personas");
-    expect(searchSummary({ ...base, monthly: true, monthlyFrom: "2026-12-01", ppl: 2 }, null)).toBe("Desde el 1 dic · 2 personas");
     expect(searchSummary({ ...base, ppl: 1 }, null)).toBe("1 persona");
   });
-  it("sin nada, null; con el mensual solo cuenta «desde», y por noches no", () => {
+  it("sin nada, null; una sola fecha no cuenta", () => {
     expect(searchSummary(base, null)).toBeNull();
-    expect(searchSummary({ ...base, monthlyFrom: "2026-12-01" }, null)).toBeNull();
-    expect(searchSummary({ ...base, monthly: true, arrival: "2026-11-23", departure: "2026-11-27" }, null)).toBeNull();
+    expect(searchSummary({ ...base, arrival: "2026-11-23" }, null)).toBeNull();
   });
   it("etiquetas sueltas", () => {
     expect(stayLabel(n)).toBe("23–27 nov");
@@ -30,14 +28,11 @@ describe("searchSummary", () => {
 });
 
 describe("resultsText", () => {
-  it("provincia, zona, fechas y mensual", () => {
+  it("provincia, zona y fechas", () => {
     expect(resultsText(12, base)).toEqual({ count: "12 casas", rest: "" }); // sin zona: todo el país
     expect(resultsText(12, { ...base, prov: "Limón" })).toEqual({ count: "12 casas", rest: " en Limón" }); // enlace viejo con ?prov=
     expect(resultsText(4, n, "Cocles")).toEqual({ count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" });
-    expect(resultsText(3, { ...base, zone: "704-cocles", monthly: true, monthlyFrom: "2026-12-01" }, "Cocles")).toEqual({ count: "3 casas", rest: " aceptan alquiler mensual en Cocles y alrededores · desde el 1 dic" });
     expect(resultsText(1, { ...base, arrival: "2026-11-23", departure: "2026-11-27" })).toEqual({ count: "1 casa", rest: " · 23–27 nov" });
-    expect(resultsText(2, { prov: "Limón", monthly: true, zone: null, arrival: null, departure: null, monthlyFrom: null })).toEqual({ count: "2 casas", rest: " aceptan alquiler mensual en Limón" });
-    expect(resultsText(1, { ...base, prov: "Todas", monthly: true })).toEqual({ count: "1 casa", rest: " acepta alquiler mensual" });
     expect(resultsText(9, { ...base, prov: "Todas" })).toEqual({ count: "9 casas", rest: "" });
   });
 });
@@ -54,12 +49,11 @@ describe("tapRange", () => {
   });
 });
 
-describe("noches y ventana mensual", () => {
+describe("noches y total orientativo", () => {
   it("cuenta y etiqueta", () => {
     expect(nightsBetween("2026-11-23", "2026-11-27")).toBe(4);
     expect(nightsLabel(4)).toBe("4 noches");
     expect(nightsLabel(1)).toBe("1 noche");
-    expect(monthlyWindowLabel("2026-11-16")).toBe("Casas libres del 16 nov al 16 dic");
   });
 });
 
@@ -93,10 +87,16 @@ describe("cardFacts y mapPriceLabel (tarjeta y marcador de Explorar)", () => {
     // Una Habitación es 1 habitación, nunca «Estudio» (aunque venga sin dato).
     expect(cardFacts({ capacity: 2, bedrooms: 0, kind: "habitacion" })).toBe("2 personas · 1 habitación");
   });
-  it("el precio de la noche, en la moneda elegida; con el mensual, el del mes o «A negociar»", () => {
-    expect(mapPriceLabel(house(), false, "CRC", 525)).toBe("₡42 000");
-    expect(mapPriceLabel(house(), false, "USD", 525)).toBe(formatMoney(42000, "USD", 525));
-    expect(mapPriceLabel(house({ acceptsMonthly: true, monthlyPriceCrc: 350000 }), true, "CRC", 525)).toBe("₡350 000");
-    expect(mapPriceLabel(house({ acceptsMonthly: true, monthlyPriceCrc: null }), true, "CRC", 525)).toBe("A negociar");
+  it("el precio de la noche, en la moneda elegida", () => {
+    expect(mapPriceLabel(house(), 0, "CRC", 525)).toBe("₡42\u00a0000");
+    expect(mapPriceLabel(house(), 0, "USD", 525)).toBe(formatMoney(42000, "USD", 525));
+    // Sin fechas no hay total aunque la casa lo traiga.
+    expect(mapPriceLabel(house({ stayTotalCrc: 168000 }), 0, "CRC", 525)).toBe("₡42\u00a0000");
+  });
+  it("con llegada y salida, la misma cifra que la tarjeta: el total orientativo (sin «por N noches»)", () => {
+    expect(mapPriceLabel(house({ stayTotalCrc: 168000 }), 4, "CRC", 525)).toBe("₡168\u00a0000");
+    expect(mapPriceLabel(house({ stayTotalCrc: 168000 }), 4, "USD", 525)).toBe(formatMoney(168000, "USD", 525));
+    // Alguna noche sin precio: el precio por noche.
+    expect(mapPriceLabel(house({ stayTotalCrc: null }), 4, "CRC", 525)).toBe("₡42\u00a0000");
   });
 });

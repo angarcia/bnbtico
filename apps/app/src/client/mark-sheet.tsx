@@ -64,7 +64,7 @@ export function MarkSheet({ today, onConfirm, onClose }: { today: string; onConf
           </span>
           <div className="contact-calendar">
             <div className="range-scroll">
-              <RangeCalendar today={today} mode="range" value={range} onChange={(r) => setRange(r)} />
+              <RangeCalendar today={today} value={range} onChange={(r) => setRange(r)} />
             </div>
           </div>
           <p className="small muted" data-testid="mark-summary" aria-live="polite">
