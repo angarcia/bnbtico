@@ -92,8 +92,8 @@ test("una escritura sin red muestra «Sin conexión», vuelve atrás y no se enc
   // La hoja (un trozo aparte) se abre con red; la escritura se intenta sin ella.
   await row.click();
   await expect(sheet).toBeVisible();
-  await sheet.getByRole("button", { name: longDateWithYear(arrival)! }).click();
-  await sheet.getByRole("button", { name: longDateWithYear(departure)! }).click();
+  await sheet.getByRole("button", { name: longDateWithYear(arrival)!, exact: true }).click();
+  await sheet.getByRole("button", { name: longDateWithYear(departure)!, exact: true }).click();
   await goOffline(context, page);
   await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
   await expect(page.locator(".toast").last()).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");

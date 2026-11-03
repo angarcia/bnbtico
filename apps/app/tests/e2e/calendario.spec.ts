@@ -432,7 +432,7 @@ test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo 
 // «Marcar una reserva» (ticket 04 de la ronda del 2 nov; sustituye a «Cerrar la casa hasta…»).
 const markRow = (page: Page) => page.getByRole("button", { name: /Marcar una reserva/ });
 const markSheet = (page: Page) => page.getByRole("dialog", { name: "Marcar una reserva" });
-const pick = (page: Page, iso: string) => markSheet(page).getByRole("button", { name: longDateWithYear(iso)! });
+const pick = (page: Page, iso: string) => markSheet(page).getByRole("button", { name: longDateWithYear(iso)!, exact: true });
 const confirmMark = (page: Page) => markSheet(page).getByRole("button", { name: "Marcar como ocupado" });
 
 test("«Marcar una reserva»: la fila, la hoja con el calendario de rango y las noches de llegada a salida − 1 quedan ocupadas, con sus precios especiales", async ({ page }) => {
@@ -460,7 +460,7 @@ test("«Marcar una reserva»: la fila, la hoja con el calendario de rango y las 
   await expect(markSheet(page)).toHaveCount(0);
   await expect(markRow(page)).toBeFocused();
   await expect(page.locator(".toast")).toHaveText(`4 noches marcadas como ocupadas · 10–13 ${shortMonth(next())}`);
-  for (const d of [10, 11, 12, 13]) await expect(cellOf(page, on(d))).toHaveAccessibleName(/, ocupado/);
+  for (const d of [10, 11, 12, 13]) await expect(day(page, on(d))).toHaveAccessibleName(/, ocupado/);
   // La salida sigue libre.
   await expect(day(page, on(14))).not.toHaveAccessibleName(/ocupado/);
   await expect.poll(async () => (await h.calendar("owner").days(casa.id)).map((d) => d.day)).toEqual([on(10), on(11), on(12), on(13)]);
@@ -556,6 +556,8 @@ test("puntos de entrada: pestaña, Mis casas y «Marcar las noches ocupadas» ll
   await showMonth(page, today().slice(0, 7));
   await expect(day(page, today())).toBeEnabled();
 
+  // La barra de abajo se esconde al bajar (client/hiding-tabbar.ts): volver arriba la trae.
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" }).click();
   await expect(page).toHaveURL(/\/propietario\/calendario/);
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" })).toHaveAttribute("aria-current", "page");

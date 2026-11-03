@@ -252,8 +252,8 @@ test("marcar una reserva responde al instante desde el Calendario y vuelve atrá
   const sheet = page.getByRole("dialog", { name: "Marcar una reserva" });
   const mark = async () => {
     await row.click();
-    await sheet.getByRole("button", { name: longDateWithYear(arrival)! }).click();
-    await sheet.getByRole("button", { name: longDateWithYear(departure)! }).click();
+    await sheet.getByRole("button", { name: longDateWithYear(arrival)!, exact: true }).click();
+    await sheet.getByRole("button", { name: longDateWithYear(departure)!, exact: true }).click();
     await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
     await expect(sheet).toHaveCount(0);
   };
@@ -281,7 +281,7 @@ test("marcar una reserva responde al instante desde el Calendario y vuelve atrá
   );
   const otherArrival = addDays(arrival, 5);
   await row.click();
-  await sheet.getByRole("button", { name: longDateWithYear(otherArrival)! }).click();
+  await sheet.getByRole("button", { name: longDateWithYear(otherArrival)!, exact: true }).click();
   await sheet.getByRole("button", { name: longDateWithYear(addDays(otherArrival, 2))! }).click();
   await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
   await expect(page.locator(".toast").last()).toHaveText("Este anuncio fue rechazado; publique uno nuevo.");
