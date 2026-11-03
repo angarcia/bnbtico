@@ -34,3 +34,10 @@ Módulo nuevo `apps/app/src/domain/stay-price.ts`, sin imports de framework:
 
 ## Añadido tras el 06
 El 06 puso el orden «Limón primero» dentro de `search_listings` y quitó el `.order()` del adaptador; el orden depende de que PostgREST conserve el de la función (en la práctica sí, sin garantía). Ya que este ticket cambia lo que devuelve la función (`stay_total_crc`), añada también una columna de orden explícita (p. ej. `sort_rank`) y vuelva a ordenar en el adaptador con `.order()`, para que sea determinista. Mantenga `tests/db/caribe-primero.test.ts` en verde.
+
+## Al rehacerlo tras la reversión (2026-11-03, Daniel: va antes que el 02–06)
+- **El 06 no está hecho:** sigue «Caribe por defecto» (Explorar arranca en Limón, con chips de provincia) y el orden de siempre (más nuevas primero). La versión vigente de `search_listings` es la de `20261029091243_explorar_fechas_y_zona.sql` (3 parámetros, sin `order by`; el adaptador ordena por `created_at desc`).
+- **Diseño final ya acordado la primera vez** (ver `git show 463b1c8`, solo como referencia; revíselo, no lo copie a ciegas): `search_listings` recibe **todos** los filtros que hoy aplica PostgREST fuera (provincia, zona, fechas, personas, habitaciones, características, precio mín/máx, límite) como parámetros con default null; filtra, ordena y limita dentro, y calcula `stay_total_crc` **solo después del límite** (helper interno `search_stay_total`, sin grant a anon/authenticated). Devuelve una columna de orden explícita (`sort_rank`, aquí solo `created_at desc`) y el adaptador ordena por ella. Fake y PostgREST con la misma cifra (prueba de contrato) y una prueba en `tests/db` que demuestre que el total solo se calcula para las filas devueltas.
+- No hay filtros de baños ni de tipo (son del 06): no los añada.
+- Quite de `docs/telemetria.md` la consulta de `monthly_filter_tap`.
+- Revise `tests/lighthouse/lighthouse.spec.ts` (espera textos de Explorar) y corra `pnpm lighthouse` si es viable en local.
