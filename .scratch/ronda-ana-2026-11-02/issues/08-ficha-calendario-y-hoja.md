@@ -33,3 +33,15 @@ Status: ready-for-agent (después del 07: usa `domain/stay-price.ts`)
 - Unit: `stay-dates.ts`; reglas de selección con ocupados; `month-grid.test.tsx` (botones y nombres).
 - E2E: `ficha-calendario.spec.ts` (todas siguen; añadir elegir rango, total, rango con ocupado rechazado, alto igual), `ficha.spec.ts` (hidratación sin avisos), `contacto.spec.ts:164` (fechas desde Explorar) y una nueva: cambiar fechas en la ficha → abrir hoja → mismas fechas y mismo total; día ocupado deshabilitado en la hoja.
 - Guía `docs/pruebas-manuales.md` C50, C51, C53, U114; actualizar `.scratch/revision-ux/2026-10-29-revision-ux.md` N4 con «cerrado el 2026-11-02».
+
+## Al rehacerlo tras la reversión (2026-11-03): decisiones de Daniel del primer intento (mandan sobre lo anterior)
+- Hecho antes: 01 (cabecera, hero 5:4) y 07 (total en Explorar, `domain/stay-price.ts`, `stayTotalLabel` en `domain/search.ts`, sin modo mensual). El 06 y el 09 NO están hechos (Explorar sigue en Limón; la tarjeta no tiene botón de WhatsApp).
+- **Barra de precio (opción B):** con fechas, la cifra principal pasa a «≈ ₡285 000 / 3 noches» (y «≈ $559 / 3 noches»; por debajo de 440 px los dólares sin «/ N noches» si no cabe). **El mensual en la barra solo con 30 noches o más:** segunda línea «Mensual: ₡900 000 / mes» o «Mensual: precio a negociar con el dueño»; sin fechas o con menos de 30 noches, una sola línea (sin «Mensual»). Con 30+ noches la barra crece ~20 px tras hidratar (aceptado: va fija abajo).
+- **Casilla «Alquiler mensual»** de las características: el precio en una línea aparte, debajo y más pequeña («₡900 000 / mes» o «A negociar»), en una casilla de dos columnas que va **la primera** de la rejilla (para no dejar huecos). Igual en SSR y cliente.
+- **Fechas que traen noches ocupadas** (de Explorar o de un enlace): ficha y hoja dicen «Hay noches ocupadas entre esas fechas.» y no calculan total; la barra con el precio por noche.
+- **«Abrir WhatsApp» (y «Continuar» sin sesión) bloqueado** con noches ocupadas **y mientras cargan los días**; se desbloquea al elegir otras fechas o quitarlas.
+- Volver a Explorar vuelve a escribir las fechas de su búsqueda (se deja así).
+- Rango en la ficha con el mismo estilo de «¿Cuándo?» (extremos terracota, banda translúcida).
+- Presupuesto: el trozo de la hoja de contacto puede pasar de 7 a 7,5 KB (aprobado); nada más sin preguntar.
+- El texto «dueño/propietario» se queda como está: «anfitrión» es el ticket 02.
+- Referencia del primer intento: `git show 4b815b9` y `git show e84ce58` (revísalo, no lo copies a ciegas).
