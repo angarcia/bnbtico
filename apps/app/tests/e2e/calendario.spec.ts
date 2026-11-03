@@ -24,7 +24,6 @@ const shortMonth = (month: string) => SHORT[Number(month.slice(5)) - 1];
 
 const grid = (page: Page) => page.getByRole("group", { name: /^\p{L}+ \d{4}$/u });
 const day = (page: Page, iso: string) => page.getByRole("button", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)}(,|$)`) });
-const cellOf = (page: Page, iso: string) => page.getByRole("gridcell", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)},`) });
 /** La casa que se muestra: en el selector (varias casas) o como subtítulo (una sola, revisión UX A5). */
 const shown = (page: Page, title: string) => page.getByRole("button", { name: new RegExp(title) }).or(page.locator(".cal-house", { hasText: title }));
 const panel = (page: Page) => page.getByRole("region", { name: "Días seleccionados" });
