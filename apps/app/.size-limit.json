@@ -51,7 +51,8 @@
       "!dist/client/assets/offer-*.js",
       "!dist/client/assets/range-calendar-*.js",
       "!dist/client/assets/map-preview-*.js",
-      "!dist/client/assets/map-pins-*.js"
+      "!dist/client/assets/map-pins-*.js",
+      "!dist/client/assets/price-slider-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -73,6 +74,14 @@
       "dist/client/assets/map-pins-*.js"
     ],
     "limit": "2.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Deslizador de precio de Filtros · trozo diferido (el histograma, los dos tiradores y las cubetas y topes del dominio; se pide al abrir Filtros)",
+    "path": [
+      "dist/client/assets/price-slider-*.js"
+    ],
+    "limit": "2 KB",
     "gzip": true
   },
   {

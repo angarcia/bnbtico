@@ -1,7 +1,7 @@
 // Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Para quiénes (habitaciones y baños) → Tipo de alojamiento → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   ALL_PROVINCES,
   BATHS_OPTIONS,
@@ -31,6 +31,9 @@ import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 
+// El deslizador y el histograma van en un trozo diferido (Filtros está en el arranque del shell; presupuesto de 150 KB).
+const PriceSlider = lazy(() => import("./price-slider").then((m) => ({ default: m.PriceSlider })));
+
 function FiltrosForm({
   provinces,
   initial,
@@ -55,6 +58,11 @@ function FiltrosForm({
     const crc = priceInputToColones(text, currency, fx.crcPerUsd);
     set(key, crc ? String(crc) : undefined);
   };
+  const commitSlider = ({ min, max }: { min: number; max: number }) => {
+    const text = (crc: number) => colonesToPriceInput(crc, currency, fx.crcPerUsd);
+    setPrice("min", text(min));
+    setPrice("max", text(max));
+  };
   const zones = useQuery({ ...zonesQuery, enabled: !!draft.zona });
   const f = parseFilters(draft, provinces, {
     today: costaRicaToday(Date.now()),
@@ -64,6 +72,9 @@ function FiltrosForm({
   const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
+  // El histograma sale de la misma búsqueda sin el rango de precio: con el rango vacío es la misma consulta que el conteo
+  // (una sola petición); al mover el deslizador solo cambia la del conteo, y esa, al soltar.
+  const { data: spread } = useQuery(listingsQuery({ ...f, min: 0, max: 0 }));
   const symbol = currency === "USD" ? "$" : "₡";
   const mineRows = [
     // Una sola fila de zona que dice lo mismo que la búsqueda: sin zona, «Todas las provincias» (un `?prov=` viejo, «Todo Limón»).
@@ -212,6 +223,18 @@ function FiltrosForm({
         </section>
         <section className="stack">
           <span className="eyebrow">Precio orientativo por noche</span>
+          {spread && spread.length ? (
+            <Suspense fallback={<div className="price-slider price-slider-wait" aria-hidden="true" />}>
+              <PriceSlider
+                prices={spread.map((l) => l.nightlyPriceCrc)}
+                min={f.min}
+                max={f.max}
+                currency={currency}
+                fx={fx.crcPerUsd}
+                onCommit={commitSlider}
+              />
+            </Suspense>
+          ) : null}
           <div className="grid-2">
             <div className="field">
               <label htmlFor="f-min">Mínimo</label>

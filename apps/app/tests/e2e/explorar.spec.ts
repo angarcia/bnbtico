@@ -109,6 +109,52 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await expect(results(page)).toHaveText("10 casas");
 });
 
+test("Filtros: el deslizador de precio (histograma y dos tiradores) se sincroniza con los campos, con el conteo y con la URL", async ({ page }) => {
+  await page.goto("/explorar/filtros");
+  await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
+  // Precios de la prueba: de ₡40 000 a ₡85 000; los topes se redondean al paso (₡2 000): ₡40 000 – ₡86 000+.
+  const range = page.locator(".price-slider-range");
+  await expect(range).toHaveText("₡40 000 – ₡86 000+");
+  await expect(page.locator(".price-slider-bars rect.in").first()).toBeVisible();
+  const min = page.getByRole("slider", { name: "Rango de precio, límite inferior por noche" });
+  const max = page.getByRole("slider", { name: "Rango de precio, límite superior por noche" });
+  await expect(min).toHaveAttribute("aria-valuetext", "₡40 000, sin mínimo");
+  await expect(max).toHaveAttribute("aria-valuetext", "₡86 000 o más, sin máximo");
+  // Con el teclado: tres pasos de ₡2 000 → mínimo ₡46 000; el campo «Mínimo» y el conteo lo siguen (46 000, 60 000 y 85 000).
+  await min.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("46000");
+  await expect(range).toHaveText("₡46 000 – ₡86 000+");
+  await expect(max).toHaveAttribute("aria-valuetext", "₡86 000 o más, sin máximo");
+  await expect(page.getByRole("button", { name: "Ver 3 casas" })).toBeVisible();
+  // Escribir en el campo mueve el tirador.
+  await page.getByLabel("Precio máximo por noche").fill("60000");
+  await expect(max).toHaveValue("60000");
+  await expect(page.getByRole("button", { name: "Ver 2 casas" })).toBeVisible();
+  await page.getByLabel("Precio máximo por noche").fill("");
+  await expect(max).toHaveValue("86000");
+  // Arrastrando el tirador de abajo hasta la mitad: el mínimo pasa de ₡60 000 y solo queda la de ₡85 000.
+  const box = (await min.boundingBox())!;
+  const y = box.y + box.height / 2;
+  const thumbX = box.x + 14 + ((box.width - 28) * (46000 - 40000)) / (86000 - 40000);
+  await page.mouse.move(thumbX, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.5, y, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue(/^6\d{4}$/);
+  await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
+  await page.getByRole("button", { name: "Ver 1 casa" }).click();
+  await expect(page).toHaveURL(/\/explorar\?min=6\d{4}$/);
+  await expect(results(page)).toHaveText("1 casa");
+  // «Sin máximo» no deja `max` en la URL y el tope de abajo tampoco deja `min`.
+  await page.getByRole("link", { name: /^Filtros/ }).click();
+  await page.getByRole("slider", { name: "Rango de precio, límite inferior por noche" }).press("Home");
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("");
+  await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
+});
+
 test("Filtros: baños y tipo de alojamiento cuentan en vivo, entran en la URL y en el contador, y «Limpiar» los quita", async ({ page }) => {
   await page.goto("/explorar/filtros");
   const baths = page.getByLabel("Baños");
