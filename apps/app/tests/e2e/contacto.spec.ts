@@ -240,6 +240,9 @@ test("la hoja se precarga en reposo tras hidratar: tocar no espera a la red", as
   page.on("request", (r) => /\/assets\/contact-sheet-[^/]+\.js$/.test(r.url()) && chunks.push(r.url()));
   await openListing(page, casa.publicId);
   await expect.poll(() => chunks.length).toBe(1);
+  // La hoja trae también sus trozos compartidos (calendario de rango, fechas de la pestaña, total): se espera a que acabe
+  // toda la precarga antes de cortar la red (en CI, más lento, a veces no habían llegado).
+  await page.waitForLoadState("networkidle");
   await page.context().setOffline(true);
   await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(sheet(page)).toBeVisible();
