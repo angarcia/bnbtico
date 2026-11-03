@@ -166,7 +166,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   for (const d of [10, 11, 12]) await expect(first.cell(on(d))).toHaveClass(/is-busy/);
   await expect(first.cell(on(20))).toHaveText("20150\u00a0000");
   await expect(first.cell(on(15))).toHaveText("1595\u00a0000");
-  await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
+  await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await first.page.context().close();
 
   // 5. La propietaria libera una noche y cambia la ★: la carga nueva del cliente lo trae en ≤ 5 s (purga de pg_net).

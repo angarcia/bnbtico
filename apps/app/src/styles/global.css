@@ -297,14 +297,26 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 /* Ronda de Ana 2026-10-30: cada casa en su tarjeta (como Airbnb, con nuestras esquinas pequeñas): superficie y sombra de `.card`,
    foto a sangre arriba (la tarjeta recorta con su radio) y el texto con relleno. */
 .listing-card{display:flex;flex-direction:column;gap:0;text-decoration:none;color:inherit;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:0}
+.listing-card .photo{aspect-ratio:5/4;height:auto;border-radius:0}
+/* Fotos deslizables de la tarjeta (ticket 09 de la ronda del 2 nov): la tira llena la foto; las que aún no se montan son cajas. */
+.card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
+.card-strip::-webkit-scrollbar{display:none}
+.photo .card-strip img,.card-strip .slot{position:static;flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start}
+/* Botón de WhatsApp: redondo, a la derecha de la parte blanca, fuera del enlace. */
+.card-wa{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--wa);color:var(--wa-ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card-wa:active{transform:scale(0.92)}
 .listing-card .sk-line{margin:12px 14px 14px}
 .listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
-.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
+.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 68px 14px 14px}
 .card-price{margin-top:3px}
 .card-price b{font-weight:var(--w-strong)}
 .listing-grid{display:grid;grid-template-columns:1fr;gap:32px}
 .listing-cell{position:relative;min-width:0}
+/* En el teléfono la tarjeta va a todo el ancho de la pantalla (sin el margen lateral) y sin esquinas; el escritorio no cambia. */
+@media (max-width:899px){
+  .listing-grid > .listing-cell,.listing-grid.skeleton > .listing-card{margin-inline:calc(-1 * var(--gutter))}
+  .listing-grid .listing-card{border-radius:0}
+}
 .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .pills-tl .pill{position:static}
 /* Corazón de favoritos (fase 3): blanco con sombra sobre la foto, crema en la ficha, terracota cuando está guardada. */

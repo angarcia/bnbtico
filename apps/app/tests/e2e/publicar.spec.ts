@@ -224,7 +224,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await page.getByRole("button", { name: "Ver cómo queda su ficha" }).click();
   const preview = page.getByRole("dialog", { name: "Vista previa de su ficha" });
   await expect(preview.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
-  await expect(preview.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
+  await expect(preview.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toHaveCount(0);
   await preview.getByRole("button", { name: "Cerrar" }).click();
   await expect(preview).toHaveCount(0);
 

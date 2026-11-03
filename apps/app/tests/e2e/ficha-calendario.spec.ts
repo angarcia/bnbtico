@@ -371,7 +371,7 @@ test("fechas que ya traen una noche ocupada (de Explorar o de un enlace viejo): 
   await page.screenshot({ path: "../../.scratch/ronda-ana-2026-11-02/capturas/08-6-fechas-con-noches-ocupadas.png" });
 
   // La hoja: el mismo aviso en lugar del total.
-  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   const sheet = page.getByRole("dialog");
   await expect(dateBox(sheet, "Llegada")).toHaveText(boxText("Llegada", on(8)));
   await expect(sheet.getByTestId("stay-total")).toHaveText("Hay noches ocupadas entre esas fechas.");
@@ -393,7 +393,7 @@ test("ficha y hoja comparten las fechas y el total: lo elegido en la ficha está
   await cell(page, on(16)).click();
   await expect(total(page)).toHaveText(line(3, 285_000, on(13), on(16)));
 
-  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   const sheet = page.getByRole("dialog");
   await expect(dateBox(sheet, "Llegada")).toHaveText(boxText("Llegada", on(13)));
   await expect(dateBox(sheet, "Salida")).toHaveText(boxText("Salida", on(16)));
@@ -432,7 +432,7 @@ test("ficha y hoja comparten las fechas y el total: lo elegido en la ficha está
   await expect(total(page)).toHaveText(expected);
 
   // Y al reabrir la hoja, las mismas fechas y el mismo total (el borrador ya no guarda fechas propias).
-  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   await expect(dateBox(sheet, "Llegada")).toHaveText(boxText("Llegada", on(18)));
   await expect(sheet.getByTestId("stay-total")).toHaveText(expected);
 });
