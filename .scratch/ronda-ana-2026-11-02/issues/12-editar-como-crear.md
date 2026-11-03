@@ -44,3 +44,11 @@ Decisión 2026-11-02 (Daniel, opción B), en `docs/decisiones.md`. Auditoría co
 - Nombre: crear 5–32; `listing_edits.title` CHECK 5–60. Descripción: mínimo 80 solo al editar; tope 2000 solo en cliente al crear.
 - `save_edit` con nombre vacío da el mensaje de longitud.
 - Nombres viejos > 32 se truncan en silencio. Tipo viejo sin tarjeta marcada. «Enviar a revisión» espera a la ubicación. Contador de fotos distinto.
+
+## Al rehacerlo tras la reversión (2026-11-03): decisiones de Daniel (mandan sobre lo anterior)
+- **Opción B** (como arriba). La excepción de «no vaciar lo que ya tenía valor» es solo para los datos que se publican al momento (`update_listing_live`): personas, habitaciones, baños, características/parqueo, precios. **El baño compartido va con el tipo y pasa por revisión** (A5, 2026-10-29): no es dato al momento.
+- **Cambiar el tipo no exige habitaciones, baños ni baño compartido** (al crear solo avisan): avisan en ocre en la fila de Capacidad. «Cada dato se valida solo».
+- Hechos antes: 01, 07, 08, 02, 03 (Habitación = 1 habitación y 1 baño; trigger `listings_habitacion_una`; `update_listing_live` vigente en `20261103204413_habitacion_un_bano.sql`; `listing_edit_check` vigente en `20261103184011_habitacion_una_habitacion.sql`). Parte SIEMPRE de la versión más reciente de cada función (grep) y no deshagas lo del 03.
+- La UI dice «anfitrión».
+- Antes del `db push` habrá que contar en `bnbtico-pruebas` las filas de `listing_edits` con título fuera de 5–32 (lo hace el orquestador).
+- Referencia del primer intento: `git show 1aa5b16` (revísalo, no lo copies a ciegas).
