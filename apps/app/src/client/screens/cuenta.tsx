@@ -63,7 +63,7 @@ function useContactMode(next?: string) {
   const publish = isPublishNext(next);
   const listing = useReturnListing(contact ? next : undefined);
   const owner = listing ? firstName(listing.ownerName) : null;
-  const header = contact ? `Escribirle a ${owner ?? "el propietario"}` : publish ? "Publicar casa" : "Ingresar";
+  const header = contact ? `Escribirle a ${owner ?? "el anfitrión"}` : publish ? "Publicar casa" : "Ingresar";
   return { contact, publish, listing, header, owner };
 }
 
@@ -230,7 +230,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
       {contact ? <ContactCard next={next} /> : null}
       <div className="stack gap-8">
         <h2 className="flow-title">
-          {newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el propietario"}` : publish ? "Para guardar su casa, verifique su WhatsApp" : "Entre con su WhatsApp"}
+          {newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el anfitrión"}` : publish ? "Para guardar su casa, verifique su WhatsApp" : "Entre con su WhatsApp"}
         </h2>
         <p className="muted">
           {newPhone ? (
@@ -343,7 +343,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
       {publish ? null : (
         <div className="note">
           <I.shield size={22} />
-          <span>Su número solo se comparte con el propietario cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
+          <span>Su número solo se comparte con el anfitrión cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
         </div>
       )}
       {listingInNext(next) && mode === "account" ? <ReturnCard next={next} /> : null}
@@ -671,7 +671,7 @@ function MyAccount({ editing, tab = false }: { editing: boolean; tab?: boolean }
         <Link to="/ayuda" className="list-item">
           <I.help />
           <span className="body">
-            Ayuda por WhatsApp<small>{owner ? "Línea de bnbtico para propietarios" : "Línea de bnbtico para clientes"}</small>
+            Ayuda por WhatsApp<small>{owner ? "Línea de bnbtico para anfitriones" : "Línea de bnbtico para clientes"}</small>
           </span>
           <span className="chev">
             <I.chevron />

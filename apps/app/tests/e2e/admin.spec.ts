@@ -128,7 +128,7 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await page.route("**/rest/v1/rpc/review_listing", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Este anuncio ya tiene una decisión.", details: null, hint: null }) }),
   );
-  await page.getByLabel(/Mensaje para el propietario/).fill("No es un alojamiento.");
+  await page.getByLabel(/Mensaje para el anfitrión/).fill("No es un alojamiento.");
   await page.getByRole("button", { name: "Rechazar" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("alert")).toHaveText("No se guardó la decisión sobre «Loft Cocles»: Este anuncio ya tiene una decisión.");
@@ -138,7 +138,7 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
 
   // Pedir cambios de verdad: pasa a «Cambios pedidos» y el propietario ve el motivo.
   await page.locator(".queue-card").click();
-  await page.getByLabel(/Mensaje para el propietario/).fill("Necesitamos una foto de la cocina.");
+  await page.getByLabel(/Mensaje para el anfitrión/).fill("Necesitamos una foto de la cocina.");
   await page.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByText("No hay anuncios pendientes.")).toBeVisible();

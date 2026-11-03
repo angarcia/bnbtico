@@ -54,14 +54,14 @@ describe("adminHouseLine", () => {
   });
 
   it("inactiva: «Parada por el propietario el 9 oct»", () => {
-    expect(adminHouseLine(sub({ status: "inactive", stoppedOn: "2026-10-09" }), TODAY)).toBe("Parada por el propietario el 9 oct");
-    expect(adminHouseLine(sub({ status: "inactive", stoppedOn: null }), TODAY)).toBe("Parada por el propietario");
+    expect(adminHouseLine(sub({ status: "inactive", stoppedOn: "2026-10-09" }), TODAY)).toBe("Parada por el anfitrión el 9 oct");
+    expect(adminHouseLine(sub({ status: "inactive", stoppedOn: null }), TODAY)).toBe("Parada por el anfitrión");
   });
 
   it("publicada que se está editando o revisando: la línea de su suscripción (o parada si lo estaba)", () => {
     expect(adminHouseLine(sub({ status: "review" }), TODAY)).toBe("Gratis hasta 14 oct 2027");
     expect(adminHouseLine(sub({ status: "changes", plan: "paid", paidSince: "2026-10-15", hasMethod: true }), TODAY)).toBe("Pagando desde el 15 oct 2026 · ₡2 900 al mes");
-    expect(adminHouseLine(sub({ status: "review", stoppedOn: "2026-10-09" }), TODAY)).toBe("Parada por el propietario el 9 oct");
+    expect(adminHouseLine(sub({ status: "review", stoppedOn: "2026-10-09" }), TODAY)).toBe("Parada por el anfitrión el 9 oct");
   });
 });
 

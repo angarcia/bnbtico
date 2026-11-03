@@ -65,7 +65,7 @@ describe("barra de la ficha en el servidor", () => {
     expect(html).not.toContain("Mensual:");
     expect(html).not.toContain('data-testid="monthly-usd"');
     expect(html).toContain(`<span>Alquiler mensual</span><small>${formatCRC(650000)} / mes</small>`);
-    expect(html).toContain("Precios orientativos: el precio final lo acuerda con el propietario.");
+    expect(html).toContain("Precios orientativos: el precio final lo acuerda con el anfitrión.");
     expect(html).not.toContain("currency-switch");
     expect(html).not.toContain("orientativo</span>");
   });
@@ -77,7 +77,7 @@ describe("barra de la ficha en el servidor", () => {
       </Providers>,
     );
     expect(html).toContain("No disponible por ahora");
-    expect(html).toContain("Precios orientativos: el precio final lo acuerda con el propietario.");
+    expect(html).toContain("Precios orientativos: el precio final lo acuerda con el anfitrión.");
   });
 
   it("la vista previa del borrador no lleva selector", () => {

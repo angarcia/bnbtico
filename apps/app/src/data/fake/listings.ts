@@ -48,7 +48,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       minMonths: l.minMonths,
       available: l.available,
       reopenAt: l.reopenAt,
-      ownerName: owner?.fullName || "Propietario",
+      ownerName: owner?.fullName || "Anfitrión",
       ownerWhatsappVerified: owner?.phoneVerified === true,
       createdAt: l.createdAt,
       updatedAt: l.updatedAt,

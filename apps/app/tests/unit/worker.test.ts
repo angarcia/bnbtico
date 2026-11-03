@@ -80,7 +80,7 @@ describe("worker · ficha /casa/CT-####", () => {
     // La zona va sola junto al pin; «Ubicación aproximada» queda bajo el mapa.
     expect(html).toMatch(/<span class="listing-zone" data-testid="listing-zone"><svg[^>]*>[\s\S]*?<\/svg>Playa Negra, Talamanca<\/span>/);
     expect(html).not.toContain("· ubicación aproximada");
-    expect(html).toContain("fechas, precio y pago los acuerda directamente con el propietario");
+    expect(html).toContain("fechas, precio y pago los acuerda directamente con el anfitrión");
     expect(html).toContain("Contactar por WhatsApp");
     expect(html).toContain("1 / 6");
   });
@@ -347,15 +347,15 @@ describe("worker · enlaces que no se muestran", () => {
     expect(a.status).toBe(410);
     const ha = await a.text();
     expect(ssrData(ha)).toEqual({ page: "blocked", reason: "stopped" });
-    expect(ha).toContain("El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
-    expect(ha).toContain("Si ya habló con el propietario por WhatsApp");
+    expect(ha).toContain("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(ha).toContain("Si ya habló con el anfitrión por WhatsApp");
     expect(ha).not.toContain("Contactar por WhatsApp");
 
     const b = await t.request(`/casa/${unpaid.publicId}`);
     expect(b.status).toBe(410);
     const hb = await b.text();
     expect(ssrData(hb)).toEqual({ page: "blocked", reason: "payment" });
-    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.");
+    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.");
     expect(b.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
     expect(reason).toHaveBeenCalledTimes(2);
   });

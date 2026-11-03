@@ -339,7 +339,7 @@ test("barra de precio: sin fechas una línea; con fechas el total; «Mensual» s
   for (const [casa, total35, monthly] of [
     [conMensual, "≈ ₡1 050 000 / 35 noches", "Mensual: ₡900 000 / mes"], // por meses: 900 000 × 35 / 30
     [soloNoches, "≈ ₡3 380 000 / 35 noches", null],
-    [negociable, "≈ ₡3 380 000 / 35 noches", "Mensual: precio a negociar con el dueño"],
+    [negociable, "≈ ₡3 380 000 / 35 noches", "Mensual: precio a negociar con el anfitrión"],
   ] as const) {
     const visit = async (dates: readonly [string, string] | null) => {
       const context = await browser.newContext({ viewport: { width: 375, height: 667 }, isMobile: true, hasTouch: true, serviceWorkers: "block" });

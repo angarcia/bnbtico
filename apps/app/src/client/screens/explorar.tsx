@@ -251,7 +251,7 @@ function UsdNote() {
   const credit = FX_ATTRIBUTION[fx.source];
   return (
     <p className="xs muted" data-testid="usd-note">
-      Dólares solo para orientarle: ≈ {fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del {fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.
+      Dólares solo para orientarle: ≈ {fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del {fxDayLabel(fx.day)}). Los anfitriones fijan sus precios en colones.
       {credit ? (
         <>
           {" · "}

@@ -190,7 +190,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await nightly.fill("85.000");
   await accepts.getByText("Sí", { exact: true }).tap();
   await expect(monthly).toBeVisible();
-  await expect(monthly).toHaveAccessibleDescription("Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».");
+  await expect(monthly).toHaveAccessibleDescription("Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».");
   await expect(nightly).toHaveAttribute("enterkeyhint", "next");
   await expect(monthly).toHaveAttribute("enterkeyhint", "done");
   await expectKeyboardRoom(page, "pub-monthlyPriceCrc");

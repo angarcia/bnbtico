@@ -96,7 +96,7 @@ export function filterHouses(houses: readonly AdminHouse[], chip: HouseChip, que
  *  «Parada por el propietario el 9 oct»). Distinta de la del propietario (subscriptionLine): habla de la casa, no a usted. */
 export function adminHouseLine(sub: HouseSubscription, today: string): string {
   if (sub.hold === "blocked") return "Suscripción parada mientras esté bloqueada";
-  if (sub.status === "inactive" || sub.stoppedOn) return sub.stoppedOn ? `Parada por el propietario el ${shortDate(sub.stoppedOn, today)}` : "Parada por el propietario";
+  if (sub.status === "inactive" || sub.stoppedOn) return sub.stoppedOn ? `Parada por el anfitrión el ${shortDate(sub.stoppedOn, today)}` : "Parada por el anfitrión";
   if (sub.status === "payment_due")
     return sub.promoEndsOn ? `Oferta vencida el ${shortDate(sub.promoEndsOn, today)} · sin método de pago` : "Sin oferta de lanzamiento · sin método de pago";
   if (sub.plan === "promo" && sub.promoEndsOn && (today <= sub.promoEndsOn || !sub.hasMethod)) return `Gratis hasta ${cardDate(sub.promoEndsOn)}`;

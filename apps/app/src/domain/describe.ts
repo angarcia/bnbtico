@@ -61,7 +61,7 @@ export function mapPriceLabel(l: PriceFields & { stayTotalCrc?: number | null },
   if (!price) return "A negociar";
   return formatMoney("stayTotalCrc" in price ? price.stayTotalCrc : price.amount, currency, fx);
 }
-export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
+export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el anfitrión";
 
 function situation(l: Listing, now: number): string {
   switch (l.status) {

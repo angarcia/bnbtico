@@ -222,7 +222,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
           <div>
             <h2 id="contact-title">Escríbale a {name}</h2>
             <span className="small muted">
-              Propietario de {title}
+              Anfitrión de {title}
               {listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
             </span>
           </div>

@@ -193,7 +193,7 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
             <input id="pub-monthlyPriceCrc" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" value={text} onChange={(e) => setText(e.currentTarget.value)} placeholder="350 000" aria-describedby="pub-monthlyPriceCrc-help" />
           </div>
           <span id="pub-monthlyPriceCrc-help" className="xs muted">
-            Si lo deja vacío, en su ficha dirá «Precio a negociar con el dueño».
+            Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».
           </span>
         </div>
       ) : null}

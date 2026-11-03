@@ -1,3 +1,7 @@
+## 2026-11-03 · «Anfitrión» en toda la interfaz (ronda de Ana, ticket 02 rehecho; Daniel)
+
+«Anfitrión/anfitriona/anfitriones» sustituye a «propietario/propietaria/propietarios/dueño» en todo el texto visible (ficha, hoja de contacto, Cuenta, ayuda, admin, avisos y los tres mensajes de `create_inquiry`, migración `anfitrion_en_consultas`): los anfitriones pueden ser propietarios o agencias. En el código sigue `Owner`/`owner` y las rutas `/propietario/...`; la landing no se toca. La app compara el mensaje de `create_inquiry` para «Ingrese con su WhatsApp…»: la migración va antes que el código.
+
 ## 2026-11-03 · Calendario de la ficha para elegir fechas, compartidas con la hoja de contacto (ronda de Ana, ticket 08 rehecho; Daniel)
 
 Cierra A3 (2026-10-26) y el «solo para mirar» de N4 (2026-10-29).

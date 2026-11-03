@@ -283,8 +283,8 @@ describe("prototipo · estados-casa.cjs", () => {
 
   it("el 410 de una casa parada dice «paró la suscripción»; el de una sin pagar, «regularice su suscripción»", () => {
     expect(blockedReason("stopped")).toMatch(/paró la suscripción/);
-    expect(blockedReason("stopped")).toBe("El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
-    expect(blockedReason("payment")).toBe("Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.");
+    expect(blockedReason("stopped")).toBe("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(blockedReason("payment")).toBe("Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.");
     expect(blockedReason("other")).toBe("Este anuncio no está disponible en este momento.");
     expect(blockedReason(null)).toBe("Este anuncio no está disponible en este momento.");
   });

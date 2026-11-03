@@ -84,6 +84,6 @@ test("con la fuente principal (sin atribución) no hay enlace en ningún sitio",
   await usd(page);
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$209");
-  await expect(page.getByTestId("usd-note")).toHaveText("Dólares solo para orientarle: ≈ ₡455 por US$1 (tipo de referencia del 3 nov.). Los propietarios fijan sus precios en colones.");
+  await expect(page.getByTestId("usd-note")).toHaveText("Dólares solo para orientarle: ≈ ₡455 por US$1 (tipo de referencia del 3 nov.). Los anfitriones fijan sus precios en colones.");
   await expect(page.getByTestId("usd-note").getByRole("link")).toHaveCount(0);
 });

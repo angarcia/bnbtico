@@ -207,7 +207,7 @@ export function fromPublicRow(row: PublicRow, url: PhotoUrl): PublicListing {
     minMonths: num(row.min_months),
     available: row.available !== false,
     reopenAt: row.reopen_at ?? null,
-    ownerName: row.owner_name || "Propietario",
+    ownerName: row.owner_name || "Anfitrión",
     ownerWhatsappVerified: row.owner_whatsapp_verified === true,
     createdAt: row.created_at ?? "",
     updatedAt: row.updated_at ?? "",

@@ -295,7 +295,7 @@ test.describe("ficha 410 con su motivo", () => {
     expect(res?.status()).toBe(410);
     await expect(page.getByRole("heading", { level: 1, name: "Este enlace ya no está activo" })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-    await expect(page.getByText("Si ya habló con el propietario por WhatsApp, puede seguir esa conversación por su cuenta.")).toBeVisible();
+    await expect(page.getByText("Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Ver otras casas en el Caribe" })).toHaveAttribute("href", "/explorar");
     await expect(page.getByRole("button", { name: /Contactar/ })).toHaveCount(0);
   }
@@ -309,11 +309,11 @@ test.describe("ficha 410 con su motivo", () => {
     const editada = await h.seed({ status: "reopened" });
 
     await open410(page, parada.publicId);
-    await expect(page.getByText("El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.")).toBeVisible();
+    await expect(page.getByText("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.")).toBeVisible();
     await page.screenshot({ path: "test-results/capturas/410-parada.png", fullPage: true });
 
     await open410(page, debe.publicId);
-    await expect(page.getByText("Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.")).toBeVisible();
+    await expect(page.getByText("Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.")).toBeVisible();
     await page.screenshot({ path: "test-results/capturas/410-pago.png", fullPage: true });
 
     await open410(page, editada.publicId);

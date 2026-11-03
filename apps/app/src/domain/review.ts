@@ -46,7 +46,7 @@ export function editNoteRefusal(decision: EditDecision, note: string): string | 
 /** Aviso tras decidir una edición. */
 export const EDIT_REVIEW_SAVED: Record<EditDecision, string> = {
   approve: "Cambios aprobados. La ficha ya los muestra.",
-  changes: "Cambios pedidos. El propietario verá su mensaje.",
+  changes: "Cambios pedidos. El anfitrión verá su mensaje.",
 };
 
 export interface QueueItem {
