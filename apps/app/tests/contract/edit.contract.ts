@@ -59,6 +59,16 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       expect((await h.anon.getPublic(s.publicId))?.bedrooms).toBe(1);
     });
 
+    it("updateLive en una Habitación: el baño es siempre 1 (sin mandarlo, con null o con otra cifra)", async () => {
+      const s = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: false, bathrooms: 2 } });
+      expect((await me.getOwn(s.id))?.bathrooms).toBe(1);
+      await me.updateLive(s.id, { capacity: 3 });
+      await me.updateLive(s.id, { bathrooms: null });
+      await me.updateLive(s.id, { bathrooms: 4 });
+      expect(await me.getOwn(s.id)).toMatchObject({ capacity: 3, bedrooms: 1, bathrooms: 1, status: "active" });
+      expect((await h.anon.getPublic(s.publicId))?.bathrooms).toBe(1);
+    });
+
     it("updateLive rechaza un borrador y parqueo sin tipo, con los mensajes de la base", async () => {
       expect((await rejection(me.updateLive((await h.seed({ status: "draft" })).id, { capacity: 3 }))).message).toBe("Solo puede cambiar así una casa publicada.");
       expect((await rejection(me.updateLive((await h.seed({ status: "active" })).id, { features: ["parking"], parkingPaid: null }))).message).toBe("Indique si el parqueo es gratuito o de pago.");
@@ -301,15 +311,15 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
         expect(await admin().getEdit(s.id)).toBeNull();
       });
 
-      it("un completo (de 3 o un estudio de 0) que pasa a Habitación: se envía sin pedir habitaciones y al aprobarlo queda en 1", async () => {
+      it("un completo (de 3 o un estudio de 0) que pasa a Habitación: se envía sin pedir habitaciones y al aprobarlo queda en 1 (y 1 baño)", async () => {
         for (const bedrooms of [3, 0]) {
-          const s = await h.seed({ status: "active", draft: { kind: "completo", bedrooms } });
+          const s = await h.seed({ status: "active", draft: { kind: "completo", bedrooms, bathrooms: 2 } });
           await me.saveEdit(s.id, { kind: "habitacion", bathroomShared: false });
           expect((await me.getOwn(s.id))?.bedrooms, `${bedrooms} hab.`).toBe(bedrooms); // pendiente: aún no cambia
           const at = (await admin().getEdit(s.id))?.listing.edit?.fields.tipo?.submittedAt ?? null;
           await admin().reviewEditField(s.id, "tipo", "approve", "", at);
-          expect(await me.getOwn(s.id)).toMatchObject({ kind: "habitacion", bathroomShared: false, bedrooms: 1, status: "active", edit: null });
-          expect((await h.anon.getPublic(s.publicId))?.bedrooms).toBe(1);
+          expect(await me.getOwn(s.id)).toMatchObject({ kind: "habitacion", bathroomShared: false, bedrooms: 1, bathrooms: 1, status: "active", edit: null });
+          expect(await h.anon.getPublic(s.publicId)).toMatchObject({ bedrooms: 1, bathrooms: 1 });
         }
       });
 

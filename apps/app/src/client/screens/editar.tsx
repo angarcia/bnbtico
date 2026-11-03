@@ -41,7 +41,7 @@ export function EditarCampoScreen() {
   const l = query.data;
   const ficha = <Navigate to="/propietario/casas/$id" params={{ id }} replace />;
   if (!field || (l && (!isPublished(l) || isBlocked(l)))) return ficha;
-  // Una Habitación no cuenta habitaciones: «Personas y baños» (con el tipo aprobado, el de sus contadores).
+  // Una Habitación solo pregunta personas: «Personas» (con el tipo aprobado, el de sus contadores).
   const header = <FlowHeader title={fieldTitle(field, l?.kind)} back={`/propietario/casas/${id}`} historyBack />;
   if (l === null)
     return (

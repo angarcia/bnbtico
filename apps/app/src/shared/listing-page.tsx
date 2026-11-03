@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
-import { describe, isNegotiable, type MonthlyPrice, type Price } from "../domain/describe";
+import { capacityLine, describe, isNegotiable, type MonthlyPrice, type Price } from "../domain/describe";
 import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatUSD } from "../domain/money";
@@ -31,7 +31,6 @@ import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 
 const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
 const LONG_TITLE = 38;
@@ -298,7 +297,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
               {[l.zone, l.canton].filter(Boolean).join(", ")}
             </span>
             <span className="muted" data-testid="listing-capacity">
-              {plural(l.capacity, "persona", "personas")} · {plural(l.bedrooms, "habitación", "habitaciones")} · {plural(l.bathrooms, "baño", "baños")}
+              {capacityLine(l)}
             </span>
           </div>
           {/* Sin reseñas, la persona verificada es la confianza: justo bajo la cabecera, en su fila entre dos líneas (revisión UX A10; como en Airbnb). */}

@@ -1,6 +1,6 @@
 import { describe as group, expect, it } from "vitest";
 import { can, type ListingAction } from "../../src/domain/can";
-import { cardPrice, describe } from "../../src/domain/describe";
+import { capacityLine, capacitySummary, cardPrice, describe } from "../../src/domain/describe";
 import { emptyDraft, type Listing, type ListingStatus, type PublicListing } from "../../src/domain/listing";
 
 const NOW = Date.parse("2026-10-22T12:00:00Z");
@@ -147,5 +147,26 @@ group("can", () => {
   it("un borrador que ya fue revisado no se descarta (conserva su CT-####)", () => {
     expect(can({ status: "draft", reviewedAt: "2026-10-20T10:00:00Z" }, "discard")).toBe(false);
     expect(can({ status: "draft", reviewedAt: "2026-10-20T10:00:00Z" }, "edit")).toBe(true);
+  });
+});
+
+group("capacidad: ficha y resumen de «Revisar y enviar»", () => {
+  const house = { kind: "completo" as const, capacity: 5, bedrooms: 2, bathrooms: 2, bathroomShared: null };
+  const room = { kind: "habitacion" as const, capacity: 2, bedrooms: 1, bathrooms: 1, bathroomShared: true };
+  it("un alojamiento completo cuenta personas, habitaciones y baños", () => {
+    expect(capacityLine(house)).toBe("5 personas · 2 habitaciones · 2 baños");
+    expect(capacityLine({ ...house, capacity: 1, bedrooms: 1, bathrooms: 1 })).toBe("1 persona · 1 habitación · 1 baño");
+    expect(capacitySummary(house)).toBe("5 pers. · 2 hab. · 2 baños");
+    expect(capacitySummary({ ...house, bathrooms: 1 })).toBe("5 pers. · 2 hab. · 1 baño");
+  });
+  it("una Habitación dice el tipo de baño en vez del número (sin elegir, «1 baño»)", () => {
+    expect(capacityLine(room)).toBe("2 personas · 1 habitación · baño compartido");
+    expect(capacityLine({ ...room, bathroomShared: false })).toBe("2 personas · 1 habitación · baño privado");
+    expect(capacityLine({ ...room, bathroomShared: null })).toBe("2 personas · 1 habitación · 1 baño");
+    // Un dato viejo (más baños o habitaciones) no cambia lo que se lee: una Habitación es 1 y 1.
+    expect(capacityLine({ ...room, bedrooms: 3, bathrooms: 2, bathroomShared: null })).toBe("2 personas · 1 habitación · 1 baño");
+    expect(capacitySummary(room)).toBe("2 pers. · baño compartido");
+    expect(capacitySummary({ ...room, bathroomShared: false })).toBe("2 pers. · baño privado");
+    expect(capacitySummary({ ...room, bathroomShared: null, bathrooms: null })).toBe("2 pers. · 1 baño");
   });
 });

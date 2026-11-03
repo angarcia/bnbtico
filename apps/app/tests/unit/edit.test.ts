@@ -61,19 +61,19 @@ describe("editar una casa publicada · dominio", () => {
     expect(planEdit(activeListing, "caracteristicas", { features: ["wifi", "parking"], parkingPaid: null })).toEqual({ error: "Indique si el parqueo es gratuito o de pago." });
     expect(planEdit(activeListing, "capacidad", { capacity: 2, bedrooms: 1, bathrooms: 1 })).toEqual({ immediate: {} });
   });
-  it("fieldTitle: una Habitación no cuenta habitaciones («Personas y baños»)", () => {
-    expect(fieldTitle("capacidad", "habitacion")).toBe("Personas y baños");
+  it("fieldTitle: una Habitación solo pregunta personas («Personas»; el baño va con el tipo)", () => {
+    expect(fieldTitle("capacidad", "habitacion")).toBe("Personas");
     expect(fieldTitle("capacidad", "completo")).toBe("Personas, habitaciones y baños");
     expect(fieldTitle("capacidad", null)).toBe("Personas, habitaciones y baños");
     expect(fieldTitle("capacidad")).toBe("Personas, habitaciones y baños");
     expect(fieldTitle("nombre", "habitacion")).toBe("Nombre");
   });
-  it("planEdit: la capacidad de una Habitación no pide habitaciones (el formulario no las manda) y se queda en 1", () => {
-    const room = { ...activeListing, kind: "habitacion" as const, bathroomShared: true, bedrooms: 1 };
-    expect(parseField("capacidad", formInput([["capacity", "3"], ["bathrooms", "1"]]))).toEqual({ capacity: 3, bedrooms: null, bathrooms: 1 });
-    expect(planEdit(room, "capacidad", { capacity: 3, bedrooms: null, bathrooms: 1 })).toEqual({ immediate: { capacity: 3 } });
-    // Un dato viejo (null) se corrige al guardar.
-    expect(planEdit({ ...room, bedrooms: null }, "capacidad", { capacity: 2, bedrooms: null, bathrooms: 1 })).toEqual({ immediate: { bedrooms: 1 } });
+  it("planEdit: la capacidad de una Habitación no pide habitaciones ni baños (el formulario solo manda personas) y se quedan en 1", () => {
+    const room = { ...activeListing, kind: "habitacion" as const, bathroomShared: true, bedrooms: 1, bathrooms: 1 };
+    expect(parseField("capacidad", formInput([["capacity", "3"]]))).toEqual({ capacity: 3, bedrooms: null, bathrooms: null });
+    expect(planEdit(room, "capacidad", { capacity: 3, bedrooms: null, bathrooms: null })).toEqual({ immediate: { capacity: 3 } });
+    // Un dato viejo (null o más de 1) se corrige al guardar.
+    expect(planEdit({ ...room, bedrooms: null, bathrooms: 2 }, "capacidad", { capacity: 2, bedrooms: null, bathrooms: null })).toEqual({ immediate: { bedrooms: 1, bathrooms: 1 } });
   });
   it("planEdit: un estudio (0 habitaciones) puede pasar a Habitación; la base fija 1 al aprobar", () => {
     const studio = { ...activeListing, bedrooms: 0 };

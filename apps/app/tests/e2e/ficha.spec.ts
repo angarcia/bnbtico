@@ -27,6 +27,7 @@ let larga: Seeded;
 let zonaLarga: Seeded;
 let negociable: Seeded;
 let descrita: Seeded;
+let cuarto: Seeded;
 const LARGA = [
   "Cabina de madera frente al parque nacional Cahuita, a cinco minutos a pie de la playa, con hamacas y rancho.",
   "La casa tiene dos habitaciones con abanico y mosquiteros, cocina equipada y una terraza grande con vista al jardín.",
@@ -41,6 +42,7 @@ test.beforeAll(async () => {
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Playa Negra", zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, features: ["wifi", "pool", "parking"], parkingPaid: false } });
   cara = await h.seed({ status: "active", photos: 5, draft: { title: "Villa Punta Uva", zone: "Punta Uva", zoneSource: "other", zoneId: null, nightlyPriceCrc: 1250000, acceptsMonthly: true, monthlyPriceCrc: 2500000 } });
   negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
+  cuarto = await h.seed({ status: "active", draft: { title: "Cuarto en Cocles", kind: "habitacion", bathroomShared: true, capacity: 2, zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 25000 } });
   descrita = await h.seed({ status: "active", draft: { title: "Casa Descrita", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 60000, description: LARGA } });
   larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
   // Una zona «Otra…» larga (hasta 60 caracteres): «Playa Negra de Puerto Viejo de Talamanca, Talamanca» no cabe en un renglón a 375 px.
@@ -449,6 +451,15 @@ test("descripción larga: párrafos, «Ver más» a pantalla completa y atrás l
   await expect(page).toHaveURL(new RegExp(`/casa/${descrita.publicId}`));
   await page.goBack();
   await expect(page).toHaveURL(/\/explorar/);
+});
+
+test("la línea de capacidad: un completo cuenta los baños; una Habitación dice el tipo de baño, ya desde el servidor", async ({ page }) => {
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 habitación · 1 baño");
+  const response = await page.goto(`/casa/${cuarto.publicId}`);
+  expect(await response!.text()).toContain("2 personas · 1 habitación · baño compartido");
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 habitación · baño compartido");
 });
 
 test("descripción corta: entera, sin «Ver más»; cabecera centrada", async ({ page }) => {

@@ -587,23 +587,26 @@ test("corregir desde «Revisar y enviar»: «Continuar» guarda y vuelve al resu
   await expect(page.locator(".btn-back")).toHaveAttribute("aria-disabled", "true");
 });
 
-test("Habitación no pregunta habitaciones (son 1); Alojamiento completo sí, y cambiar de tipo lo respeta", async ({ page }) => {
-  const room = await h.seed({ status: "draft", photos: 1, draft: { kind: "habitacion", bathroomShared: true, bedrooms: null, capacity: null } });
+test("Habitación no pregunta habitaciones ni baños (son 1); Alojamiento completo sí, y cambiar de tipo lo respeta", async ({ page }) => {
+  const room = await h.seed({ status: "draft", photos: 1, draft: { kind: "habitacion", bathroomShared: true, bedrooms: null, bathrooms: null, capacity: null } });
   await page.goto(`/propietario/publicar/${room.id}/4`);
   await expect(page.getByRole("heading", { name: "¿Cuántos caben?" })).toBeVisible();
   await expect(page.getByText("Personas", { exact: true })).toBeVisible();
-  await expect(page.getByText("Baños", { exact: true })).toBeVisible();
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
   await expect(page.getByText("Habitaciones", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Más habitaciones" })).toHaveCount(0);
+  await expect(page.getByText("Baños", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Más baños" })).toHaveCount(0);
   await expectNoScroll(page, "paso 4 de una Habitación");
   await count(page, "personas", 2);
   await continuar(page);
   await expect(page).toHaveURL(/\/5$/);
-  await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "habitacion", capacity: 2, bedrooms: 1 });
-  // En el resumen, la capacidad de una Habitación no cuenta habitaciones.
+  await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "habitacion", capacity: 2, bedrooms: 1, bathrooms: 1 });
+  // En el resumen, la capacidad de una Habitación no cuenta habitaciones ni baños: dice el tipo de baño, sin aviso ocre.
   await page.goto(`/propietario/publicar/${room.id}/9`);
-  await expect(page.getByRole("link", { name: /Capacidad/ }).locator(".review-text")).toHaveText("2 pers. · 1 baño");
+  const capacidad = page.getByRole("link", { name: /Capacidad/ });
+  await expect(capacidad.locator(".review-text")).toHaveText("2 pers. · baño compartido");
+  await expect(capacidad).not.toHaveAttribute("data-warn", "true");
 
   // De Habitación a Alojamiento completo: el contador vuelve, con la habitación que tenía (1), y se puede cambiar.
   await page.goto(`/propietario/publicar/${room.id}/1`);
@@ -612,10 +615,12 @@ test("Habitación no pregunta habitaciones (son 1); Alojamiento completo sí, y 
   await expect(page).toHaveURL(/\/2$/);
   await page.goto(`/propietario/publicar/${room.id}/4`);
   await expect(page.getByText("Habitaciones", { exact: true })).toBeVisible();
+  await expect(page.getByText("Baños", { exact: true })).toBeVisible();
   await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
   await count(page, "habitaciones", 1);
+  await count(page, "baños", 1);
   await continuar(page);
-  await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "completo", bedrooms: 2 });
+  await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "completo", bedrooms: 2, bathrooms: 2 });
 });
 
 test("lo que no es obligatorio (capacidad, parqueo, descripción) sale en ocre y no impide enviar", async ({ page }) => {

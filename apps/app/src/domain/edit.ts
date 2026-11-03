@@ -94,8 +94,9 @@ export const FIELD_TITLES: Record<EditField, string> = {
   precio: "Precio",
 };
 
-/** Título de un dato en la ficha editable y en su pantalla: una Habitación no cuenta habitaciones (son 1). */
-export const fieldTitle = (field: EditField, kind?: Kind | null): string => (field === "capacidad" && kind === "habitacion" ? "Personas y baños" : FIELD_TITLES[field]);
+/** Título de un dato en la ficha editable y en su pantalla: una Habitación solo pregunta personas (es 1 habitación y 1
+ *  baño; si el baño es privado o compartido va con el tipo, que pasa por revisión). */
+export const fieldTitle = (field: EditField, kind?: Kind | null): string => (field === "capacidad" && kind === "habitacion" ? "Personas" : FIELD_TITLES[field]);
 
 /** La pantalla del asistente cuyos campos y reglas reutiliza cada dato. */
 export const FIELD_STEP: Record<FormField, Step> = { tipo: 1, ubicacion: 2, capacidad: 4, caracteristicas: 5, nombre: 6, descripcion: 6, precio: 8 };

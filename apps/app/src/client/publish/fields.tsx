@@ -11,6 +11,7 @@ import { requiredProblems, warnings } from "../../domain/publish-rules";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
 import { accountQuery } from "../account";
+import { capacitySummary } from "../../domain/describe";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
@@ -201,14 +202,18 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
   );
 }
 
-/** Personas, habitaciones y baños: la pantalla 4 y la capacidad de una casa publicada. Una Habitación no pregunta
- *  habitaciones: son 1 (`normalize`). */
+/** Personas, habitaciones y baños: la pantalla 4 y la capacidad de una casa publicada. Una Habitación solo pregunta
+ *  personas: es 1 habitación y 1 baño (`normalize`); el baño privado o compartido va aparte (`BathroomChoice`). */
 export function CapacityCounters({ draft }: { draft: ListingDraft }) {
   return (
     <div className="card counters">
       <Counter name="capacity" label="Personas" value={draft.capacity} min={1} />
-      {draft.kind === "habitacion" ? null : <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={0} />}
-      <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} />
+      {draft.kind === "habitacion" ? null : (
+        <>
+          <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={0} />
+          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} />
+        </>
+      )}
     </div>
   );
 }
@@ -321,8 +326,8 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   const rows: { step: Step; label: string; value: string }[] = [
     { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
     { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
-    // Una Habitación no cuenta habitaciones (son 1): «2 pers. · 1 baño».
-    { step: 4, label: "Capacidad", value: d.capacity ? `${d.capacity} pers. · ${d.kind === "habitacion" ? "" : `${d.bedrooms ?? 0} hab. · `}${d.bathrooms ?? 0} ${d.bathrooms === 1 ? "baño" : "baños"}` : "Falta indicarla" },
+    // Una Habitación no cuenta habitaciones ni baños (son 1): «2 pers. · baño compartido».
+    { step: 4, label: "Capacidad", value: d.capacity ? capacitySummary(d) : "Falta indicarla" },
     // El parqueo no tiene fila propia: solo aparece cuando hay que decir si se paga.
     ...(warned.some((w) => w.step === 5) ? [{ step: 5 as Step, label: "Parqueo", value: "Falta indicar si se paga" }] : []),
     { step: 6, label: "Nombre", value: title ? `«${title}»${d.description.trim() ? "" : " · sin descripción"}` : "Sin nombre" },

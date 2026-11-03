@@ -235,6 +235,8 @@ export function editStore(db: FakeDb) {
       const keys = Object.keys(patch);
       if (keys.some((k) => !(LIVE_KEYS as readonly string[]).includes(k))) throw invalid(EDIT_MESSAGES.notHere);
       const m = { ...l, ...patch };
+      // Una Habitación no pide baños: es 1 (update_listing_live; las habitaciones las sigue validando y el trigger deja 1).
+      if (l.kind === "habitacion") m.bathrooms = 1;
       if (!Array.isArray(m.features) || m.features.some((f) => !KNOWN_FEATURES.has(f)) || typeof m.acceptsMonthly !== "boolean") throw invalid(EDIT_MESSAGES.notHere);
       if (!m.acceptsMonthly) m.monthlyPriceCrc = null;
       if ((m.capacity ?? 0) < 1) throw invalid("Indique cuántas personas pueden alojarse (mínimo 1).");

@@ -56,6 +56,24 @@ export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms"> & { ki
   return `${people} · ${rooms}`;
 }
 
+type CapacityFields = { kind: PublicListing["kind"] | null; capacity: number | null; bedrooms: number | null; bathrooms: number | null; bathroomShared: boolean | null };
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+/** El baño: en una Habitación (siempre 1) dice si es compartido o privado, y «1 baño» si aún no se eligió; si no, cuántos. */
+const bathLabel = (l: CapacityFields): string =>
+  l.kind === "habitacion" ? (l.bathroomShared === null ? "1 baño" : l.bathroomShared ? "baño compartido" : "baño privado") : count(l.bathrooms ?? 0, "baño", "baños");
+
+/** La capacidad en la ficha: «5 personas · 2 habitaciones · 2 baños»; una Habitación, «2 personas · 1 habitación · baño
+ *  compartido» (ronda de Ana 2026-11-02, ticket 03). */
+export function capacityLine(l: CapacityFields): string {
+  return [count(l.capacity ?? 0, "persona", "personas"), count(l.kind === "habitacion" ? 1 : (l.bedrooms ?? 0), "habitación", "habitaciones"), bathLabel(l)].join(" · ");
+}
+
+/** La capacidad en corto, en la fila de «Revisar y enviar»: «5 pers. · 2 hab. · 2 baños»; una Habitación no cuenta
+ *  habitaciones: «2 pers. · baño compartido». */
+export function capacitySummary(l: CapacityFields): string {
+  return [`${l.capacity ?? 0} pers.`, ...(l.kind === "habitacion" ? [] : [`${l.bedrooms ?? 0} hab.`]), bathLabel(l)].join(" · ");
+}
+
 /** El marcador del mapa de Explorar: la cifra de la tarjeta sin unidad («₡42 000», «$80»; con fechas, el total sin «por N
  *  noches»); sin precio, «A negociar». */
 export function mapPriceLabel(l: PriceFields & { stayTotalCrc?: number | null }, nights: number, currency: Currency, fx: number): string {

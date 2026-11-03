@@ -226,9 +226,23 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         await me.deleteDraft(draft.id);
       });
 
+      it("Habitación = 1 baño: al elegir el tipo y aunque el paso 4 no mande baños; de Habitación a completo se queda en 1, editable", async () => {
+        const draft = await me.createDraft();
+        expect(await me.saveStep(draft.id, 1, { kind: "completo" })).toMatchObject({ kind: "completo" });
+        expect(await me.saveStep(draft.id, 4, { capacity: 4, bedrooms: 2, bathrooms: 3, bathroomShared: null })).toMatchObject({ bathrooms: 3 });
+        expect(await me.saveStep(draft.id, 1, { kind: "habitacion" })).toMatchObject({ kind: "habitacion", bedrooms: 1, bathrooms: 1 });
+        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: null, bathrooms: null, bathroomShared: false })).toMatchObject({ capacity: 2, bedrooms: 1, bathrooms: 1, bathroomShared: false });
+        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: null, bathrooms: 4, bathroomShared: false })).toMatchObject({ bathrooms: 1 });
+        expect(await me.getOwn(draft.id)).toMatchObject({ kind: "habitacion", bedrooms: 1, bathrooms: 1 });
+        expect(await me.saveStep(draft.id, 1, { kind: "completo" })).toMatchObject({ kind: "completo", bathrooms: 1, bathroomShared: null });
+        expect(await me.saveStep(draft.id, 4, { capacity: 4, bedrooms: 2, bathrooms: 2, bathroomShared: null })).toMatchObject({ bathrooms: 2 });
+        expect(await me.getOwn(draft.id)).toMatchObject({ kind: "completo", bathrooms: 2 });
+        await me.deleteDraft(draft.id);
+      });
+
       it("una Habitación guardada sin habitaciones (por cualquier camino) queda en 1", async () => {
-        const room = await h.seed({ status: "draft", draft: { kind: "habitacion", bedrooms: null, bathroomShared: true } });
-        expect((await me.getOwn(room.id))?.bedrooms).toBe(1);
+        const room = await h.seed({ status: "draft", draft: { kind: "habitacion", bedrooms: null, bathrooms: 3, bathroomShared: true } });
+        expect(await me.getOwn(room.id)).toMatchObject({ bedrooms: 1, bathrooms: 1 });
         await me.deleteDraft(room.id);
       });
 

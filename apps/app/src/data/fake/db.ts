@@ -309,9 +309,9 @@ export class FakeDb {
   }
 }
 
-/** Trigger listings_habitacion_una: una Habitación es siempre 1 habitación, la escriba quien la escriba. */
-export function oneRoom(l: Pick<FakeListing, "kind" | "bedrooms">): void {
-  if (l.kind === "habitacion") l.bedrooms = 1;
+/** Trigger listings_habitacion_una: una Habitación es siempre 1 habitación y 1 baño, la escriba quien la escriba. */
+export function oneRoom(l: Pick<FakeListing, "kind" | "bedrooms" | "bathrooms">): void {
+  if (l.kind === "habitacion") Object.assign(l, { bedrooms: 1, bathrooms: 1 });
 }
 
 /** Como approx_point en SQL: desplazamiento determinista por casa entre 150 y 499 m (el hash no tiene que coincidir). */

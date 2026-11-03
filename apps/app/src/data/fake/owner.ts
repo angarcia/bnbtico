@@ -23,7 +23,7 @@ import {
   planStep,
 } from "../../domain/publish-rules";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
-import type { FakeDb, FakeListing } from "./db";
+import { oneRoom, type FakeDb, type FakeListing } from "./db";
 import { editStore, locationOf, type Located } from "./edits";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
@@ -69,7 +69,8 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
     return { ...l, features: [...l.features], photos, photoCount: photos.length, edit: edits.toEdit(l.id, url) };
   };
 
-  const touch = (l: FakeListing, patch: Partial<FakeListing>) => Object.assign(l, patch, { updatedAt: db.now() });
+  // Como el trigger listings_habitacion_una: lo que se guarde de una Habitación queda en 1 habitación y 1 baño.
+  const touch = (l: FakeListing, patch: Partial<FakeListing>) => oneRoom(Object.assign(l, patch, { updatedAt: db.now() }));
 
   return {
     async listOwn() {
