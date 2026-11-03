@@ -74,11 +74,21 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toContain("₡95\u00a0000");
     expect(html).toContain("· orientativo");
     // Revisión UX A10: la persona que alquila, bajo el nombre (iniciales y nombre de pila), en vez de la etiqueta suelta.
-    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?WhatsApp verificado/);
+    // Ronda de Ana 2026-11-02 (01): debajo del nombre, «Anfitrión · WhatsApp verificado».
+    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?<span class="muted">Anfitrión · WhatsApp verificado<\/span>/);
     expect(html).not.toMatch(/class="badge badge-ok"[^>]*>[\s\S]{0,200}WhatsApp verificado/);
+    // La zona va sola junto al pin; «Ubicación aproximada» queda bajo el mapa.
+    expect(html).toMatch(/<span class="listing-zone" data-testid="listing-zone"><svg[^>]*>[\s\S]*?<\/svg>Playa Negra, Talamanca<\/span>/);
+    expect(html).not.toContain("· ubicación aproximada");
     expect(html).toContain("fechas, precio y pago los acuerda directamente con el propietario");
     expect(html).toContain("Contactar por WhatsApp");
     expect(html).toContain("1 / 6");
+  });
+
+  it("con el WhatsApp del anfitrión sin verificar, debajo del nombre solo «Anfitrión»", async () => {
+    t.h.db.profiles.get(t.h.ownerId("owner"))!.phoneVerified = false;
+    const html = await (await t.request(`/casa/${casa.publicId}`)).text();
+    expect(html).toMatch(/data-testid="host-line"[\s\S]*?<b class="host-name">[^<]+<\/b><span class="muted">Anfitrión<\/span><\/span><\/div>/);
   });
 
   it("el botón de contacto llega como caja apagada sin interacción (se activa al hidratar) y nada de la hoja", async () => {

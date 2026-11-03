@@ -273,8 +273,10 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           ) : null}
           <div className="stack listing-head">
             <h1 className={`listing-title${l.title.length > LONG_TITLE ? " is-long" : ""}`}>{l.title}</h1>
-            <span className="row gap-6">
-              <I.pin size={18} /> {[l.zone, l.canton].filter(Boolean).join(", ")} · ubicación aproximada
+            {/* El pin va en línea, justo antes de la primera palabra: con dos renglones queda junto al primero (ronda de Ana 2026-11-02). */}
+            <span className="listing-zone" data-testid="listing-zone">
+              <I.pin size={18} />
+              {[l.zone, l.canton].filter(Boolean).join(", ")}
             </span>
             <span className="muted" data-testid="listing-capacity">
               {plural(l.capacity, "persona", "personas")} · {plural(l.bedrooms, "habitación", "habitaciones")} · {plural(l.bathrooms, "baño", "baños")}
@@ -288,7 +290,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             </span>
             <span className="stack host-text">
               <b className="host-name">{firstName(l.ownerName)}</b>
-              {l.ownerWhatsappVerified ? <span className="muted">WhatsApp verificado</span> : null}
+              <span className="muted">{l.ownerWhatsappVerified ? "Anfitrión · WhatsApp verificado" : "Anfitrión"}</span>
             </span>
           </div>
           <hr className="divider" />

@@ -315,9 +315,9 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
    y lo que flota sobre mapas o fotos siguen en blanco opaco. */
 .note-plain{background:var(--surface-soft);color:var(--fg)}
 .toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
-/* La foto de la ficha es cuadrada y de borde a borde, pegada arriba (detrás del notch); solo los botones se apartan del
-   área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
-.hero{position:relative;aspect-ratio:1/1;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
+/* La foto de la ficha es 5:4 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch);
+   solo los botones se apartan del área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
+.hero{position:relative;aspect-ratio:5/4;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
 .hero .top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between}
 .hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .hero .strip::-webkit-scrollbar{display:none}
@@ -982,7 +982,9 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .description-short{color:var(--sun-ink);font-weight:var(--w-medium)}
 /* Cabecera de la ficha: nombre, zona y personas, y la persona que alquila en su fila entre dos líneas (revisión UX A10; tamaños como en Airbnb). */
 .listing-head{gap:4px;align-items:center;text-align:center;line-height:1.25}
-.listing-head > .row{justify-content:center}
+/* El pin, en línea justo antes de la primera palabra (centrado con las mayúsculas del primer renglón: -0,2em lo baja
+   desde la línea base lo justo); la línea va centrada como la cabecera. Medido a 375 y 412 px (ronda de Ana 2026-11-02). */
+.listing-zone > svg{display:inline-block;vertical-align:-.2em;margin-right:4px}
 .host-line{align-items:center;line-height:1.3}
 .host-text{gap:2px}
 .host-name{font-size:18px}

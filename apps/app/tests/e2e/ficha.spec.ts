@@ -24,6 +24,7 @@ let casa: Seeded;
 let oculta: Seeded;
 let cara: Seeded;
 let larga: Seeded;
+let zonaLarga: Seeded;
 let negociable: Seeded;
 let descrita: Seeded;
 const LARGA = [
@@ -42,6 +43,8 @@ test.beforeAll(async () => {
   negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
   descrita = await h.seed({ status: "active", draft: { title: "Casa Descrita", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 60000, description: LARGA } });
   larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
+  // Una zona «Otra…» larga (hasta 60 caracteres): «Playa Negra de Puerto Viejo de Talamanca, Talamanca» no cabe en un renglón a 375 px.
+  zonaLarga = await h.seed({ status: "active", photos: 3, draft: { title: "Casa Zona Larga", zone: "Playa Negra de Puerto Viejo de Talamanca", zoneSource: "other", zoneId: null, nightlyPriceCrc: 70000 } });
   // Un nombre largo de antes del tope de 32 caracteres (publicar v2): las casas ya publicadas lo conservan.
   sql(`begin; set local app.allow_status = 'on'; update public.listings set title = 'Villa Manzanillo con piscina y rancho frente al mar Caribe' where id = '${larga.id}'; commit;`);
   const storage = serviceClient().storage.from("listings");
@@ -67,8 +70,10 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Playa Negra" })).toBeVisible();
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
-  // Cabecera como en Airbnb: nombre, zona y personas; una línea; la persona en su fila (nombre y debajo «WhatsApp verificado»); otra línea; la descripción.
-  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+\s*WhatsApp verificado$/u);
+  // Cabecera como en Airbnb: nombre, zona y personas; una línea; la persona en su fila (nombre y debajo «Anfitrión · WhatsApp verificado»); otra línea; la descripción.
+  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+\s*Anfitrión · WhatsApp verificado$/u);
+  // La zona sola, sin « · ubicación aproximada» (el aviso queda bajo el mapa). El cantón de las casas sembradas es Talamanca.
+  await expect(page.getByTestId("listing-zone")).toHaveText("Playa Negra, Talamanca");
   expect(
     await page.evaluate(() => {
       const host = document.querySelector('[data-testid="host-line"]')!;
@@ -89,9 +94,50 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-// Densidad y tarjetas (2026-10-29): en el teléfono la foto es el producto: cuadrada, de borde a borde y pegada arriba
-// (detrás del notch, como el diseño); solo los botones se apartan del área segura.
-test("a 375 px la foto es cuadrada, a todo el ancho y pegada arriba, e hidrata sin avisos", async ({ page }) => {
+/** Pin y primera letra de la zona, y cuántos renglones ocupa: el pin va en línea, pegado a la primera palabra. */
+const zoneGeometry = (page: Page) =>
+  page.evaluate(() => {
+    const zone = document.querySelector('[data-testid="listing-zone"]')!;
+    const pin = zone.querySelector("svg")!.getBoundingClientRect();
+    const text = [...zone.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim())!;
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, 1);
+    const first = range.getBoundingClientRect();
+    const box = zone.getBoundingClientRect();
+    return {
+      lines: Math.round(box.height / parseFloat(getComputedStyle(zone).lineHeight)),
+      pinTop: pin.top,
+      pinCenter: (pin.top + pin.bottom) / 2,
+      pinRight: pin.right,
+      firstTop: first.top,
+      firstCenter: (first.top + first.bottom) / 2,
+      firstLeft: first.left,
+      boxCenter: (box.left + box.right) / 2,
+      viewportCenter: innerWidth / 2,
+    };
+  });
+
+// Ronda de Ana 2026-11-02 (01): el pin va justo antes de la primera palabra y a la altura del primer renglón, con uno o dos renglones.
+test("a 375 px el pin queda pegado a la primera palabra y en el primer renglón, con la zona en uno o en dos renglones", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  for (const [publicId, lines] of [[casa.publicId, 1], [zonaLarga.publicId, 2]] as const) {
+    await page.goto(`/casa/${publicId}`);
+    await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const m = await zoneGeometry(page);
+    expect(m.lines, `${publicId}: renglones de la zona`).toBe(lines);
+    expect(Math.abs(m.pinTop - m.firstTop), `${publicId}: el pin a la altura del primer renglón`).toBeLessThanOrEqual(3);
+    expect(Math.abs(m.pinCenter - m.firstCenter), `${publicId}: el pin centrado en el primer renglón`).toBeLessThanOrEqual(1.5);
+    expect(m.firstLeft - m.pinRight, `${publicId}: el pin pegado al texto`).toBeGreaterThanOrEqual(0);
+    expect(m.firstLeft - m.pinRight, `${publicId}: el pin pegado al texto`).toBeLessThanOrEqual(8);
+    expect(Math.abs(m.boxCenter - m.viewportCenter), `${publicId}: la línea centrada`).toBeLessThanOrEqual(1);
+  }
+});
+
+// Densidad y tarjetas (2026-10-29): en el teléfono la foto es el producto: de borde a borde y pegada arriba
+// (detrás del notch, como el diseño); solo los botones se apartan del área segura. En 5:4 desde la ronda de Ana 2026-11-02 (antes cuadrada).
+test("a 375 px la foto es 5:4, a todo el ancho y pegada arriba, e hidrata sin avisos", async ({ page }) => {
   const seen = watch(page);
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto(`/casa/${casa.publicId}`);
@@ -100,9 +146,14 @@ test("a 375 px la foto es cuadrada, a todo el ancho y pegada arriba, e hidrata s
   expect(hero.x).toBeCloseTo(0, 0);
   expect(hero.y).toBeCloseTo(0, 0);
   expect(Math.abs(hero.width - 375)).toBeLessThanOrEqual(1);
-  expect(Math.abs(hero.height - 375)).toBeLessThanOrEqual(1);
+  expect(Math.abs(hero.height - 300)).toBeLessThanOrEqual(1);
   expect((await page.locator(".hero .top").boundingBox())!.y).toBeGreaterThanOrEqual(12);
   await expect(page.locator(".hero-counter")).toHaveText("1 / 5");
+  // En un Pixel 7 (412 px), el mismo 5:4: el alto sale del CSS, sin esperar a la imagen.
+  await page.setViewportSize({ width: 412, height: 915 });
+  const wide = (await page.locator(".hero").boundingBox())!;
+  expect(Math.abs(wide.width - 412)).toBeLessThanOrEqual(1);
+  expect(Math.abs(wide.height - 329.6)).toBeLessThanOrEqual(1);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
