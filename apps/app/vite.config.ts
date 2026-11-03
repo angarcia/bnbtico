@@ -119,6 +119,11 @@ function supportNumbers(): Plugin {
 export default defineConfig({
   plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers(), portadaOwnerCta()],
   define: { __BUILD_ID__: JSON.stringify(buildId) },
+  // zod/mini en su propio trozo (zod-*): ya no va en el JS inicial (filters.ts se lee a mano) y lo comparten el asistente
+  // de publicar y la edición; sin el grupo se pegaría a step-forms-* y las reglas de los formularios medirían 5 KB más.
+  environments: {
+    client: { build: { rolldownOptions: { output: { codeSplitting: { groups: [{ name: "zod", test: /[\\/]node_modules[\\/]zod[\\/]/ }] } } } } },
+  },
   // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).
   preview: { allowedHosts: ["host.docker.internal"] },
 });

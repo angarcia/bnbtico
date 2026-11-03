@@ -57,6 +57,34 @@ describe("arquitectura", () => {
     expect(html).not.toMatch(/<style\b|\sstyle=/);
   });
 
+  // zod/mini suma ~5 KB gz: solo en trozos diferidos (asistente, edición) y en el worker. Se sigue el grafo de imports
+  // estáticos desde las entradas del JS inicial (las `import("…")` dinámicas no cuentan: son trozos aparte).
+  it("el JS inicial no lleva zod", () => {
+    const resolve = (from: string, spec: string) => {
+      const base = join(from, "..", spec);
+      return [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts")].find((p) => existsSync(p) && statSync(p).isFile());
+    };
+    const seen = new Set<string>();
+    const offenders: string[] = [];
+    const walk = (path: string) => {
+      if (seen.has(path)) return;
+      seen.add(path);
+      const source = readFileSync(path, "utf8");
+      // Solo lo que llega al navegador: los `import type` se borran al compilar.
+      const values = [...source.matchAll(/^import\s+(?!type\s)[^;]*?from\s+["']([^"']+)["']/gm), ...source.matchAll(/^import\s+["']([^"']+)["']/gm)].map((m) => m[1]!);
+      for (const spec of values) {
+        if (spec === "zod" || spec === "zod/mini") offenders.push(relative(SRC, path));
+        else if (spec.startsWith(".")) {
+          const next = resolve(path, spec);
+          if (next) walk(next);
+        }
+      }
+    };
+    for (const entry of ["client/main.tsx", "client/start-shell.tsx", "client/hydrate-listing.tsx"]) walk(join(SRC, entry));
+    expect(seen.size).toBeGreaterThan(20);
+    expect(offenders).toEqual([]);
+  });
+
   it("el JS inicial de Explorar no arrastra trozos diferidos", () => {
     // Las importaciones dinámicas `import("…")` no las ve `imports()`: son las únicas permitidas hacia esos trozos.
     for (const path of ["domain/filters.ts", "domain/search.ts"].map((p) => join(SRC, p)).filter(existsSync)) {

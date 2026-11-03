@@ -1,3 +1,7 @@
+## 2026-11-03 · zod sale del JS inicial: los filtros de Explorar se leen a mano
+
+El CI marcó 150,03 KB en la zona privada inicial (límite 150) con el ticket 08. zod/mini (~5,2 KB gz) solo entraba por `domain/filters.ts`: su esquema de la URL pasa a una lectura escrita a mano (`parseSearch`, misma salida en 20 000 entradas aleatorias), como ya se hizo con la lista de favoritos y el paso 1 de publicar. zod va en su propio trozo diferido (`zod-*`, límite nuevo de 6 KB) y una prueba de arquitectura impide que vuelva al arranque. La zona privada inicial queda en 144,81 KB. Los demás esquemas zod (formularios del asistente y de la edición) no cambian.
+
 ## 2026-11-03 · «Anfitrión» en toda la interfaz (ronda de Ana, ticket 02 rehecho; Daniel)
 
 «Anfitrión/anfitriona/anfitriones» sustituye a «propietario/propietaria/propietarios/dueño» en todo el texto visible (ficha, hoja de contacto, Cuenta, ayuda, admin, avisos y los tres mensajes de `create_inquiry`, migración `anfitrion_en_consultas`): los anfitriones pueden ser propietarios o agencias. En el código sigue `Owner`/`owner` y las rutas `/propietario/...`; la landing no se toca. La app compara el mensaje de `create_inquiry` para «Ingrese con su WhatsApp…»: la migración va antes que el código.

@@ -38,7 +38,7 @@ No hay API intermedia, ni server actions, ni cookies de sesión en el servidor, 
 
 ## Módulo de dominio
 
-Un módulo TypeScript sin imports de framework: tipos generados de la base (`supabase gen types`, versionados y comprobados en CI), esquemas zod y validación por paso, mapeo tipado de filas, `describe(listing)` (precio principal, unidad, situación, enlace para compartir) y `can(listing, acción)` que refleja las reglas SQL. Dos interfaces, `ListingsApi` y `AuthApi`, con dos adaptadores cada una: PostgREST (el único archivo que importa supabase-js y conoce las columnas) y un fake en memoria que aplica propiedad y estados. **Una sola suite de contrato** corre contra los dos, así el fake no puede desviarse de la RLS. Invariantes en SQL; flujos en TypeScript; sin nuevo plpgsql de flujo.
+Un módulo TypeScript sin imports de framework: tipos generados de la base (`supabase gen types`, versionados y comprobados en CI), esquemas zod y validación por paso (los filtros de la URL se leen a mano para que zod no entre en el JS inicial, 2026-11-03), mapeo tipado de filas, `describe(listing)` (precio principal, unidad, situación, enlace para compartir) y `can(listing, acción)` que refleja las reglas SQL. Dos interfaces, `ListingsApi` y `AuthApi`, con dos adaptadores cada una: PostgREST (el único archivo que importa supabase-js y conoce las columnas) y un fake en memoria que aplica propiedad y estados. **Una sola suite de contrato** corre contra los dos, así el fake no puede desviarse de la RLS. Invariantes en SQL; flujos en TypeScript; sin nuevo plpgsql de flujo.
 
 ## Rendimiento
 

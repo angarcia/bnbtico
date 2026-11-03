@@ -3,7 +3,6 @@
 // Explorar al estilo Airbnb: `zona`, `llegada`/`salida`, `ppl` de 1 a 50 y `mapa`. Sin modo mensual desde el 2026-11-02:
 // `mensual`, `modo` y `desde` de los enlaces viejos se ignoran como cualquier clave desconocida.
 // No importa calendar.ts ni inquiry.ts (trozos diferidos): las fechas salen de dates.ts.
-import * as z from "zod/mini";
 import type { Currency } from "./currency";
 import { addDays, isoParts } from "./dates";
 import { DEFAULT_PROVINCE, FEATURE_LABEL, PROVINCES, parseColones, type Feature } from "./listing";
@@ -40,45 +39,43 @@ export interface ParseContext {
   zoneIds?: readonly string[];
 }
 
-// zod/mini: la misma validación con una fracción del peso (este esquema va en el JS inicial de Explorar).
-const first = z.pipe(
-  z._default(z.unknown(), ""),
-  z.transform((v): string => {
-    const x = Array.isArray(v) ? v[0] : v;
-    return typeof x === "string" || typeof x === "number" ? String(x) : "";
-  }),
-);
-const option = (options: readonly number[]) => z.pipe(first, z.transform((v) => (options.includes(Number(v)) ? Number(v) : 0)));
-const flag = z.pipe(first, z.transform((v) => v === "1"));
-const date = z.pipe(first, z.transform((v) => (isoParts(v) ? v : "")));
-const people = z.pipe(first, z.transform((v) => (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= SEARCH_MAX_PEOPLE ? Number(v) : 0)));
-const money = z.pipe(
-  first,
-  z.transform((v) => {
-    const n = parseColones(v);
-    return n === null || Number.isNaN(n) || n < 0 ? 0 : n;
-  }),
-);
+// Lectura escrita a mano, sin zod (como `parseFavorites` y el paso 1 de publicar): este módulo va en el JS inicial de
+// Explorar y de la ficha, y zod/mini sumaba ~5 KB gz allí. De cada clave vale el primer valor (texto o número); el resto, "".
+const first = (v: unknown): string => {
+  const x = Array.isArray(v) ? v[0] : v;
+  return typeof x === "string" || typeof x === "number" ? String(x) : "";
+};
+const option = (options: readonly number[], v: string) => (options.includes(Number(v)) ? Number(v) : 0);
+const date = (v: string) => (isoParts(v) ? v : "");
+const people = (v: string) => (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= SEARCH_MAX_PEOPLE ? Number(v) : 0);
+const money = (v: string) => {
+  const n = parseColones(v);
+  return n === null || Number.isNaN(n) || n < 0 ? 0 : n;
+};
 
-const searchSchema = z.looseObject({
-  prov: first,
-  zona: z.pipe(first, z.transform((v) => (ZONE_ID.test(v) ? v : ""))),
-  llegada: date,
-  salida: date,
-  ppl: people,
-  beds: option(BEDS_OPTIONS),
-  min: money,
-  max: money,
-  mas: flag,
-  mapa: flag,
-  ...(Object.fromEntries(FEATURE_KEYS.map((f) => [f, flag])) as Record<Feature, typeof flag>),
-});
+type Parsed = { prov: string; zona: string; llegada: string; salida: string; ppl: number; beds: number; min: number; max: number; mas: boolean; mapa: boolean } & Record<Feature, boolean>;
+
+function parseSearch(params: SearchParams): Parsed {
+  const get = (key: string) => first(params[key]);
+  const zona = get("zona");
+  return {
+    prov: get("prov"),
+    zona: ZONE_ID.test(zona) ? zona : "",
+    llegada: date(get("llegada")),
+    salida: date(get("salida")),
+    ppl: people(get("ppl")),
+    beds: option(BEDS_OPTIONS, get("beds")),
+    min: money(get("min")),
+    max: money(get("max")),
+    mas: get("mas") === "1",
+    mapa: get("mapa") === "1",
+    ...(Object.fromEntries(FEATURE_KEYS.map((f) => [f, get(f) === "1"])) as Record<Feature, boolean>),
+  };
+}
 
 export function defaultProvince(provinces: readonly string[]): string {
   return provinces.includes(DEFAULT_PROVINCE) ? DEFAULT_PROVINCE : ALL_PROVINCES;
 }
-
-type Parsed = z.infer<typeof searchSchema> & Record<Feature, boolean>;
 
 /** Las fechas de la URL que valen. Un par inválido (falta una, salida ≤ llegada, llegada antes de hoy o salida después
  *  de hoy + 365) se descarta entero. */
@@ -88,7 +85,7 @@ function stayFrom(p: Parsed, today?: string): { arrival: string | null; departur
 }
 
 export function parseFilters(params: SearchParams, provinces: readonly string[], ctx: ParseContext = {}): Filters {
-  const p = searchSchema.parse(params) as Parsed;
+  const p = parseSearch(params);
   // Un rango imposible (mínimo > máximo) en la URL se trata como sin rango: Filtros no deja aplicarlo (ticket 15).
   const invalid = priceRangeInvalid(p.min, p.max);
   const min = invalid ? 0 : p.min;
@@ -170,10 +167,10 @@ export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "ppl" | "beds" 
 /** Parámetros de Explorar tal como viajan en la URL: texto, solo claves conocidas y solo si no son el valor por defecto. */
 export type ExploreSearch = Partial<Record<SearchKey, string>>;
 
-/** Valida con el mismo esquema que `parseFilters`. La provincia y la zona quedan en texto: se contrastan con las
+/** Valida con la misma lectura que `parseFilters`. La provincia y la zona quedan en texto: se contrastan con las
  *  provincias con casas y las zonas al pintar, porque esas listas llegan de la red. `today` aplica la ventana de fechas. */
 export function normalizeSearch(params: SearchParams, today?: string): ExploreSearch {
-  const p = searchSchema.parse(params) as Parsed;
+  const p = parseSearch(params);
   const out: ExploreSearch = {};
   const stay = stayFrom(p, today);
   if (p.prov) out.prov = p.prov;
