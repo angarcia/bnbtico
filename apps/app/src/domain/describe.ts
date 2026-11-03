@@ -31,19 +31,21 @@ export interface ListingDescription {
 
 const isOwnerListing = (l: Listing | PublicListing): l is Listing => "ownerId" in l;
 
-function prices(l: Listing | PublicListing): [Price | null, MonthlyPrice | null] {
+type PriceFields = Pick<PublicListing, "nightlyPriceCrc" | "acceptsMonthly" | "monthlyPriceCrc">;
+
+function prices(l: PriceFields): [Price | null, MonthlyPrice | null] {
   const nightly = l.nightlyPriceCrc && l.nightlyPriceCrc > 0 ? { amount: l.nightlyPriceCrc, unit: "noche" as const } : null;
   const monthly = !l.acceptsMonthly ? null : l.monthlyPriceCrc && l.monthlyPriceCrc > 0 ? { amount: l.monthlyPriceCrc, unit: "mes" as const } : { negotiable: true as const };
   return [nightly, monthly];
 }
 
-/** El precio de una tarjeta: el de la noche; con el filtro «Alquiler mensual», el del mes o «a negociar». */
-export type CardPrice = Price | { negotiable: true } | null;
-export function cardPrice(d: Pick<ListingDescription, "mainPrice" | "monthly">, monthlyFilter: boolean): CardPrice {
-  return monthlyFilter && d.monthly ? d.monthly : d.mainPrice;
+/** El precio de una tarjeta de Explorar y de su marcador: con llegada y salida (`nights` > 0) y el total que calculó la
+ *  búsqueda, el total orientativo de esas noches; si no (sin fechas, alguna noche sin precio o una casa de Favoritos), el de
+ *  la noche. */
+export type CardPrice = Price | { stayTotalCrc: number; nights: number } | null;
+export function cardPrice(l: PriceFields & { stayTotalCrc?: number | null }, nights: number): CardPrice {
+  return nights > 0 && l.stayTotalCrc != null ? { stayTotalCrc: l.stayTotalCrc, nights } : prices(l)[0];
 }
-
-export const NEGOTIABLE_CARD = "Precio a negociar";
 
 /** «4 personas · 2 habitaciones», «1 persona · 1 habitación», «2 personas · Estudio» (sin habitaciones aparte). */
 export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms">): string {
@@ -52,11 +54,12 @@ export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms">): stri
   return `${people} · ${rooms}`;
 }
 
-/** El marcador del mapa de Explorar: «₡42 000» o «$80» (el de la tarjeta, sin unidad); con el mensual, «A negociar». */
-export function mapPriceLabel(l: PublicListing, monthly: boolean, currency: Currency, fx: number): string {
-  const [mainPrice, monthlyPrice] = prices(l);
-  const price = cardPrice({ mainPrice, monthly: monthlyPrice }, monthly);
-  return price && !("negotiable" in price) ? formatMoney(price.amount, currency, fx) : "A negociar";
+/** El marcador del mapa de Explorar: la cifra de la tarjeta sin unidad («₡42 000», «$80»; con fechas, el total sin «por N
+ *  noches»); sin precio, «A negociar». */
+export function mapPriceLabel(l: PriceFields & { stayTotalCrc?: number | null }, nights: number, currency: Currency, fx: number): string {
+  const price = cardPrice(l, nights);
+  if (!price) return "A negociar";
+  return formatMoney("stayTotalCrc" in price ? price.stayTotalCrc : price.amount, currency, fx);
 }
 export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
 

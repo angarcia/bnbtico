@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, effectiveFilters, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
 import { listingsQuery } from "../../src/client/queries";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
@@ -75,9 +75,7 @@ it("provinceChips respeta el orden del prototipo", () => {
 describe("búsqueda en la URL de Explorar", () => {
   it("normalizeSearch deja solo claves conocidas, en texto y sin valores por defecto", () => {
     expect(normalizeSearch({ prov: "Guanacaste", pool: "1", ppl: "4", min: "50.000", raro: "x", wifi: "0", modo: "otra" })).toEqual({ prov: "Guanacaste", ppl: "4", pool: "1", min: "50000" });
-    expect(normalizeSearch({ modo: "monthly", mas: "1", beds: 9 })).toEqual({ mensual: "1", mas: "1" });
-    expect(normalizeSearch({ modo: "both" })).toEqual({});
-    expect(normalizeSearch({ mensual: "1", modo: "nightly" })).toEqual({ mensual: "1" });
+    expect(normalizeSearch({ mas: "1", beds: 9 })).toEqual({ mas: "1" });
     expect(normalizeSearch({})).toEqual({});
   });
   it("lo que deja normalizeSearch da los mismos filtros", () => {
@@ -124,36 +122,24 @@ describe("precio en la moneda elegida (ticket 15)", () => {
   });
 });
 
-describe("alquiler mensual (?mensual=1)", () => {
-  const base = parseFilters({}, []);
-  it("mensual=1 marca el filtro; sin él o con otro valor, no", () => {
-    expect(parseFilters({}, []).monthly).toBe(false);
-    expect(parseFilters({ mensual: "1" }, []).monthly).toBe(true);
-    expect(parseFilters({ mensual: "0" }, []).monthly).toBe(false);
+describe("fin del modo mensual de Explorar (2026-11-02): enlaces viejos", () => {
+  const T = "2026-11-01";
+  const plain = parseFilters({}, ["Limón"], { today: T });
+  it("?mensual=1, ?modo=monthly y ?desde= se ignoran sin error: Explorar normal", () => {
+    for (const old of [{ mensual: "1" }, { modo: "monthly" }, { modo: "both" }, { desde: "2026-12-01" }, { mensual: "1", desde: "2026-12-01", modo: "monthly" }]) {
+      expect(parseFilters(old, ["Limón"], { today: T })).toEqual(plain);
+      expect(normalizeSearch(old, T)).toEqual({});
+    }
+    expect(Object.keys(plain)).not.toContain("monthly");
+    expect(Object.keys(plain)).not.toContain("monthlyFrom");
   });
-  it("enlaces viejos: modo=monthly es mensual; nightly, both y otros se descartan", () => {
-    expect(parseFilters({ modo: "monthly" }, []).monthly).toBe(true);
-    expect(parseFilters({ modo: "nightly" }, []).monthly).toBe(false);
-    expect(parseFilters({ modo: "both" }, []).monthly).toBe(false);
-    expect(parseFilters({ modo: "otra" }, []).monthly).toBe(false);
-  });
-  it("en la URL: mensual=1 y el rango se conserva; nunca modo", () => {
-    const params = toSearchParams({ ...base, monthly: true, min: 40000, max: 90000 }, { prov: "Todas" });
-    expect(params.toString()).toBe("mensual=1&min=40000&max=90000");
-    expect(params.has("modo")).toBe(false);
-    expect(toSearchParams(parseFilters({ modo: "monthly" }, []), { prov: "Todas" }).has("modo")).toBe(false);
-  });
-  it("con el mensual la consulta no aplica el rango por noche", () => {
-    expect(effectiveFilters({ ...base, monthly: true, min: 40000, max: 90000 })).toMatchObject({ min: 0, max: 0, monthly: true });
-    const off = { ...base, monthly: false, min: 40000, max: 90000 };
-    expect(effectiveFilters(off)).toEqual(off);
-  });
-  it("extrasCount no cuenta el rango con el mensual, ni el mensual mismo", () => {
-    expect(extrasCount({ ...base, monthly: true, min: 40000, max: 90000, beds: 2 })).toBe(1);
-    expect(extrasCount({ ...base, monthly: false, min: 40000, max: 90000, beds: 2 })).toBe(3);
-  });
-  it("ida y vuelta por searchFor", () => {
-    expect(searchFor(parseFilters({ mensual: "1", prov: "Limón" }, ["Limón"]), ["Limón"])).toEqual({ mensual: "1" });
+  it("con lo demás del enlace intacto: el rango por noche vale siempre y las fechas por noches siguen", () => {
+    const old = { mensual: "1", desde: "2026-12-01", llegada: "2026-11-23", salida: "2026-11-27", min: "40000", max: "90000" };
+    expect(normalizeSearch(old, T)).toEqual({ llegada: "2026-11-23", salida: "2026-11-27", min: "40000", max: "90000" });
+    const f = parseFilters(old, ["Limón"], { today: T });
+    expect(f).toMatchObject({ arrival: "2026-11-23", departure: "2026-11-27", min: 40000, max: 90000 });
+    expect(toSearchParams(f, { prov: "Limón" }).toString()).toBe("llegada=2026-11-23&salida=2026-11-27&min=40000&max=90000");
+    expect(extrasCount({ ...f, beds: 2 })).toBe(3);
   });
 });
 
@@ -167,8 +153,6 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
     expect(normalizeSearch({ llegada: "2026-11-05" }, T)).toEqual({}); // una sola
     expect(normalizeSearch({ llegada: "2027-10-30", salida: "2027-11-02" }, T)).toEqual({}); // salida > hoy + 365
     expect(normalizeSearch({ llegada: "2027-10-31", salida: "2027-11-01" }, T)).toEqual({ llegada: "2027-10-31", salida: "2027-11-01" }); // = hoy + 365
-    expect(normalizeSearch({ mensual: "1", desde: "2027-10-02" }, T)).toEqual({ mensual: "1", desde: "2027-10-02" }); // hoy + 335
-    expect(normalizeSearch({ mensual: "1", desde: "2027-10-03" }, T)).toEqual({ mensual: "1" });
   });
   it("personas de 1 a 50, zona con su forma, mapa como bandera", () => {
     expect(normalizeSearch({ ppl: "13" })).toEqual({ ppl: "13" });
@@ -188,20 +172,14 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
     expect(toSearchParams(f, { prov: "Limón" }).toString()).toBe("zona=704-cocles"); // la zona manda: sin prov
     expect(parseFilters({ zona: "704-cocles" }, ["Limón"], { zoneIds: ["704-puerto-viejo"] }).zone).toBeNull();
   });
-  it("stayRange: mensual [desde, desde + 30); por noches [llegada, salida)", () => {
-    const m = parseFilters({ mensual: "1", desde: "2026-12-01", llegada: "2026-11-23", salida: "2026-11-27" }, ["Limón"], { today: T });
-    expect(stayRange(m)).toEqual({ from: "2026-12-01", to: "2026-12-31" });
-    expect(stayRange({ ...m, monthly: false })).toEqual({ from: "2026-11-23", to: "2026-11-27" });
-    expect(toSearchParams(m, { prov: "Limón" }).get("llegada")).toBe("2026-11-23"); // se conserva en la URL
+  it("stayRange: las noches [llegada, salida), también 30 o más; sin las dos fechas, null", () => {
+    expect(stayRange(parseFilters({ llegada: "2026-11-23", salida: "2026-11-27" }, ["Limón"], { today: T }))).toEqual({ from: "2026-11-23", to: "2026-11-27" });
+    expect(stayRange(parseFilters({ llegada: "2026-12-01", salida: "2027-01-05" }, ["Limón"], { today: T }))).toEqual({ from: "2026-12-01", to: "2027-01-05" });
+    expect(stayRange(parseFilters({ llegada: "2026-11-23" }, ["Limón"], { today: T }))).toBeNull();
     expect(stayRange(parseFilters({}, ["Limón"]))).toBeNull();
   });
   it("extrasCount no cuenta zona, fechas ni personas", () => {
     expect(extrasCount(parseFilters({ ppl: "4", zona: "704-cocles", llegada: "2026-11-23", salida: "2026-11-27", beds: "2" }, ["Limón"]))).toBe(1);
-  });
-  it("effectiveFilters: el mensual quita llegada, salida y rango; por noches quita desde", () => {
-    const f = parseFilters({ mensual: "1", desde: "2026-12-01", llegada: "2026-11-23", salida: "2026-11-27", min: "1000" }, ["Limón"]);
-    expect(effectiveFilters(f)).toMatchObject({ arrival: null, departure: null, monthlyFrom: "2026-12-01", min: 0 });
-    expect(effectiveFilters({ ...f, monthly: false })).toMatchObject({ arrival: "2026-11-23", departure: "2026-11-27", monthlyFrom: null, min: 1000 });
   });
   it("mapa no entra en los filtros ni en la clave de la consulta", () => {
     expect(listingsQuery(parseFilters({ mapa: "1" }, ["Limón"])).queryKey).toEqual(listingsQuery(parseFilters({}, ["Limón"])).queryKey);

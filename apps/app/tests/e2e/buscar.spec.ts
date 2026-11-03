@@ -1,7 +1,6 @@
 import { webkit } from "@playwright/test";
 import { expect, test, type Page } from "./helpers/test";
-import { addDays, costaRicaToday, formatInquiryDates, longDateWithYear, shortDate } from "../../src/domain/dates";
-import { monthlyWindowLabel } from "../../src/domain/search";
+import { addDays, costaRicaToday, formatInquiryDates, longDateWithYear } from "../../src/domain/dates";
 import { COCLES } from "../contract/points";
 import { postgrestHarness } from "../db/postgrest-harness";
 
@@ -61,19 +60,23 @@ test("buscar «coc» → Cocles, fechas y 4 personas", async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-test("con «Solo alquiler mensual», «¿Cuándo?» pide «Desde» y deja fuera la ocupada el día 10", async ({ page }) => {
+test("una estancia larga se pide con llegada y salida (sin «Desde»), también desde un enlace viejo del mensual", async ({ page }) => {
   await page.goto("/explorar?mensual=1&zona=704-cocles");
   await page.locator(".search-pill").click();
   await expect(page).toHaveURL(/\/explorar\/buscar/);
   await page.getByRole("button", { name: /^¿Cuándo?/ }).click();
-  await expect(page.getByText("Solo alquiler mensual", { exact: true })).toBeVisible();
+  await expect(page.getByText(/mensual|Desde/)).toHaveCount(0);
+  await expect(page.getByText("Elija la llegada", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: longDateWithYear(day(10))!, exact: true }).click();
-  await expect(page.getByText(`Desde el ${shortDate(day(10))}`, { exact: true })).toBeVisible();
-  await expect(page.getByText(monthlyWindowLabel(day(10)), { exact: true })).toBeVisible();
+  await expect(page.getByText("Elija la salida", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: longDateWithYear(day(45))!, exact: true }).click();
+  await expect(page.locator(".range-summary")).toContainText("35 noches");
   await page.getByRole("button", { name: "Buscar", exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/explorar\\?.*desde=${day(10)}`));
+  await expect(page).toHaveURL(new RegExp(`/explorar\\?zona=704-cocles&llegada=${day(10)}&salida=${day(45)}$`));
+  // Casa Mensual está ocupada el día 20, dentro de las 35 noches.
   await expect(house(page, "Casa Larga")).toBeVisible();
   await expect(house(page, "Casa Mensual")).toHaveCount(0);
+  await expect(house(page, "Casa Larga").locator(".card-price")).toContainText("por 35 noches");
 });
 
 test("Borrar todo quita zona, fechas y personas y conserva una característica", async ({ page }) => {
@@ -135,16 +138,17 @@ test("con el teclado: Enter abre una tarjeta sin perder el foco, y elegir una zo
   await expect.poll(focusedCard).toBe("¿Cuándo?");
 });
 
-test("límites: hoy + 365 solo como salida, el «Desde» del mensual hasta hoy + 335 y 50 personas", async ({ page }) => {
+test("límites: hoy + 365 solo como salida (también con un enlace viejo del mensual) y 50 personas", async ({ page }) => {
   await page.goto("/explorar/buscar?abrir=cuando");
   const dayButton = (n: number) => page.getByRole("button", { name: longDateWithYear(day(n))!, exact: true });
   await expect(dayButton(365)).toBeDisabled();
   await expect(dayButton(366)).toBeDisabled();
   await dayButton(360).click();
   await expect(dayButton(365)).toBeEnabled();
+  // Ya no hay «Desde» hasta hoy + 335: con `mensual=1` el calendario es el de llegada y salida.
   await page.goto("/explorar/buscar?mensual=1&abrir=cuando");
-  await expect(dayButton(335)).toBeEnabled();
-  await expect(dayButton(336)).toBeDisabled();
+  await expect(dayButton(336)).toBeEnabled();
+  await expect(dayButton(365)).toBeDisabled();
   await page.goto("/explorar/buscar?ppl=49&abrir=quienes");
   await page.getByRole("button", { name: "Una persona más" }).click();
   await expect(page.getByText("50", { exact: true })).toBeVisible();

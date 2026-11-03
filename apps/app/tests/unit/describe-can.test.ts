@@ -81,11 +81,10 @@ group("describe · precios", () => {
     }
   });
 
-  it("la tarjeta: sin el filtro, el precio por noche; con él, el mensual o «a negociar»", () => {
-    const nightly = { amount: 85000, unit: "noche" } as const;
-    expect(cardPrice({ mainPrice: nightly, monthly: { amount: 350000, unit: "mes" } }, false)).toEqual(nightly);
-    expect(cardPrice({ mainPrice: nightly, monthly: { amount: 350000, unit: "mes" } }, true)).toEqual({ amount: 350000, unit: "mes" });
-    expect(cardPrice({ mainPrice: nightly, monthly: { negotiable: true } }, true)).toEqual({ negotiable: true });
+  it("la tarjeta: el precio por noche aunque acepte mensual; con fechas y total, el total (search.test.ts)", () => {
+    const monthly = { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 350000 };
+    expect(cardPrice(monthly, 0)).toEqual({ amount: 85000, unit: "noche" });
+    expect(cardPrice({ ...monthly, stayTotalCrc: 2_975_000 }, 35)).toEqual({ stayTotalCrc: 2_975_000, nights: 35 });
   });
 });
 

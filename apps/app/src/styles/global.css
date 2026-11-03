@@ -281,6 +281,8 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
 .card-price{margin-top:3px}
 .card-price b{font-weight:var(--w-strong)}
+/* «≈ ₡180 000 por 4 noches»: si no cabe en una línea (tarjeta del mapa), baja entero «por 4 noches», no solo «noches». */
+.card-price b,.card-price .muted{white-space:nowrap}
 .listing-grid{display:grid;grid-template-columns:1fr;gap:32px}
 .listing-cell{position:relative;min-width:0}
 .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
@@ -449,7 +451,6 @@ html.map-open{overflow:hidden}
 .search-card{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:var(--r-sheet);background:var(--surface);box-shadow:0 2px 0 var(--line),0 16px 36px -22px rgba(28,43,42,.45)}
 .search-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .search-card-title{min-height:44px;font-size:26px;font-weight:var(--w-strong);text-align:left}
-.search-card-head .badge{align-self:center;padding:7px 12px;font-size:15px;white-space:nowrap}
 .zone-input{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 6px 0 16px;border:2px solid var(--primary);border-radius:var(--r-input);background:var(--surface)}
 .zone-input svg{flex:none;color:var(--primary)}
 .zone-input input:not([type=checkbox]):not([type=file]):not([type=radio]){flex:1;min-width:0;min-height:48px;padding:0;border:0;border-radius:0;background:transparent;font-weight:var(--w-medium);outline:none}
@@ -481,10 +482,6 @@ html.map-open{overflow:hidden}
 .people-stepper b.is-empty{color:var(--muted);font-family:var(--body);font-weight:400;font-size:18px}
 .explore-top .chiprow{align-items:center}
 .chiprow .currency-switch{margin-left:auto}
-/* El mensual encendido (negrita y «✓ ») no cabe entero a 360 px junto a los filtros y «₡ | $»: se acorta con «…» y los
-   otros dos no encogen (44 px de toque). */
-.monthly-chip{flex:0 1 auto;min-width:0}
-.monthly-chip > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .filters-btn{position:relative;flex:none;justify-content:center;width:44px;height:44px;padding:0;background:var(--beige-soft)}
 .filters-btn .badge-count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;justify-content:center;font-size:13px;background:var(--primary);color:var(--primary-on);border:2px solid var(--bg)}
 .chip{border:0;cursor:pointer}

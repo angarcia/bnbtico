@@ -1,19 +1,16 @@
 // Explorar al estilo Airbnb: el resumen de la búsqueda, la línea de resultados, el rango de llegada y salida del
-// calendario de «¿Cuándo?» y las sugerencias de zona de «¿Dónde?». Puro y en el JS inicial: no importa calendar.ts ni
-// inquiry.ts (trozos diferidos); las fechas salen de dates.ts.
-import { addDays, formatInquiryDates, shortDate } from "./dates";
-import { ALL_PROVINCES, MONTHLY_STAY_NIGHTS, type Filters } from "./filters";
+// calendario de «¿Cuándo?», el total orientativo de la tarjeta y las sugerencias de zona de «¿Dónde?». Puro y en el JS
+// inicial: no importa calendar.ts ni inquiry.ts (trozos diferidos); las fechas salen de dates.ts.
+import type { Currency } from "./currency";
+import { formatInquiryDates } from "./dates";
+import { ALL_PROVINCES, type Filters } from "./filters";
+import { formatMoney } from "./money";
 import { caribeFirst, norm, type ZoneWithListings } from "./zones";
 
-type StayFilters = Pick<Filters, "monthly" | "arrival" | "departure" | "monthlyFrom">;
+type StayFilters = Pick<Filters, "arrival" | "departure">;
 
-/** «23–27 nov» (por noches) o «desde el 1 dic» (mensual); null sin fechas. Cuenta lo que pregunta la consulta: con el
- *  mensual, solo el «desde»; por noches, solo la llegada y la salida. */
+/** «23–27 nov»; null sin llegada y salida. */
 export function stayLabel(f: StayFilters): string | null {
-  if (f.monthly) {
-    const d = f.monthlyFrom ? shortDate(f.monthlyFrom) : null;
-    return d ? `desde el ${d}` : null;
-  }
   return f.arrival && f.departure ? formatInquiryDates(f.arrival, f.departure) : null;
 }
 
@@ -33,11 +30,9 @@ export const housesCount = (n: number): string => `${n} ${n === 1 ? "casa" : "ca
 
 /** Línea de resultados: { count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" }. */
 export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "zone">, zoneName: string | null = null): { count: string; rest: string } {
-  const one = n === 1;
-  const monthly = f.monthly ? (one ? " acepta alquiler mensual" : " aceptan alquiler mensual") : "";
   const place = f.zone && zoneName ? ` en ${zoneName} y alrededores` : f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
   const stay = stayLabel(f);
-  return { count: housesCount(n), rest: monthly + place + (stay ? ` · ${stay}` : "") };
+  return { count: housesCount(n), rest: place + (stay ? ` · ${stay}` : "") };
 }
 
 export { tapRange, type RangeState } from "./range";
@@ -49,9 +44,11 @@ export function nightsBetween(arrival: string, departure: string): number {
 
 export const nightsLabel = (n: number): string => `${n} ${n === 1 ? "noche" : "noches"}`;
 
-/** «Casas libres del 16 nov al 16 dic»: las 30 noches que pide el mensual desde `from`. */
-export function monthlyWindowLabel(from: string): string {
-  return `Casas libres del ${shortDate(from)} al ${shortDate(addDays(from, MONTHLY_STAY_NIGHTS))}`;
+/** El total orientativo de la tarjeta de Explorar, «≈ ₡180 000 por 4 noches», en sus dos partes (la cifra va en negrita, como
+ *  la de «₡45 000 / noche»), en la moneda elegida (en dólares, redondeado como el resto). Lo calcula la búsqueda
+ *  (`stay_total_crc`, regla de domain/stay-price.ts). Nunca «total a pagar». */
+export function stayTotalLabel(totalCrc: number, nights: number, currency: Currency, fx: number): { amount: string; unit: string } {
+  return { amount: `≈ ${formatMoney(totalCrc, currency, fx)}`, unit: `por ${nightsLabel(nights)}` };
 }
 
 /** Zonas cuyo nombre (o una de sus palabras) empieza con lo escrito, espacios incluidos («puerto v»), sin tildes ni mayúsculas: Caribe primero y por nombre. */

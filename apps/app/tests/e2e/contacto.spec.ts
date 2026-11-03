@@ -161,7 +161,7 @@ test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y 
 });
 
 // Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`bnbtico-fechas`).
-test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «desde el…»", async ({ page }) => {
+test("fechas: la hoja arranca con las de la búsqueda, también las de una estancia larga; un enlace viejo del mensual no deja «Desde»", async ({ page }) => {
   const [A, S] = [day(20), day(24)];
   await page.goto(`/explorar?prov=Todas&llegada=${A}&salida=${S}&ppl=2`);
   await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();
@@ -171,18 +171,29 @@ test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «des
   await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", S));
   await expect(message(page)).toHaveText(composeInquiryMessage(TITLE, { arrival: A, departure: S, people: 2 }));
 
+  // 35 noches en una casa que acepta mensual con precio: la hoja lleva llegada y salida, como cualquier otra.
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto(`/explorar?prov=Todas&llegada=${day(10)}&salida=${day(45)}`);
+  await page.getByRole("link", { name: new RegExp(MONTHLY_TITLE) }).first().click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  s = sheet(page);
+  await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", day(10)));
+  await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", day(45)));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { arrival: day(10), departure: day(45) }));
+  await expect(message(page)).not.toContainText("por meses");
+
+  // Un enlace viejo del modo mensual: la hoja arranca sin fechas y sin casilla «Desde».
   await page.evaluate(() => sessionStorage.clear());
   await page.goto(`/explorar?prov=Todas&mensual=1&desde=${day(10)}`);
   await page.getByRole("link", { name: new RegExp(MONTHLY_TITLE) }).first().click();
   await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   s = sheet(page);
-  // Con el mensual, una sola casilla «Desde», con su calendario.
-  await expect(dateBox(s, "Llegada")).toHaveCount(0);
-  await expect(dateBox(s, "Desde")).toHaveText(boxText("Desde", day(10)));
-  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(10) }));
-  await pickDates(s, day(12));
-  await expect(dateBox(s, "Desde")).toHaveText(boxText("Desde", day(12)));
-  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(12) }));
+  await expect(s.getByRole("button", { name: /^Desde/ })).toHaveCount(0);
+  await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", null));
+  await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", null));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, {}));
+  await pickDates(s, day(12), day(15));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { arrival: day(12), departure: day(15) }));
 });
 
 test("modal: el foco no sale de la hoja, el resto de la página queda inerte y «Cerrar» cierra", async ({ page }) => {

@@ -59,7 +59,8 @@ test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsque
   await empty.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/vacio-360.png` });
 
-  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nPersonas: 12.\nBusca alquiler mensual.\nNecesito: Piscina.\nFechas: ");
+  // `mensual=1` de un enlace viejo ya no cuenta (fin del modo mensual): el mensaje lleva el precio por noche y no «Busca alquiler mensual».
+  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nPersonas: 12.\nNecesito: Piscina.\nPrecio por noche: hasta ₡1.\nFechas: ");
   // La baliza: solo nombre, página y ruta (sin la búsqueda ni el mensaje).
   await expect.poll(helpEvents).toEqual(["search_help_tap - explorar /explorar"]);
 

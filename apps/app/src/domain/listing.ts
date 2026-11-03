@@ -72,10 +72,6 @@ export const MIN_PHOTOS_TO_APPROVE = 1;
 
 /** «Alquiler mensual»: característica de la ficha y resumen del admin. */
 export const MONTHLY_LABEL = "Alquiler mensual";
-/** El filtro: chip de Explorar e interruptor de Filtros (revisión de Ana, 2026-10-28). */
-export const MONTHLY_FILTER_LABEL = "Solo alquiler mensual";
-/** El chip de Explorar ya activo: corto, para que «✓» y el texto quepan en un iPhone SE (revisión UX 2026-10-29, N1). */
-export const MONTHLY_FILTER_SHORT = "Mensual";
 export const MAX_PHOTOS = 15;
 /** A published house keeps at least this many approved photos (removing the last is refused). */
 export const MIN_PHOTOS_PUBLISHED = 1;
@@ -272,6 +268,12 @@ export interface PublicListing {
   createdAt: string;
   updatedAt: string;
   photos: PublicPhoto[];
+}
+
+/** Una casa de los resultados de Explorar (`searchPublic`): con llegada y salida trae el total orientativo de esas noches en
+ *  colones, que calcula search_listings con la regla de domain/stay-price.ts; null sin fechas o si alguna noche no tiene precio. */
+export interface SearchListing extends PublicListing {
+  stayTotalCrc: number | null;
 }
 
 export interface PublicPhoto {

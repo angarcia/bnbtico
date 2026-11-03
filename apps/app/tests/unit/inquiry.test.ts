@@ -42,24 +42,14 @@ describe("composeInquiryMessage (casos del prototipo, tests/prototype/contacto-h
   });
 });
 
-describe("composeInquiryMessage · alquiler mensual («desde el…»)", () => {
-  it("con y sin personas", () => {
-    expect(composeInquiryMessage("Casa Cocles", { monthlyFrom: "2026-12-01", people: 4 })).toBe(
-      "Hola, vi Casa Cocles en bnbtico. Me interesa alquilar por meses desde el 1 de diciembre, para 4 personas. ¿Está disponible? Gracias.",
+describe("composeInquiryMessage · sin la variante mensual (fin del modo mensual, 2026-11-02)", () => {
+  it("una estancia larga va con llegada y salida, como cualquier otra; nunca «por meses desde…»", () => {
+    expect(composeInquiryMessage("Casa Cocles", { arrival: "2026-12-01", departure: "2027-01-05", people: 4 })).toBe(
+      "Hola, vi Casa Cocles en bnbtico y me interesa. ¿Está disponible del 1 de diciembre al 5 de enero para 4 personas? Gracias.",
     );
-    expect(composeInquiryMessage("Casa Cocles", { monthlyFrom: "2026-12-01" })).toBe(
-      "Hola, vi Casa Cocles en bnbtico. Me interesa alquilar por meses desde el 1 de diciembre. ¿Está disponible? Gracias.",
-    );
-  });
-  it("con llegada y salida válidas manda la frase por noches", () => {
-    expect(composeInquiryMessage("Casa Cocles", { arrival: "2026-11-23", departure: "2026-11-27", people: 4, monthlyFrom: "2026-12-01" })).toBe(
-      "Hola, vi Casa Cocles en bnbtico y me interesa. ¿Está disponible del 23 al 27 de noviembre para 4 personas? Gracias.",
-    );
-  });
-  it("al poner llegada y salida en un borrador mensual, pasa a la frase por noches", () => {
-    const s = redraft(startDraft("Casa Cocles", { monthlyFrom: "2026-12-01" }), { type: "fields", patch: { arrival: "2026-11-23", departure: "2026-11-27" } }, "Casa Cocles");
-    expect(s.message).toBe("Hola, vi Casa Cocles en bnbtico y me interesa. ¿Está disponible del 23 al 27 de noviembre? Gracias.");
-    expect(s.edited).toBe(false);
+    const s = redraft(startDraft("Casa Cocles"), { type: "fields", patch: { arrival: "2026-12-01", departure: "2027-01-05" } }, "Casa Cocles");
+    expect(s.message).not.toContain("por meses");
+    expect(s).not.toHaveProperty("monthlyFrom");
   });
 });
 

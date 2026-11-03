@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
+import { addDays } from "../../src/domain/dates";
+import { costaRicaToday } from "../../src/domain/inquiry";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 
@@ -206,4 +208,16 @@ test("telemetría: se cuentan la apertura del mapa y el toque en un marcador", a
   await expect(page.locator(".map-full .map-card")).toBeVisible();
   const events = () => sql(`select string_agg(name || ':' || coalesce(listing_public_id, '-'), ',' order by name) from public.events where created_at >= '${since}' and name in ('explore_map_open', 'map_marker_tap')`);
   await expect.poll(events).toBe(`explore_map_open:-,map_marker_tap:${coco.publicId}`);
+});
+
+test("con llegada y salida, el marcador lleva la misma cifra que la tarjeta (el total, sin «por N noches») y la tarjeta del mapa, el total", async ({ page }) => {
+  const today = costaRicaToday(Date.now());
+  await page.goto(`/explorar?llegada=${addDays(today, 20)}&salida=${addDays(today, 24)}`);
+  // Casa Coco: ₡42 000 la noche × 4.
+  await expect(mapBox(page).locator(".leaflet-marker-pane .map-price").filter({ hasText: /^₡168\s000$/ })).toHaveCount(1);
+  await expect(page.getByRole("link", { name: new RegExp(COCO) }).locator(".card-price")).toHaveText("≈ ₡168 000 por 4 noches");
+  await mapBox(page).locator(".map-price", { hasText: "₡168 000" }).click();
+  const full = page.locator(".map-full");
+  await expect(full.locator(".map-price.is-selected")).toHaveText("₡168 000");
+  await expect(full.locator(".map-card .card-price")).toHaveText("≈ ₡168 000 por 4 noches");
 });

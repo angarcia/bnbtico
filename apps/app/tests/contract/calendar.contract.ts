@@ -211,25 +211,28 @@ export function calendarContract(name: string, makeHarness: () => Promise<Subscr
       expect(await h.calendar("owner").days(due.id)).toEqual([occupied(day(3), 66_000)]);
     });
 
-    it("Explorar: solo casas libres todas esas noches y, con el mensual, 30 noches desde «Desde»", async () => {
+    it("Explorar: solo casas libres todas esas noches (la salida no cuenta), también 30 o más; un enlace viejo del mensual no filtra", async () => {
       const A = day(20);
       const S = day(24);
-      const monthly = { draft: { acceptsMonthly: true } };
       const free = await house();
       const busyInside = await house();
       const busyOnS = await house();
-      const month = await house(monthly);
-      const month2 = await house(monthly);
+      const lastOfThirty = await house({ draft: { acceptsMonthly: true } });
+      const afterThirty = await house({ draft: { acceptsMonthly: true } });
       await h.putDay(busyInside.id, occupied(day(22)));
       await h.putDay(busyOnS.id, occupied(S));
-      await h.putDay(month.id, occupied(day(10 + 29))); // la última de las 30 noches
-      await h.putDay(month2.id, occupied(day(10 + 30))); // la noche siguiente
+      await h.putDay(lastOfThirty.id, occupied(day(10 + 29))); // la última de las 30 noches desde el día 10
+      await h.putDay(afterThirty.id, occupied(day(10 + 30))); // el día de salida
       const search = async (params: Record<string, string>) =>
         (await h.anon.searchPublic(parseFilters({ prov: "Todas", ...params }, PROVINCES, { today: day(0) }))).map((l) => l.publicId);
       const nightly = await search({ llegada: A, salida: S });
-      expect(nightly).toEqual(expect.arrayContaining([free.publicId, busyOnS.publicId]));
+      expect(nightly).toEqual(expect.arrayContaining([free.publicId, busyOnS.publicId, lastOfThirty.publicId, afterThirty.publicId]));
       expect(nightly).not.toContain(busyInside.publicId);
-      expect(await search({ mensual: "1", desde: day(10) })).toEqual([month2.publicId]);
+      const thirty = await search({ llegada: day(10), salida: day(40) });
+      expect(thirty).toContain(afterThirty.publicId);
+      expect(thirty).not.toContain(lastOfThirty.publicId);
+      // Antes, «mensual» y «desde» pedían esas 30 noches libres; ahora no filtran nada.
+      expect(await search({ mensual: "1", desde: day(10) })).toEqual(await search({}));
     });
   });
 }

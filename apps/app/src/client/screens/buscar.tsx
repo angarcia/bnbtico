@@ -5,10 +5,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { costaRicaToday, formatInquiryDates, shortDate } from "../../domain/dates";
+import { costaRicaToday, formatInquiryDates } from "../../domain/dates";
 import { SEARCH_MAX_PEOPLE, parseFilters, searchFor } from "../../domain/filters";
-import { MONTHLY_FILTER_LABEL } from "../../domain/listing";
-import { monthlyWindowLabel, nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
+import { nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
 import { trackSearch } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { provincesQuery, zonesQuery } from "../queries";
@@ -22,11 +21,10 @@ interface SearchDraft {
   zone: string | null;
   arrival: string | null;
   departure: string | null;
-  monthlyFrom: string | null;
   ppl: number;
 }
 
-const EMPTY: SearchDraft = { zone: null, arrival: null, departure: null, monthlyFrom: null, ppl: 0 };
+const EMPTY: SearchDraft = { zone: null, arrival: null, departure: null, ppl: 0 };
 
 const Minus = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -68,7 +66,7 @@ function FitAboveBar({ children }: { children: ReactNode }) {
   );
 }
 
-function Fold({ title, value, open, onToggle, aside, children }: { title: string; value: string; open: boolean; onToggle(): void; aside?: ReactNode; children: ReactNode }) {
+function Fold({ title, value, open, onToggle, children }: { title: string; value: string; open: boolean; onToggle(): void; children: ReactNode }) {
   const id = useId();
   const card = useRef<HTMLElement>(null);
   const title_ = useRef<HTMLButtonElement>(null);
@@ -89,7 +87,6 @@ function Fold({ title, value, open, onToggle, aside, children }: { title: string
             {open ? null : <b className="num">{value}</b>}
           </button>
         </h2>
-        {open ? aside : null}
       </div>
       {open ? (
         <div className="search-card-body" id={id}>
@@ -182,11 +179,10 @@ export function BuscarScreen() {
   const canGoBack = useCanGoBack();
   const queryClient = useQueryClient();
   const { abrir, ...rest } = search;
-  const monthly = search.mensual === "1";
   const [today] = useState(() => costaRicaToday(Date.now()));
   const [draft, setDraft] = useState<SearchDraft>(() => {
     const f = parseFilters(rest, []);
-    return { zone: f.zone, arrival: f.arrival, departure: f.departure, monthlyFrom: f.monthlyFrom, ppl: f.ppl };
+    return { zone: f.zone, arrival: f.arrival, departure: f.departure, ppl: f.ppl };
   });
   const [open, setOpen] = useState<Card | null>(abrir ?? "donde");
   const focusZone = useRef(!abrir || abrir === "donde");
@@ -195,9 +191,8 @@ export function BuscarScreen() {
   const { data: zones } = useQuery(zonesQuery);
   // «…» solo mientras llegan las zonas; una que ya no está en la lista se muestra como «Añadir zona».
   const zoneName = draft.zone ? (zones ? (zones.find((z) => z.id === draft.zone)?.name ?? null) : "…") : null;
-  const nightly = !!draft.arrival && !!draft.departure;
-  const hasDates = monthly ? !!draft.monthlyFrom : nightly;
-  const datesValue = monthly ? (draft.monthlyFrom ? `Desde el ${shortDate(draft.monthlyFrom)}` : null) : nightly ? formatInquiryDates(draft.arrival, draft.departure) : null;
+  const hasDates = !!draft.arrival && !!draft.departure;
+  const datesValue = hasDates ? formatInquiryDates(draft.arrival, draft.departure) : null;
 
   const close = () => (canGoBack ? router.history.back() : void navigate({ to: "/explorar", search: rest, replace: true }));
   const submit = async () => {
@@ -226,32 +221,13 @@ export function BuscarScreen() {
           focusOnce={focusZone}
         />
       </Fold>
-      <Fold
-        title="¿Cuándo?"
-        value={datesValue ?? "Añadir fechas"}
-        open={open === "cuando"}
-        onToggle={toggle("cuando")}
-        aside={monthly ? <span className="badge badge-sel">{MONTHLY_FILTER_LABEL}</span> : null}
-      >
+      <Fold title="¿Cuándo?" value={datesValue ?? "Añadir fechas"} open={open === "cuando"} onToggle={toggle("cuando")}>
         <FitAboveBar>
-          {monthly ? (
-            <RangeCalendar today={today} mode="from" value={draft.monthlyFrom} onChange={(monthlyFrom) => set({ monthlyFrom })} />
-          ) : (
-            <RangeCalendar today={today} mode="range" value={{ arrival: draft.arrival, departure: draft.departure }} onChange={(r) => set(r)} />
-          )}
+          <RangeCalendar today={today} value={{ arrival: draft.arrival, departure: draft.departure }} onChange={(r) => set(r)} />
         </FitAboveBar>
         <div className="range-foot">
           <span className="range-summary" aria-live="polite">
-            {monthly ? (
-              draft.monthlyFrom ? (
-                <>
-                  <b className="num">{datesValue}</b>
-                  <span className="xs muted num">{monthlyWindowLabel(draft.monthlyFrom)}</span>
-                </>
-              ) : (
-                <b>Elija desde cuándo</b>
-              )
-            ) : nightly ? (
+            {hasDates ? (
               <>
                 <b className="num">{datesValue}</b>
                 <span className="xs muted num">{nightsLabel(nightsBetween(draft.arrival!, draft.departure!))}</span>
@@ -265,9 +241,9 @@ export function BuscarScreen() {
           </button>
         </div>
         <div className="row between">
-          {monthly ? <span /> : <span className="xs muted">Le mostramos las casas libres esas noches.</span>}
-          {(monthly ? draft.monthlyFrom : draft.arrival) ? (
-            <button type="button" className="btn-text" onClick={() => set(monthly ? { monthlyFrom: null } : { arrival: null, departure: null })}>
+          <span className="xs muted">Le mostramos las casas libres esas noches.</span>
+          {draft.arrival ? (
+            <button type="button" className="btn-text" onClick={() => set({ arrival: null, departure: null })}>
               Quitar fechas
             </button>
           ) : null}

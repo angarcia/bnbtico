@@ -1,3 +1,11 @@
+## 2026-11-03 · Total orientativo en Explorar y fin del modo mensual (ronda de Ana, ticket 07 rehecho; Daniel)
+
+Sustituye «nunca un total» (2026-10-29), «precio siempre por noche aunque haya fechas» (ronda de Ana 2026-10-28) y el chip «Solo alquiler mensual» con «Desde» (2026-10-27/29).
+- **Con llegada y salida,** la tarjeta y el mapa de Explorar muestran «≈ ₡180 000 por 4 noches» (orientativo; nunca «total a pagar»): suma noche a noche con los precios especiales; con 30 noches o más y precio al mes, mes × noches / 30; sin precio al mes, la suma por noches. Sin fechas, el precio por noche como siempre.
+- **Se calcula en `search_listings`** solo para las casas que se devuelven: la RPC recibe todos los filtros y el límite (`20261103071821_total_orientativo_en_busqueda.sql`) y devuelve `stay_total_crc` y `sort_rank`; el adaptador ordena por `sort_rank` (más nuevas primero, como antes).
+- **Fin del modo mensual en Explorar:** fuera el chip, «Desde» y la línea «N casas aceptan alquiler mensual»; los enlaces viejos `?mensual=1`, `modo=monthly` y `desde=` se ignoran. El mensaje de WhatsApp ya no tiene la variante «por meses desde…» (las fechas siguen siendo opcionales). Al publicar no cambia nada.
+- Telemetría: fuera `monthly_filter_tap` (el worker la rechaza; las filas viejas se conservan).
+
 ## 2026-11-02 · Decisiones de producto de la ronda de Ana que no tocan código (Daniel)
 
 - **Suscripción en las apps de tiendas:** cuando haya apps de iOS y Android, la suscripción se podrá pagar también con las suscripciones de Apple y Google, además de en la web (sustituye «checkout solo en web» de `docs/business-model.md`). El login con Google, Apple o biometría se revisa entonces.
