@@ -18,12 +18,12 @@ describe("migración caribe_primero", () => {
   beforeAll(async () => {
     h = await postgrestHarness();
     await h.reset();
-    const elsewhere = (province: string, canton: string) => ({ province, canton, zone: canton, zoneSource: "other" as const, zoneId: null, lat: 9.9, lng: -84.8 });
+    const elsewhere = (province: string, canton: string, lat: number, lng: number) => ({ province, canton, zone: canton, zoneSource: "other" as const, zoneId: null, lat, lng });
     // Orden de creación: de la más vieja a la más nueva.
     house.limonVieja = await h.seed({ status: "active", draft: { title: "Limón vieja" } });
-    house.puntarenas = await h.seed({ status: "active", draft: { title: "Puntarenas", ...elsewhere("Puntarenas", "Puntarenas") } });
+    house.puntarenas = await h.seed({ status: "active", draft: { title: "Puntarenas", ...elsewhere("Puntarenas", "Garabito", 9.615, -84.629) } });
     house.limonNueva = await h.seed({ status: "active", draft: { title: "Limón nueva" } });
-    house.guanacaste = await h.seed({ status: "active", draft: { title: "Guanacaste", ...elsewhere("Guanacaste", "Nicoya") } });
+    house.guanacaste = await h.seed({ status: "active", draft: { title: "Guanacaste", ...elsewhere("Guanacaste", "Nicoya", 9.88, -85.53) } });
     house.casaVieja = await h.seed({ status: "active", draft: { title: "Casa vieja", bathrooms: 2 } });
     house.habitacion = await h.seed({ status: "active", draft: { title: "Habitación", kind: "habitacion", bathroomShared: false, bathrooms: 1 } });
     // Una fila anterior al diseño v1: kind = 'casa'.
