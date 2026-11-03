@@ -87,12 +87,13 @@ describe("migración habitacion_una_habitacion", () => {
     }
   });
 
-  it("listing_edit_check sigue pidiendo habitaciones a lo que no es Habitación", async () => {
-    // Una casa de las de antes (tipo «casa») con 0 habitaciones: un cambio con revisión sigue pidiéndolas.
+  it("listing_edit_check ya no pide habitaciones al cambiar el nombre (editar sigue las reglas de crear, ticket 12)", async () => {
+    // Una casa de las de antes (tipo «casa») con 0 habitaciones: hasta el ticket 12 un cambio con revisión las pedía; ahora
+    // cada dato se valida solo y las habitaciones son de la capacidad (avisan en la app).
     const { id } = await h.seed({ status: "active", draft: { kind: "completo", bedrooms: 0 } });
     sql(`begin; select set_config('app.allow_status', 'on', true); update public.listings set kind = 'casa' where id = '${id}'; commit;`);
     const { error } = await owner.rpc("save_edit", { p_listing: id, p_patch: { title: "Casa Coco del Caribe" } });
-    expect(error?.message).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
+    expect(error).toBeNull();
   });
 
   it("el filtro de Explorar «bedrooms >= 1» encuentra la Habitación que antes era un estudio", async () => {

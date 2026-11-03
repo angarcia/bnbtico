@@ -1,3 +1,11 @@
+## 2026-11-03 · Editar sigue las reglas de crear (ronda de Ana, ticket 12 rehecho; Daniel, opción B)
+
+Sustituye «La edición de una casa publicada no cambia: sigue con las reglas por dato (`validateStep`)» del 2026-10-30.
+- **Mismos límites, mensajes, contadores y obligatorios que al crear** (tipo, ubicación, nombre 5–32 —vacío: «Póngale un nombre a la casa.»—, precio por noche, ≥ 1 foto); lo demás es aviso en ocre y no bloquea (descripción fuera de 80–2000, capacidad, parqueo, precio al mes mal escrito). Tope de 2000 en la descripción también en SQL al crear.
+- **Excepción:** en lo que se publica al momento (personas, habitaciones, baños, características/parqueo, precios), un dato que ya tenía valor válido no se puede vaciar ni dejar inválido.
+- **Cada dato se valida solo** (cliente y SQL): cambiar el precio ya no falla porque falten los baños; renombrar no falla por la descripción; cambiar el tipo no exige habitaciones ni baños. El baño de una Habitación va con el tipo (revisión) y su aviso sale en la fila «Tipo».
+- Menores: «Enviar a revisión» no espera al mapa; un tipo viejo (`casa`/`apartamento`) sale marcado como «Alojamiento completo»; un nombre viejo de más de 32 sin tocar no se recorta; contador y ayuda de fotos como en el asistente. CHECK de `listing_edits.title` 5–32 (`NOT VALID`). Migración `editar_como_crear`.
+
 ## 2026-11-03 · Publicar: una Habitación es siempre 1 habitación y «Corregir» vuelve al resumen (ronda de Ana, ticket 03 rehecho; Daniel)
 
 - **Habitación = 1 habitación:** el asistente y la edición no preguntan habitaciones cuando el tipo es Habitación; se guarda 1, también en la base (trigger `listings_habitacion_una`, migración `habitacion_una_habitacion`), venga de donde venga el cambio (incluido aprobar un cambio de tipo). **Tampoco pregunta baños** (Daniel, tras probarlo): el paso 4 de una Habitación tiene solo Personas y «Baño de la habitación»; se guarda `bathrooms = 1` (el mismo trigger, migración `habitacion_un_bano`). En vez del número se dice el tipo de baño: ficha «2 personas · 1 habitación · baño compartido» (y la etiqueta de arriba dice solo «Habitación», para no repetirlo), resumen «2 pers. · baño compartido». En la edición la fila y su pantalla son solo «Personas» (el baño privado o compartido se cambia en Tipo, con revisión).

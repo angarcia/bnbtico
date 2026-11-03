@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "./helpers/test";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
 import { secondCode } from "./helpers/admin";
@@ -29,6 +30,8 @@ test.beforeEach(async ({ page }) => {
 const rows = (page: Page) => page.getByTestId("field-rows");
 const row = (page: Page, title: string) => rows(page).getByRole("link").filter({ has: page.locator(".field-title", { hasText: new RegExp(`^${title}`) }) });
 const discardButton = (page: Page, field: string) => page.getByRole("button", { name: `Descartar el cambio de ${field}` });
+/** Un tipo de antes de publicar v2 (casa, apartamento), como el servicio. */
+const sqlKind = (id: string, kind: string) => sql(`begin; select set_config('app.allow_status','on',true); update public.listings set kind = '${kind}' where id = '${id}'; commit;`);
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
 test("la ficha editable de una casa activa", async ({ page }) => {
@@ -261,7 +264,7 @@ test("si la base rechaza el precio, la pantalla lo dice y nada cambia", async ({
   await expect(row(page, "Precio")).toContainText("₡42 000 / noche");
 });
 
-test("tipo habitación pide el baño", async ({ page }) => {
+test("tipo habitación ofrece el baño; sin elegirlo se envía (como al crear) y la fila Tipo avisa en ocre", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/tipo`);
   await expect(page.getByRole("heading", { level: 1, name: "Tipo" })).toBeVisible();
@@ -270,15 +273,120 @@ test("tipo habitación pide el baño", async ({ page }) => {
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
   await expect(page.getByTestId("review-notice")).toHaveText(`${NOTICE} «Alojamiento completo».`);
   await send(page).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique si el baño es privado o compartido.");
+  await expect(toastText(page)).toHaveText(`${SENT} Indique si el baño es privado o compartido.`);
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(row(page, "Tipo").locator(".block.strong")).toHaveText("Habitación");
+  await expect(page.getByTestId("warn-tipo")).toHaveText("Indique si el baño es privado o compartido.");
+  expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: null });
+  await row(page, "Tipo").click();
   await page.locator("label.chip", { hasText: "Compartido" }).click();
   await send(page).click();
-  await expect(toastText(page)).toHaveText(SENT);
+  await expect(toastText(page).last()).toHaveText(SENT); // el aviso anterior puede seguir a la vista
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   await expect(row(page, "Tipo")).toContainText("Habitación · baño compartido");
+  await expect(page.getByTestId("warn-tipo")).toHaveCount(0);
   // Mientras el cambio de tipo espera, la capacidad sigue la del tipo aprobado (con su contador de habitaciones).
   await expect(row(page, "Personas, habitaciones y baños")).toContainText("2 personas · 1 habitación · 1 baño");
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: true });
+});
+
+test("un tipo de antes (casa) abre con «Alojamiento completo» marcado y, sin tocarlo, no cambia", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  sqlKind(id, "casa");
+  await page.goto(`/propietario/casas/${id}/editar/tipo`);
+  await expect(page.locator("label.choice", { hasText: "Alojamiento completo" }).locator("input")).toBeChecked();
+  await send(page).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  expect((await h.owner("owner").getOwn(id))!).toMatchObject({ kind: "casa", edit: null });
+});
+
+// ---------- Editar sigue las reglas de crear (ronda de Ana del 2026-11-02, ticket 12) ----------
+
+test("una descripción corta se guarda con un aviso en ocre y no estorba al renombrar; el nombre vacío o corto sí bloquea", async ({ page }) => {
+  const short = "Cabina con jardín, a dos cuadras de la playa Negra.";
+  const { id } = await h.seed({ status: "active", draft: { description: short } });
+  await page.goto(`/propietario/casas/${id}`);
+  // La descripción de antes (51 caracteres) avisa en ocre bajo su fila; no bloquea nada.
+  await expect(page.getByTestId("warn-descripcion")).toHaveText("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+  await row(page, "Nombre").click();
+  await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");
+  await send(page).click();
+  await expect(toastText(page)).toHaveText(SENT);
+  await expect(row(page, "Nombre")).toContainText("Casa Coco frente al mar");
+  // Una descripción nueva corta también se envía, con el mismo aviso que al crear.
+  await row(page, "Descripción").click();
+  await expect(page.locator("#pub-description-count")).toHaveText("Faltan 29 caracteres");
+  await page.getByLabel("Descripción (opcional)").fill("Casita de madera con jardín y hamacas, cerca de la playa.");
+  await send(page).click();
+  await expect(toastText(page).last()).toHaveText(`${SENT} La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.`);
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(page.getByTestId("warn-descripcion")).toBeVisible();
+  expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ title: "Casa Coco frente al mar", description: "Casita de madera con jardín y hamacas, cerca de la playa." });
+  // El nombre es obligatorio, como al crear: vacío o de 4 letras no se envía, con el mensaje de crear.
+  await row(page, "Nombre").click();
+  await page.getByLabel("Nombre de la casa").fill("Casa");
+  await send(page).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("El nombre de la casa debe tener entre 5 y 32 caracteres.");
+  await page.getByLabel("Nombre de la casa").fill("");
+  await send(page).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("Póngale un nombre a la casa.");
+  await expect(page).toHaveURL(new RegExp(`/editar/nombre$`));
+});
+
+test("vaciar la capacidad que tenía valor no se guarda; una casa sin baños avisa en ocre y cambia el precio", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}/editar/capacidad`);
+  // Los contadores no bajan de su mínimo: el campo oculto se vacía justo al enviar, como un valor perdido.
+  await page.locator("form.publish-form").evaluate((form) => form.addEventListener("submit", () => ((form.querySelector('input[name="capacity"]') as HTMLInputElement).value = ""), { capture: true }));
+  await save(page).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique cuántas personas pueden alojarse (mínimo 1).");
+  expect((await h.owner("owner").getOwn(id))!.capacity).toBe(2);
+
+  const nobath = await h.seed({ status: "active", draft: { bathrooms: null } });
+  await page.goto(`/propietario/casas/${nobath.id}`);
+  await expect(page.getByTestId("warn-capacidad")).toHaveText("Indique el número de baños (mínimo 1).");
+  await row(page, "Precio").click();
+  await page.getByLabel("Precio por noche").fill("55 000");
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha.");
+  await expect(row(page, "Precio")).toContainText("₡55 000 / noche");
+  expect(await h.owner("owner").getOwn(nobath.id)).toMatchObject({ nightlyPriceCrc: 55000, bathrooms: null });
+});
+
+test("un precio al mes mal escrito avisa en ocre al escribirlo: sin precio antes se guarda vacío; con precio antes no se guarda", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await page.goto(`/propietario/casas/${id}/editar/precio`);
+  await page.locator("label.chip", { hasText: "Sí" }).click();
+  const help = page.locator("#pub-monthlyPriceCrc-help");
+  await expect(help).toHaveText("Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».");
+  await page.getByLabel("Precio al mes (opcional)").fill("350 mil");
+  await expect(help).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
+  await expect(help).toHaveClass(/sun-ink/);
+  await save(page).click();
+  await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha. Indique el precio al mes en colones o déjelo vacío.");
+  await expect(row(page, "Precio")).toContainText("Mensual: a negociar");
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });
+
+  const priced = await h.seed({ status: "active", draft: { acceptsMonthly: true, monthlyPriceCrc: 600000 } });
+  await page.goto(`/propietario/casas/${priced.id}/editar/precio`);
+  // Como en el teléfono, se toca el campo antes de escribir: sin un toque antes, un `fill` en este campo controlado de la
+  // pantalla de un dato no se queda (fallo aparte, fuera de este ticket).
+  await page.getByLabel("Precio al mes (opcional)").click();
+  await page.getByLabel("Precio al mes (opcional)").fill("600 mil");
+  await expect(page.locator("#pub-monthlyPriceCrc-help")).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
+  await save(page).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
+  expect((await h.owner("owner").getOwn(priced.id))!.monthlyPriceCrc).toBe(600000);
+});
+
+test("un nombre de antes de más de 32 caracteres, sin tocarlo, no se envía ni se recorta", async ({ page }) => {
+  const { id } = await h.seed({ status: "active" });
+  await h.setLegacyTitle(id, "Casa grande con vista al mar en Cahuita");
+  await page.goto(`/propietario/casas/${id}/editar/nombre`);
+  await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Casa grande con vista al mar en Cahuita");
+  await send(page).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  expect(await h.owner("owner").getOwn(id)).toMatchObject({ title: "Casa grande con vista al mar en Cahuita", edit: null });
 });
 
 test("una Habitación publicada: «Personas», solo con el contador de personas (el baño va con el tipo), y se queda en 1 habitación y 1 baño", async ({ page }) => {
@@ -423,7 +531,7 @@ test("quitar la portada aprobada: «Ver ficha», sin recargar, ya muestra la nue
 test("quitar una foto nueva: el contador baja y sus objetos se borran", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/fotos`);
-  await expect(counter(page)).toHaveClass(/muted/);
+  await expect(counter(page)).toHaveClass(/primary/); // el mismo contador que el paso 7 del asistente
   await page.getByLabel("Añadir fotos").setInputFiles([foto("beach.jpg"), foto("loft.jpg")]);
   await expect(counter(page)).toHaveText("7 de 15", { timeout: 20_000 });
   await expect(page.getByRole("progressbar")).toHaveCount(0);

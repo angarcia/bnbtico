@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
 import { type ListingDraft, type Step } from "../../src/domain/listing";
-import { NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
+import { DESCRIPTION_LENGTH_ERROR, NIGHTLY_PRICE_ERROR, TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import type { ListingsHarness, Seeded } from "./harness";
 import { MAR } from "./points";
 
@@ -370,6 +370,24 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         const negotiable = await h.seed({ status: "draft", photos: 5, draft: { acceptsMonthly: true, monthlyPriceCrc: null } });
         await me.submit(negotiable.id);
         expect(await me.getOwn(negotiable.id)).toMatchObject({ status: "review", acceptsMonthly: true, monthlyPriceCrc: null });
+      });
+    });
+
+    describe("enviar: la descripción solo tiene tope duro", () => {
+      // Editar sigue las reglas de crear (2026-11-02, ticket 12): el tope de 2000 también en la base al crear.
+      beforeAll(async () => {
+        h = await makeHarness();
+        me = h.owner("owner");
+        await h.reset();
+      }, 90_000);
+
+      it("una descripción corta se envía; una de 2001 caracteres no", async () => {
+        const short = await h.seed({ status: "draft", photos: 1, draft: { description: "Corta." } });
+        await me.submit(short.id);
+        expect((await me.getOwn(short.id))?.status).toBe("review");
+        const long = await h.seed({ status: "draft", photos: 1, draft: { description: "D".repeat(2001) } });
+        expect((await rejection(me.submit(long.id))).message).toBe(DESCRIPTION_LENGTH_ERROR);
+        expect((await me.getOwn(long.id))?.status).toBe("draft");
       });
     });
 

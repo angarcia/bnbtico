@@ -207,13 +207,6 @@ export function useStepReady(ready: boolean): void {
   }, [set, ready]);
 }
 
-/** Para un formulario fuera de StepForm (la pantalla de un dato de una casa publicada): `onReady` recibe lo que pidan sus
- *  campos con useStepReady (p. ej. el paso de la ubicación, mientras falta el cantón del pin). `onReady` estable (un
- *  setState). */
-export function ReadyScope({ onReady, children }: { onReady: (ready: boolean) => void; children: ReactNode }) {
-  return <ReadyContext.Provider value={onReady}>{children}</ReadyContext.Provider>;
-}
-
 // ---------- El formulario ----------
 
 export function StepForm({

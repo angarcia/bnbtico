@@ -4,11 +4,13 @@
 // (update_listing_live, optimista); nombre, tipo, ubicación y descripción van a revisión con «Enviar a revisión»
 // (save_edit), cada uno por su cuenta, con un aviso que nombra lo que los clientes siguen viendo (revisión UX 2026-10-29,
 // A5). Se pueden volver a cambiar mientras están en revisión: cuenta el último. Volver sin guardar no guarda nada.
+// Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { isBlocked, isPublished } from "../../domain/can";
-import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, planEdit, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
+import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
+import { planEdit } from "../../domain/edit-plan";
 import { toDomainError } from "../../domain/errors";
 import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
@@ -20,7 +22,6 @@ import { BathroomChoice, CapacityCounters, DescriptionField, FeatureChips, Price
 import { ChoiceCards } from "../publish/wizard-parts";
 import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
-import { ReadyScope } from "../publish/step-form";
 import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/editar/$campo");
@@ -86,34 +87,27 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const [frozen, setFrozen] = useState<string | null>(null);
   const touch = () => setFrozen((f) => f ?? version);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(true);
   const saving = live.isPending || edit.isPending;
   const failed = (e: unknown) => setError(toDomainError(e).message);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     touch();
-    if (saving || !ready) return;
-    const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget))));
+    // «Enviar a revisión» no espera a la pantalla (p. ej. al cantón del pin), como «Continuar» al crear: lo obligatorio
+    // que falte lo dice planEdit con su mensaje.
+    if (saving) return;
+    const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget)), draft));
     if ("error" in plan) return setError(plan.error);
     setError(null);
-    if ("immediate" in plan) {
-      if (Object.keys(plan.immediate).length === 0) return toFicha();
-      return live.mutate(plan.immediate, {
-        onSuccess: () => {
-          toast(EDIT_COPY.savedLive);
-          toFicha();
-        },
-        onError: failed,
-      });
-    }
-    edit.mutate(plan.reviewed, {
-      onSuccess: () => {
-        toast(EDIT_COPY.sentToReview);
-        toFicha();
-      },
-      onError: failed,
-    });
+    // Lo no obligatorio se guarda y se avisa al guardar (y en ocre bajo el dato, en la ficha).
+    const done = (text: string) => () => {
+      toast(plan.warning ? `${text} ${plan.warning}` : text);
+      toFicha();
+    };
+    const changes = "immediate" in plan ? plan.immediate : plan.reviewed;
+    if (Object.keys(changes).length === 0) return toFicha();
+    if ("immediate" in plan) return live.mutate(plan.immediate, { onSuccess: done(EDIT_COPY.savedLive), onError: failed });
+    edit.mutate(plan.reviewed, { onSuccess: done(EDIT_COPY.sentToReview), onError: failed });
   }
 
   return (
@@ -125,16 +119,14 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
           {error}
         </div>
       ) : null}
-      <ReadyScope onReady={setReady}>
-        <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
-      </ReadyScope>
+      <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
       {reviewed ? (
         <p className="note small" data-testid="review-notice">
           {reviewNotice(field as ReviewedField, listing)}
         </p>
       ) : null}
       <div className="sticky-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={saving || !ready}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
           {reviewed ? "Enviar a revisión" : "Guardar"}
         </button>
       </div>
@@ -154,7 +146,8 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
     listingId: listing.id,
     photos: listing.photos,
     pending,
-    counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "muted" },
+    // El mismo contador que el paso 7 del asistente.
+    counter: { text: `${total} de ${MAX_PHOTOS}`, tone: "ok" },
     room: MAX_PHOTOS - total,
     canAdd: true,
     register: async (folder) => (await photosApi()).addEditPhoto(listing.id, folder),
@@ -174,6 +167,8 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
     <>
       <FlowHeader title={FIELD_TITLES.fotos} back={`/propietario/casas/${listing.id}`} historyBack action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
+        {/* Como el paso 7: la ayuda de la primera foto se va con ella. */}
+        {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
         <p className="note small">El orden y las fotos que quite se guardan al momento. {EDIT_COPY.photosNotice}</p>
         <div className="sticky-actions">
@@ -197,7 +192,8 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
 
 /** El tipo: con «Habitación» elegida aparece el baño (que en el asistente se pide con la capacidad). */
 function KindInputs({ draft }: { draft: ListingDraft }) {
-  const [kind, setKind] = useState<Kind | null>(draft.kind);
+  // Un tipo de antes (casa, apartamento) cuenta como Alojamiento completo, como en el paso 1 del asistente (KindChoice).
+  const [kind, setKind] = useState<Kind | null>(draft.kind === "habitacion" ? "habitacion" : draft.kind && "completo");
   return (
     <>
       <ChoiceCards

@@ -8,10 +8,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { can, isBlocked } from "../../domain/can";
 import { describe } from "../../domain/describe";
-import { EDIT_COPY, FIELD_ORDER, REVIEWED_FIELDS, fieldTitle, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
+import { EDIT_COPY, FIELD_ORDER, REVIEWED_FIELDS, fieldTitle, fieldWarning, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, locationLine, type Listing, type ListingDraft } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
+import { DESCRIPTION_EMPTY_WARNING } from "../../domain/publish-rules";
 import { cardLabel } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
@@ -30,7 +31,8 @@ function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["ki
       return l.title;
     case "tipo":
       if (l.kind !== "habitacion") return l.kind ? KIND_LABELS[l.kind] : "";
-      return `Habitación · baño ${l.bathroomShared ? "compartido" : "privado"}`;
+      // Sin elegir el baño, solo «Habitación» (y el aviso en ocre debajo).
+      return l.bathroomShared === null ? KIND_LABELS.habitacion : `Habitación · baño ${l.bathroomShared ? "compartido" : "privado"}`;
     case "capacidad":
       // Una Habitación solo cuenta personas (es 1 habitación y 1 baño): «2 personas», como su título «Personas». El baño
       // privado o compartido ya sale en la fila Tipo, que es donde se cambia.
@@ -74,6 +76,10 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
   const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
   const value = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field, l.kind);
+  // Lo no obligatorio sin decir o mal escrito, en ocre bajo el dato: el mismo aviso que «Revisar y enviar» al crear (ticket
+  // 12); no bloquea nada. Sin descripción, el valor («Sin descripción») ya lo dice: va en ocre, sin repetirlo.
+  const warning = readOnly ? null : fieldWarning(field, mergeEdit(l, isReviewed(field) ? e : null));
+  const empty = warning === DESCRIPTION_EMPTY_WARNING;
   const tag = readOnly ? null : state ? (
     <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
   ) : isReviewed(field) ? (
@@ -86,7 +92,12 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
           {fieldTitle(field, l.kind)}
           {tag}
         </span>
-        <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}`}>{value}</span>
+        <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}${empty ? " sun-ink" : ""}`}>{value}</span>
+        {warning && !empty ? (
+          <span className="block small sun-ink" data-testid={`warn-${field}`}>
+            {warning}
+          </span>
+        ) : null}
       </span>
       {readOnly ? null : (
         <span className="chev">

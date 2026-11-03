@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
-import { charCount } from "../../domain/listing-rules";
+import { DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { charCount, monthlyError } from "../../domain/listing-rules";
 import { requiredProblems, warnings } from "../../domain/publish-rules";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
@@ -149,10 +149,13 @@ export function BathroomChoice({ shared }: { shared: boolean | null }) {
   );
 }
 
-/** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí; con Sí, «Precio al mes (opcional)». Volver a No vacía el campo. */
+/** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí; con Sí, «Precio al mes (opcional)». Volver a No
+ *  vacía el campo. Un precio al mes mal escrito se guarda vacío («a negociar»): mientras se escribe, la ayuda lo avisa en
+ *  ocre con el mensaje de la regla (ticket 12; al crear y al editar). */
 export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: number | null }) {
   const [yes, setYes] = useState(accepts);
   const [text, setText] = useState(price === null ? "" : String(price));
+  const bad = monthlyError({ acceptsMonthly: true, monthlyPriceCrc: parseColones(text) });
   return (
     <>
       <div className="stack gap-8" role="group" aria-labelledby="pub-acceptsMonthly">
@@ -193,8 +196,8 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
             <span className="cur">₡</span>
             <input id="pub-monthlyPriceCrc" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" value={text} onChange={(e) => setText(e.currentTarget.value)} placeholder="350 000" aria-describedby="pub-monthlyPriceCrc-help" />
           </div>
-          <span id="pub-monthlyPriceCrc-help" className="xs muted">
-            Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».
+          <span id="pub-monthlyPriceCrc-help" className={`xs ${bad ? "sun-ink strong" : "muted"}`} aria-live="polite">
+            {bad ?? "Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión»."}
           </span>
         </div>
       ) : null}
