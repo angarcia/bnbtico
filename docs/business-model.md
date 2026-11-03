@@ -66,7 +66,7 @@ La plataforma sí gestiona el cobro de la suscripción, con una pasarela costarr
 
 - **Tarjeta:** tokenizada, renovación automática mensual o anual.
 - **SINPE Móvil:** no es recurrente. Cada ciclo el owner paga desde su banco; la pasarela confirma por webhook. La app recuerda por WhatsApp 3 días antes; si no paga, la casa pasa a `past_due` con 5 días de gracia y luego a `paused`.
-- El checkout se hace en la **web** (enlace desde la app) para evitar las comisiones y reglas de compras in-app de Apple/Google. Validar antes de lanzar si la suscripción califica como "servicio consumido fuera de la app".
+- ~~El checkout se hace solo en la **web**~~ (sustituido el 2026-11-02, Daniel): cuando haya apps de iOS y Android, la suscripción también se podrá pagar con las suscripciones de Apple y Google, además de en la web. Pendiente: comisión de las tiendas (15–30 %) y conciliar los dos canales.
 
 ## Aclaraciones de la sesión
 - **"¿Se puede pagar por esos medios desde la app?"** Sí: la app gestiona el cobro de la suscripción (es dinero para la plataforma, no entre owner y cliente). Tarjeta = recurrente automático. SINPE Móvil = el owner inicia el pago cada ciclo; la pasarela lo confirma por API, así no hay conciliación manual. Vale la pena mantener SINPE porque muchos owners no usan tarjeta online.

@@ -1,3 +1,10 @@
+## 2026-11-02 · Decisiones de producto de la ronda de Ana que no tocan código (Daniel)
+
+- **Suscripción en las apps de tiendas:** cuando haya apps de iOS y Android, la suscripción se podrá pagar también con las suscripciones de Apple y Google, además de en la web (sustituye «checkout solo en web» de `docs/business-model.md`). El login con Google, Apple o biometría se revisa entonces.
+- **Favoritos sin cuenta** (se mantiene la regla); como mucho, sugerir crear cuenta tras el primer favorito.
+- **El nombre de la casa sigue obligatorio** de momento.
+- **Ideas para más adelante:** «casa del día» (contador de días sin publicarse en redes y lista en el admin); publicar fácil la casa de un anfitrión nuevo desde el admin.
+
 ## 2026-11-02 · Ronda de Ana del 2 nov, revertida (Daniel)
 
 Daniel la revirtió el mismo día: la calidad del resultado no servía. El código, `CLAUDE.md` y los documentos vuelven al estado del commit `782b951`; ninguna decisión de esa ronda queda vigente. Las migraciones de la ronda se deshacen con `revertir_ronda_2_nov`. El análisis, los tickets y las capturas quedan en `.scratch/ronda-ana-2026-11-02/` solo como referencia.

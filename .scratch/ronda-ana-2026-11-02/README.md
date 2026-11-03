@@ -31,3 +31,7 @@ Fuente: correo de Ana «cambios bnbtico» (2026-11-02). Decisiones confirmadas p
 | 09 | Tarjeta de Explorar: fotos 5:4 deslizables a todo el ancho y botón de WhatsApp | no |
 | 10 | Admin edita casas (primero plan) | sí |
 | 11 | Filtro de precio con deslizador e histograma | no |
+
+## Proceso tras la reversión (2026-11-02, Daniel)
+
+La ronda se revirtió entera (`8ac6f5f`). Se rehace **un ticket cada vez**, implementado por un agente **Opus**: revisión del orquestador, commit, `db push` si hay migración (preguntando antes), push a `develop`, CI en verde y Daniel lo prueba en nueva.bnbtico.com; con su visto bueno, el siguiente. Orden: 01 → 02 → 03 → 12 → 04 → 05 → 06 → 07 → 08 → 11; el 10 cuando estén D1–D7; **el 09 no, de momento**. Cambio respecto al primer intento: el hero de la ficha va en **5:4** (no 4:3).

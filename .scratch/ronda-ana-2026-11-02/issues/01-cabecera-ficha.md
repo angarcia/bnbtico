@@ -1,12 +1,12 @@
-# 01 · Cabecera de la ficha: pin, sin «ubicación aproximada», anfitrión y hero 4:3
+# 01 · Cabecera de la ficha: pin, sin «ubicación aproximada», anfitrión y hero 5:4
 
-Status: ready-for-agent
+Status: ready-for-agent (rehecho tras revertir la ronda; ver README «Proceso tras la reversión»)
 
 ## Qué
 1. **Pin pegado al texto.** `apps/app/src/shared/listing-page.tsx:276-278`: hoy `<span className="row gap-6"><I.pin/> texto</span>` con `.row` flex `align-items:center` y `.listing-head > .row{justify-content:center}` (`global.css:73`, `:984-985`). Con dos renglones el icono queda centrado a la izquierda. Debe ir **inline justo antes de la primera palabra**, la línea centrada (`text-align:center`), el icono alineado con la primera línea (`vertical-align`), funcione con uno o dos renglones.
 2. **Quitar « · ubicación aproximada»** de esa línea (queda «Playa Negra, Talamanca»). El aviso bajo el mapa (`shared/approx-map.tsx:20`) y la sección «Zona aproximada» **se quedan**.
 3. **Bloque de la persona** (`listing-page.tsx:283-294`): nombre en negrita y debajo «Anfitrión · WhatsApp verificado» (si no está verificado, solo «Anfitrión»). Mismo avatar, mismos `hr`.
-4. **Hero 4:3 en el teléfono** (`global.css:320`, `.hero{aspect-ratio:1/1}` → `4/3`). Escritorio (`global.css:1006`) sin cambios. Reserve la caja igual que ahora (sin CLS).
+4. **Hero 5:4 en el teléfono** (`global.css:320`, `.hero{aspect-ratio:1/1}` → `5/4`; Daniel, 2026-11-02, al rehacer la ronda). Escritorio (`global.css:1006`) sin cambios. Reserve la caja igual que ahora (sin CLS).
 
 ## No tocar
 - Cabecera centrada como en Airbnb (decisiones 2026-10-29, línea «Cabecera de la ficha…»): nombre 28 px, zona, «N personas · habitaciones · baños», persona en su fila entre dos líneas, luego la descripción.
