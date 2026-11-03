@@ -9,6 +9,9 @@ import { describe, isNegotiable, type MonthlyPrice, type Price } from "../domain
 import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatUSD } from "../domain/money";
+import type { CalendarDay } from "../domain/calendar";
+import { nightsLabel } from "../domain/search";
+import type { SearchDates } from "../domain/contact-return";
 import { ApproxMap } from "./approx-map";
 import { useCurrency } from "./currency";
 import { useFx } from "./fx";
@@ -25,6 +28,7 @@ import { ShareButton } from "./share-button";
 import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
+import { useStayDates } from "./stay-dates";
 
 const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -60,7 +64,7 @@ const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactShe
 
 /** El botón de la barra. Mide lo mismo antes y después de hidratar: antes es una caja apagada que aún no responde.
  *  `openOnMount`: la ficha de la SPA al volver de Ingresar con lo escrito (`?contacto=1`). */
-function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: PublicListing; hydrated: boolean; navigate: Navigate; openOnMount?: OpenSheet }) {
+function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { listing: PublicListing; days: readonly CalendarDay[] | null | undefined; hydrated: boolean; navigate: Navigate; openOnMount?: OpenSheet }) {
   const [open, setOpen] = useState(!!openOnMount);
   // Solo la hoja que reabre al volver de verificar sigue sola hacia WhatsApp; si se cierra, la siguiente espera el toque.
   const [autoSend, setAutoSend] = useState(openOnMount === "return");
@@ -114,6 +118,7 @@ function ContactButton({ listing, hydrated, navigate, openOnMount }: { listing: 
         <Suspense fallback={<div className="sheet-backdrop" />}>
           <ContactSheet
             listing={listing}
+            days={days}
             navigate={navigate}
             autoSend={autoSend}
             onClose={() => {
@@ -173,18 +178,28 @@ function Availability({ listing, currency, fx }: { listing: PublicListing; curre
   );
 }
 
-/** La barra fija de la ficha: colones a la izquierda (noche y, debajo, mensual), dólares a la derecha (≈ noche, ≈ mes).
+/** La barra fija de la ficha (con fechas, la línea principal es el total): colones a la izquierda (noche y, debajo, mensual), dólares a la derecha (≈ noche, ≈ mes).
  *  No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al hidratar. */
-function PriceColumns({ main, monthly, fx }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate }) {
+function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate; stay: BarStay | null }) {
   if (!main && !monthly) return null;
   const monthlyAmount = monthly && !isNegotiable(monthly) ? monthly.amount : null;
   const rate = `Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`;
   return (
     <div className="cta-prices">
       <div>
+        {/* Con fechas, la línea principal es el total orientativo («≈ ₡285 000 / 3 noches»); la secundaria sigue siendo la del
+            mensual, con o sin fechas: la barra mide siempre lo mismo. */}
         {main ? (
-          <span className="price" data-testid="main-price">
-            {formatCRC(main.amount)} <small>/ {main.unit}</small>
+          <span className={`price${stay ? " is-stay" : ""}`} data-testid="main-price">
+            {stay ? (
+              <span className="stay-fs">
+                ≈ {formatCRC(stay.totalCrc)} <small>/ {nightsLabel(stay.nights)}</small>
+              </span>
+            ) : (
+              <>
+                {formatCRC(main.amount)} <small>/ {main.unit}</small>
+              </>
+            )}
           </span>
         ) : null}
         {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
@@ -193,7 +208,15 @@ function PriceColumns({ main, monthly, fx }: { main: Price | null; monthly: Mont
         <div className="cta-usd">
           {main ? (
             <span className="price-usd" data-testid="price-usd" title={rate}>
-              {`≈ ${formatUSD(main.amount, fx.crcPerUsd)}`} <small>/ {main.unit}</small>
+              {stay ? (
+                <>
+                  {`≈ ${formatUSD(stay.totalCrc, fx.crcPerUsd)}`} <small>/ {nightsLabel(stay.nights)}</small>
+                </>
+              ) : (
+                <>
+                  {`≈ ${formatUSD(main.amount, fx.crcPerUsd)}`} <small>/ {main.unit}</small>
+                </>
+              )}
             </span>
           ) : null}
           {monthlyAmount !== null ? (
@@ -205,6 +228,25 @@ function PriceColumns({ main, monthly, fx }: { main: Price | null; monthly: Mont
       ) : null}
     </div>
   );
+}
+
+/** El total de la estancia para la barra: las noches y la suma en colones (los dólares se calculan con el tipo de la página). */
+type BarStay = { totalCrc: number; nights: number };
+
+/** El total orientativo de las fechas de la pestaña para la barra de precio. Sale de las reglas del calendario (un trozo
+ *  diferido, el mismo de la rejilla): se pide cuando hay fechas y días; hasta entonces la barra sigue como sin fechas. */
+function useBarStay(l: PublicListing, days: readonly CalendarDay[] | null | undefined, dates: SearchDates | null): BarStay | null {
+  const [calc, setCalc] = useState<(typeof import("../domain/stay-price"))["listingStay"] | null>(null);
+  const need = !!dates && !!days && !calc;
+  useEffect(() => {
+    if (!need) return;
+    let live = true;
+    void import("../domain/stay-price").then((m) => live && setCalc(() => m.listingStay));
+    return () => {
+      live = false;
+    };
+  }, [need]);
+  return calc && days && dates ? calc(l, days, dates) : null;
 }
 
 /** La barra fija tapa el final de la página: el espaciador mide lo mismo que ella (menos el margen inferior de la vista). */
@@ -230,6 +272,11 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
   const currency = useCurrency();
   const fx = useFx();
   const d = describe(l, { base });
+  // Los días ocupados y con precio especial (ya en la caché: los trae el worker o la consulta de la ficha) y las fechas de la
+  // pestaña: la hoja y la barra de precio los usan. Las fechas valen null hasta hidratar, así el HTML del servidor no cambia.
+  const { data: days } = useQuery({ ...listingDaysQuery(l.publicId), enabled: l.available && !preview });
+  const dates = useStayDates();
+  const stay = useBarStay(l, days, preview ? null : dates);
   useEffect(() => {
     // Ni la vista previa ni el propio dueño cuentan como visita (revisión UX A2).
     if (!preview && !isOwnListing(l.publicId)) track("listing_view", l.publicId);
@@ -333,13 +380,13 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
         <div className="cta-spacer" aria-hidden="true" ref={spacer} />
         <div className="cta-bar" ref={bar}>
-          <PriceColumns main={main} monthly={d.monthly} fx={fx} />
+          <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} />
           {preview ? (
             <span className="btn btn-wa is-pending" aria-disabled="true">
               <I.wa size={22} /> Contactar por WhatsApp
             </span>
           ) : (
-            <ContactButton listing={l} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
+            <ContactButton listing={l} days={days} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
           <p className="xs muted price-disclaimer" data-testid="price-note">
             Precios orientativos: el precio final lo acuerda con el anfitrión.

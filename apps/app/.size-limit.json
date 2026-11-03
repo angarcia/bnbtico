@@ -50,6 +50,8 @@
       "!dist/client/assets/publish-promo-*.js",
       "!dist/client/assets/offer-*.js",
       "!dist/client/assets/range-calendar-*.js",
+      "!dist/client/assets/range-????????.js",
+      "!dist/client/assets/stay-price-*.js",
       "!dist/client/assets/map-preview-*.js",
       "!dist/client/assets/map-pins-*.js"
     ],
@@ -100,13 +102,15 @@
     "gzip": true
   },
   {
-    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda)",
+    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda, y las reglas de rango y del total de la estancia, range-* y stay-price-*, que comparte con el calendario de la ficha: ~0,8 KB que estaban en la zona privada, ticket 08 de la ronda del 2 nov)",
     "path": [
       "dist/client/assets/contact-sheet-*.js",
       "dist/client/assets/inquiry-*.js",
-      "dist/client/assets/range-calendar-*.js"
+      "dist/client/assets/range-calendar-*.js",
+      "dist/client/assets/range-????????.js",
+      "dist/client/assets/stay-price-*.js"
     ],
-    "limit": "6.5 KB",
+    "limit": "7 KB",
     "gzip": true
   },
   {
@@ -285,7 +289,9 @@
     "name": "Calendario de la ficha · trozo diferido (se pide tras hidratar, en reposo o al acercarse la sección: la sección y la rejilla del mes; las reglas del calendario, calendar-*, ~2,2 KB, las comparte con el del propietario y las mide su entrada)",
     "path": [
       "dist/client/assets/listing-calendar-*.js",
-      "dist/client/assets/month-grid-*.js"
+      "dist/client/assets/month-grid-*.js",
+      "dist/client/assets/range-????????.js",
+      "dist/client/assets/stay-price-*.js"
     ],
     "limit": "4 KB",
     "gzip": true

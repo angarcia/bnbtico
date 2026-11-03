@@ -81,10 +81,10 @@ async function clientCalendar(publicId: string) {
   const { page } = await client(publicId);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const section = page.locator(".listing-calendar");
-  await expect(section.getByRole("grid", { name: monthTitle(openingMonth(today())) })).toBeVisible();
+  await expect(section.getByRole("group", { name: monthTitle(openingMonth(today())) })).toBeVisible();
   if (!opensOnNext()) await section.getByRole("button", { name: "Mes siguiente" }).click();
-  await expect(section.getByRole("grid", { name: monthTitle(next()) })).toBeVisible();
-  return { page, cell: (iso: string) => section.getByRole("gridcell", { name: dayName(iso) }) };
+  await expect(section.getByRole("group", { name: monthTitle(next()) })).toBeVisible();
+  return { page, cell: (iso: string) => section.getByRole("button", { name: dayName(iso) }) };
 }
 
 test.beforeAll(async () => {

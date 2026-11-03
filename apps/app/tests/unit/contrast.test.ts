@@ -62,6 +62,10 @@ const PAIRS: [string, string][] = [
   ["--state-ink", "--state-soft"],
   ["--cal-busy-ink", "--cal-busy"],
   ["--when-pick-ink", "--when-pick"],
+  // La estancia elegida en el calendario de la ficha (ticket 08 de la ronda del 2 nov): el número y el precio sobre la banda
+  // (con el verde de los libres debajo, hasta un 12 % más) y el número de un ocupado bajo la banda (en tinta, no en terracota: sobre la banda no llega a 4,5).
+  ["--fg", "color-mix(in srgb, var(--primary) 12%, var(--stay-band))"],
+  ["--fg", "color-mix(in srgb, var(--brand) 25%, var(--bg))"],
   ["--muted", "--review-soft"],
   ["--fg", "--surface-2"],
   ["--muted", "--surface-2"],

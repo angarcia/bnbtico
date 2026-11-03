@@ -20,11 +20,9 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     expect(contactDraftKey("CT-1015")).toBe("bnbtico-contacto:CT-1015");
   });
 
-  it("guarda fechas, personas, mensaje, si se editó y si la hoja estaba abierta", () => {
+  it("guarda personas, mensaje, si se editó y si la hoja estaba abierta; las fechas no (viven en `bnbtico-fechas`)", () => {
     const s = redraft(startDraft(TITLE), { type: "fields", patch: { arrival: "2026-12-20", departure: "2026-12-27", people: 4 } }, TITLE);
     expect(JSON.parse(storeContactDraft(s, true, NOW))).toEqual({
-      arrival: "2026-12-20",
-      departure: "2026-12-27",
       people: 4,
       message: composeInquiryMessage(TITLE, { arrival: "2026-12-20", departure: "2026-12-27", people: 4 }),
       edited: false,
@@ -57,6 +55,13 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     expect(storeContactDraft(restored.state, true, NOW)).not.toContain("monthlyFrom");
   });
 
+  it("un borrador guardado antes con fechas propias se entiende y las ignora", () => {
+    const old = JSON.stringify({ arrival: "2026-12-20", departure: "2026-12-27", people: 2, message: "x", edited: false, open: true, savedAt: NOW });
+    const restored = restoreContactDraft(old, TITLE, NOW)!;
+    expect(restored.state).toMatchObject({ arrival: null, departure: null, people: 2 });
+    expect(storeContactDraft(restored.state, true, NOW)).not.toContain("2026-12-20");
+  });
+
   it("caduca a los 30 minutos y descarta lo que no entiende", () => {
     const raw = storeContactDraft(startDraft(TITLE), true, NOW);
     expect(restoreContactDraft(raw, TITLE, NOW + CONTACT_DRAFT_TTL_MS - 1)).not.toBeNull();
@@ -64,7 +69,7 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     expect(restoreContactDraft(null, TITLE, NOW)).toBeNull();
     expect(restoreContactDraft("{", TITLE, NOW)).toBeNull();
     expect(restoreContactDraft(JSON.stringify({ message: 3, savedAt: NOW }), TITLE, NOW)).toBeNull();
-    expect(restoreContactDraft(JSON.stringify({ arrival: 5, departure: null, people: null, message: "x", edited: true, open: false, savedAt: NOW }), TITLE, NOW)).toBeNull();
+    expect(restoreContactDraft(JSON.stringify({ people: "dos", message: "x", edited: true, open: false, savedAt: NOW }), TITLE, NOW)).toBeNull();
   });
 });
 

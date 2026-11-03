@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
-import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
+import { PEOPLE_FILTER_KEY } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
 import { nightsBetween, resultsText, searchSummary } from "../../domain/search";
 import { extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
@@ -14,6 +14,7 @@ import { CurrencySwitch } from "../../shared/currency-switch";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { I } from "../../shared/icons";
+import { stayDates } from "../../shared/stay-dates";
 import { revealClass } from "../motion";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
@@ -116,15 +117,17 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const currency = useCurrency();
   const { data: listings, isError, error } = useQuery(listingsQuery(f));
   const reveal = useReveal(!listings, searchToString(searchFor(f)));
-  // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
-  const dates = searchDatesValue(stayRange(f));
+  // La hoja de contacto de la ficha arranca con estas personas (revisión UX A3); las fechas las comparten la ficha y la hoja
+  // (`stay-dates.ts`). En la pestaña, no en la URL de la ficha.
+  const range = stayRange(f);
+  const arrival = range?.from ?? null;
+  const departure = range?.to ?? null;
   useEffect(() => {
     const store = webStore("session");
     if (f.ppl > 0) store.setItem(PEOPLE_FILTER_KEY, String(f.ppl));
     else store.removeItem(PEOPLE_FILTER_KEY);
-    if (dates) store.setItem(DATES_FILTER_KEY, dates);
-    else store.removeItem(DATES_FILTER_KEY);
-  }, [f.ppl, dates]);
+    stayDates.write(arrival && departure ? { arrival, departure } : null);
+  }, [f.ppl, arrival, departure]);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next), replace: true });
   const extras = extrasCount(f);
   // Con llegada y salida, las tarjetas y el mapa muestran el total orientativo de esas noches (lo calcula la búsqueda).

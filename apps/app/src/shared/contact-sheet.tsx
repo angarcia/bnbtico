@@ -5,9 +5,12 @@
 // - El mensaje se redacta solo con fechas y personas (reductor `redraft` del dominio) y se ve como vista previa, sin caja
 //   de texto: lo que quiera añadir lo escribe en WhatsApp (revisión UX 2026-10-29, N2). Las fechas, con el mismo calendario
 //   de rango que «¿Cuándo?», no con el selector del sistema.
+// - Las fechas son las de la pestaña (`stay-dates.ts`), las mismas del calendario de la ficha: elegirlas aquí las cambia allí y
+//   al revés. Los días ocupados de la casa llegan por props (`days`): no se puede llegar en uno, un rango con una noche
+//   ocupada no vale, y con fechas la hoja dice el total orientativo (ticket 08 de la ronda del 2 nov).
 // - Diálogo modal: el resto de la página queda `inert`, el foco no sale de la hoja, Escape / fondo / «Cerrar» la cierran y el
 //   foco vuelve al botón. Sin scroll de fondo.
-import { useEffect, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import {
   contactDraftKey,
@@ -27,12 +30,18 @@ import {
 } from "../domain/inquiry";
 import type { PublicListing } from "../domain/listing";
 import { hasStoredSession, webStore } from "../data/storage";
-import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, readSearchDates } from "../domain/contact-return";
+import { effectiveDay, type CalendarDay } from "../domain/calendar";
+import { PEOPLE_FILTER_KEY } from "../domain/contact-return";
 import { shortDate } from "../domain/dates";
+import { RANGE_BUSY_MESSAGE } from "../domain/range";
+import { hasBusyNight, listingStay, stayLine } from "../domain/stay-price";
 import { proceedToWhatsApp } from "./contact-flow";
 import { I } from "./icons";
 import { useModal } from "./modal";
 import { RangeCalendar } from "./range-calendar";
+import { useCurrency } from "./currency";
+import { useFx } from "./fx";
+import { stayDates } from "./stay-dates";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 /** Campos que sacan el teclado (las fechas abren el calendario de la hoja). */
@@ -50,7 +59,7 @@ function filteredPeople(max: number): number | null {
 
 /** `autoSend`: la hoja reabre al volver de verificar el WhatsApp y sigue sola hacia WhatsApp (revisión UX C2), solo si lo
  *  escrito sigue guardado: con el borrador caducado se queda abierta con el mensaje por defecto y espera el toque. */
-export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing: PublicListing; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean }) {
+export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { listing: PublicListing; days?: readonly CalendarDay[] | null; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean }) {
   const title = listing.title;
   const store = useRef(webStore("session")).current;
   const key = contactDraftKey(listing.publicId);
@@ -60,12 +69,23 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
   const [draft, dispatch] = useReducer(
     (s: ContactDraftState, a: ContactDraftAction) => redraft(s, a, title),
     null,
-    // Sin borrador, las personas (si caben en la casa) y las fechas de la búsqueda de Explorar (revisión UX A3).
-    () => restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople), ...readSearchDates(store.getItem(DATES_FILTER_KEY), costaRicaToday(Date.now())) }),
+    // Sin borrador, las personas (si caben en la casa) del filtro de Explorar (revisión UX A3); las fechas, siempre las de la
+    // pestaña (las de la búsqueda o las que se cambiaron en el calendario de la ficha).
+    () => {
+      const start = restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople) });
+      const dates = stayDates.read();
+      return dates ? redraft(start, { type: "fields", patch: dates }, title) : start;
+    },
   );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [rejected, setRejected] = useState(false);
+  const currency = useCurrency();
+  const fx = useFx().crcPerUsd;
+  // Los días ocupados de la casa (con los precios especiales, los mismos del calendario de la ficha).
+  const base = listing.acceptsNightly ? listing.nightlyPriceCrc : null;
+  const busy = useMemo(() => (day: string) => !!days && !effectiveDay(days, base, day).available, [days, base]);
   // Al abrir el calendario, el mes de la fecha elegida (o el de hoy) arriba, bajo la fila de los días.
   const calendarBox = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -170,6 +190,11 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
     }
   }
 
+  const dates = draft.arrival && draft.departure ? { arrival: draft.arrival, departure: draft.departure } : null;
+  const stay = days && dates ? listingStay(listing, days, dates) : null;
+  const stayText = stay && dates ? stayLine(stay, dates, currency, fx) : null;
+  // Fechas que ya traen una noche ocupada (de Explorar o de un enlace viejo): el aviso en vez del total.
+  const blocked = !!days && hasBusyNight(listing, days, dates);
   const invalid = (f: InquiryField) => (status.kind === "error" && status.field === f ? true : undefined);
 
   return createPortal(
@@ -211,15 +236,35 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
                 <RangeCalendar
                   today={today}
                   value={{ arrival: draft.arrival, departure: draft.departure }}
+                  busy={busy}
+                  onReject={() => setRejected(true)}
                   onChange={(r) => {
+                    setRejected(false);
                     change({ type: "fields", patch: r });
-                    if (r.arrival && r.departure) setPicking(false);
+                    // Un rango completo es el de la pestaña (la ficha lo ve al momento); una llegada sola espera su salida aquí.
+                    if (r.arrival && r.departure) {
+                      stayDates.write({ arrival: r.arrival, departure: r.departure });
+                      setPicking(false);
+                    } else if (stayDates.read()) stayDates.write(null);
                   }}
                 />
               </div>
+              {rejected ? (
+                <p className="note" role="alert">
+                  {RANGE_BUSY_MESSAGE}
+                </p>
+              ) : null}
               <div className="row between">
                 {draft.arrival ? (
-                  <button type="button" className="btn-text" onClick={() => change({ type: "fields", patch: { arrival: null, departure: null } })}>
+                  <button
+                    type="button"
+                    className="btn-text"
+                    onClick={() => {
+                      setRejected(false);
+                      change({ type: "fields", patch: { arrival: null, departure: null } });
+                      stayDates.write(null);
+                    }}
+                  >
                     Quitar fechas
                   </button>
                 ) : (
@@ -257,6 +302,11 @@ export function ContactSheet({ listing, onClose, navigate, autoSend }: { listing
               </button>
             </div>
           </div>
+          {stayText || blocked ? (
+            <p className={`stay-line${blocked ? " is-busy" : ""}`} data-testid="stay-total" role={blocked ? "alert" : undefined}>
+              {blocked ? RANGE_BUSY_MESSAGE : stayText}
+            </p>
+          ) : null}
           <div className="stack gap-4">
             <span className="field-label" id="contact-message-label">
               Su mensaje
