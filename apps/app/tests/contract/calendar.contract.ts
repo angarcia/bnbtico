@@ -1,10 +1,10 @@
 // Contrato del calendario (fase 4): días del propietario (save_listing_days), lectura pública (public_listing_days),
-// cerrar con fecha de reapertura (set_listing_available de tres argumentos) y la reapertura nocturna
-// (reopen_due_listings). Mismas reglas y mensajes en el fake (applyChange, validateChange) y en la base.
+// «Marcar una reserva» (un rango de noches guardado como ocupado con save_listing_days) y la reapertura nocturna de las
+// casas que quedaran cerradas (reopen_due_listings; la app ya no cierra casas, las cierra el arnés). Mismas reglas y mensajes en el fake (applyChange, validateChange) y en la base.
 // Cada caso empieza con la base de casas vacía (el tope de 5 borradores sin enviar cuenta los que dejan otros casos) y
 // siembra las suyas; la reapertura nocturna recorre toda la base, por eso solo se comprueban las casas propias.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { CALENDAR_MESSAGES as M, type CalendarDay } from "../../src/domain/calendar";
+import { CALENDAR_MESSAGES as M, reservationDays, type CalendarDay } from "../../src/domain/calendar";
 import { DomainError } from "../../src/domain/errors";
 import { parseFilters } from "../../src/domain/filters";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -127,10 +127,10 @@ export function calendarContract(name: string, makeHarness: () => Promise<Subscr
       const l = await house();
       const me = h.calendar("owner");
       await me.save(l.id, { days: [day(4)], available: false, priceCrc: 99_000 });
-      await h.owner("owner").setAvailable(l.id, false);
+      await h.setClosed(l.id, true);
       expect((await rejection(me.save(l.id, { days: [day(5)], available: false }))).message).toBe(M.closed);
       expect(await me.days(l.id)).toEqual([occupied(day(4), 99_000)]);
-      await h.owner("owner").setAvailable(l.id, true);
+      await h.setClosed(l.id, false);
       expect(await me.days(l.id)).toEqual([occupied(day(4), 99_000)]);
 
       const rejected = await house({ status: "rejected" });
@@ -161,48 +161,49 @@ export function calendarContract(name: string, makeHarness: () => Promise<Subscr
       expect(await h.anon.getPublicDays(draft.publicId)).toEqual([]);
       expect(await h.anon.getPublicDays(reopened.publicId)).toEqual([]);
       expect(await h.anon.getPublicDays("CT-999999")).toEqual([]);
-      await h.owner("owner").setAvailable(l.id, false);
+      await h.setClosed(l.id, true);
       expect(await h.anon.getPublicDays(l.publicId)).toEqual([occupied(day(2)), special(day(3), 77_000)]);
     });
 
-    it("cerrar con fecha: de mañana a hoy + 365; abrir a mano la borra; una fecha al abrir se rechaza", async () => {
+    it("«Marcar una reserva»: de llegada a salida − 1 noches ocupadas; los precios especiales y lo ya ocupado se conservan", async () => {
       const l = await house();
-      const owner = h.owner("owner");
-      for (const bad of [day(0), day(-3), day(366), "2027-02-30"]) {
-        expect((await rejection(owner.setAvailable(l.id, false, bad))).message, bad).toBe(M.reopenDate);
-      }
-      expect((await owner.getOwn(l.id))?.available).toBe(true);
-      await owner.setAvailable(l.id, false, day(1));
-      expect(await owner.getOwn(l.id)).toMatchObject({ available: false, reopenAt: day(1), status: "active" });
-      expect(await h.anon.getPublic(l.publicId)).toMatchObject({ available: false, reopenAt: day(1) });
-      await owner.setAvailable(l.id, false, day(365));
-      expect((await owner.getOwn(l.id))?.reopenAt).toBe(day(365));
-      expect((await rejection(owner.setAvailable(l.id, true, day(10)))).message).toBe(M.reopenWhileOpen);
-      await owner.setAvailable(l.id, true);
-      expect(await owner.getOwn(l.id)).toMatchObject({ available: true, reopenAt: null });
-      await owner.setAvailable(l.id, false);
-      expect(await owner.getOwn(l.id)).toMatchObject({ available: false, reopenAt: null });
+      const me = h.calendar("owner");
+      await me.save(l.id, { days: [day(11)], priceCrc: 77_000 });
+      await me.save(l.id, { days: [day(12)], available: false, priceCrc: 99_000 });
+      const nights = reservationDays(day(10), day(14));
+      expect(nights).toEqual([day(10), day(11), day(12), day(13)]);
+      await me.save(l.id, { days: nights, available: false });
+      expect(await me.days(l.id)).toEqual([occupied(day(10)), occupied(day(11), 77_000), occupied(day(12), 99_000), occupied(day(13))]);
+      expect(await h.anon.getPublicDays(l.publicId)).toEqual(await me.days(l.id));
+      // La noche de la salida sigue libre; repetir la misma reserva no cambia nada.
+      await me.save(l.id, { days: nights, available: false });
+      expect((await me.days(l.id)).map((d) => d.day)).not.toContain(day(14));
+      expect((await me.days(l.id)).length).toBe(4);
+    });
 
-      const draft = await house({ status: "draft" });
-      expect((await rejection(owner.setAvailable(draft.id, false, day(3)))).message).toBe(M.notActive);
-      expect((await rejection(h.owner("other").setAvailable(l.id, true))).message).toBe(M.notActive);
+    it("«Marcar una reserva» llega hasta el último día de la ventana (salida en hoy + 365) y no más allá", async () => {
+      const l = await house();
+      const me = h.calendar("owner");
+      await me.save(l.id, { days: reservationDays(day(363), day(365)), available: false });
+      expect((await me.days(l.id)).map((d) => d.day)).toEqual([day(363), day(364)]);
+      expect((await rejection(me.save(l.id, { days: reservationDays(day(364), day(367)), available: false }))).message).toBe(M.range);
     });
 
     it("la reapertura nocturna abre las casas cuya fecha llegó, deja las demás y nunca cambia el estado ni los días", async () => {
-      const owner = h.owner("owner");
       const due = await house();
       const later = await house();
       const noDate = await house();
       const hidden = await house();
       await h.calendar("owner").save(due.id, { days: [day(3)], available: false, priceCrc: 66_000 });
-      await owner.setAvailable(due.id, false, day(1));
-      await owner.setAvailable(later.id, false, day(2));
-      await owner.setAvailable(noDate.id, false);
-      await owner.setAvailable(hidden.id, false, day(1));
+      await h.setClosed(due.id, true, day(1));
+      await h.setClosed(later.id, true, day(2));
+      await h.setClosed(noDate.id, true);
+      await h.setClosed(hidden.id, true, day(1));
       // Parada después de cerrarla (una casa publicada ya no vuelve a borrador): se abre igual y sigue parada.
       await h.billing("owner").stop(hidden.id);
 
       expect(await h.reopenDue(day(1))).toBeGreaterThanOrEqual(2);
+      const owner = h.owner("owner");
       expect(await owner.getOwn(due.id)).toMatchObject({ available: true, reopenAt: null, status: "active" });
       expect(await owner.getOwn(hidden.id)).toMatchObject({ available: true, reopenAt: null, status: "inactive" });
       expect(await owner.getOwn(later.id)).toMatchObject({ available: false, reopenAt: day(2), status: "active" });

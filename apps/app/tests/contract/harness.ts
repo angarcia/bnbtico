@@ -44,6 +44,12 @@ export interface ListingsHarness {
   dropPhoto(listingId: string): Promise<void>;
   /** Pone a una casa un nombre de antes de publicar v2 (más de 32 caracteres) saltándose las reglas, como el servicio. */
   setLegacyTitle(listingId: string, title: string): Promise<void>;
+  /**
+   * Cierra (o reabre) una casa a consultas saltándose las reglas, como el servicio: ya no hay camino en la app para cerrar
+   * una casa (ticket 04 de la ronda del 2 nov: «Marcar una reserva» sustituyó a «Cerrar la casa hasta…»), pero la base y el
+   * SSR siguen cubriendo las filas que quedaran cerradas. `reopenAt` solo al cerrar.
+   */
+  setClosed(listingId: string, closed: boolean, reopenAt?: string | null): Promise<void>;
 }
 
 /** Borrador completo y válido (Cahuita, Limón), base de cada siembra. */

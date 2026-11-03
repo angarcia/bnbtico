@@ -24,7 +24,7 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
     async searchPublic(f: Filters) {
       const x = effectiveFilters(f); // con el mensual no se aplica el rango por noche
       const r = stayRange(f);
-      // La RPC pone la zona (5 km con el punto real), las noches libres y deja fuera las casas cerradas («Cerrar la casa
+      // La RPC pone la zona (5 km con el punto real), las noches libres y deja fuera las casas cerradas (filas heredadas de «Cerrar la casa
       // hasta…» del Calendario, ticket 20; su ficha sí se abre). El resto de filtros va encima.
       let q = db.rpc("search_listings", { p_zone: x.zone ?? undefined, p_from: r?.from, p_to: r?.to }).select(PUBLIC_COLUMNS);
       if (x.prov !== ALL_PROVINCES && !x.zone) q = q.eq("province", x.prov);

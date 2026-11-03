@@ -141,6 +141,9 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
     async setLegacyTitle(listingId, title) {
       db.listings.get(listingId)!.title = title;
     },
+    async setClosed(listingId, closed, reopenAt = null) {
+      Object.assign(db.listings.get(listingId)!, { available: !closed, reopenAt: closed ? reopenAt : null });
+    },
     async objects(listingId) {
       return [...db.objects.entries()]
         .filter(([name]) => name.startsWith(`${listingId}/`))

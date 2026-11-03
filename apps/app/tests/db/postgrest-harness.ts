@@ -202,6 +202,10 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     async setLegacyTitle(listingId, title) {
       sql(`begin; select set_config('app.allow_status','on',true); update public.listings set title = '${title.replace(/'/g, "''")}' where id = '${listingId}'; commit;`);
     },
+    async setClosed(listingId, closed, reopenAt = null) {
+      const at = closed && reopenAt ? `'${reopenAt}'` : "null";
+      sql(`begin; select set_config('app.allow_status','on',true); update public.listings set available = ${!closed}, reopen_at = ${at} where id = '${listingId}'; commit;`);
+    },
     async objects(listingId) {
       const found: { name: string; cacheControl: string | null }[] = [];
       const walk = async (prefix: string) => {

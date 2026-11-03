@@ -161,7 +161,7 @@ test("con alquiler mensual a negociar, el calendario sigue siendo por noches con
 test("casa cerrada a consultas: «Calendario cerrado» y cuándo vuelve, ya en el HTML y sin rejilla", async ({ page }) => {
   const casa = await seedWithDays("Casa Cerrada Ficha");
   const reopen = addDays(today(), 12);
-  await h.owner("owner").setAvailable(casa.id, false, reopen);
+  await h.setClosed(casa.id, true, reopen);
   const seen = watch(page);
   const res = await page.goto(`/casa/${casa.publicId}`);
   const html = await res!.text();

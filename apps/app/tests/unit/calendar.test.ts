@@ -7,7 +7,6 @@ import {
   CALENDAR_MESSAGES as M,
   addMonths,
   applyChange,
-  availabilityUpdate,
   calendarMonths,
   calendarWindow,
   changeFromSelection,
@@ -19,19 +18,20 @@ import {
   monthTitle,
   openingMonth,
   reopenIfDue,
+  reservationDays,
+  reservationLabel,
   selectDay,
   selectionLabel,
   setAvailability,
   setPrice,
   validateChange,
-  validateReopenDate,
   type CalendarChange,
   type CalendarDay,
   type CalendarListing,
   type Selection,
   type SelectionContext,
 } from "../../src/domain/calendar";
-import { can } from "../../src/domain/can";
+import { addDays } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
 const TODAY = "2026-12-01";
@@ -183,53 +183,39 @@ describe("calendario cerrado («closed calendar cannot be edited», «closing mu
     expect(result.error).toBe(M.closed);
     expect(result.days).toBe(days);
   });
-  it("cerrar y volver a abrir no toca los días ni los precios", () => {
-    const listing = { status: "active" as const, available: true, reopenAt: null };
-    const closed = availabilityUpdate(listing, false, null, TODAY);
-    expect(closed).toEqual({ available: false, reopenAt: null });
-    const reopened = availabilityUpdate({ ...listing, ...closed }, true, null, TODAY);
-    expect(reopened).toEqual({ available: true, reopenAt: null });
-    expect(effectiveDay(days, BASE, day(2))).toMatchObject({ available: false, priceCrc: 140_000, special: true });
-    expect(effectiveDay(days, BASE, day(5))).toMatchObject({ available: true, priceCrc: 120_000, special: true });
-  });
 });
 
-describe("cerrada sigue visible y sin contacto («unavailable listing stays visible», «reactivation must not silently mark available»)", () => {
-  it("cerrar no cambia el estado: la casa sigue activa (Explorar, enlace) y solo deja de aceptar consultas", () => {
-    const listing = { status: "active" as const, available: true, reopenAt: null, reviewedAt: null };
-    const next = { ...listing, ...availabilityUpdate(listing, false, null, TODAY) };
-    expect(next.status).toBe("active");
-    expect(can(next, "share")).toBe(true);
-    expect(next.available).toBe(false); // create_inquiry lo rechaza: tests/contract/inquiries.contract.ts (M.unavailable)
+describe("«Marcar una reserva» (ticket 04): de llegada a salida − 1 noches, sin tocar los precios especiales", () => {
+  it("las noches son de la llegada a la víspera de la salida; la salida no se ocupa", () => {
+    expect(reservationDays(day(3), day(6))).toEqual([day(3), day(4), day(5)]);
+    expect(reservationDays(day(3), day(4))).toEqual([day(3)]);
+    expect(reservationDays("2026-12-30", "2027-01-02")).toEqual(["2026-12-30", "2026-12-31", "2027-01-01"]);
   });
-  it("solo una casa activa cambia de disponibilidad (una oculta no se abre por sí sola)", () => {
-    for (const status of ["inactive", "draft", "review"] as const) {
-      expect(availabilityUpdate({ status }, true, null, TODAY)).toEqual({ error: M.notActive });
-    }
+  it("sin llegada, sin salida o con la salida igual o anterior a la llegada no hay noches", () => {
+    expect(reservationDays(null, day(6))).toEqual([]);
+    expect(reservationDays(day(3), null)).toEqual([]);
+    expect(reservationDays(day(3), day(3))).toEqual([]);
+    expect(reservationDays(day(5), day(3))).toEqual([]);
   });
-});
-
-describe("fecha de reapertura («past reopening dates are invalid», «nonexistent dates are invalid»)", () => {
-  it("vale desde mañana hasta hoy + 365; sin fecha también vale", () => {
-    expect(validateReopenDate("2026-12-02", TODAY)).toBeNull();
-    expect(validateReopenDate("2027-12-01", TODAY)).toBeNull();
-    expect(validateReopenDate(null, TODAY)).toBeNull();
-    expect(validateReopenDate("", TODAY)).toBeNull();
+  it("el cambio es «ocupado» sin precio: valida con las reglas de siempre y conserva el precio especial de esos días", () => {
+    const change: CalendarChange = { days: reservationDays(day(4), day(7)), available: false };
+    expect(ok(change)).toBeNull();
+    const days = [special(day(5), 120_000)];
+    expect(applyChange(days, BASE, change)).toEqual([occupied(day(4)), occupied(day(5), 120_000), occupied(day(6))]);
   });
-  it("pasada, hoy, más allá de un año o inexistente → el mensaje de la RPC", () => {
-    for (const date of ["2020-01-01", TODAY, "2027-12-02", "2030-02-30", "mañana"]) {
-      expect(validateReopenDate(date, TODAY)).toBe(M.reopenDate);
-    }
+  it("una noche que ya estaba ocupada sigue ocupada", () => {
+    const days = [occupied(day(5), 140_000)];
+    expect(applyChange(days, BASE, { days: reservationDays(day(4), day(7)), available: false })).toEqual([occupied(day(4)), occupied(day(5), 140_000), occupied(day(6))]);
   });
-  it("cerrar con una fecha inválida no cambia nada; abrir con fecha se rechaza", () => {
-    const listing = { status: "active" as const, available: true, reopenAt: null };
-    expect(availabilityUpdate(listing, false, "2020-01-01", TODAY)).toEqual({ error: M.reopenDate });
-    expect(availabilityUpdate(listing, false, "2026-12-15", TODAY)).toEqual({ available: false, reopenAt: "2026-12-15" });
-    expect(availabilityUpdate(listing, true, "2026-12-15", TODAY)).toEqual({ error: M.reopenWhileOpen });
+  it("las noches caben en la ventana: salir el último día (hoy + 365) vale; una noche pasada de la ventana, no", () => {
+    const last = addDays(TODAY, 365);
+    expect(ok({ days: reservationDays(addDays(last, -2), last), available: false })).toBeNull();
+    expect(ok({ days: reservationDays(addDays(last, -1), addDays(last, 2)), available: false })).toBe(M.range);
   });
-  it("abrir a mano cancela la fecha", () => {
-    const closedUntil15 = { status: "active" as const, available: false, reopenAt: "2026-12-15" };
-    expect(availabilityUpdate(closedUntil15, true, null, TODAY)).toEqual({ available: true, reopenAt: null });
+  it("el aviso dice las noches y las fechas como el panel", () => {
+    expect(reservationLabel(reservationDays("2026-12-20", "2026-12-23"))).toBe("3 noches marcadas como ocupadas · 20–22 dic");
+    expect(reservationLabel(["2026-12-20"])).toBe("1 noche marcada como ocupada · 20 dic");
+    expect(reservationLabel(reservationDays("2026-12-30", "2027-01-02"))).toBe("3 noches marcadas como ocupadas · 30 dic – 1 ene");
   });
 });
 
@@ -425,8 +411,6 @@ describe("mensajes (los copian la migración fase4_calendario y el fake)", () =>
       range: "Elija días entre hoy y dentro de un año.",
       nothing: "No hay cambios que guardar.",
       price: "Escriba un precio por noche en colones, mayor que cero y sin decimales.",
-      reopenDate: "La fecha de reapertura debe ser a partir de mañana y dentro de un año.",
-      notActive: "Solo puede cambiar la disponibilidad de una casa activa.",
     });
   });
 });

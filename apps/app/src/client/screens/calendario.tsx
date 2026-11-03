@@ -1,11 +1,12 @@
 // Calendario del propietario (pantalla 17 del diseño v1; revisión UX 2026-10-29, A1 y C4). Trozo diferido propio. Abre arriba
-// del todo: la casa (o su selector, a todo el ancho), «Cerrar la casa hasta…», ₡ | $ y el mes actual entero. Los meses van uno
+// del todo: la casa (o su selector, a todo el ancho), «Marcar una reserva», ₡ | $ y el mes actual entero. Los meses van uno
 // debajo de otro, del actual al último de la ventana; solo se montan las rejillas cerca de la vista. La barra de pestañas se
 // esconde al bajar y vuelve al subir, y no está mientras hay días seleccionados. Selección primero: se
 // tocan uno o más días (también de meses distintos) y el panel de abajo cambia disponibilidad y precio de todos a la vez. Guardar es optimista: la rejilla cambia y el
 // panel se cierra en el mismo toque; si la base se niega o no hay red, vuelve atrás y avisa. Las reglas son las del
-// dominio (domain/calendar.ts), las mismas que la RPC save_listing_days. Arriba, en una casa activa, «Cerrar la casa
-// hasta…» (set_listing_available) abre la hoja «Cerrar la casa», en su propio trozo diferido.
+// dominio (domain/calendar.ts), las mismas que la RPC save_listing_days. Arriba, «Marcar una reserva» abre una hoja con el
+// calendario de rango de «¿Cuándo?», en su propio trozo diferido, y guarda las noches de llegada a salida − 1 como
+// ocupadas por el mismo camino que «Guardar cambios» (ticket 04 de la ronda del 2 nov; ya no se cierra la casa entera).
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
 import { Component, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
@@ -18,6 +19,7 @@ import {
   effectiveDay,
   emptySelection,
   monthTitle,
+  reservationLabel,
   selectDay,
   selectionLabel,
   setAvailability,
@@ -27,9 +29,8 @@ import {
   type CalendarDay,
   type Selection,
 } from "../../domain/calendar";
-import { can, isBlocked } from "../../domain/can";
+import { isBlocked } from "../../domain/can";
 import { ignoreTabBarScroll, showTabBar } from "../hiding-tabbar";
-import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
 import { reportError } from "../../shared/beacon";
 import { costaRicaToday } from "../../domain/inquiry";
@@ -46,15 +47,15 @@ import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { isChunkLoadError } from "../chunk-error";
 import { RootHeader } from "../chrome";
-import { ownListingsQuery, useSetAvailable } from "../owner";
+import { ownListingsQuery } from "../owner";
 import { useSession } from "../session";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "bnbtico-calendario-casa";
 const KB_RELEASE_MS = 400;
-const loadCloseSheet = () => import("../close-sheet");
-const lazySheet = () => lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
-let CloseSheet = lazySheet();
+const loadMarkSheet = () => import("../mark-sheet");
+const lazySheet = () => lazy(() => loadMarkSheet().then((m) => ({ default: m.MarkSheet })));
+let MarkSheet = lazySheet();
 
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
 /** Casas con calendario (revisión UX A5): todo lo enviado alguna vez (en revisión, con cambios pedidos, activa, pausada) y
@@ -194,7 +195,6 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   const ctx = { days, base, today };
   const [sel, setSel] = useState<Selection>(emptySelection);
   const [problem, setProblem] = useState<string | null>(null);
-  const closed = !l.available;
 
   const save = useMutation({
     mutationKey: ["calendar-save", l.id],
@@ -214,30 +214,42 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   });
 
   const change = changeFromSelection(sel);
-  function onSave() {
-    if (!change) return;
+  /** Aplica el cambio a la rejilla al instante y lo guarda; devuelve el motivo si las reglas lo rechazan. */
+  function commit(change: CalendarChange): string | null {
     const refused = validateChange(change, { today, listing: { status: l.status, available: l.available, nightlyPriceCrc: base } });
-    if (refused) return setProblem(refused);
+    if (refused) return refused;
     const previous = client.getQueryData<CalendarDay[]>(key);
     const apply = () => client.setQueryData<CalendarDay[]>(key, (d) => applyChange(d ?? [], base, change));
     apply();
     // Una lectura en vuelo traería los días de antes; al cancelarla vuelven y se aplica otra vez (es idempotente).
     if (client.isFetching({ queryKey: key })) void client.cancelQueries({ queryKey: key }).then(apply);
+    save.mutate({ change, previous });
+    return null;
+  }
+  function onSave() {
+    if (!change) return;
+    const refused = commit(change);
+    if (refused) return setProblem(refused);
     setSel(clearSelection());
     setProblem(null);
     showTabBar();
-    save.mutate({ change, previous });
+  }
+  /** «Marcar una reserva»: las noches ya vienen de llegada a salida − 1; se guardan como ocupadas (los precios no se tocan). */
+  function onMark(days: string[]): string | null {
+    const refused = commit({ days, available: false });
+    if (!refused) toast(reservationLabel(days));
+    return refused;
   }
 
   // Una casa bloqueada por bnbtico se ve, no se edita.
   const blocked = isBlocked(l);
-  const editable = !closed && !blocked && query.data !== undefined;
+  const editable = !blocked && query.data !== undefined;
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   return (
     <>
-      {can(l, "available") ? <CloseRow listing={l} userId={userId} /> : null}
+      {editable ? <MarkRow today={today} onMark={onMark} /> : null}
       <div className="row between gap-8 cal-hint-row">
-        {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por bnbtico: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
+        {blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por bnbtico: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
         <CurrencySwitch />
       </div>
 
@@ -262,7 +274,6 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
             fx={fx.crcPerUsd}
             selected={sel.days}
             onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
-            dimmed={closed}
             label={monthTitle(m)}
           />
         )}
@@ -284,74 +295,53 @@ function Calendar({ listing: l, userId, month }: { listing: Listing; userId: str
   );
 }
 
-/** Arriba del calendario de una casa activa (can(l,"available")): abierta, la fila abre la hoja «Cerrar la casa»;
- *  cerrada, dice hasta cuándo y «Abrir la casa» la abre en un toque. Las dos escrituras son optimistas (useSetAvailable);
- *  mientras la base no contesta, «Abrir la casa» no hace nada (sigue enfocable, con aria-disabled). */
-function CloseRow({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const available = useSetAvailable(userId, l);
-  const [closing, setClosing] = useState(false);
+/** Arriba del calendario de una casa editable: «Marcar una reserva» abre la hoja con el calendario de rango y, al confirmar,
+ *  las noches quedan ocupadas (optimista, como «Guardar cambios»). Si las reglas rechazan el cambio, se dice junto a la fila. */
+function MarkRow({ today, onMark }: { today: string; onMark: (days: string[]) => string | null }) {
+  const [marking, setMarking] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   const button = useRef<HTMLButtonElement>(null);
-  // El foco va al botón de la fila cuando la hoja ya se desmontó (la página dejó de estar inerte) y la fila muestra el
-  // estado esperado: al cancelar, la misma; al confirmar, «Abrir la casa»; al abrirla, «Cerrar la casa hasta…».
-  const focusWhen = useRef<boolean | null>(null);
+  // El foco vuelve al botón de la fila cuando la hoja ya se desmontó (la página dejó de estar inerte).
+  const refocus = useRef(false);
   useEffect(() => {
-    whenIdle(() => void loadCloseSheet().catch(() => {}));
+    whenIdle(() => void loadMarkSheet().catch(() => {}));
   }, []);
   useEffect(() => {
-    if (closing || focusWhen.current !== l.available) return;
-    focusWhen.current = null;
+    if (marking || !refocus.current) return;
+    refocus.current = false;
     button.current?.focus();
-  }, [closing, l.available]);
-  const endClosing = (next: boolean) => {
-    focusWhen.current = next;
-    setClosing(false);
+  }, [marking]);
+  const end = () => {
+    refocus.current = true;
+    setMarking(false);
   };
-  const pending = available.isPending;
   return (
     <>
-      {l.available ? (
-        <button ref={button} type="button" className="card close-row" aria-haspopup="dialog" onClick={() => setClosing(true)}>
-          <span className="close-row-icon">
-            <I.lock size={20} />
-          </span>
-          <span className="body">
-            <b>Cerrar la casa hasta…</b>
-            <span className="small muted">Sale de Explorar y no recibe consultas</span>
-          </span>
-          <I.chevron />
-        </button>
-      ) : (
-        <section className="card close-row is-closed">
-          <span>{l.reopenAt ? `Cerrada hasta el ${shortDate(l.reopenAt)}` : "Cerrada: no aparece en Explorar ni recibe consultas"}</span>
-          <button
-            ref={button}
-            type="button"
-            className="btn btn-ghost btn-sm"
-            aria-disabled={pending || undefined}
-            onClick={() => {
-              if (pending) return;
-              focusWhen.current = true;
-              available.mutate({ available: true });
-            }}
-          >
-            Abrir la casa
-          </button>
-        </section>
-      )}
-      {available.error ? (
+      <button ref={button} type="button" className="card mark-row" aria-haspopup="dialog" onClick={() => (setProblem(null), setMarking(true))}>
+        <span className="mark-row-icon">
+          <I.calendar size={20} />
+        </span>
+        <span className="body">
+          <b>Marcar una reserva</b>
+          <span className="small muted">Marque de una vez las noches de una reserva larga como ocupadas.</span>
+        </span>
+        <I.chevron />
+      </button>
+      {problem ? (
         <p className="note" role="alert">
-          {toDomainError(available.error).message}
+          {problem}
         </p>
       ) : null}
-      {closing ? (
+      {marking ? (
         <SheetBoundary>
           {() => (
             <Suspense fallback={<div className="sheet-backdrop" />}>
-              <CloseSheet
-                onClose={() => endClosing(true)}
-                onConfirm={(reopenAt) => {
-                  endClosing(false);
-                  available.mutate({ available: false, reopenAt });
+              <MarkSheet
+                today={today}
+                onClose={end}
+                onConfirm={(days) => {
+                  setProblem(onMark(days));
+                  end();
                 }}
               />
             </Suspense>
@@ -378,13 +368,13 @@ class SheetBoundary extends Component<{ children: () => ReactNode }, { failed: b
     return (
       <div className="row gap-8 baseline">
         <p className="field-error" role="alert">
-          No pudimos abrir «Cerrar la casa». Revise su conexión e inténtelo de nuevo.
+          No pudimos abrir «Marcar una reserva». Revise su conexión e inténtelo de nuevo.
         </p>
         <button
           type="button"
           className="btn btn-sm btn-ghost"
           onClick={() => {
-            CloseSheet = lazySheet();
+            MarkSheet = lazySheet();
             this.setState({ failed: false });
           }}
         >
