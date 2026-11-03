@@ -114,14 +114,16 @@ describe("fechas de la búsqueda de Explorar en la pestaña (la hoja de contacto
   it("clave", () => {
     expect(DATES_FILTER_KEY).toBe("bnbtico-fechas");
   });
-  it("lee llegada y salida", () => {
+  it("lee llegada y salida, o el «desde» del mensual", () => {
     expect(readSearchDates('{"llegada":"2026-11-23","salida":"2026-11-27"}', T)).toEqual({ arrival: "2026-11-23", departure: "2026-11-27" });
+    expect(readSearchDates('{"desde":"2026-12-01"}', T)).toEqual({ monthlyFrom: "2026-12-01" });
+    expect(readSearchDates('{"desde":"2026-11-01"}', T)).toEqual({ monthlyFrom: "2026-11-01" });
   });
   it("descarta lo pasado, lo vacío, lo roto y lo incompleto", () => {
     for (const raw of [
       '{"llegada":"2026-10-30","salida":"2026-11-02"}',
       '{"llegada":"2026-11-23","salida":"2026-11-23"}',
-      '{"desde":"2026-12-01"}', // el «desde» del mensual ya no existe
+      '{"desde":"2026-10-31"}',
       "no-json",
       null,
       '{"llegada":"2026-11-23"}',
@@ -133,8 +135,10 @@ describe("fechas de la búsqueda de Explorar en la pestaña (la hoja de contacto
     ])
       expect(readSearchDates(raw, T)).toBeNull();
   });
-  it("lo que guarda Explorar: el rango por noches; sin fechas, nada", () => {
-    expect(searchDatesValue({ from: "2026-11-23", to: "2026-11-27" })).toBe('{"llegada":"2026-11-23","salida":"2026-11-27"}');
-    expect(searchDatesValue(null)).toBeNull();
+  it("lo que guarda Explorar: el rango por noches o el «desde» del mensual; sin fechas, nada", () => {
+    expect(searchDatesValue({ from: "2026-11-23", to: "2026-11-27" }, false)).toBe('{"llegada":"2026-11-23","salida":"2026-11-27"}');
+    expect(searchDatesValue({ from: "2026-12-01", to: "2026-12-31" }, true)).toBe('{"desde":"2026-12-01"}');
+    expect(searchDatesValue(null, false)).toBeNull();
+    expect(searchDatesValue(null, true)).toBeNull();
   });
 });

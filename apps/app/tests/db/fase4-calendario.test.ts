@@ -70,10 +70,11 @@ describe("reapertura nocturna", () => {
     const active = await h.seed({ status: "active" });
     const hidden = await h.seed({ status: "active" });
     const later = await h.seed({ status: "active" });
-    await h.setClosed(active.id, true, day(1));
-    await h.setClosed(hidden.id, true, day(1));
+    const me = h.owner("owner");
+    await me.setAvailable(active.id, false, day(1));
+    await me.setAvailable(hidden.id, false, day(1));
     await h.billing("owner").stop(hidden.id);
-    await h.setClosed(later.id, true, day(2));
+    await me.setAvailable(later.id, false, day(2));
     const { data, error } = await serviceClient().rpc("reopen_due_listings", { p_today: day(1) });
     expect(error).toBeNull();
     expect(data).toBeGreaterThanOrEqual(2);
@@ -118,7 +119,7 @@ describe("una purga de la ficha por guardado", () => {
       select public.set_listing_available('${l.id}', false, '${day(10)}') is null;
       ${queueOf(l.publicId)}`);
     expect(lastLine(close)).toBe("1");
-    await h.setClosed(l.id, true);
+    await h.owner("owner").setAvailable(l.id, false);
     const open = inTransaction(`${withSecrets}${asOwner()}
       select public.set_listing_available('${l.id}', true) is null;
       ${queueOf(l.publicId)}`);

@@ -74,10 +74,9 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toContain("₡95\u00a0000");
     expect(html).toContain("· orientativo");
     // Revisión UX A10: la persona que alquila, bajo el nombre (iniciales y nombre de pila), en vez de la etiqueta suelta.
-    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?Anfitrión · WhatsApp verificado/);
-    expect(html).not.toContain(" · ubicación aproximada");
+    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?WhatsApp verificado/);
     expect(html).not.toMatch(/class="badge badge-ok"[^>]*>[\s\S]{0,200}WhatsApp verificado/);
-    expect(html).toContain("fechas, precio y pago los acuerda directamente con el anfitrión");
+    expect(html).toContain("fechas, precio y pago los acuerda directamente con el propietario");
     expect(html).toContain("Contactar por WhatsApp");
     expect(html).toContain("1 / 6");
   });
@@ -91,7 +90,7 @@ describe("worker · ficha /casa/CT-####", () => {
   });
 
   it("una casa que no recibe consultas llega con el botón deshabilitado «No disponible por ahora»", async () => {
-    await t.h.setClosed(casa.id, true);
+    await t.h.owner("owner").setAvailable(casa.id, false);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">[\s\S]*?No disponible por ahora<\/button>/);
     expect(html).not.toContain("Contactar por WhatsApp");
@@ -213,7 +212,7 @@ describe("worker · ficha /casa/CT-####", () => {
 
   it("una casa cerrada a consultas trae «Calendario cerrado» y su reapertura, sin caja del calendario", async () => {
     const reopen = addDays(costaRicaToday(Date.now()), 20);
-    await t.h.setClosed(casa.id, true, reopen);
+    await t.h.owner("owner").setAvailable(casa.id, false, reopen);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const body = html.slice(html.indexOf('<div id="root">'));
     expect(body).toContain("Calendario cerrado");
@@ -338,15 +337,15 @@ describe("worker · enlaces que no se muestran", () => {
     expect(a.status).toBe(410);
     const ha = await a.text();
     expect(ssrData(ha)).toEqual({ page: "blocked", reason: "stopped" });
-    expect(ha).toContain("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
-    expect(ha).toContain("Si ya habló con el anfitrión por WhatsApp");
+    expect(ha).toContain("El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(ha).toContain("Si ya habló con el propietario por WhatsApp");
     expect(ha).not.toContain("Contactar por WhatsApp");
 
     const b = await t.request(`/casa/${unpaid.publicId}`);
     expect(b.status).toBe(410);
     const hb = await b.text();
     expect(ssrData(hb)).toEqual({ page: "blocked", reason: "payment" });
-    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.");
+    expect(hb).toContain("Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.");
     expect(b.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
     expect(reason).toHaveBeenCalledTimes(2);
   });
@@ -571,11 +570,11 @@ describe("worker · balizas /vitals, /errors y /events", () => {
     expect(b.written).toEqual([{ table: "events", row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
   });
 
-  it("/events: monthly_filter_tap ya no se acepta (el chip se fue el 2026-11-02)", async () => {
+  it("/events: monthly_filter_tap se escribe sin casa y sin los filtros", async () => {
     const b = beacons();
-    const res = await b.post("/events", JSON.stringify({ name: "monthly_filter_tap", path: "/explorar", build: "abc" }), { origin: ORIGIN });
-    expect(res.status).toBe(400);
-    expect(b.written).toEqual([]);
+    const res = await b.post("/events", JSON.stringify({ name: "monthly_filter_tap", path: "/explorar?mensual=1&min=40000", build: "abc" }), { origin: ORIGIN });
+    expect(res.status).toBe(204);
+    expect(b.written).toEqual([{ table: "events", row: { name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: "abc", country: "CR" } }]);
   });
 
   it("/events: search_submit escribe search_flags y deja fuera la consulta", async () => {

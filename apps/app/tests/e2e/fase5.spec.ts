@@ -119,7 +119,7 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
     expect(status).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
     await capture(page, name);
     await page.context().close();
   }
@@ -238,7 +238,7 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   expect(expired.day.paymentDue).toBe(1);
   expect(expired.reminders.claimed).toBe(0);
   expect((await mine()).status).toBe("payment_due");
-  await expectBlocked(publicId, "Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.", "410-pago");
+  await expectBlocked(publicId, "Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.", "410-pago");
   expect(await inExplorar()).toBe(false);
   await fresh(owner, `${SCREEN}#pago=${publicId}`);
   const due = house(owner);
@@ -276,7 +276,7 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
   await expect(owner.getByText("Método de pago guardado. No se cobra nada hasta que termine la oferta.")).toHaveCount(0);
   await expect.poll(async () => (await mine()).status).toBe("inactive");
   await capture(owner, "parada");
-  await expectBlocked(publicId, "El anfitrión paró la suscripción de este anuncio", "410-parada");
+  await expectBlocked(publicId, "El propietario paró la suscripción de este anuncio", "410-parada");
   expect(await inExplorar()).toBe(false);
 
   // 8. «Activar suscripción»: Activa (ya tiene método) y el contacto de vuelta con el mismo enlace.

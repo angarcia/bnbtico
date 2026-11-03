@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Filters } from "../../src/domain/filters";
 import { searchHelpMessage } from "../../src/domain/search-help";
 
-const none: Filters = { prov: "Todas", zone: null, arrival: null, departure: null, ppl: 0, beds: 0, baths: 0, kind: null, features: [], min: 0, max: 0, open: false };
+const none: Filters = { prov: "Todas", zone: null, arrival: null, departure: null, monthlyFrom: null, monthly: false, ppl: 0, beds: 0, features: [], min: 0, max: 0, open: false };
 const lines = (f: Partial<Filters>) => searchHelpMessage({ ...none, ...f }).split("\n");
 
 describe("searchHelpMessage", () => {
@@ -24,15 +24,20 @@ describe("searchHelpMessage", () => {
     expect(l.at(-1)).toBe("Fechas: 23–27 nov.");
   });
 
+  it("mensual con «desde»: «Fechas: desde el 1 dic.»", () => {
+    expect(lines({ monthly: true, monthlyFrom: "2026-12-01" }).at(-1)).toBe("Fechas: desde el 1 dic.");
+  });
+
   it("personas", () => {
     expect(lines({ ppl: 4 })).toContain("Personas: 4.");
     expect(searchHelpMessage(none)).not.toContain("Personas");
   });
 
-  it("ya no hay modalidad mensual: nada de «mensual» en el mensaje", () => {
+  it("alquiler mensual: «Busca alquiler mensual.» y sin precio por noche", () => {
+    expect(lines({ monthly: true })).toContain("Busca alquiler mensual.");
     expect(searchHelpMessage(none)).not.toContain("Modalidad");
     expect(searchHelpMessage(none)).not.toContain("mensual");
-    expect(lines({ max: 80000 }).some((l) => l.startsWith("Precio por noche"))).toBe(true);
+    expect(lines({ monthly: true, max: 80000 }).some((l) => l.startsWith("Precio por noche"))).toBe(false);
   });
 
   it("características con las etiquetas de la lista única", () => {
@@ -46,7 +51,7 @@ describe("searchHelpMessage", () => {
   });
 
   it("todo junto, en orden y con «Fechas: » al final", () => {
-    expect(searchHelpMessage({ ...none, prov: "Limón", ppl: 4, features: ["pool", "pets"], max: 80000 })).toBe(
+    expect(searchHelpMessage({ ...none, prov: "Limón", ppl: 4, monthly: false, features: ["pool", "pets"], max: 80000 })).toBe(
       [
         "Hola, estoy buscando casa en bnbtico.",
         "Zona: Limón.",
@@ -59,7 +64,7 @@ describe("searchHelpMessage", () => {
   });
 
   it("nunca «undefined», «null» ni dobles espacios", () => {
-    const cases: Partial<Filters>[] = [{}, { prov: "Limón" }, { ppl: 2, max: 1 }, { features: ["wifi", "ac", "kids_free"] }, { prov: "Guanacaste", ppl: 12, beds: 3, min: 10, max: 99999 }];
+    const cases: Partial<Filters>[] = [{}, { prov: "Limón" }, { ppl: 2, max: 1 }, { features: ["wifi", "ac", "kids_free"], monthly: true }, { prov: "Guanacaste", ppl: 12, beds: 3, min: 10, max: 99999 }];
     for (const c of cases) {
       const text = searchHelpMessage({ ...none, ...c });
       expect(text).not.toMatch(/undefined|null|NaN/);

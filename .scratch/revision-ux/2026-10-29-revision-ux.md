@@ -242,7 +242,7 @@ Sin personas, el control se lee «–  [–]  +»: el valor vacío es otro guion
 
 > **Acordado (2026-10-29, Ana).** Maqueta: `maquetas/n3-dolar.png`. Los dólares, con **espacio** para los miles, como los colones: «≈ $2 843 / mes» (no «$2,843»). Se descartaron la coma y el punto: en español la coma es decimal y el punto se lee como decimal en inglés; el espacio no se confunde en ningún país y es la regla del proyecto («₡95 000»). La cifra mensual en dólares, en negrita y oscura como la de colones; «/ mes» en gris normal.
 
-### N4. El calendario de la ficha repite el mismo precio 30 veces **[Decisión]** (cerrado el 2026-11-02: ahora se eligen llegada y salida, ticket 08 de la ronda de Ana)
+### N4. El calendario de la ficha repite el mismo precio 30 veces **[Decisión]**
 [c09b-ficha-completa]
 Cada día del mes lleva «$186» (o «₡95 mil»), aunque ninguno cambie; los días con otro precio, que son lo que importa, no destacan. **Arreglo:** en la ficha del cliente, el precio solo en los días que no son el de base (con su ★), y la línea «Precio base…» debajo como hoy. El calendario del propietario sigue con el precio en cada casilla (C de Ana).
 

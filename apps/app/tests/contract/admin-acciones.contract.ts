@@ -144,6 +144,8 @@ export function adminAccionesContract(name: string, makeHarness: () => Promise<S
         await admin().pauseListing(s.id, REASON);
         await h.owner("owner").updateLive(s.id, { capacity: 6 });
         expect((await ownerHouse(s.id))?.capacity).toBe(6);
+        await h.owner("owner").setAvailable(s.id, false, null);
+        await h.owner("owner").setAvailable(s.id, true);
         await h.calendar("owner").save(s.id, { days: [addDays(today(), 3)], available: false });
         expect((await h.calendar("owner").days(s.id)).map((d) => d.day)).toEqual([addDays(today(), 3)]);
         const edit = await h.owner("owner").saveEdit(s.id, { title: "Cabina pausada" });
@@ -193,6 +195,7 @@ export function adminAccionesContract(name: string, makeHarness: () => Promise<S
         const attempts = [
           () => me.updateLive(s.id, { capacity: 6 }),
           () => me.saveEdit(s.id, { title: "Cabina bloqueada" }),
+          () => me.setAvailable(s.id, false, null),
           () => h.calendar("owner").save(s.id, { days: [addDays(today(), 3)], available: false }),
           () => h.photos("owner").reorder(s.id, photos.map((p) => p.id).reverse()),
           () => h.photos("owner").remove(photos[0]!.id),

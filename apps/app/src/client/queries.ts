@@ -1,14 +1,14 @@
 // Consultas de Explorar y Filtros. La ficha usa listingQuery (src/shared), sembrada con la fila de la tarjeta.
 import { keepPreviousData, queryOptions, type QueryClient } from "@tanstack/react-query";
-import type { Filters } from "../domain/filters";
+import { effectiveFilters, type Filters } from "../domain/filters";
 import type { PublicListing } from "../domain/listing";
 import { DomainError } from "../domain/errors";
 
 const api = async () => (await import("./supabase-data")).publicListings();
 
 export const listingsQuery = (f: Filters) => {
-  // «Más filtros» abierto no cambia los resultados (misma caché).
-  const { open: _open, ...key } = f;
+  // «Más filtros» abierto no cambia los resultados; el rango oculto por el mensual tampoco (misma caché).
+  const { open: _open, ...key } = effectiveFilters(f);
   return queryOptions({
     queryKey: ["listings", key] as const,
     queryFn: async () => (await api()).searchPublic(f),

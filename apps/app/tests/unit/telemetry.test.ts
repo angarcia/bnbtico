@@ -79,8 +79,11 @@ describe("telemetría · validación de balizas", () => {
       ok: true,
       row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc123" },
     });
-    // El chip «Alquiler mensual» se fue el 2026-11-02: el evento ya no se acepta (las filas viejas siguen en la tabla).
-    expect(parseBeacon("events", JSON.stringify({ ...base, name: "monthly_filter_tap", path: "/explorar" })).ok).toBe(false);
+    // «Alquiler mensual» en Explorar: el toque del chip, sin casa y sin los filtros.
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "monthly_filter_tap", path: "/explorar?mensual=1" }))).toEqual({
+      ok: true,
+      row: { name: "monthly_filter_tap", page: "explorar", path: "/explorar", build: "abc123" },
+    });
     // Explorar al estilo Airbnb: la búsqueda dice solo qué se indicó (nunca la zona, las fechas ni las personas).
     expect(parseBeacon("events", JSON.stringify({ name: "search_submit", flags: ["zona", "personas"], path: "/explorar/buscar?zona=704-cocles", build: "abc" }))).toEqual({
       ok: true,

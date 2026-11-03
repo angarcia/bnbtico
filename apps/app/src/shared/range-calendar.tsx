@@ -1,32 +1,25 @@
-// Calendario de «¿Cuándo?» (pantalla v2 03): los meses apilados de hoy a hoy + 365, lunes primero. Llegada y salida con la
-// banda entre las dos (el modo mensual «Desde» se fue el 2026-11-02). Sobre `monthGrid()` del
+// Calendario de «¿Cuándo?» (pantalla v2 03): los meses apilados de hoy a hoy + 365, lunes primero. Por noches, llegada y
+// salida con la banda entre las dos; con el mensual, un solo día («Desde»), hasta hoy + 335. Sobre `monthGrid()` del
 // dominio, no sobre `MonthGrid` (precios y semántica del propietario). Lo usan la pantalla de buscar y la hoja de contacto
 // (revisión UX 2026-10-29, N2): solo React y el dominio, para la ficha del servidor.
 import { calendarMonths, monthGrid } from "../domain/calendar";
 import { addDays, longDateWithYear } from "../domain/dates";
-import { STAY_MAX_DAYS } from "../domain/filters";
-import { canTapDay, tapRangeFree, type BusyDay, type RangeState } from "../domain/range";
-
-const FREE: BusyDay = () => false;
+import { MONTHLY_FROM_MAX_DAYS, STAY_MAX_DAYS } from "../domain/filters";
+import { tapRange, type RangeState } from "../domain/range";
 
 const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
 
-/** `busy`: los días ocupados de la casa (la hoja de contacto, ticket 08 de la ronda del 2 nov): no se puede llegar en uno, y un
- *  rango con una noche ocupada se rechaza con `onReject` (la salida sí puede caer en el primer ocupado). Sin él, la búsqueda
- *  de Explorar: todos los días valen. Los días llegan por props: este módulo no sabe de Query ni de calendarios de casas. */
-export function RangeCalendar(props: { today: string; value: RangeState; onChange(v: RangeState): void; busy?: BusyDay; onReject?(): void }) {
+type RangeProps = { today: string; mode: "range"; value: RangeState; onChange(v: RangeState): void };
+type FromProps = { today: string; mode: "from"; value: string | null; onChange(v: string): void };
+
+export function RangeCalendar(props: RangeProps | FromProps) {
   const { today } = props;
-  const busy = props.busy ?? FREE;
-  const lastDay = addDays(today, STAY_MAX_DAYS);
-  const start = props.value.arrival;
-  const end = props.value.departure;
-  // Hoy + 365 solo vale como salida: sin una llegada pendiente antes, no se puede elegir.
-  const departurePending = !!start && !end;
-  const tap = (day: string) => {
-    const r = tapRangeFree(props.value, day, busy);
-    if (r.rejected) props.onReject?.();
-    else props.onChange(r.state);
-  };
+  const lastDay = addDays(today, props.mode === "from" ? MONTHLY_FROM_MAX_DAYS : STAY_MAX_DAYS);
+  const start = props.mode === "from" ? props.value : props.value.arrival;
+  const end = props.mode === "from" ? null : props.value.departure;
+  // Hoy + 365 solo vale como salida (por noches): sin una llegada pendiente antes, no se puede elegir.
+  const departurePending = props.mode === "from" || (!!start && !end);
+  const tap = (day: string) => (props.mode === "from" ? props.onChange(day) : props.onChange(tapRange(props.value, day)));
   return (
     <div className="range-calendar">
       <div className="range-weekdays" aria-hidden="true">
@@ -46,7 +39,7 @@ export function RangeCalendar(props: { today: string; value: RangeState; onChang
                 const inside = !!start && !!end && g.day > start && g.day < end;
                 const cls = `range-day${isEnd ? " range-end" : ""}${inside ? " in-range" : ""}${start && end && g.day === start ? " is-start" : ""}${start && end && g.day === end ? " is-last" : ""}`;
                 return (
-                  <button key={g.day} type="button" className={cls} aria-label={longDateWithYear(g.day) ?? g.day} aria-pressed={isEnd} disabled={g.day < today || g.day > lastDay || (g.day === lastDay && !departurePending) || !canTapDay(props.value, g.day, busy)} onClick={() => tap(g.day)}>
+                  <button key={g.day} type="button" className={cls} aria-label={longDateWithYear(g.day) ?? g.day} aria-pressed={isEnd} disabled={g.day < today || g.day > lastDay || (g.day === lastDay && !departurePending)} onClick={() => tap(g.day)}>
                     <b>{g.date}</b>
                   </button>
                 );

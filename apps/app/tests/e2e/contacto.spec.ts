@@ -31,7 +31,7 @@ test.beforeAll(async () => {
   await h.reset();
   casa = await h.seed({ status: "active", photos: 5, draft: { title: TITLE, zone: "Playa Negra", zoneSource: "other", zoneId: null, nightlyPriceCrc: 95000, capacity: 6 } });
   cerrada = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina cerrada", zone: "Cocles", zoneSource: "other", zoneId: null } });
-  await h.setClosed(cerrada.id, true);
+  await h.owner("owner").setAvailable(cerrada.id, false);
   await h.seed({ status: "active", photos: 5, draft: { title: MONTHLY_TITLE, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 4, acceptsMonthly: true, monthlyPriceCrc: 450000 } });
   owner = h.ownerName("owner").split(" ")[0]!;
 });
@@ -57,14 +57,14 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   });
   await injectSession(page, "other");
   await openListing(page, casa.publicId);
-  const cta = page.getByRole("button", { name: "Contactar por WhatsApp", exact: true });
+  const cta = page.getByRole("button", { name: "Contactar por WhatsApp" });
   await expect(cta).toBeEnabled();
   await cta.click();
 
   const s = sheet(page);
   await expect(s).toBeVisible();
   await expect(s).toHaveAttribute("aria-modal", "true");
-  await expect(s.getByText(`Anfitrión de ${TITLE} · WhatsApp verificado`)).toBeVisible();
+  await expect(s.getByText(`Propietario de ${TITLE} · WhatsApp verificado`)).toBeVisible();
   await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
   // Revisión UX 2026-10-29 (N2): el mensaje es una vista previa, sin caja de texto; las fechas, casillas «Elegir fecha».
   await expect(s.getByRole("textbox")).toHaveCount(0);
@@ -122,7 +122,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   // También tras recargar (sessionStorage, 30 min).
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(message(page)).toHaveText(composeInquiryMessage(TITLE, { arrival: a, departure: b, people: 3 }));
   await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", a));
 
@@ -141,7 +141,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
 test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y «+» se detiene en la capacidad", async ({ page }) => {
   await page.goto("/explorar?ppl=4");
   await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   const s = sheet(page);
   const people = s.getByLabel("Personas (opcional)");
   const more = s.getByRole("button", { name: "Una persona más" });
@@ -161,11 +161,11 @@ test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y 
 });
 
 // Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`bnbtico-fechas`).
-test("fechas: la hoja arranca con las de la búsqueda y un enlace viejo con ?mensual=1&desde= se ignora", async ({ page }) => {
+test("fechas: la hoja arranca con las de la búsqueda y el mensual escribe «desde el…»", async ({ page }) => {
   const [A, S] = [day(20), day(24)];
   await page.goto(`/explorar?prov=Todas&llegada=${A}&salida=${S}&ppl=2`);
   await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   let s = sheet(page);
   await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", A));
   await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", S));
@@ -174,21 +174,20 @@ test("fechas: la hoja arranca con las de la búsqueda y un enlace viejo con ?men
   await page.evaluate(() => sessionStorage.clear());
   await page.goto(`/explorar?prov=Todas&mensual=1&desde=${day(10)}`);
   await page.getByRole("link", { name: new RegExp(MONTHLY_TITLE) }).first().click();
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   s = sheet(page);
-  // Fin del modo mensual (2026-11-02): ni casilla «Desde» ni «alquilar por meses»; llegada y salida vacías y el mensaje genérico.
-  await expect(s.getByRole("button", { name: /^Desde/ })).toHaveCount(0);
-  await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", null));
-  await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", null));
-  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, {}));
-  await expect(message(page)).not.toContainText("meses");
-  await pickDates(s, day(12), day(14));
-  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { arrival: day(12), departure: day(14) }));
+  // Con el mensual, una sola casilla «Desde», con su calendario.
+  await expect(dateBox(s, "Llegada")).toHaveCount(0);
+  await expect(dateBox(s, "Desde")).toHaveText(boxText("Desde", day(10)));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(10) }));
+  await pickDates(s, day(12));
+  await expect(dateBox(s, "Desde")).toHaveText(boxText("Desde", day(12)));
+  await expect(message(page)).toHaveText(composeInquiryMessage(MONTHLY_TITLE, { monthlyFrom: day(12) }));
 });
 
 test("modal: el foco no sale de la hoja, el resto de la página queda inerte y «Cerrar» cierra", async ({ page }) => {
   await openListing(page, casa.publicId);
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   const s = sheet(page);
   await expect(s).toBeFocused();
   expect(await page.locator("#root").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
@@ -206,7 +205,7 @@ test("modal: el foco no sale de la hoja, el resto de la página queda inerte y �
 
 test("con el teclado abierto la hoja gana sitio abajo y el campo de personas sube", async ({ page }) => {
   await openListing(page, casa.publicId);
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   const s = sheet(page);
   const before = await s.evaluate((el) => el.getBoundingClientRect().height);
   // Sin caja de mensaje (N2), el único campo con teclado es el de personas.
@@ -231,7 +230,7 @@ test("la hoja se precarga en reposo tras hidratar: tocar no espera a la red", as
   await openListing(page, casa.publicId);
   await expect.poll(() => chunks.length).toBe(1);
   await page.context().setOffline(true);
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(sheet(page)).toBeVisible();
   await page.context().setOffline(false);
 });
@@ -239,7 +238,7 @@ test("la hoja se precarga en reposo tras hidratar: tocar no espera a la red", as
 test("una casa que no recibe consultas muestra el botón deshabilitado", async ({ page }) => {
   await openListing(page, cerrada.publicId);
   await expect(page.getByRole("button", { name: "No disponible por ahora" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/contacto-no-disponible.png" });
 });
 
@@ -248,7 +247,7 @@ test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page }) => {
   await page.goto("/explorar");
   await page.getByRole("link", { name: new RegExp(TITLE) }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
   await sheet(page).getByLabel("Personas (opcional)").fill("2");
   await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`);

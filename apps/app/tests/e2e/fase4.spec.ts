@@ -6,16 +6,16 @@ import { totp } from "../contract/totp";
 import { serviceClient, sql, TEST_PHONES, totpSecretOf } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
-import { longDate, longDateWithYear } from "../../src/domain/dates";
+import { addDays, addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
+import { longDate, shortDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
 // Cierre de la fase 4 (ticket 06): el recorrido entero del calendario, cada actor en su teléfono (contexto Pixel 7 propio).
 // La propietaria envía su casa → «Marcar las noches ocupadas» → marca 3 noches y un precio ★ mientras está en revisión →
 // el admin (aal2) la aprueba → un cliente anónimo abre la ficha y los ve → la propietaria libera una noche y cambia la ★
-// → la carga nueva del cliente ya lo trae (purga) → la propietaria marca una reserva (llegada y salida en el calendario de
-// rango; ticket 04 de la ronda del 2 nov, antes «Cerrar la casa hasta…») → el cliente ve esas noches ocupadas (purga) y la
-// salida libre.
+// → la carga nueva del cliente ya lo trae (purga) → la propietaria la cierra con fecha de reapertura → el cliente ve «No
+// disponible… Vuelve a estar disponible el …» y «Calendario cerrado» → reapertura nocturna (`reopen_due_listings`) →
+// abierta otra vez con el calendario intacto.
 // La frescura usa el mismo mecanismo que frescura.spec.ts: secretos de Vault locales que apuntan al preview (creados en
 // beforeAll y SIEMPRE borrados en afterAll) y un Chrome aparte que entra por host.docker.internal, para que la clave de
 // caché del worker coincida con el origen que purga pg_net.
@@ -81,10 +81,10 @@ async function clientCalendar(publicId: string) {
   const { page } = await client(publicId);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const section = page.locator(".listing-calendar");
-  await expect(section.getByRole("group", { name: monthTitle(openingMonth(today())) })).toBeVisible();
+  await expect(section.getByRole("grid", { name: monthTitle(openingMonth(today())) })).toBeVisible();
   if (!opensOnNext()) await section.getByRole("button", { name: "Mes siguiente" }).click();
-  await expect(section.getByRole("group", { name: monthTitle(next()) })).toBeVisible();
-  return { page, cell: (iso: string) => section.getByRole("button", { name: dayName(iso) }) };
+  await expect(section.getByRole("grid", { name: monthTitle(next()) })).toBeVisible();
+  return { page, cell: (iso: string) => section.getByRole("gridcell", { name: dayName(iso) }) };
 }
 
 test.beforeAll(async () => {
@@ -166,7 +166,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   for (const d of [10, 11, 12]) await expect(first.cell(on(d))).toHaveClass(/is-busy/);
   await expect(first.cell(on(20))).toHaveText("20150\u00a0000");
   await expect(first.cell(on(15))).toHaveText("1595\u00a0000");
-  await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+  await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await first.page.context().close();
 
   // 5. La propietaria libera una noche y cambia la ★: la carga nueva del cliente lo trae en ≤ 5 s (purga de pg_net).
@@ -188,35 +188,47 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await expect(second.cell(on(20))).toHaveText("20180\u00a0000");
   await second.page.context().close();
 
-  // 6. Marca una reserva (llegada el 14, salida el 17): las noches 14, 15 y 16 quedan ocupadas y el cliente lo ve (purga).
+  // 6. La cierra a consultas con fecha de reapertura: el cliente ve «No disponible…» y «Calendario cerrado».
+  const reopen = addDays(today(), 9);
   from = lastResponseId();
-  await owner.getByRole("button", { name: /Marcar una reserva/ }).click();
-  const sheet = owner.getByRole("dialog", { name: "Marcar una reserva" });
-  await sheet.getByRole("button", { name: longDateWithYear(on(14))! }).click();
-  await sheet.getByRole("button", { name: longDateWithYear(on(17))! }).click();
-  await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
-  await expect(sheet).toHaveCount(0);
-  for (const d of [14, 15, 16]) await expect(day(on(d))).toHaveAccessibleName(/, ocupado/);
-  await expect(day(on(17))).not.toHaveAccessibleName(/ocupado/);
-  await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain(dayJson(on(14), false));
+  await owner.goto(`/propietario/calendario?casa=${draft.id}&mes=${next()}`);
+  await owner.getByRole("button", { name: /Cerrar la casa hasta…/ }).click();
+  const sheet = owner.getByRole("dialog", { name: "Cerrar la casa" });
+  await sheet.getByLabel("Abrir de nuevo el (opcional)").fill(reopen);
+  await sheet.getByRole("button", { name: "Cerrar la casa" }).click();
+  await expect(owner.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
+  await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario cerrado");
   await expect.poll(() => statusesAfter(from)).toContain("200");
-  const marked = await clientCalendar(draft.publicId);
-  for (const d of [10, 12, 14, 15, 16]) await expect(marked.cell(on(d))).toHaveClass(/is-busy/);
-  await expect(marked.cell(on(17))).not.toHaveClass(/is-busy/);
-  await expect(marked.cell(on(20))).toHaveText("20180\u00a0000");
-  await marked.page.context().close();
+  const closed = await client(draft.publicId);
+  await expect(closed.page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(closed.page.getByRole("button", { name: "No disponible por ahora" })).toBeDisabled();
+  await expect(closed.page.locator(".cta-bar").getByText(`Vuelve a estar disponible el ${longDate(reopen)}`)).toBeVisible();
+  const note = closed.page.locator(".note").filter({ hasText: "Calendario cerrado" });
+  await expect(note).toContainText(`Vuelve a estar disponible el ${longDate(reopen)}`);
+  await expect(closed.page.getByRole("grid")).toHaveCount(0);
+  await closed.page.context().close();
+
+  // El calendario de la propietaria lo dice y no se edita, pero conserva sus días.
+  await owner.goto(`/propietario/calendario?casa=${draft.id}&mes=${next()}`);
+  await expect(owner.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
+  await expect(owner.getByRole("button", { name: "Abrir la casa" })).toBeVisible();
+
+  // 7. La reapertura de las 00:00 de Costa Rica (el job de pg_cron llama a esta función con la fecha de ese día).
+  expect(Number(sql(`select public.reopen_due_listings('${reopen}')`))).toBeGreaterThanOrEqual(1);
+  await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain('<div class="listing-calendar" aria-hidden="true"></div>');
+  const reopened = await clientCalendar(draft.publicId);
+  await expect(reopened.page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
+  await expect(reopened.page.getByText(/Vuelve a estar disponible/)).toHaveCount(0);
+  for (const d of [10, 12]) await expect(reopened.cell(on(d))).toHaveClass(/is-busy/);
+  await expect(reopened.cell(on(11))).not.toHaveClass(/is-busy/);
+  await expect(reopened.cell(on(20))).toHaveText("20180\u00a0000");
+  await reopened.page.context().close();
   expect(await h.owner("owner").getOwn(draft.id)).toMatchObject({ status: "active", available: true, reopenAt: null, nightlyPriceCrc: 95000 });
-  expect((await h.calendar("owner").days(draft.id)).map((d) => JSON.stringify(d))).toEqual([
-    dayJson(on(10), false),
-    dayJson(on(12), false),
-    dayJson(on(14), false),
-    dayJson(on(15), false),
-    dayJson(on(16), false),
-    dayJson(on(20), true, 180000),
-  ]);
+  expect((await h.calendar("owner").days(draft.id)).map((d) => JSON.stringify(d))).toEqual([dayJson(on(10), false), dayJson(on(12), false), dayJson(on(20), true, 180000)]);
 
   await owner.reload();
-  await expect(owner.getByRole("button", { name: /Marcar una reserva/ })).toBeVisible();
-  await expect(day(on(15))).toHaveAccessibleName(/, ocupado/);
+  await expect(owner.getByRole("button", { name: "Abrir la casa" })).toHaveCount(0);
+  await expect(owner.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
+  await expect(day(on(12))).toHaveAccessibleName(/, ocupado/);
   await owner.context().close();
 });

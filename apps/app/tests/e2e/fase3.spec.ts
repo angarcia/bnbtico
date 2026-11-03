@@ -131,7 +131,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   // 4. Abre la ficha y escribe: fechas y personas redactan el mensaje.
   await page.locator(".fav-card", { hasText: TITLE }).getByRole("link", { name: TITLE }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${publicId}$`));
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   const sheet = page.getByRole("dialog", { name: "Escríbale a Yorleny" });
   await expect(sheet).toBeVisible();
   const [arrival, departure] = [day(40), day(45)];
@@ -158,7 +158,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect.poll(clientFavorites).toEqual([publicId]);
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`/casa/${publicId}$`));
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(sheet).toHaveCount(0);
 
   // 7. El propietario (más tarde, desde su teléfono) ve «Nueva» y abre WhatsApp con el cliente; el contador desaparece.

@@ -1,11 +1,12 @@
 // Fake en memoria de las casas del propietario: mismas reglas y mensajes que la base (RLS de listings, trigger
-// listings_protect, política listings_owner_delete y RPC submit_listing). Guardar una pantalla
+// listings_protect, política listings_owner_delete y RPCs set_listing_available y submit_listing). Guardar una pantalla
 // valida con planStep, como el adaptador PostgREST. La edición de una casa publicada sigue las reglas de ./edits.
 import type { OwnerListingsApi } from "../../domain/api";
+import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
+import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { discardRefusal } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
-  DESCRIPTION_MAX,
   MAX_PHOTOS,
   TITLE_MAX,
   TITLE_MIN,
@@ -13,7 +14,6 @@ import {
 } from "../../domain/listing";
 import {
   charCount,
-  DESCRIPTION_LENGTH_ERROR,
   NIGHTLY_PRICE_ERROR,
   TITLE_EMPTY_ERROR,
   TITLE_LENGTH_ERROR,
@@ -42,8 +42,6 @@ function submitRefusal(l: FakeListing, photos: number): string | null {
   // baños, descripción, parqueo y precio al mes ya no bloquean.
   if (!l.title.trim()) return TITLE_EMPTY_ERROR;
   if (charCount(l.title) < TITLE_MIN || charCount(l.title) > TITLE_MAX) return TITLE_LENGTH_ERROR;
-  // La descripción es opcional: solo tiene tope duro (2000), como submit_listing.
-  if (charCount(l.description) > DESCRIPTION_MAX) return DESCRIPTION_LENGTH_ERROR;
   if (photos < 1) return PHOTO_REQUIRED_ERROR;
   if (photos > MAX_PHOTOS) return `Máximo ${MAX_PHOTOS} fotos.`;
   if ((l.nightlyPriceCrc ?? 0) <= 0) return NIGHTLY_PRICE_ERROR;
@@ -122,6 +120,15 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       const refusal = submitRefusal(l, db.photosOf(id).length);
       if (refusal) throw new DomainError(refusal, "validation");
       touch(l, { status: "review", reviewNote: null, ...(locationOf(l) as Located) });
+    },
+
+    async setAvailable(id, available, reopenAt = null) {
+      const l = own(id);
+      if (!l) throw new DomainError(CALENDAR_MESSAGES.notActive, "validation");
+      if (l.adminHold?.kind === "blocked") throw new DomainError(ADMIN_HOLD_MESSAGES.ownerBlocked, "validation");
+      const next = availabilityUpdate(l, available, reopenAt, db.today());
+      if ("error" in next) throw new DomainError(next.error, "validation");
+      touch(l, next);
     },
 
     async reopenForEdit(id) {

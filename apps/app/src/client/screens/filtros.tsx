@@ -1,23 +1,21 @@
-// Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Para quiénes (habitaciones y baños) → Tipo de alojamiento → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
+// Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Zona (solo con varias provincias) → Para quiénes → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import {
-  ALL_PROVINCES,
-  BATHS_OPTIONS,
   BEDS_OPTIONS,
-  KIND_FILTERS,
   colonesToPriceInput,
   parseFilters,
   priceInputToColones,
   priceRangeInvalid,
+  provinceChips,
   searchFor,
   type ExploreSearch,
   type SearchKey,
 } from "../../domain/filters";
 import { costaRicaToday } from "../../domain/dates";
 import { peopleLabel, stayLabel } from "../../domain/search";
-import { FEATURES, KIND_LABELS } from "../../domain/listing";
+import { FEATURES } from "../../domain/listing";
 import {
   FX_INITIAL,
   fxDayLabel,
@@ -30,9 +28,6 @@ import { I } from "../../shared/icons";
 import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
-
-// El deslizador y el histograma van en un trozo diferido (Filtros está en el arranque del shell; presupuesto de 150 KB).
-const PriceSlider = lazy(() => import("./price-slider").then((m) => ({ default: m.PriceSlider })));
 
 function FiltrosForm({
   provinces,
@@ -58,32 +53,30 @@ function FiltrosForm({
     const crc = priceInputToColones(text, currency, fx.crcPerUsd);
     set(key, crc ? String(crc) : undefined);
   };
-  const commitSlider = ({ min, max }: { min: number; max: number }) => {
-    const text = (crc: number) => colonesToPriceInput(crc, currency, fx.crcPerUsd);
-    setPrice("min", text(min));
-    setPrice("max", text(max));
-  };
   const zones = useQuery({ ...zonesQuery, enabled: !!draft.zona });
   const f = parseFilters(draft, provinces, {
     today: costaRicaToday(Date.now()),
     zoneIds: zones.data?.map((z) => z.id),
   });
   const zoneName = zones.data?.find((z) => z.id === f.zone)?.name ?? null;
-  const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
+  // Con el mensual el rango por noche se oculta y no cuenta: uno inválido escondido no bloquea «Ver N casas».
+  const badRange =
+    !f.monthly &&
+    priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
-  // El histograma sale de la misma búsqueda sin el rango de precio: con el rango vacío es la misma consulta que el conteo
-  // (una sola petición); al mover el deslizador solo cambia la del conteo, y esa, al soltar.
-  const { data: spread } = useQuery(listingsQuery({ ...f, min: 0, max: 0 }));
   const symbol = currency === "USD" ? "$" : "₡";
+  // Chip de provincia: elegir una provincia quita la zona (la zona manda sobre la provincia).
+  const pickProvince = (prov: string) =>
+    setDraft((d) => ({ ...d, prov, zona: undefined }));
   const mineRows = [
-    // Una sola fila de zona que dice lo mismo que la búsqueda: sin zona, «Todas las provincias» (un `?prov=` viejo, «Todo Limón»).
+    // Una sola fila de zona que dice lo mismo que la búsqueda: «Todo Limón» sin zona (revisión UX 2026-10-29, A7).
     {
       abrir: "donde",
       label: "Zona",
       value: f.zone
         ? (zoneName ?? "")
-        : f.prov !== ALL_PROVINCES
+        : f.prov
           ? `Todo ${f.prov}`
           : "Todas las provincias",
     },
@@ -101,7 +94,7 @@ function FiltrosForm({
   const apply = () =>
     navigate({
       to: "/explorar",
-      search: searchFor(f),
+      search: searchFor(f, provinces),
       replace: true,
     });
   return (
@@ -138,7 +131,7 @@ function FiltrosForm({
               <Link
                 key={r.abrir}
                 to="/explorar/buscar"
-                search={{ ...searchFor(f), abrir: r.abrir }}
+                search={{ ...searchFor(f, provinces), abrir: r.abrir }}
                 className="list-item"
               >
                 <span className="body">
@@ -152,6 +145,31 @@ function FiltrosForm({
             ))}
           </div>
         </section>
+        {/* Las provincias solo cuando hay casas en más de una; con una (hoy, Limón) la fila «Zona» ya lo dice (A7). Cuando
+            haya varias, la provincia pasará a «¿Dónde?», con las zonas agrupadas por provincia. */}
+        {provinces.length > 1 ? (
+          <section className="stack" role="group" aria-labelledby="f-zona">
+            <span className="eyebrow" id="f-zona">
+              Zona
+            </span>
+            <div className="row wrap gap-8">
+              {provinceChips(provinces).map((prov) => (
+                <button
+                  key={prov}
+                  type="button"
+                  className="chip"
+                  aria-pressed={!f.zone && f.prov === prov}
+                  onClick={() => pickProvince(prov)}
+                >
+                  {prov}
+                </button>
+              ))}
+            </div>
+            <span className="xs muted">
+              Solo aparecen provincias con casas publicadas.
+            </span>
+          </section>
+        ) : null}
         <section className="stack">
           <span className="eyebrow">Para quiénes</span>
           <div className="grid-2">
@@ -169,38 +187,6 @@ function FiltrosForm({
                 ))}
               </select>
             </div>
-            <div className="field">
-              <label htmlFor="f-baths">Baños</label>
-              <select
-                id="f-baths"
-                value={f.baths}
-                onChange={(e) => set("banos", e.target.value)}
-              >
-                {BATHS_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n ? `${n}+` : "Cualquiera"}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section>
-        <section className="stack" role="group" aria-labelledby="f-tipo">
-          <span className="eyebrow" id="f-tipo">
-            Tipo de alojamiento
-          </span>
-          <div className="row wrap gap-8">
-            {[null, ...KIND_FILTERS].map((k) => (
-              <button
-                key={k ?? "cualquiera"}
-                type="button"
-                className="chip"
-                aria-pressed={f.kind === k}
-                onClick={() => set("tipo", k ?? undefined)}
-              >
-                {k ? KIND_LABELS[k] : "Cualquiera"}
-              </button>
-            ))}
           </div>
         </section>
         <section className="stack">
@@ -221,59 +207,49 @@ function FiltrosForm({
             ))}
           </div>
         </section>
-        <section className="stack">
-          <span className="eyebrow">Precio orientativo por noche</span>
-          {spread && spread.length ? (
-            <Suspense fallback={<div className="price-slider price-slider-wait" aria-hidden="true" />}>
-              <PriceSlider
-                prices={spread.map((l) => l.nightlyPriceCrc)}
-                min={f.min}
-                max={f.max}
-                currency={currency}
-                fx={fx.crcPerUsd}
-                onCommit={commitSlider}
-              />
-            </Suspense>
-          ) : null}
-          <div className="grid-2">
-            <div className="field">
-              <label htmlFor="f-min">Mínimo</label>
-              <input
-                id="f-min"
-                inputMode="decimal"
-                placeholder={`${symbol} 0`}
-                aria-label="Precio mínimo por noche"
-                aria-invalid={badRange || undefined}
-                aria-describedby="f-price-help"
-                value={prices.min}
-                onChange={(e) => setPrice("min", e.target.value)}
-              />
+        {f.monthly ? null : (
+          <section className="stack">
+            <span className="eyebrow">Precio orientativo por noche</span>
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="f-min">Mínimo</label>
+                <input
+                  id="f-min"
+                  inputMode="decimal"
+                  placeholder={`${symbol} 0`}
+                  aria-label="Precio mínimo por noche"
+                  aria-invalid={badRange || undefined}
+                  aria-describedby="f-price-help"
+                  value={prices.min}
+                  onChange={(e) => setPrice("min", e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="f-max">Máximo</label>
+                <input
+                  id="f-max"
+                  inputMode="decimal"
+                  placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"}
+                  aria-label="Precio máximo por noche"
+                  aria-invalid={badRange || undefined}
+                  aria-describedby="f-price-help"
+                  value={prices.max}
+                  onChange={(e) => setPrice("max", e.target.value)}
+                />
+              </div>
             </div>
-            <div className="field">
-              <label htmlFor="f-max">Máximo</label>
-              <input
-                id="f-max"
-                inputMode="decimal"
-                placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"}
-                aria-label="Precio máximo por noche"
-                aria-invalid={badRange || undefined}
-                aria-describedby="f-price-help"
-                value={prices.max}
-                onChange={(e) => setPrice("max", e.target.value)}
-              />
-            </div>
-          </div>
-          <span className="xs muted" id="f-price-help">
-            {currency === "USD"
-              ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los anfitriones fijan sus precios en colones.`
-              : `En colones (${symbol}). Puede verlos en dólares desde Explorar.`}
-          </span>
-          {badRange ? (
-            <p className="field-error" role="alert">
-              El precio mínimo no puede ser mayor que el máximo.
-            </p>
-          ) : null}
-        </section>
+            <span className="xs muted" id="f-price-help">
+              {currency === "USD"
+                ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los propietarios fijan sus precios en colones.`
+                : `En colones (${symbol}). Puede verlos en dólares desde Explorar.`}
+            </span>
+            {badRange ? (
+              <p className="field-error" role="alert">
+                El precio mínimo no puede ser mayor que el máximo.
+              </p>
+            ) : null}
+          </section>
+        )}
         <div className="sticky-spacer" aria-hidden="true" />
         <div className="sticky-actions">
           <button

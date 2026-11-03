@@ -3,9 +3,6 @@ import { readFileSync, writeFileSync } from "node:fs";
 import type { ListingsHarness, Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
-import { addDays } from "../../src/domain/calendar";
-import { longDateWithYear } from "../../src/domain/dates";
-import { costaRicaToday } from "../../src/domain/inquiry";
 
 // App instalada: service worker, manifiesto, sin conexión y aviso de versión nueva. Contra `vite preview` (el build).
 test.use({ serviceWorkers: "allow" });
@@ -45,7 +42,7 @@ const results = (page: Page) => page.getByTestId("results-count");
 
 test("segunda apertura sin red: el shell sale del service worker y Explorar visitado se pinta", async ({ page, context }) => {
   await page.goto("/explorar");
-  await expect(results(page)).toHaveText("2 casas");
+  await expect(results(page)).toHaveText("2 casas en Limón");
   await controlled(page);
   await page.waitForTimeout(1500); // la caché de Query se guarda en IndexedDB con un pequeño retraso
 
@@ -53,7 +50,7 @@ test("segunda apertura sin red: el shell sale del service worker y Explorar visi
   const response = await page.goto("/explorar");
   expect(response?.fromServiceWorker()).toBe(true);
   await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeVisible();
-  await expect(results(page)).toHaveText("2 casas");
+  await expect(results(page)).toHaveText("2 casas en Limón");
   await page.getByRole("link", { name: /Casa Manzanillo/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Casa Manzanillo" })).toBeVisible();
 
@@ -82,27 +79,20 @@ test("la ficha pública va a la red primero y, sin red, sale la copia guardada",
 test("una escritura sin red muestra «Sin conexión», vuelve atrás y no se encola", async ({ page, context }) => {
   await injectSession(page, "owner");
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /Marcar una reserva/ });
+  const row = page.getByRole("button", { name: /Cerrar la casa hasta…/ });
   await expect(row).toBeVisible();
   await controlled(page);
-  const arrival = addDays(costaRicaToday(Date.now()), 3);
-  const departure = addDays(arrival, 2);
-  const sheet = page.getByRole("dialog", { name: "Marcar una reserva" });
 
-  // La hoja (un trozo aparte) se abre con red; la escritura se intenta sin ella.
-  await row.click();
-  await expect(sheet).toBeVisible();
-  await sheet.getByRole("button", { name: longDateWithYear(arrival)!, exact: true }).click();
-  await sheet.getByRole("button", { name: longDateWithYear(departure)!, exact: true }).click();
   await goOffline(context, page);
-  await sheet.getByRole("button", { name: "Marcar como ocupado" }).click();
-  await expect(page.locator(".toast").last()).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
+  await row.click();
+  await page.getByRole("dialog", { name: "Cerrar la casa" }).getByRole("button", { name: "Cerrar la casa" }).click();
+  await expect(page.locator('.note[role="alert"]')).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
   await expect(row).toBeVisible();
 
   await context.setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
   await page.waitForTimeout(1500);
-  expect(await h.anon.getPublicDays(active.publicId)).toEqual([]);
+  expect((await h.anon.getPublic(active.publicId))?.available).toBe(true);
 });
 
 test("manifiesto, iconos y cabeceras: instalable, abre en /explorar sin redirección", async ({ page, request }) => {

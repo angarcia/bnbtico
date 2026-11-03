@@ -1,6 +1,7 @@
 import { webkit } from "@playwright/test";
 import { expect, test, type Page } from "./helpers/test";
-import { addDays, costaRicaToday, formatInquiryDates, longDateWithYear } from "../../src/domain/dates";
+import { addDays, costaRicaToday, formatInquiryDates, longDateWithYear, shortDate } from "../../src/domain/dates";
+import { monthlyWindowLabel } from "../../src/domain/search";
 import { COCLES } from "../contract/points";
 import { postgrestHarness } from "../db/postgrest-harness";
 
@@ -60,17 +61,17 @@ test("buscar «coc» → Cocles, fechas y 4 personas", async ({ page }) => {
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-test("ya no hay modo mensual: un enlace viejo con ?mensual=1 abre «¿Cuándo?» con el calendario de llegada y salida", async ({ page }) => {
-  await page.goto("/explorar/buscar?mensual=1&desde=" + day(10) + "&zona=704-cocles&abrir=cuando");
-  await expect(page.getByText("Solo alquiler mensual")).toHaveCount(0);
-  await expect(page.getByText("Elija la llegada", { exact: true })).toBeVisible();
+test("con «Solo alquiler mensual», «¿Cuándo?» pide «Desde» y deja fuera la ocupada el día 10", async ({ page }) => {
+  await page.goto("/explorar?mensual=1&zona=704-cocles");
+  await page.locator(".search-pill").click();
+  await expect(page).toHaveURL(/\/explorar\/buscar/);
+  await page.getByRole("button", { name: /^¿Cuándo?/ }).click();
+  await expect(page.getByText("Solo alquiler mensual", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: longDateWithYear(day(10))!, exact: true }).click();
-  await expect(page.getByText("Elija la salida", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: longDateWithYear(day(40))!, exact: true }).click();
-  await expect(page.getByText("30 noches", { exact: true })).toBeVisible();
+  await expect(page.getByText(`Desde el ${shortDate(day(10))}`, { exact: true })).toBeVisible();
+  await expect(page.getByText(monthlyWindowLabel(day(10)), { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Buscar", exact: true }).click();
-  // La URL nueva ya no lleva ni mensual ni desde; la casa ocupada el día 20 no sale en esas noches.
-  await expect(page).toHaveURL(new RegExp(`/explorar\\?zona=704-cocles&llegada=${day(10)}&salida=${day(40)}$`));
+  await expect(page).toHaveURL(new RegExp(`/explorar\\?.*desde=${day(10)}`));
   await expect(house(page, "Casa Larga")).toBeVisible();
   await expect(house(page, "Casa Mensual")).toHaveCount(0);
 });
@@ -134,20 +135,23 @@ test("con el teclado: Enter abre una tarjeta sin perder el foco, y elegir una zo
   await expect.poll(focusedCard).toBe("¿Cuándo?");
 });
 
-test("límites: hoy + 365 solo como salida y 50 personas", async ({ page }) => {
+test("límites: hoy + 365 solo como salida, el «Desde» del mensual hasta hoy + 335 y 50 personas", async ({ page }) => {
   await page.goto("/explorar/buscar?abrir=cuando");
   const dayButton = (n: number) => page.getByRole("button", { name: longDateWithYear(day(n))!, exact: true });
   await expect(dayButton(365)).toBeDisabled();
   await expect(dayButton(366)).toBeDisabled();
   await dayButton(360).click();
   await expect(dayButton(365)).toBeEnabled();
+  await page.goto("/explorar/buscar?mensual=1&abrir=cuando");
+  await expect(dayButton(335)).toBeEnabled();
+  await expect(dayButton(336)).toBeDisabled();
   await page.goto("/explorar/buscar?ppl=49&abrir=quienes");
   await page.getByRole("button", { name: "Una persona más" }).click();
   await expect(page.getByText("50", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Una persona más" })).toBeDisabled();
 });
 
-test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; ya no hay chips de provincia", async ({ page }) => {
+test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; con una sola provincia no sale el bloque de provincias", async ({ page }) => {
   await page.goto("/explorar/filtros?zona=704-cocles&ppl=4");
   const mine = page.getByRole("group", { name: "Su búsqueda" });
   await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/, /^Personas\s*4 personas$/]);
@@ -156,10 +160,10 @@ test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; ya no hay chips
   await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=quienes/);
   await expect(page.getByRole("button", { name: /¿Quiénes\?/ })).toHaveAttribute("aria-expanded", "true");
   await page.goBack();
-  // Ticket 06 (2026-11-02): la zona sale una vez, en «Su búsqueda»; sin zona dice «Todas las provincias» (sin chips de provincia).
+  // Revisión UX 2026-10-29 (A7): con casas solo en Limón, la zona sale una vez, en «Su búsqueda»; sin zona, «Todo Limón».
   await expect(page.getByRole("group", { name: "Zona", exact: true })).toHaveCount(0);
   await page.goto("/explorar/filtros");
-  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todas las provincias$/);
+  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todo Limón$/);
 });
 
 test("al volver a abrir «¿Dónde?» con una zona de dos palabras, la zona sigue en la lista", async ({ page }) => {

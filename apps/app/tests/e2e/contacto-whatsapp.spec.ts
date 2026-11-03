@@ -1,6 +1,5 @@
 import { messagePreview, pickDates } from "./helpers/contact-sheet";
 import { expect, test, type Page } from "./helpers/test";
-import { composeInquiryMessage } from "../../src/domain/inquiry";
 import type { Seeded } from "../contract/harness";
 import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -43,7 +42,7 @@ test.beforeEach(async ({ page }) => {
 async function openSheet(page: Page, publicId: string) {
   await page.goto(`/casa/${publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(sheet(page)).toBeVisible();
 }
 
@@ -125,20 +124,19 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   await page.unroute("**/rest/v1/rpc/create_inquiry");
   await backFromWhatsApp(page);
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(s).toHaveCount(0);
   expect(await page.evaluate((k) => sessionStorage.getItem(k), `bnbtico-contacto:${casa.publicId}`)).toBeNull();
   expect(await storedEverywhere(page)).not.toContain(digits(TEST_PHONES.owner));
 
-  // Repetir en menos de 7 días renueva la misma consulta. Las personas y el texto se olvidan con el borrador; las fechas son las
-  // de la pestaña (ticket 08 de la ronda del 2 nov) y siguen ahí.
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
-  const fresh = composeInquiryMessage(TITLE, { arrival: a, departure: b });
+  // Repetir en menos de 7 días renueva la misma consulta (sin fechas ahora: el mensaje por defecto).
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
+  const fresh = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`;
   await expect(messagePreview(s)).toHaveText(fresh);
   await openButton(page).click();
   await expect.poll(() => wa.length).toBe(2);
   expect(wa[1]).toBe(waExpected(TEST_PHONES.owner, fresh));
-  expect(inquiries(casa.publicId, "count(*), max(i.arrival::text), max(i.message)")).toBe(`1|${a}|${fresh}`);
+  expect(inquiries(casa.publicId, "count(*), max(i.arrival::text), max(i.message)")).toBe(`1||${fresh}`);
 });
 
 test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la casa (también desde la ficha de la SPA)", async ({ page }) => {
@@ -149,12 +147,12 @@ test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la ca
   await page.goto("/explorar");
   await page.getByRole("link", { name: /Cabina Cocles/ }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${otra.publicId}$`));
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await openButton(page).click();
   await expect.poll(() => wa).toEqual([waExpected(HOUSE_PHONE, "Hola, vi Cabina Cocles en bnbtico y me interesa. ¿Está disponible? Gracias.")]);
   expect(inquiries(otra.publicId, "i.whatsapp_phone")).toBe(HOUSE_PHONE);
   await backFromWhatsApp(page);
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   expect(await storedEverywhere(page)).not.toContain(digits(HOUSE_PHONE));
 });
 
@@ -180,12 +178,12 @@ test("la casa deja de recibir consultas con la hoja abierta: el mensaje de la ba
   await injectSession(page, "other");
   const wa = await catchWhatsApp(page);
   await openSheet(page, otra.publicId);
-  await h.setClosed(otra.id, true);
+  await h.owner("owner").setAvailable(otra.id, false);
   await openButton(page).click();
   await expect(sheet(page).locator('.note[role="alert"]')).toHaveText("Esta casa no está disponible para consultas.");
   await page.screenshot({ path: "test-results/contacto-error-base.png" });
   expect(wa).toEqual([]);
-  await h.setClosed(otra.id, false);
+  await h.owner("owner").setAvailable(otra.id, true);
 });
 
 test("sesión vencida (la base la rechaza): a Ingresar con la vuelta a la hoja y lo escrito guardado", async ({ page }) => {

@@ -18,7 +18,6 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { I } from "../../shared/icons";
-import { toast } from "../../shared/toast";
 import { LAST_STEP, nextStep, normalize, previousStep, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { planStep, validateAll } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
@@ -70,7 +69,6 @@ interface SaveVars {
   step: Step;
   patch: Partial<ListingDraft>;
   seq: number;
-  volver?: Volver;
   /** El guardado ya lanzado (cola por casa) en el mismo tick de «Continuar». */
   request: Promise<Listing>;
 }
@@ -87,10 +85,8 @@ let saveSeq = 0;
 /** Último guardado pedido por casa: la respuesta de uno anterior no pisa en la caché lo que vino después. */
 const latestSave = new Map<string, number>();
 
-/** `volver`: el paso se abre desde «Revisar y enviar» (`?volver=revisar`) y «Continuar» y «Atrás» vuelven a ese resumen. */
-export type Volver = "revisar" | undefined;
-const toStep = (router: ReturnType<typeof useRouter>, id: string, step: Step, volver?: Volver) =>
-  router.navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: String(step) }, search: volver ? { volver } : {} });
+const toStep = (router: ReturnType<typeof useRouter>, id: string, step: Step, replace = false) =>
+  router.navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: String(step) }, replace });
 
 export function useSaveStep(userId: string, listingId: string) {
   const client = useQueryClient();
@@ -107,10 +103,10 @@ export function useSaveStep(userId: string, listingId: string) {
       if (latestSave.get(listingId) === seq) patchCached(client, userId, listingId, saved);
     },
     // Callbacks de useMutation: corren aunque la pantalla ya no esté montada (el propietario siguió adelante).
-    onError: (error, { step, patch, volver }) => {
+    onError: (error, { step, patch }) => {
       setFailure({ listingId, step, patch, message: messageOf(error) });
       void client.invalidateQueries({ queryKey: detailKey(userId, listingId) });
-      void toStep(router, listingId, step, volver);
+      void toStep(router, listingId, step);
     },
   });
 }
@@ -130,7 +126,7 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   const invalid = validateAll(fresh);
   if (invalid) {
     setFailure({ listingId: id, step: invalid.step, patch: {}, message: invalid.error });
-    void toStep(router, id, invalid.step, "revisar"); // arreglado, «Continuar» vuelve al resumen
+    void toStep(router, id, invalid.step);
     return null;
   }
   await (await api()).submit(id);
@@ -205,9 +201,16 @@ export function useStepReady(ready: boolean): void {
   }, [set, ready]);
 }
 
+/** Para un formulario fuera de StepForm (la pantalla de un dato de una casa publicada): `onReady` recibe lo que pidan sus
+ *  campos con useStepReady (p. ej. el paso de la ubicación, mientras falta el cantón del pin). `onReady` estable (un
+ *  setState). */
+export function ReadyScope({ onReady, children }: { onReady: (ready: boolean) => void; children: ReactNode }) {
+  return <ReadyContext.Provider value={onReady}>{children}</ReadyContext.Provider>;
+}
+
 // ---------- El formulario ----------
 
-export function StepForm({ userId, listing, step, enter, volver, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; volver?: Volver; children: (values: ListingDraft) => ReactNode }) {
+export function StepForm({ userId, listing, step, enter, children }: { userId: string; listing: Listing; step: Step; enter?: "forward" | "back"; children: (values: ListingDraft) => ReactNode }) {
   // La dirección de entrada se fija al montar esta pantalla: los repintados posteriores no cortan la animación.
   const [entering] = useState(enter);
   const client = useQueryClient();
@@ -255,12 +258,10 @@ export function StepForm({ userId, listing, step, enter, volver, children }: { u
     if ("error" in plan) return setError(plan.error);
     setError(null);
     clearFailure(listing.id);
-    // Un precio al mes mal escrito se guarda vacío: se dice en el momento (el resumen ya no lo ve).
-    if (plan.warning) toast(plan.warning);
     const request = startSave(listing.id, step, patch, listing);
     request.catch(() => undefined); // el error lo recoge la mutación
-    save.mutate({ step, patch, seq: ++saveSeq, volver, request });
-    void toStep(router, listing.id, volver ? LAST_STEP : (nextStep(step) ?? LAST_STEP));
+    save.mutate({ step, patch, seq: ++saveSeq, request });
+    void toStep(router, listing.id, nextStep(step) ?? LAST_STEP);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
@@ -323,7 +324,7 @@ export function StepForm({ userId, listing, step, enter, volver, children }: { u
             <I.back size={22} />
           </span>
         ) : (
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(volver ? LAST_STEP : (previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: listing.id, paso: String(previousStep(step) ?? 1) }} className="btn btn-ghost btn-back" aria-label="Atrás">
             <I.back size={22} />
           </Link>
         )}

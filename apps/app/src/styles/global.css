@@ -26,7 +26,7 @@
   --r:12px;--r-thumb:10px;--r-tile:12px;--r-input:8px;--r-cta:8px;--r-sheet:16px;
   --nav-h:84px;--gutter:16px;
   --cal-free:color-mix(in srgb,var(--primary) 12%,var(--bg));/* Terracota = el del logo (#D65C3C) mezclado con el crema, menos naranja (Daniel, 2026-10-29); texto en --brand-ink. */
-  --cal-busy:color-mix(in srgb,var(--brand) 9%,var(--bg));--cal-busy-ink:var(--brand-ink);--when-pick:color-mix(in srgb,var(--brand) 50%,var(--bg));--when-pick-ink:#1C2B2A;--when-band:color-mix(in srgb,var(--brand) 9%,var(--bg));--stay-band:color-mix(in srgb,var(--brand) 16%,transparent);
+  --cal-busy:color-mix(in srgb,var(--brand) 9%,var(--bg));--cal-busy-ink:var(--brand-ink);--when-pick:color-mix(in srgb,var(--brand) 50%,var(--bg));--when-pick-ink:#1C2B2A;--when-band:color-mix(in srgb,var(--brand) 9%,var(--bg));
   --ease-out:cubic-bezier(0.23,1,0.32,1);--ease-drawer:cubic-bezier(0.32,0.72,0,1);
   color-scheme:light;
 }
@@ -63,24 +63,6 @@ a{color:var(--primary)}
 .btn-link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none;padding:6px 0;text-align:left;min-height:44px;display:inline-flex;align-items:center}
 .btn-link.muted{color:var(--muted)}
 .field-error{color:var(--bad);font-size:15px;font-weight:var(--w-medium)}
-/* Filtro de precio (ticket 11, ronda del 2 nov): histograma terracota dentro del rango, gris claro fuera, y dos tiradores nativos superpuestos. */
-.price-slider{display:flex;flex-direction:column;gap:8px}.price-slider-wait{height:150px}
-.price-slider-range{margin:0;font-size:20px;font-weight:var(--w-strong);font-variant-numeric:tabular-nums;color:var(--fg-title)}
-.price-slider-bars{display:block;width:calc(100% - 24px);height:72px;margin:0 12px}
-.price-slider-bars rect{fill:var(--line)}.price-slider-bars rect.in{fill:var(--brand)}
-.price-slider-track{position:relative;height:28px;margin:0 12px}
-.price-slider-track::before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--line)}
-.price-slider-fill{position:absolute;left:0;top:12px;width:100%;height:4px;fill:var(--brand)}
-div.price-slider .price-slider-track input[type=range]{z-index:2}
-div.price-slider .price-slider-track input[type=range].over{z-index:3}
-div.price-slider .price-slider-track input[type=range]{position:absolute;left:-12px;width:calc(100% + 24px);top:0;height:28px;min-height:0;margin:0;padding:0;border:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
-div.price-slider .price-slider-track input[type=range]::-webkit-slider-runnable-track{background:none;height:28px}
-div.price-slider .price-slider-track input[type=range]::-moz-range-track{background:none;height:28px}
-div.price-slider .price-slider-track input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:28px;height:28px;border-radius:50%;border:2px solid var(--brand-ink);background:var(--surface);box-shadow:var(--shadow);cursor:grab}
-div.price-slider .price-slider-track input[type=range]::-moz-range-thumb{pointer-events:auto;box-sizing:border-box;width:28px;height:28px;border-radius:50%;border:2px solid var(--brand-ink);background:var(--surface);box-shadow:var(--shadow);cursor:grab}
-div.price-slider .price-slider-track input[type=range]:focus-visible{outline:none}
-div.price-slider .price-slider-track input[type=range]:focus-visible::-webkit-slider-thumb{outline:3px solid var(--brand);outline-offset:2px}
-div.price-slider .price-slider-track input[type=range]:focus-visible::-moz-range-thumb{outline:3px solid var(--brand);outline-offset:2px}
 .counter-out{color:var(--bad);font-weight:var(--w-medium)}
 /* Turnstile: invisible salvo que Cloudflare pida interacción. */
 .captcha{display:flex;justify-content:center}
@@ -276,12 +258,6 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
 .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cta-prices .price{line-height:1.1}
-/* Con fechas la línea principal es el total («≈ ₡665 000 / 7 noches»): 20 px y de un solo renglón. La línea sigue siendo la de 24 px (un span interno
-   baja la letra) para que la base del texto y el alto de la barra no cambien. */
-.cta-bar .price.is-stay,.price-usd.is-stay{white-space:nowrap}
-/* En teléfonos de menos de 440 px el total en dólares no lleva «/ N noches» (la cifra de colones ya lo dice): si no, las dos cifras se pisan. */
-@media (max-width:439px){.price-usd.is-stay small{display:none}}
-.cta-bar .price .stay-fs{font-size:20px}
 .cta-usd{text-align:right;align-items:flex-end}
 .price-usd{font-weight:var(--w-strong);font-size:17px;font-variant-numeric:tabular-nums}
 .price-usd small{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
@@ -299,26 +275,14 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 /* Ronda de Ana 2026-10-30: cada casa en su tarjeta (como Airbnb, con nuestras esquinas pequeñas): superficie y sombra de `.card`,
    foto a sangre arriba (la tarjeta recorta con su radio) y el texto con relleno. */
 .listing-card{display:flex;flex-direction:column;gap:0;text-decoration:none;color:inherit;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.listing-card .photo{aspect-ratio:5/4;height:auto;border-radius:0}
-/* Fotos deslizables de la tarjeta (ticket 09 de la ronda del 2 nov): la tira llena la foto; las que aún no se montan son cajas. */
-.card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
-.card-strip::-webkit-scrollbar{display:none}
-.photo .card-strip img,.card-strip .slot{position:static;flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start}
-/* Botón de WhatsApp: redondo, a la derecha de la parte blanca, fuera del enlace. */
-.card-wa{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--wa);color:var(--wa-ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.card-wa:active{transform:scale(0.92)}
+.listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:0}
 .listing-card .sk-line{margin:12px 14px 14px}
 .listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
-.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 68px 14px 14px}
+.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
 .card-price{margin-top:3px}
 .card-price b{font-weight:var(--w-strong)}
 .listing-grid{display:grid;grid-template-columns:1fr;gap:32px}
 .listing-cell{position:relative;min-width:0}
-/* En el teléfono la tarjeta va a todo el ancho de la pantalla (sin el margen lateral) y sin esquinas; el escritorio no cambia. */
-@media (max-width:899px){
-  .listing-grid > .listing-cell,.listing-grid.skeleton > .listing-card{margin-inline:calc(-1 * var(--gutter))}
-  .listing-grid .listing-card{border-radius:0}
-}
 .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .pills-tl .pill{position:static}
 /* Corazón de favoritos (fase 3): blanco con sombra sobre la foto, crema en la ficha, terracota cuando está guardada. */
@@ -351,9 +315,9 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
    y lo que flota sobre mapas o fotos siguen en blanco opaco. */
 .note-plain{background:var(--surface-soft);color:var(--fg)}
 .toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
-/* La foto de la ficha es 4:3 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch); solo los botones se apartan del
+/* La foto de la ficha es cuadrada y de borde a borde, pegada arriba (detrás del notch); solo los botones se apartan del
    área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
-.hero{position:relative;aspect-ratio:4/3;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
+.hero{position:relative;aspect-ratio:1/1;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
 .hero .top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between}
 .hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .hero .strip::-webkit-scrollbar{display:none}
@@ -361,10 +325,6 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .feature-tiles div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--r-tile);background:var(--surface-soft);box-shadow:var(--shadow);font-size:14px;font-weight:var(--w-medium);text-align:center}
 .feature-tiles svg{color:var(--primary)}
-/* «Alquiler mensual» con su precio en un renglón aparte y más pequeño: la casilla no es más alta que una de dos renglones. */
-/* «Alquiler mensual» ocupa dos columnas, con su precio en un renglón aparte y más pequeño: la casilla no es más alta que las de dos renglones. */
-.feature-tiles .tile-wide{grid-column:span 2}
-.feature-tiles small{font-size:13px;color:var(--muted);margin-top:-4px;white-space:nowrap}
 .photos-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .photos-grid .photo{min-height:108px;border-radius:var(--r-input)}
 .photos-grid .photo.cover{grid-column:span 2;grid-row:span 2;min-height:224px;border-radius:var(--r-tile)}
@@ -453,11 +413,7 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .map-preview{position:absolute;inset:0;pointer-events:none}
 .map-preview .map-price{position:absolute}
 .map-price.is-selected{background:var(--brand-ink);color:#FFFBF2;box-shadow:0 6px 14px -4px rgba(180,76,48,.6)}
-.float-pill,.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
-/* «Ver ficha» del detalle del anfitrión (ticket 05): el aspecto de «Mapa» (regla de arriba) fijo abajo y centrado; la pantalla no tiene barra
-   de pestañas y deja alto del botón (48) + 32 de aire para que lo último se lea por encima. */
-.float-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;text-decoration:none}
-.view:has(.float-pill){padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
 /* Baja con la barra de pestañas (`html.tabbar-away`), con su misma transición. */
 .map-label{transition:transform 200ms var(--ease-out)}
 /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
@@ -525,6 +481,10 @@ html.map-open{overflow:hidden}
 .people-stepper b.is-empty{color:var(--muted);font-family:var(--body);font-weight:400;font-size:18px}
 .explore-top .chiprow{align-items:center}
 .chiprow .currency-switch{margin-left:auto}
+/* El mensual encendido (negrita y «✓ ») no cabe entero a 360 px junto a los filtros y «₡ | $»: se acorta con «…» y los
+   otros dos no encogen (44 px de toque). */
+.monthly-chip{flex:0 1 auto;min-width:0}
+.monthly-chip > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .filters-btn{position:relative;flex:none;justify-content:center;width:44px;height:44px;padding:0;background:var(--beige-soft)}
 .filters-btn .badge-count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;justify-content:center;font-size:13px;background:var(--primary);color:var(--primary-on);border:2px solid var(--bg)}
 .chip{border:0;cursor:pointer}
@@ -769,7 +729,6 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 /* El mensaje, como vista previa: gris claro y sin caja de texto. */
 .sheet .field-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .sheet .message-preview + .hint{margin-top:0}
-.sheet .stay-line{margin:0;font-size:16px;font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
 .sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:16px;white-space:pre-line}
 .sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]){width:72px;text-align:center;font-variant-numeric:tabular-nums}
@@ -890,15 +849,6 @@ small.swap-in{display:block}
 .month-grid button.day:disabled{cursor:default}
 .month-grid button.day:active:not(:disabled){transform:scale(0.94)}
 .month-grid.is-dimmed{opacity:.6}
-/* Estancia elegida en la ficha (ticket 08 de la ronda del 2 nov): los extremos y la banda de «¿Cuándo?» (--when-pick, banda
-   translúcida --stay-band) sobre la casilla; el verde de los libres y el rayado de los ocupados se ven debajo de la banda. La
-   banda sale 3 px a cada lado para cruzar los 6 px entre casillas, y los extremos la unen por dentro (media banda). */
-.month-grid .day.in-range{border-radius:0;background-image:linear-gradient(var(--stay-band),var(--stay-band));box-shadow:-3px 0 0 var(--stay-band),3px 0 0 var(--stay-band)}
-.month-grid .day.is-busy.in-range{color:var(--fg);background:linear-gradient(var(--stay-band),var(--stay-band)),repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px)}
-.month-grid .day.range-end{border-color:transparent;background:var(--when-pick);color:var(--when-pick-ink)}
-.month-grid .day.range-end b,.month-grid .day.range-end .day-sub{color:var(--when-pick-ink)}
-.month-grid .day.range-end.is-start{border-radius:12px 0 0 12px;box-shadow:3px 0 0 var(--stay-band)}
-.month-grid .day.range-end.is-last{border-radius:0 12px 12px 0;box-shadow:-3px 0 0 var(--stay-band)}
 .month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);padding-top:4px}
 .month-legend span{display:inline-flex;align-items:center;gap:6px}
 .month-legend .swatch{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 6%,transparent)}
@@ -906,13 +856,7 @@ small.swap-in{display:block}
 .month-legend .swatch.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px)}
 /* Ficha: «Disponibilidad», un mes a la vez con ‹ ›. Caja de alto fijo (título, fila de los días, 6 semanas y leyenda): mide
    lo mismo vacía en el HTML del servidor que con la rejilla montada tras hidratar. */
-.listing-calendar{display:flex;flex-direction:column;gap:8px;height:756px;overflow:hidden}
-/* Bajo la rejilla: la leyenda con «Quitar fechas» y la línea del total (o del aviso); las dos reservan su sitio con o sin fechas. */
-.listing-calendar .cal-legend-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
-.listing-calendar .month-legend{padding-top:0}
-.listing-calendar .btn-text{padding-right:0}
-.cal-stay{margin:0;min-height:24px;font-size:15px;font-weight:var(--w-medium);line-height:1.4;font-variant-numeric:tabular-nums}
-.cal-stay.is-rejected{color:var(--busy-ink)}
+.listing-calendar{display:flex;flex-direction:column;gap:8px;height:700px;overflow:hidden}
 .listing-calendar .cal-month{margin:-6px 0 0 -10px}
 /* La caja corta lo que sale: en la ficha, la rejilla va dentro del margen de la página. */
 .listing-calendar .month-grid,.listing-calendar .month-head{margin-inline:0}
@@ -941,9 +885,10 @@ small.swap-in{display:block}
 .cal-month-block{display:flex;flex-direction:column;scroll-margin-top:calc(26px + env(safe-area-inset-top))}
 .cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px 0}
 .cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
-.mark-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
-.mark-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
-.mark-row .body{flex:1;display:flex;flex-direction:column}
+.close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
+.close-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.close-row .body{flex:1;display:flex;flex-direction:column}
+.close-row.is-closed{justify-content:space-between}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
 /* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */
@@ -1035,12 +980,9 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 .grid-3:has(> .tile){grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
 /* Descripción por debajo del mínimo (revisión UX N3). */
 .description-short{color:var(--sun-ink);font-weight:var(--w-medium)}
-.row-warn{color:var(--sun-ink);font-weight:var(--w-medium)}
 /* Cabecera de la ficha: nombre, zona y personas, y la persona que alquila en su fila entre dos líneas (revisión UX A10; tamaños como en Airbnb). */
 .listing-head{gap:4px;align-items:center;text-align:center;line-height:1.25}
 .listing-head > .row{justify-content:center}
-.listing-zone{display:block}
-.listing-zone > svg{display:inline-block;vertical-align:-3px}
 .host-line{align-items:center;line-height:1.3}
 .host-text{gap:2px}
 .host-name{font-size:18px}

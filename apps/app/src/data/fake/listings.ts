@@ -3,11 +3,10 @@ import type { PublicListingsApi } from "../../domain/api";
 import { calendarWindow } from "../../domain/calendar";
 import { FX_INITIAL } from "../../domain/fx";
 import { DomainError } from "../../domain/errors";
-import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, effectiveFilters, stayRange, type Filters } from "../../domain/filters";
 import { distanceMeters } from "../../domain/geo";
 import { PROVINCES, type LinkState, type PublicListing } from "../../domain/listing";
 import { addDays } from "../../domain/dates";
-import { stayEstimate, stayNights } from "../../domain/stay-price";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
 import { offerTaken } from "./billing";
@@ -34,7 +33,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       zone: l.zone,
       approx: l.lat !== null && l.lng !== null ? approxPoint(l.lat, l.lng, l.publicId) : null,
       capacity: l.capacity ?? 0,
-      bedrooms: l.kind === "habitacion" ? 1 : (l.bedrooms ?? 0),
+      bedrooms: l.bedrooms ?? 0,
       bathrooms: l.bathrooms ?? 0,
       bathroomShared: l.bathroomShared,
       features: [...l.features],
@@ -48,7 +47,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       minMonths: l.minMonths,
       available: l.available,
       reopenAt: l.reopenAt,
-      ownerName: owner?.fullName || "Anfitrión",
+      ownerName: owner?.fullName || "Propietario",
       ownerWhatsappVerified: owner?.phoneVerified === true,
       createdAt: l.createdAt,
       updatedAt: l.updatedAt,
@@ -70,17 +69,13 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
   // Alguna noche de [from, to) ocupada en el calendario del fake.
   const busy = (l: FakeListing, from: string, to: string) => (db.days.get(l.id) ?? []).some((d) => !d.available && d.day >= from && d.day < to);
 
-  // El total orientativo de las noches [from, to), con la regla única de `stayEstimate` (search_listings lo calcula igual en SQL).
-  const stayTotal = (l: FakeListing, from: string, to: string): number | null =>
-    stayEstimate({ nights: stayNights(from, to), days: db.days.get(l.id) ?? [], base: l.nightlyPriceCrc, acceptsMonthly: l.acceptsMonthly === true, monthlyCrc: l.monthlyPriceCrc })?.totalCrc ?? null;
-
   // Comparaciones con null fallan, como en SQL: una casa solo mensual no entra en un filtro de precio por noche.
   const gte = (v: number | null, min: number) => v !== null && v >= min;
   const lte = (v: number | null, max: number) => v !== null && v <= max;
 
   return {
     async searchPublic(f: Filters) {
-      const q = f;
+      const q = effectiveFilters(f); // con el mensual no se aplica el rango por noche
       const r = stayRange(f);
       const today = db.today();
       if (r && (r.to <= r.from || r.from < today || r.to > addDays(today, 366))) throw new DomainError("Revise las fechas.", "validation");
@@ -91,17 +86,15 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         .filter((l) => !zone || nearZone(l, zone))
         .filter((l) => !r || !busy(l, r.from, r.to))
         .filter((l) => !!zone || q.prov === ALL_PROVINCES || l.province === q.prov)
+        .filter((l) => !q.monthly || l.acceptsMonthly === true)
         .filter((l) => !q.ppl || gte(l.capacity, q.ppl))
         .filter((l) => !q.beds || gte(l.bedrooms, q.beds))
-        .filter((l) => !q.baths || gte(l.bathrooms, q.baths))
-        .filter((l) => !q.kind || (l.kind !== null && KINDS_OF_FILTER[q.kind!].includes(l.kind)))
         .filter((l) => q.features.every((x) => l.features.includes(x)))
         .filter((l) => !q.min || gte(l.nightlyPriceCrc, q.min))
         .filter((l) => !q.max || lte(l.nightlyPriceCrc, q.max))
-        // Como search_listings: las de Limón primero y, dentro de cada grupo, las más nuevas.
-        .sort((a, b) => Number(b.province === "Limón") - Number(a.province === "Limón") || b.createdAt.localeCompare(a.createdAt))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, SEARCH_LIMIT)
-        .map((l) => ({ ...toPublic(l), stayTotalCrc: r ? stayTotal(l, r.from, r.to) : null }));
+        .map(toPublic);
     },
 
     async zonesWithListings() {

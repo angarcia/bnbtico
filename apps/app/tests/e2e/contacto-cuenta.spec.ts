@@ -46,7 +46,7 @@ test.beforeEach(async ({ page }) => {
 async function openSsrListing(page: Page) {
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(sheet(page)).toBeVisible();
 }
 
@@ -99,7 +99,7 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   // Volver atrás desde WhatsApp: la ficha con la hoja cerrada (el parámetro se quitó con replace y lo escrito se borró).
   await backFromWhatsApp(page);
   await expect(page).toHaveURL(listingUrl());
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
   await expect(s).toHaveCount(0);
 });
 
@@ -108,7 +108,7 @@ test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → Wh
   await page.goto("/explorar");
   await page.getByRole("link", { name: new RegExp(TITLE) }).click();
   await expect(page).toHaveURL(listingUrl());
-  await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).click();
   await expect(sheet(page).getByText(SIGNED_OUT)).toBeVisible();
   await sheet(page).getByLabel("Personas (opcional)").fill("2");
   const twoPeople = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`;
@@ -171,7 +171,7 @@ test("sin borrador, `?contacto=1` solo muestra la ficha (y una cuenta con correo
     await page.goto(`/cuenta/lista?next=${encodeURIComponent(`/casa/${casa.publicId}?contacto=1`)}`);
     await expect(page).toHaveURL(listingUrl());
     await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
   } finally {
     sql(`update public.profiles set email = null where phone = '${TEST_PHONES.other}'`);

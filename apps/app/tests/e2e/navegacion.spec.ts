@@ -196,7 +196,7 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
 });
 
 test("3 · una casa: la lista con una sola tarjeta; tocarla abre su detalle", async ({ page }) => {
-  h = await postgrestHarness(); // la prueba anterior cerró la sesión del anfitrión también en el servidor
+  h = await postgrestHarness(); // la prueba anterior cerró la sesión del propietario también en el servidor
   await h.reset();
   const casa = await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   await page.goto("/propietario/casas");
@@ -426,12 +426,12 @@ test("densidad: márgenes de 16 px e iconos de 26 px en la barra", async ({ page
   const active = page.locator('.tabbar .nav[aria-current="page"]');
   await expect(active).toHaveCount(1);
   expect(await active.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(180, 76, 48)");
-  // Un chip de Filtros encendido: el ✓ se ve pero no entra en el nombre accesible (texto alternativo vacío).
-  await page.goto("/explorar/filtros");
-  const pool = page.getByRole("button", { name: "Piscina", exact: true });
-  await pool.click();
-  await expect(pool).toHaveAttribute("aria-pressed", "true");
-  expect(await pool.evaluate((el) => getComputedStyle(el, "::before").content)).toMatch(/^"✓ "/);
+  const monthly = page.getByRole("button", { name: "Solo alquiler mensual" });
+  await monthly.click();
+  await expect(monthly).toHaveAttribute("aria-pressed", "true");
+  // El ✓ se ve pero no entra en el nombre accesible (texto alternativo vacío).
+  expect(await monthly.evaluate((el) => getComputedStyle(el, "::before").content)).toMatch(/^"✓ "/);
+  await expect(page.getByRole("button", { name: "Solo alquiler mensual", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
 test.describe("en un teléfono de 375 px", () => {

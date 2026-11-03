@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BATHS_OPTIONS, BEDS_OPTIONS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, effectiveFilters, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
 import { listingsQuery } from "../../src/client/queries";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 
 describe("parseFilters · provincia", () => {
-  it("sin provincia: Todas, también cuando Limón tiene casas (todo el país; el Caribe va primero en la consulta)", () => {
-    expect(parseFilters({}, ["Limón", "Guanacaste"]).prov).toBe("Todas");
+  it("Limón por defecto si tiene casas; Todas si no", () => {
+    expect(parseFilters({}, ["Limón", "Guanacaste"]).prov).toBe("Limón");
     expect(parseFilters({}, ["Guanacaste"]).prov).toBe("Todas");
     expect(parseFilters({}, []).prov).toBe("Todas");
   });
@@ -14,9 +14,8 @@ describe("parseFilters · provincia", () => {
     expect(parseFilters({ prov: "Guanacaste" }, ["Limón", "Guanacaste"]).prov).toBe("Guanacaste");
     expect(parseFilters({ prov: "Todas" }, ["Limón"]).prov).toBe("Todas");
   });
-  it("un enlace viejo con ?prov= sigue filtrando por esa provincia; una provincia sin casas cae a Todas", () => {
-    expect(parseFilters({ prov: "Limón" }, ["Limón"]).prov).toBe("Limón");
-    expect(parseFilters({ prov: "Cartago" }, ["Limón"]).prov).toBe("Todas");
+  it("una provincia de la URL sin casas cae al valor por defecto", () => {
+    expect(parseFilters({ prov: "Cartago" }, ["Limón"]).prov).toBe("Limón");
     expect(parseFilters({ prov: "Marte" }, ["Guanacaste"]).prov).toBe("Todas");
   });
 });
@@ -54,16 +53,12 @@ describe("extrasCount", () => {
 });
 
 describe("toSearchParams", () => {
-  it("omite valores por defecto (sin provincia, «Todas»)", () => {
-    expect(toSearchParams(parseFilters({}, ["Limón"])).toString()).toBe("");
-    expect(toSearchParams(parseFilters({ prov: "Todas" }, ["Limón"])).toString()).toBe("");
-  });
-  it("una provincia de un enlace viejo viaja en la URL", () => {
-    expect(toSearchParams(parseFilters({ prov: "Limón" }, ["Limón"])).toString()).toBe("prov=Lim%C3%B3n");
+  it("omite valores por defecto", () => {
+    expect(toSearchParams(parseFilters({}, ["Limón"]), { prov: "Limón" }).toString()).toBe("");
   });
   it("conserva lo elegido, sin `mas`", () => {
-    const params = toSearchParams(parseFilters({ prov: "Todas", ppl: "4", pool: "1", min: "30000", mas: "1" }, ["Limón"]));
-    expect(params.has("prov")).toBe(false);
+    const params = toSearchParams(parseFilters({ prov: "Todas", ppl: "4", pool: "1", min: "30000", mas: "1" }, ["Limón"]), { prov: "Limón" });
+    expect(params.get("prov")).toBe("Todas");
     expect(params.get("ppl")).toBe("4");
     expect(params.get("pool")).toBe("1");
     expect(params.get("min")).toBe("30000");
@@ -72,30 +67,17 @@ describe("toSearchParams", () => {
   });
 });
 
-describe("baños y tipo de alojamiento", () => {
-  it("banos: entero de la lista (1–3); tipo: completo o habitacion", () => {
-    expect(BATHS_OPTIONS).toEqual([0, 1, 2, 3]);
-    expect(parseFilters({ banos: "2", tipo: "habitacion" }, [])).toMatchObject({ baths: 2, kind: "habitacion" });
-    expect(parseFilters({ banos: "9", tipo: "casa" }, [])).toMatchObject({ baths: 0, kind: null });
-    expect(parseFilters({}, [])).toMatchObject({ baths: 0, kind: null });
-  });
-  it("entran en extrasCount, toSearchParams, normalizeSearch y el «Limpiar»", () => {
-    const f = parseFilters({ banos: "2", tipo: "completo" }, []);
-    expect(extrasCount(f)).toBe(2);
-    expect(extrasCount(parseFilters({ banos: "1" }, []))).toBe(1);
-    expect(toSearchParams(f).toString()).toBe("banos=2&tipo=completo");
-    expect(normalizeSearch({ banos: "2", tipo: "completo", raro: "x" })).toEqual({ banos: "2", tipo: "completo" });
-    expect(normalizeSearch({ banos: "7", tipo: "otro" })).toEqual({});
-    expect(searchFor(f)).toEqual({ banos: "2", tipo: "completo" });
-    expect(toSearchParams(parseFilters({}, [])).toString()).toBe("");
-  });
+it("provinceChips respeta el orden del prototipo", () => {
+  expect(provinceChips(["Cartago", "Limón"])).toEqual(["Todas", "Limón", "Cartago"]);
+  expect(provinceChips([])).toEqual(["Todas"]);
 });
 
 describe("búsqueda en la URL de Explorar", () => {
   it("normalizeSearch deja solo claves conocidas, en texto y sin valores por defecto", () => {
     expect(normalizeSearch({ prov: "Guanacaste", pool: "1", ppl: "4", min: "50.000", raro: "x", wifi: "0", modo: "otra" })).toEqual({ prov: "Guanacaste", ppl: "4", pool: "1", min: "50000" });
-    expect(normalizeSearch({ modo: "monthly", mas: "1", beds: 9 })).toEqual({ mas: "1" });
+    expect(normalizeSearch({ modo: "monthly", mas: "1", beds: 9 })).toEqual({ mensual: "1", mas: "1" });
     expect(normalizeSearch({ modo: "both" })).toEqual({});
+    expect(normalizeSearch({ mensual: "1", modo: "nightly" })).toEqual({ mensual: "1" });
     expect(normalizeSearch({})).toEqual({});
   });
   it("lo que deja normalizeSearch da los mismos filtros", () => {
@@ -111,8 +93,8 @@ describe("búsqueda en la URL de Explorar", () => {
   });
   it("searchFor da la búsqueda limpia de unos filtros", () => {
     const f = parseFilters({ prov: "Todas", max: "50000", min: "44000" }, ["Limón"]);
-    expect(searchFor(f)).toEqual({ min: "44000", max: "50000" });
-    expect(searchFor(parseFilters({}, ["Limón"]))).toEqual({});
+    expect(searchFor(f, ["Limón"])).toEqual({ prov: "Todas", min: "44000", max: "50000" });
+    expect(searchFor(parseFilters({}, ["Limón"]), ["Limón"])).toEqual({});
   });
 });
 
@@ -142,22 +124,36 @@ describe("precio en la moneda elegida (ticket 15)", () => {
   });
 });
 
-describe("fin del modo mensual: los enlaces viejos se ignoran sin error (2026-11-02)", () => {
-  const T = "2026-11-01";
-  it("?mensual=1, ?modo=monthly y ?desde= no cambian nada: ni filtros, ni búsqueda normalizada, ni URL", () => {
-    const old = { mensual: "1", modo: "monthly", desde: "2026-12-01", prov: "Limón" };
-    expect(parseFilters(old, ["Limón"], { today: T })).toEqual(parseFilters({ prov: "Limón" }, ["Limón"], { today: T }));
-    expect(normalizeSearch(old, T)).toEqual({ prov: "Limón" });
-    expect(toSearchParams(parseFilters(old, ["Limón"], { today: T })).toString()).toBe("prov=Lim%C3%B3n");
-    expect(searchFor(parseFilters({ mensual: "1", prov: "Todas" }, ["Limón"]))).toEqual({});
+describe("alquiler mensual (?mensual=1)", () => {
+  const base = parseFilters({}, []);
+  it("mensual=1 marca el filtro; sin él o con otro valor, no", () => {
+    expect(parseFilters({}, []).monthly).toBe(false);
+    expect(parseFilters({ mensual: "1" }, []).monthly).toBe(true);
+    expect(parseFilters({ mensual: "0" }, []).monthly).toBe(false);
   });
-  it("con llegada y salida y un ?desde= viejo, solo valen llegada y salida", () => {
-    const f = parseFilters({ mensual: "1", desde: "2026-12-01", llegada: "2026-11-23", salida: "2026-11-27", min: "1000" }, ["Limón"], { today: T });
-    expect(f).toMatchObject({ arrival: "2026-11-23", departure: "2026-11-27", min: 1000 });
-    expect("monthly" in f || "monthlyFrom" in f).toBe(false);
+  it("enlaces viejos: modo=monthly es mensual; nightly, both y otros se descartan", () => {
+    expect(parseFilters({ modo: "monthly" }, []).monthly).toBe(true);
+    expect(parseFilters({ modo: "nightly" }, []).monthly).toBe(false);
+    expect(parseFilters({ modo: "both" }, []).monthly).toBe(false);
+    expect(parseFilters({ modo: "otra" }, []).monthly).toBe(false);
   });
-  it("el rango de precio por noche cuenta siempre", () => {
-    expect(extrasCount(parseFilters({ mensual: "1", min: "40000", max: "90000", beds: "2" }, []))).toBe(3);
+  it("en la URL: mensual=1 y el rango se conserva; nunca modo", () => {
+    const params = toSearchParams({ ...base, monthly: true, min: 40000, max: 90000 }, { prov: "Todas" });
+    expect(params.toString()).toBe("mensual=1&min=40000&max=90000");
+    expect(params.has("modo")).toBe(false);
+    expect(toSearchParams(parseFilters({ modo: "monthly" }, []), { prov: "Todas" }).has("modo")).toBe(false);
+  });
+  it("con el mensual la consulta no aplica el rango por noche", () => {
+    expect(effectiveFilters({ ...base, monthly: true, min: 40000, max: 90000 })).toMatchObject({ min: 0, max: 0, monthly: true });
+    const off = { ...base, monthly: false, min: 40000, max: 90000 };
+    expect(effectiveFilters(off)).toEqual(off);
+  });
+  it("extrasCount no cuenta el rango con el mensual, ni el mensual mismo", () => {
+    expect(extrasCount({ ...base, monthly: true, min: 40000, max: 90000, beds: 2 })).toBe(1);
+    expect(extrasCount({ ...base, monthly: false, min: 40000, max: 90000, beds: 2 })).toBe(3);
+  });
+  it("ida y vuelta por searchFor", () => {
+    expect(searchFor(parseFilters({ mensual: "1", prov: "Limón" }, ["Limón"]), ["Limón"])).toEqual({ mensual: "1" });
   });
 });
 
@@ -171,6 +167,8 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
     expect(normalizeSearch({ llegada: "2026-11-05" }, T)).toEqual({}); // una sola
     expect(normalizeSearch({ llegada: "2027-10-30", salida: "2027-11-02" }, T)).toEqual({}); // salida > hoy + 365
     expect(normalizeSearch({ llegada: "2027-10-31", salida: "2027-11-01" }, T)).toEqual({ llegada: "2027-10-31", salida: "2027-11-01" }); // = hoy + 365
+    expect(normalizeSearch({ mensual: "1", desde: "2027-10-02" }, T)).toEqual({ mensual: "1", desde: "2027-10-02" }); // hoy + 335
+    expect(normalizeSearch({ mensual: "1", desde: "2027-10-03" }, T)).toEqual({ mensual: "1" });
   });
   it("personas de 1 a 50, zona con su forma, mapa como bandera", () => {
     expect(normalizeSearch({ ppl: "13" })).toEqual({ ppl: "13" });
@@ -187,20 +185,26 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
   it("la zona manda sobre la provincia y se descarta si no está entre las zonas cargadas", () => {
     const f = parseFilters({ zona: "704-cocles", prov: "Guanacaste" }, ["Guanacaste", "Limón"]);
     expect(f.zone).toBe("704-cocles");
-    expect(toSearchParams(f).toString()).toBe("zona=704-cocles"); // la zona manda: sin prov
+    expect(toSearchParams(f, { prov: "Limón" }).toString()).toBe("zona=704-cocles"); // la zona manda: sin prov
     expect(parseFilters({ zona: "704-cocles" }, ["Limón"], { zoneIds: ["704-puerto-viejo"] }).zone).toBeNull();
   });
-  it("stayRange: [llegada, salida) o null sin fechas", () => {
-    const f = parseFilters({ llegada: "2026-11-23", salida: "2026-11-27" }, ["Limón"], { today: T });
-    expect(stayRange(f)).toEqual({ from: "2026-11-23", to: "2026-11-27" });
-    expect(toSearchParams(f).get("llegada")).toBe("2026-11-23");
+  it("stayRange: mensual [desde, desde + 30); por noches [llegada, salida)", () => {
+    const m = parseFilters({ mensual: "1", desde: "2026-12-01", llegada: "2026-11-23", salida: "2026-11-27" }, ["Limón"], { today: T });
+    expect(stayRange(m)).toEqual({ from: "2026-12-01", to: "2026-12-31" });
+    expect(stayRange({ ...m, monthly: false })).toEqual({ from: "2026-11-23", to: "2026-11-27" });
+    expect(toSearchParams(m, { prov: "Limón" }).get("llegada")).toBe("2026-11-23"); // se conserva en la URL
     expect(stayRange(parseFilters({}, ["Limón"]))).toBeNull();
   });
   it("extrasCount no cuenta zona, fechas ni personas", () => {
     expect(extrasCount(parseFilters({ ppl: "4", zona: "704-cocles", llegada: "2026-11-23", salida: "2026-11-27", beds: "2" }, ["Limón"]))).toBe(1);
   });
+  it("effectiveFilters: el mensual quita llegada, salida y rango; por noches quita desde", () => {
+    const f = parseFilters({ mensual: "1", desde: "2026-12-01", llegada: "2026-11-23", salida: "2026-11-27", min: "1000" }, ["Limón"]);
+    expect(effectiveFilters(f)).toMatchObject({ arrival: null, departure: null, monthlyFrom: "2026-12-01", min: 0 });
+    expect(effectiveFilters({ ...f, monthly: false })).toMatchObject({ arrival: "2026-11-23", departure: "2026-11-27", monthlyFrom: null, min: 1000 });
+  });
   it("mapa no entra en los filtros ni en la clave de la consulta", () => {
     expect(listingsQuery(parseFilters({ mapa: "1" }, ["Limón"])).queryKey).toEqual(listingsQuery(parseFilters({}, ["Limón"])).queryKey);
-    expect(toSearchParams(parseFilters({ mapa: "1" }, ["Limón"])).has("mapa")).toBe(false);
+    expect(toSearchParams(parseFilters({ mapa: "1" }, ["Limón"]), { prov: "Limón" }).has("mapa")).toBe(false);
   });
 });

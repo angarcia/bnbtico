@@ -162,11 +162,10 @@ describe("validateStep", () => {
     expect(validateStep(2, { ...d, zone: "Rancho Escondido", zoneSource: "other", zoneId: null })).toBeNull();
   });
 
-  it("paso 4: alojamiento completo admite 0 habitaciones (estudio); una Habitación no pregunta habitaciones", () => {
+  it("paso 4: alojamiento completo admite 0 habitaciones (estudio); una habitación no", () => {
     const d = validDraft();
     expect(validateStep(4, { ...d, kind: "completo", bedrooms: 0 })).toBeNull();
-    expect(validateStep(4, { ...d, kind: "habitacion", bedrooms: 0, bathroomShared: false })).toBeNull();
-    expect(validateStep(4, { ...d, kind: "habitacion", bedrooms: null, bathroomShared: false })).toBeNull();
+    expect(validateStep(4, { ...d, kind: "habitacion", bedrooms: 0, bathroomShared: false })).toBe("Indique las habitaciones; solo un alojamiento completo tipo estudio puede tener 0.");
   });
 
   it("paso 4: habitaciones vacías o 1.5 fallan", () => {
@@ -264,11 +263,6 @@ describe("normalize", () => {
   it("toda casa se alquila por noches; sin habitación no hay dato del baño", () => {
     expect(normalize({ ...validDraft(), acceptsNightly: false }).acceptsNightly).toBe(true);
     expect(normalize({ ...validDraft(), kind: "completo", bathroomShared: true }).bathroomShared).toBeNull();
-    // Una Habitación es siempre 1 habitación; de Habitación a completo se queda en 1 (editable).
-    expect(normalize({ ...validDraft(), kind: "habitacion", bedrooms: null, bathroomShared: true }).bedrooms).toBe(1);
-    expect(normalize({ ...validDraft(), kind: "habitacion", bedrooms: 3, bathroomShared: true }).bedrooms).toBe(1);
-    expect(normalize({ ...validDraft(), kind: "completo", bedrooms: 1 }).bedrooms).toBe(1);
-    expect(normalize({ ...validDraft(), kind: null, bedrooms: null }).bedrooms).toBeNull();
   });
 });
 
@@ -360,7 +354,6 @@ describe("requiredProblems y warnings (publicar avanza siempre, 2026-10-30)", ()
     expect(warnings(validDraft())).toEqual([]);
     expect(warnings({ ...validDraft(), capacity: null }).map((w) => w.step)).toEqual([4]);
     expect(warnings({ ...validDraft(), kind: "habitacion", bedrooms: 1, bathroomShared: null }).map((w) => w.step)).toEqual([4]);
-    expect(warnings({ ...validDraft(), kind: "habitacion", bedrooms: null, bathroomShared: true })).toEqual([]); // sin aviso de habitaciones
     expect(warnings({ ...validDraft(), features: ["parking"], parkingPaid: null }).map((w) => w.step)).toEqual([5]);
     expect(warnings({ ...validDraft(), description: "corta" }).map((w) => w.step)).toEqual([6]);
     expect(warnings({ ...validDraft(), description: "" }).map((w) => w.step)).toEqual([6]); // vacía: aviso, no error
@@ -390,9 +383,7 @@ describe("storable (lo que la base puede guardar)", () => {
 describe("planStep (guardar una pantalla)", () => {
   it("solo el tipo (paso 1) bloquea; el resto de pantallas guarda lo que se pueda", () => {
     expect(planStep(emptyDraft(), 1, { kind: null })).toEqual({ error: "Elija Alojamiento completo o Habitación." });
-    expect(planStep({ ...validDraft(), kind: "habitacion", bedrooms: 1, bathroomShared: null }, 4, { capacity: 2, bedrooms: null, bathrooms: 1 })).toEqual({ changes: { capacity: 2, bathrooms: 1 }, next: expect.anything() });
-    // Elegir Habitación en el paso 1 fija 1 habitación; el borrador nuevo no las tenía.
-    expect(planStep(emptyDraft(), 1, { kind: "habitacion" })).toEqual({ changes: { kind: "habitacion", bedrooms: 1 }, next: expect.anything() });
+    expect(planStep({ ...validDraft(), kind: "habitacion", bathroomShared: null }, 4, { capacity: 2, bedrooms: 1, bathrooms: 1 })).toEqual({ changes: { capacity: 2, bedrooms: 1, bathrooms: 1 }, next: expect.anything() });
     expect(planStep(emptyDraft(), 2, { lat: null, lng: null })).toEqual({ changes: {}, next: expect.anything() });
     expect(planStep(emptyDraft(), 6, { title: "", description: "x" })).toEqual({ changes: { description: "x" }, next: expect.anything() });
     expect(planStep(emptyDraft(), 8, { nightlyPriceCrc: null, acceptsMonthly: false, monthlyPriceCrc: null })).toEqual({ changes: {}, next: expect.anything() });
@@ -401,14 +392,6 @@ describe("planStep (guardar una pantalla)", () => {
   it("un valor que rompería la tabla se guarda como null en vez de fallar", () => {
     expect(planStep(validDraft(), 4, { capacity: 0, bedrooms: 2, bathrooms: 2, bathroomShared: null })).toEqual({ changes: { capacity: null }, next: expect.anything() });
     expect(planStep(validDraft(), 8, { nightlyPriceCrc: Number.NaN, acceptsMonthly: false, monthlyPriceCrc: null })).toEqual({ changes: { nightlyPriceCrc: null }, next: expect.anything() });
-  });
-
-  it("un precio al mes mal escrito se guarda vacío pero avisa (ocre), como al editar", () => {
-    const plan = planStep(validDraft(), 8, { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: Number.NaN });
-    expect(plan).toMatchObject({ warning: MONTHLY_PRICE_ERROR });
-    expect(plan).toMatchObject({ next: { monthlyPriceCrc: null, acceptsMonthly: true } });
-    expect(planStep(validDraft(), 8, { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: 350000 })).not.toHaveProperty("warning");
-    expect(planStep(validDraft(), 8, { nightlyPriceCrc: 85000, acceptsMonthly: true, monthlyPriceCrc: null })).not.toHaveProperty("warning");
   });
 
   it("devuelve solo las columnas que cambian, incluidas las que limpia normalize", () => {

@@ -66,12 +66,12 @@ La plataforma sí gestiona el cobro de la suscripción, con una pasarela costarr
 
 - **Tarjeta:** tokenizada, renovación automática mensual o anual.
 - **SINPE Móvil:** no es recurrente. Cada ciclo el owner paga desde su banco; la pasarela confirma por webhook. La app recuerda por WhatsApp 3 días antes; si no paga, la casa pasa a `past_due` con 5 días de gracia y luego a `paused`.
-- ~~El checkout se hace solo en la **web**~~ (sustituido el 2026-11-02, Daniel): cuando haya apps de iOS y Android, la suscripción también se podrá pagar con las suscripciones de Apple y Google desde el teléfono, además de en la web. Pendiente: comisión de las tiendas (15–30 %) en el precio y conciliar los dos canales.
+- El checkout se hace en la **web** (enlace desde la app) para evitar las comisiones y reglas de compras in-app de Apple/Google. Validar antes de lanzar si la suscripción califica como "servicio consumido fuera de la app".
 
 ## Aclaraciones de la sesión
 - **"¿Se puede pagar por esos medios desde la app?"** Sí: la app gestiona el cobro de la suscripción (es dinero para la plataforma, no entre owner y cliente). Tarjeta = recurrente automático. SINPE Móvil = el owner inicia el pago cada ciclo; la pasarela lo confirma por API, así no hay conciliación manual. Vale la pena mantener SINPE porque muchos owners no usan tarjeta online.
 - **Copy de la landing.** "Pausá cuando querrás" era ambiguo; lo que se quiere decir es que **no hay permanencia**. Copy actual: *"Sin permanencia ni contratos: cancelá o pausá una casa cuando quieras y dejás de pagar. Pagá con tarjeta (renovación automática) o SINPE Móvil."*
-- **Apple / Google.** Las suscripciones "digitales" en apps nativas deben pasar por compras in-app (15–30 %). Una suscripción para publicar una casa física suele caer en la excepción de servicios consumidos fuera de la app (como las tarifas de anfitrión de Airbnb), pero hay que confirmarlo. Mientras tanto: checkout en web. (2026-11-02: con las apps habrá también suscripción de Apple y Google; ver arriba.)
+- **Apple / Google.** Las suscripciones "digitales" en apps nativas deben pasar por compras in-app (15–30 %). Una suscripción para publicar una casa física suele caer en la excepción de servicios consumidos fuera de la app (como las tarifas de anfitrión de Airbnb), pero hay que confirmarlo. Mientras tanto: checkout en web.
 
 ## Nombre y marca
 Marca bnbtico, rana sobre hoja en rojo coral, aplicada al prototipo el 2026-10-05. CasaTica permanece como nombre del repositorio y archivo HTML. Disponibilidad de dominio, redes y marca pendientes; no considerar propuestas anteriores como disponibilidad confirmada.

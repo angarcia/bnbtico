@@ -37,29 +37,28 @@ function prices(l: Listing | PublicListing): [Price | null, MonthlyPrice | null]
   return [nightly, monthly];
 }
 
-/** El precio de una tarjeta: el de la noche o, con llegada y salida y total calculado por la búsqueda, el total orientativo
- *  de esas noches (`nights` > 0). Sin total (alguna noche sin precio), el precio por noche. */
-export type CardPrice = Price | { stayTotalCrc: number; nights: number } | null;
-export function cardPrice(l: Pick<PublicListing, "stayTotalCrc">, mainPrice: Price | null, nights: number): CardPrice {
-  return nights > 0 && l.stayTotalCrc != null ? { stayTotalCrc: l.stayTotalCrc, nights } : mainPrice;
+/** El precio de una tarjeta: el de la noche; con el filtro «Alquiler mensual», el del mes o «a negociar». */
+export type CardPrice = Price | { negotiable: true } | null;
+export function cardPrice(d: Pick<ListingDescription, "mainPrice" | "monthly">, monthlyFilter: boolean): CardPrice {
+  return monthlyFilter && d.monthly ? d.monthly : d.mainPrice;
 }
 
+export const NEGOTIABLE_CARD = "Precio a negociar";
+
 /** «4 personas · 2 habitaciones», «1 persona · 1 habitación», «2 personas · Estudio» (sin habitaciones aparte). */
-export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms"> & { kind?: PublicListing["kind"] }): string {
+export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms">): string {
   const people = `${l.capacity} ${l.capacity === 1 ? "persona" : "personas"}`;
-  const bedrooms = l.kind === "habitacion" ? 1 : l.bedrooms; // una Habitación es 1 habitación, nunca «Estudio»
-  const rooms = bedrooms > 0 ? `${bedrooms} ${bedrooms === 1 ? "habitación" : "habitaciones"}` : "Estudio";
+  const rooms = l.bedrooms > 0 ? `${l.bedrooms} ${l.bedrooms === 1 ? "habitación" : "habitaciones"}` : "Estudio";
   return `${people} · ${rooms}`;
 }
 
-/** El marcador del mapa de Explorar: «₡42 000» o «$80» (el precio por noche); con llegada y salida, la misma cifra que la tarjeta
- *  (el total orientativo, sin «por N noches»). */
-export function mapPriceLabel(l: PublicListing, nights: number, currency: Currency, fx: number): string {
-  const price = cardPrice(l, prices(l)[0], nights);
-  if (!price) return "A negociar";
-  return formatMoney("stayTotalCrc" in price ? price.stayTotalCrc : price.amount, currency, fx);
+/** El marcador del mapa de Explorar: «₡42 000» o «$80» (el de la tarjeta, sin unidad); con el mensual, «A negociar». */
+export function mapPriceLabel(l: PublicListing, monthly: boolean, currency: Currency, fx: number): string {
+  const [mainPrice, monthlyPrice] = prices(l);
+  const price = cardPrice({ mainPrice, monthly: monthlyPrice }, monthly);
+  return price && !("negotiable" in price) ? formatMoney(price.amount, currency, fx) : "A negociar";
 }
-export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el anfitrión";
+export const NEGOTIABLE_LINE = "Mensual: precio a negociar con el dueño";
 
 function situation(l: Listing, now: number): string {
   switch (l.status) {

@@ -80,7 +80,7 @@ test("verificar desde publicar habla de guardar la casa y nunca pasa por «¡Lis
     await page.goto(`/cuenta?next=${encodeURIComponent("/publicar/continuar")}`);
     await expect(page.getByRole("heading", { name: "Para guardar su casa, verifique su WhatsApp" })).toBeVisible();
     await expect(page.getByText("Le enviamos un código por WhatsApp. Así nadie más puede publicar en su nombre.")).toBeVisible();
-    await expect(page.getByText(/Su número solo se comparte con el anfitrión/)).toHaveCount(0);
+    await expect(page.getByText(/Su número solo se comparte con el propietario/)).toHaveCount(0);
     await expect(page.getByTestId("return-card")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "No tengo acceso a mi WhatsApp" })).toBeVisible();
     await page.getByLabel("Número de WhatsApp").fill("8888 9999");

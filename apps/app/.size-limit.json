@@ -1,6 +1,6 @@
 [
   {
-    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, la hoja «Marcar una reserva», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, la hoja «Cerrar la casa», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta)",
     "path": [
       "dist/client/assets/*.js",
       "!dist/client/assets/approx-map-leaflet-*.js",
@@ -30,7 +30,7 @@
       "!dist/client/assets/month-grid-*.js",
       "!dist/client/assets/listing-calendar-*.js",
       "!dist/client/assets/suscripcion-*.js",
-      "!dist/client/assets/mark-sheet-*.js",
+      "!dist/client/assets/close-sheet-*.js",
       "!dist/client/assets/confirm-sheet-*.js",
       "!dist/client/assets/buscar-*.js",
       "!dist/client/assets/explore-map-leaflet-*.js",
@@ -50,11 +50,8 @@
       "!dist/client/assets/publish-promo-*.js",
       "!dist/client/assets/offer-*.js",
       "!dist/client/assets/range-calendar-*.js",
-      "!dist/client/assets/range-????????.js",
-      "!dist/client/assets/stay-price-*.js",
       "!dist/client/assets/map-preview-*.js",
-      "!dist/client/assets/map-pins-*.js",
-      "!dist/client/assets/price-slider-*.js"
+      "!dist/client/assets/map-pins-*.js"
     ],
     "limit": "150 KB",
     "gzip": true
@@ -76,14 +73,6 @@
       "dist/client/assets/map-pins-*.js"
     ],
     "limit": "2.5 KB",
-    "gzip": true
-  },
-  {
-    "name": "Deslizador de precio de Filtros · trozo diferido (el histograma, los dos tiradores y las cubetas y topes del dominio; se pide al abrir Filtros)",
-    "path": [
-      "dist/client/assets/price-slider-*.js"
-    ],
-    "limit": "2 KB",
     "gzip": true
   },
   {
@@ -111,15 +100,13 @@
     "gzip": true
   },
   {
-    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda, y las reglas de rango y del total de la estancia, range-* y stay-price-*, que comparte con el calendario de la ficha: ~0,8 KB que estaban en la zona privada, ticket 08 de la ronda del 2 nov; límite de 7 a 7,5 KB por el bloqueo del envío con noches ocupadas o con los días aún cargando, Daniel 2026-11-02)",
+    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda)",
     "path": [
       "dist/client/assets/contact-sheet-*.js",
       "dist/client/assets/inquiry-*.js",
-      "dist/client/assets/range-calendar-*.js",
-      "dist/client/assets/range-????????.js",
-      "dist/client/assets/stay-price-*.js"
+      "dist/client/assets/range-calendar-*.js"
     ],
-    "limit": "7.5 KB",
+    "limit": "6.5 KB",
     "gzip": true
   },
   {
@@ -154,7 +141,7 @@
     "path": [
       "dist/client/assets/edit-????????.js"
     ],
-    "limit": "2.5 kB",
+    "limit": "2.25 kB",
     "gzip": true
   },
   {
@@ -271,9 +258,9 @@
     "gzip": true
   },
   {
-    "name": "Hoja «Marcar una reserva» · trozo diferido (se pide al tocar «Marcar una reserva» o en reposo en el Calendario; el calendario de rango, range-calendar-*, es el de la búsqueda y la hoja de contacto)",
+    "name": "Hoja «Cerrar la casa» · trozo diferido (se pide al tocar «Cerrar la casa hasta…» o en reposo en el Calendario)",
     "path": [
-      "dist/client/assets/mark-sheet-*.js"
+      "dist/client/assets/close-sheet-*.js"
     ],
     "limit": "1.5 KB",
     "gzip": true
@@ -298,9 +285,7 @@
     "name": "Calendario de la ficha · trozo diferido (se pide tras hidratar, en reposo o al acercarse la sección: la sección y la rejilla del mes; las reglas del calendario, calendar-*, ~2,2 KB, las comparte con el del propietario y las mide su entrada)",
     "path": [
       "dist/client/assets/listing-calendar-*.js",
-      "dist/client/assets/month-grid-*.js",
-      "dist/client/assets/range-????????.js",
-      "dist/client/assets/stay-price-*.js"
+      "dist/client/assets/month-grid-*.js"
     ],
     "limit": "4 KB",
     "gzip": true

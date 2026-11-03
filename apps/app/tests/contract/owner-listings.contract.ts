@@ -1,12 +1,14 @@
-// Contrato de la zona del propietario: leer las casas propias, reabrir para editar (solo con cambios
+// Contrato de la zona del propietario: leer las casas propias, disponibilidad, reabrir para editar (solo con cambios
 // pedidos o rechazada; una casa publicada se edita sin salir de Explorar, ver edit.contract.ts) y descartar.
-// Mismas reglas y mensajes en el fake y en la base (RLS, trigger listings_protect, política listings_owner_delete).
+// Mismas reglas y mensajes en el fake y en la base (RLS, trigger listings_protect, política listings_owner_delete,
+// RPC set_listing_available).
 import { beforeAll, describe, expect, it } from "vitest";
 import type { OwnerListingsApi } from "../../src/domain/api";
 import { DomainError } from "../../src/domain/errors";
 import type { ListingsHarness, SeedStatus, Seeded } from "./harness";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
+const ONLY_ACTIVE = "Solo puede cambiar la disponibilidad de una casa activa.";
 const ONLY_BNBTICO = "Solo bnbtico puede cambiar el estado de un anuncio.";
 
 async function rejection(p: Promise<unknown>): Promise<DomainError> {
@@ -70,6 +72,36 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         expect(await me.getOwn(theirs.id)).toBeNull();
         expect(await me.getOwn("00000000-0000-4000-8000-999999999999")).toBeNull();
         expect(await me.getOwn("no-es-un-id")).toBeNull();
+      });
+    });
+
+    describe("disponible para consultas", () => {
+      let active: Seeded;
+      let theirs: Seeded;
+      const others = {} as Record<"draft" | "review" | "changes", Seeded>;
+
+      beforeAll(async () => {
+        h = await makeHarness();
+        me = h.owner("owner");
+        await h.reset();
+        active = await h.seed({ status: "active" });
+        for (const status of ["draft", "review", "changes"] as const) others[status] = await h.seed({ status });
+        theirs = await h.seed({ status: "active", as: "other" });
+      }, 90_000);
+
+      it("apagar y encender en una casa activa: lo ven el dueño y el público", async () => {
+        await me.setAvailable(active.id, false);
+        expect((await me.getOwn(active.id))?.available).toBe(false);
+        expect((await h.anon.getPublic(active.publicId))?.available).toBe(false);
+        await me.setAvailable(active.id, true);
+        expect((await me.getOwn(active.id))?.available).toBe(true);
+        expect((await h.anon.getPublic(active.publicId))?.available).toBe(true);
+      });
+
+      it("fuera de activa o en una casa ajena, la base lo rechaza con su mensaje", async () => {
+        for (const s of Object.values(others)) expect((await rejection(me.setAvailable(s.id, false))).message).toBe(ONLY_ACTIVE);
+        expect((await rejection(me.setAvailable(theirs.id, false))).message).toBe(ONLY_ACTIVE);
+        expect((await h.anon.getPublic(theirs.publicId))?.available).toBe(true);
       });
     });
 

@@ -81,7 +81,7 @@ export function inquiriesContract(name: string, makeHarness: () => Promise<Inqui
         expect((await rejection(h.inquiries("other").create(l.publicId, draft()))).message, status).toBe(M.notPublished);
       }
       expect((await rejection(h.inquiries("other").create("CT-999999", draft()))).message).toBe(M.notPublished);
-      await h.setClosed(house.id, true);
+      await h.owner("owner").setAvailable(house.id, false);
       expect((await rejection(h.inquiries("other").create(house.publicId, draft()))).message).toBe(M.unavailable);
       expect(await h.inquiries("owner").listForOwner()).toEqual([]);
     });

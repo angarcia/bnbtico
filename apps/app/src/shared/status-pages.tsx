@@ -38,7 +38,7 @@ export function BlockedPage({ reason }: { reason?: BlockedReason }) {
   return (
     <StatusPage title="Este enlace ya no está activo" actions={<a href="/explorar" className="btn btn-soft">Ver otras casas en el Caribe</a>}>
       <p>{blockedReason(reason ?? null)}</p>
-      <p className="small muted">Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.</p>
+      <p className="small muted">Si ya habló con el propietario por WhatsApp, puede seguir esa conversación por su cuenta.</p>
     </StatusPage>
   );
 }

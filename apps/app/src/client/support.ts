@@ -4,18 +4,18 @@ import { SUPPORT_NUMBERS } from "./support-numbers";
 
 export const SUPPORT = {
   owner: {
-    label: "bnbtico · atención a anfitriones",
+    label: "bnbtico · atención a propietarios",
     number: SUPPORT_NUMBERS.owner,
     intro: "Para cualquier duda o problema con su cuenta, sus casas o una consulta recibida, escríbanos por WhatsApp. Es el único canal de atención de bnbtico.",
-    greeting: "Hola, soy anfitrión en bnbtico y necesito ayuda con: ",
+    greeting: "Hola, soy propietario en bnbtico y necesito ayuda con: ",
     other: "clientes",
   },
   guest: {
     label: "bnbtico · atención a clientes",
     number: SUPPORT_NUMBERS.guest,
-    intro: "Para cualquier duda o problema con su cuenta, una casa o un anfitrión, escríbanos por WhatsApp. Es el único canal de atención de bnbtico. Si quiere, cuéntenos zona, fechas y personas y le ayudamos a encontrar casas compatibles.",
+    intro: "Para cualquier duda o problema con su cuenta, una casa o un propietario, escríbanos por WhatsApp. Es el único canal de atención de bnbtico. Si quiere, cuéntenos zona, fechas y personas y le ayudamos a encontrar casas compatibles.",
     greeting: "Hola, estoy buscando casa en bnbtico y necesito ayuda con: ",
-    other: "anfitriones",
+    other: "propietarios",
   },
 } as const;
 

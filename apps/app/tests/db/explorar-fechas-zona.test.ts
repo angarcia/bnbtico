@@ -45,7 +45,7 @@ describe("migración explorar_fechas_y_zona", () => {
     place(house.km6.id, KM6);
     place(house.km6z.id, KM6, "704-cocles");
     place(house.draft.id, LIMON_CENTRO);
-    await h.setClosed(house.closed.id, true, addDays(T, 5));
+    await h.owner("owner").setAvailable(house.closed.id, false, addDays(T, 5));
     // Un día ocupado por casa: dentro del rango, la última noche, el día de salida y la víspera de la llegada.
     const busy = async (id: string, day: string) => h.putDay(id, { day, available: false, specialPriceCrc: null });
     await busy(house.km4.id, addDays(A, 2));

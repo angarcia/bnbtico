@@ -6,15 +6,15 @@ import { isoParts } from "./dates";
 /** Personas del filtro de Explorar, en la pestaña: la hoja de contacto arranca con ellas (revisión UX A3). */
 export const PEOPLE_FILTER_KEY = "bnbtico-personas";
 
-/** Fechas de la búsqueda de Explorar, en la pestaña: `{"llegada","salida"}`. */
+/** Fechas de la búsqueda de Explorar, en la pestaña: `{"llegada","salida"}` o, con el mensual, `{"desde"}`. */
 export const DATES_FILTER_KEY = "bnbtico-fechas";
 
-export type SearchDates = { arrival: string; departure: string };
+export type SearchDates = { arrival: string; departure: string } | { monthlyFrom: string };
 
 /** Lo que Explorar guarda en `DATES_FILTER_KEY` para estas noches; null = quitar la clave (sin fechas). */
-export function searchDatesValue(range: { from: string; to: string } | null): string | null {
+export function searchDatesValue(range: { from: string; to: string } | null, monthly: boolean): string | null {
   if (!range) return null;
-  return JSON.stringify({ llegada: range.from, salida: range.to });
+  return JSON.stringify(monthly ? { desde: range.from } : { llegada: range.from, salida: range.to });
 }
 
 const validDay = (v: unknown, today: string): v is string => typeof v === "string" && isoParts(v) !== null && v >= today;
@@ -32,6 +32,7 @@ export function readSearchDates(raw: string | null, today: string): SearchDates 
   const o = v as Record<string, unknown>;
   const keys = Object.keys(o).sort().join(",");
   if (keys === "llegada,salida" && validDay(o.llegada, today) && validDay(o.salida, today) && o.salida > o.llegada) return { arrival: o.llegada, departure: o.salida };
+  if (keys === "desde" && validDay(o.desde, today)) return { monthlyFrom: o.desde };
   return null;
 }
 

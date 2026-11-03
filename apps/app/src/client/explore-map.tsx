@@ -15,16 +15,16 @@ import { afterPaint, whenIdle } from "../shared/idle";
 type ExploreMapHandle = ReturnType<typeof import("./explore-map-leaflet")["drawExploreMap"]>;
 export type MapMarker = Parameters<ExploreMapHandle["show"]>[0][number];
 
-/** Las casas con punto aproximado, con su precio como en la tarjeta («₡42 000», «$80»; con llegada y salida, el total orientativo). */
-export function mapMarkers(listings: readonly PublicListing[], nights: number, currency: Currency, fx: number): MapMarker[] {
-  return listings.flatMap((l) => (l.approx ? [{ publicId: l.publicId, lat: l.approx.lat, lng: l.approx.lng, label: mapPriceLabel(l, nights, currency, fx), title: l.title }] : []));
+/** Las casas con punto aproximado, con su precio como en la tarjeta («₡42 000», «$80», el del mes o «A negociar»). */
+export function mapMarkers(listings: readonly PublicListing[], monthly: boolean, currency: Currency, fx: number): MapMarker[] {
+  return listings.flatMap((l) => (l.approx ? [{ publicId: l.publicId, lat: l.approx.lat, lng: l.approx.lng, label: mapPriceLabel(l, monthly, currency, fx), title: l.title }] : []));
 }
 
-/** Los marcadores en la moneda elegida, recalculados solo si cambian las casas, las noches o la moneda. */
-export function useMapMarkers(listings: readonly PublicListing[], nights: number): MapMarker[] {
+/** Los marcadores en la moneda elegida, recalculados solo si cambian las casas, el mensual o la moneda. */
+export function useMapMarkers(listings: readonly PublicListing[], monthly: boolean): MapMarker[] {
   const currency = useCurrency();
   const fx = useFx(currency === "USD").crcPerUsd;
-  return useMemo(() => mapMarkers(listings, nights, currency, fx), [listings, nights, currency, fx]);
+  return useMemo(() => mapMarkers(listings, monthly, currency, fx), [listings, monthly, currency, fx]);
 }
 
 /** Dibuja el mapa en `box` cuando Leaflet llega (en reposo); sin red no pasa nada: queda el fondo de la caja. */
@@ -71,10 +71,10 @@ export function useExploreMap(
 const PricePreview = lazy(() => import("./map-preview").then((m) => ({ default: m.PricePreview })));
 
 /** El primer elemento de la lista: tocarlo (o Intro/Espacio) abre el mapa grande; un marcador, con su casa. */
-export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: PublicListing[]; zone: LatLng | null; nights: number; onOpen(publicId: string | null): void; ref?: RefObject<HTMLDivElement | null> }) {
+export function ExploreMap({ listings, zone, monthly, onOpen, ref }: { listings: PublicListing[]; zone: LatLng | null; monthly: boolean; onOpen(publicId: string | null): void; ref?: RefObject<HTMLDivElement | null> }) {
   const own = useRef<HTMLDivElement>(null);
   const box = ref ?? own;
-  const markers = useMapMarkers(listings, nights);
+  const markers = useMapMarkers(listings, monthly);
   const { ready } = useExploreMap(box, { interactive: false, onMarker: (id) => onOpen(id), onMap: () => undefined }, markers, zone);
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {

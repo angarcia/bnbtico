@@ -4,7 +4,7 @@ import { serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
 import { addDays, addMonths, calendarMonths, monthTitle } from "../../src/domain/calendar";
-import { longDate, longDateWithYear } from "../../src/domain/dates";
+import { longDate, shortDate } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
 
 // Calendario del propietario (pantalla 17, fase 4 ticket 03) contra Supabase local. Cada prueba siembra sus propias casas
@@ -24,6 +24,7 @@ const shortMonth = (month: string) => SHORT[Number(month.slice(5)) - 1];
 
 const grid = (page: Page) => page.getByRole("group", { name: /^\p{L}+ \d{4}$/u });
 const day = (page: Page, iso: string) => page.getByRole("button", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)}(,|$)`) });
+const cellOf = (page: Page, iso: string) => page.getByRole("gridcell", { name: new RegExp(`^${longDate(iso)} de ${iso.slice(0, 4)},`) });
 /** La casa que se muestra: en el selector (varias casas) o como subtítulo (una sola, revisión UX A5). */
 const shown = (page: Page, title: string) => page.getByRole("button", { name: new RegExp(title) }).or(page.locator(".cal-house", { hasText: title }));
 const panel = (page: Page) => page.getByRole("region", { name: "Días seleccionados" });
@@ -341,14 +342,14 @@ async function fixTodayLastMonth(page: Page, fromEnd: number) {
   return day;
 }
 const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación principal" });
-test("al abrir, arriba del todo: la casa, «Marcar una reserva», ₡ | $ y el mes actual entero con los días pasados tachados", async ({ page }) => {
+test("al abrir, arriba del todo: la casa, «Cerrar la casa hasta…», ₡ | $ y el mes actual entero con los días pasados tachados", async ({ page }) => {
   const casa = await seedHouse("Casa Primer Día");
   const now = await fixTodayLastMonth(page, 10);
   await page.goto(`/propietario/calendario?casa=${casa.id}`);
   await expect(day(page, now)).toBeEnabled();
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await expect(shown(page, "Casa Primer Día")).toBeInViewport();
-  await expect(page.getByRole("button", { name: /Marcar una reserva/ })).toBeInViewport();
+  await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeInViewport();
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toBeInViewport();
   await expect(page.getByRole("heading", { name: monthTitle(now.slice(0, 7)) })).toBeInViewport();
   // El mes entero desde el día 1: los pasados, del mismo tamaño, tachados y sin tocar.
@@ -428,110 +429,24 @@ test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo 
   expect(await h.calendar("owner").days(casa.id)).toEqual([]);
 });
 
-// «Marcar una reserva» (ticket 04 de la ronda del 2 nov; sustituye a «Cerrar la casa hasta…»).
-const markRow = (page: Page) => page.getByRole("button", { name: /Marcar una reserva/ });
-const markSheet = (page: Page) => page.getByRole("dialog", { name: "Marcar una reserva" });
-const pick = (page: Page, iso: string) => markSheet(page).getByRole("button", { name: longDateWithYear(iso)!, exact: true });
-const confirmMark = (page: Page) => markSheet(page).getByRole("button", { name: "Marcar como ocupado" });
-
-test("«Marcar una reserva»: la fila, la hoja con el calendario de rango y las noches de llegada a salida − 1 quedan ocupadas, con sus precios especiales", async ({ page }) => {
-  const casa = await seedHouse("Casa Reserva");
-  await h.putDay(casa.id, { day: on(11), available: true, specialPriceCrc: 150000 });
-  await h.putDay(casa.id, { day: on(12), available: false, specialPriceCrc: null });
+test("casa cerrada: «Cerrada hasta el …», días de solo lectura y «Abrir la casa»", async ({ page }) => {
+  const casa = await seedHouse("Casa Cerrada");
+  await h.putDay(casa.id, { day: on(3), available: false, specialPriceCrc: null });
+  const reopen = addDays(today(), 40);
+  await h.owner("owner").setAvailable(casa.id, false, reopen);
   await open(page, casa.id);
-  await expect(markRow(page)).toContainText("Marque de una vez las noches de una reserva larga como ocupadas.");
+  await expect(page.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
   await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toHaveCount(0);
-  await markRow(page).screenshot({ path: "test-results/marcar-reserva-fila.png" });
+  await expect(cellOf(page, on(3))).toHaveAccessibleName(/, ocupado/);
+  await expect(page.locator(".month-grid button")).toHaveCount(0);
+  await expect(page.locator(".month-grid.is-dimmed").first()).toBeVisible();
+  await page.screenshot({ path: "test-results/calendario-cerrada.png" });
 
-  await markRow(page).click();
-  await expect(markSheet(page)).toBeVisible();
-  await expect(markSheet(page)).toBeFocused();
-  await expect(confirmMark(page)).toBeDisabled();
-  await expect(markSheet(page).getByTestId("mark-summary")).toHaveText("Elija la llegada");
-  await pick(page, on(10)).click();
-  await expect(markSheet(page).getByTestId("mark-summary")).toHaveText("Ahora elija la salida");
-  await expect(confirmMark(page)).toBeDisabled();
-  await pick(page, on(14)).click();
-  await expect(markSheet(page).getByTestId("mark-summary")).toHaveText(`4 noches · 10–13 ${shortMonth(next())}`);
-  await page.screenshot({ path: "test-results/marcar-reserva-hoja.png" });
-  await confirmMark(page).click();
-
-  await expect(markSheet(page)).toHaveCount(0);
-  await expect(markRow(page)).toBeFocused();
-  await expect(page.locator(".toast")).toHaveText(`4 noches marcadas como ocupadas · 10–13 ${shortMonth(next())}`);
-  for (const d of [10, 11, 12, 13]) await expect(day(page, on(d))).toHaveAccessibleName(/, ocupado/);
-  // La salida sigue libre.
-  await expect(day(page, on(14))).not.toHaveAccessibleName(/ocupado/);
-  await expect.poll(async () => (await h.calendar("owner").days(casa.id)).map((d) => d.day)).toEqual([on(10), on(11), on(12), on(13)]);
-  // El precio especial del día 11 se conserva (ahora ocupado); lo ya ocupado sigue igual.
-  expect(await h.calendar("owner").days(casa.id)).toEqual([
-    { day: on(10), available: false, specialPriceCrc: null },
-    { day: on(11), available: false, specialPriceCrc: 150000 },
-    { day: on(12), available: false, specialPriceCrc: null },
-    { day: on(13), available: false, specialPriceCrc: null },
-  ]);
-  // El público lo ve ocupado.
-  expect((await h.anon.getPublicDays(casa.publicId)).filter((d) => !d.available).map((d) => d.day)).toEqual([on(10), on(11), on(12), on(13)]);
-});
-
-test("una sola noche (salida al día siguiente) dice «1 noche marcada como ocupada»", async ({ page }) => {
-  const casa = await seedHouse("Casa Una Noche");
-  await open(page, casa.id);
-  await markRow(page).click();
-  await pick(page, on(20)).click();
-  await pick(page, on(21)).click();
-  await confirmMark(page).click();
-  await expect(page.locator(".toast")).toHaveText(`1 noche marcada como ocupada · 20 ${shortMonth(next())}`);
-  await expect.poll(async () => (await h.calendar("owner").days(casa.id)).map((d) => d.day)).toEqual([on(20)]);
-});
-
-test("la hoja se cierra con Escape, el fondo o «Cancelar» sin guardar nada, y Tab no sale de ella", async ({ page }) => {
-  const casa = await seedHouse("Casa Hoja Cancela");
-  await open(page, casa.id);
-  await markRow(page).click();
-  await pick(page, on(5)).click();
-  await pick(page, on(8)).click();
-  for (let i = 0; i < 6; i++) await page.keyboard.press("Tab");
-  expect(await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
-  await page.keyboard.press("Escape");
-  await expect(markSheet(page)).toHaveCount(0);
-  await expect(markRow(page)).toBeFocused();
-  await markRow(page).click();
-  await page.getByTestId("sheet-backdrop").click({ position: { x: 10, y: 10 } });
-  await expect(markSheet(page)).toHaveCount(0);
-  await markRow(page).click();
-  // Una hoja nueva empieza sin fechas.
-  await expect(confirmMark(page)).toBeDisabled();
-  await markSheet(page).getByRole("button", { name: "Cancelar" }).click();
-  await expect(markSheet(page)).toHaveCount(0);
-  expect(await h.calendar("owner").days(casa.id)).toEqual([]);
-});
-
-test("si la base rechaza el guardado, las noches vuelven a estar libres y avisa", async ({ page }) => {
-  const casa = await seedHouse("Casa Reserva Rechazada");
-  await open(page, casa.id);
-  await page.route("**/rest/v1/rpc/save_listing_days", (route) =>
-    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Este anuncio fue rechazado; publique uno nuevo.", details: null, hint: null }) }),
-  );
-  await markRow(page).click();
-  await pick(page, on(6)).click();
-  await pick(page, on(9)).click();
-  await confirmMark(page).click();
-  await expect(page.locator(".toast").last()).toHaveText("Este anuncio fue rechazado; publique uno nuevo.");
-  await expect(day(page, on(6))).not.toHaveAccessibleName(/ocupado/);
-  expect(await h.calendar("owner").days(casa.id)).toEqual([]);
-});
-
-test("sin el trozo de la hoja: avisa de la conexión y «Reintentar» la abre", async ({ page }) => {
-  const casa = await seedHouse("Casa Sin Hoja");
-  await page.route("**/assets/mark-sheet-*.js", (route) => route.abort());
-  await open(page, casa.id);
-  await markRow(page).click();
-  await expect(page.getByRole("alert")).toHaveText("No pudimos abrir «Marcar una reserva». Revise su conexión e inténtelo de nuevo.");
-  await expect(markSheet(page)).toHaveCount(0);
-  await page.unroute("**/assets/mark-sheet-*.js");
-  await page.getByRole("button", { name: "Reintentar" }).click();
-  await expect(markSheet(page)).toBeVisible();
+  await page.getByRole("button", { name: "Abrir la casa" }).click();
+  await expect(day(page, on(3))).toHaveAccessibleName(/, ocupado/);
+  await expect(page.getByRole("button", { name: "Abrir la casa" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
+  await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(true);
 });
 
 test("puntos de entrada: pestaña, Mis casas y «Marcar las noches ocupadas» llevan a la casa; el detalle ya no lleva la fila", async ({ page }) => {
@@ -555,8 +470,6 @@ test("puntos de entrada: pestaña, Mis casas y «Marcar las noches ocupadas» ll
   await showMonth(page, today().slice(0, 7));
   await expect(day(page, today())).toBeEnabled();
 
-  // La barra de abajo se esconde al bajar (client/hiding-tabbar.ts): volver arriba la trae.
-  await page.evaluate(() => window.scrollTo(0, 0));
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" }).click();
   await expect(page).toHaveURL(/\/propietario\/calendario/);
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Calendario" })).toHaveAttribute("aria-current", "page");

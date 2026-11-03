@@ -64,13 +64,13 @@ const errors = z.object({
 const PUBLIC_ID = /^CT-\d{4,}$/;
 const events = z.object({
   ...common,
-  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap", "search_submit", "explore_map_open", "map_marker_tap", "publish_verify"]),
+  name: z.enum(["page_view", "listing_view", "whatsapp_tap", "inquiry_created", "wizard_step", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open", "map_marker_tap", "publish_verify"]),
   listing: z.optional(z.string().check(z.regex(PUBLIC_ID))),
   /** Solo en search_submit: qué se indicó en la búsqueda, nunca los valores. */
   flags: z.optional(z.array(z.enum(["zona", "fechas", "personas"])).check(z.maxLength(3))),
 });
 /** Eventos sin casa: los demás la exigen. */
-const NO_LISTING: ReadonlySet<string> = new Set(["page_view", "search_help_tap", "search_submit", "explore_map_open", "publish_verify"]);
+const NO_LISTING: ReadonlySet<string> = new Set(["page_view", "search_help_tap", "monthly_filter_tap", "search_submit", "explore_map_open", "publish_verify"]);
 
 export type VitalsRow = { name: string; value: number; rating?: string; metric_id: string; navigation_type?: string; page: PageType; path: string; build: string };
 export type ErrorRow = {
@@ -119,7 +119,7 @@ export function parseBeacon(kind: BeaconKind, body: string): ParsedBeacon {
   const r = events.safeParse(json);
   if (!r.success) return { ok: false, status: 400 };
   const e = r.data;
-  // Los de una casa la llevan; la vista de página y los toques de Explorar (ayuda) no.
+  // Los de una casa la llevan; la vista de página y los toques de Explorar (ayuda, «Alquiler mensual») no.
   if (!NO_LISTING.has(e.name) && !e.listing) return { ok: false, status: 400 };
   if (e.flags && e.name !== "search_submit") return { ok: false, status: 400 };
   return { ok: true, row: defined({ name: e.name, search_flags: e.flags, listing_public_id: e.listing, ...where(e.path), build: e.build }) };

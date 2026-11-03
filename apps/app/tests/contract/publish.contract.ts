@@ -214,16 +214,6 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         await me.deleteDraft(draft.id);
       });
 
-      it("Habitación = 1 habitación: al elegir el tipo y aunque el paso 4 no mande habitaciones; de Habitación a completo se queda en 1", async () => {
-        const draft = await me.createDraft();
-        expect((await me.saveStep(draft.id, 1, { kind: "habitacion" })).bedrooms).toBe(1);
-        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: null, bathrooms: 1, bathroomShared: true })).toMatchObject({ bedrooms: 1, capacity: 2 });
-        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: 4, bathrooms: 1, bathroomShared: true })).toMatchObject({ bedrooms: 1 });
-        expect(await me.saveStep(draft.id, 1, { kind: "completo" })).toMatchObject({ kind: "completo", bedrooms: 1 });
-        expect(await me.saveStep(draft.id, 4, { capacity: 2, bedrooms: 3, bathrooms: 1, bathroomShared: null })).toMatchObject({ bedrooms: 3 });
-        await me.deleteDraft(draft.id);
-      });
-
       it("Sí sin precio se guarda; Sí con precio y luego No no guarda el precio", async () => {
         await me.saveStep(id, 8, { nightlyPriceCrc: 42000, acceptsMonthly: true, monthlyPriceCrc: null });
         expect(await me.getOwn(id)).toMatchObject({ acceptsMonthly: true, monthlyPriceCrc: null });
@@ -322,15 +312,6 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         const blank = await h.seed({ status: "draft", photos: 5, draft: { title: "" } });
         expect((await rejection(me.submit(blank.id))).message).toBe("Póngale un nombre a la casa.");
         for (const x of [s.shortTitle, blank]) expect((await me.getOwn(x.id))?.status).toBe("draft");
-      });
-
-      it("la descripción solo tiene tope duro de 2000: corta se envía, de 2001 no", async () => {
-        const short = await h.seed({ status: "draft", photos: 1, draft: { description: "Corta." } });
-        await me.submit(short.id);
-        expect((await me.getOwn(short.id))?.status).toBe("review");
-        const long = await h.seed({ status: "draft", photos: 1, draft: { description: "D".repeat(2001) } });
-        expect((await rejection(me.submit(long.id))).message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
-        expect((await me.getOwn(long.id))?.status).toBe("draft");
       });
 
       it("en revisión, activa o ajena no se envía; con cambios pedidos, sí", async () => {

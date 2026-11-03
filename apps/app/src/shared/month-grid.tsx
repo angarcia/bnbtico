@@ -24,11 +24,6 @@ export interface MonthGridProps {
   /** Colones por dólar (tipo vigente); solo cuenta en dólares. */
   fx?: number;
   selected?: readonly string[];
-  /** La estancia elegida en la ficha (llegada y salida): extremos y banda con el estilo de «¿Cuándo?» (`range-end`,
-   *  `in-range`, `is-start`, `is-last`), y los extremos con `aria-pressed`. Debajo siguen el verde de los libres y el rayado. */
-  range?: { arrival: string | null; departure: string | null };
-  /** Con él, los días donde devuelve false no se pueden tocar (un ocupado como llegada); sin él, todos los del mes. */
-  canTap?: (day: string) => boolean;
   /** Con él, cada día es un botón; sin él, solo lectura. */
   onSelect?: (day: string) => void;
   /** Casa cerrada a consultas: se ve, atenuada, sin tocar. */
@@ -50,7 +45,7 @@ export function WeekdayRow({ className }: { className?: string }) {
   );
 }
 
-export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, label }: MonthGridProps) {
+export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], onSelect, dimmed, label }: MonthGridProps) {
   const { weeks } = monthGrid(month, today);
   const year = month.slice(0, 4);
   const interactive = !!onSelect && !dimmed;
@@ -64,16 +59,12 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
             const off = g.past || g.beyond;
             // Ocupado: solo el número. Pasado: tachado y más claro, con su precio.
             const price = s.available && s.priceCrc !== null ? dayPrice(s.priceCrc, currency, fx) : "";
-            const start = range?.arrival ?? null;
-            const end = range?.departure ?? null;
-            const isEnd = !off && (g.day === start || g.day === end);
-            const inside = !off && !!start && !!end && g.day > start && g.day < end;
-            const cls = `day${off ? " is-past" : s.available ? "" : " is-busy"}${isEnd ? " range-end" : ""}${inside ? " in-range" : ""}${isEnd && start && end && g.day === start ? " is-start" : ""}${isEnd && start && end && g.day === end ? " is-last" : ""}`;
+            const cls = `day${off ? " is-past" : s.available ? "" : " is-busy"}`;
             const name = [
               `${longDate(g.day)} de ${year}`,
               off ? null : s.available ? "disponible" : "ocupado",
-              // Un día ocupado de la ficha (con `range`, o solo lectura) no dice su precio, que no enseña; en el calendario del propietario, sí.
-              !off && ((interactive && !range) || s.available) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
+              // Un día ocupado de la ficha (solo lectura) no dice su precio, que no enseña; en el calendario del propietario, sí.
+              !off && (interactive || s.available) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
               !off && s.special ? "precio distinto" : null,
             ]
               .filter(Boolean)
@@ -85,7 +76,7 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
               </>
             );
             return interactive ? (
-              <button key={g.day} type="button" className={cls} aria-label={name} aria-pressed={range ? isEnd : selected.includes(g.day)} disabled={off || (canTap ? !canTap(g.day) : false)} onClick={() => onSelect(g.day)}>
+              <button key={g.day} type="button" className={cls} aria-label={name} aria-pressed={selected.includes(g.day)} disabled={off} onClick={() => onSelect(g.day)}>
                 {body}
               </button>
             ) : (

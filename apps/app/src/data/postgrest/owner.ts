@@ -4,6 +4,7 @@
 // valida en TypeScript (planStep, igual que el fake); enviar lo valida la RPC submit_listing.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { OwnerListingsApi } from "../../domain/api";
+import { CALENDAR_MESSAGES, isIsoDate } from "../../domain/calendar";
 import { discardRefusal } from "../../domain/can";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
@@ -102,6 +103,13 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
     async submit(id) {
       if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
       const { error } = await db.rpc("submit_listing", { p_listing: id });
+      if (error) throw toDomainError(error);
+    },
+
+    async setAvailable(id, available, reopenAt) {
+      // Una fecha que no existe no llega a la base con su tipo: el mismo mensaje que daría la RPC.
+      if (reopenAt && !isIsoDate(reopenAt)) throw new DomainError(CALENDAR_MESSAGES.reopenDate, "validation");
+      const { error } = await db.rpc("set_listing_available", { p_listing: id, p_available: available, ...(reopenAt ? { p_reopen_at: reopenAt } : {}) });
       if (error) throw toDomainError(error);
     },
 

@@ -190,7 +190,7 @@ export function AnunciosScreen() {
           ))}
         </div>
       ) : null}
-      <p className="xs muted queue-foot">Las más antiguas primero. El anfitrión ve la decisión en Mis casas; avísele por WhatsApp con el botón.</p>
+      <p className="xs muted queue-foot">Las más antiguas primero. El propietario ve la decisión en Mis casas; avísele por WhatsApp con el botón.</p>
     </>
   );
 }
@@ -279,7 +279,7 @@ export function CasasAdminScreen() {
           type="search"
           name="q"
           aria-label="Buscar casas"
-          placeholder="Nombre, CT-#### o anfitrión"
+          placeholder="Nombre, CT-#### o propietario"
           autoComplete="off"
           enterKeyHint="search"
           value={query}
@@ -328,7 +328,7 @@ export function CasasAdminScreen() {
 function NoticeLink({ href, name }: { href: string; name: string }) {
   return (
     <a className="btn btn-wa btn-block" href={href} target="_blank" rel="noopener" data-testid="notice-link">
-      Avisar a {name || "el anfitrión"} por WhatsApp
+      Avisar a {name || "el propietario"} por WhatsApp
     </a>
   );
 }
@@ -355,21 +355,21 @@ type SheetMode = "detail" | "pause" | "block" | "delete";
 const MODE_COPY: Record<Exclude<SheetMode, "detail">, { title: string; body: string; label: string; confirm: string; field: string }> = {
   pause: {
     title: "Pausar casa",
-    body: "Sale de Explorar y su enlace deja de funcionar. El anfitrión la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.",
-    label: "Motivo (lo verá el anfitrión)",
+    body: "Sale de Explorar y su enlace deja de funcionar. El propietario la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.",
+    label: "Motivo (lo verá el propietario)",
     confirm: "Pausar casa",
     field: "pause-reason",
   },
   block: {
     title: "Bloquear casa",
-    body: "Igual para el público. El anfitrión verá el motivo y «Escribir a bnbtico», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.",
-    label: "Motivo (lo verá el anfitrión)",
+    body: "Igual para el público. El propietario verá el motivo y «Escribir a bnbtico», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.",
+    label: "Motivo (lo verá el propietario)",
     confirm: "Bloquear casa",
     field: "block-reason",
   },
   delete: {
     title: "Eliminar casa",
-    body: "Desaparece para todos, también para el anfitrión y de los favoritos de los clientes. Los datos, fotos y consultas quedan guardados, ocultos. No hay «deshacer» en la app.",
+    body: "Desaparece para todos, también para su propietario y de los favoritos de los clientes. Los datos, fotos y consultas quedan guardados, ocultos. No hay «deshacer» en la app.",
     label: "Motivo (queda en el registro)",
     confirm: "Eliminar casa",
     field: "delete-reason",
@@ -723,7 +723,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
           <span className="xs muted num">{l.publicId}</span>
         </div>
         <span className="small muted">{facts}</span>
-        {isProposedZone(l) ? <span className="badge badge-mute">Zona propuesta por el anfitrión</span> : null}
+        {isProposedZone(l) ? <span className="badge badge-mute">Zona propuesta por el dueño</span> : null}
         <PriceLine l={l} />
       </div>
       <OwnerCard l={l} ownerName={ownerName} />
@@ -815,7 +815,7 @@ function NoteField({ note, onChange, hint, error }: { note: string; onChange: (v
     <>
       <div className="field">
         <label htmlFor="admin-review-note">
-          Mensaje para el anfitrión <span className="label-plain">{hint}</span>
+          Mensaje para el propietario <span className="label-plain">{hint}</span>
         </label>
         <textarea
           id="admin-review-note"
@@ -889,7 +889,7 @@ export function RevisarEdicionScreen() {
           <EditDiff item={data} userId={userId} />
           {edit.status === "changes" ? (
             <p className="note" role="status">
-              Lo pendiente tiene cambios pedidos: espera al anfitrión.
+              Lo pendiente tiene cambios pedidos: espera al propietario.
             </p>
           ) : null}
         </>
@@ -1050,11 +1050,11 @@ function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget;
   return (
     <div className="stack gap-8 decide">
       <textarea
-        aria-label="Mensaje para el anfitrión (obligatorio si pide cambios)"
+        aria-label="Mensaje para el propietario (obligatorio si pide cambios)"
         name="note"
         rows={2}
         maxLength={REVIEW_NOTE_MAX}
-        placeholder="Mensaje para el anfitrión si pide cambios"
+        placeholder="Mensaje para el propietario si pide cambios"
         value={note}
         onChange={(ev) => setNote(ev.currentTarget.value)}
       />

@@ -88,14 +88,14 @@ const DRAFT_COLUMNS = Object.keys(emptyDraft()).filter((k) => k !== "photoCount"
 
 const same = (a: unknown, b: unknown) => (Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => x === b[i]) : Object.is(a, b));
 
-export type StepPlan = { error: string } | { changes: Partial<ListingDraft>; next: ListingDraft; warning?: string };
+export type StepPlan = { error: string } | { changes: Partial<ListingDraft>; next: ListingDraft };
 
 /**
  * Guardar una pantalla del asistente: mezcla el parche sobre el borrador actual (el del servidor) y devuelve todas las
  * columnas que cambian, también las que limpia `normalize` (baño sin habitación, tipo de parqueo sin parqueo, precio al mes
  * sin «Alquiler mensual»). «Continuar» avanza siempre (decisión 2026-10-30): solo el tipo del paso 1 bloquea, porque crea
  * el borrador y decide los demás campos; lo que no cabe en la tabla se guarda como null (`storable`). El número de fotos es
- * siempre el del borrador. `warning`: lo que se guardó vacío por estar mal escrito, para decirlo en ocre.
+ * siempre el del borrador.
  */
 export function planStep(current: ListingDraft, step: Step, patch: Partial<ListingDraft>): StepPlan {
   const merged: ListingDraft = { ...current, ...patch, photoCount: current.photoCount };
@@ -106,7 +106,5 @@ export function planStep(current: ListingDraft, step: Step, patch: Partial<Listi
   const next = normalize(storable(merged));
   const changes: Partial<ListingDraft> = {};
   for (const key of DRAFT_COLUMNS) if (!same(next[key], current[key])) (changes as Record<string, unknown>)[key] = next[key];
-  // Un precio al mes mal escrito se guarda vacío (`storable`): sin este aviso se borraría en silencio (2026-11-02).
-  const warning = step === 8 && !nightlyError(merged) ? monthlyError(merged) : null;
-  return warning ? { changes, next, warning } : { changes, next };
+  return { changes, next };
 }

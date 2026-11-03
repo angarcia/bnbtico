@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { can, isBlocked } from "../../domain/can";
 import { describe } from "../../domain/describe";
-import { EDIT_COPY, FIELD_ORDER, fieldTitle, fieldWarning, REVIEWED_FIELDS, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
+import { EDIT_COPY, FIELD_ORDER, FIELD_TITLES, REVIEWED_FIELDS, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, locationLine, type Listing, type ListingDraft } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
@@ -75,21 +75,14 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
   ) : isReviewed(field) ? (
     <ReviewTag />
   ) : null;
-  // Lo no obligatorio sin decir o mal escrito, en ocre bajo el dato (el mismo aviso que «Revisar y enviar»); no bloquea nada.
-  const warning = readOnly ? null : fieldWarning(field, mergeEdit(l, e));
   const content = (
     <>
       <span className="body">
         <span className="field-title">
-          {fieldTitle(field, mergeEdit(l, e).kind)}
+          {FIELD_TITLES[field]}
           {tag}
         </span>
         <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}`}>{value}</span>
-        {warning ? (
-          <span className="block small row-warn" data-testid={`warn-${field}`}>
-            {warning}
-          </span>
-        ) : null}
       </span>
       {readOnly ? null : (
         <span className="chev">
@@ -126,7 +119,7 @@ function PendingFoot({ listing: l, field, note, userId }: { listing: Listing; fi
       <button
         type="button"
         className="btn-text"
-        aria-label={`Descartar el cambio de ${fieldTitle(field, l.kind).toLowerCase()}`}
+        aria-label={`Descartar el cambio de ${FIELD_TITLES[field].toLowerCase()}`}
         disabled={discard.isPending}
         onClick={() => window.confirm(EDIT_COPY.discardConfirm) && discard.mutate(field)}
       >

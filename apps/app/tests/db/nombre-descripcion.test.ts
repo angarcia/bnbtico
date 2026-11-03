@@ -32,8 +32,7 @@ describe("migración nombre_y_descripcion", () => {
     await me.saveEdit(old.id, { kind: "habitacion", bathroomShared: false });
     await expect(me.saveEdit(old.id, { title: "Ola!" })).rejects.toThrow("El nombre de la casa debe tener entre 5 y 32 caracteres.");
     await expect(me.saveEdit(old.id, { description: "a".repeat(2001) })).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
-    // Una descripción corta ya no bloquea (2026-11-02, editar sigue las reglas de crear): se guarda y la app avisa.
-    await me.saveEdit(old.id, { description: "Muy corta." });
+    await expect(me.saveEdit(old.id, { description: "Muy corta." })).rejects.toThrow("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
     await me.saveEdit(old.id, { description: `  ${"a".repeat(80)}  ` });
     expect(await me.getOwn(old.id)).toMatchObject({
       status: "active",

@@ -24,7 +24,6 @@ let casa: Seeded;
 let oculta: Seeded;
 let cara: Seeded;
 let larga: Seeded;
-let zonaLarga: Seeded;
 let negociable: Seeded;
 let descrita: Seeded;
 const LARGA = [
@@ -43,7 +42,6 @@ test.beforeAll(async () => {
   negociable = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles mensual", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 45000, acceptsMonthly: true, monthlyPriceCrc: null, features: ["wifi"] } });
   descrita = await h.seed({ status: "active", draft: { title: "Casa Descrita", zone: "Cocles", zoneSource: "other", zoneId: null, nightlyPriceCrc: 60000, description: LARGA } });
   larga = await h.seed({ status: "active", draft: { title: "Villa Manzanillo", zone: "Manzanillo", zoneSource: "other", zoneId: null, nightlyPriceCrc: 185000 } });
-  zonaLarga = await h.seed({ status: "active", photos: 3, draft: { title: "Casa Zona Larga", zone: "Playa Negra de Puerto Viejo de Talamanca", canton: "Talamanca", zoneSource: "other", zoneId: null, nightlyPriceCrc: 70000 } });
   // Un nombre largo de antes del tope de 32 caracteres (publicar v2): las casas ya publicadas lo conservan.
   sql(`begin; set local app.allow_status = 'on'; update public.listings set title = 'Villa Manzanillo con piscina y rancho frente al mar Caribe' where id = '${larga.id}'; commit;`);
   const storage = serviceClient().storage.from("listings");
@@ -69,16 +67,14 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByRole("heading", { level: 1, name: "Casa Playa Negra" })).toBeVisible();
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
-  // Cabecera como en Airbnb: nombre, zona y personas; una línea; la persona en su fila (nombre y debajo «Anfitrión · WhatsApp verificado»); otra línea; la descripción.
-  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+\s*Anfitrión · WhatsApp verificado$/u);
+  // Cabecera como en Airbnb: nombre, zona y personas; una línea; la persona en su fila (nombre y debajo «WhatsApp verificado»); otra línea; la descripción.
+  await expect(page.getByTestId("host-line")).toHaveText(/^[A-ZÁÉÍÓÚÑ]{1,2}\s*\p{L}+\s*WhatsApp verificado$/u);
   expect(
     await page.evaluate(() => {
       const host = document.querySelector('[data-testid="host-line"]')!;
       return [host.previousElementSibling?.tagName, host.nextElementSibling?.tagName, host.nextElementSibling?.nextElementSibling?.className];
     }),
   ).toEqual(["HR", "HR", "stack description-block"]);
-  // La línea de la zona no repite «ubicación aproximada» (el aviso queda bajo el mapa).
-  await expect(page.getByTestId("listing-zone")).toHaveText(/^\s*Playa Negra, Talamanca$/);
   expect(await page.getByTestId("listing-capacity").evaluate((el) => getComputedStyle(el).fontSize)).toBe("17px");
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
@@ -93,31 +89,9 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
-// Ronda de Ana 2026-11-02 (01): con la zona en dos renglones, el pin va pegado a la primera palabra, en el primer renglón.
-test("a 375 px, con la zona en dos renglones, el pin queda junto a la primera palabra y a la altura del primer renglón", async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 667 });
-  await page.goto(`/casa/${zonaLarga.publicId}`);
-  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  const m = await page.evaluate(() => {
-    const zone = document.querySelector('[data-testid="listing-zone"]')!;
-    const pin = zone.querySelector("svg")!.getBoundingClientRect();
-    const node = [...zone.childNodes].find((n) => n.nodeType === 3 && n.textContent!.trim())!;
-    const range = document.createRange();
-    range.setStart(node, node.textContent!.search(/\S/));
-    range.setEnd(node, node.textContent!.search(/\S/) + 1);
-    const first = range.getBoundingClientRect();
-    const lineHeight = parseFloat(getComputedStyle(zone).lineHeight);
-    return { pinTop: pin.top, pinRight: pin.right, firstTop: first.top, firstLeft: first.left, height: zone.getBoundingClientRect().height, lineHeight };
-  });
-  expect(m.height, "la zona ocupa dos renglones").toBeGreaterThan(m.lineHeight * 1.5);
-  expect(Math.abs(m.pinTop - m.firstTop), "el pin a la altura del primer renglón").toBeLessThanOrEqual(3);
-  expect(m.firstLeft - m.pinRight, "el pin pegado al texto").toBeLessThanOrEqual(8);
-  expect(m.firstLeft - m.pinRight).toBeGreaterThanOrEqual(0);
-});
-
 // Densidad y tarjetas (2026-10-29): en el teléfono la foto es el producto: cuadrada, de borde a borde y pegada arriba
 // (detrás del notch, como el diseño); solo los botones se apartan del área segura.
-test("a 375 px la foto es 4:3, a todo el ancho y pegada arriba, e hidrata sin avisos", async ({ page }) => {
+test("a 375 px la foto es cuadrada, a todo el ancho y pegada arriba, e hidrata sin avisos", async ({ page }) => {
   const seen = watch(page);
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto(`/casa/${casa.publicId}`);
@@ -126,7 +100,7 @@ test("a 375 px la foto es 4:3, a todo el ancho y pegada arriba, e hidrata sin av
   expect(hero.x).toBeCloseTo(0, 0);
   expect(hero.y).toBeCloseTo(0, 0);
   expect(Math.abs(hero.width - 375)).toBeLessThanOrEqual(1);
-  expect(Math.abs(hero.height - 281.25)).toBeLessThanOrEqual(1);
+  expect(Math.abs(hero.height - 375)).toBeLessThanOrEqual(1);
   expect((await page.locator(".hero .top").boundingBox())!.y).toBeGreaterThanOrEqual(12);
   await expect(page.locator(".hero-counter")).toHaveText("1 / 5");
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
@@ -144,11 +118,10 @@ test("una casa con mensual a negociar llega del servidor con la línea y la cara
   const res = await page.goto(`/casa/${negociable.publicId}`);
   const source = await res!.text();
   expect(source).toContain("Alquiler mensual");
-  expect(source).not.toContain("Mensual:"); // sin fechas, la barra es de una sola línea
-  expect(source).toContain("<small>A negociar</small>");
+  expect(source).toContain("Mensual: precio a negociar con el dueño");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
-  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensualA negociar");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: precio a negociar con el dueño");
+  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
   await expect(page.locator(".badge").filter({ hasText: /^(Vacacional|Mensual)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
@@ -157,11 +130,11 @@ test("una casa con precio al mes lo muestra en la línea mensual en colones y, a
   await page.goto(`/casa/${cara.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡1 250 000 / noche");
-  await expect(page.getByTestId("monthly-line")).toHaveCount(0);
-  await expect(page.getByTestId("monthly-usd")).toHaveCount(0);
-  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensual₡2 500 000 / mes");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
+  await expect(page.getByTestId("monthly-usd")).toHaveText(/^≈ \$[\d\u00a0]+ \/ mes$/);
+  await expect(page.locator(".feature-tiles > div").last()).toHaveText("Alquiler mensual");
   await chooseCurrency(page, "USD");
-  await expect(page.locator(".feature-tiles > div").first()).toHaveText("Alquiler mensual₡2 500 000 / mes");
+  await expect(page.getByTestId("monthly-line")).toHaveText("Mensual: ₡2 500 000 / mes");
 });
 
 // Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.
@@ -172,7 +145,7 @@ test("la ficha muestra las dos monedas, sin selector", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
   await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
-  await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el anfitrión.");
+  await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el propietario.");
   await expect(page.locator(".listing-view .currency-switch")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Ver en (dólares|colones)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
@@ -246,7 +219,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
   expect(await page.locator("html").getAttribute("data-hydrated")).toBeNull();
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   // El botón de contacto tampoco es un botón todavía: una caja apagada del mismo tamaño.
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
   await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
   const before = await barHeight(page);
   const text = await page.locator(".cta-prices").innerText();
@@ -255,7 +228,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeEnabled();
   expect(await barHeight(page), "al hidratar").toBe(before);
   await chooseCurrency(page, "USD");
   // Comprobación negativa: un margen para que un cambio indebido se pinte.
@@ -314,7 +287,7 @@ test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas
     expect(await barHeight(page), `${publicId}: alto de la barra`).toBeLessThanOrEqual(150);
     expect(await barOverflows(page), `${publicId}: la barra se desborda`).toBe(false);
     await expect(page.getByTestId("price-usd")).toHaveText(/^≈ \$\d+ \/ noche$/);
-    await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el anfitrión.");
+    await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el propietario.");
     const [capacityBottom, barTop] = await page.evaluate(() => [
       document.querySelector('[data-testid="listing-capacity"]')!.getBoundingClientRect().bottom,
       document.querySelector(".cta-bar")!.getBoundingClientRect().top,
@@ -322,7 +295,7 @@ test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas
     expect(capacityBottom, `${publicId}: «N personas» por encima de la barra sin scroll`).toBeLessThanOrEqual(barTop!);
   }
   await expect(page.locator("h1.listing-title")).toHaveClass(/is-long/);
-  await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el anfitrión");
+  await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el propietario");
 });
 
 // Revisión UX N5: en un ordenador, dos columnas (fotos y texto a la izquierda, precio y contacto fijos a la derecha).

@@ -73,34 +73,6 @@ describe("MonthGrid", () => {
     expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado"');
   });
 
-  it("con rango (ficha, ticket 08): los extremos y lo de en medio llevan la clase del estilo de «¿Cuándo?»; los nombres no cambian", () => {
-    const out = html({ today: "2026-12-01", range: { arrival: "2026-12-20", departure: "2026-12-23" } });
-    expect(cell(out, 20)).toMatch(/class="day range-end is-start"/);
-    expect(cell(out, 20)).toContain('aria-pressed="true"');
-    expect(cell(out, 21)).toMatch(/class="day in-range"/);
-    expect(cell(out, 22)).toMatch(/class="day in-range"/);
-    expect(cell(out, 23)).toMatch(/class="day range-end is-last"/);
-    expect(cell(out, 24)).toMatch(/class="day"/);
-    expect(cell(out, 20)).toContain('aria-label="20 de diciembre de 2026, disponible, ₡95\u00a0000"');
-    // El ocupado de la ficha no dice su precio (el del propietario sí).
-    expect(cell(html({ today: "2026-12-01", range: { arrival: null, departure: null } }), 12)).toContain('aria-label="12 de diciembre de 2026, ocupado"');
-    // Un ocupado dentro del rango conserva su rayado (is-busy) debajo de la banda.
-    expect(cell(html({ today: "2026-12-01", range: { arrival: "2026-12-10", departure: "2026-12-14" } }), 12)).toMatch(/class="day is-busy in-range"/);
-  });
-
-  it("con solo la llegada: una marca sola y sin banda", () => {
-    const out = html({ today: "2026-12-01", range: { arrival: "2026-12-20", departure: null } });
-    expect(cell(out, 20)).toMatch(/class="day range-end"/);
-    expect(cell(out, 21)).toMatch(/class="day"/);
-  });
-
-  it("`canTap` apaga los días que no se pueden elegir (un ocupado como llegada) sin cambiar su nombre", () => {
-    const out = html({ today: "2026-12-01", canTap: (d) => d !== "2026-12-12" });
-    expect(cell(out, 12)).toMatch(/disabled=""/);
-    expect(cell(out, 12)).toContain('aria-label="12 de diciembre de 2026, ocupado, ₡95\u00a0000"');
-    expect(cell(out, 13)).not.toMatch(/disabled=""/);
-  });
-
   it("atenuada (casa cerrada): clase is-dimmed y sin botones", () => {
     const out = html({ onSelect: undefined, dimmed: true });
     expect(out).toMatch(/class="month-grid is-dimmed"/);

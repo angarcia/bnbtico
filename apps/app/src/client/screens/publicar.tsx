@@ -128,7 +128,6 @@ function StepHeader({ id, step }: { id: string; step: Step | null }) {
 const stepRoute = getRouteApi("/_flow/_privateFlow/propietario/publicar/$id/$paso");
 export function PasoScreen() {
   const { id, paso } = stepRoute.useParams();
-  const { volver } = stepRoute.useSearch();
   const parsed = stepFromParam(paso);
   const step = parsed && "step" in parsed ? parsed.step : null;
   const { userId, query } = useOwnListing(id);
@@ -190,7 +189,7 @@ export function PasoScreen() {
           <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && requiredProblems(l).some((p) => p.step === s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
         ))}
       </div>
-      <StepForm key={step} userId={userId} listing={l} step={step} enter={enter} volver={step === LAST_STEP ? undefined : volver}>
+      <StepForm key={step} userId={userId} listing={l} step={step} enter={enter}>
         {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>
     </>
