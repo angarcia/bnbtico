@@ -118,8 +118,8 @@ test("Filtros: el deslizador de precio (histograma y dos tiradores) se sincroniz
   await expect(page.locator(".price-slider-bars rect.in").first()).toBeVisible();
   const min = page.getByRole("slider", { name: "Rango de precio, límite inferior por noche" });
   const max = page.getByRole("slider", { name: "Rango de precio, límite superior por noche" });
-  await expect(min).toHaveAttribute("aria-valuetext", "₡40 000, sin mínimo");
-  await expect(max).toHaveAttribute("aria-valuetext", "₡86 000 o más, sin máximo");
+  await expect(min).toHaveAttribute("aria-valuetext", /^₡40\s000,\ssin\smínimo$/);
+  await expect(max).toHaveAttribute("aria-valuetext", /^₡86\s000\so\smás,\ssin\smáximo$/);
   // Con el teclado: tres pasos de ₡2 000 → mínimo ₡46 000; el campo «Mínimo» y el conteo lo siguen (46 000, 60 000 y 85 000).
   await min.focus();
   await page.keyboard.press("ArrowRight");
@@ -127,7 +127,7 @@ test("Filtros: el deslizador de precio (histograma y dos tiradores) se sincroniz
   await page.keyboard.press("ArrowRight");
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("46000");
   await expect(range).toHaveText("₡46 000 – ₡86 000+");
-  await expect(max).toHaveAttribute("aria-valuetext", "₡86 000 o más, sin máximo");
+  await expect(max).toHaveAttribute("aria-valuetext", /^₡86\s000\so\smás,\ssin\smáximo$/);
   await expect(page.getByRole("button", { name: "Ver 3 casas" })).toBeVisible();
   // Escribir en el campo mueve el tirador.
   await page.getByLabel("Precio máximo por noche").fill("60000");
