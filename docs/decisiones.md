@@ -1,3 +1,14 @@
+## 2026-11-04 · Publicar sin cuenta hasta las fotos: el WhatsApp se verifica antes de las fotos (Ana)
+
+Sustituye «el código se pide después del paso 1» (publicar v2, §E). Capturas `sin-cuenta-*.png` en `.scratch/revision-ux/maquetas/2026-11-04/`.
+
+- **Sin cuenta se hacen los pasos 1–6** (tipo, ubicación, personas, características, nombre y descripción) con las mismas pantallas y reglas del asistente, en `/publicar/nueva/$paso`. Lo escrito se guarda en el teléfono (`bnbtico-publicar-borrador`, 7 días, como antes el paso 1); al volver a «Publicar» sigue ahí.
+- **Al llegar a las Fotos** se pide el WhatsApp: «Para subir las fotos, verifique su WhatsApp» y «Lo que ya escribió se guarda…». Las fotos necesitan cuenta (se suben al almacenamiento de la casa). `/publicar/nueva/7` en adelante lleva a verificar.
+- **Tras el código**, `/publicar/continuar` crea la casa con todo lo escrito en una sola escritura y sigue en Fotos. Con un borrador ya empezado se elige como siempre; el segundo botón dice «Seguir con «nombre»» si se llegó a escribir.
+- **Cómo:** un tercer puerto del asistente (`publish/local-port.ts`) junto al del anfitrión y el del admin; `planStep` es la misma regla. Quien ya tiene sesión no nota nada.
+- **Telemetría:** `wizard_step` sin casa en `/publicar/nueva/…`, para ver dónde se abandona antes del código; `publish_verify` ahora cuenta a quien llega a las Fotos.
+- **Por qué:** pedir el número tras el paso 1 frena a quien solo quiere ver cómo es publicar; después de escribir su casa, el código se siente como guardarla.
+
 ## 2026-11-04 · «Compartir ficha» en dorado, sin etiqueta «Revisión», borradores sin foto y paso 2 con la búsqueda sobre el mapa (Ana)
 
 Capturas en `.scratch/revision-ux/maquetas/2026-11-04/`.

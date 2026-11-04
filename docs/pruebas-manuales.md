@@ -301,23 +301,24 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 - [ ] **A2** Toque «Continuar» sin elegir nada → «Elija Alojamiento completo o Habitación.».
 - [ ] **A3** Toque «Cerrar» → vuelve a Explorar, sin cuenta ni borrador creados.
 - [ ] **A4** En Explorar, baje hasta el final de la lista y toque «Publicar mi casa gratis» (tarjeta «¿Tiene una casa en el Caribe?») → el mismo paso 1; lo mismo desde la pestaña «Ingresar» con la fila ocre «¿Quiere publicar su casa gratis?» («Gratis 12 meses · quedan N de 50 plazas»).
-- [ ] **A5** Elija «Habitación» y toque «Continuar» → `/publicar/verificar` con «Para guardar su casa, verifique su WhatsApp».
+- [ ] **A5** Elija «Habitación» y toque «Continuar» → «¿Dónde está su casa?» (etapa «Su casa» «2 de 4»), todavía sin cuenta: la dirección es `/publicar/nueva/2`. Siga con ubicación, personas, características, nombre y descripción como en 3.3–3.6 (todo se guarda en el teléfono); al tocar «Continuar» en nombre y descripción → `/publicar/verificar` con «Para subir las fotos, verifique su WhatsApp» (2026-11-04: el código se pide antes de las fotos, no tras el paso 1).
+- [ ] **A5b** Sin cuenta, a medias (p. ej. en personas), toque «Cerrar» → Explorar. Vuelva a «Publicar mi casa» → el tipo sigue elegido y, al continuar, lo escrito sigue ahí (se guarda 7 días en el teléfono).
 
 ### 3.2 Verificar el WhatsApp y entrar al asistente
 
-- [ ] **A6** En la pantalla de verificación revise → «Le enviamos un código por WhatsApp. Así nadie más puede publicar en su nombre.», selector «+506» con «Costa Rica (+506)» elegido y «Otro país» al final, «¿Su número no es de Costa Rica? Toque +506 para elegir su país.», «No tengo acceso a mi WhatsApp» y «Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.».
+- [ ] **A6** En la pantalla de verificación revise → «Lo que ya escribió se guarda. Le enviamos un código por WhatsApp: así nadie más puede publicar en su nombre.», selector «+506» con «Costa Rica (+506)» elegido y «Otro país» al final, «¿Su número no es de Costa Rica? Toque +506 para elegir su país.», «No tengo acceso a mi WhatsApp» y «Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.».
 - [ ] **A7** Toque «Recibir código por WhatsApp» sin escribir número → «Escriba su número de WhatsApp.».
 - [ ] **A8** Escriba `123` y pida el código → «Ese número no parece válido para el país elegido.».
 - [ ] **A9** Con la segunda cuenta, elija «Estados Unidos / Canadá (+1)» → el campo cambia a «Sin el código de país»; elija «Otro país» → la ayuda dice «Escriba el número completo con «+» y el código de su país.».
 - [ ] **A10** Con el número libre `8888 9999` en +506 → «Es su primera vez en bnbtico» y «Díganos su nombre para crear su cuenta. Le mandamos el código al +506 8888 9999.»; sin nombre, «Escriba su nombre.».
 - [ ] **A11** Escriba un nombre y toque «Recibir código por WhatsApp» → «Introduzca el código», «Se lo enviamos por WhatsApp al +506 8888 9999.», «¿No llegó? Puede pedir otro en 0:30.», «Abrir WhatsApp para buscar el mensaje» y «Cambiar número».
 - [ ] **A12** Escriba `000000` → «Ese código no es correcto o caducó.».
-- [ ] **A13** Escriba `123456` → «Verificar y continuar» lleva directo a «¿Dónde está su casa?» (etapa «Su casa» «2 de 4»), sin pasar por «¡Listo! Su cuenta está creada».
+- [ ] **A13** Escriba `123456` → «Verificar y continuar» lleva directo a «Fotos», sin pasar por «¡Listo! Su cuenta está creada»; en Mis casas la casa ya tiene el nombre, la zona, las personas y las características que escribió antes del código.
 - [ ] **A14** Cierre sesión (3.18) y repita con `8777 0001`, que ya existe → no pide nombre; tras el código sigue en el asistente (o, si ya tiene un borrador, ver A61).
 
 ### 3.3 Asistente: ubicación (pantalla 2)
 
-- [ ] **A15** En «¿Dónde está su casa?» revise → mapa con «+»/«−», botón «Usar mi ubicación», campo «Busque un pueblo, playa o barrio», «Toque el mapa o arrastre el punto hasta su casa.», «En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.», lista «Zona» con «Marque el punto en el mapa» y «Otra…».
+- [ ] **A15** En «¿Dónde está su casa?» revise → mapa alto con el campo «Busque un pueblo, playa o barrio» flotando arriba, «+»/«−» abajo a la izquierda, botón «Usar mi ubicación» abajo a la derecha, debajo una sola línea «Los clientes solo ven la zona, no su dirección.» y la lista «Zona» con «Marque el punto en el mapa» y «Otra…»; en un teléfono pequeño, sin scroll.
 - [ ] **A16** Toque el mapa sobre tierra, por ejemplo Limón centro → aparece una línea «cantón, provincia» (p. ej. «Limón, Limón») y «Zona» ofrece las zonas cercanas más «Otra…»; arrastre el pin a otro pueblo y la línea y la zona se actualizan solas.
 - [ ] **A17** Toque el mar o un punto fuera del país → «Ponga el punto sobre tierra, dentro de Costa Rica».
 - [ ] **A18** Escriba «Cocles» en el buscador y elija la opción «Cocles» → el mapa salta allí, la línea dice «Talamanca, Limón» y «Zona» queda en «Cocles».
@@ -387,7 +388,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 - [ ] **A60** Toque «+» («Nueva casa») en Mis casas teniendo un borrador → «Tiene un borrador sin enviar» con ««Borrador del Caribe» · empezado el 30 de octubre.», «Seguir con el borrador» y «Empezar otro»; «Seguir con el borrador» vuelve al paso donde se quedó con lo escrito y «Empezar otro» abre un paso 1 vacío con «Guardamos el borrador en cada paso; puede seguir después desde Mis casas.».
 - [ ] **A60b** Toque «+» («Nueva casa») en Mis casas sin ningún borrador → entra directo al paso 1 («¿Qué es?»); mientras se crea, solo la cabecera del paso 1 («Cerrar», «Publicar casa», «Su casa» «1 de 4») con un recuadro gris de carga, sin que asome ninguna otra tarjeta (ni «Publique su casa en pocos pasos» ni «Tiene un borrador sin enviar»), tampoco con DevTools «Slow 4G» + CPU 4×. Desde el paso 1, «Atrás» del teléfono (o del navegador) vuelve a Mis casas, no a una pantalla intermedia.
 - [ ] **A60c** Con un borrador, abra «+» (sale «Tiene un borrador sin enviar»), vuelva a Mis casas, descarte ese borrador desde otro teléfono y toque «+» otra vez → no vuelve a enseñar el borrador descartado: el recuadro de carga y directo al paso 1 de una casa nueva.
-- [ ] **A61** En la verificación con `8777 0001` (3.1–3.2) teniendo un borrador → tras el código sale «Tiene un borrador sin enviar» con «Seguir con el borrador» y «Empezar otra».
+- [ ] **A61** En la verificación con `8777 0001` (3.1–3.2) teniendo un borrador → tras el código sale «Tiene un borrador sin enviar» con «Seguir con el borrador» y «Seguir con «<el nombre que escribió>»» (o «Empezar otra» si no llegó a escribir el nombre); esta crea la casa nueva con lo escrito y sigue en Fotos.
 - [ ] **A62** Toque «Descartar» en una tarjeta → sube la hoja de la app (no el aviso del navegador) «¿Descartar este borrador?» con «No se puede deshacer.» y «Descartar» (en rojo) / «Cancelar»; «Cancelar» la cierra y la tarjeta sigue; toque otra vez «Descartar» y confirme → la tarjeta desaparece y la casilla «borrador» baja. Lo mismo con «Descartar borrador» en el detalle, que vuelve a Mis casas.
 - [ ] **A63** Cree 5 borradores y toque «Empezar otro» una sexta vez → «Ya tiene 5 borradores sin enviar. Termine o descarte uno antes de empezar otro.».
 - [ ] **A64** Toque «Continuar» y, en el mismo segundo, cierre la app o recargue → al volver, el paso quedó guardado (el siguiente paso trae lo escrito).

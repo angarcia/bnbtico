@@ -74,12 +74,12 @@ test("otra cuenta nueva responde No y va a Explorar", async ({ page }) => {
   }
 });
 
-test("verificar desde publicar habla de guardar la casa y nunca pasa por «¡Listo!»", async ({ page }) => {
+test("verificar desde publicar habla de subir las fotos y nunca pasa por «¡Listo!»", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   try {
     await page.goto(`/cuenta?next=${encodeURIComponent("/publicar/continuar")}`);
-    await expect(page.getByRole("heading", { name: "Para guardar su casa, verifique su WhatsApp" })).toBeVisible();
-    await expect(page.getByText("Le enviamos un código por WhatsApp. Así nadie más puede publicar en su nombre.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Para subir las fotos, verifique su WhatsApp" })).toBeVisible();
+    await expect(page.getByText("Lo que ya escribió se guarda. Le enviamos un código por WhatsApp: así nadie más puede publicar en su nombre.")).toBeVisible();
     await expect(page.getByText(/Su número solo se comparte con el anfitrión/)).toHaveCount(0);
     await expect(page.getByTestId("return-card")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "No tengo acceso a mi WhatsApp" })).toBeVisible();
@@ -115,10 +115,40 @@ test("un enlace viejo a «¡Listo!» con la vuelta a publicar sigue hacia ella",
   }
 });
 
-// §E.3: /publicar sin cuenta. El paso 1 se responde en el teléfono, se verifica el WhatsApp y la casa se crea al volver.
-test("desde la portada sin cuenta: paso 1, verificación y «¿Dónde está su casa?»", async ({ page }) => {
+// §E.3, desde el 2026-11-04 (Ana): /publicar sin cuenta hasta las fotos. Los pasos 1–6 se responden en el teléfono, el
+// WhatsApp se verifica al llegar a las Fotos y la casa se crea con todo al volver, en las Fotos.
+const DRAFT_KEY = "bnbtico-publicar-borrador";
+const DESCRIPTION = "Cabina de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.";
+const continuar = (page: Page) => page.getByRole("button", { name: "Continuar" }).click();
+
+/** Los pasos 2–6 sin cuenta: el pin (Limón a zoom 9, 10 px al oeste del centro, en tierra), 2 personas, Wifi, nombre y
+ *  descripción. Sin una sola petición a la cuenta. */
+async function stepsTwoToSix(page: Page) {
+  await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+  await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
+  await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
+  const map = (await page.locator(".map-box").boundingBox())!;
+  await page.mouse.click(map.x + map.width / 2 - 10, map.y + map.height / 2);
+  await expect(page.getByRole("combobox", { name: "Zona" }).locator("option:checked")).toHaveAttribute("value", /^list:701-/);
+  await continuar(page);
+  await expect(page).toHaveURL(/\/publicar\/nueva\/4$/);
+  await page.getByRole("button", { name: "Más personas" }).click();
+  await page.getByRole("button", { name: "Más personas" }).click();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/publicar\/nueva\/5$/);
+  await page.getByText("Wifi", { exact: true }).click();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/publicar\/nueva\/6$/);
+  await page.getByLabel("Nombre de la casa").fill("Cabina Cocles");
+  await page.getByLabel("Descripción").fill(DESCRIPTION);
+  await continuar(page);
+}
+
+test("desde la portada sin cuenta: pasos 1–6 en el teléfono, verificación al llegar a las Fotos y la casa con todo", async ({ page }) => {
   await deleteAccount(FREE_PHONE);
   try {
+    const account: string[] = [];
+    page.on("request", (r) => /\/(rest\/v1\/(listings|profiles)|auth\/v1\/token)/.test(r.url()) && account.push(r.url()));
     await page.goto("/?pronto=1");
     await page.getByRole("link", { name: "Publicar mi casa" }).click();
     await expect(page).toHaveURL(/\/publicar$/);
@@ -128,32 +158,83 @@ test("desde la portada sin cuenta: paso 1, verificación y «¿Dónde está su c
     await page.getByRole("button", { name: "Continuar" }).click();
     await expect(page.locator('.note[role="alert"]')).toHaveText("Elija Alojamiento completo o Habitación.");
     await page.locator("label.choice", { hasText: "Habitación" }).click();
-    await page.getByRole("button", { name: "Continuar" }).click();
+    await continuar(page);
+    // «Atrás» desde el paso 2 vuelve a la entrada con el tipo elegido.
+    await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+    await page.getByRole("link", { name: "Atrás" }).click();
+    await expect(page).toHaveURL(/\/publicar$/);
+    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText(/Habitación/);
+    await continuar(page);
+    await stepsTwoToSix(page);
+    expect(account, "sin cuenta no se toca la red de la cuenta").toEqual([]);
+
     await expect(page).toHaveURL(/\/publicar\/verificar$/);
-    await expect(page.getByRole("heading", { name: "Para guardar su casa, verifique su WhatsApp" })).toBeVisible();
-    await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+    await expect(page.getByRole("heading", { name: "Para subir las fotos, verifique su WhatsApp" })).toBeVisible();
+    await expect(page.locator(".stage-label")).toHaveText(/^Fotos/);
     await page.getByLabel("Número de WhatsApp").fill("8888 9999");
     await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
     await page.getByLabel("Nombre").fill("Ana Prueba");
     await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
     await expect(page).toHaveURL(/\/cuenta\/codigo\?next=%2Fpublicar%2Fcontinuar$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Publicar casa" })).toBeVisible();
-    await expect(page.getByText("Después seguimos con su casa")).toBeVisible();
-    // La respuesta sigue guardada hasta que la casa existe.
-    expect(await page.evaluate((k) => localStorage.getItem(k), STEP1_KEY)).not.toBeNull();
+    // Lo escrito sigue guardado hasta que la casa existe.
+    expect(await page.evaluate((k) => localStorage.getItem(k), DRAFT_KEY)).not.toBeNull();
     await enterCode(page);
-    await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/2$`));
-    expect(await page.evaluate((k) => localStorage.getItem(k), STEP1_KEY)).toBeNull();
+    await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/7$`));
+    await expect(page.locator(".photos-grid")).toBeVisible();
+    expect(await page.evaluate((k) => localStorage.getItem(k), DRAFT_KEY)).toBeNull();
     await expect(page.getByRole("heading", { name: READY })).toHaveCount(0);
-    // Exactamente una casa (el modo estricto de React monta dos veces: un solo intento por visita), con lo del paso 1.
+    // Exactamente una casa (un solo intento por visita), con todo lo de los pasos 1–6.
     await page.waitForTimeout(500);
     const mine = await listingsOf(FREE_PHONE);
     expect(mine.map((l) => [l.status, l.kind])).toEqual([["draft", "habitacion"]]);
     expect(page.url()).toContain(mine[0]!.id);
+    const { data } = await serviceClient().from("listings").select("title, description, capacity, bedrooms, features, province, zone_source, lat").eq("id", mine[0]!.id).single();
+    expect(data).toMatchObject({ title: "Cabina Cocles", description: DESCRIPTION, capacity: 2, bedrooms: 1, features: ["wifi"], province: "Limón", zone_source: "list" });
+    expect(data!.lat).not.toBeNull();
   } finally {
     await deleteAccount(FREE_PHONE);
   }
+});
+
+test("sin cuenta, cerrar a medias guarda lo escrito: al volver sigue ahí; las Fotos piden el código", async ({ page }) => {
+  await page.goto("/publicar");
+  await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+  await continuar(page); // sin pin también se sigue
+  await expect(page).toHaveURL(/\/publicar\/nueva\/4$/);
+  await page.getByRole("button", { name: "Más personas" }).click();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/publicar\/nueva\/5$/);
+  await page.getByRole("button", { name: /Cerrar/ }).click();
+  await expect(page).toHaveURL(/\/explorar/);
+  await page.goto("/publicar/nueva/4");
+  await expect(page.getByText("1", { exact: true }).first()).toBeVisible();
+  await expect.poll(() => page.evaluate((k) => JSON.parse(localStorage.getItem(k)!).draft.capacity, DRAFT_KEY)).toBe(1);
+  // Las Fotos y lo que sigue no se abren sin cuenta: llevan a verificar el WhatsApp.
+  await page.goto("/publicar/nueva/7");
+  await expect(page).toHaveURL(/\/publicar\/verificar$/);
+  await page.goto("/publicar/nueva/9");
+  await expect(page).toHaveURL(/\/publicar\/verificar$/);
+  // El paso 1 y un id que no es el del teléfono, a la entrada.
+  await page.goto("/publicar/nueva/1");
+  await expect(page).toHaveURL(/\/publicar$/);
+  await page.goto("/publicar/otra/2");
+  await expect(page).toHaveURL(/\/publicar$/);
+  // Lo de hace más de 7 días ya no se usa.
+  await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ draft: { kind: "completo", capacity: 3 }, savedAt: 0 })), DRAFT_KEY);
+  await page.goto("/publicar/verificar");
+  await expect(page).toHaveURL(/\/publicar$/);
+});
+
+test("con sesión, un paso del teléfono sigue a /publicar/continuar y crea la casa con lo escrito", async ({ page }) => {
+  await injectSession(page, "owner");
+  await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ draft: { kind: "completo", capacity: 3, title: "Casa del teléfono" }, savedAt: Date.now() })), DRAFT_KEY);
+  await page.goto("/publicar/nueva/4");
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/7$`));
+  const mine = await listingsOf(TEST_PHONES.owner);
+  const created = mine.find((l) => page.url().includes(l.id))!;
+  expect((await h.owner("owner").getOwn(created.id))).toMatchObject({ kind: "completo", capacity: 3, title: "Casa del teléfono" });
 });
 
 test("con un borrador ya empezado, elige; «Empezar otra» usa lo guardado", async ({ page }) => {
@@ -161,6 +242,8 @@ test("con un borrador ya empezado, elige; «Empezar otra» usa lo guardado", asy
   await page.goto("/publicar");
   await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+  await page.goto("/publicar/nueva/7");
   await expect(page).toHaveURL(/\/publicar\/verificar$/);
   await page.getByLabel("Número de WhatsApp").fill("8777 0001");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -168,10 +251,10 @@ test("con un borrador ya empezado, elige; «Empezar otra» usa lo guardado", asy
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible();
   await expect(page.getByRole("link", { name: "Seguir con el borrador" })).toBeVisible();
   await page.getByRole("button", { name: "Empezar otra" }).click();
-  await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/2$`));
+  await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/7$`));
   expect(page.url()).not.toContain(seeded.id);
   expect(await page.evaluate((k) => localStorage.getItem(k), STEP1_KEY)).toBeNull();
+  expect(await page.evaluate((k) => localStorage.getItem(k), DRAFT_KEY)).toBeNull();
   const mine = await listingsOf(TEST_PHONES.owner);
   expect(mine).toHaveLength(2);
   const created = mine.find((l) => l.id !== seeded.id)!;

@@ -70,6 +70,12 @@ describe("telemetría · validación de balizas", () => {
       ok: true,
       row: { name: "wizard_step", listing_public_id: "CT-1015", page: "publicar", path: "/propietario/publicar/:id/7", build: "abc123" },
     });
+    // Sin cuenta, los pasos en el teléfono (2026-11-04) van sin casa; en cualquier otra ruta, el paso la sigue exigiendo.
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "wizard_step", path: "/publicar/nueva/4" }))).toEqual({
+      ok: true,
+      row: { name: "wizard_step", page: "publicar", path: "/publicar/nueva/4", build: "abc123" },
+    });
+    expect(parseBeacon("events", JSON.stringify({ ...base, name: "wizard_step", path: "/propietario/publicar/2f8c5a1e-0d6b-4c1e-9a7e-3b1c2d4e5f60/7" })).ok).toBe(false);
     // Fase 6, ticket 01: «Escribir a bnbtico por WhatsApp» en Explorar, sin casa y sin el mensaje ni los filtros.
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "search_help_tap", path: "/explorar?prov=Todas&pool=1" }))).toEqual({
       ok: true,

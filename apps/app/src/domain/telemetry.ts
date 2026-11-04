@@ -120,7 +120,9 @@ export function parseBeacon(kind: BeaconKind, body: string): ParsedBeacon {
   if (!r.success) return { ok: false, status: 400 };
   const e = r.data;
   // Los de una casa la llevan; la vista de página y los toques de Explorar (la ayuda) no.
-  if (!NO_LISTING.has(e.name) && !e.listing) return { ok: false, status: 400 };
+  // Los pasos del asistente sin cuenta (en el teléfono, /publicar/nueva/…, 2026-11-04) aún no tienen casa.
+  const phoneWizard = e.name === "wizard_step" && e.path.startsWith("/publicar/nueva/");
+  if (!NO_LISTING.has(e.name) && !e.listing && !phoneWizard) return { ok: false, status: 400 };
   if (e.flags && e.name !== "search_submit") return { ok: false, status: 400 };
   return { ok: true, row: defined({ name: e.name, search_flags: e.flags, listing_public_id: e.listing, ...where(e.path), build: e.build }) };
 }

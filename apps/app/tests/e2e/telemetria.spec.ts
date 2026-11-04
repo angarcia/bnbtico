@@ -72,12 +72,25 @@ test("el asistente manda «wizard_step» con la casa y la ruta sin el id del bor
     .toEqual([`wizard_step ${draft.publicId} publicar /propietario/publicar/:id/4`]);
 });
 
-// Publicar v2 (§E): cuántos llegan a la verificación tras el paso 1, sin casa.
+// Sin cuenta, los pasos 2–6 (en el teléfono, 2026-11-04) también se cuentan, sin casa.
+test("sin cuenta, el asistente manda «wizard_step» sin casa", async ({ page }) => {
+  await page.goto("/publicar");
+  await page.locator("label.choice", { hasText: "Habitación" }).click();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+  await expect
+    .poll(() => rows(`select name || ' ' || coalesce(listing_public_id, '-') || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'wizard_step'`))
+    .toEqual(["wizard_step - publicar /publicar/nueva/2"]);
+});
+
+// Publicar v2 (§E): cuántos llegan a la verificación, sin casa (desde el 2026-11-04, al llegar a las Fotos).
 test("la verificación de publicar manda «publish_verify», una vez y sin casa", async ({ page }) => {
   await page.goto("/publicar");
   await page.locator("label.choice", { hasText: "Habitación" }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page.getByRole("heading", { name: "Para guardar su casa, verifique su WhatsApp" })).toBeVisible();
+  await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+  await page.goto("/publicar/nueva/7");
+  await expect(page.getByRole("heading", { name: "Para subir las fotos, verifique su WhatsApp" })).toBeVisible();
   await expect
     .poll(() => rows(`select name || ' ' || coalesce(listing_public_id, '-') || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'publish_verify'`))
     .toEqual(["publish_verify - publicar /publicar/verificar"]);

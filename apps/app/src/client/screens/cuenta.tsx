@@ -230,7 +230,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
       {contact ? <ContactCard next={next} /> : null}
       <div className="stack gap-8">
         <h2 className="flow-title">
-          {newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el anfitrión"}` : publish ? "Para guardar su casa, verifique su WhatsApp" : "Entre con su WhatsApp"}
+          {newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el anfitrión"}` : publish ? "Para subir las fotos, verifique su WhatsApp" : "Entre con su WhatsApp"}
         </h2>
         <p className="muted">
           {newPhone ? (
@@ -238,7 +238,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
               Díganos su nombre para crear su cuenta. Le mandamos el código al <b className="ink num">{formatPhone(newPhone)}</b>.
             </>
           ) : publish ? (
-            "Le enviamos un código por WhatsApp. Así nadie más puede publicar en su nombre."
+            "Lo que ya escribió se guarda. Le enviamos un código por WhatsApp: así nadie más puede publicar en su nombre."
           ) : (
             "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Si es su primera vez, le pedimos también su nombre. Sin contraseña ni correo."
           )}

@@ -168,6 +168,27 @@ const publicarPending = {
   ),
 };
 
+/** El mismo esqueleto sin cuenta: «Cerrar» vuelve a Explorar (Mis casas pediría ingresar). */
+const PHOTOS_STEP = 7;
+const publicarLocalPending = {
+  ...publicarPending,
+  pendingComponent: () => (
+    <>
+      <header className="header-flow">
+        <Link to="/explorar" className="btn-link header-close" aria-label="Cerrar y seguir después">
+          <I.x size={20} />
+          <span>Cerrar</span>
+        </Link>
+        <h1>Publicar casa</h1>
+      </header>
+      <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando">
+        <span className="sk thumb" />
+        <span className="sk sk-line" />
+      </section>
+    </>
+  ),
+};
+
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
 const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
@@ -223,6 +244,20 @@ const routeTree = rootRoute.addChildren([
         if (await currentSession()) throw redirect({ to: "/propietario/publicar", replace: true });
       },
       component: lazyRouteComponent(publicarEntrada, "PublicarEntradaScreen"),
+    }),
+    // Sin cuenta, los pasos 2–6 se guardan en el teléfono (Ana, 2026-11-04): el código se pide al llegar a las Fotos.
+    createRoute({
+      getParentRoute: () => flow,
+      path: "/publicar/$id/$paso",
+      validateSearch: pasoSearch,
+      beforeLoad: async ({ params }) => {
+        if (await currentSession()) throw redirect({ to: "/publicar/continuar", replace: true });
+        const step = Number(params.paso);
+        if (params.id !== "nueva" || !Number.isInteger(step) || step <= 1) throw redirect({ to: "/publicar", replace: true });
+        if (step >= PHOTOS_STEP) throw redirect({ to: "/publicar/verificar", replace: true });
+      },
+      ...publicarLocalPending,
+      component: lazyRouteComponent(() => import("./screens/publicar"), "PasoLocalScreen"),
     }),
     createRoute({
       getParentRoute: () => flow,

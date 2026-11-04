@@ -8,7 +8,8 @@ import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
 import { LAST_STEP, STEPS, stepFromParam, stepPosition, wizardStage, type Listing, type Step } from "../../domain/listing";
 import { isPublished } from "../../domain/can";
-import { useEditor } from "../editor-port";
+import { EditorContext, useEditor } from "../editor-port";
+import { localPort } from "../publish/local-port";
 import type { Volver } from "../publish/step-form";
 import { requiredProblems, resumeStep } from "../../domain/publish-rules";
 import { FlowHeader } from "../chrome";
@@ -169,9 +170,11 @@ export function PasoScreen() {
   }, [step, volver]);
 
   // Qué pantalla se abre (revisión UX C4): para ver dónde se abandona. La ruta lleva el paso y el id sale como :id.
-  const publicId = l?.publicId;
+  // Sin cuenta (pasos 2–6 en el teléfono) no hay casa: el evento va sin ella, con la ruta /publicar/nueva/:id/:paso.
+  // Una vez por paso: con la casa, cuando llega su publicId; en el teléfono, al abrirlo (no espera a nada).
+  const publicId = port.local ? "telefono" : l?.publicId;
   useEffect(() => {
-    if (step && publicId) track("wizard_step", publicId);
+    if (step && publicId) track("wizard_step", publicId === "telefono" ? undefined : publicId);
   }, [step, publicId]);
 
   // Fotos: siempre las del servidor al llegar a esa pantalla (la lectura espera a los guardados en curso).
@@ -222,5 +225,15 @@ export function PasoScreen() {
         {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>
     </>
+  );
+}
+
+/** Sin cuenta (Ana, 2026-11-04): los pasos 2–6 con el puerto del teléfono, en /publicar/nueva/$paso. La ruta manda el paso 1 a
+ *  /publicar (la entrada), las Fotos y lo que sigue a /publicar/verificar y, con sesión, todo a /publicar/continuar. */
+export function PasoLocalScreen() {
+  return (
+    <EditorContext.Provider value={localPort}>
+      <PasoScreen />
+    </EditorContext.Provider>
   );
 }

@@ -5,7 +5,7 @@
 // `can` decide qué botones se muestran.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { editorListingQuery, useEditor } from "../editor-port";
+import { LOCAL_USER, editorListingQuery, useEditor } from "../editor-port";
 import { Suspense, lazy, useState, type ReactNode } from "react";
 import { HOLD_COPY } from "../../domain/admin-actions";
 import { can, isPublished } from "../../domain/can";
@@ -322,9 +322,11 @@ const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
 
 /** La casa que se edita: la propia o, en las rutas del admin, la de otro (client/editor-port.ts). */
 export function useOwnListing(id: string) {
-  const userId = useUserId();
-  const client = useQueryClient();
+  const session = useUserId();
   const port = useEditor();
+  // Sin cuenta, el borrador del teléfono (publicar hasta las fotos): su caché va con un «usuario» propio.
+  const userId = port.local ? LOCAL_USER : session;
+  const client = useQueryClient();
   const [options] = useState(() => editorListingQuery(port, userId, id, client));
   return { userId, query: useQuery({ ...options, enabled: !!userId }) };
 }

@@ -1,15 +1,16 @@
-// Publicar sin cuenta (publicar v2, decisiones §E): /publicar responde el paso 1 en el teléfono, /publicar/verificar pide
-// el WhatsApp y /publicar/continuar, ya con sesión, crea la casa con esa respuesta y sigue en «¿Dónde está su casa?».
+// Publicar sin cuenta (publicar v2, decisiones §E; desde el 2026-11-04, hasta las fotos): /publicar responde el paso 1 en el
+// teléfono, los pasos 2–6 siguen ahí (/publicar/nueva/$paso, el asistente con el puerto del teléfono), /publicar/verificar
+// pide el WhatsApp al llegar a las Fotos y /publicar/continuar, ya con sesión, crea la casa con todo y sigue en las Fotos.
 // Trozo propio (publicar-entrada-*), medido en «Entrada de publicar»: no descarga el asistente ni sus campos.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { DomainError } from "../../domain/errors";
-import { emptyDraft, isFreshDraft, type Listing } from "../../domain/listing";
+import { emptyDraft, isFreshDraft, normalize, type Listing, type ListingDraft } from "../../domain/listing";
 import { validateStep } from "../../domain/listing-rules";
 import { resumeStep } from "../../domain/publish-rules";
-import { EMAIL_SKIPPED_KEY, PUBLISH_STEP1_KEY, readStep1, storeStep1, type Step1Kind } from "../../domain/publish-return";
+import { EMAIL_SKIPPED_KEY, PUBLISH_DRAFT_KEY, PUBLISH_STEP1_KEY, readLocalDraft, readPublishDraft, storeLocalDraft, type Step1Kind } from "../../domain/publish-return";
 import { track } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
@@ -22,10 +23,17 @@ import { SignInForm } from "./cuenta";
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
 const ORPHAN_MS = 10 * 60_000;
-const storedStep1 = () => readStep1(localStorage.getItem(PUBLISH_STEP1_KEY), Date.now());
+/** Lo escrito sin cuenta (los pasos 1–6, o solo el tipo de una visita del flujo anterior). */
+const storedDraft = () => readPublishDraft(localStorage.getItem(PUBLISH_DRAFT_KEY), localStorage.getItem(PUBLISH_STEP1_KEY), Date.now());
+/** Las Fotos: el primer paso que pide cuenta. */
+const PHOTOS_STEP = 7;
+const clearStored = () => {
+  localStorage.removeItem(PUBLISH_DRAFT_KEY);
+  localStorage.removeItem(PUBLISH_STEP1_KEY);
+};
 
-/** La cabecera del asistente en el paso 1, sin borrador todavía: «Cerrar» vuelve a Explorar. */
-function EntryHeader() {
+/** La cabecera del asistente sin borrador todavía (el paso 1, o las Fotos al pedir el código): «Cerrar» vuelve a Explorar. */
+function EntryHeader({ step = 1 }: { step?: 1 | 7 }) {
   return (
     <header className="header-flow">
       <Link to="/explorar" className="btn-link header-close" aria-label="Cerrar">
@@ -33,17 +41,18 @@ function EntryHeader() {
         <span>Cerrar</span>
       </Link>
       <h1>Publicar casa</h1>
-      <StageLabel step={1} />
+      <StageLabel step={step} />
     </header>
   );
 }
 
 // ---------- /publicar (sin sesión) ----------
 
-/** El paso 1 sin cuenta: la respuesta se guarda en el teléfono y se pide el WhatsApp. */
+/** El paso 1 sin cuenta: la respuesta se guarda en el teléfono (con lo que ya hubiera de una visita anterior) y se sigue en
+ *  «¿Dónde está su casa?», también en el teléfono. */
 export function PublicarEntradaScreen() {
   const navigate = useNavigate();
-  const [initial] = useState(() => storedStep1()?.kind ?? null);
+  const [initial] = useState(() => storedDraft()?.kind ?? null);
   const [error, setError] = useState<string | null>(null);
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,8 +60,9 @@ export function PublicarEntradaScreen() {
     const kind: Step1Kind | null = value === "completo" || value === "habitacion" ? value : null;
     const invalid = validateStep(1, { ...emptyDraft(), kind });
     if (invalid || !kind) return setError(invalid);
-    localStorage.setItem(PUBLISH_STEP1_KEY, storeStep1(kind, Date.now()));
-    void navigate({ to: "/publicar/verificar" });
+    localStorage.setItem(PUBLISH_DRAFT_KEY, storeLocalDraft(normalize({ ...(storedDraft() ?? emptyDraft()), kind }), Date.now()));
+    localStorage.removeItem(PUBLISH_STEP1_KEY);
+    void navigate({ to: "/publicar/$id/$paso", params: { id: "nueva", paso: "2" } });
   }
   return (
     <>
@@ -78,10 +88,10 @@ export function PublicarEntradaScreen() {
 
 // ---------- /publicar/verificar (sin sesión) ----------
 
-/** «Para guardar su casa, verifique su WhatsApp»: el formulario de Ingresar con la vuelta a /publicar/continuar. */
+/** «Para subir las fotos, verifique su WhatsApp»: el formulario de Ingresar con la vuelta a /publicar/continuar. */
 export function VerificarScreen() {
-  const [stored] = useState(storedStep1);
-  // Cuántos llegan a verificar tras el paso 1; una vez por visita (el modo estricto de React monta dos veces).
+  const [stored] = useState(storedDraft);
+  // Cuántos llegan a verificar tras el paso 6; una vez por visita (el modo estricto de React monta dos veces).
   const sent = useRef(false);
   useEffect(() => {
     if (!stored || sent.current) return;
@@ -91,7 +101,7 @@ export function VerificarScreen() {
   if (!stored) return <Navigate to="/publicar" replace />;
   return (
     <>
-      <EntryHeader />
+      <EntryHeader step={7} />
       <SignInForm next={PUBLISH_NEXT} mode="publish" />
     </>
   );
@@ -100,31 +110,37 @@ export function VerificarScreen() {
 // ---------- /publicar/continuar (con sesión) ----------
 
 /**
- * Tras el código: con la respuesta del paso 1 crea la casa, guarda el tipo y sigue en el paso 2. Si la cuenta ya tiene un
- * borrador pendiente, elige como en la entrada de siempre; si ese borrador está vacío y es de hace unos minutos (se recargó
- * entre crearlo y guardar el tipo), se usa sin preguntar. La respuesta se borra solo cuando la casa ya la tiene guardada.
+ * Tras el código: con lo escrito en el teléfono (pasos 1–6) crea la casa, lo guarda de una vez y sigue en el primer paso que
+ * falte (las Fotos, si se llegó hasta ahí). Si la cuenta ya tiene un borrador pendiente, elige como en la entrada de siempre;
+ * si ese borrador está vacío y es de hace unos minutos (se recargó entre crearlo y guardar), se usa sin preguntar. Lo del
+ * teléfono se borra solo cuando la casa ya lo tiene guardado.
  */
 export function ContinuarScreen() {
   const userId = useSession().session?.userId ?? "";
   const client = useQueryClient();
   const navigate = useNavigate();
-  const [stored] = useState(storedStep1);
+  const [stored] = useState(storedDraft);
+  // Con los pasos 1–6 se llegó a las Fotos y se sigue ahí («Continuar» nunca espera: lo que falte lo dice «Revisar y
+  // enviar»); con solo el tipo (una visita del flujo anterior), en «¿Dónde está su casa?».
+  const [next] = useState(() => (readLocalDraft(localStorage.getItem(PUBLISH_DRAFT_KEY), Date.now()) ? PHOTOS_STEP : 2));
   const resumable = useQuery({ ...resumableQuery(userId), enabled: !!userId && !!stored });
   // La casa creada en esta visita: un reintento tras fallar el guardado no crea otra.
   const created = useRef<string | null>(null);
   const create = useMutation({
-    mutationFn: async (kind: Step1Kind) => {
+    mutationFn: async (draft: ListingDraft) => {
       const owner = await api();
       created.current ??= (await owner.createDraft()).id;
-      return owner.saveStep(created.current, 1, { kind });
+      // Todos los datos en una sola escritura (`planStep` no limita los campos al paso); las fotos no van.
+      const { photoCount: _none, ...patch } = draft;
+      return owner.saveStep(created.current, 1, patch);
     },
     onSuccess: async (saved: Listing) => {
       client.setQueryData(["own-listing", userId, saved.id], saved);
       addOwnCached(client, userId, saved); // la barra crece al instante, antes de releer la lista
       void client.invalidateQueries({ queryKey: ["own-listings", userId] });
       void client.invalidateQueries({ queryKey: ["own-resumable", userId] });
-      localStorage.removeItem(PUBLISH_STEP1_KEY);
-      await navigate({ to: "/propietario/publicar/$id/$paso", params: { id: saved.id, paso: "2" }, replace: true });
+      clearStored();
+      await navigate({ to: "/propietario/publicar/$id/$paso", params: { id: saved.id, paso: String(next) }, replace: true });
     },
   });
   const draft = resumable.data;
@@ -139,13 +155,13 @@ export function ContinuarScreen() {
     if (!stored || !fresh || (draft !== null && !orphan) || autoStarted.current) return;
     autoStarted.current = true;
     if (orphan) created.current = orphan.id;
-    create.mutate(stored.kind);
+    create.mutate(stored);
   }, [stored, fresh, draft, orphan, create]);
 
   if (!stored) return <Navigate to="/propietario/publicar" replace />;
   const start = () => {
     if (create.isPending) return;
-    create.mutate(stored.kind);
+    create.mutate(stored);
   };
   const choosing = !!draft && !orphan && !create.isPending && !create.isSuccess;
   const readFailed = resumable.isError && draft === undefined;
@@ -173,13 +189,13 @@ export function ContinuarScreen() {
             to="/propietario/publicar/$id/$paso"
             params={{ id: draft.id, paso: String(resumeStep(draft)) }}
             className="btn btn-primary btn-lg btn-block"
-            onClick={() => localStorage.removeItem(PUBLISH_STEP1_KEY)}
+            onClick={clearStored}
           >
             Seguir con el borrador
           </Link>
           {create.isError ? null : (
             <button type="button" className="btn btn-block btn-ghost" onClick={start}>
-              Empezar otra
+              {stored.title.trim() ? `Seguir con «${stored.title.trim()}»` : "Empezar otra"}
             </button>
           )}
         </section>

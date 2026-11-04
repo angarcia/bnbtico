@@ -15,16 +15,18 @@ export type EditorPhotos = Pick<PhotosApi, "add" | "remove" | "reorder" | "addEd
 export interface EditorPort {
   /** Ana (el admin): lo que guarda se publica al momento, sin revisión, y no hay «Descartar» de lo pendiente del anfitrión. */
   admin: boolean;
+  /** Sin cuenta (publicar hasta las fotos, 2026-11-04): guarda en el teléfono (publish/local-port.ts). */
+  local?: boolean;
   listings(): Promise<EditorListings>;
   /** El adaptador si ya está cargado: el asistente guarda en el mismo tick de «Continuar». */
   loaded(): EditorListings | null;
   photos(): Promise<EditorPhotos>;
   calendar(): Promise<OwnerCalendarApi>;
   /** Rutas de cada zona, con los mismos parámetros y la misma búsqueda. */
-  step: "/propietario/publicar/$id/$paso" | "/admin/casas/$id/publicar/$paso";
+  step: "/propietario/publicar/$id/$paso" | "/admin/casas/$id/publicar/$paso" | "/publicar/$id/$paso";
   field: "/propietario/casas/$id/editar/$campo" | "/admin/casas/$id/editar/$campo";
   ficha: "/propietario/casas/$id" | "/admin/casas/$id";
-  close: "/propietario/casas" | "/admin/borradores";
+  close: "/propietario/casas" | "/admin/borradores" | "/explorar";
 }
 
 export const ownerPort: EditorPort = {
@@ -39,13 +41,23 @@ export const ownerPort: EditorPort = {
   close: "/propietario/casas",
 };
 
+/** El «usuario» de la caché del borrador del teléfono (claves `own-listing`): sin cuenta no hay userId. */
+export const LOCAL_USER = "telefono";
+
 export const EditorContext = createContext<EditorPort>(ownerPort);
 export const useEditor = (): EditorPort => useContext(EditorContext);
 
 /** La casa que se edita, con la clave de siempre (`own-listing`, la que tocan las escrituras optimistas y las relecturas).
  *  La del admin se lee con su adaptador, que no filtra por dueño. */
 export const editorListingQuery = (port: EditorPort, userId: string, id: string, client: QueryClient) =>
-  port.admin
+  port.local
+    ? queryOptions({
+        // El del teléfono: lo que guarda el puerto local, sin red.
+        queryKey: ["own-listing", userId, id] as const,
+        queryFn: async () => (await port.listings()).getOwn(id),
+        staleTime: Infinity,
+      })
+    : port.admin
     ? queryOptions({
         queryKey: ["own-listing", userId, id] as const,
         queryFn: async () => {
