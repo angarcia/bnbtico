@@ -81,6 +81,19 @@ test("teléfono en horizontal: el aviso tapa la app, no deja tocar y al volver a
   expect(problems, problems.join("\n")).toEqual([]);
 });
 
+// Chrome de iPhone encoge la página al abrir el teclado: en vertical queda más ancha que alta (390 × 300) y el aviso no
+// puede salir, o esconde el campo, le quita el foco y el teclado se cierra (Daniel, 2026-11-04).
+test("en vertical con el teclado abierto (página más ancha que alta) no sale el aviso y el campo sigue con el foco", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/cuenta");
+  const phone = page.locator("#account-phone");
+  await phone.focus();
+  await page.setViewportSize({ width: 390, height: 300 });
+  await expect(page.getByRole("alert").filter({ hasText: ROTATE })).toBeHidden();
+  await expect(phone).toBeVisible();
+  await expect(phone).toBeFocused();
+});
+
 test("la ficha que pinta el worker también lleva el aviso en horizontal", async ({ page }) => {
   await page.setViewportSize({ width: 667, height: 375 });
   await page.goto("/casa/CT-999999");

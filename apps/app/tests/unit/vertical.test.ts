@@ -31,7 +31,7 @@ describe("solo en vertical", () => {
 
   it("el CSS lo muestra solo en un teléfono en horizontal y entonces esconde la app", () => {
     expect(css).toMatch(/\.rotate-notice\{display:none/);
-    const media = "@media (orientation:landscape) and (max-height:500px) and (pointer:coarse)";
+    const media = "@media (orientation:landscape) and (max-height:500px) and (min-width:560px) and (pointer:coarse)";
     const block = css.slice(css.indexOf(media));
     expect(css.includes(media)).toBe(true);
     expect(block).toMatch(/\.rotate-notice\{display:flex/);
