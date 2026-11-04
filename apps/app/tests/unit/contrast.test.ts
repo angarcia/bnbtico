@@ -180,3 +180,13 @@ describe("contraste del tema oscuro", () => {
     expect((l1 + 0.05) / (l2 + 0.05)).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+// Botón de WhatsApp de la tarjeta de Explorar (ticket 09, Daniel 2026-11-04): círculo claro con el icono verde. Es un icono,
+// no texto: ≥ 3:1 sobre su fondo (--surface) en los dos temas. El verde de marca (--wa, #25D366) da 1,98:1 sobre blanco.
+describe("icono de WhatsApp de la tarjeta", () => {
+  it("--wa-icon sobre --surface ≥ 3:1, en claro y en oscuro", () => {
+    const dark = { ...vars, ...darkVars(css) };
+    expect(ratio(hex("--wa-icon"), hex("--surface"))).toBeGreaterThanOrEqual(3);
+    expect(ratio(hex("--wa-icon", dark), hex("--surface", dark))).toBeGreaterThanOrEqual(3);
+  });
+});
