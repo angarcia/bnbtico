@@ -57,7 +57,7 @@ export function TabsFrame({ children }: { children: ReactNode }) {
       <UnderTopBar.Provider value={topBar || bare}>
         <main className={topBar ? "view has-topbar" : bare ? "view is-bare" : "view"}>{children}</main>
       </UnderTopBar.Provider>
-      <nav className={`tabbar chrome-hide${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
+      <nav className={`tabbar float-card chrome-hide${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon, exact, badge }) => {
           const Icon = I[icon];
           const n = badge === "review" ? pending : badge === "inquiries" ? fresh : 0;
@@ -71,7 +71,7 @@ export function TabsFrame({ children }: { children: ReactNode }) {
               activeProps={{ "aria-current": "page" }}
               aria-label={badge === "inquiries" && n > 0 ? `${label}, ${n} ${n === 1 ? "nueva" : "nuevas"}` : undefined}
             >
-              <Icon size={26} />
+              <Icon size={24} />
               <span>{label}</span>
               {n > 0 ? (
                 <b className="nav-count num" data-testid={badge === "inquiries" ? "inquiries-badge" : undefined}>

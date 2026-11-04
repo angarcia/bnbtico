@@ -411,21 +411,40 @@ test("la barra superior: solo en Favoritos, 56 px más el área segura, con el l
   await checkBar();
 });
 
-test("densidad: márgenes de 16 px e iconos de 26 px en la barra", async ({ page }) => {
+// Tarjetas flotantes, tanda 1 (Daniel, 2026-11-04): la barra de abajo es una píldora flotante con iconos de 24 px y etiquetas,
+// a 12 px de los bordes, translúcida con desenfoque; la pestaña elegida, con su pastilla terracota suave.
+test("densidad: márgenes de 16 px y la barra de abajo, una píldora flotante con iconos de 24 px y etiquetas", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
   await page.goto("/explorar");
   await expect(nav(page).getByRole("link")).toHaveCount(5);
   const padding = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).paddingLeft);
   expect(await padding("main.view")).toBe("16px");
-  expect(await padding(".explore-top")).toBe("16px");
-  for (const svg of await page.locator(".tabbar .nav svg").all()) await expect(svg).toHaveAttribute("width", "26");
-  await page.goto("/favoritos");
-  expect(await padding(".topbar")).toBe("16px");
-  await page.goto("/explorar");
+  for (const svg of await page.locator(".tabbar .nav svg").all()) await expect(svg).toHaveAttribute("width", "24");
+  const vp = page.viewportSize()!;
+  const bar = (await nav(page).boundingBox())!;
+  expect(bar.x).toBe(12);
+  expect(bar.width).toBe(vp.width - 24);
+  expect(bar.height).toBe(68);
+  expect(vp.height - (bar.y + bar.height)).toBe(12);
+  const look = await nav(page).evaluate((el) => {
+    const c = getComputedStyle(el);
+    return { radius: c.borderTopLeftRadius, blur: c.backdropFilter, border: c.borderTopWidth, shadow: c.boxShadow, transform: c.transform };
+  });
+  expect(look).toMatchObject({ radius: "16px", blur: "blur(16px) saturate(1.2)", border: "1px", transform: "none" });
+  expect(look.shadow).not.toBe("none");
+  // Cada pestaña con su etiqueta a la vista, dentro de la píldora.
+  for (const link of await nav(page).getByRole("link").all()) {
+    const [l, label] = [(await link.boundingBox())!, (await link.locator("span").boundingBox())!];
+    expect(label.x).toBeGreaterThanOrEqual(l.x - 0.5);
+    expect(label.x + label.width).toBeLessThanOrEqual(l.x + l.width + 0.5);
+  }
   const active = page.locator('.tabbar .nav[aria-current="page"]');
   await expect(active).toHaveCount(1);
-  expect(await active.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(180, 76, 48)");
+  const on = await active.evaluate((el) => ({ color: getComputedStyle(el).color, pill: getComputedStyle(el, "::before").backgroundColor, icon: getComputedStyle(el.querySelector("svg")!).color }));
+  expect(on.icon).toBe("rgb(214, 92, 60)");
+  expect(on.pill).not.toBe("rgba(0, 0, 0, 0)");
+  expect(on.color).not.toBe(await page.locator('.tabbar .nav:not([aria-current="page"])').first().evaluate((el) => getComputedStyle(el).color));
   // Un chip de Filtros encendido: el ✓ se ve pero no entra en el nombre accesible (texto alternativo vacío).
   await page.goto("/explorar/filtros");
   const pool = page.getByRole("button", { name: "Piscina", exact: true });
@@ -437,6 +456,23 @@ test("densidad: márgenes de 16 px e iconos de 26 px en la barra", async ({ page
 
 test.describe("en un teléfono de 375 px", () => {
   test.use({ viewport: { width: 375, height: 667 } });
+
+  test("las cinco pestañas de la píldora caben con su etiqueta entera", async ({ page }) => {
+    await h.reset();
+    await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
+    await page.goto("/explorar");
+    await expect(nav(page).getByRole("link")).toHaveCount(5);
+    const boxes = await nav(page).getByRole("link").evaluateAll((els) => els.map((el) => {
+      const [a, s] = [el.getBoundingClientRect(), el.querySelector("span")!];
+      return { left: a.left, right: a.right, label: s.getBoundingClientRect().toJSON() as DOMRect, cut: s.scrollWidth > s.clientWidth + 0.5 };
+    }));
+    for (const [i, b] of boxes.entries()) {
+      expect(b.cut).toBe(false);
+      expect(b.label.left).toBeGreaterThanOrEqual(b.left - 0.5);
+      expect(b.label.right).toBeLessThanOrEqual(b.right + 0.5);
+      if (i) expect(b.label.left).toBeGreaterThanOrEqual(boxes[i - 1]!.label.right);
+    }
+  });
 
   test("Explorar: la búsqueda a todo el ancho y la barra de Favoritos caben, con y sin sesión, sin scroll horizontal", async ({ page }) => {
     const banner = page.getByRole("banner");
