@@ -193,11 +193,11 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   const reopen = addDays(today(), 9);
   from = lastResponseId();
   await owner.goto(`/propietario/calendario?casa=${draft.id}&mes=${next()}`);
-  await owner.getByRole("button", { name: /Cerrar la casa hasta…/ }).click();
-  const sheet = owner.getByRole("dialog", { name: "Cerrar la casa" });
-  await sheet.getByLabel("Abrir de nuevo el (opcional)").fill(reopen);
-  await sheet.getByRole("button", { name: "Cerrar la casa" }).click();
-  await expect(owner.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
+  await owner.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ }).click();
+  const sheet = owner.getByRole("dialog", { name: "Pausar la casa" });
+  await sheet.getByLabel("Volver a publicarla el (opcional)").fill(reopen);
+  await sheet.getByRole("button", { name: "Pausar la casa" }).click();
+  await expect(owner.getByText(`Pausada hasta el ${shortDate(reopen)}`)).toBeVisible();
   await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario cerrado");
   await expect.poll(() => statusesAfter(from)).toContain("200");
   const closed = await client(draft.publicId);
@@ -211,8 +211,8 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
 
   // El calendario de la propietaria lo dice y no se edita, pero conserva sus días.
   await owner.goto(`/propietario/calendario?casa=${draft.id}&mes=${next()}`);
-  await expect(owner.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
-  await expect(owner.getByRole("button", { name: "Abrir la casa" })).toBeVisible();
+  await expect(owner.getByText(`Pausada hasta el ${shortDate(reopen)}`)).toBeVisible();
+  await expect(owner.getByRole("button", { name: "Volver a publicarla" })).toBeVisible();
 
   // 7. La reapertura de las 00:00 de Costa Rica (el job de pg_cron llama a esta función con la fecha de ese día).
   expect(Number(sql(`select public.reopen_due_listings('${reopen}')`))).toBeGreaterThanOrEqual(1);
@@ -228,8 +228,8 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   expect((await h.calendar("owner").days(draft.id)).map((d) => JSON.stringify(d))).toEqual([dayJson(on(10), false), dayJson(on(12), false), dayJson(on(20), true, 180000)]);
 
   await owner.reload();
-  await expect(owner.getByRole("button", { name: "Abrir la casa" })).toHaveCount(0);
-  await expect(owner.getByRole("button", { name: /Cerrar la casa hasta…/ })).toBeVisible();
+  await expect(owner.getByRole("button", { name: "Volver a publicarla" })).toHaveCount(0);
+  await expect(owner.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toBeVisible();
   await expect(day(on(12))).toHaveAccessibleName(/, ocupado/);
   await owner.context().close();
 });

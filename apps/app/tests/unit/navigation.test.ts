@@ -102,8 +102,15 @@ describe("cardLabel", () => {
   // Revisión por dato (A5): sin «Edición sin enviar»; lo pendiente está en revisión o con cambios pedidos.
   it("cambios en revisión", () => expect(cardLabel(l("active"), { status: "review" })).toEqual({ text: "Cambios en revisión", cls: "state-review" }));
   it("cambios pedidos en una casa publicada", () => expect(cardLabel(l("active"), { status: "changes" })).toEqual({ text: "Cambios pedidos", cls: "state-review" }));
-  it("cerrada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Cerrada hasta el 3 dic", cls: "state-off" }));
-  it("cerrada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Cerrada", cls: "state-off" }));
+  // «Pausar la casa» del Calendario (ticket 04 de la ronda del 2 nov; antes «Cerrada hasta el …»).
+  it("pausada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Pausada hasta el 3 dic", cls: "state-off" }));
+  it("pausada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Pausada", cls: "state-off" }));
+  it("pausada por el anfitrión no se confunde con «Pausada por bnbtico» (texto y color)", () => {
+    const mine = cardLabel(l("active", false, null));
+    const admin = cardLabel({ ...l("active"), adminHold: { kind: "paused", reason: "" } });
+    expect(admin.text).toBe("Pausada por bnbtico");
+    expect(admin.cls).not.toBe(mine.cls);
+  });
   it("activa", () => expect(cardLabel(l("active"))).toEqual({ text: "Activa", cls: "state-ok" }));
   it("en revisión", () => expect(cardLabel(l("review"))).toEqual({ text: "En revisión", cls: "state-review" }));
   it("borrador", () => expect(cardLabel(l("draft"))).toEqual({ text: "Borrador", cls: "state-draft" }));

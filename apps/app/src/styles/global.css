@@ -795,6 +795,9 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 /* El total orientativo de las fechas, sobre la vista previa del mensaje (o el aviso de noches ocupadas). */
 .sheet .stay-line{margin:0;font-size:16px;font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
 .sheet .stay-line.is-busy{color:var(--busy-ink)}
+.sheet .stay-line.is-pending{color:var(--muted)}
+/* «Marcar una reserva»: la fila de los días del color de la hoja; la sombra tapa el medio píxel de arriba, donde asomaban los números del mes anterior. */
+.sheet .mark-calendar .range-weekdays{background:var(--bg);box-shadow:0 -2px 0 var(--bg)}
 .sheet .message-preview + .hint{margin-top:0}
 .sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:16px;white-space:pre-line}
 .sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -971,10 +974,18 @@ small.swap-in{display:block}
 .cal-month-block{display:flex;flex-direction:column;scroll-margin-top:calc(26px + env(safe-area-inset-top))}
 .cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px 0}
 .cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
-.close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
-.close-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
-.close-row .body{flex:1;display:flex;flex-direction:column}
-.close-row.is-closed{justify-content:space-between}
+/* «Marcar una reserva» y «Pausar la casa» (ticket 04 de la ronda del 2 nov): una tarjeta con una fila por acción, separadas
+   por una línea fina. Pausada, la fila dice hasta cuándo y lleva «Volver a publicarla». */
+.cal-actions{display:flex;flex-direction:column;padding:0}
+.cal-actions > * + *{border-top:1px solid var(--line-soft)}
+.cal-actions > .note,.cal-actions > .cal-action-error{margin:0 14px 10px;border-top:0}
+.cal-action{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;text-align:left;width:100%;background:none;border-radius:0}
+.cal-action-icon{flex-shrink:0;width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.cal-action .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cal-action > svg{flex-shrink:0;color:var(--muted)}
+/* Pausada: «Pausada hasta el …» con su línea y, debajo, «Volver a publicarla» a lo ancho. */
+.cal-action.is-paused{flex-wrap:wrap;row-gap:10px;padding-bottom:14px}
+.cal-action.is-paused .btn{flex-basis:100%;min-height:44px}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
 /* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */

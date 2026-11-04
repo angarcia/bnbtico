@@ -258,11 +258,11 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   await expect(page.getByRole("button", { name: /Editar la ficha/ })).toHaveCount(0);
 });
 
-test("cerrar la casa responde al instante desde el Calendario y vuelve atrás si la base se niega", async ({ page }) => {
+test("«Pausar la casa» responde al instante desde el Calendario y vuelve atrás si la base se niega", async ({ page }) => {
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /Cerrar la casa hasta…/ });
-  const closed = page.locator(".close-row.is-closed");
-  const open = page.getByRole("button", { name: "Abrir la casa" });
+  const row = page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
+  const closed = page.locator(".cal-action.is-paused");
+  const open = page.getByRole("button", { name: "Volver a publicarla" });
   await expect(row).toBeVisible();
 
   // La respuesta tarda: la fila ya cambió antes de que llegue.
@@ -272,16 +272,20 @@ test("cerrar la casa responde al instante desde el Calendario y vuelve atrás si
     await held;
     await route.continue();
   });
-  // Cerrar pide la fecha opcional en una hoja (ticket 04 de la fase 4); sin fecha, cerrada hasta que la abra.
+  // Pausar pide la fecha de vuelta opcional en una hoja (ticket 04 de la fase 4); sin fecha, pausada hasta que la vuelva a publicar.
   await row.click();
-  await page.getByRole("dialog", { name: "Cerrar la casa" }).getByRole("button", { name: "Cerrar la casa" }).click();
-  await expect(closed).toContainText("Cerrada: no aparece en Explorar ni recibe consultas");
+  await page.getByRole("dialog", { name: "Pausar la casa" }).getByRole("button", { name: "Pausar la casa" }).click();
+  await expect(closed).toContainText(/^Pausada\s*No aparece en Explorar ni recibe consultas/);
   release();
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(false);
   await page.unroute("**/rest/v1/rpc/set_listing_available");
-  // La misma etiqueta que la tarjeta en el detalle.
+  // La misma etiqueta en el detalle y en Mis casas: «Pausada», con el color de «Inactiva», no «Pausada por bnbtico» (ticket 04 de la ronda del 2 nov).
   await page.goto(`/propietario/casas/${active.id}`);
-  await expect(page.locator(".detail-photo .state")).toHaveText("Cerrada");
+  await expect(page.locator(".detail-photo .state")).toHaveText("Pausada");
+  await page.goto("/propietario/casas");
+  const label = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Casa Cocles" }) }).getByTestId("card-label");
+  await expect(label).toHaveText("Pausada");
+  await expect(label).toHaveClass(/state-off/);
   await page.goto(`/propietario/calendario?casa=${active.id}`);
 
   await page.route("**/rest/v1/rpc/set_listing_available", (route) =>

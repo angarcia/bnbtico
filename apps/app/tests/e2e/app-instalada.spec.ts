@@ -79,13 +79,13 @@ test("la ficha pública va a la red primero y, sin red, sale la copia guardada",
 test("una escritura sin red muestra «Sin conexión», vuelve atrás y no se encola", async ({ page, context }) => {
   await injectSession(page, "owner");
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /Cerrar la casa hasta…/ });
+  const row = page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
   await expect(row).toBeVisible();
   await controlled(page);
 
   await goOffline(context, page);
   await row.click();
-  await page.getByRole("dialog", { name: "Cerrar la casa" }).getByRole("button", { name: "Cerrar la casa" }).click();
+  await page.getByRole("dialog", { name: "Pausar la casa" }).getByRole("button", { name: "Pausar la casa" }).click();
   await expect(page.locator('.note[role="alert"]')).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
   await expect(row).toBeVisible();
 

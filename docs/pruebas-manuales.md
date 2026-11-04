@@ -103,7 +103,7 @@ Sembradas el 2026-10-30 en `bnbtico-pruebas` por los mismos caminos que la app (
 | CT-1051 (e) | Habitación privada en Cahuita | Marco | Activa | Cahuita (Limón) | 4 | Habitación con baño privado y «Niños pequeños gratis» (C22–C30) |
 | CT-1052 (f) | Villa Punta Uva en la selva | Yorleny | Activa | Punta Uva (Limón) | 8 | 10 personas, ₡180 000, descripción larga de 14 líneas («Ver más», C46–C55); parqueo de pago; noches ocupadas el mes próximo y precios especiales con ★ (C31–C42, A94–A107); consulta de grupo; favorito |
 | CT-1053 (g) | Apartamento Limón centro | Marco | Activa | «Barrio Roosevelt» escrita a mano, Otra… (Limón) | 3 | Zona propuesta con la marca del admin (D20–D27); parqueo gratis; búsqueda por Limón (C31–C42) |
-| CT-1054 (h) | Casa Playa Negra tranquila | Yorleny | Activa, cerrada hasta 2026-11-20 | Playa Negra (Limón) | 4 | «Cerrar la casa hasta…» (A94–A107): no sale en Explorar pero su ficha abre; debe verse como cerrada a consultas (C56–C63, C86–C92); favorito |
+| CT-1054 (h) | Casa Playa Negra tranquila | Yorleny | Activa, pausada hasta 2026-11-20 | Playa Negra (Limón) | 4 | «Pausar la casa» (A94–A107): no sale en Explorar pero su ficha abre; debe verse como cerrada a consultas (C56–C63, C86–C92); favorito |
 | CT-1055 (i) | Casa Santa Teresa cerca del mar | Marco | Activa | Santa Teresa, Otra… (Puntarenas) | 5 | Otra provincia: Explorar solo ofrece Puntarenas si hay casa aprobada allí (C22–C30, C31–C42) |
 | CT-1056 (j) | Casa Jaguar Puerto Viejo | Yorleny | Activa con oferta de lanzamiento (12 meses) | Puerto Viejo (Limón) | 5 | Para el reloj de pruebas (A124–A139, X6): cambiar sus días de oferta; no tocarla en otras pruebas |
 | CT-1057 (k) | Cabina Hone Creek | Yorleny | Borrador incompleto | Hone Creek (Limón) | 0 | Sin fotos ni precio: «Falta: fotos y precio», «Seguir publicando» (A57–A65, A42–A49) |
@@ -127,7 +127,7 @@ Para volver a sembrar (p. ej. después de gastar CT-1056 o de decidir CT-1058/CT
 
 ## 2. Cliente (visitante y cliente con cuenta)
 
-Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?pronto=1`). Hace falta, creadas antes en la parte Anfitrión o por un admin: **al menos 5 casas activas en Limón** en dos o más zonas; entre ellas una con «Acepta alquiler mensual» y precio al mes, otra con mensual a negociar, una con piscina y frente al mar, una con descripción larga (más de 8 líneas), una con días ocupados y un precio distinto en el calendario y una con varias fotos. Además, **una casa con la suscripción parada por el propietario** (enlace que ya no funciona), **una en revisión** y **una cerrada con «Cerrar la casa hasta…»**; apunte sus `CT-####`. Cuentas (código `123456`, +506): `8888 1234` (cliente que ya existe), `8888 9999` (libre: registro nuevo) y `8777 0001` (propietaria Yorleny Prueba, dueña de las casas). Empiece los recorridos «sin cuenta» con la sesión cerrada o en una pestaña privada.
+Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?pronto=1`). Hace falta, creadas antes en la parte Anfitrión o por un admin: **al menos 5 casas activas en Limón** en dos o más zonas; entre ellas una con «Acepta alquiler mensual» y precio al mes, otra con mensual a negociar, una con piscina y frente al mar, una con descripción larga (más de 8 líneas), una con días ocupados y un precio distinto en el calendario y una con varias fotos. Además, **una casa con la suscripción parada por el propietario** (enlace que ya no funciona), **una en revisión** y **una pausada con «Pausar la casa»**; apunte sus `CT-####`. Cuentas (código `123456`, +506): `8888 1234` (cliente que ya existe), `8888 9999` (libre: registro nuevo) y `8777 0001` (propietaria Yorleny Prueba, dueña de las casas). Empiece los recorridos «sin cuenta» con la sesión cerrada o en una pestaña privada.
 
 ### 2.1 Portada
 
@@ -231,7 +231,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C64** Abra el enlace de la casa con la suscripción parada → «Este enlace ya no está activo», «El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.», «Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.» y el botón «Ver otras casas en el Caribe», que lleva a Explorar.
 - [ ] **C65** Abra el enlace de la casa en revisión → «Este enlace ya no está activo» con «Este anuncio no está disponible en este momento.» (si en cambio está en «Pendiente de pago»: «Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.»).
 - [ ] **C66** Abra `/casa/CT-9999` → «Este enlace no existe», «Revise que el enlace esté completo. Si se lo pasaron por WhatsApp, pida que se lo envíen de nuevo.» y «Ver otras casas en el Caribe».
-- [ ] **C67** Abra la ficha de la casa cerrada con «Cerrar la casa hasta…» → insignia «No disponible por ahora», botón gris «No disponible por ahora» que no se puede tocar, «Calendario cerrado» y «Vuelve a estar disponible el <fecha>»; esa casa no sale en Explorar.
+- [ ] **C67** Abra la ficha de la casa pausada con «Pausar la casa» → insignia «No disponible por ahora», botón gris «No disponible por ahora» que no se puede tocar, «Calendario cerrado» y «Vuelve a estar disponible el <fecha>»; esa casa no sale en Explorar.
 - [ ] **C68** Con la cuenta propietaria `8777 0001`, abra la ficha de una de sus casas, toque «Contactar por WhatsApp» y «Abrir WhatsApp» → aparece «Esta es su propia casa.» y no se abre WhatsApp.
 
 ### 2.12 Favoritos
@@ -403,7 +403,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 - [ ] **A72** Casa «En revisión» → sin botones; su detalle dice «La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.».
 - [ ] **A73** Casa con la oferta vencida sin método (ver 3.17) → etiqueta «Pendiente de pago», botón ocre «Añadir método de pago» y sin «Compartir ficha» ni «Calendario».
 - [ ] **A74** Casa con la suscripción parada → etiqueta «Inactiva» y botón ocre «Activar suscripción».
-- [ ] **A75** Casa cerrada desde el Calendario → etiqueta «Cerrada hasta el <fecha>» (o «Cerrada» sin fecha) y sigue con «Compartir ficha» y «Calendario».
+- [ ] **A75** Casa pausada desde el Calendario («Pausar la casa») → etiqueta «Pausada hasta el <fecha>» (o «Pausada» sin fecha) en el beige de «Inactiva», distinta de «Pausada por bnbtico» (la del admin, con el color de «En revisión»), y sigue con «Compartir ficha» y «Calendario».
 - [ ] **A76** Arriba de la lista sale como mucho un solo aviso ocre (el de pago, primero la «Pendiente de pago») con el nombre de la casa; los borradores y los cambios pedidos no lo usan.
 
 ### 3.12 Detalle de una casa y compartir la ficha
@@ -435,7 +435,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 
 ### 3.14 Calendario
 
-- [ ] **A94** Abra la pestaña «Calendario» → arriba del todo el nombre de la casa, «Cerrar la casa hasta…» con «Sale de Explorar y no recibe consultas», «Toque los días para editarlos», selector «₡ | $», leyenda «Disponible» y «Ocupado», fila «L K M J V S D», el mes actual entero con los días pasados tachados y los meses siguientes en vertical hasta octubre del año que viene, sin flechas; cada día muestra su número y el precio completo sin «₡» ni redondeo (p. ej. «99 000»).
+- [ ] **A94** Abra la pestaña «Calendario» → arriba del todo el nombre de la casa y una tarjeta con dos filas: «Marcar una reserva» («Marque de una vez las noches de una reserva larga como ocupadas.») y, en una casa activa, «Pausar la casa» («No sale en Explorar ni recibe consultas. Puede elegir cuándo vuelve.»); debajo, «Toque los días para editarlos», selector «₡ | $», leyenda «Disponible» y «Ocupado», fila «L K M J V S D», el mes actual entero con los días pasados tachados y los meses siguientes en vertical hasta octubre del año que viene, sin flechas; cada día muestra su número y el precio completo sin «₡» ni redondeo (p. ej. «99 000»).
 - [ ] **A95** Con dos o más casas, toque el nombre de la casa → lista «Elegir casa» con las activas, las de primera revisión y las que tienen cambios; no salen los borradores ni las rechazadas; cambiar de casa no mezcla los días.
 - [ ] **A96** Toque tres noches del mes siguiente (10, 11 y 12) → marco terracota en cada una, panel pegado abajo con «3 noches · 10–12 nov», botones «Disponible» (marcado) y «Ocupado», campo «Precio por noche», «Cancelar» y «Guardar cambios» en gris; la barra de pestañas se esconde.
 - [ ] **A97** Toque «Ocupado» y «Guardar cambios» → las tres noches quedan en terracota con rayas y solo el número, al instante; recargue y siguen así.
@@ -443,11 +443,15 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 - [ ] **A99** Escriba `0` o letras en «Precio por noche» y guarde → «Escriba un precio por noche en colones, mayor que cero y sin decimales.».
 - [ ] **A100** Toque «$» en «₡ | $» → los precios de las casillas pasan a dólares; toque «₡» → vuelven a colones, y la elección se mantiene al recargar.
 - [ ] **A101** Active el modo avión, marque una noche como ocupada y guarde → el cambio vuelve atrás y avisa «Sin conexión. Revise su internet e intente de nuevo.».
-- [ ] **A102** Toque «Cerrar la casa hasta…» → hoja «Cerrar la casa» con «Abrir de nuevo el (opcional)», «No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan.», «Cerrar la casa» y «Cancelar».
+- [ ] **A101a** Toque «Marcar una reserva» → hoja «Marcar una reserva» con «Elija la llegada y la salida. La noche de la salida queda libre.», el calendario de «¿Cuándo?» (llegada y salida, como en la búsqueda), «Elija la llegada» en gris, «Marcar como ocupado» desactivado y «Cancelar». Elija el 7 → «Ahora elija la salida».
+- [ ] **A101b** Elija el 11 como salida → el 7 y el 11 en terracota con la banda entre los dos y el resumen «4 noches · 7–10 <mes>». Toque «Marcar como ocupado» → la hoja se cierra, aviso «4 noches marcadas como ocupadas · 7–10 <mes>» y las noches 7, 8, 9 y 10 quedan rayadas al instante; el 11 sigue libre. Recargue y siguen así; la ficha pública las marca ocupadas.
+- [ ] **A101c** Marque una reserva que pise una noche ya ocupada o con precio especial (★) → esa noche queda ocupada y conserva su precio (al liberarla vuelve a mostrarlo).
+- [ ] **A101d** Abra la hoja y ciérrela con «Cancelar», tocando el fondo o con Escape (teclado) → no cambia nada; al volver a abrirla empieza sin fechas. Con un día tocado (panel abajo), marcar una reserva cierra el panel.
+- [ ] **A102** Toque «Pausar la casa» → hoja «Pausar la casa» con «Volver a publicarla el (opcional)», «No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar.», «Pausar la casa» y «Cancelar».
 - [ ] **A103** Elija una fecha de reapertura de ayer o de dentro de más de un año → «La fecha de reapertura debe ser a partir de mañana y dentro de un año.».
-- [ ] **A104** Elija una fecha de reapertura de dentro de una semana y toque «Cerrar la casa» → la fila pasa a «Cerrada hasta el <fecha>» con «Abrir la casa», los días se ven atenuados y la casa no sale en Explorar ni recibe consultas (compruébelo sin sesión en otra pestaña).
-- [ ] **A105** Con la casa cerrada toque una noche → no se selecciona (solo lectura).
-- [ ] **A106** Toque «Abrir la casa» → vuelve «Cerrar la casa hasta…» al instante y la casa sale otra vez en Explorar.
+- [ ] **A104** Elija una fecha de vuelta de dentro de una semana y toque «Pausar la casa» → la tarjeta pasa a «Pausada hasta el <fecha>» («No aparece en Explorar ni recibe consultas.») con «Volver a publicarla» a lo ancho, sin «Marcar una reserva»; los días se ven atenuados y la casa no sale en Explorar ni recibe consultas (compruébelo sin sesión en otra pestaña).
+- [ ] **A105** Con la casa pausada toque una noche → no se selecciona (solo lectura).
+- [ ] **A106** Toque «Volver a publicarla» → vuelven «Marcar una reserva» y «Pausar la casa» al instante y la casa sale otra vez en Explorar.
 - [ ] **A107** Con solo un borrador y ninguna casa enviada, abra Calendario → «Su calendario se activa cuando envíe su casa a revisión.» con «Seguir publicando».
 
 ### 3.15 Consultas
@@ -623,7 +627,7 @@ Ana edita cualquier dato de cualquier casa salvo las eliminadas, al momento y si
 - [ ] **D78d** Propietaria: el detalle de la casa muestra lo que cambió Ana, sin nada «En revisión» por esos datos.
 - [ ] **D78e** Propietaria: cambie el nombre de la casa (queda «En revisión»). Ana: abra «Editar casa» → la fila «Nombre» muestra el nombre publicado y debajo «Pendiente del anfitrión: <el de la propietaria>»; cambie el nombre ella misma → manda el de Ana, la línea del pendiente desaparece, la casa ya no está en «Ediciones por revisar» y la propietaria deja de ver su cambio en revisión (sin aviso).
 - [ ] **D78f** «Fotos» (la píldora de la portada) → añada una foto → sale en la ficha pública al momento (sin revisión); quite fotos hasta dejar una → con la última, «Su ficha necesita al menos una foto…».
-- [ ] **D78g** La fila «Calendario» (o «Editar calendario» de la hoja) → «Calendario» con el nombre de la casa, sin «Cerrar la casa hasta…»; toque un día, «Ocupado», «Guardar cambios» → la propietaria lo ve en su Calendario y la ficha pública lo marca ocupado.
+- [ ] **D78g** La fila «Calendario» (o «Editar calendario» de la hoja) → «Calendario» con el nombre de la casa, sin «Marcar una reserva» ni «Pausar la casa»; toque un día, «Ocupado», «Guardar cambios» → la propietaria lo ve en su Calendario y la ficha pública lo marca ocupado.
 - [ ] **D78h** Una casa bloqueada también se edita desde «Editar casa» (Ana puede; la propietaria no).
 - [ ] **D78i** Casas → «Borradores sin enviar» → «Borradores» con «Casas que su anfitrión empezó y aún no envió.» y, por borrador, la foto (o el hueco), el nombre («Sin nombre»), `CT-#### · <anfitrión> · empezado el …` y lo que falta en ocre («Falta: nombre y fotos») o «Listo para enviar».
 - [ ] **D78j** Toque el borrador → abre el asistente donde se quedó, con el título «Asistir casa»; escriba el nombre, «Continuar», suba una foto, «Continuar» hasta «Revisar y enviar» → las filas llevan a su paso y vuelven al resumen como al anfitrión.
@@ -672,11 +676,11 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
   5. Propietaria: Fotos → la foto nueva dice «Cambios pedidos» con «Se ve un teléfono.»; la quita y sube otra → «En revisión» → Admin aprueba la foto → vuelve a Anuncios con «Cambios aprobados. La ficha ya los muestra.».
   6. Cliente: recarga la ficha → la foto nueva ya está en la galería.
 
-- [ ] **X4** Cerrar la casa en el calendario → sale de Explorar → se vuelve a abrir.
-  1. Propietaria: Calendario → elija la casa activa → toque «Cerrar la casa hasta…» («Sale de Explorar y no recibe consultas») → hoja «Cerrar la casa» → deje la fecha vacía → «Cerrar la casa».
-  2. Propietaria: la fila dice «Cerrada: no aparece en Explorar ni recibe consultas» con el botón «Abrir la casa».
+- [ ] **X4** Pausar la casa en el calendario → sale de Explorar → se vuelve a publicar.
+  1. Propietaria: Calendario → elija la casa activa → toque «Pausar la casa» («No sale en Explorar ni recibe consultas. Puede elegir cuándo vuelve.») → hoja «Pausar la casa» → deje la fecha vacía → «Pausar la casa».
+  2. Propietaria: la tarjeta dice «Pausada» («No aparece en Explorar ni recibe consultas.») con el botón «Volver a publicarla»; en Mis casas, etiqueta «Pausada».
   3. Cliente: Explorar (recargue) → la casa ya no sale en la lista ni en el mapa; Consultas de la propietaria no recibe nada nuevo de ella.
-  4. Propietaria: «Abrir la casa» → la fila vuelve a «Cerrar la casa hasta…».
+  4. Propietaria: «Volver a publicarla» → vuelve la fila «Pausar la casa».
   5. Cliente: Explorar → la casa vuelve a salir.
 
 - [ ] **X5** Noches ocupadas → Explorar con esas fechas no la muestra.

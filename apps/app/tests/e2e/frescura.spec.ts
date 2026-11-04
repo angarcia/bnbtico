@@ -88,8 +88,8 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-const closeRow = (page: Page) => page.getByRole("button", { name: /Cerrar la casa hasta…/ });
-const sheet = (page: Page) => page.getByRole("dialog", { name: "Cerrar la casa" });
+const closeRow = (page: Page) => page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
+const sheet = (page: Page) => page.getByRole("dialog", { name: "Pausar la casa" });
 
 test("el worker local cachea la ficha; guardar el calendario, cerrar y la reapertura nocturna la refrescan en ≤ 5 s", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Frescura", nightlyPriceCrc: 95000 } });
@@ -116,12 +116,12 @@ test("el worker local cachea la ficha; guardar el calendario, cerrar y la reaper
   // pg_net escribe la respuesta cuando la procesa, a veces después de que la ficha nueva ya se vea: se espera.
   await expect.poll(() => statusesAfter(from), { message: "la purga de pg_net llegó al worker con 200" }).toContain("200");
 
-  // 3. Cerrar la casa con fecha desde el Calendario (trigger de listings) → «Calendario cerrado» en el HTML.
+  // 3. Pausar la casa con fecha desde el Calendario (trigger de listings) → «Calendario cerrado» en el HTML.
   const reopen = addDays(today(), 9);
   await closeRow(page).click();
-  await sheet(page).getByLabel("Abrir de nuevo el (opcional)").fill(reopen);
-  await sheet(page).getByRole("button", { name: "Cerrar la casa" }).click();
-  await expect(page.getByText(`Cerrada hasta el ${shortDate(reopen)}`)).toBeVisible();
+  await sheet(page).getByLabel("Volver a publicarla el (opcional)").fill(reopen);
+  await sheet(page).getByRole("button", { name: "Pausar la casa" }).click();
+  await expect(page.getByText(`Pausada hasta el ${shortDate(reopen)}`)).toBeVisible();
   await expect.poll(() => freshHtml(casa.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario cerrado");
   expect(await freshHtml(casa.publicId)).toContain(`Vuelve a estar disponible el ${longDate(reopen)}`);
 

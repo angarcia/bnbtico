@@ -1,10 +1,12 @@
 // Contrato del calendario (fase 4): días del propietario (save_listing_days), lectura pública (public_listing_days),
-// cerrar con fecha de reapertura (set_listing_available de tres argumentos) y la reapertura nocturna
+// «Marcar una reserva» (un rango de noches guardado como ocupado con save_listing_days), «Pausar la casa» con fecha de
+// vuelta (set_listing_available de tres argumentos) y la reapertura nocturna
 // (reopen_due_listings). Mismas reglas y mensajes en el fake (applyChange, validateChange) y en la base.
 // Cada caso empieza con la base de casas vacía (el tope de 5 borradores sin enviar cuenta los que dejan otros casos) y
 // siembra las suyas; la reapertura nocturna recorre toda la base, por eso solo se comprueban las casas propias.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { CALENDAR_MESSAGES as M, type CalendarDay } from "../../src/domain/calendar";
+import { reservationDays } from "../../src/domain/reservation";
 import { DomainError } from "../../src/domain/errors";
 import { parseFilters } from "../../src/domain/filters";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -163,6 +165,32 @@ export function calendarContract(name: string, makeHarness: () => Promise<Subscr
       expect(await h.anon.getPublicDays("CT-999999")).toEqual([]);
       await h.owner("owner").setAvailable(l.id, false);
       expect(await h.anon.getPublicDays(l.publicId)).toEqual([occupied(day(2)), special(day(3), 77_000)]);
+    });
+
+    it("«Marcar una reserva»: de llegada a salida − 1 noches ocupadas; los precios especiales y lo ya ocupado se conservan", async () => {
+      const l = await house();
+      const me = h.calendar("owner");
+      await me.save(l.id, { days: [day(11)], priceCrc: 77_000 });
+      await me.save(l.id, { days: [day(12)], available: false, priceCrc: 99_000 });
+      const nights = reservationDays(day(10), day(14));
+      expect(nights).toEqual([day(10), day(11), day(12), day(13)]);
+      await me.save(l.id, { days: nights, available: false });
+      expect(await me.days(l.id)).toEqual([occupied(day(10)), occupied(day(11), 77_000), occupied(day(12), 99_000), occupied(day(13))]);
+      expect(await h.anon.getPublicDays(l.publicId)).toEqual(await me.days(l.id));
+      // La noche de la salida sigue libre; repetir la misma reserva no cambia nada.
+      await me.save(l.id, { days: nights, available: false });
+      expect(await me.days(l.id)).toEqual([occupied(day(10)), occupied(day(11), 77_000), occupied(day(12), 99_000), occupied(day(13))]);
+    });
+
+    it("«Marcar una reserva» llega hasta el último día de la ventana (salida en hoy + 365) y no más allá; pausada, no se marca", async () => {
+      const l = await house();
+      const me = h.calendar("owner");
+      await me.save(l.id, { days: reservationDays(day(363), day(365)), available: false });
+      expect((await me.days(l.id)).map((d) => d.day)).toEqual([day(363), day(364)]);
+      expect((await rejection(me.save(l.id, { days: reservationDays(day(364), day(367)), available: false }))).message).toBe(M.range);
+      await h.owner("owner").setAvailable(l.id, false);
+      expect((await rejection(me.save(l.id, { days: reservationDays(day(3), day(6)), available: false }))).message).toBe(M.closed);
+      expect((await me.days(l.id)).map((d) => d.day)).toEqual([day(363), day(364)]);
     });
 
     it("cerrar con fecha: de mañana a hoy + 365; abrir a mano la borra; una fecha al abrir se rechaza", async () => {

@@ -1,5 +1,5 @@
-// Hoja «Cerrar la casa» (antes «Pausar anuncio» del detalle): se abre desde «Cerrar la casa hasta…» del Calendario, con
-// fecha de reapertura opcional. Trozo diferido propio (se pide al tocar la fila o en reposo en el Calendario). Diálogo
+// Hoja «Pausar la casa» (antes «Cerrar la casa», ticket 04 de la ronda del 2 nov; el comportamiento no cambia): se abre
+// desde la fila «Pausar la casa» del Calendario, con fecha de vuelta opcional (set_listing_available). Trozo diferido propio (se pide al tocar la fila o en reposo en el Calendario). Diálogo
 // modal como la hoja de contacto: la página queda `inert`, el foco no sale de la hoja y Escape, el fondo o «Cancelar» la
 // cierran (el foco vuelve a la fila desde quien la abre).
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
@@ -58,10 +58,10 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
       <div className="sheet-backdrop" onClick={onClose} data-testid="sheet-backdrop" />
       <section ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-labelledby="close-title" tabIndex={-1} onKeyDown={onKeyDown}>
         <span className="grabber" aria-hidden="true" />
-        <h2 id="close-title">Cerrar la casa</h2>
+        <h2 id="close-title">Pausar la casa</h2>
         <form onSubmit={onSubmit} noValidate>
           <label>
-            Abrir de nuevo el (opcional)
+            Volver a publicarla el (opcional)
             <input
               type="date"
               name="reopen"
@@ -77,7 +77,7 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
             />
           </label>
           <span className="hint" id="close-hint">
-            No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan.
+            No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar.
           </span>
           {problem ? (
             <p className="note" role="alert">
@@ -85,7 +85,7 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
             </p>
           ) : null}
           <button type="submit" className="btn btn-primary btn-lg">
-            Cerrar la casa
+            Pausar la casa
           </button>
           <button type="button" className="btn btn-ghost btn-lg" onClick={onClose}>
             Cancelar
