@@ -5,6 +5,7 @@ import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, c
 import { costaRicaToday } from "../domain/dates";
 import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, type SearchParams } from "../domain/filters";
 import { track } from "../shared/beacon";
+import { I } from "../shared/icons";
 import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
 import { PRIVATE_KEYS } from "./account";
@@ -143,6 +144,30 @@ function AdminOutlet() {
 
 const adminTabs = createRoute({ getParentRoute: () => tabs, id: "_admin", beforeLoad: requireAdmin, component: AdminOutlet });
 const adminFlow = createRoute({ getParentRoute: () => flow, id: "_adminFlow", beforeLoad: requireAdmin, component: AdminOutlet });
+
+/** Mientras llega el trozo del asistente con la red lenta (p. ej. al tocar «+» en Mis casas): su cabecera y el esqueleto,
+ *  lo mismo que pinta el asistente mientras carga; sin esto, la pantalla de antes se quedaba ~1 s sin responder. Con el
+ *  trozo ya en el teléfono no llega a verse. */
+const publicarPending = {
+  pendingMs: 150,
+  pendingMinMs: 0,
+  pendingComponent: () => (
+    <>
+      <header className="header-flow">
+        <Link to="/propietario/casas" className="btn-link header-close" aria-label="Cerrar y seguir después">
+          <I.x size={20} />
+          <span>Cerrar</span>
+        </Link>
+        <h1>Publicar casa</h1>
+      </header>
+      <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando sus casas">
+        <span className="sk thumb" />
+        <span className="sk sk-line" />
+      </section>
+    </>
+  ),
+};
+
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
 const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
@@ -219,8 +244,8 @@ const routeTree = rootRoute.addChildren([
       // Tras el código de /publicar/verificar: crea la casa con la respuesta del paso 1 guardada en el teléfono.
       createRoute({ getParentRoute: () => privateFlow, path: "/publicar/continuar", component: lazyRouteComponent(publicarEntrada, "ContinuarScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", ...publicarPending, component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, ...publicarPending, component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/admin/codigo", validateSearch: nextSearch, component: adminScreen("SegundoCodigoScreen") }),
     ]),
     adminFlow.addChildren([

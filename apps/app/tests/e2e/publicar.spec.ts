@@ -452,6 +452,112 @@ test("cerrar o recargar la app justo al tocar «Continuar» no pierde el paso", 
   await expect.poll(async () => (await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina en vuelo");
 });
 
+// ---------- «Nueva casa» sin pantallas de paso (ronda de Ana 2026-11-02: parpadeo al tocar «+») ----------
+
+const ENTRY_CARDS = ["Publique su casa en pocos pasos", "Tiene un borrador sin enviar"];
+
+/** Anota cualquier tarjeta de la entrada que llegue a pintarse, aunque sea un fotograma (el observador corre antes del pintado). */
+async function watchEntryCards(page: Page) {
+  await page.evaluate((cards) => {
+    const w = window as unknown as { __entryCards: string[] };
+    w.__entryCards = [];
+    const check = () => {
+      for (const h3 of document.querySelectorAll("h3")) {
+        const text = h3.textContent?.trim() ?? "";
+        if (cards.includes(text) && !w.__entryCards.includes(text)) w.__entryCards.push(text);
+      }
+    };
+    new MutationObserver(check).observe(document.body, { childList: true, subtree: true, characterData: true });
+    check();
+  }, ENTRY_CARDS);
+}
+const entryCardsSeen = (page: Page) => page.evaluate(() => (window as unknown as { __entryCards: string[] }).__entryCards);
+
+/** Crear el borrador tarda 800 ms: se ve la espera. */
+async function slowCreate(page: Page) {
+  await page.route(/\/rest\/v1\/listings(\?|$)/, async (route) => {
+    if (route.request().method() === "POST") await new Promise((r) => setTimeout(r, 800));
+    await route.fallback();
+  });
+}
+
+/** Toca «+» en Mis casas y llega al paso 1 de un borrador nuevo viendo solo el esqueleto del paso 1; «Atrás» vuelve a Mis casas. */
+async function tapNewHouse(page: Page) {
+  await watchEntryCards(page);
+  await page.getByRole("link", { name: "Nueva casa" }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar$/);
+  await expect(page.locator(".owner-skeleton")).toBeVisible();
+  await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/1$/);
+  await expect(page.locator("label.choice", { hasText: "Alojamiento completo" })).toBeVisible();
+  const id = idFrom(page);
+  expect(await entryCardsSeen(page)).toEqual([]);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  return id;
+}
+
+test("«Nueva casa» sin borrador: directo al paso 1 con su esqueleto, sin tarjetas de por medio; «Atrás» vuelve a Mis casas", async ({ page }) => {
+  await h.seed({ status: "review" }); // Mis casas con una casa (sin ninguna no hay lista ni «+»), sin borrador pendiente
+  await slowCreate(page);
+  await page.goto("/propietario/casas");
+  await expect(page.getByRole("link", { name: "Nueva casa" })).toBeVisible();
+  const id = await tapNewHouse(page);
+  expect((await h.owner("owner").listOwn()).filter((l) => l.status === "draft").map((l) => l.id)).toEqual([id]);
+});
+
+test("«Nueva casa» con un borrador viejo en la caché: no lo enseña; lee de nuevo, crea otro y entra al paso 1", async ({ page }) => {
+  await h.seed({ status: "review" }); // queda en Mis casas al descartar el borrador
+  const old = await h.seed({ status: "draft", draft: { title: "Borrador ya descartado" } });
+  await page.goto("/propietario/casas");
+  await page.getByRole("link", { name: "Nueva casa" }).click();
+  await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible(); // queda en la caché
+  await h.owner("owner").deleteDraft(old.id); // descartado en otro teléfono
+  await slowCreate(page);
+  await page.getByRole("link", { name: "Volver" }).click();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  const id = await tapNewHouse(page);
+  expect(id).not.toBe(old.id);
+  expect((await h.owner("owner").listOwn()).filter((l) => l.status === "draft").map((l) => l.id)).toEqual([id]);
+});
+
+test("si no se puede crear el borrador, sale la tarjeta con qué tener a mano y «Empezar» para reintentar", async ({ page }) => {
+  let fail = true;
+  await page.route(/\/rest\/v1\/listings(\?|$)/, (route) =>
+    fail && route.request().method() === "POST" ? route.fulfill({ status: 500, json: { message: "caída de prueba" } }) : route.fallback(),
+  );
+  await h.seed({ status: "review" });
+  await page.goto("/propietario/casas");
+  await page.getByRole("link", { name: "Nueva casa" }).click();
+  await expect(page.getByRole("heading", { name: "Publique su casa en pocos pasos" })).toBeVisible();
+  await expect(page.locator(".ready-list li")).toHaveCount(3);
+  await expect(alert(page)).toBeVisible();
+  await expect(page).toHaveURL(/\/propietario\/publicar$/);
+  fail = false;
+  await page.getByRole("button", { name: "Empezar" }).click();
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/1$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+});
+
+test("con la red lenta, «+» pinta enseguida la cabecera del asistente y el esqueleto mientras llega su trozo", async ({ page }) => {
+  await h.seed({ status: "review" });
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  // El trozo del asistente (publicar-<hash>.js, no publicar-entrada-*) tarda hasta que la prueba lo suelta.
+  await page.route(/\/assets\/publicar-[\w-]{8}\.js$/, async (route) => {
+    await held;
+    await route.fallback();
+  });
+  await page.goto("/propietario/casas");
+  await page.getByRole("link", { name: "Nueva casa" }).click();
+  await expect(page.getByRole("heading", { name: "Publicar casa" })).toBeVisible({ timeout: 1000 });
+  await expect(page.locator(".owner-skeleton")).toBeVisible();
+  await expect(page.locator(".tiles-row")).toHaveCount(0);
+  release();
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/1$/);
+});
+
 test("«Volver» de Publicar casa: atrás si se abrió desde la app; abierta directamente, a Cuenta", async ({ page }) => {
   await h.seed({ status: "draft", draft: { title: "Borrador pendiente" } }); // con un borrador pendiente no se crea otro
   await page.goto("/propietario/casas");
