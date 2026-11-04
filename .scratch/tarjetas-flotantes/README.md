@@ -25,3 +25,7 @@ Decidido (Daniel, 2026-11-04):
 7. **Cabeceras de pantalla** («‹ Filtros», «× Cerrar · Publicar casa»…): **en un segundo paso**, si gusta el resultado.
 8. **«Mapa» y «Ver ficha»: variante B, clara** (crema translúcida como las demás tarjetas, texto e icono en tinta).
 9. Maquetas de referencia: `.scratch/tarjetas-flotantes/maquetas/` y CSS en `maqueta.css` (la franja gris entre la tarjeta de precio y el botón de la ficha es un resto de la maqueta, no va).
+
+## Tras probar la tanda 1 (Daniel, 2026-11-04)
+- **Barra de abajo:** vuelve a ser **plana y pegada al borde** (como antes: a todo el ancho, iconos y etiquetas, línea arriba, pestaña elegida en terracota), pero **se sigue ocultando al bajar** y volviendo al subir. «Mapa», toasts y banner, apoyados sobre la barra plana (`--chrome-bottom`).
+- **La de arriba (Explorar) está bien** como quedó.
