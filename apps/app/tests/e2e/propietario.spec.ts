@@ -126,7 +126,10 @@ test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha»,
   expect(await page.evaluate(() => (window as unknown as { shared: { url: string }[] }).shared)).toEqual([expect.objectContaining({ url: `http://${HOST}/casa/${active.publicId}` })]);
   await card(page, "Casa Cocles").getByRole("link", { name: "Calendario" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${active.id}`));
+  // Es otra pestaña: no deja rastro en el historial (2026-11-03), «Atrás» sale de la app.
   await page.goBack();
+  expect(page.url()).toMatch(/^about:blank$|\/robots\.txt$/); // fuera de la app (injectSession pasa por /robots.txt)
+  await page.goto("/propietario/casas");
   await card(page, "Borrador nuevo").getByRole("link", { name: "Seguir publicando" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${draft.id}/\\d+$`));
   await page.goto("/propietario/casas");

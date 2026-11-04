@@ -492,6 +492,91 @@ test("el aviso (toast) y el de versión nueva siguen a la barra de abajo", async
   })).toBe(`${vp.height - bar.y + 12}px`);
 });
 
+// Cambiar de pestaña no deja rastro en el historial (2026-11-03, Daniel): «Atrás» (gesto del sistema o botón del navegador)
+// solo vuelve dentro de la pestaña actual; desde la raíz de una pestaña sale de la app, como antes.
+test.describe("«Atrás» y las pestañas", () => {
+  // Fuera de la app: la página en blanco o /robots.txt, donde injectSession deja la sesión antes de entrar.
+  const leftApp = (page: Page) => expect(page.url()).toMatch(/^about:blank$|\/robots\.txt$/);
+  test.beforeAll(async () => {
+    h = await postgrestHarness(); // otra prueba pudo cerrar la sesión del propietario en el servidor
+    await h.reset();
+    casa = await h.seed({ status: "active", draft: { title: "Casa Atrás" } });
+  });
+
+  test("Calendario → Explorar con la barra: «Atrás» no vuelve a Calendario y sale de la app", async ({ page }) => {
+    await page.goto("/propietario/casas");
+    await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+    const before = await page.evaluate(() => history.length);
+    await nav(page).getByRole("link", { name: "Calendario" }).click();
+    await expect(page).toHaveURL(/\/propietario\/calendario/);
+    await nav(page).getByRole("link", { name: "Explorar" }).click();
+    await expect(page).toHaveURL(/\/explorar/);
+    await expect(nav(page).getByRole("link", { name: "Explorar" })).toHaveAttribute("aria-current", "page");
+    expect(await page.evaluate(() => history.length)).toBe(before);
+    await page.goBack();
+    await expect(page).not.toHaveURL(/\/propietario\//);
+    leftApp(page);
+  });
+
+  test("Explorar → ficha: «Atrás» vuelve a Explorar, y otro «Atrás» sale (no a la pestaña de antes)", async ({ page }) => {
+    await page.goto("/propietario/calendario");
+    await nav(page).getByRole("link", { name: "Explorar" }).click();
+    await expect(page).toHaveURL(/\/explorar/);
+    await page.getByRole("link", { name: /Casa Atrás/ }).first().click();
+    await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
+    await expect(page.getByRole("heading", { level: 1, name: "Casa Atrás" })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/explorar/);
+    await expect(page.getByRole("link", { name: /Casa Atrás/ }).first()).toBeVisible();
+    await page.goBack();
+    leftApp(page);
+  });
+
+  test("Mis casas: el detalle suma historial; «Calendario» de la tarjeta cambia de pestaña sin dejar rastro", async ({ page }) => {
+    await page.goto("/explorar");
+    await nav(page).getByRole("link", { name: "Mi casa" }).click();
+    await expect(page).toHaveURL(/\/propietario\/casas$/);
+    const card = page.getByRole("article").filter({ hasText: "Casa Atrás" });
+    await card.getByRole("link", { name: "Casa Atrás" }).click();
+    await expect(page).toHaveURL(new RegExp(`/propietario/casas/${casa.id}$`));
+    await page.goBack();
+    await expect(page).toHaveURL(/\/propietario\/casas$/);
+    await card.getByRole("link", { name: "Calendario" }).click();
+    await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${casa.id}`));
+    await expect(nav(page).getByRole("link", { name: "Calendario" })).toHaveAttribute("aria-current", "page");
+    await page.goBack();
+    leftApp(page);
+  });
+
+  test("Favoritos vacío → «Explorar casas» y el logo de arriba cambian de pestaña sin dejar rastro", async ({ page }) => {
+    await page.goto("/favoritos");
+    await page.getByRole("link", { name: "Explorar casas" }).click();
+    await expect(page).toHaveURL(/\/explorar/);
+    await page.goBack();
+    leftApp(page);
+    await page.goto("/favoritos");
+    await page.getByRole("link", { name: "bnbtico, inicio" }).click();
+    await expect(page).toHaveURL(/\/explorar/);
+    await page.goBack();
+    leftApp(page);
+  });
+
+  // Ids de URL del asistente: 1, 2, 4–9 (el 3 viejo lleva al 2); tras «¿Dónde está su casa?» (2) viene el 4.
+  test("publicar: del paso siguiente, «Atrás» vuelve al paso 2 como siempre", async ({ page }) => {
+    const draft = await h.seed({ status: "draft", draft: { title: "Borrador Atrás" } });
+    const step = (n: number) => new RegExp(`/propietario/publicar/${draft.id}/${n}$`);
+    await page.goto(`/propietario/publicar/${draft.id}/2`);
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page).toHaveURL(step(4));
+    await page.goBack();
+    await expect(page).toHaveURL(step(2));
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page).toHaveURL(step(4));
+    await page.getByRole("link", { name: "Atrás" }).click();
+    await expect(page).toHaveURL(step(2));
+  });
+});
+
 test.describe("en un teléfono de 375 px", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 

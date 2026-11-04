@@ -658,7 +658,7 @@ function MyAccount({ editing, tab = false }: { editing: boolean; tab?: boolean }
         {owner ? <FavoritesRow /> : null}
         {count === 0 ? <PublishPromoRow /> : null}
         {a?.isAdmin ? (
-          <Link to="/admin" className="list-item">
+          <Link to="/admin" replace className="list-item">
             <I.inbox />
             <span className="body">
               Revisión de anuncios · admin<small>Cola de casas por revisar (pide un segundo código)</small>

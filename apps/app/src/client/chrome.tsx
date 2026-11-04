@@ -66,6 +66,8 @@ export function TabsFrame({ children }: { children: ReactNode }) {
               key={to}
               to={to}
               search={to === "/cuenta" && next ? { next } : undefined}
+              // Cambiar de pestaña no deja rastro en el historial (2026-11-03): «Atrás» solo vuelve dentro de la pestaña.
+              replace
               className="nav"
               activeOptions={{ exact, includeSearch: false }}
               activeProps={{ "aria-current": "page" }}
@@ -95,7 +97,7 @@ const UnderTopBar = createContext(false);
 export function TopBar() {
   return (
     <header className="topbar float-card chrome-hide">
-      <Link to="/explorar" className="topbar-home" aria-label="bnbtico, inicio">
+      <Link to="/explorar" replace className="topbar-home" aria-label="bnbtico, inicio">
         <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
       </Link>
       <CurrencySwitch />
@@ -121,7 +123,7 @@ export function RootHeader({ title, home = "/explorar", action, aside }: { title
         action ? <div className="top">{action}</div> : null
       ) : (
         <div className="top">
-          <Link to={home} aria-label="bnbtico, inicio">
+          <Link to={home} replace aria-label="bnbtico, inicio">
             <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
           </Link>
           {action}

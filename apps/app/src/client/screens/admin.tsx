@@ -75,7 +75,7 @@ function NotAdmin() {
     <section className="card stack">
       <h3>Esta sección es solo para el equipo de bnbtico</h3>
       <p className="small muted">Si busca una casa, vuelva a Explorar.</p>
-      <Link to="/explorar" className="btn btn-ghost btn-lg">
+      <Link to="/explorar" replace className="btn btn-ghost btn-lg">
         Ir a Explorar
       </Link>
     </section>

@@ -259,12 +259,12 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
       {can(l, "share") ? (
         <div className="row gap-8">
           <ShareButtonInline listing={l} />
-          <Link to="/propietario/calendario" search={{ casa: l.id }} className="btn btn-ghost grow">
+          <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="btn btn-ghost grow">
             Calendario
           </Link>
         </div>
       ) : l.status === "active" && l.adminHold?.kind === "paused" ? (
-        <Link to="/propietario/calendario" search={{ casa: l.id }} className="btn btn-ghost btn-block">
+        <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="btn btn-ghost btn-block">
           Calendario
         </Link>
       ) : null}
