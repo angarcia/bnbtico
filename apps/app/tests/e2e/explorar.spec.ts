@@ -92,6 +92,40 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   await expect(page.getByRole("button", { name: "Ver 9 casas" })).toBeVisible();
 });
 
+// Escondida al bajar, la cabecera de Explorar no responde al toque (tampoco a medio salir ni, con movimiento reducido, fundida
+// en su sitio): lo que hay debajo (la lista) lo recibe; con el foco del teclado dentro, se queda a la vista y responde.
+test("la cabecera escondida de Explorar no responde al toque, salvo con el foco del teclado", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/explorar");
+  await expect(results(page)).toBeVisible();
+  const pill = page.locator(".explore-top .search-pill");
+  const filters = page.getByRole("link", { name: "Filtros", exact: true });
+  const spots = async () => {
+    const boxes = [(await pill.boundingBox())!, (await filters.boundingBox())!, (await page.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!];
+    return boxes.map((b) => ({ x: b.x + b.width / 2, y: Math.max(1, b.y + b.height / 2) }));
+  };
+  const at = await spots();
+  const hit = () => page.evaluate((pts) => pts.map(({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".explore-top")), at);
+  expect(await hit()).toEqual([true, true, true]);
+  for (let i = 1; i <= 6; i++) {
+    await page.evaluate((v) => window.scrollTo(0, v), i * 150);
+    await page.waitForTimeout(30);
+  }
+  await expect(page.locator("html")).toHaveClass(/chrome-away/);
+  await expect.poll(hit).toEqual([false, false, false]);
+  for (const el of [pill, filters]) expect(await el.evaluate((e) => getComputedStyle(e).pointerEvents)).toBe("none");
+  // Con movimiento reducido solo se funde y se queda en su sitio, invisible: tampoco ahí recibe el toque.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect.poll(() => page.locator(".explore-top").evaluate((e) => getComputedStyle(e).opacity)).toBe("0");
+  expect(await hit()).toEqual([false, false, false]);
+  // Con el teclado: el foco en «Filtros» la deja a la vista y responde.
+  await filters.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect.poll(() => page.locator(".explore-top").evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+  expect(await filters.evaluate((e) => getComputedStyle(e).pointerEvents)).toBe("auto");
+});
+
 test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N casas» aplica y vuelve", async ({ page }) => {
   await page.goto("/explorar/filtros");
   const zona = page.getByRole("group", { name: "Zona" });

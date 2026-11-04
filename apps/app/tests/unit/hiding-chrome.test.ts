@@ -25,6 +25,9 @@ describe("html.chrome-away en global.css", () => {
   it("esconde las piezas .chrome-hide con su desplazamiento propio, salvo la que tiene el foco del teclado", () => {
     expect(css).toContain("html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);opacity:0;pointer-events:none}");
   });
+  it("escondidas, tampoco responden sus partes que piden el toque (la cabecera de Explorar), salvo con el foco del teclado", () => {
+    expect(css).toContain("html.chrome-away .chrome-hide:not(:has(:focus-visible)) *{pointer-events:none}");
+  });
   it("con movimiento reducido solo se funde: sin desplazamiento", () => {
     expect(css).toMatch(/@media \(prefers-reduced-motion:reduce\)\{\.chrome-hide\{transition:opacity [^}]+\}html\.chrome-away \.chrome-hide:not\(:has\(:focus-visible\)\)\{transform:none\}\}/);
   });
