@@ -94,7 +94,7 @@ const UnderTopBar = createContext(false);
 /** Barra superior fija de Favoritos: logo y «₡ | $» (la cuenta ya es una pestaña). */
 export function TopBar() {
   return (
-    <header className="topbar">
+    <header className="topbar float-card chrome-hide">
       <Link to="/explorar" className="topbar-home" aria-label="bnbtico, inicio">
         <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
       </Link>

@@ -379,13 +379,16 @@ test("5 · ₡ → $ en la fila de chips cambia los precios de Explorar y se man
 
 // Revisión UX 2026-10-29 (C4, T2): solo Favoritos lleva la barra de arriba (logo y «₡ | $»); Mis casas, Calendario, Consultas
 // y Cuenta van sin ella ni título visible; Explorar trae su cabecera con la búsqueda a todo el ancho.
-test("la barra superior: solo en Favoritos, 56 px más el área segura, con el logo y «₡ | $»", async ({ page }) => {
+test("la barra superior: solo en Favoritos, una tarjeta flotante de 56 px, con el logo y «₡ | $»", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   const banner = page.getByRole("banner");
   const checkBar = async () => {
     await expect(banner).toHaveCount(1);
-    expect((await banner.boundingBox())?.height).toBe(56);
+    // Tarjeta flotante a 12 px de los bordes (tarjetas flotantes, tanda 1).
+    const box = (await banner.boundingBox())!;
+    expect(box).toMatchObject({ x: 12, y: 12, height: 56, width: page.viewportSize()!.width - 24 });
+    expect(await banner.evaluate((el) => getComputedStyle(el).backdropFilter)).toBe("blur(16px) saturate(1.2)");
     await expect(banner.getByRole("img", { name: "bnbtico" })).toBeVisible();
     await expect(banner.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
     for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -486,9 +489,9 @@ test.describe("en un teléfono de 375 px", () => {
     };
     const exploreFits = async () => {
       const pill = (await page.locator(".explore-top .search-pill").boundingBox())!;
-      expect(pill.x).toBeGreaterThanOrEqual(16);
-      expect(pill.x + pill.width).toBeGreaterThan(375 - 16 - 2);
-      expect(pill.x + pill.width).toBeLessThanOrEqual(375 - 16 + 1);
+      // Tarjeta flotante a 12 px de cada borde (tarjetas flotantes, tanda 1).
+      expect(pill.x).toBe(12);
+      expect(pill.x + pill.width).toBe(375 - 12);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
     await page.goto("/explorar");

@@ -1,7 +1,7 @@
-// El mapa de Explorar en el JS inicial: solo la caja de alto fijo (220 px, nada salta al cargar), su cargador en reposo y
-// la etiqueta flotante «Mapa». Leaflet y los marcadores van en explore-map-leaflet (trozo diferido); el mapa a pantalla
+// El mapa de Explorar en el JS inicial: solo la caja de alto fijo (arriba a todo el ancho, con el alto en CSS: nada salta al
+// cargar), su cargador en reposo y la etiqueta flotante «Mapa». Leaflet y los marcadores van en explore-map-leaflet (trozo diferido); el mapa a pantalla
 // completa, en explore-map-full (otro trozo, al abrirlo).
-import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from "react";
 import { mapPriceLabel } from "../domain/describe";
 import type { LatLng } from "../domain/geo";
 import type { SearchListing } from "../domain/listing";
@@ -27,10 +27,22 @@ export function useMapMarkers(listings: readonly SearchListing[], nights: number
   return useMemo(() => mapMarkers(listings, nights, currency, fx), [listings, nights, currency, fx]);
 }
 
+/** Lo que tapan las tarjetas flotantes de arriba y de abajo del mapa, en px: el encuadre deja a los precios fuera. */
+export type MapInsets = () => { top: number; bottom: number };
+
+/** Arriba, la cabecera flotante de Explorar sobre el mapa pequeño (arriba de la página). Con su `top` y su alto, no con su
+ *  caja en pantalla: al esconderse se desplaza, y el mapa se puede dibujar con ella fuera. */
+export function exploreHeaderInsets(box: HTMLElement): { top: number; bottom: number } {
+  const header = document.querySelector<HTMLElement>(".explore-top");
+  if (!header) return { top: 0, bottom: 0 };
+  const boxTop = box.getBoundingClientRect().top + scrollY;
+  return { top: Math.max(0, parseFloat(getComputedStyle(header).top) + header.offsetHeight - boxTop), bottom: 0 };
+}
+
 /** Dibuja el mapa en `box` cuando Leaflet llega (en reposo); sin red no pasa nada: queda el fondo de la caja. */
 export function useExploreMap(
   box: RefObject<HTMLElement | null>,
-  opts: { interactive: boolean; onMarker(id: string): void; onMap(): void },
+  opts: { interactive: boolean; onMarker(id: string): void; onMap(): void; insets: MapInsets },
   markers: MapMarker[],
   zone: LatLng | null,
 ): { handle: RefObject<ExploreMapHandle | null>; ready: boolean } {
@@ -44,7 +56,12 @@ export function useExploreMap(
       import("./explore-map-leaflet")
         .then(({ drawExploreMap }) => {
           if (cancelled || !box.current) return;
-          handle.current = drawExploreMap(box.current, { interactive: opts.interactive, onMarker: (id) => callbacks.current.onMarker(id), onMap: () => callbacks.current.onMap() });
+          handle.current = drawExploreMap(box.current, {
+            interactive: opts.interactive,
+            onMarker: (id) => callbacks.current.onMarker(id),
+            onMap: () => callbacks.current.onMap(),
+            insets: () => callbacks.current.insets(),
+          });
           setReady(true);
         })
         .catch(() => undefined);
@@ -70,39 +87,41 @@ export function useExploreMap(
 // Los precios antes de Leaflet, en su propio trozo pequeño (fuera del JS inicial): se pide al montar la caja.
 const PricePreview = lazy(() => import("./map-preview").then((m) => ({ default: m.PricePreview })));
 
-/** El primer elemento de la lista: tocarlo (o Intro/Espacio) abre el mapa grande; un marcador, con su casa. */
-export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: SearchListing[]; zone: LatLng | null; nights: number; onOpen(publicId: string | null): void; ref?: RefObject<HTMLDivElement | null> }) {
+/** Arriba de Explorar, a todo el ancho y bajo la cabecera flotante: tocarlo (o Intro/Espacio) abre el mapa grande; un marcador,
+ *  con su casa. Sin `onOpen` (mientras busca o sin casas) es solo el mapa de la zona. */
+export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: SearchListing[]; zone: LatLng | null; nights: number; onOpen: ((publicId: string | null) => void) | null; ref?: RefObject<HTMLDivElement | null> }) {
   const own = useRef<HTMLDivElement>(null);
   const box = ref ?? own;
   const markers = useMapMarkers(listings, nights);
-  const { ready } = useExploreMap(box, { interactive: false, onMarker: (id) => onOpen(id), onMap: () => undefined }, markers, zone);
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const insets = () => (box.current ? exploreHeaderInsets(box.current) : { top: 0, bottom: 0 });
+  const { ready } = useExploreMap(box, { interactive: false, onMarker: (id) => onOpen?.(id), onMap: () => undefined, insets }, markers, zone);
+  const [size, setSize] = useState({ width: 0, height: 0, top: 0 });
   useLayoutEffect(() => {
     const el = box.current;
-    if (el) setSize({ width: el.clientWidth, height: el.clientHeight });
+    if (el) setSize({ width: el.clientWidth, height: el.clientHeight, top: exploreHeaderInsets(el).top });
   }, [box]);
+  const open = onOpen
+    ? {
+        role: "button",
+        tabIndex: 0,
+        "aria-label": "Abrir el mapa de las casas",
+        onClick: (e: MouseEvent) => {
+          // Los marcadores los atiende Leaflet (un grupo, «N casas», no: abre el mapa grande); la atribución es un enlace.
+          if ((e.target as Element).closest(".leaflet-marker-icon:not(.is-group), .leaflet-control")) return;
+          onOpen(null);
+        },
+        onKeyDown: (e: KeyboardEvent) => {
+          if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
+          e.preventDefault();
+          onOpen(null);
+        },
+      }
+    : { "aria-hidden": true };
   return (
-    <div
-      ref={box}
-      className="map-box explore-map"
-      role="button"
-      tabIndex={0}
-      aria-label="Abrir el mapa de las casas"
-      data-testid="explore-map"
-      onClick={(e) => {
-        // Los marcadores los atiende Leaflet (un grupo, «N casas», no: abre el mapa grande); la atribución es un enlace.
-        if ((e.target as Element).closest(".leaflet-marker-icon:not(.is-group), .leaflet-control")) return;
-        onOpen(null);
-      }}
-      onKeyDown={(e) => {
-        if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
-        e.preventDefault();
-        onOpen(null);
-      }}
-    >
+    <div ref={box} className={`map-box explore-map${onOpen ? "" : " is-still"}`} data-testid="explore-map" {...open}>
       {ready ? null : (
         <Suspense fallback={null}>
-          <PricePreview markers={markers} width={size.width} height={size.height} />
+          <PricePreview markers={markers} width={size.width} height={size.height} top={size.top} />
         </Suspense>
       )}
     </div>

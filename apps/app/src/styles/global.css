@@ -74,17 +74,6 @@ a{color:var(--primary)}
 .num{font-variant-numeric:tabular-nums}
 .display{font-family:var(--display);letter-spacing:-0.01em}
 
-/* ---------- Tarjetas flotantes (tanda 1, 2026-11-04) ---------- */
-/* Sin desenfoque (navegadores viejos), opaca; con él, translúcida. Sin `transform` en reposo en las piezas con desenfoque
-   (Safari deja de desenfocar): se centran con left/right y margin:auto. */
-.float-card{background:var(--float-bg-solid);border:1px solid var(--float-edge);box-shadow:var(--float-shadow)}
-@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}.float-card.is-strong{background:var(--float-bg-strong)}}
-/* El escondido común (client/hiding-chrome.ts pone `html.chrome-away` al bajar y lo quita al subir): cada pieza `.chrome-hide`
-   dice hacia dónde sale con `--away`. La que tiene el foco del teclado se queda; con movimiento reducido, solo se funde. */
-.chrome-hide{transition:var(--float-away)}
-html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);opacity:0;pointer-events:none}
-@media (prefers-reduced-motion:reduce){.chrome-hide{transition:opacity 160ms ease-out}html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:none}}
-
 /* ---------- Texto ---------- */
 .small{font-size:15px}.xs{font-size:14px}.muted{color:var(--muted)}.center{text-align:center}
 .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:var(--w-medium)}
@@ -231,13 +220,18 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
 .header-root .logo{height:38px;width:auto}
 /* Barra superior fija de las pestañas (logo · ₡ | $ · cuenta): 56 px más el área segura, centrada como la de abajo. */
-.topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) var(--gutter) 0;display:flex;justify-content:space-between;align-items:center;background:var(--bg);z-index:6}
+/* Tarjetas flotantes, tanda 1: tarjeta flotante a 12 px de los bordes (y del área segura), que se esconde al bajar. */
+.topbar{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);margin:0 auto;max-width:536px;height:56px;padding:0 6px 0 14px;display:flex;justify-content:space-between;align-items:center;border-radius:var(--float-r);z-index:6;--away:translateY(calc(-100% - var(--float-top) - 8px))}
 /* A 375 px sin sesión (logo, «₡ | $» e «Ingresar») no sobra sitio: el logo es lo que encoge, nunca los botones. */
 .topbar{gap:8px}
 .topbar > .row{flex:none}
 .topbar-home{display:inline-flex;align-items:center;min-height:44px;min-width:0;flex:0 1 auto}
 .topbar .logo{height:auto;max-height:38px;width:auto;max-width:100%;display:block}
-.view.has-topbar{padding-top:calc(56px + 12px + env(safe-area-inset-top))}
+.view.has-topbar{padding-top:calc(var(--float-top) + 56px + 4px)}
+/* «₡ | $» dentro de la tarjeta: sin fondo propio, la elegida como en Explorar. */
+.topbar .currency-switch{background:transparent}
+.topbar .currency-switch button{color:var(--fg-title)}
+.topbar .currency-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--primary) 18%,transparent);color:var(--primary-ink)}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:17px;font-weight:var(--w-medium);color:var(--fg);text-decoration:none}
@@ -437,19 +431,29 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 /* ---------- Explorar y Filtros (pantallas 01 y 02, en el navegador) ---------- */
 .gap-0{gap:0}
 .btn-header{min-height:44px;font-size:16px}
-/* Cabecera de Explorar (maqueta v2 01): fija arriba al bajar, sin barra superior; la píldora y la cuenta en una fila y,
-   debajo, el mensual, los filtros y «₡ | $» al final. Anula el relleno de arriba de .view para pegarse al borde. */
-/* Cabecera fija de Explorar separada de la lista por una línea fina y con más aire (Daniel, 2026-10-29: «muy apelotonado»). */
-.explore-top{position:sticky;top:0;z-index:5;display:flex;flex-direction:column;gap:12px;margin:calc(-12px - env(safe-area-inset-top)) calc(-1 * var(--gutter)) 6px;padding:calc(10px + env(safe-area-inset-top)) var(--gutter) 14px;background:var(--bg);border-bottom:1px solid var(--line)}
+/* Cabecera de Explorar (tarjetas flotantes, tanda 1, decisión 4): flota sobre el mapa a 12 px de los bordes; la píldora a todo
+   el ancho y, debajo, los filtros a la izquierda y «₡ | $» a la derecha, cada uno su tarjeta. Entre ellas el toque pasa al mapa.
+   Por debajo del mapa a pantalla completa (z-index 5). */
+.explore-top{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:4;display:flex;flex-direction:column;gap:10px;pointer-events:none;--away:translateY(calc(-100% - var(--float-top) - 8px))}
+.explore-top .search-pill,.explore-top .chiprow > *{pointer-events:auto}
+.explore-top .search-pill{min-height:52px;padding:0 16px;border-radius:var(--float-r)}
+.explore-top .filters-btn{width:48px;height:48px;border-radius:var(--float-r)}
+.explore-top .currency-switch{padding:4px;gap:2px;border-radius:var(--float-r)}
+.explore-top .currency-switch button{min-height:38px;border-radius:8px;color:var(--fg-title)}
+.explore-top .currency-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--primary) 18%,transparent);color:var(--primary-ink)}
 .explore-search{display:flex;gap:8px;align-items:center}
 .explore-search .search-pill{flex:1;min-width:0}
-.search-pill{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:8px;background:var(--surface);box-shadow:var(--shadow-float);color:inherit;text-decoration:none;font-weight:var(--w-medium)}
+.search-pill{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:8px;color:inherit;text-decoration:none;font-weight:var(--w-medium)}
 .search-pill svg{flex:none;color:var(--primary)}
 .search-pill-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Mapa de Explorar (maquetas v2 01 y 05): la caja es el primer elemento de la lista, de alto fijo y con fondo arena
    (sin red se queda así); los marcadores, píldoras con el precio (la tocada, terracota #B44C30); «Mapa» y «N casas»,
    píldoras oscuras translúcidas. Leaflet mueve el marcador con `transform`: la píldora se centra en el punto con `translate`, que se suma. */
-.explore-map{height:220px;border-radius:var(--r-tile);background:var(--surface-2);cursor:pointer;grid-column:1/-1}
+/* Arriba de Explorar a todo el ancho, pegado arriba (detrás de la cabecera flotante y del área segura) y con las esquinas de
+   abajo redondeadas (tarjetas flotantes, tanda 1). Alto con svh: no cambia al esconderse la barra del navegador. */
+.explore-map{height:min(400px,56svh);margin:calc(-12px - env(safe-area-inset-top)) calc(-1 * var(--gutter)) 0;border-radius:0 0 var(--r-sheet) var(--r-sheet);background:var(--surface-2);cursor:pointer}
+.explore-map.is-still{cursor:default}
+.explore-map .leaflet-control-attribution{margin:0 10px 8px 0;border-radius:6px;font-size:11px}
 .explore-map.leaflet-container,.map-full-box.leaflet-container{background:var(--surface-2)}
 .explore-map:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
 .map-price{translate:-50% -50%;padding:6px 10px;border-radius:6px;background:var(--surface);color:var(--fg);font:600 13px/1.2 var(--body);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 0 var(--line),0 6px 14px -6px rgba(28,43,42,.5);cursor:pointer}
@@ -469,14 +473,21 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .map-label-end{display:block;height:0;margin-top:-14px}
 html.chrome-away .map-label{transform:translate(-50%,calc(var(--nav-h) + env(safe-area-inset-bottom)))}
 .map-label{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:5;animation:fade-in 160ms var(--ease-out)}
-.map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:5;background:var(--surface-2)}
+/* De borde a borde: la barra de pestañas flota encima (z-index 6) y «N casas» se apoya en ella (--chrome-bottom). */
+.map-full{position:fixed;inset:0;z-index:5;background:var(--surface-2)}
 html.map-open{overflow:hidden}
 .map-full-box{position:absolute;inset:0;isolation:isolate}
-.map-full-top{position:absolute;top:calc(12px + env(safe-area-inset-top));left:var(--gutter);right:var(--gutter);z-index:1;display:flex;align-items:center;gap:10px;max-width:528px;margin:0 auto}
-.map-full-top .search-pill{flex:1;min-width:0;min-height:52px}
-.map-round{flex:none;width:44px;height:44px;border:0;border-radius:8px;background:var(--bg);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 4px 12px -4px rgba(28,43,42,.4);cursor:pointer}
-.map-count{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:1}
-.map-card{position:absolute;left:var(--gutter);right:var(--gutter);bottom:80px;z-index:1;max-width:528px;margin:0 auto;background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:0 2px 0 var(--line),0 16px 32px -14px rgba(28,43,42,.5);animation:fade-in 160ms var(--ease-out)}
+/* Arriba, en una fila de tarjetas de 52 px: volver, la búsqueda y los filtros, como la cabecera de Explorar; la atribución del
+   mapa, debajo de ellas (abajo la tapaba la barra de pestañas). */
+.map-full-top{position:absolute;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);z-index:1;display:flex;align-items:center;gap:8px;max-width:536px;margin:0 auto}
+.map-full-top .search-pill{flex:1;min-width:0;min-height:52px;padding:0 16px;border-radius:var(--float-r)}
+.map-full-top .filters-btn{width:52px;height:52px;border-radius:var(--float-r)}
+.map-full .leaflet-bottom.leaflet-right{top:calc(var(--float-top) + 60px);bottom:auto}
+.map-full .leaflet-control-attribution{margin:0 12px 0 0;border-radius:6px;font-size:11px}
+.map-round{flex:none;width:52px;height:52px;border-radius:var(--float-r);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.map-count{position:absolute;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);z-index:1}
+/* La casa del marcador tocado, encima de «N casas» (44 px + 12 de aire). */
+.map-card{position:absolute;left:var(--float-gap);right:var(--float-gap);bottom:calc(var(--chrome-bottom) + 56px);z-index:1;max-width:536px;margin:0 auto;border-radius:var(--float-r);overflow:hidden;animation:fade-in 160ms var(--ease-out)}
 .map-card-link{display:flex;color:inherit;text-decoration:none}
 .map-card .photo{flex:none;width:96px;height:96px}
 .map-card-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:10px 48px 10px 14px;font-size:16px}
@@ -529,7 +540,7 @@ html.map-open{overflow:hidden}
 .people-stepper b.is-empty{color:var(--muted);font-family:var(--body);font-weight:400;font-size:18px}
 .explore-top .chiprow{align-items:center}
 .chiprow .currency-switch{margin-left:auto}
-.filters-btn{position:relative;flex:none;justify-content:center;width:44px;height:44px;padding:0;background:var(--beige-soft)}
+.filters-btn{position:relative;flex:none;justify-content:center;width:44px;height:44px;padding:0}
 .filters-btn .badge-count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;justify-content:center;font-size:13px;background:var(--primary);color:var(--primary-on);border:2px solid var(--bg)}
 .chip{border:0;cursor:pointer}
 .chip-strong{font-weight:var(--w-medium)}
@@ -1066,7 +1077,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
    hasta la pasada de escritorio (docs/plan-implementacion.md). */
 @media (min-width:900px){
   .app:has(.listing-grid){max-width:1120px}
-  .app:has(.listing-grid) .topbar{max-width:1120px}
   .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
 }
 @media (min-width:1200px){
@@ -1115,3 +1125,15 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 b,strong{font-weight:var(--w-strong)}
 .btn-primary,.btn-wa,.btn-sun{font-weight:var(--w-strong)}
 h1,h2,h3,.house-card-title,.sub-house-title,.listing-card h2,.listing-card h3,.fav-title h2,.cal-house{color:var(--fg-title)}
+
+/* ---------- Tarjetas flotantes (tanda 1, 2026-11-04) ---------- */
+/* Al final del archivo: gana al fondo y la sombra propios de cada pieza (chip, píldora, selector). Sin desenfoque
+   (navegadores viejos), opaca; con él, translúcida. Sin `transform` en reposo en las piezas con desenfoque
+   (Safari deja de desenfocar): se centran con left/right y margin:auto. */
+.float-card{background:var(--float-bg-solid);border:1px solid var(--float-edge);box-shadow:var(--float-shadow)}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}.float-card.is-strong{background:var(--float-bg-strong)}}
+/* El escondido común (client/hiding-chrome.ts pone `html.chrome-away` al bajar y lo quita al subir): cada pieza `.chrome-hide`
+   dice hacia dónde sale con `--away`. La que tiene el foco del teclado se queda; con movimiento reducido, solo se funde. */
+.chrome-hide{transition:var(--float-away)}
+html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.chrome-hide{transition:opacity 160ms ease-out}html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:none}}

@@ -53,10 +53,36 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   await expect(cards.first().locator("h2")).toHaveText("Casa Cocles mensual");
   await expect(cards.first()).toContainText("Cocles2 personas · 1 habitación₡45 000 / noche");
   await expect(cards.first().locator(".pill")).toHaveCount(0);
-  // La píldora y la fila de chips se quedan arriba al bajar.
-  await page.evaluate(() => window.scrollTo(0, 900));
-  await expect.poll(() => page.locator(".explore-top").evaluate((el) => Math.round(el.getBoundingClientRect().top))).toBe(0);
+  // Tarjetas flotantes, tanda 1 (Daniel, 2026-11-04): el mapa arriba a todo el ancho y, encima, la búsqueda, los filtros y
+  // «₡ | $» como tarjetas translúcidas a 12 px de los bordes; al bajar se esconden con la barra de abajo y al subir vuelven.
+  const vp = page.viewportSize()!;
+  const top = page.locator(".explore-top");
+  const pill = (await page.locator(".explore-top .search-pill").boundingBox())!;
+  expect(pill).toMatchObject({ x: 12, y: 12, width: vp.width - 24 });
+  const map = (await page.getByTestId("explore-map").boundingBox())!;
+  expect(map).toMatchObject({ x: 0, y: 0, width: vp.width });
+  expect(pill.y + pill.height).toBeLessThan(map.y + map.height);
+  for (const card of [page.locator(".explore-top .search-pill"), page.getByRole("link", { name: "Filtros", exact: true }), page.getByRole("group", { name: "Moneda de los precios" })]) {
+    const look = await card.evaluate((el) => ({ blur: getComputedStyle(el).backdropFilter, radius: getComputedStyle(el).borderTopLeftRadius }));
+    expect(look).toEqual({ blur: "blur(16px) saturate(1.2)", radius: "12px" });
+  }
+  const shown = () => top.evaluate((el) => getComputedStyle(el).opacity === "1" && el.getBoundingClientRect().top >= 0);
+  // Como el dedo, en varios pasos: el escondido ve cada desplazamiento.
+  const scrollTo = async (y: number) => {
+    const from = await page.evaluate(() => scrollY);
+    for (let i = 1; i <= 5; i++) {
+      await page.evaluate((v) => window.scrollTo(0, v), Math.round(from + ((y - from) * i) / 5));
+      await page.waitForTimeout(30);
+    }
+  };
+  await scrollTo(900);
+  await expect.poll(shown).toBe(false);
+  await expect(page.locator("html")).toHaveClass(/chrome-away/);
+  await expect(page.getByRole("link", { name: "Empiece su búsqueda" })).not.toBeInViewport();
+  await scrollTo(700);
+  await expect.poll(shown).toBe(true);
   await expect(page.getByRole("link", { name: "Empiece su búsqueda" })).toBeInViewport();
+  expect((await page.locator(".explore-top .search-pill").boundingBox())!.y).toBe(12);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.getByRole("link", { name: "Filtros", exact: true }).click();
   await expect(page).toHaveURL(/\/explorar\/filtros$/);

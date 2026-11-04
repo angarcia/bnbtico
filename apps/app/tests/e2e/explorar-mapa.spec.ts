@@ -55,6 +55,11 @@ async function expectPinsClear(box: import("@playwright/test").Locator, pinsOf =
   }
   for (const [i, a] of pins.entries()) for (const b of pins.slice(i + 1)) expect(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top).toBe(true);
 }
+/** Ningún precio queda debajo de las tarjetas flotantes de arriba (`cover`). */
+async function expectPinsBelow(page: Page, box: import("@playwright/test").Locator, cover: string, pinsOf = ".map-price") {
+  const bottom = await page.locator(cover).evaluate((el) => el.getBoundingClientRect().bottom);
+  for (const r of await box.locator(pinsOf).evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON() as DOMRect))) expect(r.top).toBeGreaterThanOrEqual(bottom);
+}
 /** En el mapa grande, tocar los grupos hasta que todas las casas salen solas. */
 async function expandGroups(full: import("@playwright/test").Locator) {
   // Acercar el mapa anima el zoom y rehace los marcadores al terminar: se reintenta hasta que no queda ningún grupo.
@@ -65,17 +70,23 @@ async function expandGroups(full: import("@playwright/test").Locator) {
   }).toPass({ timeout: 10_000 });
 }
 
-test("el mapa es el primer elemento de la lista y lleva precios", async ({ page }) => {
+// Tarjetas flotantes, tanda 1 (decisión 4): el mapa va arriba a todo el ancho, debajo de la cabecera flotante; los precios no
+// quedan debajo de sus tarjetas.
+test("el mapa va arriba a todo el ancho, bajo la cabecera flotante, y lleva precios", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(page.locator(".listing-grid > :first-child")).toHaveAttribute("data-testid", "explore-map");
-  const box = await mapBox(page).boundingBox();
-  expect(Math.abs(box!.height - 220)).toBeLessThanOrEqual(1);
+  await expect(page.locator("main.view > :not(.explore-top)").first()).toHaveAttribute("data-testid", "explore-map");
+  const vp = page.viewportSize()!;
+  const box = (await mapBox(page).boundingBox())!;
+  expect(box).toMatchObject({ x: 0, y: 0, width: vp.width });
+  expect(Math.abs(box.height - Math.min(400, vp.height * 0.56))).toBeLessThanOrEqual(1);
+  expect(await page.locator(".listing-grid").evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(box.y + box.height);
   await expect(mapBox(page)).toHaveAttribute("aria-label", "Abrir el mapa de las casas");
   await ready(page);
   await expect(mapBox(page).locator(".leaflet-marker-pane .map-price")).toHaveCount(2);
   await expect(mapBox(page).locator(".leaflet-marker-pane .map-price").filter({ hasText: /^7 casas$/ })).toHaveCount(1);
   await expect(mapBox(page).locator(".leaflet-marker-pane .map-price").filter({ hasText: /^₡42\s000$/ })).toHaveCount(1);
   await expectPinsClear(mapBox(page));
+  await expectPinsBelow(page, mapBox(page), ".explore-top");
   await expect(mapBox(page).getByText("₡42 000", { exact: true })).toBeVisible();
   await expect(mapBox(page).getByText("₡42 000", { exact: true })).toHaveAttribute("title", COCO);
   await expect(mapBox(page).locator(".leaflet-control-attribution")).toBeVisible();
@@ -100,6 +111,20 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   const full = page.locator(".map-full");
   await expect(full.locator(".map-price", { hasText: "₡42 000" })).toBeVisible();
   await expectPinsClear(full.locator(".leaflet-container"));
+  await expectPinsBelow(page, full.locator(".leaflet-container"), ".map-full-top", ".leaflet-marker-pane .map-price");
+  // A pantalla completa, de borde a borde: la barra de abajo flota encima y «8 casas» se apoya sobre ella.
+  const vp = page.viewportSize()!;
+  expect(await full.boundingBox()).toEqual({ x: 0, y: 0, width: vp.width, height: vp.height });
+  // La barra vuelve (se había ido al bajar la lista) y «8 casas» queda a 12 px por encima.
+  const gap = async () => {
+    const [pillBox, barBox] = [(await countPill(page).boundingBox())!, (await page.locator(".tabbar").boundingBox())!];
+    return Math.round(barBox.y - (pillBox.y + pillBox.height));
+  };
+  await expect.poll(gap).toBe(12);
+  for (const control of [full.getByRole("button", { name: "Volver a la lista" }), full.locator(".search-pill"), full.getByRole("link", { name: "Filtros", exact: true })]) {
+    expect(await control.evaluate((el) => getComputedStyle(el).backdropFilter)).toBe("blur(16px) saturate(1.2)");
+    expect((await control.boundingBox())!.height).toBe(52);
+  }
   await expect(full.getByRole("button", { name: "Volver a la lista" })).toBeFocused();
   // La lista de debajo no se enfoca ni se lee mientras el mapa está abierto.
   expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
@@ -193,6 +218,7 @@ test("sin red para el mapa, la caja se queda con los precios y la lista funciona
   await expect(mapBox(page).locator(".map-preview .map-price").filter({ hasText: /^₡42\s000$/ })).toHaveCount(1);
   await expect(mapBox(page).locator(".map-preview .map-price").filter({ hasText: /casas$/ }).first()).toBeVisible();
   await expectPinsClear(mapBox(page), ".map-preview .map-price");
+  await expectPinsBelow(page, mapBox(page), ".explore-top", ".map-preview .map-price");
   const first = page.locator(".listing-grid .listing-card").first();
   await expect(first).toBeVisible();
   await first.click();

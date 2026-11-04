@@ -1,6 +1,7 @@
-// El mapa de Explorar a pantalla completa (maqueta v2 05, `?mapa=1`): trozo diferido que se pide al abrirlo. Arriba,
-// «Volver a la lista», la píldora de búsqueda y los filtros; abajo, «N casas» para volver y, con un marcador tocado, la
-// tarjeta compacta de su casa. La lista sigue montada debajo: al volver conserva su posición.
+// El mapa de Explorar a pantalla completa (maqueta v2 05, `?mapa=1`): trozo diferido que se pide al abrirlo. De borde a borde,
+// con todo flotando encima como tarjetas (tarjetas flotantes, tanda 1): arriba, «Volver a la lista», la píldora de búsqueda y
+// los filtros; abajo, la barra de pestañas, sobre ella «N casas» para volver y, con un marcador tocado, la tarjeta compacta de
+// su casa. La lista sigue montada debajo: al volver conserva su posición.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
 import { cardPrice } from "../domain/describe";
@@ -12,12 +13,15 @@ import { FavoriteButton } from "../shared/favorite-button";
 import { I } from "../shared/icons";
 import { Picture } from "../shared/picture";
 import { useExploreMap, useMapMarkers } from "./explore-map";
+import { showChrome } from "./hiding-chrome";
 import { CardPriceText } from "./listing-card";
 
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLButtonElement>(null);
+  const top = useRef<HTMLDivElement>(null);
+  const count = useRef<HTMLButtonElement>(null);
   const markers = useMapMarkers(listings, nights);
   const { handle } = useExploreMap(
     box,
@@ -28,6 +32,11 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
         onSelect(id);
       },
       onMap: () => onSelect(null),
+      // Arriba, la fila de los controles; abajo, «N casas» (y la barra de pestañas, debajo de ella).
+      insets: () => ({
+        top: top.current ? top.current.offsetTop + top.current.offsetHeight + 24 : 0, // + la atribución, debajo
+        bottom: count.current && overlay.current ? overlay.current.clientHeight - count.current.offsetTop : 0,
+      }),
     },
     markers,
     zone,
@@ -38,6 +47,8 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
   // Mientras está abierto: la página no se mueve, lo de debajo no se enfoca ni se lee, y el foco empieza en «Volver».
   useEffect(() => {
     const root = document.documentElement;
+    // La barra de pestañas a la vista (si se había ido al bajar la lista): «N casas» se apoya en ella.
+    showChrome();
     root.classList.add("map-open");
     const below = [...(overlay.current?.parentElement?.children ?? [])].filter((el): el is HTMLElement => el !== overlay.current && el instanceof HTMLElement && !el.inert);
     for (const el of below) el.inert = true;
@@ -51,14 +62,14 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
   return (
     <div ref={overlay} className="map-full">
       <div ref={box} className="map-full-box" />
-      <div className="map-full-top">
-        <button ref={back} type="button" className="map-round" aria-label="Volver a la lista" onClick={onClose}>
+      <div ref={top} className="map-full-top">
+        <button ref={back} type="button" className="map-round float-card" aria-label="Volver a la lista" onClick={onClose}>
           <I.back />
         </button>
         {header}
       </div>
       {house ? <MapCard listing={house} nights={nights} /> : null}
-      <button type="button" className="map-count" onClick={onClose}>
+      <button ref={count} type="button" className="map-count" onClick={onClose}>
         <I.list size={20} />
         {housesCount(listings.length)}
       </button>
@@ -71,7 +82,7 @@ function MapCard({ listing: l, nights }: { listing: SearchListing; nights: numbe
   const cover = l.photos[0];
   const price = cardPrice(l, nights);
   return (
-    <div className="map-card">
+    <div className="map-card float-card is-strong">
       <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="map-card-link">
         <div className="photo">{cover ? <Picture photo={cover} alt="" sizes="96px" width={96} height={96} /> : null}</div>
         <div className="map-card-text">

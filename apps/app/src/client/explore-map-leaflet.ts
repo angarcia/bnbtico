@@ -20,7 +20,7 @@ export interface ExploreMapHandle {
 /** `interactive: false` es el mapa pequeño de la lista: sin arrastrar, zoom ni teclado (la página baja con el dedo).
  *  Los marcadores que se pisan van juntos en uno, «N casas» (revisión UX 2026-10-29, C2): en el mapa grande, tocarlo acerca
  *  el mapa a esas casas; en el pequeño, el toque sigue hasta la caja y abre el mapa grande. Se rehace al cambiar el zoom. */
-export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; onMarker(publicId: string): void; onMap(): void }): ExploreMapHandle {
+export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; onMarker(publicId: string): void; onMap(): void; insets(): { top: number; bottom: number } }): ExploreMapHandle {
   const still = { dragging: false, scrollWheelZoom: false, touchZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false };
   const map = L.map(el, { zoomControl: false, ...(opts.interactive ? {} : still) });
   L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
@@ -29,8 +29,11 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
   let markers: MapMarker[] = [];
   let selected: string | null = null;
   const [padX, padY] = EXPLORE_MAP.padding;
-  const fit = (points: { lat: number; lng: number }[]) =>
-    map.fitBounds(L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number])), { padding: [padX, padY], maxZoom: EXPLORE_MAP.maxZoom });
+  // Los precios, fuera de lo que tapan las tarjetas flotantes de arriba y de abajo (tarjetas flotantes, tanda 1).
+  const fit = (points: { lat: number; lng: number }[]) => {
+    const { top, bottom } = opts.insets();
+    map.fitBounds(L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number])), { paddingTopLeft: [padX, padY + top], paddingBottomRight: [padX, padY + bottom], maxZoom: EXPLORE_MAP.maxZoom });
+  };
   map.on("click", () => opts.onMap());
 
   const mark = () => {

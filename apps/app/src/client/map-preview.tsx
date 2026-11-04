@@ -5,15 +5,17 @@ import { groupLabel, groupPins } from "../domain/map-pins";
 import type { MapMarker } from "./explore-map";
 
 /** Mientras llega Leaflet, los precios sobre el fondo de la caja, ya juntos si se pisan: una proyección lineal de los
- *  puntos con el mismo relleno que el encuadre (en un trozo tan pequeño del mapa, casi donde Leaflet los pondrá). */
-export function PricePreview({ markers, width, height }: { markers: MapMarker[]; width: number; height: number }) {
+ *  puntos con el mismo relleno que el encuadre, debajo de la cabecera flotante (en un trozo tan pequeño del mapa, casi donde
+ *  Leaflet los pondrá). */
+export function PricePreview({ markers, width, height, top = 0 }: { markers: MapMarker[]; width: number; height: number; top?: number }) {
   if (!markers.length || !width) return null;
   const [padX, padY] = EXPLORE_MAP.padding;
   const lats = markers.map((m) => m.lat);
   const lngs = markers.map((m) => m.lng);
   const [minLat, maxLat, minLng, maxLng] = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)];
   const at = (v: number, min: number, max: number, size: number, pad: number) => (max === min ? size / 2 : pad + ((v - min) / (max - min)) * (size - 2 * pad));
-  const pins = markers.map((m) => ({ id: m.publicId, label: m.label, x: at(m.lng, minLng, maxLng, width, padX), y: at(maxLat - m.lat + minLat, minLat, maxLat, height, padY) }));
+  // `top`: lo que tapa la cabecera flotante; los precios van en lo que queda debajo.
+  const pins = markers.map((m) => ({ id: m.publicId, label: m.label, x: at(m.lng, minLng, maxLng, width, padX), y: top + at(maxLat - m.lat + minLat, minLat, maxLat, height - top, padY) }));
   const byId = new Map(markers.map((m) => [m.publicId, m]));
   return (
     <div className="map-preview" aria-hidden="true">

@@ -1,6 +1,6 @@
-// Explorar (pantalla 01, maqueta v2): sin barra superior; arriba la píldora de búsqueda y la cuenta, y la fila de chips
-// (filtros y «₡ | $»), fijas al bajar. Limón por defecto, filtros en la URL, una casa por fila; con llegada y salida, cada
-// tarjeta y su marcador dicen el total orientativo de esas noches.
+// Explorar (pantalla 01, maqueta v2; tarjetas flotantes, tanda 1): el mapa arriba a todo el ancho y, flotando encima como
+// tarjetas, la píldora de búsqueda, los filtros y «₡ | $», que se esconden al bajar y vuelven al subir. Limón por defecto,
+// filtros en la URL, una casa por fila; con llegada y salida, cada tarjeta y su marcador dicen el total orientativo de esas noches.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
@@ -23,6 +23,7 @@ import { SUPPORT_NUMBERS } from "../support-numbers";
 import { isDatesError, listingsQuery, provincesQuery, zonesQuery } from "../queries";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
+import type { SearchListing } from "../../domain/listing";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
@@ -39,7 +40,7 @@ function SearchPill({ filters: f, zoneName, search }: { filters: Filters; zoneNa
   // Las zonas de «¿Dónde?», pedidas al tocar la píldora; la ruta se precarga por `defaultPreload: "intent"`.
   const prefetchZones = () => void queryClient.prefetchQuery(zonesQuery);
   return (
-    <Link to="/explorar/buscar" search={search} className="search-pill" onPointerDown={prefetchZones} onFocus={prefetchZones}>
+    <Link to="/explorar/buscar" search={search} className="search-pill float-card" onPointerDown={prefetchZones} onFocus={prefetchZones}>
       <I.search size={22} />
       <span className="search-pill-text">{searchSummary(f, zoneName) ?? "Empiece su búsqueda"}</span>
     </Link>
@@ -49,29 +50,36 @@ function SearchPill({ filters: f, zoneName, search }: { filters: Filters; zoneNa
 function FiltersLink({ filters: f, search }: { filters: Filters; search: ExploreSearch }) {
   const extras = extrasCount(f);
   return (
-    <Link to="/explorar/filtros" search={search} className="chip filters-btn" aria-label={filtersLabel(extras)}>
+    <Link to="/explorar/filtros" search={search} className="chip filters-btn float-card" aria-label={filtersLabel(extras)}>
       <I.sliders size={22} />
       {extras ? <span className="badge badge-ok badge-count num">{extras}</span> : null}
     </Link>
   );
 }
 
-/** Cabecera de Explorar: la píldora (abre la búsqueda) a todo el ancho (la cuenta es una pestaña, C4); debajo, los filtros y
- *  «₡ | $». */
+/** Cabecera de Explorar, flotando sobre el mapa: la píldora (abre la búsqueda) a todo el ancho (la cuenta es una pestaña, C4);
+ *  debajo, los filtros y «₡ | $». Se esconde al bajar con la barra de abajo (`.chrome-hide`). */
 function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
   return (
-    <header className="explore-top">
+    <header className="explore-top chrome-hide">
       <h1 className="sr-only">Explorar casas</h1>
       <div className="explore-search">
         <SearchPill filters={f} zoneName={zoneName} search={search} />
       </div>
       <div className="chiprow fit">
         <FiltersLink filters={f} search={search} />
-        <CurrencySwitch />
+        <CurrencySwitch className="float-card" />
       </div>
     </header>
   );
 }
+
+/** El sitio del mapa mientras llegan las provincias: la misma caja, para que nada salte al llegar. */
+function MapPlaceholder() {
+  return <div className="map-box explore-map" aria-hidden="true" />;
+}
+
+const NO_LISTINGS: SearchListing[] = [];
 
 function SkeletonGrid() {
   return (
@@ -147,6 +155,8 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   };
   return (
     <>
+      {/* Arriba a todo el ancho, también mientras busca: sin casas no se abre. */}
+      <ExploreMap ref={mapBox} listings={listings ?? NO_LISTINGS} zone={zone} nights={nights} onOpen={listings?.length ? openMap : null} />
       <div className="stack gap-4">
         <span className="small muted" data-testid="results-count">
           {listings
@@ -181,7 +191,6 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
       ) : (
         <>
           <div className={`listing-grid${reveal}`}>
-            <ExploreMap ref={mapBox} listings={listings} zone={zone} nights={nights} onOpen={openMap} />
             {listings.map((l, i) => (
               <ListingCard key={l.publicId} listing={l} nights={nights} priority={i === 0} />
             ))}
@@ -230,14 +239,23 @@ export function ExplorarScreen() {
     <>
       <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f, provinces) : search} />
       {isError ? (
-        <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
+        <>
+          <MapPlaceholder />
+          <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
+        </>
       ) : loading ? (
-        <SkeletonGrid />
+        <>
+          <MapPlaceholder />
+          <SkeletonGrid />
+        </>
       ) : provinces.length === 0 ? (
-        <section className="card stack">
-          <h3>Todavía no hay casas publicadas</h3>
-          <p className="small muted">Las primeras casas del Caribe sur están en camino.</p>
-        </section>
+        <>
+          <MapPlaceholder />
+          <section className="card stack">
+            <h3>Todavía no hay casas publicadas</h3>
+            <p className="small muted">Las primeras casas del Caribe sur están en camino.</p>
+          </section>
+        </>
       ) : (
         <Results filters={f} provinces={provinces} zoneName={zoneName} zone={zone} />
       )}
