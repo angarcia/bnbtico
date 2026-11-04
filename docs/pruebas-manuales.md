@@ -402,8 +402,8 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 
 ### 3.12 Detalle de una casa y compartir la ficha
 
-- [ ] **A77** Abra una casa activa → título, enlace «Ver ficha», etiqueta «Activa», «5 fotos · Editar», tarjeta «Últimos 30 días» con «visitas», «toques en WhatsApp» y «consulta(s)», y la nota «Toque un dato para cambiarlo. Lo marcado con Revisión lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.».
-- [ ] **A78** Toque «Ver ficha» → abre `/casa/CT-####` con la ficha pública de la casa.
+- [ ] **A77** Abra una casa activa → título (sin «Ver ficha» en la cabecera), etiqueta «Activa», «5 fotos · Editar», tarjeta «Últimos 30 días» con «visitas», «toques en WhatsApp» y «consulta(s)», y la nota «Toque un dato para cambiarlo. Lo marcado con Revisión lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.».
+- [ ] **A78** Abajo y centrado flota el botón «Ver ficha» con un ojo a la izquierda, con el mismo aspecto que «Mapa» de Explorar (tinta translúcida, esquinas de 6 px, no redondo) y sin chocar con la barra de inicio del iPhone; baje hasta el final: la fila «Suscripción» se lee entera por encima del botón. Tóquelo → abre `/casa/CT-####` con la ficha pública de la casa.
 - [ ] **A79** Baje en el detalle → «Compartir ficha» con el enlace `nueva.bnbtico.com/casa/CT-####` debajo, la fila «WhatsApp de esta casa» con «+506 8777 0001 · verificado» y el bloque «Suscripción» con «Oferta de lanzamiento» y «Al día».
 - [ ] **A80** Toque «Compartir ficha» → se abre la hoja de compartir del teléfono con el enlace y el texto de la casa; elija WhatsApp y el enlace llega; sin hoja de compartir, el botón dice «Enlace copiado».
 

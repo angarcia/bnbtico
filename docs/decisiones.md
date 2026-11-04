@@ -1,3 +1,7 @@
+## 2026-11-04 · «Ver ficha» flotante en el detalle de la casa (ronda de Ana, ticket 05 rehecho; Daniel)
+
+En el detalle de la casa del anfitrión, «Ver ficha» sale de la cabecera y pasa a un botón flotante abajo y centrado, con un ojo y el mismo aspecto que «Mapa» de Explorar (regla visual compartida `.float-btn,.map-label,.map-count`; esquinas de 6 px, no píldora). La pantalla deja 80 px más el área segura debajo para no tapar lo último. El modo admin no cambia.
+
 ## 2026-11-03 · El admin edita las casas, versión simple (ronda de Ana, ticket 10; Daniel)
 
 La única admin es Ana: no se controla al propio admin. Ana edita cualquier dato de cualquier casa (salvo eliminadas), borradores incluidos, al momento y sin revisión, con las mismas pantallas y reglas de datos que el anfitrión; puede enviar a revisión el borrador de otro. Sin nota, sin «Editado por bnbtico» ni aviso al anfitrión; una línea `listing.edit` en `admin_actions` por guardado. La revisión dato a dato no cambia («Aprobar» / «Pedir cambios» con nota); si Ana edita un dato que el anfitrión tenía pendiente, manda lo de Ana y el pendiente se descarta. Sustituye el plan con D1–D7 del ticket 10.

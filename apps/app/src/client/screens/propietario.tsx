@@ -323,13 +323,6 @@ export function CasaPropietarioScreen() {
       <FlowHeader
         title={l ? titleOf(l) : "Mi casa"}
         back="/propietario/casas"
-        action={
-          l && can(l, "share") ? (
-            <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="link header-action">
-              Ver ficha
-            </Link>
-          ) : undefined
-        }
       />
       {l && isPublished(l) ? (
         <Suspense fallback={<SkeletonCard />}>
@@ -340,6 +333,12 @@ export function CasaPropietarioScreen() {
       {l === null ? <NotFoundCard /> : null}
       {l === undefined && query.isError ? <p className="note" role="alert">{message(query.error)}</p> : null}
       {l === undefined && !query.isError ? <SkeletonCard /> : null}
+      {l && can(l, "share") ? (
+        <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="float-btn">
+          <I.eye size={20} />
+          Ver ficha
+        </Link>
+      ) : null}
     </>
   );
 }

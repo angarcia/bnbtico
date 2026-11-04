@@ -426,7 +426,12 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .map-preview{position:absolute;inset:0;pointer-events:none}
 .map-preview .map-price{position:absolute}
 .map-price.is-selected{background:var(--brand-ink);color:#FFFBF2;box-shadow:0 6px 14px -4px rgba(180,76,48,.6)}
-.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
+.float-btn,.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
+/* «Ver ficha» del detalle de la casa del anfitrión (ronda de Ana 2 nov, ticket 05): el aspecto de «Mapa» (regla de arriba), fijo abajo
+   y centrado; esa pantalla no tiene barra de pestañas. La pantalla deja debajo el alto del botón (48) + 32 de aire para que lo último
+   se lea por encima. */
+.float-btn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;text-decoration:none}
+.view:has(> .float-btn){padding-bottom:calc(48px + 32px + env(safe-area-inset-bottom))}
 /* Baja con la barra de pestañas (`html.tabbar-away`), con su misma transición. */
 .map-label{transition:transform 200ms var(--ease-out)}
 /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */

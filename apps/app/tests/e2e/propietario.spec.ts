@@ -171,6 +171,51 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
 });
 
+test("detalle: «Ver ficha» es un botón flotante abajo con el aspecto de «Mapa», fuera de la cabecera y sin tapar el final", async ({ page }) => {
+  await page.goto(`/propietario/casas/${active.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  await expect(page.getByTestId("field-rows")).toBeVisible();
+  const ver = page.getByRole("link", { name: "Ver ficha", exact: true });
+  await expect(ver).toHaveCount(1);
+  await expect(ver).toHaveAttribute("href", `/casa/${active.publicId}`);
+  await expect(page.locator("header").getByRole("link", { name: "Ver ficha" })).toHaveCount(0);
+  await expect(ver.locator("svg")).toHaveCount(1); // el ojo, a la izquierda del texto
+  // El mismo aspecto que «Mapa» de Explorar: se compara con un `.map-label` puesto en esta página (la regla es la misma en global.css).
+  const looks = await ver.evaluate((el) => {
+    const pick = (node: Element) => {
+      const c = getComputedStyle(node);
+      return [c.backgroundColor, c.borderRadius, c.height, c.paddingLeft, c.paddingRight, c.color, c.font, c.boxShadow, c.columnGap, c.textDecorationLine].join(" | ");
+    };
+    const ref = document.createElement("button");
+    ref.className = "map-label";
+    ref.textContent = "Mapa";
+    document.body.append(ref);
+    const out = { ver: pick(el), mapa: pick(ref), pos: getComputedStyle(el).position, radius: getComputedStyle(el).borderTopLeftRadius };
+    ref.remove();
+    return out;
+  });
+  expect(looks.ver).toBe(looks.mapa);
+  expect(looks.pos).toBe("fixed");
+  expect(looks.radius).toBe("6px"); // esquinas de 6 px, no píldora redonda (decisión 2026-10-29)
+  // El ojo y el texto en la misma línea, centrados en el alto del botón.
+  const [icon, box] = [(await ver.locator("svg").boundingBox())!, (await ver.boundingBox())!];
+  expect(Math.abs(icon.y + icon.height / 2 - (box.y + box.height / 2))).toBeLessThan(1);
+  // Abajo y centrado.
+  const vp = page.viewportSize()!;
+  expect(Math.abs(box.x + box.width / 2 - vp.width / 2)).toBeLessThan(2);
+  expect(vp.height - (box.y + box.height)).toBe(16);
+  // Al final de la pantalla lo último queda por encima del botón, con aire.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const last = await page.locator(".view").evaluate((view) => {
+    const items = [...view.querySelectorAll("*")].filter((el) => !el.closest("a[href^='/casa/']") && el.getBoundingClientRect().height > 0);
+    return Math.max(...items.map((el) => el.getBoundingClientRect().bottom));
+  });
+  // 16 px de aire entre lo último y el botón (el scroll no llega a fracciones de píxel: margen de 1).
+  expect(last).toBeLessThan((await ver.boundingBox())!.y - 15);
+  await ver.click();
+  await expect(page).toHaveURL(new RegExp(`/casa/${active.publicId}$`));
+});
+
 test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as { shared: unknown[]; copied: string[] };
