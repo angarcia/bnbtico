@@ -459,16 +459,17 @@ describe("rótulo de la selección", () => {
   });
 });
 
-describe("mensajes (los copian la migración fase4_calendario y el fake)", () => {
+describe("mensajes (los copian la migración casa_pausada_textos y el fake)", () => {
   it("son exactamente los del spec", () => {
     expect(M).toMatchObject({
       notFound: "No encontramos ese anuncio.",
       rejected: "Este anuncio fue rechazado; publique uno nuevo.",
-      closed: "La casa está cerrada a consultas. Ábrala para cambiar el calendario.",
+      closed: "La casa está pausada. Vuelva a publicarla para cambiar el calendario.",
       range: "Elija días entre hoy y dentro de un año.",
       nothing: "No hay cambios que guardar.",
       price: "Escriba un precio por noche en colones, mayor que cero y sin decimales.",
-      reopenDate: "La fecha de reapertura debe ser a partir de mañana y dentro de un año.",
+      reopenDate: "La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.",
+      reopenWhileOpen: "La fecha para volver a publicarla solo se pone al pausar la casa.",
       notActive: "Solo puede cambiar la disponibilidad de una casa activa.",
     });
   });

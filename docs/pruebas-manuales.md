@@ -103,7 +103,7 @@ Sembradas el 2026-10-30 en `bnbtico-pruebas` por los mismos caminos que la app (
 | CT-1051 (e) | Habitación privada en Cahuita | Marco | Activa | Cahuita (Limón) | 4 | Habitación con baño privado y «Niños pequeños gratis» (C22–C30) |
 | CT-1052 (f) | Villa Punta Uva en la selva | Yorleny | Activa | Punta Uva (Limón) | 8 | 10 personas, ₡180 000, descripción larga de 14 líneas («Ver más», C46–C55); parqueo de pago; noches ocupadas el mes próximo y precios especiales con ★ (C31–C42, A94–A107); consulta de grupo; favorito |
 | CT-1053 (g) | Apartamento Limón centro | Marco | Activa | «Barrio Roosevelt» escrita a mano, Otra… (Limón) | 3 | Zona propuesta con la marca del admin (D20–D27); parqueo gratis; búsqueda por Limón (C31–C42) |
-| CT-1054 (h) | Casa Playa Negra tranquila | Yorleny | Activa, pausada hasta 2026-11-20 | Playa Negra (Limón) | 4 | «Pausar la casa» (A94–A107): no sale en Explorar pero su ficha abre; debe verse como cerrada a consultas (C56–C63, C86–C92); favorito |
+| CT-1054 (h) | Casa Playa Negra tranquila | Yorleny | Activa, pausada hasta 2026-11-20 | Playa Negra (Limón) | 4 | «Pausar la casa» (A94–A107): no sale en Explorar pero su ficha abre; debe verse como no disponible (C56–C63, C86–C92); favorito |
 | CT-1055 (i) | Casa Santa Teresa cerca del mar | Marco | Activa | Santa Teresa, Otra… (Puntarenas) | 5 | Otra provincia: Explorar solo ofrece Puntarenas si hay casa aprobada allí (C22–C30, C31–C42) |
 | CT-1056 (j) | Casa Jaguar Puerto Viejo | Yorleny | Activa con oferta de lanzamiento (12 meses) | Puerto Viejo (Limón) | 5 | Para el reloj de pruebas (A124–A139, X6): cambiar sus días de oferta; no tocarla en otras pruebas |
 | CT-1057 (k) | Cabina Hone Creek | Yorleny | Borrador incompleto | Hone Creek (Limón) | 0 | Sin fotos ni precio: «Falta: fotos y precio», «Seguir publicando» (A57–A65, A42–A49) |
@@ -231,7 +231,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C64** Abra el enlace de la casa con la suscripción parada → «Este enlace ya no está activo», «El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.», «Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.» y el botón «Ver otras casas en el Caribe», que lleva a Explorar.
 - [ ] **C65** Abra el enlace de la casa en revisión → «Este enlace ya no está activo» con «Este anuncio no está disponible en este momento.» (si en cambio está en «Pendiente de pago»: «Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.»).
 - [ ] **C66** Abra `/casa/CT-9999` → «Este enlace no existe», «Revise que el enlace esté completo. Si se lo pasaron por WhatsApp, pida que se lo envíen de nuevo.» y «Ver otras casas en el Caribe».
-- [ ] **C67** Abra la ficha de la casa pausada con «Pausar la casa» → insignia «No disponible por ahora», botón gris «No disponible por ahora» que no se puede tocar, «Calendario cerrado» y «Vuelve a estar disponible el <fecha>»; esa casa no sale en Explorar.
+- [ ] **C67** Abra la ficha de la casa pausada con «Pausar la casa» → insignia «No disponible por ahora», botón gris «No disponible por ahora» que no se puede tocar, «Calendario no disponible» y «Vuelve a estar disponible el <fecha>»; esa casa no sale en Explorar.
 - [ ] **C68** Con la cuenta propietaria `8777 0001`, abra la ficha de una de sus casas, toque «Contactar por WhatsApp» y «Abrir WhatsApp» → aparece «Esta es su propia casa.» y no se abre WhatsApp.
 
 ### 2.12 Favoritos
@@ -448,7 +448,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 - [ ] **A101c** Marque una reserva que pise una noche ya ocupada o con precio especial (★) → esa noche queda ocupada y conserva su precio (al liberarla vuelve a mostrarlo).
 - [ ] **A101d** Abra la hoja y ciérrela con «Cancelar», tocando el fondo o con Escape (teclado) → no cambia nada; al volver a abrirla empieza sin fechas. Con un día tocado (panel abajo), marcar una reserva cierra el panel.
 - [ ] **A102** Toque «Pausar la casa» → hoja «Pausar la casa» con «Volver a publicarla el (opcional)», «No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar.», «Pausar la casa» y «Cancelar».
-- [ ] **A103** Elija una fecha de reapertura de ayer o de dentro de más de un año → «La fecha de reapertura debe ser a partir de mañana y dentro de un año.».
+- [ ] **A103** Elija una fecha para volver a publicarla de ayer o de dentro de más de un año → «La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.».
 - [ ] **A104** Elija una fecha de vuelta de dentro de una semana y toque «Pausar la casa» → la tarjeta pasa a «Pausada hasta el <fecha>» («No aparece en Explorar ni recibe consultas.») con «Volver a publicarla» a lo ancho, sin «Marcar una reserva»; los días se ven atenuados y la casa no sale en Explorar ni recibe consultas (compruébelo sin sesión en otra pestaña).
 - [ ] **A105** Con la casa pausada toque una noche → no se selecciona (solo lectura).
 - [ ] **A106** Toque «Volver a publicarla» → vuelven «Marcar una reserva» y «Pausar la casa» al instante y la casa sale otra vez en Explorar.

@@ -78,7 +78,7 @@ test("pausar con fecha → «Pausada hasta el …» → fuera de Explorar y fich
   await closeRow(page).click();
   await date.fill(today());
   await sheet(page).getByRole("button", { name: "Pausar la casa" }).click();
-  await expect(sheet(page).locator('.note[role="alert"]')).toHaveText("La fecha de reapertura debe ser a partir de mañana y dentro de un año.");
+  await expect(sheet(page).locator('.note[role="alert"]')).toHaveText("La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.");
   // Tab no sale de la hoja.
   for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
   // Con el foco en un campo de la fecha (dentro del input) `:focus` no lo ve en Chrome: se mira el elemento activo.

@@ -420,12 +420,12 @@ test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo 
   await context.setOffline(false);
 
   await page.route("**/rest/v1/rpc/save_listing_days", (route) =>
-    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "La casa está cerrada a consultas. Ábrala para cambiar el calendario.", details: null, hint: null }) }),
+    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "La casa está pausada. Vuelva a publicarla para cambiar el calendario.", details: null, hint: null }) }),
   );
   await day(page, on(9)).click();
   await panel(page).getByRole("button", { name: "Ocupado" }).click();
   await saveBtn(page).click();
-  await expect(page.locator(".toast").last()).toHaveText("La casa está cerrada a consultas. Ábrala para cambiar el calendario.");
+  await expect(page.locator(".toast").last()).toHaveText("La casa está pausada. Vuelva a publicarla para cambiar el calendario.");
   await expect(day(page, on(9))).toContainText("95\u00a0000");
   expect(await h.calendar("owner").days(casa.id)).toEqual([]);
 });

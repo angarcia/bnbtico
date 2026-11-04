@@ -14,7 +14,7 @@ import { costaRicaToday } from "../../src/domain/inquiry";
 // La propietaria envía su casa → «Marcar las noches ocupadas» → marca 3 noches y un precio ★ mientras está en revisión →
 // el admin (aal2) la aprueba → un cliente anónimo abre la ficha y los ve → la propietaria libera una noche y cambia la ★
 // → la carga nueva del cliente ya lo trae (purga) → la propietaria la cierra con fecha de reapertura → el cliente ve «No
-// disponible… Vuelve a estar disponible el …» y «Calendario cerrado» → reapertura nocturna (`reopen_due_listings`) →
+// disponible… Vuelve a estar disponible el …» y «Calendario no disponible» → reapertura nocturna (`reopen_due_listings`) →
 // abierta otra vez con el calendario intacto.
 // La frescura usa el mismo mecanismo que frescura.spec.ts: secretos de Vault locales que apuntan al preview (creados en
 // beforeAll y SIEMPRE borrados en afterAll) y un Chrome aparte que entra por host.docker.internal, para que la clave de
@@ -189,7 +189,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await expect(second.cell(on(20))).toHaveText("20180\u00a0000");
   await second.page.context().close();
 
-  // 6. La cierra a consultas con fecha de reapertura: el cliente ve «No disponible…» y «Calendario cerrado».
+  // 6. La cierra a consultas con fecha de reapertura: el cliente ve «No disponible…» y «Calendario no disponible».
   const reopen = addDays(today(), 9);
   from = lastResponseId();
   await owner.goto(`/propietario/calendario?casa=${draft.id}&mes=${next()}`);
@@ -198,13 +198,13 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   await sheet.getByLabel("Volver a publicarla el (opcional)").fill(reopen);
   await sheet.getByRole("button", { name: "Pausar la casa" }).click();
   await expect(owner.getByText(`Pausada hasta el ${shortDate(reopen)}`)).toBeVisible();
-  await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario cerrado");
+  await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain("Calendario no disponible");
   await expect.poll(() => statusesAfter(from)).toContain("200");
   const closed = await client(draft.publicId);
   await expect(closed.page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(closed.page.getByRole("button", { name: "No disponible por ahora" })).toBeDisabled();
   await expect(closed.page.locator(".cta-bar").getByText(`Vuelve a estar disponible el ${longDate(reopen)}`)).toBeVisible();
-  const note = closed.page.locator(".note").filter({ hasText: "Calendario cerrado" });
+  const note = closed.page.locator(".note").filter({ hasText: "Calendario no disponible" });
   await expect(note).toContainText(`Vuelve a estar disponible el ${longDate(reopen)}`);
   await expect(closed.page.locator(".month-grid")).toHaveCount(0);
   await closed.page.context().close();

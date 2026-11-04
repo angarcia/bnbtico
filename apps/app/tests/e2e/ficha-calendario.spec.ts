@@ -161,17 +161,17 @@ test("con alquiler mensual a negociar, el calendario sigue siendo por noches con
   await expect(cell(page, on(15))).toHaveText("1595\u00a0000");
 });
 
-test("casa cerrada a consultas: «Calendario cerrado» y cuándo vuelve, ya en el HTML y sin rejilla", async ({ page }) => {
+test("casa cerrada a consultas: «Calendario no disponible» y cuándo vuelve, ya en el HTML y sin rejilla", async ({ page }) => {
   const casa = await seedWithDays("Casa Cerrada Ficha");
   const reopen = addDays(today(), 12);
   await h.owner("owner").setAvailable(casa.id, false, reopen);
   const seen = watch(page);
   const res = await page.goto(`/casa/${casa.publicId}`);
   const html = await res!.text();
-  expect(html).toContain("Calendario cerrado");
+  expect(html).toContain("Calendario no disponible");
   expect(html).not.toContain('class="listing-calendar"');
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  const closed = page.locator(".note").filter({ hasText: "Calendario cerrado" });
+  const closed = page.locator(".note").filter({ hasText: "Calendario no disponible" });
   await expect(closed).toContainText(`Vuelve a estar disponible el ${longDate(reopen)}`);
   await expect(page.locator(".month-grid")).toHaveCount(0);
   await closed.evaluate((el) => el.scrollIntoView({ block: "center" }));

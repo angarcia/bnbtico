@@ -35,17 +35,17 @@ export const CALENDAR_WINDOW_DAYS = 365;
 export const CALENDAR_MAX_DAYS = 366;
 export const CALENDAR_MAX_PRICE_CRC = 100_000_000;
 
-/** Mensajes de save_listing_days / set_listing_available, repetidos tal cual en la migración fase4_calendario y en el fake. */
+/** Mensajes de save_listing_days / set_listing_available, repetidos tal cual en la migración casa_pausada_textos y en el fake. */
 export const CALENDAR_MESSAGES = {
   notFound: "No encontramos ese anuncio.",
   rejected: "Este anuncio fue rechazado; publique uno nuevo.",
-  closed: "La casa está cerrada a consultas. Ábrala para cambiar el calendario.",
+  closed: "La casa está pausada. Vuelva a publicarla para cambiar el calendario.",
   range: "Elija días entre hoy y dentro de un año.",
   nothing: "No hay cambios que guardar.",
   price: "Escriba un precio por noche en colones, mayor que cero y sin decimales.",
   noNightlyPrice: "Ponga primero el precio por noche de la casa para cambiar el de un día.",
-  reopenDate: "La fecha de reapertura debe ser a partir de mañana y dentro de un año.",
-  reopenWhileOpen: "La fecha de reapertura solo se pone al cerrar la casa.",
+  reopenDate: "La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.",
+  reopenWhileOpen: "La fecha para volver a publicarla solo se pone al pausar la casa.",
   notActive: "Solo puede cambiar la disponibilidad de una casa activa.",
 } as const;
 

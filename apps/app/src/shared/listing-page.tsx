@@ -138,7 +138,7 @@ const loadCalendar = () => import("./listing-calendar");
 const ListingCalendar = lazy(() => loadCalendar().then((m) => ({ default: m.ListingCalendar })));
 
 /** «Disponibilidad». En el HTML del servidor solo la caja, de alto fijo (sin la rejilla: los días van en ssr-data); la
- *  rejilla se monta dentro tras hidratar. Una casa cerrada a consultas muestra «Calendario cerrado» ya en el servidor.
+ *  rejilla se monta dentro tras hidratar. Una casa pausada muestra «Calendario no disponible» ya en el servidor.
  *  `missing`: días que no se pudieron leer (null del servidor, o la consulta de la SPA falló): sin sección, ni caja ni error. */
 function Availability({ listing, missing, currency, fx, onStay }: { listing: PublicListing; missing: boolean; currency: Currency; fx: number; onStay: (stay: BarStay | null) => void }) {
   const box = useRef<HTMLDivElement>(null);
@@ -168,7 +168,7 @@ function Availability({ listing, missing, currency, fx, onStay }: { listing: Pub
         </div>
       ) : (
         <div className="note note-arena note-col">
-          <b>Calendario cerrado</b>
+          <b>Calendario no disponible</b>
           {reopen ? <span className="small">{reopen}</span> : null}
         </div>
       )}

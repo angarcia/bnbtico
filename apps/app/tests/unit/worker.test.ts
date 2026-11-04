@@ -220,13 +220,13 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(body.indexOf("Disponibilidad")).toBeLessThan(body.indexOf("Zona aproximada"));
   });
 
-  it("una casa cerrada a consultas trae «Calendario cerrado» y su reapertura, sin caja del calendario", async () => {
+  it("una casa pausada trae «Calendario no disponible» y cuándo vuelve, sin caja del calendario", async () => {
     const reopen = addDays(costaRicaToday(Date.now()), 20);
     await t.h.owner("owner").setAvailable(casa.id, false, reopen);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const body = html.slice(html.indexOf('<div id="root">'));
-    expect(body).toContain("Calendario cerrado");
-    expect(body).toMatch(/Calendario cerrado[\s\S]*Vuelve a estar disponible el/);
+    expect(body).toContain("Calendario no disponible");
+    expect(body).toMatch(/Calendario no disponible[\s\S]*Vuelve a estar disponible el/);
     expect(body).not.toContain('class="listing-calendar"');
   });
 
