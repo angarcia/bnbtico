@@ -42,3 +42,65 @@ test("una ruta desconocida muestra el shell con su aviso", async ({ page }) => {
   await page.getByRole("link", { name: "Ir a Explorar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
 });
+
+// Solo en vertical en el teléfono (decisión 2026-11-03): en un teléfono en horizontal, el aviso tapa la app y no deja tocar
+// nada; al volver a vertical se va y la app sigue donde estaba (sin recargar). No sale en tabletas ni en el ordenador.
+const ROTATE = "Gire el teléfono para usar bnbtico";
+
+test("teléfono en horizontal: el aviso tapa la app, no deja tocar y al volver a vertical sigue donde estaba", async ({ page }) => {
+  const problems = watchConsole(page);
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/favoritos");
+  await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
+  const notice = page.getByRole("alert").filter({ hasText: ROTATE });
+  await expect(notice).toBeHidden();
+  await page.evaluate(() => ((window as unknown as { __sinRecargar: boolean }).__sinRecargar = true));
+  const tab = page.locator('nav[aria-label="Navegación principal"] a[href="/explorar"]');
+  const box = (await tab.boundingBox())!;
+
+  await page.setViewportSize({ width: 667, height: 375 });
+  await expect(notice).toBeVisible();
+  await expect(notice.locator("img")).toBeVisible();
+  // Lo demás, fuera de la vista y del árbol de accesibilidad (visibility:hidden), pero montado.
+  await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeHidden();
+  await expect(page.getByRole("navigation", { name: "Navegación principal" })).toBeHidden();
+  const at = { x: Math.min(box.x + box.width / 2, 660), y: 375 - 20 };
+  expect(await page.evaluate(({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".rotate-notice"), at)).toBe(true);
+  await page.touchscreen.tap(at.x, at.y);
+  await page.waitForTimeout(300);
+  await expect(page).toHaveURL(/\/favoritos$/);
+
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expect(notice).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
+  await expect(page).toHaveURL(/\/favoritos$/);
+  expect(await page.evaluate(() => (window as unknown as { __sinRecargar?: boolean }).__sinRecargar)).toBe(true);
+  // Ya en vertical, la pestaña responde.
+  await tab.click();
+  await expect(page).toHaveURL(/\/explorar$/);
+  expect(problems, problems.join("\n")).toEqual([]);
+});
+
+test("la ficha que pinta el worker también lleva el aviso en horizontal", async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.goto("/casa/CT-999999");
+  await expect(page.getByRole("alert").filter({ hasText: ROTATE })).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expect(page.getByRole("alert").filter({ hasText: ROTATE })).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
+test("ni en el ordenador ni en una tableta en horizontal sale el aviso", async ({ browser, baseURL }) => {
+  for (const device of [
+    { viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false },
+    { viewport: { width: 1024, height: 768 }, isMobile: true, hasTouch: true },
+  ]) {
+    const ctx = await browser.newContext({ ...device, baseURL, serviceWorkers: "block" });
+    const page = await ctx.newPage();
+    await page.goto("/explorar");
+    await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeVisible();
+    await expect(page.getByText(ROTATE)).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Explorar" })).toBeVisible();
+    await ctx.close();
+  }
+});

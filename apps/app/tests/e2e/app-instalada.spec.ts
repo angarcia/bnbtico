@@ -102,8 +102,9 @@ test("manifiesto, iconos y cabeceras: instalable, abre en /explorar sin redirecc
 
   const manifest = await request.get("/manifest.webmanifest");
   expect(manifest.status()).toBe(200);
-  const m = (await manifest.json()) as { start_url: string; display: string; icons: { src: string; purpose: string; sizes: string }[]; theme_color: string; background_color: string };
-  expect(m).toMatchObject({ start_url: "/explorar", display: "standalone", theme_color: "#FFFBF2", background_color: "#FFFBF2" });
+  const m = (await manifest.json()) as { start_url: string; display: string; orientation: string; icons: { src: string; purpose: string; sizes: string }[]; theme_color: string; background_color: string };
+  // Solo en vertical en el teléfono (decisión 2026-11-03): instalada, el sistema no la gira.
+  expect(m).toMatchObject({ start_url: "/explorar", display: "standalone", orientation: "portrait", theme_color: "#FFFBF2", background_color: "#FFFBF2" });
   expect(m.icons.map((i) => `${i.sizes} ${i.purpose}`)).toEqual(["192x192 any", "512x512 any", "192x192 maskable", "512x512 maskable"]);
   for (const icon of [...m.icons.map((i) => i.src), "/icons/apple-touch-icon.png"]) {
     const res = await request.get(icon);

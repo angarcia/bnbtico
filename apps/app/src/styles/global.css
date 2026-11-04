@@ -1139,3 +1139,18 @@ html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);op
    el toque entre sus tarjetas): ni a medio salir ni, con movimiento reducido, fundida en su sitio. Con el foco del teclado, sí. */
 html.chrome-away .chrome-hide:not(:has(:focus-visible)) *{pointer-events:none}
 @media (prefers-reduced-motion:reduce){.chrome-hide{transition:opacity 160ms ease-out}html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:none}}
+
+/* ---------- Solo en vertical en el teléfono (decisión 2026-11-03) ---------- */
+/* El aviso de index.html (también en la ficha del worker): fuera de un teléfono en horizontal, display:none (ni se ve, ni lo
+   leen los lectores de pantalla, ni se pide el logo). En un teléfono en horizontal (poca altura y dedo: no tabletas ni
+   ordenador) tapa todo y lo demás queda en visibility:hidden: fuera del árbol de accesibilidad y sin toques ni foco, pero
+   montado (sin recargar ni perder estado). Sin animación: aparece y se va con el giro, también con movimiento reducido. */
+.rotate-notice{display:none}
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){
+  .rotate-notice{display:flex;position:fixed;inset:0;z-index:2147483647;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    padding:max(16px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
+    background:var(--bg);color:var(--fg);text-align:center;touch-action:none}
+  .rotate-notice img{width:150px;height:auto}
+  .rotate-notice p{margin:0;font-family:var(--display);font-size:20px;font-weight:var(--w-strong);color:var(--fg-title)}
+  body>:not(.rotate-notice){visibility:hidden}
+}

@@ -15,5 +15,11 @@
   </head>
   <body>
     <div id="root"><!--app-html--></div>
+    <!-- Solo en vertical (decisión 2026-11-03): en un teléfono en horizontal, global.css enseña este aviso y esconde lo demás
+         (visibility, sin desmontar: al volver a vertical la app sigue donde estaba). Fuera de #root: React no lo toca. -->
+    <div class="rotate-notice" role="alert">
+      <img src="/logo-horizontal.png" alt="" width="150" height="38" loading="lazy" decoding="async" />
+      <p>Gire el teléfono para usar bnbtico</p>
+    </div>
   </body>
 </html>

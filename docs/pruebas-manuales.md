@@ -280,6 +280,7 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 - [ ] **C101** Con Explorar ya visitado, active el modo avión y cierre y abra la app → el shell sale al instante, Explorar muestra las casas que ya había visto y se puede abrir una ficha ya vista; las pestañas «Explorar», «Favoritos» e «Ingresar» cambian sin recargar.
 - [ ] **C102** Sin red, abra una ficha que no había visitado → aparece «No pudimos cargar esta casa» con «Intentar de nuevo» e «Ir a Explorar»; con red, «Intentar de nuevo» la recarga.
 - [ ] **C103** Después de un despliegue nuevo, cierre y vuelva a abrir la app instalada → aparece la franja «Hay una versión nueva» con el botón «Actualizar»; tóquelo → la app se recarga y la franja desaparece.
+- [ ] **C103a** Solo en vertical (2026-11-03): con la app instalada, gire el teléfono → la app no se gira. En el navegador del teléfono, en Explorar con un filtro puesto o en una ficha a media página, gire el teléfono → una capa con el fondo de la app, el logo y «Gire el teléfono para usar bnbtico» lo tapa todo y no deja tocar nada (con VoiceOver o TalkBack solo se lee el aviso); vuelva a vertical → el aviso desaparece y la pantalla sigue igual, sin recargar (mismo filtro, mismo punto de la ficha). En una tableta en horizontal y en el ordenador no sale nunca.
 
 ### 2.17 Rutas desconocidas y tamaños
 
