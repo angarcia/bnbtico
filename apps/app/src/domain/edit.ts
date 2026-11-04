@@ -63,7 +63,8 @@ export interface ListingEdit {
 export const EDIT_COPY = {
   savedLive: "Guardado. Ya se ve en su ficha.",
   sentToReview: "Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos.",
-  discardConfirm: "¿Descartar este cambio? Su ficha sigue como está.",
+  discardTitle: "¿Descartar este cambio?",
+  discardBody: "Su ficha sigue como está.",
   photosNotice: "Las fotos nuevas las revisamos antes de publicarlas, normalmente en menos de 24 horas.",
 } as const;
 

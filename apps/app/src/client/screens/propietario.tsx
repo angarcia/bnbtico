@@ -29,6 +29,7 @@ import { HouseCardTop } from "../house-card";
 import { offerTakenQuery, ownListingsQuery, useDeleteDraft } from "../owner";
 import { useSession } from "../session";
 import { SUPPORT_NUMBERS } from "../support-numbers";
+import { ConfirmSheet } from "../confirm-sheet";
 
 const base = () => window.location.origin;
 const message = (e: unknown) => toDomainError(e).message;
@@ -42,7 +43,29 @@ export function useUserId(): string {
   return useSession().session?.userId ?? "";
 }
 
-const confirmed = (text: string) => window.confirm(text);
+/** «¿Descartar este borrador?» con la hoja de la app (no el diálogo del navegador), desde la tarjeta y desde el detalle:
+ *  devuelve la función que la abre y la hoja (o nada). */
+function useDiscardSheet(go: () => void): [() => void, ReactNode] {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  return [
+    () => setOpen(true),
+    open ? (
+      <ConfirmSheet
+        title="¿Descartar este borrador?"
+        body="No se puede deshacer."
+        confirmLabel="Descartar"
+        confirmClassName="btn btn-outline-bad btn-lg"
+        cancelClassName="btn btn-ghost btn-lg"
+        onClose={close}
+        onConfirm={() => {
+          close();
+          go();
+        }}
+      />
+    ) : null,
+  ];
+}
 
 // ---------- Suscripción (fase 5) ----------
 
@@ -224,6 +247,7 @@ export function CasasScreen() {
 /** Una casa por fila: foto con su estado, nombre y zona; debajo, como mucho un botón relleno (diseño v2, 07-mis-casas). */
 function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: string; eager: boolean }) {
   const discard = useDeleteDraft(userId);
+  const [ask, sheet] = useDiscardSheet(() => discard.mutate(l.id));
   // Sin la consulta de la suscripción (despliegue antes de la migración) no se ofrece pagar: la pantalla no funcionaría.
   const billed = !!useBilling(userId)?.of(l.id);
   return (
@@ -259,7 +283,7 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
               type="button"
               className="btn btn-link muted"
               disabled={discard.isPending}
-              onClick={() => confirmed("¿Descartar este borrador? No se puede deshacer.") && discard.mutate(l.id)}
+              onClick={ask}
             >
               Descartar
             </button>
@@ -269,6 +293,7 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
       {billed && l.status === "payment_due" && l.adminHold?.kind !== "blocked" ? <PayButton publicId={l.publicId} /> : null}
       {billed && l.status === "inactive" && l.adminHold?.kind !== "blocked" ? <ActivateButton publicId={l.publicId} /> : null}
       {discard.isError ? <p className="note" role="alert">{message(discard.error)}</p> : null}
+      {sheet}
     </article>
   );
 }
@@ -351,10 +376,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   const label = cardLabel(l);
   const toWizard = () => navigate({ to: "/propietario/publicar/$id/$paso", params: { id: l.id, paso: "1" } });
 
-  function remove() {
-    if (!confirmed("¿Descartar este borrador? No se puede deshacer.")) return;
-    discard.mutate(l.id, { onSuccess: () => void navigate({ to: "/propietario/casas", replace: true }) });
-  }
+  const [ask, sheet] = useDiscardSheet(() => discard.mutate(l.id, { onSuccess: () => void navigate({ to: "/propietario/casas", replace: true }) }));
 
   const error = discard.error;
   return (
@@ -405,10 +427,11 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       {error ? <p className="note" role="alert">{message(error)}</p> : null}
 
       {can(l, "discard") ? (
-        <button type="button" className="btn btn-outline-bad" onClick={remove} disabled={discard.isPending}>
+        <button type="button" className="btn btn-outline-bad" onClick={ask} disabled={discard.isPending}>
           Descartar borrador
         </button>
       ) : null}
+      {sheet}
     </>
   );
 }

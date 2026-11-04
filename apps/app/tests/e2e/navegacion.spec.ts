@@ -320,15 +320,16 @@ test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", asyn
   await h.reset();
   await h.seed({ status: "draft", draft: { title: "Borrador uno" } });
   await h.seed({ status: "draft", draft: { title: "Borrador dos" } });
-  page.on("dialog", (d) => void d.accept());
   await page.goto("/propietario/casas");
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS_MANY);
   await expect(page.getByRole("article")).toHaveCount(2);
   await page.getByRole("article").filter({ hasText: "Borrador uno" }).getByRole("button", { name: "Descartar" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
   await expect(page.getByRole("article")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "Borrador dos" })).toBeVisible();
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
   await page.getByRole("article").getByRole("button", { name: "Descartar" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
 });

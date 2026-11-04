@@ -94,15 +94,24 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await card(page, "Casa Coco").getByRole("link", { name: "Casa Coco" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
 
-  // «Descartar» pregunta; al cancelar no pasa nada, al aceptar el cambio desaparece.
-  page.once("dialog", (d) => {
-    expect(d.message()).toBe("¿Descartar este cambio? Su ficha sigue como está.");
+  // «Descartar» pregunta con la hoja de la app (nunca el diálogo del navegador); al cancelar no pasa nada, al confirmar
+  // el cambio desaparece.
+  const native: string[] = [];
+  page.on("dialog", (d) => {
+    native.push(d.message());
     void d.dismiss();
   });
+  const sheet = page.getByRole("dialog");
   await discardButton(page, "nombre").click();
+  await expect(sheet.getByRole("heading", { name: "¿Descartar este cambio?" })).toBeVisible();
+  await expect(sheet).toContainText("Su ficha sigue como está.");
+  await sheet.getByRole("button", { name: "Cancelar" }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(discardButton(page, "nombre")).toBeFocused();
   await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
-  page.once("dialog", (d) => void d.accept());
   await discardButton(page, "nombre").click();
+  await sheet.getByRole("button", { name: "Descartar" }).click();
+  expect(native).toEqual([]);
   await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Revisión");
   await expect(row(page, "Nombre")).toContainText("Casa Coco");
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit).toBeNull();
@@ -115,8 +124,8 @@ test("descartar un dato: si la base se niega, vuelve con su mensaje; con cambios
   await page.route("**/rest/v1/rpc/discard_edit_field", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "No encontramos esa edición.", details: null, hint: null }) }),
   );
-  page.once("dialog", (d) => void d.accept());
   await discardButton(page, "nombre").click();
+  await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
   await expect(page.locator(".toast")).toHaveText("No encontramos esa edición.");
   await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
   await page.unroute("**/rest/v1/rpc/discard_edit_field");

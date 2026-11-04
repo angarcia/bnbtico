@@ -307,7 +307,7 @@
     "gzip": true
   },
   {
-    "name": "Hoja de confirmación · trozo diferido (la comparten «Promoción y suscripción» y Cuenta: parar una suscripción, cerrar sesión)",
+    "name": "Hoja de confirmación · trozo diferido (la comparten «Promoción y suscripción», Cuenta, Mis casas y la ficha editable: parar una suscripción, cerrar sesión, descartar un borrador o un cambio en revisión)",
     "path": [
       "dist/client/assets/confirm-sheet-*.js"
     ],

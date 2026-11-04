@@ -16,7 +16,9 @@ import { DESCRIPTION_EMPTY_WARNING } from "../../domain/publish-rules";
 import { cardLabel } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
+import { useState } from "react";
 import { useBilling } from "../billing";
+import { ConfirmSheet } from "../confirm-sheet";
 import { useDiscardEditField } from "../edit";
 import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
@@ -137,6 +139,7 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
 /** Debajo de un dato pendiente: la nota del admin (si pidió cambios) y «Descartar», que deja la ficha como está. */
 function PendingFoot({ listing: l, field, note, userId }: { listing: Listing; field: ReviewedField; note: string | null; userId: string }) {
   const discard = useDiscardEditField(userId, l);
+  const [asking, setAsking] = useState(false);
   return (
     <div className="pending-foot">
       {note ? <p className="small note-review">Le pedimos cambios: {note}</p> : <span className="xs muted">Los clientes ven lo de antes hasta que lo aprobemos.</span>}
@@ -145,10 +148,24 @@ function PendingFoot({ listing: l, field, note, userId }: { listing: Listing; fi
         className="btn-text"
         aria-label={`Descartar el cambio de ${fieldTitle(field, l.kind).toLowerCase()}`}
         disabled={discard.isPending}
-        onClick={() => window.confirm(EDIT_COPY.discardConfirm) && discard.mutate(field)}
+        onClick={() => setAsking(true)}
       >
         Descartar
       </button>
+      {asking ? (
+        <ConfirmSheet
+          title={EDIT_COPY.discardTitle}
+          body={EDIT_COPY.discardBody}
+          confirmLabel="Descartar"
+          confirmClassName="btn btn-outline-bad btn-lg"
+          cancelClassName="btn btn-ghost btn-lg"
+          onClose={() => setAsking(false)}
+          onConfirm={() => {
+            setAsking(false);
+            discard.mutate(field);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

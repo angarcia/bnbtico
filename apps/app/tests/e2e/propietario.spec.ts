@@ -305,22 +305,50 @@ test("con cambios pedidos: la nota y «Corregir y reenviar» abre el asistente",
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${changes.id}/1$`));
 });
 
-test("descartar un borrador nunca enviado, desde Mis casas y desde el detalle", async ({ page }) => {
+test("descartar un borrador nunca enviado, desde Mis casas y desde el detalle: la hoja de la app, nunca el diálogo del navegador", async ({ page }) => {
+  const native: string[] = [];
+  page.on("dialog", (d) => {
+    native.push(d.message());
+    void d.dismiss();
+  });
   await page.goto("/propietario/casas");
-  page.once("dialog", (d) => void d.dismiss());
-  await card(page, "Borrador nuevo").getByRole("button", { name: "Descartar" }).click();
+  const sheet = page.getByRole("dialog");
+  const discardCard = card(page, "Borrador nuevo").getByRole("button", { name: "Descartar" });
+
+  await discardCard.click();
+  await expect(sheet.getByRole("heading", { name: "¿Descartar este borrador?" })).toBeVisible();
+  await expect(sheet).toContainText("No se puede deshacer.");
+  await expect(sheet.getByRole("button")).toHaveText(["Descartar", "Cancelar"]);
+  await expect(sheet.getByRole("button", { name: "Descartar" })).toHaveClass(/btn-outline-bad/);
+  await sheet.getByRole("button", { name: "Cancelar" }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(discardCard).toBeFocused();
   await expect(card(page, "Borrador nuevo")).toHaveCount(1);
-  page.once("dialog", (d) => void d.accept());
-  await card(page, "Borrador nuevo").getByRole("button", { name: "Descartar" }).click();
+
+  await discardCard.click();
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await expect(discardCard).toBeFocused();
+  await expect(card(page, "Borrador nuevo")).toHaveCount(1);
+
+  await discardCard.click();
+  await sheet.getByRole("button", { name: "Descartar" }).click();
+  await expect(sheet).toHaveCount(0);
   await expect(card(page, "Borrador nuevo")).toHaveCount(0);
   expect(await h.anon.linkState(draft.publicId)).toBeNull();
 
   await card(page, "Otro borrador").getByRole("link", { name: "Otro borrador" }).click();
-  page.once("dialog", (d) => void d.accept());
   await page.getByRole("button", { name: "Descartar borrador" }).click();
+  await expect(sheet.getByRole("heading", { name: "¿Descartar este borrador?" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Cancelar" }).click();
+  await expect(page.getByRole("button", { name: "Descartar borrador" })).toBeFocused();
+  await page.getByRole("button", { name: "Descartar borrador" }).click();
+  await sheet.getByRole("button", { name: "Descartar" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
   await expect(card(page, "Otro borrador")).toHaveCount(0);
   await expect.poll(async () => (await h.owner("owner").getOwn(draft2.id)) === null).toBe(true);
+  expect(native).toEqual([]);
 });
 
 test("«enviada» confirma la revisión con la referencia, y una casa ajena no existe", async ({ page }) => {
