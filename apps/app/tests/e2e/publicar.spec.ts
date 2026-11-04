@@ -657,8 +657,7 @@ test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrá
     await page.waitForTimeout(700);
     return page.evaluate(() => [(window as unknown as { maxScrollWidth: number }).maxScrollWidth, window.innerWidth]);
   };
-  // Tarjetas flotantes, tanda 2: la barra flota a 12 px del borde de abajo.
-  const barAtBottom = () => page.evaluate(() => Math.round(document.querySelector(".sticky-actions")!.getBoundingClientRect().bottom) === window.innerHeight - 12);
+  const barAtBottom = () => page.evaluate(() => Math.round(document.querySelector(".sticky-actions")!.getBoundingClientRect().bottom) === window.innerHeight);
 
   await sample();
   await continuar(page);
