@@ -57,7 +57,7 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
   await expect(cocles.getByTestId("card-zone")).toHaveText("Cocles");
   await expect(cocles).not.toContainText("₡");
   const share = cocles.getByRole("button", { name: "Compartir ficha" });
-  await expect(share).toHaveClass(/btn-primary/);
+  await expect(share).toHaveClass(/btn-sun/); // en dorado (Ana, 2026-11-04)
   await expect(share).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
   await expect(cocles.getByRole("link", { name: "Calendario" })).toHaveClass(/btn-ghost/);
 

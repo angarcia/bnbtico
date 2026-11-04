@@ -37,8 +37,10 @@ export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "
             decoding="async"
           />
         ) : (
-          <span className="house-photo-empty">
-            <I.house size={32} />
+          // Sin fotos (un borrador): un hueco hecho a propósito, no una imagen rota (Ana, 2026-11-04).
+          <span className="photo-empty">
+            <I.camera size={28} />
+            Aún sin fotos
           </span>
         )}
         <span className={`state ${label.cls}`} data-testid="card-label">

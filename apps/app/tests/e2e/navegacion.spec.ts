@@ -205,7 +205,8 @@ test("3 · una casa: la lista con una sola tarjeta; tocarla abre su detalle", as
   await expect(page.getByRole("article")).toHaveCount(1);
   const only = page.getByRole("article");
   await expect(only.getByTestId("card-label")).toHaveText("Activa");
-  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-primary/);
+  // En dorado, como «Activar suscripción»: compartir es publicidad de bnbtico (Ana, 2026-11-04).
+  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-sun/);
   await expect(only.getByRole("link", { name: "Calendario" })).toHaveClass(/btn-ghost/);
   await expect(page.getByRole("link", { name: "Nueva" })).toHaveAttribute("href", "/propietario/publicar");
   await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveCount(0);

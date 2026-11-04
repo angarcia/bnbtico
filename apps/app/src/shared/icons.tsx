@@ -25,6 +25,7 @@ export const I = {
   beach: (p: P) => <svg {...S(p)}><circle cx="17" cy="7" r="3" /><path d="M2 19c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M3 14c3-3 6-3 9 0" /></svg>,
   bbq: (p: P) => <svg {...S(p)}><path d="M4 10h16a8 8 0 0 1-16 0z" /><path d="M8 18l-2 4M16 18l2 4M9 3c0 1.5 1 1.5 1 3M13 3c0 1.5 1 1.5 1 3" /></svg>,
   // Casa con tejado y puerta (ronda de Ana 2026-10-30: «Mis casas» llevaba el mismo dibujo que el pin del mapa).
+  camera: (p: P) => <svg {...S(p)}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>,
   house: (p: P) => <svg {...S(p)}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9v12h14V9" /><path d="M10 21v-6h4v6" /></svg>,
   calendar: (p: P) => <svg {...S(p)}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>,
   chat: (p: P) => <svg {...S(p)}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12z" /></svg>,

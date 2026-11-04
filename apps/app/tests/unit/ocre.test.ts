@@ -1,4 +1,4 @@
-// El ocre (`--sun`) es solo para dinero y avisos de pago (spec «Densidad y tarjetas», § 4). Esta prueba recorre
+// El ocre (`--sun`) es solo para dinero y avisos de pago (spec «Densidad y tarjetas», § 4), más «Compartir ficha» (2026-11-04). Esta prueba recorre
 // `src/client` y `src/shared` y falla si una clase `*-sun` aparece fuera de la lista de permitidos.
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -17,6 +17,7 @@ const ALLOW = new Set([
   "client/screens/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
   "shared/contact-sheet.tsx#*", // «no pague por adelantado»
   "client/publish-promo.tsx#*", // la oferta de lanzamiento: publicar gratis (revisión UX 2026-10-29, A8)
+  "client/screens/propietario.tsx#ShareButtonInline", // «Compartir ficha»: publicidad de bnbtico (Ana, 2026-11-04)
 ]);
 
 function files(dir: string): string[] {

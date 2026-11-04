@@ -88,18 +88,20 @@ export function LocationStep({ listing: _listing, draft, readOnly = false }: { l
 
   return (
     <>
-      <PlaceSearch
-        label="Busque un pueblo, playa o barrio"
-        placeholder="Busque un pueblo, playa o barrio…"
-        local={zoneItems}
-        near={() => picker.current?.center() ?? pin ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!}
-        onChoose={(item) => item.point && picker.current?.view(item.point, ZONE_ZOOM)}
-      />
-      <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} readOnly={readOnly} />
+      {/* La búsqueda flota sobre el mapa, como en Explorar (Ana, 2026-11-04): el mapa gana su alto. */}
+      <div className="loc-map">
+        <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} readOnly={readOnly} />
+        <PlaceSearch
+          label="Busque un pueblo, playa o barrio"
+          placeholder="Busque un pueblo, playa o barrio…"
+          local={zoneItems}
+          near={() => picker.current?.center() ?? pin ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!}
+          onChoose={(item) => item.point && picker.current?.view(item.point, ZONE_ZOOM)}
+        />
+      </div>
       {readOnly ? null : (
-        <p className="small muted location-hint">
-          Toque el mapa o arrastre el punto hasta su casa. <span className="xs">En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.</span>
-        </p>
+        // Una línea: lo que preocupa al marcar la casa (Ana, 2026-11-04). El «toque o arrastre» sobraba: el punto ya invita.
+        <p className="small muted location-hint">Los clientes solo ven la zona, no su dirección.</p>
       )}
       <PlaceLine state={state} onRetry={() => lookup.current?.retry()} />
       <ZoneSelect options={options} value={choice} other={otherOpen && !!pin} onChange={(c) => (setChoice(c), setOtherOpen(false))} onOther={() => pin && setOtherOpen(true)} />

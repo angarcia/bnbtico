@@ -626,7 +626,8 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .house-card{position:relative;display:flex;flex-direction:column;gap:10px;padding:12px}
 .house-card .btn{position:relative;z-index:1}
 .house-photo{aspect-ratio:1/1;border-radius:8px;width:100%}
-.house-photo-empty{display:grid;place-items:center;width:100%;height:100%;background:var(--surface-2);color:var(--state-ink)}
+/* Hueco de la foto sin fotos (borradores): borde discontinuo como «Añadir fotos» del asistente, cámara y texto (2026-11-04). */
+.photo-empty{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface-soft);color:var(--primary);font-size:16px;font-weight:var(--w-medium);text-decoration:none}
 .house-card-title{font-size:20px;font-weight:var(--w-strong)}
 /* Mis casas (ronda de Ana 2026-10-30): el mismo lenguaje que Explorar: foto a sangre arriba, texto con relleno y más aire entre
    tarjetas. Actividad comparte la cabeza de la tarjeta y no cambia. */
@@ -1027,6 +1028,11 @@ html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(s
 .place-search .zone-pop{z-index:600} /* sobre «Usar mi ubicación» (z-index 500) */
 /* La lupa va en el CSS (no en el JS del asistente; img-src admite data:). El selector gana al de todos los campos. */
 .place-search input:not([type=checkbox]):not([type=file]):not([type=radio]){padding-left:40px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 14px center}
+/* Paso 2: la búsqueda flota arriba del mapa como una tarjeta (como la píldora de Explorar); su lista se abre debajo, sobre el
+   mapa. El mapa llena el alto que queda. */
+.loc-map{position:relative;flex:1;min-height:200px;display:flex}
+.loc-map > .place-search{position:absolute;top:10px;left:10px;right:10px;z-index:1000}
+.loc-map > .place-search input:not([type=checkbox]):not([type=file]):not([type=radio]){min-height:52px;border-radius:var(--float-r);border-color:var(--float-edge);box-shadow:var(--float-shadow)}
 .location-hint{margin:0;line-height:1.3}
 .location-hint .xs{display:block}
 .zone-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;padding:6px;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float)}

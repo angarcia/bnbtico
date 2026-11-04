@@ -1,3 +1,12 @@
+## 2026-11-04 · «Compartir ficha» en dorado, sin etiqueta «Revisión», borradores sin foto y paso 2 con la búsqueda sobre el mapa (Ana)
+
+Capturas en `.scratch/revision-ux/maquetas/2026-11-04/`.
+
+- **«Compartir ficha» en dorado** (el de «Activar suscripción»), en Mis casas y en el detalle de la casa activa: no es dinero, pero compartir la ficha es publicidad de bnbtico. Excepción a «dorado solo para dinero» (tokens 0.3.1, `sun.role`; `tests/unit/ocre.test.ts`). Se valoró dejarlo verde con el icono dorado; Ana prefirió el botón dorado.
+- **Sin la etiqueta «Revisión»** en los datos de una casa publicada que se revisan al cambiarlos: salía aunque no hubiera nada pendiente y parecía un estado. Solo quedan «En revisión» y «Cambios pedidos». La nota de arriba nombra los datos («Los cambios de nombre, tipo, descripción y ubicación, y las fotos nuevas, los revisamos antes de publicarlos…») y, al abrir uno, siguen el aviso y «Enviar a revisión».
+- **Borrador sin foto:** en lugar del recuadro con una casita, que parecía una imagen rota, un hueco con borde discontinuo y cámara: «Aún sin fotos» en Mis casas y, en el detalle, «Añadir fotos», que lleva al paso de las fotos.
+- **Paso 2 («¿Dónde está su casa?»):** la búsqueda flota encima del mapa como en Explorar; «+ / −» abajo a la izquierda; debajo, una sola línea: «Los clientes solo ven la zona, no su dirección.» (sale «Toque el mapa o arrastre el punto…»). El mapa gana alto (unos 445 px en un teléfono de 390) y el paso sigue sin scroll a 375×667.
+
 ## 2026-11-04 · Una sola tarjeta: de borde a borde, foto 3:2, puntitos; Favoritos sin logo y tarjeta del mapa (Ana)
 
 Sustituye, del 2026-11-04 de abajo, el contador «1 / N» y la foto 4:3 de la tarjeta de Explorar. Capturas en `.scratch/revision-ux/maquetas/2026-11-03/`.

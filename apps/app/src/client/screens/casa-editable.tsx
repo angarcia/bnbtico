@@ -1,6 +1,6 @@
 // La ficha editable de una casa publicada (spec .scratch/editar-casa, maquetas 08a–08c): se lee como la ficha pública, sin
-// calendario, y cada dato es una fila que abre su pantalla (/propietario/casas/$id/editar/$campo). Lo marcado con
-// «Revisión» va al admin al guardarlo, dato a dato (revisión UX 2026-10-29, A5): cada dato pendiente enseña su valor nuevo
+// calendario, y cada dato es una fila que abre su pantalla (/propietario/casas/$id/editar/$campo). Nombre, tipo,
+// ubicación, descripción y las fotos nuevas van al admin al guardarlos, dato a dato (revisión UX 2026-10-29, A5): cada dato pendiente enseña su valor nuevo
 // con «En revisión» o «Cambios pedidos» (y la nota) y su propio «Descartar»; mientras tanto los clientes ven lo aprobado. Trozo
 // diferido: se precarga con las pantallas del propietario. Las casas que nunca se publicaron siguen con el detalle de
 // propietario.tsx y el asistente.
@@ -57,20 +57,6 @@ function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["ki
 
 const isReviewed = (field: FormField) => REVIEWED_FIELDS.includes(field);
 
-/** El reloj de la etiqueta «Revisión» (maqueta 08a). */
-const Clock = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="8" />
-    <path d="M12 8v4l3 2" />
-  </svg>
-);
-const ReviewTag = () => (
-  <span className="tag-rev">
-    <Clock />
-    Revisión
-  </span>
-);
-
 /** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si está en revisión). Un dato pendiente
  *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar». */
 function FieldRow({ listing: l, field, userId }: { listing: Listing; field: FormField; userId: string }) {
@@ -86,10 +72,11 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
   // 12); no bloquea nada. Sin descripción, el valor («Sin descripción») ya lo dice: va en ocre, sin repetirlo.
   const warning = readOnly ? null : fieldWarning(field, mergeEdit(l, isReviewed(field) && !admin ? e : null));
   const empty = warning === DESCRIPTION_EMPTY_WARNING;
+  // Solo el estado de un cambio («En revisión», «Cambios pedidos»). La etiqueta «Revisión» en los datos que se revisan
+  // salía aunque no hubiera nada pendiente y parecía un estado (Ana, 2026-11-04): lo dicen la nota de arriba y, al editar,
+  // el aviso y «Enviar a revisión».
   const tag = readOnly ? null : state ? (
     <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
-  ) : isReviewed(field) && !admin ? (
-    <ReviewTag />
   ) : null;
   const content = (
     <>
@@ -284,7 +271,7 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
             <span>Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión.</span>
           ) : (
             <span>
-              Toque un dato para cambiarlo. Lo marcado con <ReviewTag /> lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.
+              Toque un dato para cambiarlo. Los cambios de nombre, tipo, descripción y ubicación, y las fotos nuevas, los revisamos antes de publicarlos; mientras tanto, los clientes ven la versión actual.
             </span>
           )}
         </p>

@@ -47,16 +47,17 @@ test("la ficha editable de una casa activa", async ({ page }) => {
     /^Precio/,
     /^Ubicación/,
   ]);
-  await expect(rows(page).locator(".tag-rev", { hasText: /^Revisión$/ })).toHaveCount(4);
+  // Sin etiqueta en los datos que se revisan mientras no hay nada pendiente (Ana, 2026-11-04): lo dice la nota.
+  await expect(rows(page).locator(".tag-rev")).toHaveCount(0);
   await expect(row(page, "Nombre")).toHaveAttribute("href", `/propietario/casas/${id}/editar/nombre`);
   await expect(row(page, "Personas, habitaciones y baños")).toHaveAttribute("href", `/propietario/casas/${id}/editar/capacidad`);
   await expect(row(page, "Nombre")).toContainText("Casa Coco");
-  await expect(page.getByText("Toque un dato para cambiarlo. Lo marcado con Revisión lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.")).toBeVisible();
+  await expect(page.getByText("Toque un dato para cambiarlo. Los cambios de nombre, tipo, descripción y ubicación, y las fotos nuevas, los revisamos antes de publicarlos; mientras tanto, los clientes ven la versión actual.")).toBeVisible();
   const pill = page.getByRole("link", { name: "5 fotos · Editar" });
   await expect(pill).toHaveAttribute("href", `/propietario/casas/${id}/editar/fotos`);
   await expect(page.locator(".detail-photo .state")).toHaveText("Activa");
   const share = page.getByRole("button", { name: "Compartir ficha" });
-  await expect(share).toHaveClass(/btn-primary/);
+  await expect(share).toHaveClass(/btn-sun/); // en dorado (Ana, 2026-11-04)
   await expect(page.getByTestId("share-url")).toHaveText(new RegExp(`/casa/${publicId}$`));
   await expect(page.getByText("WhatsApp de esta casa")).toBeVisible();
   const sub = page.getByTestId("subscription-card");
@@ -80,7 +81,7 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(row(page, "Nombre")).toContainText("Casa Coco frente al mar");
   await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("En revisión");
   await expect(page.getByTestId("pending-nombre")).toContainText("Los clientes ven lo de antes hasta que lo aprobemos.");
-  await expect(rows(page).locator(".tag-rev", { hasText: /^Revisión$/ })).toHaveCount(3);
+  await expect(rows(page).locator(".tag-rev")).toHaveCount(1);
   await expect(page.getByTestId("edit-banner")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Enviar a revisión" })).toHaveCount(0);
   await expect(page.locator(".detail-photo .state")).toHaveText("Cambios en revisión");
@@ -112,7 +113,7 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await discardButton(page, "nombre").click();
   await sheet.getByRole("button", { name: "Descartar" }).click();
   expect(native).toEqual([]);
-  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Revisión");
+  await expect(row(page, "Nombre").locator(".tag-rev")).toHaveCount(0);
   await expect(row(page, "Nombre")).toContainText("Casa Coco");
   await expect.poll(async () => (await h.owner("owner").getOwn(id))!.edit).toBeNull();
 });
@@ -443,7 +444,7 @@ test("ubicación con otro dato en revisión: el aviso nombra la zona y el mapa s
   await expect(page.getByTestId("review-notice")).toHaveText(`${NOTICE} «Cahuita».`);
   await expect(send(page)).toBeVisible();
   await expect(page.getByRole("button", { name: "Usar mi ubicación" })).toBeVisible();
-  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
+  await expect(page.getByText("Los clientes solo ven la zona, no su dirección.")).toBeVisible();
   await expect(page.locator(".leaflet-marker-icon")).toBeVisible();
 });
 

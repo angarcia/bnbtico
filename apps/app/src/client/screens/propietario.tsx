@@ -298,11 +298,13 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
   );
 }
 
+/** «Compartir ficha» en dorado (el de «Activar suscripción»; Ana, 2026-11-04): no es dinero, pero compartir la ficha es publicidad de bnbtico y
+ *  la acción que más le conviene; el dorado deja de ser solo para pagos. */
 export function ShareButtonInline({ listing: l, className = "grow" }: { listing: Listing; className?: string }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className={`btn btn-primary ${className}`} onClick={share} data-share-url={target.url}>
+    <button type="button" className={`btn btn-sun ${className}`} onClick={share} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? "Enlace copiado" : "Compartir ficha"}
       </span>
@@ -382,7 +384,15 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
   return (
     <>
       <div className="photo detail-photo">
-        {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={340} /> : <span className="small">Sin fotos</span>}
+        {cover ? (
+          <img src={variantUrl(cover, 800)} alt="" width={800} height={340} />
+        ) : (
+          // Sin fotos: el hueco lleva directo al paso de las fotos (Ana, 2026-11-04).
+          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "7" }} className="photo-empty">
+            <I.camera size={28} />
+            Añadir fotos
+          </Link>
+        )}
         <span className={`state ${label.cls}`}>{label.text}</span>
         {price ? (
           <span className="pill pill-bl">

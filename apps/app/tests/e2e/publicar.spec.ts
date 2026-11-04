@@ -82,7 +82,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
 
   // 2 ¿Dónde está su casa?: sin pin se puede seguir (avanza siempre); un toque en el mapa (abre en Limón) da el cantón y la zona más cercana.
   await expect(page.getByRole("button", { name: "Continuar" })).toBeEnabled();
-  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
+  await expect(page.getByText("Los clientes solo ven la zona, no su dirección.")).toBeVisible();
   // El mapa abre en Limón a zoom 9, con la costa a unos 3 px al este del centro: el toque va 10 px al oeste, en tierra.
   await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
   const map = (await page.locator(".map-box").boundingBox())!;

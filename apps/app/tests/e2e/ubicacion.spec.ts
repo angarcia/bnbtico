@@ -107,9 +107,9 @@ test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ 
   expect(names).not.toContain("Manzanillo");
   expect(names.at(-1)).toBe("Otra…");
   await expect(continuar(page)).toBeEnabled();
-  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toBeVisible();
-  // El punto exacto no se publica: el propietario lo sabe antes de marcarlo.
-  await expect(page.getByText("En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.")).toBeVisible();
+  // El punto exacto no se publica: el propietario lo sabe antes de marcarlo (una sola línea desde el 2026-11-04).
+  await expect(page.getByText("Los clientes solo ven la zona, no su dirección.")).toBeVisible();
+  await expect(page.getByText("Toque el mapa o arrastre el punto hasta su casa.")).toHaveCount(0);
   await expect(page.locator(".leaflet-control-attribution")).toContainText("OpenStreetMap");
   await expect(page.getByRole("button", { name: "Usar mi ubicación" })).toBeVisible();
   await expectNoScroll(page, "paso 2");
