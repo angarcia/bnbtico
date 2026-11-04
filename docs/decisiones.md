@@ -1,3 +1,13 @@
+## 2026-11-04 · Tarjetas flotantes, tanda 1: base, barra de abajo, Explorar y botones (Daniel)
+
+Sustituye «Solo la barra de abajo; las cabeceras se quedan» (2026-10-30), «lo que flota sobre mapas o fotos, opaco» (2026-10-29) y el token `bottomNav` «plana, pegada al borde, sin píldora». Maquetas, decisiones e inventario: `.scratch/tarjetas-flotantes/`.
+- **Tarjetas flotantes:** crema translúcida (80 %; 90 % donde hay texto pequeño) con desenfoque, borde fino, sombra suave, esquinas 12/16, a 12 px del borde más el área segura; respaldo opaco sin `backdrop-filter`; tema oscuro. Tokens `--float-*` y `tokens.json` 0.3.0.
+- **Se esconden al bajar y vuelven al subir** con un mecanismo común (`client/hiding-chrome.ts`, `html.chrome-away`); lo enfocado con teclado no se esconde; con movimiento reducido solo se funden. **No se esconden** (tanda 2): la barra de la ficha con «Contactar por WhatsApp» y «Atrás / Continuar» del asistente.
+- **Barra de abajo:** píldora flotante con iconos y etiquetas; pestaña elegida con pastilla terracota suave.
+- **Explorar:** mapa arriba a todo el ancho con el buscador, los filtros y «₡ | $» flotando encima; los precios del mapa no quedan bajo las tarjetas. Favoritos y el mapa a pantalla completa con el mismo estilo.
+- **«Mapa», «N casas» y «Ver ficha»:** variante clara (crema translúcida, texto en tinta). Toasts y banner de versión siguen a la barra (`--chrome-bottom`).
+- Pendiente (tanda 2): ficha (precio y WhatsApp en dos piezas flotantes, sin la nota «Precios orientativos»; botones de la foto que vuelven al subir), barras de acción y calendario. Cabeceras de pantalla («‹ Título»): segundo paso.
+
 ## 2026-11-04 · «Ver ficha» flotante en el detalle de la casa (ronda de Ana, ticket 05 rehecho; Daniel)
 
 En el detalle de la casa del anfitrión, «Ver ficha» sale de la cabecera y pasa a un botón flotante abajo y centrado, con un ojo y el mismo aspecto que «Mapa» de Explorar (regla visual compartida `.float-btn,.map-label,.map-count`; esquinas de 6 px, no píldora). La pantalla deja 80 px más el área segura debajo para no tapar lo último. El modo admin no cambia.
