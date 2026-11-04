@@ -985,25 +985,18 @@ small.swap-in{display:block}
 /* 26 px justos: el título del mes cuenta con ese alto (calc de abajo), también con la letra más grande. */
 .cal-weekdays{height:26px;line-height:18px;box-sizing:border-box}
 .cal-month-block{display:flex;flex-direction:column;scroll-margin-top:calc(26px + env(safe-area-inset-top))}
-/* El título del mes tapa la rejilla al pasar: tan ancho como ella (que sale 2 px por cada lado), para que no asome el borde de una
-   casilla a su lado (tarjetas flotantes, tanda 2); el texto, donde estaba. */
-.cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px calc(var(--gutter) - 14px);margin-inline:calc(14px - var(--gutter))}
+.cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px 0}
 .cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
 .close-row{display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:left;width:100%}
 .close-row-icon{width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
 .close-row .body{flex:1;display:flex;flex-direction:column}
 .close-row.is-closed{justify-content:space-between}
 .cal-skeleton{height:320px}
-/* Con el panel abierto la última semana se puede subir por encima de él (unos 220 px de panel y 12 de separación). */
-.view:has(.cal-panel){padding-bottom:calc(252px + env(safe-area-inset-bottom))}
+.view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
 /* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */
-/* Tarjetas flotantes, tanda 2: tarjeta flotante fuerte a 12 px de los bordes y del área segura, esquinas 16, donde estaba la
-   barra de abajo; no se esconde mientras haya días elegidos (solo existe entonces). Centrada con left/right y margin:auto. */
-.cal-panel{position:fixed;left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);margin:0 auto;max-width:536px;z-index:9;display:flex;flex-direction:column;gap:10px;padding:14px 14px 12px;border:1px solid var(--float-edge);border-radius:var(--float-r-bar);background:var(--float-bg-solid);box-shadow:var(--float-shadow);animation:fade-in 140ms var(--ease-out)}
-@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.cal-panel{background:var(--float-bg-strong);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}}
-/* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima;
-   los 320 px del teclado cuentan desde el borde, y el panel ya está a 12 de él. */
-.cal-panel.kb{padding-bottom:calc(12px + 320px - var(--float-gap))}
+.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:9;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
+/* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
+.cal-panel.kb{padding-bottom:calc(14px + 320px)}
 /* «Guardar cambios» más bajo (44 px) y en gris mientras no hay cambios. */
 .cal-panel .cal-save{min-height:44px;font-size:16px}
 .cal-panel .cal-save:disabled{background:color-mix(in srgb,var(--fg) 8%,var(--surface));color:var(--muted);opacity:1}
