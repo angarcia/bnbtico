@@ -14,3 +14,12 @@ Decidido (Daniel, 2026-11-04):
 - Decisiones que se revertirían: 2026-10-30 «Solo la barra de abajo; las cabeceras se quedan»; 2026-10-29 «lo que flota sobre mapas o fotos, opaco»; token `bottomNav` «plana, sin píldora».
 - Riesgos: CLS/hidratación y alto de la barra de la ficha (ficha.spec), teclado del iPhone en el asistente (`--kb`), Safari (`-webkit-backdrop-filter`, `transform` del centrado rompe el desenfoque, barra del navegador), contraste sobre fotos/mapa (opacidad ≥ 0,8), tema oscuro, foco (`:focus-within`), reduced motion, toasts/banner con `--nav-h` fijo (usar `--chrome-bottom`), presupuesto JS (la ficha SSR no monta TabsFrame).
 - Tickets propuestos: T0 base (tokens `--float-*`, `.float-card`, `html.chrome-away`); T1 barra de pestañas; T2 Explorar; T3 ficha; T4 barras de formularios; T5 panel del calendario; T6 flotantes sueltos (Ver ficha, toast, banner); T7 hojas y cabeceras de flujo; T8 verificación Safari y presupuestos.
+
+## Decisiones tras ver las maquetas (Daniel, 2026-11-04)
+1. **Ficha, parte de abajo:** el precio y el botón van en **dos piezas flotantes separadas** (tarjeta clara con «₡… / noche» y «≈ $… / noche»; debajo el botón verde «Contactar por WhatsApp», flotante con sombra), según la referencia de Daniel. La cabecera de la ficha **no cambia** (la del ticket 01).
+2. **Fuera la nota «Precios orientativos: el precio final lo acuerda con el anfitrión»** de la ficha (Daniel; las cifras siguen con «≈» donde ya lo llevan).
+3. **Barra de abajo:** píldora flotante **con iconos y etiquetas**.
+4. **Explorar:** el **mapa arriba a todo el ancho** con el buscador, los filtros y la moneda flotando encima.
+5. **«Mapa» y «Ver ficha»:** ahora parecen **demasiado oscuros**: preparar variantes menos oscuras para elegir.
+6. **Botones de la ficha** (volver, compartir, favorito): flotan, se esconden al bajar y **vuelven al subir**.
+7. **Cabeceras de pantalla** («‹ Filtros», «× Cerrar · Publicar casa»…): **en un segundo paso**, si gusta el resultado.
