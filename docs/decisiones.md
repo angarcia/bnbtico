@@ -1,3 +1,8 @@
+## 2026-11-04 · «Marcar una reserva» y «Pausar la casa» (ronda de Ana, ticket 04 rehecho; Daniel)
+
+- **«Marcar una reserva»** en el calendario de cada casa: hoja con el calendario de rango (llegada y salida) que marca de una vez como ocupadas las noches de llegada a salida − 1, conservando los precios especiales; confirmación «4 noches marcadas como ocupadas · 7–10 dic».
+- **Se mantiene cerrar la casa entera,** renombrado **«Pausar la casa»** (sustituye «Cerrar la casa hasta…»): no sale en Explorar ni recibe consultas; la fecha de vuelta es opcional. En Mis casas, «Pausada hasta el <fecha>» / «Pausada» (distinta de «Pausada por bnbtico»). Textos de las RPCs y de la ficha alineados («La casa está pausada…», «Calendario no disponible»; migración `casa_pausada_textos`). Sin migración de datos.
+
 ## 2026-11-04 · Fotos deslizables y WhatsApp en la tarjeta de Explorar, solo vertical y arreglos (Daniel)
 
 - **Tarjeta de Explorar** (ronda de Ana, ticket 09, alcance reducido): las fotos se deslizan dentro de la foto de siempre, con el contador «1 / N»; las 2+ no se piden hasta deslizar esa tarjeta. **Botón de WhatsApp** claro (círculo `--surface`, borde fino, icono en `--wa-icon`, verde un poco más oscuro que `--wa` para llegar a 3:1) a la derecha del texto: abre la misma hoja de contacto sobre Explorar (con los días de esa casa y las fechas de la pestaña); nunca `wa.me` directo. El formato de la tarjeta (4:3, márgenes, tipografía) no cambia; lo demás del 09 queda para más adelante.
