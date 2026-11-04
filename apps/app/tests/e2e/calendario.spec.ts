@@ -127,7 +127,12 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   expect(style.border).not.toBe("rgba(0, 0, 0, 0)");
   expect(style.bg).toBe(await day(page, on(13)).evaluate((el) => getComputedStyle(el).backgroundColor));
   await expect.poll(async () => (await page.locator(".tabbar").boundingBox())!.y).toBeGreaterThanOrEqual(page.viewportSize()!.height - 1);
-  expect(Math.round((await panel(page).boundingBox())!.y + (await panel(page).boundingBox())!.height)).toBe(page.viewportSize()!.height);
+  // Tarjetas flotantes, tanda 2: el panel flota a 12 px de los bordes, como tarjeta translúcida.
+  const box = (await panel(page).boundingBox())!;
+  expect(Math.round(box.y + box.height)).toBe(page.viewportSize()!.height - 12);
+  expect(Math.round(box.x)).toBe(12);
+  expect(Math.round(box.width)).toBe(page.viewportSize()!.width - 24);
+  expect(await panel(page).evaluate((el) => getComputedStyle(el).backdropFilter)).toContain("blur(16px)");
   expect(Math.round((await saveBtn(page).boundingBox())!.height)).toBe(44);
   const grey = await saveBtn(page).evaluate((el) => getComputedStyle(el).backgroundColor);
   await page.screenshot({ path: "test-results/calendario-seleccion.png" });
