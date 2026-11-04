@@ -1,6 +1,6 @@
 # Tarjetas flotantes · tanda 2: ficha, barras de acción y calendario
 
-Status: ready-for-agent (Daniel, 2026-11-04). La tanda 1 ya está hecha: usa su base (tokens `--float-*`, `.float-card`, `html.chrome-away` en `client/hiding-chrome.ts`, `--chrome-bottom`); no la reinventes.
+Status: wontfix (descartada por Daniel el 2026-11-04; revertida). La tanda 1 ya está hecha: usa su base (tokens `--float-*`, `.float-card`, `html.chrome-away` en `client/hiding-chrome.ts`, `--chrome-bottom`); no la reinventes.
 
 Referencias: `README.md` (decisiones 1, 2, 6, 8 y las excepciones), maquetas `maquetas/3-ficha-*`, `3b-ficha-con-fechas-*`, `4-ficha-abajo-*`, `4-ficha-subiendo-*`, `7-publicar-*`, `8-filtros-*`, `9-calendario-*`, `9-calendario-panel-*` y `maqueta.css` (la franja gris entre la tarjeta de precio y el botón de la ficha es un resto de la maqueta: no va).
 

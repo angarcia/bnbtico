@@ -29,3 +29,4 @@ Decidido (Daniel, 2026-11-04):
 ## Tras probar la tanda 1 (Daniel, 2026-11-04)
 - **Barra de abajo:** vuelve a ser **plana y pegada al borde** (como antes: a todo el ancho, iconos y etiquetas, línea arriba, pestaña elegida en terracota), pero **se sigue ocultando al bajar** y volviendo al subir. «Mapa», toasts y banner, apoyados sobre la barra plana (`--chrome-bottom`).
 - **La de arriba (Explorar) está bien** como quedó.
+- **Tanda 2 descartada de momento** (Daniel, 2026-11-04: «no quiero tantas cosas flotantes»): la ficha, las barras de acción y el calendario siguen como estaban. Sus commits (3a7a32b, 2a68196, 03bc359, 8ab74c5) se revirtieron antes de subir; quedan en el historial por si se retoma alguna pieza.
