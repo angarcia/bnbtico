@@ -201,8 +201,11 @@ test("sin cuenta, cerrar a medias guarda lo escrito: al volver sigue ahí; las F
   await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
+  // La dirección cambia antes de que llegue el trozo del asistente: se espera a la pantalla, no al «Continuar» de antes.
+  await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
   await continuar(page); // sin pin también se sigue
   await expect(page).toHaveURL(/\/publicar\/nueva\/4$/);
+  await expect(page.getByRole("heading", { name: "¿Cuántos caben?" })).toBeVisible();
   await page.getByRole("button", { name: "Más personas" }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/5$/);
