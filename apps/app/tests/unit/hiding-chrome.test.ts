@@ -47,3 +47,22 @@ describe("botones de arriba de la ficha en global.css", () => {
     expect(css).toContain("html.chrome-away .listing-view > .hero-top.chrome-hide{transform:none;opacity:1}");
   });
 });
+
+// Tarjetas flotantes, tanda 2: las barras de acción de los formularios son tarjetas flotantes fuertes que no se esconden.
+describe("barras de acción (.sticky-actions) en global.css", () => {
+  const rule = css.match(/\n\.sticky-actions\{[^}]*\}/)![0];
+  it("flotan a 12 px de los bordes y del área segura, centradas sin transform, con el respaldo opaco", () => {
+    expect(rule).toContain("left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);margin:0 auto");
+    expect(rule).toContain("background:var(--float-bg-solid)");
+    expect(rule).not.toContain("transform");
+    expect(css).toContain("{.sticky-actions{background:var(--float-bg-strong);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}}");
+  });
+  it("no se esconden: no llevan .chrome-hide ni su desplazamiento", () => {
+    expect(rule).not.toContain("--away");
+    expect(css).not.toMatch(/chrome-away[^{]*\.sticky-actions/);
+  });
+  it("los huecos de debajo dejan sitio a la barra y su separación (66 + 12)", () => {
+    expect(css).toContain(".sticky-spacer{height:78px}");
+    expect(css).toContain(".publish-form::after{content:\"\";flex:none;height:calc(78px + var(--kb,0px) + env(safe-area-inset-bottom))}");
+  });
+});

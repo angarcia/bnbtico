@@ -313,6 +313,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 ### 3.3 Asistente: ubicación (pantalla 2)
 
 - [ ] **A15** En «¿Dónde está su casa?» revise → mapa con «+»/«−», botón «Usar mi ubicación», campo «Busque un pueblo, playa o barrio», «Toque el mapa o arrastre el punto hasta su casa.», «En la ficha solo se ve una zona aproximada de unos 500 m; la dirección exacta la da usted por WhatsApp.», lista «Zona» con «Marque el punto en el mapa» y «Otra…».
+- [ ] **A15b** Mire la barra «‹ / Continuar» → es una tarjeta clara translúcida, separada de los bordes y con las esquinas redondeadas, que no se esconde al desplazarse; lo último de la pantalla («Zona») queda por encima de ella sin hacer scroll en un iPhone SE. Toque «Otra…» o un campo de texto → con el teclado abierto el campo sube por encima del teclado y de la barra. Las barras de «Guardar» en la edición, «Ver N casas» en Filtros, «Borrar todo · Buscar» en la búsqueda y «Aprobar y publicar» en la revisión del admin tienen el mismo aspecto.
 - [ ] **A16** Toque el mapa sobre tierra, por ejemplo Limón centro → aparece una línea «cantón, provincia» (p. ej. «Limón, Limón») y «Zona» ofrece las zonas cercanas más «Otra…»; arrastre el pin a otro pueblo y la línea y la zona se actualizan solas.
 - [ ] **A17** Toque el mar o un punto fuera del país → «Ponga el punto sobre tierra, dentro de Costa Rica».
 - [ ] **A18** Escriba «Cocles» en el buscador y elija la opción «Cocles» → el mapa salta allí, la línea dice «Talamanca, Limón» y «Zona» queda en «Cocles».
