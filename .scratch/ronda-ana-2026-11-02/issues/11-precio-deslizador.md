@@ -1,6 +1,6 @@
 # 11 · Filtro de precio con deslizador e histograma
 
-Status: ready-for-agent (después del 06 y 07)
+Status: wontfix (Daniel, 2026-11-04: no se hace)
 
 ## Qué
 Ana: «El filtro por precio debería ser de este tipo (con los estilos, colores de bnbtico)», con la referencia de Airbnb «Tu presupuesto (por noche)»: histograma de barras de precios y un deslizador de dos tiradores debajo.
