@@ -326,7 +326,8 @@ test("soltar fuera de la rejilla deja la foto donde se veía (y no toca «Contin
   const expected = [b[0], b[4], b[1], b[2], b[3], b[5]];
   await expect.poll(() => grid(page)).toEqual(expected);
   await expect(page).toHaveURL(/\/7$/);
-  expect(reorders).toEqual([expected]);
+  // La petición sale justo después de pintar el orden nuevo: se espera (en CI llegaba unos ms tarde, 2026-11-04).
+  await expect.poll(() => reorders).toEqual([expected]);
 });
 
 test("si el servidor rechaza el orden al soltar, vuelve el anterior y avisa", async ({ page }) => {
