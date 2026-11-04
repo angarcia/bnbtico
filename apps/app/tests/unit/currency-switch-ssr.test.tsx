@@ -51,7 +51,7 @@ function Providers({ children }: { children: ReactNode }) {
 }
 
 describe("barra de la ficha en el servidor", () => {
-  it("lleva colones a la izquierda y dólares a la derecha en la tarjeta de precios, sin la nota ni selector de moneda", () => {
+  it("lleva colones a la izquierda, dólares a la derecha y la nota, sin selector de moneda", () => {
     const l = listing({ acceptsMonthly: true, monthlyPriceCrc: 650000 });
     const html = renderToString(
       <Providers>
@@ -65,21 +65,19 @@ describe("barra de la ficha en el servidor", () => {
     expect(html).not.toContain("Mensual:");
     expect(html).not.toContain('data-testid="monthly-usd"');
     expect(html).toContain(`<span>Alquiler mensual</span><small>${formatCRC(650000)} / mes</small>`);
-    // Tarjetas flotantes, tanda 2 (decisiones 1 y 2): la tarjeta clara con los precios, aparte del botón, y fuera la nota.
-    expect(html).toContain('<div class="cta-bar"><div class="cta-card float-card is-strong"><div class="cta-prices">');
-    expect(html).not.toContain("Precios orientativos");
+    expect(html).toContain("Precios orientativos: el precio final lo acuerda con el anfitrión.");
     expect(html).not.toContain("currency-switch");
     expect(html).not.toContain("orientativo</span>");
   });
 
-  it("una casa no disponible tampoco lleva la nota", () => {
+  it("una casa no disponible lleva la nota también", () => {
     const html = renderToString(
       <Providers>
         <ListingPage listing={listing({ available: false })} base="https://bnbtico.com" />
       </Providers>,
     );
     expect(html).toContain("No disponible por ahora");
-    expect(html).not.toContain("Precios orientativos");
+    expect(html).toContain("Precios orientativos: el precio final lo acuerda con el anfitrión.");
   });
 
   it("la vista previa del borrador no lleva selector", () => {

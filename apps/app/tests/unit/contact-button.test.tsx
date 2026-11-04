@@ -63,8 +63,7 @@ describe("botón de contacto antes de hidratar", () => {
     expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">.*No disponible por ahora<\/button>/);
     expect(html).not.toContain("Vuelve a estar disponible");
   });
-  it("no disponible con fecha de reapertura: la nota en la tarjeta de precios, encima del botón", () => {
-    const html = bar(listing({ available: false, reopenAt: "2026-11-15" }));
-    expect(html).toMatch(/<div class="cta-card float-card is-strong">.*<span class="xs muted cta-note">Vuelve a estar disponible el 15 de noviembre<\/span><\/div><button/);
+  it("no disponible con fecha de reapertura: la nota debajo", () => {
+    expect(bar(listing({ available: false, reopenAt: "2026-11-15" }))).toContain("Vuelve a estar disponible el 15 de noviembre");
   });
 });

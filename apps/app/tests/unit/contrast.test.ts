@@ -148,15 +148,6 @@ describe("contraste sobre las tarjetas flotantes (tarjetas flotantes, tanda 1)",
       expect(ratio(hex(fg), over(bg, backdrop))).toBeGreaterThanOrEqual(4.5);
     });
 
-  // Tarjetas flotantes, tanda 2: la tarjeta de precios de la ficha es la fuerte; --muted encima de algo muy oscuro se queda en
-  // 4,3:1, así que su letra pequeña va en --fg-title.
-  it("la letra pequeña de la tarjeta de precios de la ficha va en --fg-title (--muted no llega sobre negro)", () => {
-    expect(ratio(hex("--muted"), over("--float-bg-strong", "#000000"))).toBeLessThan(4.5);
-    expect(css).toContain(".cta-bar .price small{font-family:var(--body);font-size:14px;font-weight:var(--w-medium);color:var(--fg-title);letter-spacing:0}");
-    expect(css).toContain(".price-usd small{font-size:14px;font-weight:var(--w-medium);color:var(--fg-title)}");
-    expect(css).toContain(".cta-card .muted{color:var(--fg-title)}");
-  });
-
   it("la tarjeta translúcida es la crema al 80 % y la fuerte al 90 %", () => {
     expect(vars["--float-bg"]).toBe("color-mix(in srgb,var(--bg) 80%,transparent)");
     expect(vars["--float-bg-strong"]).toBe("color-mix(in srgb,var(--bg) 90%,transparent)");

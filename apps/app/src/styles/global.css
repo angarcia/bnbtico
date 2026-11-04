@@ -276,37 +276,27 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .place-line .place-off{color:var(--sun-ink);font-size:16px}
 .place-line .btn{flex-shrink:0}
 .photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
-/* Ficha, parte de abajo (tarjetas flotantes, tanda 2, decisión 1): dos piezas flotantes a 12 px del borde que no se esconden.
-   Arriba, la tarjeta clara con los precios (la fuerte, --float-bg-strong: hay letra pequeña); debajo, a 10 px y del mismo
-   ancho, el botón verde con su propia sombra. Centradas con left/right y margin:auto: sin transform (Safari y el desenfoque). */
-.cta-bar{position:fixed;left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);margin:0 auto;max-width:536px;display:flex;flex-direction:column;gap:10px;z-index:6}
-.cta-card{display:flex;flex-direction:column;gap:6px;padding:12px 16px;border-radius:var(--float-r)}
-.cta-bar > .btn-wa{min-height:54px;border-radius:var(--float-r);box-shadow:0 1px 2px rgba(6,59,30,.18),0 12px 26px -12px rgba(6,59,30,.55)}
-/* Apagado (antes de hidratar, en la vista previa o sin casa disponible) pero opaco: flota sobre el texto y no lo deja ver. El
-   mismo tono que con la opacidad de siempre sobre el crema. */
-.cta-bar > .btn-wa.is-pending{opacity:1;background:color-mix(in srgb,var(--wa) 60%,var(--bg));color:color-mix(in srgb,var(--wa-ink) 60%,var(--bg))}
-.cta-bar > .btn-wa:disabled{opacity:1;background:color-mix(in srgb,var(--wa) 50%,var(--bg));color:color-mix(in srgb,var(--wa-ink) 50%,var(--bg))}
-.cta-bar .price{font-family:var(--display);font-weight:var(--w-strong);font-size:22px;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
-.cta-bar .price small{font-family:var(--body);font-size:14px;font-weight:var(--w-medium);color:var(--fg-title);letter-spacing:0}
-/* La letra pequeña de la tarjeta («/ noche», «Mensual:», «≈ … / mes», «Vuelve a estar disponible…») en --fg-title y no en
-   --muted: sobre la tarjeta translúcida, encima de algo muy oscuro, --muted no llega a 4,5:1 (contrast.test.ts). */
-.cta-card .muted{color:var(--fg-title)}
-/* Alto de partida (antes de medir la barra): el de una casa solo por noches, 116 px de barra más 12 de separación y 8 de aire,
-   menos los 16 px de margen de la vista. */
-.cta-spacer{height:120px}
+.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
+.cta-bar .price{font-family:var(--display);font-weight:var(--w-strong);font-size:24px;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
+.cta-bar .price small{font-family:var(--body);font-size:14px;font-weight:var(--w-medium);color:var(--muted);letter-spacing:0}
+/* Alto de partida (antes de medir la barra): el de una casa solo por noches, 140 px de barra menos 16 px de margen. */
+.cta-spacer{height:124px}
 /* Colones a la izquierda (noche y mensual), dólares a la derecha (≈ noche, ≈ mes): las dos monedas siempre, sin selector. */
 .cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
 .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cta-prices .price{line-height:1.1}
-/* Con fechas (ronda de Ana 2 nov, ticket 08) la cifra es el total, «≈ ₡285 000 / 3 noches»: 19 px en un renglón, dentro de la
-   línea de 22 px (un span interno baja la letra), que no cambia: la tarjeta mide lo mismo que sin fechas. */
+/* Con fechas (ronda de Ana 2 nov, ticket 08) la cifra es el total, «≈ ₡285 000 / 3 noches»: 20 px en un renglón, dentro de la
+   línea de 24 px (un span interno baja la letra), que no cambia: la barra mide lo mismo que sin fechas. */
 .cta-bar .price.is-stay,.price-usd.is-stay{white-space:nowrap}
-.cta-bar .price.is-stay .price-fig{font-size:19px}
+.cta-bar .price.is-stay .price-fig{font-size:20px}
 /* En un teléfono de menos de 440 px los dólares del total van sin «/ N noches» (ya lo dicen los colones): si no, se pisan. */
 @media (max-width:439px){.price-usd.is-stay small{display:none}}
 .cta-usd{text-align:right;align-items:flex-end}
 .price-usd{font-weight:var(--w-strong);font-size:17px;font-variant-numeric:tabular-nums}
-.price-usd small{font-size:14px;font-weight:var(--w-medium);color:var(--fg-title)}
+.price-usd small{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.price-disclaimer{text-align:center;line-height:1.3;margin-top:-4px;font-size:13px}
+/* En pantallas de menos de 400 px (iPhone SE), la nota en una sola línea para que la barra no pase de 150 px (revisión UX C3). */
+@media (max-width:399px){.price-disclaimer{font-size:12px}}
 
 /* ---------- Fotos y tarjetas de casa ---------- */
 .photo{position:relative;background:var(--state-soft);overflow:hidden;display:grid;place-items:center;color:var(--state-ink)}
@@ -764,8 +754,7 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .btn-wa.is-pending{opacity:.6}
 /* «Abriendo WhatsApp…»: la consulta se está registrando; el toque se nota al momento y no admite otro. */
 .btn-wa.is-sending{opacity:.8;cursor:progress}
-/* «Vuelve a estar disponible el…», bajo los precios, en su tarjeta. */
-.cta-note{line-height:1.3}
+.cta-note{text-align:center;margin-top:-4px}
 html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet-backdrop{position:fixed;inset:0;background:rgba(28,43,42,.35);z-index:30;animation:fade-in 200ms ease-out backwards}
 .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:560px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;z-index:31;
@@ -883,13 +872,10 @@ small.swap-in{display:block}
    botones de la foto y la barra de contacto llegan por su cuenta y el resto de la página se funde. */
 .hero{view-transition-name:listing-photo}
 .hero .top{view-transition-name:listing-top}
-/* La barra de la ficha entra desde abajo pieza a pieza: con el nombre en .cta-bar, la barra sería la «raíz» del desenfoque de la
-   tarjeta de precios, que no vería la página (tarjetas flotantes, tanda 2). */
-.cta-card{view-transition-name:listing-price}
-.cta-bar > .btn-wa{view-transition-name:listing-cta}
+.cta-bar{view-transition-name:listing-cta}
 @keyframes vt-out{to{opacity:0}}
-@keyframes vt-cta-in{from{transform:translateY(calc(100% + 80px))}}
-@keyframes vt-cta-out{to{transform:translateY(calc(100% + 80px))}}
+@keyframes vt-cta-in{from{transform:translateY(100%)}}
+@keyframes vt-cta-out{to{transform:translateY(100%)}}
 ::view-transition-group(listing-photo){animation-duration:340ms;animation-timing-function:var(--ease-drawer)}
 ::view-transition-old(listing-photo),::view-transition-new(listing-photo){width:100%;height:100%;object-fit:cover}
 ::view-transition-old(listing-photo){animation:vt-out 200ms ease-out both}
@@ -898,8 +884,8 @@ small.swap-in{display:block}
 ::view-transition-new(root){animation:fade-in 240ms var(--ease-out) 60ms both}
 ::view-transition-new(listing-top){animation:fade-in 200ms ease-out 160ms both}
 ::view-transition-old(listing-top){animation:vt-out 100ms ease-out both}
-::view-transition-new(listing-cta),::view-transition-new(listing-price){animation:vt-cta-in 340ms var(--ease-drawer) both}
-::view-transition-old(listing-cta),::view-transition-old(listing-price){animation:vt-cta-out 200ms var(--ease-out) both}
+::view-transition-new(listing-cta){animation:vt-cta-in 340ms var(--ease-drawer) both}
+::view-transition-old(listing-cta){animation:vt-cta-out 200ms var(--ease-out) both}
 
 /* ---------- Calendario (pantalla 17) y rejilla del mes, la misma en la ficha (revisión UX 2026-10-29, C4 y N4) ---------- */
 /* Casillas de 47 × 92 px (a 390 px de ancho), 6 px entre ellas y 14 px de margen lateral; número arriba y precio completo
@@ -998,9 +984,7 @@ small.swap-in{display:block}
    ficha, panel del calendario: tanda 2), donde estaba. */
 html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
 html.chrome-away{--chrome-bottom:var(--float-bottom)}
-html:has(.sticky-actions,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
-/* La ficha: encima de sus dos piezas (116 px) con 10 de aire. */
-html:has(.cta-bar){--chrome-bottom:calc(var(--float-bottom) + 126px)}
+html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
 .cal-cancel{font-size:15px;font-weight:var(--w-medium);color:var(--muted);min-height:32px}
 .seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
 .seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
@@ -1106,14 +1090,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
   .listing-view > .hero{grid-column:1;grid-row:1;height:480px;aspect-ratio:auto;border-radius:var(--r-sheet);margin:0}
   .listing-view > .listing-body{grid-column:1;grid-row:2}
   .listing-view > .cta-spacer{display:none}
-  .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;right:auto;margin:0;max-width:none;gap:8px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
-  /* En el ordenador, una sola tarjeta como siempre: los precios y el botón sin tarjeta ni sombra propias. */
-  .listing-view > .cta-bar > .cta-card{padding:0;border:0;border-radius:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-  .listing-view > .cta-bar > .btn-wa{min-height:56px;border-radius:var(--r-cta);box-shadow:none}
-  .listing-view > .cta-bar > .btn-wa.is-pending{opacity:.6;background:var(--wa);color:var(--wa-ink)}
-  .listing-view > .cta-bar > .btn-wa:disabled{opacity:.5;background:var(--wa);color:var(--wa-ink)}
-  .listing-view > .cta-bar .price{font-size:24px}
-  .listing-view > .cta-bar .price.is-stay .price-fig{font-size:20px}
+  .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;transform:none;width:auto;max-width:none;border:0;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
 }
 /* + / − sin fondo (Daniel, 2026-10-29): solo el signo en verde, la zona táctil de siempre; al tocar, un fondo
    tonal un instante. Desactivado, tenue. */

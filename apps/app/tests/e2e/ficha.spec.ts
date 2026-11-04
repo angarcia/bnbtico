@@ -205,8 +205,7 @@ test("la ficha muestra las dos monedas, sin selector", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");
   await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
-  // Tarjetas flotantes, tanda 2 (decisión 2): fuera la nota «Precios orientativos…»; las cifras llevan «≈».
-  await expect(page.getByText(/Precios orientativos/)).toHaveCount(0);
+  await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el anfitrión.");
   await expect(page.locator(".listing-view .currency-switch")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Ver en (dólares|colones)/ })).toHaveCount(0);
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
@@ -348,6 +347,7 @@ test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas
     expect(await barHeight(page), `${publicId}: alto de la barra`).toBeLessThanOrEqual(150);
     expect(await barOverflows(page), `${publicId}: la barra se desborda`).toBe(false);
     await expect(page.getByTestId("price-usd")).toHaveText(/^≈ \$\d+ \/ noche$/);
+    await expect(page.getByTestId("price-note")).toHaveText("Precios orientativos: el precio final lo acuerda con el anfitrión.");
     const [capacityBottom, barTop] = await page.evaluate(() => [
       document.querySelector('[data-testid="listing-capacity"]')!.getBoundingClientRect().bottom,
       document.querySelector(".cta-bar")!.getBoundingClientRect().top,
@@ -356,38 +356,6 @@ test("en un iPhone SE la barra cabe a lo ancho y deja ver la zona y las personas
   }
   await expect(page.locator("h1.listing-title")).toHaveClass(/is-long/);
   await expect(page.locator(".listing-body")).toContainText("fechas, precio y pago los acuerda directamente con el anfitrión");
-});
-
-// Tarjetas flotantes, tanda 2 (decisión 1): abajo, dos piezas flotantes que no se esconden: la tarjeta clara con los precios y,
-// a 10 px, el botón verde del mismo ancho, a 12 px de los bordes. Al bajar siguen ahí.
-test("en el teléfono los precios y el botón son dos piezas flotantes del mismo ancho, a 12 px de los bordes, que no se esconden al bajar", async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 667 });
-  await page.goto(`/casa/${casa.publicId}`);
-  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  const pieces = () =>
-    page.evaluate(() => {
-      const r = (q: string) => document.querySelector(q)!.getBoundingClientRect().toJSON() as DOMRect;
-      const card = getComputedStyle(document.querySelector(".cta-bar > .cta-card")!);
-      return { card: r(".cta-bar > .cta-card"), button: r(".cta-bar > .btn-wa"), bar: getComputedStyle(document.querySelector(".cta-bar")!).backgroundColor, blur: card.backdropFilter, radius: card.borderTopLeftRadius };
-    });
-  const before = await pieces();
-  expect(before.card.left).toBeCloseTo(12, 0);
-  expect(before.card.right).toBeCloseTo(375 - 12, 0);
-  expect(before.button.left).toBeCloseTo(before.card.left, 0);
-  expect(before.button.width).toBeCloseTo(before.card.width, 0);
-  expect(before.button.top - before.card.bottom, "10 px entre la tarjeta y el botón").toBeCloseTo(10, 0);
-  expect(before.button.bottom, "a 12 px del borde de abajo").toBeCloseTo(667 - 12, 0);
-  expect(before.bar, "la barra no tiene fondo: solo sus dos piezas").toBe("rgba(0, 0, 0, 0)");
-  expect(before.blur).toContain("blur(16px)");
-  expect(before.radius).toBe("12px");
-  for (let y = 100; y <= 800; y += 100) {
-    await page.evaluate((v) => scrollTo(0, v), y);
-    await page.waitForTimeout(30);
-  }
-  await page.waitForTimeout(400);
-  const after = await pieces();
-  expect(after.card.top, "no se esconde").toBeCloseTo(before.card.top, 0);
-  expect(after.button.top).toBeCloseTo(before.button.top, 0);
 });
 
 // Revisión UX N5: en un ordenador, dos columnas (fotos y texto a la izquierda, precio y contacto fijos a la derecha).
