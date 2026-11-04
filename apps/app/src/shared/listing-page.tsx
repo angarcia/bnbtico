@@ -80,15 +80,12 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
     button.current?.focus();
   }, [open]);
 
+  // «Vuelve a estar disponible el…» va en la tarjeta de precios (PriceCard).
   if (!listing.available) {
-    const reopen = reopenLabel(listing.reopenAt);
     return (
-      <>
-        <button className="btn btn-wa" type="button" disabled>
-          <I.wa size={22} /> No disponible por ahora
-        </button>
-        {reopen ? <span className="xs muted cta-note">{reopen}</span> : null}
-      </>
+      <button className="btn btn-wa" type="button" disabled>
+        <I.wa size={22} /> No disponible por ahora
+      </button>
     );
   }
   if (!hydrated) {
@@ -176,9 +173,9 @@ function Availability({ listing, missing, currency, fx, onStay }: { listing: Pub
   );
 }
 
-/** La barra fija de la ficha: colones a la izquierda, dólares a la derecha. Sin fechas, el precio por noche; con fechas, el
- *  total orientativo («≈ ₡285 000 / 3 noches») en la misma línea, y con 30 noches o más, debajo, el mensual (ronda de Ana
- *  2 nov, ticket 08). No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al
+/** Los precios de la barra de la ficha: colones a la izquierda, dólares a la derecha. Sin fechas, el precio por noche; con
+ *  fechas, el total orientativo («≈ ₡285 000 / 3 noches») en la misma línea, y con 30 noches o más, debajo, el mensual (ronda
+ *  de Ana 2 nov, ticket 08). No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al
  *  hidratar, donde aún no hay fechas. */
 function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate; stay: BarStay | null }) {
   if (!main && !monthly) return null;
@@ -220,7 +217,8 @@ function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly
   );
 }
 
-/** La barra fija tapa el final de la página: el espaciador mide lo mismo que ella (menos el margen inferior de la vista). */
+/** La barra fija tapa el final de la página: el espaciador mide lo mismo que ella más su separación del borde (12 px) y 8 px
+ *  de aire, menos el margen inferior de la vista (16 px; el área segura la llevan los dos). */
 function useSpacerMatchingBar() {
   const bar = useRef<HTMLDivElement>(null);
   const spacer = useRef<HTMLDivElement>(null);
@@ -228,7 +226,7 @@ function useSpacerMatchingBar() {
     const b = bar.current;
     const s = spacer.current;
     if (!b || !s || typeof ResizeObserver === "undefined") return;
-    const fit = () => (s.style.height = `calc(${b.getBoundingClientRect().height}px - 16px - env(safe-area-inset-bottom))`);
+    const fit = () => (s.style.height = `calc(${b.getBoundingClientRect().height}px + var(--float-gap) + 8px - 16px)`);
     const observer = new ResizeObserver(fit);
     observer.observe(b);
     return () => observer.disconnect();
@@ -253,6 +251,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
     if (!preview && !isOwnListing(l.publicId)) track("listing_view", l.publicId);
   }, [l.publicId, preview]);
   const main = d.mainPrice;
+  const reopen = l.available ? null : reopenLabel(l.reopenAt);
   const { bar, spacer } = useSpacerMatchingBar();
   return (
     <div className="app">
@@ -353,8 +352,15 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
         </div>
 
         <div className="cta-spacer" aria-hidden="true" ref={spacer} />
+        {/* Tarjetas flotantes, tanda 2 (Daniel, 2026-11-04): dos piezas que flotan y no se esconden, la tarjeta clara con los
+            precios y, debajo, el botón verde con su sombra; sin la nota «Precios orientativos…» (las cifras llevan «≈»). */}
         <div className="cta-bar" ref={bar}>
-          <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} />
+          {main || d.monthly || reopen ? (
+            <div className="cta-card float-card is-strong">
+              <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} />
+              {reopen ? <span className="xs muted cta-note">{reopen}</span> : null}
+            </div>
+          ) : null}
           {preview ? (
             <span className="btn btn-wa is-pending" aria-disabled="true">
               <I.wa size={22} /> Contactar por WhatsApp
@@ -362,9 +368,6 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           ) : (
             <ContactButton listing={l} days={days} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
-          <p className="xs muted price-disclaimer" data-testid="price-note">
-            Precios orientativos: el precio final lo acuerda con el anfitrión.
-          </p>
         </div>
       </main>
     </div>
