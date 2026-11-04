@@ -119,7 +119,7 @@ test("enviar → aprobar con oferta → avisos 90/30/7/0 → pendiente de pago y
     expect(status).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
     await capture(page, name);
     await page.context().close();
   }

@@ -29,6 +29,50 @@ test.beforeEach(async ({ page }) => {
 
 const results = (page: Page) => page.getByTestId("results-count");
 
+test("Tarjeta: fotos deslizables con contador, pedidas al deslizar, y botón de WhatsApp que abre la hoja sobre Explorar", async ({ page }) => {
+  await page.goto("/explorar");
+  const cards = page.locator(".listing-grid:not(.skeleton) .listing-card");
+  await expect(cards).toHaveCount(9);
+  const card = cards.nth(1);
+  const cell = page.locator(".listing-grid .listing-cell").nth(1);
+  // El formato no cambia (alcance del 2026-11-04): foto 4:3 a todo el ancho menos los márgenes.
+  const photo = (await card.locator(".photo").boundingBox())!;
+  expect(Math.abs(photo.width / photo.height - 4 / 3)).toBeLessThan(0.02);
+  // Antes de deslizar solo existe la primera foto; el contador marca «1 / 5» y el corazón sigue arriba a la derecha.
+  await expect(card.locator("img")).toHaveCount(1);
+  await expect(card.locator(".hero-counter")).toHaveText("1 / 5");
+  const heart = (await cell.locator(".heart-card").boundingBox())!;
+  expect(heart.y - photo.y).toBeLessThan(20);
+  expect(photo.x + photo.width - (heart.x + heart.width)).toBeLessThan(20);
+  const requested: string[] = [];
+  page.on("request", (r) => r.url().includes("/storage/v1/object/public/") && requested.push(r.url()));
+  await card.scrollIntoViewIfNeeded();
+  const before = requested.length;
+  await card.locator(".card-strip").evaluate((el) => el.scrollTo({ left: el.clientWidth, behavior: "instant" }));
+  await expect(card.locator(".hero-counter")).toHaveText("2 / 5");
+  // Al deslizar se montan la foto 2 y la 3 (la que viene) y se piden; las demás siguen sin existir. Deslizar no navega.
+  await expect(card.locator("img")).toHaveCount(3);
+  await expect.poll(() => requested.length - before).toBeGreaterThanOrEqual(2);
+  await expect(page).toHaveURL(/\/explorar/);
+  // El botón de WhatsApp va fuera del enlace, con el nombre del anfitrión, y abre la misma hoja sobre Explorar.
+  const wa = cell.getByRole("button", { name: /^Contactar por WhatsApp a / });
+  await expect(wa).toBeVisible();
+  expect(await card.locator("button").count()).toBe(0);
+  const name = (await card.locator("h2").textContent())!;
+  await wa.click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("heading", { name: /^Escríbale a / })).toBeVisible();
+  await expect(sheet).toContainText(name);
+  await expect(page).toHaveURL(/\/explorar/);
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(wa).toBeFocused();
+  // Tocar la foto abre la ficha.
+  await card.locator(".photo").click();
+  await expect(page).toHaveURL(/\/casa\/CT-/);
+});
+
 test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, filtros y ₡ | $", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeAttached();
@@ -42,17 +86,21 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   await expect(results(page)).toHaveText("9 casas en Limón");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Cabina Sámara/ })).toHaveCount(0);
-  // Una casa por fila, a todo el ancho menos los márgenes; la primera foto (el LCP) sin carga diferida.
+  // Una casa por fila, a todo el ancho menos los márgenes; la primera foto (el LCP) sin carga diferida y con prioridad alta,
+  // las de las demás tarjetas diferidas; las fotos 2+ de cada tarjeta no existen hasta deslizarla (ticket 09 de la ronda del 2 nov).
   const cards = page.locator(".listing-grid:not(.skeleton) .listing-card");
   await expect(cards).toHaveCount(9);
+  await expect(cards.first().locator("img")).toHaveCount(1);
   await expect(cards.first().locator("img")).toHaveAttribute("loading", "eager");
+  await expect(cards.first().locator("img")).toHaveAttribute("fetchpriority", "high");
+  await expect(cards.nth(1).locator("img")).toHaveCount(1);
   await expect(cards.nth(1).locator("img")).toHaveAttribute("loading", "lazy");
   const viewport = page.viewportSize()!.width;
   for (const box of await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width))) expect(Math.abs(box - (viewport - 2 * 16))).toBeLessThanOrEqual(1);
   // La primera es la más nueva (Casa Cocles mensual): nombre, zona, personas y habitaciones, y el precio de la noche.
   await expect(cards.first().locator("h2")).toHaveText("Casa Cocles mensual");
   await expect(cards.first()).toContainText("Cocles2 personas · 1 habitación₡45 000 / noche");
-  await expect(cards.first().locator(".pill")).toHaveCount(0);
+  await expect(cards.first().locator(".pill:not(.hero-counter)")).toHaveCount(0);
   // Tarjetas flotantes, tanda 1 (Daniel, 2026-11-04): el mapa arriba a todo el ancho y, encima, la búsqueda, los filtros y
   // «₡ | $» como tarjetas translúcidas a 12 px de los bordes; al bajar se esconden con la barra de abajo y al subir vuelven.
   const vp = page.viewportSize()!;

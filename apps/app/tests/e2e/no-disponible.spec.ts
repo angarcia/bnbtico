@@ -118,7 +118,7 @@ test("cerrar con fecha → «Cerrada hasta el …» → fuera de Explorar y fich
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(page.getByText("Anuncio visible")).toHaveCount(0);
   await page.getByRole("link", { name: "Ver ficha" }).click();
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await expect(page.getByText(/Vuelve a estar disponible/)).toHaveCount(0);
 
   const after = await h.owner("owner").getOwn(casa.id);

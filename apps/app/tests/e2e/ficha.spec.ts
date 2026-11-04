@@ -279,7 +279,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
   expect(await page.locator("html").getAttribute("data-hydrated")).toBeNull();
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   // El botón de contacto tampoco es un botón todavía: una caja apagada del mismo tamaño.
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toHaveCount(0);
   await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
   const before = await barHeight(page);
   const text = await page.locator(".cta-prices").innerText();
@@ -288,7 +288,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("price-usd")).toHaveText("≈ $186 / noche");
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeEnabled();
   expect(await barHeight(page), "al hidratar").toBe(before);
   await chooseCurrency(page, "USD");
   // Comprobación negativa: un margen para que un cambio indebido se pinte.
