@@ -312,6 +312,13 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
    `.photo` mientras no está montada o no ha llegado). Sin barra de desplazamiento; el gesto no arrastra la página de lado. */
 .card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
 .card-strip::-webkit-scrollbar{display:none}
+/* iPhone (Safari y la app instalada; en Chrome sí iba): el dedo no pasaba las fotos de la tarjeta y sí las de la ficha. Safari
+   deja arrastrar los enlaces (Chrome no) y la tira va dentro del de la tarjeta: ni el enlace ni sus fotos se arrastran. La tarjeta con tira no se encoge al tocarla
+   (el `transform` que aplica `:active` en el mismo toque le quita el gesto de lado a la tira), la tira declara que se desplaza
+   en los dos ejes (Daniel, 2026-11-04). */
+.listing-card:has(.card-strip):active{transform:none}
+.card-strip{touch-action:pan-x pan-y;-webkit-touch-callout:none}
+.listing-card:has(.card-strip),.card-strip img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .card-slide{position:relative;flex:0 0 100%;scroll-snap-align:start}
 /* Botón de WhatsApp: redondo y claro (el fondo de las tarjetas, borde fino, sin sombra) con el icono en verde WhatsApp
    oscurecido (--wa-icon, ≥ 3:1: el #25D366 de marca no llega sobre blanco), abajo a la derecha de la parte de texto, fuera
