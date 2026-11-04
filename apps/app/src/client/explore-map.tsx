@@ -118,7 +118,9 @@ export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: 
       }
     : { "aria-hidden": true };
   return (
-    <div ref={box} className={`map-box explore-map${onOpen ? "" : " is-still"}`} data-testid="explore-map" {...open}>
+    // La clase no cambia nunca: Leaflet añade las suyas (`leaflet-container`…) a esta caja y React, al reescribir `className`,
+    // las borraría (las teselas se quedaban a 0 px: sin fondo, solo los precios). Quieta o no, va en un atributo.
+    <div ref={box} className="map-box explore-map" data-still={onOpen ? undefined : ""} data-testid="explore-map" {...open}>
       {ready ? null : (
         <Suspense fallback={null}>
           <PricePreview markers={markers} width={size.width} height={size.height} top={size.top} />

@@ -94,6 +94,30 @@ test("el mapa va arriba a todo el ancho, bajo la cabecera flotante, y lleva prec
   await expect(mapBox(page).locator(".leaflet-control-zoom")).toHaveCount(0);
 });
 
+// Fallo de Daniel (2026-11-03): si Leaflet llega antes que las casas (al abrir la app con la búsqueda lenta, o al volver de
+// Buscar con Leaflet ya en caché), el mapa se dibuja en la caja quieta (antes la clase «is-still») y, al llegar las casas, React reescribía
+// su `className` y borraba `leaflet-container`: las teselas se quedaban a 0 px de ancho (sin fondo, solo los precios).
+test("si Leaflet llega antes que las casas, el mapa conserva su fondo al llegar ellas", async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/rest/v1/rpc/search_listings**", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto("/explorar");
+  // Mientras busca: la caja quieta ya con Leaflet dentro.
+  await expect(mapBox(page)).toHaveAttribute("data-still", "");
+  await expect(mapBox(page).locator(".leaflet-tile-pane")).toHaveCount(1);
+  release();
+  await ready(page);
+  await expect(mapBox(page)).not.toHaveAttribute("data-still");
+  await expect(mapBox(page)).toHaveClass(/leaflet-container/);
+  // Las teselas a su tamaño (sin `leaflet-container` medían 0 px). Leaflet las cambia al encuadrar: se espera a que se asienten.
+  await expect
+    .poll(() => mapBox(page).locator(".leaflet-tile-loaded").evaluateAll((els) => els.filter((el) => el.isConnected).map((el) => el.getBoundingClientRect().width)))
+    .toContain(256);
+});
+
 test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador muestra su casa; Atrás cierra y conserva el scroll", async ({ page }) => {
   await page.goto("/explorar");
   await ready(page);
