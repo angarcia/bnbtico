@@ -28,7 +28,7 @@ import {
   type Selection,
 } from "../../domain/calendar";
 import { can, isBlocked } from "../../domain/can";
-import { ignoreTabBarScroll, showTabBar } from "../hiding-tabbar";
+import { ignoreChromeScroll, showChrome } from "../hiding-chrome";
 import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
 import { reportError } from "../../shared/beacon";
@@ -229,7 +229,7 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
     if (client.isFetching({ queryKey: key })) void client.cancelQueries({ queryKey: key }).then(apply);
     setSel(clearSelection());
     setProblem(null);
-    showTabBar();
+    showChrome();
     save.mutate({ change, previous });
   }
 
@@ -280,7 +280,7 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
           problem={problem}
           canSave={change !== null}
           onChange={(s) => (setSel(s), setProblem(null))}
-          onCancel={() => (setSel(clearSelection()), setProblem(null), showTabBar())}
+          onCancel={() => (setSel(clearSelection()), setProblem(null), showChrome())}
           onSave={onSave}
         />
       ) : null}
@@ -410,7 +410,7 @@ function CalendarMonths({ months, target, render }: { months: string[]; target: 
   useLayoutEffect(() => {
     if (!target || target === months[0]) return;
     const toTarget = () => {
-      ignoreTabBarScroll(300);
+      ignoreChromeScroll(300);
       box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
     };
     toTarget();

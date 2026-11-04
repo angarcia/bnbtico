@@ -111,6 +111,53 @@ describe("contraste de los colores de texto (tema claro)", () => {
   });
 });
 
+/** Una tarjeta flotante translúcida (`color-mix(in srgb, var(--bg) 80%, transparent)`) sobre lo que pase por debajo: el peor
+ *  caso es blanco puro o una foto muy oscura (negro). El desenfoque no cuenta: solo aclara u oscurece menos. */
+function over(token: string, backdrop: string, map: Record<string, string> = vars): string {
+  const value = map[token]!.trim();
+  const mix = /^color-mix\(in srgb,\s*var\((--[\w-]+)\)\s+(\d+(?:\.\d+)?)%,\s*transparent\)$/.exec(value);
+  if (!mix) throw new Error(`${token} no es una mezcla con transparent (${value})`);
+  const a = hex(mix[1]!, map);
+  const p = Number(mix[2]) / 100;
+  const ch = (c: string, i: number) => parseInt(c.slice(i, i + 2), 16);
+  return `#${[1, 3, 5].map((i) => Math.round(ch(a, i) * p + ch(backdrop, i) * (1 - p)).toString(16).padStart(2, "0")).join("")}`;
+}
+const ratio = (a: string, b: string) => {
+  const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (l1 + 0.05) / (l2 + 0.05);
+};
+const BACKDROPS = [
+  ["blanco", "#FFFFFF"],
+  ["foto oscura", "#000000"],
+] as const;
+// Texto sobre las tarjetas flotantes: el de la búsqueda, «Mapa», «Ver ficha» y «N casas» (--fg) y las pestañas sin elegir y
+// «₡ | $» (--fg-title), sobre la tarjeta normal y la fuerte (texto pequeño o campos).
+const FLOAT_TEXT: [string, string][] = [
+  ["--fg", "--float-bg"],
+  ["--fg-title", "--float-bg"],
+  ["--fg", "--float-bg-strong"],
+  ["--fg-title", "--float-bg-strong"],
+];
+
+describe("contraste sobre las tarjetas flotantes (tarjetas flotantes, tanda 1)", () => {
+  for (const [name, backdrop] of BACKDROPS)
+    it.each(FLOAT_TEXT)(`%s sobre %s, encima de ${name}, ≥ 4,5:1`, (fg, bg) => {
+      expect(ratio(hex(fg), over(bg, backdrop))).toBeGreaterThanOrEqual(4.5);
+    });
+
+  it("la tarjeta translúcida es la crema al 80 % y la fuerte al 90 %", () => {
+    expect(vars["--float-bg"]).toBe("color-mix(in srgb,var(--bg) 80%,transparent)");
+    expect(vars["--float-bg-strong"]).toBe("color-mix(in srgb,var(--bg) 90%,transparent)");
+    expect(vars["--float-bg-solid"]).toBe("var(--bg)");
+  });
+
+  it("tema oscuro: el texto sobre la tarjeta oscura translúcida, encima de blanco o de negro, ≥ 4,5:1", () => {
+    const dark = { ...vars, ...darkVars(css) };
+    for (const [, backdrop] of BACKDROPS)
+      for (const [fg, bg] of FLOAT_TEXT) expect(ratio(hex(fg, dark), over(bg, backdrop, dark)), `${fg} sobre ${bg} (${backdrop})`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe("contraste del tema oscuro", () => {
   const dark = darkVars(css);
   /** En el tema oscuro, la variable del bloque oscuro o, si no la cambia, la del claro. */

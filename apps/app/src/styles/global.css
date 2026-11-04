@@ -1,4 +1,4 @@
-/* bnbtico · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.2.1 */
+/* bnbtico · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.3.0 */
 /* Fuentes alojadas aquí (variables, subconjuntos latin y latin-ext): Figtree para todo; los títulos en 600, más sobrios que el
    Outfit 800 de antes (Daniel, 2026-10-29). Outfit sigue en /fonts solo para la portada. */
 @font-face{font-family:Figtree;font-style:normal;font-weight:300 900;font-display:swap;src:url(/fonts/figtree-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -25,6 +25,17 @@
      todo cuadrado salvo los avatares de las personas y los puntos de estado (también los botones de icono, 2026-10-29). */
   --r:12px;--r-thumb:10px;--r-tile:12px;--r-input:8px;--r-cta:8px;--r-sheet:16px;
   --nav-h:84px;--gutter:16px;
+  /* Tarjetas flotantes (tanda 1, Daniel 2026-11-04): crema translúcida con desenfoque (la fuerte, para texto pequeño o campos;
+     la opaca, donde no hay desenfoque), borde de 1 px y sombra suave; esquinas de 12 (tarjetas) y 16 (barras); a 12 px del
+     borde más el área segura. `--chrome-bottom`: dónde se apoya lo que va encima de la barra de abajo (toasts, aviso de
+     versión, «Ver ficha»): sobre la barra si está a la vista, si no a 12 px del borde (reglas de html, más abajo). */
+  --float-bg:color-mix(in srgb,var(--bg) 80%,transparent);--float-bg-strong:color-mix(in srgb,var(--bg) 90%,transparent);--float-bg-solid:var(--bg);
+  --float-blur:blur(16px) saturate(1.2);--float-edge:color-mix(in srgb,var(--fg) 9%,transparent);
+  --float-shadow:0 1px 2px rgba(28,43,42,.08),0 12px 28px -14px rgba(28,43,42,.38);
+  --float-r:12px;--float-r-bar:16px;--float-gap:12px;
+  --float-top:calc(var(--float-gap) + env(safe-area-inset-top));--float-bottom:calc(var(--float-gap) + env(safe-area-inset-bottom));
+  --float-away:transform 240ms var(--ease-out),opacity 200ms var(--ease-out);
+  --chrome-bottom:var(--float-bottom);
   --cal-free:color-mix(in srgb,var(--primary) 12%,var(--bg));/* Terracota = el del logo (#D65C3C) mezclado con el crema, menos naranja (Daniel, 2026-10-29); texto en --brand-ink. */
   --cal-busy:color-mix(in srgb,var(--brand) 9%,var(--bg));--cal-busy-ink:var(--brand-ink);--when-pick:color-mix(in srgb,var(--brand) 50%,var(--bg));--when-pick-ink:#1C2B2A;--when-band:color-mix(in srgb,var(--brand) 9%,var(--bg));
   /* La banda del rango elegido en el calendario de la ficha: la de «¿Cuándo?», translúcida para que el verde de los libres siga debajo (ronda de Ana 2 nov, ticket 08). */
@@ -37,7 +48,8 @@
   --brand:#E8785A;--brand-ink:#F0A48C;--primary:#7FA98A;--primary-on:#16331F;--primary-ink:#B9D2BF;
   --selection:#3E6B52;--selection-ink:#DCE8DF;--state-soft:color-mix(in srgb,var(--primary) 18%,var(--bg));--state-ink:#B9D2BF;
   --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--review-soft:#2B2A22;--overlay:rgba(11,11,12,.86);--overlay-btn:rgba(28,35,32,.7);
-  --bad:#E8785A;--bad-soft:#4A2521;--ochre:#F0B24F;--cal-busy:#4A2521;--cal-busy-ink:#F0A48C;--cal-free:#1F3A2C;--shadow:0 2px 0 var(--line);color-scheme:dark}}
+  --bad:#E8785A;--bad-soft:#4A2521;--ochre:#F0B24F;--cal-busy:#4A2521;--cal-busy-ink:#F0A48C;--cal-free:#1F3A2C;--shadow:0 2px 0 var(--line);
+  --float-edge:color-mix(in srgb,#FFFFFF 10%,transparent);--float-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 28px -12px rgba(0,0,0,.6);color-scheme:dark}}
 
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
@@ -56,6 +68,17 @@ p{margin:0}
 a{color:var(--primary)}
 .num{font-variant-numeric:tabular-nums}
 .display{font-family:var(--display);letter-spacing:-0.01em}
+
+/* ---------- Tarjetas flotantes (tanda 1, 2026-11-04) ---------- */
+/* Sin desenfoque (navegadores viejos), opaca; con él, translúcida. Sin `transform` en reposo en las piezas con desenfoque
+   (Safari deja de desenfocar): se centran con left/right y margin:auto. */
+.float-card{background:var(--float-bg-solid);border:1px solid var(--float-edge);box-shadow:var(--float-shadow)}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}.float-card.is-strong{background:var(--float-bg-strong)}}
+/* El escondido común (client/hiding-chrome.ts pone `html.chrome-away` al bajar y lo quita al subir): cada pieza `.chrome-hide`
+   dice hacia dónde sale con `--away`. La que tiene el foco del teclado se queda; con movimiento reducido, solo se funde. */
+.chrome-hide{transition:var(--float-away)}
+html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.chrome-hide{transition:opacity 160ms ease-out}html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:none}}
 
 /* ---------- Texto ---------- */
 .small{font-size:15px}.xs{font-size:14px}.muted{color:var(--muted)}.center{text-align:center}
@@ -215,7 +238,7 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:17px;font-weight:var(--w-medium);color:var(--fg);text-decoration:none}
 .header-close:disabled{opacity:.6}
 .header-flow .right{margin-left:auto;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:6}
+.tabbar{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px;--away:translateY(100%);height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:6}
 .tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}
 /* Pestaña activa: el icono en el terracota del logo; la etiqueta en --brand-ink, que es texto pequeño y necesita 4,5:1. */
 .tabbar .nav[aria-current="page"]{color:var(--brand-ink);font-weight:var(--w-medium)}
@@ -432,11 +455,11 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
    se lea por encima. */
 .float-btn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;text-decoration:none}
 .view:has(> .float-btn){padding-bottom:calc(48px + 32px + env(safe-area-inset-bottom))}
-/* Baja con la barra de pestañas (`html.tabbar-away`), con su misma transición. */
+/* Baja con la barra de pestañas (`html.chrome-away`), con su misma transición. */
 .map-label{transition:transform 200ms var(--ease-out)}
 /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
 .map-label-end{display:block;height:0;margin-top:-14px}
-html.tabbar-away .map-label{transform:translate(-50%,calc(var(--nav-h) + env(safe-area-inset-bottom)))}
+html.chrome-away .map-label{transform:translate(-50%,calc(var(--nav-h) + env(safe-area-inset-bottom)))}
 .map-label{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:5;animation:fade-in 160ms var(--ease-out)}
 .map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:5;background:var(--surface-2)}
 html.map-open{overflow:hidden}
@@ -933,10 +956,14 @@ small.swap-in{display:block}
 /* «Guardar cambios» más bajo (44 px) y en gris mientras no hay cambios. */
 .cal-panel .cal-save{min-height:44px;font-size:16px}
 .cal-panel .cal-save:disabled{background:color-mix(in srgb,var(--fg) 8%,var(--surface));color:var(--muted);opacity:1}
-/* La barra de pestañas: fuera mientras hay días seleccionados; en el Calendario sale al bajar y vuelve al subir. */
-.tabbar{transition:transform 200ms var(--ease-out)}
-html.tabbar-away .tabbar,.app:has(.cal-panel) .tabbar{transform:translate(-50%,100%)}
-@media (prefers-reduced-motion:reduce){.tabbar,.map-label{transition:none}}
+/* La barra de pestañas: fuera mientras hay días seleccionados (sale al bajar y vuelve al subir con el escondido común). */
+.app:has(.cal-panel) .tabbar{transform:var(--away);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.map-label{transition:none}.app:has(.cal-panel) .tabbar{transform:none}}
+/* Sobre la barra de abajo si está a la vista; si se escondió, a 12 px del borde. Con las barras de botones de abajo (asistente,
+   ficha, panel del calendario: tanda 2), donde estaba. */
+html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
+html.chrome-away{--chrome-bottom:var(--float-bottom)}
+html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
 .cal-cancel{font-size:15px;font-weight:var(--w-medium);color:var(--muted);min-height:32px}
 .seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
 .seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
