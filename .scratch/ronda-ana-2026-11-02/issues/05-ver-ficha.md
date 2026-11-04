@@ -18,3 +18,8 @@ En `client/screens/propietario.tsx:318-330` (`CasaPropietarioScreen`), «Ver fic
 - E2E nueva: en el detalle de una casa activa sale el botón «Ver ficha» con el fondo de «Mapa» (compare `getComputedStyle` background y border-radius con `.map-label`), lleva a `/casa/CT-####`, y el último elemento de la pantalla queda por encima del botón al hacer scroll al final.
 - `tests/unit/contrast.test.ts` si lista estilos de botones.
 - Guía `docs/pruebas-manuales.md` A77/A78; `docs/diseno-v1.md:37`.
+
+## Al rehacerlo tras la reversión (2026-11-04)
+- Hechos antes: 01, 07, 08, 02, 03, 12 y 10. El 10 añadió el modo admin de la ficha editable (puerto `EditorPort`; `/admin/casas/$id` también tiene «Ver ficha» en la cabecera). **Alcance:** el detalle de la casa del anfitrión (`CasaPropietarioScreen`); en el modo admin, el mismo botón flotante solo si sale gratis del mismo componente (dígalo); si no, déjelo como está.
+- Referencia del primer intento: `git show 6a0d6c2` (revísalo; allí el botón compartía la regla visual con `.map-label` vía `.float-pill`).
+- Presupuesto: zona privada ~145,1 de 150 KB; el trozo «Pantallas de las pestañas» está a 25,09 de 25,2 KB (casi sin margen): si no cabe, pare y diga cuánto.
