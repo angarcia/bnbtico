@@ -36,3 +36,14 @@ describe("tarjeta flotante (.float-card)", () => {
     expect(css).toContain("@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}");
   });
 });
+
+// Tarjetas flotantes, tanda 2: los botones de la ficha usan el mismo escondido; en el ordenador se quedan sobre la foto.
+describe("botones de arriba de la ficha en global.css", () => {
+  it("fijos arriba a 12 px de los bordes y del área segura, salen hacia arriba y escondidos no responden", () => {
+    expect(css).toContain(".hero-top{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:6;display:flex;justify-content:space-between;pointer-events:none;--away:translateY(calc(-100% - var(--float-top) - 8px))}");
+    expect(css).toContain("html.chrome-away .hero-top:not(:has(:focus-visible)) *{pointer-events:none}");
+  });
+  it("en el ordenador no se fijan ni se esconden", () => {
+    expect(css).toContain("html.chrome-away .listing-view > .hero-top.chrome-hide{transform:none;opacity:1}");
+  });
+});

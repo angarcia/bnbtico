@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PublicPhoto } from "../domain/listing";
 import { fadeIn } from "./picture";
 import { useChanged } from "./use-changed";
 
-/** Hero de la ficha (pantalla 03): fotos deslizables con contador «1 / 14»; los botones van encima como hijos.
+/** Hero de la ficha (pantalla 03): fotos deslizables con contador «1 / 14». Los botones (volver, compartir, favorito) van
+ *  fuera, en la ficha: flotan fijos y se esconden al bajar (tarjetas flotantes, tanda 2).
  *  Del servidor solo llega la portada (el LCP); las demás fotos son cajas del mismo tamaño hasta que la página cargó o
  *  se desliza el carrusel. Con `loading="lazy"` Chrome las pedía igual (están a una pantalla en horizontal) y en Slow 4G
  *  le quitaban ancho de banda a la portada y al JS que hidrata (ticket 12). */
-export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]; title: string; children?: ReactNode }) {
+export function HeroGallery({ photos, title }: { photos: PublicPhoto[]; title: string }) {
   const strip = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [allPhotos, setAllPhotos] = useState(false);
@@ -48,7 +49,6 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
           )}
         </div>
       ) : null}
-      <div className="top">{children}</div>
       {photos.length > 1 ? (
         <span className="pill pill-sm hero-counter" aria-live="polite">
           <span key={index} className={moved ? "tick changed" : "tick"}>{`${index + 1} / ${photos.length}`}</span>

@@ -32,11 +32,11 @@ export function useShare(target: ShareTarget) {
   return { share, copied, swap };
 }
 
-/** Botón redondo sobre la foto (ficha pública). */
+/** Botón sobre la foto de la ficha pública: tarjeta flotante (tarjetas flotantes, tanda 2). */
 export function ShareButton(target: ShareTarget) {
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className="icon-btn overlay" aria-label={copied ? "Enlace copiado" : "Compartir ficha"} onClick={share}>
+    <button type="button" className="icon-btn float-card" aria-label={copied ? "Enlace copiado" : "Compartir ficha"} onClick={share}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? <I.check /> : <I.share />}
       </span>
