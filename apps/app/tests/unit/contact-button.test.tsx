@@ -68,29 +68,3 @@ describe("botón de contacto antes de hidratar", () => {
     expect(html).toMatch(/<div class="cta-card float-card is-strong">.*<span class="xs muted cta-note">Vuelve a estar disponible el 15 de noviembre<\/span><\/div><button/);
   });
 });
-
-// Tarjetas flotantes, tanda 2 (decisión 6): volver, compartir y el corazón flotan fijos arriba y se esconden al bajar. Fuera del
-// hero (su nombre de View Transition le quitaría el desenfoque) y, antes de hidratar, cajas iguales con su icono.
-describe("botones de arriba de la ficha antes de hidratar", () => {
-  const page = (preview?: boolean) => {
-    const client = new QueryClient();
-    seedListing(client, listing(), [], FX_INITIAL);
-    return renderToString(
-      <QueryClientProvider client={client}>
-        <ListingPage listing={listing()} base="https://bnbtico.com" preview={preview} />
-      </QueryClientProvider>,
-    );
-  };
-  it("van fuera del hero, en una pieza que se esconde, como tarjetas flotantes con su icono", () => {
-    const html = page();
-    const top = html.slice(html.indexOf('<div class="hero-top chrome-hide">'));
-    expect(html.indexOf('<div class="hero-top chrome-hide">')).toBeGreaterThan(html.indexOf('<div class="hero">'));
-    expect(html.slice(html.indexOf('<div class="hero">'), html.indexOf('<div class="hero-top'))).not.toContain("icon-btn");
-    expect(top).toMatch(/^<div class="hero-top chrome-hide"><a href="\/explorar" aria-label="Volver a Explorar" class="icon-btn float-card"><svg/);
-    expect(top).toMatch(/<span class="icon-btn float-card" aria-hidden="true"><svg[^>]*>.*?<\/svg><\/span><span class="heart heart-hero float-card" aria-hidden="true"><svg/);
-    expect(top.slice(0, top.indexOf('<div class="stack listing-body"'))).not.toContain("<button");
-  });
-  it("la vista previa del asistente no los lleva", () => {
-    expect(page(true)).not.toContain("hero-top");
-  });
-});

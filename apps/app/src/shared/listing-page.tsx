@@ -25,7 +25,6 @@ import { I, type IconName } from "./icons";
 import { whenIdle } from "./idle";
 import { listingDaysQuery, listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
-import { watchChromeScroll } from "./chrome-scroll";
 import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
@@ -247,9 +246,6 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
   const daysQuery = useQuery({ ...listingDaysQuery(l.publicId), enabled: l.available && !preview });
   const days = daysQuery.isError ? null : daysQuery.data;
   const [stay, setStay] = useState<BarStay | null>(null);
-  // Los botones de arriba se esconden al bajar con el escondido común: la ficha del servidor no tiene TabsFrame (ni router), así
-  // que lo arranca ella, tras hidratar (un efecto: nada del render lee `window`).
-  useEffect(() => (preview ? undefined : watchChromeScroll()), [preview]);
   useEffect(() => {
     // Ni la vista previa ni el propio dueño cuentan como visita (revisión UX A2).
     if (!preview && !isOwnListing(l.publicId)) track("listing_view", l.publicId);
@@ -260,45 +256,30 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
   return (
     <div className="app">
       <main className="view no-nav listing-view">
-        <HeroGallery photos={l.photos} title={l.title} />
-        {/* Volver, compartir y el corazón (tarjetas flotantes, tanda 2, decisión 6): tarjetas fijas arriba que se esconden al bajar
-            y vuelven al subir, también ya sobre el texto. Compartir y el corazón dependen del navegador: antes de hidratar, cajas
-            iguales con su icono, que aún no responden. En la vista previa del asistente, ninguno. */}
-        {preview ? null : (
-          <div className="hero-top chrome-hide">
-            <a
-              href="/explorar"
-              aria-label="Volver a Explorar"
-              className="icon-btn float-card"
-              onClick={
-                onBack
-                  ? (e) => {
-                      e.preventDefault();
-                      onBack();
-                    }
-                  : undefined
-              }
-            >
-              <I.back />
-            </a>
-            <div className="row gap-8">
-              {hydrated ? (
-                <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} />
-              ) : (
-                <span className="icon-btn float-card" aria-hidden="true">
-                  <I.share />
-                </span>
-              )}
-              {hydrated ? (
-                <FavoriteButton publicId={l.publicId} className="heart-hero float-card" size={20} />
-              ) : (
-                <span className="heart heart-hero float-card" aria-hidden="true">
-                  <I.heart size={20} />
-                </span>
-              )}
-            </div>
+        <HeroGallery photos={l.photos} title={l.title}>
+          {preview ? <span /> : (
+          <a
+            href="/explorar"
+            aria-label="Volver a Explorar"
+            className="icon-btn overlay"
+            onClick={
+              onBack
+                ? (e) => {
+                    e.preventDefault();
+                    onBack();
+                  }
+                : undefined
+            }
+          >
+            <I.back />
+          </a>
+          )}
+          {/* Compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
+          <div className="row gap-8">
+            {hydrated && !preview ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
+            {hydrated && !preview ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
           </div>
-        )}
+        </HeroGallery>
 
         <div className="stack listing-body">
           {l.kind === "habitacion" || !l.available ? (

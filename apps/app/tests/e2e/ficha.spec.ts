@@ -85,9 +85,8 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(await page.getByTestId("listing-capacity").evaluate((el) => getComputedStyle(el).fontSize)).toBe("17px");
   await expect(page.getByTestId("approx-map").locator(".leaflet-tile-loaded").first()).toBeAttached();
   await expect(page.getByText("Parqueo gratis")).toBeVisible();
-  // Compartir y el corazón: en el HTML del servidor, sus tarjetas con el icono que aún no responden (tarjetas flotantes, tanda 2);
-  // tras hidratar, botones del mismo tamaño. Sin «₡ | $».
-  expect(source).toMatch(/<div class="row gap-8"><span class="icon-btn float-card" aria-hidden="true"><svg[^>]*>.*?<\/svg><\/span><span class="heart heart-hero float-card" aria-hidden="true"><svg/);
+  // Compartir y el corazón: en el HTML del servidor solo sus cajas; tras hidratar, botones del mismo tamaño. Sin «₡ | $».
+  expect(source).toContain('<div class="row gap-8"><span class="icon-btn" aria-hidden="true"></span><span class="icon-btn" aria-hidden="true"></span></div>');
   expect(source).not.toContain("currency-switch");
   expect(source).not.toContain("favoritos");
   const heart = page.getByRole("button", { name: "Guardar en favoritos" });
@@ -150,7 +149,7 @@ test("a 375 px la foto es 5:4, a todo el ancho y pegada arriba, e hidrata sin av
   expect(hero.y).toBeCloseTo(0, 0);
   expect(Math.abs(hero.width - 375)).toBeLessThanOrEqual(1);
   expect(Math.abs(hero.height - 300)).toBeLessThanOrEqual(1);
-  expect((await page.locator(".hero-top").boundingBox())!.y).toBeGreaterThanOrEqual(12);
+  expect((await page.locator(".hero .top").boundingBox())!.y).toBeGreaterThanOrEqual(12);
   await expect(page.locator(".hero-counter")).toHaveText("1 / 5");
   // En un Pixel 7 (412 px), el mismo 5:4: el alto sale del CSS, sin esperar a la imagen.
   await page.setViewportSize({ width: 412, height: 915 });
@@ -386,47 +385,9 @@ test("en el teléfono los precios y el botón son dos piezas flotantes del mismo
     await page.waitForTimeout(30);
   }
   await page.waitForTimeout(400);
-  await expect(page.locator("html")).toHaveClass(/chrome-away/);
   const after = await pieces();
   expect(after.card.top, "no se esconde").toBeCloseTo(before.card.top, 0);
   expect(after.button.top).toBeCloseTo(before.button.top, 0);
-});
-
-// Tarjetas flotantes, tanda 2 (decisión 6): volver, compartir y el corazón son tarjetas fijas arriba que salen al bajar y vuelven
-// al subir, también sobre el texto; el contador se queda con la foto. La ficha del servidor no tiene TabsFrame: el escondido lo
-// arranca ella al hidratar, sin avisos.
-test("los botones de arriba salen al bajar y vuelven al subir, ya sobre el texto; el contador se queda en la foto", async ({ page }) => {
-  const seen = watch(page);
-  await page.setViewportSize({ width: 375, height: 667 });
-  await page.goto(`/casa/${casa.publicId}`);
-  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  const top = page.locator(".hero-top");
-  const y = () => top.evaluate((el) => el.getBoundingClientRect().bottom);
-  const start = await top.boundingBox();
-  expect(start!.y).toBeCloseTo(12, 0);
-  expect(start!.x).toBeCloseTo(12, 0);
-  expect(start!.width).toBeCloseTo(375 - 24, 0);
-  const back = page.getByRole("link", { name: "Volver a Explorar" });
-  expect(await back.evaluate((el) => getComputedStyle(el).backdropFilter)).toContain("blur(16px)");
-  const glide = async (from: number, to: number) => {
-    for (let i = 1; i <= 8; i++) {
-      await page.evaluate((v) => scrollTo(0, v), Math.round(from + ((to - from) * i) / 8));
-      await page.waitForTimeout(30);
-    }
-  };
-  await glide(0, 700);
-  await expect(page.locator("html")).toHaveClass(/chrome-away/);
-  await expect.poll(y, { message: "fuera, por arriba" }).toBeLessThanOrEqual(0);
-  await expect(page.locator(".hero-counter")).toHaveText("1 / 5");
-  // Escondidos no responden: el toque pasa a lo de debajo.
-  expect(await back.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
-  await glide(700, 560);
-  await expect(page.locator("html")).not.toHaveClass(/chrome-away/);
-  await expect.poll(async () => (await top.boundingBox())!.y, { message: "de vuelta arriba, sobre el texto" }).toBeCloseTo(12, 0);
-  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(300);
-  await back.click();
-  await expect(page).toHaveURL(/\/explorar/);
-  expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 });
 
 // Revisión UX N5: en un ordenador, dos columnas (fotos y texto a la izquierda, precio y contacto fijos a la derecha).
@@ -438,13 +399,6 @@ test("en escritorio la ficha va a dos columnas con el contacto a la derecha; en 
   expect(bar.left, "el contacto a la derecha de las fotos").toBeGreaterThanOrEqual(hero.right);
   expect(bar.top, "arriba, a la altura de las fotos").toBeLessThan(hero.bottom);
   expect(await page.locator(".cta-bar").evaluate((el) => getComputedStyle(el).position)).toBe("sticky");
-  // Los botones, sobre la foto como antes, y no se esconden al bajar.
-  const buttons = (await page.locator(".hero-top").boundingBox())!;
-  expect(buttons.y - hero.top).toBeCloseTo(12, 0);
-  expect(buttons.x - hero.left).toBeCloseTo(12, 0);
-  await page.evaluate(() => document.documentElement.classList.add("chrome-away"));
-  expect(await page.locator(".hero-top").evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
-  await page.evaluate(() => document.documentElement.classList.remove("chrome-away"));
   await page.setViewportSize({ width: 375, height: 667 });
   expect(await page.locator(".cta-bar").evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
 });

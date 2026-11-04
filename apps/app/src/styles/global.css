@@ -337,6 +337,7 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .heart-card{position:absolute;right:8px;top:8px;color:#FFFFFF}
 .heart-card svg{filter:drop-shadow(0 1px 2px rgba(28,43,42,.45))}
 .heart-card[aria-pressed="true"] svg{filter:none}
+.heart-hero{border-radius:8px;background:var(--overlay-btn)}
 .heart-row{margin:-10px -10px 0 0;flex-shrink:0}
 /* Favoritos (pantalla 05): tarjeta horizontal; el enlace del título cubre la tarjeta y el corazón queda por encima. */
 .fav-list{gap:14px}
@@ -362,13 +363,7 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 /* La foto de la ficha es 5:4 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch);
    solo los botones se apartan del área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
 .hero{position:relative;aspect-ratio:5/4;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
-/* Volver, compartir y el corazón de la ficha (tarjetas flotantes, tanda 2, decisión 6): tarjetas de 44 px fijas arriba, a 12 px
-   de los bordes y del área segura (donde estaban sobre la foto: nada se mueve al llegar); se esconden al bajar y vuelven al subir
-   (.chrome-hide), también ya sobre el texto. Fuera del hero en el HTML: su `view-transition-name` haría del hero la «raíz» del
-   desenfoque y, sobre el texto, no se vería la página. Entre ellas el toque pasa a la página; escondidas, no responden. */
-.hero-top{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:6;display:flex;justify-content:space-between;pointer-events:none;--away:translateY(calc(-100% - var(--float-top) - 8px))}
-.hero-top .icon-btn,.hero-top .heart{width:44px;height:44px;border-radius:var(--float-r);color:var(--fg);pointer-events:auto}
-html.chrome-away .hero-top:not(:has(:focus-visible)) *{pointer-events:none}
+.hero .top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between}
 .hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .hero .strip::-webkit-scrollbar{display:none}
 .hero .strip img,.hero .strip .slot{flex:0 0 100%;height:100%;object-fit:cover;scroll-snap-align:start}
@@ -884,10 +879,10 @@ small.swap-in{display:block}
 .hero-counter .tick{display:inline-block}
 .hero-counter .tick.changed{animation:tick-in 180ms var(--ease-out) backwards}
 
-/* Explorar ↔ ficha (View Transitions con tipos, client/motion.ts): la foto de la tarjeta se convierte en el hero, las dos piezas
-   de abajo llegan por su cuenta y el resto de la página (también los botones de arriba, desde la tanda 2: con nombre propio no se
-   desenfocaría lo de debajo) se funde. */
+/* Explorar ↔ ficha (View Transitions con tipos, client/motion.ts): la foto de la tarjeta se convierte en el hero, los
+   botones de la foto y la barra de contacto llegan por su cuenta y el resto de la página se funde. */
 .hero{view-transition-name:listing-photo}
+.hero .top{view-transition-name:listing-top}
 /* La barra de la ficha entra desde abajo pieza a pieza: con el nombre en .cta-bar, la barra sería la «raíz» del desenfoque de la
    tarjeta de precios, que no vería la página (tarjetas flotantes, tanda 2). */
 .cta-card{view-transition-name:listing-price}
@@ -901,6 +896,8 @@ small.swap-in{display:block}
 ::view-transition-new(listing-photo){animation:fade-in 200ms ease-out both}
 ::view-transition-old(root){animation:vt-out 140ms ease-out both}
 ::view-transition-new(root){animation:fade-in 240ms var(--ease-out) 60ms both}
+::view-transition-new(listing-top){animation:fade-in 200ms ease-out 160ms both}
+::view-transition-old(listing-top){animation:vt-out 100ms ease-out both}
 ::view-transition-new(listing-cta),::view-transition-new(listing-price){animation:vt-cta-in 340ms var(--ease-drawer) both}
 ::view-transition-old(listing-cta),::view-transition-old(listing-price){animation:vt-cta-out 200ms var(--ease-out) both}
 
@@ -1108,10 +1105,6 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
   .listing-view{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:40px;align-items:start;padding-top:calc(8px + env(safe-area-inset-top))}
   .listing-view > .hero{grid-column:1;grid-row:1;height:480px;aspect-ratio:auto;border-radius:var(--r-sheet);margin:0}
   .listing-view > .listing-body{grid-column:1;grid-row:2}
-  /* Los botones, sobre la foto como antes: en su celda, sin fijarse arriba ni esconderse. */
-  .listing-view > .hero-top{grid-column:1;grid-row:1;align-self:start;position:relative;top:auto;left:auto;right:auto;max-width:none;margin:12px;z-index:1}
-  html.chrome-away .listing-view > .hero-top.chrome-hide{transform:none;opacity:1}
-  html.chrome-away .listing-view > .hero-top.chrome-hide *{pointer-events:auto}
   .listing-view > .cta-spacer{display:none}
   .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;right:auto;margin:0;max-width:none;gap:8px;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
   /* En el ordenador, una sola tarjeta como siempre: los precios y el botón sin tarjeta ni sombra propias. */
