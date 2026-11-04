@@ -457,6 +457,37 @@ test("densidad: márgenes de 16 px y la barra de abajo, una píldora flotante co
   await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
+// Tarjetas flotantes, tanda 1: los avisos se apoyan sobre la barra de abajo (`--chrome-bottom`) y, si se esconde, a 12 px del
+// borde; en una pantalla sin barra, también a 12 px.
+test("el aviso (toast) y el de versión nueva siguen a la barra de abajo", async ({ page }) => {
+  await h.reset();
+  await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
+  await page.goto("/propietario/casas");
+  await expect(nav(page)).toBeVisible();
+  const toast = page.locator(".toast");
+  await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = "Guardado.";
+    document.body.append(el);
+  });
+  const vp = page.viewportSize()!;
+  const bar = (await nav(page).boundingBox())!;
+  expect(Math.round(bar.y - ((await toast.boundingBox())!.y + (await toast.boundingBox())!.height))).toBe(12);
+  expect(await toast.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("12px");
+  await page.evaluate(() => document.documentElement.classList.add("chrome-away"));
+  await expect.poll(async () => Math.round(vp.height - ((await toast.boundingBox())!.y + (await toast.boundingBox())!.height))).toBe(12);
+  await page.evaluate(() => document.documentElement.classList.remove("chrome-away"));
+  expect(await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "update-banner";
+    document.body.append(el);
+    const b = getComputedStyle(el).bottom;
+    el.remove();
+    return b;
+  })).toBe(`${vp.height - bar.y + 12}px`);
+});
+
 test.describe("en un teléfono de 375 px", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 

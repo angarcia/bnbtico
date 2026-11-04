@@ -349,7 +349,7 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
    Las tarjetas y recuadros blancos fijos de la página van en `--surface-soft` (blanco al 70 %); los campos, las hojas
    y lo que flota sobre mapas o fotos siguen en blanco opaco. */
 .note-plain{background:var(--surface-soft);color:var(--fg)}
-.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--r-input);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
+.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:var(--chrome-bottom);z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--float-r);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
 /* La foto de la ficha es 5:4 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch);
    solo los botones se apartan del área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
 .hero{position:relative;aspect-ratio:5/4;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
@@ -461,18 +461,20 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .map-preview{position:absolute;inset:0;pointer-events:none}
 .map-preview .map-price{position:absolute}
 .map-price.is-selected{background:var(--brand-ink);color:#FFFBF2;box-shadow:0 6px 14px -4px rgba(180,76,48,.6)}
-.float-btn,.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:6px;background:rgba(28,43,42,.92);color:#FFFBF2;font:500 15px/1 var(--body);white-space:nowrap;box-shadow:0 10px 24px -10px rgba(28,43,42,.6);cursor:pointer}
-/* «Ver ficha» del detalle de la casa del anfitrión (ronda de Ana 2 nov, ticket 05): el aspecto de «Mapa» (regla de arriba), fijo abajo
-   y centrado; esa pantalla no tiene barra de pestañas. La pantalla deja debajo el alto del botón (48) + 32 de aire para que lo último
-   se lea por encima. */
-.float-btn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;text-decoration:none}
-.view:has(> .float-btn){padding-bottom:calc(48px + 32px + env(safe-area-inset-bottom))}
-/* Baja con la barra de pestañas (`html.chrome-away`), con su misma transición. */
-.map-label{transition:transform 200ms var(--ease-out)}
+/* «Mapa» (Explorar), «N casas» (mapa a pantalla completa) y «Ver ficha» (detalle de la casa del anfitrión): la misma tarjeta
+   flotante clara, variante B (tarjetas flotantes, tanda 1, decisión 8: la tinta al 92 % era demasiado oscura), con texto e icono
+   en tinta, 44 px de alto y esquinas de 12. Centradas con left/right y margin:auto: sin transform en reposo (Safari y el desenfoque). */
+.float-btn,.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:44px;width:fit-content;left:0;right:0;margin:0 auto;padding:0 18px;border:1px solid var(--float-edge);border-radius:var(--float-r);background:var(--float-bg-solid);color:var(--fg);font:500 15px/1 var(--body);white-space:nowrap;box-shadow:var(--float-shadow);cursor:pointer}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-btn,.map-label,.map-count{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}}
+/* «Ver ficha» (ronda de Ana 2 nov, ticket 05): fijo abajo, en una pantalla sin barra de pestañas (--chrome-bottom: a 12 px del
+   borde). La pantalla deja debajo el botón y 16 px de aire para que lo último se lea por encima. */
+.float-btn{position:fixed;bottom:var(--chrome-bottom);z-index:5;text-decoration:none}
+.view:has(> .float-btn){padding-bottom:calc(var(--float-bottom) + 44px + 16px)}
+/* «Mapa», sobre la barra de pestañas; baja con ella (`html.chrome-away`) hasta 12 px del borde, con su misma transición. */
+.map-label{position:fixed;bottom:calc(var(--float-bottom) + var(--nav-h));z-index:5;transition:transform 240ms var(--ease-out);animation:fade-in 160ms var(--ease-out)}
+html.chrome-away .map-label{transform:translateY(var(--nav-h))}
 /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
 .map-label-end{display:block;height:0;margin-top:-14px}
-html.chrome-away .map-label{transform:translate(-50%,calc(var(--nav-h) + env(safe-area-inset-bottom)))}
-.map-label{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));z-index:5;animation:fade-in 160ms var(--ease-out)}
 /* De borde a borde: la barra de pestañas flota encima (z-index 6) y «N casas» se apoya en ella (--chrome-bottom). */
 .map-full{position:fixed;inset:0;z-index:5;background:var(--surface-2)}
 html.map-open{overflow:hidden}
@@ -485,7 +487,7 @@ html.map-open{overflow:hidden}
 .map-full .leaflet-bottom.leaflet-right{top:calc(var(--float-top) + 60px);bottom:auto}
 .map-full .leaflet-control-attribution{margin:0 12px 0 0;border-radius:6px;font-size:11px}
 .map-round{flex:none;width:52px;height:52px;border-radius:var(--float-r);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.map-count{position:absolute;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);z-index:1}
+.map-count{position:absolute;bottom:var(--chrome-bottom);z-index:1}
 /* La casa del marcador tocado, encima de «N casas» (44 px + 12 de aire). */
 .map-card{position:absolute;left:var(--float-gap);right:var(--float-gap);bottom:calc(var(--chrome-bottom) + 56px);z-index:1;max-width:536px;margin:0 auto;border-radius:var(--float-r);overflow:hidden;animation:fade-in 160ms var(--ease-out)}
 .map-card-link{display:flex;color:inherit;text-decoration:none}
@@ -744,8 +746,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .tabbar .nav{position:relative}
 .nav-count{position:absolute;top:5px;right:calc(50% - 24px);border:2px solid var(--bg);min-width:20px;height:20px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:var(--w-medium);display:flex;align-items:center;justify-content:center}
 
-/* Aviso de versión nueva (service worker): flota sobre la barra inferior. */
-.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--r-input);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:7}
+/* Aviso de versión nueva (service worker): se apoya en la barra de abajo (--chrome-bottom) o, sin ella, a 12 px del borde. */
+.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:7}
 
 /* ---------- Hoja de contacto (pantalla 04): sobre la ficha atenuada, 28 px arriba ---------- */
 /* Antes de hidratar el botón es una caja del mismo tamaño que todavía no responde: se ve, pero apagado. */

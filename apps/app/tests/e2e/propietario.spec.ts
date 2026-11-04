@@ -171,7 +171,7 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
 });
 
-test("detalle: «Ver ficha» es un botón flotante abajo con el aspecto de «Mapa», fuera de la cabecera y sin tapar el final", async ({ page }) => {
+test("detalle: «Ver ficha» es una tarjeta flotante clara abajo con el aspecto de «Mapa», fuera de la cabecera y sin tapar el final", async ({ page }) => {
   await page.goto(`/propietario/casas/${active.id}`);
   await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByTestId("field-rows")).toBeVisible();
@@ -184,26 +184,29 @@ test("detalle: «Ver ficha» es un botón flotante abajo con el aspecto de «Map
   const looks = await ver.evaluate((el) => {
     const pick = (node: Element) => {
       const c = getComputedStyle(node);
-      return [c.backgroundColor, c.borderRadius, c.height, c.paddingLeft, c.paddingRight, c.color, c.font, c.boxShadow, c.columnGap, c.textDecorationLine].join(" | ");
+      return [c.backgroundColor, c.borderRadius, c.height, c.paddingLeft, c.paddingRight, c.color, c.font, c.boxShadow, c.columnGap, c.textDecorationLine, c.backdropFilter, c.borderTopColor].join(" | ");
     };
     const ref = document.createElement("button");
     ref.className = "map-label";
     ref.textContent = "Mapa";
     document.body.append(ref);
-    const out = { ver: pick(el), mapa: pick(ref), pos: getComputedStyle(el).position, radius: getComputedStyle(el).borderTopLeftRadius };
+    const c = getComputedStyle(el);
+    const out = { ver: pick(el), mapa: pick(ref), pos: c.position, radius: c.borderTopLeftRadius, color: c.color, blur: c.backdropFilter, height: c.height };
     ref.remove();
     return out;
   });
   expect(looks.ver).toBe(looks.mapa);
   expect(looks.pos).toBe("fixed");
-  expect(looks.radius).toBe("6px"); // esquinas de 6 px, no píldora redonda (decisión 2026-10-29)
+  // Tarjetas flotantes, tanda 1 (decisión 8, variante B): clara como las demás tarjetas, texto e icono en tinta, 44 px de alto
+  // y esquinas de 12 px.
+  expect(looks).toMatchObject({ radius: "12px", color: "rgb(28, 43, 42)", blur: "blur(16px) saturate(1.2)", height: "44px" });
   // El ojo y el texto en la misma línea, centrados en el alto del botón.
   const [icon, box] = [(await ver.locator("svg").boundingBox())!, (await ver.boundingBox())!];
   expect(Math.abs(icon.y + icon.height / 2 - (box.y + box.height / 2))).toBeLessThan(1);
   // Abajo y centrado.
   const vp = page.viewportSize()!;
   expect(Math.abs(box.x + box.width / 2 - vp.width / 2)).toBeLessThan(2);
-  expect(vp.height - (box.y + box.height)).toBe(16);
+  expect(vp.height - (box.y + box.height)).toBe(12);
   // Al final de la pantalla lo último queda por encima del botón, con aire.
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   const last = await page.locator(".view").evaluate((view) => {

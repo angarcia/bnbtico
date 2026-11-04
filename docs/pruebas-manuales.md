@@ -137,9 +137,9 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 
 ### 2.2 Explorar sin cuenta: lista y tarjetas
 
-- [ ] **C4** Abra `/explorar` sin sesión → la barra de abajo trae «Explorar», «Favoritos» e «Ingresar» (en ese orden); arriba solo la píldora «Empiece su búsqueda», sin logo ni botón «Ingresar» en la cabecera.
+- [ ] **C4** Abra `/explorar` sin sesión → arriba, a todo el ancho y pegado al borde, el mapa; encima flotan como tarjetas claras translúcidas (se ve el mapa difuminado detrás, sombra suave, esquinas redondeadas, a 12 px de los bordes) la píldora «Empiece su búsqueda» y, debajo, el botón de filtros a la izquierda y «₡ | $» a la derecha, sin logo ni botón «Ingresar»; abajo, la barra flotante en forma de píldora con «Explorar», «Favoritos» e «Ingresar» (en ese orden), cada una con icono y nombre, y la elegida sobre una pastilla terracota suave.
 - [ ] **C5** Mire la línea de resultados y las tarjetas → la línea dice «N casas en Limón» (con una sola, «1 casa en Limón») y N coincide con las tarjetas; cada tarjeta es una por fila, a todo el ancho, con foto, nombre, zona, «N personas · N habitación(es)» y precio «₡95 000 / noche», y un corazón sobre la foto.
-- [ ] **C6** Baje por la lista → la píldora «Empiece su búsqueda» y la fila de chips (filtros y «₡ | $»; ya no hay «Solo alquiler mensual») se quedan fijas arriba y la barra de abajo no tapa la última tarjeta.
+- [ ] **C6** Baje por la lista → la búsqueda, los filtros y «₡ | $» (ya no hay «Solo alquiler mensual») salen por arriba y la barra de abajo por abajo; suba un poco → vuelven todos a la vez, flotando sobre las fotos de la lista; arriba del todo siempre están a la vista; la barra de abajo no tapa la última tarjeta.
 - [ ] **C7** Al final de la lista → la tarjeta «¿Tiene una casa en el Caribe?» con «Publíquela gratis 12 meses. Quedan N de 50 plazas.» y el botón «Publicar mi casa gratis», que abre el asistente de publicar sin pedir cuenta; vuelva con Atrás y Explorar sigue donde estaba.
 - [ ] **C8** Toque una tarjeta lejos del principio de la lista y luego la flecha «Volver a Explorar» de la ficha → Explorar vuelve al mismo punto del desplazamiento y con esa tarjeta a la vista.
 - [ ] **C9** Toque el corazón de una tarjeta sin sesión → se rellena al instante, su nombre pasa a «Quitar de favoritos», no abre la ficha y no pide cuenta.
@@ -152,14 +152,14 @@ Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?p
 
 ### 2.4 Barra de abajo y botón «Mapa»
 
-- [ ] **C13** Baje con el dedo por Explorar → la barra «Explorar · Favoritos · Ingresar» sale por abajo; suba un poco → vuelve; arriba del todo siempre está a la vista; repita en Favoritos (con alguna casa) e Ingresar → se comporta igual y un movimiento muy corto no la hace parpadear.
-- [ ] **C14** Con la caja del mapa ya arriba, fuera de la pantalla, siga bajando por la lista → aparece el botón flotante «Mapa» sobre la barra y baja junto con ella cuando la barra se esconde; arriba del todo (con el mapa a la vista) no hay botón «Mapa».
+- [ ] **C13** Baje con el dedo por Explorar → la píldora «Explorar · Favoritos · Ingresar» sale por abajo; suba un poco → vuelve; arriba del todo siempre está a la vista; repita en Favoritos (con alguna casa; la tarjeta de arriba con el logo y «₡ | $» también sale y vuelve) e Ingresar → se comporta igual y un movimiento muy corto no la hace parpadear.
+- [ ] **C14** Con el mapa ya fuera de la pantalla, siga bajando por la lista → aparece el botón flotante «Mapa» (tarjeta clara, texto e icono oscuros, como las demás tarjetas) sobre la barra y baja junto con ella hasta cerca del borde cuando la barra se esconde; arriba del todo (con el mapa a la vista) no hay botón «Mapa».
 - [ ] **C15** Siga bajando hasta el final de la lista → el botón «Mapa» desaparece antes de llegar a «Publicar mi casa gratis» y no tapa ese botón ni la nota «¿No encuentra lo que busca?»; suba otra vez → «Mapa» vuelve a salir.
 
 ### 2.5 Mapa de Explorar
 
-- [ ] **C16** Mire la primera caja de la lista (antes de las tarjetas) → es un mapa pequeño con burbujas de **precio** (p. ej. «₡42 000»), el crédito «Leaflet | © OpenStreetMap», sin botones de zoom, y arrastrar con el dedo desplaza la página, no el mapa; si dos casas están muy juntas van en una sola burbuja «N casas».
-- [ ] **C17** Toque el mapa pequeño → se abre el mapa a pantalla completa con la flecha redonda «Volver a la lista», la píldora de búsqueda, el botón de filtros y abajo la píldora «N casas».
+- [ ] **C16** Mire el mapa de arriba (antes de «N casas en Limón») → burbujas de **precio** (p. ej. «₡42 000»), ninguna escondida debajo de la búsqueda ni de los filtros, el crédito «Leaflet | © OpenStreetMap» abajo a la derecha, sin botones de zoom, y arrastrar con el dedo desplaza la página, no el mapa; si dos casas están muy juntas van en una sola burbuja «N casas».
+- [ ] **C17** Toque el mapa pequeño → se abre el mapa a pantalla completa, de borde a borde; arriba, en una fila de tarjetas de la misma altura, la flecha «Volver a la lista», la búsqueda y los filtros, con el crédito del mapa justo debajo; abajo la barra de pestañas flotando sobre el mapa (también si se había escondido al bajar) y, encima de ella, la tarjeta clara «N casas»; ninguna burbuja queda debajo de las tarjetas de arriba.
 - [ ] **C18** En el mapa grande toque una burbuja de precio → se resalta y aparece una tarjeta compacta con foto cuadrada, nombre, zona, «₡… / noche» y corazón; toque un punto vacío → la tarjeta se quita; vuelva a elegir la burbuja y toque la tarjeta → abre la ficha, y Atrás regresa al mapa.
 - [ ] **C19** Toque una burbuja «N casas» del mapa grande → el mapa se acerca a esas casas sin abrir ninguna ficha.
 - [ ] **C20** Toque la píldora «N casas» (o la flecha «Volver a la lista» o Atrás del teléfono) → cierra el mapa y la lista queda exactamente donde estaba, con la barra de abajo en su sitio.
@@ -403,7 +403,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://nu
 ### 3.12 Detalle de una casa y compartir la ficha
 
 - [ ] **A77** Abra una casa activa → título (sin «Ver ficha» en la cabecera), etiqueta «Activa», «5 fotos · Editar», tarjeta «Últimos 30 días» con «visitas», «toques en WhatsApp» y «consulta(s)», y la nota «Toque un dato para cambiarlo. Lo marcado con Revisión lo revisamos antes de publicarlo; mientras tanto, los clientes ven la versión actual.».
-- [ ] **A78** Abajo y centrado flota el botón «Ver ficha» con un ojo a la izquierda, con el mismo aspecto que «Mapa» de Explorar (tinta translúcida, esquinas de 6 px, no redondo) y sin chocar con la barra de inicio del iPhone; baje hasta el final: la fila «Suscripción» se lee entera por encima del botón. Tóquelo → abre `/casa/CT-####` con la ficha pública de la casa.
+- [ ] **A78** Abajo y centrado flota el botón «Ver ficha» con un ojo a la izquierda, con el mismo aspecto que «Mapa» de Explorar (tarjeta clara translúcida con texto e icono oscuros, esquinas de 12 px, no redondo), a 12 px del borde y sin chocar con la barra de inicio del iPhone; baje hasta el final: la fila «Suscripción» se lee entera por encima del botón. Tóquelo → abre `/casa/CT-####` con la ficha pública de la casa.
 - [ ] **A79** Baje en el detalle → «Compartir ficha» con el enlace `nueva.bnbtico.com/casa/CT-####` debajo, la fila «WhatsApp de esta casa» con «+506 8777 0001 · verificado» y el bloque «Suscripción» con «Oferta de lanzamiento» y «Al día».
 - [ ] **A80** Toque «Compartir ficha» → se abre la hoja de compartir del teléfono con el enlace y el texto de la casa; elija WhatsApp y el enlace llega; sin hoja de compartir, el botón dice «Enlace copiado».
 
@@ -498,7 +498,8 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 ### 3.19 Barra de abajo del propietario
 
 - [ ] **A145** Con sesión de propietario la barra tiene cinco pestañas → «Explorar», «Mi casa» (o «Mis casas»), «Calendario», «Consultas» y «Cuenta»; con una cuenta sin casas son tres (cliente).
-- [ ] **A146** Baje la lista en Mis casas (y luego en Consultas, Cuenta y Explorar) → la barra sale por abajo al desplazarse hacia delante; suba un poco o vuelva al principio y regresa; los títulos de arriba se quedan.
+- [ ] **A146** Mire la barra de abajo → píldora flotante separada de los bordes, con las cinco etiquetas enteras (también «Calendario» y «Consultas» en un iPhone SE) y la pestaña elegida sobre su pastilla terracota suave; el contador de consultas nuevas, en el icono de «Consultas». Baje la lista en Mis casas (y luego en Consultas, Cuenta y Explorar) → la barra sale por abajo al desplazarse hacia delante; suba un poco o vuelva al principio y regresa; los títulos de arriba (cabeceras «‹ Título») se quedan.
+- [ ] **A146b** Provoque un aviso (p. ej. guarde un dato de su casa y vuelva) → el aviso oscuro aparece justo encima de la barra de abajo; si la barra está escondida, a 12 px del borde; la franja «Hay una versión nueva» se coloca igual.
 - [ ] **A147** En Calendario seleccione un día → la barra se va mientras haya días elegidos y vuelve al guardar o cancelar.
 
 ## 4. Admin
