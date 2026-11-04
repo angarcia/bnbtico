@@ -36,3 +36,19 @@ describe("tarjeta flotante (.float-card)", () => {
     expect(css).toContain("@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}");
   });
 });
+
+// Tras probar la tanda 1 (Daniel, 2026-11-04): la barra de abajo vuelve a ser plana y pegada al borde, pero se sigue escondiendo.
+describe("barra de abajo (.tabbar) en global.css", () => {
+  const rule = css.match(/\n\.tabbar\{[^}]*\}/)![0];
+  it("plana: a todo el ancho, pegada abajo, opaca y con la línea fina arriba; sin píldora ni desenfoque", () => {
+    expect(rule).toContain("position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px");
+    expect(rule).toContain("height:calc(var(--nav-h) + env(safe-area-inset-bottom))");
+    expect(rule).toContain("background:var(--bg);border-top:2px solid var(--line-nav)");
+    expect(rule).not.toMatch(/border-radius|backdrop-filter|box-shadow/);
+    expect(css).toContain("--nav-h:84px;");
+    expect(css).not.toMatch(/--tab-on|--tab-ink|--tabbar-h/);
+  });
+  it("sale entera por abajo con el escondido común", () => {
+    expect(rule).toContain("--away:translateY(100%)");
+  });
+});

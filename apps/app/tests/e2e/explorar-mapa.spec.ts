@@ -112,9 +112,10 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect(full.locator(".map-price", { hasText: "₡42 000" })).toBeVisible();
   await expectPinsClear(full.locator(".leaflet-container"));
   await expectPinsBelow(page, full.locator(".leaflet-container"), ".map-full-top", ".leaflet-marker-pane .map-price");
-  // A pantalla completa, de borde a borde: la barra de abajo flota encima y «8 casas» se apoya sobre ella.
+  // A pantalla completa hasta la barra de abajo plana (84 px), que se queda a la vista; «8 casas» se apoya sobre ella.
   const vp = page.viewportSize()!;
-  expect(await full.boundingBox()).toEqual({ x: 0, y: 0, width: vp.width, height: vp.height });
+  expect(await full.boundingBox()).toEqual({ x: 0, y: 0, width: vp.width, height: vp.height - 84 });
+  await expect.poll(async () => (await page.locator(".tabbar").boundingBox())!.y).toBe(vp.height - 84);
   // La barra vuelve (se había ido al bajar la lista) y «8 casas» queda a 12 px por encima.
   const gap = async () => {
     const [pillBox, barBox] = [(await countPill(page).boundingBox())!, (await page.locator(".tabbar").boundingBox())!];

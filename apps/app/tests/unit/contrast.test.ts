@@ -68,9 +68,6 @@ const PAIRS: [string, string][] = [
   ["--fg", "--surface-2"],
   ["--muted", "--surface-2"],
   ["--busy-ink", "--busy"],
-  // La pestaña elegida de la barra de abajo: etiqueta de 12 px sobre su pastilla terracota suave, opaca para que no dependa de lo
-  // que pase por debajo de la barra translúcida (tarjetas flotantes, tanda 1).
-  ["--tab-ink", "--tab-on"],
 ];
 
 // Etiquetas de estado de las tarjetas (`.state-*` en global.css): texto sobre fondo, en los dos temas.
@@ -173,10 +170,6 @@ describe("contraste del tema oscuro", () => {
   it.each(STATE_LABELS)(".%s: %s sobre %s ≥ 4,5:1", (cls, fg, bg) => {
     expect(css).toContain(`.${cls}{background:var(${bg});color:var(${fg})}`);
     expect(darkContrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it("la etiqueta de la pestaña elegida sobre su pastilla ≥ 4,5:1", () => {
-    expect(darkContrast("--tab-ink", "--tab-on")).toBeGreaterThanOrEqual(4.5);
   });
 
   it("texto --bg sobre el contador --brand-ink ≥ 4,5:1", () => {

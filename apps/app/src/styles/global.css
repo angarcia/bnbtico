@@ -24,12 +24,9 @@
   /* Esquinas menos redondeadas (Daniel, 2026-10-29): botones, campos y chips 8 px, etiquetas 6 px, tarjetas 12 px;
      todo cuadrado salvo los avatares de las personas y los puntos de estado (también los botones de icono, 2026-10-29). */
   --r:12px;--r-thumb:10px;--r-tile:12px;--r-input:8px;--r-cta:8px;--r-sheet:16px;
-  /* La barra de abajo (tarjetas flotantes, tanda 1): píldora de 68 px a 12 px del borde; `--nav-h` es lo que ocupa abajo sin el
-     área segura (68 + 12), y lo dejan libre .view, «Mapa» y lo que se apoya en la barra. */
-  --tabbar-h:68px;--nav-h:calc(var(--tabbar-h) + var(--float-gap));--gutter:16px;
-  /* La pestaña elegida: pastilla terracota suave, opaca (no depende de lo que pase por debajo de la píldora), y la etiqueta
-     en un terracota un poco más hondo que --brand-ink, para el 4,5:1 sobre la pastilla con letra de 12 px. */
-  --tab-on:color-mix(in srgb,var(--brand) 12%,var(--bg));--tab-ink:color-mix(in srgb,var(--brand-ink) 88%,var(--fg));
+  /* La barra de abajo, plana y pegada al borde (Daniel, 2026-11-04, tras probar la píldora de la tanda 1): 84 px sin el área
+     segura; los dejan libres .view, «Mapa», el mapa a pantalla completa y lo que se apoya en la barra (--chrome-bottom). */
+  --nav-h:84px;--gutter:16px;
   /* Tarjetas flotantes (tanda 1, Daniel 2026-11-04): crema translúcida con desenfoque (la fuerte, para texto pequeño o campos;
      la opaca, donde no hay desenfoque), borde de 1 px y sombra suave; esquinas de 12 (tarjetas) y 16 (barras); a 12 px del
      borde más el área segura. `--chrome-bottom`: dónde se apoya lo que va encima de la barra de abajo (toasts, aviso de
@@ -237,16 +234,15 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:17px;font-weight:var(--w-medium);color:var(--fg);text-decoration:none}
 .header-close:disabled{opacity:.6}
 .header-flow .right{margin-left:auto;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.tabbar{position:fixed;left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);margin:0 auto;max-width:536px;height:var(--tabbar-h);display:flex;align-items:center;gap:2px;padding:0 6px;border-radius:var(--float-r-bar);z-index:6;--away:translateY(calc(100% + var(--float-bottom) + 8px))}
-/* Barra de abajo (tarjetas flotantes, tanda 1, decisión 3): píldora flotante con icono de 24 px y etiqueta de 12 px en cada
-   pestaña; las no elegidas en --fg-title (4,5:1 también con una foto oscura debajo); la elegida, icono en el terracota del
-   logo y etiqueta en --tab-ink sobre su pastilla. */
-.tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;min-width:0;min-height:56px;font-size:12px;letter-spacing:.005em;font-weight:var(--w-medium);color:var(--fg-title);text-decoration:none;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-.tabbar .nav::before{content:"";position:absolute;inset:4px 2px;border-radius:var(--float-r);background:transparent;transition:background-color 150ms ease}
-.tabbar .nav > svg,.tabbar .nav > span{position:relative}
-.tabbar .nav[aria-current="page"]{color:var(--tab-ink)}
-.tabbar .nav[aria-current="page"]::before{background:var(--tab-on)}
-.tabbar .nav[aria-current="page"] svg{color:var(--brand);stroke-width:2.4}
+.tabbar{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px;--away:translateY(100%);height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:6}
+/* Barra de abajo plana, pegada al borde, a todo el ancho, con icono y etiqueta en cada pestaña (Daniel, 2026-11-04: vuelve
+   la de antes de la píldora); sale por abajo al bajar y vuelve al subir con el escondido común (.chrome-hide). */
+.tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}
+/* Pestaña activa: el icono en el terracota del logo; la etiqueta en --brand-ink, que es texto pequeño y necesita 4,5:1. */
+.tabbar .nav[aria-current="page"]{color:var(--brand-ink);font-weight:var(--w-medium)}
+.tabbar .nav[aria-current="page"] svg{color:var(--brand)}
+.tabbar .nav[aria-current="page"] svg{stroke-width:2.4}
+.tabbar.three .nav{font-size:14px}
 /* En pantallas de flujo con botones fijos (publicar, filtros, revisar, ficha) no hay barra de pestañas. */
 .app:has(.sticky-actions) .tabbar,.app:has(.cta-bar) .tabbar{display:none}
 .sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
@@ -470,26 +466,26 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
    borde). La pantalla deja debajo el botón y 16 px de aire para que lo último se lea por encima. */
 .float-btn{position:fixed;bottom:var(--chrome-bottom);z-index:5;text-decoration:none}
 .view:has(> .float-btn){padding-bottom:calc(var(--float-bottom) + 44px + 16px)}
-/* «Mapa», sobre la barra de pestañas; baja con ella (`html.chrome-away`) hasta 12 px del borde, con su misma transición. */
+/* «Mapa», a 12 px sobre la barra de pestañas; baja con ella (`html.chrome-away`) hasta 12 px del borde, con su misma transición. */
 .map-label{position:fixed;bottom:calc(var(--float-bottom) + var(--nav-h));z-index:5;transition:transform 240ms var(--ease-out);animation:fade-in 160ms var(--ease-out)}
 html.chrome-away .map-label{transform:translateY(var(--nav-h))}
 /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
 .map-label-end{display:block;height:0;margin-top:-14px}
-/* De borde a borde: la barra de pestañas flota encima (z-index 6) y «N casas» se apoya en ella (--chrome-bottom). */
-.map-full{position:fixed;inset:0;z-index:5;background:var(--surface-2)}
+/* Hasta la barra de pestañas plana, que se queda a la vista (abrir el mapa la muestra y con él abierto no se esconde). */
+.map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:5;background:var(--surface-2)}
 html.map-open{overflow:hidden}
 .map-full-box{position:absolute;inset:0;isolation:isolate}
 /* Arriba, en una fila de tarjetas de 52 px: volver, la búsqueda y los filtros, como la cabecera de Explorar; la atribución del
-   mapa, debajo de ellas (abajo la tapaba la barra de pestañas). */
+   mapa, debajo de ellas (abajo la taparía «N casas»). */
 .map-full-top{position:absolute;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);z-index:1;display:flex;align-items:center;gap:8px;max-width:536px;margin:0 auto}
 .map-full-top .search-pill{flex:1;min-width:0;min-height:52px;padding:0 16px;border-radius:var(--float-r)}
 .map-full-top .filters-btn{width:52px;height:52px;border-radius:var(--float-r)}
 .map-full .leaflet-bottom.leaflet-right{top:calc(var(--float-top) + 60px);bottom:auto}
 .map-full .leaflet-control-attribution{margin:0 12px 0 0;border-radius:6px;font-size:11px}
 .map-round{flex:none;width:52px;height:52px;border-radius:var(--float-r);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.map-count{position:absolute;bottom:var(--chrome-bottom);z-index:1}
-/* La casa del marcador tocado, encima de «N casas» (44 px + 12 de aire). */
-.map-card{position:absolute;left:var(--float-gap);right:var(--float-gap);bottom:calc(var(--chrome-bottom) + 56px);z-index:1;max-width:536px;margin:0 auto;border-radius:var(--float-r);overflow:hidden;animation:fade-in 160ms var(--ease-out)}
+.map-count{position:absolute;bottom:var(--float-gap);z-index:1}
+/* La casa del marcador tocado, encima de «N casas» (12 + 44 px + 12 de aire). */
+.map-card{position:absolute;left:var(--float-gap);right:var(--float-gap);bottom:calc(var(--float-gap) + 56px);z-index:1;max-width:536px;margin:0 auto;border-radius:var(--float-r);overflow:hidden;animation:fade-in 160ms var(--ease-out)}
 .map-card-link{display:flex;color:inherit;text-decoration:none}
 .map-card .photo{flex:none;width:96px;height:96px}
 .map-card-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:10px 48px 10px 14px;font-size:16px}
@@ -744,7 +740,7 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .diff-photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .diff-photos img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:var(--r-input)}
 .tabbar .nav{position:relative}
-.nav-count{position:absolute;top:5px;right:calc(50% - 24px);border:2px solid var(--bg);min-width:20px;height:20px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:var(--w-medium);display:flex;align-items:center;justify-content:center}
+.nav-count{position:absolute;top:2px;right:16px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:var(--w-medium);display:flex;align-items:center;justify-content:center}
 
 /* Aviso de versión nueva (service worker): se apoya en la barra de abajo (--chrome-bottom) o, sin ella, a 12 px del borde. */
 .update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:7}
@@ -980,8 +976,8 @@ small.swap-in{display:block}
 /* La barra de pestañas: fuera mientras hay días seleccionados (sale al bajar y vuelve al subir con el escondido común). */
 .app:has(.cal-panel) .tabbar{transform:var(--away);opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.map-label{transition:none}.app:has(.cal-panel) .tabbar{transform:none}}
-/* Sobre la barra de abajo si está a la vista; si se escondió, a 12 px del borde. Con las barras de botones de abajo (asistente,
-   ficha, panel del calendario: tanda 2), donde estaba. */
+/* A 12 px sobre la barra de abajo si está a la vista; si se escondió, a 12 px del borde. Con las barras de botones de abajo
+   (asistente, ficha, panel del calendario), por encima de ellas. */
 html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
 html.chrome-away{--chrome-bottom:var(--float-bottom)}
 html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
@@ -1079,6 +1075,7 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
    hasta la pasada de escritorio (docs/plan-implementacion.md). */
 @media (min-width:900px){
   .app:has(.listing-grid){max-width:1120px}
+  .app:has(.listing-grid) .tabbar{max-width:1120px}
   .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
 }
 @media (min-width:1200px){

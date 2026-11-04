@@ -414,29 +414,28 @@ test("la barra superior: solo en Favoritos, una tarjeta flotante de 56 px, con e
   await checkBar();
 });
 
-// Tarjetas flotantes, tanda 1 (Daniel, 2026-11-04): la barra de abajo es una píldora flotante con iconos de 24 px y etiquetas,
-// a 12 px de los bordes, translúcida con desenfoque; la pestaña elegida, con su pastilla terracota suave.
-test("densidad: márgenes de 16 px y la barra de abajo, una píldora flotante con iconos de 24 px y etiquetas", async ({ page }) => {
+// La barra de abajo, plana y pegada al borde (Daniel, 2026-11-04, tras probar la píldora de la tanda 1): a todo el ancho, 84 px
+// más el área segura, opaca, con la línea fina arriba e iconos de 26 px con su etiqueta; la elegida, en terracota.
+test("densidad: márgenes de 16 px y la barra de abajo plana, pegada al borde, con iconos de 26 px y etiquetas", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
   await page.goto("/explorar");
   await expect(nav(page).getByRole("link")).toHaveCount(5);
   const padding = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).paddingLeft);
   expect(await padding("main.view")).toBe("16px");
-  for (const svg of await page.locator(".tabbar .nav svg").all()) await expect(svg).toHaveAttribute("width", "24");
+  for (const svg of await page.locator(".tabbar .nav svg").all()) await expect(svg).toHaveAttribute("width", "26");
   const vp = page.viewportSize()!;
   const bar = (await nav(page).boundingBox())!;
-  expect(bar.x).toBe(12);
-  expect(bar.width).toBe(vp.width - 24);
-  expect(bar.height).toBe(68);
-  expect(vp.height - (bar.y + bar.height)).toBe(12);
+  expect(bar.x).toBe(0);
+  expect(bar.width).toBe(Math.min(vp.width, 560));
+  expect(bar.height).toBe(84);
+  expect(bar.y + bar.height).toBe(vp.height);
   const look = await nav(page).evaluate((el) => {
     const c = getComputedStyle(el);
-    return { radius: c.borderTopLeftRadius, blur: c.backdropFilter, border: c.borderTopWidth, shadow: c.boxShadow, transform: c.transform };
+    return { radius: c.borderTopLeftRadius, blur: c.backdropFilter, border: `${c.borderTopWidth} ${c.borderLeftWidth}`, shadow: c.boxShadow, bg: c.backgroundColor };
   });
-  expect(look).toMatchObject({ radius: "16px", blur: "blur(16px) saturate(1.2)", border: "1px", transform: "none" });
-  expect(look.shadow).not.toBe("none");
-  // Cada pestaña con su etiqueta a la vista, dentro de la píldora.
+  expect(look).toEqual({ radius: "0px", blur: "none", border: "2px 0px", shadow: "none", bg: await page.evaluate(() => getComputedStyle(document.body).backgroundColor) });
+  // Cada pestaña con su etiqueta a la vista.
   for (const link of await nav(page).getByRole("link").all()) {
     const [l, label] = [(await link.boundingBox())!, (await link.locator("span").boundingBox())!];
     expect(label.x).toBeGreaterThanOrEqual(l.x - 0.5);
@@ -444,10 +443,15 @@ test("densidad: márgenes de 16 px y la barra de abajo, una píldora flotante co
   }
   const active = page.locator('.tabbar .nav[aria-current="page"]');
   await expect(active).toHaveCount(1);
-  const on = await active.evaluate((el) => ({ color: getComputedStyle(el).color, pill: getComputedStyle(el, "::before").backgroundColor, icon: getComputedStyle(el.querySelector("svg")!).color }));
-  expect(on.icon).toBe("rgb(214, 92, 60)");
-  expect(on.pill).not.toBe("rgba(0, 0, 0, 0)");
-  expect(on.color).not.toBe(await page.locator('.tabbar .nav:not([aria-current="page"])').first().evaluate((el) => getComputedStyle(el).color));
+  const on = await active.evaluate((el) => ({ color: getComputedStyle(el).color, icon: getComputedStyle(el.querySelector("svg")!).color }));
+  expect(on).toEqual({ color: "rgb(180, 76, 48)", icon: "rgb(214, 92, 60)" });
+  // Escondida (html.chrome-away, al bajar; el desplazamiento lo prueban calendario.spec y explorar.spec) sale entera por abajo y
+  // no responde; al quitarse, vuelve a su sitio.
+  await page.evaluate(() => document.documentElement.classList.add("chrome-away"));
+  await expect.poll(async () => (await nav(page).boundingBox())!.y).toBeGreaterThanOrEqual(vp.height - 0.5);
+  expect(await nav(page).evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+  await page.evaluate(() => document.documentElement.classList.remove("chrome-away"));
+  await expect.poll(async () => (await nav(page).boundingBox())!.y).toBe(vp.height - 84);
   // Un chip de Filtros encendido: el ✓ se ve pero no entra en el nombre accesible (texto alternativo vacío).
   await page.goto("/explorar/filtros");
   const pool = page.getByRole("button", { name: "Piscina", exact: true });
@@ -457,8 +461,7 @@ test("densidad: márgenes de 16 px y la barra de abajo, una píldora flotante co
   await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
-// Tarjetas flotantes, tanda 1: los avisos se apoyan sobre la barra de abajo (`--chrome-bottom`) y, si se esconde, a 12 px del
-// borde; en una pantalla sin barra, también a 12 px.
+// Los avisos se apoyan a 12 px sobre la barra de abajo plana (`--chrome-bottom`) y, si se esconde, a 12 px del borde.
 test("el aviso (toast) y el de versión nueva siguen a la barra de abajo", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
@@ -491,7 +494,7 @@ test("el aviso (toast) y el de versión nueva siguen a la barra de abajo", async
 test.describe("en un teléfono de 375 px", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
-  test("las cinco pestañas de la píldora caben con su etiqueta entera", async ({ page }) => {
+  test("las cinco pestañas de la barra caben con su etiqueta entera", async ({ page }) => {
     await h.reset();
     await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
     await page.goto("/explorar");
