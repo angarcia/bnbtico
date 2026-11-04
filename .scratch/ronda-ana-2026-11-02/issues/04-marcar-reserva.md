@@ -21,3 +21,9 @@ Status: ready-for-agent
 - Contrato: `calendar.contract.ts:126,147` (quitar lo de `setAvailable`; añadir «marcar rango» = `saveDays` con available false).
 - DB: prueba de la migración en `tests/db/`.
 - Guía y diseño: `docs/pruebas-manuales.md` (calendario del anfitrión), `docs/diseno-v1.md:35`.
+
+## Al rehacerlo tras la reversión (Daniel, 2026-11-04) — MANDA sobre lo anterior
+- **Se mantienen las dos cosas** (cambia el punto 2 de arriba: NO se quita cerrar la casa, NO hay migración de reapertura, NO se borran `setAvailable`, `CloseSheet`, `availabilityUpdate`, `validateReopenDate` ni la acción `available`).
+- **Fila nueva «Marcar una reserva»** (ayuda: «Marque de una vez las noches de una reserva larga como ocupadas.»): hoja con el calendario de rango de «¿Cuándo?» (`shared/range-calendar.tsx`), resumen «N noches · 7–10 nov», «Marcar como ocupado» / «Cancelar»; guarda con `save_listing_days(p_days, p_available=false)` las noches de llegada a salida − 1 (la salida libre), conservando precios especiales; confirmación «4 noches marcadas como ocupadas · 7–10 nov». Trozo diferido con su límite. Respeta el teclado y el foco como las demás hojas.
+- **«Cerrar la casa hasta…» pasa a «Pausar la casa»** (ayuda: «No sale en Explorar ni recibe consultas. Puede elegir cuándo vuelve.»); dentro, la fecha de vuelta sigue opcional; el comportamiento no cambia. Textos de la hoja, botón y estados en coherencia («Pausar la casa», «Volver a publicarla» o el que ya haya para abrirla, a criterio, en usted). En Mis casas la etiqueta pasa de «Cerrada hasta el <fecha>» a **«Pausada hasta el <fecha>»** (sin fecha, «Pausada»); distinta de «Pausada por bnbtico» del admin (texto y color).
+- Hechos antes: 01, 07, 08, 02, 03, 12, 10, 05, 09 parcial, tarjetas flotantes tanda 1, barra plana. Referencia del primer intento: `git show 4214b46` (solo la parte de «Marcar una reserva»).
