@@ -150,7 +150,10 @@ test("a 375 px la foto es 5:4, a todo el ancho y pegada arriba, e hidrata sin av
   expect(Math.abs(hero.width - 375)).toBeLessThanOrEqual(1);
   expect(Math.abs(hero.height - 300)).toBeLessThanOrEqual(1);
   expect((await page.locator(".hero .top").boundingBox())!.y).toBeGreaterThanOrEqual(12);
-  await expect(page.locator(".hero-counter")).toHaveText("1 / 5");
+  // Puntitos, como en las tarjetas de Explorar (2026-11-03), y la posición en texto para el lector de pantalla.
+  await expect(page.locator(".hero .photo-dots i")).toHaveCount(5);
+  await expect(page.locator(".hero .photo-dots i").nth(0)).toHaveClass(/\bon\b/);
+  await expect(page.locator(".hero .sr-only")).toHaveText("Foto 1 de 5");
   // En un Pixel 7 (412 px), el mismo 5:4: el alto sale del CSS, sin esperar a la imagen.
   await page.setViewportSize({ width: 412, height: 915 });
   const wide = (await page.locator(".hero").boundingBox())!;
@@ -372,7 +375,7 @@ test("en escritorio la ficha va a dos columnas con el contacto a la derecha; en 
 });
 
 // «Enlace copiado» y el contador del hero se animan al cambiar, no al pintarse por primera vez.
-test("compartir y el contador de fotos no se animan al abrir la ficha, solo al cambiar", async ({ page }) => {
+test("compartir no se anima al abrir la ficha, solo al cambiar; deslizar marca el puntito de la foto", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => undefined } });
@@ -381,7 +384,6 @@ test("compartir y el contador de fotos no se animan al abrir la ficha, solo al c
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.locator(".hero .strip img")).toHaveCount(5);
   const running = (selector: string) => page.locator(selector).evaluateAll((els) => els.reduce((n, el) => n + el.getAnimations().length, 0));
-  expect(await running(".hero-counter .tick")).toBe(0);
   expect(await running(".icon-btn .swap-in")).toBe(0);
 
   // El cambio se mide en el mismo frame en que aparece: la animación dura 200 ms.
@@ -401,8 +403,9 @@ test("compartir y el contador de fotos no se animan al abrir la ficha, solo al c
       { action, selector },
     );
   expect(await animatedAfter("share", ".icon-btn .swap-in"), "«Enlace copiado»").toBeGreaterThan(0);
-  expect(await animatedAfter("scroll", ".hero-counter .tick"), "contador 2 / 5").toBeGreaterThan(0);
-  await expect(page.locator(".hero-counter")).toHaveText("2 / 5");
+  await page.locator(".hero .strip").evaluate((el) => el.scrollTo({ left: el.clientWidth }));
+  await expect(page.locator(".hero .photo-dots i").nth(1)).toHaveClass(/\bon\b/);
+  await expect(page.locator(".hero .sr-only")).toHaveText("Foto 2 de 5");
 });
 
 // Como en Airbnb: párrafos separados y, si es larga, 8 líneas con «Ver más», que abre la descripción entera a pantalla completa.

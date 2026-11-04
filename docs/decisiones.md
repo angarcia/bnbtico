@@ -1,3 +1,14 @@
+## 2026-11-04 · Una sola tarjeta: de borde a borde, foto 3:2, puntitos; Favoritos sin logo y tarjeta del mapa (Ana)
+
+Sustituye, del 2026-11-04 de abajo, el contador «1 / N» y la foto 4:3 de la tarjeta de Explorar. Capturas en `.scratch/revision-ux/maquetas/2026-11-03/`.
+
+- **Tarjeta de Explorar** (`ListingCard`): en el teléfono, de borde a borde (sin margen lateral), foto **3:2** y las cuatro esquinas redondeadas; **puntitos** centrados abajo en vez de «1 / N» (máximo 5; el del borde, más pequeño si hay más fotos). En escritorio, la cuadrícula de siempre.
+- **Puntitos también en la ficha** (`PhotoDots`, en `src/shared`, el mismo componente en la tarjeta y en la foto grande con SSR); la ficha anuncia «Foto N de M» a los lectores de pantalla.
+- **Favoritos usa la misma tarjeta** que Explorar (fotos deslizables, corazón y botón de WhatsApp que abre la hoja de contacto aquí mismo; sustituye «Enviar WhatsApp», que llevaba a la ficha). **Sin barra de arriba con el logo** (ninguna pestaña la lleva ya): una fila con «N casas guardadas…» y «₡ | $» (toque de 44 px).
+- **Mis casas:** la misma forma (de borde a borde, foto 3:2).
+- **Tarjeta del mapa** (al tocar un precio): versión compacta. Foto a la izquierda con el corazón en su esquina; nombre, zona, «N personas · N habitaciones» y precio; el mismo botón de WhatsApp **arriba a la derecha** (abajo pisaría la línea de personas). Sin fotos deslizables: en una foto tan pequeña se confunde con arrastrar el mapa.
+- Pruebas: dos e2e intermitentes que paraban el despliegue de `develop` (fase 3: tocaba la barra de abajo escondida tras bajar la lista; publicar: navegaba mientras la página recargaba) esperan ya lo que corresponde.
+
 ## 2026-11-04 · «Marcar una reserva» y «Pausar la casa» (ronda de Ana, ticket 04 rehecho; Daniel)
 
 - **«Marcar una reserva»** en el calendario de cada casa: hoja con el calendario de rango (llegada y salida) que marca de una vez como ocupadas las noches de llegada a salida − 1, conservando los precios especiales; confirmación «4 noches marcadas como ocupadas · 7–10 dic».

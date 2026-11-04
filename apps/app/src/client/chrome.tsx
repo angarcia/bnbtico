@@ -6,7 +6,6 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
 import { createContext, useContext, type MouseEvent, type ReactNode } from "react";
 import { tabsFor } from "../domain/tabs";
-import { CurrencySwitch } from "../shared/currency-switch";
 import { I } from "../shared/icons";
 import { useHidingChrome } from "./hiding-chrome";
 import { countNew, inquiriesQuery } from "./inquiries";
@@ -32,8 +31,8 @@ function useNewInquiries(enabled: boolean): number {
 /** Revisión UX 2026-10-29 (C4, T2, Ana): solo Favoritos conserva la barra de arriba (logo y «₡ | $»); Mis casas, Calendario,
  *  Consultas y Cuenta van sin barra ni título visible (la pestaña de abajo ya dice dónde se está). Explorar trae su propia
  *  cabecera; la zona del admin y «no encontrada» siguen con el logo y el título. */
-const TOP_BAR_PATHS = new Set(["/favoritos"]);
-const BARE_PATHS = new Set(["/propietario/casas", "/propietario/calendario", "/propietario/actividad", "/cuenta"]);
+// Ninguna pestaña lleva barra superior con el logo (Favoritos tampoco, 2026-11-03): el contenido empieza arriba.
+const BARE_PATHS = new Set(["/favoritos", "/propietario/casas", "/propietario/calendario", "/propietario/actividad", "/cuenta"]);
 
 /** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
 const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
@@ -42,7 +41,6 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
   const pathname = useLocation({ select: (l) => l.pathname });
   useHidingChrome();
-  const topBar = TOP_BAR_PATHS.has(pathname);
   const bare = BARE_PATHS.has(pathname);
   const { status } = useSession();
   const { count } = useListingsCount();
@@ -53,9 +51,8 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   const next = status === "signed-out" ? nextFor(pathname) : undefined;
   return (
     <div className="app">
-      {topBar ? <TopBar /> : null}
-      <UnderTopBar.Provider value={topBar || bare}>
-        <main className={topBar ? "view has-topbar" : bare ? "view is-bare" : "view"}>{children}</main>
+      <UnderTopBar.Provider value={bare}>
+        <main className={bare ? "view is-bare" : "view"}>{children}</main>
       </UnderTopBar.Provider>
       <nav className={`tabbar chrome-hide${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon, exact, badge }) => {
@@ -88,22 +85,10 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** En una pestaña con la barra de arriba (Favoritos) o sin ella (Mis casas, Calendario, Consultas, Cuenta): sin logo propio y con
- *  el título solo para lectores de pantalla. */
+/** En una pestaña sin barra de arriba (Favoritos, Mis casas, Calendario, Consultas, Cuenta): sin logo y con el título solo
+ *  para lectores de pantalla. */
 const UnderTopBar = createContext(false);
 
-
-/** Barra superior fija de Favoritos: logo y «₡ | $» (la cuenta ya es una pestaña). */
-export function TopBar() {
-  return (
-    <header className="topbar float-card chrome-hide">
-      <Link to="/explorar" replace className="topbar-home" aria-label="bnbtico, inicio">
-        <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
-      </Link>
-      <CurrencySwitch />
-    </header>
-  );
-}
 
 export function FlowFrame({ children }: { children: ReactNode }) {
   return (

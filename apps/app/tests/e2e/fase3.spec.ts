@@ -124,12 +124,15 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   const cell = page.locator(".listing-cell", { hasText: TITLE });
   await cell.getByRole("button", { name: "Guardar en favoritos" }).click();
   await expect(cell.getByRole("button", { name: "Quitar de favoritos" })).toHaveAttribute("aria-pressed", "true");
+  // Tocar el corazón puede haber bajado la lista hasta la casa, y al bajar la barra de abajo se esconde: se sube arriba,
+  // como haría una persona, para que vuelva.
+  await page.evaluate(() => scrollTo(0, 0));
   await nav(page).getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
-  await expect(page.locator(".fav-card h2")).toHaveText([TITLE]);
+  await expect(page.locator(".listing-card h2")).toHaveText([TITLE]);
 
   // 4. Abre la ficha y escribe: fechas y personas redactan el mensaje.
-  await page.locator(".fav-card", { hasText: TITLE }).getByRole("link", { name: TITLE }).click();
+  await page.locator(".listing-card", { hasText: TITLE }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${publicId}$`));
   await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   const sheet = page.getByRole("dialog", { name: "Escríbale a Yorleny" });

@@ -378,27 +378,28 @@ test("5 · ₡ → $ en la fila de chips cambia los precios de Explorar y se man
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$");
 });
 
-// Revisión UX 2026-10-29 (C4, T2): solo Favoritos lleva la barra de arriba (logo y «₡ | $»); Mis casas, Calendario, Consultas
-// y Cuenta van sin ella ni título visible; Explorar trae su cabecera con la búsqueda a todo el ancho.
-test("la barra superior: solo en Favoritos, una tarjeta flotante de 56 px, con el logo y «₡ | $»", async ({ page }) => {
+// Revisión UX 2026-10-29 (C4, T2), y desde el 2026-11-03 tampoco Favoritos: ninguna pestaña lleva barra de arriba con el
+// logo. Favoritos pone «₡ | $» en la fila de la cuenta; Mis casas, Calendario, Consultas y Cuenta van sin título visible;
+// Explorar trae su cabecera con la búsqueda a todo el ancho.
+test("sin barra superior con el logo en ninguna pestaña; Favoritos lleva «₡ | $» junto a la cuenta", async ({ page }) => {
   await h.reset();
   await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   const banner = page.getByRole("banner");
-  const checkBar = async () => {
-    await expect(banner).toHaveCount(1);
-    // Tarjeta flotante a 12 px de los bordes (tarjetas flotantes, tanda 1).
-    const box = (await banner.boundingBox())!;
-    expect(box).toMatchObject({ x: 12, y: 12, height: 56, width: page.viewportSize()!.width - 24 });
-    expect(await banner.evaluate((el) => getComputedStyle(el).backdropFilter)).toBe("blur(16px) saturate(1.2)");
-    await expect(banner.getByRole("img", { name: "bnbtico" })).toBeVisible();
-    await expect(banner.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
-    for (const b of await banner.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const checkFavorites = async () => {
+    await expect(page.getByTestId("favorites-count")).toBeVisible();
+    await expect(banner).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "bnbtico, inicio" })).toHaveCount(0);
+    const currency = page.getByRole("group", { name: "Moneda de los precios" });
+    await expect(currency).toBeVisible();
+    for (const b of await currency.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   };
   await page.goto("/explorar");
   await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toHaveCount(0);
   await expect(banner).toHaveCount(0);
+  const publicId = (await page.locator("a.listing-card").first().getAttribute("href"))!.split("/").pop();
+  await page.evaluate((id) => localStorage.setItem("bnbtico-favoritos", JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }])), publicId);
   await page.goto("/favoritos");
-  await checkBar();
+  await checkFavorites();
   for (const path of ["/propietario/casas", "/propietario/calendario", "/propietario/actividad", "/cuenta"]) {
     await page.goto(path);
     await expect(page.locator("main h1")).toHaveClass(/sr-only/);
@@ -409,10 +410,6 @@ test("la barra superior: solo en Favoritos, una tarjeta flotante de 56 px, con e
   await expect(page.getByRole("heading", { level: 1, name: "Filtros" })).toBeVisible();
   await expect(banner).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(0);
-  // Sin sesión, la misma barra en Favoritos (la cuenta va abajo).
-  await page.evaluate(() => localStorage.clear());
-  await page.goto("/favoritos");
-  await checkBar();
 });
 
 // La barra de abajo, plana y pegada al borde (Daniel, 2026-11-04, tras probar la píldora de la tanda 1): a todo el ancho, 84 px
@@ -548,14 +545,11 @@ test.describe("«Atrás» y las pestañas", () => {
     leftApp(page);
   });
 
-  test("Favoritos vacío → «Explorar casas» y el logo de arriba cambian de pestaña sin dejar rastro", async ({ page }) => {
+  test("Favoritos vacío → «Explorar casas» cambia de pestaña sin dejar rastro; Favoritos ya no lleva el logo arriba", async ({ page }) => {
     await page.goto("/favoritos");
+    // Sin barra superior con el logo, como las demás pestañas (2026-11-03).
+    await expect(page.getByRole("link", { name: "bnbtico, inicio" })).toHaveCount(0);
     await page.getByRole("link", { name: "Explorar casas" }).click();
-    await expect(page).toHaveURL(/\/explorar/);
-    await page.goBack();
-    leftApp(page);
-    await page.goto("/favoritos");
-    await page.getByRole("link", { name: "bnbtico, inicio" }).click();
     await expect(page).toHaveURL(/\/explorar/);
     await page.goBack();
     leftApp(page);
@@ -597,13 +591,14 @@ test.describe("en un teléfono de 375 px", () => {
     }
   });
 
-  test("Explorar: la búsqueda a todo el ancho y la barra de Favoritos caben, con y sin sesión, sin scroll horizontal", async ({ page }) => {
-    const banner = page.getByRole("banner");
+  test("Explorar: la búsqueda a todo el ancho y la fila de Favoritos (cuenta y «₡ | $») caben, con y sin sesión, sin scroll horizontal", async ({ page }) => {
+    await h.reset();
+    await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
     const fits = async () => {
-      const logo = (await banner.getByRole("img", { name: "bnbtico" }).boundingBox())!;
-      const currency = (await banner.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
-      expect(logo.x).toBeGreaterThanOrEqual(0);
-      expect(logo.x + logo.width).toBeLessThanOrEqual(currency.x);
+      const count = (await page.getByTestId("favorites-count").boundingBox())!;
+      const currency = (await page.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
+      expect(count.x).toBeGreaterThanOrEqual(0);
+      expect(count.x + count.width).toBeLessThanOrEqual(currency.x);
       expect(currency.x + currency.width).toBeLessThanOrEqual(375);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
@@ -614,13 +609,22 @@ test.describe("en un teléfono de 375 px", () => {
       expect(pill.x + pill.width).toBe(375 - 12);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
+    const saveFirst = async () => {
+      await expect(page.locator("a.listing-card").first()).toBeVisible();
+      await page.evaluate(() => {
+        const id = document.querySelector("a.listing-card")!.getAttribute("href")!.split("/").pop();
+        localStorage.setItem("bnbtico-favoritos", JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }]));
+      });
+    };
     await page.goto("/explorar");
     await exploreFits();
+    await saveFirst();
     await page.goto("/favoritos");
     await fits();
     await page.evaluate(() => localStorage.clear());
     await page.goto("/explorar");
     await exploreFits();
+    await saveFirst();
     await page.goto("/favoritos");
     await fits();
     await page.screenshot({ path: "test-results/barra-375-sin-sesion.png" });

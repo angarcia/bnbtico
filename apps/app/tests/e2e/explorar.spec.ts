@@ -29,18 +29,20 @@ test.beforeEach(async ({ page }) => {
 
 const results = (page: Page) => page.getByTestId("results-count");
 
-test("Tarjeta: fotos deslizables con contador, pedidas al deslizar, y botón de WhatsApp que abre la hoja sobre Explorar", async ({ page }) => {
+test("Tarjeta: de borde a borde, foto 3:2 deslizable con puntitos, pedida al deslizar, y botón de WhatsApp que abre la hoja sobre Explorar", async ({ page }) => {
   await page.goto("/explorar");
   const cards = page.locator(".listing-grid:not(.skeleton) .listing-card");
   await expect(cards).toHaveCount(9);
   const card = cards.nth(1);
   const cell = page.locator(".listing-grid .listing-cell").nth(1);
-  // El formato no cambia (alcance del 2026-11-04): foto 4:3 a todo el ancho menos los márgenes.
+  // En el teléfono (2026-11-03): de borde a borde, foto 3:2, con puntitos en lugar del «1 / N».
   const photo = (await card.locator(".photo").boundingBox())!;
-  expect(Math.abs(photo.width / photo.height - 4 / 3)).toBeLessThan(0.02);
-  // Antes de deslizar solo existe la primera foto; el contador marca «1 / 5» y el corazón sigue arriba a la derecha.
+  expect(Math.abs(photo.width / photo.height - 3 / 2)).toBeLessThan(0.02);
+  const dots = card.locator(".photo-dots i");
+  // Antes de deslizar solo existe la primera foto; el primer puntito marcado y el corazón sigue arriba a la derecha.
   await expect(card.locator("img")).toHaveCount(1);
-  await expect(card.locator(".hero-counter")).toHaveText("1 / 5");
+  await expect(dots).toHaveCount(5);
+  await expect(dots.nth(0)).toHaveClass(/\bon\b/);
   const heart = (await cell.locator(".heart-card").boundingBox())!;
   expect(heart.y - photo.y).toBeLessThan(20);
   expect(photo.x + photo.width - (heart.x + heart.width)).toBeLessThan(20);
@@ -49,7 +51,8 @@ test("Tarjeta: fotos deslizables con contador, pedidas al deslizar, y botón de 
   await card.scrollIntoViewIfNeeded();
   const before = requested.length;
   await card.locator(".card-strip").evaluate((el) => el.scrollTo({ left: el.clientWidth, behavior: "instant" }));
-  await expect(card.locator(".hero-counter")).toHaveText("2 / 5");
+  await expect(dots.nth(1)).toHaveClass(/\bon\b/);
+  await expect(dots.nth(0)).not.toHaveClass(/\bon\b/);
   // Al deslizar se montan la foto 2 y la 3 (la que viene) y se piden; las demás siguen sin existir. Deslizar no navega.
   await expect(card.locator("img")).toHaveCount(3);
   await expect.poll(() => requested.length - before).toBeGreaterThanOrEqual(2);
@@ -96,11 +99,11 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   await expect(cards.nth(1).locator("img")).toHaveCount(1);
   await expect(cards.nth(1).locator("img")).toHaveAttribute("loading", "lazy");
   const viewport = page.viewportSize()!.width;
-  for (const box of await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width))) expect(Math.abs(box - (viewport - 2 * 16))).toBeLessThanOrEqual(1);
+  for (const box of await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width))) expect(Math.abs(box - viewport)).toBeLessThanOrEqual(1);
   // La primera es la más nueva (Casa Cocles mensual): nombre, zona, personas y habitaciones, y el precio de la noche.
   await expect(cards.first().locator("h2")).toHaveText("Casa Cocles mensual");
   await expect(cards.first()).toContainText("Cocles2 personas · 1 habitación₡45 000 / noche");
-  await expect(cards.first().locator(".pill:not(.hero-counter)")).toHaveCount(0);
+  await expect(cards.first().locator(".pill")).toHaveCount(0);
   // Tarjetas flotantes, tanda 1 (Daniel, 2026-11-04): el mapa arriba a todo el ancho y, encima, la búsqueda, los filtros y
   // «₡ | $» como tarjetas translúcidas a 12 px de los bordes; al bajar se esconden con la barra de abajo y al subir vuelven.
   const vp = page.viewportSize()!;

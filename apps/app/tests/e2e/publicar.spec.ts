@@ -407,12 +407,17 @@ test("si la base rechaza un guardado, vuelve a esa pantalla con su mensaje y lo 
 
 test("cerrar o recargar la app justo al tocar «Continuar» no pierde el paso", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5 });
+  // Espera a que la recarga termine: si no, la navegación siguiente de la prueba (`injectSession` abre /robots.txt) puede
+  // cruzarse con ella y salir con ERR_ABORTED (fallo intermitente en CI, 2026-11-04).
   const submitAndReload = () =>
-    page.evaluate(() => {
-      // Envío y recarga en la misma tarea: la petición tiene que salir antes de que la página se vaya.
-      document.querySelector<HTMLFormElement>("form.publish-form")!.requestSubmit();
-      location.reload();
-    });
+    Promise.all([
+      page.waitForEvent("load"),
+      page.evaluate(() => {
+        // Envío y recarga en la misma tarea: la petición tiene que salir antes de que la página se vaya.
+        document.querySelector<HTMLFormElement>("form.publish-form")!.requestSubmit();
+        location.reload();
+      }),
+    ]);
 
   // 1. supabase-js está renovando el token (red lenta): el guardado no lo espera, sale con el token vigente.
   await page.goto(`/propietario/publicar/${draft.id}/6`);

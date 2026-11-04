@@ -1,18 +1,13 @@
 // Favoritos (pantalla 05): las casas guardadas en este teléfono (y, con sesión, en la cuenta). Trozo diferido.
-// Las tarjetas salen de listings_public en una sola consulta (caché pública); las que ya no vuelven se quitan sin avisar.
+// Las tarjetas (las de Explorar) salen de listings_public en una sola consulta (caché pública); las que ya no vuelven se quitan
+// sin avisar.
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
-import { describe } from "../../domain/describe";
-import { FEATURE_SHORT, type PublicListing } from "../../domain/listing";
-import { formatMoney } from "../../domain/money";
-import { useCurrency } from "../../shared/currency";
-import { useFx } from "../../shared/fx";
-import { FavoriteButton } from "../../shared/favorite-button";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
-import { I } from "../../shared/icons";
-import { Picture } from "../../shared/picture";
 import { RootHeader } from "../chrome";
+import { CurrencySwitch } from "../../shared/currency-switch";
+import { ListingCard } from "../listing-card";
 import { useSession } from "../session";
 
 const favoriteListingsQuery = (ids: string[]) => ({
@@ -29,50 +24,12 @@ function countLine(n: number, signedIn: boolean): string {
   return `${casas} · ${n === 1 ? "guardada" : "guardadas"} en este teléfono`;
 }
 
-function FavoriteCard({ listing: l }: { listing: PublicListing }) {
-  const currency = useCurrency();
-  const fx = useFx(currency === "USD");
-  const cover = l.photos[0];
-  const price = describe(l, { base: "" }).mainPrice;
-  return (
-    <article className="fav-card">
-      <div className="photo fav-photo">{cover ? <Picture photo={cover} alt="" sizes="116px" width={480} height={336} /> : null}</div>
-      <div className="fav-body">
-        <div className="fav-title">
-          <h2>
-            <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="stretched">
-              {l.title}
-            </Link>
-          </h2>
-          <FavoriteButton publicId={l.publicId} className="heart-row" />
-        </div>
-        <span className="small muted">{[l.zone, `${l.capacity} pers.`, `${l.bedrooms} hab.`].filter(Boolean).join(" · ")}</span>
-        {l.features.length ? <span className="small muted">{l.features.slice(0, 3).map((f) => FEATURE_SHORT[f]).join(" · ")}</span> : null}
-        {price ? (
-          <span className="fav-price num">
-            {formatMoney(price.amount, currency, fx.crcPerUsd)} <span className="muted">/ {price.unit}</span>
-          </span>
-        ) : null}
-        {/* Un favorito es intención: escribir desde aquí abre la ficha con la hoja de contacto (revisión UX N6). Con el icono
-            y el verde de «Contactar por WhatsApp», en pequeño (revisión de Ana). */}
-        {l.available ? (
-          <Link to="/casa/$publicId" params={{ publicId: l.publicId }} search={{ escribir: "1" }} className="btn btn-wa btn-sm fav-write">
-            <I.wa size={16} /> Enviar WhatsApp
-          </Link>
-        ) : (
-          <span className="small muted">No disponible por ahora</span>
-        )}
-      </div>
-    </article>
-  );
-}
-
 function SkeletonCards({ n }: { n: number }) {
   return (
-    <div className="stack skeleton" aria-hidden="true">
+    <div className="listing-grid skeleton" aria-hidden="true">
       {Array.from({ length: Math.min(n, 4) }, (_, i) => (
-        <div key={i} className="fav-card">
-          <span className="sk fav-photo" />
+        <div key={i} className="listing-card">
+          <span className="sk photo" />
           <span className="sk sk-line" />
         </div>
       ))}
@@ -104,9 +61,13 @@ export function FavoritosScreen() {
         title="Favoritos"
         aside={
           favs.length ? (
-            <span className="small muted" data-testid="favorites-count">
-              {countLine(loading ? favs.length : shown.length, status === "signed-in")}
-            </span>
+            // Sin logo ni barra arriba (2026-11-03): en una fila, cuántas hay y «₡ | $» para sus precios.
+            <div className="row between gap-8 fav-head">
+              <span className="small muted" data-testid="favorites-count">
+                {countLine(loading ? favs.length : shown.length, status === "signed-in")}
+              </span>
+              <CurrencySwitch />
+            </div>
           ) : null
         }
       />
@@ -121,9 +82,11 @@ export function FavoritosScreen() {
       ) : loading ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonCards n={favs.length} />
       ) : (
-        <div className="stack fav-list">
-          {shown.map((l) => (
-            <FavoriteCard key={l.publicId} listing={l} />
+        // La misma tarjeta que Explorar (2026-11-03): fotos deslizables con puntitos, corazón y botón de WhatsApp que abre la
+        // hoja de contacto aquí mismo.
+        <div className="listing-grid">
+          {shown.map((l, i) => (
+            <ListingCard key={l.publicId} listing={l} priority={i === 0} />
           ))}
         </div>
       )}

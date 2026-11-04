@@ -4,7 +4,7 @@
 // su casa. La lista sigue montada debajo: al volver conserva su posición.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
-import { cardPrice } from "../domain/describe";
+import { cardFacts, cardPrice } from "../domain/describe";
 import type { LatLng } from "../domain/geo";
 import type { SearchListing } from "../domain/listing";
 import { housesCount } from "../domain/search";
@@ -14,6 +14,7 @@ import { I } from "../shared/icons";
 import { Picture } from "../shared/picture";
 import { useExploreMap, useMapMarkers } from "./explore-map";
 import { showChrome } from "./hiding-chrome";
+import { CardWhatsApp } from "./card-whatsapp";
 import { CardPriceText } from "./listing-card";
 
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
@@ -77,21 +78,25 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
   );
 }
 
-/** La casa del marcador tocado: foto cuadrada a la izquierda, nombre, zona, precio y el corazón (fuera del enlace). */
+/** La casa del marcador tocado: versión compacta de la tarjeta de Explorar (2026-11-04). Foto a la izquierda con el corazón
+ *  en su esquina; nombre, zona, «4 personas · 2 habitaciones» y precio; arriba a la derecha (abajo pisaría «N personas · N habitaciones»), el mismo botón de WhatsApp. Sin
+ *  fotos deslizables: en una foto tan pequeña se confunde con arrastrar el mapa. Corazón y botón, fuera del enlace. */
 function MapCard({ listing: l, nights }: { listing: SearchListing; nights: number }) {
   const cover = l.photos[0];
   const price = cardPrice(l, nights);
   return (
     <div className="map-card float-card is-strong">
       <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="map-card-link">
-        <div className="photo">{cover ? <Picture photo={cover} alt="" sizes="96px" width={96} height={96} /> : null}</div>
+        <div className="photo">{cover ? <Picture photo={cover} alt="" sizes="120px" width={120} height={120} /> : null}</div>
         <div className="map-card-text">
           <h2>{l.title}</h2>
           <span className="muted">{l.zone}</span>
+          <span className="muted">{cardFacts(l)}</span>
           {price ? <CardPriceText price={price} /> : null}
         </div>
       </Link>
       <FavoriteButton publicId={l.publicId} className="heart-card" size={24} />
+      {l.available ? <CardWhatsApp listing={l} /> : null}
     </div>
   );
 }

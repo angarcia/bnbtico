@@ -73,21 +73,23 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Favoritos" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
   await expect(page.getByTestId("favorites-count")).toHaveText("2 casas · guardadas en este teléfono");
-  await expect(page.locator(".fav-card h2")).toHaveText(["Casa Playa Negra", "Casa Cocles"]);
-  await expect(page.locator(".fav-card").first()).toContainText("Playa Negra · 2 pers. · 1 hab.Aire acond. · Wifi");
-  await expect(page.locator(".fav-card").first()).toContainText("₡95 000 / noche");
+  // La misma tarjeta que Explorar (2026-11-03).
+  await expect(page.locator(".listing-card h2")).toHaveText(["Casa Playa Negra", "Casa Cocles"]);
+  await expect(page.locator(".listing-card").first()).toContainText("Playa Negra2 personas · 1 habitación");
+  await expect(page.locator(".listing-card").first()).toContainText("₡95 000 / noche");
   await expect(page.getByText("Compare y escriba directo")).toBeVisible();
-  // La moneda se elige en la barra superior: Favoritos no tiene selector propio, pero la sigue.
+  // Sin barra superior ni logo (2026-11-03): «₡ | $» va en la fila de la cuenta, y la elección es la de toda la app.
+  await expect(page.getByRole("link", { name: "bnbtico, inicio" })).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(1);
-  await expect(page.getByRole("banner").getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
   await page.evaluate(() => localStorage.setItem("bnbtico_currency", "USD"));
   await page.reload();
-  await expect(page.locator(".fav-card").first()).toContainText("$186 / noche");
+  await expect(page.locator(".listing-card").first()).toContainText("$186 / noche");
   await page.evaluate(() => localStorage.removeItem("bnbtico_currency"));
   await page.reload();
 
-  await page.locator(".fav-card", { hasText: "Casa Cocles" }).getByRole("button", { name: "Quitar de favoritos" }).click();
-  await expect(page.locator(".fav-card h2")).toHaveText(["Casa Playa Negra"]);
+  await card(page, "Casa Cocles").getByRole("button", { name: "Quitar de favoritos" }).click();
+  await expect(page.locator(".listing-card h2")).toHaveText(["Casa Playa Negra"]);
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
   expect(rest, "sin cuenta no se toca la red de la cuenta").toEqual([]);
 
@@ -107,30 +109,27 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
 });
 
-// Revisión UX N6: un favorito es intención; «Enviar WhatsApp» (antes «Escribir», revisión de Ana) abre la ficha con la hoja
-// de contacto (sin enviar nada sola). Lleva el icono y el verde de «Contactar por WhatsApp» de la ficha.
-test("«Enviar WhatsApp» en un favorito abre la ficha con la hoja de contacto, y la nota lo dice", async ({ page }) => {
+// Revisión UX N6: un favorito es intención. Desde el 2026-11-03 la tarjeta es la de Explorar: su botón de WhatsApp abre la
+// hoja de contacto aquí mismo, sin ir a la ficha y sin enviar nada solo.
+test("el botón de WhatsApp de un favorito abre la hoja de contacto en Favoritos, y la nota lo dice", async ({ page }) => {
   await page.goto("/robots.txt");
   await page.evaluate(([key, id]) => localStorage.setItem(key!, JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }])), [KEY, negra.publicId]);
   await page.goto("/favoritos");
   await expect(page.getByText("Escriba directo desde aquí.", { exact: false })).toBeVisible();
   const wa: string[] = [];
   await page.route("https://wa.me/**", (r) => (wa.push(r.request().url()), r.abort()));
-  await expect(page.getByRole("link", { name: "Escribir", exact: true })).toHaveCount(0);
-  const send = page.getByRole("link", { name: "Enviar WhatsApp", exact: true });
-  await expect(send).toHaveClass(/\bbtn-wa\b/);
-  await expect(send.locator("svg")).toHaveCount(1);
-  const green = await send.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const box = await send.boundingBox();
-  expect(box!.height, "botón pequeño").toBeLessThan(48);
-  expect(box!.width, "no ocupa todo el ancho de la tarjeta").toBeLessThan(page.viewportSize()!.width / 2);
+  await expect(page.getByRole("link", { name: "Enviar WhatsApp", exact: true })).toHaveCount(0);
+  const send = card(page, "Casa Playa Negra").getByRole("button", { name: /^Contactar por WhatsApp a / });
   await send.click();
-  await expect(page).toHaveURL(new RegExp(`/casa/${negra.publicId}$`)); // el parámetro se quita
-  await expect(page.getByRole("dialog", { name: /Escríbale a/ })).toBeVisible();
+  const sheet = page.getByRole("dialog", { name: /Escríbale a/ });
+  await expect(sheet).toBeVisible();
+  await expect(sheet).toContainText("Casa Playa Negra");
+  await expect(page).toHaveURL(/\/favoritos$/);
   await page.waitForTimeout(500);
   expect(wa).toEqual([]);
-  // El mismo verde que el botón de la ficha.
-  expect(await page.locator(".btn-wa").first().evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(green);
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(send).toBeFocused();
 });
 
 test("casas que ya no están publicadas se quitan solas; vacío con «Explorar casas»", async ({ page }) => {
@@ -140,7 +139,7 @@ test("casas que ya no están publicadas se quitan solas; vacío con «Explorar c
     [KEY, [oculta.publicId, "CT-999999", cocles.publicId].join(",")],
   );
   await page.goto("/favoritos");
-  await expect(page.locator(".fav-card h2")).toHaveText(["Casa Cocles"]);
+  await expect(page.locator(".listing-card h2")).toHaveText(["Casa Cocles"]);
   await expect.poll(() => stored(page)).toEqual([cocles.publicId]);
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
 
@@ -157,7 +156,7 @@ test("otro teléfono con la misma cuenta los ve; con sesión se escribe en la cu
   await page.route("**/storage/v1/object/**", (route) => route.abort());
   await injectSession(page, "other");
   await page.goto("/favoritos");
-  await expect(page.locator(".fav-card h2")).toHaveText(["Casa Playa Negra"]);
+  await expect(page.locator(".listing-card h2")).toHaveText(["Casa Playa Negra"]);
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa guardada");
 
   await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Explorar" }).click();

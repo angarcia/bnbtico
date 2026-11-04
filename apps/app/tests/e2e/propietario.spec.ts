@@ -81,12 +81,14 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
 
   // Como mucho un botón relleno (verde o, si es dinero, ocre) por tarjeta.
   for (const article of await page.getByRole("article").all()) expect(await article.locator(".btn-primary, .btn-sun").count()).toBeLessThanOrEqual(1);
-  // La primera foto se pide enseguida; las demás, al acercarse. La caja de la foto es cuadrada.
+  // La primera foto se pide enseguida; las demás, al acercarse. En el teléfono, como las tarjetas de Explorar (2026-11-03):
+  // de borde a borde y la foto 3:2.
   const photos = page.locator("article .house-photo");
   await expect(photos.first().locator("img")).toHaveAttribute("loading", "eager");
   await expect(page.locator("article .house-photo img").nth(1)).toHaveAttribute("loading", "lazy");
   const box = (await photos.first().boundingBox())!;
-  expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box.width / box.height - 3 / 2)).toBeLessThan(0.02);
+  expect(Math.abs(box.width - page.viewportSize()!.width)).toBeLessThanOrEqual(1);
 
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());

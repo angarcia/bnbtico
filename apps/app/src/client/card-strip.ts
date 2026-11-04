@@ -7,3 +7,4 @@ export function stripStep({ scrollLeft, width, count, reach }: { scrollLeft: num
   const at = scrollLeft / width;
   return { index: Math.min(last, Math.round(at)), reach: Math.min(last, Math.max(reach, Math.ceil(at) + 1)) };
 }
+

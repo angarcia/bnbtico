@@ -82,7 +82,9 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).not.toContain("· ubicación aproximada");
     expect(html).toContain("fechas, precio y pago los acuerda directamente con el anfitrión");
     expect(html).toContain("Contactar por WhatsApp");
-    expect(html).toContain("1 / 6");
+    // Puntitos en el hero (2026-11-03): el primero marcado ya en el HTML, y la posición en texto.
+    expect(html).toContain('<span class="photo-dots" aria-hidden="true"><i class="on"></i>');
+    expect(html).toContain("Foto 1 de 6");
   });
 
   it("con el WhatsApp del anfitrión sin verificar, debajo del nombre solo «Anfitrión»", async () => {
@@ -150,12 +152,13 @@ describe("worker · ficha /casa/CT-####", () => {
     expect((await t.request("/casa/CT-999999")).headers.get("link")).toBeNull();
   });
 
-  it("sin descripción y con una foto: ni párrafo de descripción ni contador «1 / 1»", async () => {
+  it("sin descripción y con una foto: ni párrafo de descripción ni puntitos", async () => {
     const sola = await t.h.seed({ status: "active", photos: 1, draft: { description: "" } });
     const html = await (await t.request(`/casa/${sola.publicId}`)).text();
     expect(html).toContain("<h1");
     expect(html).not.toContain('class="listing-description"');
-    expect(html).not.toContain("1 / 1");
+    expect(html).not.toContain("photo-dots");
+    expect(html).not.toContain("Foto 1 de 1");
   });
 
   it("incrusta la casa en un JSON no ejecutable y escapado", async () => {
