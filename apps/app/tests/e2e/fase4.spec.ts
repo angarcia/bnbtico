@@ -167,7 +167,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   for (const d of [10, 11, 12]) await expect(first.cell(on(d))).toHaveClass(/is-busy/);
   await expect(first.cell(on(20))).toHaveText("20150\u00a0000");
   await expect(first.cell(on(15))).toHaveText("1595\u00a0000");
-  await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
+  await expect(first.page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await first.page.context().close();
 
   // 5. La propietaria libera una noche y cambia la ★: la carga nueva del cliente lo trae en ≤ 5 s (purga de pg_net).
@@ -218,7 +218,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   expect(Number(sql(`select public.reopen_due_listings('${reopen}')`))).toBeGreaterThanOrEqual(1);
   await expect.poll(() => freshHtml(draft.publicId), { timeout: 5000, intervals: [250] }).toContain('<div class="listing-calendar" aria-hidden="true"></div>');
   const reopened = await clientCalendar(draft.publicId);
-  await expect(reopened.page.getByRole("button", { name: "Contactar por WhatsApp" })).toBeVisible();
+  await expect(reopened.page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await expect(reopened.page.getByText(/Vuelve a estar disponible/)).toHaveCount(0);
   for (const d of [10, 12]) await expect(reopened.cell(on(d))).toHaveClass(/is-busy/);
   await expect(reopened.cell(on(11))).not.toHaveClass(/is-busy/);

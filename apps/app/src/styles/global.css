@@ -308,6 +308,15 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .listing-card .sk-line{margin:12px 14px 14px}
 .listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
 .listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
+/* Fotos deslizables (ticket 09 de la ronda del 2 nov): la tira llena la caja de la foto; cada foto, en su casilla (el fondo de
+   `.photo` mientras no está montada o no ha llegado). Sin barra de desplazamiento; el gesto no arrastra la página de lado. */
+.card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
+.card-strip::-webkit-scrollbar{display:none}
+.card-slide{position:relative;flex:0 0 100%;scroll-snap-align:start}
+/* Botón de WhatsApp: redondo, abajo a la derecha de la parte de texto, fuera del enlace; el texto le deja su sitio. */
+.listing-cell:has(.card-wa) .listing-card-text{padding-right:70px}
+.card-wa{position:absolute;right:14px;bottom:14px;width:44px;height:44px;border:0;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--wa);color:var(--wa-ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ease-out)}
+.card-wa:active{transform:scale(0.92)}
 .card-price{margin-top:3px}
 .card-price b{font-weight:var(--w-strong)}
 /* «≈ ₡180 000 por 4 noches»: si no cabe en una línea (tarjeta del mapa), baja entero «por 4 noches», no solo «noches». */
@@ -994,7 +1003,7 @@ html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(s
 
 @media (prefers-reduced-motion:reduce){
   .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition-property:background-color,color,opacity}
-  .btn:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
+  .btn:active,.card-wa:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
   @starting-style{.update-banner{transform:translateX(-50%)}}
   .heart:active{transform:none}
   .listing-grid.reveal > *,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in.changed,.hero-counter .tick.changed{animation-name:fade-in}
