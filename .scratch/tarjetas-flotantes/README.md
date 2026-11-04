@@ -23,3 +23,5 @@ Decidido (Daniel, 2026-11-04):
 5. **«Mapa» y «Ver ficha»:** ahora parecen **demasiado oscuros**: preparar variantes menos oscuras para elegir.
 6. **Botones de la ficha** (volver, compartir, favorito): flotan, se esconden al bajar y **vuelven al subir**.
 7. **Cabeceras de pantalla** («‹ Filtros», «× Cerrar · Publicar casa»…): **en un segundo paso**, si gusta el resultado.
+8. **«Mapa» y «Ver ficha»: variante B, clara** (crema translúcida como las demás tarjetas, texto e icono en tinta).
+9. Maquetas de referencia: `.scratch/tarjetas-flotantes/maquetas/` y CSS en `maqueta.css` (la franja gris entre la tarjeta de precio y el botón de la ficha es un resto de la maqueta, no va).
