@@ -1,3 +1,12 @@
+## 2026-11-04 · Fotos deslizables y WhatsApp en la tarjeta de Explorar, solo vertical y arreglos (Daniel)
+
+- **Tarjeta de Explorar** (ronda de Ana, ticket 09, alcance reducido): las fotos se deslizan dentro de la foto de siempre, con el contador «1 / N»; las 2+ no se piden hasta deslizar esa tarjeta. **Botón de WhatsApp** claro (círculo `--surface`, borde fino, icono en `--wa-icon`, verde un poco más oscuro que `--wa` para llegar a 3:1) a la derecha del texto: abre la misma hoja de contacto sobre Explorar (con los días de esa casa y las fechas de la pestaña); nunca `wa.me` directo. El formato de la tarjeta (4:3, márgenes, tipografía) no cambia; lo demás del 09 queda para más adelante.
+- **Solo vertical en el teléfono:** la app instalada va en vertical (manifiesto) y, en un teléfono en horizontal, un aviso a pantalla completa («Gire el teléfono para usar bnbtico») tapa la app hasta volver a vertical, sin JS y sin perder el estado. Tabletas y ordenador, sin aviso. La portada estática no lo lleva (va por `main`).
+- **«Descartar»** (borrador y cambio en revisión) pregunta con la hoja de la app, no con el diálogo del navegador.
+- **Al tocar «+»** se va directo al paso 1 con su esqueleto; la tarjeta «Publique su casa en pocos pasos» solo sale si falla la creación del borrador (sustituye lo de la revisión UX C4 de enseñar «qué tener a mano» en ese momento). «Tiene un borrador sin enviar» solo con una lectura de esta visita; «Atrás» desde el paso 1 vuelve a Mis casas.
+- Arreglo: el mapa de Explorar se quedaba sin fondo si Leaflet llegaba antes que las casas (React reescribía la clase de su caja y borraba las de Leaflet). Regla: nunca un `className` dinámico en el elemento que se pasa a `L.map`.
+- **El ticket 11** (deslizador de precio con histograma) **no se hace.**
+
 ## 2026-11-04 · Tarjetas flotantes, tanda 1: base, barra de abajo, Explorar y botones (Daniel)
 
 Sustituye «Solo la barra de abajo; las cabeceras se quedan» (2026-10-30), «lo que flota sobre mapas o fotos, opaco» (2026-10-29) y el token `bottomNav` «plana, pegada al borde, sin píldora». Maquetas, decisiones e inventario: `.scratch/tarjetas-flotantes/`.
