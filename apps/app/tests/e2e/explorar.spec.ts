@@ -133,7 +133,8 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   await scrollTo(700);
   await expect.poll(shown).toBe(true);
   await expect(page.getByRole("link", { name: "Empiece su búsqueda" })).toBeInViewport();
-  expect((await page.locator(".explore-top .search-pill").boundingBox())!.y).toBe(12);
+  // Exactamente 12 px, cuando acaba la vuelta: la opacidad llega a 1 antes que el transform (en CI se medía 11,9997).
+  await expect.poll(async () => (await page.locator(".explore-top .search-pill").boundingBox())!.y).toBe(12);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.getByRole("link", { name: "Filtros", exact: true }).click();
   await expect(page).toHaveURL(/\/explorar\/filtros$/);
