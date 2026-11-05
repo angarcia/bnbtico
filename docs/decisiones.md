@@ -178,6 +178,22 @@ Ronda de Ana del 2026-10-30 (grupo 5; `.scratch/ronda-ana-2026-10-30/spec.md`, t
 - **Las fotos pasan a ser obligatorias al enviar** (antes bastaba con una al aprobar; el admin sigue sin poder aprobar una casa sin foto).
 - «Falta: …» de Mis casas y el paso donde se retoma un borrador cuentan solo los obligatorios. La edición de una casa publicada no cambia: sigue con las reglas por dato (`validateStep`).
 
+## 2026-10-30 · SEO: páginas de zona fuera de v1 (Daniel)
+
+Decisión sobre el SEO del análisis de viabilidad (`docs/viabilidad-y-proyecciones.md`, punto 9.5). Sin páginas por provincia ni cantón en v1; la regla 1 de `CLAUDE.md` no cambia.
+
+- **Canal principal:** captación directa de propietarios y reparto de la ficha por WhatsApp (`docs/marketing.md`). El tráfico orgánico de zona no sostiene la oferta en el lanzamiento.
+- **Lo que ya indexa Google en v1:** la portada, la ficha `/casa/CT-####` (SSR con título, foto y precio) y el sitemap de casas. Cubre búsquedas de una casa concreta; no cubre consultas genéricas como «casas en Puerto Viejo».
+- **Sin datos de búsqueda:** el dominio no tiene impresiones en Search Console y GA4 no conectó (timeout). Decidir zonas sobre supuestos sería apostar a ciegas.
+- **Si se reabre (post-lanzamiento):**
+  - Ruta del worker `GET /casas/:provincia/:canton`, con el mismo `renderToString` que la ficha y una sola consulta por pantalla (casas activas de la zona, foto de portada resuelta).
+  - Caché del borde con `Cache-Tag: zona:<slug>`; Postgres (`pg_net`) purga las zonas afectadas al aprobar, bloquear, pausar, cambiar precio o portada, y al aprobar un cambio de cantón (se purgan la zona vieja y la nueva).
+  - Indexable con 10 o más casas activas y texto propio por zona; con menos, `noindex`; con cero, 404 y `noindex`. Umbrales propuestos, sin medir.
+  - Sitemap de zonas generado desde el mismo recuento y regenerado al purgar; paginación de 24 con `rel=next` y canónica por página; filtros de Explorar con `noindex`.
+  - La regla 1 pasaría a «SSR solo en la ficha y en las páginas de zona»; la prueba de hidratación de CI se amplía a la página de zona.
+- **Disparadores para reabrirlo:** impresiones sostenidas en Search Console para consultas por zona, y una zona con 10 o más casas activas.
+- **Decisiones abiertas al reabrirlo:** esquema de URL (propuesta: cantón, no distrito); quién escribe el texto de cada zona.
+
 ## 2026-10-29 · Revisión UX, segunda ronda: navegación, Cuenta, calendarios y negritas (Ana)
 
 Decisión de Ana, punto por punto sobre la app y maquetas hechas con ella. Detalle, maquetas y estado de cada punto: `.scratch/revision-ux/2026-10-29-revision-ux.md`. Construido el 2026-10-30 salvo lo marcado como pendiente.

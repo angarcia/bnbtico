@@ -184,7 +184,7 @@ Tramos: de 1 a 9 casas, ₡2 900 cada una. De 10 a 24, ₡2 400. Desde 25, ₡1 
 2. **Captar propietarios de forma directa.** Usar contacto personal, grupos de propietarios, referidos y agencias. Meta: 10 casas publicadas al mes.
 3. **Comprar tráfico de clientes solo en una zona con al menos 20 casas activas.** Antes, la publicidad envía visitas que no encuentran casas.
 4. **Probar con un presupuesto pequeño.** La prueba de 200 USD que describe `docs/marketing.md` aún no está autorizada. Seguir invirtiendo solo si el coste por casa publicada queda por debajo de unos US$35.
-5. **Decidir sobre el SEO.** Si es un canal importante, las páginas por zona entran en el alcance y cambian la regla de renderizado del servidor.
+5. **SEO: páginas de zona fuera de v1** (decisión del 2026-10-30). Se reabren con impresiones sostenidas en Search Console y una zona con 10 o más casas activas; entonces la regla de renderizado del servidor pasa a incluir las páginas de zona.
 6. **Medir indicadores de adelanto.** Casas publicadas al mes, consultas por casa, respuesta de propietarios, paso a verificación y coste por casa publicada. Los pagos reales llegan de 3 a 12 meses después de publicar.
 7. **Ajustar la meta de la visión.** Cambiar "150 casas de pago a los 6 meses" por una cifra que la oferta permita. `docs/vision.md` está marcado como desactualizado en su propia nota.
 8. **Decidir el precio con datos.** Antes de cambiar los ₡2 900, revisar la sección 8.
