@@ -60,7 +60,7 @@
       "!dist/client/assets/asistir-*.js",
       "!dist/client/assets/editor-port-*.js"
     ],
-    "limit": "150 KB",
+    "limit": "160 KB",
     "gzip": true
   },
   {

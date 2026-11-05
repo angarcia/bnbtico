@@ -3,9 +3,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { renderDocument } from "../../src/server/render";
+import { readCss } from "../read-css";
 
 const template = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
-const css = readFileSync(new URL("../../src/styles/global.css", import.meta.url), "utf8");
+const css = readCss();
 const manifest = JSON.parse(readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8")) as { orientation?: string };
 
 const NOTICE = /<div class="rotate-notice" role="alert">[\s\S]*?Gire el teléfono para usar bnbtico[\s\S]*?<\/div>/;

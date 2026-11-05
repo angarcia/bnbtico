@@ -1,9 +1,9 @@
 // Contraste WCAG de los pares de colores que llevan texto (spec «Densidad y tarjetas», § Accessibility): todos ≥ 4,5:1
 // en el tema claro. Lee las variables del primer bloque `:root{…}` de global.css que define `--bg`.
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { readCss } from "../read-css";
 
-const css = readFileSync(new URL("../../src/styles/global.css", import.meta.url), "utf8");
+const css = readCss();
 
 function rootVars(source: string): Record<string, string> {
   for (const m of source.matchAll(/:root\{([^}]*)\}/g)) {

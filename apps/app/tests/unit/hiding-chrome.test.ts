@@ -1,10 +1,10 @@
 // El escondido común de las tarjetas flotantes (tarjetas flotantes, tanda 1): `chromeAway` decide con el desplazamiento y
 // `html.chrome-away` (global.css) esconde todas las piezas `.chrome-hide` a la vez, salvo la que tiene el foco.
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CHROME_THRESHOLD, chromeAway } from "../../src/client/hiding-chrome";
+import { readCss } from "../read-css";
 
-const css = readFileSync(new URL("../../src/styles/global.css", import.meta.url), "utf8");
+const css = readCss();
 
 describe("chromeAway", () => {
   it("esconde al bajar, muestra al subir y arriba del todo", () => {

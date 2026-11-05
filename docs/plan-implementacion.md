@@ -20,14 +20,18 @@ Todo lo que el prototipo oculta (reclamaciones, titularidad registral, planes po
 
 ## Stack (revisado el 2026-10-21; detalle y porqués en `decisiones.md`)
 
-- **App client-first (PWA):** Vite + React 19 + TanStack Router + TanStack Query, en `apps/app` mientras dura la reescritura y en `apps/web` después. La zona con sesión es un shell estático cacheado por un service worker que habla con PostgREST con el JWT del usuario; **una sola ruta con SSR**, `/casa/CT-####`, renderizada por un worker Hono para que WhatsApp y Google vean la ficha. La portada es HTML estático.
+- **App client-first (PWA):** Vite + React 19 + TanStack Router + TanStack Query, en `apps/app`, paquete `app`, sin renombrado posterior (decisión 2026-11-04). La zona con sesión es un shell estático cacheado por un service worker que habla con PostgREST con el JWT del usuario; **una sola ruta con SSR**, `/casa/CT-####`, renderizada por un worker Hono para que WhatsApp y Google vean la ficha. La portada es HTML estático.
 - **Worker Hono en Cloudflare Workers** (plan gratuito hasta que un disparador medido pida el de 5 USD): SSR de la ficha, sitemap, balizas de `web-vitals`/errores/eventos, y en la fase 5 webhooks de pago y cron de avisos. Despliegue con GitHub Actions: push a `develop` → pruebas → `nueva.bnbtico.com` (luego `pruebas.bnbtico.com`); push a `main` → bnbtico.com. Vercel solo sigue sirviendo la app vieja hasta el corte.
 - `supabase/`: **Supabase** (Postgres con RLS, RPCs plpgsql para invariantes, Storage para fotos, `pg_cron`/`pg_net` para trabajos). Free hasta un disparador medido (Storage 800 MB, egreso 4 GB/mes, base 400 MB), luego Pro. Copia diaria con `pg_dump` desde GitHub Actions desde la primera semana. Proyecto local para desarrollar, uno de pruebas y uno de producción. **El navegador es el cliente de PostgREST**; no hay API intermedia ni server actions.
 - **Presupuesto de infraestructura:** 0 USD hasta el lanzamiento; después, 10–20 USD/mes aceptados (Workers 5 USD y Supabase Pro 25 USD cuando sus disparadores salten).
-- **Stack anterior (fases 0–2, vigente solo en `apps/web` hasta el corte):** Next.js 16 App Router en Vercel Hobby con Server Components, Server Actions y proxy; se sustituye porque el render por petición y la verificación de sesión por red en cada hop impedían la fluidez (`decisiones.md`, 2026-10-21).
+- **Stack anterior (fases 0–2, retirado del repositorio en el ticket 09):** Next.js 16 App Router en Vercel Hobby con Server Components, Server Actions y proxy; se sustituyó porque el render por petición y la verificación de sesión por red en cada hop impedían la fluidez (`decisiones.md`, 2026-10-21). Vercel conserva sus despliegues, con builds desactivados, hasta un corte autorizado.
 - **Códigos por WhatsApp:** Twilio Verify (canal WhatsApp) para arrancar; cuenta de empresa de Meta tramitándose desde la fase 0 para pasar a la API oficial cuando esté aprobada. Los avisos de suscripción salen por el mismo canal.
 - **Pruebas:** Vitest para lógica (filtros, dinero, estados de casa, redacción de mensajes); una **suite de contrato** sobre `ListingsApi`/`AuthApi` que corre contra el fake en memoria y contra PostgREST en Supabase local (`tests/db`); Playwright en viewport móvil (Pixel 7) para los flujos (publicar → aprobar → ver ficha → contactar); y tres puertas en CI (`size-limit`, hidratación de la ficha, Lighthouse CI). Las pruebas del prototipo (`tests/prototype/*.cjs`) siguen siendo la referencia de comportamiento.
 - Se retiran del repo `apps/mobile`, `packages/*` y Turborepo: una sola app, pnpm simple.
+
+## Retirada de Next (2026-11-04)
+
+El ticket 09 del refactor conservador retira solo los archivos versionados de `apps/web`, sus dependencias exclusivas y sus comandos. Conserva `apps/app`, el paquete `app`, la cobertura vigente y todos los presupuestos. No cambia datos, Vercel ni DNS. Los estados fechados de abajo documentan las fases anteriores; sus instrucciones de Next son históricas. Para desarrollar se sigue el `README.md`; para el corte, `docs/corte-fase-r.md`.
 
 ## Estado (2026-10-27)
 

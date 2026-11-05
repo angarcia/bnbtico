@@ -10,27 +10,25 @@ import { DomainError } from "../../domain/errors";
 import { emptyDraft, isFreshDraft, normalize, type Listing, type ListingDraft } from "../../domain/listing";
 import { validateStep } from "../../domain/listing-rules";
 import { resumeStep } from "../../domain/publish-rules";
-import { EMAIL_SKIPPED_KEY, PUBLISH_DRAFT_KEY, PUBLISH_STEP1_KEY, readLocalDraft, readPublishDraft, storeLocalDraft, type Step1Kind } from "../../domain/publish-return";
+import { EMAIL_SKIPPED_KEY, type Step1Kind } from "../../domain/publish-return";
 import { track } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
 import { FlowHeader } from "../chrome";
 import { addOwnCached, api, resumableQuery } from "../owner";
+import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } from "../publish/phone-draft";
 import { KindChoice, ReadyList, StageLabel } from "../publish/wizard-parts";
 import { authApi, useSession } from "../session";
-import { SignInForm } from "./cuenta";
+import { SignInForm } from "../sign-in";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
 const ORPHAN_MS = 10 * 60_000;
 /** Lo escrito sin cuenta (los pasos 1–6, o solo el tipo de una visita del flujo anterior). */
-const storedDraft = () => readPublishDraft(localStorage.getItem(PUBLISH_DRAFT_KEY), localStorage.getItem(PUBLISH_STEP1_KEY), Date.now());
+const storedDraft = () => readPhoneDraft();
 /** Las Fotos: el primer paso que pide cuenta. */
 const PHOTOS_STEP = 7;
-const clearStored = () => {
-  localStorage.removeItem(PUBLISH_DRAFT_KEY);
-  localStorage.removeItem(PUBLISH_STEP1_KEY);
-};
+const clearStored = clearPhoneDraft;
 
 /** La cabecera del asistente sin borrador todavía (el paso 1, o las Fotos al pedir el código): «Cerrar» vuelve a Explorar. */
 function EntryHeader({ step = 1 }: { step?: 1 | 7 }) {
@@ -60,8 +58,7 @@ export function PublicarEntradaScreen() {
     const kind: Step1Kind | null = value === "completo" || value === "habitacion" ? value : null;
     const invalid = validateStep(1, { ...emptyDraft(), kind });
     if (invalid || !kind) return setError(invalid);
-    localStorage.setItem(PUBLISH_DRAFT_KEY, storeLocalDraft(normalize({ ...(storedDraft() ?? emptyDraft()), kind }), Date.now()));
-    localStorage.removeItem(PUBLISH_STEP1_KEY);
+    writePhoneDraft(normalize({ ...(storedDraft() ?? emptyDraft()), kind }));
     void navigate({ to: "/publicar/$id/$paso", params: { id: "nueva", paso: "2" } });
   }
   return (
@@ -122,7 +119,7 @@ export function ContinuarScreen() {
   const [stored] = useState(storedDraft);
   // Con los pasos 1–6 se llegó a las Fotos y se sigue ahí («Continuar» nunca espera: lo que falte lo dice «Revisar y
   // enviar»); con solo el tipo (una visita del flujo anterior), en «¿Dónde está su casa?».
-  const [next] = useState(() => (readLocalDraft(localStorage.getItem(PUBLISH_DRAFT_KEY), Date.now()) ? PHOTOS_STEP : 2));
+  const [next] = useState(() => (readFullPhoneDraft() ? PHOTOS_STEP : 2));
   const resumable = useQuery({ ...resumableQuery(userId), enabled: !!userId && !!stored });
   // La casa creada en esta visita: un reintento tras fallar el guardado no crea otra.
   const created = useRef<string | null>(null);

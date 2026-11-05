@@ -5,12 +5,13 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { Listing } from "../domain/listing";
 import { ownListingsHint } from "../shared/own-listings";
 import { useSession } from "./session";
+import { ownListingsKey } from "./listing-keys";
 
 export const OWNER_STALE_MS = 30_000;
 
 export const ownListingsQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["own-listings", userId] as const,
+    queryKey: ownListingsKey(userId),
     queryFn: async (): Promise<Listing[]> => (await import("./owner")).fetchOwnListings(),
     staleTime: OWNER_STALE_MS,
   });

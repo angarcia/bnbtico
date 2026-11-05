@@ -22,7 +22,7 @@ import { ConfirmSheet } from "../confirm-sheet";
 import { useDiscardEditField } from "../edit";
 import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
-import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./propietario";
+import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "../owner-ui";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 

@@ -8,7 +8,7 @@ import { track } from "../shared/beacon";
 import { I } from "../shared/icons";
 import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
-import { PRIVATE_KEYS } from "./account";
+import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./query-policy";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
 import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
@@ -313,13 +313,13 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: PERSI
 // Al cerrar sesión (aquí, en otra pestaña o porque el servidor la revocó): fuera la caché privada y la pista de las casas
 // (la barra vuelve a dos pestañas).
 onSignedOut(() => {
-  queryClient.removeQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
+  queryClient.removeQueries({ predicate: (q) => PRIVATE_QUERY_KEYS.has(String(q.queryKey[0])) });
   forgetOwnListings();
 });
 
 // La caché del dispositivo se guarda cada segundo como mucho: si la app se cerró justo después de un cambio, lo restaurado
 // puede ser anterior. Las consultas privadas restauradas se pintan al instante y se vuelven a pedir por detrás.
-const refreshPrivate = () => void queryClient.invalidateQueries({ predicate: (q) => PRIVATE_KEYS.has(String(q.queryKey[0])) });
+const refreshPrivate = () => void queryClient.invalidateQueries({ predicate: (q) => PERSISTED_PRIVATE_KEYS.has(String(q.queryKey[0])) });
 
 // La foto de la tarjeta a la que se vuelve desde la ficha (client/motion.ts). El router emite onRendered dentro de la
 // actualización de la View Transition, después de pintar y de restaurar el scroll: la captura del estado nuevo ya ve la

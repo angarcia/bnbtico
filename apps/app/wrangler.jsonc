@@ -21,6 +21,19 @@
   // Local: SUPABASE_URL y SUPABASE_ANON_KEY salen de .dev.vars (pnpm dev:vars, desde `supabase status`).
   "vars": { "ENVIRONMENT": "local" },
   "env": {
+    "refactor": {
+      "name": "bnbtico-refactor",
+      "vars": {
+        "ENVIRONMENT": "pruebas",
+        "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co",
+        "LISTING_CACHE": "no-store"
+      },
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "triggers": { "crons": [] },
+      "routes": [{ "pattern": "refactor.bnbtico.com", "custom_domain": true }],
+      "workers_dev": false,
+      "preview_urls": false
+    },
     "pruebas": {
       "vars": {
         "ENVIRONMENT": "pruebas",

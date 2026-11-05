@@ -5,13 +5,15 @@ import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@ta
 import type { ListingActivity, OwnerListingsApi, PhotosApi, PlacesApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
 import { rememberOwnListings } from "../shared/own-listings";
-import { billingQuery } from "./billing";
+import { patchCached, refresh, removeOwnCached } from "./listing-cache";
+import { ownActivityKey, ownListingKey, ownListingsKey, ownResumableKey, ownStatsKey } from "./listing-keys";
 import { OWNER_STALE_MS, ownListingsQuery } from "./own-listings-query";
 import { allSavesSettled, savesSettled } from "./save-queue";
 import { authApi } from "./session";
 
 // La consulta de la lista vive en el JS inicial (la barra de pestañas cuenta las casas); los importadores de siempre la toman de aquí.
 export { ownListingsQuery, OWNER_STALE_MS } from "./own-listings-query";
+export { patchCached, addOwnCached, refresh } from "./listing-cache";
 
 /** Carga supabase-js con la sesión ya leída antes de pedir datos del propietario. */
 let loaded: OwnerListingsApi | null = null;
@@ -45,7 +47,7 @@ export async function fetchOwnListings(): Promise<Listing[]> {
 /** Visitas, toques en WhatsApp y consultas de 30 días de todas las casas propias (Actividad). */
 export const activityQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["own-activity", userId] as const,
+    queryKey: ownActivityKey(userId),
     queryFn: async (): Promise<ListingActivity[]> => (await api()).ownerActivity(),
     staleTime: OWNER_STALE_MS,
   });
@@ -53,7 +55,7 @@ export const activityQuery = (userId: string) =>
 /** Visitas y consultas de 30 días de una casa (revisión UX A2). */
 export const listingStatsQuery = (userId: string, id: string) =>
   queryOptions({
-    queryKey: ["own-stats", userId, id] as const,
+    queryKey: ownStatsKey(userId, id),
     queryFn: async () => (await api()).stats(id),
     staleTime: OWNER_STALE_MS,
   });
@@ -61,7 +63,7 @@ export const listingStatsQuery = (userId: string, id: string) =>
 export const ownListingQuery = (userId: string, id: string, client: QueryClient) => {
   const list = client.getQueryState(ownListingsQuery(userId).queryKey);
   return queryOptions({
-    queryKey: ["own-listing", userId, id] as const,
+    queryKey: ownListingKey(userId, id),
     queryFn: async () => {
       await savesSettled(id);
       return (await api()).getOwn(id);
@@ -81,34 +83,13 @@ export { offerTakenQuery } from "./offer-query";
 /** El borrador pendiente para retomar (pantalla de entrada a publicar). Siempre se pide de nuevo: puede venir de otro dispositivo. */
 export const resumableQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["own-resumable", userId] as const,
+    queryKey: ownResumableKey(userId),
     queryFn: async () => {
       await allSavesSettled();
       return (await api()).findResumable();
     },
     staleTime: 0,
   });
-
-/** Cambia una casa en la lista y en su detalle a la vez (escrituras optimistas). */
-export function patchCached(client: QueryClient, userId: string, id: string, patch: Partial<Listing>) {
-  client.setQueryData<Listing[]>(ownListingsQuery(userId).queryKey, (list) => list?.map((l) => (l.id === id ? { ...l, ...patch } : l)));
-  client.setQueryData<Listing | null>(["own-listing", userId, id], (l) => (l ? { ...l, ...patch } : l));
-}
-
-/** Una casa recién creada, al principio de la lista ya leída (si la hay), para que la barra crezca al instante. */
-export function addOwnCached(client: QueryClient, userId: string, l: Listing) {
-  client.setQueryData<Listing[]>(ownListingsQuery(userId).queryKey, (list) => (list && !list.some((x) => x.id === l.id) ? [l, ...list] : list));
-}
-
-/** Tras cualquier cambio: la lista, el detalle y lo que el público ve de esa casa vuelven a pedirse. */
-export function refresh(client: QueryClient, userId: string, l: Pick<Listing, "id" | "publicId">) {
-  void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-  void client.invalidateQueries({ queryKey: ["own-listing", userId, l.id] });
-  void client.invalidateQueries({ queryKey: ["listing", l.publicId] });
-  void client.invalidateQueries({ queryKey: ["listings"] });
-  void client.invalidateQueries({ queryKey: ["offer-taken"] });
-  void client.invalidateQueries({ queryKey: billingQuery(userId).queryKey });
-}
 
 /** Abrir (borra la fecha de reapertura) o cerrar a consultas con una fecha opcional. */
 export type AvailabilityChange = { available: true } | { available: false; reopenAt: string | null };
@@ -119,9 +100,9 @@ export function useSetAvailable(userId: string, listing: Pick<Listing, "id" | "p
   return useMutation({
     mutationFn: async (c: AvailabilityChange) => (await api()).setAvailable(listing.id, c.available, c.available ? null : c.reopenAt),
     onMutate: async (c) => {
-      await client.cancelQueries({ queryKey: ["own-listings", userId] });
-      await client.cancelQueries({ queryKey: ["own-listing", userId, listing.id] });
-      const before = client.getQueryData<Listing | null>(["own-listing", userId, listing.id]);
+      await client.cancelQueries({ queryKey: ownListingsKey(userId) });
+      await client.cancelQueries({ queryKey: ownListingKey(userId, listing.id) });
+      const before = client.getQueryData<Listing | null>(ownListingKey(userId, listing.id));
       patchCached(client, userId, listing.id, { available: c.available, reopenAt: c.available ? null : c.reopenAt });
       return { previous: { available: !c.available, reopenAt: before?.reopenAt ?? null } };
     },
@@ -137,10 +118,7 @@ export function useDeleteDraft(userId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => (await api()).deleteDraft(id),
-    onSuccess: (_void, id) => {
-      client.setQueryData<Listing[]>(ownListingsQuery(userId).queryKey, (list) => list?.filter((l) => l.id !== id));
-      client.removeQueries({ queryKey: ["own-listing", userId, id] });
-    },
-    onSettled: () => void client.invalidateQueries({ queryKey: ["own-listings", userId] }),
+    onSuccess: (_void, id) => removeOwnCached(client, userId, id),
+    onSettled: () => void client.invalidateQueries({ queryKey: ownListingsKey(userId) }),
   });
 }

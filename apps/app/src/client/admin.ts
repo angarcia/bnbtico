@@ -11,6 +11,8 @@ import { toDomainError } from "../domain/errors";
 import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
 import { ownerNoticeUrl, firstName } from "../domain/owner-notice";
 import { authApi } from "./session";
+import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "./listing-cache";
+import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "./listing-keys";
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
   await authApi();
@@ -19,7 +21,7 @@ export const adminApi = async (): Promise<AdminListingsApi> => {
 
 export const adminQueueQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["admin-queue", userId] as const,
+    queryKey: adminQueueKey(userId),
     queryFn: async () => (await adminApi()).queue(),
     staleTime: 0,
   });
@@ -27,7 +29,7 @@ export const adminQueueQuery = (userId: string) =>
 /** Casas del admin (diseño 23): solo lectura; se piden de nuevo al abrir la pantalla. */
 export const adminHousesQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["admin-houses", userId] as const,
+    queryKey: adminHousesKey(userId),
     queryFn: async () => (await adminApi()).houses(),
     staleTime: 0,
   });
@@ -37,7 +39,7 @@ const fromQueue = (q: AdminQueue | undefined, id: string) => q && [...q.review, 
 export const adminListingQuery = (userId: string, id: string, client: QueryClient) => {
   const queue = client.getQueryState(adminQueueQuery(userId).queryKey);
   return queryOptions({
-    queryKey: ["admin-listing", userId, id] as const,
+    queryKey: adminListingKey(userId, id),
     queryFn: async () => (await adminApi()).get(id),
     staleTime: 0,
     initialData: () => fromQueue(queue?.data as AdminQueue | undefined, id),
@@ -75,15 +77,13 @@ export interface ReviewInput {
   note: string;
 }
 
-const reviewKey = (userId: string) => ["admin-review", userId] as const;
-
 /**
  * La cola tal como debe verse: lo que dice la base más las decisiones aún en curso. Sin esto, una lectura de la cola que
  * llegue antes de que la base guarde la decisión (la cola se pide al abrirla, staleTime 0) devolvería la casa a la cola.
  */
 export function useQueueWithPending(userId: string, queue: AdminQueue | undefined): AdminQueue | undefined {
   const pending = useMutationState({
-    filters: { mutationKey: reviewKey(userId), status: "pending" },
+    filters: { mutationKey: adminReviewKey(userId), status: "pending" },
     select: (m) => ({ input: m.state.variables as ReviewInput, at: new Date(m.state.submittedAt).toISOString() }),
   });
   if (!queue) return queue;
@@ -94,9 +94,9 @@ export function useQueueWithPending(userId: string, queue: AdminQueue | undefine
 export function useReview(userId: string) {
   const client = useQueryClient();
   const queueKey = adminQueueQuery(userId).queryKey;
-  const itemKey = (id: string) => ["admin-listing", userId, id] as const;
+  const itemKey = (id: string) => adminListingKey(userId, id);
   return useMutation({
-    mutationKey: reviewKey(userId),
+    mutationKey: adminReviewKey(userId),
     mutationFn: async ({ item, decision, note }: ReviewInput) => (await adminApi()).review(item.listing.id, decision, note),
     onMutate: async ({ item, decision, note }) => {
       const id = item.listing.id;
@@ -126,14 +126,7 @@ export function useReview(userId: string) {
       if (previous?.item !== undefined) client.setQueryData(itemKey(item.listing.id), previous.item);
       setOutcome({ kind: "failed", title: item.listing.title, text: toDomainError(error).message });
     },
-    onSettled: (_data, _error, { item }) => {
-      void client.invalidateQueries({ queryKey: queueKey });
-      void client.invalidateQueries({ queryKey: itemKey(item.listing.id) });
-      void client.invalidateQueries({ queryKey: ["listing", item.listing.publicId] });
-      void client.invalidateQueries({ queryKey: ["listings"] });
-      void client.invalidateQueries({ queryKey: ["offer-taken"] });
-      void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
-    },
+    onSettled: (_data, _error, { item }) => refreshAdminReview(client, userId, item.listing),
   });
 }
 
@@ -172,13 +165,7 @@ export function useHouseAction(userId: string) {
           return api.deleteListing(a.id, a.reason, a.confirm);
       }
     },
-    onSettled: (_data, _error, a) => {
-      void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
-      void client.invalidateQueries({ queryKey: adminQueueQuery(userId).queryKey });
-      void client.invalidateQueries({ queryKey: ["listing", a.publicId] });
-      void client.invalidateQueries({ queryKey: ["listings"] });
-      void client.invalidateQueries({ queryKey: ["offer-taken"] });
-    },
+    onSettled: (_data, _error, a) => refreshAdminHouse(client, userId, a.publicId),
   });
 }
 
@@ -186,7 +173,7 @@ export function useHouseAction(userId: string) {
 /** Ediciones en revisión, la que más espera primero; se piden de nuevo al abrir la cola. */
 export const adminEditsQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["admin-edits", userId] as const,
+    queryKey: adminEditsKey(userId),
     queryFn: async () => (await adminApi()).editQueue(),
     staleTime: 0,
   });
@@ -195,7 +182,7 @@ export const adminEditsQuery = (userId: string) =>
 export const adminEditQuery = (userId: string, id: string, client?: QueryClient) => {
   const edits = client?.getQueryState(adminEditsQuery(userId).queryKey);
   return queryOptions({
-    queryKey: ["admin-edit", userId, id] as const,
+    queryKey: adminEditKey(userId, id),
     queryFn: async () => (await adminApi()).getEdit(id),
     staleTime: 0,
     initialData: () => (edits?.data as QueueItem[] | undefined)?.find((i) => i.listing.id === id),
@@ -213,12 +200,10 @@ export interface EditReviewInput {
   note: string;
 }
 
-const editReviewKey = (userId: string) => ["admin-review-edit", userId] as const;
-
 /** La cola de ediciones sin las que se quedan sin nada en revisión por una decisión en curso (como useQueueWithPending). */
 export function useEditsWithPending(userId: string, edits: QueueItem[] | undefined): QueueItem[] | undefined {
   const pending = useMutationState({
-    filters: { mutationKey: editReviewKey(userId), status: "pending" },
+    filters: { mutationKey: adminEditReviewKey(userId), status: "pending" },
     select: (m) => m.state.variables as EditReviewInput,
   });
   if (!edits || !pending.length) return edits;
@@ -264,7 +249,7 @@ export function useReviewEdit(userId: string) {
   const client = useQueryClient();
   const editsKey = adminEditsQuery(userId).queryKey;
   return useMutation<void, Error, EditReviewInput, { edits: QueueItem[] | undefined; item: QueueItem | null | undefined }>({
-    mutationKey: editReviewKey(userId),
+    mutationKey: adminEditReviewKey(userId),
     mutationFn: async ({ item, target, decision, note }) => {
       const api = await adminApi();
       const e = item.listing.edit;
@@ -272,7 +257,7 @@ export function useReviewEdit(userId: string) {
       return api.reviewEditPhoto(target.photoId, decision, note, e?.photos.find((p) => p.id === target.photoId)?.submittedAt ?? null);
     },
     onMutate: async (input) => {
-      const itemKey = ["admin-edit", userId, input.item.listing.id] as const;
+      const itemKey = adminEditKey(userId, input.item.listing.id);
       await client.cancelQueries({ queryKey: editsKey });
       await client.cancelQueries({ queryKey: itemKey });
       const edits = client.getQueryData<QueueItem[]>(editsKey);
@@ -287,16 +272,10 @@ export function useReviewEdit(userId: string) {
     },
     onError: (error, { item }, previous) => {
       if (previous?.edits) client.setQueryData(editsKey, previous.edits);
-      if (previous?.item !== undefined) client.setQueryData(["admin-edit", userId, item.listing.id], previous.item);
+      if (previous?.item !== undefined) client.setQueryData(adminEditKey(userId, item.listing.id), previous.item);
       setOutcome({ kind: "failed", title: item.listing.title, text: toDomainError(error).message });
     },
-    onSettled: (_data, _error, { item }) => {
-      void client.invalidateQueries({ queryKey: editsKey });
-      void client.invalidateQueries({ queryKey: ["admin-edit", userId, item.listing.id] });
-      void client.invalidateQueries({ queryKey: ["listing", item.listing.publicId] });
-      void client.invalidateQueries({ queryKey: ["listings"] });
-      void client.invalidateQueries({ queryKey: adminHousesQuery(userId).queryKey });
-    },
+    onSettled: (_data, _error, { item }) => refreshAdminEdit(client, userId, item.listing),
   });
 }
 

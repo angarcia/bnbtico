@@ -15,6 +15,30 @@ function files(dir: string): string[] {
 const imports = (path: string) => [...readFileSync(path, "utf8").matchAll(/(?:from|import)\s+["']([^"']+)["']/g)].map((m) => m[1]!);
 
 describe("arquitectura", () => {
+  it("las consultas y piezas compartidas de edición no dependen de pantallas; la composición de rutas queda fuera de esta regla", () => {
+    const seen = new Set<string>();
+    const offenders: string[] = [];
+    const walk = (path: string) => {
+      if (seen.has(path)) return;
+      seen.add(path);
+      const source = readFileSync(path, "utf8");
+      const specs = [
+        ...imports(path),
+        ...[...source.matchAll(/\bimport\s*\(\s*["']([^"']+)["']/g)].map((m) => m[1]!),
+      ];
+      for (const spec of specs.filter((i) => i.startsWith("."))) {
+        const base = join(path, "..", spec);
+        const target = [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts"), join(base, "index.tsx")]
+          .find((p) => existsSync(p) && statSync(p).isFile());
+        if (!target) continue;
+        if (relative(SRC, target).startsWith("client/screens/")) offenders.push(`${relative(SRC, path)} → ${spec}`);
+        else walk(target);
+      }
+    };
+    for (const entry of ["client/editor-query.ts", "client/editor-status.tsx", "client/owner-ui.tsx"]) walk(join(SRC, entry));
+    expect(offenders).toEqual([]);
+  });
+
   it("solo src/data/postgrest importa supabase-js", () => {
     const offenders = files(SRC)
       .filter((f) => !relative(SRC, f).startsWith("data/postgrest/"))

@@ -8,6 +8,7 @@ import type { OwnerCalendarApi, OwnerListingsApi, PhotosApi } from "../domain/ap
 import { calendarApi } from "./calendar-days";
 import { OWNER_STALE_MS, api, loadedApi, ownListingQuery, photosApi } from "./owner";
 import { savesSettled } from "./save-queue";
+import { ownListingKey } from "./listing-keys";
 
 export type EditorListings = Pick<OwnerListingsApi, "getOwn" | "saveStep" | "submit" | "updateLive" | "saveEdit" | "discardEditField">;
 export type EditorPhotos = Pick<PhotosApi, "add" | "remove" | "reorder" | "addEditPhoto" | "removeEditPhoto" | "reorderEditPhotos">;
@@ -53,13 +54,13 @@ export const editorListingQuery = (port: EditorPort, userId: string, id: string,
   port.local
     ? queryOptions({
         // El del teléfono: lo que guarda el puerto local, sin red.
-        queryKey: ["own-listing", userId, id] as const,
+        queryKey: ownListingKey(userId, id),
         queryFn: async () => (await port.listings()).getOwn(id),
         staleTime: Infinity,
       })
     : port.admin
     ? queryOptions({
-        queryKey: ["own-listing", userId, id] as const,
+        queryKey: ownListingKey(userId, id),
         queryFn: async () => {
           await savesSettled(id);
           return (await port.listings()).getOwn(id);

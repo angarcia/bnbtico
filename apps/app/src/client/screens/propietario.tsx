@@ -3,11 +3,12 @@
 // El calendario (17) va en su propio trozo (screens/calendario.tsx).
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { LOCAL_USER, editorListingQuery, useEditor } from "../editor-port";
+import { useOwnListing, useUserId } from "../editor-query";
+import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { ActivateButton, HoldNotice, PayButton, PayNotice, ShareButtonInline, WhatsAppItem, shareOf, titleOf } from "../owner-ui";
 import { Suspense, lazy, useState, type ReactNode } from "react";
-import { HOLD_COPY } from "../../domain/admin-actions";
 import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
@@ -16,32 +17,18 @@ import { type Listing } from "../../domain/listing";
 import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { formatCRC } from "../../domain/money";
 import { byPendingAction, cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
-import { MONTHLY_FEE_CRC, cardDate, launchOffer, payButtonDue, reminderCard, reminderDaysLeft } from "../../domain/subscription";
-import { formatPhone } from "../../domain/phone";
-import { waUrl } from "../../domain/whatsapp";
+import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/subscription";
 import { I } from "../../shared/icons";
 import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
-import { useBilling, type Billing, type HouseBilling } from "../billing";
+import { useBilling, type Billing } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
 import { offerTakenQuery, ownListingsQuery, useDeleteDraft } from "../owner";
-import { useSession } from "../session";
-import { SUPPORT_NUMBERS } from "../support-numbers";
 import { ConfirmSheet } from "../confirm-sheet";
 
-const base = () => window.location.origin;
 const message = (e: unknown) => toDomainError(e).message;
-export const titleOf = (l: Listing) => l.title || "Borrador sin título";
-export const shareOf = (l: Listing) => {
-  const d = describe(l, { base: base() });
-  return { url: d.shareUrl, title: titleOf(l), text: d.previewText };
-};
-
-export function useUserId(): string {
-  return useSession().session?.userId ?? "";
-}
 
 /** «¿Descartar este borrador?» con la hoja de la app (no el diálogo del navegador), desde la tarjeta y desde el detalle:
  *  devuelve la función que la abre y la hoja (o nada). */
@@ -65,115 +52,6 @@ function useDiscardSheet(go: () => void): [() => void, ReactNode] {
       />
     ) : null,
   ];
-}
-
-// ---------- Suscripción (fase 5) ----------
-
-/** «14 oct» si es de este año; si no, «14 oct 2027». */
-const dayOf = (date: string, today: string) => (date.slice(0, 4) === today.slice(0, 4) ? cardDate(date).slice(0, -5) : cardDate(date));
-
-/** Enlace a la suscripción: con casa, «Suscripción» de esa sola casa (`?casa=CT-####` y `#pago=CT-####`, que la resalta);
- *  sin ella, «Promoción y suscripción» con todas. */
-export function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
-  return publicId ? (
-    <Link to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} className={className}>
-      {children}
-    </Link>
-  ) : (
-    <Link to="/propietario/suscripcion" className={className}>
-      {children}
-    </Link>
-  );
-}
-
-function PayButton({ publicId }: { publicId: string }) {
-  return (
-    <SubscriptionLink publicId={publicId} className="btn btn-sun btn-block">
-      Añadir método de pago
-    </SubscriptionLink>
-  );
-}
-
-/** Reactivar una casa parada: lleva a «Promoción y suscripción» con la casa resaltada. */
-export function ActivateButton({ publicId }: { publicId: string }) {
-  return (
-    <SubscriptionLink publicId={publicId} className="btn btn-sun btn-block">
-      Activar suscripción
-    </SubscriptionLink>
-  );
-}
-
-/** Tarjeta ocre: la oferta terminó sin método (pendiente de pago) o termina dentro de 90 días; null si no toca avisar. */
-export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: string; title?: string }) {
-  if (!payButtonDue(hb.sub, today)) return null;
-  const { house, sub } = hb;
-  const card =
-    sub.status === "payment_due"
-      ? {
-          title: sub.promoEndsOn ? `Su oferta gratuita terminó el ${dayOf(sub.promoEndsOn, today)}` : "Falta el método de pago",
-          body: `La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${formatCRC(sub.monthlyPriceCrc)} al mes, sin permanencia; puede parar cuando quiera.`,
-        }
-      : reminderCard(reminderDaysLeft(sub, today) ?? -1);
-  if (!card) return null;
-  return (
-    <section className="card-sun stack gap-10" data-testid="pay-notice">
-      {title ? <span className="xs strong">{title}</span> : null}
-      <b className="display offer-title">{card.title}</b>
-      <span className="small ink">{card.body}</span>
-      <PayButton publicId={house.publicId} />
-    </section>
-  );
-}
-
-// ---------- Avisos y piezas de Mis casas ----------
-
-/** Casa pausada o bloqueada por bnbtico (spec .scratch/admin-casas-acciones): el motivo que escribió el admin y, bloqueada,
- *  «Escribir a bnbtico» (WhatsApp de propietarios). La etiqueta ya va sobre la foto. `card`: la versión corta de Mis casas. */
-export function HoldNotice({ listing: l, card = false }: { listing: Listing; card?: boolean }) {
-  const hold = l.adminHold;
-  if (!hold) return null;
-  const copy = HOLD_COPY[hold.kind];
-  const write =
-    hold.kind === "blocked" ? (
-      <a
-        className={`btn btn-block ${card ? "btn-ghost" : "btn-wa"}`}
-        href={waUrl(SUPPORT_NUMBERS.owner, `Hola, mi casa ${l.publicId} (${titleOf(l)}) está bloqueada y quisiera hablar con ustedes.`)}
-        target="_blank"
-        rel="noopener"
-      >
-        Escribir a bnbtico
-      </a>
-    ) : null;
-  if (card)
-    return (
-      <>
-        <p className="note note-arena small" data-testid="hold-note">
-          <span>
-            <b>{copy.title}.</b> Motivo: {hold.reason}
-          </span>
-        </p>
-        {write}
-      </>
-    );
-  return (
-    <section className="card-arena stack gap-10" data-testid="hold-notice">
-      <h2 className="display offer-title">{copy.title}</h2>
-      <span className="small ink">{copy.body}</span>
-      <span className="small ink">
-        <b>Motivo:</b> <span data-testid="hold-reason">{hold.reason}</span>
-      </span>
-      {write}
-    </section>
-  );
-}
-
-export function SkeletonCard() {
-  return (
-    <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando sus casas">
-      <span className="sk thumb" />
-      <span className="sk sk-line" />
-    </section>
-  );
 }
 
 // ---------- Mis casas ----------
@@ -298,20 +176,6 @@ function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: st
   );
 }
 
-/** «Compartir ficha» en dorado (el de «Activar suscripción»; Ana, 2026-11-04): no es dinero, pero compartir la ficha es publicidad de bnbtico y
- *  la acción que más le conviene; el dorado deja de ser solo para pagos. */
-export function ShareButtonInline({ listing: l, className = "grow" }: { listing: Listing; className?: string }) {
-  const target = shareOf(l);
-  const { share, copied, swap } = useShare(target);
-  return (
-    <button type="button" className={`btn btn-sun ${className}`} onClick={share} data-share-url={target.url}>
-      <span key={copied ? "copied" : "share"} className={swap}>
-        {copied ? "Enlace copiado" : "Compartir ficha"}
-      </span>
-    </button>
-  );
-}
-
 // ---------- Detalle de una casa ----------
 
 // La ficha editable de una casa publicada va en su propio trozo (spec .scratch/editar-casa); las que nunca se publicaron
@@ -319,29 +183,6 @@ export function ShareButtonInline({ listing: l, className = "grow" }: { listing:
 const EditableFicha = lazy(() => import("./casa-editable").then((m) => ({ default: m.EditableFicha })));
 
 const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
-
-/** La casa que se edita: la propia o, en las rutas del admin, la de otro (client/editor-port.ts). */
-export function useOwnListing(id: string) {
-  const session = useUserId();
-  const port = useEditor();
-  // Sin cuenta, el borrador del teléfono (publicar hasta las fotos): su caché va con un «usuario» propio.
-  const userId = port.local ? LOCAL_USER : session;
-  const client = useQueryClient();
-  const [options] = useState(() => editorListingQuery(port, userId, id, client));
-  return { userId, query: useQuery({ ...options, enabled: !!userId }) };
-}
-
-export function NotFoundCard() {
-  return (
-    <section className="card stack gap-12">
-      <h3>No encontramos esta casa</h3>
-      <p className="small muted">Puede que la haya descartado o que el enlace no sea suyo.</p>
-      <Link to="/propietario/casas" className="btn btn-soft">
-        Ir a Mis casas
-      </Link>
-    </section>
-  );
-}
 
 export function CasaPropietarioScreen() {
   const { id } = detailRoute.useParams();
@@ -445,20 +286,6 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
       ) : null}
       {sheet}
     </>
-  );
-}
-
-/** El WhatsApp de la casa, de solo lectura (se cambia desde Cuenta). */
-export function WhatsAppItem({ listing: l }: { listing: Listing }) {
-  return (
-    <div className="list-item">
-      <span className="muted-icon">
-        <I.phone />
-      </span>
-      <span className="body">
-        WhatsApp de esta casa<small className="num">{formatPhone(l.whatsappPhone)} · verificado</small>
-      </span>
-    </div>
   );
 }
 

@@ -63,6 +63,47 @@ async function expectedLine(s: Seeded, status: ListingStatus) {
 const chip = (page: Page, label: string) => page.getByRole("navigation", { name: "Filtrar casas" }).getByRole("link", { name: new RegExp(`^${label} · \\d+$`) });
 const countOf = async (page: Page, label: string) => Number((await chip(page, label).textContent())!.split(" · ")[1]);
 
+test("hoja privada admin: teclado, fondo, controles deshabilitados y foco de retorno", async ({ page }) => {
+  const title = "Casa Hoja Privada 16";
+  const existing = await serviceClient().from("listings").select("id").eq("title", title).limit(1);
+  if (!existing.data?.length) await h.seed({ status: "active", draft: { title } });
+  await openCasas(page);
+  const sheet = await openSheet(page, title);
+  const opener = page.locator(".house-row").filter({ hasText: title });
+  await expect(sheet).toBeFocused();
+  await expect(sheet).toHaveAttribute("aria-modal", "true");
+  await expect(page.locator("body > section[role=dialog]")).toHaveCount(1);
+  await expect(page.locator("#root")).toHaveJSProperty("inert", true);
+  await page.keyboard.press("Shift+Tab");
+  await expect(sheet.getByRole("button", { name: "Eliminar casa" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(sheet.getByRole("button", { name: "Cerrar" })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(sheet.getByRole("button", { name: "Eliminar casa" })).toBeFocused();
+  if (process.env.PRIVATE_SHEET_CAPTURE_PREFIX) {
+    await page.evaluate(() => document.fonts.ready);
+    await sheet.screenshot({ path: `${process.env.PRIVATE_SHEET_CAPTURE_PREFIX}-admin.png`, animations: "disabled" });
+  }
+  await page.keyboard.press("Enter");
+  await expect(sheet.getByRole("button", { name: "Eliminar casa" })).toBeDisabled();
+  await sheet.getByRole("button", { name: "Cancelar" }).focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(sheet.getByLabel(/Para confirmar, escriba/)).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await expect(page.locator("#root")).toHaveJSProperty("inert", false);
+  await expect(page.locator("html")).not.toHaveClass(/sheet-open/);
+  await opener.click();
+  await page.locator(".sheet-backdrop").click({ position: { x: 8, y: 8 } });
+  await expect(sheet).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(opener).toBeFocused();
+});
+
 test("el admin ve sus casas por estado con su línea de suscripción, filtra por chip y busca por nombre, CT o propietario", async ({ page }) => {
   const tag = `T${Date.now().toString(36)}`;
   // Sin método de pago en las cuentas de prueba (es de la cuenta y decide entre pendiente de pago y plan de pago).

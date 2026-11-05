@@ -23,7 +23,8 @@ import { BathroomChoice, CapacityCounters, DescriptionField, FeatureChips, Price
 import { ChoiceCards } from "../publish/wizard-parts";
 import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
-import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
+import { useOwnListing } from "../editor-query";
+import { NotFoundCard, SkeletonCard } from "../editor-status";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */

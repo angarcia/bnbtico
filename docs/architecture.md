@@ -8,6 +8,8 @@ El navegador es el cliente de Postgres. La app es un shell estático que habla c
 
 ## Piezas
 
+La aplicación y el worker viven en `apps/app`, paquete `app`. La retirada de Next del repositorio (2026-11-04) no renombra ese directorio ni modifica los despliegues vigentes de Vercel. El corte de infraestructura sigue siendo una operación separada.
+
 | Pieza | Qué es | Dónde corre |
 |---|---|---|
 | App | Vite + React 19 + TanStack Router (rutas y parámetros tipados) + TanStack Query (caché persistida en IndexedDB) | Navegador; shell precacheado por un service worker |
@@ -42,7 +44,7 @@ Un módulo TypeScript sin imports de framework: tipos generados de la base (`sup
 
 ## Rendimiento
 
-Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 150 KB gz. Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
+Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 160 KB gz (ampliación autorizada el 2026-11-04). Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
 
 ## Costes y disparadores
 

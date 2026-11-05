@@ -298,6 +298,96 @@ describe("worker · ficha /casa/CT-####", () => {
   });
 });
 
+describe("worker · fichas sin caché en el refactor", () => {
+  function uncached() {
+    const t = setup({ LISTING_CACHE: "no-store" });
+    const match = vi.spyOn(t.cache, "match");
+    const put = vi.spyOn(t.cache, "put");
+    return { ...t, match, put };
+  }
+
+  it("ignora una copia previa y consulta de nuevo en cada visita, sin leer ni escribir Cache API", async () => {
+    const t = uncached();
+    const casa = await t.h.seed({ status: "active" });
+    t.cache.store.set(`${ORIGIN}/casa/${casa.publicId}?__v=v1`, new Response("copia vieja"));
+    for (const suffix of ["", "?utm_source=whatsapp"]) {
+      const res = await t.request(`/casa/${casa.publicId}${suffix}`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("cache-control")).toBe("no-store");
+      expect(ssrData(await res.text()).listing.publicId).toBe(casa.publicId);
+    }
+    expect(t.spy.getPublic).toHaveBeenCalledTimes(2);
+    expect(t.spy.getPublicDays).toHaveBeenCalledTimes(2);
+    expect(t.match).not.toHaveBeenCalled();
+    expect(t.put).not.toHaveBeenCalled();
+  });
+
+  it.each(["inexistente", "id inválido", "borrador", "bloqueada"] as const)("%s: conserva el estado HTTP pero emite no-store", async (kind) => {
+    const t = uncached();
+    const path = kind === "inexistente" ? "/casa/CT-999999" : kind === "id inválido" ? "/casa/no-es-un-id"
+      : `/casa/${(await t.h.seed({ status: kind === "borrador" ? "draft" : "rejected" })).publicId}`;
+    const res = await t.request(path);
+    expect(res.status).toBe(kind === "bloqueada" ? 410 : 404);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(ssrData(await res.text()).page).toBe(kind === "bloqueada" ? "blocked" : "missing");
+    expect(t.match).not.toHaveBeenCalled();
+    expect(t.put).not.toHaveBeenCalled();
+  });
+
+  it.each(["getPublic", "getPublicDays", "fxRate"] as const)("%s falla: conserva el fallback sin caché", async (method) => {
+    const t = uncached();
+    const casa = await t.h.seed({ status: "active" });
+    vi.spyOn(t.h.anon, method).mockRejectedValueOnce(new Error("caída"));
+    const res = await t.request(`/casa/${casa.publicId}`);
+    expect(res.status).toBe(method === "getPublic" ? 503 : 200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    const data = ssrData(await res.text());
+    expect(data.page).toBe(method === "getPublic" ? "error" : "listing");
+    if (method === "getPublicDays") expect(data.days).toBeNull();
+    if (method === "fxRate") expect(data.fx.source).toBe("constante");
+    expect(t.match).not.toHaveBeenCalled();
+    expect(t.put).not.toHaveBeenCalled();
+  });
+
+  it("la redirección al id canónico tampoco se guarda", async () => {
+    const t = uncached();
+    const res = await t.request("/casa/ct-1000");
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe("/casa/CT-1000");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(t.match).not.toHaveBeenCalled();
+    expect(t.put).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, "", "default"])("sin la opción explícita (%s), conserva caché larga y estados de 60 s", async (mode) => {
+    const t = setup({ LISTING_CACHE: mode });
+    const casa = await t.h.seed({ status: "active" });
+    for (let i = 0; i < 2; i++) {
+      const res = await t.request(`/casa/${casa.publicId}`);
+      expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=86400, stale-while-revalidate=604800");
+    }
+    expect(t.spy.getPublic).toHaveBeenCalledTimes(1);
+    const blocked = await t.h.seed({ status: "rejected" });
+    for (const id of ["CT-999999", "no-es-un-id", blocked.publicId]) {
+      expect((await t.request(`/casa/${id}`)).headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+    }
+  });
+
+  it("no cambia las respuestas de assets, shell, sitemap ni portada", async () => {
+    const assets = vi.fn(async () => new Response(SHELL, { headers: { "cache-control": "public, max-age=31536000, immutable" } }));
+    const t = setup({ LISTING_CACHE: "no-store", ASSETS: { fetch: assets } });
+    for (const path of ["/assets/app.js", "/sw.js", "/explorar"]) {
+      const res = await t.request(path);
+      expect(res.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+      expect(await res.text()).toBe(SHELL);
+    }
+    expect(assets).toHaveBeenCalledTimes(3);
+    expect((await t.request("/sitemap.xml")).headers.get("cache-control")).toBe("public, max-age=3600, s-maxage=3600");
+    expect((await t.request("/?pronto=1")).headers.get("cache-control")).toBe("public, max-age=300, s-maxage=3600");
+    expect(await (await t.request("/robots.txt")).text()).toBe("User-agent: *\nDisallow: /\n");
+  });
+});
+
 describe("worker · enlaces que no se muestran", () => {
   it("una casa que no existe responde 404 con su página y sin indexar", async () => {
     const t = setup();

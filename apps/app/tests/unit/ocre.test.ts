@@ -8,16 +8,16 @@ const SRC = new URL("../../src/", import.meta.url).pathname;
 const OCRE = /\b(btn|card|note|tile|badge|list-item)-sun\b/g;
 // archivo (relativo a src/) + "#" + la `function Nombre` más cercana declarada antes de la coincidencia; "#*" = todo el archivo.
 const ALLOW = new Set([
-  "client/screens/propietario.tsx#PayButton",
-  "client/screens/propietario.tsx#PayNotice",
+  "client/owner-ui.tsx#PayButton",
+  "client/owner-ui.tsx#PayNotice",
   "client/screens/casa-editable.tsx#PaymentDueNote",
-  "client/screens/propietario.tsx#ActivateButton",
+  "client/owner-ui.tsx#ActivateButton",
   "client/screens/propietario.tsx#CasasScreen", // casilla «por pagar»
   "client/screens/casa-editable.tsx#StoppedNotice", // «Suscripción parada» en la ficha editable
   "client/screens/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
   "shared/contact-sheet.tsx#*", // «no pague por adelantado»
   "client/publish-promo.tsx#*", // la oferta de lanzamiento: publicar gratis (revisión UX 2026-10-29, A8)
-  "client/screens/propietario.tsx#ShareButtonInline", // «Compartir ficha»: publicidad de bnbtico (Ana, 2026-11-04)
+  "client/owner-ui.tsx#ShareButtonInline", // «Compartir ficha»: publicidad de bnbtico (Ana, 2026-11-04)
 ]);
 
 function files(dir: string): string[] {

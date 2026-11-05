@@ -16,6 +16,7 @@ import { registerBilling, type BillingDeps, type PaymentsEnv } from "./billing";
 
 export type Env = ReminderEnv & {
   ENVIRONMENT: Environment;
+  LISTING_CACHE?: string;
   /** Solo producción: "true" abre la app entera; cualquier otro valor (o nada) sirve solo la portada. */
   LAUNCHED?: string;
   SUPABASE_URL: string;
@@ -167,14 +168,17 @@ export function createApp(deps: Deps) {
   });
 
   app.get("/casa/:publicId", async (c) => {
+    const cacheEnabled = c.env.LISTING_CACHE !== "no-store";
+    const statusCache = cacheEnabled ? STATUS_CACHE : "no-store";
+    if (!cacheEnabled) c.header("cache-control", "no-store");
     const raw = c.req.param("publicId");
     const publicId = parsePublicId(raw);
-    if (!publicId) return page(c, { page: "missing" }, 404, STATUS_CACHE);
+    if (!publicId) return page(c, { page: "missing" }, 404, statusCache);
     if (publicId !== raw) return c.redirect(publicPath(publicId), 301);
 
     const origin = new URL(c.req.url).origin;
     const key = cacheKey(origin, publicId, c.env);
-    const cache = deps.cache();
+    const cache = cacheEnabled ? deps.cache() : null;
     const hit = await cache?.match(key);
     if (hit) return hit;
 
@@ -186,14 +190,14 @@ export function createApp(deps: Deps) {
       const [listing, days, fx] = await Promise.all([api.getPublic(publicId), api.getPublicDays(publicId).catch(() => null), api.fxRate().catch(() => null)]);
       if (!listing) {
         const state = await api.linkState(publicId);
-        if (state !== "blocked") return page(c, { page: "missing" }, 404, STATUS_CACHE);
+        if (state !== "blocked") return page(c, { page: "missing" }, 404, statusCache);
         // El motivo solo en este camino (la ficha activa no da ninguna vuelta más). Si falla (una base sin la migración de la
         // fase 5, un error pasajero), el 410 genérico de siempre, nunca un error.
         const reason = (await api.blockedReason(publicId).catch(() => null)) ?? "other";
-        return page(c, { page: "blocked", reason }, 410, STATUS_CACHE);
+        return page(c, { page: "blocked", reason }, 410, statusCache);
       }
       const complete = days !== null && fx !== null;
-      const res = await page(c, { page: "listing", listing, days, fx: fx ?? FX_INITIAL, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, complete ? LISTING_CACHE : "no-store");
+      const res = await page(c, { page: "listing", listing, days, fx: fx ?? FX_INITIAL, base: shareBase(c.env.ENVIRONMENT, origin) }, 200, cacheEnabled && complete ? LISTING_CACHE : "no-store");
       if (cache && complete) await later(c, cache.put(key, res.clone()));
       return res;
     } catch (error) {

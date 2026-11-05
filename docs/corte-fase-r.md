@@ -2,9 +2,11 @@
 
 Fecha de redacción: 2026-10-23 (ticket 13, parte preparada). **No se ejecuta hasta que Daniel apruebe `docs/pruebas-manuales-fase-r.md`.** Lo hace Daniel (o un agente con su permiso explícito para cada paso que toca Cloudflare, Supabase alojado, GitHub o Vercel). Pasos en orden; cada uno dice cómo volver atrás.
 
-**Hoy (antes del corte):** Vercel sirve `bnbtico.com` (portada, rama `main`) y `pruebas.bnbtico.com` (app vieja con `PREVIEW_PASSWORD`, rama `develop`) desde `apps/web`. Los registros `@` (A `76.76.21.21`) y `pruebas` (CNAME `cname.vercel-dns.com`), y `www` si existe, están en la zona `bnbtico.com` de Cloudflare en modo **DNS only** (guía del ticket 01, parte C). La app nueva (`apps/app`) se despliega desde `develop` al worker `bnbtico-pruebas` en `nueva.bnbtico.com`, detrás de Cloudflare Access.
+**Actualización 2026-11-04:** el ticket 09 retira solo el paquete Next versionado. Daniel confirmó que Vercel tiene los builds desactivados. Se conservan `apps/app` y el nombre `app`; no hay renombrado. Ningún paso de DNS, Access, Vault, migraciones, publicación o eliminación del proyecto Vercel queda autorizado por esta retirada.
 
-**Después del corte:** `pruebas.bnbtico.com` = worker `bnbtico-pruebas` (Access); `bnbtico.com` = worker `bnbtico-production` sirviendo **solo la portada** hasta el lanzamiento; `nueva.bnbtico.com` desaparece; `apps/app` se llama `apps/web`; el proyecto de Vercel se borra una semana después.
+**Antes del corte:** Vercel conserva los despliegues de `bnbtico.com` (portada) y `pruebas.bnbtico.com` (app vieja con `PREVIEW_PASSWORD`), construidos desde el antiguo `apps/web`. Los registros `@` (A `76.76.21.21`) y `pruebas` (CNAME `cname.vercel-dns.com`), y `www` si existe, están en la zona `bnbtico.com` de Cloudflare en modo **DNS only** (guía del ticket 01, parte C). La aplicación activa (`apps/app`) se despliega desde `develop` al worker `bnbtico-pruebas` en `nueva.bnbtico.com`, detrás de Cloudflare Access. Cambiar la portada en el repositorio no actualiza la que sirve Vercel.
+
+**Después del corte autorizado:** `pruebas.bnbtico.com` = worker `bnbtico-pruebas` (Access); `bnbtico.com` = worker `bnbtico-production` sirviendo **solo la portada** hasta el lanzamiento; `nueva.bnbtico.com` desaparece. `apps/app` conserva su ruta y nombre. La eventual eliminación del proyecto Vercel exige permiso separado y las comprobaciones del paso 11.
 
 ## Qué está preparado ya (2026-10-23)
 
@@ -27,7 +29,7 @@ Fecha de redacción: 2026-10-23 (ticket 13, parte preparada). **No se ejecuta ha
 
 ## 1. Vercel deja de construir (reversible)
 
-Antes de empujar nada que renombre carpetas, para que Vercel no intente construir la app nueva con Next:
+Daniel confirmó este paso antes de autorizar la retirada de Next. No reactivar los builds con una rama que ya no contiene el paquete antiguo:
 
 - Vercel → proyecto `bnbtico` → Settings → Git → **Ignored Build Step** → «Don't build anything» (o el comando `exit 0`). Los despliegues actuales siguen sirviendo.
 - **Volver atrás:** quitar el Ignored Build Step.
@@ -62,7 +64,7 @@ Un dominio personalizado de Workers no se crea si ya existe un registro DNS con 
 
 El worker de producción se despliega al empujar a `main` (paso 9). Orden recomendado: primero el paso 9 hasta tener `bnbtico-production` desplegado sin rutas, después este paso.
 
-1. En `wrangler.jsonc` (en `apps/app`, o en `apps/web` si ya se hizo el paso 7), entorno `production`: `"routes": [{ "pattern": "bnbtico.com", "custom_domain": true }]` (y `www.bnbtico.com` si se decide servirlo con el worker; ver decisiones). Commit en `develop`.
+1. En `apps/app/wrangler.jsonc`, entorno `production`: `"routes": [{ "pattern": "bnbtico.com", "custom_domain": true }]` (y `www.bnbtico.com` si se decide servirlo con el worker; ver decisiones). Commit en `develop`.
 2. Cloudflare → DNS: borrar el A `@` → `76.76.21.21` (y el CNAME `www` si va al worker). **No tocar MX ni TXT** (correo, Search Console).
 3. Merge a `main` y push: el despliegue crea el dominio personalizado.
 4. Comprobar: `curl -I https://bnbtico.com/` → 200 `text/html`; la portada en el teléfono; `https://bnbtico.com/explorar` y `/casa/CT-1015` → 404 con la portada; `robots.txt` → `Allow: /` con el sitemap; `sitemap.xml` con solo `https://bnbtico.com/`; el depurador de compartir de Facebook o WhatsApp muestra `og.jpg`; Search Console sigue verificado (si la verificación era por TXT, no cambia nada).
@@ -77,28 +79,25 @@ Cuando `pruebas.bnbtico.com` lleve al menos un día funcionando:
 3. Si quedan instalaciones de la PWA de `nueva` en teléfonos de prueba, desinstalarlas (otro origen: no migran solas).
 - **Volver atrás:** volver a añadir la ruta y desplegar; recrear la aplicación de Access.
 
-## 7. Borrar la app vieja y renombrar `apps/app` → `apps/web`
+## 7. Retirada del paquete antiguo, sin renombrado (ticket 09)
 
-Un solo commit en `develop`, con todo en verde antes de confirmar. Vercel ya no construye (paso 1).
+La retirada del árbol versionado es independiente del corte de infraestructura. La especificación del refactor sustituye el antiguo paso de renombrado.
 
-1. `git rm -r apps/web && git mv apps/app apps/web`.
-2. `apps/web/package.json`: `"name": "web"`; script `db:types` → `... > apps/web/src/domain/database.types.ts`.
-3. `package.json` raíz: `dev`, `build`, `typecheck`, `test`, `test:e2e` siguen con `--filter web` (ahora la app nueva); añadir `test:db`, `size`, `lighthouse` con `--filter web`; quitar `start` y `lint` (eran de Next) y todos los `*:app`.
-4. `pnpm install` para regenerar `pnpm-lock.yaml` (el importador `apps/app` pasa a `apps/web`; desaparecen las dependencias de Next).
-5. `.claude/launch.json`: una sola configuración `web` con `pnpm --filter web dev --port 5173 --strictPort --host 127.0.0.1`.
-6. `.github/workflows/app.yml`: `working-directory: apps/web`, `workingDirectory: apps/web` en las dos `wrangler-action`, `apps/web/lighthouse-results/` en el artefacto y en `hashFiles`, el mensaje `pnpm --filter web db:types`. Renombrar el archivo a `web.yml` es opcional (cambia el nombre del check en GitHub; actualizar la protección de rama si la hay).
-7. `.gitignore`: quitar la línea `apps/web/AGENTS.md` y su comentario (lo generaba Next); `.next/` puede irse también.
-8. Sin cambios por la ruta: `playwright.config.ts`, `playwright.lighthouse.config.ts`, `vitest.config.ts`, `.size-limit.json`, `tsconfig*.json`, `scripts/dev-vars.mjs` y las pruebas usan rutas relativas al paquete (las de `design/pantallas/fotos/` conservan la profundidad).
-9. Documentos: `CLAUDE.md` (quitar las notas de Next/Vercel/`PREVIEW_PASSWORD`/proveedor demo/`.note[role="alert"]`/`apps/web/AGENTS.md`; `apps/app` → `apps/web`; `.claude/launch.json` y Playwright de la app nueva), `README.md` (estructura y desarrollo con Vite), `docs/plan-implementacion.md` (fase R hecha), `docs/configuracion-supabase.md` (quitar la sección de Vercel), `docs/pruebas-manuales-fase-2.md` (marcar como histórico o cambiar las URL a `pruebas.bnbtico.com` de la app nueva), `docs/architecture.md`, `.env.example` (variables de Next → `.dev.vars`/`VITE_*`). `git grep -n "apps/app\|PREVIEW_PASSWORD\|proxy.ts\|Vercel"` fuera de `docs/historico/` y `.scratch/` debe quedar vacío o solo con menciones históricas.
-10. Comprobar: `pnpm typecheck && pnpm test && pnpm test:db && pnpm dev:vars && pnpm build && pnpm size && pnpm test:e2e && pnpm lighthouse` desde `apps/web`, y `pnpm test:prototype` desde la raíz.
-- **Volver atrás:** `git revert` del commit (la app vieja vuelve al árbol; Vercel puede volver a construir quitando el Ignored Build Step).
+1. Revisar el inventario de los 144 archivos versionados de `apps/web` y preservar la cobertura vigente antes de retirarlos.
+2. Retirar solo esos archivos. Conservar directorios, `.env.local`, secretos y cualquier archivo no versionado. No sustituir assets de `apps/app`.
+3. Conservar `apps/app`, su paquete `app`, sus rutas de pruebas y las referencias de CI. Los comandos raíz apuntan a `--filter app`; se mantienen los alias `*:app`. Se retiran `start` y `lint`, exclusivos de Next.
+4. Regenerar el lockfile sin actualizar versiones compartidas ni permitir scripts antes bloqueados. El workspace solo incluye `apps/app`.
+5. Conservar únicamente la configuración `app` existente en `.claude/launch.json`. No añadir configuración.
+6. Verificar tipos, unitarias, base, build, tamaño, E2E, Lighthouse y prototipo, con las reservas de recursos necesarias. Registrar lo que quede pendiente; no darlo por aprobado.
+
+**Volver atrás:** revertir el cambio aislado recupera el paquete versionado, pero no cambia Vercel ni DNS. No activar builds de Vercel como parte de esa reversión sin permiso separado.
 
 ## 8. Fotos solo por RPC (migración pendiente del ticket 08)
 
 Cuando la app vieja ya no sirve a nadie (tras el paso 3):
 
 1. Desde la raíz: `pnpm exec supabase migration new corte_fotos_solo_rpc < /dev/null`, copiar encima `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, borrar la carpeta `supabase/migrations-pendientes/`.
-2. `pnpm exec supabase migration up --local` y `pnpm --filter web db:types` (no deberían cambiar los tipos).
+2. `pnpm exec supabase migration up --local` y `pnpm --filter app db:types` (no deberían cambiar los tipos).
 3. Ajustar `tests/db/cliente-directo-fotos.test.ts`:
    - «máximo 15 fotos, también con un insert directo»: el insert directo ahora falla por privilegios (`permission denied for table listing_photos`, código `42501`); el tope de 15 por RPC no cambia.
    - «solo nombres conocidos…»: `<casa>/<uuid>.jpg` (foto única de la app vieja) pasa a ser rechazado por Storage; solo `<casa>/<uuid>/{480,800,1600}.jpg`.

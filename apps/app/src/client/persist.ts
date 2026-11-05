@@ -1,7 +1,7 @@
 // Caché de Query en IndexedDB: una pantalla visitada se pinta sin red al volver a abrir la app.
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { Query } from "@tanstack/react-query";
-import { PRIVATE_KEYS } from "./account";
+import { PERSISTED_PRIVATE_KEYS } from "./query-policy";
 import { sessionState } from "./session";
 
 const DB = "bnbtico";
@@ -11,7 +11,7 @@ const PUBLIC_KEYS = new Set(["listings", "provinces", "listing", "listing-days",
 
 function persisted(q: Query): boolean {
   const key = String(q.queryKey[0]);
-  return PUBLIC_KEYS.has(key) || (PRIVATE_KEYS.has(key) && sessionState().status === "signed-in");
+  return PUBLIC_KEYS.has(key) || (PERSISTED_PRIVATE_KEYS.has(key) && sessionState().status === "signed-in");
 }
 export const PERSIST_MAX_AGE = 24 * 60 * 60_000;
 

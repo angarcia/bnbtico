@@ -1,0 +1,114 @@
+import { spawnSync } from "node:child_process";
+import { appendFileSync, closeSync, copyFileSync, cpSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { constants } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { initializeRun, sanitizeRun } from "./sanitize-playwright-artifacts.mjs";
+
+const ci = fileURLToPath(new URL("./ci-e2e.mjs", import.meta.url));
+const ensure = (condition) => {
+  if (!condition) throw new Error("Diagnóstico no publicable.");
+};
+const environment = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
+  !name.startsWith("PLAYWRIGHT_") && !name.startsWith("PW_") && name !== "PWDEBUG" &&
+  !["GITHUB_STEP_SUMMARY", "GITHUB_OUTPUT", "GITHUB_ENV", "GITHUB_PATH", "GITHUB_STATE"].includes(name)));
+
+function command(executable, args, log, env = environment, stdout = log) {
+  const out = openSync(stdout, "a", 0o600);
+  const err = stdout === log ? out : openSync(log, "a", 0o600);
+  try {
+    const result = spawnSync(executable, args, { env, stdio: ["ignore", out, err] });
+    return result.status ?? (result.signal ? 128 + constants.signals[result.signal] : 1);
+  } finally {
+    closeSync(out);
+    if (err !== out) closeSync(err);
+  }
+}
+
+async function publish(root, code, gateCode = 0) {
+  await sanitizeRun({ root, input: "render", output: "publish" });
+  const output = join(root, "publish");
+  const summary = join(output, "summary.md");
+  if (process.env.GITHUB_STEP_SUMMARY && existsSync(summary)) appendFileSync(process.env.GITHUB_STEP_SUMMARY, readFileSync(summary));
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,
+    `publish=${output}\ne2e_rc=${code}\ngate_rc=${gateCode}\nsafe_to_upload=true\n`);
+  return code || gateCode;
+}
+
+async function e2e(root, current, total) {
+  ensure(["2", "3"].includes(total) && /^[1-3]$/.test(current) && Number(current) <= Number(total));
+  const raw = join(root, "raw");
+  const render = join(root, "render");
+  const env = {
+    ...environment,
+    PW_ARTIFACT_ROOT: root,
+    CI_SHARD_CURRENT: current,
+    CI_SHARD_TOTAL: total,
+    PLAYWRIGHT_BLOB_OUTPUT_DIR: join(raw, "blob"),
+  };
+  const shard = `--shard=${current}/${total}`;
+  const manifest = join(raw, "expected-shard.json");
+  const listCode = command("pnpm", ["exec", "playwright", "test", "--list", "--reporter=json", shard, "--workers=1"],
+    join(raw, "discovery.log"), env, manifest);
+  ensure(listCode === 0);
+  const code = command("pnpm", ["exec", "playwright", "test", "--reporter=blob,json", `--output=${join(raw, "results")}`, shard, "--workers=1"],
+    join(raw, "runner.log"), env, join(raw, "runner.json"));
+  writeFileSync(join(raw, "e2e-exit.txt"), `${code}\n`, { mode: 0o600 });
+  await sanitizeRun({ root, output: "clean" });
+  const clean = join(root, "clean");
+  const renderCode = command("pnpm", ["exec", "playwright", "merge-reports", "--reporter=json", join(clean, "blob")],
+    join(render, "renderer.log"), {
+      ...environment, PLAYWRIGHT_JSON_OUTPUT_FILE: join(render, "e2e.json"),
+    });
+  ensure(renderCode === 0);
+  for (const file of ["runner.json", "runner.log", "discovery.log", "e2e-exit.txt", "expected-shard.json"]) copyFileSync(join(clean, file), join(render, file));
+  const normalized = join(render, "e2e-normalized.json");
+  const normalizeCode = command(process.execPath, [ci, "normalize", join(render, "e2e.json"), join(clean, "expected-shard.json"), normalized],
+    join(render, "normalizer.log"));
+  ensure(normalizeCode === 0 && existsSync(normalized));
+  JSON.parse(readFileSync(normalized, "utf8"));
+  mkdirSync(join(render, "test-results"), { mode: 0o700 });
+  copyFileSync(normalized, join(render, "test-results", "e2e.json"));
+  const gateCode = command(process.execPath, [ci, "gate", normalized, join(clean, "expected-shard.json")],
+    join(render, "gate.log"));
+  writeFileSync(join(render, "gate-exit.txt"), `${gateCode}\n`, { mode: 0o600 });
+  return publish(root, code, gateCode);
+}
+
+async function bundle(mode, root, args) {
+  const raw = join(root, "raw");
+  let code = 0;
+  if (mode === "inventory") {
+    code = command(process.execPath, [ci, "inventory", raw], join(raw, "runner.log"));
+    ensure(code === 0 && existsSync(join(raw, "inventory.json")));
+  } else if (mode === "preparation") {
+    copyFileSync(args[0], join(raw, "e2e-preparation.tsv"));
+    if (args[1]) copyFileSync(args[1], join(raw, "preparation.log"));
+  } else if (mode === "report") {
+    code = command(process.execPath, [ci, "report", ...args, raw], join(raw, "runner.log"));
+    ensure(existsSync(join(raw, "summary.json")) && existsSync(join(raw, "summary.md")));
+    JSON.parse(readFileSync(join(raw, "summary.json"), "utf8"));
+  } else if (mode === "lighthouse") {
+    code = command("pnpm", ["lighthouse"], join(raw, "runner.log"));
+    ensure(existsSync("lighthouse-results"));
+    cpSync("lighthouse-results", join(raw, "lighthouse"), { recursive: true, dereference: false });
+  } else {
+    throw new Error("Comando desconocido.");
+  }
+  writeFileSync(join(raw, "command-exit.txt"), `${code}\n`, { mode: 0o600 });
+  await sanitizeRun({ root, output: "clean" });
+  for (const name of readdirSync(join(root, "clean"))) {
+    if (name !== "sanitization.json") cpSync(join(root, "clean", name), join(root, "render", name), { recursive: true, dereference: false });
+  }
+  return publish(root, code);
+}
+
+const [mode, root, ...args] = process.argv.slice(2);
+try {
+  process.umask(0o077);
+  await initializeRun(root);
+  process.exitCode = mode === "e2e" ? await e2e(root, ...args) : await bundle(mode, root, args);
+} catch {
+  console.error("Diagnóstico no publicable; no se autoriza la subida.");
+  process.exitCode = 1;
+}

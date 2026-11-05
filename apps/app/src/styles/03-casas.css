@@ -1,0 +1,153 @@
+
+/* ---------- Fotos y tarjetas de casa ---------- */
+.photo{position:relative;background:var(--state-soft);overflow:hidden;display:grid;place-items:center;color:var(--state-ink)}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb{width:92px;height:92px;border-radius:var(--r-thumb);object-fit:cover;flex-shrink:0;background:var(--state-soft)}
+.return-card{align-items:center}
+.return-thumb{width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--state-soft)}
+.return-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* Ronda de Ana 2026-10-30: cada casa en su tarjeta (como Airbnb, con nuestras esquinas pequeñas): superficie y sombra de `.card`,
+   foto a sangre arriba (la tarjeta recorta con su radio) y el texto con relleno. */
+.listing-card{display:flex;flex-direction:column;gap:0;text-decoration:none;color:inherit;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:0}
+.listing-card .sk-line{margin:12px 14px 14px}
+.listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
+.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
+/* Fotos deslizables (ticket 09 de la ronda del 2 nov): la tira llena la caja de la foto; cada foto, en su casilla (el fondo de
+   `.photo` mientras no está montada o no ha llegado). Sin barra de desplazamiento; el gesto no arrastra la página de lado. */
+.card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
+.card-strip::-webkit-scrollbar{display:none}
+/* iPhone (Safari y la app instalada; en Chrome sí iba): el dedo no pasaba las fotos de la tarjeta y sí las de la ficha. Safari
+   deja arrastrar los enlaces (Chrome no) y la tira va dentro del de la tarjeta: ni el enlace ni sus fotos se arrastran. La tarjeta con tira no se encoge al tocarla
+   (el `transform` que aplica `:active` en el mismo toque le quita el gesto de lado a la tira), la tira declara que se desplaza
+   en los dos ejes (Daniel, 2026-11-04). */
+.listing-card:has(.card-strip):active{transform:none}
+.card-strip{touch-action:pan-x pan-y;-webkit-touch-callout:none}
+.listing-card:has(.card-strip),.card-strip img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+.card-slide{position:relative;flex:0 0 100%;scroll-snap-align:start}
+/* Botón de WhatsApp: redondo y claro (el fondo de las tarjetas, borde fino, sin sombra) con el icono en verde WhatsApp
+   oscurecido (--wa-icon, ≥ 3:1: el #25D366 de marca no llega sobre blanco), abajo a la derecha de la parte de texto, fuera
+   del enlace; el texto le deja su sitio (Daniel, 2026-11-04). */
+.listing-cell:has(.card-wa) .listing-card-text{padding-right:70px}
+.card-wa{position:absolute;right:14px;bottom:14px;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;padding:0;display:grid;place-items:center;background:var(--surface);color:var(--wa-icon);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ease-out)}
+.card-wa:active{transform:scale(0.92)}
+.card-price{margin-top:3px}
+.card-price b{font-weight:var(--w-strong)}
+/* «≈ ₡180 000 por 4 noches»: si no cabe en una línea (tarjeta del mapa), baja entero «por 4 noches», no solo «noches». */
+.card-price b,.card-price .muted{white-space:nowrap}
+.listing-grid{display:grid;grid-template-columns:1fr;gap:32px}
+/* Puntitos de las fotos (2026-11-03, en lugar del «1 / N»; tarjeta y ficha): abajo en el centro; la foto actual, blanca llena. */
+.photo-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;align-items:center;gap:6px;pointer-events:none}
+.photo-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 0 2px rgba(0,0,0,.35);transition:background-color 160ms ease,transform 160ms var(--ease-out)}
+.photo-dots i.on{background:#FFFFFF}
+.photo-dots i.small{transform:scale(.7)}
+/* En el teléfono, cada casa de borde a borde, con la foto 3:2 y sus esquinas redondeadas; menos aire entre casas (2026-11-03). */
+@media (max-width:899px){
+  .listing-grid{gap:16px}
+  .listing-grid > .listing-cell,.listing-grid.skeleton > .listing-card{margin-inline:calc(-1 * var(--gutter))}
+  .listing-card .photo{aspect-ratio:3/2}
+  /* «Mis casas», la misma forma (sin fotos deslizables ni WhatsApp): de borde a borde, foto 3:2 y esquinas redondeadas. */
+  .house-list{gap:16px}
+  .house-list > .house-card{margin-inline:calc(-1 * var(--gutter))}
+  .house-list .house-photo{aspect-ratio:3/2}
+}
+.listing-cell{position:relative;min-width:0}
+.pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.pills-tl .pill{position:static}
+/* Corazón de favoritos (fase 3): blanco con sombra sobre la foto, crema en la ficha, terracota cuando está guardada. */
+.heart{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;padding:0;background:transparent;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:transform 160ms var(--ease-out)}
+.heart:active{transform:scale(0.9)}
+.heart[aria-pressed="true"] svg{fill:var(--brand);stroke:var(--brand)}
+.heart-card{position:absolute;right:8px;top:8px;color:#FFFFFF}
+.heart-card svg{filter:drop-shadow(0 1px 2px rgba(28,43,42,.45))}
+.heart-card[aria-pressed="true"] svg{filter:none}
+.heart-hero{border-radius:8px;background:var(--overlay-btn)}
+/* Enlace estirado: el del título cubre toda la tarjeta (Mis casas); los botones van por encima. */
+.stretched{color:inherit;text-decoration:none}
+.stretched::after{content:"";position:absolute;inset:0;border-radius:var(--r)}
+.fav-empty{align-items:flex-start;gap:14px}
+/* «₡ | $» de Favoritos, junto a la cuenta: el toque de 44 px que tenía en la barra de arriba (quitada el 2026-11-03). */
+.fav-head .currency-switch button{min-height:44px}
+.note-col{flex-direction:column;gap:8px}
+.note-col b{font-family:var(--display);font-weight:var(--w-medium)}
+/* Nota informativa en blanco con borde, como las tarjetas de características: sin verde (Favoritos; Daniel, 2026-10-29).
+   Las tarjetas y recuadros blancos fijos de la página van en `--surface-soft` (blanco al 70 %); los campos, las hojas
+   y lo que flota sobre mapas o fotos siguen en blanco opaco. */
+.note-plain{background:var(--surface-soft);color:var(--fg)}
+.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:var(--chrome-bottom);z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--float-r);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
+/* La foto de la ficha es 5:4 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch);
+   solo los botones se apartan del área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
+.hero{position:relative;aspect-ratio:5/4;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
+.hero .top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between}
+.hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.hero .strip::-webkit-scrollbar{display:none}
+.hero .strip img,.hero .strip .slot{flex:0 0 100%;height:100%;object-fit:cover;scroll-snap-align:start}
+.feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.feature-tiles div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--r-tile);background:var(--surface-soft);box-shadow:var(--shadow);font-size:14px;font-weight:var(--w-medium);text-align:center}
+.feature-tiles svg{color:var(--primary)}
+/* «Alquiler mensual»: dos columnas, la primera de la rejilla, con el precio debajo, en un renglón aparte y más pequeño. */
+.feature-tiles .tile-wide{grid-column:span 2}
+.feature-tiles .tile-wide small{margin-top:-4px;font-size:13px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.photos-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.photos-grid .photo{min-height:108px;border-radius:var(--r-input)}
+.photos-grid .photo.cover{grid-column:span 2;grid-row:span 2;min-height:224px;border-radius:var(--r-tile)}
+.photos-grid .add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:108px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface-soft);color:var(--primary);font-size:14px;font-weight:var(--w-medium);cursor:pointer}
+.photos-grid .remove{position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:8px;background:var(--overlay-btn);color:var(--fg);display:inline-flex;align-items:center;justify-content:center}
+.photos-grid .tag{position:absolute;left:10px;top:10px;padding:5px 10px;border-radius:6px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:var(--w-medium)}
+.photo-strip{display:flex;gap:8px;overflow-x:auto;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);scrollbar-width:none}
+.photo-strip::-webkit-scrollbar{display:none}
+.photo-strip .photo{flex:0 0 auto;height:140px;border-radius:var(--r-tile)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:var(--w-medium);font-size:22px;flex-shrink:0}
+.avatar-sm{width:40px;height:40px;font-size:16px}
+.map-box{height:220px;border-radius:var(--r-tile);overflow:hidden;background:#E9EFE4;position:relative}
+.leaflet-container{font:inherit}
+.pin-icon span{display:block;width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--brand-ink);border:3px solid #FFFBF2;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.steps-list{display:flex;flex-direction:column;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;text-align:left}
+.steps-list > div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line-soft);font-size:16px}
+.steps-list > div:last-child{border-bottom:0}
+.steps-list .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:var(--w-medium);font-size:15px;flex-shrink:0}
+.steps-list .n.done{background:var(--primary);color:var(--primary-on)}
+
+/* ---------- Portada «Muy pronto» ---------- */
+.soon{position:relative;min-height:100dvh;display:grid;place-items:end center;padding:24px 20px calc(44px + env(safe-area-inset-bottom));overflow:hidden;color:#FFFBF2;background:#1C2B2A}
+.soon-bg{position:absolute;inset:0;z-index:0}
+.soon-bg img{object-fit:cover;object-position:74% 50%}
+.soon-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(28,43,42,.10) 0%,rgba(28,43,42,.22) 40%,rgba(28,43,42,.70) 72%,rgba(28,43,42,.92) 100%)}
+.soon-card{position:relative;z-index:1;max-width:420px;width:100%;text-align:center;display:grid;gap:14px;justify-items:center}
+.soon-eyebrow{display:inline-flex;align-items:center;padding:6px 12px;border-radius:6px;background:var(--sun-soft);color:var(--sun-ink);font-size:14px;font-weight:var(--w-medium);letter-spacing:.04em;text-transform:uppercase}
+.soon-title{color:#FFFBF2;font-size:30px;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.soon-text{color:rgba(255,251,242,.92);font-size:18px;line-height:1.45;text-wrap:balance;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.soon-place{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,251,242,.7)}
+.soon-logo{width:210px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.soon-more{max-width:560px;margin:0 auto;padding:36px 20px calc(40px + env(safe-area-inset-bottom));display:grid;gap:14px}
+.soon-more h2{font-size:24px;margin-top:8px}
+.soon-more p{line-height:1.55}
+@media (min-width:760px){.soon{place-items:center}.soon-shade{background:linear-gradient(180deg,rgba(28,43,42,.25),rgba(28,43,42,.55))}.soon-title{font-size:40px}}
+
+/* ---------- Ficha pública (pantalla 03, renderizada en el worker) ---------- */
+.gap-4{gap:4px}.gap-6{gap:6px}.gap-8{gap:8px}.wrap{flex-wrap:wrap}.baseline{align-items:baseline}
+.listing-view{padding-top:0}
+.listing-body{gap:16px;padding-top:4px}
+/* 28 px como la maqueta v2 (06-ficha): con el tamaño anterior, 30 px, un nombre de ~19 letras pasaba a dos líneas a 320 px
+   con el render de fuentes de Linux (avances ~4 % más anchos) y la zona quedaba bajo la barra fija. */
+.listing-title{font-size:28px}
+.listing-title.is-long{font-size:24px}
+.listing-description{font-size:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Párrafos separados por una línea; larga, 8 líneas con la última difuminada y «Ver más» (como en Airbnb). */
+.listing-description p+p{margin-top:1.45em}
+.listing-description.is-clamped{max-height:calc(8 * 1.45em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent)}
+.description-block{gap:14px}
+.btn-more{width:100%;min-height:48px}
+.btn-more.is-pending{pointer-events:none}
+/* La descripción entera, a pantalla completa por encima de la ficha. */
+.description-screen{position:fixed;inset:0;z-index:31;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:screen-in 280ms var(--ease-drawer) backwards}
+.description-screen:focus{outline:none}
+.description-screen-head{margin-left:-10px}
+.description-screen h2{font-size:28px}
+@media (min-width:760px){.description-screen{padding-left:max(32px,calc(50% - 320px));padding-right:max(32px,calc(50% - 320px))}}
+@keyframes screen-in{from{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){.description-screen{animation-name:fade-in}}
+.map-box-listing{height:180px}
+.btn-note{font-family:var(--body);font-weight:var(--w-medium);font-size:14px;opacity:.8}
+.status-title{font-size:24px}
+.map-box{isolation:isolate}

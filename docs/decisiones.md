@@ -1,3 +1,30 @@
+## 2026-11-04 · Aplazar los informes HTML y las trazas descargables de CI
+
+Daniel aprobó aplazar la publicación de los informes HTML de Playwright y de sus trazas descargables en CI hasta que una revisión apruebe el saneador de fragmentos de código. Hasta entonces, CI publica solo el JSON normalizado, los logs saneados, los códigos de salida y el resumen.
+
+- Las pruebas, las puertas (`normalize`, `gate`) y las condiciones del despliegue no cambian. Un fallo sigue bloqueando el despliegue.
+
+## 2026-11-04 · Presupuesto inicial privado de 160 kB gzip
+
+Daniel autorizó ampliar únicamente el límite inicial de 150 a 160 kB gzip durante el refactor conservador.
+
+- El ticket 16 midió 150.395 bytes: excedía el límite anterior por 395 bytes. El nuevo límite concede 10.000 bytes de margen adicional.
+- Se conservan las exclusiones del clasificador y los otros 32 presupuestos. No se retiran código ni comprobaciones para cambiar el resultado.
+- Esta autorización no demuestra impacto nulo en rendimiento. Lighthouse, hidratación, comprobaciones de red y revisión independiente siguen siendo obligatorias.
+- Las mediciones anteriores conservan sus límites históricos; no se reinterpretan como pruebas ejecutadas con el límite nuevo.
+
+## 2026-11-04 · Retirar Next del repositorio sin cortar Vercel ni renombrar la aplicación
+
+Daniel autorizó retirar los 144 archivos versionados de `apps/web` en el ticket 09 del refactor conservador. La aplicación activa conserva `apps/app` y el nombre de paquete `app`. Sustituye la previsión de renombrarla a `apps/web` al hacer el corte.
+
+- **Motivo:** mantener una sola aplicación y comandos coherentes, sin mezclar la limpieza del repositorio con un cambio de infraestructura.
+- **Alcance:** código, assets, pruebas y configuración versionados del paquete Next; comandos raíz, workspace, lockfile y referencias operativas. No se borran directorios, archivos locales ni secretos. No se sustituyen assets de la aplicación activa.
+- **Cobertura:** se conservan las pruebas activas y se trasladan las comprobaciones de permisos sin equivalente directo a `apps/app/tests/db/permisos-heredados.test.ts`, mediante REST. No cambia SQL ni autorización.
+- **Dependencias:** se retiran las exclusivas de Next; las versiones compartidas y la política de scripts de instalación permanecen iguales. No se amplían presupuestos ni se retiran puertas de CI.
+- **Vercel y portada:** Daniel confirmó que los builds están desactivados. Se conservan el proyecto, sus despliegues y DNS. Los cambios futuros de portada no llegarán al dominio servido por Vercel hasta un corte autorizado.
+- **Alternativa descartada:** renombrar la aplicación durante esta retirada obligaría a cambiar rutas de herramientas y CI sin aportar aislamiento ni funcionalidad.
+- **Marcha atrás:** revertir este cambio aislado recupera el paquete versionado y sus comandos. No restaura datos ni cambia despliegues. No habilitar builds de Vercel sin autorización separada.
+
 ## 2026-11-04 · Publicar sin cuenta hasta las fotos: el WhatsApp se verifica antes de las fotos (Ana)
 
 Sustituye «el código se pide después del paso 1» (publicar v2, §E). Capturas `sin-cuenta-*.png` en `.scratch/revision-ux/maquetas/2026-11-04/`.

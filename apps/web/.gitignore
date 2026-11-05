@@ -1,9 +1,0 @@
-.next/
-node_modules/
-test-results/
-playwright-report/
-.env.local
-next-env.d.ts
-.dev.vars
-.open-next/
-.wrangler/

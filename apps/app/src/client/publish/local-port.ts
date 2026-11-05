@@ -5,25 +5,13 @@
 import { DomainError } from "../../domain/errors";
 import { emptyDraft, type Listing, type ListingDraft } from "../../domain/listing";
 import { planStep } from "../../domain/publish-rules";
-import { PUBLISH_DRAFT_KEY, PUBLISH_STEP1_KEY, readPublishDraft, storeLocalDraft } from "../../domain/publish-return";
 import type { EditorListings, EditorPort } from "../editor-port";
+import { readPhoneDraft, writePhoneDraft } from "./phone-draft";
 export { LOCAL_USER } from "../editor-port";
+export { clearPhoneDraft, readPhoneDraft, writePhoneDraft } from "./phone-draft";
 
 /** El id de la ruta del borrador del teléfono (no es un UUID: nunca llega a la base). */
 export const LOCAL_ID = "nueva";
-
-export const readPhoneDraft = (now = Date.now()): ListingDraft | null =>
-  readPublishDraft(localStorage.getItem(PUBLISH_DRAFT_KEY), localStorage.getItem(PUBLISH_STEP1_KEY), now);
-
-export function writePhoneDraft(draft: ListingDraft, now = Date.now()): void {
-  localStorage.setItem(PUBLISH_DRAFT_KEY, storeLocalDraft(draft, now));
-  localStorage.removeItem(PUBLISH_STEP1_KEY); // el borrador entero ya lleva el tipo
-}
-
-export function clearPhoneDraft(): void {
-  localStorage.removeItem(PUBLISH_DRAFT_KEY);
-  localStorage.removeItem(PUBLISH_STEP1_KEY);
-}
 
 const EPOCH = new Date(0).toISOString();
 /** El borrador del teléfono con la forma de una casa: siempre un borrador, sin fotos, sin dueño ni número todavía. */

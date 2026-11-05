@@ -1,0 +1,86 @@
+
+/* ---------- Movimiento y respuesta al toque ---------- */
+/* Todo lo que se toca responde al instante: se encoge un poco al presionar y vuelve rápido. Solo transform y opacity. */
+a,button{-webkit-tap-highlight-color:transparent}
+.btn,.chip,.icon-btn,.tabbar .nav,.choice,.photos-grid .add,.photos-grid .remove{-webkit-user-select:none;user-select:none}
+.btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition:transform 160ms var(--ease-out)}
+.chip{transition:transform 160ms var(--ease-out),background-color 150ms ease,color 150ms ease}
+.btn:active:not(:disabled):not([aria-disabled="true"]):not(.is-disabled),.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.photos-grid .add:active,.photos-grid .remove:active{transform:scale(0.97)}
+a.list-item:active,button.list-item:active:not(:disabled),.listing-card:active{transform:scale(0.98)}
+.link,.btn-link{transition:opacity 120ms ease}
+.link:active,.btn-link:active{opacity:.6}
+/* Las fotos aparecen con un fundido al cargar (solo las que monta el cliente: nunca la portada de la ficha, que es el LCP).
+   Una foto que no carga se queda oculta y se ve el fondo de su caja; el texto alternativo no se pinta encima. */
+img[data-fade]{opacity:0;transition:opacity 240ms var(--ease-out)}
+img[data-fade][data-loaded]{opacity:1}
+img[data-fade][data-instant]{transition:none}
+.photo img,.hero img{color:transparent}
+.update-banner{transition:opacity 200ms ease-out,transform 240ms var(--ease-out)}
+@starting-style{.update-banner{opacity:0;transform:translate(-50%,8px)}}
+/* Barra de subida de una foto: avanza por tramos con transform (0–4 de 5). */
+.upload-bar{display:block;width:100%;height:6px;border-radius:2px;background:var(--bg);overflow:hidden}
+.upload-bar span{display:block;height:100%;border-radius:inherit;background:var(--primary);transform-origin:left;transform:scaleX(.06);transition:transform 400ms var(--ease-out)}
+.upload-bar[data-step="1"] span{transform:scaleX(.2)}
+.upload-bar[data-step="2"] span{transform:scaleX(.4)}
+.upload-bar[data-step="3"] span{transform:scaleX(.6)}
+.upload-bar[data-step="4"] span{transform:scaleX(.85)}
+
+/* Entradas: siempre con fill-mode backwards, para que al terminar no retengan el transform y el :active siga funcionando. */
+@keyframes rise-in{from{opacity:0;transform:translateY(8px)}}
+@keyframes fade-in{from{opacity:0}}
+
+/* Explorar: las tarjetas que sustituyen a los esqueletos aparecen; en la primera carga, una tras otra (40 ms). */
+.listing-grid.reveal > *{animation:rise-in 280ms var(--ease-out) backwards}
+.listing-grid.stagger > :nth-child(2){animation-delay:40ms}
+.listing-grid.stagger > :nth-child(3){animation-delay:80ms}
+.listing-grid.stagger > :nth-child(4){animation-delay:120ms}
+.listing-grid.stagger > :nth-child(5){animation-delay:160ms}
+.listing-grid.stagger > :nth-child(6){animation-delay:200ms}
+
+/* Asistente de publicar: la pantalla nueva entra desde la dirección del paso. Se animan los hijos y no el <form>: un
+   transform en el form haría que la barra fija de «Atrás / Continuar» se moviera con él. */
+@keyframes step-in{from{opacity:0;transform:translateX(var(--step-dx))}}
+.publish-form[data-enter="forward"]{--step-dx:16px}
+.publish-form[data-enter="back"]{--step-dx:-16px}
+.publish-form[data-enter] > :not(.sticky-actions){animation:step-in 220ms var(--ease-out) backwards}
+/* Lo que entra de lado no ensancha la página. clip y no hidden: hidden haría de la vista un contenedor de scroll y
+   rompería lo pegajoso y el scroll del teclado; la barra fija escapa del recorte. */
+.app:has(.publish-form) .view{overflow-x:clip}
+
+/* «Enviada»: una pequeña celebración, una vez por casa. Foto, sello con el check que se dibuja, y el texto detrás. */
+@keyframes sent-pop{from{opacity:0;transform:scale(.9)}}
+@keyframes sent-badge{from{opacity:0;transform:scale(.5)}}
+@keyframes sent-draw{to{stroke-dashoffset:0}}
+.sent-circle{animation:sent-pop 360ms var(--ease-out) backwards}
+.sent-check{animation:sent-badge 360ms cubic-bezier(.34,1.56,.64,1) 200ms backwards}
+.sent-check path{stroke-dasharray:22;stroke-dashoffset:22;animation:sent-draw 300ms var(--ease-out) 420ms forwards}
+.sent > :nth-child(n+2){animation:rise-in 320ms var(--ease-out) backwards}
+.sent > :nth-child(2){animation-delay:140ms}
+.sent > :nth-child(3){animation-delay:220ms}
+.sent > :nth-child(n+4){animation-delay:300ms}
+
+/* Cambios pequeños de contenido (icono o texto de «Enlace copiado», contador de fotos): el nuevo aparece en su sitio. */
+@keyframes swap-in{from{opacity:0;transform:scale(.8);filter:blur(2px)}}
+/* Solo al cambiar (`.changed`, useChanged): al montar el contenido ya está en su sitio. */
+.swap-in{display:inline-flex}
+small.swap-in{display:block}
+.swap-in.changed{animation:swap-in 200ms var(--ease-out) backwards}
+
+/* Explorar ↔ ficha (View Transitions con tipos, client/motion.ts): la foto de la tarjeta se convierte en el hero, los
+   botones de la foto y la barra de contacto llegan por su cuenta y el resto de la página se funde. */
+.hero{view-transition-name:listing-photo}
+.hero .top{view-transition-name:listing-top}
+.cta-bar{view-transition-name:listing-cta}
+@keyframes vt-out{to{opacity:0}}
+@keyframes vt-cta-in{from{transform:translateY(100%)}}
+@keyframes vt-cta-out{to{transform:translateY(100%)}}
+::view-transition-group(listing-photo){animation-duration:340ms;animation-timing-function:var(--ease-drawer)}
+::view-transition-old(listing-photo),::view-transition-new(listing-photo){width:100%;height:100%;object-fit:cover}
+::view-transition-old(listing-photo){animation:vt-out 200ms ease-out both}
+::view-transition-new(listing-photo){animation:fade-in 200ms ease-out both}
+::view-transition-old(root){animation:vt-out 140ms ease-out both}
+::view-transition-new(root){animation:fade-in 240ms var(--ease-out) 60ms both}
+::view-transition-new(listing-top){animation:fade-in 200ms ease-out 160ms both}
+::view-transition-old(listing-top){animation:vt-out 100ms ease-out both}
+::view-transition-new(listing-cta){animation:vt-cta-in 340ms var(--ease-drawer) both}
+::view-transition-old(listing-cta){animation:vt-cta-out 200ms var(--ease-out) both}

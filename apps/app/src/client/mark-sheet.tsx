@@ -4,51 +4,21 @@
 // Trozo diferido propio (se pide al tocar la fila o en reposo en el Calendario; el calendario de rango, range-calendar-*,
 // es otro trozo, compartido). Diálogo modal como «Pausar la casa»: la página queda `inert`, el foco no sale de la hoja y
 // Escape, el fondo o «Cancelar» la cierran (el foco vuelve a la fila desde quien la abre).
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { selectionLabel } from "../domain/calendar";
 import { reservationDays, reservationLabel } from "../domain/reservation";
 import type { RangeState } from "../domain/range";
 import { RangeCalendar } from "../shared/range-calendar";
+import { usePrivateSheet } from "./private-sheet";
 
 const FOCUSABLE = "button:not([disabled])";
 
 /** `onConfirm`: las noches a marcar y el aviso que lo dice («4 noches marcadas como ocupadas · 7–10 nov»). */
 export function MarkSheet({ today, onConfirm, onClose }: { today: string; onConfirm: (days: string[], label: string) => void; onClose: () => void }) {
-  const sheet = useRef<HTMLElement>(null);
+  const { sheet, onKeyDown } = usePrivateSheet({ onClose, focusable: FOCUSABLE });
   const [range, setRange] = useState<RangeState>({ arrival: null, departure: null });
   const days = reservationDays(range.arrival, range.departure);
-
-  useEffect(() => {
-    const root = document.getElementById("root");
-    document.documentElement.classList.add("sheet-open");
-    if (root) root.inert = true;
-    sheet.current?.focus();
-    return () => {
-      document.documentElement.classList.remove("sheet-open");
-      if (root) root.inert = false;
-    };
-  }, []);
-
-  function onKeyDown(e: KeyboardEvent<HTMLElement>) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-      return;
-    }
-    if (e.key !== "Tab" || !sheet.current) return;
-    const items = Array.from(sheet.current.querySelectorAll<HTMLElement>(FOCUSABLE));
-    const first = items[0];
-    const last = items[items.length - 1];
-    if (!first || !last) return;
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet.current)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -18,7 +18,8 @@ import { authApi, useSession } from "../session";
 import { EditableFicha } from "./casa-editable";
 import { Calendar } from "./calendario";
 import { EditarCampoScreen } from "./editar";
-import { NotFoundCard, SkeletonCard, useOwnListing } from "./propietario";
+import { useOwnListing } from "../editor-query";
+import { NotFoundCard, SkeletonCard } from "../editor-status";
 import { PasoScreen } from "./publicar";
 
 let edit: AdminEditApi | null = null;

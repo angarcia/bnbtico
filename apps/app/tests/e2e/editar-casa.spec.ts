@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "./helpers/test";
+import { expect, test as base, type Page } from "./helpers/test";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { sql } from "../db/local";
@@ -6,6 +6,7 @@ import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
 import { secondCode } from "./helpers/admin";
 import { injectSession } from "./helpers/session";
+import { ownerMemorySession } from "./helpers/memory-session";
 import { touch } from "./helpers/touch";
 
 // Editar una casa publicada sin sacarla de Explorar (spec .scratch/editar-casa, maquetas 08a–08c), contra Supabase local.
@@ -14,6 +15,19 @@ import { touch } from "./helpers/touch";
 // pedidos», su nota y su propio «Descartar»; en Mis casas, «Cambios en revisión».
 const FOTOS = new URL("../../../../design/pantallas/fotos/", import.meta.url).pathname;
 let h: Awaited<ReturnType<typeof postgrestHarness>>;
+const test = base.extend<{}, { ownerSession: ReturnType<typeof ownerMemorySession> }>({
+  ownerSession: [async ({}, use) => {
+    const session = ownerMemorySession();
+    try {
+      await use(session);
+    } finally {
+      session.clear();
+    }
+  }, { scope: "worker" }],
+  storageState: async ({ baseURL, ownerSession }, use, testInfo) => {
+    await ownerSession.useState(baseURL!, testInfo.timeout, use);
+  },
+});
 
 test.describe.configure({ mode: "serial" });
 
@@ -23,7 +37,6 @@ test.beforeAll(async () => {
 
 test.beforeEach(async ({ page }) => {
   await h.reset();
-  await injectSession(page, "owner");
   await page.route("**/storage/v1/object/public/**", (route) => route.fulfill({ body: readFileSync(`${FOTOS}loft.jpg`), contentType: "image/jpeg" }));
 });
 

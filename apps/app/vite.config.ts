@@ -122,7 +122,16 @@ export default defineConfig({
   // zod/mini en su propio trozo (zod-*): ya no va en el JS inicial (filters.ts se lee a mano) y lo comparten el asistente
   // de publicar y la edición; sin el grupo se pegaría a step-forms-* y las reglas de los formularios medirían 5 KB más.
   environments: {
-    client: { build: { rolldownOptions: { output: { codeSplitting: { groups: [{ name: "zod", test: /[\\/]node_modules[\\/]zod[\\/]/ }] } } } } },
+    client: { build: { rolldownOptions: { output: {
+      chunkFileNames: (chunk) => chunk.moduleIds.length === 2 && chunk.moduleIds.every((id) => /[\\/]src[\\/]domain[\\/](?:admin-actions|edit-label)\.ts$/.test(id))
+        ? "assets/edit-label-[hash].js"
+        : "assets/[name]-[hash].js",
+      codeSplitting: { groups: [
+      { name: "zod", test: /[\\/]node_modules[\\/]zod[\\/]/ },
+      { name: "cuenta", test: /[\\/]src[\\/](?:client[\\/](?:screens[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|sign-in)\.tsx|client[\\/](?:turnstile|token-gate|support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, includeDependenciesRecursively: false },
+      { name: "propietario", test: /[\\/]src[\\/](?:client[\\/](?:screens[\\/]propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx)|domain[\\/]navigation\.ts)$/, includeDependenciesRecursively: false },
+      { name: "admin", test: /(?:[\\/]src[\\/](?:client[\\/](?:screens[\\/]admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, includeDependenciesRecursively: false },
+    ] } } } } },
   },
   // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).
   preview: { allowedHosts: ["host.docker.internal"] },

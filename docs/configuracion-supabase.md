@@ -1,6 +1,6 @@
 # Configurar Supabase y Twilio para `pruebas.bnbtico.com`
 
-> **App nueva (fase R, 2026-10-23):** se despliega con GitHub Actions a Cloudflare Workers; sus variables y secretos están en la sección 10. Las secciones 5 y 6 (Vercel, contraseña de pruebas, proxy) valen **solo para la app vieja y hasta el corte** (`docs/corte-fase-r.md`).
+> **Aplicación vigente (`apps/app`, paquete `app`):** se despliega con GitHub Actions a Cloudflare Workers; sus variables y secretos están en la sección 10. Desde la retirada de Next (2026-11-04), las secciones 5 y 6 (Vercel, contraseña de pruebas, proxy) son referencia histórica de los despliegues conservados, no instrucciones para construir esta rama. No modificar Vercel ni sus secretos como parte de la retirada (`docs/corte-fase-r.md`).
 
 Guía paso a paso (2026-10-15). Todo lo que requiere crear cuentas, aceptar condiciones o pegar claves lo hace una persona; la CLI del repo solo aplica la migración. El proyecto de **producción** se crea igual en la fase 7, con otro nombre.
 
@@ -20,7 +20,7 @@ Guía paso a paso (2026-10-15). Todo lo que requiere crear cuentas, aceptar cond
 3. Esperá a que el proyecto termine de aprovisionarse (1–2 minutos).
 4. Anotá dos valores (el botón **Connect**, arriba del panel, pestaña «App Frameworks» → Next.js, los muestra juntos):
    - **Project URL** (`https://<ref>.supabase.co`), en **Project Settings → Data API**. El **ref** son las 20 letras minúsculas que Supabase asigna al proyecto; también se ven en la barra de direcciones del panel (`…/dashboard/project/<ref>`).
-   - **Publishable key** (`sb_publishable_…`), en **Project Settings → API Keys**. Es la que va en la app como `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Las claves `secret` no se usan en la app.
+   - **Publishable key** (`sb_publishable_…`), en **Project Settings → API Keys**. Es la que va en el navegador como `VITE_SUPABASE_ANON_KEY`. Las claves `secret` nunca se usan en el navegador.
 
 ## 2. Aplicar el esquema
 
@@ -145,4 +145,3 @@ Los secretos que falten no se suben al worker (la purga responde 503 y las baliz
 **En Stripe** (modo de prueba, cuenta de Ana): la clave secreta y un destino de webhook con `checkout.session.completed`. **En Twilio:** el sandbox de WhatsApp, con el teléfono de pruebas unido («join <código>», dura 3 días). Pasos en `docs/pruebas-manuales-fase-5.md`, A1–A2.
 
 **En Cloudflare** (panel, no en el repo): zona `bnbtico.com`; worker `bnbtico-pruebas` con el dominio personalizado `nueva.bnbtico.com` (`pruebas.bnbtico.com` tras el corte); Zero Trust → Access con la aplicación de `nueva.bnbtico.com` y sus bypass `/casa/*`, `/_purge/*` y, desde la fase 5, `/webhooks/*` y `/_pruebas/*`; widget de Turnstile con los hostnames donde se ingresa. **En Supabase** (`bnbtico-pruebas`): los secretos de Vault `worker_purge_url` (hoy `https://nueva.bnbtico.com`; al cortar, `https://pruebas.bnbtico.com`) y `worker_purge_secret`; desde la fase 5, `bnbtico_test_clock = 'on'` (solo pruebas: abre el reloj de pruebas; nunca en producción); protección de bots con la secret key de Turnstile; MFA TOTP activo; «Max rows» 200.
-

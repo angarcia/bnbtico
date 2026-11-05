@@ -1,0 +1,127 @@
+
+/* ---------- Calendario (pantalla 17) y rejilla del mes, la misma en la ficha (revisión UX 2026-10-29, C4 y N4) ---------- */
+/* Casillas de 47 × 92 px (a 390 px de ancho), 6 px entre ellas y 14 px de margen lateral; número arriba y precio completo
+   debajo, los dos centrados y con transparencia; fondo verde al 6 %. */
+.month-grid{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+.month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.month-grid,.month-head{margin-inline:calc(14px - var(--gutter))}
+.month-head{font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-align:center}
+.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;height:92px;padding:14px 0 0;border:2px solid transparent;border-radius:12px;background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
+.month-grid .day b{font-size:14px;font-weight:500;line-height:1.2;color:color-mix(in srgb,currentColor 70%,transparent)}
+.month-grid .day-sub{font-size:12px;font-weight:400;line-height:1.2;white-space:nowrap;color:color-mix(in srgb,var(--fg) 75%,transparent)}
+/* Seis cifras («120 000») en 11 px para que quepan en la casilla. */
+.month-grid .day-sub.is-long{font-size:11px;letter-spacing:-0.02em}
+/* Ocupado: terracota claro con rayas finas y solo el número, en terracota. */
+.month-grid .day.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px);color:var(--cal-busy-ink)}
+/* Seleccionado para editar: solo un marco terracota (2 px, al 60 %), sin relleno. */
+.month-grid .day[aria-pressed="true"]{border-color:color-mix(in srgb,var(--brand-ink) 60%,transparent)}
+/* Días pasados del mes: del mismo tamaño, con el número tachado y todo más claro. */
+.month-grid .day.is-past{opacity:.5}
+.month-grid .day.is-past b{text-decoration:line-through}
+.month-grid button.day:disabled{cursor:default}
+.month-grid button.day:active:not(:disabled){transform:scale(0.94)}
+.month-grid.is-dimmed{opacity:.6}
+/* La estancia elegida en la ficha (ronda de Ana 2 nov, ticket 08), como en «¿Cuándo?»: extremos en --when-pick y la banda
+   entre ellos, translúcida, encima del verde de los libres. La banda cruza los 6 px entre casillas (3 px de cada lado, con
+   sombras del color que da la banda sobre el verde, para que no se vea la junta) y los extremos la recogen por su lado de
+   dentro: media banda. Al principio y al final de cada semana, la casilla se redondea y no sale. */
+.month-grid .day.in-range{border-radius:0;background-image:linear-gradient(var(--stay-band),var(--stay-band));box-shadow:-3px 0 0 var(--stay-band-solid),3px 0 0 var(--stay-band-solid)}
+.month-grid .day.range-end,.month-grid .day.range-end[aria-pressed="true"]{border-color:transparent;background:var(--when-pick);color:var(--when-pick-ink)}
+.month-grid .day.range-end b,.month-grid .day.range-end .day-sub{color:var(--when-pick-ink)}
+.month-grid .day.range-end.is-start{border-radius:12px 0 0 12px;box-shadow:3px 0 0 var(--stay-band-solid)}
+.month-grid .day.range-end.is-last{border-radius:0 12px 12px 0;box-shadow:-3px 0 0 var(--stay-band-solid)}
+.month-week > .day.in-range:first-child{box-shadow:3px 0 0 var(--stay-band-solid)}
+.month-week > .day.in-range:last-child{box-shadow:-3px 0 0 var(--stay-band-solid)}
+.month-week > .day.range-end.is-start:last-child,.month-week > .day.range-end.is-last:first-child{border-radius:12px;box-shadow:none}
+.month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);padding-top:4px}
+.month-legend span{display:inline-flex;align-items:center;gap:6px}
+.month-legend .swatch{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 6%,transparent)}
+.month-legend .swatch:not(.is-busy){background:color-mix(in srgb,var(--primary) 12%,transparent)}
+.month-legend .swatch.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px)}
+/* Ficha: «Disponibilidad», un mes a la vez con ‹ ›. Caja de alto fijo (título, fila de los días, 6 semanas y leyenda): mide
+   lo mismo vacía en el HTML del servidor que con la rejilla montada tras hidratar. */
+.listing-calendar{display:flex;flex-direction:column;gap:8px;height:740px;overflow:hidden}
+/* Bajo la rejilla: la leyenda con «Quitar fechas» a la derecha y la línea del total (o del aviso). Guardan su sitio con o sin
+   fechas: la caja no cambia de alto (ronda de Ana 2 nov, ticket 08). */
+.listing-calendar .cal-legend-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.listing-calendar .month-legend{padding-top:0}
+.listing-calendar .cal-legend-row .btn-text{padding-right:0;font-size:15px}
+.cal-stay{margin:0;min-height:22px;font-size:15px;font-weight:var(--w-medium);line-height:22px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-stay.is-busy{color:var(--busy-ink)}
+.listing-calendar .cal-month{margin:-6px 0 0 -10px}
+/* La caja corta lo que sale: en la ficha, la rejilla va dentro del margen de la página. */
+.listing-calendar .month-grid,.listing-calendar .month-head{margin-inline:0}
+.header-root > div:has(> .btn-round){align-items:center}
+.header-root > div:has(> .house-picker){align-items:center;flex-wrap:nowrap;gap:10px}
+.header-root:has(.house-picker) h1{font-size:28px}
+.house-picker{position:relative;min-width:0}
+/* Selector de casa del Calendario, a todo el ancho arriba (revisión UX 2026-10-29, C4). */
+.picker-pill{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:52px;padding:0 16px;border-radius:var(--r-input);background:var(--beige-soft);font-weight:var(--w-strong);font-size:18px;text-align:left}
+.picker-pill .ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-pill svg{transform:rotate(90deg);flex-shrink:0}
+.picker-pill[aria-expanded="true"] svg{transform:rotate(-90deg)}
+.picker-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:8;margin:0;padding:6px;list-style:none;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float);animation:fade-in 140ms var(--ease-out)}
+.picker-list li{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;font-size:16px;font-weight:var(--w-medium);cursor:pointer}
+.picker-list li[aria-selected="true"]{color:var(--primary);font-weight:var(--w-medium);background:var(--state-soft)}
+.cal-month{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 0 -10px}
+.cal-arrow{width:40px;height:40px;color:var(--muted)}
+.cal-arrow:disabled{opacity:.3;cursor:default}
+.cal-title{font-weight:400;font-size:19px;white-space:nowrap}
+/* Propietario: los meses uno debajo de otro. La fila L K M J V S D queda fija arriba (sin barra superior) y el título de
+   cada mes, debajo de ella. */
+.cal-hint-row{align-items:center;margin-top:-4px}
+.cal-weekdays{position:sticky;top:env(safe-area-inset-top);z-index:3;background:var(--bg);padding:4px 0;margin-bottom:-14px}
+/* 26 px justos: el título del mes cuenta con ese alto (calc de abajo), también con la letra más grande. */
+.cal-weekdays{height:26px;line-height:18px;box-sizing:border-box}
+.cal-month-block{display:flex;flex-direction:column;scroll-margin-top:calc(26px + env(safe-area-inset-top))}
+.cal-month-title{position:sticky;top:calc(26px + env(safe-area-inset-top));z-index:2;background:var(--bg);font-size:19px;font-weight:400;padding:6px 0}
+.cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
+/* «Marcar una reserva» y «Pausar la casa» (ticket 04 de la ronda del 2 nov): una tarjeta con una fila por acción, separadas
+   por una línea fina. Pausada, la fila dice hasta cuándo y lleva «Volver a publicarla». */
+.cal-actions{display:flex;flex-direction:column;padding:0}
+.cal-actions > * + *{border-top:1px solid var(--line-soft)}
+.cal-actions > .note,.cal-actions > .cal-action-error{margin:0 14px 10px;border-top:0}
+.cal-action{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;text-align:left;width:100%;background:none;border-radius:0}
+.cal-action-icon{flex-shrink:0;width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.cal-action .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cal-action > svg{flex-shrink:0;color:var(--muted)}
+/* Pausada: «Pausada hasta el …» con su línea y, debajo, «Volver a publicarla» a lo ancho. */
+.cal-action.is-paused{flex-wrap:wrap;row-gap:10px;padding-bottom:14px}
+.cal-action.is-paused .btn{flex-basis:100%;min-height:44px}
+.cal-skeleton{height:320px}
+.view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
+/* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */
+.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:9;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
+/* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
+.cal-panel.kb{padding-bottom:calc(14px + 320px)}
+/* «Guardar cambios» más bajo (44 px) y en gris mientras no hay cambios. */
+.cal-panel .cal-save{min-height:44px;font-size:16px}
+.cal-panel .cal-save:disabled{background:color-mix(in srgb,var(--fg) 8%,var(--surface));color:var(--muted);opacity:1}
+/* La barra de pestañas: fuera mientras hay días seleccionados (sale al bajar y vuelve al subir con el escondido común). */
+.app:has(.cal-panel) .tabbar{transform:var(--away);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.map-label{transition:none}.app:has(.cal-panel) .tabbar{transform:none}}
+/* A 12 px sobre la barra de abajo si está a la vista; si se escondió, a 12 px del borde. Con las barras de botones de abajo
+   (asistente, ficha, panel del calendario), por encima de ellas. */
+html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
+html.chrome-away{--chrome-bottom:var(--float-bottom)}
+html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
+.cal-cancel{font-size:15px;font-weight:var(--w-medium);color:var(--muted);min-height:32px}
+.seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
+.seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
+.seg button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
+.cal-price{display:flex;align-items:center;gap:4px;min-height:44px;padding:0 12px;border:1.5px solid transparent;border-radius:8px;background:var(--surface);font-size:15px;color:var(--muted);font-weight:500}
+/* 16 px y no los 14 del diseño: con menos, el iPhone amplía la página al enfocar el campo. */
+.cal-price input:not([type=checkbox]):not([type=file]):not([type=radio]){width:104px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:18px;font-weight:var(--w-strong);font-variant-numeric:tabular-nums;color:var(--fg)}
+.cal-price input::placeholder{font-size:16px;font-weight:var(--w-medium);color:var(--muted)}
+.cal-base{min-height:32px;padding:0;font-size:15px;align-self:flex-start}
+.cal-panel .btn-lg{min-height:48px;font-size:17px}
+
+@media (prefers-reduced-motion:reduce){
+  .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition-property:background-color,color,opacity}
+  .btn:active,.card-wa:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
+  @starting-style{.update-banner{transform:translateX(-50%)}}
+  .heart:active{transform:none}
+  .listing-grid.reveal > *,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in.changed{animation-name:fade-in}
+  .sent-check path{animation:none;stroke-dashoffset:0}
+  .progress span::after,.upload-bar span{transition-property:none}
+}

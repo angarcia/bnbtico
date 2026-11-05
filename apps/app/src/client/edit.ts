@@ -8,12 +8,12 @@ import type { Listing } from "../domain/listing";
 import { toDomainError } from "../domain/errors";
 import { toast } from "../shared/toast";
 import { useEditor, type EditorListings } from "./editor-port";
-import { api, ownListingsQuery, patchCached, refresh } from "./owner";
+import { api } from "./owner";
+import { cachedOwnListing, invalidateOwn, patchCached, refresh } from "./listing-cache";
+import { ownListingKey, ownListingsKey } from "./listing-keys";
 
 type Target = Pick<Listing, "id" | "publicId">;
 type LiveContext = { previous: Listing | null | undefined };
-
-const detailKey = (userId: string, id: string) => ["own-listing", userId, id] as const;
 
 /** Las opciones de useUpdateLive, aparte para probar la caché sin React. `listings`: el adaptador del puerto (el del
  *  anfitrión o, en las rutas del admin, el de Ana). */
@@ -21,10 +21,9 @@ export function updateLiveOptions(client: QueryClient, userId: string, l: Target
   return {
     mutationFn: async (patch) => (await listings()).updateLive(l.id, patch),
     onMutate: async (patch) => {
-      await client.cancelQueries({ queryKey: detailKey(userId, l.id) });
-      await client.cancelQueries({ queryKey: ["own-listings", userId] });
-      const previous =
-        client.getQueryData<Listing | null>(detailKey(userId, l.id)) ?? client.getQueryData<Listing[]>(ownListingsQuery(userId).queryKey)?.find((x) => x.id === l.id);
+      await client.cancelQueries({ queryKey: ownListingKey(userId, l.id) });
+      await client.cancelQueries({ queryKey: ownListingsKey(userId) });
+      const previous = cachedOwnListing(client, userId, l.id);
       patchCached(client, userId, l.id, patch);
       return { previous };
     },
@@ -45,11 +44,6 @@ export function useUpdateLive(userId: string, l: Target) {
   return useMutation(updateLiveOptions(client, userId, l, useEditor().listings));
 }
 
-const invalidateOwn = (client: QueryClient, userId: string, id: string) => {
-  void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-  void client.invalidateQueries({ queryKey: detailKey(userId, id) });
-};
-
 /** Nombre, tipo, ubicación o descripción: a revisión, en la edición de la casa (null si ya no cambia nada). */
 export function useSaveEdit(userId: string, l: Target) {
   const client = useQueryClient();
@@ -63,7 +57,7 @@ export function useSaveEdit(userId: string, l: Target) {
 }
 
 const cachedEdit = (client: QueryClient, userId: string, id: string): ListingEdit | null =>
-  (client.getQueryData<Listing | null>(detailKey(userId, id)) ?? client.getQueryData<Listing[]>(ownListingsQuery(userId).queryKey)?.find((x) => x.id === id))?.edit ?? null;
+  cachedOwnListing(client, userId, id)?.edit ?? null;
 
 /** «Descartar» un dato pendiente (revisión por dato, A5): sale de la ficha editable al momento; la ficha pública sigue igual. */
 export function useDiscardEditField(userId: string, l: Target) {

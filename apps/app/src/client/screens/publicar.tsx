@@ -20,7 +20,8 @@ import { addOwnCached, api, ownListingQuery, resumableQuery } from "../owner";
 import { StepFields } from "../publish/fields";
 import { ReadyList, StageLabel } from "../publish/wizard-parts";
 import { StepForm } from "../publish/step-form";
-import { NotFoundCard, SkeletonCard, useOwnListing, useUserId } from "./propietario";
+import { useOwnListing, useUserId } from "../editor-query";
+import { NotFoundCard, SkeletonCard } from "../editor-status";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 

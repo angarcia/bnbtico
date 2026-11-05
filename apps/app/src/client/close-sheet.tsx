@@ -2,49 +2,19 @@
 // desde la fila «Pausar la casa» del Calendario, con fecha de vuelta opcional (set_listing_available). Trozo diferido propio (se pide al tocar la fila o en reposo en el Calendario). Diálogo
 // modal como la hoja de contacto: la página queda `inert`, el foco no sale de la hoja y Escape, el fondo o «Cancelar» la
 // cierran (el foco vuelve a la fila desde quien la abre).
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { addDays, CALENDAR_WINDOW_DAYS, validateReopenDate } from "../domain/calendar";
 import { costaRicaToday } from "../domain/inquiry";
+import { usePrivateSheet } from "./private-sheet";
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled])';
 
 export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: string | null) => void; onClose: () => void }) {
-  const sheet = useRef<HTMLElement>(null);
+  const { sheet, onKeyDown } = usePrivateSheet({ onClose, focusable: FOCUSABLE });
   const [date, setDate] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const today = costaRicaToday(Date.now());
-
-  useEffect(() => {
-    const root = document.getElementById("root");
-    document.documentElement.classList.add("sheet-open");
-    if (root) root.inert = true;
-    sheet.current?.focus();
-    return () => {
-      document.documentElement.classList.remove("sheet-open");
-      if (root) root.inert = false;
-    };
-  }, []);
-
-  function onKeyDown(e: KeyboardEvent<HTMLElement>) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-      return;
-    }
-    if (e.key !== "Tab" || !sheet.current) return;
-    const items = Array.from(sheet.current.querySelectorAll<HTMLElement>(FOCUSABLE));
-    const first = items[0];
-    const last = items[items.length - 1];
-    if (!first || !last) return;
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet.current)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
