@@ -78,7 +78,7 @@ describe("CI aislada", () => {
   });
 
   it("reconstruye el deploy en checkout limpio sin artefactos ni base local", () => {
-    expect(jobs.deploy).toContain("uses: actions/checkout@v4");
+    expect(jobs.deploy).toContain("uses: actions/checkout@v7");
     expect(jobs.deploy).toContain("pnpm install --frozen-lockfile");
     expect(jobs.deploy).toContain("pnpm build");
     expect(jobs.deploy).not.toMatch(/download-artifact|supabase start|dev:vars/);
@@ -87,7 +87,7 @@ describe("CI aislada", () => {
   });
 
   it("retiene artefactos tres días e identifica cada shard", () => {
-    const uploads = [...workflow.matchAll(/uses: actions\/upload-artifact@v4\n([\s\S]*?)(?=\n      - |\n  [\w-]+:|$)/g)];
+    const uploads = [...workflow.matchAll(/uses: actions\/upload-artifact@v7\n([\s\S]*?)(?=\n      - |\n  [\w-]+:|$)/g)];
     expect(uploads.length).toBeGreaterThanOrEqual(5);
     for (const upload of uploads) expect(upload[1]).toContain("retention-days: 3");
     expect(jobs.e2e).toContain("name: playwright-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}");
@@ -99,7 +99,7 @@ describe("CI aislada", () => {
   });
 
   it("todos los uploads exigen la última señal segura y solo publican publish", () => {
-    const uploads = workflow.split(/\n      - /).filter(step => step.includes("uses: actions/upload-artifact@v4"));
+    const uploads = workflow.split(/\n      - /).filter(step => step.includes("uses: actions/upload-artifact@v7"));
     expect(uploads).toHaveLength(5);
     for (const upload of uploads) {
       expect(upload).toMatch(/if: always\(\) && steps\.[\w-]+\.outputs\.safe_to_upload == 'true'/);

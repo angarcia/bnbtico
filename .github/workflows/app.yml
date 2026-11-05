@@ -37,8 +37,8 @@ jobs:
       matrix: ${{ steps.shards.outputs.matrix }}
       total: ${{ steps.shards.outputs.total }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
       - name: Seleccionar destino
@@ -68,9 +68,9 @@ jobs:
       run:
         working-directory: apps/app
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -89,7 +89,7 @@ jobs:
         run: node scripts/ci-artifacts.mjs inventory "$RUNNER_TEMP/$CI_ARTIFACT_NAME"
       - name: Inventario E2E
         if: always() && steps.inventory.outputs.safe_to_upload == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-inventory-attempt-${{ github.run_attempt }}
           path: ${{ steps.inventory.outputs.publish }}
@@ -109,9 +109,9 @@ jobs:
       run:
         working-directory: apps/app
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -142,9 +142,9 @@ jobs:
       run:
         working-directory: apps/app
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -170,7 +170,7 @@ jobs:
         run: node scripts/ci-artifacts.mjs preparation "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv"
       - name: Tiempos de preparación E2E
         if: always() && steps.preparation.outputs.safe_to_upload == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-preparation-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}
           path: ${{ steps.preparation.outputs.publish }}
@@ -180,7 +180,7 @@ jobs:
         run: node scripts/ci-artifacts.mjs e2e "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "${{ matrix.shard }}" "${{ matrix.total }}"
       - name: Diagnóstico de Playwright
         if: always() && steps.e2e.outputs.safe_to_upload == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}
           path: ${{ steps.e2e.outputs.publish }}
@@ -204,9 +204,9 @@ jobs:
       run:
         working-directory: apps/app
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -225,7 +225,7 @@ jobs:
         run: CHROMIUM_PATH="$(command -v google-chrome)" node scripts/ci-artifacts.mjs lighthouse "$RUNNER_TEMP/$CI_ARTIFACT_NAME"
       - name: Informes de Lighthouse
         if: always() && steps.lighthouse.outputs.safe_to_upload == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-attempt-${{ github.run_attempt }}
           path: ${{ steps.lighthouse.outputs.publish }}
@@ -257,18 +257,18 @@ jobs:
       CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-report
       CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: e2e-*-attempt-${{ github.run_attempt }}
           path: ci-artifacts/
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: playwright-*-attempt-${{ github.run_attempt }}
           path: ci-artifacts/
@@ -280,7 +280,7 @@ jobs:
         run: node apps/app/scripts/ci-artifacts.mjs report "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "ci-artifacts/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json" ci-artifacts "$SHARD_COUNT"
       - name: Informe combinado
         if: always() && steps.summary.outputs.safe_to_upload == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-summary-attempt-${{ github.run_attempt }}
           path: ${{ steps.summary.outputs.publish }}
@@ -312,9 +312,9 @@ jobs:
       # main → producción (sin ruta todavía); develop y pull requests → pruebas (nueva.bnbtico.com).
       DEPLOY_ENV: ""
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -396,7 +396,7 @@ jobs:
       - name: Desplegar
         id: deploy
         if: steps.target.outputs.publish == 'deploy' && steps.target-check.outcome == 'success' && steps.freshness-publish.outcome == 'success'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -408,7 +408,7 @@ jobs:
       - name: Versión de vista previa
         id: preview
         if: steps.target.outputs.publish == 'preview' && steps.target-check.outcome == 'success' && steps.freshness-publish.outcome == 'success'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

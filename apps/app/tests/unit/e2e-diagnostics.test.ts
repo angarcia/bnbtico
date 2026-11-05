@@ -46,7 +46,7 @@ describe("diagnóstico E2E", () => {
   it("conserva los informes y las trazas aunque falle la primera ejecución", () => {
     const upload = step("Diagnóstico de Playwright");
     expect(upload).toContain("if: always() && steps.e2e.outputs.safe_to_upload == 'true'");
-    expect(upload).toContain("uses: actions/upload-artifact@v4");
+    expect(upload).toContain("uses: actions/upload-artifact@v7");
     expect(upload).toContain("path: ${{ steps.e2e.outputs.publish }}");
     expect(upload).not.toMatch(/apps\/app\/(?:playwright-report|test-results)|raw\/|clean\/|render\//);
     expect(upload).toContain("retention-days: 3");
