@@ -70,6 +70,12 @@ describe("diagnóstico E2E", () => {
       expect(step(name)).toContain('"$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1');
       expect(step(name)).not.toMatch(/continue-on-error|\|\|/);
     }
+    const sanitize = step("Sanear tiempos de preparación");
+    expect(sanitize).toContain('node scripts/ci-artifacts.mjs preparation "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv"');
+    expect(sanitize.trimEnd().endsWith('-preparation.tsv"')).toBe(true);
+    expect(sanitize.split("\n").filter(line => line.includes("run:")).join("\n")).not.toContain("preparation.log");
+    const e2eJob = workflow.split("\n  e2e:\n")[1]!.split("\n  lighthouse:\n")[0]!;
+    expect(e2eJob).toContain('"${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"');
     const upload = step("Tiempos de preparación E2E");
     expect(upload).toContain("if: always() && steps.preparation.outputs.safe_to_upload == 'true'");
     expect(upload).toContain("path: ${{ steps.preparation.outputs.publish }}");
@@ -88,5 +94,7 @@ describe("diagnóstico E2E", () => {
     expect(script).toContain('"gate"');
     expect(script).toContain("return code || gateCode");
     expect(script).not.toMatch(/stdio: ["']inherit|continue-on-error/);
+    expect(script).toContain('join(root, "logs")');
+    expect(script).not.toMatch(/join\((?:raw|render), "[\w-]+\.log"\)|"[\w-]+\.log", "e2e-exit\.txt"/);
   });
 });

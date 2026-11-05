@@ -116,6 +116,13 @@ describe("CI aislada", () => {
     expect(jobs.report).toContain("CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}");
   });
 
+  it("no entrega logs de texto libre al saneador ni a los artefactos", () => {
+    const calls = workflow.match(/node (?:apps\/app\/)?scripts\/ci-artifacts\.mjs [^\n]+/g) ?? [];
+    expect(calls).toHaveLength(5);
+    for (const call of calls) expect(call).not.toMatch(/\.log\b/);
+    expect(jobs.e2e).toMatch(/run: rm -rf -- [^\n]*"\$\{RUNNER_TEMP:\?\}\/\$\{CI_ARTIFACT_NAME:\?\}-preparation\.log"/);
+  });
+
   it.each(["quality", "e2e", "lighthouse", "report"])("no invoca limpieza de %s con variables vacías o ausentes", job => {
     const cleanup = jobs[job]!.match(/run: (rm -rf -- .+)/)?.[1];
     expect(cleanup).toBeDefined();

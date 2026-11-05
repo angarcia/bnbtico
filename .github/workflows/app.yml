@@ -166,7 +166,8 @@ jobs:
       - name: Sanear tiempos de preparación
         id: preparation
         if: always()
-        run: node scripts/ci-artifacts.mjs preparation "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log"
+        # Publica solo el TSV de tiempos y códigos; preparation.log se queda privado y lo borra «Borrar diagnósticos privados».
+        run: node scripts/ci-artifacts.mjs preparation "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv"
       - name: Tiempos de preparación E2E
         if: always() && steps.preparation.outputs.safe_to_upload == 'true'
         uses: actions/upload-artifact@v4
@@ -237,7 +238,7 @@ jobs:
         run: |
           test -f "$LIGHTHOUSE_SUMMARY" || exit 0
           marker='<!-- bnbtico:lighthouse -->'
-          body="$(printf '%s\n' "$marker"; cat "$LIGHTHOUSE_SUMMARY"; printf '\nCommit `%s` · informes completos en el artefacto «lighthouse-attempt-%s».\n' "${{ github.sha }}" "${{ github.run_attempt }}")"
+          body="$(printf '%s\n' "$marker"; cat "$LIGHTHOUSE_SUMMARY"; printf '\nCommit `%s` · resumen en el artefacto «lighthouse-attempt-%s».\n' "${{ github.sha }}" "${{ github.run_attempt }}")"
           id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
           if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
       - name: Borrar diagnósticos privados
