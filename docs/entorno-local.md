@@ -58,11 +58,13 @@ brew --version
 brew install node@22
 ```
 
-Homebrew no pone esta versión en el camino por defecto; hágalo usted:
+Homebrew instala esta versión aparte («keg-only»). Enlácela para que `node` sea Node 22 en cualquier Terminal, sin editar ningún archivo:
 
 ```bash
-echo 'export PATH="$(brew --prefix node@22)/bin:$PATH"' >> ~/.zprofile && source ~/.zprofile
+brew link --overwrite --force node@22
 ```
+
+Cierre la Terminal y abra una nueva.
 
 Compruebe que dice `v22.` y algo más:
 
@@ -305,7 +307,8 @@ pnpm db:stop
 | Síntoma | Causa y solución |
 | --- | --- |
 | `brew: command not found` | Falta el paso de `shellenv` de 1.2. Ejecútelo y abra una Terminal nueva. |
-| `node -v` no dice `v22.…`, o `Unexpected module status` y errores raros de Vite o Vitest | Node equivocado. Repita la línea `export PATH=…` de 1.3 y abra una Terminal nueva. |
+| `node -v` no dice `v22.…`, o `Unexpected module status` y errores raros de Vite o Vitest | Node equivocado. Repita `brew link --overwrite --force node@22` (1.3) y abra una Terminal nueva. Si había otro Node de Homebrew enlazado, antes: `brew unlink node`. |
+| Tras pegar un comando en `~/.zprofile`, ninguna orden funciona (`command not found`) o aparecen caracteres raros | Se añadió texto roto al final de `~/.zprofile`. En esa Terminal: `eval "$(/usr/libexec/path_helper -s)"`; copia con `/bin/cp ~/.zprofile ~/.zprofile.bak`; vea las líneas con `/bin/cat -n -v ~/.zprofile`; borre desde la primera línea rota (N) hasta el final con `/usr/bin/sed -i '' 'N,$d' ~/.zprofile` y abra una Terminal nueva. |
 | `pnpm: command not found` | Ejecute `corepack enable` (1.3). Si falla, instale pnpm con npm: `npm install -g pnpm@10.9.0`. |
 | `Repository not found` al clonar | Su cuenta de GitHub no tiene acceso al repositorio, o `gh auth login` no terminó. |
 | `Supabase local no está arrancado: pnpm db:start` | Ejecute `pnpm db:start`. Si falla, abra Docker Desktop. |
