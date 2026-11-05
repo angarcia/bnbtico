@@ -65,6 +65,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - `docs/antes-de-produccion.md` — lo decidido que se deja para antes del lanzamiento (p. ej. protección contra el abuso del envío de códigos). Revisar al cortar a producción.
 - `docs/corte-fase-r.md` — guion del corte de infraestructura, separado de la retirada de Next; conserva `apps/app`, la migración pendiente de fotos (`supabase/migrations-pendientes/`) y decisiones abiertas (Google Analytics en la portada).
 - `docs/pruebas-manuales.md` — **guía de pruebas manual única** (2026-10-30, escrita desde cero tras los rediseños): preparación, cliente, anfitrión, admin y recorridos de punta a punta, desde el teléfono en nueva.bnbtico.com. Sustituye a las guías por fase (`docs/pruebas-manuales-fase-*.md`, `-revision-ux.md`, `-mejoras-2026-10-27.md`), que quedan como histórico. Al cambiar una pantalla, actualizar sus comprobaciones aquí.
+- `docs/entorno-local.md` — levantar y probar la app en el Mac sin servicios externos: Node 22, Supabase local, cuentas de prueba, admin con `seed_admin`, comandos de prueba y problemas frecuentes.
 - `docs/telemetria.md` — balizas de Web Vitals, errores y eventos, consultas p75, CSP, Turnstile y cron.
 - `docs/copias-de-seguridad.md` — copia diaria con `pg_dump` a R2 y prueba mensual de restauración.
 - `docs/design.md` — pantallas, flujos, calendario, sistema de diseño.

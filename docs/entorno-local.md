@@ -1,0 +1,328 @@
+# Entorno de pruebas local
+
+Guía para levantar bnbtico en su Mac y probarlo usted mismo, desde la terminal, sin Claude ni ningún servicio de pago. Todo corre en su ordenador:
+
+- la base de datos es un Supabase local en Docker;
+- los códigos de WhatsApp son fijos (`123456`) y no se envía nada;
+- los avisos de WhatsApp y los pagos usan remitentes y pasarelas **falsos**;
+- Turnstile usa la clave de prueba de Cloudflare, que siempre deja pasar.
+
+Nada de lo que haga aquí toca `nueva.bnbtico.com`, el Supabase alojado ni a usuarios reales.
+
+## 1. Preparación en un Mac nuevo (una sola vez)
+
+Esta sección parte de un Mac recién estrenado, sin nada instalado. Hágala una vez, en orden; tarda unos 30–45 minutos, casi todo descargas. Al final tendrá:
+
+| Qué | Para qué |
+| --- | --- |
+| Herramientas de Apple (`git`) | descargar el código |
+| Homebrew | instalar lo demás con un comando |
+| Node 22 y pnpm 10 | ejecutar la app y sus pruebas (el proyecto **no funciona** con otras versiones de Node, ni más nuevas) |
+| Docker Desktop | la base de datos local (Supabase) |
+| Google Chrome | las pruebas automáticas |
+| GitHub CLI (`gh`) | acceder al repositorio, que es privado |
+
+Todos los comandos se escriben en la app **Terminal** (Aplicaciones → Utilidades → Terminal, o `Cmd+Espacio` y escriba «Terminal»). Copie cada bloque, péguelo y pulse Intro. Si pide la contraseña, es la de su usuario del Mac (no se ve al escribirla).
+
+### 1.1 Herramientas de Apple
+
+Abre una ventana; pulse «Instalar» y espere a que termine:
+
+```bash
+xcode-select --install
+```
+
+Si dice que ya están instaladas, siga.
+
+### 1.2 Homebrew
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Al terminar, en un Mac con chip Apple (M1, M2…), deje `brew` disponible en cada terminal:
+
+```bash
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+(En un Mac con Intel no hace falta.) Compruebe que responde con un número de versión:
+
+```bash
+brew --version
+```
+
+### 1.3 Node 22 y pnpm
+
+```bash
+brew install node@22
+```
+
+Homebrew no pone esta versión en el camino por defecto; hágalo usted:
+
+```bash
+echo 'export PATH="$(brew --prefix node@22)/bin:$PATH"' >> ~/.zprofile && source ~/.zprofile
+```
+
+Compruebe que dice `v22.` y algo más:
+
+```bash
+node -v
+```
+
+pnpm viene con Node a través de Corepack; actívelo:
+
+```bash
+corepack enable
+```
+
+La primera vez que use `pnpm` dentro del proyecto, Corepack preguntará si descarga pnpm 10.9.0: responda `Y`.
+
+### 1.4 Docker Desktop
+
+```bash
+brew install --cask docker
+```
+
+Abra **Docker** desde Aplicaciones, acepte las condiciones y espere a que el icono de la ballena, arriba en la barra, deje de moverse. No hace falta crear cuenta («Skip»). En Docker → Settings → Resources, deje al menos **4 GB de memoria**.
+
+Compruebe que Docker responde (sin error):
+
+```bash
+docker info --format '{{.ServerVersion}}'
+```
+
+Docker Desktop tiene que estar abierto cada vez que vaya a probar.
+
+### 1.5 Google Chrome
+
+Si no lo tiene ya:
+
+```bash
+brew install --cask google-chrome
+```
+
+### 1.6 Descargar el código
+
+El repositorio es privado: necesita una cuenta de GitHub con acceso a `angarcia/bnbtico` (pídale a Daniel que le invite).
+
+```bash
+brew install gh
+```
+
+Inicie sesión: elija «GitHub.com», «HTTPS», «Yes» a usar sus credenciales para git y «Login with a web browser»; copie el código que le muestra y péguelo en la página que se abre.
+
+```bash
+gh auth login
+```
+
+Descargue el proyecto en la carpeta `~/bnbtico` y entre en la rama de trabajo:
+
+```bash
+gh repo clone angarcia/bnbtico ~/bnbtico
+```
+
+```bash
+cd ~/bnbtico && git checkout develop
+```
+
+### 1.7 Instalar las dependencias
+
+Desde `~/bnbtico`:
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+### 1.8 Comprobación final
+
+Los cuatro tienen que responder sin error: Node `v22.…`, pnpm `10.9.0`, una versión de Docker y una de Supabase.
+
+```bash
+node -v && pnpm -v && docker info --format '{{.ServerVersion}}' && pnpm exec supabase --version
+```
+
+Si alguno falla, vea la sección 7.
+
+## 2. Arrancar (cada vez que vaya a probar)
+
+Abra Docker Desktop y, en la Terminal, entre en la carpeta del proyecto:
+
+```bash
+cd ~/bnbtico
+```
+
+**Paso 1 — base de datos.** La primera vez tarda unos minutos porque descarga imágenes de Docker. Después tarda segundos. Si ya está arrancada, avisa y no pasa nada.
+
+```bash
+pnpm db:start
+```
+
+**Paso 2 — la app.** Genera solo las variables locales (`apps/app/.env.local` y `apps/app/.dev.vars`) y arranca Vite con el worker en un único proceso. Deje esta terminal abierta; se para con `Ctrl+C`.
+
+```bash
+pnpm dev --port 5173 --strictPort --host 127.0.0.1
+```
+
+**Paso 3 — abrir en Chrome:**
+
+| Dirección | Qué es |
+| --- | --- |
+| http://127.0.0.1:5173 | La app (Explorar). |
+| http://127.0.0.1:5173/?pronto=1 | La portada estática («Pronto»). |
+| http://127.0.0.1:5173/casa/CT-#### | Ficha de una casa (renderizada en el servidor). Ponga un número que exista: lo ve en la casa o en Studio, tabla `listings`, columna `public_id`. |
+| http://127.0.0.1:54323 | **Supabase Studio**: ver y editar las tablas a mano. |
+
+### Verlo como en el teléfono
+
+La app es móvil primero. En Chrome:
+
+1. Pulse `Cmd+Opción+I` para abrir DevTools.
+2. Pulse `Cmd+Shift+M` para activar el modo dispositivo.
+3. Arriba, elija **Pixel 7**, el mismo que usan las pruebas automáticas.
+4. Para simular la red de Costa Rica: pestaña **Network** → «Slow 4G»; pestaña **Performance** → ⚙ → CPU «4× slowdown».
+
+## 3. Cuentas de prueba
+
+Al ingresar escriba el número **sin el +506**. El código siempre es **`123456`**.
+
+| Número | Papel | Nota |
+| --- | --- | --- |
+| `8777 0001` | Anfitriona (propietaria) | Úsela para publicar casas. |
+| `8888 1234` | Cliente | Favoritos, contactar por WhatsApp. |
+| `8888 9999` | Libre | Segundo cliente o segundo anfitrión. |
+| `8899 0001` | **Admin** | Hay que marcarla como admin la primera vez (ver 4.2). |
+| `+1 415 555 0100` | Cliente de EE. UU. | Para probar el selector de país. |
+
+Las pruebas automáticas usan `8777 0001`, `8888 1234` y `8899 0001` y **borran sus casas** al terminar. Para casas que quiera conservar, publíquelas con `8888 9999`.
+
+## 4. Llenar la base de datos
+
+Una base local nueva (o recién reseteada) arranca **vacía**: no trae casas de ejemplo; solo verá las que hayan dejado las pruebas automáticas. Se llenan igual que en la vida real: un anfitrión publica y el admin aprueba.
+
+### 4.1 Publicar una casa
+
+1. Ingrese con `8888 9999` (o `8777 0001`).
+2. Toque «Publicar casa» y complete los pasos. En las fotos, sirve cualquier imagen del Mac.
+3. Al enviar, la casa queda **Pendiente de revisión**.
+
+### 4.2 Hacer admin a `8899 0001` (una vez)
+
+1. Ingrese en la app con `8899 0001` y código `123456`, para que exista el usuario.
+2. Ejecute en la terminal:
+
+```bash
+docker exec -i supabase_db_bnbtico psql -U postgres -c "select seed_admin('+50688990001');"
+```
+
+3. Cierre sesión y vuelva a ingresar. En **Cuenta** aparece «Revisión de anuncios · admin».
+4. La primera vez le pide vincular una **app de autenticación** (Google Authenticator, 1Password…). Escanee el QR con el teléfono y escriba el código de 6 dígitos. Las siguientes veces solo le pide el código.
+
+Si el segundo código deja de valer (por ejemplo, después de pasar las pruebas automáticas), borre el factor y vuelva a vincularlo:
+
+```bash
+docker exec -i supabase_db_bnbtico psql -U postgres -c "delete from auth.mfa_factors where user_id = (select id from profiles where phone = '+50688990001');"
+```
+
+### 4.3 Aprobar la casa
+
+Como admin: **Anuncios** → toque la casa → «Aprobar y publicar». Con la promoción de lanzamiento, la casa pasa directamente a **Activa** y ya sale en Explorar y en su ficha `/casa/CT-####`.
+
+Para recorridos completos (cliente, anfitrión, admin), siga `docs/pruebas-manuales.md`. Está escrita para `nueva.bnbtico.com`, pero en local vale igual: cambie la dirección por `http://127.0.0.1:5173`.
+
+## 5. Pruebas automáticas
+
+Todas se ejecutan desde la raíz del repositorio, con Node 22.
+
+| Comando | Qué comprueba | Necesita | Tiempo aprox. |
+| --- | --- | --- | --- |
+| `pnpm typecheck` | Tipos de TypeScript | — | < 1 min |
+| `pnpm test` | Lógica (Vitest) | — | < 1 min |
+| `pnpm test:prototype` | Prototipo HTML | — | segundos |
+| `pnpm test:db` | Reglas de la base (RLS, RPCs) | `pnpm db:start` | 1–3 min |
+| `pnpm build` | Compila la app | — | < 1 min |
+| `pnpm size` | Peso del JS frente al presupuesto | `pnpm build` | segundos |
+| `pnpm test:e2e` | Flujos en un móvil simulado (Playwright) | `pnpm db:start` y `pnpm build` | 10–20 min |
+| `pnpm lighthouse` | Velocidad (ficha y app instalada) | `pnpm db:start` y `pnpm build`, sin nada más abierto | varios min |
+
+Antes de subir un cambio, lo mínimo es:
+
+```bash
+pnpm typecheck && pnpm test
+```
+
+Las E2E, siempre después de un build y con su Chrome:
+
+```bash
+pnpm build && CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm test:e2e
+```
+
+Una sola prueba E2E (más rápido):
+
+```bash
+CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm test:e2e explorar.spec.ts
+```
+
+Informe de la última ejecución E2E, con capturas y trazas de lo que falló:
+
+```bash
+pnpm --filter app exec playwright show-report
+```
+
+Avisos:
+
+- `test:db` y `test:e2e` escriben y borran datos de las cuentas de prueba en su base local. No las ejecute mientras está probando a mano con esas cuentas.
+- Las E2E usan el puerto 4173. Si está ocupado: `E2E_PORT=4174 pnpm test:e2e`.
+
+## 6. Mantenimiento
+
+**Después de cada `git pull`**, ponga al día las dependencias. Si alguien añadió una, sin esto fallan las pruebas con `Cannot find package …`:
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+**Después de un `git pull` con migraciones nuevas** (archivos nuevos en `supabase/migrations/`), aplíquelas sin borrar datos:
+
+```bash
+pnpm exec supabase migration up
+```
+
+**Empezar de cero.** Borra **todo** (usuarios, casas, fotos) y vuelve a aplicar las migraciones. Después repita 4.2.
+
+```bash
+pnpm db:reset
+```
+
+**Parar Supabase** al terminar el día, para liberar memoria (los datos se conservan):
+
+```bash
+pnpm db:stop
+```
+
+## 7. Problemas frecuentes
+
+| Síntoma | Causa y solución |
+| --- | --- |
+| `brew: command not found` | Falta el paso de `shellenv` de 1.2. Ejecútelo y abra una Terminal nueva. |
+| `node -v` no dice `v22.…`, o `Unexpected module status` y errores raros de Vite o Vitest | Node equivocado. Repita la línea `export PATH=…` de 1.3 y abra una Terminal nueva. |
+| `pnpm: command not found` | Ejecute `corepack enable` (1.3). Si falla, instale pnpm con npm: `npm install -g pnpm@10.9.0`. |
+| `Repository not found` al clonar | Su cuenta de GitHub no tiene acceso al repositorio, o `gh auth login` no terminó. |
+| `Supabase local no está arrancado: pnpm db:start` | Ejecute `pnpm db:start`. Si falla, abra Docker Desktop. |
+| `Cannot connect to the Docker daemon` | Docker Desktop está cerrado. Ábralo y espere a que arranque. |
+| `Port 5173 is in use` | Hay otra app corriendo. Ciérrela, o cierre la terminal donde la dejó abierta. |
+| `Cannot find package '…'` en las pruebas | Faltan dependencias: `pnpm install --frozen-lockfile`. |
+| `pnpm typecheck` falla en un archivo que no está en git | TypeScript revisa también archivos locales que no se suben (por ejemplo, scripts de capturas en `tests/capturas/`). No es un fallo del proyecto: en CI no existen. Arréglelos o apártelos de la carpeta. |
+| El código `123456` no funciona | Revise que el número sea uno de la tabla de la sección 3. Con otros números no llega ningún código. |
+| La app muestra datos viejos | Es la caché offline. En DevTools: **Application** → «Clear site data» y recargue. |
+| No sale ninguna casa en Explorar | La base está vacía o la casa no está aprobada. Siga la sección 4. |
+
+## 8. El prototipo (referencia de diseño)
+
+No necesita Supabase:
+
+```bash
+python3 -m http.server 8765 --bind 127.0.0.1 --directory design/prototype
+```
+
+Abra http://127.0.0.1:8765/casatica-prototipo.html y elija la vista **Móvil**.

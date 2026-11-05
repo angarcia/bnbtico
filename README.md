@@ -18,6 +18,8 @@ tests/prototype/ pruebas del prototipo (node)
 
 ## Desarrollo
 
+Guía paso a paso para probar en local sin servicios externos (cuentas de prueba, cómo llenar la base, pruebas automáticas, problemas frecuentes): `docs/entorno-local.md`.
+
 Requisitos: Node 22 (`.nvmrc`), pnpm 10 (`corepack enable` lo activa) y Docker para Supabase local. La aplicación no tiene modo demo.
 
 En un entorno local propio, inicie Supabase antes de la aplicación:
