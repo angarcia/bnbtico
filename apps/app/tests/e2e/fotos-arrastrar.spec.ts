@@ -230,8 +230,10 @@ test("mantener pulsada levanta la foto sin mover la página; el ✕ no levanta",
   await expect(tile).toHaveClass(/is-lifted/);
   await expect(page.locator(".photos-grid")).toHaveClass(/is-dragging/);
   expect(await page.evaluate(() => [window.scrollY, document.querySelector(".photos-scroll")!.scrollTop])).toEqual(scrollBefore);
-  // Levantada, mover el dedo en vertical no hace scroll (touchmove nativo no pasivo con preventDefault).
-  await t.move(p.x, p.y - 120, 6);
+  // Levantada, mover el dedo en vertical no hace scroll (touchmove nativo no pasivo con preventDefault). 40 px: más que
+  // SLOP_PX y sin salir de su casilla (108 px de alto), así soltar no reordena llegue o no el frame antes del touchEnd
+  // (con 120 px el dedo acababa sobre la portada y el resultado dependía del ritmo de frames: fallaba en CI).
+  await t.move(p.x, p.y - 40, 6);
   await expect(tile).toHaveClass(/is-lifted/);
   expect(await page.evaluate(() => [window.scrollY, document.querySelector(".photos-scroll")!.scrollTop])).toEqual(scrollBefore);
   await t.up();
