@@ -166,3 +166,6 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .editable-ficha .photo-pill>span{min-width:0;overflow-wrap:anywhere}
 .listing-stats.stack{gap:14px;min-height:138px;padding:14px;background:color-mix(in srgb,var(--sun) 14%,var(--bg));text-align:center}
 .listing-stats .activity-figures p{align-items:center;gap:6px}
+
+/* Perfil: un único acceso junto a los datos, con objetivo táctil suficiente. */
+.account-card>.account-edit{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;flex-shrink:0}

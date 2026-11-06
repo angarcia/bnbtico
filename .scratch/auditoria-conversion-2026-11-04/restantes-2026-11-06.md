@@ -9,7 +9,7 @@
 - [x] 06 Preparado, pendiente de pruebas. Detalle: margen12, fotos accesibles crema44, cifras centradas y compactas, nota breve; conservar flotante. Pruebas: propietario, editar-casa y navegación.
 - [x] 07 Preparado, pendiente de pruebas. Mapa: una salida inferior Ver lista con recuento; foco y Atrás intactos. Pruebas: explorar-mapa, explorar y navegación.
 - [x] 08 Preparado, pendiente de pruebas. Calendario: filas compactas y explicaciones en hojas; conservar estado, mes, moneda y panel. Pruebas: calendario y private-sheets.
-- [ ] 09 Perfil: conservar Editar y quitar la fila duplicada del cliente; formulario intacto. Pruebas: cuenta-y-actividad y navegación.
+- [x] 09 Preparado, pendiente de pruebas. Perfil: conservar Editar y quitar la fila duplicada del cliente; formulario intacto. Pruebas: cuenta-y-actividad y navegación.
 
 **Revisión:** comprobar código y disposición móvil 375×667/390×844 sin activar/parar suscripciones ni enviar mensajes. Revisar nombres largos, muchas casas, bloqueadas, URL directa, errores, foco, y guardados sin cambios. Una revisión visual no equivale a ejecutar las suites.
 
@@ -20,3 +20,7 @@
 07: leída la referencia38; reutilizado el cierre existente, foco inicial en el contador renombrado Ver lista. Las pruebas conservan historial, vuelta a la posición de la lista, marcador y contacto; solo se elimina la expectativa de flecha y se actualiza el nombre del contador. Pruebas no ejecutadas.
 
 08: referencias40/42 leídas. No se tocó el panel de días ni su guardado: ya aplica el estilo global y la validación de cambios. Se retiran solo dos explicaciones permanentes; reserva se explica en su hoja y pausa ya se explicaba en close-hint. Selector común ya entregado en el bloque4. Pruebas no ejecutadas.
+
+09: eliminada solo la entrada duplicada del cliente; Editar/Listo siguen junto a los datos y con el mismo destino e historial. Objetivo44 sin fondo añadido. Casos preparados de cliente y propietario: entrar, Guardar desactivado sin cambios y salir sin perder acceso. No se ejecutaron pruebas.
+
+Revisión final: corregidas las seis observaciones del pase estático (tres expectativas antiguas, nombre del botón Guardar cambios, ancho táctil de Editar/Listo y la guía C94). Inspección visual local a 375×667 y 390×844: Cuenta con dos casas reales, listado completo, perfil sin guardar, detalle con estadísticas138/fotos44, calendario con ambas hojas y mapa con una salida. Las fotos sembradas no cargan en este entorno local; no se cambió Storage. Las suites, build y typecheck siguen pendientes para mañana.

@@ -1,3 +1,7 @@
+## 2026-11-06 · Un solo acceso para editar el perfil (Ana)
+
+Se aplica el apartado9 aprobado: se mantiene Editar junto a los datos personales y se elimina la fila duplicada Mi perfil del cliente. Los campos, destino, guardado y validación se conservan. Pruebas de cliente y propietario preparadas; Ana hará la ejecución conjunta antes de publicar los commits.
+
 ## 2026-11-06 · Explicaciones del Calendario dentro de sus hojas (Ana)
 
 Se aplica el apartado8 aprobado: filas compactas, explicación de reserva en su hoja y explicación de pausa conservada en la suya. Se mantienen las confirmaciones y las reglas existentes de disponibilidad, selección, precios y guardado. No cambia el calendario ni se introduce guardado automático. Pruebas adaptadas, ejecución conjunta pendiente.

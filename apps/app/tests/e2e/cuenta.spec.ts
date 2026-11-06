@@ -203,10 +203,11 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
   await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeAttached();
   // Cuenta es una pestaña (revisión UX 2026-10-29, C4).
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Cuenta" })).toHaveAttribute("aria-current", "page");
-  // Sin casas: «Publicar mi casa», «Mi perfil» y la línea de clientes; nada de suscripción ni de cambiar de modo.
+  // Sin casas: «Publicar mi casa», «Editar» y la línea de clientes; nada de suscripción ni de cambiar de modo.
   // La puerta para publicar es la fila en ocre (revisión UX 2026-10-29, A8).
   await expect(page.getByTestId("publish-promo-row")).toHaveAttribute("href", "/publicar");
-  await expect(page.getByRole("link", { name: /Mi perfil/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Mi perfil/ })).toHaveCount(0);
   await expect(page.getByText("Próximo cobro")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Buscar una casa/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Ayuda por WhatsApp/ })).toContainText("Línea de bnbtico para clientes");

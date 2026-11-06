@@ -92,11 +92,11 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           </div>
           {/* Editar y Listo sustituyen la entrada del historial: la flecha de Cuenta sigue volviendo adonde se estaba. */}
           {editing ? (
-            <Link to="/cuenta" replace className="link small">
+            <Link to="/cuenta" replace className="link small account-edit">
               Listo
             </Link>
           ) : (
-            <Link to="/cuenta" search={{ editar: "1" }} replace className="link small">
+            <Link to="/cuenta" search={{ editar: "1" }} replace className="link small account-edit">
               Editar
             </Link>
           )}
@@ -125,17 +125,6 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           <Suspense fallback={null}>
             <CuentaPaymentRow />
           </Suspense>
-        ) : null}
-        {!owner ? (
-          <Link to="/cuenta" search={{ editar: "1" }} replace className="list-item">
-            <I.user />
-            <span className="body">
-              Mi perfil<small>Descripción y correo de recuperación (opcionales)</small>
-            </span>
-            <span className="chev">
-              <I.chevron />
-            </span>
-          </Link>
         ) : null}
         {/* Favoritos sale de la barra del propietario y pasa aquí (C4). */}
         {owner ? <FavoritesRow /> : null}

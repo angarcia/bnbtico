@@ -528,3 +528,27 @@ test.describe("Actividad por casa", () => {
     await expect(picker(page)).toBeFocused();
   });
 });
+
+for (const actor of ["owner", "other"] as const) {
+  test(`Perfil de ${actor}: un único Editar abre y cierra el formulario sin cambios`, async ({ page }) => {
+    if (actor === "owner") await h.seed({ status: "active", draft: { title: "Casa perfil" } });
+    await injectSession(page, actor);
+    await page.goto("/cuenta");
+    const edit=page.getByRole("link", { name: "Editar", exact: true });
+    await expect(edit).toBeVisible();
+    await expect(page.getByRole("link", { name: /Mi perfil/ })).toHaveCount(0);
+    const editBox=(await edit.boundingBox())!;
+    expect(editBox.height).toBeGreaterThanOrEqual(44);
+    expect(editBox.width).toBeGreaterThanOrEqual(44);
+    await edit.click();
+    await expect(page.getByRole("heading", { name: "Mi perfil", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Guardar cambios", exact: true })).toBeDisabled();
+    const done=page.getByRole("link", { name: "Listo", exact: true });
+    const doneBox=(await done.boundingBox())!;
+    expect(doneBox.height).toBeGreaterThanOrEqual(44);
+    expect(doneBox.width).toBeGreaterThanOrEqual(44);
+    await done.click();
+    await expect(page.getByRole("heading", { name: "Mi perfil", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Editar", exact: true })).toBeVisible();
+  });
+}
