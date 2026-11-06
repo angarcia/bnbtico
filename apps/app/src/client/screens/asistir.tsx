@@ -3,9 +3,9 @@
 // calendario) con el puerto del admin (client/editor-port.ts): lee la casa sin filtrar por dueño y guarda con las RPCs
 // admin_*, al momento y sin revisión. Y la lista de borradores de todos, para asistir a quien está creando su casa.
 // Trozo diferido propio (asistir-*): no entra en el JS inicial ni en el de la zona del admin.
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useParams } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import type { AdminEditApi } from "../../domain/api";
 import { isPublished } from "../../domain/can";
 import { DomainError, toDomainError } from "../../domain/errors";
@@ -17,6 +17,7 @@ import { EditorContext, type EditorListings, type EditorPhotos, type EditorPort 
 import { authApi, useSession } from "../session";
 import { EditableFicha } from "./casa-editable";
 import { Calendar } from "./calendario";
+import { calendarQuery } from "../calendar-days";
 import { EditarCampoScreen } from "./editar";
 import { useOwnListing } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
@@ -151,6 +152,11 @@ export function AsistirCalendarioScreen() {
 function AdminCalendar() {
   const id = useId();
   const { userId, query } = useOwnListing(id);
+  const client = useQueryClient();
+  // Los días se piden a la vez que la casa (el id viene en la URL), no al llegar ella.
+  useEffect(() => {
+    if (userId) void client.prefetchQuery(calendarQuery(userId, id, adminPort.calendar));
+  }, [client, userId, id]);
   const l = query.data;
   return (
     <>

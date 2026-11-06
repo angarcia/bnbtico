@@ -12,7 +12,7 @@ import { planStep } from "../../domain/publish-rules";
 import { REVIEW_MESSAGES as M } from "../../domain/review";
 import { EDIT_SELECT, fromDayRow, fromEditRow, fromListingRow, fromPhotoRows, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
 import { photoObjectPaths } from "../../domain/image";
-import { aalOf } from "./auth";
+import { adminAccess } from "./admin-access";
 
 const COLUMNS = `*, listing_photos(id, path, position), listing_edits(${EDIT_SELECT})`;
 const DRAFT_COLUMNS = `${COLUMNS}, owner:profiles!listings_owner_id_fkey(full_name)`;
@@ -23,19 +23,9 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
   const url = storagePhotoUrl(opts.supabaseUrl);
   const now = opts.now ?? Date.now;
 
-  /** «admin» con aal2, «mfa» si es admin sin el segundo código, «none» si no lo es (la RLS le dejaría leer lo suyo). */
-  async function access(): Promise<"admin" | "mfa" | "none"> {
-    const { data } = await db.auth.getSession();
-    const s = data.session;
-    if (!s) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
-    const { data: me, error } = await db.from("profiles").select("is_admin").eq("id", s.user.id).maybeSingle();
-    if (error) throw toDomainError(error);
-    if (!me?.is_admin) return "none";
-    return aalOf(s.access_token) === "aal2" ? "admin" : "mfa";
-  }
   /** Lo que piden todas las lecturas: sin ser admin, nada; sin el segundo código, que lo confirme. */
   async function reader(): Promise<boolean> {
-    const a = await access();
+    const a = await adminAccess(db);
     if (a === "mfa") throw new DomainError(M.mfaRequired, "forbidden");
     return a === "admin";
   }
@@ -54,7 +44,12 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
     if (error) throw toDomainError(error);
     return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
   }
-  const get = async (id: string) => (UUID.test(id) && (await reader()) ? read(id) : null);
+  /** Una lectura a la vez que la comprobación de quién es (admin-access.ts); sin ser admin, se descarta lo leído. */
+  async function asAdmin<T>(load: () => Promise<T>, none: T): Promise<T> {
+    const [admin, data] = await Promise.all([reader(), load()]);
+    return admin ? data : none;
+  }
+  const get = async (id: string) => (UUID.test(id) ? asAdmin(() => read(id), null) : null);
 
   async function readEdit(id: string) {
     const { data, error } = await db.from("listing_edits").select(EDIT_SELECT).eq("listing_id", id).maybeSingle<EditRow>();
@@ -66,24 +61,26 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
     get,
 
     async drafts() {
-      if (!(await reader())) return [];
-      const { data, error } = await db
-        .from("listings")
-        .select(DRAFT_COLUMNS)
-        .eq("status", "draft")
-        .is("first_published_at", null)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .returns<(Parameters<typeof fromListingRow>[0] & { listing_photos: Parameters<typeof fromPhotoRows>[0]; listing_edits: EditRow | null; owner: { full_name: string } | null })[]>();
-      if (error) throw toDomainError(error);
-      return data.map((row) => ({ listing: fromListingRow(row, row.listing_photos, url, row.listing_edits), ownerName: row.owner?.full_name ?? "" }));
+      return asAdmin(async () => {
+        const { data, error } = await db
+          .from("listings")
+          .select(DRAFT_COLUMNS)
+          .eq("status", "draft")
+          .is("first_published_at", null)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .returns<(Parameters<typeof fromListingRow>[0] & { listing_photos: Parameters<typeof fromPhotoRows>[0]; listing_edits: EditRow | null; owner: { full_name: string } | null })[]>();
+        if (error) throw toDomainError(error);
+        return data.map((row) => ({ listing: fromListingRow(row, row.listing_photos, url, row.listing_edits), ownerName: row.owner?.full_name ?? "" }));
+      }, []);
     },
 
     async saveStep(id, step, patch, known) {
       if (!UUID.test(id) || (known && known.id !== id)) throw notFound();
-      if (!known && !(await reader())) throw new DomainError(M.adminOnly, "validation");
       // Con `known` (la casa que ya tiene el navegador) no se relee antes: la RPC vuelve a comprobar quién es y la casa.
-      const current = known ?? (await read(id));
+      // Sin ella, se lee a la vez que se comprueba quién es.
+      const [admin, current] = known ? [true, known] : await Promise.all([reader(), read(id)]);
+      if (!admin) throw new DomainError(M.adminOnly, "validation");
       if (!current) throw notFound();
       if (current.firstPublishedAt !== null && ["active", "payment_due", "inactive"].includes(current.status)) throw new DomainError(FROZEN, "validation");
       const plan = planStep(current, step, patch);
@@ -132,11 +129,13 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
     },
 
     async days(listingId) {
-      if (!UUID.test(listingId) || !(await reader())) return [];
+      if (!UUID.test(listingId)) return [];
       const { first, last } = calendarWindow(costaRicaToday(now()));
-      const { data, error } = await db.from("listing_days").select("day, available, special_price_crc").eq("listing_id", listingId).gte("day", first).lte("day", last).order("day");
-      if (error) throw toDomainError(error);
-      return data.map(fromDayRow);
+      return asAdmin(async () => {
+        const { data, error } = await db.from("listing_days").select("day, available, special_price_crc").eq("listing_id", listingId).gte("day", first).lte("day", last).order("day");
+        if (error) throw toDomainError(error);
+        return data.map(fromDayRow);
+      }, []);
     },
 
     async saveDays(listingId, change) {

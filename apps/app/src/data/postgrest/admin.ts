@@ -13,7 +13,7 @@ import { REVIEW_MESSAGES as M, REJECTED_SHOWN, editNoteRefusal, editQueueOrder, 
 import { costaRicaToday } from "../../domain/inquiry";
 import { EDIT_SELECT, fromListingRow, fromPhotoRows, storagePhotoUrl, type EditRow, type ListingRow, type PhotoRow } from "../../domain/rows";
 import { FIELD_COLUMN } from "../../domain/edit-summary";
-import { aalOf } from "./auth";
+import { adminAccess } from "./admin-access";
 
 const EDIT_COLUMNS = EDIT_SELECT;
 const BASE_COLUMNS = "*, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name)";
@@ -38,15 +38,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
   const mfa = () => new DomainError(M.mfaRequired, "forbidden");
 
   /** «admin» con aal2, «mfa» si es admin sin el segundo código, «none» si no es admin. Se pide junto con los datos. */
-  async function access(): Promise<"admin" | "mfa" | "none"> {
-    const { data } = await db.auth.getSession();
-    const s = data.session;
-    if (!s) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
-    const { data: me, error } = await db.from("profiles").select("is_admin").eq("id", s.user.id).maybeSingle();
-    if (error) throw toDomainError(error);
-    if (!me?.is_admin) return "none";
-    return aalOf(s.access_token) === "aal2" ? "admin" : "mfa";
-  }
+  const access = () => adminAccess(db);
 
   /** Una RPC del admin: error de la base como DomainError, con el segundo código aparte. */
   async function call(rpc: PromiseLike<{ error: { message: string } | null }>): Promise<void> {

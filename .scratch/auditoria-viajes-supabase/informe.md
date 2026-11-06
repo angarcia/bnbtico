@@ -1,6 +1,6 @@
 # Auditoría: pantallas que encadenan viajes a Supabase
 
-Status: needs-triage (1, 3 y 4 arreglados el 2026-11-05; ver «Estado»)
+Status: needs-triage (1, 3 y 4 arreglados el 2026-11-05 y 5 el 2026-11-06; ver «Estado»)
 Fecha: 2026-11-05
 
 ## Qué se buscaba
@@ -97,8 +97,17 @@ Arreglados 1, 3 y 4, cada uno con una prueba E2E que retiene la primera petició
 - **Ficha:** precarga de `billingQuery`, `activityQuery` y del JS de la ficha editable en `CasaPropietarioScreen`.
 - **Calendario:** precarga de `calendarQuery` con `?casa=` o la última casa usada.
 
-Siguen en segundo nivel, sin tapar nada: la tarjeta «Publique gratis» (punto 7) y el contador de Consultas en Explorar y Calendario. Pendientes: 5, 6, 7 y 8.
+Siguen en segundo nivel, sin tapar nada: la tarjeta «Publique gratis» (punto 7) y el contador de Consultas en Explorar y Calendario.
+
+**Punto 5, arreglado el 2026-11-06.** La comprobación «es admin» vive en `apps/app/src/data/postgrest/admin-access.ts`, compartida por `admin.ts` y `admin-edit.ts`:
+- Se hace a la vez que la lectura. En `admin-edit.ts`: `get`, `drafts`, `days` y `saveStep` sin `known`. Sin ser admin, lo leído se descarta como antes.
+- Se pregunta una sola vez por token. Las peticiones simultáneas comparten la pregunta, y la respuesta «admin» se recuerda hasta que cambia el token (al confirmar el segundo código o al renovarse la sesión). «No es admin» y «falta el código» no se recuerdan. La seguridad sigue en SQL (`is_admin()` con `aal2`).
+- El calendario de una casa ajena pide los días a la vez que la casa, porque el id viene en la URL.
+- En frío, el calendario del admin pasa de 4 niveles (perfil → casa → perfil → días) a 1. En `/admin` desaparecen las 2–3 consultas repetidas de `profiles`.
+- Pruebas: una E2E que retiene la comprobación y espera la casa y los días (fallaba antes), y `tests/unit/admin-access.test.ts`.
+
+Pendientes: 6, 7 y 8 (y el 2, de prioridad baja).
 
 ## Siguiente paso
 
-Elegir qué puntos se arreglan y abrir un ticket por cada uno en esta carpeta, con «No tocar», según la forma de trabajar de las rondas. Mi orden recomendado para lo que queda: 5 y después 8.
+Elegir qué puntos se arreglan y abrir un ticket por cada uno en esta carpeta, con «No tocar», según la forma de trabajar de las rondas. Mi orden recomendado para lo que queda: 8 (sobre todo `saveEdit`) y después 6.

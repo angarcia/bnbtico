@@ -181,3 +181,24 @@ test("editar el calendario de una casa ajena", async ({ page }) => {
   expect(await h.anon.getPublicDays(publicId)).toEqual([{ day: iso, available: false, specialPriceCrc: null }]);
   expect((await h.adminActions(id)).map((a) => a.action)).toEqual(["listing.edit"]);
 });
+
+test("calendario de una casa ajena en frío: la casa y sus días salen sin esperar a comprobar que es admin", async ({ page }) => {
+  const { id } = await h.seed({ status: "active", as: "other", draft: { title: "Casa Sin Esperas", nightlyPriceCrc: 95000 } });
+  await asAdmin(page, `/admin/casas/${id}/calendario`);
+  await expect(page.locator(".cal-house")).toHaveText("Casa Sin Esperas");
+  // Al recargar, la comprobación de «es admin» se queda retenida: la casa y sus días tienen que salir igual.
+  const held: (() => void)[] = [];
+  await page.route(
+    (url) => url.pathname.endsWith("/rest/v1/profiles") && url.searchParams.get("select") === "is_admin",
+    (route) => new Promise<void>((resolve) => held.push(() => resolve(route.continue()))),
+  );
+  const listing = page.waitForRequest((r) => r.url().includes("/rest/v1/listings?") && r.url().includes(`id=eq.${id}`));
+  const days = page.waitForRequest((r) => r.url().includes("/rest/v1/listing_days?") && r.url().includes(`listing_id=eq.${id}`));
+  await page.reload();
+  await Promise.all([listing, days]);
+  await expect.poll(() => held.length).toBeGreaterThan(0);
+  held.forEach((go) => go());
+  await page.unroute((url) => url.pathname.endsWith("/rest/v1/profiles"));
+  await expect(page.locator(".cal-house")).toHaveText("Casa Sin Esperas");
+  await expect(page.getByText("Toque los días para editarlos")).toBeVisible();
+});
