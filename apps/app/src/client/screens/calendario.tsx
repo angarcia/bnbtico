@@ -93,6 +93,13 @@ export function CalendarioScreen() {
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const houses = listings.data?.filter(hasCalendar);
   const last = readLast();
+  // Los días de la casa de la URL o de la última usada salen a la vez que la lista, sin esperarla (auditoría de viajes
+  // 2026-11-05). Si al final se muestra otra, solo sobra esta petición.
+  const client = useQueryClient();
+  const guess = search.casa ?? last;
+  useEffect(() => {
+    if (userId && guess) void client.prefetchQuery(calendarQuery(userId, guess));
+  }, [client, userId, guess]);
   // Por defecto, la elegida en la URL, la última usada o la primera activa; nunca un borrador (revisión UX A5).
   const current =
     houses?.find((l) => l.id === search.casa) ?? houses?.find((l) => l.id === last) ?? houses?.find((l) => l.status === "active") ?? houses?.[0];

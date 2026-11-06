@@ -72,6 +72,24 @@ test("solo un borrador sin enviar: el aviso y «Seguir publicando» al paso dond
   await expect(page.getByRole("link", { name: "Seguir publicando" })).toHaveAttribute("href", `/propietario/publicar/${draft.id}/7`); // sin fotos ni precio: la foto es obligatoria y va antes (2026-10-30)
 });
 
+// Auditoría de viajes (2026-11-05): los días de la casa esperaban a la lista de casas. Con la casa en la URL (o la última
+// usada), salen a la vez que la lista.
+test("con la casa en la URL, sus días se piden sin esperar a la lista de casas", async ({ page }) => {
+  const house = await seedHouse("Casa Días Ya");
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route((u) => u.pathname.endsWith("/rest/v1/listings") && u.searchParams.has("owner_id") && !u.searchParams.has("id"), async (route) => {
+    await held;
+    await route.continue();
+  });
+  const days = page.waitForRequest((r) => r.url().includes("/rest/v1/listing_days") && r.url().includes(house.id));
+  await open(page, house.id);
+  await days;
+  release();
+  await expect(page.locator(".cal-house, .house-picker").first()).toBeVisible();
+  await expect(grid(page).first()).toBeVisible();
+});
+
 test("una casa activa y un borrador más nuevo: abre la activa, sin selector, y el borrador no aparece", async ({ page }) => {
   await clearOther();
   const active = await h.seed({ status: "active", as: "other", draft: { title: "Casa Activa Cal", nightlyPriceCrc: 95000 } });
