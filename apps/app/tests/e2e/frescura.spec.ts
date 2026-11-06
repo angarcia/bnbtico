@@ -88,7 +88,7 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-const closeRow = (page: Page) => page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
+const closeRow = (page: Page) => page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true });
 const sheet = (page: Page) => page.getByRole("dialog", { name: "Pausar la casa" });
 
 test("el worker local cachea la ficha; guardar el calendario, cerrar y la reapertura nocturna la refrescan en ≤ 5 s", async ({ page }) => {

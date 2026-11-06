@@ -310,7 +310,6 @@ function MarkRow({ today, onMark }: { today: string; onMark: (nights: string[], 
         </span>
         <span className="body">
           <b>Marcar una reserva</b>
-          <span className="small muted">Marque de una vez las noches de una reserva larga como ocupadas.</span>
         </span>
         <I.chevron />
       </button>
@@ -372,7 +371,6 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
           </span>
           <span className="body">
             <b>Pausar la casa</b>
-            <span className="small muted">No sale en Explorar ni recibe consultas. Puede elegir cuándo vuelve.</span>
           </span>
           <I.chevron />
         </button>

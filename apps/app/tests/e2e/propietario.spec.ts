@@ -281,7 +281,7 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
 
 test("«Pausar la casa» responde al instante desde el Calendario y vuelve atrás si la base se niega", async ({ page }) => {
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
+  const row = page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true });
   const closed = page.locator(".cal-action.is-paused");
   const open = page.getByRole("button", { name: "Volver a publicarla" });
   await expect(row).toBeVisible();

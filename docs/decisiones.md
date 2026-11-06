@@ -1,3 +1,7 @@
+## 2026-11-06 · Explicaciones del Calendario dentro de sus hojas (Ana)
+
+Se aplica el apartado8 aprobado: filas compactas, explicación de reserva en su hoja y explicación de pausa conservada en la suya. Se mantienen las confirmaciones y las reglas existentes de disponibilidad, selección, precios y guardado. No cambia el calendario ni se introduce guardado automático. Pruebas adaptadas, ejecución conjunta pendiente.
+
 ## 2026-11-06 · Una salida inferior en el mapa de Explorar (Ana)
 
 Se aplica el apartado7 aprobado: se quita la flecha superior y la salida inferior se nombra «Ver lista · N casas». El foco inicial pasa a esa salida; se conserva el cierre existente y la navegación de Atrás, sin tocar el asistente de Publicar. Pruebas de foco y navegación adaptadas, pendientes de la tanda conjunta de Ana.

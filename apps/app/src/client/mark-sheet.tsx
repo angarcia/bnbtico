@@ -32,7 +32,7 @@ export function MarkSheet({ today, onConfirm, onClose }: { today: string; onConf
         <span className="grabber" aria-hidden="true" />
         <h2 id="mark-title">Marcar una reserva</h2>
         <span className="hint" id="mark-hint">
-          Elija la llegada y la salida. La noche de la salida queda libre.
+          Marque de una vez las noches de una reserva larga como ocupadas. Elija la llegada y la salida. La noche de la salida queda libre.
         </span>
         <form onSubmit={onSubmit} noValidate>
           <div className="contact-calendar mark-calendar">

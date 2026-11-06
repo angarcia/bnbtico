@@ -140,7 +140,7 @@ describe("hojas privadas: contrato de interacción en Chromium", () => {
   it("reserva: no confirma sin fechas y el recorrido omite el botón deshabilitado", async () => {
     await fixture("mark", async (page) => {
       await expect(page.getByRole("button", { name: "Marcar como ocupado" })).toBeDisabled();
-      await expect(page.getByRole("dialog")).toHaveAccessibleDescription("Elija la llegada y la salida. La noche de la salida queda libre.");
+      await expect(page.getByRole("dialog")).toHaveAccessibleDescription("Marque de una vez las noches de una reserva larga como ocupadas. Elija la llegada y la salida. La noche de la salida queda libre.");
       await page.getByRole("button", { name: "Cancelar" }).focus();
       await page.keyboard.press("Shift+Tab");
       await expect(page.getByRole("dialog").locator("button:not([disabled])").nth(-2)).toBeFocused();

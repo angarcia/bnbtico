@@ -79,7 +79,7 @@ test("la ficha pública va a la red primero y, sin red, sale la copia guardada",
 test("una escritura sin red muestra «Sin conexión», vuelve atrás y no se encola", async ({ page, context }) => {
   await injectSession(page, "owner");
   await page.goto(`/propietario/calendario?casa=${active.id}`);
-  const row = page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
+  const row = page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true });
   await expect(row).toBeVisible();
   await controlled(page);
 

@@ -224,7 +224,7 @@ test("ficha editable: la tarjeta ocre de la pendiente, el bloque de la parada, s
   await expect(page.getByTestId("subscription-row")).toHaveText(`Gratis hasta el ${cardDate(subCerca.promoEndsOn!)}`);
   // «Pausar la casa» (en el Calendario) no depende de la suscripción.
   await page.goto(`/propietario/calendario?casa=${cerca.id}`);
-  await expect(page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true })).toBeVisible();
 
   await page.goto(`/propietario/casas/${parada.id}`);
   await expect(page.getByTestId("stopped-notice").getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", payLink(parada.publicId));

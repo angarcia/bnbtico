@@ -38,6 +38,10 @@ El detalle del propietario tiene márgenes exteriores de 12 px, conserva la port
 
 En el mapa completo se retira únicamente la flecha de salida superior. El buscador y filtros conservan su fila y ganan espacio. La salida inferior dice «Ver lista · N casas», con icono de lista y recuento actual, y recibe el foco inicial. Usa el mismo cierre, que conserva posición de la lista, retorno de foco y Atrás del navegador. No cambian los marcadores, agrupaciones, atribución, ficha del marcador ni filtros.
 
+## Acciones de Calendario compactas (2026-11-06)
+
+Las filas Marcar una reserva y Pausar la casa conservan iconos, nombres, flechas y objetivos táctiles; se retiran solo sus explicaciones permanentes. La explicación de reserva aparece en su hoja antes de confirmar, con las reglas de llegada/salida; Pausar conserva la explicación completa existente en su hoja. El estado ya pausado conserva fecha y Volver a publicarla. Meses, moneda, precios, selector compartido y panel de días conservan sus reglas, Cancelar y los desactivados reales.
+
 ## Sistema
 
 - **Logo e iconos elegidos (2026-11-05, Ana):** sin rana; letras originales con solo la T elevada. Cuatro composiciones: BNBTICO, BNBTICO.COM y ambas dentro del cuadrado de puntos. Iconos: contorno continuo con BT a 96/64/48 px; B original más ancha y reforzada a 32/24/16 px, según el tamaño visible (exportaciones 1×/2×/3×). Predeterminado: terracota `#B44C30` sobre crema `#FFFBF2`; alternativa crema sobre terracota para fondos oscuros, además de crema sobre oscuros sólidos y blanco transparente sobre fotos. Archivos definitivos de estos seis tamaños en `design/logo/iconos-elegidos-2026-11-05/`; recursos sustituidos localmente en las dos apps, portada, imagen de compartir, prototipo y rutas de las maquetas; sin despliegue ni cambios en los colores del menú o calendarios. Para web, las cuatro composiciones van siempre en terracota/tinta #1C2B2A/crema transparente (blanco para fotos), sin placa de fondo; los fondos sólidos se reservan para perfiles e iconos. Ver `design/logo/README.md`.

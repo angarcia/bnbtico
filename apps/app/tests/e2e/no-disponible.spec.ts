@@ -18,7 +18,7 @@ test.describe.configure({ mode: "serial" });
 
 const today = () => costaRicaToday(Date.now());
 const nextMonthDay = (d: number) => `${addMonths(today().slice(0, 7), 1)}-${String(d).padStart(2, "0")}`;
-const closeRow = (page: Page) => page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ });
+const closeRow = (page: Page) => page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true });
 const sheet = (page: Page) => page.getByRole("dialog", { name: "Pausar la casa" });
 const closedRow = (page: Page) => page.locator(".cal-action.is-paused");
 const openBtn = (page: Page) => page.getByRole("button", { name: "Volver a publicarla" });
@@ -51,7 +51,7 @@ test("pausar con fecha → «Pausada hasta el …» → fuera de Explorar y fich
 
   await calendar(page, casa.id);
   await expect(closeRow(page)).toBeVisible();
-  await expect(closeRow(page)).toContainText("No sale en Explorar ni recibe consultas. Puede elegir cuándo vuelve.");
+  await expect(closeRow(page)).not.toContainText("No sale en Explorar ni recibe consultas. Puede elegir cuándo vuelve.");
   await expect(page.locator(".month-grid.is-dimmed")).toHaveCount(0);
   await closeRow(page).screenshot({ path: "test-results/no-disponible-fila.png" });
 

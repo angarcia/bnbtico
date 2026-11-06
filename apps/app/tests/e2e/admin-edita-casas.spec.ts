@@ -163,7 +163,7 @@ test("editar el calendario de una casa ajena", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Calendario" })).toBeVisible();
   await expect(page.locator(".cal-house")).toHaveText(title);
   // «Marcar una reserva» y «Pausar la casa» son del anfitrión.
-  await expect(page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pausar la casa", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Marcar una reserva/ })).toHaveCount(0);
   await expect(page.getByText("Toque los días para editarlos")).toBeVisible();
   await shot(page, "5-calendario-casa-ajena");

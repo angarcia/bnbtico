@@ -372,7 +372,7 @@ test("al abrir, arriba del todo: la casa, «Marcar una reserva» y «Pausar la c
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await expect(shown(page, "Casa Primer Día")).toBeInViewport();
   await expect(page.getByRole("button", { name: /Marcar una reserva/ })).toBeInViewport();
-  await expect(page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toBeInViewport();
+  await expect(page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true })).toBeInViewport();
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toBeInViewport();
   await expect(page.getByRole("heading", { name: monthTitle(now.slice(0, 7)) })).toBeInViewport();
   // El mes entero desde el día 1: los pasados, del mismo tamaño, tachados y sin tocar.
@@ -459,7 +459,7 @@ test("casa pausada: «Pausada hasta el …», días de solo lectura, sin «Marca
   await h.owner("owner").setAvailable(casa.id, false, reopen);
   await open(page, casa.id);
   await expect(page.getByText(`Pausada hasta el ${shortDate(reopen)}`)).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Marcar una reserva/ })).toHaveCount(0);
   await expect(cellOf(page, on(3))).toHaveAccessibleName(/, ocupado/);
   await expect(page.locator(".month-grid button")).toHaveCount(0);
@@ -469,7 +469,7 @@ test("casa pausada: «Pausada hasta el …», días de solo lectura, sin «Marca
   await page.getByRole("button", { name: "Volver a publicarla" }).click();
   await expect(day(page, on(3))).toHaveAccessibleName(/, ocupado/);
   await expect(page.getByRole("button", { name: "Volver a publicarla" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Marcar una reserva/ })).toBeVisible();
   await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(true);
 });
@@ -487,11 +487,12 @@ test("«Marcar una reserva»: la fila, la hoja con el calendario de rango y las 
   await h.putDay(casa.id, { day: on(11), available: true, specialPriceCrc: 150000 });
   await h.putDay(casa.id, { day: on(12), available: false, specialPriceCrc: null });
   await open(page, casa.id);
-  await expect(markRow(page)).toContainText("Marque de una vez las noches de una reserva larga como ocupadas.");
+  await expect(markRow(page)).not.toContainText("Marque de una vez las noches de una reserva larga como ocupadas.");
 
   await markRow(page).click();
   await expect(markSheet(page)).toBeVisible();
   await expect(markSheet(page)).toBeFocused();
+  await expect(markSheet(page)).toContainText("Marque de una vez las noches de una reserva larga como ocupadas.");
   await expect(markSheet(page)).toContainText("Elija la llegada y la salida. La noche de la salida queda libre.");
   await expect(confirmMark(page)).toBeDisabled();
   await expect(markSheet(page).getByTestId("mark-summary")).toHaveText("Elija la llegada");

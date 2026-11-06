@@ -193,7 +193,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
   const reopen = addDays(today(), 9);
   from = lastResponseId();
   await owner.goto(`/propietario/calendario?casa=${draft.id}&mes=${next()}`);
-  await owner.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ }).click();
+  await owner.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true }).click();
   const sheet = owner.getByRole("dialog", { name: "Pausar la casa" });
   await sheet.getByLabel("Volver a publicarla el (opcional)").fill(reopen);
   await sheet.getByRole("button", { name: "Pausar la casa" }).click();
@@ -229,7 +229,7 @@ test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo 
 
   await owner.reload();
   await expect(owner.getByRole("button", { name: "Volver a publicarla" })).toHaveCount(0);
-  await expect(owner.getByRole("button", { name: /^Pausar la casa.*cuándo vuelve/ })).toBeVisible();
+  await expect(owner.getByRole("region", { name: "Acciones del calendario" }).getByRole("button", { name: "Pausar la casa", exact: true })).toBeVisible();
   await expect(day(on(12))).toHaveAccessibleName(/, ocupado/);
   await owner.context().close();
 });
