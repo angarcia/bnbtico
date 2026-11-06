@@ -1,3 +1,7 @@
+## 2026-11-06 · Marca como vistas las consultas visibles (Ana)
+
+Solo se marca como vista una consulta cuyo nombre de cliente se mantiene visible un momento en Consultas, también desde el acceso de Mis casas y dentro del filtro elegido. Las que quedan fuera de pantalla no cambian. Bajan «Nueva» y el contador sin reordenar las tarjetas durante la visita; tocar «Abrir WhatsApp» antes de verla también la marca. Se reutiliza el registro existente; no se infiere nada de lo ocurrido dentro de WhatsApp.
+
 ## 2026-11-06 · Oculta el borrador automático en Consultas (Ana)
 
 Se oculta el borrador automático en Consultas porque el cliente puede editarlo antes de enviar o no enviar nada. Se conserva en el registro y se muestran las notas personalizadas. La tarjeta mantiene el nombre, los datos de la estancia, «Nueva» y «Abrir WhatsApp».

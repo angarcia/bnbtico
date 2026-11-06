@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import type { OwnerInquiry } from "../../src/domain/inquiry";
 import { PRIVATE_KEYS } from "../../src/client/account";
-import { countNew, inquiriesQuery, openInquiry } from "../../src/client/inquiries";
+import { countNew, inquiriesQuery, markInquirySeen, openInquiry } from "../../src/client/inquiries";
 
 const inquiry = (id: string, openedAt: string | null = null): OwnerInquiry => ({
   id,
@@ -32,6 +32,20 @@ describe("Mis consultas en el navegador", () => {
   it("countNew cuenta las que el propietario no ha abierto", () => {
     expect(countNew(undefined)).toBe(0);
     expect(countNew([inquiry("a"), inquiry("b", "2026-10-23T13:00:00Z"), inquiry("c")])).toBe(2);
+  });
+
+  it("al verla solo marca esa consulta, y un toque posterior no vuelve a escribir", async () => {
+    const client = new QueryClient();
+    const key = inquiriesQuery("u1").queryKey;
+    const a = inquiry("a");
+    client.setQueryData(key, [a, inquiry("b")]);
+    const mark = vi.fn(async () => {});
+    const assign = vi.fn();
+    await markInquirySeen(client, "u1", a, { mark, now: () => "t" });
+    expect(client.getQueryData<OwnerInquiry[]>(key)?.map((i) => i.openedAt)).toEqual(["t", null]);
+    await openInquiry(client, "u1", a, { mark, assign });
+    expect(mark).toHaveBeenCalledExactlyOnceWith("a");
+    expect(assign).toHaveBeenCalledWith("https://wa.me/50688881234");
   });
 
   it("«Abrir WhatsApp»: deja de ser nueva en la caché al momento, pide marcarla y abre wa.me con el cliente, sin texto", async () => {
@@ -66,6 +80,7 @@ describe("Mis consultas en el navegador", () => {
     expect(assign).toHaveBeenCalledWith("https://wa.me/50688881234");
     expect(client.getQueryData<OwnerInquiry[]>(key)?.[0]?.openedAt).toBe("t");
 
+    client.setQueryData(key, [inquiry("a")]); // una lectura posterior aún la trae como nueva
     const slow = vi.fn();
     await openInquiry(client, "u1", inquiry("a"), {
       mark: () => new Promise(() => {}),

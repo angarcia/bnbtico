@@ -14,7 +14,7 @@ import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
 // publica por el asistente → el admin (aal2, código de su app de autenticación) aprueba → un cliente sin cuenta guarda la
 // casa en favoritos y la contacta: crea su cuenta con un número de prueba recién borrado (el único código por SMS del
 // recorrido; las demás sesiones se inyectan) y vuelve a la hoja con lo escrito → «Abrir WhatsApp» con la URL exacta →
-// el propietario ve «Nueva» en Actividad, abre WhatsApp con el cliente y el contador desaparece.
+// el propietario ve la consulta en Actividad, el contador desaparece y puede abrir WhatsApp con el cliente.
 test.describe.configure({ mode: "serial" });
 
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
@@ -164,7 +164,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await expect(sheet).toHaveCount(0);
 
-  // 7. El propietario (más tarde, desde su teléfono) ve «Nueva» y abre WhatsApp con el cliente; el contador desaparece.
+  // 7. El propietario ve la consulta (el contador desaparece) y abre WhatsApp con el cliente.
   const later = await phone(browser, info);
   await injectSession(later, "owner");
   await later.goto("/propietario/casas");
@@ -180,7 +180,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(card).toContainText("3 personas");
   await expect(card).not.toContainText(message);
   await expect(card.locator(".inquiry-message")).toHaveCount(0);
-  await expect(card.getByText("Nueva", { exact: true })).toBeVisible();
+  await expect(nav(later).getByTestId("inquiries-badge")).toHaveCount(0);
   const waOwner = await catchWhatsApp(later);
   await card.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect.poll(() => waOwner).toEqual([`https://wa.me/${FREE_PHONE.replace(/\D/g, "")}`]);

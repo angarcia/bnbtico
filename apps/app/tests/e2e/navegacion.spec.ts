@@ -99,7 +99,6 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   await h.recordTaps(casa.publicId, 2);
   await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: 2, message: "Hola, ¿está libre?" });
   await page.goto("/propietario/actividad");
-  await expect(page.getByTestId("inquiries-new")).toHaveText("1 consulta nueva");
   await expect(page.getByTestId("activity-figures")).toHaveCount(0);
   await expect(page.locator("article.activity-card")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toHaveCount(0);
@@ -108,13 +107,13 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   await expect(inquiry).toContainText("AP");
   await expect(inquiry).toContainText("sin fechas · 2 personas");
   await expect(inquiry.getByTestId("inquiry-house")).toHaveCount(0);
-  await expect(inquiry.getByText("Nueva", { exact: true })).toBeVisible();
   await expect(page.getByTestId("house-picker-trigger")).toHaveCount(0);
-  await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
-  await expect(nav(page).getByRole("link", { name: "Consultas, 1 nueva" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByTestId("inquiries-new")).toHaveText("Sin consultas nuevas");
+  await expect(nav(page).getByRole("link", { name: "Consultas", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect.poll(() => opened(casa.publicId)).toBe("1");
   await page.screenshot({ path: "test-results/consultas-una-casa.png", fullPage: true });
 
-  // «Abrir WhatsApp»: el chat con el cliente, sin texto; la consulta deja de ser nueva y el contador de la pestaña se va.
+  // «Abrir WhatsApp»: abre el chat con el cliente, sin texto.
   const wa = await catchWhatsApp(page);
   await inquiry.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect.poll(() => wa).toEqual([`https://wa.me/${TEST_PHONES.other.replace(/\D/g, "")}`]);
@@ -173,7 +172,7 @@ test("7c · sin consultas: un único mensaje", async ({ page }) => {
 
 test("el contador se va con la sesión y la consulta privada sale de la caché del dispositivo", async ({ page }) => {
   await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: null, message: "Otra pregunta" });
-  await page.goto("/propietario/actividad");
+  await page.goto("/propietario/casas");
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
   // Cuenta es la pestaña de la derecha (C4): la barra sigue a la vista.
   await accountButton(page).click();
