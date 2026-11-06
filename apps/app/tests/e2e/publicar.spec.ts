@@ -783,6 +783,8 @@ test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrá
   const draft = await h.seed({ status: "draft", photos: 5 });
   await page.goto(`/propietario/publicar/${draft.id}/4`);
   await expect(page.locator(".stage-label")).toHaveText("3 de 4");
+  // La cabecera ya aparece con el esqueleto; medir cuando haya cargado el formulario del paso.
+  await expect(page.getByRole("heading", { level: 2, name: "¿Cuántos caben?" })).toBeVisible();
   // La cabecera y los controles siguen separados y accesibles en ambos tamaños de móvil.
   for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
