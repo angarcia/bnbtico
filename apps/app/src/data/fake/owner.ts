@@ -102,7 +102,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       const open = [...db.listings.values()].filter((l) => l.ownerId === owner && l.deletedAt === null && l.status === "draft" && l.reviewedAt === null).length;
       if (open >= MAX_OPEN_DRAFTS) throw new DomainError(`Ya tiene ${MAX_OPEN_DRAFTS} borradores sin enviar. Termine o descarte uno antes de empezar otro.`, "validation");
       const l = db.insertListing(owner);
-      return { id: l.id, publicId: l.publicId };
+      return { id: l.id, publicId: l.publicId, listing: toListing(l) };
     },
 
     async saveStep(id, step, patch, known) {

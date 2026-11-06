@@ -67,17 +67,26 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
     },
 
     async createDraft() {
-      const owner = await me();
-      const profile = await db.from("profiles").select("phone").eq("id", owner).single();
-      if (profile.error) throw toDomainError(profile.error);
-      // Nada preseleccionado salvo lo que no se pregunta: toda casa se alquila por noches y el mensual empieza en No.
+      // El WhatsApp sale de la sesión (sin otro viaje a la base): GoTrue lo guarda sin «+». Al insertar, listings_insert_guard
+      // lo reescribe con el del perfil para todos menos el admin; sin teléfono en la sesión, se lee el perfil como antes.
+      const { data: auth } = await db.auth.getSession();
+      const owner = auth.session?.user.id;
+      if (!owner) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
+      let phone = auth.session?.user.phone ? `+${auth.session.user.phone.replace(/^\+/, "")}` : null;
+      if (!phone) {
+        const profile = await db.from("profiles").select("phone").eq("id", owner).single();
+        if (profile.error) throw toDomainError(profile.error);
+        phone = profile.data.phone;
+      }
+      // Nada preseleccionado salvo lo que no se pregunta: toda casa se alquila por noches y el mensual empieza en No. La fila
+      // vuelve entera (como getOwn) para que la pantalla no tenga que pedirla otra vez.
       const { data, error } = await db
         .from("listings")
-        .insert({ owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: profile.data.phone, accepts_nightly: true, accepts_monthly: false })
-        .select("id, public_id")
+        .insert({ owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: phone, accepts_nightly: true, accepts_monthly: false })
+        .select(OWN_COLUMNS)
         .single();
       if (error) throw toDomainError(error);
-      return { id: data.id, publicId: data.public_id };
+      return { id: data.id, publicId: data.public_id, listing: fromListingRow(data, data.listing_photos, url, data.listing_edits) };
     },
 
     async saveStep(id, step, patch, known) {

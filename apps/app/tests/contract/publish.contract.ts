@@ -85,9 +85,11 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
       });
 
       it("un borrador nuevo tiene su CT-####, el WhatsApp del perfil, se alquila por noches y no por meses", async () => {
-        const { id, publicId } = await me.createDraft();
+        const { id, publicId, listing } = await me.createDraft();
         expect(publicId).toMatch(/^CT-\d+$/);
         const l = await me.getOwn(id);
+        // Devuelve el borrador entero: la pantalla de «+» lo guarda en caché sin volver a pedirlo.
+        expect(listing).toEqual(l);
         expect(l).toMatchObject({
           id,
           publicId,

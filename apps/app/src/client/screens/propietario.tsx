@@ -3,12 +3,12 @@
 // El calendario (17) va en su propio trozo (screens/calendario.tsx).
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useOwnListing, useUserId } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
 import { ActivateButton, HoldNotice, PayButton, PayNotice, ShareButtonInline, WhatsAppItem, shareOf, titleOf } from "../owner-ui";
-import { Suspense, lazy, useState, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
 import { toDomainError } from "../../domain/errors";
@@ -25,7 +25,7 @@ import { useShare } from "../../shared/share-button";
 import { useBilling, type Billing } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
-import { offerTakenQuery, ownListingsQuery, useDeleteDraft } from "../owner";
+import { offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
 import { ConfirmSheet } from "../confirm-sheet";
 
 const message = (e: unknown) => toDomainError(e).message;
@@ -62,8 +62,23 @@ function NoticeCard({ notice, billing }: { notice: Notice | null; billing: Billi
   return hb && billing ? <PayNotice hb={hb} today={billing.today} title={hb.house.title} /> : null;
 }
 
+/** El asistente de publicar se descarga en reposo al abrir Mis casas: el «+» ya no espera a su JS. */
+function usePreloadPublish() {
+  useEffect(() => {
+    const load = () => void import("./publicar").catch(() => undefined);
+    if (typeof requestIdleCallback === "function") {
+      const handle = requestIdleCallback(load, { timeout: 3000 });
+      return () => cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(load, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+}
+
 export function CasasScreen() {
   const userId = useUserId();
+  const client = useQueryClient();
+  usePreloadPublish();
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
   const billing = useBilling(userId);
@@ -107,7 +122,15 @@ export function CasasScreen() {
                 )}
               </div>
             ) : null}
-            <Link to="/propietario/publicar" className="new-house" aria-label="Nueva casa">
+            {/* Al apoyar el dedo empieza ya la lectura del borrador pendiente que el asistente necesita (siempre de la base). */}
+            <Link
+              to="/propietario/publicar"
+              className="new-house"
+              aria-label="Nueva casa"
+              onPointerDown={() => {
+                if (userId) void client.prefetchQuery(resumableQuery(userId));
+              }}
+            >
               <I.plus size={22} />
             </Link>
           </div>
