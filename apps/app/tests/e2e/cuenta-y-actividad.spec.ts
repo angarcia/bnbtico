@@ -210,15 +210,16 @@ test.describe("Cuenta", () => {
     await expect(rowA).toHaveAttribute("data-ocre", "1");
     await expect(rowA.locator(".badge.badge-sun")).toHaveText("Pendiente de pago");
     const rowB = rows.filter({ hasText: "Crystal Jungle Villa" });
-    await expect(rowB).not.toHaveAttribute("data-ocre", /./);
-    await expect(rowB).toHaveAttribute("href", `${SCREEN}?casa=${b.publicId}`);
+    await expect(rowB).toHaveCount(0);
+    await expect(page.getByTestId("subscription-counts")).toHaveText("2 casas");
     const rowC = rows.filter({ hasText: "Cabina Punta Uva" });
     await expect(rowC.locator("a")).toHaveCount(0);
     expect(await rowC.evaluate((e) => e.tagName)).toBe("DIV");
     await page.screenshot({ path: "test-results/capturas/cuenta-metodo-ocre.png", fullPage: true });
-    await rowB.click();
-    await expect(page).toHaveURL(new RegExp(`${SCREEN}\\?casa=${b.publicId}$`));
-    await expect(houses(page)).toHaveCount(1);
+    await page.getByTestId("subscriptions-link").click();
+    await expect(page).toHaveURL(new RegExp(`${SCREEN}$`));
+    await expect(houses(page)).toHaveCount(2);
+    await expect(page.locator(`[data-house="${b.publicId}"]`)).toBeVisible();
 
     await addCard();
     await fresh(page, "/cuenta");
@@ -242,7 +243,8 @@ test.describe("Cuenta", () => {
     // Una casa en su oferta gratuita, lejos del final.
     const a = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
     await fresh(page, "/cuenta");
-    await expect(page.getByTestId("sub-row").filter({ hasText: "Casa Cocles" })).toBeVisible();
+    await expect(page.getByTestId("sub-row").filter({ hasText: "Casa Cocles" })).toHaveCount(0);
+    await expect(page.getByTestId("subscription-counts")).toHaveText("1 casa");
     await neutral();
     // Toca el aviso de los 7 días: ya sale «Añadir método de pago» en la casa, y la fila en ocre.
     await h.setDaysLeft(a.id, 7);

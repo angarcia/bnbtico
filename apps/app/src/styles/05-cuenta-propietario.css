@@ -141,3 +141,19 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .sent .steps-list,.sent-actions{width:100%}
 .sent-actions{padding-top:8px}
 .sent-link{justify-content:center;width:100%}
+
+/* Cuenta y suscripciones: resumen real, avisos visibles y una tarjeta por casa. */
+.subscription-list>.sub-house{border:0;padding:14px}
+.subscription-list>.sub-house.is-target{margin:0;padding:14px}
+.sub-house-inactive{background:color-mix(in srgb,var(--sun) 14%,var(--bg))}
+.subscription-offer{background:var(--sun-soft)}
+.sub-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px}
+.sub-price b{font-size:25px;font-weight:var(--w-strong)}
+.sub-price>span{font-size:15px;color:var(--muted)}
+.sub-house .row>h3{min-width:0;overflow-wrap:anywhere}
+.sub-house .badge{flex-shrink:0}
+.sub-summary-link{display:flex;align-items:center;gap:12px;min-height:52px;padding-block:8px;color:var(--primary);text-decoration:none}
+.sub-summary-link>svg{flex:none}
+.sub-summary-link>.stack{flex:1;min-width:0}
+.sub-row-link{flex-wrap:wrap;min-height:44px;overflow-wrap:anywhere}
+.sub-row-detail{flex-basis:100%}

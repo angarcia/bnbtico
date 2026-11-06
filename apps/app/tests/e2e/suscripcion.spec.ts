@@ -106,6 +106,10 @@ test("cada estado con su línea, aviso y botones; «Añadir método de pago» so
   await expect(c.getByRole("button", { name: "Parar suscripción" })).toBeVisible();
 
   const d = house(page, "Casa parada");
+  expect((await d.boundingBox())!.y).toBeLessThan((await c.boundingBox())!.y);
+  await expect(d).toContainText("Ahora no se cobra.");
+  await expect(d.getByTestId("sub-price")).toContainText("al activarla");
+  await expect(a.getByTestId("sub-price")).toContainText("₡0");
   await expect(d.getByText("Inactiva", { exact: true })).toBeVisible();
   await expect(d.getByTestId("sub-line")).toHaveText(/^Parada el \d+ \w+.* · no se cobra$/);
   await expect(d.getByRole("button", { name: "Activar suscripción" })).toHaveClass(/btn-sun/);
@@ -269,7 +273,7 @@ test("vuelta con ?pago=ok sin que llegue el aviso de la pasarela: «Lo estamos c
   await expect(house(page, "Casa por pagar").getByText("Pendiente de pago", { exact: true }).first()).toBeVisible();
 });
 
-test("Cuenta del propietario: una línea por casa, próximo cobro, «Ver detalle» y la fila del método de pago", async ({ page }) => {
+test("Cuenta del propietario: avisos visibles, resumen de casas al día y listado completo", async ({ page }) => {
   const gratis = await h.seed({ status: "active", draft: { title: "Crystal Jungle Villa" } });
   const debe = await h.seed({ status: "active", draft: { title: "Rancho Manzanillo" } });
   await expire(debe.id);
@@ -279,7 +283,6 @@ test("Cuenta del propietario: una línea por casa, próximo cobro, «Ver detalle
   const sub = page.getByTestId("subscription-card");
   await expect(sub.getByTestId("sub-row")).toHaveText([
     `Rancho ManzanilloPendiente de pago`,
-    `Crystal Jungle VillaGratis hasta el ${cardDate((await mine(gratis.id)).promoEndsOn!)}`,
     "Cabina Punta UvaEn revisión",
   ]);
   // Revisión UX 2026-10-29 (C5): en plena oferta, hasta cuándo no paga nada; la fila del método, en ocre, porque toca.
@@ -288,7 +291,8 @@ test("Cuenta del propietario: una línea por casa, próximo cobro, «Ver detalle
   await expect(row).toContainText("Falta · añádalo antes de que termine su oferta");
   await expect(row).toHaveAttribute("href", SCREEN);
   await page.screenshot({ path: "test-results/capturas/cuenta-suscripcion.png", fullPage: true });
-  await sub.getByRole("link", { name: "Ver detalle" }).click();
+  await expect(sub.getByTestId("subscription-counts")).toHaveText("2 casas");
+  await sub.getByRole("link", { name: /Ver suscripciones/ }).click();
   await expect(page).toHaveURL(new RegExp(`${SCREEN}$`));
   await expect(page.getByRole("heading", { name: "Promoción y suscripción" })).toBeVisible();
   await page.getByRole("link", { name: "Volver" }).click();
@@ -315,4 +319,18 @@ test("sin owner_billing ni launch_offer_taken (base sin la migración), Cuenta y
   await expect(page.getByTestId("tiers-card")).not.toContainText("Quedan …");
   await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(page.getByRole("article")).toHaveCount(0);
+});
+
+test("Cuenta resume sin límite y Ver suscripciones abre todas las casas", async ({ page }) => {
+  let last = "";
+  for (let n = 1; n <= 5; n++) last = (await h.seed({ status: "active", draft: { title: `Casa resumen ${n}` } })).id;
+  await h.billing("owner").stop(last);
+  await owner(page);
+  await ownerCuenta(page);
+  await expect(page.getByTestId("subscription-counts")).toHaveText("5 casas · 1 inactiva");
+  await expect(page.getByTestId("sub-row")).toHaveCount(1);
+  await page.getByTestId("subscriptions-link").click();
+  await expect(page.locator("article.sub-house")).toHaveCount(5);
+  await expect(page.locator("article.sub-house").first()).toContainText("Casa resumen 5");
+  for (let n = 1; n <= 5; n++) await expect(house(page, `Casa resumen ${n}`)).toBeVisible();
 });

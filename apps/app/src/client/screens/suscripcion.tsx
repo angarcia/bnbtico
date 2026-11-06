@@ -10,6 +10,7 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import { STATUS_LABELS, type Listing, type ListingStatus } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { PAYMENT_MESSAGES } from "../../domain/payments";
+import { orderSubscriptions, subscriptionNeedsAttention, subscriptionSummary } from "../../domain/subscription-presentation";
 import { scopeBilling, scopeFix } from "../../domain/subscription-scope";
 import {
   MONTHLY_FEE_CRC,
@@ -159,9 +160,10 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
   // «Pendiente de pago» ya lo dice la etiqueta: la línea solo sale cuando añade algo.
   const line = subscriptionLine(sub, today);
   const pay = payButtonDue(sub, today);
+  const free = !blocked && promoRunning(sub, today);
   const sent = house.reminders.filter((r) => r.status === "sent" && r.sentAt);
   return (
-    <article ref={ref} tabIndex={-1} className={`stack gap-8 sub-house${target ? " is-target" : ""}`} data-house={house.publicId}>
+    <article ref={ref} tabIndex={-1} className={`card stack gap-8 sub-house${sub.status === "inactive" && !blocked ? " sub-house-inactive" : ""}${target ? " is-target" : ""}`} data-house={house.publicId}>
       <div className="row between baseline gap-8">
         <h3 className="sub-house-title">{house.title || "Casa sin título"}</h3>
         <span className={`badge ${label.badge}`}>{label.label}</span>
@@ -171,6 +173,9 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           {line}
         </span>
       ) : null}
+      <p className="sub-price num" data-testid="sub-price"><b>{formatCRC(free ? 0 : sub.monthlyPriceCrc)}</b><span>/ mes{sub.status === "inactive" && !blocked ? " al activarla" : ""}</span></p>
+      {free ? <span className="small muted num">Después de su oferta: {formatCRC(sub.monthlyPriceCrc)} al mes.</span> : null}
+      {sub.status === "inactive" && !blocked ? <span className="small muted">Ahora no se cobra.</span> : null}
       {/* Lo que la casa le ha dado (visitas y consultas): lo que retiene, no el botón para irse (revisión UX 2026-10-29, A2). */}
       {sub.status === "active" ? <HouseFigures userId={userId} listingId={house.listingId} /> : null}
       {pay ? <PayNotice hb={hb} today={today} /> : null}
@@ -310,13 +315,13 @@ export function SuscripcionScreen() {
   );
   // Revisión UX 2026-10-29 (A2, Ana): si alguna casa necesita algo (parada o pendiente de pago), «Sus casas» va arriba, con
   // esas primero; si todas están al día, abajo del todo.
-  const needsSomething = (hb: HouseBilling) => hb.sub.status === "inactive" || hb.sub.status === "payment_due";
+  const needsSomething = (hb: HouseBilling) => subscriptionNeedsAttention(hb.sub, today);
   const needs = scoped ? needsSomething(scoped) : (indexed?.all.some(needsSomething) ?? false);
-  const ordered = indexed ? [...indexed.all.filter(needsSomething), ...indexed.all.filter((x) => !needsSomething(x))] : [];
+  const ordered = indexed ? orderSubscriptions(indexed.all, today) : [];
   const houses = scoped ? (
-    <section className="card stack gap-12">{card(scoped)}</section>
+    <section className="stack gap-12 subscription-list">{card(scoped)}</section>
   ) : indexed ? (
-    <section className="card stack gap-12">
+    <section className="stack gap-12 subscription-list">
       <h2 className="card-title">Sus casas</h2>
       {ordered.length ? ordered.map(card) : <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>}
     </section>
@@ -398,7 +403,7 @@ function TiersCard() {
   const taken = useQuery(offerTakenQuery);
   const offer = taken.data === undefined ? undefined : launchOffer(taken.data);
   return (
-    <section className="card stack gap-8 offer-card" data-testid="tiers-card">
+    <section className="card stack gap-8 offer-card subscription-offer" data-testid="tiers-card">
       <div className="row between baseline">
         <b className="display offer-title">Oferta de lanzamiento</b>
         <span className={`xs num offer-left${offer === undefined ? " is-hidden" : ""}`}>{offer ? `Quedan ${offer.remaining} de ${offer.size}` : offer === null ? "Terminada" : "Quedan …"}</span>
@@ -422,28 +427,28 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
   const own = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   if (!billing) return <>{fallback}</>;
   const { today } = billing;
-  const rows: { id: string; publicId?: string; title: string; status: ListingStatus; line: string; promo: boolean }[] = billing.all.map(({ house, sub }) => ({ id: house.listingId, publicId: house.publicId, title: house.title, status: sub.status, line: subscriptionLine(sub, today) ?? STATUS_LABELS[sub.status].label, promo: sub.status === "active" && sub.plan === "promo" }));
+  const rows: { id: string; publicId?: string; title: string; status: ListingStatus; line: string; promo: boolean; blocked: boolean; attention: boolean }[] = billing.all.map(({ house, sub }) => ({ id: house.listingId, publicId: house.publicId, title: house.title, status: sub.status, line: subscriptionLine(sub, today) ?? STATUS_LABELS[sub.status].label, promo: sub.status === "active" && sub.plan === "promo", blocked: sub.hold === "blocked", attention: subscriptionNeedsAttention(sub, today) }));
   // Las casas en revisión que aún no tienen suscripción (nunca aprobadas): «En revisión», sin enlace.
   for (const l of (own.data ?? []) as Listing[]) {
-    if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: "En revisión", promo: false });
+    if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: "En revisión", promo: false, blocked: false, attention: false });
   }
+  const visible = rows.filter((r) => r.attention || r.blocked || r.status === "review");
+  const summary = subscriptionSummary(billing.all.map((x) => x.sub));
   return (
     <section className="card stack gap-10" data-testid="subscription-card">
       <div className="row between baseline">
-        <b>Suscripción</b>
-        <Link to="/propietario/suscripcion" className="link small">
-          Ver detalle
-        </Link>
+        <b>Suscripciones</b>
       </div>
-      {rows.length ? (
+      {visible.length ? (
         <div className="stack gap-8 small">
-          {rows.map((r) => {
+          {visible.map((r) => {
             // Pendiente de pago o parada: el título en ocre y la etiqueta del estado (dinero que falta).
-            const ocre = r.status === "payment_due" || r.status === "inactive";
+            const ocre = !r.blocked && (r.status === "payment_due" || r.status === "inactive");
             const inner = (
               <>
                 <span className={ocre ? "sun-ink strong" : undefined}>{r.title || "Casa sin título"}</span>
-                {ocre ? <span className="badge badge-sun">{STATUS_LABELS[r.status].label}</span> : <span className={`num align-end ${r.promo ? "primary strong" : (LINE_CLASS[r.status] ?? "")}`}>{r.line}</span>}
+                {r.blocked ? <span className="badge badge-bad">Bloqueada</span> : ocre ? <span className="badge badge-sun">{STATUS_LABELS[r.status].label}</span> : <span className={`num align-end ${r.promo ? "primary strong" : (LINE_CLASS[r.status] ?? "")}`}>{r.line}</span>}
+                {r.blocked || (ocre && r.status === "inactive") ? <span className="sub-row-detail xs muted num">{r.line}</span> : null}
               </>
             );
             return r.publicId ? (
@@ -457,9 +462,14 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
             );
           })}
         </div>
-      ) : (
+      ) : summary.total === 0 ? (
         <p className="small muted">Cuando aprobemos su primera casa, aquí verá su suscripción.</p>
-      )}
+      ) : null}
+      <Link to="/propietario/suscripcion" className="sub-summary-link" data-testid="subscriptions-link">
+        <CardIcon />
+        <span className="stack gap-4"><span>Ver suscripciones</span><span className="small muted num" data-testid="subscription-counts">{summary.total} {summary.total === 1 ? "casa" : "casas"}{summary.inactive ? ` · ${summary.inactive} ${summary.inactive === 1 ? "inactiva" : "inactivas"}` : ""}{summary.blocked ? ` · ${summary.blocked} ${summary.blocked === 1 ? "bloqueada" : "bloqueadas"}` : ""}</span></span>
+        <I.chevron />
+      </Link>
       <hr className="divider" />
       <div className="row between baseline">
         <span className="small muted">Próximo cobro</span>

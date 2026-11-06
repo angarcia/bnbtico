@@ -351,7 +351,7 @@ test("Cuenta es la pestaña de la derecha; lo que se abre desde ella vuelve a Cu
   await expect(page).toHaveURL(/\/ayuda$/);
   await volver();
   await expect(page).toHaveURL(/\/cuenta$/);
-  await page.getByTestId("subscription-card").getByRole("link", { name: "Ver detalle" }).click();
+  await page.getByTestId("subscription-card").getByRole("link", { name: /Ver suscripciones/ }).click();
   await expect(page).toHaveURL(/\/propietario\/suscripcion$/);
   await volver();
   await expect(page).toHaveURL(/\/cuenta$/);

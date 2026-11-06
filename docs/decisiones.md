@@ -1,3 +1,7 @@
+## 2026-11-06 · Cuenta resumida y listado de suscripciones completo (Ana)
+
+Se aplica el apartado 5 de los cambios aprobados: Cuenta agrupa las casas al día sin esconder pagos, recordatorios o bloqueos, y «Ver suscripciones» abre todas. El listado prioriza reactivación y pagos sin presentar bloqueadas como activables. Se mantienen importes reales por casa, fechas, oferta vigente, avisos y confirmación al parar; no se aplican las cifras provisionales de las capturas. Ana solicita preparar también los demás bloques y ejecutar las pruebas conjuntamente al día siguiente; esta implementación queda pendiente de esas pruebas.
+
 ## 2026-11-06 · Mis casas más compacto, divisor neutro y barra de estados conservada (Ana)
 
 Ana rechaza que el ajuste se limite a aumentar iconos y pide reducir el espacio blanco. Tras ver la captura compacta, acepta esa composición con un divisor sin verde y confirma que la barra de estados le gustaba como estaba. Se conserva esa barra con sus cantidades, colores y accesos; se alinean barra y tarjetas a 16 px de los bordes. Las tarjetas con acciones agrupan nombre y zona, usan una línea neutra encima de las acciones y prescinden de la banda verde de la propuesta. Compartir conserva icono y texto verde; Calendario y Consultas pasan a 28 px dentro de objetivos de 44 px, separados 16 px. El ajuste no modifica la presentación del detalle editable ni las reglas de casas, pagos, contadores o navegación.
