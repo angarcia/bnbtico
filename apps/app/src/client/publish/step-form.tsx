@@ -29,6 +29,7 @@ import { authApi } from "../session";
 import { useEditor, type EditorPort } from "../editor-port";
 import { patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
+import { isLostDraft } from "./lost-drafts";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
@@ -112,6 +113,7 @@ export function useSaveStep(userId: string, listingId: string) {
     },
     // Callbacks de useMutation: corren aunque la pantalla ya no esté montada (el propietario siguió adelante).
     onError: (error, { step, patch, volver }) => {
+      if (isLostDraft(listingId)) return; // la base no creó el borrador: la entrada ya enseña por qué (new-draft.ts)
       setFailure({ listingId, step, patch, message: messageOf(error) });
       void client.invalidateQueries({ queryKey: detailKey(userId, listingId) });
       void toStep(router, port.step, listingId, step, volver);

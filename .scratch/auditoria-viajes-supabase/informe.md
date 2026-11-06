@@ -106,7 +106,11 @@ Siguen en segundo nivel, sin tapar nada: la tarjeta «Publique gratis» (punto 7
 - En frío, el calendario del admin pasa de 4 niveles (perfil → casa → perfil → días) a 1. En `/admin` desaparecen las 2–3 consultas repetidas de `profiles`.
 - Pruebas: una E2E que retiene la comprobación y espera la casa y los días (fallaba antes), y `tests/unit/admin-access.test.ts`.
 
-Pendientes: 6, 7 y 8 (y el 2, de prioridad baja).
+**Punto 8, probado el 2026-11-06 y sin arreglar.** No se puede quitar el segundo viaje de `saveEdit` sin migración. Pedir a la vez que la RPC las relaciones embebidas (`rpc("save_edit").select(EDIT_SELECT)`) no sirve: PostgREST las lee en la misma sentencia y ve el estado de cada dato de antes de guardar, y las pruebas de contrato lo detectan. El arreglo es que `save_edit` (y `admin_update_listing`) devuelvan la edición completa como JSON, con su migración aplicada antes en `bnbtico-pruebas`.
+
+**«+» de Mis casas, 2026-11-06.** Cuando Mis casas ya leyó en esta visita que no hay borrador pendiente, el teléfono elige el id del borrador (`createDraft(id)`), entra al paso 1 sin esperar a la base y crea la fila por detrás, como primer guardado de la cola de esa casa (`apps/app/src/client/publish/new-draft.ts`). Con red lenta, el paso 1 sale a los ~0,1 s (antes, 1,3 s con una tarjeta gris).
+
+Pendientes: 6, 7 y 8 (este último con migración), y el 2, de prioridad baja.
 
 ## Siguiente paso
 

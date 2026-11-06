@@ -485,23 +485,29 @@ async function watchEntryCards(page: Page) {
 }
 const entryCardsSeen = (page: Page) => page.evaluate(() => (window as unknown as { __entryCards: string[] }).__entryCards);
 
-/** Crear el borrador tarda 800 ms: se ve la espera. */
+/** Crear el borrador tarda 800 ms. Devuelve si ya respondió la base (para comprobar que la pantalla no la esperó). */
 async function slowCreate(page: Page) {
+  const state = { created: false };
   await page.route(/\/rest\/v1\/listings(\?|$)/, async (route) => {
-    if (route.request().method() === "POST") await new Promise((r) => setTimeout(r, 800));
+    if (route.request().method() !== "POST") return route.fallback();
+    await new Promise((r) => setTimeout(r, 800));
     await route.fallback();
+    state.created = true;
   });
+  return state;
 }
 
-/** Toca «+» en Mis casas y llega al paso 1 de un borrador nuevo viendo solo el esqueleto del paso 1; «Atrás» vuelve a Mis casas. */
-async function tapNewHouse(page: Page) {
+/** Toca «+» en Mis casas y llega al paso 1 de un borrador nuevo sin tarjetas de por medio; «Atrás» vuelve a Mis casas.
+ *  `instant`: el paso 1 tiene que verse antes de que la base termine de crear el borrador (Mis casas ya sabía que no hay
+ *  ninguno pendiente); si no, se espera a la base con el esqueleto del paso 1. */
+async function tapNewHouse(page: Page, slow: { created: boolean }, instant: boolean) {
   await watchEntryCards(page);
   await page.getByRole("link", { name: "Nueva casa" }).click();
-  await expect(page).toHaveURL(/\/propietario\/publicar$/);
-  await expect(page.locator(".owner-skeleton")).toBeVisible();
+  if (!instant) await expect(page.locator(".owner-skeleton")).toBeVisible();
   await expect(page.locator(".stage-label")).toHaveText("1 de 4");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/1$/);
   await expect(page.locator("label.choice", { hasText: "Alojamiento completo" })).toBeVisible();
+  if (instant) expect(slow.created).toBe(false);
   const id = idFrom(page);
   expect(await entryCardsSeen(page)).toEqual([]);
   await page.goBack();
@@ -509,12 +515,29 @@ async function tapNewHouse(page: Page) {
   return id;
 }
 
-test("«Nueva casa» sin borrador: directo al paso 1 con su esqueleto, sin tarjetas de por medio; «Atrás» vuelve a Mis casas", async ({ page }) => {
+test("«Nueva casa» sin borrador: el paso 1 sale al instante, sin esperar a que se cree el borrador; «Atrás» vuelve a Mis casas", async ({ page }) => {
   await h.seed({ status: "review" }); // Mis casas con una casa (sin ninguna no hay lista ni «+»), sin borrador pendiente
-  await slowCreate(page);
+  const slow = await slowCreate(page);
   await page.goto("/propietario/casas");
   await expect(page.getByRole("link", { name: "Nueva casa" })).toBeVisible();
-  const id = await tapNewHouse(page);
+  const id = await tapNewHouse(page, slow, true);
+  await expect.poll(async () => (await h.owner("owner").listOwn()).filter((l) => l.status === "draft").map((l) => l.id)).toEqual([id]);
+});
+
+test("«Nueva casa»: lo que se elige en el paso 1 mientras se crea el borrador se guarda en cuanto existe", async ({ page }) => {
+  await h.seed({ status: "review" });
+  const slow = await slowCreate(page);
+  await page.goto("/propietario/casas");
+  await page.getByRole("link", { name: "Nueva casa" }).click();
+  await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
+  await continuar(page);
+  await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/2$/);
+  expect(slow.created).toBe(false);
+  const id = idFrom(page);
+  await expect.poll(async () => (await h.owner("owner").getOwn(id))?.kind).toBe("completo");
+  // Mis casas lo cuenta como un borrador más, con su número de casa.
+  await page.getByRole("button", { name: /Cerrar y seguir después/ }).click();
+  await expect(page).toHaveURL(/\/propietario\/(casas|borradores)/);
   expect((await h.owner("owner").listOwn()).filter((l) => l.status === "draft").map((l) => l.id)).toEqual([id]);
 });
 
@@ -525,10 +548,10 @@ test("«Nueva casa» con un borrador viejo en la caché: no lo enseña; lee de n
   await page.getByRole("link", { name: "Nueva casa" }).click();
   await expect(page.getByText("Tiene un borrador sin enviar")).toBeVisible(); // queda en la caché
   await h.owner("owner").deleteDraft(old.id); // descartado en otro teléfono
-  await slowCreate(page);
+  const slow = await slowCreate(page);
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  const id = await tapNewHouse(page);
+  const id = await tapNewHouse(page, slow, false);
   expect(id).not.toBe(old.id);
   expect((await h.owner("owner").listOwn()).filter((l) => l.status === "draft").map((l) => l.id)).toEqual([id]);
 });

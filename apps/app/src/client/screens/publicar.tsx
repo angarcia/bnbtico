@@ -2,7 +2,7 @@
 // cortas sin scroll (ids de URL 1, 2 y 4–9; el 3 viejo lleva al 2). Se carga bajo demanda al abrir /propietario/publicar:
 // no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { Link, Navigate, useNavigate, useParams, useRouter, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
@@ -23,22 +23,42 @@ import { ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { StepForm } from "../publish/step-form";
 import { useOwnListing, useUserId } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { knownNoDraft } from "../own-listings-query";
+import { clearCreateFailure, createFailure, startDraft } from "../publish/new-draft";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 
 // ---------- Entrada ----------
 
-/** Sin borrador pendiente, abrir esta pantalla crea uno y entra al paso 1 viendo lo mismo que el paso 1 mientras carga
- *  (su cabecera y el esqueleto); solo si falla, qué tener a mano y «Empezar». Si hay uno pendiente, no crea nada: ofrece
- *  seguirlo o empezar otro (ronda de Ana 2026-11-02: sin tarjetas de paso al tocar «+»). */
+/** Sin borrador pendiente, abrir esta pantalla crea uno y entra al paso 1. Si Mis casas ya lo sabía, al instante y el
+ *  borrador se crea por detrás (2026-11-06); si no, viendo lo mismo que el paso 1 mientras la base responde (su cabecera y
+ *  el esqueleto). Solo si falla, qué tener a mano y «Empezar». Si hay uno pendiente, no crea nada: ofrece seguirlo o
+ *  empezar otro (ronda de Ana 2026-11-02: sin tarjetas de paso al tocar «+»). */
 const RESUMABLE_FRESH_MS = 3000;
 
 export function PublicarScreen() {
   const userId = useUserId();
   const client = useQueryClient();
   const navigate = useNavigate();
+  const router = useRouter();
+  // El borrador que el teléfono empezó sin esperar a la base y que la base no creó: aquí, su mensaje y «Empezar».
+  const [lost] = useState(createFailure);
+  useEffect(() => clearCreateFailure(), []);
+  // Mis casas ya sabe que no hay borrador pendiente: el paso 1 sale ya y el borrador se crea por detrás (new-draft.ts).
+  const [instant] = useState(() => !lost && knownNoDraft(client, userId));
   // La lectura que empezó al apoyar el dedo en «+» (Mis casas) vale si es de hace menos de RESUMABLE_FRESH_MS: no se repite.
-  const resumable = useQuery({ ...resumableQuery(userId), enabled: !!userId, staleTime: RESUMABLE_FRESH_MS });
+  const resumable = useQuery({ ...resumableQuery(userId), enabled: !!userId && !instant, staleTime: RESUMABLE_FRESH_MS });
+  const begun = useRef(false);
+  useEffect(() => {
+    if (!instant || begun.current) return;
+    begun.current = true;
+    const id = startDraft(client, userId, (lostId) => {
+      // Solo si sigue en ese borrador: quien ya cerró el asistente no se ve llevado de vuelta.
+      if (router.state.location.pathname.includes(lostId)) void router.navigate({ to: "/propietario/publicar", replace: true });
+    });
+    // En lugar de la entrada: «Atrás» desde el paso 1 vuelve a donde se tocó «+».
+    void navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: "1" }, replace: true });
+  }, [instant, client, userId, router, navigate]);
   // Si se cierra mientras se crea, el borrador queda en Mis casas y no se salta al paso 1.
   const mounted = useRef(false);
   useEffect(() => {
@@ -66,26 +86,30 @@ export function PublicarScreen() {
   const draft = fresh && !resumable.isError ? resumable.data : undefined;
   // Sin borrador pendiente no hay nada que elegir: se crea y se entra directo al paso 1 (revisión UX C4). Un solo intento
   // por visita (el modo estricto de React monta dos veces); si falla, el botón «Empezar» queda para reintentar.
-  const autoStarted = useRef(false);
+  const autoStarted = useRef(instant || lost !== null);
   useEffect(() => {
     if (draft !== null || resumable.isFetching || autoStarted.current) return;
     autoStarted.current = true;
     create.mutate();
   }, [draft, resumable.isFetching, create]);
+  const failure = create.isError ? message(create.error) : create.isIdle ? lost : null;
   const start = (
     <button type="button" className={`btn btn-block ${draft ? "btn-ghost" : "btn-primary btn-lg"}`} disabled={create.isPending} onClick={() => create.mutate()}>
       {create.isPending ? "Un momento…" : draft ? "Empezar otro" : "Empezar"}
     </button>
   );
-  const failed = create.isError ? (
-    <p className="note" role="alert">
-      {message(create.error)}
-    </p>
-  ) : null;
+  const failed =
+    failure !== null ? (
+      <p className="note" role="alert">
+        {failure}
+      </p>
+    ) : null;
 
   // Leyendo, creando o ya creado (camino del paso 1): lo mismo que verá el paso 1 mientras carga, para que no cambie nada
   // hasta el formulario; al releer, el borrador recién creado no sale como «pendiente».
-  if (create.isSuccess || (!draft && !resumable.isError && !create.isError))
+  // Con `instant`, solo la cabecera del paso 1 hasta que la navegación (sin red) pinta su formulario.
+  if (instant) return <StepHeader step={1} />;
+  if (create.isSuccess || (!draft && !resumable.isError && failure === null))
     return (
       <>
         <StepHeader step={1} />

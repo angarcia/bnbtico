@@ -28,6 +28,8 @@ import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import { oneRoom, type FakeDb, type FakeListing } from "./db";
 import { editStore, locationOf, type Located } from "./edits";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const NOT_FOUND = "No encontramos ese anuncio.";
 /** Política listings_owner_insert y trigger listings_insert_guard (ticket 08). */
 const MAX_OPEN_DRAFTS = 5;
@@ -97,11 +99,12 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       return newest ? toListing(newest) : null;
     },
 
-    async createDraft() {
+    async createDraft(id) {
       const owner = me();
+      if (id !== undefined && (!UUID.test(id) || db.listings.has(id))) throw new DomainError("No se pudo crear el borrador. Intente de nuevo.", "validation");
       const open = [...db.listings.values()].filter((l) => l.ownerId === owner && l.deletedAt === null && l.status === "draft" && l.reviewedAt === null).length;
       if (open >= MAX_OPEN_DRAFTS) throw new DomainError(`Ya tiene ${MAX_OPEN_DRAFTS} borradores sin enviar. Termine o descarte uno antes de empezar otro.`, "validation");
-      const l = db.insertListing(owner);
+      const l = db.insertListing(owner, id ? { id } : {});
       return { id: l.id, publicId: l.publicId, listing: toListing(l) };
     },
 

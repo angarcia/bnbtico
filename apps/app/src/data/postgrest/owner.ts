@@ -66,7 +66,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
     },
 
-    async createDraft() {
+    async createDraft(id) {
       // El WhatsApp sale de la sesión (sin otro viaje a la base): GoTrue lo guarda sin «+». Al insertar, listings_insert_guard
       // lo reescribe con el del perfil para todos menos el admin; sin teléfono en la sesión, se lee el perfil como antes.
       const { data: auth } = await db.auth.getSession();
@@ -82,7 +82,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       // vuelve entera (como getOwn) para que la pantalla no tenga que pedirla otra vez.
       const { data, error } = await db
         .from("listings")
-        .insert({ owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: phone, accepts_nightly: true, accepts_monthly: false })
+        .insert({ ...(id ? { id } : {}), owner_id: owner, title: "", description: "", province: DEFAULT_PROVINCE, whatsapp_phone: phone, accepts_nightly: true, accepts_monthly: false })
         .select(OWN_COLUMNS)
         .single();
       if (error) throw toDomainError(error);
@@ -141,7 +141,8 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       if (error) throw toDomainError(error);
       // Si la edición quedó vacía y se borró, la RPC devuelve null::listing_edits: PostgREST lo da con todo a null.
       if (!data || data.listing_id === null) return null;
-      // save_edit devuelve la fila sin el estado de cada dato ni sus fotos nuevas: se lee entera.
+      // save_edit devuelve la fila sin el estado de cada dato ni sus fotos nuevas: se lee entera. (Embeberlos en la llamada a
+      // la RPC no sirve: PostgREST los lee en la misma sentencia y ve el estado de antes de guardar.)
       const full = await db.from("listing_edits").select(EDIT_SELECT).eq("listing_id", id).maybeSingle<EditRow>();
       if (full.error) throw toDomainError(full.error);
       return fromEditRow(full.data, url);
