@@ -66,7 +66,7 @@ test("el propietario que abre su propia ficha no suma una visita", async ({ page
 test("el asistente manda «wizard_step» con la casa y la ruta sin el id del borrador", async ({ page }) => {
   await injectSession(page, "owner");
   await page.goto(`/propietario/publicar/${draft.id}/4`);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
+  await expect(page.locator(".stage-label")).toHaveText("3 de 4");
   await expect
     .poll(() => rows(`select name || ' ' || listing_public_id || ' ' || page || ' ' || path from public.events where created_at >= '${since}' and name = 'wizard_step'`))
     .toEqual([`wizard_step ${draft.publicId} publicar /propietario/publicar/:id/4`]);

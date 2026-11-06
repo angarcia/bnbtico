@@ -1,3 +1,9 @@
+## 2026-11-06 · Publicar casa: cabecera y nota simplificadas (Ana)
+
+Se aplica el apartado 2 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`: quitar el rótulo visible «Su casa» de la primera etapa y la nota de seguir después en Mis casas. Se conserva el número de paso visible, la descripción accesible completa, las etapas siguientes, los ocho tramos de progreso y el guardado. Atrás y Continuar ya tenían la composición aprobada y se conservan. Las expectativas existentes de las pruebas de navegador se adaptan al nuevo rótulo visible, sin cambiar las reglas del asistente. Pendiente de revisión visual y comprobaciones de Ana.
+
+Tras contrastar la referencia completa y la corrección de Ana, la X pasa arriba a la derecha, sin texto visible; progreso y contador quedan debajo de la cabecera. Entrada sin cuenta, verificación y pasos reutilizan esa estructura, incluidos los estados de carga. Capacidad adopta las filas abiertas de la referencia, iconos y controles de 44 px; el primer paso sin cuenta comparte la barra inferior. Ana pide continuar por bloques completos y probarlos directamente en local, sin enseñar ni pedir aceptación por cada ajuste. Los comandos de comprobación los sigue ejecutando ella.
+
 ## 2026-11-05 · Aplicar los cambios aprobados por tandas: botones y notas (Ana)
 
 Ana autoriza implementar uno a uno los cambios de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`, enseñando cada tanda para revisión. Se empieza por la regla visual compartida: acciones verde B con sombra ligera y sin borde, desactivados grises claros y notas informativas neutras. Se conserva el refactor de CSS, los estados reales, los iconos existentes y los colores funcionales de pagos, WhatsApp y errores. No se modifican cobros ni promociones.

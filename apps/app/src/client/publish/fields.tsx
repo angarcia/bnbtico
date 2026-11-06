@@ -78,12 +78,12 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
 }
 
 /** Contador −/+ con el valor en un campo oculto. */
-export function Counter({ name, label, value, min, max = 30 }: { name: string; label: string; value: number | null; min: number; max?: number }) {
+export function Counter({ name, label, value, min, max = 30, icon }: { name: string; label: string; value: number | null; min: number; max?: number; icon?: ReactNode }) {
   const [n, setN] = useState<number | null>(value);
   const current = n ?? min;
   return (
     <div className="counter">
-      <span className="strong">{label}</span>
+      <span className="strong counter-label">{icon}{label}</span>
       <div className="ctl">
         <button type="button" className="minus" aria-label={`Menos ${label.toLowerCase()}`} onClick={() => setN(Math.max(min, current - 1))} disabled={current <= min}>
           −
@@ -208,14 +208,14 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
 
 /** Personas, habitaciones y baños: la pantalla 4 y la capacidad de una casa publicada. Una Habitación solo pregunta
  *  personas: es 1 habitación y 1 baño (`normalize`); el baño privado o compartido va aparte (`BathroomChoice`). */
-export function CapacityCounters({ draft }: { draft: ListingDraft }) {
+export function CapacityCounters({ draft, icons = false }: { draft: ListingDraft; icons?: boolean }) {
   return (
     <div className="card counters">
-      <Counter name="capacity" label="Personas" value={draft.capacity} min={1} />
+      <Counter name="capacity" label="Personas" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} />
       {draft.kind === "habitacion" ? null : (
         <>
-          <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={0} />
-          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} />
+          <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} />
+          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} />
         </>
       )}
     </div>
@@ -342,7 +342,6 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   ];
   return (
     <>
-      <h2>Revisar y enviar</h2>
       <nav className="card review-list" aria-label="Lo que va a enviar">
         {rows.map((r) => {
           const missing = required.some((p) => p.step === r.step);
@@ -424,7 +423,6 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
             </section>
           ) : null}
           <KindChoice kind={draft.kind} />
-          <span className="small muted">Guardamos el borrador en cada paso; puede seguir después desde Mis casas.</span>
         </>
       );
     case 2:
@@ -438,7 +436,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>¿Cuántos caben?</h2>
-          <CapacityCounters draft={draft} />
+          <CapacityCounters draft={draft} icons />
           {draft.kind === "habitacion" ? <BathroomChoice shared={draft.bathroomShared} /> : null}
         </>
       );

@@ -153,7 +153,7 @@ test("desde la portada sin cuenta: pasos 1–6 en el teléfono, verificación al
     await page.getByRole("link", { name: "Publicar mi casa" }).click();
     await expect(page).toHaveURL(/\/publicar$/);
     await expect(page.getByRole("heading", { name: "¿Qué es?" })).toBeVisible();
-    await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+    await expect(page.locator(".stage-label")).toHaveText("1 de 4");
     await expect(page.locator(".ready-list")).toBeVisible();
     await page.getByRole("button", { name: "Continuar" }).click();
     await expect(page.locator('.note[role="alert"]')).toHaveText("Elija Alojamiento completo o Habitación.");

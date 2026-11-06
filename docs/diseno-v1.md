@@ -6,6 +6,12 @@ Implementa el apartado 1 de `.scratch/auditoria-conversion-2026-11-04/cambios-ap
 
 Referencia visual vigente de la app. Manda sobre `docs/design.md` en todo lo visual; el prototipo HTML sigue mandando en comportamiento. Las pantallas están en el lienzo de diseño **«bnbtico · diseño v1 (Sol y sal)»** (Claude Design, https://claude.ai/artifact/KRziP5mGGNKqsPFr11MR8P) y, como HTML de referencia, en `design/pantallas/`. Tokens: `design/tokens/tokens.json` (0.3.3). Logo: `design/logo/README.md`.
 
+## Ajuste de Publicar casa (2026-11-06)
+
+Aplicación del apartado 2 de los cambios aprobados por Ana: en los pasos 1, 2, 4 y 5 se muestra solo «1 de 4» a «4 de 4», sin «Su casa». Se conserva la etapa completa y el paso global en la descripción accesible, la barra de progreso y los rótulos de las etapas posteriores. Se retira la nota «Guardamos el borrador en cada paso; puede seguir después desde Mis casas.» del primer paso. El guardado por pasos sigue igual. Atrás conserva su recuadro inferior izquierdo de al menos 44 px y Continuar conserva texto y flecha centrados a su derecha, con los estilos compartidos aprobados.
+
+La cabecera compartida sitúa el título a la izquierda y solo la X a la derecha (44 × 44 px, con nombre accesible). Debajo aparecen los ocho tramos de progreso y, en su propia fila a la derecha, el contador de etapa. Se aplica también al primer paso sin cuenta y a la verificación al llegar a Fotos. El primer paso sin cuenta adopta la misma barra inferior. Capacidad usa filas sin tarjeta exterior, separadores suaves e iconos de personas, cama y baño; los controles −/+ tienen 44 × 44 px. Se conservan los límites, valores y campos del formulario, y la edición de casas publicadas mantiene su presentación anterior. En Revisar y enviar, el título de pantalla aparece una sola vez bajo el progreso, junto a «último paso»; el resumen usa espacios de 8 px y filas de al menos 44 px para que el contenido y la oferta no queden debajo de la barra fija en 375 × 667.
+
 ## Sistema
 
 - **Tono:** usted en toda la interfaz («Toque el corazón», «Puede añadirlo después», «¿No encuentra lo que busca?»). Sin voseo ni tuteo. Textos cortos, sin «orientativo» salvo la línea de la ficha.

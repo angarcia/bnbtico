@@ -1,8 +1,31 @@
 // Piezas del paso 1 que comparten el asistente de publicar, la entrada sin cuenta (/publicar) y la edición de una casa
 // publicada: las tarjetas de elección, «¿Qué es?», qué tener a mano y la etapa de la cabecera. Trozo propio y pequeño
 // (wizard-parts-*), medido en «Entrada de publicar»: /publicar no descarga los campos del asistente.
-import { useState } from "react";
-import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
+import { useState, type ReactNode } from "react";
+import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
+
+/** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
+export function WizardHeader({ title = "Publicar casa", step, close, missingSteps = [] }: { title?: string; step: Step | null; close: ReactNode; missingSteps?: readonly Step[] }) {
+  return (
+    <div className="wizard-heading">
+      <header className="header-flow publish-header">
+        <h1>{title}</h1>
+        {close}
+      </header>
+      {step ? (
+        <>
+          <div className="progress" aria-hidden="true">
+            {/* En el resumen, lo obligatorio que falta conserva su tramo vacío. */}
+            {STEPS.map((s) => (
+              <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && missingSteps.includes(s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
+            ))}
+          </div>
+          <StageLabel step={step} />
+        </>
+      ) : null}
+    </div>
+  );
+}
 
 /** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
 export function ChoiceCards({
@@ -70,20 +93,20 @@ export function ReadyList() {
   );
 }
 
-/** La etapa en vez de «Paso n de 8» (revisión UX C4): tres tramos que se leen más cortos que ocho pasos. */
+/** Progreso por etapa: la primera solo muestra la cuenta; el nombre se conserva en la descripción accesible. */
 export function StageLabel({ step }: { step: Step }) {
   const stage = wizardStage(step);
   // El último paso no es «Precio · 2 de 2» sino «Revisar y enviar» (revisión UX 2026-10-29, A9).
   if (step === LAST_STEP)
     return (
-      <span className="right stage-label" aria-label={`Revisar y enviar, último paso. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
-        <b>Revisar y enviar</b>
+      <div className="right stage-label stage-summary" aria-label={`Revisar y enviar, último paso. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
+        <h2>Revisar y enviar</h2>
         <span>último paso</span>
-      </span>
+      </div>
     );
   return (
     <span className="right stage-label" aria-label={`${stage.name}, ${stage.position} de ${stage.size}. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
-      <b>{stage.name}</b>
+      {stage.index === 0 ? null : <b>{stage.name}</b>}
       <span>
         {stage.position} de {stage.size}
       </span>

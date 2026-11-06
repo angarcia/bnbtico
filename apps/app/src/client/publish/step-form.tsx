@@ -333,7 +333,7 @@ export function StepForm({
 
   const shown = error ?? failed?.message ?? null;
   return (
-    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} onPointerDown={onPointerDown} onClick={onClick} className="publish-form" data-enter={entering} noValidate>
+    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} onFocus={onFocus} onBlur={onBlur} onPointerDown={onPointerDown} onClick={onClick} className={`publish-form${step === LAST_STEP ? " publish-review" : ""}`} data-enter={entering} noValidate>
       {shown ? (
         <div className="note" role="alert">
           {shown}

@@ -61,7 +61,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = idFrom(page);
   await expect(page.locator(".ready-list li")).toHaveText(["Fotos horizontales, si ya las tiene", "El precio por noche", "Unos 10 minutos"]);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+  await expect(page.locator(".stage-label")).toHaveText("1 de 4");
   await expect(page.locator(".stage-label")).toHaveAttribute("aria-label", "Su casa, 1 de 4. Paso 1 de 8.");
   await expect(page.locator(".progress span")).toHaveCount(8);
   await expect(page.locator(".progress span.on")).toHaveCount(1);
@@ -76,7 +76,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa2 de 4");
+  await expect(page.locator(".stage-label")).toHaveText("2 de 4");
   await expect(page.getByRole("heading", { name: "¿Dónde está su casa?" })).toBeVisible();
   await expectNoScroll(page, "paso 2");
 
@@ -96,7 +96,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expectNoScroll(page, "paso 2 con el pin");
   await continuar(page);
   await expect(page).toHaveURL(/\/4$/);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
+  await expect(page.locator(".stage-label")).toHaveText("3 de 4");
   await expectNoScroll(page, "paso 4");
 
   // 4 Capacidad (no bloquea: sin rellenar también se sigue; aquí se rellena).
@@ -210,6 +210,13 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.getByRole("heading", { name: "Revisar y enviar" })).toBeVisible();
   const review = page.getByRole("navigation", { name: "Lo que va a enviar" });
   await expect(review.getByRole("link")).toHaveCount(6);
+  for (const link of await review.getByRole("link").all()) {
+    expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  }
+  // La oferta debe quedar completa por encima de la barra fija, sin ocultar su última línea.
+  const offerBox = (await page.locator(".offer-line").boundingBox())!;
+  const actionsBox = (await page.locator(".sticky-actions").boundingBox())!;
+  expect(offerBox.y + offerBox.height).toBeLessThanOrEqual(actionsBox.y);
   await expect(review.locator(".review-label")).toHaveText(["Alojamiento", "Dónde", "Capacidad", "Nombre", "Fotos", "Precio"]);
   const where = review.getByRole("link", { name: /Dónde/ });
   await expect(where.locator(".review-text")).toHaveText(`${zoneName} · Limón, Limón, Limón`);
@@ -492,7 +499,7 @@ async function tapNewHouse(page: Page) {
   await page.getByRole("link", { name: "Nueva casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/publicar$/);
   await expect(page.locator(".owner-skeleton")).toBeVisible();
-  await expect(page.locator(".stage-label")).toHaveText("Su casa1 de 4");
+  await expect(page.locator(".stage-label")).toHaveText("1 de 4");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/1$/);
   await expect(page.locator("label.choice", { hasText: "Alojamiento completo" })).toBeVisible();
   const id = idFrom(page);
@@ -752,7 +759,36 @@ test("lo que no es obligatorio (capacidad, parqueo, descripción) sale en ocre y
 test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrás / Continuar» sigue fija abajo", async ({ page }) => {
   const draft = await h.seed({ status: "draft", photos: 5 });
   await page.goto(`/propietario/publicar/${draft.id}/4`);
-  await expect(page.locator(".stage-label")).toHaveText("Su casa3 de 4");
+  await expect(page.locator(".stage-label")).toHaveText("3 de 4");
+  // La cabecera y los controles siguen separados y accesibles en ambos tamaños de móvil.
+  for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+      const title = box(".publish-header h1");
+      const close = box(".publish-header .header-close");
+      const progress = box(".progress");
+      const stage = box(".stage-label");
+      const heading = box(".publish-form h2");
+      return {
+        closeAfterTitle: close.left >= title.right,
+        progressBelowClose: progress.top >= close.bottom,
+        stageBelowProgress: stage.top >= progress.bottom,
+        contentBelowStage: heading.top >= stage.bottom,
+        targets: [...document.querySelectorAll(".header-close,.counter .ctl button,.sticky-actions .btn")].map((el) => {
+          const r = el.getBoundingClientRect();
+          return Math.min(r.width, r.height);
+        }),
+      };
+    });
+    expect(layout.closeAfterTitle).toBe(true);
+    expect(layout.progressBelowClose).toBe(true);
+    expect(layout.stageBelowProgress).toBe(true);
+    expect(layout.contentBelowStage).toBe(true);
+    expect(Math.min(...layout.targets)).toBeGreaterThanOrEqual(44);
+    await expectNoScroll(page, `cabecera y contadores en ${viewport.width}`);
+  }
+  await page.setViewportSize({ width: 375, height: 667 });
   const sample = () =>
     page.evaluate(() => {
       const w = window as unknown as { maxScrollWidth: number };

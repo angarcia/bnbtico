@@ -4,6 +4,25 @@
 .label-plain{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .choice{cursor:pointer}
 .counters{padding:0;border-radius:var(--r-tile)}
+/* Publicar: título y cierre arriba; progreso y cuenta en sus propias filas. */
+.wizard-heading{display:flex;flex-direction:column;gap:8px;flex:none}
+.header-flow.publish-header{margin:0;min-height:44px}
+.publish-header h1{white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+.publish-header .header-close{flex:0 0 44px;width:44px;height:44px;padding:0;justify-content:center;color:var(--muted)}
+.wizard-heading .stage-label{align-self:flex-end;color:var(--muted);font-variant-numeric:tabular-nums;min-height:17px}
+.wizard-heading .stage-summary{align-self:stretch;flex-direction:row;align-items:baseline;justify-content:space-between;gap:8px}
+.stage-summary h2{font-size:23px;line-height:1.2;color:var(--fg)}
+.stage-summary>span{flex:none}
+/* Un solo título en el resumen; compactar espacios, conservando objetivos táctiles y toda la información. */
+.publish-form.publish-review{gap:8px}
+.publish-review .review-row{min-height:44px}
+.publish-form .counters{background:transparent;border:0;border-radius:0;box-shadow:none}
+.publish-form .counter{min-height:78px;padding:12px 0;gap:8px}
+.publish-form .counter-label{display:flex;align-items:center;gap:12px;min-width:0;font-weight:400;overflow-wrap:anywhere}
+.publish-form .counter-label svg{flex:none;color:var(--muted)}
+.publish-form .counter .ctl{flex:none;gap:0}
+.publish-form .counter .ctl button{width:44px;height:44px;flex:none}
+.publish-form .counter .ctl b{width:28px}
 .grow-col textarea{flex:1}
 /* Con el teclado, el alto que le queda hasta la barra o el teclado (publish/fill-height.ts). */
 .grow-col textarea:focus{flex:1 0 var(--fill,0%)}

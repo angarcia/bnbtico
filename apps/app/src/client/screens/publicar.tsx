@@ -6,7 +6,7 @@ import { Link, Navigate, useNavigate, useParams, useSearch } from "@tanstack/rea
 import { useEffect, useRef, useState } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
-import { LAST_STEP, STEPS, stepFromParam, stepPosition, wizardStage, type Step } from "../../domain/listing";
+import { LAST_STEP, stepFromParam, type Step } from "../../domain/listing";
 import { isPublished } from "../../domain/can";
 import { EditorContext, useEditor } from "../editor-port";
 import { localPort } from "../publish/local-port";
@@ -19,7 +19,7 @@ import { stepEnter } from "../motion";
 import { ownListingKey } from "../listing-keys";
 import { addOwnCached, api, resumableQuery } from "../owner";
 import { StepFields } from "../publish/fields";
-import { ReadyList, StageLabel } from "../publish/wizard-parts";
+import { ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { StepForm } from "../publish/step-form";
 import { useOwnListing, useUserId } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
@@ -138,21 +138,16 @@ function CloseWizard({ id }: { id?: string }) {
     await navigate({ to });
   }
   return (
-    <button type="button" className="btn-link header-close" onClick={close} disabled={saving} aria-label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"}>
+    <button type="button" className="btn-link header-close" onClick={close} disabled={saving} aria-busy={saving || undefined} aria-label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"} title="Cerrar y seguir después">
       <I.x size={20} />
-      <span>{saving ? "Guardando…" : "Cerrar"}</span>
     </button>
   );
 }
 
-function StepHeader({ id, step }: { id?: string; step: Step | null }) {
+function StepHeader({ id, step, missingSteps }: { id?: string; step: Step | null; missingSteps?: readonly Step[] }) {
   const { admin } = useEditor();
   return (
-    <header className="header-flow">
-      <CloseWizard id={id} />
-      <h1>{admin ? "Asistir casa" : "Publicar casa"}</h1>
-      {step ? <StageLabel step={step} /> : null}
-    </header>
+    <WizardHeader title={admin ? "Asistir casa" : "Publicar casa"} step={step} close={<CloseWizard id={id} />} missingSteps={missingSteps} />
   );
 }
 
@@ -191,7 +186,7 @@ export function PasoScreen() {
 
   // Un id de pantalla retirado (el 3, el mapa de antes) lleva a la que lo sustituye: los enlaces viejos siguen sirviendo.
   if (parsed && "redirect" in parsed) return <Navigate to={port.step} params={{ id, paso: String(parsed.redirect) }} replace />;
-  const header = <StepHeader id={id} step={step} />;
+  const header = <StepHeader id={id} step={step} missingSteps={step === LAST_STEP && l ? requiredProblems(l).map((p) => p.step) : undefined} />;
   if (!step || l === null) {
     return (
       <>
@@ -221,13 +216,6 @@ export function PasoScreen() {
   return (
     <>
       {header}
-      <div className="progress" aria-hidden="true">
-        {/* Los 8 tramos agrupados por etapa: un hueco mayor donde empieza la siguiente. */}
-        {/* En el último paso, el tramo de lo obligatorio que falta queda vacío (revisión UX 2026-10-29, A9). */}
-        {STEPS.map((s) => (
-          <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && requiredProblems(l).some((p) => p.step === s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
-        ))}
-      </div>
       <StepForm key={step} userId={userId} listing={l} step={step} enter={enter} volver={volver}>
         {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>

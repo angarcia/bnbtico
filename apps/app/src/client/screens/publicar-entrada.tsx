@@ -17,7 +17,7 @@ import { accountQuery } from "../account";
 import { FlowHeader } from "../chrome";
 import { addOwnCached, api, resumableQuery } from "../owner";
 import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } from "../publish/phone-draft";
-import { KindChoice, ReadyList, StageLabel } from "../publish/wizard-parts";
+import { KindChoice, ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { authApi, useSession } from "../session";
 import { SignInForm } from "../sign-in";
 
@@ -33,14 +33,11 @@ const clearStored = clearPhoneDraft;
 /** La cabecera del asistente sin borrador todavía (el paso 1, o las Fotos al pedir el código): «Cerrar» vuelve a Explorar. */
 function EntryHeader({ step = 1 }: { step?: 1 | 7 }) {
   return (
-    <header className="header-flow">
-      <Link to="/explorar" className="btn-link header-close" aria-label="Cerrar">
+    <WizardHeader step={step} close={
+      <Link to="/explorar" className="btn-link header-close" aria-label="Cerrar" title="Cerrar">
         <I.x size={20} />
-        <span>Cerrar</span>
       </Link>
-      <h1>Publicar casa</h1>
-      <StageLabel step={step} />
-    </header>
+    } />
   );
 }
 
@@ -64,7 +61,7 @@ export function PublicarEntradaScreen() {
   return (
     <>
       <EntryHeader />
-      <form onSubmit={submit} className="stack flow" noValidate>
+      <form onSubmit={submit} className="publish-form" noValidate>
         <section className="stack gap-4" aria-label="Qué tener a mano">
           <span className="small strong">Tenga a mano:</span>
           <ReadyList />
@@ -75,9 +72,14 @@ export function PublicarEntradaScreen() {
             {error}
           </p>
         ) : null}
-        <button type="submit" className="btn btn-primary btn-lg btn-block">
-          Continuar
-        </button>
+        <div className="sticky-actions">
+          <span className="btn btn-ghost btn-back is-disabled" aria-disabled="true" aria-label="Atrás">
+            <I.back size={22} />
+          </span>
+          <button type="submit" className="btn btn-primary grow">
+            Continuar <I.chevron size={20} />
+          </button>
+        </div>
       </form>
     </>
   );
