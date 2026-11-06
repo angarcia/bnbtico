@@ -25,6 +25,8 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Checkout parcial: design/ solo se descarga donde lo necesitan las pruebas.
+  # En modo no cónico, los patrones positivos incluyen y los negativos excluyen.
   plan:
     concurrency:
       group: app-verify-plan-${{ github.ref }}
@@ -38,6 +40,11 @@ jobs:
       total: ${{ steps.shards.outputs.total }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/design/
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -69,6 +76,16 @@ jobs:
         working-directory: apps/app
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          # El inventario E2E también lee las fotos al cargar los archivos de pruebas.
+          sparse-checkout: |
+            /*
+            !/design/*
+            /design/prototype/
+            /design/pantallas/
+            !/design/pantallas/*
+            /design/pantallas/fotos/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -110,6 +127,11 @@ jobs:
         working-directory: apps/app
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/design/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -143,6 +165,14 @@ jobs:
         working-directory: apps/app
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/design/*
+            /design/pantallas/
+            !/design/pantallas/*
+            /design/pantallas/fotos/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -205,6 +235,14 @@ jobs:
         working-directory: apps/app
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/design/*
+            /design/pantallas/
+            !/design/pantallas/*
+            /design/pantallas/fotos/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -258,6 +296,11 @@ jobs:
       CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/design/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -313,6 +356,11 @@ jobs:
       DEPLOY_ENV: ""
     steps:
       - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/design/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
