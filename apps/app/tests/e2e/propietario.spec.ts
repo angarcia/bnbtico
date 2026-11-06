@@ -372,3 +372,19 @@ test("«enviada» confirma la revisión con la referencia, y una casa ajena no e
   await page.goto(`/propietario/casas/${ana.id}`);
   await expect(page.getByRole("heading", { name: "No encontramos esta casa" })).toBeVisible();
 });
+
+// Auditoría de viajes (2026-11-05): suscripción y actividad se pedían cuando ya había llegado la casa y el JS de su ficha.
+test("ficha de una casa activa: la suscripción y la actividad se piden sin esperar a la casa", async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route((u) => u.pathname.endsWith("/rest/v1/listings") && u.searchParams.get("id") === `eq.${active.id}`, async (route) => {
+    await held;
+    await route.continue();
+  });
+  const billing = page.waitForRequest((r) => r.url().includes("/rest/v1/rpc/owner_billing"));
+  const activity = page.waitForRequest((r) => r.url().includes("/rest/v1/rpc/owner_activity"));
+  await page.goto(`/propietario/casas/${active.id}`);
+  await Promise.all([billing, activity]);
+  release();
+  await expect(page.getByRole("heading", { name: "Casa Cocles" }).first()).toBeVisible();
+});

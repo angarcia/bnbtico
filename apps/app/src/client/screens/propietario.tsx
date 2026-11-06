@@ -22,10 +22,10 @@ import { I } from "../../shared/icons";
 import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
-import { useBilling, type Billing } from "../billing";
+import { billingQuery, useBilling, type Billing } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
-import { offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
+import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
 import { ConfirmSheet } from "../confirm-sheet";
 
 const message = (e: unknown) => toDomainError(e).message;
@@ -210,6 +210,15 @@ const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
 export function CasaPropietarioScreen() {
   const { id } = detailRoute.useParams();
   const { userId, query } = useOwnListing(id);
+  // Suscripción, actividad y el JS de la ficha editable no dependen de la casa: salen a la vez que ella, no después
+  // (auditoría de viajes 2026-11-05: los avisos y las cifras llegaban ~0,6 s más tarde).
+  const client = useQueryClient();
+  useEffect(() => {
+    if (!userId) return;
+    void client.prefetchQuery(billingQuery(userId));
+    void client.prefetchQuery(activityQuery(userId));
+    void import("./casa-editable").catch(() => undefined);
+  }, [client, userId]);
   const l = query.data;
   return (
     <>
