@@ -8,7 +8,7 @@ import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
 import { nightsBetween, resultsText, searchSummary } from "../../domain/search";
-import { extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { CurrencySwitch } from "../../shared/currency-switch";
@@ -21,6 +21,7 @@ import { SearchHelp } from "../search-help";
 import { useListingsCount } from "../own-listings-query";
 import { SUPPORT_NUMBERS } from "../support-numbers";
 import { isDatesError, listingsQuery, provincesQuery, zonesQuery } from "../queries";
+import { DEFAULT_PROVINCE } from "../../domain/listing";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
@@ -226,6 +227,22 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   );
 }
 
+/** En frío, la búsqueda no espera a las provincias (auditoría de viajes 2026-11-05): sale a la vez, con la provincia de la
+ *  URL o Limón, y `Results` la encuentra en la caché al llegar ellas. Si Limón no tuviera casas, solo sobraría esta petición.
+ *  Con una zona en la URL se espera, porque la zona también se valida contra su lista. */
+function usePrefetchSearch(search: ExploreSearch, waiting: boolean) {
+  const client = useQueryClient();
+  const guess =
+    waiting && !search.zona
+      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [DEFAULT_PROVINCE, search.prov] : [DEFAULT_PROVINCE], { today: costaRicaToday(Date.now()) })
+      : null;
+  const key = guess ? JSON.stringify(listingsQuery(guess).queryKey) : "";
+  useEffect(() => {
+    if (guess) void client.prefetchQuery(listingsQuery(guess));
+    // `guess` es un objeto nuevo en cada render: basta con su clave.
+  }, [key]);
+}
+
 export function ExplorarScreen() {
   const search = route.useSearch();
   const { data: provinces, isError } = useQuery(provincesQuery);
@@ -235,6 +252,7 @@ export function ExplorarScreen() {
   const zoneName = zoneRow?.name ?? null;
   const zone = zoneRow ? { lat: zoneRow.lat, lng: zoneRow.lng } : null;
   const loading = !provinces || (!!search.zona && zones.isPending);
+  usePrefetchSearch(search, !provinces && !isError);
   return (
     <>
       <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f, provinces) : search} />

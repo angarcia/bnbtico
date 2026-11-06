@@ -76,6 +76,27 @@ test("Tarjeta: de borde a borde, foto 3:2 deslizable con puntitos, pedida al des
   await expect(page).toHaveURL(/\/casa\/CT-/);
 });
 
+// Auditoría de viajes (2026-11-05): la búsqueda esperaba a las provincias (un viaje entero de más en la primera visita).
+// Ahora sale a la vez, con la provincia de la URL o Limón, y la lista la aprovecha al llegar las provincias.
+test("en frío, la búsqueda sale sin esperar a las provincias y no se repite al llegar ellas", async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/rest/v1/provinces_with_listings**", async (route) => {
+    await held;
+    await route.continue();
+  });
+  const searches: string[] = [];
+  page.on("request", (r) => {
+    if (r.url().includes("/rest/v1/rpc/search_listings")) searches.push(r.postData() ?? "");
+  });
+  await page.goto("/explorar");
+  await expect.poll(() => searches.length).toBe(1);
+  release();
+  await expect(results(page)).toContainText("casas");
+  await expect(page.getByText("Casa Manzanillo")).toBeVisible();
+  expect(searches).toHaveLength(1);
+});
+
 test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, filtros y ₡ | $", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("heading", { level: 1, name: "Explorar casas" })).toBeAttached();
