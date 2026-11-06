@@ -25,6 +25,7 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Sin material de trabajo, copias históricas, documentación ni herramientas manuales de la raíz.
   # Checkout parcial: design/ solo se descarga donde lo necesitan las pruebas.
   # En modo no cónico, los patrones positivos incluyen y los negativos excluyen.
   plan:
@@ -44,6 +45,11 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/
       - uses: actions/setup-node@v7
         with:
@@ -81,6 +87,11 @@ jobs:
           # El inventario E2E también lee las fotos al cargar los archivos de pruebas.
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/*
             /design/prototype/
             /design/pantallas/
@@ -131,6 +142,11 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
@@ -169,6 +185,11 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/*
             /design/pantallas/
             !/design/pantallas/*
@@ -239,6 +260,11 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/*
             /design/pantallas/
             !/design/pantallas/*
@@ -300,6 +326,11 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
@@ -360,6 +391,11 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
             !/design/
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
