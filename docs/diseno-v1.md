@@ -1,6 +1,10 @@
 # Diseño visual de la v1 · «Sol y sal» (2026-10-20)
 
-Referencia visual vigente de la app. Manda sobre `docs/design.md` en todo lo visual; el prototipo HTML sigue mandando en comportamiento. Las pantallas están en el lienzo de diseño **«bnbtico · diseño v1 (Sol y sal)»** (Claude Design, https://claude.ai/artifact/KRziP5mGGNKqsPFr11MR8P) y, como HTML de referencia, en `design/pantallas/`. Tokens: `design/tokens/tokens.json` (0.2.2). Logo: `design/logo/README.md`.
+## Ajuste compartido de botones y notas (2026-11-05)
+
+Implementa el apartado 1 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md` y sustituye las indicaciones anteriores de botón principal verde lleno o de notas informativas verdes: Continuar, Guardar, Enviar y Compartir usan `--state-soft`, texto `--primary`, sombra `0 2px 5px` verde al 14 % y ningún borde permanente. Los desactivados reales usan fondo `#F2F1ED`, texto `#898D88`, sin sombra ni borde y sin bajar la opacidad. Las notas informativas usan superficie neutra clara, texto normal y borde suave; errores, avisos, pastillas y pagos conservan sus colores funcionales. Los iconos secundarios mantienen su menor peso visual; no cambia la composición de Continuar ni las confirmaciones. Tokens 0.3.3.
+
+Referencia visual vigente de la app. Manda sobre `docs/design.md` en todo lo visual; el prototipo HTML sigue mandando en comportamiento. Las pantallas están en el lienzo de diseño **«bnbtico · diseño v1 (Sol y sal)»** (Claude Design, https://claude.ai/artifact/KRziP5mGGNKqsPFr11MR8P) y, como HTML de referencia, en `design/pantallas/`. Tokens: `design/tokens/tokens.json` (0.3.3). Logo: `design/logo/README.md`.
 
 ## Sistema
 

@@ -1,3 +1,9 @@
+## 2026-11-05 · Aplicar los cambios aprobados por tandas: botones y notas (Ana)
+
+Ana autoriza implementar uno a uno los cambios de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`, enseñando cada tanda para revisión. Se empieza por la regla visual compartida: acciones verde B con sombra ligera y sin borde, desactivados grises claros y notas informativas neutras. Se conserva el refactor de CSS, los estados reales, los iconos existentes y los colores funcionales de pagos, WhatsApp y errores. No se modifican cobros ni promociones.
+
+La aplicación local sirve de revisión; Ana ejecuta los comandos de terminal. El seguimiento está en `.scratch/auditoria-conversion-2026-11-04/plan-implementacion.md`. Esta entrada registra la implementación de acuerdos previos: la aceptación visual y las comprobaciones de cada tanda se anotan allí sin darlas por hechas.
+
 ## 2026-11-04 · Aplazar los informes HTML y las trazas descargables de CI
 
 Daniel aprobó aplazar la publicación de los informes HTML de Playwright y de sus trazas descargables en CI hasta que una revisión apruebe el saneador de fragmentos de código. Hasta entonces, CI publica solo el JSON normalizado, los logs saneados, los códigos de salida y el resumen.

@@ -4,7 +4,6 @@
 .label-plain{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .choice{cursor:pointer}
 .counters{padding:0;border-radius:var(--r-tile)}
-.btn.is-disabled{border-color:var(--line);color:#A3ADA6;opacity:1;cursor:default}
 .grow-col textarea{flex:1}
 /* Con el teclado, el alto que le queda hasta la barra o el teclado (publish/fill-height.ts). */
 .grow-col textarea:focus{flex:1 0 var(--fill,0%)}

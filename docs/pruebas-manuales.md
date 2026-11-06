@@ -129,6 +129,15 @@ Para volver a sembrar (p. ej. después de gastar CT-1056 o de decidir CT-1058/CT
 
 Se prueba desde el teléfono en `https://nueva.bnbtico.com` (la portada, en `/?pronto=1`). Hace falta, creadas antes en la parte Anfitrión o por un admin: **al menos 5 casas activas en Limón** en dos o más zonas; entre ellas una con «Acepta alquiler mensual» y precio al mes, otra con mensual a negociar, una con piscina y frente al mar, una con descripción larga (más de 8 líneas), una con días ocupados y un precio distinto en el calendario y una con varias fotos. Además, **una casa con la suscripción parada por el propietario** (enlace que ya no funciona), **una en revisión** y **una pausada con «Pausar la casa»**; apunte sus `CT-####`. Cuentas (código `123456`, +506): `8888 1234` (cliente que ya existe), `8888 9999` (libre: registro nuevo) y `8777 0001` (propietaria Yorleny Prueba, dueña de las casas). Empiece los recorridos «sin cuenta» con la sesión cerrada o en una pestaña privada.
 
+### 2.0 Acabado compartido de botones y notas (2026-11-05)
+
+Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no acreditan los cambios de estructura de las tandas siguientes.
+
+- [ ] **C0a** En Publicar casa y Filtros, Continuar y Ver N casas muestran fondo verde claro, texto verde, sombra suave y ningún borde permanente; texto e icono siguen centrados y el área táctil mide al menos 44 × 44 px.
+- [ ] **C0b** En un editor sin cambios efectivos, Guardar sigue desactivado de verdad: fondo `#F2F1ED`, texto `#898D88`, sin sombra ni borde. Hacer un cambio válido lo activa; deshacerlo vuelve a desactivarlo. No se guarda nada al tocar un desactivado.
+- [ ] **C0c** Las notas informativas tienen fondo neutro claro, texto normal y borde suave; los errores y avisos conservan su color funcional. Pagos y Activar suscripción siguen dorados; WhatsApp mantiene su identificación.
+- [ ] **C0d** Con teclado, el foco sigue siendo visible en acciones y enlaces. Revisar nombres largos y ambos tamaños móviles: no hay texto recortado, solapamientos ni cambios de tamaño al pulsar.
+
 ### 2.1 Portada
 
 - [ ] **C1** Abra `/?pronto=1` → se ve «MUY PRONTO», el título «Alquile en el Caribe de Costa Rica, directo con quien lo recibe», la foto «PLAYA NEGRA · PUERTO VIEJO DE TALAMANCA» y, al bajar, «Qué es bnbtico», «Dónde empezamos» y «Cómo funciona» en tres pasos; sin barra de pestañas.

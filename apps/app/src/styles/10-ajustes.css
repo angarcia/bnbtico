@@ -122,5 +122,5 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
 /* Negritas sueltas del texto (<b>, <strong>) a 600 como mucho; títulos de pantalla y de casa en --fg al 85 % (un hex fijo,
    para que contrast.test.ts lo mida), para que no compitan con el precio ni con los botones. */
 b,strong{font-weight:var(--w-strong)}
-.btn-primary,.btn-wa,.btn-sun{font-weight:var(--w-strong)}
+.btn-primary,.btn-soft,.btn-outline,.btn-wa,.btn-sun{font-weight:var(--w-strong)}
 h1,h2,h3,.house-card-title,.sub-house-title,.listing-card h2,.listing-card h3,.cal-house{color:var(--fg-title)}
