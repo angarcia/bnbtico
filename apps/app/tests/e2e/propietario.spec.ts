@@ -36,7 +36,7 @@ test.beforeEach(async ({ page }) => {
 
 const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
-test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno por tarjeta", async ({ page }) => {
+test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarjeta", async ({ page }) => {
   await page.goto("/propietario/casas");
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Mis casas", "Calendario", /^Consultas\d*$/, "Cuenta"]);
@@ -57,7 +57,7 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
   await expect(cocles.getByTestId("card-zone")).toHaveText("Cocles");
   await expect(cocles).not.toContainText("₡");
   const share = cocles.getByRole("button", { name: "Compartir ficha" });
-  await expect(share).toHaveClass(/btn-primary/); // verde aprobado; el dorado se conserva para pagos
+  await expect(share).toHaveClass(/btn-primary/); // icono y texto verdes; el dorado se conserva para pagos
   await expect(share).toHaveText("Compartir");
   await expect(share).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
   await expect(cocles.getByRole("link", { name: "Calendario" })).toHaveAttribute("href", `/propietario/calendario?casa=${active.id}`);
@@ -83,14 +83,15 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
 
   // Como mucho un botón relleno (verde o, si es dinero, ocre) por tarjeta.
   for (const article of await page.getByRole("article").all()) expect(await article.locator(".btn-primary, .btn-sun").count()).toBeLessThanOrEqual(1);
-  // La primera foto se pide enseguida; las demás, al acercarse. En el teléfono, como las tarjetas de Explorar (2026-11-03):
-  // de borde a borde y la foto 3:2.
+  // La primera foto se pide enseguida; las demás, al acercarse. Foto 3:2 a todo el ancho de su tarjeta;
+  // desde el 2026-11-06, tarjetas y barra de estados comparten 16 px de margen a cada lado de la pantalla.
   const photos = page.locator("article .house-photo");
   await expect(photos.first().locator("img")).toHaveAttribute("loading", "eager");
   await expect(page.locator("article .house-photo img").nth(1)).toHaveAttribute("loading", "lazy");
   const box = (await photos.first().boundingBox())!;
   expect(Math.abs(box.width / box.height - 3 / 2)).toBeLessThan(0.02);
-  expect(Math.abs(box.width - page.viewportSize()!.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box.x - 16)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box.width - (page.viewportSize()!.width - 32))).toBeLessThanOrEqual(1);
 
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());
@@ -424,6 +425,14 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
     const inquiries = (await aInquiries.boundingBox())!;
     expect(Math.min(calendar.width, calendar.height, inquiries.width, inquiries.height)).toBeGreaterThanOrEqual(44);
     expect(inquiries.x - calendar.x - calendar.width).toBeGreaterThanOrEqual(16);
+    const summary = (await page.locator(".tiles-row").boundingBox())!;
+    const house = (await aCard.boundingBox())!;
+    expect(summary.x).toBeCloseTo(house.x, 0);
+    expect(summary.x + summary.width).toBeCloseTo(house.x + house.width, 0);
+    expect(house.x).toBe(16);
+    const calendarDrawing = await aCard.getByRole("link", { name: "Calendario", exact: true }).locator("svg").boundingBox();
+    const inquiriesDrawing = await aInquiries.locator("svg").boundingBox();
+    expect(Math.min(calendarDrawing!.width, calendarDrawing!.height, inquiriesDrawing!.width, inquiriesDrawing!.height)).toBeGreaterThanOrEqual(28);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   }
   await aInquiries.click();

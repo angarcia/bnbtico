@@ -1,3 +1,7 @@
+## 2026-11-06 · Mis casas más compacto, divisor neutro y barra de estados conservada (Ana)
+
+Ana rechaza que el ajuste se limite a aumentar iconos y pide reducir el espacio blanco. Tras ver la captura compacta, acepta esa composición con un divisor sin verde y confirma que la barra de estados le gustaba como estaba. Se conserva esa barra con sus cantidades, colores y accesos; se alinean barra y tarjetas a 16 px de los bordes. Las tarjetas con acciones agrupan nombre y zona, usan una línea neutra encima de las acciones y prescinden de la banda verde de la propuesta. Compartir conserva icono y texto verde; Calendario y Consultas pasan a 28 px dentro de objetivos de 44 px, separados 16 px. El ajuste no modifica la presentación del detalle editable ni las reglas de casas, pagos, contadores o navegación.
+
 ## 2026-11-06 · Consultas y selector compartido con Calendario (Ana)
 
 Se aplica el apartado 4 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`: selector común con hoja inferior, nombres completos, X, lista desplazable y selección dorada con check. Consultas ofrece «Todas las casas»; Calendario solo una casa concreta. Cada pantalla conserva su lista de casas elegibles; con una sola se oculta el selector. Se conservan las rutas, el filtro antes de las últimas 20 consultas, las nuevas primero y el funcionamiento con la caché sin red.

@@ -162,7 +162,7 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
   const tools = multiple && can(l, "available");
   const inquiriesLabel = newInquiries > 0 ? `Consultas, ${newInquiries} ${newInquiries === 1 ? "nueva" : "nuevas"}` : "Consultas";
   return (
-    <article className="card house-card">
+    <article className={`card house-card${shareable || tools ? " house-card-compact" : ""}`}>
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de bnbtico: {l.reviewNote}</p> : null}
@@ -173,10 +173,10 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
           {tools ? (
             <div className="house-tools">
               <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label="Calendario" title="Calendario">
-                <I.calendar size={22} />
+                <I.calendar size={28} />
               </Link>
               <Link to="/propietario/actividad" search={{ casa: l.id }} replace className="house-tool" aria-label={inquiriesLabel} title={inquiriesLabel}>
-                <I.chat size={22} />
+                <I.chat size={28} />
                 {newInquiries > 0 ? <span className="house-inquiries-count num" data-testid="house-inquiries-count" aria-hidden="true">{newInquiries}</span> : null}
               </Link>
             </div>
