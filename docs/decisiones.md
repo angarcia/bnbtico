@@ -1,3 +1,15 @@
+## 2026-11-06 · Marca como vistas las consultas visibles (Ana)
+
+Solo se marca como vista una consulta cuyo nombre de cliente se mantiene visible un momento en Consultas, también desde el acceso de Mis casas y dentro del filtro elegido. Las que quedan fuera de pantalla no cambian. Bajan «Nueva» y el contador sin reordenar las tarjetas durante la visita; tocar «Abrir WhatsApp» antes de verla también la marca. Se reutiliza el registro existente; no se infiere nada de lo ocurrido dentro de WhatsApp.
+
+## 2026-11-06 · Oculta el borrador automático en Consultas (Ana)
+
+Se oculta el borrador automático en Consultas porque el cliente puede editarlo antes de enviar o no enviar nada. Se conserva en el registro y se muestran las notas personalizadas. La tarjeta mantiene el nombre, los datos de la estancia, «Nueva» y «Abrir WhatsApp».
+
+## 2026-11-06 · Enlace a la ficha en los mensajes de consulta (Ana)
+
+Al abrir WhatsApp para contactar a un anfitrión, el mensaje preparado empieza con la URL pública de la casa de esa consulta, sin parámetros, seguida de una línea en blanco y el texto habitual. El enlace se añade al abrir WhatsApp, también al volver de verificar el número; la vista previa y el texto guardado en Consultas se conservan. El anfitrión sigue abriendo el chat del cliente desde Consultas sin texto preparado.
+
 ## 2026-11-06 · Un solo acceso para editar el perfil (Ana)
 
 Se aplica el apartado9 aprobado: se mantiene Editar junto a los datos personales y se elimina la fila duplicada Mi perfil del cliente. Los campos, destino, guardado y validación se conservan. Pruebas de cliente y propietario preparadas; Ana hará la ejecución conjunta antes de publicar los commits.

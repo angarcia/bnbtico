@@ -14,7 +14,7 @@ import { catchWhatsApp, waExpected } from "./helpers/whatsapp";
 // publica por el asistente → el admin (aal2, código de su app de autenticación) aprueba → un cliente sin cuenta guarda la
 // casa en favoritos y la contacta: crea su cuenta con un número de prueba recién borrado (el único código por SMS del
 // recorrido; las demás sesiones se inyectan) y vuelve a la hoja con lo escrito → «Abrir WhatsApp» con la URL exacta →
-// el propietario ve «Nueva» en Actividad, abre WhatsApp con el cliente y el contador desaparece.
+// el propietario ve la consulta en Actividad, el contador desaparece y puede abrir WhatsApp con el cliente.
 test.describe.configure({ mode: "serial" });
 
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
@@ -55,7 +55,7 @@ test.afterAll(async () => {
   await deleteAccount(FREE_PHONE);
 });
 
-test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → Actividad → responder", async ({ page, browser }, info) => {
+test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → Actividad → responder", async ({ page, browser, baseURL }, info) => {
   test.setTimeout(180_000);
 
   // 1. El propietario publica por el asistente (las fotos se siembran en la base; la subida real está en fotos.spec.ts).
@@ -156,7 +156,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   const wa = await catchWhatsApp(page);
   await enterCode(page);
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, message)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, message, publicId, baseURL)]);
   // 6. El favorito guardado sin cuenta pasó a la cuenta al verificar.
   await expect.poll(clientFavorites).toEqual([publicId]);
   await page.goBack();
@@ -164,7 +164,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await expect(sheet).toHaveCount(0);
 
-  // 7. El propietario (más tarde, desde su teléfono) ve «Nueva» y abre WhatsApp con el cliente; el contador desaparece.
+  // 7. El propietario ve la consulta (el contador desaparece) y abre WhatsApp con el cliente.
   const later = await phone(browser, info);
   await injectSession(later, "owner");
   await later.goto("/propietario/casas");
@@ -178,8 +178,9 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(card.getByTestId("inquiry-house")).toHaveCount(0);
   await expect(card).not.toContainText(`${TITLE} · `);
   await expect(card).toContainText("3 personas");
-  await expect(card).toContainText(`“${message}”`);
-  await expect(card.getByText("Nueva", { exact: true })).toBeVisible();
+  await expect(card).not.toContainText(message);
+  await expect(card.locator(".inquiry-message")).toHaveCount(0);
+  await expect(nav(later).getByTestId("inquiries-badge")).toHaveCount(0);
   const waOwner = await catchWhatsApp(later);
   await card.getByRole("button", { name: "Abrir WhatsApp" }).click();
   await expect.poll(() => waOwner).toEqual([`https://wa.me/${FREE_PHONE.replace(/\D/g, "")}`]);

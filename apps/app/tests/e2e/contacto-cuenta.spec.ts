@@ -50,7 +50,7 @@ async function openSsrListing(page: Page) {
   await expect(sheet(page)).toBeVisible();
 }
 
-test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → de vuelta con la hoja abierta y lo mismo escrito", async ({ page }) => {
+test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → de vuelta con la hoja abierta y lo mismo escrito", async ({ page, baseURL }) => {
   const supabaseJs: string[] = [];
   page.on("request", (r) => /\/assets\/supabase-data-[^/]+\.js$/.test(r.url()) && supabaseJs.push(r.url()));
   await openSsrListing(page);
@@ -95,7 +95,7 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   // Tras el código: de vuelta en la ficha, la hoja reabre con lo escrito y abre WhatsApp sola (sin segundo toque).
   const wa = await catchWhatsApp(page);
   await enterCode(page);
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, written)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, written, casa.publicId, baseURL)]);
   // Volver atrás desde WhatsApp: la ficha con la hoja cerrada (el parámetro se quitó con replace y lo escrito se borró).
   await backFromWhatsApp(page);
   await expect(page).toHaveURL(listingUrl());
@@ -103,7 +103,7 @@ test("ficha del servidor sin sesión → Ingresar con 8888 1234 → código → 
   await expect(s).toHaveCount(0);
 });
 
-test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → WhatsApp, sin «¡Listo!» por el camino", async ({ page }) => {
+test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → WhatsApp, sin «¡Listo!» por el camino", async ({ page, baseURL }) => {
   await deleteAccount(FREE_PHONE);
   await page.goto("/explorar");
   await page.getByRole("link", { name: new RegExp(TITLE) }).click();
@@ -130,7 +130,7 @@ test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → Wh
   await enterCode(page);
 
   // Sin «¡Listo! Su cuenta está creada» (la invitación al correo queda en Mi cuenta): directo a WhatsApp.
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, twoPeople)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, twoPeople, casa.publicId, baseURL)]);
   await deleteAccount(FREE_PHONE);
 });
 

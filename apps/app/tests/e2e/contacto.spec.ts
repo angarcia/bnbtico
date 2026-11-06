@@ -256,7 +256,7 @@ test("una casa que no recibe consultas muestra el botón deshabilitado", async (
   await page.screenshot({ path: "test-results/contacto-no-disponible.png" });
 });
 
-test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page }) => {
+test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page, baseURL }) => {
   await injectSession(page, "other");
   await page.goto("/explorar");
   await page.getByRole("link", { name: new RegExp(TITLE) }).click();
@@ -268,5 +268,5 @@ test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page }) => {
   await page.screenshot({ path: "test-results/contacto-spa.png" });
   const wa = await catchWhatsApp(page);
   await sheet(page).getByRole("button", { name: "Abrir WhatsApp" }).click();
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`, casa.publicId, baseURL)]);
 });

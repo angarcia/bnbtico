@@ -32,11 +32,12 @@ describe("vuelta a la hoja de contacto tras ingresar", () => {
 describe("«Abrir WhatsApp» con un borrador válido", () => {
   const draft: InquiryDraft = { arrival: "2026-12-20", departure: "2026-12-27", people: 2, message: "Hola, ¿tienen parqueo? Gracias & saludos" };
   const signedIn = () => true;
+  const contact = { publicId: "CT-1042", draft };
 
   it("sin sesión: va a Ingresar con la vuelta a la hoja y deja la página, sin registrar nada", async () => {
     const navigate = vi.fn();
     const create = vi.fn();
-    const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, hasSession: () => false, create });
+    const outcome = await proceedToWhatsApp({ ...contact, navigate, hasSession: () => false, create });
     expect(outcome).toEqual({ kind: "leaving" });
     expect(navigate).toHaveBeenCalledExactlyOnceWith("/cuenta?next=%2Fcasa%2FCT-1042%3Fcontacto%3D1");
     expect(create).not.toHaveBeenCalled();
@@ -44,19 +45,19 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
 
   it("sin sesión guardada en el dispositivo lo sabe sin cargar supabase-js", async () => {
     const navigate = vi.fn();
-    expect(await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate })).toEqual({ kind: "leaving" });
+    expect(await proceedToWhatsApp({ ...contact, navigate })).toEqual({ kind: "leaving" });
     expect(navigate).toHaveBeenCalledOnce();
   });
 
-  it("con sesión: registra la consulta y abre wa.me con el número de la casa (solo dígitos) y el texto codificado", async () => {
+  it("con sesión: guarda el texto de la consulta y abre wa.me con el enlace de la ficha en la primera línea", async () => {
     const navigate = vi.fn();
     const open = vi.fn();
     const created = vi.fn();
     const create = vi.fn(async () => ({ inquiryId: "i1", whatsappPhone: "+506 6000-1234" }));
-    const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, hasSession: signedIn, create, open, created });
+    const outcome = await proceedToWhatsApp({ ...contact, origin: "https://bnbtico.com", navigate, hasSession: signedIn, create, open, created });
     expect(outcome).toEqual({ kind: "sent" });
     expect(create).toHaveBeenCalledExactlyOnceWith("CT-1042", draft);
-    expect(open).toHaveBeenCalledExactlyOnceWith(`https://wa.me/50660001234?text=${encodeURIComponent(draft.message)}`);
+    expect(open).toHaveBeenCalledExactlyOnceWith(`https://wa.me/50660001234?text=${encodeURIComponent(`https://bnbtico.com/casa/CT-1042\n\n${draft.message}`)}`);
     expect(created).toHaveBeenCalledExactlyOnceWith("CT-1042");
     expect(navigate).not.toHaveBeenCalled();
   });
@@ -67,7 +68,7 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
     const create = vi.fn(async () => {
       throw new DomainError(INQUIRY_MESSAGES.ownHouse, "validation");
     });
-    expect(await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate: vi.fn(), hasSession: signedIn, create, open, created })).toEqual({
+    expect(await proceedToWhatsApp({ ...contact, navigate: vi.fn(), hasSession: signedIn, create, open, created })).toEqual({
       kind: "error",
       message: "Esta es su propia casa.",
     });
@@ -79,7 +80,7 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
     const create = vi.fn(async () => {
       throw new TypeError("Failed to fetch dynamically imported module");
     });
-    expect(await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate: vi.fn(), hasSession: signedIn, create, open: vi.fn() })).toEqual({
+    expect(await proceedToWhatsApp({ ...contact, navigate: vi.fn(), hasSession: signedIn, create, open: vi.fn() })).toEqual({
       kind: "error",
       message: "Sin conexión. Revise su internet e intente de nuevo.",
     });
@@ -89,7 +90,7 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
     for (const err of [new DomainError(INQUIRY_MESSAGES.signIn, "validation"), new DomainError("Su sesión venció. Ingrese de nuevo.", "session")]) {
       const navigate = vi.fn();
       const open = vi.fn();
-      const outcome = await proceedToWhatsApp({ publicId: "CT-1042", draft, navigate, hasSession: signedIn, open, create: async () => Promise.reject(err) });
+      const outcome = await proceedToWhatsApp({ ...contact, navigate, hasSession: signedIn, open, create: async () => Promise.reject(err) });
       expect(outcome).toEqual({ kind: "leaving" });
       expect(navigate).toHaveBeenCalledExactlyOnceWith("/cuenta?next=%2Fcasa%2FCT-1042%3Fcontacto%3D1");
       expect(open).not.toHaveBeenCalled();

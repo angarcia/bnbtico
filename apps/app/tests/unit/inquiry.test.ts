@@ -13,6 +13,7 @@ import {
   waUrl,
   type OwnerInquiry,
 } from "../../src/domain/inquiry";
+import { inquiryNote } from "../../src/domain/inquiry-note";
 import { waLink } from "../../src/client/support";
 
 const TITLE = "Casa Manzanillo, a pie de playa";
@@ -50,6 +51,21 @@ describe("composeInquiryMessage · sin la variante mensual (fin del modo mensual
     const s = redraft(startDraft("Casa Cocles"), { type: "fields", patch: { arrival: "2026-12-01", departure: "2027-01-05" } }, "Casa Cocles");
     expect(s.message).not.toContain("por meses");
     expect(s).not.toHaveProperty("monthlyFrom");
+  });
+});
+
+describe("nota visible en Consultas", () => {
+  const fields = { arrival: "2026-12-20", departure: "2026-12-23", people: 4 };
+  const generated = "Hola, vi Casa con su nombre anterior en bnbtico y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.";
+
+  it("oculta el borrador automático, incluso si la casa cambió de nombre", () => {
+    expect(inquiryNote({ ...fields, source: "listing", message: generated })).toBeNull();
+  });
+
+  it("conserva las notas personalizadas y las consultas creadas por bnbtico", () => {
+    const custom = `${generated} ¿Tiene entrada sin gradas?`;
+    expect(inquiryNote({ ...fields, source: "listing", message: custom })).toBe(custom);
+    expect(inquiryNote({ ...fields, source: "bnbtico", message: generated })).toBe(generated);
   });
 });
 

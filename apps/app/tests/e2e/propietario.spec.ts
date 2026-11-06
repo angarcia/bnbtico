@@ -441,7 +441,8 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
   await expect(page).toHaveURL("/propietario/actividad?casa=" + a.id);
   await expect(page.getByRole("article")).toHaveCount(1);
   await expect(page.getByRole("article")).toContainText("Consulta de la casa del Caribe");
-  // Filtrar y leer la tarjeta no equivale a abrir WhatsApp: la consulta sigue nueva.
+  // Ver la tarjeta desde el acceso de Mis casas baja el contador sin abrir WhatsApp.
+  await expect.poll(async () => (await h.inquiries("owner").listForOwner()).find((i) => i.publicId === a.publicId)?.openedAt ?? null).not.toBeNull();
   await page.goto("/propietario/casas");
-  await expect(card(page, "Casa del Caribe").getByTestId("house-inquiries-count")).toHaveText("1");
+  await expect(card(page, "Casa del Caribe").getByTestId("house-inquiries-count")).toHaveCount(0);
 });

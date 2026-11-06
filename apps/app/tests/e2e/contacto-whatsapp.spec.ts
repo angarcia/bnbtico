@@ -72,7 +72,7 @@ function storedEverywhere(page: Page): Promise<string> {
   });
 }
 
-test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exacto, consulta en la base y la ficha sin la hoja al volver", async ({ page }) => {
+test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exacto, consulta en la base y la ficha sin la hoja al volver", async ({ page, baseURL }) => {
   const since = sql("select now()::text");
   // El número de la casa no está en el HTML de la ficha.
   const html = await (await page.request.get(`/casa/${casa.publicId}`)).text();
@@ -114,7 +114,7 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   await page.screenshot({ path: "test-results/contacto-abriendo.png" });
   release();
 
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, text)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, text, casa.publicId, baseURL)]);
   expect(rpc).toHaveLength(1);
   expect(inquiries(casa.publicId, "i.arrival, i.departure, i.people, i.message")).toBe(`${a}|${b}|3|${text}`);
   await expect
@@ -137,11 +137,11 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   await expect(messagePreview(s)).toHaveText(fresh);
   await openButton(page).click();
   await expect.poll(() => wa.length).toBe(2);
-  expect(wa[1]).toBe(waExpected(TEST_PHONES.owner, fresh));
+  expect(wa[1]).toBe(waExpected(TEST_PHONES.owner, fresh, casa.publicId, baseURL));
   expect(inquiries(casa.publicId, "count(*), max(i.arrival::text), max(i.message)")).toBe(`1|${a}|${fresh}`);
 });
 
-test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la casa (también desde la ficha de la SPA)", async ({ page }) => {
+test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la casa (también desde la ficha de la SPA)", async ({ page, baseURL }) => {
   const html = await (await page.request.get(`/casa/${otra.publicId}`)).text();
   expect(html).not.toContain(digits(HOUSE_PHONE));
   await injectSession(page, "other");
@@ -151,7 +151,7 @@ test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la ca
   await expect(page).toHaveURL(new RegExp(`/casa/${otra.publicId}$`));
   await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   await openButton(page).click();
-  await expect.poll(() => wa).toEqual([waExpected(HOUSE_PHONE, "Hola, vi Cabina Cocles en bnbtico y me interesa. ¿Está disponible? Gracias.")]);
+  await expect.poll(() => wa).toEqual([waExpected(HOUSE_PHONE, "Hola, vi Cabina Cocles en bnbtico y me interesa. ¿Está disponible? Gracias.", otra.publicId, baseURL)]);
   expect(inquiries(otra.publicId, "i.whatsapp_phone")).toBe(HOUSE_PHONE);
   await backFromWhatsApp(page);
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();

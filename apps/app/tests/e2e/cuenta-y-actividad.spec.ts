@@ -400,7 +400,7 @@ test.describe("Actividad por casa", () => {
     await expect(first).not.toContainText("Casa Cocles ·");
 
     const fresh_ = page.getByTestId("inquiries-new");
-    await expect(fresh_).toHaveText("22 consultas nuevas");
+    await expect(fresh_).toHaveText(/^\d+ consultas nuevas$/);
     await expect(picker(page)).toHaveText("Todas las casas");
     expect((await picker(page).boundingBox())!.y).toBeGreaterThan((await fresh_.boundingBox())!.y);
     const figures = page.locator("article.activity-card");
@@ -434,6 +434,33 @@ test.describe("Actividad por casa", () => {
     await expect(page).toHaveURL(new RegExp(`\\?casa=${vacia.id}$`));
     await expect(page.getByText("Todavía no hay consultas de esta casa.")).toBeVisible();
     await expect(inquiryCards(page)).toHaveCount(0);
+  });
+
+  test("marca como vistas solo las consultas que aparecen en pantalla, sin reordenarlas", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    const cocles = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+    const cabina = await h.seed({ status: "active", draft: { title: "Cabina Punta Uva" } });
+    await inquiry(cabina.publicId, "Hola Cabina 0", 0);
+    for (let n = 0; n < 8; n++) await inquiry(cocles.publicId, `Hola Cocles ${n}`, 8 * (7 - n));
+    const seen = async (message: string) => (await h.inquiries("owner").listForOwner()).find((i) => i.message === message)?.openedAt ?? null;
+
+    await owner(page);
+    await page.goto(`/propietario/actividad?casa=${cocles.id}`);
+    const cards = inquiryCards(page);
+    const first = cards.filter({ hasText: "Hola Cocles 7" });
+    const last = cards.filter({ hasText: "Hola Cocles 0" });
+    await expect(first).toBeInViewport();
+    await expect(last).not.toBeInViewport();
+    await expect.poll(() => seen("Hola Cocles 7")).not.toBeNull();
+    await expect(first.getByText("Nueva", { exact: true })).toHaveCount(0);
+    await expect(cards.first()).toContainText("Hola Cocles 7");
+    expect(await seen("Hola Cocles 0")).toBeNull();
+    expect(await seen("Hola Cabina 0")).toBeNull();
+
+    await last.scrollIntoViewIfNeeded();
+    await expect.poll(() => seen("Hola Cocles 0")).not.toBeNull();
+    await expect(last.getByText("Nueva", { exact: true })).toHaveCount(0);
+    expect(await seen("Hola Cabina 0")).toBeNull();
   });
 
   test("sin red, con ?casa= de una casa que no está en la caché: conserva casa y enseña sus consultas", async ({ page }) => {

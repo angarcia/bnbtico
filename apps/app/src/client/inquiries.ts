@@ -19,31 +19,39 @@ export const inquiriesQuery = (userId: string) =>
     staleTime: 30_000,
   });
 
-/** «Nuevas» = las que el propietario todavía no abrió. */
+/** «Nuevas» = las que el propietario todavía no vio ni abrió en WhatsApp. */
 export const countNew = (list: readonly Pick<OwnerInquiry, "openedAt">[] | undefined): number => list?.filter((i) => !i.openedAt).length ?? 0;
 
-interface OpenDeps {
+interface SeenDeps {
   mark?: (id: string) => Promise<void>;
-  assign?: (url: string) => void;
   now?: () => string;
+}
+
+interface OpenDeps extends SeenDeps {
+  assign?: (url: string) => void;
   /** Cuánto se espera a la base antes de salir a WhatsApp (la petición lleva keepalive y sigue aunque se salga). */
   wait?: number;
 }
 
-/**
- * «Abrir WhatsApp» en una consulta: deja de ser «Nueva» en la caché al momento, pide a la base marcarla (sin deshacer si
- * falla: se marca la próxima vez) y abre el chat con el cliente sin texto, porque la conversación ya existe.
- */
-export async function openInquiry(client: QueryClient, userId: string, inquiry: Pick<OwnerInquiry, "id" | "openedAt" | "clientPhone">, deps: OpenDeps = {}) {
-  const { mark = async (id) => (await api()).markOpened(id), assign = (url) => window.location.assign(url), now = () => new Date().toISOString(), wait = 400 } = deps;
-  if (!inquiry.openedAt) {
-    const openedAt = now();
-    const key = inquiriesQuery(userId).queryKey;
-    // Una lectura en vuelo traería la consulta aún sin abrir y pisaría el cambio.
-    if (client.isFetching({ queryKey: key })) await client.cancelQueries({ queryKey: key });
-    client.setQueryData<OwnerInquiry[]>(key, (list) => list?.map((i) => (i.id === inquiry.id ? { ...i, openedAt } : i)));
-    const sent = mark(inquiry.id).catch(() => undefined);
-    await Promise.race([sent, new Promise((resolve) => setTimeout(resolve, wait))]);
-  }
+type SeenInquiry = Pick<OwnerInquiry, "id" | "openedAt" | "updatedAt">;
+
+/** Comparte el marcado optimista al ver la tarjeta y al abrir el chat antes de que se marque sola. */
+export async function markInquirySeen(client: QueryClient, userId: string, inquiry: SeenInquiry, deps: SeenDeps = {}) {
+  if (inquiry.openedAt) return;
+  const { mark = async (id) => (await api()).markOpened(id), now = () => new Date().toISOString() } = deps;
+  const key = inquiriesQuery(userId).queryKey;
+  // Una lectura en vuelo traería la consulta aún sin abrir y pisaría el cambio.
+  if (client.isFetching({ queryKey: key })) await client.cancelQueries({ queryKey: key });
+  const current = client.getQueryData<OwnerInquiry[]>(key)?.find((i) => i.id === inquiry.id);
+  if (current && (current.openedAt || current.updatedAt !== inquiry.updatedAt)) return;
+  const openedAt = now();
+  client.setQueryData<OwnerInquiry[]>(key, (list) => list?.map((i) => (i.id === inquiry.id ? { ...i, openedAt } : i)));
+  await mark(inquiry.id).catch(() => undefined);
+}
+
+/** «Abrir WhatsApp» abre el chat sin texto, con una espera máxima si aún falta marcarla. */
+export async function openInquiry(client: QueryClient, userId: string, inquiry: SeenInquiry & Pick<OwnerInquiry, "clientPhone">, deps: OpenDeps = {}) {
+  const { assign = (url) => window.location.assign(url), wait = 400 } = deps;
+  if (!inquiry.openedAt) await Promise.race([markInquirySeen(client, userId, inquiry, deps), new Promise((resolve) => setTimeout(resolve, wait))]);
   assign(waUrl(inquiry.clientPhone));
 }
