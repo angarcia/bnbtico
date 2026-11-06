@@ -9,6 +9,12 @@ Guía para levantar bnbtico en su Mac y probarlo usted mismo, desde la terminal,
 
 Nada de lo que haga aquí toca `nueva.bnbtico.com`, el Supabase alojado ni a usuarios reales.
 
+**Resumen:** en un Mac nuevo, haga una vez los pasos 1.1, 1.2, 1.4 y 1.6 (herramientas de Apple, Homebrew, Docker y descargar el código). Después, cada vez que quiera probar, basta con esto desde la carpeta `docs/` del proyecto (sección 2):
+
+```bash
+cd ~/bnbtico/docs && ./preparar-entorno-local.sh
+```
+
 ## 1. Preparación en un Mac nuevo (una sola vez)
 
 Esta sección parte de un Mac recién estrenado, sin nada instalado. Hágala una vez, en orden; tarda unos 30–45 minutos, casi todo descargas. Al final tendrá:
@@ -144,9 +150,23 @@ Los cuatro tienen que responder sin error: Node `v22.…`, pnpm `10.9.0`, una ve
 node -v && pnpm -v && docker info --format '{{.ServerVersion}}' && pnpm exec supabase --version
 ```
 
-Si alguno falla, vea la sección 7.
+Si alguno falla, vea la sección 8.
 
-## 2. Arrancar (cada vez que vaya a probar)
+## 2. Todo con un comando
+
+Con Homebrew, Docker Desktop y el repositorio ya instalados (pasos 1.1, 1.2, 1.4 y 1.6), un solo comando hace el resto: Node 22 y pnpm, dependencias, Supabase local, migraciones, las casas de prueba (5.1) y la app abierta en el navegador. Desde la carpeta `docs/`:
+
+```bash
+./preparar-entorno-local.sh
+```
+
+(o `docs/preparar-entorno-local.sh` desde la raíz). Al terminar, la Terminal muestra las cuentas de prueba y la app se abre en el navegador. La primera vez tarda unos minutos; después, menos de uno. Se puede repetir cuando quiera: salta lo que ya está hecho y vuelve a crear las casas de prueba. La app se queda corriendo en esa Terminal; se para con `Ctrl+C`.
+
+Si el Mac ya tenía otro Node de Homebrew (la fórmula `node`), instalar `node@22` puede actualizar librerías que comparten y dejar ese otro Node sin arrancar. El script lo detecta y avisa; se repara con `brew upgrade node`.
+
+Lo que hace el script, paso a paso, es lo que explica la sección 3.
+
+## 3. Arrancar a mano (cada vez que vaya a probar)
 
 Abra Docker Desktop y, en la Terminal, entre en la carpeta del proyecto:
 
@@ -184,31 +204,56 @@ La app es móvil primero. En Chrome:
 3. Arriba, elija **Pixel 7**, el mismo que usan las pruebas automáticas.
 4. Para simular la red de Costa Rica: pestaña **Network** → «Slow 4G»; pestaña **Performance** → ⚙ → CPU «4× slowdown».
 
-## 3. Cuentas de prueba
+## 4. Cuentas de prueba
 
 Al ingresar escriba el número **sin el +506**. El código siempre es **`123456`**.
 
-| Número | Papel | Nota |
+**Para probar a mano**, use las cuentas de las casas de prueba (sección 5.1). Ninguna prueba automática las toca:
+
+| Número | Quién | Qué tiene |
 | --- | --- | --- |
-| `8777 0001` | Anfitriona (propietaria) | Úsela para publicar casas. |
-| `8888 1234` | Cliente | Favoritos, contactar por WhatsApp. |
-| `8888 9999` | Libre | Segundo cliente o segundo anfitrión. |
-| `8899 0001` | **Admin** | Hay que marcarla como admin la primera vez (ver 4.2). |
-| `+1 415 555 0100` | Cliente de EE. UU. | Para probar el selector de país. |
+| `8800 0001` | Marlen, anfitriona | 2 casas activas y 1 en revisión |
+| `8800 0002` | Keilor, anfitrión | 1 activa, 1 inactiva, 1 con cambios pedidos y 1 borrador |
+| `8800 0003` | Yendry, anfitriona | 2 activas (una en Guanacaste y una habitación) y 1 rechazada |
+| `8800 0004` | Cliente | 2 casas en Favoritos |
+| `8899 0001` | **Admin** | La cola de revisión (ver 5.3) |
 
-Las pruebas automáticas usan `8777 0001`, `8888 1234` y `8899 0001` y **borran sus casas** al terminar. Para casas que quiera conservar, publíquelas con `8888 9999`.
+Las pruebas automáticas usan además `8777 0001`, `8888 1234`, `8888 9999` y `+1 415 555 0100`, y **borran sus casas o la cuenta entera** al terminar. Sirven para un vistazo rápido, pero no guarde nada importante en ellas.
 
-## 4. Llenar la base de datos
+## 5. Llenar la base de datos
 
-Una base local nueva (o recién reseteada) arranca **vacía**: no trae casas de ejemplo; solo verá las que hayan dejado las pruebas automáticas. Se llenan igual que en la vida real: un anfitrión publica y el admin aprueba.
+Una base local nueva (o recién reseteada) arranca **vacía**.
 
-### 4.1 Publicar una casa
+### 5.1 Casas de prueba con un comando
 
-1. Ingrese con `8888 9999` (o `8777 0001`).
+```bash
+pnpm datos:prueba
+```
+
+Crea los anfitriones y el cliente de la tabla de arriba y **10 casas con fotos**, por el mismo camino que la app: el anfitrión crea la casa, sube las fotos y la envía, y el admin decide. Quedan:
+
+- 5 activas: Cocles, Manzanillo, Playa Negra, Bribrí (habitación con baño compartido) y Tamarindo (Guanacaste, para ver que su provincia sale en los filtros);
+- 1 inactiva (el anfitrión paró la suscripción), 1 en revisión, 1 con cambios pedidos, 1 rechazada y 1 borrador.
+
+Tarda menos de un minuto. Se puede repetir cuando quiera: primero borra las casas de prueba anteriores y las vuelve a crear. Ejecútelo de nuevo después de `pnpm db:reset` o de `pnpm test:db`, que vacía **todas** las casas de la base.
+
+Las fotos están en `supabase/datos-de-prueba/fotos/` (procedencia y licencias en `ATRIBUCIONES.md`). Puede cambiarlas por otras con el mismo nombre.
+
+Si dice «No se pudo pedir el código», Supabase no conoce todavía los números nuevos: reinícielo una vez (los datos se conservan) y repita:
+
+```bash
+pnpm db:stop && pnpm db:start
+```
+
+### 5.2 Publicar una casa a mano
+
+1. Ingrese con un anfitrión (`8800 0001`, por ejemplo).
 2. Toque «Publicar casa» y complete los pasos. En las fotos, sirve cualquier imagen del Mac.
 3. Al enviar, la casa queda **Pendiente de revisión**.
 
-### 4.2 Hacer admin a `8899 0001` (una vez)
+### 5.3 Hacer admin a `8899 0001` (una vez)
+
+Si ejecutó `pnpm datos:prueba`, ya es admin: pase al paso 3. Si no:
 
 1. Ingrese en la app con `8899 0001` y código `123456`, para que exista el usuario.
 2. Ejecute en la terminal:
@@ -226,13 +271,13 @@ Si el segundo código deja de valer (por ejemplo, después de pasar las pruebas 
 docker exec -i supabase_db_bnbtico psql -U postgres -c "delete from auth.mfa_factors where user_id = (select id from profiles where phone = '+50688990001');"
 ```
 
-### 4.3 Aprobar la casa
+### 5.4 Aprobar una casa
 
 Como admin: **Anuncios** → toque la casa → «Aprobar y publicar». Con la promoción de lanzamiento, la casa pasa directamente a **Activa** y ya sale en Explorar y en su ficha `/casa/CT-####`.
 
 Para recorridos completos (cliente, anfitrión, admin), siga `docs/pruebas-manuales.md`. Está escrita para `nueva.bnbtico.com`, pero en local vale igual: cambie la dirección por `http://127.0.0.1:5173`.
 
-## 5. Pruebas automáticas
+## 6. Pruebas automáticas
 
 Todas se ejecutan desde la raíz del repositorio, con Node 22.
 
@@ -276,7 +321,7 @@ Avisos:
 - `test:db` y `test:e2e` escriben y borran datos de las cuentas de prueba en su base local. No las ejecute mientras está probando a mano con esas cuentas.
 - Las E2E usan el puerto 4173. Si está ocupado: `E2E_PORT=4174 pnpm test:e2e`.
 
-## 6. Mantenimiento
+## 7. Mantenimiento
 
 **Después de cada `git pull`**, ponga al día las dependencias. Si alguien añadió una, sin esto fallan las pruebas con `Cannot find package …`:
 
@@ -302,10 +347,13 @@ pnpm db:reset
 pnpm db:stop
 ```
 
-## 7. Problemas frecuentes
+## 8. Problemas frecuentes
 
 | Síntoma | Causa y solución |
 | --- | --- |
+| `permission denied: ./preparar-entorno-local.sh` | El archivo perdió el permiso de ejecución. Láncelo con `bash preparar-entorno-local.sh`, o devuélvaselo una vez con `chmod +x preparar-entorno-local.sh`. |
+| `no such file or directory: ./preparar-entorno-local.sh` | No está en la carpeta `docs/`. Entre con `cd ~/bnbtico/docs` y repita. |
+| El script se para con «✗ …» | El mensaje dice qué falta y en qué paso de esta guía se arregla. Arréglelo y vuelva a lanzarlo: lo ya hecho se salta. |
 | `brew: command not found` | Falta el paso de `shellenv` de 1.2. Ejecútelo y abra una Terminal nueva. |
 | `node -v` no dice `v22.…`, o `Unexpected module status` y errores raros de Vite o Vitest | Node equivocado. Repita `brew link --overwrite --force node@22` (1.3) y abra una Terminal nueva. Si había otro Node de Homebrew enlazado, antes: `brew unlink node`. |
 | Tras pegar un comando en `~/.zprofile`, ninguna orden funciona (`command not found`) o aparecen caracteres raros | Se añadió texto roto al final de `~/.zprofile`. En esa Terminal: `eval "$(/usr/libexec/path_helper -s)"`; copia con `/bin/cp ~/.zprofile ~/.zprofile.bak`; vea las líneas con `/bin/cat -n -v ~/.zprofile`; borre desde la primera línea rota (N) hasta el final con `/usr/bin/sed -i '' 'N,$d' ~/.zprofile` y abra una Terminal nueva. |
@@ -316,11 +364,11 @@ pnpm db:stop
 | `Port 5173 is in use` | Hay otra app corriendo. Ciérrela, o cierre la terminal donde la dejó abierta. |
 | `Cannot find package '…'` en las pruebas | Faltan dependencias: `pnpm install --frozen-lockfile`. |
 | `pnpm typecheck` falla en un archivo que no está en git | TypeScript revisa también archivos locales que no se suben (por ejemplo, scripts de capturas en `tests/capturas/`). No es un fallo del proyecto: en CI no existen. Arréglelos o apártelos de la carpeta. |
-| El código `123456` no funciona | Revise que el número sea uno de la tabla de la sección 3. Con otros números no llega ningún código. |
+| El código `123456` no funciona | Revise que el número sea uno de la tabla de la sección 4. Con otros números no llega ningún código. |
 | La app muestra datos viejos | Es la caché offline. En DevTools: **Application** → «Clear site data» y recargue. |
-| No sale ninguna casa en Explorar | La base está vacía o la casa no está aprobada. Siga la sección 4. |
+| No sale ninguna casa en Explorar | La base está vacía o la casa no está aprobada. Siga la sección 5. |
 
-## 8. El prototipo (referencia de diseño)
+## 9. El prototipo (referencia de diseño)
 
 No necesita Supabase:
 
