@@ -32,7 +32,7 @@ pnpm dev
 
 `pnpm dev` abre Vite y el worker en `http://127.0.0.1:5173`. Genera `apps/app/.env.local` para el navegador y `.dev.vars` para el worker desde Supabase local. Ninguno se versiona. La clave de servicio nunca lleva el prefijo `VITE_`. `.env.example` enumera solo variables públicas del navegador; los secretos del despliegue se configuran según `docs/configuracion-supabase.md`, sección 10.
 
-Los números locales `8888 1234`, `8777 0001`, `8888 9999` y `8899 0001` aceptan el código `123456` sin enviar mensajes. Consulte `supabase/config.toml` para la configuración completa.
+Los números locales `8888 1234`, `8777 0001`, `8888 9999` y `8899 0001` aceptan el código `123456` sin enviar mensajes. `pnpm datos:prueba` llena la base local con 10 casas de prueba con fotos y sus anfitriones (`8800 0001`–`8800 0004`). Consulte `supabase/config.toml` para la configuración completa.
 
 Comprobaciones desde la raíz:
 

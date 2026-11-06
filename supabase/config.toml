@@ -44,6 +44,11 @@ auth_token = "local-sin-envios"
 50688889999 = "123456"
 50688990001 = "123456"  # admin local (fase 2): el seed lo marca is_admin
 14155550100 = "123456"  # número de otro país (EE. UU.) para probar el selector de país; en el alojado no se añade nada
+# Casas de prueba (pnpm datos:prueba): tres anfitriones y un cliente que ninguna prueba automática usa ni borra.
+50688000001 = "123456"
+50688000002 = "123456"
+50688000003 = "123456"
+50688000004 = "123456"
 
 # Tope de códigos por hora en todo el proyecto (cada envío cuesta dinero; evita el «SMS pumping»).
 # En el proyecto alojado se ajusta en Authentication → Rate Limits.

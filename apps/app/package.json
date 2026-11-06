@@ -16,7 +16,8 @@
     "deploy": "wrangler deploy",
     "test:db": "vitest run --project db",
     "db:types": "cd ../.. && supabase gen types typescript --local --schema public > apps/app/src/domain/database.types.ts",
-    "dev:vars": "node scripts/dev-vars.mjs"
+    "dev:vars": "node scripts/dev-vars.mjs",
+    "datos:prueba": "node scripts/casas-de-prueba.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
