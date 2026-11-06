@@ -269,12 +269,12 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 ### 2.14 Contactar al propietario, con y sin cuenta
 
 - [ ] **C86** Sin sesión, en una ficha toque «Contactar por WhatsApp», elija fechas y personas y toque «Continuar» → pantalla «Escribirle a <nombre>» con la tarjeta de la casa (foto, nombre y «<nombre> · WhatsApp verificado») y «Un paso y le escribe a <nombre>»; no ofrece «No tengo acceso a mi WhatsApp» y la flecha «Volver» regresa a la ficha.
-- [ ] **C87** Escriba `8888 1234`, toque «Recibir código por WhatsApp» y luego `123456` → vuelve a la ficha con la hoja abierta y lo mismo escrito, «Abriendo WhatsApp…» y se abre WhatsApp sola, sin segundo toque, con el mensaje redactado y el número del propietario (`https://wa.me/50687770001?text=Hola, vi Casa Playa Negra en bnbtico y me interesa. ¿Está disponible del 9 al 13 de diciembre para 3 personas? Gracias.` para esa casa y fechas).
+- [ ] **C87** Escriba `8888 1234`, toque «Recibir código por WhatsApp» y luego `123456` → vuelve a la ficha con la hoja abierta y lo mismo escrito, «Abriendo WhatsApp…» y se abre WhatsApp sola, sin segundo toque, con el número del propietario (`wa.me/50687770001`) y el enlace público de esa casa en la primera línea, una línea en blanco y luego «Hola, vi Casa Playa Negra en bnbtico y me interesa. ¿Está disponible del 9 al 13 de diciembre para 3 personas? Gracias.» para esa casa y fechas.
 - [ ] **C88** Vuelva con Atrás desde WhatsApp → la ficha se ve con la hoja cerrada y el botón «Contactar por WhatsApp»; lo escrito se borró.
 - [ ] **C89** Repita desde cero con un número nuevo (cierre sesión y use uno que no tenga cuenta) → pide «Es su primera vez en bnbtico» y el nombre y, tras el código, abre WhatsApp directo, **sin** pasar por «¡Listo! Su cuenta está creada».
 - [ ] **C90** Deje pasar más de 30 minutos en la pantalla del código y entre → la ficha vuelve con la hoja abierta y el mensaje por defecto, no abre WhatsApp sola y hay que tocar «Abrir WhatsApp».
 - [ ] **C91** Con sesión de `8888 1234` toque «Contactar por WhatsApp» → la hoja muestra «Abrir WhatsApp» (no «Continuar») y no trae el aviso de verificar el WhatsApp.
-- [ ] **C92** Con sesión, elija fechas y 3 personas y toque «Abrir WhatsApp» → el botón pasa un instante a «Abriendo WhatsApp…» y se abre `wa.me` con el número de la casa y el texto «Hola, vi <casa> en bnbtico y me interesa. ¿Está disponible del … para 3 personas? Gracias.»; sin red aparece «Sin conexión. Revise su internet e intente de nuevo.» y no se abre nada; con una casa que se cerró mientras tanto, «Esta casa no está disponible para consultas.».
+- [ ] **C92** Con sesión, elija fechas y 3 personas y toque «Abrir WhatsApp» → el botón pasa un instante a «Abriendo WhatsApp…» y se abre `wa.me` con el número de la casa y el enlace público de esa ficha (`/casa/CT-####`, sin parámetros) en la primera línea. Tras una línea en blanco aparece «Hola, vi <casa> en bnbtico y me interesa. ¿Está disponible del … para 3 personas? Gracias.»; sin red aparece «Sin conexión. Revise su internet e intente de nuevo.» y no se abre nada; con una casa que se cerró mientras tanto, «Esta casa no está disponible para consultas.».
 
 ### 2.15 Cuenta del cliente
 
@@ -674,7 +674,7 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
   1. Propietaria: Mis casas → «Nueva casa» y publicar una casa en Cocles con nombre «Casa X1», precio, al menos una foto → termina en «¡Listo! Su casa está en revisión» y en Mis casas con «En revisión».
   2. Admin: Anuncios → la casa sale con «Nueva» y `Cocles · … fotos · ₡…` → ábrala, revise fotos y datos → «Aprobar y publicar» → ««Casa X1»: Aprobada y publicada. El enlace ya funciona.».
   3. Cliente (sin necesidad de sesión para mirar): Explorar → «Casa X1» aparece en la lista con «Cocles» y su precio; tóquela → la ficha abre.
-  4. Cliente: «Contactar por WhatsApp» → hoja «Escríbale a Yorleny»; elija llegada y salida y 3 personas → «Abrir WhatsApp» abre `wa.me/50687770001` con el texto «Hola, vi Casa X1 en bnbtico y me interesa. ¿Está disponible del … al … para 3 personas? Gracias.».
+  4. Cliente: «Contactar por WhatsApp» → hoja «Escríbale a Yorleny»; elija llegada y salida y 3 personas → «Abrir WhatsApp» abre `wa.me/50687770001` con el enlace de la ficha de Casa X1 en la primera línea, una línea en blanco y luego «Hola, vi Casa X1 en bnbtico y me interesa. ¿Está disponible del … al … para 3 personas? Gracias.».
   5. Cliente: vuelva a la app (atrás desde WhatsApp) → la ficha sigue abierta, sin errores.
   6. Propietaria: la pestaña «Consultas» muestra un número y, dentro, «1 consulta nueva» con la tarjeta marcada «Nueva» y el botón «Abrir WhatsApp» que abre `wa.me/50688881234`.
 

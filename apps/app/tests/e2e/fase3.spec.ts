@@ -55,7 +55,7 @@ test.afterAll(async () => {
   await deleteAccount(FREE_PHONE);
 });
 
-test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → Actividad → responder", async ({ page, browser }, info) => {
+test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → Actividad → responder", async ({ page, browser, baseURL }, info) => {
   test.setTimeout(180_000);
 
   // 1. El propietario publica por el asistente (las fotos se siembran en la base; la subida real está en fotos.spec.ts).
@@ -156,7 +156,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   const wa = await catchWhatsApp(page);
   await enterCode(page);
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, message)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, message, publicId, baseURL)]);
   // 6. El favorito guardado sin cuenta pasó a la cuenta al verificar.
   await expect.poll(clientFavorites).toEqual([publicId]);
   await page.goBack();

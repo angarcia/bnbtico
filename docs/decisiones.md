@@ -1,3 +1,7 @@
+## 2026-11-06 · Enlace a la ficha en los mensajes de consulta (Ana)
+
+Al abrir WhatsApp para contactar a un anfitrión, el mensaje preparado empieza con la URL pública de la casa de esa consulta, sin parámetros, seguida de una línea en blanco y el texto habitual. El enlace se añade al abrir WhatsApp, también al volver de verificar el número; la vista previa y el texto guardado en Consultas se conservan. El anfitrión sigue abriendo el chat del cliente desde Consultas sin texto preparado.
+
 ## 2026-11-06 · Un solo acceso para editar el perfil (Ana)
 
 Se aplica el apartado9 aprobado: se mantiene Editar junto a los datos personales y se elimina la fila duplicada Mi perfil del cliente. Los campos, destino, guardado y validación se conservan. Pruebas de cliente y propietario preparadas; Ana hará la ejecución conjunta antes de publicar los commits.

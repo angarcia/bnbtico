@@ -23,5 +23,6 @@ export async function backFromWhatsApp(page: Page): Promise<void> {
   await page.goBack();
 }
 
-/** La URL exacta que debe abrir «Abrir WhatsApp»: el número de la casa en dígitos y el mensaje codificado. */
-export const waExpected = (e164: string, text: string) => `https://wa.me/${e164.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+/** La URL exacta de una consulta: el número de la casa y su ficha arriba del mensaje. */
+export const waExpected = (e164: string, text: string, publicId: string, baseURL: string | undefined) =>
+  `https://wa.me/${e164.replace(/\D/g, "")}?text=${encodeURIComponent(`${new URL(`/casa/${publicId}`, baseURL).href}\n\n${text}`)}`;
