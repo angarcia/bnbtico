@@ -499,7 +499,8 @@ test.describe("Actividad por casa", () => {
         const settled = (await sheet.boundingBox())!;
         return settled.y + settled.height;
       }).toBeLessThanOrEqual(viewport.height + 1);
-      for (const row of await list.getByRole("option").all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(52);
+      // 52 px de alto táctil, con medio píxel de margen: el runner mide a veces 51,99998 por el redondeo de subpíxel.
+      for (const row of await list.getByRole("option").all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(51.5);
       await sheet.getByRole("button", { name: "Cerrar", exact: true }).click();
       await expect(picker(page)).toBeFocused();
       await expect(page.locator("#root")).toHaveJSProperty("inert", false);
