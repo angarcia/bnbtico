@@ -250,7 +250,8 @@ export function ExplorarScreen() {
         </>
       ) : provinces.length === 0 ? (
         <>
-          <MapPlaceholder />
+          {/* Sin ninguna casa publicada, el mapa de verdad (quieto, centrado en Limón), no solo su caja vacía. */}
+          <ExploreMap listings={NO_LISTINGS} zone={null} nights={0} onOpen={null} />
           <section className="card stack">
             <h3>Todavía no hay casas publicadas</h3>
             <p className="small muted">Las primeras casas del Caribe sur están en camino.</p>

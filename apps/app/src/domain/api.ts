@@ -79,8 +79,9 @@ export interface OwnerListingsApi {
   listOwn(): Promise<Listing[]>;
   /** null si no existe o es de otro propietario. */
   getOwn(id: string): Promise<Listing | null>;
-  /** Borrador nuevo con su CT-####, el WhatsApp del perfil y todo lo demás vacío (nada preseleccionado). */
-  createDraft(): Promise<{ id: string; publicId: string }>;
+  /** Borrador nuevo con su CT-####, el WhatsApp del perfil y todo lo demás vacío (nada preseleccionado). Devuelve también el
+   *  borrador entero (`listing`, igual que getOwn): la pantalla de «+» lo guarda en caché sin otro viaje a la base. */
+  createDraft(): Promise<{ id: string; publicId: string; listing: Listing }>;
   /** El borrador pendiente para retomar desde cualquier dispositivo: el más reciente que nunca se revisó; null si no hay. */
   findResumable(): Promise<Listing | null>;
   /**
