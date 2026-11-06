@@ -992,6 +992,9 @@ isOneToOne: true
         isOneToOne: true
         isSetofReturn: false
       } },
+"save_edit_full":
+{ Args: { "p_listing": string,"p_patch": Json }; Returns: Json
+                           },
 "save_listing_days":
 { Args: { "p_available"?: boolean,"p_days": (string)[],"p_listing": string,"p_price_crc"?: number }; Returns: undefined
                            },

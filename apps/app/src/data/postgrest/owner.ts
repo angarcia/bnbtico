@@ -137,15 +137,11 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
 
     async saveEdit(id, patch) {
       if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
-      const { data, error } = await db.rpc("save_edit", { p_listing: id, p_patch: toEditPatch(patch) });
+      // save_edit_full guarda (save_edit) y devuelve la edición entera, con el estado de cada dato y las fotos nuevas, en
+      // un solo viaje (auditoría de viajes, punto 8). null si la edición quedó vacía y se borró.
+      const { data, error } = await db.rpc("save_edit_full", { p_listing: id, p_patch: toEditPatch(patch) });
       if (error) throw toDomainError(error);
-      // Si la edición quedó vacía y se borró, la RPC devuelve null::listing_edits: PostgREST lo da con todo a null.
-      if (!data || data.listing_id === null) return null;
-      // save_edit devuelve la fila sin el estado de cada dato ni sus fotos nuevas: se lee entera. (Embeberlos en la llamada a
-      // la RPC no sirve: PostgREST los lee en la misma sentencia y ve el estado de antes de guardar.)
-      const full = await db.from("listing_edits").select(EDIT_SELECT).eq("listing_id", id).maybeSingle<EditRow>();
-      if (full.error) throw toDomainError(full.error);
-      return fromEditRow(full.data, url);
+      return fromEditRow(data as EditRow | null, url);
     },
 
     async discardEditField(id, field) {
