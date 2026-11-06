@@ -15,6 +15,8 @@ Nada de lo que haga aquí toca `nueva.bnbtico.com`, el Supabase alojado ni a usu
 cd ~/bnbtico/docs && ./preparar-entorno-local.sh
 ```
 
+Y para pararlo todo al terminar: `./parar-entorno-local.sh`.
+
 ## 1. Preparación en un Mac nuevo (una sola vez)
 
 Esta sección parte de un Mac recién estrenado, sin nada instalado. Hágala una vez, en orden; tarda unos 30–45 minutos, casi todo descargas. Al final tendrá:
@@ -164,7 +166,15 @@ Con Homebrew, Docker Desktop y el repositorio ya instalados (pasos 1.1, 1.2, 1.4
 
 Si el Mac ya tenía otro Node de Homebrew (la fórmula `node`), instalar `node@22` puede actualizar librerías que comparten y dejar ese otro Node sin arrancar. El script lo detecta y avisa; se repara con `brew upgrade node`.
 
-Lo que hace el script, paso a paso, es lo que explica la sección 3.
+Para pararlo todo al terminar (la app y Supabase; los datos se conservan), desde otra Terminal en `docs/`:
+
+```bash
+./parar-entorno-local.sh
+```
+
+Con `./parar-entorno-local.sh --docker` cierra también Docker Desktop. Se puede ejecutar aunque algo ya esté parado.
+
+Lo que hace el script de arranque, paso a paso, es lo que explica la sección 3.
 
 ## 3. Arrancar a mano (cada vez que vaya a probar)
 
@@ -341,7 +351,7 @@ pnpm exec supabase migration up
 pnpm db:reset
 ```
 
-**Parar Supabase** al terminar el día, para liberar memoria (los datos se conservan):
+**Parar Supabase** al terminar el día, para liberar memoria (los datos se conservan). `docs/parar-entorno-local.sh` para además la app; a mano:
 
 ```bash
 pnpm db:stop
