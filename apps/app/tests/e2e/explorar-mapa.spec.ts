@@ -40,7 +40,7 @@ test.beforeEach(async ({ page }) => {
 
 const mapBox = (page: Page) => page.getByTestId("explore-map");
 const mapLabel = (page: Page) => page.getByRole("button", { name: "Mapa", exact: true });
-const countPill = (page: Page) => page.getByRole("button", { name: "8 casas", exact: true });
+const countPill = (page: Page) => page.getByRole("button", { name: "Ver lista · 8 casas", exact: true });
 /** Revisión UX 2026-10-29 (C2): las siete cabinas, a unos 7 km entre sí, se pisan en el mapa pequeño y van juntas. */
 const ready = (page: Page) => expect(mapBox(page).locator(".leaflet-marker-pane .map-price", { hasText: "₡42 000" })).toBeVisible();
 /** Ningún precio tapa a otro ni se sale de la caja. */
@@ -160,11 +160,13 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
     return Math.round(barBox.y - (pillBox.y + pillBox.height));
   };
   await expect.poll(gap).toBe(12);
-  for (const control of [full.getByRole("button", { name: "Volver a la lista" }), full.locator(".search-pill"), full.getByRole("link", { name: "Filtros", exact: true })]) {
+  for (const control of [full.locator(".search-pill"), full.getByRole("link", { name: "Filtros", exact: true })]) {
     expect(await control.evaluate((el) => getComputedStyle(el).backdropFilter)).toBe("blur(16px) saturate(1.2)");
     expect((await control.boundingBox())!.height).toBe(52);
   }
-  await expect(full.getByRole("button", { name: "Volver a la lista" })).toBeFocused();
+  await expect(full.getByRole("button", { name: "Volver a la lista" })).toHaveCount(0);
+  await expect(countPill(page)).toBeFocused();
+  expect((await countPill(page).boundingBox())!.height).toBeGreaterThanOrEqual(44);
   // La lista de debajo no se enfoca ni se lee mientras el mapa está abierto.
   expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
   await expect(full.locator(".search-pill")).toBeVisible();

@@ -1,3 +1,7 @@
+## 2026-11-06 · Una salida inferior en el mapa de Explorar (Ana)
+
+Se aplica el apartado7 aprobado: se quita la flecha superior y la salida inferior se nombra «Ver lista · N casas». El foco inicial pasa a esa salida; se conserva el cierre existente y la navegación de Atrás, sin tocar el asistente de Publicar. Pruebas de foco y navegación adaptadas, pendientes de la tanda conjunta de Ana.
+
 ## 2026-11-06 · Detalle editable con fotos accesibles y estadísticas compactas (Ana)
 
 Se aplica el apartado 6 aprobado: margen exterior12, cámara y recuento crema con acceso táctil44, estadísticas doradas centradas y nota breve. No cambia el botón flotante Ver ficha, la proporción de la portada, las métricas ni las reglas de edición. El ajuste visual se limita al detalle del propietario; admin conserva su aviso y marco. Pruebas preparadas para la ejecución conjunta solicitada por Ana.

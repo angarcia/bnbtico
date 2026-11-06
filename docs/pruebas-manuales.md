@@ -171,10 +171,10 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 ### 2.5 Mapa de Explorar
 
 - [ ] **C16** Mire el mapa de arriba (antes de «N casas en Limón») → burbujas de **precio** (p. ej. «₡42 000»), ninguna escondida debajo de la búsqueda ni de los filtros, el crédito «Leaflet | © OpenStreetMap» abajo a la derecha, sin botones de zoom, y arrastrar con el dedo desplaza la página, no el mapa; si dos casas están muy juntas van en una sola burbuja «N casas».
-- [ ] **C17** Toque el mapa pequeño → se abre el mapa a pantalla completa, hasta la barra de abajo; arriba, en una fila de tarjetas de la misma altura, la flecha «Volver a la lista», la búsqueda y los filtros, con el crédito del mapa justo debajo; abajo la barra de pestañas plana, a la vista (también si se había escondido al bajar) y, encima de ella, la tarjeta clara «N casas»; ninguna burbuja queda debajo de las tarjetas de arriba.
+- [ ] **C17** Toque el mapa pequeño → mapa completo con buscador y filtros arriba, sin flecha de salida, atribución visible y una sola salida inferior «Ver lista · N casas» con icono de lista, sobre la barra de pestañas. Con teclado, el foco empieza en esa salida; los marcadores no quedan tapados por los controles.
 - [ ] **C18** En el mapa grande toque una burbuja de precio → se resalta y aparece una tarjeta compacta con foto cuadrada, nombre, zona, «₡… / noche» y corazón; toque un punto vacío → la tarjeta se quita; vuelva a elegir la burbuja y toque la tarjeta → abre la ficha, y Atrás regresa al mapa.
 - [ ] **C19** Toque una burbuja «N casas» del mapa grande → el mapa se acerca a esas casas sin abrir ninguna ficha.
-- [ ] **C20** Toque la píldora «N casas» (o la flecha «Volver a la lista» o Atrás del teléfono) → cierra el mapa y la lista queda exactamente donde estaba, con la barra de abajo en su sitio.
+- [ ] **C20** Toque «Ver lista · N casas» o use Atrás del teléfono → cierra el mapa, conserva la posición de la lista y devuelve el foco a Mapa o a su caja. Abrirlo por URL directa y sin resultados también permite salir; filtros, grupos y atribuciones siguen funcionando.
 - [ ] **C21** Con «$» abra el mapa → las burbujas muestran dólares («$75»); con llegada y salida en la búsqueda, cada burbuja lleva la misma cifra que la tarjeta de su casa (el total, p. ej. «₡180 000», sin «por 4 noches») y la tarjeta compacta del mapa dice «≈ ₡180 000 por 4 noches».
 
 ### 2.6 Total de la estancia, Filtros y características

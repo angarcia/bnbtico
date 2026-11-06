@@ -1,5 +1,5 @@
 // El mapa de Explorar a pantalla completa (maqueta v2 05, `?mapa=1`): trozo diferido que se pide al abrirlo. De borde a borde,
-// con todo flotando encima como tarjetas (tarjetas flotantes, tanda 1): arriba, «Volver a la lista», la píldora de búsqueda y
+// con todo flotando encima como tarjetas (tarjetas flotantes, tanda 1): arriba, la píldora de búsqueda y
 // los filtros; abajo, la barra de pestañas, sobre ella «N casas» para volver y, con un marcador tocado, la tarjeta compacta de
 // su casa. La lista sigue montada debajo: al volver conserva su posición.
 import { Link } from "@tanstack/react-router";
@@ -20,7 +20,6 @@ import { CardPriceText } from "./listing-card";
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
-  const back = useRef<HTMLButtonElement>(null);
   const top = useRef<HTMLDivElement>(null);
   const count = useRef<HTMLButtonElement>(null);
   const markers = useMapMarkers(listings, nights);
@@ -45,7 +44,7 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
   useEffect(() => {
     handle.current?.select(selected);
   });
-  // Mientras está abierto: la página no se mueve, lo de debajo no se enfoca ni se lee, y el foco empieza en «Volver».
+  // Mientras está abierto: la página no se mueve, lo de debajo no se enfoca ni se lee, y el foco empieza en «Ver lista».
   useEffect(() => {
     const root = document.documentElement;
     // La barra de pestañas a la vista (si se había ido al bajar la lista): «N casas» se apoya en ella.
@@ -53,7 +52,7 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
     root.classList.add("map-open");
     const below = [...(overlay.current?.parentElement?.children ?? [])].filter((el): el is HTMLElement => el !== overlay.current && el instanceof HTMLElement && !el.inert);
     for (const el of below) el.inert = true;
-    back.current?.focus({ preventScroll: true });
+    count.current?.focus({ preventScroll: true });
     return () => {
       root.classList.remove("map-open");
       for (const el of below) el.inert = false;
@@ -64,15 +63,12 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
     <div ref={overlay} className="map-full">
       <div ref={box} className="map-full-box" />
       <div ref={top} className="map-full-top">
-        <button ref={back} type="button" className="map-round float-card" aria-label="Volver a la lista" onClick={onClose}>
-          <I.back />
-        </button>
         {header}
       </div>
       {house ? <MapCard listing={house} nights={nights} /> : null}
       <button ref={count} type="button" className="map-count" onClick={onClose}>
         <I.list size={20} />
-        {housesCount(listings.length)}
+        Ver lista · {housesCount(listings.length)}
       </button>
     </div>
   );
