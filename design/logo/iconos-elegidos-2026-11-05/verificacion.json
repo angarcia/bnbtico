@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-05",
+  "nativeIcons": 48,
+  "pngDensityVariants": 144,
+  "icoFiles": 16,
+  "B": [
+    16,
+    24,
+    32
+  ],
+  "BT": [
+    48,
+    64,
+    96
+  ],
+  "default": "Terracota #B44C30 sobre crema #FFFBF2",
+  "darkOption": "Crema #FFFBF2 sobre terracota #B44C30",
+  "faviconAlwaysB": true,
+  "defaultLogoAliases": true
+}

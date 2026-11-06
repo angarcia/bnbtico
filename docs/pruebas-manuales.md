@@ -288,7 +288,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 ### 2.16 PWA, sin red y versión nueva
 
-- [ ] **C100** Instale la app (Chrome en Android o Safari en iPhone con «Añadir a pantalla de inicio») → el icono dice «bnbtico» y la app abre en Explorar a pantalla completa, sin barra del navegador.
+- [ ] **C100** Instale la app (Chrome en Android o Safari en iPhone con «Añadir a pantalla de inicio») → icono de fondo crema `#FFFBF2` con BT y contorno terracota `#B44C30`, sin rana; nombre «bnbtico» debajo. En Android, compruebe que el recorte del sistema no corta el contorno ni las letras. La app abre en Explorar a pantalla completa, sin barra del navegador.
 - [ ] **C101** Con Explorar ya visitado, active el modo avión y cierre y abra la app → el shell sale al instante, Explorar muestra las casas que ya había visto y se puede abrir una ficha ya vista; las pestañas «Explorar», «Favoritos» e «Ingresar» cambian sin recargar.
 - [ ] **C101a** Cambiar de pestaña no deja rastro (2026-11-03): en Favoritos toque «Explorar» en la barra (o «Explorar casas», o el logo) y haga «Atrás» → no vuelve a Favoritos: sale de la app; en Explorar abra una ficha y haga «Atrás» → vuelve a Explorar donde estaba.
 - [ ] **C102** Sin red, abra una ficha que no había visitado → aparece «No pudimos cargar esta casa» con «Intentar de nuevo» e «Ir a Explorar»; con red, «Intentar de nuevo» la recarga.
@@ -743,3 +743,11 @@ No hace falta parar: marque la casilla como fallida (✗), anótelo y siga con l
 | Fecha | Quién | Teléfono y navegador | Partes hechas | Fallos (códigos) |
 |---|---|---|---|---|
 | | | | | |
+
+
+## Marca gráfica vigente · comprobación tras integrar recursos (2026-11-05)
+
+- [ ] En el teléfono, cabeceras y aviso de giro muestran BNBTICO sin rana, con solo la T elevada; el fondo de la página se ve detrás, sin placa crema ni letras recortadas.
+- [ ] En la portada sobre foto se ve el logo blanco sin rectángulo ni sombra propia. Al compartir un enlace, la imagen OG usa la marca nueva.
+- [ ] Favicon: B reforzada; al instalar la PWA, icono con contorno y BT, terracota sobre crema; recorte circular sin cortar el contorno.
+- [ ] Los logos de las maquetas y del prototipo corresponden a la marca vigente; los originales con rana están en logos-obsoletos y no se solicitan como imágenes activas.

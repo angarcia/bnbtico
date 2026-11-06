@@ -10,7 +10,7 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
         <header className="header-root">
           <div className="top">
             <a href="/explorar" aria-label="bnbtico, inicio">
-              <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
+              <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={115} height={38} />
             </a>
           </div>
         </header>

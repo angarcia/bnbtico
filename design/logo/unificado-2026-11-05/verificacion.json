@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-05",
+  "svgFiles": 96,
+  "svg": "Trazados, sin fuentes ni imágenes incrustadas",
+  "silhouetteIntersectionOverUnion": 0.98921,
+  "tIsHighest": true,
+  "sharedWordPath": true,
+  "flatBackgrounds": true,
+  "photoLogoTransparent": true,
+  "photoInk": "#FFFFFF",
+  "solidDarkInk": "#FFFBF2",
+  "geometricCircleFrames": true,
+  "nativePixelAlignedDots": true,
+  "compositions": [
+    "BNBTICO",
+    "BNBTICO.COM",
+    "Cuadrado con BNBTICO",
+    "Cuadrado con BNBTICO.COM"
+  ],
+  "cream": "#FFFBF2",
+  "compactOptions": 8,
+  "compactPngSizes": [
+    16,
+    32,
+    48,
+    64,
+    180,
+    192,
+    512
+  ],
+  "icoSizes": [
+    16,
+    32,
+    48
+  ],
+  "mReference": "referencia-m.png",
+  "visualInspection": "Comparativa, referencia frente al vector, dominio, Instagram y opciones pequeñas abiertas en el visor"
+}

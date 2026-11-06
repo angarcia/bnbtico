@@ -1,0 +1,26 @@
+[
+  {
+    "file": "facebook-portada.png",
+    "width": 1702,
+    "height": 630,
+    "errors": [],
+    "contentBounds": {
+      "x": 451,
+      "y": 155,
+      "width": 800,
+      "height": 245.65625
+    }
+  },
+  {
+    "file": "whatsapp-business-portada.png",
+    "width": 1211,
+    "height": 681,
+    "errors": [],
+    "contentBounds": {
+      "x": 0,
+      "y": 0,
+      "width": 1211,
+      "height": 540
+    }
+  }
+]

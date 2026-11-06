@@ -1,3 +1,9 @@
+## 2026-11-06 · Organización y entregas de marca para perfiles (Ana)
+
+Ana solicita revisar y preparar en Git los archivos de marca. La biblioteca completa es la entrega de referencia; las carpetas intermedias se identifican como tales y conservan sus rutas por compatibilidad y por la procedencia del inventario. Propuestas, referencias históricas y logos obsoletos quedan diferenciados mediante sus índices. Los ZIP locales duplican las carpetas y no se versionan.
+
+Se documentan también las adaptaciones aprobadas en este chat: B terracota sobre crema para el perfil de correo; BT sin recuadro sobre crema con margen circular para Instagram; portada Facebook con BNBTICO.COM, descripción de la plataforma y «Reservas directas, sin comisión de plataforma»; portada WhatsApp con BNBTICO.COM dentro de puntos a la izquierda, sin copy adicional, con más margen arriba y el cuadro reducido un 10 %. Se reutiliza la foto de Playa Negra aportada por Ana y los trazados originales. No se publican imágenes en las redes ni se despliega la aplicación.
+
 ## 2026-11-06 · Publicar casa: cabecera y nota simplificadas (Ana)
 
 Se aplica el apartado 2 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`: quitar el rótulo visible «Su casa» de la primera etapa y la nota de seguir después en Mis casas. Se conserva el número de paso visible, la descripción accesible completa, las etapas siguientes, los ocho tramos de progreso y el guardado. Atrás y Continuar ya tenían la composición aprobada y se conservan. Las expectativas existentes de las pruebas de navegador se adaptan al nuevo rótulo visible, sin cambiar las reglas del asistente. Pendiente de revisión visual y comprobaciones de Ana.
@@ -9,6 +15,62 @@ Tras contrastar la referencia completa y la corrección de Ana, la X pasa arriba
 Ana autoriza implementar uno a uno los cambios de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`, enseñando cada tanda para revisión. Se empieza por la regla visual compartida: acciones verde B con sombra ligera y sin borde, desactivados grises claros y notas informativas neutras. Se conserva el refactor de CSS, los estados reales, los iconos existentes y los colores funcionales de pagos, WhatsApp y errores. No se modifican cobros ni promociones.
 
 La aplicación local sirve de revisión; Ana ejecuta los comandos de terminal. El seguimiento está en `.scratch/auditoria-conversion-2026-11-04/plan-implementacion.md`. Esta entrada registra la implementación de acuerdos previos: la aceptación visual y las comprobaciones de cada tanda se anotan allí sin darlas por hechas.
+
+## 2026-11-05 · Guía de marca e historia de origen (Ana)
+
+Ana solicita una guía de marca con fundamentos, reglas visuales, comunicación y aplicaciones. Aporta su experiencia: propietaria de una casa en el Caribe, alquileres a través de plataformas con comisiones y contactos directos por Facebook en temporada baja, con turismo local y oferta dispersa. La guía cuenta ese origen como experiencia de la fundadora y oportunidad percibida, sin afirmar que no existen competidores ni usar el nombre de la villa como parte de la marca.
+
+Dirección de voz recomendada y recogida tras su preferencia: cercana, cálida y de confianza; trato de usted. El Caribe se expresa en fotografías, luz y paleta. La guía documenta Figtree para interfaz y Outfit solo en portada; el lettering del logo se conserva como trazados. Se añade una norma compositiva recomendada de espacio libre x/4 y referencias digitales de tamaño para revisión; los mínimos físicos y los Pantone quedan sujetos a prueba con el proveedor.
+
+Guía de 15 páginas y fuente HTML en `design/logo/biblioteca-completa-2026-11-05/09-guia-de-marca/`, con fuentes y licencias OFL. Edición 1.0 para revisión; no modifica pantallas ni implica un despliegue.
+
+## 2026-11-05 · Tinta para pantalla y carbón cálido para merchandising (Ana)
+
+Ana elige carbón cálido **#2B2926** en lugar del negro puro para las versiones de merchandising. Para los logos oscuros de pantalla solicita usar la tinta de marca **#1C2B2A**. Las dos variantes siguen siendo transparentes; el logotipo predeterminado continúa en terracota #B44C30. Se mantienen las formas y el marco de puntos aprobados.
+
+Maestros explícitos `tinta-transparente` y `carbon-calido-transparente` en la biblioteca y el juego unificado. Los nombres anteriores `negro-transparente` se conservan como alias: tinta en los recursos digitales y carbón cálido en la carpeta de merchandising. Los maestros de imprenta a color oscuro pasan a la carpeta `carbon-calido-transparente`; los anteriores en negro puro se guardan en logos-obsoletos. El perfil CMYK es el ICC genérico incluido, sin asignar equivalencia Pantone ni prometer una tinta de imprenta o hilo exactos. Colores de interfaz sin cambios.
+
+## 2026-11-05 · Todos los logos transparentes por defecto (Ana)
+
+Ana fija la regla general: todos los logos y maestros son transparentes por defecto, incluidos los interiores de los marcos de puntos; solo se incluye un fondo deliberado cuando el uso lo necesita, como perfiles e iconos de instalación. Se conservan esas variantes separadas. Ana confirma como principal las letras BNBTICO en terracota, sin marco ni placa: el fondo real de la pantalla debe verse detrás. Las versiones con marco de puntos también conservan el interior transparente. Los archivos principales de acceso rápido son `design/logo/biblioteca-completa-2026-11-05/logo-predeterminado.svg` y `.png`, copias exactas del maestro terracota transparente. Los acabados con fondo se reservan para perfiles e iconos. La vista general muestra el principal directamente sobre el fondo de la página.
+
+## 2026-11-05 · Archivar la rana y sustituir las rutas activas por la marca nueva (Ana)
+
+Ana autoriza guardar el juego antiguo en `design/logo/logos-obsoletos/2026-11-05/` y garantizar sustitutos para los archivos que referencia el código. Se conservan los originales con su ruta y hashes SHA-256 antes de sustituir 53 recursos o crear su reemplazo: alias PNG/ICO de diseño usados por maquetas y tarjetas, cabeceras y PWA de ambas apps, favicon, portada e imagen OG de compartir enlaces. Los logos tipográficos colocados en pantallas son transparentes. La portada y el OG usan blanco transparente sobre la foto; la sombra CSS anterior del logo se retira.
+
+El PNG original del prototipo se archiva intacto (idéntico al de Git); el prototipo pide ahora `assets/bnbtico.svg` y el módulo `logo-vigente.js` elimina el recorte y la placa antiguos. Los nombres públicos de las otras imágenes se mantienen para compatibilidad; `sustituciones.json` documenta su procedencia nueva y el respaldo anterior. No hay despliegue ni cambios de colores de interfaz.
+
+## 2026-11-05 · Entrega de marca por plataforma y logos web transparentes (Ana)
+
+Ana solicita reutilizar los recursos aprobados y completar tamaños para web, tiendas, PWA, redes sociales e impresión. Para **web, las cuatro composiciones (letras solas o dentro del marco de puntos) se usan siempre sin placa de fondo**, en terracota, negro o crema; blanco transparente para fotos. El crema #FFFBF2 puede ser el fondo de la pantalla, pero no se incluye como rectángulo en el archivo colocado sobre ella. Los acabados con fondo se conservan para avatares de Instagram/Facebook y otras redes e iconos de aplicaciones; terracota sobre crema y crema sobre terracota siguen siendo las combinaciones acordadas.
+
+Biblioteca en `design/logo/biblioteca-completa-2026-11-05/`, con vista `VISTA-GENERAL.html`, accesos `EMPEZAR-AQUI/`, selección `LOGOS-TRANSPARENTES/`, recursos por plataforma e imprenta. Los SVG maestros y símbolos aprobados se reutilizan; no se añade un diseño. EPS y PDF vectoriales CMYK con perfil ICC genérico incluido; PNG de impresión RGB a 300 ppp (PNG no admite CMYK). Las capas de Icon Composer y los recursos Android se entregan para integración posterior; no se despliega ni modifica la app.
+
+## 2026-11-05 · Iconos pequeños elegidos: contorno con BT y B reforzada (Ana)
+
+Ana elige **contorno continuo con BT para 96, 64 y 48 px**, y **la B original más ancha y reforzada para 32, 24 y 16 px**. Referencias: `02-contorno-bt` de `design/logo/propuestas/marco-solido-2026-11-05/` y `02-b-mas-ancha` de `design/logo/propuestas/microiconos-2026-11-05/`, confirmadas con imágenes en este chat. Esta elección sustituye las alternativas pendientes descritas en la entrada anterior para esos seis tamaños.
+
+Juego definitivo en `design/logo/iconos-elegidos-2026-11-05/`: SVG, PNG nativos y 2×/3×, e ICO con las seis representaciones. Se verifica coincidencia exacta de las seis versiones crema con las referencias seleccionadas. La B usa el trazado aprobado ensanchado al 180 %, con refuerzo óptico; el nombre completo conserva las letras originales. Los iconos usan terracota #B44C30 sobre crema #FFFBF2 o blanco, crema sobre oscuros sólidos y blanco transparente sobre fotos. El contorno es continuo en los iconos; las cuatro composiciones del nombre completo mantienen su marco de puntos donde corresponde.
+
+La forma se elige por tamaño visible: en 16 px sobre pantalla 2× se usa la B de 16 a doble resolución, manteniendo ese perfil de B a doble resolución. La revisión entrega recursos elegidos, sin sustituir aún los iconos de la app ni desplegar cambios.
+
+Ajuste final de Ana: el acabado predeterminado de todo el juego es terracota #B44C30 sobre crema #FFFBF2. Se añade crema sobre terracota como alternativa para fondos oscuros, tanto en las cuatro composiciones como en los iconos. En las pestañas del navegador el favicon dedicado conserva la B de 16 px en todas sus densidades; las formas por tamaño visible quedan B en 16/24/32 y contorno con BT en 48/64/96. Kit limpio listo para uso en `design/logo/kit-final-2026-11-05/`, sin las exploraciones.
+
+## 2026-11-05 · Logo sin rana, letras unificadas y maestro vectorial (Ana)
+
+Ana confirma como referencia exacta las letras de `design/logo/redes-sociales/bnbtico-instagram-cuadrado-puntos.png`: ambas B a altura normal y solo la T elevada. Pide quitar la rana, vectorizar y generar archivos consistentes; incluir BNBTICO.COM, opciones simples para favicon y versiones para fotos y fondos oscuros. Aporta una imagen de la M para el dominio, conservada en `design/logo/maestro/referencia-m.png`.
+
+Se trazan los contornos de la referencia aprobada, sin sustituirlos por otra fuente ni regenerarlos con IA. SVG maestros en `design/logo/maestro/`; C y O del sufijo reutilizan los glifos del nombre. Juego de SVG/PNG en `design/logo/unificado-2026-11-05/`: terracota sobre transparente/blanco/arena/crema, blanco/crema para oscuro, blanco transparente para fotos, sin base opaca y negro para impresión. Se actualizan las cuatro carpetas de diseño indicadas en la conversación y se conservan sus originales en `design/logo/historico/2026-11-05-antes-unificacion/`.
+
+Las cinco propuestas compactas de `design/logo/propuestas/iconos-compactos-2026-11-05/` (B original, BT, nombre en dos líneas, B geométrica sólida y solo cuadrado de puntos) quedan **pendientes de elección**. La B sólida muestra mejor lectura a 16–32 px; no se adopta automáticamente. Esta revisión prepara recursos de diseño: la sustitución del icono en la app, del prototipo y de otros PDF de imprenta no forma parte de este cambio.
+
+Ana aclara en la misma revisión que «arena» significa el crema habitual #FFFBF2 y descarta la base opaca sobre fotografías. Pide las cuatro composiciones para cada uso: BNBTICO, BNBTICO.COM, cuadrado con BNBTICO y cuadrado con BNBTICO.COM. Cada una incluye el mismo juego de colores/fondos. El cuadrado vacío es la opción E para tamaños pequeños, con marco doble en grande y una fila de 12 puntos en 16–32 px; sigue pendiente la elección del símbolo.
+
+Ana aprueba las cuatro composiciones mostradas sobre crema y pide versiones sobre negro y foto, además de explorar BT dentro del cuadrado. Se añaden negro puro #000000 y tres propuestas pequeñas F/G/H con BT y una fila de 12/20/28 puntos. Los puntos de todos los marcos pasan a círculos geométricos de radio uniforme; las opciones E/F/G/H tienen SVG de tamaño nativo a 16/32/48/64 px con centros ajustados a medios píxeles. A 16 px el marco se reduce a 12 puntos; para lectura se recomienda el cuadrado vacío porque BT resulta demasiado pequeño. Son ocho alternativas compactas en total, pendientes de elección. Paquete específico: `design/logo/negro-y-fotos-2026-11-05/`.
+
+Ana explora una reducción progresiva del símbolo: cuadrado con BT → BT sin marco → B sola (corrige expresamente el último escalón a B). Prueba con glifos originales y refuerzo óptico en `design/logo/propuestas/sistema-adaptativo-2026-11-05/`; orientación para revisar: 64 px o más / 32–48 px / 16–24 px. La propuesta está pendiente de elección y no sustituye los iconos de la app.
+
+Ana fija la tinta de las cuatro composiciones según el soporte: crema #FFFBF2 sobre negro y demás colores oscuros sólidos; blanco #FFFFFF con transparencia sobre fotografías. Se sustituyen las variantes `blanco-sobre-negro` y `blanco-sobre-oscuro` por `crema-sobre-negro` y `crema-sobre-oscuro`. El verde selva conserva crema. Las variantes anteriores se archivan; se comprueba que los ocho archivos SVG/PNG para fotos mantienen exactamente sus huellas.
 
 ## 2026-11-04 · Aplazar los informes HTML y las trazas descargables de CI
 

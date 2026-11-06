@@ -280,7 +280,7 @@ details p{padding-top:6px}
 
 <div class="shell">
   <div class="shell-bar">
-    <div class="brand"><span class="brand-logo"><img src="assets/bnbtico-original.png" alt="bnbtico · rana sonriente sobre hoja" width="1716" height="917"></span><small>prototipo v0.1</small></div>
+    <div class="brand"><span class="brand-logo"><img src="assets/bnbtico.svg" alt="bnbtico" width="672" height="222"></span><small>prototipo v0.1</small></div>
     <div class="row" style="gap:10px;flex-wrap:wrap">
       <div class="seg" id="roleSeg" aria-label="Rol">
         <button data-role="landing" aria-pressed="false">Landing</button>
@@ -401,7 +401,7 @@ function ownerPending(key){
 function ownerNavCount(key){const n=S.role==='owner'?ownerPending(key):0;return n?` <span class="nav-count" aria-label="${n} pendientes">${n}</span>`:'';}
 function chrome(inner){
  const items=NAV[S.role];const cur=current();
- const logo=`<span class="brand-logo"><img src="assets/bnbtico-original.png" alt="bnbtico · rana sonriente sobre hoja" width="1716" height="917"></span>`;
+ const logo=`<span class="brand-logo"><img src="assets/bnbtico.svg" alt="bnbtico" width="672" height="222"></span>`;
  const top=`<div class="topnav"><div class="brand">${logo}</div>
    ${items.map(([k,l])=>`<button class="nav" data-go="${k}" ${cur===k?'aria-current="page"':''}>${l}${ownerNavCount(k)}</button>`).join("")}
    ${S.role==="guest"?(S.loggedIn?`<span class="avatar">AC</span>`:`<button class="btn btn-ghost btn-sm" data-go="login">Ingresar</button>`):""}
@@ -882,3 +882,4 @@ render();
 <script src="contacto-hoja.js?v=20261013-1"></script>
 <script src="ficha-movil.js?v=20261013-1"></script>
 <script src="mis-casas.js?v=20261013-1"></script>
+<script src="logo-vigente.js?v=20261105-1"></script>

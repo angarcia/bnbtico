@@ -99,7 +99,7 @@ export function FlowFrame({ children }: { children: ReactNode }) {
 }
 
 /** Bajo la barra superior, solo el título (y `action` en su fila, si la hay); sin ella (/admin, «no encontrada»), también
- *  el logo (que lleva a `home`) y `role="banner"`, la cabecera de la página. */
+ *  el logo tipográfico sin fondo, de 38 px de alto (que lleva a `home`), y `role="banner"`, la cabecera de la página. */
 export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
   const under = useContext(UnderTopBar);
   return (
@@ -109,7 +109,7 @@ export function RootHeader({ title, home = "/explorar", action, aside }: { title
       ) : (
         <div className="top">
           <Link to={home} replace aria-label="bnbtico, inicio">
-            <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={150} height={38} />
+            <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={115} height={38} />
           </Link>
           {action}
         </div>
