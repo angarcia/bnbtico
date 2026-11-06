@@ -1,3 +1,9 @@
+## 2026-11-06 · La base local se pone al día sola con las migraciones
+
+- **Problema:** Supabase local solo aplica las migraciones al crear la base. Tras un `git pull` con `save_edit_full`, la base de Ana se quedó con el esquema viejo y sus e2e fallaron. `preparar-entorno-local.sh` ocultaba el error de `migration up`, que además se niega a aplicar una migración con fecha anterior a la última aplicada, que es lo que pasa al juntar ramas.
+- **Decisión:** `pnpm db:al-dia` (`apps/app/scripts/base-local.mjs`) aplica lo que falte con `--include-all` y avisa si quedó fuera de orden. Si la base tiene migraciones que ya no están en el repositorio, se para y explica el arreglo; `--reset` la deja igual que el repositorio y vuelve a crear las casas de prueba. Lo llaman antes `pnpm dev`, `test:e2e`, `test:db`, `datos:prueba` y `preparar-entorno-local.sh`. En CI la base es nueva y no hace nada.
+- **Regla:** todo cambio de base va en una migración, nunca a mano en la base local. Al añadir una: `pnpm db:al-dia`, `pnpm db:types` y, si hace falta, `casas-de-prueba.mjs` en el mismo commit.
+
 ## 2026-11-06 · Refina la búsqueda de Explorar sin tarjetas blancas (Ana)
 
 Ana toma como referencia el selector de Consultas y Calendario y pide quitar las tarjetas blancas, especialmente en el desplegable. Se mantiene la búsqueda a pantalla completa: sección abierta sobre el fondo crema, filas cerradas con borde y chevrón, y sugerencias con el nombre completo y un check dorado para la zona elegida. La lista mantiene visible la opción al recorrerla con el teclado. Las reglas de zona, fechas, personas y filtros no cambian.

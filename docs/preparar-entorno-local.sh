@@ -75,8 +75,12 @@ ok "Instaladas"
 
 paso "Supabase local (la primera vez descarga imágenes: unos minutos)"
 pnpm exec supabase start >/dev/null 2>&1 || { pnpm exec supabase start 2>&1 | tail -20; error "Supabase no arrancó."; }
-pnpm exec supabase migration up --local >/dev/null 2>&1 || error "No se pudieron aplicar las migraciones: pnpm exec supabase migration up --local"
-ok "En marcha en http://127.0.0.1:54321 (Studio: http://127.0.0.1:54323), migraciones al día"
+ok "En marcha en http://127.0.0.1:54321 (Studio: http://127.0.0.1:54323)"
+
+paso "Base local al día con supabase/migrations"
+# Aplica las migraciones nuevas (también las que llegan con fecha anterior al juntar ramas) y para con el error a la vista
+# si la base no cuadra con el repositorio. Ver apps/app/scripts/base-local.mjs.
+pnpm --silent db:al-dia || error "La base local no está al día con las migraciones (arriba, el motivo y cómo arreglarlo)."
 
 paso "Casas de prueba"
 if ! pnpm --silent datos:prueba; then

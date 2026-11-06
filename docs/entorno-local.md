@@ -190,7 +190,7 @@ cd ~/bnbtico
 pnpm db:start
 ```
 
-**Paso 2 — la app.** Genera solo las variables locales (`apps/app/.env.local` y `apps/app/.dev.vars`) y arranca Vite con el worker en un único proceso. Deje esta terminal abierta; se para con `Ctrl+C`.
+**Paso 2 — la app.** Pone la base al día con las migraciones (7), genera solo las variables locales (`apps/app/.env.local` y `apps/app/.dev.vars`) y arranca Vite con el worker en un único proceso. Deje esta terminal abierta; se para con `Ctrl+C`.
 
 ```bash
 pnpm dev --port 5173 --strictPort --host 127.0.0.1
@@ -339,10 +339,16 @@ Avisos:
 pnpm install --frozen-lockfile
 ```
 
-**Después de un `git pull` con migraciones nuevas** (archivos nuevos en `supabase/migrations/`), aplíquelas sin borrar datos:
+**La base local se pone al día sola.** El esquema sale solo de `supabase/migrations/`. `pnpm dev`, `pnpm test:e2e`, `pnpm test:db`, `pnpm datos:prueba` y `preparar-entorno-local.sh` aplican antes las migraciones que falten. Eso incluye las que llegan con fecha anterior a otra ya aplicada, algo que pasa al juntar ramas. Sin migraciones nuevas no hacen nada. Para hacerlo a mano, por ejemplo después de un `git pull`:
 
 ```bash
-pnpm exec supabase migration up
+pnpm db:al-dia
+```
+
+Si dice que la base tiene migraciones que no están en `supabase/migrations/` (pasa si renombró o rehízo una migración suya, o si viene de otra rama), su esquema ya no es el del repositorio. Déjela igual que el repositorio. Esto borra usuarios, casas y fotos locales y vuelve a crear las casas de prueba:
+
+```bash
+pnpm db:al-dia --reset
 ```
 
 **Empezar de cero.** Borra **todo** (usuarios, casas, fotos) y vuelve a aplicar las migraciones. Después repita 4.2.
@@ -369,6 +375,7 @@ pnpm db:stop
 | Tras pegar un comando en `~/.zprofile`, ninguna orden funciona (`command not found`) o aparecen caracteres raros | Se añadió texto roto al final de `~/.zprofile`. En esa Terminal: `eval "$(/usr/libexec/path_helper -s)"`; copia con `/bin/cp ~/.zprofile ~/.zprofile.bak`; vea las líneas con `/bin/cat -n -v ~/.zprofile`; borre desde la primera línea rota (N) hasta el final con `/usr/bin/sed -i '' 'N,$d' ~/.zprofile` y abra una Terminal nueva. |
 | `pnpm: command not found` | Ejecute `corepack enable` (1.3). Si falla, instale pnpm con npm: `npm install -g pnpm@10.9.0`. |
 | `Repository not found` al clonar | Su cuenta de GitHub no tiene acceso al repositorio, o `gh auth login` no terminó. |
+| Las pruebas fallan tras un `git pull` o al juntar ramas (funciones o columnas que «no existen») | La base local tenía un esquema viejo. `pnpm db:al-dia` la pone al día; si dice que tiene migraciones que no están en el repositorio, `pnpm db:al-dia --reset` (sección 7). |
 | `Supabase local no está arrancado: pnpm db:start` | Ejecute `pnpm db:start`. Si falla, abra Docker Desktop. |
 | `Cannot connect to the Docker daemon` | Docker Desktop está cerrado. Ábralo y espere a que arranque. |
 | `Port 5173 is in use` | Hay otra app corriendo. Ciérrela, o cierre la terminal donde la dejó abierta. |
