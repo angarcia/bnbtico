@@ -70,7 +70,7 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(pill).toHaveAttribute("href", `/propietario/casas/${id}/editar/fotos`);
   await expect(page.locator(".detail-photo .state")).toHaveText("Activa");
   const share = page.getByRole("button", { name: "Compartir ficha" });
-  await expect(share).toHaveClass(/btn-sun/); // en dorado (Ana, 2026-11-04)
+  await expect(share).toHaveClass(/btn-primary/); // mismo acabado de Compartir que en Mis casas
   await expect(page.getByTestId("share-url")).toHaveText(new RegExp(`/casa/${publicId}$`));
   await expect(page.getByText("WhatsApp de esta casa")).toBeVisible();
   const sub = page.getByTestId("subscription-card");
@@ -605,7 +605,7 @@ test("el admin aprueba el nombre: la ficha lo muestra al momento y la casa sale 
   await expect(editSection(page).getByRole("heading", { name: "Ediciones por revisar" })).toBeVisible();
   const item = editSection(page).getByRole("link", { name: /Cabina Cahuita/ });
   await expect(item).toContainText(publicId);
-  await expect(item).toContainText("Yorleny Prueba");
+  await expect(item).toContainText(h.ownerName("owner"));
   await expect(item).toContainText("Edición: nombre");
   await item.click();
   await expect(page).toHaveURL(new RegExp(`/admin/ediciones/${id}$`));

@@ -57,9 +57,11 @@ test("Mis casas: la etiqueta sobre la foto, sin precio, y un solo botón relleno
   await expect(cocles.getByTestId("card-zone")).toHaveText("Cocles");
   await expect(cocles).not.toContainText("₡");
   const share = cocles.getByRole("button", { name: "Compartir ficha" });
-  await expect(share).toHaveClass(/btn-sun/); // en dorado (Ana, 2026-11-04)
+  await expect(share).toHaveClass(/btn-primary/); // verde aprobado; el dorado se conserva para pagos
+  await expect(share).toHaveText("Compartir");
   await expect(share).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
-  await expect(cocles.getByRole("link", { name: "Calendario" })).toHaveClass(/btn-ghost/);
+  await expect(cocles.getByRole("link", { name: "Calendario" })).toHaveAttribute("href", `/propietario/calendario?casa=${active.id}`);
+  await expect(cocles.getByRole("link", { name: "Consultas", exact: true })).toHaveAttribute("href", `/propietario/actividad?casa=${active.id}`);
 
   const cambios = card(page, "Cabina con cambios");
   await expect(cambios.getByTestId("card-label")).toHaveText("Cambios pedidos");
@@ -126,6 +128,17 @@ test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha»,
   await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
   expect(await page.evaluate(() => (window as unknown as { shared: { url: string }[] }).shared)).toEqual([expect.objectContaining({ url: `http://${HOST}/casa/${active.publicId}` })]);
+  const shareBeforeCopy = (await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).boundingBox())!;
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => undefined } });
+  });
+  await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).click();
+  const copiedButton = card(page, "Casa Cocles").getByRole("button", { name: "Enlace copiado" });
+  await expect(copiedButton).toBeVisible();
+  const shareAfterCopy = (await copiedButton.boundingBox())!;
+  expect(shareAfterCopy.width).toBe(shareBeforeCopy.width);
+  expect(shareAfterCopy.height).toBe(shareBeforeCopy.height);
   await card(page, "Casa Cocles").getByRole("link", { name: "Calendario" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/calendario\\?casa=${active.id}`));
   // Es otra pestaña: no deja rastro en el historial (2026-11-03), «Atrás» sale de la app.
@@ -387,4 +400,37 @@ test("ficha de una casa activa: la suscripción y la actividad se piden sin espe
   await Promise.all([billing, activity]);
   release();
   await expect(page.getByRole("heading", { name: "Casa Cocles" }).first()).toBeVisible();
+});
+
+// Acuerdo de Mis casas del 2026-11-04: accesos por casa y consultas nuevas, sin confundirlas con mensajes.
+test("Mis casas: los accesos filtran la casa correcta y el contador excluye las consultas ya abiertas", async ({ page }) => {
+  await h.reset();
+  const a = await h.seed({ status: "active", draft: { title: "Casa del Caribe" } });
+  const b = await h.seed({ status: "active", draft: { title: "Cabina del bosque" } });
+  await h.inquiries("other").create(a.publicId, { arrival: null, departure: null, people: 2, message: "Consulta de la casa del Caribe" });
+  const read = await h.inquiries("other").create(b.publicId, { arrival: null, departure: null, people: 2, message: "Consulta ya abierta del bosque" });
+  await h.inquiries("owner").markOpened(read.inquiryId);
+  await page.goto("/propietario/casas");
+  const aCard = card(page, "Casa del Caribe");
+  const bCard = card(page, "Cabina del bosque");
+  const aInquiries = aCard.getByRole("link", { name: "Consultas, 1 nueva", exact: true });
+  await expect(aInquiries).toHaveAttribute("href", "/propietario/actividad?casa=" + a.id);
+  await expect(aCard.getByTestId("house-inquiries-count")).toHaveText("1");
+  await expect(bCard.getByRole("link", { name: "Consultas", exact: true })).toHaveAttribute("href", "/propietario/actividad?casa=" + b.id);
+  await expect(bCard.getByTestId("house-inquiries-count")).toHaveCount(0);
+  for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    const calendar = (await aCard.getByRole("link", { name: "Calendario", exact: true }).boundingBox())!;
+    const inquiries = (await aInquiries.boundingBox())!;
+    expect(Math.min(calendar.width, calendar.height, inquiries.width, inquiries.height)).toBeGreaterThanOrEqual(44);
+    expect(inquiries.x - calendar.x - calendar.width).toBeGreaterThanOrEqual(16);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  }
+  await aInquiries.click();
+  await expect(page).toHaveURL("/propietario/actividad?casa=" + a.id);
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("article")).toContainText("Consulta de la casa del Caribe");
+  // Filtrar y leer la tarjeta no equivale a abrir WhatsApp: la consulta sigue nueva.
+  await page.goto("/propietario/casas");
+  await expect(card(page, "Casa del Caribe").getByTestId("house-inquiries-count")).toHaveText("1");
 });

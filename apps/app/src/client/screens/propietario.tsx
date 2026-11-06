@@ -25,6 +25,7 @@ import { useShare } from "../../shared/share-button";
 import { billingQuery, useBilling, type Billing } from "../billing";
 import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
+import { inquiriesQuery } from "../inquiries";
 import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
 import { ConfirmSheet } from "../confirm-sheet";
 
@@ -81,6 +82,12 @@ export function CasasScreen() {
   usePreloadPublish();
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
+  // La misma caché privada que Consultas y la pestaña: sin peticiones por tarjeta ni contadores de WhatsApp.
+  const inquiries = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
+  const freshByHouse = new Map<string, number>();
+  for (const inquiry of inquiries.data ?? []) {
+    if (!inquiry.openedAt) freshByHouse.set(inquiry.listingId, (freshByHouse.get(inquiry.listingId) ?? 0) + 1);
+  }
   const billing = useBilling(userId);
   const notice = list ? noticeFor(list, billing && { today: billing.today, houses: billing.all.map((x) => ({ listingId: x.house.listingId, sub: x.sub })) }) : null;
   const view = list ? casasView(list.length) : null;
@@ -136,7 +143,7 @@ export function CasasScreen() {
           </div>
           <div className="stack house-list">
             {byPendingAction(list!).map((l, i) => (
-              <OwnerCard key={l.id} listing={l} userId={userId} eager={i === 0} />
+              <OwnerCard key={l.id} listing={l} userId={userId} eager={i === 0} multiple={list!.length > 1} newInquiries={freshByHouse.get(l.id) ?? 0} />
             ))}
           </div>
         </>
@@ -146,28 +153,35 @@ export function CasasScreen() {
 }
 
 /** Una casa por fila: foto con su estado, nombre y zona; debajo, como mucho un botón relleno (diseño v2, 07-mis-casas). */
-function OwnerCard({ listing: l, userId, eager }: { listing: Listing; userId: string; eager: boolean }) {
+function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { listing: Listing; userId: string; eager: boolean; multiple: boolean; newInquiries: number }) {
   const discard = useDeleteDraft(userId);
   const [ask, sheet] = useDiscardSheet(() => discard.mutate(l.id));
   // Sin la consulta de la suscripción (despliegue antes de la migración) no se ofrece pagar: la pantalla no funcionaría.
   const billed = !!useBilling(userId)?.of(l.id);
+  const shareable = can(l, "share");
+  const tools = multiple && can(l, "available");
+  const inquiriesLabel = newInquiries > 0 ? `Consultas, ${newInquiries} ${newInquiries === 1 ? "nueva" : "nuevas"}` : "Consultas";
   return (
     <article className="card house-card">
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
       {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de bnbtico: {l.reviewNote}</p> : null}
       <HoldNotice listing={l} card />
-      {can(l, "share") ? (
-        <div className="row gap-8">
-          <ShareButtonInline listing={l} />
-          <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="btn btn-ghost grow">
-            Calendario
-          </Link>
+      {shareable || tools ? (
+        <div className="house-actions">
+          {shareable ? <ShareButtonInline listing={l} className="house-share" /> : null}
+          {tools ? (
+            <div className="house-tools">
+              <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label="Calendario" title="Calendario">
+                <I.calendar size={22} />
+              </Link>
+              <Link to="/propietario/actividad" search={{ casa: l.id }} replace className="house-tool" aria-label={inquiriesLabel} title={inquiriesLabel}>
+                <I.chat size={22} />
+                {newInquiries > 0 ? <span className="house-inquiries-count num" data-testid="house-inquiries-count" aria-hidden="true">{newInquiries}</span> : null}
+              </Link>
+            </div>
+          ) : null}
         </div>
-      ) : l.status === "active" && l.adminHold?.kind === "paused" ? (
-        <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="btn btn-ghost btn-block">
-          Calendario
-        </Link>
       ) : null}
       {l.status === "changes" ? (
         <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="btn btn-primary btn-block">

@@ -205,9 +205,10 @@ test("3 · una casa: la lista con una sola tarjeta; tocarla abre su detalle", as
   await expect(page.getByRole("article")).toHaveCount(1);
   const only = page.getByRole("article");
   await expect(only.getByTestId("card-label")).toHaveText("Activa");
-  // En dorado, como «Activar suscripción»: compartir es publicidad de bnbtico (Ana, 2026-11-04).
-  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-sun/);
-  await expect(only.getByRole("link", { name: "Calendario" })).toHaveClass(/btn-ghost/);
+  // Compartir conserva el verde; con una sola casa se usan las pestañas de Calendario y Consultas.
+  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-primary/);
+  await expect(only.getByRole("link", { name: "Calendario" })).toHaveCount(0);
+  await expect(only.getByRole("link", { name: "Consultas" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Nueva" })).toHaveAttribute("href", "/propietario/publicar");
   await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/mis-casas-una.png", fullPage: true });
@@ -531,9 +532,12 @@ test.describe("«Atrás» y las pestañas", () => {
   });
 
   test("Mis casas: el detalle suma historial; «Calendario» de la tarjeta cambia de pestaña sin dejar rastro", async ({ page }) => {
+    // El acceso en la tarjeta solo aparece con varias casas; con una se usa la pestaña (caso 3).
+    await h.seed({ status: "active", draft: { title: "Segunda casa del Caribe" } });
     await page.goto("/explorar");
-    await nav(page).getByRole("link", { name: "Mi casa" }).click();
+    await nav(page).getByRole("link", { name: "Mis casas", exact: true }).click();
     await expect(page).toHaveURL(/\/propietario\/casas$/);
+    await expect(page.getByRole("article")).toHaveCount(2);
     const card = page.getByRole("article").filter({ hasText: "Casa Atrás" });
     await card.getByRole("link", { name: "Casa Atrás" }).click();
     await expect(page).toHaveURL(new RegExp(`/propietario/casas/${casa.id}$`));

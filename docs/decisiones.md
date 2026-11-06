@@ -1,3 +1,9 @@
+## 2026-11-06 · Mis casas: acciones por casa y contador de consultas (Ana)
+
+Se implementa el apartado 3 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md` tras confirmar Ana las 43 E2E de Publicar. Compartir usa el verde final aprobado, icono y texto breve; se retira del componente compartido la variante dorada anterior, también en el detalle editable. Calendario y Consultas se presentan como iconos accesibles de 44 px con varias casas, conservando las restricciones vigentes. Cada acceso incluye la casa en su ruta y el contador solo suma consultas que aún no se abrieron de esa casa; usa la consulta privada existente y no cuenta mensajes de WhatsApp.
+
+Se corrige el ancho de las acciones de pago para que no sumen 100 % más márgenes y se recorten dentro de la tarjeta. Se conservan fotos, estados, borradores, pagos y sus reglas. Ana prueba el bloque en local y ejecuta las comprobaciones; se prepara un commit por bloque probado antes de continuar.
+
 ## 2026-11-06 · Organización y entregas de marca para perfiles (Ana)
 
 Ana solicita revisar y preparar en Git los archivos de marca. La biblioteca completa es la entrega de referencia; las carpetas intermedias se identifican como tales y conservan sus rutas por compatibilidad y por la procedencia del inventario. Propuestas, referencias históricas y logos obsoletos quedan diferenciados mediante sus índices. Los ZIP locales duplican las carpetas y no se versionan.

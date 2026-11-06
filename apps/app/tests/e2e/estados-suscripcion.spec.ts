@@ -337,3 +337,26 @@ test.describe("ficha 410 con su motivo", () => {
     await expect(page.getByRole("button", { name: /Contactar por WhatsApp/ })).toBeVisible();
   });
 });
+
+test("una casa inactiva conserva Activar suscripción dentro de los márgenes en móvil", async ({ page }) => {
+  const house = await h.seed({ status: "active", draft: { title: "Casa parada" } });
+  await h.billing("owner").stop(house.id);
+  await owner(page);
+  await page.goto("/propietario/casas");
+  const only = card(page, "Casa parada");
+  const activate = only.getByRole("link", { name: "Activar suscripción", exact: true });
+  await expect(activate).toHaveAttribute("href", payLink(house.publicId));
+  await expect(activate).toHaveClass(/btn-sun/);
+  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveCount(0);
+  await expect(only.getByRole("link", { name: "Calendario" })).toHaveCount(0);
+  await expect(only.getByRole("link", { name: "Consultas" })).toHaveCount(0);
+  for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }, { width: 320, height: 667 }]) {
+    await page.setViewportSize(viewport);
+    const parent = (await only.boundingBox())!;
+    const button = (await activate.boundingBox())!;
+    expect(button.height).toBeGreaterThanOrEqual(44);
+    expect(button.x).toBeGreaterThanOrEqual(parent.x + 14);
+    expect(button.x + button.width).toBeLessThanOrEqual(parent.x + parent.width - 14);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  }
+});

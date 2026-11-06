@@ -119,15 +119,15 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
   );
 }
 
-/** «Compartir ficha» en dorado (el de «Activar suscripción»; Ana, 2026-11-04): no es dinero, pero compartir la ficha es publicidad de bnbtico y
- *  la acción que más le conviene; el dorado deja de ser solo para pagos. */
+/** Compartir con el acabado verde común aprobado; nombre accesible y lógica de copia conservados. */
 export function ShareButtonInline({ listing: l, className = "grow" }: { listing: Listing; className?: string }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className={`btn btn-sun ${className}`} onClick={share} data-share-url={target.url}>
+    <button type="button" className={`btn btn-primary ${className}`} onClick={share} aria-label={copied ? "Enlace copiado" : "Compartir ficha"} data-share-url={target.url}>
+      <I.share size={20} />
       <span key={copied ? "copied" : "share"} className={swap}>
-        {copied ? "Enlace copiado" : "Compartir ficha"}
+        {copied ? "Enlace copiado" : "Compartir"}
       </span>
     </button>
   );
