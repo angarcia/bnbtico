@@ -69,7 +69,7 @@ test("la primera vez el admin vincula su app con el QR, ve la cola y aprueba: la
   await expect(cards.first()).toContainText("Cabina Punta Uva");
   await expect(cards.first()).toContainText(`${first.publicId} · hoy`);
   await expect(cards.first()).toContainText("Nueva");
-  await expect(cards.first()).toContainText("Yorleny Prueba · WhatsApp verificado");
+  await expect(cards.first()).toContainText(`${h.ownerName("owner")} · WhatsApp verificado`);
   await expect(cards.first()).toContainText("Punta Uva · 4 personas · 5 fotos · ₡52 000");
 
   await cards.first().click();

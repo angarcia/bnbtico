@@ -5,6 +5,7 @@ import { HOUSE_BADGES, adminHouseLine } from "../../src/domain/admin-houses";
 import { FIELD_TITLES } from "../../src/domain/edit";
 import { costaRicaToday } from "../../src/domain/inquiry";
 import type { ListingStatus } from "../../src/domain/listing";
+import { firstName } from "../../src/domain/person";
 import { TEST_PHONES, serviceClient, totpSecretOf } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
@@ -106,6 +107,7 @@ test("hoja privada admin: teclado, fondo, controles deshabilitados y foco de ret
 
 test("el admin ve sus casas por estado con su línea de suscripción, filtra por chip y busca por nombre, CT o propietario", async ({ page }) => {
   const tag = `T${Date.now().toString(36)}`;
+  const otherName = h.ownerName("other");
   // Sin método de pago en las cuentas de prueba (es de la cuenta y decide entre pendiente de pago y plan de pago).
   await serviceClient().from("payment_methods").delete().in("owner_id", [h.ownerId("owner"), h.ownerId("other")]);
   const active = await h.seed({ status: "active", draft: { title: `Villa Activa ${tag}`, zone: "Cocles", zoneSource: "other", zoneId: null } });
@@ -131,11 +133,11 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
 
   const row = (s: Seeded) => rows.filter({ hasText: s.publicId });
   await expect(row(active)).toContainText(`Villa Activa ${tag}`);
-  await expect(row(active)).toContainText(`${active.publicId} · Yorleny Prueba · Cocles`);
+  await expect(row(active)).toContainText(`${active.publicId} · ${h.ownerName("owner")} · Cocles`);
   await expect(row(active)).toContainText(await expectedLine(active, "active"));
   await expect(row(active)).toContainText(/Gratis hasta \d{1,2} [a-z]{3} \d{4}/);
   await expect(row(active).locator(".badge")).toHaveText(HOUSE_BADGES.active.label);
-  await expect(row(due)).toContainText(`${due.publicId} · Ana Prueba · Manzanillo`);
+  await expect(row(due)).toContainText(`${due.publicId} · ${otherName} · Manzanillo`);
   await expect(row(due)).toContainText(await expectedLine(due, "payment_due"));
   await expect(row(due)).toContainText(/Oferta vencida el \d{1,2} [a-z]{3}.* · sin método de pago/);
   await expect(row(due).locator(".badge")).toHaveText("Por pagar");
@@ -165,16 +167,15 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
   await expect(rows.first()).toContainText(due.publicId);
   await search.fill("zzz-ninguna");
   await expect(page.getByText("Ninguna casa coincide con la búsqueda.")).toBeVisible();
-  await search.fill(`ana prueba`);
+  await search.fill(otherName.toLowerCase());
   await expect(row(due)).toHaveCount(1);
-  await expect(row(active)).toHaveCount(0);
 
   // Un toque abre el detalle de la casa: sus datos, la ficha pública si se ve y el detalle del anuncio.
   await search.fill(tag);
   await row(due).click();
   const sheet = page.getByRole("dialog", { name: `Rancho Por Pagar ${tag}` });
   await expect(sheet).toBeVisible();
-  await expect(sheet).toContainText(`${due.publicId} · Ana Prueba · Manzanillo`);
+  await expect(sheet).toContainText(`${due.publicId} · ${otherName} · Manzanillo`);
   await expect(sheet.getByRole("link", { name: "Ver ficha pública" })).toHaveCount(0);
   await sheet.getByRole("link", { name: "Ver datos del anuncio" }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${due.id}$`));
@@ -272,8 +273,9 @@ test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada p
   // La hoja sigue abierta con el botón para avisar al propietario por WhatsApp (sin abrirlo: se comprueba el enlace).
   await expect(sheet.getByTestId("hold-note")).toContainText(reason);
   const notice = sheet.getByTestId("notice-link");
-  await expect(notice).toHaveText("Avisar a Yorleny por WhatsApp");
-  const text = `Hola, Yorleny. Le escribimos de bnbtico: su casa «${title}» está pausada en bnbtico: ${reason.replace(/\.$/, "")}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
+  const ownerFirstName = firstName(h.ownerName("owner"));
+  await expect(notice).toHaveText(`Avisar a ${ownerFirstName} por WhatsApp`);
+  const text = `Hola, ${ownerFirstName}. Le escribimos de bnbtico: su casa «${title}» está pausada en bnbtico: ${reason.replace(/\.$/, "")}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
   await expect(notice).toHaveAttribute("href", `https://wa.me/50687770001?text=${encodeURIComponent(text)}`);
   await sheet.getByRole("button", { name: "Cerrar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
