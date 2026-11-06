@@ -1,3 +1,7 @@
+## 2026-11-06 · Detalle editable con fotos accesibles y estadísticas compactas (Ana)
+
+Se aplica el apartado 6 aprobado: margen exterior12, cámara y recuento crema con acceso táctil44, estadísticas doradas centradas y nota breve. No cambia el botón flotante Ver ficha, la proporción de la portada, las métricas ni las reglas de edición. El ajuste visual se limita al detalle del propietario; admin conserva su aviso y marco. Pruebas preparadas para la ejecución conjunta solicitada por Ana.
+
 ## 2026-11-06 · Cuenta resumida y listado de suscripciones completo (Ana)
 
 Se aplica el apartado 5 de los cambios aprobados: Cuenta agrupa las casas al día sin esconder pagos, recordatorios o bloqueos, y «Ver suscripciones» abre todas. El listado prioriza reactivación y pagos sin presentar bloqueadas como activables. Se mantienen importes reales por casa, fechas, oferta vigente, avisos y confirmación al parar; no se aplican las cifras provisionales de las capturas. Ana solicita preparar también los demás bloques y ejecutar las pruebas conjuntamente al día siguiente; esta implementación queda pendiente de esas pruebas.

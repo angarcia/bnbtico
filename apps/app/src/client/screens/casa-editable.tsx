@@ -171,7 +171,7 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
   const taps = a?.whatsappTaps ?? 0;
   const inquiries = a?.inquiries ?? 0;
   return (
-    <section className="card stack gap-8" data-testid="listing-stats" aria-busy={!data || undefined}>
+    <section className="card stack listing-stats" data-testid="listing-stats" aria-busy={!data || undefined}>
       <span className="small muted">Últimos 30 días</span>
       {data ? (
         <div className="activity-figures">
@@ -245,8 +245,9 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
   const cover = l.photos[0];
   const label = cardLabel(l, l.edit);
   const shareUrl = shareOf(l).url.replace(/^https?:\/\//, "");
+  const photosLabel = photoPill(l.photos.length, l.edit?.photos.length ?? 0).replace(/ · Editar$/, "");
   return (
-    <>
+    <div className={`${admin ? "editable-ficha-admin" : "editable-ficha"} stack gap-14`}>
       <HoldNotice listing={l} />
       {onTop && l.status === "payment_due" ? hb && billing ? <PayNotice hb={hb} today={billing.today} /> : <PaymentDueNote listing={l} /> : null}
       {onTop && l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
@@ -255,10 +256,10 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
         {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
         <span className={`state ${label.cls}`}>{label.text}</span>
         {blocked ? (
-          <span className="pill photo-pill num">{photoPill(l.photos.length, l.edit?.photos.length ?? 0)}</span>
+          <span className="pill photo-pill num"><I.camera size={20} /><span>{photosLabel}</span></span>
         ) : (
-          <Link to={field} params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num">
-            {photoPill(l.photos.length, l.edit?.photos.length ?? 0)}
+          <Link to={field} params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num" aria-label={admin ? photoPill(l.photos.length, l.edit?.photos.length ?? 0) : `Editar fotos: ${photosLabel}`} title="Editar fotos">
+            {admin ? photoPill(l.photos.length, l.edit?.photos.length ?? 0) : <><I.camera size={20} /><span>{photosLabel}</span></>}
           </Link>
         )}
       </div>
@@ -271,7 +272,7 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
             <span>Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión.</span>
           ) : (
             <span>
-              Toque un dato para cambiarlo. Los cambios de nombre, tipo, descripción y ubicación, y las fotos nuevas, los revisamos antes de publicarlos; mientras tanto, los clientes ven la versión actual.
+              Toque un dato para editarlo. Su ficha seguirá visible durante la revisión.
             </span>
           )}
         </p>
@@ -296,6 +297,6 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
         <WhatsAppItem listing={l} />
       </section>
       {!onTop && hb && billing ? <SubscriptionCard listing={l} sub={hb.sub} today={billing.today} /> : null}
-    </>
+    </div>
   );
 }

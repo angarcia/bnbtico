@@ -178,6 +178,8 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await expect(stats).toHaveText(/Últimos 30 días\s*0\s*visitas\s*0\s*toques en WhatsApp\s*0\s*consultas/);
   expect((await stats.boundingBox())!.y).toBeGreaterThan((await page.locator(".detail-photo").boundingBox())!.y);
   expect((await stats.boundingBox())!.y).toBeLessThan((await page.getByTestId("field-rows").boundingBox())!.y);
+  expect((await stats.boundingBox())!.height).toBeGreaterThanOrEqual(130);
+  expect((await stats.boundingBox())!.height).toBeLessThanOrEqual(150);
   await h.recordViews(active.publicId, 4);
   await h.recordViews(active.publicId, 2, 45);
   await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });

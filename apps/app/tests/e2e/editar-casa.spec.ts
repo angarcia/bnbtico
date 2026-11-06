@@ -65,9 +65,12 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(row(page, "Nombre")).toHaveAttribute("href", `/propietario/casas/${id}/editar/nombre`);
   await expect(row(page, "Personas, habitaciones y baños")).toHaveAttribute("href", `/propietario/casas/${id}/editar/capacidad`);
   await expect(row(page, "Nombre")).toContainText("Casa Coco");
-  await expect(page.getByText("Toque un dato para cambiarlo. Los cambios de nombre, tipo, descripción y ubicación, y las fotos nuevas, los revisamos antes de publicarlos; mientras tanto, los clientes ven la versión actual.")).toBeVisible();
-  const pill = page.getByRole("link", { name: "5 fotos · Editar" });
+  await expect(page.getByText("Toque un dato para editarlo. Su ficha seguirá visible durante la revisión.")).toBeVisible();
+  const pill = page.getByRole("link", { name: "Editar fotos: 5 fotos" });
   await expect(pill).toHaveAttribute("href", `/propietario/casas/${id}/editar/fotos`);
+  const photoControl = (await pill.boundingBox())!;
+  expect(Math.min(photoControl.width, photoControl.height)).toBeGreaterThanOrEqual(44);
+  expect((await page.locator(".detail-photo").boundingBox())!.x).toBe(12);
   await expect(page.locator(".detail-photo .state")).toHaveText("Activa");
   const share = page.getByRole("button", { name: "Compartir ficha" });
   await expect(share).toHaveClass(/btn-primary/); // mismo acabado de Compartir que en Mis casas
@@ -219,10 +222,10 @@ test("historial: guardar un dato, volver de un dato o de las fotos regresa a la 
   await row(page, "Nombre").click();
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(ficha);
-  await page.getByRole("link", { name: "5 fotos · Editar" }).click();
+  await page.getByRole("link", { name: "Editar fotos: 5 fotos" }).click();
   await page.getByRole("link", { name: "Listo" }).click();
   await expect(page).toHaveURL(ficha);
-  await page.getByRole("link", { name: "5 fotos · Editar" }).click();
+  await page.getByRole("link", { name: "Editar fotos: 5 fotos" }).click();
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(ficha);
   await page.goBack();
@@ -485,10 +488,10 @@ test("dos fotos nuevas van a revisión al subirlas; quitarlas las descarta y bor
 
   await page.getByRole("link", { name: "Listo" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
-  await expect(page.getByRole("link", { name: "5 fotos · 2 nuevas en revisión · Editar" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Editar fotos: 5 fotos · 2 nuevas en revisión" })).toBeVisible();
   await expect(page.locator(".detail-photo .state")).toHaveText("Cambios en revisión");
   expect((await h.owner("owner").getOwn(id))!.edit!.photos.map((p) => p.status)).toEqual(["review", "review"]);
-  await page.getByRole("link", { name: "5 fotos · 2 nuevas en revisión · Editar" }).click();
+  await page.getByRole("link", { name: "Editar fotos: 5 fotos · 2 nuevas en revisión" }).click();
   await page.getByRole("button", { name: "Quitar foto 7" }).click();
   await expect(counter(page)).toHaveText("6 de 15");
   await page.getByRole("button", { name: "Quitar foto 6" }).click();
@@ -542,7 +545,7 @@ test("quitar la portada aprobada: «Ver ficha», sin recargar, ya muestra la nue
   await page.getByRole("link", { name: "Ver ficha" }).click();
   await expect(cover).toHaveAttribute("src", before[0]!.url);
   await page.goBack();
-  await page.getByRole("link", { name: "5 fotos · Editar" }).click();
+  await page.getByRole("link", { name: "Editar fotos: 5 fotos" }).click();
   await page.getByRole("button", { name: "Quitar foto 1" }).click();
   await expect(counter(page)).toHaveText("4 de 15");
   await page.getByRole("link", { name: "Listo" }).click();
