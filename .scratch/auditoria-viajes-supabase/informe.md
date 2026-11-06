@@ -1,6 +1,6 @@
 # Auditoría: pantallas que encadenan viajes a Supabase
 
-Status: needs-triage (1, 3 y 4 arreglados el 2026-11-05 y 5 el 2026-11-06; ver «Estado»)
+Status: needs-triage (1, 3 y 4 arreglados el 2026-11-05; 5 y 8 (saveEdit) el 2026-11-06; ver «Estado»)
 Fecha: 2026-11-05
 
 ## Qué se buscaba
@@ -106,7 +106,12 @@ Siguen en segundo nivel, sin tapar nada: la tarjeta «Publique gratis» (punto 7
 - En frío, el calendario del admin pasa de 4 niveles (perfil → casa → perfil → días) a 1. En `/admin` desaparecen las 2–3 consultas repetidas de `profiles`.
 - Pruebas: una E2E que retiene la comprobación y espera la casa y los días (fallaba antes), y `tests/unit/admin-access.test.ts`.
 
-Pendientes: 6, 7 y 8 (y el 2, de prioridad baja).
+**Punto 8, arreglado el 2026-11-06 (`saveEdit`).** Pedir las relaciones embebidas junto con la RPC no servía: PostgREST las lee en la misma sentencia y ve el estado de antes de guardar. Por eso la migración `20261106180413_save_edit_completa` añade `save_edit_full`, que llama a `save_edit` sin cambiarla y devuelve en una sentencia aparte la edición entera como JSON (con la forma de `EDIT_SELECT`). Está aplicada en `bnbtico-pruebas` antes del push. Guardar un cambio de una casa publicada pasa de 2 viajes a 1: lo comprueba `tests/db/guardar-edicion-un-viaje.test.ts`, y el contrato exige que lo devuelto sea igual a lo que se lee después.
+- Siguen con dos viajes, por ser poco frecuentes o porque no se notan: `admin_update_listing` en `adminEdit.saveEdit` (devuelve `void`), los favoritos (optimistas) y `photos.remove`.
+
+**«+» de Mis casas, 2026-11-06.** Cuando Mis casas ya leyó en esta visita que no hay borrador pendiente, el teléfono elige el id del borrador (`createDraft(id)`), entra al paso 1 sin esperar a la base y crea la fila por detrás, como primer guardado de la cola de esa casa (`apps/app/src/client/publish/new-draft.ts`). Con red lenta, el paso 1 sale a los ~0,1 s (antes, 1,3 s con una tarjeta gris).
+
+Pendientes: 6 y 7, el resto del 8 (admin, favoritos y fotos) y el 2, de prioridad baja.
 
 ## Siguiente paso
 

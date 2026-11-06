@@ -143,6 +143,8 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
       expect(e).toMatchObject({ status: "review", title: "Casa Coco frente al mar", description: null, location: null, photos: [] });
       expect(e?.fields).toEqual({ nombre: { status: "review", reviewNote: null, submittedAt: e?.submittedAt } });
       expect((await me.getOwn(s.id))?.edit?.fields.nombre?.status).toBe("review");
+      // Lo que devuelve saveEdit es la edición entera, igual que la que se lee después (la pantalla no la vuelve a pedir).
+      expect((await me.getOwn(s.id))?.edit).toEqual(e);
       expect((await me.listOwn()).find((l) => l.id === s.id)?.edit?.status).toBe("review");
       expect((await h.anon.getPublic(s.publicId))?.title).toBe("Cabina Cahuita");
     });
@@ -257,6 +259,10 @@ export function editContract(name: string, makeHarness: () => Promise<ListingsHa
         const b = await ph().addEditPhoto(s.id, await ph().upload(s.id, variants()));
         await ph().reorderEditPhotos(s.id, [b.id, a.id]);
         expect((await me.getOwn(s.id))?.edit?.photos.map((x) => x.id)).toEqual([b.id, a.id]);
+        // Guardar otro dato devuelve la edición entera, con las fotos nuevas en su orden y su estado.
+        const e = await me.saveEdit(s.id, { title: "Casa Coco frente al mar" });
+        expect(e?.photos.map((x) => x.id)).toEqual([b.id, a.id]);
+        expect((await me.getOwn(s.id))?.edit).toEqual(e);
         expect((await rejection(ph().reorderEditPhotos(s.id, [a.id]))).message).toBe("La lista de fotos cambió. Vuelva a intentarlo.");
       });
 

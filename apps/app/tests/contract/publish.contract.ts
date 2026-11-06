@@ -155,6 +155,20 @@ export function publishContract(name: string, makeHarness: () => Promise<Listing
         await h.seed({ status: "changes" });
         expect(await me.findResumable()).toBeNull();
       });
+
+      it("el teléfono puede elegir el id del borrador nuevo; uno que ya existe falla sin tocar esa casa", async () => {
+        await h.reset();
+        const chosen = crypto.randomUUID();
+        const { id, listing } = await me.createDraft(chosen);
+        expect(id).toBe(chosen);
+        expect(listing.id).toBe(chosen);
+        expect((await me.getOwn(chosen))?.status).toBe("draft");
+        const theirs = await other.createDraft();
+        await rejection(me.createDraft(theirs.id));
+        await rejection(me.createDraft(chosen));
+        expect((await other.getOwn(theirs.id))?.ownerId).toBe(theirs.listing.ownerId);
+        expect((await me.listOwn()).map((l) => l.id)).toEqual([chosen]);
+      });
     });
 
     describe("guardar pantalla a pantalla", () => {

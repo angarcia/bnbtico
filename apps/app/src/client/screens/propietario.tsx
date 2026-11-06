@@ -27,6 +27,7 @@ import { FlowHeader, RootHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
 import { inquiriesQuery } from "../inquiries";
 import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
+import { knownNoDraft } from "../own-listings-query";
 import { ConfirmSheet } from "../confirm-sheet";
 
 const message = (e: unknown) => toDomainError(e).message;
@@ -129,13 +130,14 @@ export function CasasScreen() {
                 )}
               </div>
             ) : null}
-            {/* Al apoyar el dedo empieza ya la lectura del borrador pendiente que el asistente necesita (siempre de la base). */}
+            {/* Al apoyar el dedo empieza ya la lectura del borrador pendiente que el asistente necesita (siempre de la base),
+                salvo que la lista ya diga que no hay ninguno: entonces el paso 1 sale sin esperarla. */}
             <Link
               to="/propietario/publicar"
               className="new-house"
               aria-label="Nueva casa"
               onPointerDown={() => {
-                if (userId) void client.prefetchQuery(resumableQuery(userId));
+                if (userId && !knownNoDraft(client, userId)) void client.prefetchQuery(resumableQuery(userId));
               }}
             >
               <I.plus size={22} />
