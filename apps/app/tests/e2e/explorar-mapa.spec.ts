@@ -94,6 +94,20 @@ test("el mapa va arriba a todo el ancho, bajo la cabecera flotante, y lleva prec
   await expect(mapBox(page).locator(".leaflet-control-zoom")).toHaveCount(0);
 });
 
+// Fallo de Daniel (2026-11-05): con la base sin ninguna casa publicada (sin provincias), Explorar pintaba solo la caja vacía del
+// mapa. Ahora es el mapa de verdad, quieto y centrado en Limón, sobre «Todavía no hay casas publicadas».
+test("sin ninguna casa publicada, el mapa se dibuja igual (centrado en Limón) sobre el aviso", async ({ page }) => {
+  await page.route("**/rest/v1/provinces_with_listings**", (route) => route.fulfill({ json: [] }));
+  await page.goto("/explorar");
+  await expect(page.getByRole("heading", { name: "Todavía no hay casas publicadas" })).toBeVisible();
+  await expect(mapBox(page)).toHaveAttribute("data-still", "");
+  await expect(mapBox(page)).toHaveClass(/leaflet-container/);
+  await expect
+    .poll(() => mapBox(page).locator(".leaflet-tile-loaded").evaluateAll((els) => els.filter((el) => el.isConnected).length))
+    .toBeGreaterThan(0);
+  await expect(mapBox(page).locator(".leaflet-marker-icon")).toHaveCount(0);
+});
+
 // Fallo de Daniel (2026-11-03): si Leaflet llega antes que las casas (al abrir la app con la búsqueda lenta, o al volver de
 // Buscar con Leaflet ya en caché), el mapa se dibuja en la caja quieta (antes la clase «is-still») y, al llegar las casas, React reescribía
 // su `className` y borraba `leaflet-container`: las teselas se quedaban a 0 px de ancho (sin fondo, solo los precios).
