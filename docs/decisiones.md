@@ -1,3 +1,9 @@
+## 2026-11-06 · Consultas y selector compartido con Calendario (Ana)
+
+Se aplica el apartado 4 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`: selector común con hoja inferior, nombres completos, X, lista desplazable y selección dorada con check. Consultas ofrece «Todas las casas»; Calendario solo una casa concreta. Cada pantalla conserva su lista de casas elegibles; con una sola se oculta el selector. Se conservan las rutas, el filtro antes de las últimas 20 consultas, las nuevas primero y el funcionamiento con la caché sin red.
+
+El nombre de casa se muestra sin foto ni pastilla únicamente en consultas mezcladas; «Nueva» pasa a dorado suave y «Abrir WhatsApp» a icono oficial y texto sin banda verde, con objetivo táctil de 44 px. No cambian la apertura de WhatsApp ni la marca de consulta abierta. Se preparan pruebas de selección, nombres largos, foco, teclado, cierre y navegación; Ana ejecuta las comprobaciones antes del commit de este bloque.
+
 ## 2026-11-06 · Mis casas: acciones por casa y contador de consultas (Ana)
 
 Se implementa el apartado 3 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md` tras confirmar Ana las 43 E2E de Publicar. Compartir usa el verde final aprobado, icono y texto breve; se retira del componente compartido la variante dorada anterior, también en el detalle editable. Calendario y Consultas se presentan como iconos accesibles de 44 px con varias casas, conservando las restricciones vigentes. Cada acceso incluye la casa en su ruta y el contador solo suma consultas que aún no se abrieron de esa casa; usa la consulta privada existente y no cuenta mensajes de WhatsApp.

@@ -118,6 +118,10 @@ test("en el selector: activas, en revisión por primera vez y la publicada que s
   await page.getByRole("button", { name: /Cal / }).click();
   const list = page.getByRole("listbox", { name: "Elegir casa" });
   await expect(list.getByRole("option")).toHaveText(["Cal Reabierta", "Cal En Revisión", "Cal Activa"]);
+  await expect(list.getByRole("option", { name: "Todas las casas", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Elegir casa", exact: true })).toBeFocused();
+  await page.getByRole("dialog", { name: "Elegir casa", exact: true }).getByRole("button", { name: "Cerrar", exact: true }).click();
+  await expect(page.getByTestId("house-picker-trigger")).toBeFocused();
 });
 
 test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recargar y liberar borra la fila", async ({ page }) => {

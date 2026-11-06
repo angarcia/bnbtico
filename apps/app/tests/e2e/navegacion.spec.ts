@@ -107,9 +107,9 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   await expect(inquiry.getByRole("heading", { name: TEST_NAMES.other })).toBeVisible();
   await expect(inquiry).toContainText("AP");
   await expect(inquiry).toContainText("sin fechas · 2 personas");
-  await expect(inquiry.getByTestId("inquiry-house")).toHaveText("Casa Cocles");
+  await expect(inquiry.getByTestId("inquiry-house")).toHaveCount(0);
   await expect(inquiry.getByText("Nueva", { exact: true })).toBeVisible();
-  await expect(page.getByRole("group", { name: "Filtrar por casa" })).toHaveCount(0);
+  await expect(page.getByTestId("house-picker-trigger")).toHaveCount(0);
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
   await expect(nav(page).getByRole("link", { name: "Consultas, 1 nueva" })).toHaveAttribute("aria-current", "page");
   await page.screenshot({ path: "test-results/consultas-una-casa.png", fullPage: true });

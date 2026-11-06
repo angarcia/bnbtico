@@ -273,7 +273,7 @@ test.describe("Cuenta", () => {
   test("Cerrar sesión falla: aviso, el botón vuelve y el foco va al título", async ({ page }) => {
     await owner(page);
     await page.goto("/cuenta");
-    await expect(page.getByRole("heading", { name: "Yorleny Prueba" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: h.ownerName("owner") })).toBeVisible();
     // Sin red para revocarla en el servidor y sin poder borrarla del teléfono: la sesión no se cierra.
     await page.route("**/auth/v1/logout*", (route) => route.abort("internetdisconnected"));
     await page.evaluate(() => {
@@ -349,7 +349,7 @@ test.describe("Cuenta", () => {
     await expect(dialog).toHaveCount(0);
 
     await page.reload();
-    await expect(page.getByRole("heading", { name: "Yorleny Prueba" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: h.ownerName("owner") })).toBeVisible();
 
     await signOut(page);
     await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
@@ -369,10 +369,15 @@ test.describe("Actividad por casa", () => {
     await h.backdateInquiry(inquiryId, days);
   }
   const inquiryCards = (page: Page) => page.getByRole("article").filter({ hasText: /Hola (Cocles|Cabina)/ });
-  const chips = (page: Page) => page.getByRole("group", { name: "Filtrar por casa" });
+  const picker = (page: Page) => page.getByTestId("house-picker-trigger");
+  const options = (page: Page) => page.getByRole("listbox", { name: "Elegir casa" });
+  async function choose(page: Page, name: string) {
+    await picker(page).click();
+    await options(page).getByRole("option", { name, exact: true }).click();
+  }
 
-  test("Flujo 7: Actividad con dos casas: cada consulta con su casa; el chip filtra y queda en la URL", async ({ page }) => {
-    // Los chips siguen el orden de Mis casas (la más nueva primero): Cabina se crea antes que Cocles.
+  test("Flujo 7: Consultas con dos casas: nombre discreto y selector que conserva la casa en la URL", async ({ page }) => {
+    // El selector sigue el orden de Mis casas (la más nueva primero): Cabina se crea antes que Cocles.
     await h.seed({ status: "draft", draft: { title: "Borrador" } });
     const cabina = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Punta Uva" } });
     const cocles = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
@@ -385,41 +390,45 @@ test.describe("Actividad por casa", () => {
     await expect(inquiryCards(page)).toHaveCount(20);
     for (const card of await inquiryCards(page).all()) {
       const tag = card.getByTestId("inquiry-house");
-      await expect(tag.locator("img")).toHaveCount(1);
+      await expect(tag.locator("img")).toHaveCount(0);
       await expect(tag).toHaveText("Casa Cocles");
     }
     const first = inquiryCards(page).filter({ hasText: "Hola Cocles 20" });
     await expect(first).toContainText("sin fechas · 2 personas");
     await expect(first).not.toContainText("Casa Cocles ·");
 
-    const links = chips(page).getByRole("link");
-    await expect(links).toHaveText(["Todas", "Casa Cocles", "Cabina Punta Uva"]);
-    await expect(links.first()).toHaveAttribute("aria-current", "page");
-    // Revisión UX 2026-10-29 (C1): Consultas solo con consultas; arriba cuántas nuevas, y los chips debajo.
     const fresh_ = page.getByTestId("inquiries-new");
     await expect(fresh_).toHaveText("22 consultas nuevas");
-    expect((await chips(page).boundingBox())!.y).toBeGreaterThan((await fresh_.boundingBox())!.y);
+    await expect(picker(page)).toHaveText("Todas las casas");
+    expect((await picker(page).boundingBox())!.y).toBeGreaterThan((await fresh_.boundingBox())!.y);
     const figures = page.locator("article.activity-card");
     await expect(figures).toHaveCount(0);
-    await page.screenshot({ path: "test-results/capturas/actividad-chips.png" });
-
-    await chips(page).getByRole("link", { name: "Cabina Punta Uva" }).click();
+    await picker(page).click();
+    const sheet = page.getByRole("dialog", { name: "Filtrar por casa" });
+    await expect(sheet).toBeFocused();
+    await expect(options(page).getByRole("option")).toHaveText(["Todas las casas", "Casa Cocles", "Cabina Punta Uva"]);
+    await expect(options(page).getByRole("option", { name: "Todas las casas", exact: true })).toHaveAttribute("aria-selected", "true");
+    await options(page).getByRole("option", { name: "Cabina Punta Uva", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/propietario/actividad\\?casa=${cabina.id}$`));
     await expect(inquiryCards(page)).toHaveCount(1);
     await expect(inquiryCards(page)).toContainText("Hola Cabina 0");
-    await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveText("Cabina Punta Uva");
+    await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveCount(0);
     await expect(figures).toHaveCount(0);
     await page.reload();
     await expect(inquiryCards(page)).toHaveCount(1);
-    await expect(chips(page).getByRole("link", { name: "Cabina Punta Uva" })).toHaveAttribute("aria-current", "page");
+    await expect(picker(page)).toHaveText("Cabina Punta Uva");
+    await picker(page).click();
+    await expect(options(page).getByRole("option", { name: "Cabina Punta Uva", exact: true })).toHaveAttribute("aria-selected", "true");
+    await page.keyboard.press("Escape");
+    await expect(picker(page)).toBeFocused();
 
     await page.goto("/propietario/actividad?casa=00000000-0000-4000-8000-000000000000");
     await expect(page).toHaveURL(/\/propietario\/actividad$/);
-    await expect(chips(page).getByRole("link", { name: "Todas" })).toHaveAttribute("aria-current", "page");
+    await expect(picker(page)).toHaveText("Todas las casas");
 
     const vacia = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Vacía" } });
     await fresh(page, "/propietario/actividad");
-    await chips(page).getByRole("link", { name: "Casa Vacía" }).click();
+    await choose(page, "Casa Vacía");
     await expect(page).toHaveURL(new RegExp(`\\?casa=${vacia.id}$`));
     await expect(page.getByText("Todavía no hay consultas de esta casa.")).toBeVisible();
     await expect(inquiryCards(page)).toHaveCount(0);
@@ -431,7 +440,9 @@ test.describe("Actividad por casa", () => {
     await inquiry(cabina.publicId, "Hola Cabina 0", 1);
     await owner(page);
     await page.goto("/propietario/actividad");
-    await expect(chips(page).getByRole("link")).toHaveCount(3);
+    await picker(page).click();
+    await expect(options(page).getByRole("option")).toHaveCount(3);
+    await page.getByRole("dialog", { name: "Filtrar por casa" }).getByRole("button", { name: "Cerrar", exact: true }).click();
     await page.waitForTimeout(1500); // la caché se guarda en IndexedDB sin la casa nueva
     const nueva = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Nueva" } });
     await inquiry(nueva.publicId, "Hola Cocles nueva", 0);
@@ -448,12 +459,70 @@ test.describe("Actividad por casa", () => {
     await expect(inquiryCards(page)).toContainText("Hola Cocles nueva");
   });
 
-  test("con una sola casa: la etiqueta de la casa y sin chips", async ({ page }) => {
+  test("con una sola casa: sin selector ni nombre de casa duplicado", async ({ page }) => {
     const cocles = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
     await inquiry(cocles.publicId, "Hola Cocles 0", 0);
     await owner(page);
     await page.goto("/propietario/actividad");
-    await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveText("Casa Cocles");
-    await expect(chips(page)).toHaveCount(0);
+    await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveCount(0);
+    await expect(picker(page)).toHaveCount(0);
+  });
+
+  test("selector compartido: nombres completos, lista larga, teclado y mismo acabado en Calendario", async ({ page }) => {
+    const legacy = await h.seed({ status: "active", draft: { title: "Casa Manzanillo" } });
+    const longName = "Casa Manzanillo frente al mar con jardín y acceso al parque nacional";
+    await h.setLegacyTitle(legacy.id, longName);
+    let last = legacy;
+    for (let n = 1; n <= 10; n++) last = await h.seed({ status: "active", draft: { title: `Casa selector ${n}` } });
+    await owner(page);
+    await page.goto("/propietario/actividad");
+    // El selector también está disponible antes de recibir la primera consulta.
+    await expect(picker(page)).toHaveText("Todas las casas");
+    const background = await picker(page).evaluate((el) => getComputedStyle(el).backgroundColor);
+    for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await picker(page).click();
+      const sheet = page.getByRole("dialog", { name: "Filtrar por casa", exact: true });
+      const list = options(page);
+      await expect(list.getByRole("option", { name: longName, exact: true })).toHaveText(longName);
+      await expect(page.locator("#root")).toHaveJSProperty("inert", true);
+      await page.keyboard.press("Shift+Tab");
+      await expect(list.getByRole("option", { name: "Todas las casas", exact: true })).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(sheet.getByRole("button", { name: "Cerrar", exact: true })).toBeFocused();
+      await page.keyboard.press("Shift+Tab");
+      await expect(list.getByRole("option", { name: "Todas las casas", exact: true })).toBeFocused();
+      expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+      const box = (await sheet.boundingBox())!;
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      await expect.poll(async () => {
+        const settled = (await sheet.boundingBox())!;
+        return settled.y + settled.height;
+      }).toBeLessThanOrEqual(viewport.height + 1);
+      for (const row of await list.getByRole("option").all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(52);
+      await sheet.getByRole("button", { name: "Cerrar", exact: true }).click();
+      await expect(picker(page)).toBeFocused();
+      await expect(page.locator("#root")).toHaveJSProperty("inert", false);
+    }
+    await picker(page).press("ArrowDown");
+    const all = options(page).getByRole("option", { name: "Todas las casas", exact: true });
+    await all.focus();
+    await all.press("ArrowDown");
+    const newest = options(page).getByRole("option", { name: "Casa selector 10", exact: true });
+    await expect(newest).toBeFocused();
+    await newest.press("Enter");
+    await expect(page).toHaveURL("/propietario/actividad?casa=" + last.id);
+    await expect(picker(page)).toHaveText("Casa selector 10");
+    await page.goto("/propietario/calendario?casa=" + last.id);
+    await expect(picker(page)).toHaveText("Casa selector 10");
+    expect(await picker(page).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(background);
+    await picker(page).click();
+    await expect(options(page).getByRole("option", { name: "Todas las casas", exact: true })).toHaveCount(0);
+    await options(page).getByRole("option", { name: longName, exact: true }).click();
+    await expect(page).toHaveURL("/propietario/calendario?casa=" + legacy.id);
+    await expect(picker(page)).toHaveText(longName);
+    await picker(page).click();
+    await page.keyboard.press("Escape");
+    await expect(picker(page)).toBeFocused();
   });
 });

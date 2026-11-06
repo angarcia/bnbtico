@@ -40,17 +40,16 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .activity-grid .activity-figures{display:flex;flex-direction:column;gap:2px}
 .activity-h2{font-size:22px;margin-top:8px}
 .inquiry-card{padding:14px}
-.inquiry-house{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;height:32px;max-width:100%;padding:0 12px 0 4px;border-radius:8px;background:var(--surface-2)}
-.inquiry-house-photo{width:24px;height:24px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--line-soft)}
-.inquiry-house-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inquiry-house{display:block;max-width:100%;overflow-wrap:anywhere}
 .inquiry-avatar{width:44px;height:44px;border-radius:999px;font-size:17px}
 .inquiry-avatar.is-read{background:var(--line-soft);color:var(--muted)}
 .inquiry-body{gap:2px;min-width:0}
 .inquiry-name{margin:0;font-family:var(--display);font-weight:var(--w-medium);font-size:19px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
 .inquiry-message{margin:4px 0 0;font-size:16px;overflow-wrap:anywhere}
-.badge-new{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink);padding:2px 8px;font-size:13px}
+.badge-new{background:var(--sun-soft);color:var(--sun-ink);padding:2px 8px;font-size:13px}
 .nowrap{white-space:nowrap;flex-shrink:0}
-.btn-wa.inquiry-wa{min-height:44px;border-radius:var(--r-input);font-family:inherit;font-weight:var(--w-strong);font-size:16px;gap:8px}
+.inquiry-wa{display:inline-flex;align-items:center;justify-content:center;align-self:flex-end;gap:8px;min-height:44px;max-width:100%;padding:0 4px;background:transparent;color:var(--primary);font-family:inherit;font-weight:var(--w-medium);font-size:16px;text-decoration:none;white-space:normal}
+.inquiry-wa svg{flex:none}
 .inquiries-foot{margin:0;padding:0 4px}
 .featured-title{font-weight:var(--w-strong);font-size:20px;line-height:1.1;color:inherit;text-decoration:none}
 .share-url{font-weight:var(--w-medium);overflow-wrap:anywhere}

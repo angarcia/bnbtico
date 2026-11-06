@@ -51,6 +51,7 @@ import { RootHeader } from "../chrome";
 import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";
+import { HousePicker } from "../house-picker";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "bnbtico-calendario-casa";
@@ -126,7 +127,7 @@ export function CalendarioScreen() {
       ) : null}
       {!houses && !listings.isError ? <section className="card skeleton cal-skeleton" aria-busy="true" aria-label="Cargando su calendario" /> : null}
       {/* Con una sola casa no hay nada que elegir: su nombre. */}
-      {current && houses && houses.length > 1 ? <HousePicker houses={houses} current={current} onPick={(id) => go(id, search.mes)} /> : null}
+      {current && houses && houses.length > 1 ? <HousePicker houses={houses.map((h) => ({ id: h.id, name: titleOf(h) }))} currentId={current.id} onPick={(id) => { if (id) go(id, search.mes); }} /> : null}
       {current && houses && houses.length === 1 ? <p className="cal-house">{titleOf(current)}</p> : null}
       {houses && houses.length === 0 ? (
         <section className="card stack gap-12">
@@ -147,49 +148,6 @@ export function CalendarioScreen() {
   );
 }
 
-function HousePicker({ houses, current, onPick }: { houses: Listing[]; current: Listing; onPick: (id: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", esc);
-    };
-  }, [open]);
-  const pick = (id: string) => {
-    setOpen(false);
-    if (id !== current.id) onPick(id);
-  };
-  return (
-    <div className="house-picker" ref={box}>
-      <button type="button" className="picker-pill" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <span className="ellipsis">{titleOf(current)}</span>
-        <I.chevron size={14} />
-      </button>
-      {open ? (
-        <ul className="picker-list" role="listbox" aria-label="Elegir casa">
-          {houses.map((h) => (
-            <li
-              key={h.id}
-              role="option"
-              tabIndex={0}
-              aria-selected={h.id === current.id}
-              onClick={() => pick(h.id)}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), pick(h.id))}
-            >
-              {titleOf(h)}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
 
 /** El calendario de una casa. Lo reutiliza el admin con su puerto (screens/asistir.tsx): edita también una casa bloqueada
  *  y no tiene «Marcar una reserva» ni «Pausar la casa» (son del anfitrión). */

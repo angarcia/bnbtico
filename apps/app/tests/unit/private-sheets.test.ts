@@ -149,3 +149,51 @@ describe("hojas privadas: contrato de interacción en Chromium", () => {
     });
   });
 });
+
+for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }]) {
+  it(`selector compartido: foco, teclado y lista larga en ${viewport.width} px`, async () => {
+    const page = await browser.newPage({ viewport });
+    try {
+      await page.goto(`${origin}tests/unit/private-sheets.fixture.html?kind=picker`);
+      const trigger = page.getByTestId("house-picker-trigger");
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: "Filtrar por casa" });
+      const list = page.getByRole("listbox", { name: "Elegir casa" });
+      await expect(dialog).toBeFocused();
+      await expect(page.locator("#root")).toHaveJSProperty("inert", true);
+      await expect(list.getByRole("option")).toHaveCount(15);
+      await expect(list.getByRole("option", { name: "Casa Manzanillo frente al mar con jardín y acceso al parque nacional", exact: true })).toHaveText("Casa Manzanillo frente al mar con jardín y acceso al parque nacional");
+      expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+      const box = (await dialog.boundingBox())!;
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      await expect.poll(async () => {
+        const settled = (await dialog.boundingBox())!;
+        return settled.y + settled.height;
+      }).toBeLessThanOrEqual(viewport.height + 1);
+      for (const option of await list.getByRole("option").all()) expect((await option.boundingBox())!.height).toBeGreaterThanOrEqual(52);
+      await page.keyboard.press("Shift+Tab");
+      const all = list.getByRole("option", { name: "Todas las casas", exact: true });
+      await expect(all).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(dialog.getByRole("button", { name: "Cerrar", exact: true })).toBeFocused();
+      await page.keyboard.press("Shift+Tab");
+      await all.press("ArrowDown");
+      const first = list.getByRole("option", { name: "Casa del Caribe 1", exact: true });
+      await expect(first).toBeFocused();
+      await first.press("Enter");
+      await released(page);
+      await expect(trigger).toBeFocused();
+      await expect(trigger).toHaveText("Casa del Caribe 1");
+      await expect(page.locator("output")).toHaveText("house-0");
+      for (const close of ["escape", "x", "backdrop"]) {
+        await trigger.click();
+        await expect(list.getByRole("option", { name: "Casa del Caribe 1", exact: true })).toHaveAttribute("aria-selected", "true");
+        if (close === "escape") await page.keyboard.press("Escape");
+        else if (close === "x") await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
+        else await page.locator(".sheet-backdrop").click({ position: { x: 8, y: 8 } });
+        await released(page);
+        await expect(trigger).toBeFocused();
+      }
+    } finally { await page.close(); }
+  });
+}

@@ -55,14 +55,20 @@
 .header-root > div:has(> .house-picker){align-items:center;flex-wrap:nowrap;gap:10px}
 .header-root:has(.house-picker) h1{font-size:28px}
 .house-picker{position:relative;min-width:0}
-/* Selector de casa del Calendario, a todo el ancho arriba (revisión UX 2026-10-29, C4). */
-.picker-pill{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:52px;padding:0 16px;border-radius:var(--r-input);background:var(--beige-soft);font-weight:var(--w-strong);font-size:18px;text-align:left}
-.picker-pill .ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.picker-pill svg{transform:rotate(90deg);flex-shrink:0}
-.picker-pill[aria-expanded="true"] svg{transform:rotate(-90deg)}
-.picker-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:8;margin:0;padding:6px;list-style:none;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float);animation:fade-in 140ms var(--ease-out)}
-.picker-list li{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;font-size:16px;font-weight:var(--w-medium);cursor:pointer}
-.picker-list li[aria-selected="true"]{color:var(--primary);font-weight:var(--w-medium);background:var(--state-soft)}
+/* El mismo selector cerrado y la misma hoja en Consultas y Calendario. */
+.picker-pill{display:grid;grid-template-columns:20px minmax(0,1fr) 18px;align-items:center;gap:10px;width:100%;height:52px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg);color:var(--fg);font-family:inherit;font-weight:400;font-size:17px;text-align:left}
+.picker-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-arrow{display:flex;transition:transform 140ms var(--ease-out);color:var(--primary)}
+.picker-pill[aria-expanded="true"] .picker-arrow{transform:rotate(180deg)}
+.house-picker-sheet{overflow:hidden;gap:12px}
+.house-picker-sheet .sheet-head{flex:none;align-items:center}
+.house-picker-sheet .sheet-head h2{font-size:23px;line-height:1.2}
+.house-picker-sheet .sheet-head .icon-btn{flex:none;margin:0;color:var(--muted)}
+.house-picker-list{min-height:0;max-height:min(60dvh,560px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px}
+.house-picker-list [role=option]{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;min-height:52px;width:100%;padding:12px;border-radius:8px;background:transparent;color:var(--fg);font:inherit;line-height:1.35;text-align:left}
+.house-picker-list [role=option][aria-selected=true]{background:var(--sun-soft);color:var(--sun-ink)}
+.picker-option-name{min-width:0;overflow-wrap:anywhere}
+.picker-check{display:flex;flex:0 0 20px;width:20px}
 .cal-month{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 0 -10px}
 .cal-arrow{width:40px;height:40px;color:var(--muted)}
 .cal-arrow:disabled{opacity:.3;cursor:default}

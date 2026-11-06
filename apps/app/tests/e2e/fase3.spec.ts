@@ -135,7 +135,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await page.locator(".listing-card", { hasText: TITLE }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${publicId}$`));
   await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
-  const sheet = page.getByRole("dialog", { name: "Escríbale a Yorleny" });
+  const sheet = page.getByRole("dialog", { name: `Escríbale a ${h.ownerName("owner").split(" ")[0]}`, exact: true });
   await expect(sheet).toBeVisible();
   const [arrival, departure] = [day(40), day(45)];
   await pickDates(sheet, arrival, departure);
@@ -175,7 +175,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   const card = later.locator("article.inquiry-card");
   await expect(card).toHaveCount(1);
   await expect(card.getByRole("heading", { name: CLIENT })).toBeVisible();
-  await expect(card.getByTestId("inquiry-house")).toHaveText(TITLE);
+  await expect(card.getByTestId("inquiry-house")).toHaveCount(0);
   await expect(card).not.toContainText(`${TITLE} · `);
   await expect(card).toContainText("3 personas");
   await expect(card).toContainText(`“${message}”`);
