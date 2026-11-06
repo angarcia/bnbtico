@@ -178,7 +178,8 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(card.getByTestId("inquiry-house")).toHaveCount(0);
   await expect(card).not.toContainText(`${TITLE} · `);
   await expect(card).toContainText("3 personas");
-  await expect(card).toContainText(`“${message}”`);
+  await expect(card).not.toContainText(message);
+  await expect(card.locator(".inquiry-message")).toHaveCount(0);
   await expect(card.getByText("Nueva", { exact: true })).toBeVisible();
   const waOwner = await catchWhatsApp(later);
   await card.getByRole("button", { name: "Abrir WhatsApp" }).click();

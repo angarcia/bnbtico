@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import { toDomainError } from "../../domain/errors";
 import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../../domain/inquiry";
 import { filterInquiries, inquiryHouseOptions } from "../../domain/inquiry-filter";
+import { inquiryNote } from "../../domain/inquiry-note";
 import type { Listing } from "../../domain/listing";
 import { I } from "../../shared/icons";
 import { RootHeader } from "../chrome";
@@ -77,7 +78,7 @@ export function ActividadScreen() {
           ) : (
             <p className="small muted">Todavía no hay consultas de esta casa.</p>
           )}
-          {(inquiries.data ?? []).length > 0 ? <p className="xs muted inquiries-foot">Es un registro de quién le escribió; la conversación completa está en su WhatsApp.</p> : null}
+          {(inquiries.data ?? []).length > 0 ? <p className="xs muted inquiries-foot">La conversación está en su WhatsApp.</p> : null}
         </section>
       )}
     </>
@@ -88,6 +89,7 @@ function InquiryCard({ inquiry: i, userId, house, showHouse }: { inquiry: OwnerI
   const client = useQueryClient();
   const opening = useRef(false);
   const isNew = !i.openedAt;
+  const note = inquiryNote(i);
   const nameId = `inquiry-${i.id}`;
   function open() {
     if (opening.current) return;
@@ -113,7 +115,7 @@ function InquiryCard({ inquiry: i, userId, house, showHouse }: { inquiry: OwnerI
           </div>
           <span className="small muted">{inquirySummary(i)}</span>
           {i.source === "bnbtico" ? <span className="badge badge-tight">Creada por bnbtico</span> : null}
-          <p className="inquiry-message">“{i.message}”</p>
+          {note ? <p className="inquiry-message">“{note}”</p> : null}
         </div>
       </div>
       <button type="button" className="btn-link inquiry-wa" onClick={open}>

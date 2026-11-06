@@ -81,13 +81,19 @@ function messageDates(f: InquiryFields): string {
   return am === dm && ay === dy ? `del ${ad} al ${dd} de ${MONTHS[am - 1]}` : `del ${ad} de ${MONTHS[am - 1]} al ${dd} de ${MONTHS[dm - 1]}`;
 }
 
-/** El mensaje por defecto de la hoja (prototipo `contactCompose`, mismas frases). */
-export function composeInquiryMessage(title: string, f: InquiryFields): string {
+export const INQUIRY_GREETING = "Hola, vi ";
+
+export function inquiryMessageTail(f: InquiryFields): string {
   const dates = messageDates(f);
   const n = f.people && f.people > 0 ? Math.floor(f.people) : 0;
   const people = n > 0 ? `${n} persona${n === 1 ? "" : "s"}` : "";
   const ask = dates && people ? `¿Está disponible ${dates} para ${people}?` : dates ? `¿Está disponible ${dates}?` : people ? `¿Está disponible para ${people}?` : "¿Está disponible?";
-  return `Hola, vi ${title} en bnbtico y me interesa. ${ask} Gracias.`;
+  return ` en bnbtico y me interesa. ${ask} Gracias.`;
+}
+
+/** El mensaje por defecto de la hoja (prototipo `contactCompose`, mismas frases). */
+export function composeInquiryMessage(title: string, f: InquiryFields): string {
+  return `${INQUIRY_GREETING}${title}${inquiryMessageTail(f)}`;
 }
 
 export type InquiryField = "arrival" | "departure" | "people" | "message";
