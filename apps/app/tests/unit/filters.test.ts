@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, provinceChips, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, KIND_FILTERS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
 import { listingsQuery } from "../../src/client/queries";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 
 describe("parseFilters · provincia", () => {
-  it("Limón por defecto si tiene casas; Todas si no", () => {
-    expect(parseFilters({}, ["Limón", "Guanacaste"]).prov).toBe("Limón");
+  it("sin provincia en la URL: Todas (todo el país)", () => {
+    // Sin provincia: todo el país, también con casas en Limón (el Caribe va primero en la consulta; ticket 06).
+    expect(parseFilters({}, ["Limón", "Guanacaste"]).prov).toBe("Todas");
+    expect(parseFilters({}, ["Limón"]).prov).toBe("Todas");
     expect(parseFilters({}, ["Guanacaste"]).prov).toBe("Todas");
     expect(parseFilters({}, []).prov).toBe("Todas");
   });
@@ -14,8 +16,9 @@ describe("parseFilters · provincia", () => {
     expect(parseFilters({ prov: "Guanacaste" }, ["Limón", "Guanacaste"]).prov).toBe("Guanacaste");
     expect(parseFilters({ prov: "Todas" }, ["Limón"]).prov).toBe("Todas");
   });
-  it("una provincia de la URL sin casas cae al valor por defecto", () => {
-    expect(parseFilters({ prov: "Cartago" }, ["Limón"]).prov).toBe("Limón");
+  it("un enlace viejo con ?prov= sigue filtrando por esa provincia; una provincia sin casas cae a Todas", () => {
+    expect(parseFilters({ prov: "Limón" }, ["Limón"]).prov).toBe("Limón");
+    expect(parseFilters({ prov: "Cartago" }, ["Limón"]).prov).toBe("Todas");
     expect(parseFilters({ prov: "Marte" }, ["Guanacaste"]).prov).toBe("Todas");
   });
 });
@@ -54,11 +57,13 @@ describe("extrasCount", () => {
 
 describe("toSearchParams", () => {
   it("omite valores por defecto", () => {
-    expect(toSearchParams(parseFilters({}, ["Limón"]), { prov: "Limón" }).toString()).toBe("");
+    expect(toSearchParams(parseFilters({}, ["Limón"])).toString()).toBe("");
+    expect(toSearchParams(parseFilters({ prov: "Todas" }, ["Limón"])).toString()).toBe("");
+    expect(toSearchParams(parseFilters({ prov: "Limón" }, ["Limón"])).toString()).toBe("prov=Lim%C3%B3n");
   });
   it("conserva lo elegido, sin `mas`", () => {
-    const params = toSearchParams(parseFilters({ prov: "Todas", ppl: "4", pool: "1", min: "30000", mas: "1" }, ["Limón"]), { prov: "Limón" });
-    expect(params.get("prov")).toBe("Todas");
+    const params = toSearchParams(parseFilters({ prov: "Todas", ppl: "4", pool: "1", min: "30000", mas: "1" }, ["Limón"]));
+    expect(params.has("prov")).toBe(false);
     expect(params.get("ppl")).toBe("4");
     expect(params.get("pool")).toBe("1");
     expect(params.get("min")).toBe("30000");
@@ -67,9 +72,26 @@ describe("toSearchParams", () => {
   });
 });
 
-it("provinceChips respeta el orden del prototipo", () => {
-  expect(provinceChips(["Cartago", "Limón"])).toEqual(["Todas", "Limón", "Cartago"]);
-  expect(provinceChips([])).toEqual(["Todas"]);
+describe("tipo de alojamiento (ticket 06)", () => {
+  it("tipo: completo o habitacion; cualquier otro valor, sin tipo", () => {
+    expect(KIND_FILTERS).toEqual(["completo", "habitacion"]);
+    expect(parseFilters({ tipo: "habitacion" }, []).kind).toBe("habitacion");
+    expect(parseFilters({ tipo: "completo" }, []).kind).toBe("completo");
+    expect(parseFilters({ tipo: "casa" }, []).kind).toBeNull();
+    expect(parseFilters({}, []).kind).toBeNull();
+  });
+  it("entra en extrasCount, toSearchParams, normalizeSearch y searchFor", () => {
+    const f = parseFilters({ tipo: "completo" }, []);
+    expect(extrasCount(f)).toBe(1);
+    expect(extrasCount(parseFilters({ tipo: "habitacion", pool: "1" }, []))).toBe(2);
+    expect(toSearchParams(f).toString()).toBe("tipo=completo");
+    expect(normalizeSearch({ tipo: "habitacion", raro: "x" })).toEqual({ tipo: "habitacion" });
+    expect(normalizeSearch({ tipo: "otro" })).toEqual({});
+    expect(searchFor(f)).toEqual({ tipo: "completo" });
+  });
+  it("cambia la clave de la consulta", () => {
+    expect(listingsQuery(parseFilters({ tipo: "habitacion" }, [])).queryKey).not.toEqual(listingsQuery(parseFilters({}, [])).queryKey);
+  });
 });
 
 describe("búsqueda en la URL de Explorar", () => {
@@ -91,8 +113,8 @@ describe("búsqueda en la URL de Explorar", () => {
   });
   it("searchFor da la búsqueda limpia de unos filtros", () => {
     const f = parseFilters({ prov: "Todas", max: "50000", min: "44000" }, ["Limón"]);
-    expect(searchFor(f, ["Limón"])).toEqual({ prov: "Todas", min: "44000", max: "50000" });
-    expect(searchFor(parseFilters({}, ["Limón"]), ["Limón"])).toEqual({});
+    expect(searchFor(f)).toEqual({ min: "44000", max: "50000" });
+    expect(searchFor(parseFilters({}, ["Limón"]))).toEqual({});
   });
 });
 
@@ -138,7 +160,7 @@ describe("fin del modo mensual de Explorar (2026-11-02): enlaces viejos", () => 
     expect(normalizeSearch(old, T)).toEqual({ llegada: "2026-11-23", salida: "2026-11-27", min: "40000", max: "90000" });
     const f = parseFilters(old, ["Limón"], { today: T });
     expect(f).toMatchObject({ arrival: "2026-11-23", departure: "2026-11-27", min: 40000, max: 90000 });
-    expect(toSearchParams(f, { prov: "Limón" }).toString()).toBe("llegada=2026-11-23&salida=2026-11-27&min=40000&max=90000");
+    expect(toSearchParams(f).toString()).toBe("llegada=2026-11-23&salida=2026-11-27&min=40000&max=90000");
     expect(extrasCount({ ...f, beds: 2 })).toBe(3);
   });
 });
@@ -169,7 +191,7 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
   it("la zona manda sobre la provincia y se descarta si no está entre las zonas cargadas", () => {
     const f = parseFilters({ zona: "704-cocles", prov: "Guanacaste" }, ["Guanacaste", "Limón"]);
     expect(f.zone).toBe("704-cocles");
-    expect(toSearchParams(f, { prov: "Limón" }).toString()).toBe("zona=704-cocles"); // la zona manda: sin prov
+    expect(toSearchParams(f).toString()).toBe("zona=704-cocles"); // la zona manda: sin prov
     expect(parseFilters({ zona: "704-cocles" }, ["Limón"], { zoneIds: ["704-puerto-viejo"] }).zone).toBeNull();
   });
   it("stayRange: las noches [llegada, salida), también 30 o más; sin las dos fechas, null", () => {
@@ -183,6 +205,6 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
   });
   it("mapa no entra en los filtros ni en la clave de la consulta", () => {
     expect(listingsQuery(parseFilters({ mapa: "1" }, ["Limón"])).queryKey).toEqual(listingsQuery(parseFilters({}, ["Limón"])).queryKey);
-    expect(toSearchParams(parseFilters({ mapa: "1" }, ["Limón"]), { prov: "Limón" }).has("mapa")).toBe(false);
+    expect(toSearchParams(parseFilters({ mapa: "1" }, ["Limón"])).has("mapa")).toBe(false);
   });
 });

@@ -5,7 +5,7 @@ import type { PublicListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
-import { ALL_PROVINCES, stayRange, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing, type SearchListing } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 import { caribeFirst, type ZoneWithListings } from "../../domain/zones";
@@ -24,8 +24,9 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
     async searchPublic(f: Filters) {
       const r = stayRange(f);
       // Todo lo decide search_listings: zona (5 km con el punto real), noches libres, casas cerradas fuera («Cerrar la casa
-      // hasta…» del Calendario, ticket 20; su ficha sí se abre), provincia (solo sin zona), personas, habitaciones,
-      // características y precio por noche; ordena (`sort_rank`), limita y solo entonces calcula `stay_total_crc`.
+      // hasta…» del Calendario, ticket 20; su ficha sí se abre), provincia (solo sin zona), personas, habitaciones, tipo,
+      // características y precio por noche; ordena (`sort_rank`: el Caribe primero y luego las más nuevas), limita y solo
+      // entonces calcula `stay_total_crc`.
       const { data, error } = await db
         .rpc("search_listings", {
           p_zone: f.zone ?? undefined,
@@ -34,6 +35,7 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
           p_province: f.prov !== ALL_PROVINCES && !f.zone ? f.prov : undefined,
           p_people: f.ppl || undefined,
           p_bedrooms: f.beds || undefined,
+          p_kinds: f.kind ? [...KINDS_OF_FILTER[f.kind]] : undefined,
           p_features: f.features.length ? f.features : undefined,
           p_min: f.min || undefined,
           p_max: f.max || undefined,

@@ -111,8 +111,11 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
         nicoya = await h.seed({ status: "active", draft: { province: "Guanacaste", canton: "Nicoya", zone: "Sámara", zoneSource: "other", zoneId: null, lat: 9.88, lng: -85.53, nightlyPriceCrc: 60000 } });
       }, 60_000);
 
-      it("más recientes primero", async () => {
-        expect(await ids(filters())).toEqual([nicoya.publicId, grande.publicId, mensual.publicId, cahuita.publicId]);
+      it("el Caribe primero: las de Limón y, dentro de cada grupo, las más recientes (ticket 06)", async () => {
+        // nicoya (Guanacaste) es la más reciente, pero va después de las tres de Limón.
+        expect(await ids(filters())).toEqual([grande.publicId, mensual.publicId, cahuita.publicId, nicoya.publicId]);
+        // Sin provincia en la URL también es todo el país.
+        expect(await ids(parseFilters({}, PROVINCES))).toEqual([grande.publicId, mensual.publicId, cahuita.publicId, nicoya.publicId]);
       });
 
       it("provincia", async () => {
@@ -142,8 +145,8 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
       });
 
       it("precio por noche: mínimo y máximo", async () => {
-        expect(await ids(filters({ min: "50000" }))).toEqual([nicoya.publicId, grande.publicId]);
-        expect(await ids(filters({ max: "60000" }))).toEqual([nicoya.publicId, mensual.publicId, cahuita.publicId]);
+        expect(await ids(filters({ min: "50000" }))).toEqual([grande.publicId, nicoya.publicId]);
+        expect(await ids(filters({ max: "60000" }))).toEqual([mensual.publicId, cahuita.publicId, nicoya.publicId]);
         expect(await ids(filters({ min: "45000", max: "100000" }))).toEqual([nicoya.publicId]);
       });
 
@@ -155,6 +158,31 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
         expect(await h.anon.countActive()).toBe(4);
       });
     });
+    describe("tipo de alojamiento (ticket 06)", () => {
+      let completo: Seeded;
+      let habitacion: Seeded;
+      let grande: Seeded;
+
+      beforeAll(async () => {
+        h = await makeHarness();
+        await h.reset();
+        completo = await h.seed({ status: "active", draft: { kind: "completo" } });
+        habitacion = await h.seed({ status: "active", draft: { kind: "habitacion", bedrooms: 1, bathrooms: 1, bathroomShared: true } });
+        grande = await h.seed({ status: "active", draft: { kind: "completo", bedrooms: 3, capacity: 6 } });
+      }, 60_000);
+
+      it("«completo» deja fuera las habitaciones y «habitacion» solo trae habitaciones", async () => {
+        expect(await ids(filters({ tipo: "completo" }))).toEqual([grande.publicId, completo.publicId]);
+        expect(await ids(filters({ tipo: "habitacion" }))).toEqual([habitacion.publicId]);
+        expect(await ids(filters())).toEqual([grande.publicId, habitacion.publicId, completo.publicId]);
+      });
+
+      it("se combina con los demás filtros", async () => {
+        expect(await ids(filters({ tipo: "completo", beds: "3" }))).toEqual([grande.publicId]);
+        expect(await ids(filters({ tipo: "habitacion", beds: "2" }))).toEqual([]);
+      });
+    });
+
     describe("total orientativo de la estancia (ronda 2 nov, ticket 07)", () => {
       const today = costaRicaToday(Date.now());
       const day = (n: number) => addDays(today, n);

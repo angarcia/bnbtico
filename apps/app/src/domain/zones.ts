@@ -25,6 +25,8 @@ export interface NearZone { id: string; name: string; distanceM: number }
 export interface Zone { id: string; name: string; cantonCode: string; lat: number; lng: number }
 /** Una zona con su cantón, su provincia y las casas que tiene (`zones_with_listings`, para el buscador de Explorar). */
 export interface ZoneWithListings { id: string; name: string; cantonCode: string; canton: string; province: string; lat: number; lng: number; listings: number }
+/** La provincia del Caribe tal como se guarda en la casa: Explorar sin zona la pone primero (search_listings; ticket 06). */
+export const CARIBE_PROVINCE = "Limón";
 /** Caribe (código de cantón 7xx, Limón) primero; el resto del orden se respeta. */
 export const caribeFirst = <T extends Pick<Zone, "cantonCode">>(zones: readonly T[]): T[] =>
   [...zones].sort((a, b) => Number(!a.cantonCode.startsWith("7")) - Number(!b.cantonCode.startsWith("7")));

@@ -14,7 +14,7 @@ let since: string;
 test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
-  // Sin reset: la prueba solo cuenta con su casa (en Limón, la zona por defecto) y con filtros que nada cumple (máximo ₡1).
+  // Sin reset: la prueba solo cuenta con su casa (en Limón) y con filtros que nada cumple (máximo ₡1).
   const h = await postgrestHarness();
   await h.seed({ status: "active", draft: { title: TITLE, zone: "Cocles", zoneSource: "other", zoneId: null, capacity: 2, nightlyPriceCrc: 45000 } });
 });
@@ -60,7 +60,8 @@ test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsque
   await page.screenshot({ path: `${SHOTS}/vacio-360.png` });
 
   // `mensual=1` de un enlace viejo ya no cuenta (fin del modo mensual): el mensaje lleva el precio por noche y no «Busca alquiler mensual».
-  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nPersonas: 12.\nNecesito: Piscina.\nPrecio por noche: hasta ₡1.\nFechas: ");
+  // Sin zona ni provincia (todo el país, ticket 06) el mensaje no lleva «Zona:».
+  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nPersonas: 12.\nNecesito: Piscina.\nPrecio por noche: hasta ₡1.\nFechas: ");
   // La baliza: solo nombre, página y ruta (sin la búsqueda ni el mensaje).
   await expect.poll(helpEvents).toEqual(["search_help_tap - explorar /explorar"]);
 
@@ -70,7 +71,7 @@ test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsque
   await expect(page.getByRole("heading", { name: "No hay casas con esos filtros" })).toHaveCount(0);
 });
 
-test("con resultados: la nota al final de la rejilla, con la zona en el mensaje", async ({ page }) => {
+test("con resultados: la nota al final de la rejilla; sin zona (todo el país) el mensaje no lleva «Zona:»", async ({ page }) => {
   await page.goto("/explorar");
   const card = page.getByRole("link", { name: new RegExp(TITLE) });
   await expect(card).toBeVisible();
@@ -86,7 +87,7 @@ test("con resultados: la nota al final de la rejilla, con la zona en el mensaje"
   await note.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/resultados-360.png` });
 
-  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nFechas: ");
+  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nFechas: ");
   await expect.poll(helpEvents).toEqual(["search_help_tap - explorar /explorar"]);
   // Sin filtros puestos, la rejilla no ofrece «Quitar filtros».
   await expect(page.getByRole("button", { name: "Quitar filtros" })).toHaveCount(0);

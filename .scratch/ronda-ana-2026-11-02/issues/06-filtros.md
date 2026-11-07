@@ -1,6 +1,6 @@
 # 06 · Filtros: baños, tipo; todo el país con el Caribe primero
 
-Status: ready-for-agent
+Status: done (rehecho el 2026-11-06 sin el punto 1, baños; ver docs/decisiones.md)
 
 Todo el filtrado vive en `apps/app/src/domain/filters.ts` (esquema zod de la URL, `effectiveFilters`, `extrasCount`, `toSearchParams`, `normalizeSearch`) y se aplica igual en `data/postgrest/listings.ts:24-39` y `data/fake/listings.ts:77-98` (suite de contrato). Pantalla: `client/screens/filtros.tsx`.
 

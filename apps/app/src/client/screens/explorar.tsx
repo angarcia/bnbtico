@@ -1,5 +1,5 @@
 // Explorar (pantalla 01, maqueta v2; tarjetas flotantes, tanda 1): el mapa arriba a todo el ancho y, flotando encima como
-// tarjetas, la píldora de búsqueda, los filtros y «₡ | $», que se esconden al bajar y vuelven al subir. Limón por defecto,
+// tarjetas, la píldora de búsqueda, los filtros y «₡ | $», que se esconden al bajar y vuelven al subir. Todo el país con el Caribe primero,
 // filtros en la URL, una casa por fila; con llegada y salida, cada tarjeta y su marcador dicen el total orientativo de esas noches.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
@@ -21,7 +21,6 @@ import { SearchHelp } from "../search-help";
 import { useListingsCount } from "../own-listings-query";
 import { SUPPORT_NUMBERS } from "../support-numbers";
 import { isDatesError, listingsQuery, provincesQuery, zonesQuery } from "../queries";
-import { DEFAULT_PROVINCE } from "../../domain/listing";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
@@ -126,7 +125,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   }, [mapOpen]);
   const currency = useCurrency();
   const { data: listings, isError, error } = useQuery(listingsQuery(f));
-  const reveal = useReveal(!listings, searchToString(searchFor(f, provinces)));
+  const reveal = useReveal(!listings, searchToString(searchFor(f)));
   // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
   const stay = stayRange(f);
   const dates = searchDatesValue(stay);
@@ -137,11 +136,11 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
     if (dates) store.setItem(DATES_FILTER_KEY, dates);
     else store.removeItem(DATES_FILTER_KEY);
   }, [f.ppl, dates]);
-  const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next, provinces), replace: true });
+  const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next), replace: true });
   const extras = extrasCount(f);
   // Con llegada y salida, las tarjetas y el mapa enseñan el total orientativo de esas noches (lo calcula la búsqueda).
   const nights = stay ? nightsBetween(stay.from, stay.to) : 0;
-  const linkSearch = searchFor(f, provinces);
+  const linkSearch = searchFor(f);
   // Abrir el mapa es una entrada del historial (Atrás lo cierra); la lista no se mueve debajo.
   const openMap = (publicId: string | null) => {
     setSelected(publicId);
@@ -228,13 +227,14 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
 }
 
 /** En frío, la búsqueda no espera a las provincias (auditoría de viajes 2026-11-05): sale a la vez, con la provincia de la
- *  URL o Limón, y `Results` la encuentra en la caché al llegar ellas. Si Limón no tuviera casas, solo sobraría esta petición.
+ *  URL o todo el país, y `Results` la encuentra en la caché al llegar ellas. Si esa provincia no tuviera casas, solo
+ *  sobraría esta petición.
  *  Con una zona en la URL se espera, porque la zona también se valida contra su lista. */
 function usePrefetchSearch(search: ExploreSearch, waiting: boolean) {
   const client = useQueryClient();
   const guess =
     waiting && !search.zona
-      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [DEFAULT_PROVINCE, search.prov] : [DEFAULT_PROVINCE], { today: costaRicaToday(Date.now()) })
+      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [search.prov] : [], { today: costaRicaToday(Date.now()) })
       : null;
   const key = guess ? JSON.stringify(listingsQuery(guess).queryKey) : "";
   useEffect(() => {
@@ -255,7 +255,7 @@ export function ExplorarScreen() {
   usePrefetchSearch(search, !provinces && !isError);
   return (
     <>
-      <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f, provinces) : search} />
+      <ExploreHeader filters={f} zoneName={zoneName} search={provinces ? searchFor(f) : search} />
       {isError ? (
         <>
           <MapPlaceholder />

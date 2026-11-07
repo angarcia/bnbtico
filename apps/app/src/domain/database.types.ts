@@ -1002,7 +1002,7 @@ isOneToOne: true
 { Args: { "p_owner": string,"p_provider": string,"p_ref": string }; Returns: undefined
                            },
 "search_listings":
-{ Args: { "p_bedrooms"?: number,"p_features"?: (Database["public"]['Enums']["feature"])[],"p_from"?: string,"p_limit"?: number,"p_max"?: number,"p_min"?: number,"p_people"?: number,"p_province"?: string,"p_to"?: string,"p_zone"?: string }; Returns: {
+{ Args: { "p_bedrooms"?: number,"p_features"?: (Database["public"]['Enums']["feature"])[],"p_from"?: string,"p_kinds"?: (Database["public"]['Enums']["listing_kind"])[],"p_limit"?: number,"p_max"?: number,"p_min"?: number,"p_people"?: number,"p_province"?: string,"p_to"?: string,"p_zone"?: string }; Returns: {
               "accepts_monthly": boolean,"accepts_nightly": boolean,"available": boolean,"bathroom_shared": boolean,"bathrooms": number,"bedrooms": number,"canton": string,"capacity": number,"created_at": string,"description": string,"features": (Database["public"]['Enums']["feature"])[],"id": string,"kind": Database["public"]['Enums']["listing_kind"],"lat": number,"lng": number,"min_months": number,"min_nights": number,"monthly_mode": string,"monthly_price_crc": number,"nightly_price_crc": number,"owner_name": string,"owner_whatsapp_verified": boolean,"parking_paid": boolean,"photos": Json,"province": string,"public_id": string,"reopen_at": string,"sort_rank": number,"stay_total_crc": number,"title": string,"updated_at": string,"zone": string
             }[]
                            },

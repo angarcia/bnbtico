@@ -61,8 +61,8 @@ describe("migración total_orientativo_en_busqueda", () => {
     expect(data!.find((r) => r.public_id === house.limon1.publicId)?.stay_total_crc).toBe(4 * 40000);
   });
 
-  it("sort_rank numera el orden (más nuevas primero) y PostgREST ordena por él cuando se le pide", async () => {
-    const newestFirst = [house.busy, house.limon3, house.guanacaste, house.limon2, house.limon1].map((x) => x.publicId);
+  it("sort_rank numera el orden (el Caribe primero y luego las más nuevas, ticket 06) y PostgREST ordena por él cuando se le pide", async () => {
+    const newestFirst = [house.busy, house.limon3, house.limon2, house.limon1, house.guanacaste].map((x) => x.publicId);
     const { data, error } = await anonClient().rpc("search_listings", {}).select("public_id, sort_rank").order("sort_rank");
     expect(error).toBeNull();
     expect(data!.map((r) => r.public_id)).toEqual(newestFirst);
@@ -80,7 +80,7 @@ describe("migración total_orientativo_en_busqueda", () => {
     };
     expect(await ids({ p_province: "Limón", p_limit: 2 })).toEqual([house.busy.publicId, house.limon3.publicId]);
     expect(await ids({ p_people: 6 })).toEqual([house.limon2.publicId]);
-    expect(await ids({ p_min: 50000, p_max: 70000 })).toEqual([house.limon3.publicId, house.guanacaste.publicId, house.limon2.publicId]);
+    expect(await ids({ p_min: 50000, p_max: 70000 })).toEqual([house.limon3.publicId, house.limon2.publicId, house.guanacaste.publicId]);
     expect(await ids({ p_province: "Limón", p_from: addDays(T, 10), p_to: addDays(T, 14), p_limit: 2 })).toEqual([house.limon3.publicId, house.limon2.publicId]);
   });
 

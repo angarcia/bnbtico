@@ -163,10 +163,10 @@ test("Filtros: Zona y Fechas abren su sección; con una sola provincia no sale e
   await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=cuando/);
   await expect(page.getByRole("button", { name: /¿Cuándo\?/ })).toHaveAttribute("aria-expanded", "true");
   await page.goBack();
-  // Revisión UX 2026-10-29 (A7): con casas solo en Limón, la zona sale una vez, en «Su búsqueda»; sin zona, «Todo Limón».
+  // La zona sale una vez, en «Su búsqueda» (A7); sin zona es todo el país (ticket 06): «Todas las provincias».
   await expect(page.getByRole("group", { name: "Zona", exact: true })).toHaveCount(0);
   await page.goto("/explorar/filtros");
-  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todo Limón$/);
+  await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todas las provincias$/);
 });
 
 test("Filtros: Personas y el mínimo de Habitaciones se ajustan en la misma pantalla", async ({ page }) => {

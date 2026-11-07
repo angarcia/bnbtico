@@ -217,7 +217,7 @@ export function BuscarScreen() {
   const submit = async () => {
     trackSearch({ zona: !!draft.zone, fechas: hasDates, personas: draft.ppl > 0 });
     const provinces = await queryClient.ensureQueryData(provincesQuery).catch(() => [] as string[]);
-    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces), ...draft }, provinces), replace: true, resetScroll: true });
+    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces), ...draft }), replace: true, resetScroll: true });
     window.scrollTo(0, 0);
   };
 

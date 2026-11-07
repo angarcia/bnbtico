@@ -1,3 +1,8 @@
+## 2026-11-06 · Todo el país con el Caribe primero y tipo de alojamiento en Filtros (ronda de Ana, ticket 06 rehecho)
+
+- **Decisión (Daniel, 2026-11-06):** del ticket 06 entran el tipo de alojamiento, todo el país sin zona, el Caribe primero, fuera las pastillas de provincia y la lista y el mapa con las mismas casas. **No entra el filtro de baños.** Sustituye «Caribe por defecto» (Explorar arrancaba en Limón).
+- **Cómo:** `search_listings` (migración `20261107042744_caribe_primero_y_tipo`) ordena con las de Limón primero y, dentro de cada grupo, las más nuevas, antes de aplicar el límite de 60, y acepta `p_kinds`. «Alojamiento completo» = `completo`, `casa` y `apartamento`. `?tipo=` cuenta en el contador de Filtros. Un `?prov=` de enlaces viejos sigue filtrando. El mapa no cambia: ya se ajusta a las casas de la lista. Sin estilos nuevos: el tipo usa las pastillas que ya existían, sobre el rediseño de Filtros de Ana del mismo día.
+
 ## 2026-11-06 · La base local se pone al día sola con las migraciones
 
 - **Problema:** Supabase local solo aplica las migraciones al crear la base. Tras un `git pull` con `save_edit_full`, la base de Ana se quedó con el esquema viejo y sus e2e fallaron. `preparar-entorno-local.sh` ocultaba el error de `migration up`, que además se niega a aplicar una migración con fecha anterior a la última aplicada, que es lo que pasa al juntar ramas.

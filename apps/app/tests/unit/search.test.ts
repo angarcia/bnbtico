@@ -30,9 +30,11 @@ describe("searchSummary", () => {
 
 describe("resultsText", () => {
   it("provincia, zona y fechas", () => {
-    expect(resultsText(12, base)).toEqual({ count: "12 casas", rest: " en Limón" });
+    // Sin zona ni provincia: todo el país, «N casas» sin lugar (ticket 06); un ?prov= viejo sí lo dice.
+    expect(resultsText(12, base)).toEqual({ count: "12 casas", rest: "" });
+    expect(resultsText(12, { ...base, prov: "Limón" })).toEqual({ count: "12 casas", rest: " en Limón" });
     expect(resultsText(4, n, "Cocles")).toEqual({ count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" });
-    expect(resultsText(1, { ...base, arrival: "2026-11-23", departure: "2026-11-27" })).toEqual({ count: "1 casa", rest: " en Limón · 23–27 nov" });
+    expect(resultsText(1, { ...base, arrival: "2026-11-23", departure: "2026-11-27" })).toEqual({ count: "1 casa", rest: " · 23–27 nov" });
     expect(resultsText(9, { ...base, prov: "Todas" })).toEqual({ count: "9 casas", rest: "" });
   });
 });
