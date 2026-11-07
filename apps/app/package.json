@@ -4,20 +4,21 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev-vars.mjs && vite",
+    "dev": "node scripts/base-local.mjs && node scripts/dev-vars.mjs && vite",
     "build": "vitest run --project unit tests/unit/architecture.test.ts && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.sw.json",
     "test": "vitest run --project unit",
     "test:watch": "vitest --project unit",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/base-local.mjs && playwright test",
     "lighthouse": "playwright test -c playwright.lighthouse.config.ts",
     "size": "size-limit",
     "deploy": "wrangler deploy",
-    "test:db": "vitest run --project db",
+    "test:db": "node scripts/base-local.mjs && vitest run --project db",
     "db:types": "cd ../.. && supabase gen types typescript --local --schema public > apps/app/src/domain/database.types.ts",
     "dev:vars": "node scripts/dev-vars.mjs",
-    "datos:prueba": "node scripts/casas-de-prueba.mjs"
+    "datos:prueba": "node scripts/base-local.mjs && node scripts/casas-de-prueba.mjs",
+    "db:al-dia": "node scripts/base-local.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
