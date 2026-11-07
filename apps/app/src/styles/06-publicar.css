@@ -17,12 +17,13 @@
 .publish-form.publish-review{gap:8px}
 .publish-review .review-row{min-height:44px}
 .publish-form .counters{background:transparent;border:0;border-radius:0;box-shadow:none}
-.publish-form .counter{min-height:78px;padding:12px 0;gap:8px}
-.publish-form .counter-label{display:flex;align-items:center;gap:12px;min-width:0;font-weight:400;overflow-wrap:anywhere}
-.publish-form .counter-label svg{flex:none;color:var(--muted)}
-.publish-form .counter .ctl{flex:none;gap:0}
-.publish-form .counter .ctl button{width:44px;height:44px;flex:none}
-.publish-form .counter .ctl b{width:28px}
+:is(.publish-form,.filter-counters) .counter{padding-inline:0;gap:8px}
+.publish-form .counter{min-height:78px;padding-block:12px}
+:is(.publish-form,.filter-counters) .counter-label{display:flex;align-items:center;gap:12px;min-width:0;font-weight:400;overflow-wrap:anywhere}
+:is(.publish-form,.filter-counters) .counter-label svg{flex:none;color:var(--muted)}
+:is(.publish-form,.filter-counters) .counter .ctl{flex:none;gap:0}
+:is(.publish-form,.filter-counters) .counter .ctl button{width:44px;height:44px;flex:none}
+:is(.publish-form,.filter-counters) .counter .ctl b{width:28px}
 .grow-col textarea{flex:1}
 /* Con el teclado, el alto que le queda hasta la barra o el teclado (publish/fill-height.ts). */
 .grow-col textarea:focus{flex:1 0 var(--fill,0%)}

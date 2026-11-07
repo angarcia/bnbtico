@@ -16,6 +16,7 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { reportError } from "../../shared/beacon";
+import { CounterRow } from "../../shared/counter-row";
 import { I } from "../../shared/icons";
 import { isChunkLoadError } from "../chunk-error";
 import { useEditor } from "../editor-port";
@@ -78,23 +79,20 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
 }
 
 /** Contador −/+ con el valor en un campo oculto. */
-export function Counter({ name, label, value, min, max = 30, icon }: { name: string; label: string; value: number | null; min: number; max?: number; icon?: ReactNode }) {
+function Counter({ name, label, value, min, max = 30, icon }: { name: string; label: string; value: number | null; min: number; max?: number; icon?: ReactNode }) {
   const [n, setN] = useState<number | null>(value);
   const current = n ?? min;
   return (
-    <div className="counter">
-      <span className="strong counter-label">{icon}{label}</span>
-      <div className="ctl">
-        <button type="button" className="minus" aria-label={`Menos ${label.toLowerCase()}`} onClick={() => setN(Math.max(min, current - 1))} disabled={current <= min}>
-          −
-        </button>
-        <b aria-live="polite">{n === null ? "–" : n}</b>
-        <button type="button" className="plus" aria-label={`Más ${label.toLowerCase()}`} onClick={() => setN(n === null ? Math.max(min, 1) : Math.min(max, current + 1))}>
-          +
-        </button>
-      </div>
+    <>
       <input type="hidden" name={name} value={n === null ? "" : n} />
-    </div>
+      <CounterRow
+        label={label}
+        icon={icon}
+        value={n ?? "–"}
+        decrease={current > min ? () => setN(current - 1) : undefined}
+        increase={() => setN(n === null ? Math.max(min, 1) : Math.min(max, current + 1))}
+      />
+    </>
   );
 }
 

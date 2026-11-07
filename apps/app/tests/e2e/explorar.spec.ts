@@ -207,7 +207,7 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await page.getByRole("button", { name: "Piscina", exact: true }).click();
   await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
   await page.getByRole("button", { name: "Piscina", exact: true }).click();
-  // Las personas se eligen en la búsqueda (tarea 8); aquí llegan en la URL.
+  // El número de personas también se recupera de un enlace directo.
   await page.goto("/explorar/filtros?prov=Todas&ppl=4");
   await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
   await page.goto("/explorar/filtros?prov=Todas");

@@ -16,7 +16,7 @@ test.describe.configure({ mode: "serial" });
 test.beforeAll(async () => {
   const h = await postgrestHarness();
   await h.reset();
-  await h.seed({ status: "active", draft: { ...cocles, title: "Casa Coco" } });
+  await h.seed({ status: "active", draft: { ...cocles, title: "Casa Coco", bedrooms: 3 } });
   const ocupada = await h.seed({ status: "active", draft: { ...cocles, title: "Casa Ocupada" } });
   await h.putDay(ocupada.id, busy(day(22)));
   await h.seed({ status: "active", draft: { title: "Cabina Cahuita" } });
@@ -155,14 +155,13 @@ test("límites: hoy + 365 solo como salida (también con un enlace viejo del men
   await expect(page.getByRole("button", { name: "Una persona más" })).toBeDisabled();
 });
 
-test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; con una sola provincia no sale el bloque de provincias", async ({ page }) => {
+test("Filtros: Zona y Fechas abren su sección; con una sola provincia no sale el bloque de provincias", async ({ page }) => {
   await page.goto("/explorar/filtros?zona=704-cocles&ppl=4");
   const mine = page.getByRole("group", { name: "Su búsqueda" });
-  await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/, /^Personas\s*4 personas$/]);
-  await expect(page.getByLabel("Personas", { exact: true })).toHaveCount(0);
-  await mine.getByRole("link", { name: /^Personas/ }).click();
-  await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=quienes/);
-  await expect(page.getByRole("button", { name: /¿Quiénes\?/ })).toHaveAttribute("aria-expanded", "true");
+  await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/]);
+  await mine.getByRole("link", { name: /^Fechas/ }).click();
+  await expect(page).toHaveURL(/\/explorar\/buscar\?.*abrir=cuando/);
+  await expect(page.getByRole("button", { name: /¿Cuándo\?/ })).toHaveAttribute("aria-expanded", "true");
   await page.goBack();
   // Revisión UX 2026-10-29 (A7): con casas solo en Limón, la zona sale una vez, en «Su búsqueda»; sin zona, «Todo Limón».
   await expect(page.getByRole("group", { name: "Zona", exact: true })).toHaveCount(0);
@@ -170,11 +169,60 @@ test("Filtros: «Su búsqueda» abre la búsqueda en su tarjeta; con una sola pr
   await expect(mine.getByRole("link").first()).toHaveText(/^Zona\s*Todo Limón$/);
 });
 
+test("Filtros: Personas y el mínimo de Habitaciones se ajustan en la misma pantalla", async ({ page }) => {
+  await page.goto("/explorar/filtros?ppl=3");
+  const morePeople = page.getByRole("button", { name: "Más personas" });
+  const moreRooms = page.getByRole("button", { name: "Más habitaciones" });
+  const fewerRooms = page.getByRole("button", { name: "Menos habitaciones" });
+  await expect(fewerRooms).toBeDisabled();
+  await morePeople.click();
+  await moreRooms.click();
+  await moreRooms.click();
+  await expect(page.getByText("2+", { exact: true })).toBeVisible();
+  // Casa Coco tiene 3 habitaciones y sigue entrando con mínimo 2.
+  const apply = page.getByRole("button", { name: /^Ver/ });
+  await expect(apply).toHaveText("Ver 1 casa");
+  await moreRooms.click();
+  await moreRooms.click();
+  await expect(moreRooms).toBeDisabled();
+  await expect(apply).toHaveText("Ver 0 casas");
+  await fewerRooms.click();
+  await fewerRooms.click();
+  await expect(apply).toHaveText("Ver 1 casa");
+  await apply.click();
+  await expect(page).toHaveURL(/\/explorar\?ppl=4&beds=2$/);
+  await expect(house(page, "Casa Coco")).toBeVisible();
+});
+
 test("al volver a abrir «¿Dónde?» con una zona de dos palabras, la zona sigue en la lista", async ({ page }) => {
   await page.goto("/explorar/buscar?zona=704-puerto-viejo");
   await expect(page.getByRole("combobox", { name: "Busque una zona" })).toHaveValue("Puerto Viejo");
   await expect(page.getByRole("option", { name: /^Puerto Viejo/ })).toBeVisible();
+  await expect(page.getByRole("option", { name: /^Puerto Viejo/ })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("Todavía no hay casas en esa zona.")).toHaveCount(0);
+});
+
+test("las flechas mantienen visible la zona activa en una lista larga", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  const zones = Array.from({ length: 60 }, (_, i) => {
+    const number = String(i + 1).padStart(2, "0");
+    return { id: `704-zona-${number}`, name: `Zona ${number}`, canton_code: "704", canton: "Talamanca", province: "Limón", lat: 9.65, lng: -82.75, listings: 1 };
+  });
+  await page.route("**/rest/v1/zones_with_listings?**", (request) => request.fulfill({ json: zones }));
+  await page.goto("/explorar/buscar");
+  const input = page.getByRole("combobox", { name: "Busque una zona" });
+  const last = page.getByRole("option", { name: /^Zona 60/ });
+  await expect(page.getByRole("option")).toHaveCount(60);
+  await expect(page.getByRole("button", { name: "Buscar", exact: true })).toBeInViewport();
+  await expect(last).not.toBeInViewport();
+  await input.press("ArrowUp");
+  await expect(input).toBeFocused();
+  await expect(input).toHaveAttribute("aria-activedescendant", (await last.getAttribute("id"))!);
+  await expect(last).toBeInViewport({ ratio: 1 });
+  await input.fill("Zona 59");
+  await expect(page.getByRole("option")).toHaveCount(1);
+  await input.press("Enter");
+  await expect(page.getByRole("button", { name: "¿Dónde? Zona 59" })).toHaveAttribute("aria-expanded", "false");
 });
 
 test("una zona que ya no está en la lista se muestra como «Añadir zona»", async ({ page }) => {

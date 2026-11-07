@@ -1,3 +1,9 @@
+## 2026-11-06 · Refina la búsqueda de Explorar sin tarjetas blancas (Ana)
+
+Ana toma como referencia el selector de Consultas y Calendario y pide quitar las tarjetas blancas, especialmente en el desplegable. Se mantiene la búsqueda a pantalla completa: sección abierta sobre el fondo crema, filas cerradas con borde y chevrón, y sugerencias con el nombre completo y un check dorado para la zona elegida. La lista mantiene visible la opción al recorrerla con el teclado. Las reglas de zona, fechas, personas y filtros no cambian.
+
+En Filtros, Zona y Fechas siguen abriendo la búsqueda. Personas y Habitaciones se ajustan directamente con los contadores de Publicar, sobre el fondo crema y separados por un divisor. Habitaciones conserva el criterio de mínimo y lo expresa como «1+» a «4+».
+
 ## 2026-11-06 · Marca como vistas las consultas visibles (Ana)
 
 Solo se marca como vista una consulta cuyo nombre de cliente se mantiene visible un momento en Consultas, también desde el acceso de Mis casas y dentro del filtro elegido. Las que quedan fuera de pantalla no cambian. Bajan «Nueva» y el contador sin reordenar las tarjetas durante la visita; tocar «Abrir WhatsApp» antes de verla también la marca. Se reutiliza el registro existente; no se infiere nada de lo ocurrido dentro de WhatsApp.

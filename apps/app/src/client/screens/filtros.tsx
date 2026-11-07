@@ -1,9 +1,10 @@
-// Filtros (pantalla 02): Su búsqueda (zona, fechas, personas: abren la búsqueda) → Zona (solo con varias provincias) → Para quiénes → Qué necesitan → Precio; «Ver N casas» cuenta en vivo con la misma consulta.
+// Filtros (pantalla 02): Zona y Fechas abren la búsqueda; Personas y Habitaciones se ajustan aquí. «Ver N casas» cuenta en vivo.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   BEDS_OPTIONS,
+  SEARCH_MAX_PEOPLE,
   colonesToPriceInput,
   parseFilters,
   priceInputToColones,
@@ -14,7 +15,7 @@ import {
   type SearchKey,
 } from "../../domain/filters";
 import { costaRicaToday } from "../../domain/dates";
-import { peopleLabel, stayLabel } from "../../domain/search";
+import { stayLabel } from "../../domain/search";
 import { FEATURES } from "../../domain/listing";
 import {
   FX_INITIAL,
@@ -23,6 +24,7 @@ import {
   type FxRate,
 } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
+import { CounterRow } from "../../shared/counter-row";
 import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
 import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
@@ -82,12 +84,9 @@ function FiltrosForm({
       label: "Fechas",
       value: stayLabel(f)?.replace(/^desde/, "Desde") ?? "Sin fechas",
     },
-    {
-      abrir: "quienes",
-      label: "Personas",
-      value: peopleLabel(f.ppl) ?? "Sin indicar",
-    },
   ] as const;
+  const setCount = (key: "ppl" | "beds", n: number) => set(key, n ? String(n) : undefined);
+  const maxBeds = BEDS_OPTIONS[BEDS_OPTIONS.length - 1]!;
   const apply = () =>
     navigate({
       to: "/explorar",
@@ -167,24 +166,26 @@ function FiltrosForm({
             </span>
           </section>
         ) : null}
-        <section className="stack">
-          <span className="eyebrow">Para quiénes</span>
-          <div className="grid-2">
-            <div className="field">
-              <label htmlFor="f-beds">Habitaciones</label>
-              <select
-                id="f-beds"
-                value={f.beds}
-                onChange={(e) => set("beds", e.target.value)}
-              >
-                {BEDS_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n ? `${n}+` : "Cualquiera"}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+        <section className="filter-counters" role="group" aria-label="Personas y habitaciones">
+          <CounterRow
+            label="Personas"
+            icon={<I.users size={22} />}
+            value={f.ppl || <span className="muted">–</span>}
+            decrease={f.ppl > 0 ? () => setCount("ppl", f.ppl - 1) : undefined}
+            increase={f.ppl < SEARCH_MAX_PEOPLE ? () => setCount("ppl", f.ppl + 1) : undefined}
+          />
+          <CounterRow
+            label="Habitaciones"
+            icon={<I.bed size={22} />}
+            value={
+              <>
+                <span className="sr-only">{f.beds ? `${f.beds} o más` : "Cualquier cantidad"}</span>
+                <span aria-hidden="true" className={f.beds ? undefined : "muted"}>{f.beds ? `${f.beds}+` : "–"}</span>
+              </>
+            }
+            decrease={f.beds > 0 ? () => setCount("beds", f.beds - 1) : undefined}
+            increase={f.beds < maxBeds ? () => setCount("beds", f.beds + 1) : undefined}
+          />
         </section>
         <section className="stack">
           <span className="eyebrow">Qué necesitan</span>

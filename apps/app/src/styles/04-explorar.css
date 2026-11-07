@@ -70,28 +70,32 @@ html.map-open{overflow:hidden}
 .map-card .card-price{margin-top:auto}
 .map-card .heart-card{right:auto;left:64px;top:4px}
 .map-card .card-wa{right:8px;top:8px;bottom:auto}
-/* Búsqueda a pantalla completa (/explorar/buscar, pantallas v2 02–04): tarjetas plegables, una abierta a la vez. */
+/* Búsqueda a pantalla completa (/explorar/buscar): sección abierta sin fondo blanco y filas crema como el selector de casa. */
 .btn-text{min-height:44px;white-space:nowrap;padding:0 8px;color:var(--muted);font-weight:var(--w-medium);text-decoration:underline;text-underline-offset:3px}
 .badge-sel{background:var(--chosen);color:var(--primary-ink)}
 .search-screen{display:flex;flex-direction:column;gap:10px}
 .search-close{align-self:flex-start;background:transparent;color:var(--fg)}
 .search-closed .search-card-head h2{flex:1;min-width:0}
-.search-fold{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;padding:0 20px;border-radius:var(--r-tile);background:var(--surface);box-shadow:var(--shadow);font-family:var(--body);font-size:17px;font-weight:400;letter-spacing:normal;line-height:1.45;text-align:left}
-.search-fold b{font-weight:var(--w-medium)}
+.search-fold{display:grid;grid-template-columns:auto minmax(0,1fr) 18px;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;font-weight:400;line-height:1.35;text-align:left}
+.search-fold b{min-width:0;font-weight:var(--w-medium);text-align:right;overflow-wrap:anywhere}
+.search-fold svg{color:var(--primary)}
 .search-card-body{display:flex;flex-direction:column;gap:14px}
 .search-fold span{color:var(--muted);font-size:16px;font-weight:var(--w-medium)}
-.search-fold b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.search-card{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:var(--r-sheet);background:var(--surface);box-shadow:0 2px 0 var(--line),0 16px 36px -22px rgba(28,43,42,.45)}
+.search-card{display:flex;flex-direction:column;gap:10px;padding:6px 0 12px}
 .search-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .search-card-title{min-height:44px;font-size:26px;font-weight:var(--w-strong);text-align:left}
-.zone-input{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 6px 0 16px;border:2px solid var(--primary);border-radius:var(--r-input);background:var(--surface)}
+.zone-input{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 6px 0 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg)}
+.zone-input:focus-within{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
 .zone-input svg{flex:none;color:var(--primary)}
 .zone-input input:not([type=checkbox]):not([type=file]):not([type=radio]){flex:1;min-width:0;min-height:48px;padding:0;border:0;border-radius:0;background:transparent;font-weight:var(--w-medium);outline:none}
-.zone-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;max-height:300px;overflow-y:auto}
-.zone-option{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 6px;border-radius:10px;cursor:pointer}
+.zone-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:min(40dvh,288px);overflow-y:auto;overscroll-behavior:contain}
+.zone-list:empty{display:none}
+.zone-option{display:grid;grid-template-columns:20px minmax(0,1fr) 20px;align-items:center;gap:12px;flex:none;min-height:52px;padding:8px 12px;border-radius:8px;cursor:pointer}
 .zone-input:focus-within ~ .zone-list .zone-option.is-active,.zone-option:hover{background:var(--line-soft)}
-.zone-icon{display:flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;border-radius:10px;background:var(--surface-2)}
-.zone-text{display:flex;flex-direction:column;line-height:1.25}
+.zone-list .zone-option[aria-selected="true"]{background:var(--sun-soft);color:var(--sun-ink)}
+.zone-icon,.zone-check{display:flex;align-items:center;justify-content:center}
+.zone-text{display:flex;flex-direction:column;min-width:0;line-height:1.3;overflow-wrap:anywhere}
+.search-screen .range-weekdays,.search-screen .sticky-actions{background:var(--bg)}
 .range-scroll{max-height:min(52dvh,420px);overflow-y:auto;overscroll-behavior:contain}
 .range-weekdays,.range-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
 .range-weekdays{position:sticky;top:0;z-index:1;padding:4px 0;background:var(--surface);font-size:14px;font-weight:var(--w-medium);color:var(--muted);text-align:center}

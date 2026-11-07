@@ -84,7 +84,7 @@ function Fold({ title, value, open, onToggle, children }: { title: string; value
         <h2>
           <button ref={title_} type="button" className={open ? "search-card-title" : "search-fold"} aria-expanded={open} aria-controls={open ? id : undefined} onClick={onToggle}>
             <span>{title}</span>
-            {open ? null : <b className="num">{value}</b>}
+            {open ? null : <><b className="num">{value}</b><I.chevronDown size={18} /></>}
           </button>
         </h2>
       </div>
@@ -99,13 +99,14 @@ function Fold({ title, value, open, onToggle, children }: { title: string; value
 
 function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPick(id: string): void; onClear(): void; focusOnce?: { current: boolean } }) {
   const input = useRef<HTMLInputElement>(null);
+  const listbox = useRef<HTMLUListElement>(null);
   // Al abrir la búsqueda en «¿Dónde?», el foco va al campo (abre el teclado), sin el anillo del título (N6).
   useEffect(() => {
     if (!focusOnce?.current) return;
     focusOnce.current = false;
     input.current?.focus({ preventScroll: true });
   }, [focusOnce]);
-  const { data: zones = [] } = useQuery(zonesQuery);
+  const { data: zones = [], isPending, isError, refetch } = useQuery(zonesQuery);
   const name = zones.find((z) => z.id === zone)?.name ?? "";
   const [text, setText] = useState(name);
   // Con la caché fría (`?zona=` sin las zonas aún), el nombre llega después: se pone mientras no se haya escrito nada.
@@ -113,10 +114,24 @@ function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPi
   useEffect(() => {
     if (!typed.current && name) setText(name);
   }, [name]);
-  const [active, setActive] = useState(0);
   const list = zoneSuggestions(zones, text);
+  const [active, setActive] = useState(0);
+  const activeIndex = Math.min(active, list.length - 1);
   const listId = useId();
   const optionId = (i: number) => `${listId}-${i}`;
+  function move(step: number) {
+    if (!list.length) return;
+    const next = (activeIndex + step + list.length) % list.length;
+    setActive(next);
+    const box = listbox.current;
+    const row = box?.children[next];
+    if (!box || !row) return;
+    // Desplace solo las sugerencias, sin mover el campo ni las demás secciones.
+    const bounds = box.getBoundingClientRect();
+    const item = row.getBoundingClientRect();
+    if (item.top < bounds.top) box.scrollTop += item.top - bounds.top;
+    else if (item.bottom > bounds.bottom) box.scrollTop += item.bottom - bounds.bottom;
+  }
   return (
     <>
       <div className="zone-input">
@@ -129,7 +144,7 @@ function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPi
           aria-expanded={list.length > 0}
           aria-controls={listId}
           aria-autocomplete="list"
-          aria-activedescendant={list.length ? optionId(Math.min(active, list.length - 1)) : undefined}
+          aria-activedescendant={list.length ? optionId(activeIndex) : undefined}
           autoComplete="off"
           enterKeyHint="search"
           value={text}
@@ -137,14 +152,15 @@ function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPi
             typed.current = true;
             setText(e.target.value);
             setActive(0);
+            if (listbox.current) listbox.current.scrollTop = 0;
           }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
               e.preventDefault();
-              setActive((i) => (list.length ? (i + (e.key === "ArrowDown" ? 1 : list.length - 1)) % list.length : 0));
+              move(e.key === "ArrowDown" ? 1 : -1);
             } else if (e.key === "Enter" && list.length) {
               e.preventDefault();
-              onPick(list[Math.min(active, list.length - 1)]!.id);
+              onPick(list[activeIndex]!.id);
             }
           }}
         />
@@ -154,19 +170,22 @@ function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPi
           </button>
         ) : null}
       </div>
-      <ul className="zone-list" role="listbox" id={listId} aria-label="Zonas con casas">
+      <ul ref={listbox} className="zone-list" role="listbox" id={listId} aria-label="Zonas con casas">
         {list.map((z, i) => (
-          <li key={z.id} id={optionId(i)} role="option" aria-selected={z.id === zone} className={`zone-option${i === active ? " is-active" : ""}`} onClick={() => onPick(z.id)}>
+          <li key={z.id} id={optionId(i)} role="option" aria-selected={z.id === zone} className={`zone-option${i === activeIndex ? " is-active" : ""}`} onClick={() => onPick(z.id)}>
             <span className="zone-icon" aria-hidden="true">
               <I.pin size={20} />
             </span>
             <span className="zone-text">
               <b>{z.name}</b> <span className="small muted">{zonePlace(z)}</span>
             </span>
+            <span className="zone-check" aria-hidden="true">{z.id === zone ? <I.check size={20} /> : null}</span>
           </li>
         ))}
       </ul>
-      {text && !list.length ? <p className="small">Todavía no hay casas en esa zona.</p> : null}
+      {isPending ? <p className="small muted" role="status">Cargando zonas…</p> : isError && !zones.length ? (
+        <div className="row between gap-8"><p className="small" role="alert">No pudimos cargar las zonas.</p><button type="button" className="btn-text" onClick={() => void refetch()}>Reintentar</button></div>
+      ) : !list.length ? <p className="small" role="status">{text ? "Todavía no hay casas en esa zona." : "Todavía no hay zonas con casas."}</p> : null}
       <p className="small muted">Le mostramos las casas de la zona y las que están a 5 km o menos.</p>
     </>
   );
