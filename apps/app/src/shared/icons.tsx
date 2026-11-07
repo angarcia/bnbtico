@@ -1,3 +1,5 @@
+import type { Feature } from "../domain/listing";
+
 type P = { size?: number };
 const base = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", viewBox: "0 0 24 24", "aria-hidden": true } as const;
 const S = (p: P, d = 20) => ({ ...base, width: p.size ?? d, height: p.size ?? d });
@@ -16,12 +18,13 @@ export const I = {
     <svg viewBox="0 0 24 24" width={p.size ?? 20} height={p.size ?? 20} fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4 5.3 5.3 0 0 0 3.2.7 2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z" /></svg>
   ),
   pool: (p: P) => <svg {...S(p)}><path d="M3 17c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0" /><path d="M7 15V5a2 2 0 0 1 4 0v1M13 15V5a2 2 0 0 1 4 0v1" /></svg>,
-  pets: (p: P) => <svg {...S(p)}><circle cx="7" cy="9" r="2" /><circle cx="17" cy="9" r="2" /><circle cx="10" cy="5" r="2" /><circle cx="14" cy="5" r="2" /><path d="M12 11c-3 0-5 2.5-5 5s2 3 5 3 5-.5 5-3-2-5-5-5z" /></svg>,
+  // Lucide paw-print y baby (ISC; licencia en icons-lucide.LICENSE).
+  pets: (p: P) => <svg {...S(p)}><circle cx="11" cy="4" r="2" /><circle cx="18" cy="8" r="2" /><circle cx="20" cy="16" r="2" /><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" /></svg>,
   wifi: (p: P) => <svg {...S(p)}><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0" /><circle cx="12" cy="19.5" r="1" /></svg>,
   ac: (p: P) => <svg {...S(p)}><rect x="3" y="6" width="18" height="8" rx="2" /><path d="M7 18l-1 2M12 18v3M17 18l1 2" /></svg>,
   parking: (p: P) => <svg {...S(p)}><path d="M5 16l1.5-5h11L19 16" /><rect x="3" y="16" width="18" height="4" /><circle cx="7.5" cy="20" r="1.5" /><circle cx="16.5" cy="20" r="1.5" /></svg>,
   ev: (p: P) => <svg {...S(p)}><path d="M13 2 5 13h6l-1 9 8-12h-6z" /></svg>,
-  kids: (p: P) => <svg {...S(p)}><circle cx="12" cy="7" r="3" /><path d="M6 21v-5a6 6 0 0 1 12 0v5" /></svg>,
+  kids: (p: P) => <svg {...S(p)}><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5M15 12h.01M9 12h.01" /><path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1" /></svg>,
   beach: (p: P) => <svg {...S(p)}><circle cx="17" cy="7" r="3" /><path d="M2 19c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M3 14c3-3 6-3 9 0" /></svg>,
   bbq: (p: P) => <svg {...S(p)}><path d="M4 10h16a8 8 0 0 1-16 0z" /><path d="M8 18l-2 4M16 18l2 4M9 3c0 1.5 1 1.5 1 3M13 3c0 1.5 1 1.5 1 3" /></svg>,
   // Casa con tejado y puerta (ronda de Ana 2026-10-30: «Mis casas» llevaba el mismo dibujo que el pin del mapa).
@@ -49,3 +52,15 @@ export const I = {
 };
 
 export type IconName = keyof typeof I;
+
+export const FEATURE_ICON: Record<Feature, IconName> = {
+  pool: "pool",
+  pets: "pets",
+  wifi: "wifi",
+  ac: "ac",
+  parking: "parking",
+  ev: "ev",
+  kids_free: "kids",
+  beachfront: "beach",
+  bbq: "bbq",
+};

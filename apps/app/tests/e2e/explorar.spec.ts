@@ -229,7 +229,12 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
 
   await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("44000");
-  await page.getByRole("link", { name: "Limpiar" }).click();
+  await page.getByRole("button", { name: "Limpiar", exact: true }).click();
+  await expect(page).toHaveURL(/\/explorar\/filtros/);
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveValue("");
+  await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("");
+  await expect(page.getByRole("button", { name: "Ver 9 casas", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Ver 9 casas", exact: true }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(results(page)).toHaveText("9 casas en Limón");
 

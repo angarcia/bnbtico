@@ -110,6 +110,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   // 5 Características: tipo de parqueo al marcar Parqueo.
   await expect(page.getByLabel("Tipo de parqueo")).toHaveCount(0);
   await page.getByText("Parqueo", { exact: true }).click();
+  await expect(page.locator(".feature-choices .chip").filter({ has: page.getByRole("checkbox", { name: "Parqueo", exact: true }) }).locator(".feature-check svg")).toBeVisible();
   await expect(page.getByLabel("Tipo de parqueo")).toBeVisible();
   await expectNoScroll(page, "paso 5 con parqueo");
   await page.getByLabel("Tipo de parqueo").selectOption("free");

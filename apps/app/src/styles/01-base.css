@@ -195,6 +195,17 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .code-boxes span.filled{border-color:var(--primary)}
 .code-boxes span.active{border:2px solid var(--primary);background:var(--state-soft)}
 .sr-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.feature-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.feature-choices .chip{position:relative;min-height:44px;padding-inline:6px 26px;gap:4px;justify-content:flex-start;cursor:pointer}
+.feature-choices .chip svg{flex:none}
+.feature-choices .chip>svg{width:16px;height:16px}
+.feature-choices .chip[aria-pressed="true"]::before{content:none}
+.feature-choices .chip:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:2px}
+.feature-check{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);display:flex;width:14px;height:14px}
+.feature-check svg{stroke-width:3}
+@media(max-width:360px){
+  .feature-choices .chip{padding-inline:2px 24px;gap:2px}
+}
 /* Esqueleto de carga (app/(app)/loading.tsx): bloques arena con brillo suave. */
 .skeleton .sk{display:block;border-radius:var(--r-input);background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sk 1.2s linear infinite}
 @keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}

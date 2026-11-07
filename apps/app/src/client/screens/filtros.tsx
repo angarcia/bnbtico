@@ -17,10 +17,10 @@ import {
 } from "../../domain/filters";
 import { costaRicaToday } from "../../domain/dates";
 import { stayLabel } from "../../domain/search";
-import { FEATURES } from "../../domain/listing";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { CounterRow } from "../../shared/counter-row";
+import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
 import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
@@ -100,9 +100,16 @@ function FiltrosForm({
         </Link>
         <h1>Filtros</h1>
         <div className="right">
-          <Link to="/explorar" className="link muted">
+          <button
+            type="button"
+            className="btn btn-sm filters-clear"
+            onClick={() => {
+              setDraft({});
+              setPrices({ min: "", max: "" });
+            }}
+          >
             Limpiar
-          </Link>
+          </button>
         </div>
       </header>
       <form
@@ -180,18 +187,19 @@ function FiltrosForm({
         ) : null}
         <section className="stack">
           <span className="eyebrow">Qué necesitan</span>
-          <div className="row wrap gap-8">
-            {FEATURES.map(([key, label]) => (
+          <div className="feature-choices">
+            {FEATURE_CHOICE_ORDER.map((key) => (
               <button
                 key={key}
                 type="button"
                 className="chip"
+                aria-label={FEATURE_CHOICE_NAME[key]}
                 aria-pressed={f.features.includes(key)}
                 onClick={() =>
                   set(key, f.features.includes(key) ? undefined : "1")
                 }
               >
-                {label}
+                <FeatureChoiceContent feature={key} selected={f.features.includes(key)} />
               </button>
             ))}
           </div>

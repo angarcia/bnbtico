@@ -451,13 +451,13 @@ test("densidad: márgenes de 16 px y la barra de abajo plana, pegada al borde, c
   expect(await nav(page).evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
   await page.evaluate(() => document.documentElement.classList.remove("chrome-away"));
   await expect.poll(async () => (await nav(page).boundingBox())!.y).toBe(vp.height - 84);
-  // Un chip de Filtros encendido: el ✓ se ve pero no entra en el nombre accesible (texto alternativo vacío).
+  // El icono del filtro queda fuera del nombre accesible y el botón anuncia su estado.
   await page.goto("/explorar/filtros");
   const pool = page.getByRole("button", { name: "Piscina", exact: true });
-  await pool.click();
+  await pool.press("Space");
   await expect(pool).toHaveAttribute("aria-pressed", "true");
-  expect(await pool.evaluate((el) => getComputedStyle(el, "::before").content)).toMatch(/^"✓ "/);
-  await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(pool.locator("svg").first()).toHaveAttribute("aria-hidden", "true");
+  await expect(pool.locator(".feature-check svg")).toBeVisible();
 });
 
 // Los avisos se apoyan a 12 px sobre la barra de abajo plana (`--chrome-bottom`) y, si se esconde, a 12 px del borde.

@@ -7,7 +7,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
 import { capacityLine, describe, isNegotiable, type MonthlyPrice, type Price } from "../domain/describe";
-import { FEATURE_SHORT, MONTHLY_LABEL, type Feature, type PublicListing } from "../domain/listing";
+import { FEATURE_SHORT, MONTHLY_LABEL, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatUSD } from "../domain/money";
 import type { CalendarDay } from "../domain/calendar";
@@ -21,7 +21,7 @@ import { MonthlyLine } from "./monthly-line";
 import { firstName, initials } from "../domain/person";
 import { isOwnListing } from "./own-listings";
 import { useHydrated } from "./hydration";
-import { I, type IconName } from "./icons";
+import { FEATURE_ICON, I } from "./icons";
 import { whenIdle } from "./idle";
 import { listingDaysQuery, listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
@@ -30,7 +30,6 @@ import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 
-const FEATURE_ICON: Record<Feature, IconName> = { pool: "pool", pets: "pets", wifi: "wifi", ac: "ac", parking: "parking", ev: "ev", kids_free: "kids", beachfront: "beach", bbq: "bbq" };
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
 const LONG_TITLE = 38;

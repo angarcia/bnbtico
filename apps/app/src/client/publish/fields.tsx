@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
-import { DESCRIPTION_MAX, DESCRIPTION_MIN, FEATURES, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { DESCRIPTION_MAX, DESCRIPTION_MIN, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { charCount, monthlyError } from "../../domain/listing-rules";
 import { requiredProblems, warnings } from "../../domain/publish-rules";
 import { previewListing } from "../../domain/preview";
@@ -17,6 +17,7 @@ import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { reportError } from "../../shared/beacon";
 import { CounterRow } from "../../shared/counter-row";
+import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { I } from "../../shared/icons";
 import { isChunkLoadError } from "../chunk-error";
 import { useEditor } from "../editor-port";
@@ -102,11 +103,11 @@ export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; p
   const toggle = (f: Feature) => setOn((c) => (c.includes(f) ? c.filter((x) => x !== f) : [...c, f]));
   return (
     <div className="stack gap-8">
-      <div className="row wrap gap-8">
-        {FEATURES.map(([key, label]) => (
+      <div className="feature-choices">
+        {FEATURE_CHOICE_ORDER.map((key) => (
           <label key={key} className="chip" aria-pressed={on.includes(key)}>
-            <input type="checkbox" name="features" value={key} checked={on.includes(key)} onChange={() => toggle(key)} className="sr-input" />
-            {label}
+            <input type="checkbox" name="features" value={key} aria-label={FEATURE_CHOICE_NAME[key]} checked={on.includes(key)} onChange={() => toggle(key)} className="sr-input" />
+            <FeatureChoiceContent feature={key} selected={on.includes(key)} />
           </label>
         ))}
       </div>
