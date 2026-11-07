@@ -116,7 +116,7 @@ function FiltrosForm({
           <span className="eyebrow" id="f-mine">
             Su búsqueda
           </span>
-          <div className="filters-search">
+          <div className="filters-search filter-counters">
             {mineRows.map((r) => (
               <Link
                 key={r.abrir}
@@ -125,15 +125,32 @@ function FiltrosForm({
                 className="list-item"
               >
                 <r.icon size={22} />
-                <span className="body">
-                  {r.label}
-                  <small>{r.value}</small>
-                </span>
+                <span>{r.label}</span>
+                <small className="filters-search-value">{r.value}</small>
                 <span className="chev">
                   <I.chevron />
                 </span>
               </Link>
             ))}
+            <CounterRow
+              label="Personas"
+              icon={<I.users size={22} />}
+              value={f.ppl || <span className="muted">–</span>}
+              decrease={f.ppl > 0 ? () => setCount("ppl", f.ppl - 1) : undefined}
+              increase={f.ppl < SEARCH_MAX_PEOPLE ? () => setCount("ppl", f.ppl + 1) : undefined}
+            />
+            <CounterRow
+              label="Habitaciones"
+              icon={<I.bed size={22} />}
+              value={
+                <>
+                  <span className="sr-only">{f.beds ? `${f.beds} o más` : "Cualquier cantidad"}</span>
+                  <span aria-hidden="true" className={f.beds ? undefined : "muted"}>{f.beds ? `${f.beds}+` : "–"}</span>
+                </>
+              }
+              decrease={f.beds > 0 ? () => setCount("beds", f.beds - 1) : undefined}
+              increase={f.beds < maxBeds ? () => setCount("beds", f.beds + 1) : undefined}
+            />
           </div>
         </section>
         {/* Las provincias solo cuando hay casas en más de una; con una (hoy, Limón) la fila «Zona» ya lo dice (A7). Cuando
@@ -161,27 +178,6 @@ function FiltrosForm({
             </span>
           </section>
         ) : null}
-        <section className="filter-counters" role="group" aria-label="Personas y habitaciones">
-          <CounterRow
-            label="Personas"
-            icon={<I.users size={22} />}
-            value={f.ppl || <span className="muted">–</span>}
-            decrease={f.ppl > 0 ? () => setCount("ppl", f.ppl - 1) : undefined}
-            increase={f.ppl < SEARCH_MAX_PEOPLE ? () => setCount("ppl", f.ppl + 1) : undefined}
-          />
-          <CounterRow
-            label="Habitaciones"
-            icon={<I.bed size={22} />}
-            value={
-              <>
-                <span className="sr-only">{f.beds ? `${f.beds} o más` : "Cualquier cantidad"}</span>
-                <span aria-hidden="true" className={f.beds ? undefined : "muted"}>{f.beds ? `${f.beds}+` : "–"}</span>
-              </>
-            }
-            decrease={f.beds > 0 ? () => setCount("beds", f.beds - 1) : undefined}
-            increase={f.beds < maxBeds ? () => setCount("beds", f.beds + 1) : undefined}
-          />
-        </section>
         <section className="stack">
           <span className="eyebrow">Qué necesitan</span>
           <div className="row wrap gap-8">
