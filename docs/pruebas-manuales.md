@@ -159,7 +159,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 ### 2.3 Moneda ₡ | $ y tipo de cambio
 
 - [ ] **C10** En la fila de chips toque «$» → los precios pasan a dólares («$118 / noche»), aparece la nota «Dólares solo para orientarle: ≈ ₡… por US$1 (tipo de referencia del … ). Los anfitriones fijan sus precios en colones.»; recargue → sigue en dólares; toque «₡» → vuelven los colones y la nota se va.
-- [ ] **C11** Con «$» elegido abra una ficha → la barra de abajo muestra las dos monedas a la vez (colones a la izquierda, «≈ $… / noche» a la derecha) y no hay selector ₡ | $ en la ficha; en Favoritos (con una casa guardada) el selector está arriba junto al logo y los precios siguen la moneda elegida.
+- [ ] **C11** Con «$» elegido abra una ficha → la barra de abajo muestra las dos monedas a la vez (colones a la izquierda, «≈ $… / noche» a la derecha) y no hay selector ₡ | $ en la ficha; en Favoritos (con una casa guardada) el selector está arriba, al extremo derecho de la fila del contador, y los precios siguen la moneda elegida.
 - [ ] **C12** Si la nota de dólares termina con una atribución (p. ej. «· Rates By Exchange Rate API»), toque el enlace → abre la web de la fuente en otra pestaña; si no hay atribución, la nota no tiene ningún enlace.
 
 ### 2.4 Barra de abajo y botón «Mapa»
@@ -246,8 +246,8 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 ### 2.12 Favoritos
 
-- [ ] **C69** Sin cuenta ni casas guardadas, toque la pestaña «Favoritos» → título «Favoritos» con el logo y «₡ | $» arriba, «Toque el corazón de una casa para guardarla aquí.», el botón «Explorar casas» y la nota «Compare y escriba directo».
-- [ ] **C70** Guarde dos casas (una desde Explorar, otra desde su ficha) y abra Favoritos → «2 casas · guardadas en este teléfono» y dos tarjetas con foto, nombre, «<Zona> · N pers. · N hab.», hasta tres características, precio «/ noche» y el botón verde «Enviar WhatsApp».
+- [ ] **C69** Sin cuenta ni casas guardadas, toque la pestaña «Favoritos» → «Toque el corazón de una casa para guardarla aquí.», el botón «Explorar casas» y la nota «Compare y escriba directo».
+- [ ] **C70** Guarde dos casas (una desde Explorar, otra desde su ficha) y abra Favoritos → «2 casas · guardadas en este teléfono» a la izquierda, «₡ | $» alineado al extremo derecho y dos tarjetas como las de Explorar. En un teléfono angosto, el contador puede ocupar dos líneas y el selector queda a la derecha.
 - [ ] **C71** Toque el corazón de una tarjeta de Favoritos → la casa sale de la lista y el contador baja a «1 casa · guardada en este teléfono».
 - [ ] **C72** Toque «Enviar WhatsApp» en una tarjeta → abre la ficha con la hoja «Escríbale a <nombre>» ya abierta, sin enviar nada todavía; una casa que dejó de estar disponible muestra «No disponible por ahora» en lugar del botón.
 - [ ] **C73** Estando en Favoritos con casas guardadas, toque «Ingresar» e inicie sesión con `8888 1234` → vuelve a Favoritos, el contador pasa a «N casas guardadas» (sin «en este teléfono») y las casas de antes siguen ahí; con la misma cuenta en otro teléfono se ven las mismas casas.

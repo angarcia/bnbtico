@@ -601,9 +601,10 @@ test.describe("en un teléfono de 375 px", () => {
     const fits = async () => {
       const count = (await page.getByTestId("favorites-count").boundingBox())!;
       const currency = (await page.getByRole("group", { name: "Moneda de los precios" }).boundingBox())!;
+      const header = (await page.locator(".header-root").boundingBox())!;
       expect(count.x).toBeGreaterThanOrEqual(0);
       expect(count.x + count.width).toBeLessThanOrEqual(currency.x);
-      expect(currency.x + currency.width).toBeLessThanOrEqual(375);
+      expect(currency.x + currency.width).toBeCloseTo(header.x + header.width, 0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     };
     const exploreFits = async () => {

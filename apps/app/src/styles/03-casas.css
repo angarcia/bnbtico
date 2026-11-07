@@ -67,6 +67,7 @@
 .stretched::after{content:"";position:absolute;inset:0;border-radius:var(--r)}
 .fav-empty{align-items:flex-start;gap:14px}
 /* «₡ | $» de Favoritos, junto a la cuenta: el toque de 44 px que tenía en la barra de arriba (quitada el 2026-11-03). */
+.fav-head{inline-size:100%}
 .fav-head .currency-switch button{min-height:44px}
 .note-col{flex-direction:column;gap:8px}
 .note-col b{font-family:var(--display);font-weight:var(--w-medium)}
