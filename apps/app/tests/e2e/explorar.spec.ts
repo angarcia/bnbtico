@@ -203,6 +203,7 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await page.goto("/explorar/filtros");
   const zona = page.getByRole("group", { name: "Zona" });
   await zona.getByRole("button", { name: "Todas" }).click();
+  await expect(page.getByRole("link", { name: "Zona Todas las provincias" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
   await page.getByRole("button", { name: "Piscina", exact: true }).click();
   await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
@@ -243,7 +244,7 @@ test("con dólares elegidos, los precios de Filtros se escriben en dólares y se
   await page.getByRole("link", { name: /^Filtros/ }).click();
   await page.getByRole("group", { name: "Zona" }).getByRole("button", { name: "Todas" }).click();
   await expect(page.getByLabel("Precio mínimo por noche")).toHaveAttribute("placeholder", "$ 0");
-  await expect(page.getByText(/≈ ₡510 por US\$1/)).toBeVisible();
+  await expect(page.getByText(/tipo de referencia/)).toHaveCount(0);
   await page.getByLabel("Precio mínimo por noche").fill("86");
   await page.getByLabel("Precio máximo por noche").fill("98");
   await page.getByRole("button", { name: "Ver 4 casas" }).click();

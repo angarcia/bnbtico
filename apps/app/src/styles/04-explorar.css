@@ -131,3 +131,6 @@ html.map-open{overflow:hidden}
 .pill-bl{left:10px;bottom:10px}
 .sk-line{height:18px;width:70%}
 .filters-form{gap:22px}
+.filters-search .list-item{padding-inline:0}
+.filters-search .list-item>svg{flex:none;color:var(--muted)}
+.filters-search .body{overflow-wrap:anywhere}

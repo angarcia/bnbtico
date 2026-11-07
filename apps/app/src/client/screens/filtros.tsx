@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
+  ALL_PROVINCES,
   BEDS_OPTIONS,
   SEARCH_MAX_PEOPLE,
   colonesToPriceInput,
@@ -17,12 +18,7 @@ import {
 import { costaRicaToday } from "../../domain/dates";
 import { stayLabel } from "../../domain/search";
 import { FEATURES } from "../../domain/listing";
-import {
-  FX_INITIAL,
-  fxDayLabel,
-  fxRateLabel,
-  type FxRate,
-} from "../../domain/fx";
+import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { CounterRow } from "../../shared/counter-row";
 import { fxQuery } from "../../shared/fx";
@@ -73,15 +69,13 @@ function FiltrosForm({
     {
       abrir: "donde",
       label: "Zona",
-      value: f.zone
-        ? (zoneName ?? "")
-        : f.prov
-          ? `Todo ${f.prov}`
-          : "Todas las provincias",
+      icon: I.pin,
+      value: f.zone ? (zoneName ?? "") : f.prov === ALL_PROVINCES ? "Todas las provincias" : `Todo ${f.prov}`,
     },
     {
       abrir: "cuando",
       label: "Fechas",
+      icon: I.calendar,
       value: stayLabel(f)?.replace(/^desde/, "Desde") ?? "Sin fechas",
     },
   ] as const;
@@ -122,7 +116,7 @@ function FiltrosForm({
           <span className="eyebrow" id="f-mine">
             Su búsqueda
           </span>
-          <div className="list">
+          <div className="filters-search">
             {mineRows.map((r) => (
               <Link
                 key={r.abrir}
@@ -130,6 +124,7 @@ function FiltrosForm({
                 search={{ ...searchFor(f, provinces), abrir: r.abrir }}
                 className="list-item"
               >
+                <r.icon size={22} />
                 <span className="body">
                   {r.label}
                   <small>{r.value}</small>
@@ -206,7 +201,7 @@ function FiltrosForm({
           </div>
         </section>
         <section className="stack">
-          <span className="eyebrow">Precio orientativo por noche</span>
+          <span className="eyebrow">Precio</span>
           <div className="grid-2">
             <div className="field">
               <label htmlFor="f-min">Mínimo</label>
@@ -216,7 +211,7 @@ function FiltrosForm({
                 placeholder={`${symbol} 0`}
                 aria-label="Precio mínimo por noche"
                 aria-invalid={badRange || undefined}
-                aria-describedby="f-price-help"
+                aria-describedby={currency === "CRC" ? "f-price-help" : undefined}
                 value={prices.min}
                 onChange={(e) => setPrice("min", e.target.value)}
               />
@@ -229,17 +224,13 @@ function FiltrosForm({
                 placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"}
                 aria-label="Precio máximo por noche"
                 aria-invalid={badRange || undefined}
-                aria-describedby="f-price-help"
+                aria-describedby={currency === "CRC" ? "f-price-help" : undefined}
                 value={prices.max}
                 onChange={(e) => setPrice("max", e.target.value)}
               />
             </div>
           </div>
-          <span className="xs muted" id="f-price-help">
-            {currency === "USD"
-              ? `En dólares (${symbol}), solo para orientarle: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del ${fxDayLabel(fx.day)}). Los anfitriones fijan sus precios en colones.`
-              : `En colones (${symbol}). Puede verlos en dólares desde Explorar.`}
-          </span>
+          {currency === "CRC" ? <span className="xs muted" id="f-price-help">En colones (₡). Puede verlos en dólares desde Explorar.</span> : null}
           {badRange ? (
             <p className="field-error" role="alert">
               El precio mínimo no puede ser mayor que el máximo.

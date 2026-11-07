@@ -43,7 +43,7 @@ function watch(page: Page) {
 
 const usd = (page: Page) => page.addInitScript(() => localStorage.setItem("bnbtico_currency", "USD"));
 
-test("Explorar y Filtros en dólares usan el tipo sembrado, con su día y la atribución al final de la nota", async ({ page }) => {
+test("Explorar y Filtros en dólares usan el tipo sembrado y la nota sale en Explorar", async ({ page }) => {
   await usd(page);
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Playa Negra/ })).toContainText("$238");
@@ -53,7 +53,7 @@ test("Explorar y Filtros en dólares usan el tipo sembrado, con su día y la atr
   await expect(note.getByRole("link", { name: "Rates By Exchange Rate API" })).toHaveAttribute("href", "https://www.exchangerate-api.com");
 
   await page.getByRole("link", { name: /^Filtros/ }).click();
-  await expect(page.locator("#f-price-help")).toContainText("≈ ₡400 por US$1 (tipo de referencia del 2 nov.).");
+  await expect(page.locator("#f-price-help")).toHaveCount(0);
   await page.getByLabel("Precio mínimo por noche").fill("200");
   await page.getByLabel("Precio máximo por noche").fill("250");
   await page.getByRole("button", { name: "Ver 1 casa" }).click();
