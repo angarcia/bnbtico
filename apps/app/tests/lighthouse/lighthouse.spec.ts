@@ -108,7 +108,7 @@ test("Lighthouse móvil: ficha y shell instalado dentro del presupuesto de LCP",
     // 2) Instalar: primera visita a Explorar, service worker activo y caché de Query guardada en IndexedDB.
     const page = await context.newPage();
     await page.goto(`${baseURL}/explorar`);
-    await expect(page.getByTestId("results-count")).toHaveText("8 casas en Limón", { timeout: 20_000 }); // primera visita con el service worker instalándose: en CI tarda más de 5 s
+    await expect(page.getByTestId("results-count")).toHaveText("8 casas", { timeout: 20_000 }); // primera visita con el service worker instalándose: en CI tarda más de 5 s
     await page.evaluate(() => navigator.serviceWorker.ready);
     await expect
       .poll(() =>

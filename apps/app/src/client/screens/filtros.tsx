@@ -64,7 +64,7 @@ function FiltrosForm({
   const count = data?.length;
   const symbol = currency === "USD" ? "$" : "₡";
   const mineRows = [
-    // Una sola fila de zona que dice lo mismo que la búsqueda: «Todo Limón» sin zona (revisión UX 2026-10-29, A7).
+    // Una sola fila de zona que dice lo mismo que la búsqueda: «Todas las provincias» sin zona, «Todo Limón» con un ?prov= viejo (A7, ticket 06).
     {
       abrir: "donde",
       label: "Zona",
