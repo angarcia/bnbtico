@@ -132,7 +132,15 @@ html.map-open{overflow:hidden}
 .sk-line{height:18px;width:70%}
 .filters-form{gap:22px}
 .filters-clear{border:1px solid var(--line);background:var(--bg);color:var(--primary-ink)}
-.filters-search{display:grid;grid-auto-rows:1fr}
+.kind-filter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.kind-filter .chip{position:relative;min-height:72px;padding:8px 4px;gap:4px;flex-direction:column;justify-content:center}
+.kind-filter .chip[aria-pressed="true"]::before{content:none}
+.kind-filter .feature-check{top:8px;transform:none}
+.filters-search{display:grid;grid-auto-rows:minmax(56px,auto)}
+.kind-section{padding-block:12px;border-bottom:1px solid var(--line-soft)}
 .filters-search .list-item{padding-inline:0}
 .filters-search .list-item>svg{flex:none;color:var(--muted)}
 .filters-search-value{flex:1;min-width:0;text-align:right;overflow-wrap:anywhere;color:var(--muted);font-size:14px}
+
+.map-card-text > .card-capacity,.map-card-text > .card-zone{white-space:normal;overflow:visible}
+.map-card .card-features{gap:6px;margin-top:6px}

@@ -134,9 +134,10 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
         expect(await h.anon.getPublic(mensual.publicId)).toMatchObject({ acceptsNightly: true, acceptsMonthly: true, monthlyPriceCrc: null });
       });
 
-      it("personas y habitaciones como mínimo", async () => {
+      it("personas y dormitorios como mínimo, estos últimos solo con alojamiento completo", async () => {
         expect(await ids(filters({ ppl: "4" }))).toEqual([grande.publicId, mensual.publicId]);
-        expect(await ids(filters({ beds: "3" }))).toEqual([grande.publicId]);
+        expect(await ids(filters({ tipo: "completo", beds: "3" }))).toEqual([grande.publicId]);
+        expect(await ids(filters({ beds: "3" }))).toEqual(await ids(filters()));
       });
 
       it("características: todas las pedidas", async () => {
@@ -179,7 +180,8 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
 
       it("se combina con los demás filtros", async () => {
         expect(await ids(filters({ tipo: "completo", beds: "3" }))).toEqual([grande.publicId]);
-        expect(await ids(filters({ tipo: "habitacion", beds: "2" }))).toEqual([]);
+        expect(await ids(filters({ tipo: "habitacion", beds: "2" }))).toEqual([habitacion.publicId]);
+        expect(await ids(filters({ beds: "3" }))).toEqual([grande.publicId, habitacion.publicId, completo.publicId]);
       });
     });
 

@@ -152,3 +152,19 @@
 .btn-note{font-family:var(--body);font-weight:var(--w-medium);font-size:14px;opacity:.8}
 .status-title{font-size:24px}
 .map-box{isolation:isolate}
+
+/* Capacidad y características de Explorar y Favoritos: los mismos iconos de la ficha. */
+.card-capacity{display:flex;align-items:center;flex-wrap:wrap;column-gap:6px}
+.card-capacity > span:has(svg){display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.card-capacity svg,.card-features svg{flex-shrink:0}
+.card-features{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px;color:var(--muted)}
+.card-features > span{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px}
+
+.listing-capacity-icons{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px}
+.listing-capacity-icons > span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.listing-capacity-icons svg{flex-shrink:0}
+
+.card-zone{display:flex;align-items:center;gap:5px;min-width:0}
+.card-zone svg{flex-shrink:0}
+
+.accommodation-type{font-size:14px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}

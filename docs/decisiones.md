@@ -1,3 +1,19 @@
+## 2026-11-07 · Tipo de alojamiento bajo el nombre (Ana)
+
+Las tarjetas de Explorar, Favoritos y mapa y la ficha muestran una línea de texto bajo el nombre: «Alojamiento completo» o «Habitación · baño privado/compartido». Si no se conoce el tipo de baño, solo «Habitación». Sustituye la antigua pastilla Habitación de la ficha. El icono de cama representa dormitorios, sin reutilizarlo para identificar el tipo.
+
+## 2026-11-07 · Iconos en las tarjetas del catálogo (Ana)
+
+Explorar y Favoritos muestran personas, dormitorios y número de baños con sus iconos. La ficha también usa esos tres iconos junto a la capacidad y conserva el detalle de baño privado o compartido. Bajo el precio se muestran los iconos de las características presentes, reutilizando el mapa de iconos de la ficha, con nombre accesible y título. Las características ausentes no se muestran.
+
+## 2026-11-07 · Dormitorios en los contadores de capacidad (Ana)
+
+Se sustituye «Habitaciones» por «Dormitorios» en Filtros y en Crear casa; el contador compartido de edición usa el mismo nombre. Las líneas de capacidad de las tarjetas y la ficha usan «1 dormitorio» o «N dormitorios». «Habitación» se conserva como tipo de alojamiento.
+
+## 2026-11-07 · Selector único de tipo de alojamiento en Filtros (Ana)
+
+El selector va entre Personas y Habitaciones en Filtros. Las opciones «Cualquiera», «Completo» y «Habitación» se muestran en una fila con iconos y check, con Cualquiera por defecto y una sola selección. Completo representa el alojamiento completo, incluidas las casas y apartamentos anteriores. Habitaciones solo aparece y se aplica al seleccionar Completo. Con Cualquiera o Habitación se oculta el contador y se descarta el mínimo, también si venía en un enlace guardado. Al volver a Completo, el contador aparece sin mínimo. Personas siempre permanece disponible.
+
 ## 2026-11-06 · Todo el país con el Caribe primero y tipo de alojamiento en Filtros (ronda de Ana, ticket 06 rehecho)
 
 - **Decisión (Daniel, 2026-11-06):** del ticket 06 entran el tipo de alojamiento, todo el país sin zona, el Caribe primero, fuera las pastillas de provincia y la lista y el mapa con las mismas casas. **No entra el filtro de baños.** Sustituye «Caribe por defecto» (Explorar arrancaba en Limón).

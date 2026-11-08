@@ -4,7 +4,7 @@
 // su casa. La lista sigue montada debajo: al volver conserva su posición.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
-import { cardFacts, cardPrice } from "../domain/describe";
+import { accommodationLabel, cardPrice } from "../domain/describe";
 import type { LatLng } from "../domain/geo";
 import type { SearchListing } from "../domain/listing";
 import { housesCount } from "../domain/search";
@@ -15,7 +15,7 @@ import { Picture } from "../shared/picture";
 import { useExploreMap, useMapMarkers } from "./explore-map";
 import { showChrome } from "./hiding-chrome";
 import { CardWhatsApp } from "./card-whatsapp";
-import { CardPriceText } from "./listing-card";
+import { CardCapacity, CardFeatures, CardPriceText } from "./listing-card";
 
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
@@ -86,9 +86,11 @@ function MapCard({ listing: l, nights }: { listing: SearchListing; nights: numbe
         <div className="photo">{cover ? <Picture photo={cover} alt="" sizes="120px" width={120} height={120} /> : null}</div>
         <div className="map-card-text">
           <h2>{l.title}</h2>
-          <span className="muted">{l.zone}</span>
-          <span className="muted">{cardFacts(l)}</span>
+          <span className="accommodation-type">{accommodationLabel(l)}</span>
+          <span className="muted card-zone"><I.pin size={18} />{l.zone}</span>
+          <CardCapacity listing={l} compact />
           {price ? <CardPriceText price={price} /> : null}
+          <CardFeatures listing={l} />
         </div>
       </Link>
       <FavoriteButton publicId={l.publicId} className="heart-card" size={24} />

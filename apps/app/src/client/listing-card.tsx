@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { cardFacts, cardPrice, type CardPrice } from "../domain/describe";
-import type { PublicListing, PublicPhoto, SearchListing } from "../domain/listing";
+import { accommodationLabel, cardFacts, cardPrice, type CardPrice } from "../domain/describe";
+import { FEATURE_SHORT, type PublicListing, type PublicPhoto, type SearchListing } from "../domain/listing";
+import { FEATURE_ICON, I } from "../shared/icons";
 import { formatMoney } from "../domain/money";
 import { stayTotalLabel } from "../domain/search";
 import { useCurrency } from "../shared/currency";
@@ -67,13 +68,42 @@ export function ListingCard({ listing: l, nights = 0, priority = false }: { list
         <div className="photo">{l.photos.length ? <CardPhotos photos={l.photos} priority={priority} /> : null}</div>
         <div className="listing-card-text">
           <h2>{l.title}</h2>
-          <span className="muted">{l.zone}</span>
-          <span className="muted">{cardFacts(l)}</span>
+          <span className="accommodation-type">{accommodationLabel(l)}</span>
+          <span className="muted card-zone"><I.pin size={18} />{l.zone}</span>
+          <CardCapacity listing={l} />
           {price ? <CardPriceText price={price} /> : null}
+          <CardFeatures listing={l} />
         </div>
       </Link>
       <FavoriteButton publicId={l.publicId} className="heart-card" size={24} />
       {l.available ? <CardWhatsApp listing={l} /> : null}
     </div>
   );
+}
+
+export function CardCapacity({ listing: l, compact = false }: { listing: PublicListing; compact?: boolean }) {
+  const [people, rooms] = cardFacts(l).split(" · ");
+  const bathrooms = l.kind === "habitacion" ? 1 : l.bathrooms;
+  const bath = `${bathrooms} ${bathrooms === 1 ? "baño" : "baños"}`;
+  return (
+    <span className="muted card-capacity">
+      <span title={people}><I.users size={18} /><span className={compact ? "sr-only" : undefined}>{people}</span>{compact ? <span aria-hidden="true">{l.capacity}</span> : null}</span>
+      <span aria-hidden="true"> · </span>
+      <span title={rooms}><I.bed size={18} /><span className={compact ? "sr-only" : undefined}>{rooms}</span>{compact ? <span aria-hidden="true">{l.kind === "habitacion" ? 1 : l.bedrooms || "Estudio"}</span> : null}</span>
+      <span aria-hidden="true"> · </span>
+      <span title={bath}><I.bath size={18} /><span className={compact ? "sr-only" : undefined}>{bath}</span>{compact ? <span aria-hidden="true">{bathrooms}</span> : null}</span>
+    </span>
+  );
+}
+
+export function CardFeatures({ listing: l }: { listing: PublicListing }) {
+  return l.features.length ? (
+    <span className="card-features">
+      {l.features.map((feature) => {
+        const Icon = I[FEATURE_ICON[feature]];
+        const label = feature === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratis"}` : FEATURE_SHORT[feature];
+        return <span key={feature} role="img" aria-label={label} title={label}><Icon size={20} /></span>;
+      })}
+    </span>
+  ) : null;
 }

@@ -145,8 +145,36 @@ function FiltrosForm({
               decrease={f.ppl > 0 ? () => setCount("ppl", f.ppl - 1) : undefined}
               increase={f.ppl < SEARCH_MAX_PEOPLE ? () => setCount("ppl", f.ppl + 1) : undefined}
             />
-            <CounterRow
-              label="Habitaciones"
+            {/* Tipo de alojamiento (ticket 06): una sola opción; «Alojamiento completo» incluye las casas y apartamentos viejos. */}
+            <section className="stack kind-section" role="group" aria-labelledby="f-tipo">
+              <span className="eyebrow" id="f-tipo">
+                Tipo de alojamiento
+              </span>
+              <div className="kind-filter">
+                {([null, ...KIND_FILTERS] as const).map((kind) => (
+                  <button
+                    key={kind ?? "cualquiera"}
+                    type="button"
+                    className="chip"
+                    aria-label={kind === null ? "Cualquiera" : KIND_FILTER_LABEL[kind]}
+                    aria-pressed={f.kind === kind}
+                    onClick={() => setDraft((d) => ({
+                      ...d,
+                      tipo: kind ?? undefined,
+                      beds: kind === "completo" ? d.beds : undefined,
+                    }))}
+                  >
+                    {kind === null ? <I.list size={24} /> : kind === "completo" ? <I.house size={24} /> : <I.bed size={24} />}
+                    <span>{kind === null ? "Cualquiera" : kind === "completo" ? "Completo" : KIND_FILTER_LABEL[kind]}</span>
+                    <span className="feature-check" aria-hidden="true">
+                      {f.kind === kind ? <I.check size={14} /> : null}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+            {f.kind === "completo" ? <CounterRow
+              label="Dormitorios"
               icon={<I.bed size={22} />}
               value={
                 <>
@@ -156,26 +184,7 @@ function FiltrosForm({
               }
               decrease={f.beds > 0 ? () => setCount("beds", f.beds - 1) : undefined}
               increase={f.beds < maxBeds ? () => setCount("beds", f.beds + 1) : undefined}
-            />
-          </div>
-        </section>
-        {/* Tipo de alojamiento (ticket 06): una sola opción; «Alojamiento completo» incluye las casas y apartamentos viejos. */}
-        <section className="stack" role="group" aria-labelledby="f-tipo">
-          <span className="eyebrow" id="f-tipo">
-            Tipo de alojamiento
-          </span>
-          <div className="row wrap gap-8">
-            {([null, ...KIND_FILTERS] as const).map((kind) => (
-              <button
-                key={kind ?? "cualquiera"}
-                type="button"
-                className="chip"
-                aria-pressed={f.kind === kind}
-                onClick={() => set("tipo", kind ?? undefined)}
-              >
-                {kind === null ? "Cualquiera" : KIND_FILTER_LABEL[kind]}
-              </button>
-            ))}
+            /> : null}
           </div>
         </section>
         <section className="stack">

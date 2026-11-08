@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { Currency } from "../domain/currency";
 import { reopenLabel } from "../domain/dates";
-import { capacityLine, describe, isNegotiable, type MonthlyPrice, type Price } from "../domain/describe";
+import { accommodationLabel, capacityLine, describe, isNegotiable, type MonthlyPrice, type Price } from "../domain/describe";
 import { FEATURE_SHORT, MONTHLY_LABEL, type PublicListing } from "../domain/listing";
 import { fxDayLabel, fxRateLabel, type FxRate } from "../domain/fx";
 import { formatCRC, formatUSD } from "../domain/money";
@@ -282,21 +282,24 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
         </HeroGallery>
 
         <div className="stack listing-body">
-          {l.kind === "habitacion" || !l.available ? (
+          {!l.available ? (
             <div className="row wrap gap-8">
-              {l.kind === "habitacion" ? <span className="badge">Habitación</span> : null}
               {!l.available ? <span className="badge badge-mute">No disponible por ahora</span> : null}
             </div>
           ) : null}
           <div className="stack listing-head">
             <h1 className={`listing-title${l.title.length > LONG_TITLE ? " is-long" : ""}`}>{l.title}</h1>
+            <span className="accommodation-type" data-testid="listing-type">{accommodationLabel(l)}</span>
             {/* El pin va en línea, justo antes de la primera palabra: con dos renglones queda junto al primero (ronda de Ana 2026-11-02). */}
             <span className="listing-zone" data-testid="listing-zone">
               <I.pin size={18} />
               {[l.zone, l.canton].filter(Boolean).join(", ")}
             </span>
-            <span className="muted" data-testid="listing-capacity">
-              {capacityLine(l)}
+            <span className="muted listing-capacity-icons" data-testid="listing-capacity">
+              {capacityLine(l).split(" · ").map((label, index) => {
+                const Icon = [I.users, I.bed, I.bath][index]!;
+                return <span key={index}>{index > 0 ? <span aria-hidden="true"> · </span> : null}<Icon size={20} />{label}</span>;
+              })}
             </span>
           </div>
           {/* Sin reseñas, la persona verificada es la confianza: justo bajo la cabecera, en su fila entre dos líneas (revisión UX A10; como en Airbnb). */}

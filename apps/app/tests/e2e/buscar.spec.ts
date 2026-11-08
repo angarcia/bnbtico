@@ -171,9 +171,11 @@ test("Filtros: Zona y Fechas abren su sección; con una sola provincia no sale e
 
 test("Filtros: Personas y el mínimo de Habitaciones se ajustan en la misma pantalla", async ({ page }) => {
   await page.goto("/explorar/filtros?ppl=3");
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Alojamiento completo" }).click();
   const morePeople = page.getByRole("button", { name: "Más personas" });
-  const moreRooms = page.getByRole("button", { name: "Más habitaciones" });
-  const fewerRooms = page.getByRole("button", { name: "Menos habitaciones" });
+  const moreRooms = page.getByRole("button", { name: "Más dormitorios" });
+  const fewerRooms = page.getByRole("button", { name: "Menos dormitorios" });
   await expect(fewerRooms).toBeDisabled();
   await morePeople.click();
   await moreRooms.click();
@@ -190,7 +192,7 @@ test("Filtros: Personas y el mínimo de Habitaciones se ajustan en la misma pant
   await fewerRooms.click();
   await expect(apply).toHaveText("Ver 1 casa");
   await apply.click();
-  await expect(page).toHaveURL(/\/explorar\?ppl=4&beds=2$/);
+  await expect(page).toHaveURL(/\/explorar\?ppl=4&beds=2&tipo=completo$/);
   await expect(house(page, "Casa Coco")).toBeVisible();
 });
 

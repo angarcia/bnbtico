@@ -83,11 +83,11 @@ describe("cardFacts, cardPrice y mapPriceLabel (tarjeta y marcador de Explorar)"
   const house = (over: Partial<SearchListing> = {}) =>
     ({ capacity: 4, bedrooms: 2, acceptsNightly: true, nightlyPriceCrc: 42000, acceptsMonthly: false, monthlyPriceCrc: null, stayTotalCrc: null, ...over }) as SearchListing;
   it("personas y habitaciones; 0 habitaciones es «Estudio»", () => {
-    expect(cardFacts({ capacity: 4, bedrooms: 2 })).toBe("4 personas · 2 habitaciones");
-    expect(cardFacts({ capacity: 1, bedrooms: 1 })).toBe("1 persona · 1 habitación");
+    expect(cardFacts({ capacity: 4, bedrooms: 2 })).toBe("4 personas · 2 dormitorios");
+    expect(cardFacts({ capacity: 1, bedrooms: 1 })).toBe("1 persona · 1 dormitorio");
     expect(cardFacts({ capacity: 2, bedrooms: 0 })).toBe("2 personas · Estudio");
     // Una Habitación es 1 habitación, nunca «Estudio» (también con un dato viejo guardado en el teléfono).
-    expect(cardFacts({ capacity: 2, bedrooms: 0, kind: "habitacion" })).toBe("2 personas · 1 habitación");
+    expect(cardFacts({ capacity: 2, bedrooms: 0, kind: "habitacion" })).toBe("2 personas · 1 dormitorio");
     expect(cardFacts({ capacity: 2, bedrooms: 0, kind: "completo" })).toBe("2 personas · Estudio");
   });
   it("sin fechas, el precio de la noche (aunque acepte mensual); con fechas y total, el total de esas noches", () => {

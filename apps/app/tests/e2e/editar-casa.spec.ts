@@ -426,9 +426,9 @@ test("una Habitación publicada: «Personas», solo con el contador de personas 
   await expect(page.getByRole("heading", { level: 1, name: "Personas" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Más personas" })).toBeVisible();
   await expect(page.getByText("Baños", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Habitaciones", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Dormitorios", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más habitaciones" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Más baños" })).toHaveCount(0);
   await page.getByRole("button", { name: "Más personas" }).click();
   await save(page).click();

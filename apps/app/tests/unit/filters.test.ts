@@ -27,7 +27,7 @@ describe("parseFilters · resto", () => {
   it("ppl entero de 1 a 50; beds solo con valores de la lista", () => {
     expect(BEDS_OPTIONS).toEqual([0, 1, 2, 3, 4]);
     expect(parseFilters({ ppl: "4", beds: "2" }, []).ppl).toBe(4);
-    expect(parseFilters({ ppl: "4", beds: "2" }, []).beds).toBe(2);
+    expect(parseFilters({ tipo: "completo", ppl: "4", beds: "2" }, []).beds).toBe(2);
     expect(parseFilters({ ppl: "5", beds: "9" }, [])).toMatchObject({ ppl: 5, beds: 0 });
     expect(parseFilters({ ppl: "0" }, []).ppl).toBe(0);
     expect(parseFilters({ ppl: "50" }, []).ppl).toBe(50);
@@ -51,7 +51,7 @@ describe("parseFilters · resto", () => {
 describe("extrasCount", () => {
   it("cuenta habitaciones, características y precios; no la provincia ni las personas", () => {
     expect(extrasCount(parseFilters({ prov: "Guanacaste" }, ["Guanacaste"]))).toBe(0);
-    expect(extrasCount(parseFilters({ ppl: "2", beds: "1", pool: "1", ev: "1", min: "1000", max: "2000" }, []))).toBe(5);
+    expect(extrasCount(parseFilters({ tipo: "completo", ppl: "2", beds: "1", pool: "1", ev: "1", min: "1000", max: "2000" }, []))).toBe(6);
   });
 });
 
@@ -91,6 +91,17 @@ describe("tipo de alojamiento (ticket 06)", () => {
   });
   it("cambia la clave de la consulta", () => {
     expect(listingsQuery(parseFilters({ tipo: "habitacion" }, [])).queryKey).not.toEqual(listingsQuery(parseFilters({}, [])).queryKey);
+  });
+  it.each([undefined, "habitacion", "invalido"])("sin alojamiento completo (%s), ignora habitaciones de enlaces anteriores", (tipo) => {
+    const search = { tipo, beds: "3", ppl: "2" };
+    const expectedKind = tipo === "habitacion" ? "habitacion" : null;
+    const expectedSearch = expectedKind ? { tipo: expectedKind, ppl: "2" } : { ppl: "2" };
+    const f = parseFilters(search, []);
+    expect(f).toMatchObject({ kind: expectedKind, beds: 0, ppl: 2 });
+    expect(extrasCount(f)).toBe(expectedKind ? 1 : 0);
+    expect(searchFor(f)).toEqual(expectedSearch);
+    expect(normalizeSearch(search)).toEqual(expectedSearch);
+    expect(parseFilters({ tipo: "completo", beds: "3" }, []).beds).toBe(3);
   });
 });
 
@@ -201,7 +212,7 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
     expect(stayRange(parseFilters({}, ["Limón"]))).toBeNull();
   });
   it("extrasCount no cuenta zona, fechas ni personas", () => {
-    expect(extrasCount(parseFilters({ ppl: "4", zona: "704-cocles", llegada: "2026-11-23", salida: "2026-11-27", beds: "2" }, ["Limón"]))).toBe(1);
+    expect(extrasCount(parseFilters({ ppl: "4", zona: "704-cocles", llegada: "2026-11-23", salida: "2026-11-27", beds: "2" }, ["Limón"]))).toBe(0);
   });
   it("mapa no entra en los filtros ni en la clave de la consulta", () => {
     expect(listingsQuery(parseFilters({ mapa: "1" }, ["Limón"])).queryKey).toEqual(listingsQuery(parseFilters({}, ["Limón"])).queryKey);

@@ -101,7 +101,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
 
   // 4 Capacidad (no bloquea: sin rellenar también se sigue; aquí se rellena).
   await count(page, "personas", 5);
-  await count(page, "habitaciones", 2);
+  await count(page, "dormitorios", 2);
   await count(page, "baños", 2);
   await continuar(page);
   await expect(page).toHaveURL(/\/5$/);
@@ -278,7 +278,7 @@ test("sin fotos no se envía; sin descripción sí (aviso en ocre)", async ({ pa
     await continuar(page);
     await expect(page).toHaveURL(/\/4$/);
     await count(page, "personas", 2);
-    await count(page, "habitaciones", 1);
+    await count(page, "dormitorios", 1);
     await count(page, "baños", 1);
     await continuar(page);
     await expect(page).toHaveURL(/\/5$/);
@@ -735,8 +735,8 @@ test("Habitación no pregunta habitaciones ni baños (son 1); Alojamiento comple
   await expect(page.getByRole("heading", { name: "¿Cuántos caben?" })).toBeVisible();
   await expect(page.getByText("Personas", { exact: true })).toBeVisible();
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
-  await expect(page.getByText("Habitaciones", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más habitaciones" })).toHaveCount(0);
+  await expect(page.getByText("Dormitorios", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
   await expect(page.getByText("Baños", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Más baños" })).toHaveCount(0);
   await expectNoScroll(page, "paso 4 de una Habitación");
@@ -756,10 +756,10 @@ test("Habitación no pregunta habitaciones ni baños (son 1); Alojamiento comple
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
   await page.goto(`/propietario/publicar/${room.id}/4`);
-  await expect(page.getByText("Habitaciones", { exact: true })).toBeVisible();
+  await expect(page.getByText("Dormitorios", { exact: true })).toBeVisible();
   await expect(page.getByText("Baños", { exact: true })).toBeVisible();
   await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
-  await count(page, "habitaciones", 1);
+  await count(page, "dormitorios", 1);
   await count(page, "baños", 1);
   await continuar(page);
   await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "completo", bedrooms: 2, bathrooms: 2 });

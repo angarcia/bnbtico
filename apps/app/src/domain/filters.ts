@@ -71,7 +71,7 @@ function parseSearch(params: SearchParams): Parsed {
     llegada: date(get("llegada")),
     salida: date(get("salida")),
     ppl: people(get("ppl")),
-    beds: option(BEDS_OPTIONS, get("beds")),
+    beds: get("tipo") === "completo" ? option(BEDS_OPTIONS, get("beds")) : 0,
     tipo: (KIND_FILTERS as readonly string[]).includes(get("tipo")) ? (get("tipo") as KindFilter) : "",
     min: money(get("min")),
     max: money(get("max")),

@@ -52,7 +52,7 @@ export function cardPrice(l: PriceFields & { stayTotalCrc?: number | null }, nig
 export function cardFacts(l: Pick<PublicListing, "capacity" | "bedrooms"> & { kind?: PublicListing["kind"] }): string {
   const people = `${l.capacity} ${l.capacity === 1 ? "persona" : "personas"}`;
   const bedrooms = l.kind === "habitacion" ? 1 : l.bedrooms;
-  const rooms = bedrooms > 0 ? `${bedrooms} ${bedrooms === 1 ? "habitación" : "habitaciones"}` : "Estudio";
+  const rooms = bedrooms > 0 ? `${bedrooms} ${bedrooms === 1 ? "dormitorio" : "dormitorios"}` : "Estudio";
   return `${people} · ${rooms}`;
 }
 
@@ -65,7 +65,7 @@ const bathLabel = (l: CapacityFields): string =>
 /** La capacidad en la ficha: «5 personas · 2 habitaciones · 2 baños»; una Habitación, «2 personas · 1 habitación · baño
  *  compartido» (ronda de Ana 2026-11-02, ticket 03). */
 export function capacityLine(l: CapacityFields): string {
-  return [count(l.capacity ?? 0, "persona", "personas"), count(l.kind === "habitacion" ? 1 : (l.bedrooms ?? 0), "habitación", "habitaciones"), bathLabel(l)].join(" · ");
+  return [count(l.capacity ?? 0, "persona", "personas"), count(l.kind === "habitacion" ? 1 : (l.bedrooms ?? 0), "dormitorio", "dormitorios"), bathLabel(l)].join(" · ");
 }
 
 /** La capacidad en corto, en la fila de «Revisar y enviar»: «5 pers. · 2 hab. · 2 baños»; una Habitación no cuenta
@@ -123,4 +123,10 @@ export function describe(l: Listing | PublicListing, opts: { base: string; now?:
     shareUrl: publicUrl(l.publicId, opts.base),
     previewText: previewText(l, mainPrice),
   };
+}
+
+/** Tipo en las tarjetas y la ficha: la cama se reserva para el número de dormitorios. */
+export function accommodationLabel(l: Pick<PublicListing, "kind" | "bathroomShared">): string {
+  if (l.kind !== "habitacion") return "Alojamiento completo";
+  return l.bathroomShared === null ? "Habitación" : `Habitación · baño ${l.bathroomShared ? "compartido" : "privado"}`;
 }

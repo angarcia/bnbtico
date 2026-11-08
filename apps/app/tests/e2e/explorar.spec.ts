@@ -124,8 +124,13 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   for (const box of await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width))) expect(Math.abs(box - viewport)).toBeLessThanOrEqual(1);
   // La primera es la más nueva (Casa Cocles mensual): nombre, zona, personas y habitaciones, y el precio de la noche.
   await expect(cards.first().locator("h2")).toHaveText("Casa Cocles mensual");
-  await expect(cards.first()).toContainText("Cocles2 personas · 1 habitación₡45 000 / noche");
+  await expect(cards.first()).toContainText("Cocles2 personas · 1 dormitorio · 1 baño₡45 000 / noche");
   await expect(cards.first().locator(".pill")).toHaveCount(0);
+  await expect(cards.first().locator(".card-capacity svg")).toHaveCount(3);
+  const beachHouse = cards.filter({ hasText: "Casa Manzanillo" });
+  await expect(beachHouse.getByRole("img", { name: "Wifi", exact: true })).toBeVisible();
+  await expect(beachHouse.getByRole("img", { name: "Frente al mar", exact: true })).toBeVisible();
+  await expect(beachHouse.getByRole("img", { name: "Piscina", exact: true })).toHaveCount(0);
   // Tarjetas flotantes, tanda 1 (Daniel, 2026-11-04): el mapa arriba a todo el ancho y, encima, la búsqueda, los filtros y
   // «₡ | $» como tarjetas translúcidas a 12 px de los bordes; al bajar se esconden con la barra de abajo y al subir vuelven.
   const vp = page.viewportSize()!;
@@ -247,14 +252,22 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
 test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contador (ticket 06)", async ({ page }) => {
   await page.goto("/explorar/filtros");
   const tipo = page.getByRole("group", { name: "Tipo de alojamiento" });
-  await expect(tipo.getByRole("button")).toHaveText(["Cualquiera", "Alojamiento completo", "Habitación"]);
+  await expect(tipo.getByRole("button")).toHaveText(["Cualquiera", "Completo", "Habitación"]);
   await expect(tipo.getByRole("button", { name: "Cualquiera" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await tipo.getByRole("button", { name: "Alojamiento completo" }).click();
   // Todas las casas sembradas son alojamientos completos.
+  await page.getByRole("button", { name: "Más dormitorios" }).click();
+  await page.getByRole("button", { name: "Más dormitorios" }).click();
   await tipo.getByRole("button", { name: "Habitación" }).click();
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Más personas" })).toBeVisible();
   await expect(tipo.getByRole("button", { name: "Habitación" })).toHaveAttribute("aria-pressed", "true");
+  await expect(tipo.getByRole("button", { name: "Alojamiento completo" })).toHaveAttribute("aria-pressed", "false");
   await expect(tipo.getByRole("button", { name: "Cualquiera" })).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByRole("button", { name: "Ver 0 casas" })).toBeVisible();
   await tipo.getByRole("button", { name: "Alojamiento completo" }).click();
+  await expect(page.getByRole("button", { name: "Menos dormitorios" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
   await page.getByRole("button", { name: "Ver 10 casas" }).click();
   await expect(page).toHaveURL(/\/explorar\?tipo=completo$/);
@@ -262,8 +275,15 @@ test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contad
   await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(tipo.getByRole("button", { name: "Alojamiento completo" })).toHaveAttribute("aria-pressed", "true");
   await tipo.getByRole("button", { name: "Cualquiera" }).click();
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(tipo.locator('[aria-pressed="true"]')).toHaveCount(1);
   await page.getByRole("button", { name: "Ver 10 casas" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
+  await page.goto("/explorar/filtros?tipo=habitacion&beds=3");
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Limpiar", exact: true }).click();
+  await expect(tipo.getByRole("button", { name: "Cualquiera" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
 });
 
 test("con dólares elegidos, los precios de Filtros se escriben en dólares y se buscan en colones", async ({ page }) => {

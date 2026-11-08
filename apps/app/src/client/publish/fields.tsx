@@ -213,7 +213,7 @@ export function CapacityCounters({ draft, icons = false }: { draft: ListingDraft
       <Counter name="capacity" label="Personas" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} />
       {draft.kind === "habitacion" ? null : (
         <>
-          <Counter name="bedrooms" label="Habitaciones" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} />
+          <Counter name="bedrooms" label="Dormitorios" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} />
           <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} />
         </>
       )}

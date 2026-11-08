@@ -458,13 +458,18 @@ test("descripción larga: párrafos, «Ver más» a pantalla completa y atrás l
 
 test("la línea de capacidad: un completo cuenta los baños; una Habitación dice el tipo de baño, ya desde el servidor", async ({ page }) => {
   await page.goto(`/casa/${casa.publicId}`);
-  await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 habitación · 1 baño");
+  await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 dormitorio · 1 baño");
   const response = await page.goto(`/casa/${cuarto.publicId}`);
-  expect(await response!.text()).toContain("2 personas · 1 habitación · baño compartido");
+  // Se comprueba el HTML recibido, antes de hidratar: los iconos separan los fragmentos de texto.
+  const serverCapacity = await page.evaluate((html) => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.querySelector('[data-testid="listing-capacity"]')?.textContent;
+  }, await response!.text());
+  expect(serverCapacity).toBe("2 personas · 1 dormitorio · baño compartido");
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-  await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 habitación · baño compartido");
-  // La etiqueta de arriba no repite el baño (Daniel, 2026-11-03): solo «Habitación».
-  await expect(page.locator(".listing-view .badge").filter({ hasText: "Habitación" })).toHaveText("Habitación");
+  await expect(page.getByTestId("listing-capacity")).toHaveText("2 personas · 1 dormitorio · baño compartido");
+  // El tipo se muestra bajo el nombre e incluye el baño de la habitación.
+  await expect(page.getByTestId("listing-type")).toHaveText("Habitación · baño compartido");
 });
 
 test("descripción corta: entera, sin «Ver más»; cabecera centrada", async ({ page }) => {
