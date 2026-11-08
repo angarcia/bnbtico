@@ -82,7 +82,7 @@ test("con la casa en la URL, sus días se piden sin esperar a la lista de casas"
     await held;
     await route.continue();
   });
-  const days = page.waitForRequest((r) => r.url().includes("/rest/v1/listing_days") && r.url().includes(house.id));
+  const days = page.waitForRequest((r) => r.method() === "POST" && new URL(r.url()).pathname.endsWith("/rest/v1/rpc/owner_calendar_days") && r.postDataJSON()?.p_listing === house.id);
   await open(page, house.id);
   await days;
   release();
