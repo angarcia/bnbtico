@@ -10,6 +10,7 @@ import { createPostgrestAuth, type OtpChannel } from "./auth";
 import { createPostgrestOwnerBilling } from "./billing";
 import { createPostgrestCalendar } from "./calendar";
 import { createOwnerAirbnb } from "./airbnb";
+import { createOwnerIcalExport } from "./ical-export";
 import { createPostgrestFavorites, createPostgrestInquiries } from "./inquiries";
 import { keepaliveFetch } from "./keepalive-fetch";
 import { createPostgrestListings } from "./listings";
@@ -76,6 +77,7 @@ export function createBrowserData(supabaseUrl: string, anonKey: string, stores: 
     favorites: createPostgrestFavorites(db),
     calendar: createPostgrestCalendar(db),
     airbnb: createOwnerAirbnb({ supabaseUrl, anonKey, fetch: (i, init) => fetch(i, init), token: async () => (await db.auth.getSession()).data.session?.access_token ?? null }),
+    icalExport: createOwnerIcalExport({ supabaseUrl, anonKey, fetch: (i, init) => fetch(i, init), token: async () => (await db.auth.getSession()).data.session?.access_token ?? null }),
     billing: createPostgrestOwnerBilling(db),
     /** El JWT de la sesión (renovado si hacía falta) para las rutas del worker que lo reenvían a PostgREST (POST /api/pago/sesion). */
     accessToken: async (): Promise<string | null> => (await db.auth.getSession()).data.session?.access_token ?? null,

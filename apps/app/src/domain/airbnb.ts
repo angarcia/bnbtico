@@ -7,6 +7,8 @@ export interface AirbnbSummary {
   lastSuccessAt: string | null;
   errorCode: IcalErrorCode | null;
   nights: number;
+  /** Solo presencia, nunca el token. Compatible con la lectura de #5 anterior a la migración de #6. */
+  exportGenerated?: boolean;
 }
 
 /** Puerto del worker. Contexto/finalización/repetición son exclusivamente de servicio. */
@@ -33,13 +35,15 @@ export function readAirbnbSummary(value: unknown): AirbnbSummary {
     !["none", "connected", "running", "error", "suspended"].includes(String(value.state)) ||
     !(value.lastSuccessAt === null || typeof value.lastSuccessAt === "string" && Number.isFinite(Date.parse(value.lastSuccessAt))) ||
     !(value.errorCode === null || ["url", "calendar", "unsupported", "download", "timeout", "size"].includes(String(value.errorCode))) ||
-    typeof value.nights !== "number" || !Number.isInteger(value.nights) || value.nights < 0 || value.nights > 366) throw new Error("Respuesta de calendario no válida.");
+    typeof value.nights !== "number" || !Number.isInteger(value.nights) || value.nights < 0 || value.nights > 366 ||
+    !(value.exportGenerated === undefined || typeof value.exportGenerated === "boolean")) throw new Error("Respuesta de calendario no válida.");
   // Los predicados de valores discriminados se comprueban de nuevo para estrechar sin casts.
   const state = value.state;
   const error = value.errorCode;
   if (state !== "none" && state !== "connected" && state !== "running" && state !== "error" && state !== "suspended") throw new Error("Estado de calendario no válido.");
   if (error !== null && error !== "url" && error !== "calendar" && error !== "unsupported" && error !== "download" && error !== "timeout" && error !== "size") throw new Error("Error de calendario no válido.");
-  return { connected: value.connected, state, lastSuccessAt: value.lastSuccessAt, errorCode: error, nights: value.nights };
+  return { connected: value.connected, state, lastSuccessAt: value.lastSuccessAt, errorCode: error, nights: value.nights,
+    ...(typeof value.exportGenerated === "boolean" ? { exportGenerated: value.exportGenerated } : {}) };
 }
 
 export function readCalendarDays(value: unknown): CalendarDay[] {

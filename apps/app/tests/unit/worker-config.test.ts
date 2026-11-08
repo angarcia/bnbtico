@@ -15,6 +15,13 @@ describe("wrangler · worker aislado del refactor", () => {
     expect(wrangler.env.production.assets.run_worker_first).toBe(true);
   });
 
+  it("envía el feed iCal al worker y conserva logs explícitos sin registrar la URL de invocación", () => {
+    expect(wrangler.assets.run_worker_first).toContain("/ical/*");
+    expect(wrangler.observability).toMatchObject({ enabled: true, logs: { enabled: true, invocation_logs: false } });
+    expect(wrangler.env.pruebas.assets).toBeUndefined();
+    expect(wrangler.env.production.assets.run_worker_first).toBe(true);
+  });
+
   it("solo publica en su dominio y desactiva workers.dev y URLs de preview", () => {
     expect(wrangler.env.refactor).toMatchObject({
       name: "bnbtico-refactor",

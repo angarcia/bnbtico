@@ -42,6 +42,14 @@ Descarga: HTTPS hacia hosts exactos `www.airbnb.ca`/`www.airbnb.com`, ruta y tok
 
 El motor `runAirbnbImport` y la reclamación de servicio se reutilizan en el arnés opt-in local. #5 no añade exportación, interfaces de gestión de #7 ni cron #8. Al suspender administrativamente se invalidan intentos en vuelo; la ocupación anterior se conserva. La programación posterior consumirá el mismo motor para lecturas y recuperación. Guía reproducible: `docs/pruebas-manuales.md`, IC01–IC13. Tipos generados tras aplicar migraciones; firmas finales en `database.types.ts`.
 
+### Exportación iCal (#6)
+
+`ical_exports` guarda por casa un namespace aleatorio para UID y una capacidad secreta de 256 bits, con RLS y sin acceso directo desde navegador/admin. `owner_ical_export` autoriza al dueño y genera de forma idempotente; `revoke_ical_export` prepara la revocación de #7, sin interfaz en #6. El resumen persistible `airbnb_overview` solo incorpora `exportGenerated`, nunca el secreto. La tarjeta de generación/copia obtiene la capacidad por PostgREST y la mantiene en memoria, fuera de Query/IndexedDB y de las mutaciones persistidas. Se desmonta al cambiar de casa/cuenta y descarta respuestas tardías.
+
+GET/HEAD `/ical/<token>.ics` valida la capacidad en cada consulta mediante `read_ical_export`, RPC exclusiva del worker con service role. Exporta solo `listing_days.available=false` dentro de hoy CR…hoy+365, sin consultar la unión efectiva de Airbnb, ni bloquear por una consulta WhatsApp. Un evento por noche, salida excluida y UID por namespace/fecha estable. Sin datos de casa/huésped/precios; solo UID técnico, fechas y propiedades neutras de calendario. Bloqueo/rechazo suspende; pausa del dueño conserva el feed; revocación y eliminación invalidan consultas posteriores. No hay caché ni ETag, también ante errores, y el SW manda `.ics` a red. La configuración de Workers Logs desactiva solo registros automáticos de invocación que contienen la URL; conserva los logs explícitos saneados.
+
+Contrato y comprobaciones: `.scratch/calendarios-externos/contrato-tecnico-06.md` y `plan-06.md`. Backend validado localmente con tipos, 61 pruebas unitarias y 10 DB; tarjeta móvil comprobada con tres E2E y revisión visual a 375/390 px. Las pruebas locales no acreditan la importación en Airbnb, que requiere HTTPS público sin la barrera de Access. Aplicar una migración alojada exige su revisión y paso autorizado separados del despliegue del worker.
+
 ### Sesión de la aplicación
 
 - supabase-js guarda la sesión en localStorage detrás de un adaptador de almacenamiento (Capacitor la moverá a Keychain/Keystore). Token de acceso de 1 h, rotación del refresh con detección de reutilización, logout que revoca.

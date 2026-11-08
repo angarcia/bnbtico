@@ -11,6 +11,7 @@ import { FlowHeader } from "../chrome";
 import { ownListingQuery } from "../owner";
 import { usePrivateSheet } from "../private-sheet";
 import { sessionState, useSession } from "../session";
+import { IcalExportCard } from "./ical-export-card";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/airbnb");
 const time = (iso: string) => new Intl.DateTimeFormat("es-CR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(iso));
@@ -43,6 +44,7 @@ export function AirbnbScreen() {
       {!summary.connected && !suspended ? <button className="btn btn-primary btn-lg" type="button" disabled={summary.state === "running"} onClick={() => setConnecting(true)}>Conectar Airbnb</button> : null}
     </section> : null}
     <p className="note small">Las noches importadas corresponden a la última lectura correcta. Confirme la disponibilidad antes de acordar una estancia.</p>
+    {l && summary ? <IcalExportCard key={`${uid}:${id}`} id={id} userId={uid} /> : null}
     {connecting && l ? <ConnectSheet onClose={() => setConnecting(false)} onConnect={async (url, requestId) => {
       const data = await (await airbnbApi()).connect(id, url, requestId).catch(error => {
         if (sessionState().session?.userId === uid) void client.invalidateQueries({ queryKey: airbnbQuery(uid, id).queryKey });

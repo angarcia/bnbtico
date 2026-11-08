@@ -43,7 +43,7 @@ export function AirbnbAvailability({ sel, importedCount, manualCount, onChange, 
 export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listing; userId: string; month: string | undefined; disabled: boolean }) {
   const navigate = useNavigate();
   const info = useQuery({ ...airbnbQuery(userId, listing.id), enabled: !!userId });
-  const connected = info.data?.connected;
+  const connected = info.data?.connected || info.data?.exportGenerated;
   return <>
     <button type="button" className="cal-action" disabled={disabled} aria-describedby={disabled ? "airbnb-selection-hint" : undefined} onClick={() => void navigate({ to: "/propietario/casas/$id/airbnb", params: { id: listing.id }, search: month ? { mes: month } : {} })}>
       <span className="cal-action-icon"><I.calendar size={20} /></span>

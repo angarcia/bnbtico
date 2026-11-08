@@ -1,3 +1,7 @@
+## 2026-11-08 · Presupuesto del módulo diferido de Airbnb con exportación (Ana)
+
+Ana aprueba ampliar de 5 a 6,5 kB gzip el límite del grupo diferido de Airbnb para incorporar la generación y copia del enlace de exportación de #6. La medición es 6,21 kB; el grupo incluye importación, estado, controles por origen y exportación, sin parser iCal ni la librería de pruebas en el navegador. Motivo: cubrir el alcance aprobado de ambas direcciones con un presupuesto explícito. El límite de JS inicial privado permanece en 160 kB (medición: 153,97 kB) y los demás presupuestos se conservan. Referencia: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-06.md`.
+
 ## 2026-11-07 · Origen Airbnb visible en el calendario (Ana)
 
 Ana aprueba un icono de enlace en cada noche importada y la leyenda «Bloqueado por Airbnb», para reconocer el origen sin seleccionar el día. Se conservan el número y el precio visible en esas noches; el panel mantiene el detalle manual/Airbnb/ambos. La marca pertenece al calendario privado, sin mostrar el proveedor en la ficha pública.
