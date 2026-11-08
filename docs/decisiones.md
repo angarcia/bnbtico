@@ -2,6 +2,50 @@
 
 Ana aprueba ampliar de 5 a 6,5 kB gzip el límite del grupo diferido de Airbnb para incorporar la generación y copia del enlace de exportación de #6. La medición es 6,21 kB; el grupo incluye importación, estado, controles por origen y exportación, sin parser iCal ni la librería de pruebas en el navegador. Motivo: cubrir el alcance aprobado de ambas direcciones con un presupuesto explícito. El límite de JS inicial privado permanece en 160 kB (medición: 153,97 kB) y los demás presupuestos se conservan. Referencia: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-06.md`.
 
+## 2026-11-08 · Priorizar compactación automática para continuar en el mismo chat (Ana)
+
+Ana pide compactación automática para reducir contexto sin abrir otro chat. En su configuración personal de Codex se establece `model_post_turn_compact_threshold_percent = 70`, un umbral ajustable al terminar una respuesta. Se mantienen los límites automáticos propios del modelo. La opción está documentada en https://learn.chatgpt.com/docs/config-file/config-reference; escribir una instrucción en una skill no ejecuta esa operación.
+
+`credit-saver` prioriza la compactación nativa y un resumen breve según la tarea y las skills activas. Solo propone otro chat cuando cambie sustancialmente la tarea o siga siendo difícil manejar el contexto. No se compacta manualmente cada mensaje ni se promete un ahorro medido por bajar el umbral. La configuración queda guardada; no acredita por sí sola que la sesión activa ya la haya cargado o se haya compactado.
+
+## 2026-11-08 · Commits locales al terminar cambios del proyecto (Ana)
+
+Ana autoriza de forma permanente preparar y crear un commit local al terminar cambios del proyecto con las comprobaciones necesarias. El agente revisa el estado y el diff, incluye solo los archivos o fragmentos de la tarea y conserva trabajo y staging ajenos. Si falta validación o no puede separar el cambio, informa de lo pendiente.
+
+Es una excepción a que Ana ejecute los comandos de consola: no autoriza cambiar de rama, descartar trabajo, hacer push, merge ni desplegar. Los demás comandos mantienen la regla anterior. Se registra en `AGENTS.md` y en `credit-saver`.
+
+## 2026-11-08 · Superpowers proporcional a complejidad y riesgo (Ana)
+
+Ana aprueba mantener `credit-saver` en todas las tareas y usar los procesos de Superpowers de forma proporcional. Las preguntas y cambios pequeños reversibles se resuelven sin imponer un ciclo completo de documentos, planificación, revisiones o subagentes. Los fallos difíciles y cambios importantes mantienen las técnicas pertinentes de diagnóstico y revisión, sin reiniciar acuerdos ya aprobados.
+
+La reducción de proceso no elimina verificaciones necesarias ni amplía permisos, especialmente en cambios de datos, seguridad, pagos o despliegue. La preferencia se recoge en las instrucciones del proyecto y en `credit-saver`, sin modificar el paquete instalado de Superpowers.
+
+## 2026-11-08 · Priorizar ahorro, recomendar modelo y avisar de contexto extenso (Ana)
+
+Ana pide priorizar las medidas de ahorro en todas las tareas. `credit-saver` ordena las decisiones por coste total hasta obtener un resultado correcto: modelo y esfuerzo adecuados, contexto pertinente, reducción de ejecución y trabajo repetidos, conversación concisa, comandos ejecutados por Ana y validación ajustada al cambio. Se mantienen las comprobaciones necesarias; no se mide el ahorro solo por cantidad de comandos o longitud de instrucciones.
+
+`credit-saver` recomendará modelo y esfuerzo según complejidad, partiendo de la selección actual de Ana (Sol Medium) y de las opciones disponibles. Una recomendación no equivale a cambiar el selector: si no dispone de un control compatible, indicará qué elegir sin afirmar que lo cambió. No se generan otros chats ni delegaciones solo para cambiar de modelo, ni se prometen ahorros sin medición.
+
+Cuando el chat acumule muchas tareas, sea demasiado extenso o muestre pérdida repetida de contexto, se avisará brevemente en una pausa natural y se preparará un resumen corto para continuar. Se usarán métricas reales si están disponibles, sin inventar porcentajes ni repetir el aviso en cada turno. Ana decide cuándo abrir otro chat; el aviso no cancela trabajo autorizado.
+
+## 2026-11-08 · Conversación breve sin activar trabajo adicional (Ana)
+
+Ana pide reducir el trabajo que se activa al conversar. `credit-saver` y las instrucciones del proyecto distinguen preguntas y exploración de las peticiones de ejecución: responder con el contexto disponible, sin lecturas, planes, pruebas, ediciones o commits innecesarios. No se atribuye un ahorro medido a esta regla.
+
+Una petición explícita o la aceptación clara de una propuesta concreta autoriza su ejecución. La regla no cancela tareas ya autorizadas ni exige volver a pedir confirmación. Se mantiene la preferencia de que Ana ejecute los comandos de consola.
+
+## 2026-11-07 · Credit Saver transversal y comandos ejecutados por Ana
+
+Ana establece el uso de `credit-saver` en todas las tareas, junto con las skills especializadas. Se amplía su descripción y se explicita esta regla en `AGENTS.md`.
+
+El agente entrega los comandos de consola con su directorio y la salida necesaria para continuar; Ana los ejecuta y comparte los resultados. Pedir resolver una tarea no autoriza por sí solo ejecutar esos comandos. Una petición expresa de Ana para ejecutarlos cambia esa regla para el alcance indicado. La inspección y edición normal de archivos sigue permitida.
+
+## 2026-11-07 · Prácticas de código comunes y específicas por rol (Ana)
+
+Las reglas compartidas de TypeScript, validación de fronteras, cambios acotados, reutilización y pruebas de comportamiento se mantienen una sola vez en `AGENTS.md` (enlace a `CLAUDE.md`). Las skills de frontend y backend añaden únicamente prácticas propias de su responsabilidad, para evitar duplicación y recomendaciones genéricas crecientes.
+
+Frontend explicita el manejo del estado del servidor, responsabilidades de componentes y hooks, limpieza de efectos, respuestas fuera de orden y controles semánticos. Backend explicita validación y errores del contrato, SQL parametrizado, transacciones e integridad y concurrencia en la base. Estas reglas orientan el trabajo futuro; no implican refactorizar código existente fuera de una tarea autorizada.
+
 ## 2026-11-07 · Origen Airbnb visible en el calendario (Ana)
 
 Ana aprueba un icono de enlace en cada noche importada y la leyenda «Bloqueado por Airbnb», para reconocer el origen sin seleccionar el día. Se conservan el número y el precio visible en esas noches; el panel mantiene el detalle manual/Airbnb/ambos. La marca pertenece al calendario privado, sin mostrar el proveedor en la ficha pública.

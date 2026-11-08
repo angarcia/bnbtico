@@ -39,10 +39,13 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 
 - `apps/app` es la única aplicación del workspace, paquete `app`. Los comandos `pnpm typecheck`, `test`, `test:db`, `build`, `size`, `test:e2e` y `lighthouse` funcionan desde su directorio o desde la raíz. Los alias `*:app` se conservan. `apps/web` se retira solo del árbol versionado; no borrar archivos locales ni directorios que queden allí. `supabase/`: Postgres con RLS, Storage, `pg_cron`. Sin `apps/mobile`, sin `packages/*`, sin Turborepo.
 - Entidades en inglés (`Listing`, `Inquiry`, `Subscription`); copy en español.
+- **Prácticas comunes de código, para todas las skills:** mantenga TypeScript estricto; no use `any` ni conversiones de tipos para silenciar errores y valide los datos en las fronteras externas. Haga cambios pequeños centrados en la tarea, sin refactorizaciones ajenas. Reutilice código existente y cree abstracciones cuando resuelvan una necesidad concreta, no por anticipación.
 - Dinero como entero en colones + `currency`; formato `₡95 000`; cifras tabulares. Dólares solo al mostrar.
 - IDs públicos de casa `CT-####`. Enlaces `bnbtico.com/casa/CT-####`.
-- Pruebas: Vitest (lógica) y Playwright en viewport móvil (flujos). Primero la prueba, luego el código.
+- Pruebas: Vitest (lógica) y Playwright en viewport móvil (flujos). Primero la prueba, luego el código. Compruebe comportamiento observable y errores relevantes; evite pruebas que solo reproduzcan la implementación.
 - Commits en español, imperativo. Un commit por paso completo con pruebas en verde.
+- **Autorización permanente de commits (Ana):** al completar cambios de archivos del proyecto y disponer de las comprobaciones necesarias, prepare y cree un commit local sin pedir confirmación otra vez. Esta excepción permite revisar Git, preparar solo los archivos o fragmentos de la tarea y comprobar el diff antes de confirmar; conserve cambios y staging ajenos. No autoriza cambiar de rama, descartar trabajo, hacer push, merge ni desplegar. Los demás comandos siguen a cargo de Ana. Si faltan resultados de validación o no puede aislar el cambio con seguridad, explique lo pendiente.
+- **Documentación y commits, para todas las skills:** antes de proponer o preparar un commit, revise qué documentación queda afectada por el trabajo. Si se toma o cambia una decisión, actualice `docs/decisiones.md` el mismo día con lo decidido y su motivo; si solo se implementa una decisión vigente, actualice las guías afectadas sin inventar otra decisión. Al cambiar pantallas, mantenga `docs/pruebas-manuales.md`; para cambios de arquitectura, entorno, despliegue o recuperación, revise la guía correspondiente. Incluya todos los documentos modificados por esa tarea en la lista de archivos y comandos de preparación del commit, incluido `docs/decisiones.md` cuando haya cambiado. No incluya cambios ajenos ni dé la documentación por actualizada sin revisarla.
 
 ## Entornos y herramientas (2026-10-19)
 
@@ -84,9 +87,21 @@ Veriff opcional (v1.1), cobro real con pasarela local (Tilopay / ONVO / Greenpay
 
 ## Agent skills
 
+### Skills de Ana para bnbtico
+
+- **Superpowers proporcional (preferencia explícita de Ana):** para preguntas, cambios pequeños reversibles y documentación sencilla, responda o actúe directamente sin imponer un ciclo completo de brainstorming, especificación, plan y revisiones ni lanzar subagentes por rutina. Para fallos difíciles y cambios importantes, use las técnicas pertinentes que reduzcan incertidumbre o trabajo repetido. Conserve permisos y verificaciones necesarias, especialmente en datos, seguridad, pagos y despliegues; reutilice lo ya aprobado.
+- En todas las tareas, lea y aplique `credit-saver` junto con las skills especializadas que correspondan. Entregue a Ana los comandos de consola para que ella los ejecute y espere sus resultados; no los ejecute salvo petición expresa para esa tarea. La inspección y edición normal de archivos sigue permitida conforme a esa skill.
+- Cuando Ana pregunte, compare opciones o piense en voz alta, responda brevemente con el contexto disponible. No convierta la conversación en lecturas de archivos, planes, pruebas, cambios de documentación o commits salvo que sean necesarios para responder con precisión o ella los pida. Una aceptación clara de una propuesta concreta autoriza ese trabajo; continúe las tareas ya autorizadas sin pedir confirmación otra vez.
+- Antes de diseñar o rediseñar una pantalla de bnbtico, lea y aplique la skill [`ana-ux-ui`](.scratch/skills/ana-ux-ui/SKILL.md). Si también va a implementarla, aplique después `ana-frontend-developer`.
+- Para implementar o revisar la interfaz de bnbtico, lea y aplique la skill `ana-frontend-developer`.
+- Para implementar o revisar lógica de backend, migraciones, permisos, RPCs, contratos PostgREST o endpoints y trabajos del worker de bnbtico, lea y aplique la skill [`ana-backend-developer`](.scratch/skills/ana-backend-developer/SKILL.md).
+- Para revisar o modificar CI/CD, optimizar despliegues, configurar entornos o preparar verificaciones, reversión y operaciones de infraestructura, lea y aplique la skill [`ana-devops`](.scratch/skills/ana-devops/SKILL.md).
+- Para preparar historias, criterios BDD, prioridades del backlog o asignar skills por historia, lea y aplique la skill `ana-product-owner`. También redacta prompts de esas historias, solo cuando Ana los pide.
+- Para diagnosticar o mejorar el rendimiento de PostgreSQL/Supabase, revisar planes, índices o bloqueos, o trabajar en copias, restauración y recuperación de la base, lea y aplique la skill [`ana-dba`](.scratch/skills/ana-dba/SKILL.md).
+
 ### Issue tracker
 
-Issues and specs live as local markdown under `.scratch/<feature>/` in this repo (committed); no external tracker. See `docs/agents/issue-tracker.md`.
+Las especificaciones y la preparación de historias viven en `.scratch/<feature>/` (versionadas). Desde el 2026-11-05, por instrucción de Ana, el backlog de producto se entrega como JSON para que ella lo importe a GitHub Issues/Projects: allí se mantiene el estado de ejecución y las relaciones. No publicar historias directamente salvo petición explícita. Leer `docs/agents/historias-listas.md` antes de preparar o tomar una historia; **Todo no significa lista para trabajar**. Las convenciones de archivos locales siguen en `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

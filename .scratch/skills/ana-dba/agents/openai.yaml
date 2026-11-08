@@ -1,0 +1,3 @@
+interface:
+  display_name: "ana-dba"
+  short_description: "Rendimiento y recuperación de PostgreSQL y Supabase"

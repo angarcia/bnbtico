@@ -1,6 +1,6 @@
 # Issue tracker: Local Markdown
 
-Issues and specs for this repo live as markdown files in `.scratch/`.
+Issues and specs are prepared as markdown files in `.scratch/`. For product backlogs imported to GitHub, the execution state and native relationships live in GitHub Issues/Projects (Ana, 2026-11-05). Deliver JSON plus an import command; do not publish directly unless explicitly requested. Read [historias-listas.md](historias-listas.md) for readiness gates, design links and the difference between Todo and ready to work. The local file conventions below still apply.
 
 ## Conventions
 
