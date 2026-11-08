@@ -178,9 +178,11 @@ describe("conexión privada de artefactos", () => {
       expect(result.stdout + result.stderr).not.toContain(secret);
       expect(existsSync(join(root, "clean"))).toBe(mode !== "sanitize");
       if (mode === "flaky") {
+        expect(result.stdout).toContain("Playwright: código de salida 0.");
         expect(readFileSync(join(root, "raw/e2e-exit.txt"), "utf8").trim()).toBe("0");
         expect(JSON.parse(readFileSync(join(root, "render/e2e.json"), "utf8")).stats.flaky).toBe(1);
       }
+      if (mode === "sanitize") expect(result.stdout).toContain("Playwright: código de salida 1.");
       if (mode === "publish-sanitize") expect(existsSync(join(root, "render/e2e-normalized.json"))).toBe(true);
     }, 60_000,
   );

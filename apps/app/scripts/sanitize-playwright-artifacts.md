@@ -71,6 +71,14 @@ Un error de saneamiento o render debe bloquear la subida y fallar el job. No use
 
 No modifique `publish` ni añada archivos después de la promoción. Elimine la raíz temporal propia al terminar el job. No incluya el workspace, raw, clean o render en uploads, caches ni logs públicos.
 
+## Diagnosticar un rechazo en CI
+
+El coordinador `ci-artifacts.mjs` imprime `Playwright: código de salida N.` antes del saneamiento: `0` indica que el proceso terminó correctamente; otro valor indica un fallo o una interrupción. Las puertas posteriores siguen siendo obligatorias. Este dato permite conocer el resultado del proceso incluso si no se puede publicar el diagnóstico.
+
+Los rechazos de entradas ZIP se distinguen por códigos fijos: `zip-duplicate` (nombre repetido), `zip-encrypted` (entrada cifrada), `zip-compression` (método no admitido) y `zip-type` (tipo de archivo no admitido). No se imprimen nombres, rutas ni contenido del ZIP. Todos estos rechazos siguen bloqueando la publicación y el job.
+
+Si el saneamiento falla, los logs de Actions conservan únicamente este diagnóstico limitado. El paso de limpieza elimina la raíz privada y no se suben los artefactos rechazados. Para investigar el formato concreto, reproduzca el caso con datos desechables; no publique `raw`, trazas ni logs privados para saltarse el bloqueo.
+
 ## Alcance y rechazo seguro
 
 - ZIP de traza versión 10, blob versión 2 y ZIP anidados del HTML de Playwright 1.64.1.

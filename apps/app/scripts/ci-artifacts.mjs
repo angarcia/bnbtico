@@ -58,6 +58,8 @@ async function e2e(root, current, total) {
   const code = command("pnpm", ["exec", "playwright", "test", "--reporter=blob,json", `--output=${join(raw, "results")}`, shard, "--workers=1"],
     join(logs, "runner.log"), env, join(raw, "runner.json"));
   writeFileSync(join(raw, "e2e-exit.txt"), `${code}\n`, { mode: 0o600 });
+  // Solo el código numérico; los logs y el contenido de los artefactos siguen privados.
+  console.log(`Playwright: código de salida ${code}.`);
   await sanitizeRun({ root, output: "clean" });
   const clean = join(root, "clean");
   const renderCode = command("pnpm", ["exec", "playwright", "merge-reports", "--reporter=json", join(clean, "blob")],
