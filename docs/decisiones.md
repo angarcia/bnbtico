@@ -1,3 +1,29 @@
+## 2026-11-08 · Commits locales al terminar cambios del proyecto (Ana)
+
+Ana autoriza de forma permanente preparar y crear un commit local al terminar cambios del proyecto con las comprobaciones necesarias. El agente revisa el estado y el diff, incluye solo los archivos o fragmentos de la tarea y conserva trabajo y staging ajenos. Si falta validación o no puede separar el cambio, informa de lo pendiente.
+
+Es una excepción a que Ana ejecute los comandos de consola: no autoriza cambiar de rama, descartar trabajo, hacer push, merge ni desplegar. Los demás comandos mantienen la regla anterior. Se registra en `AGENTS.md` y en `credit-saver`.
+
+## 2026-11-08 · Superpowers proporcional a complejidad y riesgo (Ana)
+
+Ana aprueba mantener `credit-saver` en todas las tareas y usar los procesos de Superpowers de forma proporcional. Las preguntas y cambios pequeños reversibles se resuelven sin imponer un ciclo completo de documentos, planificación, revisiones o subagentes. Los fallos difíciles y cambios importantes mantienen las técnicas pertinentes de diagnóstico y revisión, sin reiniciar acuerdos ya aprobados.
+
+La reducción de proceso no elimina verificaciones necesarias ni amplía permisos, especialmente en cambios de datos, seguridad, pagos o despliegue. La preferencia se recoge en las instrucciones del proyecto y en `credit-saver`, sin modificar el paquete instalado de Superpowers.
+
+## 2026-11-08 · Priorizar ahorro, recomendar modelo y avisar de contexto extenso (Ana)
+
+Ana pide priorizar las medidas de ahorro en todas las tareas. `credit-saver` ordena las decisiones por coste total hasta obtener un resultado correcto: modelo y esfuerzo adecuados, contexto pertinente, reducción de ejecución y trabajo repetidos, conversación concisa, comandos ejecutados por Ana y validación ajustada al cambio. Se mantienen las comprobaciones necesarias; no se mide el ahorro solo por cantidad de comandos o longitud de instrucciones.
+
+`credit-saver` recomendará modelo y esfuerzo según complejidad, partiendo de la selección actual de Ana (Sol Medium) y de las opciones disponibles. Una recomendación no equivale a cambiar el selector: si no dispone de un control compatible, indicará qué elegir sin afirmar que lo cambió. No se generan otros chats ni delegaciones solo para cambiar de modelo, ni se prometen ahorros sin medición.
+
+Cuando el chat acumule muchas tareas, sea demasiado extenso o muestre pérdida repetida de contexto, se avisará brevemente en una pausa natural y se preparará un resumen corto para continuar. Se usarán métricas reales si están disponibles, sin inventar porcentajes ni repetir el aviso en cada turno. Ana decide cuándo abrir otro chat; el aviso no cancela trabajo autorizado.
+
+## 2026-11-08 · Conversación breve sin activar trabajo adicional (Ana)
+
+Ana pide reducir el trabajo que se activa al conversar. `credit-saver` y las instrucciones del proyecto distinguen preguntas y exploración de las peticiones de ejecución: responder con el contexto disponible, sin lecturas, planes, pruebas, ediciones o commits innecesarios. No se atribuye un ahorro medido a esta regla.
+
+Una petición explícita o la aceptación clara de una propuesta concreta autoriza su ejecución. La regla no cancela tareas ya autorizadas ni exige volver a pedir confirmación. Se mantiene la preferencia de que Ana ejecute los comandos de consola.
+
 ## 2026-11-07 · Credit Saver transversal y comandos ejecutados por Ana
 
 Ana establece el uso de `credit-saver` en todas las tareas, junto con las skills especializadas. Se amplía su descripción y se explicita esta regla en `AGENTS.md`.
