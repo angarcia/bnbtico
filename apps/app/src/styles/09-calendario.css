@@ -11,6 +11,8 @@
 .month-grid .day-sub{font-size:12px;font-weight:400;line-height:1.2;white-space:nowrap;color:color-mix(in srgb,var(--fg) 75%,transparent)}
 /* Seis cifras («120 000») en 11 px para que quepan en la casilla. */
 .month-grid .day-sub.is-long{font-size:11px;letter-spacing:-0.02em}
+.month-grid .day:has(.day-imported){position:relative}
+.month-grid .day-imported{position:absolute;bottom:6px;display:flex;color:var(--cal-busy-ink);pointer-events:none}
 /* Ocupado: terracota claro con rayas finas y solo el número, en terracota. */
 .month-grid .day.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px);color:var(--cal-busy-ink)}
 /* Seleccionado para editar: solo un marco terracota (2 px, al 60 %), sin relleno. */
@@ -91,6 +93,9 @@
 .cal-action-icon{flex-shrink:0;width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
 .cal-action .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .cal-action > svg{flex-shrink:0;color:var(--muted)}
+.cal-action:disabled{color:var(--muted);background:var(--disabled-bg,#F2F1ED);opacity:1}
+.cal-action:disabled .cal-action-icon{background:transparent;color:inherit}
+.cal-actions > .hint{margin:0;padding:10px 14px;border-top:0}
 /* Pausada: «Pausada hasta el …» con su línea y, debajo, «Volver a publicarla» a lo ancho. */
 .cal-action.is-paused{flex-wrap:wrap;row-gap:10px;padding-bottom:14px}
 .cal-action.is-paused .btn{flex-basis:100%;min-height:44px}

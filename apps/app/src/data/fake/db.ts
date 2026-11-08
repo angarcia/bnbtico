@@ -2,6 +2,7 @@
 // listings_public y la función listing_link_state. Sirve a las pruebas unitarias, a la prueba HTTP del worker y a
 // la suite de contrato (que lo compara con PostgREST).
 import type { AdminHold } from "../../domain/admin-hold";
+import type { FakeAirbnbAttempt, FakeAirbnbConnection } from "./airbnb";
 import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
 import { APPROX_MAX_METERS, APPROX_MIN_METERS, type LatLng } from "../../domain/geo";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
@@ -169,6 +170,8 @@ export class FakeDb {
   favorites: FakeFavorite[] = [];
   /** listing_days: por casa, solo los días que difieren del habitual, en orden. */
   readonly days = new Map<string, CalendarDay[]>();
+  readonly airbnbConnections = new Map<string, FakeAirbnbConnection>();
+  readonly airbnbAttempts = new Map<string, FakeAirbnbAttempt>();
   /** Reloj de las reglas con fecha (consultas, calendario, reapertura); «hoy» es el de Costa Rica con este reloj. */
   clock: () => number = () => Date.now();
   /** Storage en memoria: bucket `listings`, nombre del objeto → metadatos. */
@@ -300,6 +303,8 @@ export class FakeDb {
     this.taps = [];
     this.favorites = [];
     this.days.clear();
+    this.airbnbConnections.clear();
+    this.airbnbAttempts.clear();
     this.subscriptions.clear();
     this.reminders = [];
     this.adminActions = [];

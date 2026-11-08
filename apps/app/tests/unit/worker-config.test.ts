@@ -9,6 +9,12 @@ const wrangler = JSON.parse(
 );
 
 describe("wrangler · worker aislado del refactor", () => {
+  it("envía la importación de Airbnb al worker antes que a los assets de la SPA", () => {
+    expect(wrangler.assets.run_worker_first).toContain("/api/calendarios/*");
+    expect(wrangler.env.pruebas.assets).toBeUndefined();
+    expect(wrangler.env.production.assets.run_worker_first).toBe(true);
+  });
+
   it("solo publica en su dominio y desactiva workers.dev y URLs de preview", () => {
     expect(wrangler.env.refactor).toMatchObject({
       name: "bnbtico-refactor",

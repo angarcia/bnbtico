@@ -43,7 +43,7 @@ import { whenIdle } from "../../shared/idle";
 import { useCurrency } from "../../shared/currency";
 import { CurrencySwitch } from "../../shared/currency-switch";
 import { useFx } from "../../shared/fx";
-import { MonthGrid, MonthLegend, WeekdayRow } from "../../shared/month-grid";
+import { MonthGrid, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { isChunkLoadError } from "../chunk-error";
@@ -52,6 +52,8 @@ import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";
 import { HousePicker } from "../house-picker";
+
+import { AirbnbRow, AirbnbAvailability, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "bnbtico-calendario-casa";
@@ -225,12 +227,14 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   const canMark = !closed && !blocked && !port.admin;
   const canPause = can(l, "available") && !port.admin;
+  const { importedCount, manualCount } = countCalendarOrigins(days, sel.days);
   return (
     <>
-      {canMark || canPause ? (
+      {canMark || canPause || !port.admin ? (
         <section className="card cal-actions" aria-label="Acciones del calendario">
           {canMark ? <MarkRow today={today} onMark={onMark} /> : null}
           {canPause ? <PauseRow listing={l} userId={userId} /> : null}
+          {!port.admin ? <AirbnbRow listing={l} userId={userId} month={month} disabled={sel.days.length > 0} /> : null}
         </section>
       ) : null}
       <div className="row between gap-8 cal-hint-row">
@@ -244,7 +248,7 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
         </p>
       ) : null}
 
-      <MonthLegend />
+      <AirbnbLegend days={query.data} />
       <WeekdayRow className="cal-weekdays" />
       <CalendarMonths
         months={months}
@@ -260,6 +264,7 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
             selected={sel.days}
             onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
             dimmed={closed}
+            importedIcon={<I.link size={16} />}
             label={monthTitle(m)}
           />
         )}
@@ -270,6 +275,8 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
           sel={sel}
           base={base}
           hasSpecial={hasSpecial}
+          importedCount={importedCount}
+          manualCount={manualCount}
           problem={problem}
           canSave={change !== null}
           onChange={(s) => (setSel(s), setProblem(null))}
@@ -517,6 +524,8 @@ interface PanelProps {
   sel: Selection;
   base: number | null;
   hasSpecial: boolean;
+  importedCount: number;
+  manualCount: number;
   problem: string | null;
   canSave: boolean;
   onChange: (s: Selection) => void;
@@ -524,7 +533,7 @@ interface PanelProps {
   onSave: () => void;
 }
 
-function Panel({ sel, base, hasSpecial, problem, canSave, onChange, onCancel, onSave }: PanelProps) {
+function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, canSave, onChange, onCancel, onSave }: PanelProps) {
   // Teclado del iPhone (no encoge la vista): mientras el precio tiene el foco el panel gana sitio abajo y el campo sube por
   // encima. Se quita un poco después de salir del campo para que «Guardar cambios» no se mueva bajo el dedo.
   const [kb, setKb] = useState(false);
@@ -542,6 +551,21 @@ function Panel({ sel, base, hasSpecial, problem, canSave, onChange, onCancel, on
     timer.current = setTimeout(() => setKb(false), KB_RELEASE_MS);
   }
   const price = sel.priceEdited ? sel.price : grouped(sel.price);
+  const priceField = base !== null ? (
+    <label className="cal-price">
+      <span aria-hidden="true">₡</span>
+      <input
+        aria-label="Precio por noche"
+        inputMode="numeric"
+        enterKeyHint="done"
+        autoComplete="off"
+        placeholder={sel.mixedPrice ? "Varios precios" : undefined}
+        value={price}
+        onChange={(e) => onChange(setPrice(sel, e.target.value))}
+        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      />
+    </label>
+  ) : null;
   return (
     <section className={`cal-panel${kb ? " kb" : ""}`} aria-label="Días seleccionados" onFocus={onFocus} onBlur={onBlur}>
       <div className="row between baseline">
@@ -550,6 +574,8 @@ function Panel({ sel, base, hasSpecial, problem, canSave, onChange, onCancel, on
           Cancelar
         </button>
       </div>
+      {importedCount ? <AirbnbAvailability sel={sel} importedCount={importedCount} manualCount={manualCount} onChange={onChange}>{priceField}</AirbnbAvailability> : <>
+      {manualCount ? <p className="small muted">Bloqueo manual</p> : null}
       <div className="row gap-8">
         <div className="seg" role="group" aria-label="Disponibilidad">
           <button type="button" aria-pressed={sel.available === true} onClick={() => onChange(setAvailability(sel, true))}>
@@ -559,22 +585,9 @@ function Panel({ sel, base, hasSpecial, problem, canSave, onChange, onCancel, on
             Ocupado
           </button>
         </div>
-        {base !== null ? (
-          <label className="cal-price">
-            <span aria-hidden="true">₡</span>
-            <input
-              aria-label="Precio por noche"
-              inputMode="numeric"
-              enterKeyHint="done"
-              autoComplete="off"
-              placeholder={sel.mixedPrice ? "Varios precios" : undefined}
-              value={price}
-              onChange={(e) => onChange(setPrice(sel, e.target.value))}
-              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            />
-          </label>
-        ) : null}
+        {priceField}
       </div>
+      </>}
       {base !== null && hasSpecial ? (
         <button type="button" className="btn-link cal-base" onClick={() => onChange(setPrice(sel, grouped(String(base))))}>
           Usar el precio base ({formatCRC(base)})

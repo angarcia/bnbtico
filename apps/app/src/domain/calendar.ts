@@ -12,6 +12,9 @@ export interface CalendarDay {
   day: string;
   available: boolean;
   specialPriceCrc: number | null;
+  /** Solo en la lectura privada; available ya incorpora ambas capas. */
+  imported?: boolean;
+  manualAvailable?: boolean;
 }
 
 /** Cómo queda un día de verdad: `priceCrc` null en una casa solo mensual; `special` = la ★. */
@@ -20,6 +23,8 @@ export interface DayState {
   available: boolean;
   priceCrc: number | null;
   special: boolean;
+  imported?: boolean;
+  manualAvailable?: boolean;
 }
 
 /** Lo que guarda «Guardar cambios»: los días y lo que se eligió (lo que falta se conserva en cada día). */
@@ -123,6 +128,7 @@ export function effectiveDay(days: CalendarDays, base: number | null, date: stri
     available: row?.available ?? true,
     priceCrc: specialPrice ?? base,
     special: specialPrice !== null && specialPrice !== base,
+    ...(row?.imported ? { imported: true, manualAvailable: row.manualAvailable } : {}),
   };
 }
 
@@ -189,10 +195,12 @@ export function applyChange(days: readonly CalendarDay[], base: number | null, c
   const next = new Map(days.map((d) => [d.day, d]));
   for (const day of new Set(change.days)) {
     const row = next.get(day) ?? { day, available: true, specialPriceCrc: null };
+    const manualAvailable = change.available ?? (row.imported ? row.manualAvailable !== false : row.available);
     const updated: CalendarDay = {
       day,
-      available: change.available ?? row.available,
+      available: row.imported ? false : manualAvailable,
       specialPriceCrc: change.priceCrc === undefined ? row.specialPriceCrc : change.priceCrc === base ? null : change.priceCrc,
+      ...(row.imported ? { imported: true, manualAvailable } : {}),
     };
     if (updated.available && updated.specialPriceCrc === null) next.delete(day);
     else next.set(day, updated);
@@ -261,7 +269,8 @@ function prefill(s: Selection, ctx: SelectionContext): Selection {
   if (s.days.length === 0) return emptySelection;
   const states = s.days.map((d) => effectiveDay(ctx.days, ctx.base, d));
   const next = { ...s };
-  if (!s.availabilityChosen) next.available = states.every((d) => d.available === states[0]!.available) ? states[0]!.available : null;
+  const availability = states.map(d => d.imported ? d.manualAvailable !== false : d.available);
+  if (!s.availabilityChosen) next.available = availability.every(value => value === availability[0]) ? availability[0]! : null;
   if (!s.priceEdited) {
     const price = states[0]!.priceCrc;
     next.mixedPrice = states.some((d) => d.priceCrc !== price);

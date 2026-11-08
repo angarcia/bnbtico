@@ -13,6 +13,7 @@ import { securityHeaders } from "../shared/security";
 import type { ReminderEnv, ReminderRuntime } from "./reminders";
 import { testClock } from "./test-clock";
 import { registerBilling, type BillingDeps, type PaymentsEnv } from "./billing";
+import { registerAirbnb, type AirbnbDeps } from "./airbnb";
 
 export type Env = ReminderEnv & {
   ENVIRONMENT: Environment;
@@ -52,6 +53,7 @@ export interface Deps {
   securityHeaders?: boolean;
   /** Método de pago (src/server/billing.ts): sin esto, sus rutas no existen. */
   billing?: BillingDeps;
+  airbnb?: AirbnbDeps;
 }
 
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
@@ -227,6 +229,7 @@ export function createApp(deps: Deps) {
   });
 
   if (deps.billing) registerBilling(app, deps.billing, deps.securityHeaders !== false);
+  if (deps.airbnb) registerAirbnb(app, deps.airbnb);
 
   app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 
