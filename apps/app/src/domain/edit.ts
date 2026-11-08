@@ -95,7 +95,7 @@ export const FIELD_TITLES: Record<EditField, string> = {
   nombre: "Nombre",
   tipo: "Tipo",
   ubicacion: "Ubicación",
-  capacidad: "Personas, habitaciones y baños",
+  capacidad: "Personas, dormitorios y baños",
   caracteristicas: "Características",
   descripcion: "Descripción",
   precio: "Precio",

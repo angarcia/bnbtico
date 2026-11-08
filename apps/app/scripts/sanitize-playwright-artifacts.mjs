@@ -133,7 +133,10 @@ async function parse(name, bytes, ctx, depth = 0) {
         const name = directory ? entry.fileName.slice(0, -1) : entry.fileName;
         safeName(name);
         const mode = (entry.externalFileAttributes >>> 16) & 0xf000;
-        if (names.has(name) || entry.isEncrypted() || ![0, 8].includes(entry.compressionMethod) || ![0, 0x8000, 0x4000].includes(mode)) fail("zip-entry");
+        if (names.has(name)) fail("zip-duplicate");
+        if (entry.isEncrypted()) fail("zip-encrypted");
+        if (![0, 8].includes(entry.compressionMethod)) fail("zip-compression");
+        if (![0, 0x8000, 0x4000].includes(mode)) fail("zip-type");
         if (entry.uncompressedSize > LIMITS.file || entry.uncompressedSize / Math.max(1, entry.compressedSize) > LIMITS.ratio) fail("zip-limits");
         names.add(name);
         const stream = await archive.openReadStreamPromise(entry);

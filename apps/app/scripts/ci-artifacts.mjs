@@ -48,23 +48,22 @@ async function e2e(root, current, total) {
     PW_ARTIFACT_ROOT: root,
     CI_SHARD_CURRENT: current,
     CI_SHARD_TOTAL: total,
-    PLAYWRIGHT_BLOB_OUTPUT_DIR: join(raw, "blob"),
   };
   const shard = `--shard=${current}/${total}`;
   const manifest = join(raw, "expected-shard.json");
   const listCode = command("pnpm", ["exec", "playwright", "test", "--list", "--reporter=json", shard, "--workers=1"],
     join(logs, "discovery.log"), env, manifest);
   ensure(listCode === 0);
-  const code = command("pnpm", ["exec", "playwright", "test", "--reporter=blob,json", `--output=${join(raw, "results")}`, shard, "--workers=1"],
+  const code = command("pnpm", ["exec", "playwright", "test", "--reporter=json", `--output=${join(raw, "results")}`, shard, "--workers=1"],
     join(logs, "runner.log"), env, join(raw, "runner.json"));
   writeFileSync(join(raw, "e2e-exit.txt"), `${code}\n`, { mode: 0o600 });
+  // Solo el código numérico; los logs y el contenido de los artefactos siguen privados.
+  console.log(`Playwright: código de salida ${code}.`);
   await sanitizeRun({ root, output: "clean" });
   const clean = join(root, "clean");
-  const renderCode = command("pnpm", ["exec", "playwright", "merge-reports", "--reporter=json", join(clean, "blob")],
-    join(logs, "renderer.log"), {
-      ...environment, PLAYWRIGHT_JSON_OUTPUT_FILE: join(render, "e2e.json"),
-    });
-  ensure(renderCode === 0);
+  // El JSON nativo ya contiene el resultado completo del shard. Evita el ZIP blob
+  // intermedio, que puede repetir adjuntos; las trazas siguen en raw/results.
+  copyFileSync(join(clean, "runner.json"), join(render, "e2e.json"));
   for (const file of ["runner.json", "e2e-exit.txt", "expected-shard.json"]) copyFileSync(join(clean, file), join(render, file));
   const normalized = join(render, "e2e-normalized.json");
   const normalizeCode = command(process.execPath, [ci, "normalize", join(render, "e2e.json"), join(clean, "expected-shard.json"), normalized],

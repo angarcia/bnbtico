@@ -775,14 +775,38 @@ test("fragmentos", async () => {
       archive.outputStream.on("data", (chunk: Buffer) => chunks.push(chunk));
       archive.outputStream.on("end", () => done(Buffer.concat(chunks)));
     });
-    archive.addBuffer(Buffer.from("{}"), "same.json");
-    archive.addBuffer(Buffer.from("{}"), "same.json");
+    const privateName = `PRIVATE_${randomUUID()}.json`;
+    archive.addBuffer(Buffer.from("{}"), privateName);
+    archive.addBuffer(Buffer.from("{}"), privateName);
     archive.end();
     await writeFile(join(root, "raw", "duplicate.zip"), await finished);
-    await expect(sanitizeRun({ root })).rejects.toThrow();
+    await expect(sanitizeRun({ root })).rejects.toMatchObject({ code: "zip-duplicate" });
+    const result = await command(process.execPath, [script, "sanitize", "--root", root]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("zip-duplicate");
+    expect(result.stdout + result.stderr).not.toContain(privateName);
     await rm(join(root, "raw", "duplicate.zip"));
     await writeFile(join(root, "raw", "bad.html"), '<template id="playwrightReportBase64">data:application/zip;base64,@@@</template>');
     await expect(sanitizeRun({ root })).rejects.toThrow();
+    expect(await readdir(root)).not.toContain("publish");
+  });
+
+  it.each([
+    { offset: 8, value: 1, width: 2, code: "zip-encrypted" },
+    { offset: 10, value: 99, width: 2, code: "zip-compression" },
+    { offset: 38, value: 0xa0000000, width: 4, code: "zip-type" },
+  ])("distingue $code sin publicar el ZIP ni revelar su nombre privado", async ({ offset, value, width, code }) => {
+    const privateName = `PRIVATE_${randomUUID()}.txt`;
+    const bytes = await zip({ [privateName]: Buffer.from("contenido privado") }, code === "zip-encrypted");
+    const central = bytes.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+    expect(central).toBeGreaterThanOrEqual(0);
+    if (width === 2) bytes.writeUInt16LE(value, central + offset);
+    else bytes.writeUInt32LE(value, central + offset);
+    await writeFile(join(root, "raw", "unsupported.zip"), bytes);
+    const result = await command(process.execPath, [script, "sanitize", "--root", root]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain(code);
+    expect(result.stdout + result.stderr).not.toContain(privateName);
     expect(await readdir(root)).not.toContain("publish");
   });
 

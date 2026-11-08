@@ -22,6 +22,10 @@ La utilidad descubre secretos en memoria antes de transformar archivos. La pasad
 
 ## Enganche para el coordinador de 05
 
+El coordinador vigente de CI (`ci-artifacts.mjs`) usa el reporter JSON nativo, lo sanea y lo copia a `render/e2e.json` antes de normalizarlo. No genera ni fusiona blobs: Playwright puede repetir un adjunto en ese ZIP y provocar `zip-duplicate`. Conserva `trace: retain-on-failure`, el saneamiento de los resultados y las dos pasadas antes de publicar. El resultado de Playwright y las puertas siguen bloqueando el despliegue cuando fallan.
+
+El esqueleto con blob que sigue sirve para herramientas que necesiten generar HTML; no es el camino usado actualmente por CI. El saneador sigue rechazando entradas repetidas, aunque tengan contenido idéntico.
+
 Este documento no modifica el workflow ni `playwright.config.ts`. El coordinador debe conectar todas las rutas de diagnóstico, incluidas las del JSON normalizado.
 
 1. Genere una raíz distinta por job, intento y shard.
@@ -70,6 +74,14 @@ La subida debe exigir ese output y apuntar exclusivamente a `$PW_ARTIFACT_ROOT/p
 Un error de saneamiento o render debe bloquear la subida y fallar el job. No use un `always()` sin esa puerta. No confunda `sanitization.json` con una firma de confianza.
 
 No modifique `publish` ni añada archivos después de la promoción. Elimine la raíz temporal propia al terminar el job. No incluya el workspace, raw, clean o render en uploads, caches ni logs públicos.
+
+## Diagnosticar un rechazo en CI
+
+El coordinador `ci-artifacts.mjs` imprime `Playwright: código de salida N.` antes del saneamiento: `0` indica que el proceso terminó correctamente; otro valor indica un fallo o una interrupción. Las puertas posteriores siguen siendo obligatorias. Este dato permite conocer el resultado del proceso incluso si no se puede publicar el diagnóstico.
+
+Los rechazos de entradas ZIP se distinguen por códigos fijos: `zip-duplicate` (nombre repetido), `zip-encrypted` (entrada cifrada), `zip-compression` (método no admitido) y `zip-type` (tipo de archivo no admitido). No se imprimen nombres, rutas ni contenido del ZIP. Todos estos rechazos siguen bloqueando la publicación y el job.
+
+Si el saneamiento falla, los logs de Actions conservan únicamente este diagnóstico limitado. El paso de limpieza elimina la raíz privada y no se suben los artefactos rechazados. Para investigar el formato concreto, reproduzca el caso con datos desechables; no publique `raw`, trazas ni logs privados para saltarse el bloqueo.
 
 ## Alcance y rechazo seguro
 

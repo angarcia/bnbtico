@@ -76,7 +76,7 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(owner.locator(".place-line")).toHaveText("Limón, Limón");
   await continuar();
   await expect(owner).toHaveURL(/\/4$/);
-  for (const [label, n] of [["personas", 4], ["habitaciones", 2], ["baños", 1]] as const) {
+  for (const [label, n] of [["personas", 4], ["dormitorios", 2], ["baños", 1]] as const) {
     for (let i = 0; i < n; i++) await owner.getByRole("button", { name: `Más ${label}` }).click();
   }
   await continuar();

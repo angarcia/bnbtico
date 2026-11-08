@@ -179,10 +179,12 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect(card).toBeVisible();
   await expect(card).toHaveAttribute("href", `/casa/${coco.publicId}`);
   await expect(full.locator(".map-card")).toContainText("₡42 000 / noche");
-  // Versión compacta de la tarjeta de Explorar (2026-11-04): «N personas · N habitaciones», el corazón en la esquina de la
+  // Versión compacta de la tarjeta de Explorar: personas, dormitorios y baños con iconos, el corazón en la esquina de la
   // foto y el mismo botón de WhatsApp, que abre la hoja de contacto sobre el mapa.
   const mapCard = full.locator(".map-card");
-  await expect(mapCard).toContainText(/\d+ personas? · (\d+ habitaci(ón|ones)|Estudio)/);
+  await expect(mapCard.getByTitle("2 personas", { exact: true })).toBeVisible();
+  await expect(mapCard.getByTitle("1 dormitorio", { exact: true })).toBeVisible();
+  await expect(mapCard.getByTitle("1 baño", { exact: true })).toBeVisible();
   const photo = (await mapCard.locator(".photo").boundingBox())!;
   const heart = (await mapCard.getByRole("button", { name: /favoritos/ }).boundingBox())!;
   expect(heart.x + heart.width).toBeLessThanOrEqual(photo.x + photo.width + 1);

@@ -84,9 +84,10 @@ describe("diagnóstico E2E", () => {
 
   it("la captura CI no escribe reporters públicos y conserva la puerta del resultado", () => {
     const script = readFileSync(new URL("../../scripts/ci-artifacts.mjs", import.meta.url), "utf8");
-    expect(script).toContain('"--reporter=blob,json"');
+    expect(script).toContain('"--reporter=json"');
     expect(script).toContain('"--workers=1"');
-    expect(script).toContain('"merge-reports", "--reporter=json"');
+    expect(script).not.toContain('"--reporter=blob,json"');
+    expect(script).not.toContain('"merge-reports"');
     expect(script).not.toMatch(/reporter=html|PLAYWRIGHT_HTML_/);
     expect(script).toContain('output: "clean"');
     expect(script).toContain('input: "render", output: "publish"');
