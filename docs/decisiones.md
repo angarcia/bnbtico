@@ -1,3 +1,9 @@
+## 2026-11-08 · Priorizar compactación automática para continuar en el mismo chat (Ana)
+
+Ana pide compactación automática para reducir contexto sin abrir otro chat. En su configuración personal de Codex se establece `model_post_turn_compact_threshold_percent = 70`, un umbral ajustable al terminar una respuesta. Se mantienen los límites automáticos propios del modelo. La opción está documentada en https://learn.chatgpt.com/docs/config-file/config-reference; escribir una instrucción en una skill no ejecuta esa operación.
+
+`credit-saver` prioriza la compactación nativa y un resumen breve según la tarea y las skills activas. Solo propone otro chat cuando cambie sustancialmente la tarea o siga siendo difícil manejar el contexto. No se compacta manualmente cada mensaje ni se promete un ahorro medido por bajar el umbral. La configuración queda guardada; no acredita por sí sola que la sesión activa ya la haya cargado o se haya compactado.
+
 ## 2026-11-08 · Commits locales al terminar cambios del proyecto (Ana)
 
 Ana autoriza de forma permanente preparar y crear un commit local al terminar cambios del proyecto con las comprobaciones necesarias. El agente revisa el estado y el diff, incluye solo los archivos o fragmentos de la tarea y conserva trabajo y staging ajenos. Si falta validación o no puede separar el cambio, informa de lo pendiente.
