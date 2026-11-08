@@ -1,3 +1,17 @@
+## 2026-11-07 · Skills por historia y prompts solo bajo pedido (Ana)
+
+El PO identifica en cada historia la skill principal y los apoyos necesarios según el trabajo real, incluyendo su orden si hay fases. Esta información se conserva en el cuerpo de la historia y en `body` al exportar el JSON, sin añadir campos a GitHub Projects.
+
+Ana decide cuándo necesita prompts: el PO no los genera automáticamente al crear historias. Cuando se pidan, los entrega listos para copiar con las skills, la referencia de la historia vigente y sus condiciones de entrada. Así se facilita pasar del backlog al trabajo sin convertir historias bloqueadas en órdenes de implementación ni ampliar permisos de ejecución.
+
+## 2026-11-07 · Revisar documentación antes de proponer commits (Ana)
+
+Ana establece una regla transversal para todas las skills de bnbtico: revisar la documentación afectada antes de proponer o preparar un commit e incluir en su lista de archivos y comandos los documentos modificados por esa tarea. Responde a que las propuestas de commit estaban dejando fuera `docs/decisiones.md`.
+
+Las decisiones nuevas o modificadas se registran aquí el mismo día, con su motivo. Implementar una decisión ya aprobada no exige inventar una entrada: se actualizan las guías afectadas, incluida la de pruebas manuales cuando cambien pantallas. Los cambios ajenos a la tarea quedan fuera del commit propuesto.
+
+Se incorpora `ana-devops` para CI/CD y operación, con optimización de despliegues basada en mediciones, sin retirar comprobaciones obligatorias. Su uso no autoriza el corte de infraestructura ni operaciones remotas.
+
 ## 2026-11-07 · Tipo de alojamiento bajo el nombre (Ana)
 
 Las tarjetas de Explorar, Favoritos y mapa y la ficha muestran una línea de texto bajo el nombre: «Alojamiento completo» o «Habitación · baño privado/compartido». Si no se conoce el tipo de baño, solo «Habitación». Sustituye la antigua pastilla Habitación de la ficha. El icono de cama representa dormitorios, sin reutilizarlo para identificar el tipo.
@@ -154,6 +168,22 @@ Ana aprueba las cuatro composiciones mostradas sobre crema y pide versiones sobr
 Ana explora una reducción progresiva del símbolo: cuadrado con BT → BT sin marco → B sola (corrige expresamente el último escalón a B). Prueba con glifos originales y refuerzo óptico en `design/logo/propuestas/sistema-adaptativo-2026-11-05/`; orientación para revisar: 64 px o más / 32–48 px / 16–24 px. La propuesta está pendiente de elección y no sustituye los iconos de la app.
 
 Ana fija la tinta de las cuatro composiciones según el soporte: crema #FFFBF2 sobre negro y demás colores oscuros sólidos; blanco #FFFFFF con transparencia sobre fotografías. Se sustituyen las variantes `blanco-sobre-negro` y `blanco-sobre-oscuro` por `crema-sobre-negro` y `crema-sobre-oscuro`. El verde selva conserva crema. Las variantes anteriores se archivan; se comprueba que los ocho archivos SVG/PNG para fotos mantienen exactamente sus huellas.
+
+## 2026-11-04 · Logo e icono en terracota oscuro `#B44C30` (Ana)
+
+Decisión final tras comparar `#D65C3C` y `#B44C30` en el logo horizontal, el nombre, el símbolo y el icono: **se adopta `#B44C30` para los archivos de marca sobre fondo claro**. Sustituye la indicación anterior de no recolorear los logos. Se conserva la rana, la hoja, las proporciones y la transparencia; no se redibuja ni se modifica el original del prototipo.
+
+- Icono principal: beige `#FFFBF2`, rana y hoja `#B44C30`, sin nombre. Versiones de la PWA, iPhone, Android maskable y favicon sincronizadas; se mantienen las zonas seguras y el recorte de esquinas a cargo del sistema.
+- Los archivos inversos de fondo terracota usan también `#B44C30`; los logos crema, blanco y tinta conservan sus colores.
+- **La interfaz mantiene sus colores y selecciones actuales**: no se cambia `--brand` (`#D65C3C`), `--brand-ink` (`#B44C30`), el menú, los calendarios, los verdes ni los dorados de pago. Los tokens documentan esta separación sin cambiar sus valores de color.
+
+Archivos y usos: `design/logo/README.md`. Comparación aprobada: `.scratch/exploracion-color-marca-2026-11-04/evidencias/11-logos-icono-b44c30.jpg`.
+
+## 2026-11-04 · Conservar el terracota y usar el icono beige con la rana (Ana)
+
+Tras comparar dorados y cobres, se conserva el aspecto y el terracota actuales. Los logos de `design/logo` y el logo horizontal de la app ya comparten `#D65C3C`; no se recolorean. La tinta `#B44C30` sigue destinada a los usos de texto pequeño y contraste.
+
+El icono principal pasa a ser **fondo beige `#FFFBF2`, rana y hoja terracota `#D65C3C`, sin nombre dentro**, como la referencia elegida por Ana. Se usa el juego `design/logo/icono-crema-*` para la PWA y el icono de iPhone; los maskable de Android usan los mismos colores conservando su zona segura. Los PNG son cuadrados y opacos: el sistema aplica las esquinas. La variante de fondo terracota queda disponible como alternativa, no como icono principal. Ver `design/logo/README.md`.
 
 ## 2026-11-04 · Aplazar los informes HTML y las trazas descargables de CI
 
