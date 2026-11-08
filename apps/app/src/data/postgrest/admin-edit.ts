@@ -10,7 +10,8 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
 import { planStep } from "../../domain/publish-rules";
 import { REVIEW_MESSAGES as M } from "../../domain/review";
-import { EDIT_SELECT, fromDayRow, fromEditRow, fromListingRow, fromPhotoRows, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
+import { EDIT_SELECT, fromEditRow, fromListingRow, fromPhotoRows, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
+import { readCalendarDays } from "../../domain/airbnb";
 import { photoObjectPaths } from "../../domain/image";
 import { adminAccess } from "./admin-access";
 
@@ -132,9 +133,9 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
       if (!UUID.test(listingId)) return [];
       const { first, last } = calendarWindow(costaRicaToday(now()));
       return asAdmin(async () => {
-        const { data, error } = await db.from("listing_days").select("day, available, special_price_crc").eq("listing_id", listingId).gte("day", first).lte("day", last).order("day");
+        const { data, error } = await db.rpc("admin_calendar_days", { p_listing: listingId });
         if (error) throw toDomainError(error);
-        return data.map(fromDayRow);
+        return readCalendarDays(data).filter(d => d.day >= first && d.day <= last);
       }, []);
     },
 

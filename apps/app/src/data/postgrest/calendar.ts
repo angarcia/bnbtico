@@ -7,7 +7,7 @@ import { CALENDAR_MESSAGES, calendarWindow, isIsoDate } from "../../domain/calen
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
-import { fromDayRow } from "../../domain/rows";
+import { readCalendarDays } from "../../domain/airbnb";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -24,19 +24,12 @@ export function createPostgrestCalendar(db: SupabaseClient<Database>, opts: { no
 
   return {
     async days(listingId) {
-      const uid = await me(db);
+      await me(db);
       if (!UUID.test(listingId)) return [];
       const { first, last } = calendarWindow(costaRicaToday(now()));
-      const { data, error } = await db
-        .from("listing_days")
-        .select("day, available, special_price_crc, listings!inner(owner_id)")
-        .eq("listing_id", listingId)
-        .eq("listings.owner_id", uid)
-        .gte("day", first)
-        .lte("day", last)
-        .order("day");
+      const { data, error } = await db.rpc("owner_calendar_days", { p_listing: listingId });
       if (error) throw toDomainError(error);
-      return data.map(fromDayRow);
+      return readCalendarDays(data).filter(d => d.day >= first && d.day <= last);
     },
 
     async save(listingId, change) {

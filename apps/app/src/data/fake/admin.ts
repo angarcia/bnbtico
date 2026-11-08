@@ -14,6 +14,7 @@ import { approveSubscription } from "./billing";
 import { costaRicaToday } from "../../domain/inquiry";
 import type { FakeDb, FakeListing } from "./db";
 import { editStore } from "./edits";
+import { invalidateFakeAirbnb } from "./airbnb";
 
 type Access = "admin" | "mfa" | "none";
 
@@ -196,6 +197,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (!published(l)) throw new DomainError(H.notPublished, "validation");
       if (l.adminHold?.kind === "blocked") throw new DomainError(H.alreadyBlocked, "validation");
       Object.assign(l, { adminHold: { kind: "blocked", reason: text }, adminHoldAt: new Date(db.clock()).toISOString() });
+      invalidateFakeAirbnb(db, l.id);
       dropQueued(l.id);
       db.adminActions.push({ action: "listing.block", listingId: l.id, reason: text });
     },
@@ -222,6 +224,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       const l = target(id);
       if (!deleteConfirmMatches(l.publicId, confirm)) throw new DomainError(H.confirmCode, "validation");
       Object.assign(l, { deletedAt: db.now(), deletedReason: text });
+      invalidateFakeAirbnb(db, l.id, true);
       dropQueued(l.id);
       db.adminActions.push({ action: "listing.delete", listingId: l.id, reason: text });
     },
@@ -241,6 +244,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       // Aprobar toma la plaza de la oferta la primera vez y decide entre activa y pendiente de pago (fase 5).
       const status = decision === "approve" ? approveSubscription(db, l) : DECISION_STATUS[decision];
       Object.assign(l, { status, reviewNote: text || null, reviewedAt: at, updatedAt: at });
+      if (status === "rejected") invalidateFakeAirbnb(db, l.id);
       if (decision === "approve") l.firstPublishedAt ??= at;
       if (decision === "approve") {
         const owner = db.profiles.get(l.ownerId);

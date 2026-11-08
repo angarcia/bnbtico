@@ -32,6 +32,18 @@ No hay API intermedia, ni server actions, ni cookies de sesión en el servidor, 
 
 ## Sesión y seguridad
 
+### Importación de Airbnb (#5)
+
+El navegador mantiene el calendario manual y lee `owner_calendar_days`/`airbnb_overview` por PostgREST con su JWT. `POST /api/calendarios/airbnb` es una integración externa del worker: la RPC `begin_airbnb_import` autoriza al dueño y reserva un intento antes de descargar. El worker no verifica el JWT por una vía propia. `airbnb_import_context` reclama el intento una sola vez y `finish_airbnb_import`, solo de servicio, publica una instantánea completa mediante transacción y versión. Reintentos del requestId no duplican la lectura; trabajos obsoletos no reviven conexiones suspendidas o eliminadas.
+
+`airbnb_connections` guarda la URL privada y estado; `airbnb_blocks`, únicamente UID técnico e intervalos; `airbnb_import_attempts`, coordinación. Son tablas con RLS y sin grants al navegador, incluido admin. `listing_days` continúa siendo manual/precios. La proyección `effective_calendar_days` une ambas capas en una ventana de 366 fechas, sin expandir intervalos remotos ilimitados. Ficha, búsqueda y contacto usan la misma ocupación; el contacto se serializa contra el commit de importación. El público no recibe procedencia ni secretos. Admin conserva lectura/edición manual con aal2, sin gestión de conexiones.
+
+Descarga: HTTPS hacia hosts exactos `www.airbnb.ca`/`www.airbnb.com`, ruta y token admitidos, cero redirecciones, plazo completo de 10 s, máximo 1 MiB y 5.000 eventos. El parser admite inicio/fin de día completo con salida excluida, rechaza horas/recurrencias y descarta todo texto personal. Error de red/contenido/tamaño conserva último conjunto válido y fecha de éxito; un calendario completo válido vacío retira solo importados. La purga por casa se solicita al publicar la instantánea, no depende de escribir `listing_days`.
+
+El motor `runAirbnbImport` y la reclamación de servicio se reutilizan en el arnés opt-in local. #5 no añade exportación, interfaces de gestión de #7 ni cron #8. Al suspender administrativamente se invalidan intentos en vuelo; la ocupación anterior se conserva. La programación posterior consumirá el mismo motor para lecturas y recuperación. Guía reproducible: `docs/pruebas-manuales.md`, IC01–IC13. Tipos generados tras aplicar migraciones; firmas finales en `database.types.ts`.
+
+### Sesión de la aplicación
+
 - supabase-js guarda la sesión en localStorage detrás de un adaptador de almacenamiento (Capacitor la moverá a Keychain/Keystore). Token de acceso de 1 h, rotación del refresh con detección de reutilización, logout que revoca.
 - El riesgo asumido es XSS con robo de token. Contramedidas obligatorias: CSP estricta (`script-src 'self'`, sin inline ni terceros en la zona privada), prohibición de `dangerouslySetInnerHTML` por lint, Turnstile en el formulario del código, y **MFA por app de autenticación (TOTP) para admin exigida en SQL** (`auth.jwt()->>'aal' = 'aal2'` en políticas y RPCs de admin).
 - Lo que expone un token robado: las casas del propio usuario (con su dirección exacta), sus favoritos y consultas; nunca dinero. El de admin, además, los teléfonos de todos los perfiles y la cola de revisión: por eso el `aal2`.

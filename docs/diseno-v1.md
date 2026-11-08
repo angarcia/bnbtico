@@ -1,5 +1,13 @@
 # Diseño visual de la v1 · «Sol y sal» (2026-10-20)
 
+## Calendarios Airbnb: diseño móvil aprobado (2026-11-07)
+
+Ajuste aprobado tras probar la primera conexión: cada noche importada lleva un icono de enlace de 16 px bajo el precio, dentro de la casilla existente. Con noches importadas, la leyenda añade el mismo icono con «Bloqueado por Airbnb». No depende solo del color; se conservan el número, el precio y el origen accesible. Solo se presenta en el calendario privado.
+
+Referencia aprobada por Ana: [especificación móvil v0.1](../.scratch/calendarios-externos/diseno-v0.1.md). Define el recorrido desde Calendario para importar Airbnb, copiar la exportación y gestionar estado y enlaces, conservando componentes y patrones. #5 implementa localmente solo la conexión/primera importación y el origen de las noches; su validación final se recoge en la [preparación de la épica](../.scratch/calendarios-externos/spec.md). Exportación y gestión posterior se entregan con #6/#7; programación con #8. Escritorio queda aplazado.
+
+La entrada de Airbnb queda desactivada mientras haya días seleccionados sin guardar, con explicación para Guardar/Cancelar. El panel precarga la capa manual y muestra «Bloqueo manual», «Ocupado por Airbnb · sin bloqueo manual», «Bloqueo manual y Airbnb» o recuentos al mezclar días. Retirar un manual no cambia el ocupado efectivo de Airbnb ni el precio. En esta primera entrega la nota informa de la última lectura válida, sin anunciar actualizaciones automáticas que todavía no existen.
+
 ## Ajuste compartido de botones y notas (2026-11-05)
 
 Implementa el apartado 1 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md` y sustituye las indicaciones anteriores de botón principal verde lleno o de notas informativas verdes: Continuar, Guardar, Enviar y Compartir usan `--state-soft`, texto `--primary`, sombra `0 2px 5px` verde al 14 % y ningún borde permanente. Los desactivados reales usan fondo `#F2F1ED`, texto `#898D88`, sin sombra ni borde y sin bajar la opacidad. Las notas informativas usan superficie neutra clara, texto normal y borde suave; errores, avisos, pastillas y pagos conservan sus colores funcionales. Los iconos secundarios mantienen su menor peso visual; no cambia la composición de Continuar ni las confirmaciones. Tokens 0.3.3.

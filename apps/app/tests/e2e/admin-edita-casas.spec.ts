@@ -193,7 +193,7 @@ test("calendario de una casa ajena en frío: la casa y sus días salen sin esper
     (route) => new Promise<void>((resolve) => held.push(() => resolve(route.continue()))),
   );
   const listing = page.waitForRequest((r) => r.url().includes("/rest/v1/listings?") && r.url().includes(`id=eq.${id}`));
-  const days = page.waitForRequest((r) => r.url().includes("/rest/v1/listing_days?") && r.url().includes(`listing_id=eq.${id}`));
+  const days = page.waitForRequest((r) => r.method() === "POST" && new URL(r.url()).pathname.endsWith("/rest/v1/rpc/admin_calendar_days") && r.postDataJSON()?.p_listing === id);
   await page.reload();
   await Promise.all([listing, days]);
   await expect.poll(() => held.length).toBeGreaterThan(0);

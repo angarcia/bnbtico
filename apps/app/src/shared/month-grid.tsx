@@ -10,6 +10,7 @@ import type { Currency } from "../domain/currency";
 import { longDateWithYear } from "../domain/dates";
 import { FX_INITIAL } from "../domain/fx";
 import { formatMoney } from "../domain/money";
+import type { ReactNode } from "react";
 
 const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
 
@@ -34,6 +35,8 @@ export interface MonthGridProps {
   onSelect?: (day: string) => void;
   /** Casa cerrada a consultas: se ve, atenuada, sin tocar. */
   dimmed?: boolean;
+  /** Solo calendario privado: origen de los bloqueos importados. */
+  importedIcon?: ReactNode;
   /** Nombre accesible de la rejilla («Diciembre 2026»). */
   label: string;
 }
@@ -51,7 +54,7 @@ export function WeekdayRow({ className }: { className?: string }) {
   );
 }
 
-export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, label }: MonthGridProps) {
+export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, importedIcon, label }: MonthGridProps) {
   const { weeks } = monthGrid(month, today);
   const start = range?.arrival ?? null;
   const end = range?.departure ?? null;
@@ -64,8 +67,9 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
             if (!g) return <span key={`b${i}`} className="day-blank" aria-hidden="true" />;
             const s = effectiveDay(days, base, g.day);
             const off = g.past || g.beyond;
-            // Ocupado: solo el número. Pasado: tachado y más claro, con su precio.
-            const price = s.available && s.priceCrc !== null ? dayPrice(s.priceCrc, currency, fx) : "";
+            // Ocupado: solo número, salvo importados privados con precio y marca de origen.
+            const imported = !!importedIcon && !range && !off && s.imported;
+            const price = (s.available || imported) && s.priceCrc !== null ? dayPrice(s.priceCrc, currency, fx) : "";
             const isEnd = !off && (g.day === start || g.day === end);
             const inside = !off && !!start && !!end && g.day > start && g.day < end;
             const band = isEnd && start && end ? (g.day === start ? " is-start" : " is-last") : "";
@@ -73,8 +77,9 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
             const name = [
               longDateWithYear(g.day),
               off ? null : s.available ? "disponible" : "ocupado",
+              !off && (interactive || importedIcon) && !range && s.imported ? s.manualAvailable === false ? "bloqueo manual y Airbnb" : "ocupado por Airbnb" : null,
               // Un día ocupado de la ficha no dice su precio, que no enseña; en el calendario del propietario, sí.
-              !off && ((interactive && !range) || s.available) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
+              !off && ((interactive && !range) || s.available || imported) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
               !off && s.special ? "precio distinto" : null,
             ]
               .filter(Boolean)
@@ -83,6 +88,7 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
               <>
                 <b>{g.date}</b>
                 <span className={`day-sub${price.replace(/\D/g, "").length >= 6 ? " is-long" : ""}`}>{price}</span>
+                {imported ? <span className="day-imported" aria-hidden="true">{importedIcon}</span> : null}
               </>
             );
             return interactive ? (
@@ -101,7 +107,7 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
   );
 }
 
-export function MonthLegend() {
+export function MonthLegend({ extra }: { extra?: ReactNode }) {
   return (
     <div className="month-legend">
       <span>
@@ -112,6 +118,7 @@ export function MonthLegend() {
         <i className="swatch is-busy" aria-hidden="true" />
         Ocupado
       </span>
+      {extra}
     </div>
   );
 }
