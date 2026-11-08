@@ -20,6 +20,8 @@ terceros salvo Turnstile en Ingresar.
 
 ## Consultas
 
+**Privacidad de iCal (#5):** la conexión no añade eventos con el enlace importado. El campo de URL no se incorpora a navegación, Query ni mutaciones persistidas. El worker transforma los fallos de descarga/parser en códigos cerrados (`url`, `calendar`, `unsupported`, `download`, `timeout`, `size`), sin registrar el texto del error remoto, su causa ni el cuerpo iCal. No registrar `DESCRIPTION`, enlaces de reserva, últimos dígitos de teléfono o UID de huéspedes en balizas; los rangos y UID técnicos solo se guardan en tablas privadas para reconciliación. El estado conserva fecha de éxito/error seguro; un fallo no incrementa artificialmente la fecha de éxito. El arnés local imprime únicamente identificador público y fechas sintéticas de la prueba.
+
 p75 de LCP por tipo de página para usuarios en Costa Rica (últimos 28 días; el presupuesto de la ficha es < 1,5 s):
 
 ```sql

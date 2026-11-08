@@ -1,3 +1,7 @@
+## 2026-11-07 · Origen Airbnb visible en el calendario (Ana)
+
+Ana aprueba un icono de enlace en cada noche importada y la leyenda «Bloqueado por Airbnb», para reconocer el origen sin seleccionar el día. Se conservan el número y el precio visible en esas noches; el panel mantiene el detalle manual/Airbnb/ambos. La marca pertenece al calendario privado, sin mostrar el proveedor en la ficha pública.
+
 ## 2026-11-07 · Gestión de conexiones iCal solo por el propietario (Ana)
 
 Ana aprueba que solo el propietario pueda conectar, sustituir, desconectar y revocar los enlaces de su casa. Esta épica no añade gestión de conexiones para administradores. El trabajo automático autorizado sigue operando con las reglas aprobadas; no equivale a conceder gestión interactiva a otros usuarios.

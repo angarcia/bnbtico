@@ -19,6 +19,10 @@ Y para pararlo todo al terminar: `./parar-entorno-local.sh`.
 
 ## 1. Preparación en un Mac nuevo (una sola vez)
 
+**Pruebas de Airbnb (#5):** la primera conexión con un enlace real hace una lectura externa desde el worker. Para probar de forma reproducible sin Airbnb, use el arnés opt-in y la casa desechable de la sección IC01–IC13 de `docs/pruebas-manuales.md`. Aplica solo a Supabase local y no modifica conexiones reales. Antes, `pnpm db:al-dia` y `pnpm --filter app db:types`; estos comandos no requieren reiniciar ni resetear Supabase. Durante una reserva de la base compartida prevalecen sus restricciones: no ejecutar los comandos de start/reset/stop de las instrucciones generales de abajo.
+
+La ruta `/api/calendarios/*` debe estar en `assets.run_worker_first` de `apps/app/wrangler.jsonc`: si falta, el servidor de assets rechaza el POST con 405 antes de llegar al importador. Después de cambiar esa configuración, reinicie `pnpm dev` si Vite no lo hace automáticamente; no hace falta reiniciar Supabase.
+
 Esta sección parte de un Mac recién estrenado, sin nada instalado. Hágala una vez, en orden; tarda unos 30–45 minutos, casi todo descargas. Al final tendrá:
 
 | Qué | Para qué |

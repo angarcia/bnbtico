@@ -5,6 +5,7 @@ import type { FavoritesApi, InquiriesApi } from "../../domain/api";
 import { DomainError } from "../../domain/errors";
 import { INQUIRY_MESSAGES as M, costaRicaToday, validateInquiryDraft } from "../../domain/inquiry";
 import { isPublicListing, type FakeDb, type FakeListing } from "./db";
+import { AIRBNB_BUSY_MESSAGE, fakeBusyNights } from "./airbnb";
 
 const DAY = 86_400_000;
 const DEDUP_MS = 7 * DAY;
@@ -53,6 +54,7 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
       const now = tick();
       const problem = validateInquiryDraft(draft, costaRicaToday(now));
       if (problem) throw new DomainError(problem.message, "validation");
+      if (draft.arrival && draft.departure && fakeBusyNights(db, l.id, draft.arrival, draft.departure)) throw new DomainError(AIRBNB_BUSY_MESSAGE, "validation");
 
       const others = new Set(
         db.inquiries.filter((i) => i.clientId === uid && Date.parse(i.updatedAt) > now - RATE_WINDOW_MS && i.listingId !== l.id).map((i) => i.listingId),

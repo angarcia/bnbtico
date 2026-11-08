@@ -5,6 +5,7 @@ import { applyChange, calendarWindow, validateChange, type CalendarListing } fro
 import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { DomainError } from "../../domain/errors";
 import type { FakeDb, FakeListing } from "./db";
+import { fakeEffectiveDays } from "./airbnb";
 
 function session(userId: () => string | null): string {
   const id = userId();
@@ -27,7 +28,7 @@ export function createFakeCalendar(db: FakeDb, opts: { userId: () => string | nu
       const l = own(listingId);
       if (!l) return [];
       const { first, last } = calendarWindow(db.today());
-      return (db.days.get(l.id) ?? []).filter((d) => d.day >= first && d.day <= last).map((d) => ({ ...d }));
+      return fakeEffectiveDays(db, l.id, true).filter((d) => d.day >= first && d.day <= last);
     },
 
     async save(listingId, change) {

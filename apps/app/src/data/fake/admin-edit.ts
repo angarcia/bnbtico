@@ -15,6 +15,7 @@ import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
 import type { ReviewedField } from "../../domain/edit-summary";
 import { OTHER_ZONE_MAX } from "../../domain/zones";
 import { nightlyBase } from "./calendar";
+import { fakeEffectiveDays } from "./airbnb";
 import { oneRoom, type FakeDb, type FakeListing } from "./db";
 import { editStore, locationOf, type Located } from "./edits";
 import { submitRefusal } from "./owner";
@@ -215,7 +216,7 @@ export function createFakeAdminEdit(db: FakeDb, opts: { supabaseUrl: string; ses
       const l = live(listingId);
       if (!l) return [];
       const { first, last } = calendarWindow(db.today());
-      return (db.days.get(l.id) ?? []).filter((d) => d.day >= first && d.day <= last).map((d) => ({ ...d }));
+      return fakeEffectiveDays(db, l.id, true).filter((d) => d.day >= first && d.day <= last);
     },
 
     async saveDays(listingId, change) {

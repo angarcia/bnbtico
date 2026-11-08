@@ -13,6 +13,7 @@ import { CARIBE_PROVINCE, ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithLi
 import { offerTaken } from "./billing";
 import { approxPoint, isPublicListing, type FakeDb, type FakeListing } from "./db";
 import { FAKE_ZONES, fakeCantonOf } from "./places";
+import { fakeBusyNights, fakeEffectiveDays } from "./airbnb";
 
 export const SEARCH_LIMIT = 60;
 export const SITEMAP_LIMIT = 1000;
@@ -68,7 +69,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
   const nearZone = (l: FakeListing, z: Zone) =>
     l.zoneId === z.id || (l.lat !== null && l.lng !== null && distanceMeters({ lat: l.lat, lng: l.lng }, z) <= ZONE_RADIUS_M);
   // Alguna noche de [from, to) ocupada en el calendario del fake.
-  const busy = (l: FakeListing, from: string, to: string) => (db.days.get(l.id) ?? []).some((d) => !d.available && d.day >= from && d.day < to);
+  const busy = (l: FakeListing, from: string, to: string) => fakeBusyNights(db, l.id, from, to);
 
   // El total orientativo de [from, to) con la regla del dominio; search_listings la repite en SQL (search_stay_total).
   const stayTotal = (l: FakeListing, from: string, to: string): number | null =>
@@ -140,7 +141,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       const l = db.byPublicId(publicId);
       if (!l || !isPublicListing(l)) return [];
       const { first, last } = calendarWindow(db.today());
-      return (db.days.get(l.id) ?? []).filter((d) => d.day >= first && d.day <= last).map((d) => ({ ...d }));
+      return fakeEffectiveDays(db, l.id).filter((d) => d.day >= first && d.day <= last);
     },
 
     async fxRate() {

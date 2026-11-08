@@ -2,7 +2,11 @@
 
 ## Calendarios Airbnb: diseño móvil aprobado (2026-11-07)
 
-Referencia aprobada por Ana: [especificación móvil v0.1](../.scratch/calendarios-externos/diseno-v0.1.md). Añade el recorrido desde Calendario para importar Airbnb, copiar la exportación y gestionar estado y enlaces, conservando los componentes y patrones vigentes. Incluye estados y confirmaciones; es una especificación escrita, todavía sin pantallas implementadas ni validación de funcionamiento. Escritorio queda aplazado. Las reglas de producto consultadas P1–P6 de la [preparación de la épica](../.scratch/calendarios-externos/spec.md) ya están aprobadas y se inspeccionó una muestra real compatible con el alcance inicial. Antes de implementar se deben contrastar el contrato técnico preparado y las condiciones de entrada de cada historia.
+Ajuste aprobado tras probar la primera conexión: cada noche importada lleva un icono de enlace de 16 px bajo el precio, dentro de la casilla existente. Con noches importadas, la leyenda añade el mismo icono con «Bloqueado por Airbnb». No depende solo del color; se conservan el número, el precio y el origen accesible. Solo se presenta en el calendario privado.
+
+Referencia aprobada por Ana: [especificación móvil v0.1](../.scratch/calendarios-externos/diseno-v0.1.md). Define el recorrido desde Calendario para importar Airbnb, copiar la exportación y gestionar estado y enlaces, conservando componentes y patrones. #5 implementa localmente solo la conexión/primera importación y el origen de las noches; su validación final se recoge en la [preparación de la épica](../.scratch/calendarios-externos/spec.md). Exportación y gestión posterior se entregan con #6/#7; programación con #8. Escritorio queda aplazado.
+
+La entrada de Airbnb queda desactivada mientras haya días seleccionados sin guardar, con explicación para Guardar/Cancelar. El panel precarga la capa manual y muestra «Bloqueo manual», «Ocupado por Airbnb · sin bloqueo manual», «Bloqueo manual y Airbnb» o recuentos al mezclar días. Retirar un manual no cambia el ocupado efectivo de Airbnb ni el precio. En esta primera entrega la nota informa de la última lectura válida, sin anunciar actualizaciones automáticas que todavía no existen.
 
 ## Ajuste compartido de botones y notas (2026-11-05)
 

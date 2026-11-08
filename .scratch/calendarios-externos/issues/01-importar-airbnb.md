@@ -1,7 +1,7 @@
 # #5 · Importar disponibilidad desde Airbnb
 
-Status: needs-info
-Preparación: Bloqueada por contrato técnico pendiente; muestra real inspeccionada y compatible con el alcance inicial, reglas de producto consultadas aprobadas. Diseño: Listo; móvil v0.1 aprobado por Ana el 2026-11-07.
+Status: ready-for-agent
+Preparación: reglas, diseño, muestra y contrato contrastados. Implementación local escrita; aceptación pendiente de la verificación restante, sin cambiar el estado remoto. Diseño: Listo; móvil v0.1 aprobado por Ana el 2026-11-07.
 Fuente: https://github.com/angarcia/bnbtico/issues/5 · Épica: #4.
 
 ## Objetivo, usuario y diferencia
@@ -14,7 +14,7 @@ Conectar una casa, primera lectura y reconciliación idempotente de una lectura 
 
 ## Condiciones de entrada
 
-Contrato técnico preparado, pendiente de contraste final en el checkout de implementación: [#5 v0.1](../contrato-tecnico-05.md). Fija responsabilidades de worker/Postgres, procedencias, publicación atómica, permisos, descarga acotada, parser y consumidores de disponibilidad. Las decisiones técnicas propuestas se validan con pruebas al implementar, sin reabrir el diseño y producto ya aprobados.
+Contrato técnico contrastado con el checkout: [#5 v0.1](../contrato-tecnico-05.md). La implementación local conserva procedencias, publicación atómica, permisos y descarga acotada. Seguimiento de pasos y evidencia pendiente en [plan-05](../plan-05.md); no reabrir el diseño y producto aprobados ni comenzar #6 sin aceptar #5.
 
 Diseño [v0.1](../diseno-v0.1.md), apartados conectar/noches/estados, aprobado; P1–P5 resueltas; muestra anonimizada de Airbnb compatible. Definir contrato con procedencias separadas, permisos de dueño, protección de URL y descarga y publicación atómica del resultado. Tablas nuevas con políticas y pruebas antes de pantalla. No asumir que `CalendarDay.available` identifica el origen. Definir actualización/invalidez de las cachés de dueño, ficha y búsqueda.
 

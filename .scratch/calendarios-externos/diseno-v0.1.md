@@ -84,7 +84,7 @@ Pendiente: botón «Desconectando…» / «Revocando…» y sin doble envío. Er
 
 ## Noches y edición manual
 
-Propuesta: mantener el color/rayado de ocupado. En el panel seleccionado, añadir origen textual «Ocupado por Airbnb», «Bloqueo manual» o ambos; nombres accesibles incluyen origen, sin nombres de huéspedes. No depender de otro color.
+Aprobado: mantener el color/rayado de ocupado. Tras probar la conexión, Ana aprueba añadir un icono de enlace de 16 px en cada noche importada, bajo el precio y sin cambiar el alto de la casilla. La leyenda privada añade el mismo icono con «Bloqueado por Airbnb» cuando hay noches importadas; se conservan el número y el precio. En el panel seleccionado, origen textual «Ocupado por Airbnb», «Bloqueo manual» o ambos; nombres accesibles incluyen origen, sin nombres de huéspedes. No depender de otro color. La ficha pública no muestra esta marca ni la leyenda del proveedor.
 
 Disponible actúa únicamente sobre la capa manual; nunca permite prometer una noche libre mientras existe Airbnb. Si está importada, nota «Esta noche sigue ocupada por Airbnb. Para liberarla, cambie el calendario en Airbnb y actualice la importación.». Si hay ambas capas, permitir quitar el bloqueo manual con botón explícito «Quitar bloqueo manual», manteniendo Airbnb. Con selección mixta, informar cuántas seguirán ocupadas y aplicar solo a manuales; precios conservan su edición independiente. Este ajuste del panel forma parte del diseño móvil aprobado.
 

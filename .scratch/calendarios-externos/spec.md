@@ -1,6 +1,6 @@
 # Épica #4 · Calendarios Airbnb · preparación v0.1
 
-Fecha: 2026-11-07. Estado de preparación: **Por definir técnicamente**. Diseño móvil v0.1 y las reglas de producto consultadas P1–P6: **Aprobados por Ana el 2026-11-07**. Muestra real de Airbnb inspeccionada y compatible con el alcance inicial; faltan los contratos técnicos y su validación. No es una orden de implementación ni un estado de ejecución paralelo a GitHub.
+Fecha: 2026-11-07. Diseño móvil v0.1 y reglas de producto consultadas P1–P6: **Aprobados por Ana el 2026-11-07**. Muestra real inspeccionada y contrato contrastado. #5 tiene implementación local escrita y verificación en curso; #6–#8 conservan sus dependencias. No se modifica el estado remoto de GitHub desde esta preparación.
 
 ## Objetivo y alcance
 
@@ -10,7 +10,7 @@ Orden indicado por Ana: diseño conjunto → #5 → #6 → #7 → #8, aceptando 
 
 **Alcance actualizado por Ana el 2026-11-07: solo móvil por ahora.** La web de escritorio aún no está lista; su adaptación y validación quedan aplazadas y no son condiciones de entrada ni de aceptación de #5–#8. Ana aprobó el diseño móvil v0.1 y, posteriormente, las reglas P1–P6 una por una.
 
-Las reglas P1–P6 se aprobaron después, una por una, y se recogen abajo. Preparación técnica añadida tras revisar la muestra y el código: [contrato de #5 v0.1](contrato-tecnico-05.md). No es implementación ni evidencia de pruebas ejecutadas.
+Las reglas P1–P6 se recogen abajo. El [contrato de #5](contrato-tecnico-05.md) y el [plan de ejecución](plan-05.md) enlazan las firmas y la evidencia disponible; no confundir diseño aprobado, código escrito y comprobaciones ejecutadas.
 
 Fuentes remotas leídas completas el 7 de noviembre desde GitHub, en solo lectura: [#4](https://github.com/angarcia/bnbtico/issues/4), [#5](https://github.com/angarcia/bnbtico/issues/5), [#6](https://github.com/angarcia/bnbtico/issues/6), [#7](https://github.com/angarcia/bnbtico/issues/7), [#8](https://github.com/angarcia/bnbtico/issues/8). #4 no tiene descripción; sus cuatro sub-issues fijan el alcance. No se observaron comentarios de contenido adicional ni bloqueos nativos en Relationships. La secuencia es una instrucción de Ana, no una relación remota creada por esta preparación.
 

@@ -26,6 +26,7 @@
       "!dist/client/assets/image-*.js",
       "!dist/client/assets/useMutation-*.js",
       "!dist/client/assets/calendario-*.js",
+      "!dist/client/assets/airbnb-*.js",
       "!dist/client/assets/calendar-*.js",
       "!dist/client/assets/month-grid-*.js",
       "!dist/client/assets/listing-calendar-*.js",
@@ -289,6 +290,12 @@
       "dist/client/assets/month-grid-*.js"
     ],
     "limit": "8.5 kB",
+    "gzip": true
+  },
+  {
+    "name": "Airbnb · estado, controles de noches importadas y pantalla de conexión por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
+    "path": ["dist/client/assets/airbnb-*.js"],
+    "limit": "5 KB",
     "gzip": true
   },
   {

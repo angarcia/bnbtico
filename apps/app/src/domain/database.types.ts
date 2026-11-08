@@ -43,6 +43,72 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"airbnb_blocks": {
+                  Row: {
+                    "ends_on": string,"listing_id": string,"source_uid": string,"starts_on": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ends_on": string,"listing_id": string,"source_uid": string,"starts_on": string
+                  }
+                  Update: {
+                    "ends_on"?: string,"listing_id"?: string,"source_uid"?: string,"starts_on"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "airbnb_blocks_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "airbnb_connections"
+      referencedColumns: ["listing_id"]
+    }
+                  ]
+                },"airbnb_connections": {
+                  Row: {
+                    "connected": boolean,"error_code": string | null,"last_success_at": string | null,"listing_id": string,"private_url": string | null,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "connected"?: boolean,"error_code"?: string | null,"last_success_at"?: string | null,"listing_id": string,"private_url"?: string | null,"version"?: number
+                  }
+                  Update: {
+                    "connected"?: boolean,"error_code"?: string | null,"last_success_at"?: string | null,"listing_id"?: string,"private_url"?: string | null,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "airbnb_connections_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: true
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "airbnb_connections_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: true
+      referencedRelation: "listings_public"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"airbnb_import_attempts": {
+                  Row: {
+                    "claimed": boolean,"error_code": string | null,"listing_id": string,"request_id": string,"started_at": string,"state": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
+                  }
+                  Update: {
+                    "claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "airbnb_import_attempts_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "airbnb_connections"
+      referencedColumns: ["listing_id"]
+    }
+                  ]
                 },"client_errors": {
                   Row: {
                     "build": string,"col": number | null,"country": string | null,"created_at": string,"id": number,"kind": string,"line": number | null,"message": string,"page": string,"path": string,"source": string | null,"stack": string | null,"user_agent": string | null
@@ -615,6 +681,11 @@ isOneToOne: true
 "admin_block_listing":
 { Args: { "p_listing": string,"p_reason": string }; Returns: undefined
                            },
+"admin_calendar_days":
+{ Args: { "p_listing": string }; Returns: {
+              "available": boolean,"day": string,"imported": boolean,"manual_available": boolean,"special_price_crc": number
+            }[]
+                           },
 "admin_delete_listing":
 { Args: { "p_confirm": string,"p_listing": string,"p_reason": string }; Returns: undefined
                            },
@@ -701,6 +772,15 @@ isOneToOne: true
 "admin_update_listing":
 { Args: { "p_listing": string,"p_patch": Json }; Returns: undefined
                            },
+"airbnb_import_context":
+{ Args: { "p_listing": string,"p_request": string }; Returns: Json
+                           },
+"airbnb_overview":
+{ Args: { "p_listing": string }; Returns: Json
+                           },
+"airbnb_reserve":
+{ Args: { "p_initial": boolean,"p_listing": string,"p_request": string,"p_url": string }; Returns: Json
+                           },
 "apply_payment_event":
 { Args: { "p_brand"?: string,"p_customer_ref"?: string,"p_event_id": string,"p_exp_month"?: number,"p_exp_year"?: number,"p_last4"?: string,"p_method_ref"?: string,"p_owner"?: string,"p_provider": string,"p_type": string }; Returns: string
                            },
@@ -709,6 +789,12 @@ isOneToOne: true
                            },
 "assert_listing_open":
 { Args: { "p_listing": string }; Returns: undefined
+                           },
+"begin_airbnb_import":
+{ Args: { "p_listing": string,"p_request": string,"p_url": string }; Returns: Json
+                           },
+"claim_airbnb_import":
+{ Args: { "p_listing": string,"p_request": string }; Returns: Json
                            },
 "claim_reminders":
 { Args: { "p_limit"?: number }; Returns: {
@@ -736,6 +822,14 @@ isOneToOne: true
 { Args: { "p_lat": number,"p_lng": number,"p_zone": string,"p_zone_id": string,"p_zone_source": string }; Returns: {
               "canton": string,"district": string,"province": string,"zone": string
             }[]
+                           },
+"effective_calendar_days":
+{ Args: { "p_listing": string }; Returns: {
+              "available": boolean,"day": string,"imported": boolean,"manual_available": boolean,"special_price_crc": number
+            }[]
+                           },
+"finish_airbnb_import":
+{ Args: { "p_blocks": Json,"p_error"?: string,"p_listing": string,"p_request": string }; Returns: undefined
                            },
 "finish_reminders":
 { Args: { "p_results": Json }; Returns: number
@@ -795,6 +889,9 @@ isOneToOne: true
                            },
 "listing_folder_objects":
 { Args: { "p_listing": string }; Returns: number
+                           },
+"listing_has_busy_nights":
+{ Args: { "p_from": string,"p_listing": string,"p_to": string }; Returns: boolean
                            },
 "listing_is_public":
 { Args: { "l": Omit<Database["public"]['Tables']["listings"]['Row'], Database["public"]['Tables']["listings"]['ComputedFields']> }; Returns: boolean
@@ -903,6 +1000,11 @@ isOneToOne: true
                            },
 "owner_billing":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"owner_calendar_days":
+{ Args: { "p_listing": string }; Returns: {
+              "available": boolean,"day": string,"imported": boolean,"manual_available": boolean,"special_price_crc": number
+            }[]
                            },
 "owner_has_payment_method":
 { Args: { "p_owner": string }; Returns: boolean

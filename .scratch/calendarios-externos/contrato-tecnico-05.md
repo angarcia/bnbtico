@@ -1,6 +1,6 @@
 # #5 · Contrato técnico de preparación · v0.1
 
-Fecha: 2026-11-07. Especificación técnica propuesta tras inspección del código y muestra real; **no implementada ni verificada mediante pruebas**. Conserva las reglas de producto y el diseño móvil aprobados. Las firmas y nombres internos pueden ajustarse al implementar sin cambiar este comportamiento. No habilita #6–#8 antes de aceptar sus entregas previas.
+Fecha: 2026-11-07. Contrato contrastado con el checkout e implementación local escrita de #5; **aceptación pendiente de verificación final y recorrido visual**. Se conserva producto/diseño aprobado. Evidencia comunicada por Ana: 70 pruebas unitarias puntuales y 12 pruebas de contrato/permisos contra Postgres pasaron antes de las últimas correcciones del panel; revisar el plan de ejecución para la verificación del estado final. No habilita #6–#8 antes de aceptar sus entregas previas.
 
 ## Evidencia y límites
 
@@ -87,4 +87,10 @@ La implementación debe crear migración, regenerar tipos y actualizar fake/adap
 
 ## Estado de entrada
 
-Producto, diseño móvil y muestra: disponibles. Este contrato hace revisable el trabajo técnico; no acredita que esté implementado ni que las pruebas pasen. Antes de marcar #5 «Lista para trabajar», revisar este documento contra la versión del checkout donde se vaya a implementar, fijar las firmas finales y comprobar que ninguna regla de estados o privacidad contradice lo aprobado. No hace falta otra aprobación de producto para resolver nombres internos o límites técnicos rutinarios; sí consultar cualquier cambio del alcance aprobado.
+Producto, diseño móvil, muestra y contraste del contrato: disponibles. Las firmas finales de abajo corresponden al código local escrito. La aceptación requiere la evidencia del estado final, incluida la revisión visual; no basta con tener este documento. No hace falta otra aprobación de producto para resolver nombres internos o límites técnicos rutinarios; sí consultar cualquier cambio del alcance aprobado.
+
+### Firmas finales de #5 y corte de entrega
+
+La API está en `src/domain/airbnb.ts`: `begin`, `claim`, `context`, `finish`, `overview`. Sus RPCs son `begin_airbnb_import`, `claim_airbnb_import`, `airbnb_import_context`, `finish_airbnb_import` y `airbnb_overview`; `claim/context/finish` se conceden solo a service_role. `owner_calendar_days` y `admin_calendar_days` sustituyen lecturas directas para incorporar origen sin dar permisos de gestión al admin. La ventana/importación se aplica con migraciones `20261108020000_importar_airbnb` y `20261108021000_airbnb_revalidar_cuenta`; la segunda revalida la cuenta durante el trabajo sin modificar una migración ya aplicada.
+
+El cuerpo del endpoint exige UUID de casa/requestId y URL admitida, con máximo 4 KiB. La URL solo vive en el campo local del formulario y columnas de servicio, nunca en Query/mutaciones persistidas. Estado/días privados se aíslan por usuario. El arnés `tests/db/airbnb-manual.test.ts` usa el motor real con fetch inyectado y fixture inventado; opt-in, solo localhost, dueño de pruebas y título «Prueba Airbnb», sin endpoint de pruebas de importación en producción. Repite lecturas para comprobar cambios/cancelaciones/fallo sin implementar «Actualizar ahora».
