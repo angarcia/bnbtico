@@ -1,3 +1,15 @@
+## 2026-11-07 · Credit Saver transversal y comandos ejecutados por Ana
+
+Ana establece el uso de `credit-saver` en todas las tareas, junto con las skills especializadas. Se amplía su descripción y se explicita esta regla en `AGENTS.md`.
+
+El agente entrega los comandos de consola con su directorio y la salida necesaria para continuar; Ana los ejecuta y comparte los resultados. Pedir resolver una tarea no autoriza por sí solo ejecutar esos comandos. Una petición expresa de Ana para ejecutarlos cambia esa regla para el alcance indicado. La inspección y edición normal de archivos sigue permitida.
+
+## 2026-11-07 · Prácticas de código comunes y específicas por rol (Ana)
+
+Las reglas compartidas de TypeScript, validación de fronteras, cambios acotados, reutilización y pruebas de comportamiento se mantienen una sola vez en `AGENTS.md` (enlace a `CLAUDE.md`). Las skills de frontend y backend añaden únicamente prácticas propias de su responsabilidad, para evitar duplicación y recomendaciones genéricas crecientes.
+
+Frontend explicita el manejo del estado del servidor, responsabilidades de componentes y hooks, limpieza de efectos, respuestas fuera de orden y controles semánticos. Backend explicita validación y errores del contrato, SQL parametrizado, transacciones e integridad y concurrencia en la base. Estas reglas orientan el trabajo futuro; no implican refactorizar código existente fuera de una tarea autorizada.
+
 ## 2026-11-07 · Skills por historia y prompts solo bajo pedido (Ana)
 
 El PO identifica en cada historia la skill principal y los apoyos necesarios según el trabajo real, incluyendo su orden si hay fases. Esta información se conserva en el cuerpo de la historia y en `body` al exportar el JSON, sin añadir campos a GitHub Projects.

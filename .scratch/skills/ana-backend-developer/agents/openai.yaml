@@ -1,0 +1,3 @@
+interface:
+  display_name: "ana-backend-developer"
+  short_description: "Backend de bnbtico: SQL, permisos, RPCs y worker"
