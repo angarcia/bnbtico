@@ -40,7 +40,7 @@ function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["ki
       // Una Habitación solo cuenta personas (es 1 habitación y 1 baño): «2 personas», como su título «Personas». El baño
       // privado o compartido ya sale en la fila Tipo, que es donde se cambia.
       if (approvedKind === "habitacion") return plural(l.capacity ?? 0, "persona", "personas");
-      return [plural(l.capacity ?? 0, "persona", "personas"), plural(l.bedrooms ?? 0, "habitación", "habitaciones"), plural(l.bathrooms ?? 0, "baño", "baños")].join(" · ");
+      return [plural(l.capacity ?? 0, "persona", "personas"), plural(l.bedrooms ?? 0, "dormitorio", "dormitorios"), plural(l.bathrooms ?? 0, "baño", "baños")].join(" · ");
     case "caracteristicas":
       return l.features.length ? l.features.map((f) => FEATURE_LABEL[f]).join(", ") : "Ninguna marcada";
     case "descripcion":

@@ -78,9 +78,9 @@ describe("editar una casa publicada · dominio", () => {
   });
   it("fieldTitle: una Habitación solo pregunta personas («Personas»; el baño va con el tipo)", () => {
     expect(fieldTitle("capacidad", "habitacion")).toBe("Personas");
-    expect(fieldTitle("capacidad", "completo")).toBe("Personas, habitaciones y baños");
-    expect(fieldTitle("capacidad", null)).toBe("Personas, habitaciones y baños");
-    expect(fieldTitle("capacidad")).toBe("Personas, habitaciones y baños");
+    expect(fieldTitle("capacidad", "completo")).toBe("Personas, dormitorios y baños");
+    expect(fieldTitle("capacidad", null)).toBe("Personas, dormitorios y baños");
+    expect(fieldTitle("capacidad")).toBe("Personas, dormitorios y baños");
     expect(fieldTitle("nombre", "habitacion")).toBe("Nombre");
   });
   it("planEdit: la capacidad de una Habitación no pide habitaciones ni baños (el formulario solo manda personas) y se quedan en 1", () => {

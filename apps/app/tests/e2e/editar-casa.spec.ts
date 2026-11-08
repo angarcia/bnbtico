@@ -54,7 +54,7 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(rows(page).locator(".field-title")).toHaveText([
     /^Nombre/,
     /^Tipo/,
-    /^Personas, habitaciones y baños/,
+    /^Personas, dormitorios y baños/,
     /^Características/,
     /^Descripción/,
     /^Precio/,
@@ -63,7 +63,7 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   // Sin etiqueta en los datos que se revisan mientras no hay nada pendiente (Ana, 2026-11-04): lo dice la nota.
   await expect(rows(page).locator(".tag-rev")).toHaveCount(0);
   await expect(row(page, "Nombre")).toHaveAttribute("href", `/propietario/casas/${id}/editar/nombre`);
-  await expect(row(page, "Personas, habitaciones y baños")).toHaveAttribute("href", `/propietario/casas/${id}/editar/capacidad`);
+  await expect(row(page, "Personas, dormitorios y baños")).toHaveAttribute("href", `/propietario/casas/${id}/editar/capacidad`);
   await expect(row(page, "Nombre")).toContainText("Casa Coco");
   await expect(page.getByText("Toque un dato para editarlo. Su ficha seguirá visible durante la revisión.")).toBeVisible();
   const pill = page.getByRole("link", { name: "Editar fotos: 5 fotos" });
@@ -312,7 +312,7 @@ test("tipo habitación ofrece el baño; sin elegirlo se envía (como al crear) y
   await expect(row(page, "Tipo")).toContainText("Habitación · baño compartido");
   await expect(page.getByTestId("warn-tipo")).toHaveCount(0);
   // Mientras el cambio de tipo espera, la capacidad sigue la del tipo aprobado (con su contador de habitaciones).
-  await expect(row(page, "Personas, habitaciones y baños")).toContainText("2 personas · 1 habitación · 1 baño");
+  await expect(row(page, "Personas, dormitorios y baños")).toContainText("2 personas · 1 dormitorio · 1 baño");
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: true });
 });
 
