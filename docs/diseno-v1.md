@@ -1,5 +1,9 @@
 # Diseño visual de la v1 · «Sol y sal» (2026-10-20)
 
+## Calendarios Airbnb: diseño móvil aprobado (2026-11-07)
+
+Referencia aprobada por Ana: [especificación móvil v0.1](../.scratch/calendarios-externos/diseno-v0.1.md). Añade el recorrido desde Calendario para importar Airbnb, copiar la exportación y gestionar estado y enlaces, conservando los componentes y patrones vigentes. Incluye estados y confirmaciones; es una especificación escrita, todavía sin pantallas implementadas ni validación de funcionamiento. Escritorio queda aplazado. Las reglas de producto consultadas P1–P6 de la [preparación de la épica](../.scratch/calendarios-externos/spec.md) ya están aprobadas y se inspeccionó una muestra real compatible con el alcance inicial. Antes de implementar se deben contrastar el contrato técnico preparado y las condiciones de entrada de cada historia.
+
 ## Ajuste compartido de botones y notas (2026-11-05)
 
 Implementa el apartado 1 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md` y sustituye las indicaciones anteriores de botón principal verde lleno o de notas informativas verdes: Continuar, Guardar, Enviar y Compartir usan `--state-soft`, texto `--primary`, sombra `0 2px 5px` verde al 14 % y ningún borde permanente. Los desactivados reales usan fondo `#F2F1ED`, texto `#898D88`, sin sombra ni borde y sin bajar la opacidad. Las notas informativas usan superficie neutra clara, texto normal y borde suave; errores, avisos, pastillas y pagos conservan sus colores funcionales. Los iconos secundarios mantienen su menor peso visual; no cambia la composición de Continuar ni las confirmaciones. Tokens 0.3.3.

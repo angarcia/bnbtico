@@ -1,3 +1,71 @@
+## 2026-11-07 · Gestión de conexiones iCal solo por el propietario (Ana)
+
+Ana aprueba que solo el propietario pueda conectar, sustituir, desconectar y revocar los enlaces de su casa. Esta épica no añade gestión de conexiones para administradores. El trabajo automático autorizado sigue operando con las reglas aprobadas; no equivale a conceder gestión interactiva a otros usuarios.
+
+Quedan aprobadas las reglas de producto consultadas P1–P6. Se inspeccionó después una muestra real de Airbnb compatible con el alcance inicial y se preparó el contrato técnico de #5, pendiente de contraste final y pruebas al implementar. Referencias: `.scratch/calendarios-externos/spec.md`, `validacion-muestra.md` y `contrato-tecnico-05.md` en la misma carpeta.
+
+## 2026-11-07 · Invalidar conexiones al eliminar definitivamente una casa (Ana)
+
+Ana aprueba detener las importaciones e invalidar el enlace de exportación al eliminar definitivamente una casa. Los trabajos en curso no deben restablecer la conexión y el enlace debe dejar de servir el calendario, también mediante cachés. No se promete retirar inmediatamente los bloqueos que Airbnb ya hubiera leído. Esta decisión concreta el efecto sobre iCal; no añade ni autoriza un nuevo flujo de eliminación de casas.
+
+Referencia: P5 en `.scratch/calendarios-externos/spec.md`. Los permisos y los demás estados todavía pendientes se mantienen por definir.
+
+## 2026-11-07 · Recuperación de conexiones y ciclos fijos de tres horas (Ana)
+
+Ana aprueba reactivar automáticamente las conexiones suspendidas por un bloqueo administrativo cuando este se levanta. Se vuelve a leer Airbnb para incorporar cambios y cancelaciones y se habilita el enlace de exportación. Si falla la lectura, se conservan los últimos bloqueos válidos y se muestra el error. Las conexiones desconectadas o revocadas por el anfitrión permanecen desactivadas; la recuperación no exige configurarlas de nuevo si solo estaban suspendidas por bnbtico.
+
+Ana también aprueba P6: actualizaciones cada tres horas en horarios fijos de Costa Rica. «Actualizar ahora» no desplaza el siguiente ciclo; si una actualización falla, se reintenta en el siguiente ciclo. El horario exacto y su verificación operativa se concretan técnicamente antes de #8. Siguen pendientes los demás detalles de estados y permisos de P5. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Suspender calendarios externos al bloquear o rechazar una casa (Ana)
+
+Ana aprueba suspender las conexiones de importación y exportación si bnbtico bloquea o rechaza la casa, conservando los datos existentes. Durante la suspensión no se realizan nuevas lecturas de Airbnb ni se sirve disponibilidad mediante el enlace de exportación. Es una suspensión, no una desconexión o revocación definitiva. No se promete retirar inmediatamente los bloqueos que Airbnb ya hubiera leído.
+
+Este caso se distingue de la pausa del anfitrión, que mantiene las actualizaciones. La recuperación al levantar un bloqueo, los demás estados y permisos pendientes de P5 y la programación P6 aún deben concretarse. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Airbnb sigue actualizando las casas pausadas por su anfitrión (Ana)
+
+Ana aprueba esta parte de P5: pausar la casa en bnbtico no detiene las actualizaciones de Airbnb. Se mantiene el calendario al día para cuando vuelva a publicarse, incluidos cambios y cancelaciones importados. La actualización del calendario no levanta la pausa ni hace reaparecer la casa en Explorar.
+
+Los demás estados y permisos de P5, y P6, siguen pendientes; no se equipara una pausa del anfitrión con un bloqueo administrativo. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Conexiones por casa y cancelaciones de Airbnb (Ana)
+
+Ana aprueba P4: una conexión de importación Airbnb y un enlace activo de exportación bnbtico por casa, independientes. Revocar invalida el enlace anterior; generar otro es una acción posterior y produce uno distinto.
+
+Ana recalca que hay que distinguir los bloqueos procedentes de Airbnb y reflejar aquí una reserva cancelada allí. La siguiente lectura completa válida retira el bloqueo de esa reserva sin afectar bloqueos manuales, precios ni otros bloqueos importados coincidentes. El calendario privado permite consultar el origen según el diseño móvil aprobado. No se promete actualización instantánea: la gestión manual se entrega en #7 y la actualización automática cada tres horas en #8.
+
+P5–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Calendario iCal válido sin bloqueos (Ana)
+
+Ana aprueba P3: si Airbnb devuelve un calendario completo y válido sin bloqueos, se retiran los bloqueos importados anteriores; se conservan los manuales y los precios. Si la lectura falla o está incompleta, se conservan los últimos bloqueos válidos. Así se distingue una liberación válida de noches de un fallo de lectura.
+
+P4–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Alcance inicial de eventos iCal (Ana)
+
+Ana aprueba P2: empezar con bloqueos de días completos con inicio y fin, sin eventos por horas ni repeticiones automáticas. Ante un evento que no se pueda interpretar, informar del error y conservar los últimos bloqueos válidos, sin publicar resultados parciales que liberen noches.
+
+Antes de implementar se comprobará la compatibilidad con una muestra real anonimizada del calendario de Airbnb. Los detalles del parser se concretan con esa evidencia; esta aprobación no confirma por sí sola compatibilidad externa. P3–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Ventana de importación y exportación iCal (Ana)
+
+Ana aprueba P1: importar y exportar las noches desde hoy de Costa Rica hasta hoy + 365 días, ambas incluidas, para mantener la ventana del calendario existente. Los eventos que crucen sus límites se recortan a esa ventana. La fecha final de un evento sigue siendo exclusiva: para representar la última noche admitida, el fin exportado es hoy + 366. Este acuerdo no amplía la salida máxima del selector manual vigente.
+
+Las reglas P2–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Diseño móvil de calendarios Airbnb aprobado (Ana)
+
+Ana aprueba la especificación escrita `.scratch/calendarios-externos/diseno-v0.1.md`: acceso desde Calendario, importación y exportación separadas, estados, confirmaciones y edición por procedencia. No hay maquetas nuevas ni implementación verificada. Escritorio sigue aplazado.
+
+Las reglas P1–P6 de `.scratch/calendarios-externos/spec.md` no quedan aprobadas por este acuerdo; Ana pide consultarlas una por una. Las historias conservan sus dependencias y condiciones de entrada pendientes. Esta aprobación no inicia la implementación ni modifica GitHub.
+
+## 2026-11-07 · Calendarios Airbnb: móvil primero, escritorio aplazado (Ana)
+
+La preparación y las entregas de la épica #4 y las historias #5–#8 se limitan por ahora a móvil, porque la web de escritorio todavía no está lista. La adaptación y validación específicas de escritorio quedan pendientes y no bloquean estas entregas. Se mantiene el orden diseño conjunto → #5 → #6 → #7 → #8, probando cada entrega antes de continuar.
+
+Este acuerdo acota el alcance; no aprueba por sí solo el diseño propuesto ni las reglas pendientes de `.scratch/calendarios-externos/`, ni autoriza implementar la UI.
+
 ## 2026-11-07 · Skills por historia y prompts solo bajo pedido (Ana)
 
 El PO identifica en cada historia la skill principal y los apoyos necesarios según el trabajo real, incluyendo su orden si hay fases. Esta información se conserva en el cuerpo de la historia y en `body` al exportar el JSON, sin añadir campos a GitHub Projects.
