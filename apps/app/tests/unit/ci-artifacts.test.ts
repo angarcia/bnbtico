@@ -56,6 +56,8 @@ function execute(mode: string) {
       shard: { current: Number(process.env.CI_SHARD_CURRENT), total: Number(process.env.CI_SHARD_TOTAL) } },
     use: { trace: "retain-on-failure", launchOptions: ${JSON.stringify({ executablePath })} }
   };`);
+  const attachment = join(dir, "attachment.txt");
+  writeFileSync(attachment, "adjunto de prueba");
   for (const file of ["a", "b"]) writeFileSync(join(dir, `${file}.spec.cjs`), `
     const { test, expect } = require(${JSON.stringify(require.resolve("@playwright/test"))});
     test("diagnóstico ${file}", async ({ page }, info) => {
@@ -63,6 +65,12 @@ function execute(mode: string) {
       console.error("copia ${secret}");
       await page.route("**/*", route => route.abort());
       await page.goto("data:text/html,<h1>Diagnóstico</h1>");
+      if (${JSON.stringify(mode)} === "duplicate-attachment") {
+        info.attachments.push(
+          { name: "primero", path: ${JSON.stringify(attachment)}, contentType: "text/plain" },
+          { name: "segundo", path: ${JSON.stringify(attachment)}, contentType: "text/plain" },
+        );
+      }
       if (${JSON.stringify(mode)} === "sanitize") await page.setContent("<h1>${secret}</h1>");
       if (${JSON.stringify(mode)} === "interrupted") {
         process.kill(process.ppid, "SIGINT");
@@ -81,7 +89,6 @@ args = args.slice(2);
 const isTest = args[0] === "test";
 const isList = args.includes("--list");
 if (isTest) args.push("--config", ${JSON.stringify(config)});
-if (!isTest && ${JSON.stringify(mode)} === "renderer") process.exit(42);
 const result = spawnSync(process.execPath, [${JSON.stringify(cli)}, ...args], { encoding: "utf8", env: process.env });
 if (isList && ${JSON.stringify(mode)} === "incomplete") {
   const report = JSON.parse(result.stdout);
@@ -89,13 +96,13 @@ if (isList && ${JSON.stringify(mode)} === "incomplete") {
   report.suites[0].specs.push({ ...spec, id: "missing-id", title: "missing case" });
   result.stdout = JSON.stringify(report);
 }
-if (!isTest && ${JSON.stringify(mode)} === "normalizer" && result.status === 0) {
-  const report = JSON.parse(readFileSync(process.env.PLAYWRIGHT_JSON_OUTPUT_FILE, "utf8"));
+if (isTest && !isList && ${JSON.stringify(mode)} === "normalizer" && result.status === 0) {
+  const report = JSON.parse(result.stdout);
   report.stats.duration = "invalid";
-  writeFileSync(process.env.PLAYWRIGHT_JSON_OUTPUT_FILE, JSON.stringify(report));
+  result.stdout = JSON.stringify(report);
 }
-if (!isTest && ${JSON.stringify(mode)} === "publish-sanitize" && result.status === 0)
-  writeFileSync(require("node:path").join(require("node:path").dirname(process.env.PLAYWRIGHT_JSON_OUTPUT_FILE), "unsupported.bin"), Buffer.from([255, 254, 250]));
+if (isTest && !isList && ${JSON.stringify(mode)} === "publish-sanitize" && result.status === 0)
+  writeFileSync(require("node:path").join(process.env.PW_ARTIFACT_ROOT, "render", "unsupported.bin"), Buffer.from([255, 254, 250]));
 process.stdout.write(result.stdout || "");
 process.stderr.write(result.stderr || "");
 if (isTest && !isList && ${JSON.stringify(mode)} === "stderr")
@@ -118,18 +125,18 @@ process.exit(isTest && !isList && ${JSON.stringify(mode)} === "exit7" ? 7 : (res
 }
 
 describe("conexión privada de artefactos", () => {
-  it.each(["passing", "failing", "interrupted", "incomplete", "exit7", "stderr"])(
+  it.each(["passing", "failing", "interrupted", "incomplete", "exit7", "stderr", "duplicate-attachment"])(
     "publica diagnóstico saneado de %s sin ocultar el resultado original", async mode => {
       const { result, outputs, root } = execute(mode);
       expect(outputs, result.stderr).toContain("safe_to_upload=true\n");
       expect(outputs.trim().endsWith("safe_to_upload=true")).toBe(true);
       expect(outputs).toContain(`publish=${root}/publish\n`);
-      expect(result.status).toBe(["passing", "stderr"].includes(mode) ? 0 : mode === "exit7" ? 7 : mode === "interrupted" ? 130 : 1);
+      expect(result.status).toBe(["passing", "stderr", "duplicate-attachment"].includes(mode) ? 0 : mode === "exit7" ? 7 : mode === "interrupted" ? 130 : 1);
       expect(result.stdout + result.stderr).not.toContain(secret);
       const rawJson = readFileSync(join(root, "raw/runner.json"), "utf8");
       expect(rawJson).toContain(secret);
       const raw = JSON.parse(rawJson);
-      expect(raw.config.reporter).toEqual([["blob"], ["json"]]);
+      expect(raw.config.reporter).toEqual([["json"]]);
       expect(raw.suites[0].specs[0].tests[0].results[0].stdout).toEqual([{ text: `Authorization: Bearer ${secret}\n` }]);
       expect(raw.suites[0].specs[0].tests[0].results[0].stderr).toEqual([{ text: `copia ${secret}\n` }]);
       expect(existsSync(join(root, "raw/runner.log"))).toBe(false);
@@ -169,7 +176,7 @@ describe("conexión privada de artefactos", () => {
     expect(result.stdout + result.stderr).not.toContain(secret);
   }, 60_000);
 
-  it.each(["sanitize", "publish-sanitize", "renderer", "normalizer", "metadata", "flaky"])(
+  it.each(["sanitize", "publish-sanitize", "normalizer", "metadata", "flaky"])(
     "bloquea publicación y éxito ante %s", mode => {
       const { result, outputs, root } = execute(mode);
       expect(result.status).not.toBe(0);

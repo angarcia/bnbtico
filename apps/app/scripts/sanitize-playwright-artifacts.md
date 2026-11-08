@@ -22,6 +22,10 @@ La utilidad descubre secretos en memoria antes de transformar archivos. La pasad
 
 ## Enganche para el coordinador de 05
 
+El coordinador vigente de CI (`ci-artifacts.mjs`) usa el reporter JSON nativo, lo sanea y lo copia a `render/e2e.json` antes de normalizarlo. No genera ni fusiona blobs: Playwright puede repetir un adjunto en ese ZIP y provocar `zip-duplicate`. Conserva `trace: retain-on-failure`, el saneamiento de los resultados y las dos pasadas antes de publicar. El resultado de Playwright y las puertas siguen bloqueando el despliegue cuando fallan.
+
+El esqueleto con blob que sigue sirve para herramientas que necesiten generar HTML; no es el camino usado actualmente por CI. El saneador sigue rechazando entradas repetidas, aunque tengan contenido idéntico.
+
 Este documento no modifica el workflow ni `playwright.config.ts`. El coordinador debe conectar todas las rutas de diagnóstico, incluidas las del JSON normalizado.
 
 1. Genere una raíz distinta por job, intento y shard.
