@@ -5,7 +5,7 @@ import { IcalError } from "../../domain/ical";
 interface Config { supabaseUrl: string; anonKey: string; fetch: typeof fetch }
 export interface AirbnbServiceConfig extends Config { serviceKey: string }
 
-export function airbnbRpc(cfg: Config) {
+export function airbnbRpc(cfg: Config, safeMessages: ReadonlySet<string> = SAFE_MESSAGES) {
   return async (name: string, args: Record<string, unknown>, bearer: string, apikey = cfg.anonKey): Promise<unknown> => {
     if (!bearer) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
     let response: Response;
@@ -18,7 +18,7 @@ export function airbnbRpc(cfg: Config) {
     if (!response.ok) {
       // Solo mensajes de dominio controlados; no propagar SQL, payload, URL ni errores de gateways.
       if (response.status === 401) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
-      if (isRecord(raw) && raw.code === "P0001" && typeof raw.message === "string" && SAFE_MESSAGES.has(raw.message)) throw new DomainError(raw.message, "validation");
+      if (isRecord(raw) && raw.code === "P0001" && typeof raw.message === "string" && safeMessages.has(raw.message)) throw new DomainError(raw.message, "validation");
       throw toDomainError(isRecord(raw) ? { code: raw.code } : null);
     }
     return raw;

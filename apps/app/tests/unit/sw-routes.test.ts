@@ -10,6 +10,13 @@ const nav = (path: string) => req(`${ORIGIN}${path}`, { mode: "navigate" });
 const strategy = (r: ReturnType<typeof req>) => strategyFor(r, ORIGIN, PRECACHED);
 
 describe("estrategia del service worker por petición", () => {
+  it("el feed iCal va siempre a red y no entra en el precache ni recibe el shell", () => {
+    const path = `/ical/${"a".repeat(64)}.ics`;
+    expect(strategy(nav(path))).toBe("network");
+    expect(strategy(req(`${ORIGIN}${path}`))).toBe("network");
+    expect(strategy(req(`${ORIGIN}${path}`, { method: "HEAD" }))).toBe("network");
+    expect(precacheList([path.slice(1)], [])).toEqual(["/"]);
+  });
   it("las rutas de la SPA (privadas y de pestañas) abren el shell precacheado", () => {
     for (const path of ["/explorar", "/explorar/filtros?prov=Todas", "/favoritos", "/cuenta", "/propietario", "/propietario/casas/123", "/propietario/publicar/1/3", "/admin", "/ayuda"]) {
       expect(strategy(nav(path)), path).toBe("shell");

@@ -92,6 +92,8 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 
 ## 7. Cuando el proyecto exista
 
+**Migraciones y despliegue son pasos distintos.** El workflow de la app comprueba migraciones contra Supabase local del runner, pero no aplica el esquema al proyecto alojado. Antes de publicar código que use nuevas tablas/RPCs, verificarlo localmente y preparar por separado la aplicación de sus migraciones en el proyecto de pruebas correcto. Revisar primero `supabase db push --linked --dry-run`; solo después, con autorización para ese entorno, aplicar la lista revisada y comprobar las RPCs antes de probar la pantalla. Un build o merge correcto no acredita que la base alojada esté al día. En #5 faltaban las migraciones `20261108020000` y `20261108021000`: Ana las aplicó y confirmó la recuperación. La migración de #6 está validada en local y pendiente de aplicación/validación alojada; no aplicarla remotamente como parte de sus pruebas unitarias o de contrato.
+
 - Los cambios de esquema van en **migraciones nuevas** (`pnpm exec supabase migration new <nombre>`), nunca editando `0001_init.sql`.
 - Los datos de prueba se borran antes del lanzamiento (`docs/plan-implementacion.md`, fase 7).
 - El proyecto de producción se crea en la fase 7 repitiendo estos pasos con `bnbtico-prod`, variables en el entorno **Production** de Vercel y Twilio en modo producción o la API de Meta.

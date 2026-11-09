@@ -108,7 +108,7 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
       const l = own(jwt, id);
       const c = db.airbnbConnections.get(id);
       const running = [...db.airbnbAttempts.values()].some(a => a.listingId === id && a.state === "running" && db.clock() - a.started < 30000);
-      return { connected: c?.connected ?? false,
+      return { connected: c?.connected ?? false, exportGenerated: !!db.icalExports.get(id)?.token,
         state: l.status === "rejected" || l.adminHold?.kind === "blocked" ? "suspended" : running ? "running" : c?.errorCode ? "error" : c?.connected ? "connected" : "none",
         lastSuccessAt: c?.lastSuccessAt ?? null, errorCode: c?.errorCode ?? null,
         nights: fakeEffectiveDays(db, id, true).filter(d => d.imported).length };

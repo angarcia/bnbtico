@@ -1,3 +1,7 @@
+## 2026-11-08 · Presupuesto del módulo diferido de Airbnb con exportación (Ana)
+
+Ana aprueba ampliar de 5 a 6,5 kB gzip el límite del grupo diferido de Airbnb para incorporar la generación y copia del enlace de exportación de #6. La medición es 6,21 kB; el grupo incluye importación, estado, controles por origen y exportación, sin parser iCal ni la librería de pruebas en el navegador. Motivo: cubrir el alcance aprobado de ambas direcciones con un presupuesto explícito. El límite de JS inicial privado permanece en 160 kB (medición: 153,97 kB) y los demás presupuestos se conservan. Referencia: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-06.md`.
+
 ## 2026-11-08 · Priorizar compactación automática para continuar en el mismo chat (Ana)
 
 Ana pide compactación automática para reducir contexto sin abrir otro chat. En su configuración personal de Codex se establece `model_post_turn_compact_threshold_percent = 70`, un umbral ajustable al terminar una respuesta. Se mantienen los límites automáticos propios del modelo. La opción está documentada en https://learn.chatgpt.com/docs/config-file/config-reference; escribir una instrucción en una skill no ejecuta esa operación.

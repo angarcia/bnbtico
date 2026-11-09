@@ -183,6 +183,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"ical_exports": {
+                  Row: {
+                    "generated_at": string,"id": string,"listing_id": string,"revoked_at": string | null,"token": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "generated_at"?: string,"id"?: string,"listing_id": string,"revoked_at"?: string | null,"token"?: string | null
+                  }
+                  Update: {
+                    "generated_at"?: string,"id"?: string,"listing_id"?: string,"revoked_at"?: string | null,"token"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ical_exports_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: true
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ical_exports_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: true
+      referencedRelation: "listings_public"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"inquiries": {
                   Row: {
                     "arrival": string | null,"client_id": string,"consent_share_phone": boolean,"created_at": string,"departure": string | null,"id": string,"listing_id": string,"message": string,"owner_id": string,"owner_opened_at": string | null,"people": number | null,"source": string,"updated_at": string,"whatsapp_phone": string
@@ -1009,6 +1035,9 @@ isOneToOne: true
 "owner_has_payment_method":
 { Args: { "p_owner": string }; Returns: boolean
                            },
+"owner_ical_export":
+{ Args: { "p_generate"?: boolean,"p_listing": string }; Returns: Json
+                           },
 "owner_inquiries":
 { Args: Record<PropertyKey, never>; Returns: {
               "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"message": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
@@ -1038,6 +1067,9 @@ isOneToOne: true
 "purge_listing_page":
 { Args: { "p_public_id": string }; Returns: undefined
                            },
+"read_ical_export":
+{ Args: { "p_token": string }; Returns: Json
+                           },
 "remove_edit_photo":
 { Args: { "p_photo": string }; Returns: string
                            },
@@ -1064,6 +1096,9 @@ isOneToOne: true
                            },
 "review_listing":
 { Args: { "p_decision": string,"p_listing": string,"p_note": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
+"revoke_ical_export":
+{ Args: { "p_listing": string }; Returns: undefined
                            },
 "run_subscription_day":
 { Args: { "p_today"?: string }; Returns: Json

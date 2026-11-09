@@ -8,11 +8,12 @@
     "not_found_handling": "single-page-application",
     // Sin esto, las navegaciones a estas rutas recibirían el index.html de la SPA sin pasar por el worker. `/` pasa por el
     // worker para la portada estática (`/?pronto=1`, y producción antes del lanzamiento).
-    "run_worker_first": ["/", "/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/_pruebas/*", "/vitals", "/errors", "/events", "/api/pago/*", "/api/calendarios/*", "/webhooks/*", "/_pago-falso/*"]
+    "run_worker_first": ["/", "/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/_pruebas/*", "/vitals", "/errors", "/events", "/api/pago/*", "/api/calendarios/*", "/ical/*", "/webhooks/*", "/_pago-falso/*"]
   },
   // Las vinculaciones no se heredan: cada entorno repite version_metadata.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
-  "observability": { "enabled": true },
+  // El feed usa una capacidad secreta en la URL. Conservar logs explícitos saneados, sin invocaciones que graben esa URL.
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
   // Cron diario (src/server/cron.ts): keep-alive a PostgREST y recorte de la telemetría. Los triggers no se heredan: cada
   // entorno los repite. 09:17 UTC = 03:17 en Costa Rica.
   // Fase 5: cada hora (un trigger por entorno, el plan gratuito permite 5 por cuenta): lo diario solo en la de las 09 UTC

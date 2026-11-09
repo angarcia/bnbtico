@@ -1,7 +1,7 @@
 # #6 · Exportar disponibilidad de bnbtico hacia Airbnb
 
-Status: needs-info
-Preparación: Bloqueada por dependencias y condiciones técnicas de entrada; reglas de producto consultadas aprobadas. Diseño: Listo; móvil v0.1 aprobado por Ana el 2026-11-07.
+Status: ready-for-agent
+Preparación: Lista para trabajar. Ana aceptó #5 y pidió continuar con #6 tras fusionar la PR #30; diseño móvil v0.1 y P1/P4/P5 aprobados. Contrato técnico: `../contrato-tecnico-06.md`; ejecución y comprobaciones pendientes en `../plan-06.md`. No se modifica el estado de GitHub desde este archivo.
 Fuente: https://github.com/angarcia/bnbtico/issues/6 · Épica: #4.
 
 ## Objetivo y capacidad existente

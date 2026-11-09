@@ -1,5 +1,6 @@
 import { createBillingService } from "../data/postgrest/billing-service";
 import { createAirbnbService } from "../data/postgrest/airbnb";
+import { createIcalExportService } from "../data/postgrest/ical-export";
 import { createAnonListings } from "../data/postgrest/client";
 import { createFxWriter } from "../data/postgrest/fx";
 import { createTelemetryWriter } from "../data/postgrest/telemetry";
@@ -29,6 +30,13 @@ const app = createApp({
   purgeFetch: (input, init) => fetch(input, init),
   reminders,
   telemetry,
+  icalExport: {
+    read: (env, token) => {
+      if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.SUPABASE_URL) throw new Error("Exportación no configurada.");
+      return createIcalExportService({ supabaseUrl: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY,
+        serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, fetch: (input, init) => fetch(input, init) }).read(token);
+    },
+  },
   airbnb: {
     service: env => env.SUPABASE_SERVICE_ROLE_KEY ? createAirbnbService({ supabaseUrl: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, fetch: (i, init) => fetch(i, init) }) : null,
     fetch: (i, init) => fetch(i, init),

@@ -23,5 +23,6 @@ export const favoritesApi = (): FavoritesApi => get().favorites;
 export const inquiriesApi = (): InquiriesApi => get().inquiries;
 export const calendarApi = (): OwnerCalendarApi => get().calendar;
 export const airbnbApi = () => get().airbnb;
+export const icalExportApi = () => get().icalExport;
 export const ownerBilling = (): OwnerBillingApi => get().billing;
 export const accessToken = (): Promise<string | null> => get().accessToken();

@@ -14,6 +14,7 @@ import type { ReminderEnv, ReminderRuntime } from "./reminders";
 import { testClock } from "./test-clock";
 import { registerBilling, type BillingDeps, type PaymentsEnv } from "./billing";
 import { registerAirbnb, type AirbnbDeps } from "./airbnb";
+import { ICAL_EXPORT_HEADERS, registerIcalExport, type IcalExportDeps } from "./ical-export";
 
 export type Env = ReminderEnv & {
   ENVIRONMENT: Environment;
@@ -54,6 +55,7 @@ export interface Deps {
   /** Método de pago (src/server/billing.ts): sin esto, sus rutas no existen. */
   billing?: BillingDeps;
   airbnb?: AirbnbDeps;
+  icalExport?: IcalExportDeps;
 }
 
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
@@ -112,6 +114,7 @@ export function createApp(deps: Deps) {
     const path = new URL(c.req.url).pathname;
     const read = c.req.method === "GET" || c.req.method === "HEAD";
     if (read && (path === "/" || LANDING_FILES.test(path))) return next();
+    if (path.startsWith("/ical/")) return c.text("Calendario no disponible.", 404, ICAL_EXPORT_HEADERS);
     return landing(c, 404);
   });
 
@@ -230,6 +233,7 @@ export function createApp(deps: Deps) {
 
   if (deps.billing) registerBilling(app, deps.billing, deps.securityHeaders !== false);
   if (deps.airbnb) registerAirbnb(app, deps.airbnb);
+  registerIcalExport(app, deps.icalExport);
 
   app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 

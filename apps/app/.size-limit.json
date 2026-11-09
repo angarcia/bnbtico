@@ -293,9 +293,9 @@
     "gzip": true
   },
   {
-    "name": "Airbnb · estado, controles de noches importadas y pantalla de conexión por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
+    "name": "Airbnb · estado, controles de noches importadas y conexión/exportación por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
     "path": ["dist/client/assets/airbnb-*.js"],
-    "limit": "5 KB",
+    "limit": "6.5 kB",
     "gzip": true
   },
   {

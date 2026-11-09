@@ -15,6 +15,7 @@ import { costaRicaToday } from "../../domain/inquiry";
 import type { FakeDb, FakeListing } from "./db";
 import { editStore } from "./edits";
 import { invalidateFakeAirbnb } from "./airbnb";
+import { invalidateFakeIcalExport } from "./ical-export";
 
 type Access = "admin" | "mfa" | "none";
 
@@ -225,6 +226,7 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       if (!deleteConfirmMatches(l.publicId, confirm)) throw new DomainError(H.confirmCode, "validation");
       Object.assign(l, { deletedAt: db.now(), deletedReason: text });
       invalidateFakeAirbnb(db, l.id, true);
+      invalidateFakeIcalExport(db, l.id);
       dropQueued(l.id);
       db.adminActions.push({ action: "listing.delete", listingId: l.id, reason: text });
     },
