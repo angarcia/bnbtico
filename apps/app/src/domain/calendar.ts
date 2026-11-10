@@ -32,6 +32,8 @@ export interface CalendarChange {
   days: string[];
   available?: boolean;
   priceCrc?: number;
+  /** «Marcar una reserva»: comprobar disponibilidad efectiva dentro de la transacción de escritura. */
+  requireFree?: boolean;
 }
 
 export type CalendarDays = readonly CalendarDay[] | ReadonlyMap<string, CalendarDay>;

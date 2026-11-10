@@ -1,6 +1,6 @@
 import { expect, test } from "./helpers/test";
 import { injectSession } from "./helpers/session";
-import { postgrestHarness } from "../db/postgrest-harness";
+import { icalExportHarness } from "../db/ical-export-harness";
 import { localSupabase } from "../db/local";
 import type { SubscriptionHarness } from "../contract/harness";
 import { createAirbnbService } from "../../src/data/postgrest/airbnb";
@@ -11,7 +11,8 @@ import { costaRicaToday } from "../../src/domain/inquiry";
 
 let h: SubscriptionHarness;
 test.describe.configure({ mode: "serial" });
-test.beforeAll(async () => { h = await postgrestHarness(); await h.reset(); });
+test.beforeAll(async () => { h = await icalExportHarness(); });
+test.afterAll(async () => { if (h) await h.reset(); });
 const day = (n: number) => addDays(costaRicaToday(Date.now()), n);
 
 test("conectar Airbnb muestra carga, importa por casa y conserva el contexto al volver", async ({ page }) => {
@@ -44,7 +45,7 @@ test("conectar Airbnb muestra carga, importa por casa y conserva el contexto al 
   release();
   await expect(dialog).toBeHidden();
   await expect(page.getByText("3 noches bloqueadas por Airbnb", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Actualizar ahora" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Actualizar ahora" })).toBeVisible();
   await page.getByRole("link", { name: "Volver", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`casa=${l.id}.*mes=${month}`));
   const days = await h.calendar("owner").days(l.id);

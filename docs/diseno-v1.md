@@ -1,6 +1,8 @@
 # Diseño visual de la v1 · «Sol y sal» (2026-10-20)
 
-## Calendarios Airbnb: diseño móvil aprobado (2026-11-07)
+## Calendarios Airbnb: diseño móvil aprobado (2026-11-07, ajuste 2026-11-09)
+
+El ajuste [móvil v0.2](../.scratch/calendarios-externos/diseno-v0.2-propuesta.md) aprobado por Ana añade «Sincronización con Airbnb», actualizar por icono verde claro a la izquierda y gestión por título/chevrón. Sin conectar, la fila permanece unida a las otras acciones dentro de la tarjeta blanca; conectada, aparece sobre el fondo crema sin tarjeta. Reserva/pausa conservan su menú y sus iconos pierden el recuadro. La hoja de marcar una reserva recibe ocupación manual/importada, espera la comprobación previa y exige confirmar el último calendario válido si falla Airbnb; reglas en [reservas #7](../.scratch/calendarios-externos/reservas-07.md).
 
 Ajuste aprobado tras probar la primera conexión: cada noche importada lleva un icono de enlace de 16 px bajo el precio, dentro de la casilla existente. Con noches importadas, la leyenda añade el mismo icono con «Bloqueado por Airbnb». No depende solo del color; se conservan el número, el precio y el origen accesible. Solo se presenta en el calendario privado.
 

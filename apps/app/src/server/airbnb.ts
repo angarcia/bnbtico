@@ -50,16 +50,23 @@ export function registerAirbnb(app: Hono<{ Bindings: Env }>, deps: AirbnbDeps) {
     finally { try { await reader.cancel(); } catch { /* Sin datos de errores remotos. */ } reader.releaseLock(); }
     let raw: unknown;
     try { raw = JSON.parse(text); } catch { return c.json({ error: "Revise los datos del calendario." }, 400, NO_STORE); }
-    if (!isRecord(raw) || typeof raw.listingId !== "string" || !UUID.test(raw.listingId) || typeof raw.requestId !== "string" || !UUID.test(raw.requestId) || typeof raw.url !== "string") {
+    if (!isRecord(raw) || typeof raw.listingId !== "string" || !UUID.test(raw.listingId) || typeof raw.requestId !== "string" || !UUID.test(raw.requestId)) {
+      return c.json({ error: "Revise los datos del calendario." }, 400, NO_STORE);
+    }
+    const action = raw.action ?? "connect";
+    if (action !== "connect" && action !== "refresh" && action !== "replace" ||
+      action === "refresh" && raw.url !== undefined || action !== "refresh" && typeof raw.url !== "string") {
       return c.json({ error: "Revise los datos del calendario." }, 400, NO_STORE);
     }
     try {
-      const url = validateAirbnbUrl(raw.url);
-      const attempt = await service.begin(jwt, raw.listingId, url, raw.requestId);
+      const url = typeof raw.url === "string" ? validateAirbnbUrl(raw.url) : undefined;
+      const attempt = action === "connect" && url
+        ? await service.begin(jwt, raw.listingId, url, raw.requestId)
+        : await service.update(jwt, raw.listingId, raw.requestId, url);
       if (attempt.run) await runAirbnbImport(service, raw.listingId, raw.requestId, deps);
       const summary = await service.overview(jwt, raw.listingId);
       // Error de lectura no es éxito de conexión aunque la reserva SQL se haya completado.
-      if (summary.errorCode) return c.json({ code: summary.errorCode }, 422, NO_STORE);
+      if (summary.errorCode && summary.state !== "running") return c.json({ code: summary.errorCode }, 422, NO_STORE);
       return c.json(summary, 200, NO_STORE);
     } catch (error) {
       if (error instanceof IcalError) return c.json({ code: error.code }, 400, NO_STORE);

@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"airbnb_connections": {
                   Row: {
-                    "connected": boolean,"error_code": string | null,"last_success_at": string | null,"listing_id": string,"private_url": string | null,"version": number
+                    "connected": boolean,"error_code": string | null,"last_error_at": string | null,"last_success_at": string | null,"listing_id": string,"private_url": string | null,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "connected"?: boolean,"error_code"?: string | null,"last_success_at"?: string | null,"listing_id": string,"private_url"?: string | null,"version"?: number
+                    "connected"?: boolean,"error_code"?: string | null,"last_error_at"?: string | null,"last_success_at"?: string | null,"listing_id": string,"private_url"?: string | null,"version"?: number
                   }
                   Update: {
-                    "connected"?: boolean,"error_code"?: string | null,"last_success_at"?: string | null,"listing_id"?: string,"private_url"?: string | null,"version"?: number
+                    "connected"?: boolean,"error_code"?: string | null,"last_error_at"?: string | null,"last_success_at"?: string | null,"listing_id"?: string,"private_url"?: string | null,"version"?: number
                   }
                   Relationships: [
                     {
@@ -91,14 +91,14 @@ isOneToOne: true
                   ]
                 },"airbnb_import_attempts": {
                   Row: {
-                    "claimed": boolean,"error_code": string | null,"listing_id": string,"request_id": string,"started_at": string,"state": string,"version": number
+                    "candidate_url": string | null,"claimed": boolean,"error_code": string | null,"listing_id": string,"operation": string,"request_id": string,"started_at": string,"state": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
+                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"operation"?: string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
                   }
                   Update: {
-                    "claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
+                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"operation"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -185,14 +185,14 @@ isOneToOne: false
                   ]
                 },"ical_exports": {
                   Row: {
-                    "generated_at": string,"id": string,"listing_id": string,"revoked_at": string | null,"token": string | null
+                    "generated_at": string,"generation": number,"id": string,"listing_id": string,"revoked_at": string | null,"token": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "generated_at"?: string,"id"?: string,"listing_id": string,"revoked_at"?: string | null,"token"?: string | null
+                    "generated_at"?: string,"generation"?: number,"id"?: string,"listing_id": string,"revoked_at"?: string | null,"token"?: string | null
                   }
                   Update: {
-                    "generated_at"?: string,"id"?: string,"listing_id"?: string,"revoked_at"?: string | null,"token"?: string | null
+                    "generated_at"?: string,"generation"?: number,"id"?: string,"listing_id"?: string,"revoked_at"?: string | null,"token"?: string | null
                   }
                   Relationships: [
                     {
@@ -798,6 +798,9 @@ isOneToOne: true
 "admin_update_listing":
 { Args: { "p_listing": string,"p_patch": Json }; Returns: undefined
                            },
+"airbnb_check_owner":
+{ Args: { "p_listing": string }; Returns: undefined
+                           },
 "airbnb_import_context":
 { Args: { "p_listing": string,"p_request": string }; Returns: Json
                            },
@@ -818,6 +821,9 @@ isOneToOne: true
                            },
 "begin_airbnb_import":
 { Args: { "p_listing": string,"p_request": string,"p_url": string }; Returns: Json
+                           },
+"begin_airbnb_update":
+{ Args: { "p_listing": string,"p_request": string,"p_url"?: string }; Returns: Json
                            },
 "claim_airbnb_import":
 { Args: { "p_listing": string,"p_request": string }; Returns: Json
@@ -840,6 +846,9 @@ isOneToOne: true
                            },
 "discard_edit_field":
 { Args: { "p_field": string,"p_listing": string }; Returns: undefined
+                           },
+"disconnect_airbnb":
+{ Args: { "p_listing": string,"p_request": string }; Returns: undefined
                            },
 "edit_admin_guard":
 { Args: Record<PropertyKey, never>; Returns: undefined
@@ -962,6 +971,9 @@ isOneToOne: true
                            },
 "mark_inquiry_opened":
 { Args: { "p_id": string }; Returns: undefined
+                           },
+"mark_listing_reservation":
+{ Args: { "p_days": (string)[],"p_listing": string }; Returns: undefined
                            },
 "open_drafts":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -1099,6 +1111,9 @@ isOneToOne: true
                            },
 "revoke_ical_export":
 { Args: { "p_listing": string }; Returns: undefined
+                           },
+"revoke_ical_export_generation":
+{ Args: { "p_generation": number,"p_listing": string }; Returns: undefined
                            },
 "run_subscription_day":
 { Args: { "p_today"?: string }; Returns: Json

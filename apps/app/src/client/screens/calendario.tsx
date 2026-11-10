@@ -10,7 +10,7 @@
 // «Cerrar la casa hasta…», set_listing_available) abre su hoja. Cada hoja, en su propio trozo diferido.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
-import { Component, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { Component, Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import {
   addMonths,
   applyChange,
@@ -213,7 +213,10 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
   /** «Marcar una reserva»: las noches ya vienen de llegada a salida − 1; se guardan como ocupadas, sin tocar los precios.
    *  Una selección a medias del panel se descarta (la rejilla cambia debajo). */
   function onMark(nights: string[], label: string): string | null {
-    const refused = commit({ days: nights, available: false });
+    const currentDays = client.getQueryData<CalendarDay[]>(key);
+    if (!currentDays) return "No pudimos comprobar la disponibilidad. Intente de nuevo.";
+    if (currentDays.some(d => !d.available && nights.includes(d.day))) return "Hay noches ocupadas entre esas fechas.";
+    const refused = commit({ days: nights, available: false, requireFree: true });
     if (refused) return refused;
     setSel(clearSelection());
     setProblem(null);
@@ -227,14 +230,19 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
   const canMark = !closed && !blocked && !port.admin;
   const canPause = can(l, "available") && !port.admin;
+  const prepareMark = useCallback(async (signal: AbortSignal) =>
+    (await import("../reservation-calendar")).prepareReservationCalendar(client, userId, l.id, l.publicId, signal),
+  [client, userId, l.id, l.publicId]);
   const { importedCount, manualCount } = countCalendarOrigins(days, sel.days);
   return (
     <>
       {canMark || canPause || !port.admin ? (
-        <section className="card cal-actions" aria-label="Acciones del calendario">
-          {canMark ? <MarkRow today={today} onMark={onMark} /> : null}
-          {canPause ? <PauseRow listing={l} userId={userId} /> : null}
-          {!port.admin ? <AirbnbRow listing={l} userId={userId} month={month} disabled={sel.days.length > 0} /> : null}
+        <section className="cal-actions" aria-label="Acciones del calendario">
+          {canMark || canPause ? <div className="card cal-action-group">
+            {canMark ? <MarkRow today={today} onMark={onMark} calendarDays={query.data} prepare={prepareMark} /> : null}
+            {canPause ? <PauseRow listing={l} userId={userId} /> : null}
+          </div> : null}
+          {!port.admin ? <AirbnbRow key={`${userId}:${l.id}`} listing={l} userId={userId} month={month} disabled={sel.days.length > 0} /> : null}
         </section>
       ) : null}
       <div className="row between gap-8 cal-hint-row">
@@ -291,7 +299,10 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
 /** «Marcar una reserva» (ticket 04 de la ronda del 2 nov), arriba del calendario editable: abre la hoja con el calendario
  *  de rango y, al confirmar, las noches quedan ocupadas (optimista, como «Guardar cambios») y lo dice un aviso. Si las
  *  reglas rechazan el cambio, se dice junto a la fila. */
-function MarkRow({ today, onMark }: { today: string; onMark: (nights: string[], label: string) => string | null }) {
+function MarkRow({ today, onMark, calendarDays, prepare }: {
+  today: string; onMark: (nights: string[], label: string) => string | null; calendarDays: CalendarDay[] | undefined;
+  prepare: (signal: AbortSignal) => Promise<{ warning: string | null }>;
+}) {
   const [marking, setMarking] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -331,6 +342,8 @@ function MarkRow({ today, onMark }: { today: string; onMark: (nights: string[], 
             <Suspense fallback={<div className="sheet-backdrop" />}>
               <MarkSheet
                 today={today}
+                calendarDays={calendarDays}
+                prepare={prepare}
                 onClose={end}
                 onConfirm={(nights, label) => {
                   setProblem(onMark(nights, label));
