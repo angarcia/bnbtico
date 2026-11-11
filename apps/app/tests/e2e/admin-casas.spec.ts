@@ -211,7 +211,7 @@ test("una casa recién aprobada aparece en Activas y el recuento sube; quien no 
   await page.evaluate(() => localStorage.clear());
   await injectSession(page, "owner");
   await page.goto("/admin/casas");
-  await expect(page.getByRole("heading", { name: "Esta sección es solo para el equipo de bnbtico" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Esta sección es solo para el equipo de 3bstays" })).toBeVisible();
   await expect(page.locator(".house-row")).toHaveCount(0);
 });
 
@@ -220,7 +220,7 @@ const cleanIndexedDb = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<void>((resolve) => {
-        const req = indexedDB.deleteDatabase("bnbtico");
+        const req = indexedDB.deleteDatabase("3bstays");
         req.onsuccess = req.onerror = req.onblocked = () => resolve();
       }),
   );
@@ -249,7 +249,7 @@ async function openSheet(page: Page, title: string) {
   return sheet;
 }
 
-test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada por bnbtico» con el motivo y la sigue editando; el admin la reanuda", async ({ page, request }) => {
+test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada por 3bstays» con el motivo y la sigue editando; el admin la reanuda", async ({ page, request }) => {
   const tag = `P${Date.now().toString(36)}`;
   const title = `Casa Pausable ${tag}`;
   const house = await h.seed({ status: "active", draft: { title } });
@@ -275,7 +275,7 @@ test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada p
   const notice = sheet.getByTestId("notice-link");
   const ownerFirstName = firstName(h.ownerName("owner"));
   await expect(notice).toHaveText(`Avisar a ${ownerFirstName} por WhatsApp`);
-  const text = `Hola, ${ownerFirstName}. Le escribimos de bnbtico: su casa «${title}» está pausada en bnbtico: ${reason.replace(/\.$/, "")}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
+  const text = `Hola, ${ownerFirstName}. Le escribimos de 3bstays: su casa «${title}» está pausada en 3bstays: ${reason.replace(/\.$/, "")}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
   await expect(notice).toHaveAttribute("href", `https://wa.me/50687770001?text=${encodeURIComponent(text)}`);
   await sheet.getByRole("button", { name: "Cerrar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -300,12 +300,12 @@ test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada p
   await asOwner(page);
   await fresh(page, "/propietario/casas");
   const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(card.getByTestId("card-label")).toHaveText("Pausada por bnbtico");
+  await expect(card.getByTestId("card-label")).toHaveText("Pausada por 3bstays");
   await expect(card.getByTestId("hold-note")).toContainText(reason);
   await card.getByRole("link", { name: title }).click();
-  await expect(page.getByTestId("hold-notice")).toContainText("Pausada por bnbtico");
+  await expect(page.getByTestId("hold-notice")).toContainText("Pausada por 3bstays");
   await expect(page.getByTestId("hold-reason")).toHaveText(reason);
-  await expect(page.getByRole("link", { name: "Escribir a bnbtico" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Escribir a 3bstays" })).toHaveCount(0);
   await page.screenshot({ path: "test-results/propietario-casa-pausada.png", fullPage: true });
   await page.goto(`/propietario/casas/${house.id}/editar/capacidad`);
   await expect(page).toHaveURL(new RegExp(`/editar/capacidad$`));
@@ -325,7 +325,7 @@ test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada p
   expect((await h.owner("owner").getOwn(house.id))?.adminHold).toBeNull();
 });
 
-test("bloquear: el propietario ve «Bloqueada por bnbtico» con el motivo y «Escribir a bnbtico», no puede editarla y su suscripción se para", async ({ page, request }) => {
+test("bloquear: el propietario ve «Bloqueada por 3bstays» con el motivo y «Escribir a 3bstays», no puede editarla y su suscripción se para", async ({ page, request }) => {
   const tag = `B${Date.now().toString(36)}`;
   const title = `Casa Bloqueable ${tag}`;
   const house = await h.seed({ status: "active", draft: { title } });
@@ -339,7 +339,7 @@ test("bloquear: el propietario ve «Bloqueada por bnbtico» con el motivo y «Es
   await sheet.getByLabel("Motivo (lo verá el anfitrión)").fill(reason);
   await sheet.getByRole("button", { name: "Bloquear casa" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Casa bloqueada" })).toBeVisible();
-  await expect(sheet.getByTestId("notice-link")).toHaveAttribute("href", /^https:\/\/wa\.me\/50687770001\?text=.*bloqueada%20en%20bnbtico/);
+  await expect(sheet.getByTestId("notice-link")).toHaveAttribute("href", /^https:\/\/wa\.me\/50687770001\?text=.*bloqueada%20en%203bstays/);
   await sheet.getByRole("button", { name: "Cerrar" }).click();
   await expect(chip(page, "Bloqueadas")).toHaveText(`Bloqueadas · ${bloqueadas + 1}`);
   const rowEl = page.locator(".house-row").filter({ hasText: house.publicId });
@@ -350,13 +350,13 @@ test("bloquear: el propietario ve «Bloqueada por bnbtico» con el motivo y «Es
   await asOwner(page);
   await fresh(page, "/propietario/casas");
   const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(card.getByTestId("card-label")).toHaveText("Bloqueada por bnbtico");
+  await expect(card.getByTestId("card-label")).toHaveText("Bloqueada por 3bstays");
   await expect(card.getByTestId("hold-note")).toContainText(reason);
   await expect(card.getByRole("link", { name: "Compartir ficha" })).toHaveCount(0);
   await card.getByRole("link", { name: title }).click();
-  await expect(page.getByTestId("hold-notice")).toContainText("Bloqueada por bnbtico");
+  await expect(page.getByTestId("hold-notice")).toContainText("Bloqueada por 3bstays");
   await expect(page.getByTestId("hold-reason")).toHaveText(reason);
-  const write = page.getByTestId("hold-notice").getByRole("link", { name: "Escribir a bnbtico" });
+  const write = page.getByTestId("hold-notice").getByRole("link", { name: "Escribir a 3bstays" });
   await expect(write).toHaveAttribute("href", /^https:\/\/wa\.me\/.*text=.*CT-/);
   // Solo lectura: ningún dato abre su pantalla, y el enlace directo vuelve a la ficha.
   await expect(page.getByTestId("field-rows").getByRole("link")).toHaveCount(0);

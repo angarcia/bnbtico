@@ -104,7 +104,7 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
       )}
     </>
   );
-  // Bloqueada por bnbtico: se lee, no se toca.
+  // Bloqueada por 3bstays: se lee, no se toca.
   const row = readOnly ? (
     <div className="list-item" aria-disabled="true">
       {content}

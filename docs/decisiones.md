@@ -1,3 +1,26 @@
+## 2026-11-11 · Cambio de dominio a 3bstays.com e identificadores internos
+
+- **Decisión (Daniel, 2026-11-11):**
+  - El cambio de dominio se hace hoy.
+  - Pruebas pasa a **`pruebas.3bstays.com`**; `nueva.` desaparece.
+  - Los workers se renombran a `3bstays-pruebas`, `3bstays-production` y `3bstays-refactor`.
+  - Se aprovecha que aún no hay datos reales para renombrar también lo interno.
+- **Qué cambia en la app:**
+  - Textos, SEO y manifest.
+  - Las claves del teléfono pasan a `3bstays-*`. Las antiguas `bnbtico*` y la IndexedDB `bnbtico` se borran una vez tras cargar (`src/client/legacy-storage.ts`), así que los probadores vuelven a entrar.
+  - El UID de los eventos de la exportación a Airbnb pasa a `3bstays-…@3bstays.com`.
+  - El prefijo de idempotencia de Stripe y los nombres internos del build.
+- **Qué cambia en la base** (migraciones `marca_3bstays` y `marca_3bstays_internos`):
+  - Los mensajes de error.
+  - `inquiries.source` `'bnbtico'` pasa a `'support'`.
+  - El correo de relleno de los admins pasa a `@admin.3bstays.invalid`.
+  - Los trabajos de pg_cron pasan a `3bstays-reabrir-casas` y `3bstays-suscripciones`.
+- **Se dejan con el nombre anterior:**
+  - El proyecto de Supabase `bnbtico-pruebas` y el `project_id` local, porque cambiarlo recrea los contenedores.
+  - El bucket `bnbtico-copias`, con su prefijo. Producción usará un bucket propio.
+- **Después, el mismo día:** el candado pasa a `3bstays.promo_slot` y el secreto del reloj de pruebas a `3bstays_test_clock` (migración `marca_3bstays_candado_y_reloj`, que también renombra el secreto en Vault), para que el esquema de producción nazca sin bnbtico. El proyecto de producción será uno nuevo (`3bstays-prod`).
+- **Pasos en los paneles:** `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`.
+
 ## 2026-11-11 · Se retiran los logos de bnbtico y queda una sola biblioteca de marca
 
 - **Decisión (Daniel, 2026-11-11):** borrar del repositorio los iconos y logos antiguos y dejar los nuevos en su carpeta. `design/logo/` solo contiene la biblioteca `3bstays-2026-11-10/`, su README, `.gitignore` y `.gitattributes`.

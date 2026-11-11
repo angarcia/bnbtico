@@ -117,7 +117,7 @@ function assistedScreen(){
   return header('Búsqueda asistida','home')+`<div class="assisted-layout"><div class="stack">
     <div class="card small"><b>✦ Encontrá tu casa, paso a paso</b><p>Esto es una simulación guiada, no una IA conectada. No consume búsquedas ni avisa a owners.</p><a href="#" data-go="request">¿Ya sabés lo que querés? Pedí casa con el formulario gratuito.</a></div>
     <div class="assist-history" aria-label="Conversación con el asistente">${assisted.messages.map(m=>`<div class="assist-bubble">${safe(m.question)}</div><div class="assist-bubble assist-user">${safe(m.answer)}</div>`).join('')}</div>
-    <section class="card stack" aria-live="polite"><b>bnbtico · asistente de prueba</b><p>${safe(q.text)}</p>
+    <section class="card stack" aria-live="polite"><b>3bstays · asistente de prueba</b><p>${safe(q.text)}</p>
     <div class="chiprow">${q.options.map(o=>`<button class="chip" data-assist-answer="${safe(o)}">${safe(o)}</button>`).join('')}</div>
     ${!['none','done'].includes(q.key)?`<form id="assist-form" class="stack"><label for="assist-input" class="small">Tu respuesta</label><div class="row"><input id="assist-input" maxlength="240" value="${safe(assisted.draft)}" autocomplete="off" placeholder="Escribí acá…" style="min-width:0;flex:1"><button class="btn btn-primary" type="submit">Enviar</button></div></form>`:''}
     ${assisted.error?`<p class="small" role="alert">${safe(assisted.error)}</p>`:''}

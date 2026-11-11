@@ -153,7 +153,7 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen }: { i
             </span>
           </div>
           <span className="small muted">{inquirySummary(i)}</span>
-          {i.source === "bnbtico" ? <span className="badge badge-tight">Creada por bnbtico</span> : null}
+          {i.source === "support" ? <span className="badge badge-tight">Creada por 3bstays</span> : null}
           {note ? <p className="inquiry-message">“{note}”</p> : null}
         </div>
       </div>

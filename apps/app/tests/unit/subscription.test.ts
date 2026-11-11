@@ -244,7 +244,7 @@ describe("prototipo · estados-casa.cjs", () => {
     const card = reminderCard(reminderDaysLeft(inWindow, TODAY)!)!;
     expect(card.title).toMatch(/^Su oferta gratuita termina en \d+ días$/);
     expect(card.body).toMatch(/También se lo recordamos por WhatsApp\.$/);
-    expect(card.title + card.body).not.toMatch(/Somos bnbtico|La oferta gratuita de|#pago=/);
+    expect(card.title + card.body).not.toMatch(/Somos 3bstays|La oferta gratuita de|#pago=/);
   });
 
   it("fin de la oferta sin método → Pendiente de pago, fuera del catálogo", () => {
@@ -283,14 +283,14 @@ describe("prototipo · estados-casa.cjs", () => {
 
   it("el 410 de una casa parada dice «paró la suscripción»; el de una sin pagar, «regularice su suscripción»", () => {
     expect(blockedReason("stopped")).toMatch(/paró la suscripción/);
-    expect(blockedReason("stopped")).toBe("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(blockedReason("stopped")).toBe("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde 3bstays.");
     expect(blockedReason("payment")).toBe("Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.");
     expect(blockedReason("other")).toBe("Este anuncio no está disponible en este momento.");
     expect(blockedReason(null)).toBe("Este anuncio no está disponible en este momento.");
   });
 
   it("el WhatsApp dice que no se cobra nada hasta esa fecha, lleva #pago=CT-#### y no da instrucciones de navegación", () => {
-    const wa = reminderWhatsApp({ name: "Marcela", title: "Casa Cocles", endsOn: "2027-10-01", link: payLink("https://bnbtico.com", "CT-1150"), daysBefore: 90 });
+    const wa = reminderWhatsApp({ name: "Marcela", title: "Casa Cocles", endsOn: "2027-10-01", link: payLink("https://3bstays.com", "CT-1150"), daysBefore: 90 });
     expect(wa).toMatch(/hasta entonces no se le cobra nada/);
     expect(wa).toMatch(/#pago=CT-1150/);
     expect(wa).not.toMatch(/Cuenta → Promoción/);
@@ -388,7 +388,7 @@ describe("reminderCard", () => {
 
   it("el cuerpo exacto, con la tarifa vigente", () => {
     expect(reminderCard(7)?.body).toBe(
-      `No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en bnbtico; después, ${fee} al mes por casa, sin permanencia. También se lo recordamos por WhatsApp.`,
+      `No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en 3bstays; después, ${fee} al mes por casa, sin permanencia. También se lo recordamos por WhatsApp.`,
     );
   });
 
@@ -399,22 +399,22 @@ describe("reminderCard", () => {
 });
 
 describe("reminderWhatsApp", () => {
-  const base = { name: "Marcela", title: "Casa Cocles", endsOn: "2027-10-14", link: "https://bnbtico.com/propietario/suscripcion#pago=CT-1042" };
+  const base = { name: "Marcela", title: "Casa Cocles", endsOn: "2027-10-14", link: "https://3bstays.com/propietario/suscripcion#pago=CT-1042" };
 
   it("90, 30 y 7 días: el texto exacto", () => {
-    const expected = `Hola, Marcela. Somos bnbtico. La oferta gratuita de «Casa Cocles» termina el 14 de octubre: hasta entonces no se le cobra nada. Para que su casa siga saliendo en bnbtico después, añada un método de pago aquí: https://bnbtico.com/propietario/suscripcion#pago=CT-1042 Desde esa fecha, ${fee} al mes por casa, sin permanencia; puede pararla cuando quiera.`;
+    const expected = `Hola, Marcela. Somos 3bstays. La oferta gratuita de «Casa Cocles» termina el 14 de octubre: hasta entonces no se le cobra nada. Para que su casa siga saliendo en 3bstays después, añada un método de pago aquí: https://3bstays.com/propietario/suscripcion#pago=CT-1042 Desde esa fecha, ${fee} al mes por casa, sin permanencia; puede pararla cuando quiera.`;
     for (const daysBefore of [90, 30, 7] as const) expect(reminderWhatsApp({ ...base, daysBefore })).toBe(expected);
   });
 
   it("el último día: termina hoy y desde mañana deja de mostrarse", () => {
     expect(reminderWhatsApp({ ...base, daysBefore: 0 })).toBe(
-      `Hola, Marcela. Somos bnbtico. La oferta gratuita de «Casa Cocles» termina hoy. Si no añade un método de pago, desde mañana su casa deja de mostrarse en bnbtico: https://bnbtico.com/propietario/suscripcion#pago=CT-1042 Hoy todavía no se le cobra nada; después, ${fee} al mes por casa, sin permanencia; puede pararla cuando quiera.`,
+      `Hola, Marcela. Somos 3bstays. La oferta gratuita de «Casa Cocles» termina hoy. Si no añade un método de pago, desde mañana su casa deja de mostrarse en 3bstays: https://3bstays.com/propietario/suscripcion#pago=CT-1042 Hoy todavía no se le cobra nada; después, ${fee} al mes por casa, sin permanencia; puede pararla cuando quiera.`,
     );
   });
 
   it("sin nombre saluda igual", () => {
-    expect(reminderWhatsApp({ ...base, name: null, daysBefore: 30 })).toMatch(/^Hola\. Somos bnbtico\. La oferta/);
-    expect(reminderWhatsApp({ ...base, name: "  ", daysBefore: 30 })).toMatch(/^Hola\. Somos bnbtico\./);
+    expect(reminderWhatsApp({ ...base, name: null, daysBefore: 30 })).toMatch(/^Hola\. Somos 3bstays\. La oferta/);
+    expect(reminderWhatsApp({ ...base, name: "  ", daysBefore: 30 })).toMatch(/^Hola\. Somos 3bstays\./);
   });
 
   it("de usted, sin voseo", () => {
@@ -424,8 +424,8 @@ describe("reminderWhatsApp", () => {
 
 describe("payLink y parsePayHash", () => {
   it("enlace a la pantalla de suscripción con el id de la casa", () => {
-    expect(payLink("https://bnbtico.com", "CT-1042")).toBe("https://bnbtico.com/propietario/suscripcion#pago=CT-1042");
-    expect(payLink("https://pruebas.bnbtico.com/", "CT-1042")).toBe("https://pruebas.bnbtico.com/propietario/suscripcion#pago=CT-1042");
+    expect(payLink("https://3bstays.com", "CT-1042")).toBe("https://3bstays.com/propietario/suscripcion#pago=CT-1042");
+    expect(payLink("https://pruebas.3bstays.com/", "CT-1042")).toBe("https://pruebas.3bstays.com/propietario/suscripcion#pago=CT-1042");
   });
 
   it("solo acepta #pago=CT- con cuatro o más cifras", () => {
@@ -437,7 +437,7 @@ describe("payLink y parsePayHash", () => {
   });
 
   it("ida y vuelta", () => {
-    expect(parsePayHash(new URL(payLink("https://bnbtico.com", "CT-2001")).hash)).toBe("CT-2001");
+    expect(parsePayHash(new URL(payLink("https://3bstays.com", "CT-2001")).hash)).toBe("CT-2001");
   });
 });
 

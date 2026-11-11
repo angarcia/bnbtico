@@ -9,7 +9,7 @@ import { enterCode, injectSession } from "./helpers/session";
 // al ingresar, en la cuenta (sigue al usuario a otro teléfono).
 test.describe.configure({ mode: "serial" });
 
-const KEY = "bnbtico-favoritos";
+const KEY = "3bstays-favoritos";
 let cocles: Seeded;
 let negra: Seeded;
 let oculta: Seeded;
@@ -79,13 +79,13 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect(page.locator(".listing-card").first()).toContainText("₡95 000 / noche");
   await expect(page.getByText("Compare y escriba directo")).toBeVisible();
   // Sin barra superior ni logo (2026-11-03): «₡ | $» va en la fila de la cuenta, y la elección es la de toda la app.
-  await expect(page.getByRole("link", { name: "bnbtico, inicio" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "3bstays, inicio" })).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toHaveCount(1);
   await expect(page.getByRole("group", { name: "Moneda de los precios" })).toBeVisible();
-  await page.evaluate(() => localStorage.setItem("bnbtico_currency", "USD"));
+  await page.evaluate(() => localStorage.setItem("3bstays_currency", "USD"));
   await page.reload();
   await expect(page.locator(".listing-card").first()).toContainText("$186 / noche");
-  await page.evaluate(() => localStorage.removeItem("bnbtico_currency"));
+  await page.evaluate(() => localStorage.removeItem("3bstays_currency"));
   await page.reload();
 
   await card(page, "Casa Cocles").getByRole("button", { name: "Quitar de favoritos" }).click();
@@ -104,7 +104,7 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect.poll(accountFavorites).toEqual([negra.publicId]);
 
   // Cerrar sesión no borra la lista del teléfono.
-  await page.evaluate(() => localStorage.removeItem("bnbtico-auth"));
+  await page.evaluate(() => localStorage.removeItem("3bstays-auth"));
   await page.reload();
   await expect(page.getByTestId("favorites-count")).toHaveText("1 casa · guardada en este teléfono");
 });

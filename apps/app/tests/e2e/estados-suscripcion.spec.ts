@@ -49,7 +49,7 @@ const expire = async (id: string) => {
 async function fresh(page: Page, path: string) {
   await page.goto("/robots.txt");
   await page.evaluate(() => new Promise<void>((resolve) => {
-    const req = indexedDB.deleteDatabase("bnbtico");
+    const req = indexedDB.deleteDatabase("3bstays");
     req.onsuccess = req.onerror = req.onblocked = () => resolve();
   }));
   await page.goto(path);
@@ -71,7 +71,7 @@ test("Mis casas: arriba solo el pago (la pendiente antes que la ventana de 90 d�
   const notice = page.getByTestId("pay-notice");
   await expect(notice).toContainText("Casa Cocles");
   await expect(notice).toContainText("Su oferta gratuita termina en 30 días");
-  await expect(notice).toContainText(`No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en bnbtico; después, ${FEE} al mes por casa, sin permanencia. También se lo recordamos por WhatsApp.`);
+  await expect(notice).toContainText(`No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en 3bstays; después, ${FEE} al mes por casa, sin permanencia. También se lo recordamos por WhatsApp.`);
   await expect(notice).not.toContainText("Hola,"); // nunca el texto del WhatsApp
   await expect(page.locator("[data-testid=pay-notice], [data-testid=resume-card]")).toHaveCount(1);
   await expect(card(page, "Borrador del Caribe").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
@@ -309,7 +309,7 @@ test.describe("ficha 410 con su motivo", () => {
     const editada = await h.seed({ status: "reopened" });
 
     await open410(page, parada.publicId);
-    await expect(page.getByText("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.")).toBeVisible();
+    await expect(page.getByText("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde 3bstays.")).toBeVisible();
     await page.screenshot({ path: "test-results/capturas/410-parada.png", fullPage: true });
 
     await open410(page, debe.publicId);

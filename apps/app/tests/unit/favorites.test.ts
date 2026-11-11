@@ -5,7 +5,7 @@ const at = (d: number) => new Date(Date.UTC(2026, 9, d)).toISOString();
 
 describe("favoritos en el teléfono", () => {
   it("la clave del almacenamiento", () => {
-    expect(FAVORITES_KEY).toBe("bnbtico-favoritos");
+    expect(FAVORITES_KEY).toBe("3bstays-favoritos");
   });
 
   it("añadir pone la casa primero, sin duplicar; quitar es idempotente", () => {

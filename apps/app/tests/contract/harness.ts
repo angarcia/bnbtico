@@ -162,7 +162,7 @@ export interface SubscriptionHarness extends CalendarHarness {
   reminders(listingId: string): Promise<StoredReminder[]>;
   /** Los ids de la pasarela guardados para esa cuenta (como el servicio); null sin método. */
   storedMethod(who: SeedOwner): Promise<{ customerRef: string; methodRef: string } | null>;
-  /** Crea o borra el secreto bnbtico_test_clock de Vault; devuelve si estaba. */
+  /** Crea o borra el secreto 3bstays_test_clock de Vault; devuelve si estaba. */
   setTestClock(on: boolean): Promise<boolean>;
   /** admin_actions de una casa, en el orden en que ocurrieron (como el servicio). */
   adminActions(listingId: string): Promise<{ action: string; reason: string | null }[]>;

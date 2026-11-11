@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { precacheList, strategyFor } from "../../src/sw/routes";
 
-const ORIGIN = "https://nueva.bnbtico.com";
+const ORIGIN = "https://pruebas.3bstays.com";
 const SUPABASE = "https://bpxiggdzgzolcazaaboj.supabase.co";
 const PRECACHED = new Set(["/", "/assets/index-abc.js", "/assets/index-abc.css", "/fonts/outfit-latin.woff2", "/manifest.webmanifest"]);
 

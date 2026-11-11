@@ -23,7 +23,7 @@ test("genera y copia el enlace real por casa y lo recupera al volver", async ({ 
   await page.getByRole("button", { name: "Conectar con Airbnb" }).click();
   await expect(page.getByRole("heading", { name: "Exportar hacia Airbnb" })).toBeVisible();
   await page.getByRole("button", { name: "Generar enlace", exact: true }).click();
-  const field = page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true });
+  const field = page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true });
   await expect(field).toHaveValue(/^http:\/\/127\.0\.0\.1:\d+\/ical\/[a-f0-9]{64}\.ics$/);
   await expect(field).toHaveAttribute("readonly", "");
   const url = await field.inputValue();
@@ -44,13 +44,13 @@ test("genera y copia el enlace real por casa y lo recupera al volver", async ({ 
   await expect(field).toHaveValue(url);
   const persisted = () => page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("bnbtico", 1);
+      const request = indexedDB.open("3bstays", 1);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
     try {
       return await new Promise<string>((resolve, reject) => {
-        const request = db.transaction("query-cache", "readonly").objectStore("query-cache").get("bnbtico-query");
+        const request = db.transaction("query-cache", "readonly").objectStore("query-cache").get("3bstays-query");
         request.onsuccess = () => resolve(JSON.stringify(request.result) ?? "");
         request.onerror = () => reject(request.error);
       });
@@ -83,10 +83,10 @@ test("fallar al generar permite reintentar y no anuncia un enlace antes de confi
   await page.goto(`/propietario/casas/${l.id}/airbnb`);
   await page.getByRole("button", { name: "Generar enlace", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("No pudimos generar el enlace");
-  await expect(page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Generar enlace", exact: true }).click();
   await expect(page.getByRole("button", { name: "Generando enlace…" })).toBeDisabled();
-  await expect(page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true })).toHaveCount(0);
   release();
   await expect(page.getByRole("button", { name: "Copiar enlace", exact: true })).toBeVisible();
   await expect(page.getByText("No hay noches bloqueadas manualmente en este período.", { exact: true })).toBeVisible();
@@ -104,7 +104,7 @@ test("denegar portapapeles conserva el enlace seleccionable y no anuncia copia",
   });
   await page.goto(`/propietario/casas/${l.id}/airbnb`);
   await page.getByRole("button", { name: "Generar enlace", exact: true }).click();
-  const field = page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true });
+  const field = page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true });
   await expect(field).toBeVisible();
   const url = await field.inputValue();
   await page.getByRole("button", { name: "Copiar enlace", exact: true }).click();

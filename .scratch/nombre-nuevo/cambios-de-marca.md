@@ -1,6 +1,11 @@
 # Cambio de marca: de bnbtico a 3bstays
 
-Status: needs-triage
+Status: ready-for-human (2026-11-11)
+
+**Estado (2026-11-11):**
+
+- **Hecho en la rama `marca-3bstays`:** A, B, C y E, incluidas las decisiones 1–3. Las claves del teléfono se renombran, los identificadores internos también salvo los que se dejan, y pruebas pasa a `pruebas.3bstays.com` con workers `3bstays-*`.
+- **Pendiente:** el bloque D, que lo hace Daniel siguiendo `guion-cambio-de-dominio.md`, y la decisión 4 (bnbtico.com). Las listas de abajo son el plan original.
 
 Decisión del 2026-11-10 (ver `docs/decisiones.md`). Dominios: **3bstays.com** (principal), y tresbstays.com y threebstays.com como alternativas. Inventario hecho con `git grep` el 2026-11-10 en `develop`.
 

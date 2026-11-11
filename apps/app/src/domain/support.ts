@@ -1,4 +1,4 @@
-// Números de WhatsApp de atención (Ayuda) en el build (revisión UX A12). Ayuda es el único canal de bnbtico: con la app
+// Números de WhatsApp de atención (Ayuda) en el build (revisión UX A12). Ayuda es el único canal de 3bstays: con la app
 // abierta en producción (LAUNCHED "true") el build no sigue sin ellos; antes del lanzamiento solo avisa, para no frenar los
 // despliegues de la portada.
 

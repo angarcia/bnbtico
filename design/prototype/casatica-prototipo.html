@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>bnbtico Prototipo</title>
+<title>3bstays Prototipo</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <style>
 /* Layout: prototype shell (role tabs + device toggle) wrapping one responsive app surface.
@@ -11,7 +11,7 @@
   --fg:#1B2420;
   --muted:#5F6B64;
   --line:#DDD9CE;
-  --coral:#FF385C;       /* bnbtico: original coral logo */
+  --coral:#FF385C;       /* 3bstays: original coral logo */
   --primary:#D92349;     /* deeper coral for white text contrast */
   --primary-ink:#A81736;
   --primary-soft:#FFF0F3;
@@ -280,7 +280,7 @@ details p{padding-top:6px}
 
 <div class="shell">
   <div class="shell-bar">
-    <div class="brand"><span class="brand-logo"><img src="assets/bnbtico.svg" alt="bnbtico" width="672" height="222"></span><small>prototipo v0.1</small></div>
+    <div class="brand"><span class="brand-logo"><img src="assets/3bstays.svg" alt="3bstays" width="672" height="235"></span><small>prototipo v0.1</small></div>
     <div class="row" style="gap:10px;flex-wrap:wrap">
       <div class="seg" id="roleSeg" aria-label="Rol">
         <button data-role="landing" aria-pressed="false">Landing</button>
@@ -401,7 +401,7 @@ function ownerPending(key){
 function ownerNavCount(key){const n=S.role==='owner'?ownerPending(key):0;return n?` <span class="nav-count" aria-label="${n} pendientes">${n}</span>`:'';}
 function chrome(inner){
  const items=NAV[S.role];const cur=current();
- const logo=`<span class="brand-logo"><img src="assets/bnbtico.svg" alt="bnbtico" width="672" height="222"></span>`;
+ const logo=`<span class="brand-logo"><img src="assets/3bstays.svg" alt="3bstays" width="672" height="235"></span>`;
  const top=`<div class="topnav"><div class="brand">${logo}</div>
    ${items.map(([k,l])=>`<button class="nav" data-go="${k}" ${cur===k?'aria-current="page"':''}>${l}${ownerNavCount(k)}</button>`).join("")}
    ${S.role==="guest"?(S.loggedIn?`<span class="avatar">AC</span>`:`<button class="btn btn-ghost btn-sm" data-go="login">Ingresar</button>`):""}
@@ -493,8 +493,8 @@ function detail(backTo="home"){
     <div class="stack"><div class="eyebrow">Lo que ofrece</div><div class="amen">${amen.map(([a,on])=>`<div style="${on?"":"opacity:.4;text-decoration:line-through"}"><span style="color:var(--primary)">${I.check}</span>${a}</div>`).join("")}</div></div>
     <div class="stack"><div class="eyebrow">Disponibilidad y precio orientativo</div>${calendar(false,h)}<div class="xs muted">El owner actualiza este calendario a mano. Confirmá fechas y precio final con el owner.</div></div>
     <div class="stack"><div class="eyebrow">Ubicación aproximada</div><div class="map" style="min-height:160px"><div class="water"></div><button class="pin active" style="left:50%;top:55%">${h.loc.split(",")[0]}</button></div><div class="xs muted">La dirección exacta la comparte el owner.</div></div>
-    <div class="card row"><span class="avatar">${ini(h.owner)}</span><div><b>${h.owner}</b><div class="xs muted">Owner ${h.ownerV?"verificado con cédula":"en revisión"} · responde en ~1 h · en bnbtico desde 2026</div></div></div>
-    <div class="note">⚠ bnbtico no procesa pagos. No transfieras dinero sin confirmar la casa; reportá cualquier anuncio sospechoso.</div>
+    <div class="card row"><span class="avatar">${ini(h.owner)}</span><div><b>${h.owner}</b><div class="xs muted">Owner ${h.ownerV?"verificado con cédula":"en revisión"} · responde en ~1 h · en 3bstays desde 2026</div></div></div>
+    <div class="note">⚠ 3bstays no procesa pagos. No transfieras dinero sin confirmar la casa; reportá cualquier anuncio sospechoso.</div>
     <button class="btn btn-ghost" data-claim-new="${h.id}">Reportar un problema</button>
    </div>
    <div class="detail-side stack" style="gap:12px">
@@ -531,7 +531,7 @@ function login(){
    <div class="field"><label for="l-phone">Teléfono (WhatsApp)</label><input id="l-phone" value="+506 8xxx-xxxx"><span class="hint">Dato ficticio. Solo compartimos contacto cuando el cliente lo solicita y el owner acepta.</span></div>
    <div class="field"><label for="l-mail">Correo</label><input id="l-mail" value="andrea@ejemplo.cr"></div>
    <div class="note small">Demo con datos ficticios. Simulamos una identidad ya verificada; no enviamos códigos ni comprobamos documentos.</div><button class="btn btn-primary" data-login>Entrar a la demo</button>
-   <div class="xs muted" style="text-align:center">Al continuar aceptás los Términos. bnbtico nunca te pedirá pagos.</div>
+   <div class="xs muted" style="text-align:center">Al continuar aceptás los Términos. 3bstays nunca te pedirá pagos.</div>
   </div>`;
 }
 function profile(){
@@ -595,8 +595,8 @@ function myRequests(){
    ${r.offers.length?r.offers.map(o=>{const h=HOUSES.find(x=>x.id===o.house);return `<div class="row between" style="flex-wrap:wrap;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
      <div class="row"><span class="avatar">${ini(o.owner)}</span><div><div class="row" style="gap:6px"><b>${o.owner}</b>${verified(h.ownerV)}</div><div class="xs muted">${h.t} · ${h.loc.split(",")[0]}</div></div></div>
      <div class="row" style="gap:6px"><button class="btn btn-ghost btn-sm" data-open="${h.id}">Ver casa</button><button class="btn btn-sm" style="background:var(--wa);color:#063b1e" data-relay-offer="${h.id}" data-relay-thread="${o.threadId||''}" aria-label="Contactar por WhatsApp">${I.wa} WhatsApp</button></div>
-    </div>`}).join(""):`<div class="small muted">Todavía no hay contactos iniciados. Los propietarios compatibles podrán escribirte directamente por WhatsApp; no recibirás mensajes dentro de bnbtico.</div>`}
-   <div class="xs muted">Esta lista registra que el propietario inició el contacto desde bnbtico, no que haya enviado un mensaje. Revisá tu WhatsApp: bnbtico no lee ni confirma la entrega de esas conversaciones.</div>
+    </div>`}).join(""):`<div class="small muted">Todavía no hay contactos iniciados. Los propietarios compatibles podrán escribirte directamente por WhatsApp; no recibirás mensajes dentro de 3bstays.</div>`}
+   <div class="xs muted">Esta lista registra que el propietario inició el contacto desde 3bstays, no que haya enviado un mensaje. Revisá tu WhatsApp: 3bstays no lee ni confirma la entrega de esas conversaciones.</div>
    ${r.status==='open'?`<div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn btn-primary btn-sm" data-close-request="${S.requests.indexOf(r)}">Ya encontré alojamiento</button><button class="btn btn-ghost btn-sm" data-close-request="${S.requests.indexOf(r)}">Cerrar búsqueda</button></div>`:'<p class="small">Búsqueda cerrada: no se habilitan nuevos contactos desde esta solicitud.</p>'}<p class="xs muted">Cerrar no retira números ya compartidos ni impide que continúen conversaciones en WhatsApp.</p>
   </div>`).join("");
 }
@@ -652,7 +652,7 @@ function oNew(){
     <div class="note">⚠ Las fotos con números de teléfono o enlaces se rechazan en la revisión. Los clientes te escriben con el botón «Contactar».</div>`,
   ()=>`<h3>Precio orientativo</h3>
     <div class="grid" style="grid-template-columns:2fr 1fr"><div class="field"><label for="w-price">Precio por ${S.wizType==="vac"?"noche":"mes"}</label><input id="w-price" value="${S.wizType==="vac"?"95.000":"380.000"}" class="num"></div><div class="field"><label for="w-cur">Moneda</label><select id="w-cur"><option>₡ colones</option><option>$ dólares</option></select></div></div>
-    <div class="xs muted">Se muestra como «desde». El precio final lo acordás con el cliente; bnbtico no cobra ni retiene pagos.</div>
+    <div class="xs muted">Se muestra como «desde». El precio final lo acordás con el cliente; 3bstays no cobra ni retiene pagos.</div>
     <div class="field"><label for="w-wa">Número de WhatsApp de negocio</label><input id="w-wa" value="+506 8xxx-xxxx"></div>
     <div class="note">📱 Te recomendamos un número de negocio o distinto del personal. No se muestra en la ficha. Al aceptar contactar a un cliente por WhatsApp, compartirás tu número con él.</div>
     <div class="card stack summary-box" style="gap:6px"><b>Resumen de la suscripción</b><div class="row between small"><span>Villa Brisa frente al mar</span><b class="num">₡9.900 / mes</b></div><div class="xs muted">Se cobra solo cuando la casa esté aprobada y activa. Podés pausarla cuando querrás.</div></div>`
@@ -694,7 +694,7 @@ function oLeads(){
      <div class="row" style="gap:8px;margin-top:6px;flex-wrap:wrap"><div class="ratebtn" aria-label="Valorar cliente">${[1,2,3,4,5].map(n=>`<button class="${n<=l.rated?"on":""}" data-rate="${i}:${n}" aria-label="${n} estrellas">★</button>`).join("")}</div>${l.rated?`<span class="badge badge-ok">Valorado</span>`:`<span class="xs muted">Valorar</span>`}</div></div>
     <div class="stack" style="grid-column:2;gap:8px">
      ${relayLeadExpired(l)?`<span class="badge badge-mute" style="align-self:flex-start">Expirada · no pendiente</span><button class="btn btn-ghost btn-sm" data-relay-lead="${i}">Ver solicitud</button>`:l.dismissed?`<span class="badge badge-mute" style="align-self:flex-start">No me interesa</span><span class="xs muted">Marcado solo para vos. No se envió ningún mensaje al cliente. El plazo sigue contando desde el envío original; después podrá enviar otra solicitud.</span><button class="btn btn-ghost btn-sm" data-relay-restore="${i}">Reactivar consulta</button><button class="btn btn-ghost btn-sm" data-relay-lead="${i}">Ver solicitud</button>`:
-     `<button class="btn btn-wa btn-sm" style="font-size:13px;padding:10px" data-relay-lead="${i}">${I.wa} Contactar por WhatsApp</button><button class="btn btn-ghost btn-sm" data-relay-dismiss="${i}">No me interesa</button><span class="xs muted">WhatsApp directo. El plazo solo limita nuevos avisos en bnbtico.</span>`}
+     `<button class="btn btn-wa btn-sm" style="font-size:13px;padding:10px" data-relay-lead="${i}">${I.wa} Contactar por WhatsApp</button><button class="btn btn-ghost btn-sm" data-relay-dismiss="${i}">No me interesa</button><span class="xs muted">WhatsApp directo. El plazo solo limita nuevos avisos en 3bstays.</span>`}
     </div></div>`).join("")}</div>`;
 }
 function oProfile(){
@@ -703,7 +703,7 @@ function oProfile(){
   <div class="card list">
    <div class="row between"><span>Suscripción</span><button class="btn-link" data-go="o-sub">2 casas · ₡19.800/mes</button></div>
    <div class="row between"><span>WhatsApp de mi cuenta</span><button class="btn-link" data-go="o-whatsapp">Configurar para todos mis anuncios</button></div>
-   <div class="row between"><span>Avisos de contactos</span><span class="badge badge-ok">En bnbtico · demo</span></div>
+   <div class="row between"><span>Avisos de contactos</span><span class="badge badge-ok">En 3bstays · demo</span></div>
    <div class="row between"><span>Métodos de pago</span><span class="muted">SINPE Móvil · Visa ••42</span></div>
    <div class="row between"><span>Ayuda</span><span class="muted">Chat de soporte</span></div>
   </div>`;
@@ -764,7 +764,7 @@ function landing(){
    <div class="stack" style="gap:16px">
     <span class="badge badge-sun" style="align-self:flex-start">Hecho en Costa Rica</span>
     <h1>Tu casa, a la vista de todo el país. Tu contacto, bajo tu control.</h1>
-    <p>bnbtico es el catálogo donde los owners publican su casa y conversan directamente por WhatsApp cuando ambos aceptan compartir contacto. Sin comisiones por reserva ni intermediarios en el pago.</p>
+    <p>3bstays es el catálogo donde los owners publican su casa y conversan directamente por WhatsApp cuando ambos aceptan compartir contacto. Sin comisiones por reserva ni intermediarios en el pago.</p>
     <div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-role-switch="owner">Publicar mi casa</button><button class="btn btn-ghost" data-role-switch="guest">Buscar una casa</button></div>
     <div class="row small muted" style="gap:14px;flex-wrap:wrap"><span class="row" style="gap:4px">${I.shield} Owners verificados con cédula</span><span class="row" style="gap:4px">${I.wa} WhatsApp directo</span></div>
    </div>
@@ -777,7 +777,7 @@ function landing(){
   </section>
   <section class="stack" style="gap:16px">
    <div class="price-box stack" style="gap:8px"><span class="eyebrow">Precio simple</span><div class="big">₡9.900 <span style="font-size:16px;font-weight:600;opacity:.85">/ casa / mes</span></div><span style="opacity:.9">Una reserva de fin de semana lo paga. Cero comisiones aunque alquilés 30 noches. Sin permanencia ni contratos: cancelá o pausá una casa cuando quieras y dejás de pagar. Pagá con tarjeta (renovación automática) o SINPE Móvil.</span><button class="btn btn-onprimary" data-role-switch="owner">Empezar · primer mes gratis</button></div>
-   <div class="card tbl-wrap"><table class="compare"><thead><tr><th></th><th>bnbtico</th><th>Plataformas con comisión</th><th>Solo WhatsApp</th></tr></thead><tbody>
+   <div class="card tbl-wrap"><table class="compare"><thead><tr><th></th><th>3bstays</th><th>Plataformas con comisión</th><th>Solo WhatsApp</th></tr></thead><tbody>
     <tr><td>Comisión por reserva</td><td><b style="color:var(--primary)">0%</b></td><td>12–18%</td><td>0%</td></tr>
     <tr><td>Visibilidad</td><td>Mundial</td><td>Mundial</td><td>Tus contactos</td></tr>
     <tr><td>Quién fija precio y fechas</td><td>Vos</td><td>La plataforma</td><td>Vos</td></tr>
@@ -788,7 +788,7 @@ function landing(){
   <section class="stack"><div class="eyebrow">Casas recién publicadas</div><div class="listings">${HOUSES.slice(0,3).map(listingCard).join("")}</div></section>
   <section class="card stack" style="gap:10px"><b>Preguntas frecuentes</b>
    <details><summary><b>¿Por qué no hay reseñas de las casas?</b></summary><p class="small muted">Como la reserva se cierra fuera de la app, no podemos comprobar quién se hospedó de verdad. Preferimos no mostrar reseñas que no podemos verificar. En cambio verificamos la identidad de cada owner y los owners valoran a los clientes.</p></details>
-   <details><summary><b>¿Qué pasa si un owner me pide un adelanto?</b></summary><p class="small muted">Es común en Costa Rica. Confirmá que el anuncio tenga el sello «Verificado», hacé videollamada y pedí comprobante. bnbtico nunca pide pagos.</p></details>
+   <details><summary><b>¿Qué pasa si un owner me pide un adelanto?</b></summary><p class="small muted">Es común en Costa Rica. Confirmá que el anuncio tenga el sello «Verificado», hacé videollamada y pedí comprobante. 3bstays nunca pide pagos.</p></details>
    <details><summary><b>¿Puedo publicar varias casas?</b></summary><p class="small muted">Sí, pagás ₡9.900 por cada casa activa.</p></details>
   </section>`;
 }

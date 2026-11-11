@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { OWNER_CTA_TEXT, WIZARD_CTA, ownerCtaTarget, withOwnerCta, withWizardCta } from "../../src/domain/portada";
 
-// Revisión UX C1: el botón de propietarios de la portada solo existe cuando hay número de WhatsApp de bnbtico.
+// Revisión UX C1: el botón de propietarios de la portada solo existe cuando hay número de WhatsApp de 3bstays.
 const HTML = `<p>antes</p><!--cta-propietarios--><p class="soon-later">Abrimos pronto en el Caribe sur.</p><!--/cta-propietarios--><p>después</p>`;
 
 describe("botón de propietarios de la portada", () => {

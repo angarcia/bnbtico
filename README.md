@@ -1,6 +1,6 @@
-# bnbtico (repo CasaTica)
+# 3bstays (repo CasaTica)
 
-Casas en alquiler en el Caribe de Costa Rica. Los propietarios publican; los clientes les escriben **directo por WhatsApp**. bnbtico no procesa reservas ni pagos entre partes; cobra una suscripción por casa activa, sin comisiones.
+Casas en alquiler en el Caribe de Costa Rica. Los propietarios publican; los clientes les escriben **directo por WhatsApp**. 3bstays no procesa reservas ni pagos entre partes; cobra una suscripción por casa activa, sin comisiones.
 
 - **Qué se construye y en qué orden:** `docs/plan-implementacion.md`
 - **Reglas vigentes y convenciones:** `CLAUDE.md`

@@ -5,8 +5,8 @@ import { BROKEN_AIRBNB, EMPTY_AIRBNB, INITIAL_AIRBNB, TEST_AIRBNB_URL, calendarE
 describe("Airbnb · interpretación de la instantánea", () => {
   it("conserva fechas y UID de reservas y cierres sin datos privados ni títulos", () => {
     expect(parseAirbnbCalendar(INITIAL_AIRBNB)).toEqual([
-      { uid: "reserva-prueba@bnbtico.test", start: "2026-12-10", end: "2026-12-13" },
-      { uid: "cierre-prueba@bnbtico.test", start: "2026-12-20", end: "2026-12-22" },
+      { uid: "reserva-prueba@3bstays.test", start: "2026-12-10", end: "2026-12-13" },
+      { uid: "cierre-prueba@3bstays.test", start: "2026-12-20", end: "2026-12-22" },
     ]);
   });
 
@@ -15,8 +15,8 @@ describe("Airbnb · interpretación de la instantánea", () => {
   });
 
   it("une continuaciones antes de leer campos y admite metadatos con hora", () => {
-    const event = calendarEvent("id-largo@bnbtico.test", "20261210", "20261213").replace("id-largo@bnbtico.test", "id-largo@\r\n bnbtico.test");
-    expect(parseAirbnbCalendar(calendarFile(event))).toEqual([{ uid: "id-largo@bnbtico.test", start: "2026-12-10", end: "2026-12-13" }]);
+    const event = calendarEvent("id-largo@3bstays.test", "20261210", "20261213").replace("id-largo@3bstays.test", "id-largo@\r\n 3bstays.test");
+    expect(parseAirbnbCalendar(calendarFile(event))).toEqual([{ uid: "id-largo@3bstays.test", start: "2026-12-10", end: "2026-12-13" }]);
   });
 
   it("cancelados y transparentes dejan de aportar ocupación", () => {

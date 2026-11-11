@@ -41,7 +41,7 @@ function watch(page: Page) {
   return problems;
 }
 
-const usd = (page: Page) => page.addInitScript(() => localStorage.setItem("bnbtico_currency", "USD"));
+const usd = (page: Page) => page.addInitScript(() => localStorage.setItem("3bstays_currency", "USD"));
 
 test("Explorar y Filtros en dólares usan el tipo sembrado y la nota sale en Explorar", async ({ page }) => {
   await usd(page);
@@ -71,7 +71,7 @@ test("la ficha del servidor convierte con el tipo vigente, hidrata sin avisos y 
   await expect(page.getByTestId("price-usd")).toHaveAttribute("title", "Orientativo: ≈ ₡400 por US$1, tipo de referencia del 2 nov.");
   await expect(page.getByText("Exchange Rate API")).toHaveCount(0);
   // En dólares desde el principio: la ficha no sigue la moneda, así que el servidor y la hidratación pintan lo mismo.
-  await page.evaluate(() => localStorage.setItem("bnbtico_currency", "USD"));
+  await page.evaluate(() => localStorage.setItem("3bstays_currency", "USD"));
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");

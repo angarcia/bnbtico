@@ -4,11 +4,11 @@ import { safeNext } from "./account";
 import { isoParts } from "./dates";
 
 /** Personas del filtro de Explorar, en la pestaña: la hoja de contacto arranca con ellas (revisión UX A3). */
-export const PEOPLE_FILTER_KEY = "bnbtico-personas";
+export const PEOPLE_FILTER_KEY = "3bstays-personas";
 
 /** Fechas de la búsqueda de Explorar, en la pestaña: `{"llegada","salida"}` (el `{"desde"}` del modo mensual, que se fue el
  *  2026-11-02, ya no se entiende: la hoja arranca sin fechas). */
-export const DATES_FILTER_KEY = "bnbtico-fechas";
+export const DATES_FILTER_KEY = "3bstays-fechas";
 
 export type SearchDates = { arrival: string; departure: string };
 
@@ -36,7 +36,7 @@ export function readSearchDates(raw: string | null, today: string): SearchDates 
 }
 
 /** Lo escrito en la hoja de una casa, en la pestaña (sessionStorage, 30 min). */
-export const contactDraftKey = (publicId: string) => `bnbtico-contacto:${publicId}`;
+export const contactDraftKey = (publicId: string) => `3bstays-contacto:${publicId}`;
 
 /** La ficha con la hoja abierta: adonde vuelve el cliente tras verificar su WhatsApp. */
 export const contactNext = (publicId: string) => `/casa/${publicId}?contacto=1`;

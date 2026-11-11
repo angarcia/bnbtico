@@ -30,7 +30,7 @@ export function registerIcalExport(app: Hono<{ Bindings: Env }>, deps?: IcalExpo
       if (!snapshot) return c.text("Calendario no disponible.", 404, ICAL_EXPORT_HEADERS);
       const body = serializeManualCalendar(snapshot, (deps.now ?? Date.now)());
       return new Response(c.req.method === "HEAD" ? null : body, { status: 200, headers: {
-        ...ICAL_EXPORT_HEADERS, "content-type": "text/calendar; charset=utf-8", "content-disposition": 'inline; filename="bnbtico.ics"',
+        ...ICAL_EXPORT_HEADERS, "content-type": "text/calendar; charset=utf-8", "content-disposition": 'inline; filename="3bstays.ics"',
       } });
     } catch {
       // Sin error remoto, stack, ruta ni secreto en registros o respuesta. Nunca convertir un fallo en vacío válido.

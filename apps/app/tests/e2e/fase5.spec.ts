@@ -15,7 +15,7 @@ import { cardDate, payLink, reminderCard, reminderWhatsApp, type BillingHouse, t
 // app; repetir la llamada no reenvía nada) → −1: Pendiente de pago, 410 «regularice» y fuera de Explorar → «Añadir método
 // de pago» por la pasarela falsa → Activa y la ficha vuelve → «Parar suscripción» → Inactiva y 410 «paró» → «Activar suscripción»
 // → Activa con el contacto de vuelta.
-// El secreto de Vault bnbtico_test_clock (sin él, test_set_offer_days_left se niega) se crea en beforeAll y se borra
+// El secreto de Vault 3bstays_test_clock (sin él, test_set_offer_days_left se niega) se crea en beforeAll y se borra
 // SIEMPRE en afterAll. No depende de pg_net: la copia de la ficha guardada en la caché del worker se borra llamando a
 // /_purge/CT-#### desde la prueba (lo que en pruebas hace pg_net tras cada cambio de estado), así que corre también en CI.
 test.describe.configure({ mode: "serial" });
@@ -59,7 +59,7 @@ async function fresh(page: Page, path: string) {
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
-        const req = indexedDB.deleteDatabase("bnbtico");
+        const req = indexedDB.deleteDatabase("3bstays");
         req.onsuccess = req.onerror = req.onblocked = () => resolve();
       }),
   );
@@ -80,7 +80,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   // También si algo falló: el secreto no puede quedarse en la base local.
   await h?.setTestClock(false);
-  expect(sql("select count(*) from vault.secrets where name = 'bnbtico_test_clock'")).toBe("0");
+  expect(sql("select count(*) from vault.secrets where name = '3bstays_test_clock'")).toBe("0");
   if (listingId) await serviceClient().from("listings").delete().eq("id", listingId);
   if (h) await serviceClient().from("payment_methods").delete().eq("owner_id", h.ownerId("owner"));
 });

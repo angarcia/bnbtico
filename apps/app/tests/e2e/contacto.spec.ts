@@ -65,7 +65,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   await expect(s).toBeVisible();
   await expect(s).toHaveAttribute("aria-modal", "true");
   await expect(s.getByText(`Anfitrión de ${TITLE} · WhatsApp verificado`)).toBeVisible();
-  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
+  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible? Gracias.`);
   // Revisión UX 2026-10-29 (N2): el mensaje es una vista previa, sin caja de texto; las fechas, casillas «Elegir fecha».
   await expect(s.getByRole("textbox")).toHaveCount(0);
   await expect(s.getByText("Podrá añadir lo que quiera en WhatsApp antes de enviarlo.")).toBeVisible();
@@ -74,7 +74,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   await expect(s.locator('input[type="date"]')).toHaveCount(0);
   await expect(s.getByText(`${owner} verá su nombre y su WhatsApp.`)).toBeVisible();
   await expect(s.getByText(/Para escribirle necesita verificar/)).toHaveCount(0); // con sesión
-  await expect(s.getByText("Por su seguridad, nunca envíe dinero antes de confirmar la casa. bnbtico no procesa ni pide pagos.")).toBeVisible();
+  await expect(s.getByText("Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.")).toBeVisible();
   await expect(page.locator("html")).toHaveClass(/sheet-open/);
 
   // Las fechas, en el calendario de «¿Cuándo?»: al elegir la salida se cierra. El mensaje sigue a fechas y personas.
@@ -84,7 +84,7 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   await expect(dateBox(s, "Llegada")).toHaveText(boxText("Llegada", a));
   await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", b));
   await s.getByLabel("Personas (opcional)").fill("4");
-  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible ${expectedRange(a, b)} para 4 personas? Gracias.`);
+  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible ${expectedRange(a, b)} para 4 personas? Gracias.`);
   // Captura en reposo (sin teclado): sin campo enfocado la hoja pierde el sitio extra.
   await s.getByLabel("Personas (opcional)").blur();
   await expect(s).not.toHaveClass(/\bkb\b/);
@@ -160,7 +160,7 @@ test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y 
   await expect(s.getByRole("alert")).toHaveText("Esta casa es para 6 personas como máximo.");
 });
 
-// Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`bnbtico-fechas`).
+// Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`3bstays-fechas`).
 test("fechas: la hoja arranca con las de la búsqueda, también las de una estancia larga; un enlace viejo del mensual no deja «Desde»", async ({ page }) => {
   const [A, S] = [day(20), day(24)];
   await page.goto(`/explorar?prov=Todas&llegada=${A}&salida=${S}&ppl=2`);
@@ -262,11 +262,11 @@ test("ficha de la SPA (desde Explorar): la misma hoja", async ({ page, baseURL }
   await page.getByRole("link", { name: new RegExp(TITLE) }).click();
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
   await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
-  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`);
+  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible? Gracias.`);
   await sheet(page).getByLabel("Personas (opcional)").fill("2");
-  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`);
+  await expect(message(page)).toHaveText(`Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible para 2 personas? Gracias.`);
   await page.screenshot({ path: "test-results/contacto-spa.png" });
   const wa = await catchWhatsApp(page);
   await sheet(page).getByRole("button", { name: "Abrir WhatsApp" }).click();
-  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`, casa.publicId, baseURL)]);
+  await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, `Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible para 2 personas? Gracias.`, casa.publicId, baseURL)]);
 });

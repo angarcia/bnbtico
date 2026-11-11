@@ -9,7 +9,7 @@ const template = readFileSync(new URL("../../index.html", import.meta.url), "utf
 const css = readCss();
 const manifest = JSON.parse(readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8")) as { orientation?: string };
 
-const NOTICE = /<div class="rotate-notice" role="alert">[\s\S]*?Gire el teléfono para usar bnbtico[\s\S]*?<\/div>/;
+const NOTICE = /<div class="rotate-notice" role="alert">[\s\S]*?Gire el teléfono para usar 3bstays[\s\S]*?<\/div>/;
 
 describe("solo en vertical", () => {
   it("el manifiesto de la PWA fija la orientación vertical", () => {

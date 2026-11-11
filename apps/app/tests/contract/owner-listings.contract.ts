@@ -9,7 +9,7 @@ import type { ListingsHarness, SeedStatus, Seeded } from "./harness";
 
 const NOT_FOUND = "No encontramos ese anuncio.";
 const ONLY_ACTIVE = "Solo puede cambiar la disponibilidad de una casa activa.";
-const ONLY_BNBTICO = "Solo bnbtico puede cambiar el estado de un anuncio.";
+const ONLY_3BSTAYS = "Solo 3bstays puede cambiar el estado de un anuncio.";
 
 async function rejection(p: Promise<unknown>): Promise<DomainError> {
   try {
@@ -117,8 +117,8 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         theirs = await h.seed({ status: "active", as: "other" });
       }, 90_000);
 
-      it("una casa activa ya no vuelve a borrador: solo bnbtico cambia ese estado", async () => {
-        expect((await rejection(me.reopenForEdit(s.active.id))).message).toBe(ONLY_BNBTICO);
+      it("una casa activa ya no vuelve a borrador: solo 3bstays cambia ese estado", async () => {
+        expect((await rejection(me.reopenForEdit(s.active.id))).message).toBe(ONLY_3BSTAYS);
         expect((await me.getOwn(s.active.id))?.status).toBe("active");
         expect(await h.anon.linkState(s.active.publicId)).toBe("active");
       });
@@ -130,8 +130,8 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         }
       });
 
-      it("en revisión no se puede: solo bnbtico cambia ese estado", async () => {
-        expect((await rejection(me.reopenForEdit(s.review.id))).message).toBe(ONLY_BNBTICO);
+      it("en revisión no se puede: solo 3bstays cambia ese estado", async () => {
+        expect((await rejection(me.reopenForEdit(s.review.id))).message).toBe(ONLY_3BSTAYS);
         expect((await me.getOwn(s.review.id))?.status).toBe("review");
       });
 

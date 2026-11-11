@@ -14,7 +14,7 @@ export async function adminCode() {
 export async function secondCode(page: Page) {
   await expect(page).toHaveURL(/\/admin\/codigo/);
   await expect(page.getByRole("heading", { name: "Confirme que es usted" })).toBeVisible();
-  await expect(page.getByText("Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.")).toBeVisible();
+  await expect(page.getByText("Abra su app de autenticación y escriba el código de 6 dígitos de 3bstays.")).toBeVisible();
   await expect(page.getByRole("img", { name: "Código QR para su app de autenticación" })).toHaveCount(0);
   const verify = page.getByRole("button", { name: "Verificar y entrar" });
   await expect(verify).toBeEnabled();

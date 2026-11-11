@@ -11,13 +11,13 @@ const oldSha = "a".repeat(40);
 const newSha = "b".repeat(40);
 const mergeSha = "c".repeat(40);
 const baseSha = "d".repeat(40);
-const repository = "bnbtico/app";
+const repository = "3bstays/app";
 const token = "TOKEN_NO_DEBE_APARECER";
 const directories: string[] = [];
 afterEach(() => directories.splice(0).forEach((dir) => rmSync(dir, { recursive: true })));
 
 function fixture() {
-  const dir = mkdtempSync(join(tmpdir(), "bnbtico-freshness-"));
+  const dir = mkdtempSync(join(tmpdir(), "3bstays-freshness-"));
   directories.push(dir);
   const eventFile = join(dir, "event.json");
   const apiFile = join(dir, "api.json");
@@ -25,12 +25,12 @@ function fixture() {
   writeFileSync(stub, `
     import { readFileSync } from "node:fs";
     globalThis.fetch = async (url, options) => {
-      if (!url.startsWith("https://api.github.com/repos/bnbtico/app/") ||
+      if (!url.startsWith("https://api.github.com/repos/3bstays/app/") ||
           options.method !== "GET" || options.redirect !== "error" ||
           options.headers.Authorization !== "Bearer " + process.env.GITHUB_TOKEN ||
           !options.signal) throw new Error(process.env.GITHUB_TOKEN);
       const replies = JSON.parse(readFileSync(process.env.TEST_API_FILE, "utf8"));
-      const reply = replies[url.slice("https://api.github.com/repos/bnbtico/app/".length)];
+      const reply = replies[url.slice("https://api.github.com/repos/3bstays/app/".length)];
       if (!reply || reply.throw) throw new Error(process.env.GITHUB_TOKEN);
       return { ok: (reply.status ?? 200) === 200, status: reply.status ?? 200,
         json: async () => { if (reply.invalidJson) throw new Error(process.env.GITHUB_TOKEN); return reply.body; } };

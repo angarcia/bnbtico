@@ -47,9 +47,9 @@ const BY_CODE: Record<string, [DomainErrorKind, string]> = {
   mfa_verification_failed: ["validation", "Ese código no es correcto o caducó."],
   mfa_challenge_expired: ["validation", "Ese código no es correcto o caducó."],
   mfa_factor_not_found: ["conflict", "Su app de autenticación ya no está vinculada. Vuelva a abrir esta pantalla para vincularla."],
-  mfa_totp_enroll_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
-  mfa_totp_verify_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
-  too_many_enrolled_mfa_factors: ["unknown", "El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp."],
+  mfa_totp_enroll_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a 3bstays por WhatsApp."],
+  mfa_totp_verify_not_enabled: ["unknown", "El segundo código no está disponible ahora. Escríbale a 3bstays por WhatsApp."],
+  too_many_enrolled_mfa_factors: ["unknown", "El segundo código no está disponible ahora. Escríbale a 3bstays por WhatsApp."],
 };
 
 type RawError = { code?: unknown; message?: unknown; name?: unknown };

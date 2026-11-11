@@ -18,7 +18,7 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://pruebas.bnbtico.com", "https://bnbtico.com"]
+additional_redirect_urls = ["https://pruebas.3bstays.com", "https://3bstays.com"]
 enable_signup = true
 
 [auth.sms]

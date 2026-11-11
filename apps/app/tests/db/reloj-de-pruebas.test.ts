@@ -1,5 +1,5 @@
 // Reloj de pruebas de punta a punta contra Supabase local: la ruta del worker llama a test_set_offer_days_left,
-// run_subscription_day y al envío con el remitente falso. El secreto de Vault bnbtico_test_clock no existe en local: se
+// run_subscription_day y al envío con el remitente falso. El secreto de Vault 3bstays_test_clock no existe en local: se
 // crea para el caso y se borra siempre (como en admin-aal2-purga.test.ts).
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createBillingService } from "../../src/data/postgrest/billing-service";
@@ -11,7 +11,7 @@ import { localSupabase, sql } from "./local";
 import { postgrestHarness } from "./postgrest-harness";
 
 const ORIGIN = "http://localhost:4273";
-const clockSecretCount = () => sql("select count(*) from vault.secrets where name = 'bnbtico_test_clock'");
+const clockSecretCount = () => sql("select count(*) from vault.secrets where name = '3bstays_test_clock'");
 
 describe("reloj de pruebas · /_pruebas/oferta/CT-#### contra Supabase local", () => {
   let h: SubscriptionHarness;

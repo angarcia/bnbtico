@@ -9,7 +9,7 @@ import { formatCRC } from "./money";
 export function searchHelpMessage(q: Filters, zoneName: string | null = null): string {
   const stay = stayLabel(q);
   return [
-    "Hola, estoy buscando casa en bnbtico.",
+    "Hola, estoy buscando casa en 3bstays.",
     zoneName && q.zone ? `Zona: ${zoneName}.` : q.prov !== ALL_PROVINCES ? `Zona: ${q.prov}.` : null,
     q.ppl ? `Personas: ${q.ppl}.` : null,
     q.features.length ? `Necesito: ${q.features.map((x) => FEATURE_LABEL[x]).join(", ")}.` : null,

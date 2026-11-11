@@ -56,7 +56,7 @@ import { HousePicker } from "../house-picker";
 import { AirbnbRow, AirbnbAvailability, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
-const LAST_HOUSE = "bnbtico-calendario-casa";
+const LAST_HOUSE = "3bstays-calendario-casa";
 const KB_RELEASE_MS = 400;
 const loadCloseSheet = () => import("../close-sheet");
 const lazyCloseSheet = () => lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
@@ -224,7 +224,7 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
     return null;
   }
 
-  // Una casa bloqueada por bnbtico se ve, no se edita.
+  // Una casa bloqueada por 3bstays se ve, no se edita.
   const blocked = isBlocked(l) && !port.admin;
   const editable = !closed && !blocked && query.data !== undefined;
   const hasSpecial = sel.days.some((d) => effectiveDay(days, base, d).special);
@@ -246,7 +246,7 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
         </section>
       ) : null}
       <div className="row between gap-8 cal-hint-row">
-        {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por bnbtico: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
+        {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
         <CurrencySwitch />
       </div>
 

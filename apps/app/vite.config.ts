@@ -25,7 +25,7 @@ function files(dir: string): string[] {
  */
 function serviceWorker(): Plugin {
   return {
-    name: "bnbtico:service-worker",
+    name: "3bstays:service-worker",
     apply: "build",
     enforce: "post",
     applyToEnvironment: (env) => env.name === "client",
@@ -42,7 +42,7 @@ function serviceWorker(): Plugin {
           write: false,
           minify: true,
           emptyOutDir: false,
-          lib: { entry: join(root, "src/sw/sw.ts"), formats: ["iife"], name: "bnbticoSw", fileName: () => "sw.js" },
+          lib: { entry: join(root, "src/sw/sw.ts"), formats: ["iife"], name: "swApp", fileName: () => "sw.js" },
         },
       });
       const output = (Array.isArray(out) ? out[0]! : out) as { output: { type: string; code?: string }[] };
@@ -60,7 +60,7 @@ function serviceWorker(): Plugin {
 function securityHeadersFile(): Plugin {
   let supabaseUrl: string | undefined;
   return {
-    name: "bnbtico:security-headers",
+    name: "3bstays:security-headers",
     apply: "build",
     applyToEnvironment: (env) => env.name === "client",
     configResolved(config) {
@@ -85,7 +85,7 @@ function securityHeadersFile(): Plugin {
 function portadaOwnerCta(): Plugin {
   let owners: string | undefined;
   return {
-    name: "bnbtico:portada-cta",
+    name: "3bstays:portada-cta",
     apply: "build",
     applyToEnvironment: (env) => env.name === "client",
     configResolved(config) {
@@ -100,13 +100,13 @@ function portadaOwnerCta(): Plugin {
 
 function supportNumbers(): Plugin {
   return {
-    name: "bnbtico:support-numbers",
+    name: "3bstays:support-numbers",
     apply: "build",
     applyToEnvironment: (env) => env.name === "client",
     configResolved(config) {
       // El hook corre una vez por build anidado (cliente, worker, service worker): basta con mirar una.
-      if (process.env.BNBTICO_SUPPORT_CHECKED) return;
-      process.env.BNBTICO_SUPPORT_CHECKED = "1";
+      if (process.env.SUPPORT_NUMBERS_CHECKED) return;
+      process.env.SUPPORT_NUMBERS_CHECKED = "1";
       const env = { ...loadEnv(config.mode, root, "VITE_"), ...process.env };
       const wrangler = ts.parseConfigFileTextToJson("wrangler.jsonc", readFileSync(join(root, "wrangler.jsonc"), "utf8")).config;
       const check = supportNumbersCheck({ launched: launchedFor(wrangler, process.env.CLOUDFLARE_ENV), owners: env.VITE_WA_OWNERS, guests: env.VITE_WA_GUESTS });

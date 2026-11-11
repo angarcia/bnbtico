@@ -7,7 +7,7 @@ import { descriptionParagraphs, isLongDescription } from "../domain/description"
 import { I } from "./icons";
 import { useModal } from "./modal";
 
-const STATE_KEY = "bnbticoDescripcion";
+const STATE_KEY = "3bstaysDescripcion";
 
 function Paragraphs({ paragraphs, className, testId }: { paragraphs: string[]; className: string; testId?: string }) {
   return (

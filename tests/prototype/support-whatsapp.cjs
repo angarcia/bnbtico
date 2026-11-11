@@ -1,4 +1,4 @@
-// Contacto con bnbtico solo por WhatsApp: un canal por rol, sin flujo de reclamaciones visible.
+// Contacto con 3bstays solo por WhatsApp: un canal por rol, sin flujo de reclamaciones visible.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../../design/prototype'),noop=()=>{};
 const storage=new Map();
@@ -10,11 +10,11 @@ for(const s of html.matchAll(/<script(?: src="([^"]+)")?>([\s\S]*?)<\/script>/g)
 assert.equal(run("NAV.admin.some(([k])=>k==='claims')"),false,'admin nav must not expose claims');
 assert.equal(run('typeof SCREENS.claims'),'function','claims code is kept, only hidden');
 
-// Cliente: Mi cuenta con un único botón de contacto con bnbtico.
+// Cliente: Mi cuenta con un único botón de contacto con 3bstays.
 run("S.role='guest';S.params={id:'CT-1042'};accountAccess.start('register','Ana','+506 80000001');accountAccess.verify('123456');");
 assert.equal(run('S.loggedIn'),true);
 const profile=run('SCREENS.profile()');
-assert.match(profile,/data-go="support-info">(?:<svg[\s\S]*?<\/svg> )?Escribile a bnbtico por WhatsApp</);
+assert.match(profile,/data-go="support-info">(?:<svg[\s\S]*?<\/svg> )?Escribile a 3bstays por WhatsApp</);
 assert.doesNotMatch(profile,/Reclamaciones|data-go="claims"/);
 assert.equal((profile.match(/data-go="support-info"/g)||[]).length,1,'exactly one support button');
 
@@ -30,7 +30,7 @@ assert.doesNotMatch(guestHelp,/Reclamaciones|data-go="claims"/);
 // Owner: Cuenta y canal de propietarios.
 run("S.role='owner';accountAccess.start('register','Marcela','+506 80000002');accountAccess.verify('123456');");
 const ownerProfile=run("SCREENS['o-profile']()");
-assert.match(ownerProfile,/Escribile a bnbtico por WhatsApp/);
+assert.match(ownerProfile,/Escribile a 3bstays por WhatsApp/);
 assert.doesNotMatch(ownerProfile,/Reclamaciones|data-go="claims"/);
 const ownerHelp=run("SCREENS['support-info']()");
 assert.match(ownerHelp,/atención a propietarios/);

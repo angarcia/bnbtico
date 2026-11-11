@@ -118,7 +118,7 @@ describe("teselas: obsoleto mientras se revalida", () => {
 });
 
 describe("ficha: red primero con 3 s de espera", () => {
-  const page = new Request("https://nueva.bnbtico.com/casa/CT-1234");
+  const page = new Request("https://pruebas.3bstays.com/casa/CT-1234");
   const PAGES = { cacheName: "pages", maxEntries: 5, timeoutMs: 3000 };
 
   it("con red responde la red y la guarda; sin red, la guardada; sin nada, el respaldo", async () => {
@@ -128,7 +128,7 @@ describe("ficha: red primero con 3 s de espera", () => {
     await t.settle();
     online = false;
     expect(await (await networkFirst(t.deps, page, { ...PAGES, fallback: async () => new Response("shell") })).text()).toBe("fresca");
-    const otra = new Request("https://nueva.bnbtico.com/casa/CT-9999");
+    const otra = new Request("https://pruebas.3bstays.com/casa/CT-9999");
     expect(await (await networkFirst(t.deps, otra, { ...PAGES, fallback: async () => new Response("shell") })).text()).toBe("shell");
     await expect(networkFirst(t.deps, otra, { ...PAGES, fallback: async () => undefined })).rejects.toThrow();
   });
@@ -145,7 +145,7 @@ describe("ficha: red primero con 3 s de espera", () => {
       expect(await (await served).text()).toBe("copia");
       release();
 
-      const otra = new Request("https://nueva.bnbtico.com/casa/CT-9999");
+      const otra = new Request("https://pruebas.3bstays.com/casa/CT-9999");
       const waiting = networkFirst(t.deps, otra, { ...PAGES, fallback: async () => undefined });
       await vi.advanceTimersByTimeAsync(5000);
       release();

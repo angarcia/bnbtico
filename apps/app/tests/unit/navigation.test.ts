@@ -105,10 +105,10 @@ describe("cardLabel", () => {
   // «Pausar la casa» del Calendario (ticket 04 de la ronda del 2 nov; antes «Cerrada hasta el …»).
   it("pausada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Pausada hasta el 3 dic", cls: "state-off" }));
   it("pausada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Pausada", cls: "state-off" }));
-  it("pausada por el anfitrión no se confunde con «Pausada por bnbtico» (texto y color)", () => {
+  it("pausada por el anfitrión no se confunde con «Pausada por 3bstays» (texto y color)", () => {
     const mine = cardLabel(l("active", false, null));
     const admin = cardLabel({ ...l("active"), adminHold: { kind: "paused", reason: "" } });
-    expect(admin.text).toBe("Pausada por bnbtico");
+    expect(admin.text).toBe("Pausada por 3bstays");
     expect(admin.cls).not.toBe(mine.cls);
   });
   it("activa", () => expect(cardLabel(l("active"))).toEqual({ text: "Activa", cls: "state-ok" }));

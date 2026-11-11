@@ -4,15 +4,15 @@ import { scopeBilling, scopeFix } from "../../src/domain/subscription-scope";
 
 describe("setupReturnUrls", () => {
   it("con casa: ?pago=ok&casa= y el hash; cancelar sin pago=ok", () => {
-    expect(setupReturnUrls("https://bnbtico.com/", "CT-1042")).toEqual({
-      successUrl: "https://bnbtico.com/propietario/suscripcion?pago=ok&casa=CT-1042#pago=CT-1042",
-      cancelUrl: "https://bnbtico.com/propietario/suscripcion?casa=CT-1042#pago=CT-1042",
+    expect(setupReturnUrls("https://3bstays.com/", "CT-1042")).toEqual({
+      successUrl: "https://3bstays.com/propietario/suscripcion?pago=ok&casa=CT-1042#pago=CT-1042",
+      cancelUrl: "https://3bstays.com/propietario/suscripcion?casa=CT-1042#pago=CT-1042",
     });
   });
   it("sin casa: como hasta ahora", () => {
-    expect(setupReturnUrls("https://bnbtico.com", null)).toEqual({
-      successUrl: "https://bnbtico.com/propietario/suscripcion?pago=ok",
-      cancelUrl: "https://bnbtico.com/propietario/suscripcion",
+    expect(setupReturnUrls("https://3bstays.com", null)).toEqual({
+      successUrl: "https://3bstays.com/propietario/suscripcion?pago=ok",
+      cancelUrl: "https://3bstays.com/propietario/suscripcion",
     });
   });
 });

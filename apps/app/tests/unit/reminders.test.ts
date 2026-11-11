@@ -75,9 +75,9 @@ describe("remitente según el entorno", () => {
     expect(parseAllowlist("  ")).toBeNull();
   });
 
-  it("enlace del aviso: bnbtico.com en producción; en pruebas PUBLIC_ORIGIN o el de la petición", () => {
-    expect(reminderBase({ ENVIRONMENT: "production" }, "https://x.workers.dev")).toBe("https://bnbtico.com");
-    expect(reminderBase({ ENVIRONMENT: "pruebas", PUBLIC_ORIGIN: "https://nueva.bnbtico.com" }, "https://x.workers.dev")).toBe("https://nueva.bnbtico.com");
+  it("enlace del aviso: 3bstays.com en producción; en pruebas PUBLIC_ORIGIN o el de la petición", () => {
+    expect(reminderBase({ ENVIRONMENT: "production" }, "https://x.workers.dev")).toBe("https://3bstays.com");
+    expect(reminderBase({ ENVIRONMENT: "pruebas", PUBLIC_ORIGIN: "https://pruebas.3bstays.com" }, "https://x.workers.dev")).toBe("https://pruebas.3bstays.com");
     expect(reminderBase({ ENVIRONMENT: "local" }, "http://localhost:4173/")).toBe("http://localhost:4173");
   });
 
@@ -185,12 +185,12 @@ describe(`lote de envío: ≤ ${REMINDER_BATCH} avisos y ≤ 22 subpeticiones (p
       sender: createTwilioSender({ accountSid: "AC1", authToken: "t", from: "+14155238886", fetch: f }),
       allowlist: null,
     };
-    const r = await sendReminders(rt, { base: "https://nueva.bnbtico.com", log: () => {}, limit: 50 });
+    const r = await sendReminders(rt, { base: "https://pruebas.3bstays.com", log: () => {}, limit: 50 });
     expect(r).toMatchObject({ claimed: 20, sent: 20 });
     expect(calls).toHaveLength(22);
     expect(calls.filter((u) => u.includes("api.twilio.com"))).toHaveLength(20);
     expect(finished).toHaveLength(20);
-    expect(finished[0]).toMatchObject({ id: "r0", outcome: "sent", provider_ref: "SM2", to_phone: "+50687770001", body: expect.stringContaining("https://nueva.bnbtico.com/propietario/suscripcion#pago=CT-1000") });
+    expect(finished[0]).toMatchObject({ id: "r0", outcome: "sent", provider_ref: "SM2", to_phone: "+50687770001", body: expect.stringContaining("https://pruebas.3bstays.com/propietario/suscripcion#pago=CT-1000") });
   });
 
   it("si falla el cierre, lo registra y no lanza (las filas quedan en «sending»: nunca se reenvían)", async () => {
@@ -217,7 +217,7 @@ describe(`lote de envío: ≤ ${REMINDER_BATCH} avisos y ≤ 22 subpeticiones (p
 });
 
 describe("worker · reloj de pruebas POST /_pruebas/oferta/CT-####", () => {
-  const ORIGIN = "https://nueva.bnbtico.com";
+  const ORIGIN = "https://pruebas.3bstays.com";
   let h: ReturnType<typeof fakeHarness>;
   let sender: FakeSender;
   let withRuntime = true;
@@ -328,7 +328,7 @@ describe("wrangler.jsonc · fase 5", () => {
   });
 
   it("pruebas: remitente Twilio y base pública del enlace; producción sin remitente", () => {
-    expect(wrangler.env.pruebas.vars).toMatchObject({ WHATSAPP_SENDER: "twilio", PUBLIC_ORIGIN: "https://nueva.bnbtico.com" });
+    expect(wrangler.env.pruebas.vars).toMatchObject({ WHATSAPP_SENDER: "twilio", PUBLIC_ORIGIN: "https://pruebas.3bstays.com" });
     expect(wrangler.env.production.vars.WHATSAPP_SENDER).toBeUndefined();
     expect(wrangler.env.production.vars.TEST_CLOCK_SECRET).toBeUndefined();
   });

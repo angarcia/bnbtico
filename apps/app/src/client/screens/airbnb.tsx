@@ -86,8 +86,8 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
     {house.data === null ? <p className="note" role="alert">No encontramos ese anuncio.</p> : null}
     {l && summary ? <section className="card stack gap-16" aria-labelledby="airbnb-import-title" aria-busy={busy}>
       <h2 id="airbnb-import-title">Importar desde Airbnb</h2>
-      <p>Traiga a bnbtico las noches bloqueadas en Airbnb.</p>
-      {suspended ? <p className="note">La conexión está suspendida mientras la casa esté bloqueada o rechazada por bnbtico. Los datos se conservan.</p> : null}
+      <p>Traiga a 3bstays las noches bloqueadas en Airbnb.</p>
+      {suspended ? <p className="note">La conexión está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</p> : null}
       {summary.lastSuccessAt ? <p className="small muted">Última importación correcta: {time(summary.lastSuccessAt)}</p> : null}
       {summary.connected ? <p>{summary.nights ? `${summary.nights} ${summary.nights === 1 ? "noche bloqueada" : "noches bloqueadas"} por Airbnb` : "No hay noches bloqueadas por Airbnb en este período."}</p> : null}
       {!online ? <p className="note small">Sin conexión. Puede consultar el último estado guardado.</p> : null}

@@ -24,7 +24,7 @@ describe("telemetría · tipo de página y ruta", () => {
   it("guarda solo la ruta, sin consulta ni fragmento, con los uuid ocultos y acotada", () => {
     expect(safePath("/explorar?prov=Todas#pago=CT-1")).toBe("/explorar");
     expect(safePath("/propietario/casas/0b7c2c1e-3f0a-4b9e-9d7e-2a1b3c4d5e6f/enviada")).toBe("/propietario/casas/:id/enviada");
-    expect(safePath("https://nueva.bnbtico.com/casa/CT-1015?x=1")).toBe("/casa/CT-1015");
+    expect(safePath("https://pruebas.3bstays.com/casa/CT-1015?x=1")).toBe("/casa/CT-1015");
     expect(safePath("/" + "a".repeat(500)).length).toBe(200);
   });
 });
@@ -76,7 +76,7 @@ describe("telemetría · validación de balizas", () => {
       row: { name: "wizard_step", page: "publicar", path: "/publicar/nueva/4", build: "abc123" },
     });
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "wizard_step", path: "/propietario/publicar/2f8c5a1e-0d6b-4c1e-9a7e-3b1c2d4e5f60/7" })).ok).toBe(false);
-    // Fase 6, ticket 01: «Escribir a bnbtico por WhatsApp» en Explorar, sin casa y sin el mensaje ni los filtros.
+    // Fase 6, ticket 01: «Escribir a 3bstays por WhatsApp» en Explorar, sin casa y sin el mensaje ni los filtros.
     expect(parseBeacon("events", JSON.stringify({ ...base, name: "search_help_tap", path: "/explorar?prov=Todas&pool=1" }))).toEqual({
       ok: true,
       row: { name: "search_help_tap", page: "explorar", path: "/explorar", build: "abc123" },

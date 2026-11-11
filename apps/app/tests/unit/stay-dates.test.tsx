@@ -1,4 +1,4 @@
-// Las fechas de la estancia en la pestaña (ronda de Ana 2 nov, ticket 08): una sola clave, `bnbtico-fechas`, que escribe
+// Las fechas de la estancia en la pestaña (ronda de Ana 2 nov, ticket 08): una sola clave, `3bstays-fechas`, que escribe
 // Explorar y comparten la ficha y la hoja de contacto, con aviso en memoria.
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";

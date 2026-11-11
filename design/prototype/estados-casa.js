@@ -13,7 +13,7 @@ function billingTick(id){
   const b=billingFor(id);
   if(b.plan==='promo'&&relayNow()>=b.promoEndsAt){
     if(b.paymentMethod){b.plan='paid';b.paidSince=b.promoEndsAt;billingLog(id,'Suscripción iniciada con el método de pago guardado. Tu casa sigue visible.');}
-    else{b.plan='due';billingLog(id,'Tu oferta gratuita terminó y no hay un método de pago. La casa dejó de mostrarse en bnbtico hasta que lo añadás.');}
+    else{b.plan='due';billingLog(id,'Tu oferta gratuita terminó y no hay un método de pago. La casa dejó de mostrarse en 3bstays hasta que lo añadás.');}
   }
   return b;
 }
@@ -24,10 +24,10 @@ function billingReminderDue(id){
   const step=BILLING_REMINDER_DAYS.find(d=>daysLeft<=d);
   return step===undefined?null:{daysLeft,step};
 }
-function billingPayLink(id){const base=typeof location!=='undefined'&&location.origin?location.origin+location.pathname:'https://bnbtico.app/';return base+'#pago='+id;}
+function billingPayLink(id){const base=typeof location!=='undefined'&&location.origin?location.origin+location.pathname:'https://3bstays.app/';return base+'#pago='+id;}
 function billingWhatsappText(id){
   const h=HOUSES.find(h=>h.id===id)||MY.find(h=>h.id===id),b=billingFor(id);
-  return `Hola, somos bnbtico. «${h?h.t:id}» está gratis hasta el ${billingDate(b.promoEndsAt)}: no se te cobrará nada hasta esa fecha. Para que siga saliendo en la app después, añadí un método de pago aquí: ${billingPayLink(id)} · Desde entonces, ₡9.900 al mes por casa, sin permanencia.`;
+  return `Hola, somos 3bstays. «${h?h.t:id}» está gratis hasta el ${billingDate(b.promoEndsAt)}: no se te cobrará nada hasta esa fecha. Para que siga saliendo en la app después, añadí un método de pago aquí: ${billingPayLink(id)} · Desde entonces, ₡9.900 al mes por casa, sin permanencia.`;
 }
 // Estado visible de cada casa.
 function houseState(id){
@@ -51,7 +51,7 @@ function billingExpireDemo(id){const b=billingFor(id);if(!houseManageable(id)||b
 // Tarjeta de Mis casas: estado, detalle y acciones.
 function houseStateBlock(id){
   const s=houseState(id),b=billingFor(id);
-  const reminder=s.reminder?`<div class="note small"><div><b>Tu oferta gratuita termina en ${s.reminder.daysLeft} día${s.reminder.daysLeft===1?'':'s'}</b><p>No se te cobrará nada hasta entonces. Añadí un método de pago antes de esa fecha para que tu casa siga saliendo en bnbtico; después, ₡9.900 al mes por casa, sin permanencia. También te lo recordamos por WhatsApp.</p></div></div>`:'';
+  const reminder=s.reminder?`<div class="note small"><div><b>Tu oferta gratuita termina en ${s.reminder.daysLeft} día${s.reminder.daysLeft===1?'':'s'}</b><p>No se te cobrará nada hasta entonces. Añadí un método de pago antes de esa fecha para que tu casa siga saliendo en 3bstays; después, ₡9.900 al mes por casa, sin permanencia. También te lo recordamos por WhatsApp.</p></div></div>`:'';
   const actions=[];
   if(s.key==='payment_due'||(s.key==='active'&&b.plan==='promo'&&!b.paymentMethod))actions.push(`<button class="btn btn-primary btn-sm" data-billing-pay="${id}">Añadir método de pago</button>`);
   if(s.key==='active')actions.push(`<button class="btn btn-ghost btn-sm" data-billing-stop="${id}">Parar suscripción</button>`);
@@ -83,7 +83,7 @@ function houseLinkBlocked(id){const h=HOUSES.find(x=>x.id===id);if(!h)return nul
 {const previous=SCREENS.detail;SCREENS.detail=()=>{
   if(S.role!=='guest')return previous();
   const id=S.params.id,blocked=houseLinkBlocked(id);if(!blocked)return previous();
-  const why=blocked.key==='inactive'?'El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.':blocked.key==='payment_due'?'Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.':'Este anuncio no está disponible en este momento.';
+  const why=blocked.key==='inactive'?'El propietario paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde 3bstays.':blocked.key==='payment_due'?'Este anuncio está fuera del catálogo hasta que el propietario regularice su suscripción.':'Este anuncio no está disponible en este momento.';
   return header('Ficha no disponible','home')+`<section class="card stack"><h3>Este enlace ya no está activo</h3><p>${why}</p><p class="small muted">Si ya hablaste con el propietario por WhatsApp, podés seguir esa conversación por tu cuenta.</p><button class="btn btn-primary" data-go="home">Explorar otras casas</button></section>`;
 };}
 // Enlace del aviso: #pago=CT-xxxx abre Promoción y suscripción del propietario (tras iniciar sesión si hace falta).
@@ -97,7 +97,7 @@ if(typeof window!=='undefined'&&window.location){
 }
 // Persistencia de demo: estado de suscripción y pausa por casa en este navegador, para que un enlace
 // abierto en otra pestaña o tras recargar respete que la casa está Inactiva o Pendiente de pago.
-const BILLING_STORE='bnbtico-demo-houses';
+const BILLING_STORE='3bstays-demo-houses';
 function billingSave(){
   try{const data={};for(const [id,b] of houseBilling)data[id]={plan:b.plan,promoEndsAt:b.promoEndsAt,paymentMethod:b.paymentMethod,paidSince:b.paidSince,active:houseSettings(id).active};localStorage.setItem(BILLING_STORE,JSON.stringify(data));}catch(e){}
 }

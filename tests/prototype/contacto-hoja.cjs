@@ -23,11 +23,11 @@ assert.doesNotMatch(web,/id="s-in"/);
 run("S.dev='phone';accountAccess.start('register','Ana','+506 80000001');accountAccess.verify('123456');S.sheet={type:'launch-contact',id:'CT-1171'};");
 const hoja=run('sheet()');
 assert.match(hoja,/id="s-in"[\s\S]*id="s-out"[\s\S]*id="s-ppl"/);
-assert.match(hoja,/<label for="launch-query">Tu mensaje<\/label><textarea id="launch-query"[^>]*>Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa\. ¿Está disponible\? Gracias\.<\/textarea>/);
+assert.match(hoja,/<label for="launch-query">Tu mensaje<\/label><textarea id="launch-query"[^>]*>Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa\. ¿Está disponible\? Gracias\.<\/textarea>/);
 // El mensaje se redacta con fechas y personas, y lo que va a WhatsApp es ese texto tal cual.
-assert.equal(run("contactCompose('CT-1171',{arrival:'2026-12-20',departure:'2026-12-23',people:'4'})"),'Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.');
-assert.equal(run("contactCompose('CT-1171',{arrival:'2026-12-28',departure:'2027-01-02'})"),'Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible del 28 de diciembre al 2 de enero? Gracias.');
-assert.equal(run("contactCompose('CT-1171',{people:'1'})"),'Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible para 1 persona? Gracias.');
+assert.equal(run("contactCompose('CT-1171',{arrival:'2026-12-20',departure:'2026-12-23',people:'4'})"),'Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.');
+assert.equal(run("contactCompose('CT-1171',{arrival:'2026-12-28',departure:'2027-01-02'})"),'Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible del 28 de diciembre al 2 de enero? Gracias.');
+assert.equal(run("contactCompose('CT-1171',{people:'1'})"),'Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible para 1 persona? Gracias.');
 assert.equal(run("launchClientMessage('CT-1171',{composed:true,message:'Texto mío'})"),'Texto mío');
 assert.match(run("launchClientMessage('CT-1171',{message:'Texto mío'})"),/^Hola, vi Casa Manzanillo/);
 assert.doesNotMatch(hoja,/Fechas y personas son opcionales|Tu consulta \(opcional\)/);

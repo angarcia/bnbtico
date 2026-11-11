@@ -61,8 +61,8 @@ describe("reapertura nocturna", () => {
     }
   });
 
-  it("el trabajo bnbtico-reabrir-casas está registrado a las 06:00 UTC (medianoche en Costa Rica)", () => {
-    const job = sql("select schedule || '|' || command || '|' || active from cron.job where jobname = 'bnbtico-reabrir-casas'");
+  it("el trabajo 3bstays-reabrir-casas está registrado a las 06:00 UTC (medianoche en Costa Rica)", () => {
+    const job = sql("select schedule || '|' || command || '|' || active from cron.job where jobname = '3bstays-reabrir-casas'");
     expect(job).toBe("0 6 * * *|select public.reopen_due_listings()|true");
   });
 

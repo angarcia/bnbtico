@@ -8,7 +8,7 @@ import type { WhatsAppSendResult, WhatsAppSender } from "../../src/domain/whatsa
 import { REMINDER_BATCH, sendReminders } from "../../src/server/reminders";
 import type { SubscriptionHarness } from "./harness";
 
-const BASE = "https://nueva.bnbtico.com";
+const BASE = "https://pruebas.3bstays.com";
 const today = () => costaRicaToday(Date.now());
 
 /** Remitente de prueba: responde en orden lo que se le pide (después, ok) y anota cada intento. */

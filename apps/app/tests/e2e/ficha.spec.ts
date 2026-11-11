@@ -66,7 +66,7 @@ test("la ficha real llega renderizada del servidor e hidrata sin avisos ni volve
   expect(res?.status()).toBe(200);
   const source = await res!.text();
   expect(source).toContain('<meta property="og:title" content="Casa Playa Negra" />');
-  expect(source).toContain(`<link rel="canonical" href="https://bnbtico.com/casa/${casa.publicId}" />`);
+  expect(source).toContain(`<link rel="canonical" href="https://3bstays.com/casa/${casa.publicId}" />`);
   expect(source).toMatch(/<h1[^>]*>Casa Playa Negra<\/h1>/);
 
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
@@ -165,8 +165,8 @@ test("a 375 px la foto es 5:4, a todo el ancho y pegada arriba, e hidrata sin av
 /** Cambia la moneda como lo haría el selector de otra pantalla u otra pestaña del navegador (mismo almacenamiento y aviso). */
 const chooseCurrency = (page: Page, currency: "USD" | "CRC") =>
   page.evaluate((c) => {
-    localStorage.setItem("bnbtico_currency", c);
-    dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
+    localStorage.setItem("3bstays_currency", c);
+    dispatchEvent(new StorageEvent("storage", { key: "3bstays_currency" }));
   }, currency);
 
 // Ronda de Ana del 2 nov, ticket 08: sin fechas la barra lleva solo el precio por noche («Mensual» va con 30 noches o más, en
@@ -203,7 +203,7 @@ test("una casa con precio al mes lo muestra en la casilla «Alquiler mensual», 
 // Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.
 test("la ficha muestra las dos monedas, sin selector", async ({ page }) => {
   const seen = watch(page);
-  await page.addInitScript(() => localStorage.setItem("bnbtico_currency", "USD"));
+  await page.addInitScript(() => localStorage.setItem("3bstays_currency", "USD"));
   await page.goto(`/casa/${casa.publicId}`);
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("main-price")).toHaveText("₡95 000 / noche");

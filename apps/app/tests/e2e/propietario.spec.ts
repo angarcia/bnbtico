@@ -65,7 +65,7 @@ test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarj
 
   const cambios = card(page, "Cabina con cambios");
   await expect(cambios.getByTestId("card-label")).toHaveText("Cambios pedidos");
-  await expect(cambios.getByText("Nota de bnbtico: Faltan fotos del baño.")).toHaveClass(/note-arena/);
+  await expect(cambios.getByText("Nota de 3bstays: Faltan fotos del baño.")).toHaveClass(/note-arena/);
   await expect(cambios.getByRole("link", { name: "Corregir y reenviar" })).toHaveClass(/btn-primary/);
   await expect(cambios.getByRole("link", { name: "Corregir y reenviar" })).toHaveAttribute("href", `/propietario/publicar/${changes.id}/1`);
 
@@ -185,7 +185,7 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });
   await page.goto("/robots.txt");
   await page.evaluate(() => new Promise<void>((resolve) => {
-    const req = indexedDB.deleteDatabase("bnbtico");
+    const req = indexedDB.deleteDatabase("3bstays");
     req.onsuccess = req.onerror = req.onblocked = () => resolve();
   }));
   await page.goto(`/propietario/casas/${active.id}`);
@@ -300,7 +300,7 @@ test("«Pausar la casa» responde al instante desde el Calendario y vuelve atrá
   release();
   await expect.poll(async () => (await h.anon.getPublic(active.publicId))?.available).toBe(false);
   await page.unroute("**/rest/v1/rpc/set_listing_available");
-  // La misma etiqueta en el detalle y en Mis casas: «Pausada», con el color de «Inactiva», no «Pausada por bnbtico» (ticket 04 de la ronda del 2 nov).
+  // La misma etiqueta en el detalle y en Mis casas: «Pausada», con el color de «Inactiva», no «Pausada por 3bstays» (ticket 04 de la ronda del 2 nov).
   await page.goto(`/propietario/casas/${active.id}`);
   await expect(page.locator(".detail-photo .state")).toHaveText("Pausada");
   await page.goto("/propietario/casas");

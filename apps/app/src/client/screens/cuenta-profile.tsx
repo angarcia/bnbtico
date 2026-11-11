@@ -143,7 +143,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
         <Link to="/ayuda" className="list-item">
           <I.help />
           <span className="body">
-            Ayuda por WhatsApp<small>{owner ? "Línea de bnbtico para anfitriones" : "Línea de bnbtico para clientes"}</small>
+            Ayuda por WhatsApp<small>{owner ? "Línea de 3bstays para anfitriones" : "Línea de 3bstays para clientes"}</small>
           </span>
           <span className="chev">
             <I.chevron />

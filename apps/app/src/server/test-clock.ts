@@ -1,7 +1,7 @@
 // Reloj de pruebas (fase 5): POST /_pruebas/oferta/CT-#### con { "diasRestantes": n } y `Authorization: Bearer
 // <TEST_CLOCK_SECRET>` deja esa casa con n días de oferta (test_set_offer_days_left), corre el trabajo del día
 // (run_subscription_day) y un lote de envío de avisos, y responde lo ocurrido. Doble cerrojo: aquí, 404 en producción y
-// sin secreto; en la base, test_set_offer_days_left se niega sin el secreto de Vault bnbtico_test_clock.
+// sin secreto; en la base, test_set_offer_days_left se niega sin el secreto de Vault 3bstays_test_clock.
 import type { Context } from "hono";
 import { DomainError } from "../domain/errors";
 import { parsePublicId } from "../domain/share";

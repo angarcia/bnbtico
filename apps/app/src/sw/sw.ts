@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-// Service worker de bnbtico: se compila aparte como /sw.js (vite.config.ts) con la lista de precache del build.
+// Service worker de 3bstays: se compila aparte como /sw.js (vite.config.ts) con la lista de precache del build.
 import { SHELL_URL, strategyFor } from "./routes";
 import { cacheFirst, networkFirst, staleWhileRevalidate, type RuntimeDeps } from "./runtime";
 

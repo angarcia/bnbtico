@@ -4,7 +4,7 @@ import { capacityLine, capacitySummary, cardPrice, accommodationLabel, describe 
 import { emptyDraft, type Listing, type ListingStatus, type PublicListing } from "../../src/domain/listing";
 
 const NOW = Date.parse("2026-10-22T12:00:00Z");
-const BASE = "https://bnbtico.com";
+const BASE = "https://3bstays.com";
 
 function owned(over: Partial<Listing> = {}): Listing {
   return {
@@ -114,7 +114,7 @@ group("describe · situación y etiqueta por estado", () => {
 
 group("describe · enlace y vista previa", () => {
   it("enlace con la base que se pase", () => {
-    expect(describe(owned(), { base: "https://nueva.bnbtico.com/" }).shareUrl).toBe("https://nueva.bnbtico.com/casa/CT-1042");
+    expect(describe(owned(), { base: "https://pruebas.3bstays.com/" }).shareUrl).toBe("https://pruebas.3bstays.com/casa/CT-1042");
   });
 
   it.each<[string, Partial<Listing>, string]>([

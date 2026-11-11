@@ -181,7 +181,7 @@ test("quien no es admin no entra: no se le pide código ni se le inscribe ningú
   await injectSession(page, "owner");
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/admin\/codigo/);
-  await expect(page.getByRole("heading", { name: "Esta sección es solo para el equipo de bnbtico" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Esta sección es solo para el equipo de 3bstays" })).toBeVisible();
   await expect(page.getByLabel("Código de 6 dígitos")).toHaveCount(0);
   expect(await factorsOf(TEST_PHONES.owner)).toEqual([]);
   await page.goto("/cuenta");
@@ -220,5 +220,5 @@ test("el admin no aprueba sin fotos y pide una con el mensaje", async ({ page })
 
   await injectSession(page, "other");
   await page.goto("/propietario/casas");
-  await expect(page.getByText(`Nota de bnbtico: ${NO_PHOTOS_NOTE}`)).toBeVisible();
+  await expect(page.getByText(`Nota de 3bstays: ${NO_PHOTOS_NOTE}`)).toBeVisible();
 });

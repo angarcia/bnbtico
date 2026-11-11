@@ -39,7 +39,7 @@ describe("Exportación iCal · lector independiente RFC 5545", () => {
     expect(new ICAL.Event(after.getFirstSubcomponent("vevent")!).startDate.toString()).toBe("2026-11-08");
   });
 
-  it("un calendario vacío sigue siendo válido para un lector distinto del importador de bnbtico", () => {
+  it("un calendario vacío sigue siendo válido para un lector distinto del importador de 3bstays", () => {
     const calendar = ICAL.Component.fromString(serializeManualCalendar({ id, nights: [] }, now));
     expect(calendar.getAllSubcomponents("vevent")).toEqual([]);
     expect(calendar.getFirstPropertyValue("version")).toBe("2.0");

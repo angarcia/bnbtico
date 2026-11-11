@@ -63,7 +63,7 @@ describe("admin con segundo factor exigido en SQL", () => {
     const { id } = await h.seed({ status: "review" });
     const other = await signIn("other");
     const { error } = await other.rpc("review_listing", { p_listing: id, p_decision: "approve", p_note: "" });
-    expect(error?.message).toBe("Solo bnbtico puede revisar anuncios.");
+    expect(error?.message).toBe("Solo 3bstays puede revisar anuncios.");
   });
 
   it("el segundo factor es TOTP: seed_admin da al admin el rótulo que GoTrue exige; una cuenta sin él no puede inscribirlo", async () => {
@@ -71,9 +71,9 @@ describe("admin con segundo factor exigido en SQL", () => {
     expect(factors.data?.totp.filter((f) => f.status === "verified")).toHaveLength(1);
     expect(factors.data?.all.some((f) => f.factor_type === "phone")).toBe(false);
     const adminId = (await aal2.auth.getUser()).data.user!.id;
-    expect((await serviceClient().auth.admin.getUserById(adminId)).data.user?.email).toBe("50688990001@admin.bnbtico.invalid");
+    expect((await serviceClient().auth.admin.getUserById(adminId)).data.user?.email).toBe("50688990001@admin.3bstays.invalid");
     const owner = await signIn("owner");
-    const enrolled = await owner.auth.mfa.enroll({ factorType: "totp", friendlyName: "bnbtico admin" });
+    const enrolled = await owner.auth.mfa.enroll({ factorType: "totp", friendlyName: "3bstays admin" });
     expect(enrolled.error?.status).toBe(500);
   });
 

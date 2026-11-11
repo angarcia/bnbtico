@@ -301,7 +301,7 @@ jobs:
           LIGHTHOUSE_SUMMARY: ${{ steps.lighthouse.outputs.publish }}/lighthouse/resumen.md
         run: |
           test -f "$LIGHTHOUSE_SUMMARY" || exit 0
-          marker='<!-- bnbtico:lighthouse -->'
+          marker='<!-- 3bstays:lighthouse -->'
           body="$(printf '%s\n' "$marker"; cat "$LIGHTHOUSE_SUMMARY"; printf '\nCommit `%s` · resumen en el artefacto «lighthouse-attempt-%s».\n' "${{ github.sha }}" "${{ github.run_attempt }}")"
           id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
           if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
@@ -383,7 +383,7 @@ jobs:
       run:
         working-directory: apps/app
     env:
-      # main → producción (sin ruta todavía); develop y pull requests → pruebas (nueva.bnbtico.com).
+      # main → producción (sin ruta todavía); develop y pull requests → pruebas (pruebas.3bstays.com).
       DEPLOY_ENV: ""
     steps:
       - uses: actions/checkout@v7
@@ -435,7 +435,7 @@ jobs:
         env:
           DEPLOY_ENV: ${{ steps.target.outputs.environment }}
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
-        run: node scripts/deploy-target.mjs validate dist/bnbtico/wrangler.json
+        run: node scripts/deploy-target.mjs validate dist/3bstays/wrangler.json
       - name: Puerta de tamaño (zona privada < 160 KB gz)
         run: pnpm size
 
@@ -487,7 +487,7 @@ jobs:
           workingDirectory: apps/app
           packageManager: pnpm
           wranglerVersion: "4.152.0"
-          command: deploy --config dist/bnbtico/wrangler.json --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
+          command: deploy --config dist/3bstays/wrangler.json --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
 
       - name: Versión de vista previa
         id: preview
@@ -499,7 +499,7 @@ jobs:
           workingDirectory: apps/app
           packageManager: pnpm
           wranglerVersion: "4.152.0"
-          command: versions upload --config dist/bnbtico/wrangler.json --preview-alias pr-${{ github.event.number }} --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
+          command: versions upload --config dist/3bstays/wrangler.json --preview-alias pr-${{ github.event.number }} --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
 
       - name: Publicar la URL de vista previa en el pull request
         if: steps.preview.outcome == 'success'
@@ -510,7 +510,7 @@ jobs:
         run: |
           alias_url=$(printf '%s' "$OUTPUT" | grep -oE 'https://pr-[a-z0-9-]+\.[a-z0-9.-]+\.workers\.dev' | head -1)
           # Comentario propio con marca (no --edit-last: el último comentario del bot puede ser el de Lighthouse).
-          marker='<!-- bnbtico:vista-previa -->'
+          marker='<!-- 3bstays:vista-previa -->'
           body="$(printf '%s\nVista previa de `%s`: %s' "$marker" "${{ github.sha }}" "${alias_url:-$URL}")"
           id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
           if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi

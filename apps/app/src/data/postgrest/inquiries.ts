@@ -45,7 +45,7 @@ export function createPostgrestInquiries(db: SupabaseClient<Database>): Inquirie
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         openedAt: r.owner_opened_at ?? null,
-        source: r.source === "bnbtico" ? "bnbtico" : "listing",
+        source: r.source === "support" ? "support" : "listing",
       }));
     },
 

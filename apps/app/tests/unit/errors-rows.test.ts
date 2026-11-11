@@ -33,7 +33,7 @@ describe("toDomainError", () => {
   it("los errores del segundo factor (app de autenticación)", () => {
     expect(toDomainError({ code: "mfa_verification_failed", message: "Invalid TOTP code entered" })).toMatchObject({ kind: "validation", message: "Ese código no es correcto o caducó." });
     expect(toDomainError({ code: "mfa_factor_not_found" }).kind).toBe("conflict");
-    expect(toDomainError({ code: "mfa_totp_enroll_not_enabled" }).message).toBe("El segundo código no está disponible ahora. Escríbale a bnbtico por WhatsApp.");
+    expect(toDomainError({ code: "mfa_totp_enroll_not_enabled" }).message).toBe("El segundo código no está disponible ahora. Escríbale a 3bstays por WhatsApp.");
   });
 
   it("errores de red", () => {

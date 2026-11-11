@@ -232,7 +232,7 @@ async function main() {
   const admin = await signIn(ADMIN);
   sql(`select public.seed_admin('${ADMIN.phone}');`);
 
-  const dir = mkdtempSync(join(tmpdir(), "bnbtico-fotos-"));
+  const dir = mkdtempSync(join(tmpdir(), "3bstays-fotos-"));
   const cache = {};
   const creadas = [];
   try {

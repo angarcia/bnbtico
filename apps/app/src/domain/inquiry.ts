@@ -59,7 +59,7 @@ export interface OwnerInquiry {
   updatedAt: string;
   /** Cuándo tocó el propietario «Abrir WhatsApp»; null = «Nueva». */
   openedAt: string | null;
-  source: "listing" | "bnbtico";
+  source: "listing" | "support";
 }
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -88,7 +88,7 @@ export function inquiryMessageTail(f: InquiryFields): string {
   const n = f.people && f.people > 0 ? Math.floor(f.people) : 0;
   const people = n > 0 ? `${n} persona${n === 1 ? "" : "s"}` : "";
   const ask = dates && people ? `¿Está disponible ${dates} para ${people}?` : dates ? `¿Está disponible ${dates}?` : people ? `¿Está disponible para ${people}?` : "¿Está disponible?";
-  return ` en bnbtico y me interesa. ${ask} Gracias.`;
+  return ` en 3bstays y me interesa. ${ask} Gracias.`;
 }
 
 /** El mensaje por defecto de la hoja (prototipo `contactCompose`, mismas frases). */
@@ -165,7 +165,7 @@ export { firstName, initials } from "./person";
 export const CONTACT_DRAFT_TTL_MS = 30 * 60_000;
 export { contactDraftKey } from "./contact-return";
 
-/** Sin fechas: son las de la pestaña (`bnbtico-fechas`, `shared/stay-dates.ts`), las mismas de Explorar, el calendario de la
+/** Sin fechas: son las de la pestaña (`3bstays-fechas`, `shared/stay-dates.ts`), las mismas de Explorar, el calendario de la
  *  ficha y la hoja (ronda de Ana 2 nov, ticket 08). Un borrador guardado antes con fechas vuelve sin ellas. */
 interface StoredContactDraft {
   people: number | null;

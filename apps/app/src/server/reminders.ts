@@ -23,7 +23,7 @@ export type ReminderEnv = {
   TWILIO_WHATSAPP_FROM?: string;
   /** Pruebas: solo estos números E.164 reciben avisos; los demás se omiten. Con Twilio en pruebas es obligatoria. */
   WHATSAPP_ALLOWLIST?: string;
-  /** Origen público del entorno para el enlace del aviso (el cron no tiene petición): https://nueva.bnbtico.com. */
+  /** Origen público del entorno para el enlace del aviso (el cron no tiene petición): https://pruebas.3bstays.com. */
   PUBLIC_ORIGIN?: string;
   /** Ruta del reloj de pruebas /_pruebas/oferta/CT-####; sin él (y siempre en producción), 404. */
   TEST_CLOCK_SECRET?: string;
@@ -57,7 +57,7 @@ export interface BatchResult {
   error?: string;
 }
 
-/** Base pública del enlace del aviso: bnbtico.com en producción; en pruebas, PUBLIC_ORIGIN o el origen de la petición. */
+/** Base pública del enlace del aviso: 3bstays.com en producción; en pruebas, PUBLIC_ORIGIN o el origen de la petición. */
 export function reminderBase(env: Pick<Env, "ENVIRONMENT"> & ReminderEnv, origin: string | null): string {
   return shareBase(env.ENVIRONMENT, env.PUBLIC_ORIGIN ?? origin);
 }

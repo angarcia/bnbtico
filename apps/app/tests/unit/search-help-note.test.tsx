@@ -14,8 +14,8 @@ describe("Explorar · ¿No encuentra lo que busca?", () => {
     expect(html).toContain("¿No encuentra lo que busca?");
     expect(html).toContain("btn-outline");
     expect(html).not.toContain("btn-wa");
-    expect(html).toContain(`href="https://wa.me/50660000000?text=${encodeURIComponent("Hola, estoy buscando casa en bnbtico.\nZona: Limón.\nPersonas: 4.\nNecesito: Piscina.\nFechas: ")}"`);
-    expect(html).toContain("Escribir a bnbtico por WhatsApp");
+    expect(html).toContain(`href="https://wa.me/50660000000?text=${encodeURIComponent("Hola, estoy buscando casa en 3bstays.\nZona: Limón.\nPersonas: 4.\nNecesito: Piscina.\nFechas: ")}"`);
+    expect(html).toContain("Escribir a 3bstays por WhatsApp");
   });
 
   it("sin número no sale nada al final de la rejilla", () => {

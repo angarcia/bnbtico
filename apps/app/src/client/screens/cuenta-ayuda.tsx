@@ -22,9 +22,9 @@ export function RecuperarScreen() {
       </section>
       <section className="card stack">
         <h3>¿No tiene un correo confirmado?</h3>
-        <p className="small">Pida ayuda a bnbtico para revisar la recuperación. Indicar su nombre y otro número no basta para recuperar una cuenta. No mande documentos ni códigos por este formulario.</p>
+        <p className="small">Pida ayuda a 3bstays para revisar la recuperación. Indicar su nombre y otro número no basta para recuperar una cuenta. No mande documentos ni códigos por este formulario.</p>
         <Link to="/ayuda" className="btn btn-wa">
-          <I.wa size={20} /> Escribir a bnbtico por WhatsApp
+          <I.wa size={20} /> Escribir a 3bstays por WhatsApp
         </Link>
       </section>
     </>

@@ -99,7 +99,7 @@ export interface OwnerListingsApi {
   submit(id: string): Promise<void>;
   /**
    * Con cambios pedidos o rechazada → borrador. Una casa publicada ya no vuelve a borrador (se edita con updateLive y
-   * saveEdit): falla con «Solo bnbtico puede cambiar el estado de un anuncio.».
+   * saveEdit): falla con «Solo 3bstays puede cambiar el estado de un anuncio.».
    */
   reopenForEdit(id: string): Promise<void>;
   /** Datos al momento de una casa publicada (RPC update_listing_live). */

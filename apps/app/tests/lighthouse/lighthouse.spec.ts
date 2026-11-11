@@ -58,7 +58,7 @@ test("Lighthouse móvil: ficha y shell instalado dentro del presupuesto de LCP",
   const proxy = await gzipProxy(preview!);
   const baseURL = proxy.url;
   const port = await freePort();
-  const profile = join(tmpdir(), `bnbtico-lh-${Date.now()}`);
+  const profile = join(tmpdir(), `3bstays-lh-${Date.now()}`);
   // Contexto persistente = contexto por defecto del navegador: Lighthouse (por el puerto de depuración) ve el mismo
   // service worker, caché y IndexedDB que deja el calentamiento de Playwright.
   const context = await chromium.launchPersistentContext(profile, {
@@ -115,12 +115,12 @@ test("Lighthouse móvil: ficha y shell instalado dentro del presupuesto de LCP",
         page.evaluate(
           () =>
             new Promise<boolean>((resolve) => {
-              const req = indexedDB.open("bnbtico");
+              const req = indexedDB.open("3bstays");
               req.onerror = () => resolve(false);
               req.onsuccess = () => {
                 const db = req.result;
                 if (!db.objectStoreNames.contains("query-cache")) return resolve(false);
-                const get = db.transaction("query-cache").objectStore("query-cache").get("bnbtico-query");
+                const get = db.transaction("query-cache").objectStore("query-cache").get("3bstays-query");
                 get.onsuccess = () => resolve(typeof get.result === "string" && get.result.includes('"listings"'));
                 get.onerror = () => resolve(false);
               };

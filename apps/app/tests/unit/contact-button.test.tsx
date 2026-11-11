@@ -46,7 +46,7 @@ const bar = (l: PublicListing) => {
   seedListing(client, l, [], FX_INITIAL);
   const html = renderToString(
     <QueryClientProvider client={client}>
-      <ListingPage listing={l} base="https://bnbtico.com" />
+      <ListingPage listing={l} base="https://3bstays.com" />
     </QueryClientProvider>,
   );
   return html.slice(html.indexOf('class="cta-bar"'));

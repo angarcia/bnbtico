@@ -55,7 +55,7 @@ async function fresh(page: Page, path: string) {
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
-        const req = indexedDB.deleteDatabase("bnbtico");
+        const req = indexedDB.deleteDatabase("3bstays");
         req.onsuccess = req.onerror = req.onblocked = () => resolve();
       }),
   );
@@ -281,7 +281,7 @@ test.describe("Cuenta", () => {
     await page.evaluate(() => {
       const remove = Storage.prototype.removeItem;
       Storage.prototype.removeItem = function (this: Storage, key: string) {
-        if (key === "bnbtico-auth") throw new Error("storage");
+        if (key === "3bstays-auth") throw new Error("storage");
         return remove.call(this, key);
       };
     });
@@ -289,7 +289,7 @@ test.describe("Cuenta", () => {
     await expect(page.locator('.note[role="alert"]')).toHaveText("No pudimos cerrar la sesión. Intente de nuevo.");
     await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeEnabled();
     await expect(page.getByRole("heading", { level: 1, name: "Cuenta" })).toBeFocused();
-    expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).not.toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem("3bstays-auth"))).not.toBeNull();
   });
 
   test("Flujo 5: Cuenta: la línea de identidad bajo WhatsApp verificado", async ({ page }) => {
@@ -355,7 +355,7 @@ test.describe("Cuenta", () => {
 
     await signOut(page);
     await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
-    expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem("3bstays-auth"))).toBeNull();
   });
 });
 

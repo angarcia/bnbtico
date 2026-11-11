@@ -20,20 +20,20 @@ const TITLE = "Casa Manzanillo, a pie de playa";
 
 describe("composeInquiryMessage (casos del prototipo, tests/prototype/contacto-hoja.cjs)", () => {
   it("sin datos", () => {
-    expect(composeInquiryMessage(TITLE, {})).toBe("Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible? Gracias.");
+    expect(composeInquiryMessage(TITLE, {})).toBe("Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible? Gracias.");
   });
   it("fechas del mismo mes y personas", () => {
     expect(composeInquiryMessage(TITLE, { arrival: "2026-12-20", departure: "2026-12-23", people: 4 })).toBe(
-      "Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.",
+      "Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.",
     );
   });
   it("fechas que cruzan mes y año", () => {
     expect(composeInquiryMessage(TITLE, { arrival: "2026-12-28", departure: "2027-01-02" })).toBe(
-      "Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible del 28 de diciembre al 2 de enero? Gracias.",
+      "Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible del 28 de diciembre al 2 de enero? Gracias.",
     );
   });
   it("una persona, en singular", () => {
-    expect(composeInquiryMessage(TITLE, { people: 1 })).toBe("Hola, vi Casa Manzanillo, a pie de playa en bnbtico y me interesa. ¿Está disponible para 1 persona? Gracias.");
+    expect(composeInquiryMessage(TITLE, { people: 1 })).toBe("Hola, vi Casa Manzanillo, a pie de playa en 3bstays y me interesa. ¿Está disponible para 1 persona? Gracias.");
   });
   it("fechas incompletas o al revés no entran en el mensaje", () => {
     const plain = composeInquiryMessage(TITLE, {});
@@ -46,7 +46,7 @@ describe("composeInquiryMessage (casos del prototipo, tests/prototype/contacto-h
 describe("composeInquiryMessage · sin la variante mensual (fin del modo mensual, 2026-11-02)", () => {
   it("una estancia larga va con llegada y salida, como cualquier otra; nunca «por meses desde…»", () => {
     expect(composeInquiryMessage("Casa Cocles", { arrival: "2026-12-01", departure: "2027-01-05", people: 4 })).toBe(
-      "Hola, vi Casa Cocles en bnbtico y me interesa. ¿Está disponible del 1 de diciembre al 5 de enero para 4 personas? Gracias.",
+      "Hola, vi Casa Cocles en 3bstays y me interesa. ¿Está disponible del 1 de diciembre al 5 de enero para 4 personas? Gracias.",
     );
     const s = redraft(startDraft("Casa Cocles"), { type: "fields", patch: { arrival: "2026-12-01", departure: "2027-01-05" } }, "Casa Cocles");
     expect(s.message).not.toContain("por meses");
@@ -56,16 +56,16 @@ describe("composeInquiryMessage · sin la variante mensual (fin del modo mensual
 
 describe("nota visible en Consultas", () => {
   const fields = { arrival: "2026-12-20", departure: "2026-12-23", people: 4 };
-  const generated = "Hola, vi Casa con su nombre anterior en bnbtico y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.";
+  const generated = "Hola, vi Casa con su nombre anterior en 3bstays y me interesa. ¿Está disponible del 20 al 23 de diciembre para 4 personas? Gracias.";
 
   it("oculta el borrador automático, incluso si la casa cambió de nombre", () => {
     expect(inquiryNote({ ...fields, source: "listing", message: generated })).toBeNull();
   });
 
-  it("conserva las notas personalizadas y las consultas creadas por bnbtico", () => {
+  it("conserva las notas personalizadas y las consultas creadas por 3bstays", () => {
     const custom = `${generated} ¿Tiene entrada sin gradas?`;
     expect(inquiryNote({ ...fields, source: "listing", message: custom })).toBe(custom);
-    expect(inquiryNote({ ...fields, source: "bnbtico", message: generated })).toBe(generated);
+    expect(inquiryNote({ ...fields, source: "support", message: generated })).toBe(generated);
   });
 });
 

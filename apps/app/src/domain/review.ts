@@ -12,7 +12,7 @@ export const REVIEW_NOTE_MAX = 2000;
 /** Mensajes de review_listing y de la guarda de admin (iguales en la base, el adaptador y el fake). */
 export const REVIEW_MESSAGES = {
   mfaRequired: "Confirme el segundo código para revisar anuncios.",
-  adminOnly: "Solo bnbtico puede revisar anuncios.",
+  adminOnly: "Solo 3bstays puede revisar anuncios.",
   notFound: "No encontramos ese anuncio.",
   decided: "Este anuncio ya tiene una decisión.",
   noteRequired: "Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.",

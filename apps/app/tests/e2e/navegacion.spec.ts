@@ -54,10 +54,10 @@ const persistedCache = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<string>((resolve, reject) => {
-        const req = indexedDB.open("bnbtico");
+        const req = indexedDB.open("3bstays");
         req.onerror = () => reject(req.error);
         req.onsuccess = () => {
-          const get = req.result.transaction("query-cache").objectStore("query-cache").get("bnbtico-query");
+          const get = req.result.transaction("query-cache").objectStore("query-cache").get("3bstays-query");
           get.onsuccess = () => resolve(String(get.result ?? ""));
           get.onerror = () => reject(get.error);
         };
@@ -389,7 +389,7 @@ test("sin barra superior con el logo en ninguna pestaña; Favoritos lleva «₡ 
   const checkFavorites = async () => {
     await expect(page.getByTestId("favorites-count")).toBeVisible();
     await expect(banner).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "bnbtico, inicio" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "3bstays, inicio" })).toHaveCount(0);
     const currency = page.getByRole("group", { name: "Moneda de los precios" });
     await expect(currency).toBeVisible();
     for (const b of await currency.getByRole("button").all()) expect((await b.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -398,7 +398,7 @@ test("sin barra superior con el logo en ninguna pestaña; Favoritos lleva «₡ 
   await expect(page.locator(".explore-top").getByRole("link", { name: "Cuenta" })).toHaveCount(0);
   await expect(banner).toHaveCount(0);
   const publicId = (await page.locator("a.listing-card").first().getAttribute("href"))!.split("/").pop();
-  await page.evaluate((id) => localStorage.setItem("bnbtico-favoritos", JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }])), publicId);
+  await page.evaluate((id) => localStorage.setItem("3bstays-favoritos", JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }])), publicId);
   await page.goto("/favoritos");
   await checkFavorites();
   for (const path of ["/propietario/casas", "/propietario/calendario", "/propietario/actividad", "/cuenta"]) {
@@ -552,7 +552,7 @@ test.describe("«Atrás» y las pestañas", () => {
   test("Favoritos vacío → «Explorar casas» cambia de pestaña sin dejar rastro; Favoritos ya no lleva el logo arriba", async ({ page }) => {
     await page.goto("/favoritos");
     // Sin barra superior con el logo, como las demás pestañas (2026-11-03).
-    await expect(page.getByRole("link", { name: "bnbtico, inicio" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "3bstays, inicio" })).toHaveCount(0);
     await page.getByRole("link", { name: "Explorar casas" }).click();
     await expect(page).toHaveURL(/\/explorar/);
     await page.goBack();
@@ -618,7 +618,7 @@ test.describe("en un teléfono de 375 px", () => {
       await expect(page.locator("a.listing-card").first()).toBeVisible();
       await page.evaluate(() => {
         const id = document.querySelector("a.listing-card")!.getAttribute("href")!.split("/").pop();
-        localStorage.setItem("bnbtico-favoritos", JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }]));
+        localStorage.setItem("3bstays-favoritos", JSON.stringify([{ publicId: id, savedAt: new Date().toISOString() }]));
       });
     };
     await page.goto("/explorar");

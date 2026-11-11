@@ -135,7 +135,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
       {contact ? <ContactCard next={next} /> : null}
       <div className="stack gap-8">
         <h2 className="flow-title">
-          {newPhone ? "Es su primera vez en bnbtico" : contact ? `Un paso y le escribe a ${owner ?? "el anfitrión"}` : publish ? "Para subir las fotos, verifique su WhatsApp" : "Entre con su WhatsApp"}
+          {newPhone ? "Es su primera vez en 3bstays" : contact ? `Un paso y le escribe a ${owner ?? "el anfitrión"}` : publish ? "Para subir las fotos, verifique su WhatsApp" : "Entre con su WhatsApp"}
         </h2>
         <p className="muted">
           {newPhone ? (
@@ -252,7 +252,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
         </div>
       )}
       {listingInNext(next) && mode === "account" ? <ReturnCard next={next} /> : null}
-      <p className="xs muted center">Al continuar acepta los Términos. bnbtico nunca le pedirá pagos.</p>
+      <p className="xs muted center">Al continuar acepta los Términos. 3bstays nunca le pedirá pagos.</p>
     </div>
   );
 }

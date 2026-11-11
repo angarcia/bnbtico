@@ -16,7 +16,7 @@ export function SearchHelp({ filters, zoneName = null, number, onClear }: { filt
       <p>¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.</p>
       {/* Se abre como «Abrir WhatsApp» de Ayuda; la baliza no lleva el mensaje ni los filtros (solo ruta, build y país). */}
       <a className="btn btn-outline btn-block" href={waUrl(number, searchHelpMessage(filters, zoneName))} target="_blank" rel="noopener" onClick={() => track("search_help_tap")}>
-        <I.wa size={20} /> Escribir a bnbtico por WhatsApp
+        <I.wa size={20} /> Escribir a 3bstays por WhatsApp
       </a>
     </>
   ) : null;

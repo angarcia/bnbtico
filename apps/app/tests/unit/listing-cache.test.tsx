@@ -84,7 +84,7 @@ beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   cleanups = [];
   vi.resetAllMocks();
-  vi.stubGlobal("window", { location: { origin: "https://bnbtico.test" } });
+  vi.stubGlobal("window", { location: { origin: "https://3bstays.test" } });
   vi.stubGlobal("__BUILD_ID__", "cache-test");
 });
 afterEach(() => { cleanups.forEach((f) => f()); client.clear(); vi.unstubAllGlobals(); });
@@ -341,7 +341,7 @@ describe("contrato de caché de casas", () => {
     const { persistOptions } = await import("../../src/client/persist");
     seed();
     const storage = memoryStore();
-    const persister = createAsyncStoragePersister({ storage, key: "bnbtico-query", throttleTime: 0 });
+    const persister = createAsyncStoragePersister({ storage, key: "3bstays-query", throttleTime: 0 });
     const options = { ...persistOptions, persister, queryClient: client };
     await persistQueryClientSave(options);
     const saved = (await persister.restoreClient())!;
@@ -349,7 +349,7 @@ describe("contrato de caché de casas", () => {
     expect(saved.clientState.queries.map((q) => q.queryKey)).not.toContainEqual(housesKey);
     expect(saved.clientState.queries.map((q) => q.queryKey)).not.toContainEqual(editsKey);
     expect(saved.clientState.queries.map((q) => q.queryKey)).not.toContainEqual(editKey);
-    expect(storage.getItem("bnbtico-query")).toContain('"queryKey":["own-listing","u1","l-activa"]');
+    expect(storage.getItem("3bstays-query")).toContain('"queryKey":["own-listing","u1","l-activa"]');
     client.clear();
     await persistQueryClientRestore(options);
     expect(detail()).toEqual(activeListing);

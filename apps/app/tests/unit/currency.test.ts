@@ -4,7 +4,7 @@ import { formatMoney } from "../../src/domain/money";
 
 describe("parseCurrency", () => {
   it("USD solo con 'USD'; cualquier otra cosa es colones", () => {
-    expect(CURRENCY_STORAGE_KEY).toBe("bnbtico_currency");
+    expect(CURRENCY_STORAGE_KEY).toBe("3bstays_currency");
     expect(parseCurrency("USD")).toBe("USD");
     expect(parseCurrency("usd")).toBe("CRC");
     expect(parseCurrency(undefined)).toBe("CRC");

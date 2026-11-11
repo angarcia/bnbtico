@@ -1,4 +1,4 @@
-// Favoritos en el teléfono (localStorage `bnbtico-favoritos`), compartidos por la ficha SSR y el shell. El toque cambia
+// Favoritos en el teléfono (localStorage `3bstays-favoritos`), compartidos por la ficha SSR y el shell. El toque cambia
 // la lista al momento; con sesión, después se escribe en la cuenta y, si falla, se vuelve atrás y se avisa. Sin sesión
 // guardada nunca se toca la red (ni se descarga supabase-js).
 import { useSyncExternalStore } from "react";
@@ -7,7 +7,7 @@ import { FAVORITES_KEY, addFavorite, isFavorite, mergeFavorites, parseFavorites,
 import { toast } from "./toast";
 
 /** = SESSION_STORAGE_KEY (data/storage): ese módulo no se importa aquí para no arrastrarlo al JS de la ficha SSR. */
-export const STORED_SESSION_KEY = "bnbtico-auth";
+export const STORED_SESSION_KEY = "3bstays-auth";
 
 export type FavoritesRemote = Pick<FavoritesApi, "add" | "remove">;
 

@@ -46,7 +46,7 @@ test("marcar reserva recibe los días manuales; la salida ocupada vale y no se a
   await page.goto(`/propietario/calendario?casa=${l.id}`);
   await expect(page.getByRole("button", { name: "Conectar con Airbnb", exact: true })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 667 });
-  await page.screenshot({ path: "/tmp/bnbtico-calendario-07-sin-conectar.jpg" });
+  await page.screenshot({ path: "/tmp/3bstays-calendario-07-sin-conectar.jpg" });
   await page.getByRole("button", { name: "Marcar una reserva", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Marcar una reserva", exact: true });
   const busy = dialog.getByRole("button", { name: dateName(10), exact: true });
@@ -116,7 +116,7 @@ test("el acceso directo actualiza sin salir del calendario y deshabilita el bot�
   await expect(update).toBeEnabled();
   await expect(page.getByRole("button", { name: /Sincronización con Airbnb/ })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({ path: "/tmp/bnbtico-calendario-07-conectado.jpg" });
+  await page.screenshot({ path: "/tmp/3bstays-calendario-07-conectado.jpg" });
   await page.context().setOffline(true);
   await expect(update).toBeDisabled();
   await page.context().setOffline(false);
