@@ -11,7 +11,10 @@ export function createIcalExportService(cfg: AirbnbServiceConfig): IcalExportSer
     async owner(jwt, listingId, generate) {
       return readOwnerIcalExport(await rpc("owner_ical_export", { p_listing: listingId, p_generate: generate }, jwt));
     },
-    async revoke(jwt, listingId) { await rpc("revoke_ical_export", { p_listing: listingId }, jwt); },
+    async revoke(jwt, listingId, generation) {
+      if (generation === undefined) await rpc("revoke_ical_export", { p_listing: listingId }, jwt);
+      else await rpc("revoke_ical_export_generation", { p_listing: listingId, p_generation: generation }, jwt);
+    },
     async read(token) {
       if (!ICAL_EXPORT_TOKEN.test(token)) return null;
       return readIcalExportSnapshot(await rpc("read_ical_export", { p_token: token }, cfg.serviceKey, cfg.serviceKey));
@@ -27,5 +30,13 @@ export function createOwnerIcalExport(cfg: OwnerConfig & { token(): Promise<stri
     if (!jwt) throw new DomainError(ICAL_EXPORT_MESSAGES.session, "session");
     return readOwnerIcalExport(await rpc("owner_ical_export", { p_listing: listingId, p_generate: generate }, jwt));
   }
-  return { overview: id => read(id, false), generate: id => read(id, true) };
+  return {
+    overview: id => read(id, false), generate: id => read(id, true),
+    async revoke(id, generation) {
+      if (!Number.isSafeInteger(generation) || generation < 0) throw new DomainError(ICAL_EXPORT_MESSAGES.changed, "validation");
+      const jwt = await cfg.token();
+      if (!jwt) throw new DomainError(ICAL_EXPORT_MESSAGES.session, "session");
+      await rpc("revoke_ical_export_generation", { p_listing: id, p_generation: generation }, jwt);
+    },
+  };
 }

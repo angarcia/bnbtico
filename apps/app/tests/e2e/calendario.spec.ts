@@ -499,15 +499,16 @@ test("«Marcar una reserva»: la fila, la hoja con el calendario de rango y las 
   await pick(page, on(10)).click();
   await expect(markSheet(page).getByTestId("mark-summary")).toHaveText("Ahora elija la salida");
   await expect(confirmMark(page)).toBeDisabled();
-  await pick(page, on(14)).click();
-  await expect(markSheet(page).getByTestId("mark-summary")).toHaveText(`4 noches · 10–13 ${shortMonth(next())}`);
+  // El día 12 ocupado no vale como llegada, pero sí como salida: su noche queda fuera.
+  await pick(page, on(12)).click();
+  await expect(markSheet(page).getByTestId("mark-summary")).toHaveText(`2 noches · 10–11 ${shortMonth(next())}`);
   await confirmMark(page).click();
 
   await expect(markSheet(page)).toHaveCount(0);
   await expect(markRow(page)).toBeFocused();
-  expect(await toastText(page)).toBe(`4 noches marcadas como ocupadas · 10–13 ${shortMonth(next())}`);
-  for (const d of [10, 11, 12, 13]) await expect(day(page, on(d))).toHaveAccessibleName(/, ocupado/);
-  // La salida sigue libre.
+  expect(await toastText(page)).toBe(`2 noches marcadas como ocupadas · 10–11 ${shortMonth(next())}`);
+  for (const d of [10, 11, 12]) await expect(day(page, on(d))).toHaveAccessibleName(/, ocupado/);
+  // Las noches posteriores siguen libres; la salida conserva el bloqueo que ya tenía.
   await expect(day(page, on(14))).not.toHaveAccessibleName(/ocupado/);
   // El precio especial del día 11 se conserva (ahora ocupado); lo ya ocupado sigue igual.
   await expect
@@ -516,9 +517,8 @@ test("«Marcar una reserva»: la fila, la hoja con el calendario de rango y las 
       { day: on(10), available: false, specialPriceCrc: null },
       { day: on(11), available: false, specialPriceCrc: 150000 },
       { day: on(12), available: false, specialPriceCrc: null },
-      { day: on(13), available: false, specialPriceCrc: null },
     ]);
-  expect((await h.anon.getPublicDays(casa.publicId)).filter((d) => !d.available).map((d) => d.day)).toEqual([on(10), on(11), on(12), on(13)]);
+  expect((await h.anon.getPublicDays(casa.publicId)).filter((d) => !d.available).map((d) => d.day)).toEqual([on(10), on(11), on(12)]);
 });
 
 test("una sola noche (salida al día siguiente) dice «1 noche marcada como ocupada»; una selección a medias del panel se descarta", async ({ page }) => {
@@ -562,7 +562,7 @@ test("la hoja se cierra con Escape, el fondo o «Cancelar» sin guardar nada, y 
 test("si la base rechaza el guardado, las noches vuelven a estar libres y avisa", async ({ page }) => {
   const casa = await seedHouse("Casa Reserva Rechazada");
   await open(page, casa.id);
-  await page.route("**/rest/v1/rpc/save_listing_days", (route) =>
+  await page.route("**/rest/v1/rpc/mark_listing_reservation", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Este anuncio fue rechazado; publique uno nuevo.", details: null, hint: null }) }),
   );
   await markRow(page).click();

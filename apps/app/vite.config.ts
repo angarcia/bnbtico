@@ -128,7 +128,11 @@ export default defineConfig({
         : "assets/[name]-[hash].js",
       codeSplitting: { groups: [
       { name: "zod", test: /[\\/]node_modules[\\/]zod[\\/]/ },
-      { name: "airbnb", test: /[\\/]src[\\/]client[\\/](?:airbnb\.ts|airbnb-calendar-row\.tsx|screens[\\/]airbnb\.tsx)$/, includeDependenciesRecursively: false },
+      // Calendario usa API/fila; gestión y exportación mantienen entradas separadas para no adelantar sus pantallas.
+      // Los tres grupos cuentan en airbnb-*.js del presupuesto existente.
+      { name: "airbnb", test: /[\\/]src[\\/]client[\\/](?:airbnb\.ts|airbnb-calendar-row\.tsx)$/, includeDependenciesRecursively: false },
+      { name: "airbnb-management", test: /[\\/]src[\\/]client[\\/]screens[\\/]airbnb\.tsx$/, includeDependenciesRecursively: false },
+      { name: "airbnb-export", test: /[\\/]src[\\/]client[\\/]screens[\\/]ical-export-card\.tsx$/, includeDependenciesRecursively: false },
       { name: "cuenta", test: /[\\/]src[\\/](?:client[\\/](?:screens[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|sign-in)\.tsx|client[\\/](?:turnstile|token-gate|support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, includeDependenciesRecursively: false },
       { name: "propietario", test: /[\\/]src[\\/](?:client[\\/](?:screens[\\/]propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx)|domain[\\/]navigation\.ts)$/, includeDependenciesRecursively: false },
       { name: "admin", test: /(?:[\\/]src[\\/](?:client[\\/](?:screens[\\/]admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, includeDependenciesRecursively: false },

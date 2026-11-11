@@ -7,13 +7,15 @@ export interface OwnerIcalExport {
   suspended: boolean;
   token: string | null;
   nights: number;
+  /** Cambia solo al generar otro enlace; protege revocaciones con respuesta de red desconocida. */
+  generation?: number;
 }
 
 export interface IcalExportSnapshot { id: string; nights: string[] }
 
 export interface IcalExportService {
   owner(jwt: string, listingId: string, generate: boolean): Promise<OwnerIcalExport>;
-  revoke(jwt: string, listingId: string): Promise<void>;
+  revoke(jwt: string, listingId: string, expectedGeneration?: number): Promise<void>;
   /** Solo servicio: valida la capacidad sin aceptar una sesión como alternativa al token. */
   read(token: string): Promise<IcalExportSnapshot | null>;
 }
@@ -21,6 +23,7 @@ export interface IcalExportService {
 export interface OwnerIcalExportApi {
   overview(listingId: string): Promise<OwnerIcalExport>;
   generate(listingId: string): Promise<OwnerIcalExport>;
+  revoke(listingId: string, expectedGeneration: number): Promise<void>;
 }
 
 export const ICAL_EXPORT_TOKEN = /^[a-f0-9]{64}$/;
@@ -30,16 +33,19 @@ export const ICAL_EXPORT_MESSAGES = {
   account: "Verifique su cuenta para gestionar el calendario.",
   missing: "No encontramos ese anuncio.",
   session: "Su sesión venció. Ingrese de nuevo.",
+  changed: "El enlace cambió. Revise el estado e intente de nuevo.",
 } as const;
 
 export function readOwnerIcalExport(value: unknown): OwnerIcalExport {
   if (!isRecord(value) || typeof value.generated !== "boolean" || typeof value.suspended !== "boolean" ||
     !(value.token === null || typeof value.token === "string" && ICAL_EXPORT_TOKEN.test(value.token)) ||
     typeof value.nights !== "number" || !Number.isInteger(value.nights) || value.nights < 0 || value.nights > 366 ||
-    (!value.generated || value.suspended ? value.token !== null : value.token === null)) {
+    (!value.generated || value.suspended ? value.token !== null : value.token === null) ||
+    !(value.generation === undefined || typeof value.generation === "number" && Number.isSafeInteger(value.generation) && value.generation >= 0)) {
     throw new Error("Respuesta de exportación no válida.");
   }
-  return { generated: value.generated, suspended: value.suspended, token: value.token, nights: value.nights };
+  return { generated: value.generated, suspended: value.suspended, token: value.token, nights: value.nights,
+    ...(typeof value.generation === "number" ? { generation: value.generation } : {}) };
 }
 
 export function readIcalExportSnapshot(value: unknown): IcalExportSnapshot | null {

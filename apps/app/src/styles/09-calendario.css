@@ -86,16 +86,26 @@
 .cal-month-placeholder{height:calc(5 * 92px + 4 * 6px)}
 /* «Marcar una reserva» y «Pausar la casa» (ticket 04 de la ronda del 2 nov): una tarjeta con una fila por acción, separadas
    por una línea fina. Pausada, la fila dice hasta cuándo y lleva «Volver a publicarla». */
-.cal-actions{display:flex;flex-direction:column;padding:0}
-.cal-actions > * + *{border-top:1px solid var(--line-soft)}
-.cal-actions > .note,.cal-actions > .cal-action-error{margin:0 14px 10px;border-top:0}
+.cal-actions{display:flex;flex-direction:column;gap:12px;padding:0}
+.cal-action-group,.cal-airbnb{padding:0}
+.cal-actions:has(> .cal-airbnb.card){gap:0}
+.cal-actions:has(> .cal-airbnb.card) > .cal-action-group{border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:none}
+.cal-action-group + .cal-airbnb.card{border-top:1px solid var(--line-soft);border-top-left-radius:0;border-top-right-radius:0}
+.cal-action-group > * + *{border-top:1px solid var(--line-soft)}
+.cal-action-group > .note,.cal-action-group > .cal-action-error{margin:0 14px 10px;border-top:0}
 .cal-action{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;text-align:left;width:100%;background:none;border-radius:0}
 .cal-action-icon{flex-shrink:0;width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.cal-action-group .cal-action-icon{background:none}
+.cal-airbnb-line{display:flex;align-items:center}
+.cal-airbnb-line .cal-action{flex:1;min-width:0}
+.cal-airbnb-update{flex:0 0 44px;width:44px;height:44px;min-height:44px;margin-left:14px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--primary) 14%,var(--bg));color:var(--primary);border-radius:8px}
+.cal-airbnb-update:disabled{background:var(--disabled-bg,#F2F1ED);color:var(--muted);opacity:1}
+.cal-airbnb > .note{margin:0 14px 10px}
 .cal-action .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .cal-action > svg{flex-shrink:0;color:var(--muted)}
 .cal-action:disabled{color:var(--muted);background:var(--disabled-bg,#F2F1ED);opacity:1}
 .cal-action:disabled .cal-action-icon{background:transparent;color:inherit}
-.cal-actions > .hint{margin:0;padding:10px 14px;border-top:0}
+.cal-airbnb > .hint{margin:0;padding:10px 14px;border-top:0}
 /* Pausada: «Pausada hasta el …» con su línea y, debajo, «Volver a publicarla» a lo ancho. */
 .cal-action.is-paused{flex-wrap:wrap;row-gap:10px;padding-bottom:14px}
 .cal-action.is-paused .btn{flex-basis:100%;min-height:44px}

@@ -200,7 +200,7 @@
     "path": [
       "dist/client/assets/fields-*.js"
     ],
-    "limit": "11.5 KB",
+    "limit": "11.6 KB",
     "gzip": true
   },
   {
@@ -289,13 +289,13 @@
       "dist/client/assets/calendar-*.js",
       "dist/client/assets/month-grid-*.js"
     ],
-    "limit": "8.5 kB",
+    "limit": "9.1 kB",
     "gzip": true
   },
   {
-    "name": "Airbnb · estado, controles de noches importadas y conexión/exportación por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
+    "name": "Airbnb · importación, exportación y gestión de conexiones por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
     "path": ["dist/client/assets/airbnb-*.js"],
-    "limit": "6.5 kB",
+    "limit": "9.5 kB",
     "gzip": true
   },
   {
@@ -311,7 +311,7 @@
     "path": [
       "dist/client/assets/mark-sheet-*.js"
     ],
-    "limit": "1.5 KB",
+    "limit": "1.65 KB",
     "gzip": true
   },
   {

@@ -14,6 +14,8 @@ export function ConfirmSheet({
   onConfirm,
   onClose,
   returnFocus,
+  pending = false,
+  error,
 }: {
   title: string;
   body: ReactNode;
@@ -23,11 +25,13 @@ export function ConfirmSheet({
   onConfirm(): void;
   onClose(): void;
   returnFocus?: RefObject<HTMLElement | null>;
+  pending?: boolean;
+  error?: string | null;
 }): ReactPortal {
   const confirmed = useRef(false);
   const id = useId();
   const { sheet, onKeyDown } = usePrivateSheet({
-    onClose,
+    onClose: () => { if (!pending) onClose(); },
     focusable: "button",
     trapEmpty: true,
     returnFocus(opener) {
@@ -41,14 +45,16 @@ export function ConfirmSheet({
   });
   return createPortal(
     <>
-      <div className="sheet-backdrop" onClick={onClose} />
-      <section ref={sheet} className="sheet stack" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} tabIndex={-1} onKeyDown={onKeyDown}>
+      <div className="sheet-backdrop" onClick={() => { if (!pending) onClose(); }} />
+      <section ref={sheet} className="sheet stack" role="dialog" aria-modal="true" aria-busy={pending} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} tabIndex={-1} onKeyDown={onKeyDown}>
         <span className="grabber" aria-hidden="true" />
         <h2 id={`${id}-title`}>{title}</h2>
         <p id={`${id}-text`}>{body}</p>
+        {error ? <p className="field-error" role="alert">{error}</p> : null}
         <button
           type="button"
           className={confirmClassName}
+          disabled={pending}
           onClick={() => {
             confirmed.current = true;
             onConfirm();
@@ -56,7 +62,7 @@ export function ConfirmSheet({
         >
           {confirmLabel}
         </button>
-        <button type="button" className={cancelClassName} onClick={onClose}>
+        <button type="button" className={cancelClassName} disabled={pending} onClick={onClose}>
           Cancelar
         </button>
       </section>

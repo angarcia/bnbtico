@@ -39,6 +39,12 @@ export function createPostgrestCalendar(db: SupabaseClient<Database>, opts: { no
       // null) se rechaza aquí con el mismo mensaje que daría la RPC.
       if (!change.days.every(isIsoDate)) throw new DomainError(CALENDAR_MESSAGES.range, "validation");
       if (change.priceCrc !== undefined && !Number.isInteger(change.priceCrc)) throw new DomainError(CALENDAR_MESSAGES.price, "validation");
+      if (change.requireFree) {
+        if (change.available !== false || change.priceCrc !== undefined) throw new DomainError("La reserva solo puede marcar noches como ocupadas.", "validation");
+        const { error } = await db.rpc("mark_listing_reservation", { p_listing: listingId, p_days: change.days });
+        if (error) throw toDomainError(error);
+        return;
+      }
       const { error } = await db.rpc("save_listing_days", {
         p_listing: listingId,
         p_days: change.days,

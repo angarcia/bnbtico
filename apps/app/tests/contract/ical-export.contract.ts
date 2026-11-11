@@ -33,7 +33,7 @@ export function icalExportContract(name: string, make: () => Promise<{ h: Subscr
       const a = await h.seed({ status: "active" });
       const b = await h.seed({ status: "active" });
       const jwt = await h.jwt("owner");
-      expect(await service.owner(jwt, a.id, false)).toEqual({ generated: false, suspended: false, token: null, nights: 0 });
+      expect(await service.owner(jwt, a.id, false)).toEqual({ generated: false, suspended: false, token: null, nights: 0, generation: 0 });
       const [first, repeated] = await Promise.all([service.owner(jwt, a.id, true), service.owner(jwt, a.id, true)]);
       expect(first.generated && !first.suspended).toBe(true);
       expect(typeof first.token === "string" && /^[a-f0-9]{64}$/.test(first.token)).toBe(true);

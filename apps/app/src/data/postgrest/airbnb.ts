@@ -42,6 +42,8 @@ export function createAirbnbService(cfg: AirbnbServiceConfig): AirbnbService {
   const service = (name: string, args: Record<string, unknown>) => rpc(name, args, cfg.serviceKey, cfg.serviceKey);
   return {
     async begin(jwt, listingId, url, requestId) { return attempt(await rpc("begin_airbnb_import", { p_listing: listingId, p_url: url, p_request: requestId }, jwt)); },
+    async update(jwt, listingId, requestId, url) { return attempt(await rpc("begin_airbnb_update", { p_listing: listingId, p_request: requestId, p_url: url ?? null }, jwt)); },
+    async disconnect(jwt, listingId, requestId) { await rpc("disconnect_airbnb", { p_listing: listingId, p_request: requestId }, jwt); },
     async claim(listingId, requestId) { return attempt(await service("claim_airbnb_import", { p_listing: listingId, p_request: requestId })); },
     async context(listingId, requestId) {
       const raw = await service("airbnb_import_context", { p_listing: listingId, p_request: requestId });
@@ -61,12 +63,10 @@ export function createOwnerAirbnb(cfg: Config & { token(): Promise<string | null
     if (!jwt) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
     return jwt;
   }
-  return {
-    async overview(listingId) { return readAirbnbSummary(await rpc("airbnb_overview", { p_listing: listingId }, await token())); },
-    async connect(listingId, url, requestId) {
+  async function importCalendar(action: "connect" | "refresh" | "replace", listingId: string, requestId: string, url?: string) {
       let response: Response;
       try {
-        response = await cfg.fetch("/api/calendarios/airbnb", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${await token()}` }, body: JSON.stringify({ listingId, url, requestId }) });
+        response = await cfg.fetch("/api/calendarios/airbnb", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${await token()}` }, body: JSON.stringify({ listingId, url, requestId, action }) });
       } catch (error) {
         if (error instanceof DomainError) throw error;
         throw new DomainError("Sin conexión. Revise su internet e intente de nuevo.", "network");
@@ -76,10 +76,16 @@ export function createOwnerAirbnb(cfg: Config & { token(): Promise<string | null
         if (response.status === 401) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
         const code = isRecord(raw) ? raw.code : null;
         if (code === "url" || code === "calendar" || code === "unsupported" || code === "download" || code === "timeout" || code === "size") throw new DomainError(new IcalError(code).message, "validation");
-        if (isRecord(raw) && typeof raw.error === "string" && SAFE_MESSAGES.has(raw.error)) throw new DomainError(raw.error, "validation");
-        throw new DomainError("No pudimos conectar Airbnb. Intente de nuevo.", "unknown");
+        if (isRecord(raw) && typeof raw.error === "string" && SAFE_MESSAGES.has(raw.error)) throw new DomainError(raw.error, raw.error === "Ya estamos leyendo este calendario." ? "conflict" : "validation");
+        throw new DomainError(action === "connect" ? "No pudimos conectar Airbnb. Intente de nuevo." : "No pudimos actualizar Airbnb. Intente de nuevo.", "unknown");
       }
       return readAirbnbSummary(raw);
-    },
+  }
+  return {
+    async overview(listingId) { return readAirbnbSummary(await rpc("airbnb_overview", { p_listing: listingId }, await token())); },
+    connect: (id, url, request) => importCalendar("connect", id, request, url),
+    refresh: (id, request) => importCalendar("refresh", id, request),
+    replace: (id, url, request) => importCalendar("replace", id, request, url),
+    async disconnect(id, request) { await rpc("disconnect_airbnb", { p_listing: id, p_request: request }, await token()); },
   };
 }

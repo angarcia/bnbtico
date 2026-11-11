@@ -34,14 +34,31 @@ test("genera y copia el enlace real por casa y lo recupera al volver", async ({ 
   expect(feed.status()).toBe(200);
   expect(await feed.text()).toContain(`DTSTART;VALUE=DATE:${day.replaceAll("-", "")}`);
   expect(await feed.text()).not.toContain("75000");
-  await expect(page.getByRole("button", { name: "Revocar enlace", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Revocar enlace", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Conectar Airbnb", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Volver", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`casa=${l.id}.*mes=${month}`));
-  await page.getByRole("button", { name: "Calendarios de Airbnb" }).click();
+  await page.getByRole("button", { name: /Sincronización con Airbnb/ }).click();
   await expect(field).toHaveValue(url);
   await page.reload();
   await expect(field).toHaveValue(url);
+  const persisted = () => page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("bnbtico", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      return await new Promise<string>((resolve, reject) => {
+        const request = db.transaction("query-cache", "readonly").objectStore("query-cache").get("bnbtico-query");
+        request.onsuccess = () => resolve(JSON.stringify(request.result) ?? "");
+        request.onerror = () => reject(request.error);
+      });
+    } finally { db.close(); }
+  });
+  await expect.poll(persisted).toContain("airbnb");
+  expect(await persisted()).toContain(l.id);
+  expect((await persisted()).includes(new URL(url).pathname.split("/")[2]!.replace(".ics", ""))).toBe(false);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 

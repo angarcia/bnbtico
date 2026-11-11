@@ -6,6 +6,7 @@ import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { DomainError } from "../../domain/errors";
 import type { FakeDb, FakeListing } from "./db";
 import { fakeEffectiveDays } from "./airbnb";
+import { AIRBNB_BUSY_MESSAGE } from "../../domain/airbnb";
 
 function session(userId: () => string | null): string {
   const id = userId();
@@ -37,6 +38,12 @@ export function createFakeCalendar(db: FakeDb, opts: { userId: () => string | nu
       const listing: CalendarListing | null = l ? { status: l.status, available: l.available, nightlyPriceCrc: nightlyBase(l) } : null;
       const refusal = validateChange(change, { today: db.today(), listing });
       if (refusal) throw new DomainError(refusal, "validation");
+      if (change.requireFree) {
+        const profile = db.profiles.get(l!.ownerId);
+        if (!profile?.isActive || !profile.phoneVerified) throw new DomainError("Verifique su cuenta para cambiar el calendario.", "forbidden");
+        if (change.available !== false || change.priceCrc !== undefined) throw new DomainError("La reserva solo puede marcar noches como ocupadas.", "validation");
+        if (fakeEffectiveDays(db, l!.id).some(d => !d.available && change.days.includes(d.day))) throw new DomainError(AIRBNB_BUSY_MESSAGE, "validation");
+      }
       db.days.set(l!.id, applyChange(db.days.get(l!.id) ?? [], nightlyBase(l!), change));
     },
   };

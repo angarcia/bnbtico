@@ -1,3 +1,27 @@
+## 2026-11-09 · Presupuestos tras revisar reservas y sincronización de #7 (Ana)
+
+Tras revisar duplicación, dependencias estáticas y dos mediciones, Ana aprueba estos límites gzip: Calendario 9,1 kB (medido 8,864 kB), Airbnb completo 9,5 kB (9,322 kB), Marcar una reserva 1,65 kB (1,589 kB) y Campos del asistente 11,6 kB (11,504 kB). El JS inicial conserva 160 kB (medido 155,840 kB) y los demás límites se mantienen.
+
+Se unifica la actualización directa y de gestión y se separan API/fila, gestión y exportación, todos dentro del mismo presupuesto total de Airbnb. El conjunto completo aumenta por comprimir más archivos por separado; el código específico de Airbnb requerido estáticamente por Calendario baja de 8,228 a 2,907 kB. No se atribuye a ello una mejora de latencia no medida. Campos no cambia de fuente; su pequeño exceso corresponde al artefacto generado. Motivo: cubrir carga, recuperación y protección de reservas aprobadas, y evitar adelantar las pantallas de gestión/exportación al calendario. Referencia: `.scratch/calendarios-externos/revision-tamano-07.md`.
+
+## 2026-11-09 · Mantener el icono de actualizar dentro del módulo de Airbnb (Ana)
+
+Tras aclarar que el traslado no cambia el aspecto ni el comportamiento del botón verde claro, Ana autoriza dejar el icono de actualizar exclusivamente en el módulo de Airbnb. Sustituye su aceptación previa del exceso de 7 bytes gzip del grupo «Campos del asistente» (11,51 kB frente a 11,5 kB). Se conservan los límites configurados; falta comprobar el tamaño del nuevo build.
+
+## 2026-11-09 · Acceso a sincronización desde el Calendario (Ana)
+
+Ana aprueba el título «Sincronización con Airbnb», con actualización por icono a la izquierda y gestión por título/chevrón. El icono de actualizar queda desactivado sin internet. Antes de conectar, «Conectar con Airbnb» permanece unido a las acciones superiores dentro de la misma tarjeta blanca, sin separación; al conectar, la sincronización se muestra sobre el fondo crema sin tarjeta blanca. Los iconos de reserva y pausa pierden su recuadro, conservando el menú de edición. Motivo: distinguir la acción directa de actualizar de los accesos a gestión. Referencia: `.scratch/calendarios-externos/diseno-v0.2-propuesta.md`.
+
+## 2026-11-09 · Disponibilidad y actualización previa al marcar una reserva (Ana)
+
+Ana aprueba incluir en el bloque de #7 que «Marcar una reserva» reciba los días ya ocupados del calendario efectivo, tanto manuales como de Airbnb. No se pueden seleccionar noches ocupadas ni atravesarlas; se mantiene la salida excluida. La base comprueba de nuevo las noches al guardar y rechaza toda la operación si alguna se ocupó entretanto, sin modificar precios ni el comportamiento del editor general.
+
+Antes de habilitar la selección se actualiza Airbnb cuando exista conexión, reutilizando una lectura reciente o una importación en curso. Si falla, se conserva la última disponibilidad válida y solo se permite continuar tras confirmar expresamente el aviso; nunca se interpreta un error de lectura como disponibilidad. El contacto por WhatsApp conserva la comprobación en la base, sin descargar Airbnb por cada consulta ni crear bloqueos. La actualización automática cada tres horas sigue perteneciendo a #8. Motivo: reducir selecciones incompatibles y desfases sin multiplicar descargas por visitas. Referencia: `.scratch/calendarios-externos/reservas-07.md`.
+
+## 2026-11-09 · Presupuesto del módulo diferido de Airbnb con gestión (Ana)
+
+Ana aprueba ampliar únicamente el presupuesto diferido de Airbnb de 6,5 a 8 kB gzip para incorporar las operaciones de #7: estado/error posterior, actualización, sustitución, desconexión y revocación con confirmación y recuperación de respuestas ambiguas. Medición: 7,7 kB. El JS inicial privado permanece limitado a 160 kB y mide 153,96 kB; los demás límites no cambian. Motivo: incluir la gestión aprobada junto con las dos direcciones de #5/#6 bajo un presupuesto explícito. Referencias: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-07.md`.
+
 ## 2026-11-08 · Presupuesto del módulo diferido de Airbnb con exportación (Ana)
 
 Ana aprueba ampliar de 5 a 6,5 kB gzip el límite del grupo diferido de Airbnb para incorporar la generación y copia del enlace de exportación de #6. La medición es 6,21 kB; el grupo incluye importación, estado, controles por origen y exportación, sin parser iCal ni la librería de pruebas en el navegador. Motivo: cubrir el alcance aprobado de ambas direcciones con un presupuesto explícito. El límite de JS inicial privado permanece en 160 kB (medición: 153,97 kB) y los demás presupuestos se conservan. Referencia: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-06.md`.

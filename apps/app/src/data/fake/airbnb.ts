@@ -5,8 +5,8 @@ import { DomainError } from "../../domain/errors";
 import { validateAirbnbUrl, type IcalErrorCode, type ImportedBlock } from "../../domain/ical";
 import type { FakeDb, FakeListing } from "./db";
 
-export interface FakeAirbnbConnection { url: string; connected: boolean; version: number; lastSuccessAt: string | null; errorCode: IcalErrorCode | null; blocks: ImportedBlock[] }
-export interface FakeAirbnbAttempt { listingId: string; version: number; claimed: boolean; state: "running" | "success" | "error" | "obsolete"; started: number }
+export interface FakeAirbnbConnection { url: string; connected: boolean; version: number; lastSuccessAt: string | null; errorCode: IcalErrorCode | null; lastErrorAt: string | null; blocks: ImportedBlock[] }
+export interface FakeAirbnbAttempt { listingId: string; version: number; claimed: boolean; state: "running" | "success" | "error" | "obsolete"; started: number; operation: "connect" | "refresh" | "replace" | "disconnect"; candidateUrl: string | null }
 
 export function fakeEffectiveDays(db: FakeDb, listingId: string, privateOrigin = false): CalendarDay[] {
   const manual = new Map((db.days.get(listingId) ?? []).map(d => [d.day, d]));
@@ -42,7 +42,7 @@ export function invalidateFakeAirbnb(db: FakeDb, listingId: string, deleted = fa
     connection.version++;
     if (deleted) { connection.connected = false; connection.url = ""; }
   }
-  for (const attempt of db.airbnbAttempts.values()) if (attempt.listingId === listingId && attempt.state === "running") attempt.state = "obsolete";
+  for (const attempt of db.airbnbAttempts.values()) if (attempt.listingId === listingId && attempt.state === "running") { attempt.state = "obsolete"; attempt.candidateUrl = null; }
 }
 
 export function createFakeAirbnbService(db: FakeDb): AirbnbService {
@@ -54,27 +54,33 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
     return l;
   }
   const allowed = (l: FakeListing | undefined) => l && !l.deletedAt && l.status !== "rejected" && l.adminHold?.kind !== "blocked" && !(l.status === "draft" && !l.firstPublishedAt);
+  function managed(jwt: string, id: string) {
+    const l = own(jwt, id);
+    const p = db.profiles.get(l.ownerId);
+    if (!p?.isActive || !p.phoneVerified) throw new DomainError("Verifique su cuenta para conectar el calendario.", "validation");
+  }
+  const empty = (): FakeAirbnbConnection => ({ url: "", connected: false, version: 0, lastSuccessAt: null, errorCode: null, lastErrorAt: null, blocks: [] });
   function reserve(id: string, requestId: string, url: string | null, initial: boolean) {
     const l = db.listings.get(id);
     if (!allowed(l)) throw new DomainError("Esta casa no permite conectar calendarios.", "validation");
     const profile = db.profiles.get(l!.ownerId);
     if (!profile?.isActive || !profile.phoneVerified) throw new DomainError("Verifique su cuenta para conectar el calendario.", "validation");
+    const operation = initial ? "connect" : url !== null ? "replace" : "refresh";
     const prior = db.airbnbAttempts.get(requestId);
     if (prior) {
-      if (prior.listingId !== id) throw new DomainError("No encontramos ese intento.", "validation");
+      if (prior.listingId !== id || prior.operation !== operation) throw new DomainError("No encontramos ese intento.", "validation");
       return { run: false };
     }
-    const c = db.airbnbConnections.get(id) ?? { url: "", connected: false, version: 0, lastSuccessAt: null, errorCode: null, blocks: [] };
+    const c = db.airbnbConnections.get(id) ?? empty();
     const attempts = [...db.airbnbAttempts.values()].filter(a => a.listingId === id && a.state === "running");
     if (attempts.some(a => db.clock() - a.started < 30000)) throw new DomainError("Ya estamos leyendo este calendario.", "validation");
     if (initial && c.connected) throw new DomainError("Esta casa ya tiene Airbnb conectado.", "validation");
     if (!initial && !c.connected) throw new DomainError("Esta casa no tiene Airbnb conectado.", "validation");
-    if (initial) c.url = validateAirbnbUrl(url ?? "");
-    attempts.forEach(a => { a.state = "obsolete"; });
+    const candidateUrl = initial || url !== null ? validateAirbnbUrl(url ?? "") : c.url;
+    attempts.forEach(a => { a.state = "obsolete"; a.candidateUrl = null; });
     c.version++;
-    c.errorCode = null;
     db.airbnbConnections.set(id, c);
-    db.airbnbAttempts.set(requestId, { listingId: id, version: c.version, state: "running", claimed: false, started: db.clock() });
+    db.airbnbAttempts.set(requestId, { listingId: id, version: c.version, state: "running", claimed: false, started: db.clock(), operation, candidateUrl });
     return { run: true };
   }
   function live(id: string, requestId: string) {
@@ -86,23 +92,41 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
   }
   return {
     async begin(jwt, id, url, requestId) { own(jwt, id); return reserve(id, requestId, url, true); },
+    async update(jwt, id, requestId, url) { managed(jwt, id); return reserve(id, requestId, url ?? null, false); },
+    async disconnect(jwt, id, requestId) {
+      managed(jwt, id);
+      const prior = db.airbnbAttempts.get(requestId);
+      if (prior) {
+        if (prior.listingId !== id || prior.operation !== "disconnect") throw new DomainError("No encontramos ese intento.", "validation");
+        return;
+      }
+      const c = db.airbnbConnections.get(id) ?? empty();
+      c.version++;
+      for (const a of db.airbnbAttempts.values()) if (a.listingId === id && a.state === "running") { a.state = "obsolete"; a.candidateUrl = null; }
+      Object.assign(c, { url: "", connected: false, lastSuccessAt: null, errorCode: null, lastErrorAt: null, blocks: [] });
+      db.airbnbConnections.set(id, c);
+      db.airbnbAttempts.set(requestId, { listingId: id, version: c.version, state: "success", claimed: false, started: db.clock(), operation: "disconnect", candidateUrl: null });
+    },
     async claim(id, requestId) { return reserve(id, requestId, null, false); },
     async context(id, requestId) {
       const active = live(id, requestId);
       if (!active || active.a.claimed) return null;
       active.a.claimed = true;
-      return { url: active.c.url };
+      return { url: active.a.candidateUrl ?? active.c.url };
     },
     async finish(id, requestId, blocks, error) {
       const active = live(id, requestId);
       if (!active || !active.a.claimed) return;
-      if (error) { active.a.state = "error"; active.c.errorCode = error; return; }
+      if (error) { active.a.state = "error"; active.a.candidateUrl = null; active.c.errorCode = error; active.c.lastErrorAt = db.now(); return; }
       if (!blocks || blocks.length > 5000 || blocks.some(b => !b.uid || b.uid.length > 512 || b.end <= b.start) || new Set(blocks.map(b => b.uid)).size !== blocks.length) throw new DomainError("Calendario no válido.", "validation");
       active.c.blocks = blocks.map(b => ({ ...b }));
       active.c.connected = true;
+      active.c.url = active.a.candidateUrl ?? active.c.url;
       active.c.errorCode = null;
+      active.c.lastErrorAt = null;
       active.c.lastSuccessAt = db.now();
       active.a.state = "success";
+      active.a.candidateUrl = null;
     },
     async overview(jwt, id): Promise<AirbnbSummary> {
       const l = own(jwt, id);
@@ -110,7 +134,7 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
       const running = [...db.airbnbAttempts.values()].some(a => a.listingId === id && a.state === "running" && db.clock() - a.started < 30000);
       return { connected: c?.connected ?? false, exportGenerated: !!db.icalExports.get(id)?.token,
         state: l.status === "rejected" || l.adminHold?.kind === "blocked" ? "suspended" : running ? "running" : c?.errorCode ? "error" : c?.connected ? "connected" : "none",
-        lastSuccessAt: c?.lastSuccessAt ?? null, errorCode: c?.errorCode ?? null,
+        lastSuccessAt: c?.lastSuccessAt ?? null, errorCode: c?.errorCode ?? null, lastErrorAt: c?.lastErrorAt ?? null,
         nights: fakeEffectiveDays(db, id, true).filter(d => d.imported).length };
     },
   };
