@@ -837,10 +837,10 @@ No hace falta parar: marque la casilla como fallida (✗), anótelo y siga con l
 
 ## Marca gráfica vigente · comprobación tras integrar recursos (2026-11-05)
 
-- [ ] En el teléfono, cabeceras y aviso de giro muestran BNBTICO sin rana, con solo la T elevada; el fondo de la página se ve detrás, sin placa crema ni letras recortadas.
-- [ ] En la portada sobre foto se ve el logo blanco sin rectángulo ni sombra propia. Al compartir un enlace, la imagen OG usa la marca nueva.
-- [ ] Favicon: B reforzada; al instalar la PWA, icono con contorno y BT, terracota sobre crema; recorte circular sin cortar el contorno.
-- [ ] Los logos de las maquetas y del prototipo corresponden a la marca vigente; los originales con rana están en logos-obsoletos y no se solicitan como imágenes activas.
+- [ ] En el teléfono, cabeceras y aviso de giro muestran el logotipo 3bstays; el fondo de la página se ve detrás, sin placa crema ni letras recortadas.
+- [ ] En la portada sobre foto se ve el logo blanco sin rectángulo ni sombra propia. Al compartir un enlace, la imagen OG usa la marca 3bstays.
+- [ ] Favicon: cuadrado terracota con esquinas redondeadas y B crema. Al instalar la PWA, B terracota sobre crema, sin recuadro; el recorte circular no corta la B.
+- [ ] Los logos de las maquetas y del prototipo son los de 3bstays; en `design/logo/` solo está la biblioteca `3bstays-2026-11-10`.
 
 - [ ] En las tarjetas de Explorar y Favoritos, compruebe los iconos junto a personas, dormitorios y número de baños, y, bajo el precio, solo las características presentes (Wifi, Mascotas, Niños gratis, etc.), con los mismos dibujos de la ficha. Revise una casa sin características y otra con las nueve a 320 px: ni el precio ni los iconos se solapan con WhatsApp.
 

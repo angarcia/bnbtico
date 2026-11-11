@@ -1,3 +1,33 @@
+## 2026-11-11 · Se retiran los logos de bnbtico y queda una sola biblioteca de marca
+
+- **Decisión (Daniel, 2026-11-11):** borrar del repositorio los iconos y logos antiguos y dejar los nuevos en su carpeta. `design/logo/` solo contiene la biblioteca `3bstays-2026-11-10/`, su README, `.gitignore` y `.gitattributes`.
+- **Qué se retira** (unos 4 070 archivos, ~190 MB):
+  - `logos-obsoletos/`, `historico/`, `propuestas/` y `maestro/`.
+  - Los alias con nombre bnbtico (raíz, `bnbtico-actualizado/` y `redes-sociales/`).
+  - `personalizado/` y `design/merchandising/`. El juego de impresión vigente es `3bstays-2026-11-10/07-impresion/`.
+  - Todo sigue en el historial de git.
+- **Qué se conserva, movido:**
+  - Los dos SVG de partida aprobados, en `3bstays-2026-11-10/00-maestros/fuente/`.
+  - `generar-3bstays.cjs` y `exportar-3bstays-eps.cjs`, en `3bstays-2026-11-10/scripts/`, con las rutas ajustadas.
+  - `integrar-3bstays.cjs` y `verificar-3bstays.cjs` se retiran: mantenían los alias y su archivo. Los iconos de `apps/app/public` se copian a mano desde la biblioteca.
+- **Pantallas de diseño:** apuntan a `logo-predeterminado.png`.
+
+## 2026-11-10 · La marca pasa a llamarse 3bstays
+
+- **Motivo:** la norma de marca de Airbnb (https://www.airbnb.ca/help/article/3233) prohíbe «air», «bnb», «b&b» y términos parecidos en el nombre, el dominio y los usuarios de redes. bnbtico tiene que cambiar.
+- **Decisión (fundadores, 2026-11-10):** el nombre nuevo es **3bstays**. Las «3 B» son «bueno, bonito y barato», un dicho que se entiende en Costa Rica y en todo el mundo hispanohablante. Dominios: 3bstays.com (principal), más tresbstays.com y threebstays.com como alternativas, para quien lo escriba como lo oye.
+- **Riesgos conocidos, aceptados:**
+  - [Bueno Bonito Barato Hostel](https://www.tripadvisor.com/Hotel_Review-g309226-d3258650-Reviews-Bueno_Bonito_Barato_Hostel-La_Fortuna_de_San_Carlos_Arenal_Volcano_National_Park_Provi.html), en La Fortuna.
+  - Tiendas 3B, la cadena mexicana de descuento.
+  - Que «barato» le reste a las casas ante el propietario.
+  - Que el nombre se dicte mal.
+  - Ninguno se ha valorado todavía en el RNP.
+- **Pendiente:**
+  - Búsqueda en el RNP Digital y consulta con un abogado de propiedad intelectual antes de registrar.
+  - Comprobar @3bstays en Instagram.
+  - Valorar comprar también 3bstay.com, que está libre.
+  - Lista de cambios de marca: logo, favicon, app/PWA, copy, redes, dominios del worker y enlaces `/casa/CT-####`.
+- **Proceso:** se estudiaron unos 400 nombres. Detalle en `.scratch/nombre-nuevo/finalistas.md` y `propuestas-2026-11-09.md`.
 ## 2026-11-10 · Logotipo 3bstays con 3 angular y B de asta alta (Ana)
 
 Ana aprueba el logotipo con el 3 de remate plano ligeramente más bajo que la «s», la B angular abierta con el asta a la altura de las minúsculas y el hueco entre la B y «stays» más corto. Tras ver la primera entrega, Ana aprobó acercar «stays» otras 8 unidades del dibujo vectorial. El 3, la B y las minúsculas comparten base. Ana confirma que esta composición se lee bien. La B conserva la reducción del 29 % de su trazo en el logotipo completo.

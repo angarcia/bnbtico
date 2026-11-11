@@ -1,7 +1,0 @@
-LOGO PREDETERMINADO: bnbtico.svg — letras terracota, sin marco y sin fondo.
-Se verá el fondo de la pantalla por detrás.
-Las versiones con puntos también son transparentes en su interior.
-
-Abra ../VISTA-GENERAL.html para revisar el sistema completo.
-Los cuatro logos SVG principales son terracota transparente, sin rectángulo de fondo. LOGOS-TRANSPARENTES contiene además negro y crema.
-Los archivos para otros fondos y plataformas están en las carpetas numeradas.

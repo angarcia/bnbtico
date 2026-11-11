@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>ticonido, ticoguest, ticopaseo y ticoaway · ideas de icono</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --terracota:#B44C30; --tinta:#1C2B2A; --crema:#FFFBF2; --sol:#F2B544; --verde:#2F5D45; --verde-claro:#7FA98A; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:32px; background:var(--crema); color:var(--tinta); font-family:Outfit, system-ui, sans-serif; }
+  h1 { font-weight:700; font-size:28px; margin:0 0 4px; }
+  p.sub { margin:0 0 28px; color:#4a5856; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px; }
+  .card { background:#fff; border-radius:20px; padding:24px; box-shadow:0 1px 3px rgba(28,43,42,.12); }
+  .card h2 { font-size:18px; margin:0 0 4px; }
+  .card p { font-size:14px; margin:0 0 16px; color:#4a5856; line-height:1.4; }
+  .big { display:flex; justify-content:center; align-items:center; height:170px; }
+  .sizes { display:flex; gap:16px; align-items:flex-end; margin-top:12px; }
+  .sizes span { font-size:11px; color:#7a8583; display:block; text-align:center; }
+  .lockup { display:flex; align-items:center; gap:10px; margin-top:16px; }
+  .word { font-size:34px; font-weight:600; letter-spacing:-0.5px; }
+  .word .a { color:var(--tinta); } .word .b { color:var(--terracota); }
+  .dark { background:var(--tinta); border-radius:14px; padding:12px 16px; margin-top:12px; }
+  .dark .word .a { color:var(--crema); } .dark .word .b { color:var(--sol); }
+  .word .sun { display:inline-block; width:.8em; height:.8em; vertical-align:-0.1em; margin:0 -.06em; }
+  .word.huge { font-size:54px; }
+</style>
+</head>
+<body>
+<h1>ticonido: ideas de icono</h1>
+<p class="sub">Bocetos rápidos con la paleta de la marca. Versión 2: el nido es redondo y se le ve la boca (el óvalo de arriba), para que no parezca un barco. Cada uno se ve en grande, a 48 y 24 px (tamaño de favicon), junto al nombre y en fondo oscuro.</p>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- A · Casita en el nido -->
+    <symbol id="a" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="62" rx="44" ry="13" fill="#7E3320"/>
+      <path d="M40 56 L60 30 L80 56 V76 H40 Z" fill="#1C2B2A"/>
+      <rect x="54" y="54" width="12" height="20" rx="3" fill="#F2B544"/>
+      <path d="M16 62 C14 92 36 106 60 106 C84 106 106 92 104 62 Q60 88 16 62 Z" fill="#B44C30"/>
+      <path d="M16 62 Q60 88 104 62" stroke="#B44C30" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M24 80 Q42 96 60 92 M60 98 Q82 98 96 80 M30 92 Q46 102 66 102 M44 80 Q60 86 78 82" stroke="#FFFBF2" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M36 84 Q52 78 66 90 M72 84 Q86 86 92 96 M22 70 Q30 80 40 80" stroke="#FFFBF2" stroke-width="2" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M17 60 L8 53 M26 52 L21 44 M94 52 L100 44 M103 60 L112 55 M40 76 L36 84" stroke="#B44C30" stroke-width="3.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- B · Yigüirro en el nido -->
+    <symbol id="b" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="64" rx="44" ry="13" fill="#7E3320"/>
+      <path d="M36 52 L16 44 L28 60 Z" fill="#6B4A32"/>
+      <ellipse cx="56" cy="56" rx="24" ry="15" fill="#6B4A32" transform="rotate(-12 56 56)"/>
+      <ellipse cx="60" cy="62" rx="14" ry="6" fill="#A57A55" transform="rotate(-12 60 62)"/>
+      <circle cx="78" cy="38" r="12" fill="#6B4A32"/>
+      <path d="M88 35 L101 39 L88 43 Z" fill="#F2B544"/>
+      <circle cx="81" cy="36" r="2.6" fill="#FFFBF2"/>
+      <path d="M16 64 C14 94 36 108 60 108 C84 108 106 94 104 64 Q60 90 16 64 Z" fill="#B44C30"/>
+      <path d="M16 64 Q60 90 104 64" stroke="#B44C30" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M24 82 Q42 98 60 94 M60 100 Q82 100 96 82 M30 94 Q46 104 66 104 M44 82 Q60 88 78 84" stroke="#FFFBF2" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M36 86 Q52 80 66 92 M72 86 Q86 88 92 98 M22 72 Q30 82 40 82" stroke="#FFFBF2" stroke-width="2" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M17 62 L8 55 M26 54 L21 46 M94 54 L100 46 M103 62 L112 57 M40 78 L36 86" stroke="#B44C30" stroke-width="3.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- D · Icono de app -->
+    <symbol id="d" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="28" fill="#B44C30"/>
+      <g transform="translate(12 8) scale(.8)">
+      <ellipse cx="60" cy="62" rx="44" ry="13" fill="#E8D9BC"/>
+      <path d="M40 56 L60 30 L80 56 V76 H40 Z" fill="#1C2B2A"/>
+      <rect x="54" y="54" width="12" height="20" rx="3" fill="#F2B544"/>
+      <path d="M16 62 C14 92 36 106 60 106 C84 106 106 92 104 62 Q60 88 16 62 Z" fill="#FFFBF2"/>
+      <path d="M16 62 Q60 88 104 62" stroke="#FFFBF2" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M24 80 Q42 96 60 92 M60 98 Q82 98 96 80 M30 92 Q46 102 66 102 M44 80 Q60 86 78 82" stroke="#B44C30" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M36 84 Q52 78 66 90 M72 84 Q86 86 92 96 M22 70 Q30 80 40 80" stroke="#B44C30" stroke-width="2" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M17 60 L8 53 M26 52 L21 44 M94 52 L100 44 M103 60 L112 55 M40 76 L36 84" stroke="#FFFBF2" stroke-width="3.5" stroke-linecap="round"/>
+      </g>
+    </symbol>
+    <!-- ticoguest E · Llave con casita -->
+    <symbol id="ge" viewBox="0 0 120 120"><g transform="rotate(-18 60 60)">
+      <path d="M14 52 L38 28 L62 52 V78 H14 Z" fill="#B44C30"/>
+      <circle cx="38" cy="54" r="7" fill="#FFFBF2"/>
+      <path d="M35 56 L41 56 L43 70 L33 70 Z" fill="#FFFBF2"/>
+      <rect x="62" y="58" width="46" height="11" rx="4" fill="#1C2B2A"/>
+      <rect x="88" y="66" width="7" height="14" rx="2" fill="#1C2B2A"/>
+      <rect x="100" y="66" width="7" height="10" rx="2" fill="#1C2B2A"/>
+    </g></symbol>
+    <!-- ticoguest F · Puerta abierta -->
+    <symbol id="gf" viewBox="0 0 120 120">
+      <path d="M8 50 L60 14 L112 50 Z" fill="#1C2B2A"/>
+      <rect x="18" y="48" width="84" height="56" fill="#B44C30"/>
+      <path d="M46 104 L74 104 L90 116 L30 116 Z" fill="#F2B544" opacity=".5"/>
+      <rect x="46" y="64" width="28" height="40" fill="#F2B544"/>
+      <path d="M46 64 L34 70 L34 100 L46 104 Z" fill="#1C2B2A"/>
+      <circle cx="38" cy="86" r="2.2" fill="#FFFBF2"/>
+    </symbol>
+    <!-- ticoguest G · Icono de app (llave) -->
+    <symbol id="gg" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="28" fill="#1C2B2A"/>
+      <g transform="translate(10 10) scale(.84) rotate(-18 60 60)">
+      <path d="M14 52 L38 28 L62 52 V78 H14 Z" fill="#B44C30"/>
+      <circle cx="38" cy="54" r="7" fill="#1C2B2A"/>
+      <path d="M35 56 L41 56 L43 70 L33 70 Z" fill="#1C2B2A"/>
+      <rect x="62" y="58" width="46" height="11" rx="4" fill="#F2B544"/>
+      <rect x="88" y="66" width="7" height="14" rx="2" fill="#F2B544"/>
+      <rect x="100" y="66" width="7" height="10" rx="2" fill="#F2B544"/>
+      </g>
+    </symbol>
+    <!-- ticopaseo G · Camino a la casita -->
+    <symbol id="pg" viewBox="0 0 120 120">
+      <circle cx="88" cy="32" r="15" fill="#F2B544"/>
+      <path d="M0 70 Q40 46 120 58 V112 Q120 120 112 120 H8 Q0 120 0 112 Z" fill="#7FA98A"/>
+      <path d="M0 84 Q30 64 62 76 Q92 88 120 70 V112 Q120 120 112 120 H8 Q0 120 0 112 Z" fill="#2F5D45"/>
+      <path d="M56 60 L70 47 L84 60 Z" fill="#1C2B2A"/>
+      <rect x="59" y="59" width="22" height="14" fill="#B44C30"/>
+      <rect x="67" y="63" width="6" height="10" fill="#F2B544"/>
+      <path d="M34 120 C44 106 28 98 50 90 C62 86 62 80 68 75" stroke="#FFFBF2" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <!-- ticopaseo H · Ruta hasta la casa -->
+    <symbol id="ph" viewBox="0 0 120 120">
+      <path d="M16 104 C34 106 30 88 46 90 C58 92 60 100 68 92" stroke="#1C2B2A" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-dasharray="0.1 10"/>
+      <circle cx="16" cy="104" r="6" fill="#1C2B2A"/>
+      <path d="M70 10 C52 10 42 24 42 40 C42 60 70 84 70 84 C70 84 98 60 98 40 C98 24 88 10 70 10 Z" fill="#B44C30"/>
+      <path d="M56 42 L70 28 L84 42 Z" fill="#FFFBF2"/>
+      <rect x="59" y="41" width="22" height="15" fill="#FFFBF2"/>
+      <rect x="67" y="46" width="7" height="10" rx="1.5" fill="#B44C30"/>
+    </symbol>
+    <!-- ticopaseo I · Icono de app (ruta) -->
+    <symbol id="pi" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="28" fill="#B44C30"/>
+      <g transform="translate(6 10) scale(.86)">
+      <path d="M16 104 C34 106 30 88 46 90 C58 92 60 100 68 92" stroke="#FFFBF2" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="0.1 10"/>
+      <circle cx="16" cy="104" r="6" fill="#FFFBF2"/>
+      <path d="M70 10 C52 10 42 24 42 40 C42 60 70 84 70 84 C70 84 98 60 98 40 C98 24 88 10 70 10 Z" fill="#FFFBF2"/>
+      <path d="M56 42 L70 28 L84 42 Z" fill="#B44C30"/>
+      <rect x="59" y="41" width="22" height="15" fill="#B44C30"/>
+      <rect x="67" y="46" width="7" height="10" rx="1.5" fill="#F2B544"/>
+      </g>
+    </symbol>
+    <!-- sol para la «o» -->
+    <symbol id="psun" viewBox="0 0 40 40">
+      <circle cx="20" cy="20" r="10.5" fill="none" stroke="#F2B544" stroke-width="5.5"/>
+      <g stroke="#F2B544" stroke-width="2.6" stroke-linecap="round">
+        <path d="M20 2 V5.5 M20 34.5 V38 M2 20 H5.5 M34.5 20 H38 M7.3 7.3 L9.8 9.8 M30.2 30.2 L32.7 32.7 M7.3 32.7 L9.8 30.2 M30.2 9.8 L32.7 7.3"/>
+      </g>
+    </symbol>
+    <!-- ticoaway K · Hamaca entre palmeras -->
+    <symbol id="ak" viewBox="0 0 120 120">
+      <circle cx="60" cy="44" r="15" fill="#F2B544"/>
+      <path d="M8 106 H112" stroke="#F2B544" stroke-width="5" stroke-linecap="round"/>
+      <path d="M24 106 Q20 72 30 40" stroke="#1C2B2A" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M30 40 Q18 30 8 36 M30 40 Q24 24 16 18 M30 40 Q36 24 46 22 M30 40 Q44 34 50 44" stroke="#2F5D45" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M96 106 Q100 72 90 40" stroke="#1C2B2A" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M90 40 Q102 30 112 36 M90 40 Q96 24 104 18 M90 40 Q84 24 74 22 M90 40 Q76 34 70 44" stroke="#2F5D45" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M30 60 Q60 94 90 60 Q60 82 30 60 Z" fill="#B44C30"/>
+      <path d="M30 60 Q60 94 90 60" stroke="#B44C30" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <!-- ticoaway L · Maleta con casita -->
+    <symbol id="al" viewBox="0 0 120 120">
+      <path d="M46 40 V30 Q46 25 51 25 H69 Q74 25 74 30 V40" stroke="#1C2B2A" stroke-width="6" fill="none"/>
+      <rect x="22" y="38" width="76" height="60" rx="11" fill="#B44C30"/>
+      <path d="M38 40 V96 M82 40 V96" stroke="#8E3A24" stroke-width="4"/>
+      <path d="M48 68 L60 55 L72 68 Z" fill="#FFFBF2"/>
+      <rect x="51" y="67" width="18" height="14" fill="#FFFBF2"/>
+      <rect x="57" y="71" width="6" height="10" fill="#F2B544"/>
+      <circle cx="36" cy="104" r="5" fill="#1C2B2A"/><circle cx="84" cy="104" r="5" fill="#1C2B2A"/>
+    </symbol>
+    <!-- ticoaway M · Icono de app (hamaca) -->
+    <symbol id="am" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="28" fill="#1C2B2A"/>
+      <g transform="translate(9 6) scale(.85)"><circle cx="60" cy="44" r="15" fill="#F2B544"/>
+      <path d="M8 106 H112" stroke="#F2B544" stroke-width="5" stroke-linecap="round"/>
+      <path d="M24 106 Q20 72 30 40" stroke="#FFFBF2" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M30 40 Q18 30 8 36 M30 40 Q24 24 16 18 M30 40 Q36 24 46 22 M30 40 Q44 34 50 44" stroke="#7FA98A" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M96 106 Q100 72 90 40" stroke="#FFFBF2" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M90 40 Q102 30 112 36 M90 40 Q96 24 104 18 M90 40 Q84 24 74 22 M90 40 Q76 34 70 44" stroke="#7FA98A" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M30 60 Q60 94 90 60 Q60 82 30 60 Z" fill="#B44C30"/>
+      <path d="M30 60 Q60 94 90 60" stroke="#B44C30" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="grid">
+  <div class="card">
+    <h2>A · Casita en el nido</h2>
+    <p>La idea literal: la casa que uno encuentra para acomodarse. Lo más claro de los tres; dice «casa» sin palabras.</p>
+    <div class="big"><svg width="160" height="160"><use href="#a"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#a"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#a"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#a"/></svg><span class="word"><span class="a">tico</span><span class="b">nido</span></span></div>
+    <div class="dark lockup"><svg width="44" height="44"><use href="#d"/></svg><span class="word"><span class="a">tico</span><span class="b">nido</span></span></div>
+  </div>
+
+  <div class="card">
+    <h2>B · Yigüirro en el nido</h2>
+    <p>El ave nacional, sencilla y simpática. Más emotivo y más tico (el yigüirro es pardo y de pico amarillo); dice «nido», no tanto «casa».</p>
+    <div class="big"><svg width="160" height="160"><use href="#b"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#b"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#b"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#b"/></svg><span class="word"><span class="a">tico</span><span class="b">nido</span></span></div>
+  </div>
+  <div class="card">
+    <h2>C · Icono de app (variante de A)</h2>
+    <p>A sobre fondo terracota, como se vería en la pantalla del teléfono y en la PWA.</p>
+    <div class="big"><svg width="150" height="150"><use href="#d"/></svg></div>
+    <div class="sizes"><div><svg width="60" height="60"><use href="#d"/></svg><span>60</span></div><div><svg width="40" height="40"><use href="#d"/></svg><span>40</span></div><div><svg width="24" height="24"><use href="#d"/></svg><span>24</span></div></div>
+  </div>
+</div>
+
+<h1 style="margin-top:48px">ticoguest: ideas de icono</h1>
+<p class="sub">«Guest» es el huésped: los iconos hablan de llegar y ser bienvenido. Ojo: ticoguest tiene el riesgo de TicoGuides y de la pronunciación («güest»).</p>
+<div class="grid">
+  <div class="card">
+    <h2>D · Llave con casita</h2>
+    <p>El mango de la llave es una casita: «aquí tiene su llave». Dice casa y huésped a la vez; muy legible en pequeño.</p>
+    <div class="big"><svg width="160" height="160"><use href="#ge"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#ge"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#ge"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#ge"/></svg><span class="word"><span class="a">tico</span><span class="b">guest</span></span></div><div class="dark lockup"><svg width="44" height="44"><use href="#gg"/></svg><span class="word"><span class="a">tico</span><span class="b">guest</span></span></div>
+  </div>
+  <div class="card">
+    <h2>E · Puerta abierta</h2>
+    <p>La puerta de la casa abierta, con luz cálida: la bienvenida. Más emotiva; a 24 px se pierde el detalle.</p>
+    <div class="big"><svg width="160" height="160"><use href="#gf"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#gf"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#gf"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#gf"/></svg><span class="word"><span class="a">tico</span><span class="b">guest</span></span></div>
+  </div>
+  <div class="card">
+    <h2>F · Icono de app (llave)</h2>
+    <p>La llave sobre fondo tinta, para la pantalla del teléfono.</p>
+    <div class="big"><svg width="160" height="160"><use href="#gg"/></svg></div>
+    <div class="sizes"><div><svg width="60" height="60"><use href="#gg"/></svg><span>60</span></div><div><svg width="40" height="40"><use href="#gg"/></svg><span>40</span></div><div><svg width="24" height="24"><use href="#gg"/></svg><span>24</span></div></div>
+    
+  </div>
+</div>
+
+<h1 style="margin-top:48px">ticopaseo: ideas de logo</h1>
+<p class="sub">«Irse de paseo»: el viaje y la casa al final del camino. El icono tiene que decir «casa», porque «paseo» solo puede sonar a tours.</p>
+<div class="grid">
+  <div class="card">
+    <h2>G · Camino a la casita</h2>
+    <p>Un camino entre colinas que sube hasta una casa, con el sol detrás. Cuenta el paseo entero; es el más ilustrado y pierde detalle a 24 px.</p>
+    <div class="big"><svg width="160" height="160"><use href="#pg"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#pg"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#pg"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#pg"/></svg><span class="word"><span class="a">tico</span><span class="b">paseo</span></span></div>
+  </div>
+  <div class="card">
+    <h2>H · Ruta hasta la casa</h2>
+    <p>Una ruta punteada que termina en un marcador con forma de casa: «su paseo acaba aquí». Muy de app y de mapa; se lee bien en pequeño.</p>
+    <div class="big"><svg width="160" height="160"><use href="#ph"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#ph"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#ph"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#ph"/></svg><span class="word"><span class="a">tico</span><span class="b">paseo</span></span></div><div class="dark lockup"><svg width="44" height="44"><use href="#pi"/></svg><span class="word"><span class="a">tico</span><span class="b">paseo</span></span></div>
+  </div>
+  <div class="card">
+    <h2>I · Icono de app (ruta)</h2>
+    <p>H sobre terracota, para la pantalla del teléfono.</p>
+    <div class="big"><svg width="160" height="160"><use href="#pi"/></svg></div>
+    <div class="sizes"><div><svg width="60" height="60"><use href="#pi"/></svg><span>60</span></div><div><svg width="40" height="40"><use href="#pi"/></svg><span>40</span></div><div><svg width="24" height="24"><use href="#pi"/></svg><span>24</span></div></div>
+    
+  </div>
+  <div class="card">
+    <h2>J · Solo letras: la «o» es un sol</h2>
+    <p>Sin dibujo aparte: la «o» de «tico» es el sol del paseo. Funciona en rótulos y redes; para el icono de la app hace falta G o H.</p>
+    <div class="big"><span class="word huge"><span class="a">tic</span><svg class="sun" viewBox="0 0 40 40"><use href="#psun"/></svg><span class="b">paseo</span></span></div>
+    <div class="dark lockup" style="justify-content:center"><span class="word"><span class="a">tic</span><svg class="sun" viewBox="0 0 40 40"><use href="#psun"/></svg><span class="b">paseo</span></span></div>
+  </div>
+</div>
+
+<h1 style="margin-top:48px">ticoaway: ideas de logo</h1>
+<p class="sub">«Away» = lejos, de escapada. Recordatorio: estaba descartado porque se dice «ticoauéi» (al dictarlo nadie sabe escribirlo) y por Costa Rica Away, agencia de San José.</p>
+<div class="grid">
+  <div class="card">
+    <h2>K · Hamaca entre palmeras</h2>
+    <p>La escapada en una imagen: hamaca, palmeras y sol. Muy clara y vacacional, pero dice «playa» y no «casa»; también la usan muchos hoteles.</p>
+    <div class="big"><svg width="160" height="160"><use href="#ak"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#ak"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#ak"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#ak"/></svg><span class="word"><span class="a">tico</span><span class="b">away</span></span></div><div class="dark lockup"><svg width="44" height="44"><use href="#am"/></svg><span class="word"><span class="a">tico</span><span class="b">away</span></span></div>
+  </div>
+  <div class="card">
+    <h2>L · Maleta con casita</h2>
+    <p>Una maleta con una casita como pegatina: se va de viaje y llega a una casa. Dice las dos cosas; se lee bien en pequeño.</p>
+    <div class="big"><svg width="160" height="160"><use href="#al"/></svg></div>
+    <div class="sizes"><div><svg width="48" height="48"><use href="#al"/></svg><span>48</span></div><div><svg width="24" height="24"><use href="#al"/></svg><span>24</span></div></div>
+    <div class="lockup"><svg width="44" height="44"><use href="#al"/></svg><span class="word"><span class="a">tico</span><span class="b">away</span></span></div>
+  </div>
+  <div class="card">
+    <h2>M · Icono de app (hamaca)</h2>
+    <p>K sobre fondo tinta, para la pantalla del teléfono.</p>
+    <div class="big"><svg width="160" height="160"><use href="#am"/></svg></div>
+    <div class="sizes"><div><svg width="60" height="60"><use href="#am"/></svg><span>60</span></div><div><svg width="40" height="40"><use href="#am"/></svg><span>40</span></div><div><svg width="24" height="24"><use href="#am"/></svg><span>24</span></div></div>
+    
+  </div>
+</div>
+</body>
+</html>

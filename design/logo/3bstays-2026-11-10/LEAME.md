@@ -34,8 +34,8 @@ Los EPS y los PNG de impresión son entregas distintas: EPS vectorial CMYK conve
 
 ## Compatibilidad e histórico
 
-Los nombres antiguos bnbtico de la raíz, perfiles, merchandising y rutas de apps/app se conservan como alias de archivo cuyo contenido ya es 3bstays. No cambian dominios, enlaces ni otros textos de producto. Las entregas anteriores están archivadas en ../logos-obsoletos/2026-11-10-bnbtico/. Los enlaces con sus nombres originales apuntan al archivo para mantener las referencias históricas; no son la entrega vigente.
+Los SVG de partida aprobados están en 00-maestros/fuente. La marca anterior, bnbtico, y sus alias se retiraron del repositorio el 2026-11-11; siguen en el historial de git.
 
-Los generadores vigentes están en ../maestro/generar-3bstays.cjs, integrar-3bstays.cjs y exportar-3bstays-eps.cjs. No ejecutar los generadores de la identidad anterior para regenerar esta entrega.
+Los generadores están en scripts/: generar-3bstays.cjs (biblioteca) y exportar-3bstays-eps.cjs (EPS CMYK). Necesitan sharp. Los iconos de la app (apps/app/public) se copian a mano desde 03-iconos y 04-apps.
 
 Favicon de pestaña elegido: cuadrado terracota #B44C30 con B crema #FFFBF2 y esquinas redondeadas. Archivos en 03-iconos/favicon-pestana/. Para el móvil/PWA se conserva crema con B terracota, sin recuadro dibujado.
