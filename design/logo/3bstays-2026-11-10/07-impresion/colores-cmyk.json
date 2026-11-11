@@ -1,0 +1,203 @@
+{
+  "profile": "Apple Generic CMYK Profile.icc",
+  "intent": "relative colorimetric",
+  "colors": {
+    "#B44C30": {
+      "bytes": [
+        24,
+        197,
+        223,
+        33
+      ],
+      "percent": [
+        9.41,
+        77.25,
+        87.45,
+        12.94
+      ]
+    },
+    "#FFFBF2": {
+      "bytes": [
+        3,
+        4,
+        12,
+        0
+      ],
+      "percent": [
+        1.18,
+        1.57,
+        4.71,
+        0
+      ]
+    },
+    "#1C2B2A": {
+      "bytes": [
+        213,
+        157,
+        167,
+        145
+      ],
+      "percent": [
+        83.53,
+        61.57,
+        65.49,
+        56.86
+      ]
+    },
+    "#FFFFFF": {
+      "bytes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "percent": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "#2B2926": {
+      "bytes": [
+        187,
+        184,
+        185,
+        136
+      ],
+      "percent": [
+        73.33,
+        72.16,
+        72.55,
+        53.33
+      ]
+    }
+  },
+  "files": [
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo-com.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo-com-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/simbolo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo-com.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo-com-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/simbolo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo-com.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo-com-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/simbolo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo-com.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo-com-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/simbolo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo-com.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo-com-cuadrado.eps",
+      "widthMm": 100,
+      "vector": true
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/simbolo.eps",
+      "widthMm": 100,
+      "vector": true
+    }
+  ]
+}

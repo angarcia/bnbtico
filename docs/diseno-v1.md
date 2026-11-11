@@ -1,5 +1,9 @@
 # Diseño visual de la v1 · «Sol y sal» (2026-10-20)
 
+## Identidad visual vigente · 2026-11-10
+
+Los logos y símbolos pasan a 3bstays según la decisión del 2026-11-10. Biblioteca: `design/logo/3bstays-2026-11-10/`. Terracota original #B44C30 y crema #FFFBF2; logo sin fondo y símbolo B abierto con asta alta en todos los iconos. La interfaz conserva sus colores funcionales.
+
 ## Calendarios Airbnb: diseño móvil aprobado (2026-11-07, ajuste 2026-11-09)
 
 El ajuste [móvil v0.2](../.scratch/calendarios-externos/diseno-v0.2-propuesta.md) aprobado por Ana añade «Sincronización con Airbnb», actualizar por icono verde claro a la izquierda y gestión por título/chevrón. Sin conectar, la fila permanece unida a las otras acciones dentro de la tarjeta blanca; conectada, aparece sobre el fondo crema sin tarjeta. Reserva/pausa conservan su menú y sus iconos pierden el recuadro. La hoja de marcar una reserva recibe ocupación manual/importada, espera la comprobación previa y exige confirmar el último calendario válido si falla Airbnb; reglas en [reservas #7](../.scratch/calendarios-externos/reservas-07.md).

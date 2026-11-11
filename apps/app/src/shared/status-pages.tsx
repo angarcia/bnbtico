@@ -9,8 +9,8 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
       <main className="view no-nav">
         <header className="header-root">
           <div className="top">
-            <a href="/explorar" aria-label="bnbtico, inicio">
-              <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={115} height={38} />
+            <a href="/explorar" aria-label="3bstays, inicio">
+              <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
             </a>
           </div>
         </header>

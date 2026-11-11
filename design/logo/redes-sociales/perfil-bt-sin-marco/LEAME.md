@@ -1,5 +1,7 @@
-# BT sin marco para perfil circular
+# 3bstays · archivos compatibles actualizados
 
-Subir instagram-bt-terracota-crema-1080.png a Instagram: BT terracota #B44C30 sobre crema #FFFBF2, 1080 × 1080 px. Mantener el encuadre completo y centrado, sin ampliar en el recorte.
+Contenido sustituido el 10 noviembre 2026 por la identidad 3bstays aprobada. Los nombres bnbtico/BT se conservan por compatibilidad; todos los iconos y perfiles muestran solo el símbolo B original abierto. Logos sin fondo salvo las aplicaciones deliberadas sobre foto o fondos de perfil.
 
-Se reutilizan exactamente los trazados del símbolo BT aprobado, eliminando el recuadro y ampliando ambas letras juntas un 18 %. No se modifica la tipografía. Se adjuntan SVG y PNG transparentes para otros usos.
+Biblioteca principal: /Users/anagarciasaiz/Documents/GitHub/bnbtico/design/logo/3bstays-2026-11-10/
+
+Los originales están en design/logo/logos-obsoletos/2026-11-10-bnbtico/ conservando su ruta.

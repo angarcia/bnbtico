@@ -1,9 +1,7 @@
-# Merchandising · carbón cálido aprobado · 2026-11-05
+# 3bstays · archivos compatibles actualizados
 
-BNBTICO y BNBTICO.COM sin rana, con las mismas letras del maestro de `design/logo/maestro/` (solo T elevada). Se incluyen SVG de trazados y PNG transparentes de 2400 px de ancho.
+Contenido sustituido el 10 noviembre 2026 por la identidad 3bstays aprobada. Los nombres bnbtico/BT se conservan por compatibilidad; todos los iconos y perfiles muestran solo el símbolo B original abierto. Logos sin fondo salvo las aplicaciones deliberadas sobre foto o fondos de perfil.
 
-`bnbtico-com-marco-puntos-negro`: marco y nombre en carbón cálido #2B2926, transparente, en SVG y PNG de 3000 × 3000. `bnbtico-com-marco-puntos-vista-blanca.png`: comprobación sobre blanco; usar la versión transparente cuando deba verse el tejido.
+Biblioteca principal: /Users/anagarciasaiz/Documents/GitHub/bnbtico/design/logo/3bstays-2026-11-10/
 
-Para impresión, partir del SVG y acordar con el proveedor el tamaño y grosor mínimo en el soporte. Los originales con rana están conservados en `design/logo/historico/2026-11-05-antes-unificacion/`. Esta revisión no modifica los PDF ya preparados en otras carpetas.
-
-Color elegido por Ana: carbón cálido #2B2926. Los nombres anteriores con «negro» son alias de compatibilidad; usar preferentemente los archivos carbon-calido-transparente. PNG con 300 ppp; SVG sin fuentes ni fondo. Para EPS CMYK y PDF, ver design/logo/biblioteca-completa-2026-11-05/07-impresion/.
+Los originales están en design/logo/logos-obsoletos/2026-11-10-bnbtico/ conservando su ruta.

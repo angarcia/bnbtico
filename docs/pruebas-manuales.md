@@ -1,5 +1,9 @@
 # Guía de pruebas manuales de bnbtico
 
+## Comprobación de logos · 2026-11-10
+
+En móvil y escritorio, comprobar la cabecera de admin o página no encontrada y el aviso de giro: debe verse 3bstays sin placa de fondo, sin deformación ni recorte. Abrir la portada local con /?pronto=1 y comprobar el logo blanco sobre la foto. Revisar favicon, instalación PWA, apple-touch y recorte circular: solo el símbolo B abierto con asta alta. Contrastar claro/oscuro y comprobar las portadas de redes en la nueva biblioteca. No confundir la sustitución visual con el cambio de dominios o del copy de producto.
+
 Fecha: 2026-10-30. Guía nueva, escrita desde cero tras los rediseños de la UI (revisión UX del 26 al 30 de octubre, publicar v2, edición dato a dato, ronda de Ana del 30 de octubre y acciones del admin en Casas). **Sustituye a todas las guías anteriores** (`docs/pruebas-manuales-fase-*.md`, `-revision-ux.md`, `-mejoras-2026-10-27.md`), que quedan como histórico. Los textos entre «» son los de la app, comprobados contra el código, las pruebas automáticas y un recorrido real de las 188 pantallas en un teléfono de 390 × 844.
 
 Se prueba **desde el teléfono**, en `https://nueva.bnbtico.com`. Marque cada casilla; si algo falla, anote su código (C12, A40, D7, X3…) y siga (ver la sección 6).

@@ -1,0 +1,3720 @@
+{
+  "fecha": "2026-11-10",
+  "colors": {
+    "terracota": "#B44C30",
+    "crema": "#FFFBF2",
+    "tinta": "#1C2B2A",
+    "blanco": "#FFFFFF",
+    "carbon-calido": "#2B2926"
+  },
+  "selection": "3 angular, B abierta con asta alta y separación ajustada con stays. B un 29 % más fina en el logotipo y reforzada para iconos.",
+  "sources": [
+    {
+      "file": "design/logo/propuestas/3bstays-curva-superior/3bstays-b-y-s-mas-juntas.svg",
+      "sha256": "fa765eae81b521c7c3c1c57e1f88b69c7921787640448667822b9b5b9122fe87"
+    },
+    {
+      "file": "design/logo/propuestas/3bstays-curva-superior/3bstays-b-y-s-mas-juntas-com.svg",
+      "sha256": "da57e6297d00c6ed6da35ca43455cea70dd63a74f2020069fe2c459886feb5aa"
+    },
+    {
+      "file": "design/logo/propuestas/3bstays-curva-superior/simbolo-b-asta-alta.svg",
+      "sha256": "54715617941df842f4f9bd18927af334d961a418131c8a3ca2da108d66406e32"
+    }
+  ],
+  "files": [
+    {
+      "file": "00-maestros/blanco/logo-com-cuadrado.svg",
+      "bytes": 26352,
+      "sha256": "dc4e0cc030425fa28108df43c2ac017c308ee72388b11c6f3a4b74369eeda98c"
+    },
+    {
+      "file": "00-maestros/blanco/logo-com.svg",
+      "bytes": 3127,
+      "sha256": "d9b5b5b03687db65953bcbd62b37f2fbff58acd4fda92af7f86f9beaf9d73989"
+    },
+    {
+      "file": "00-maestros/blanco/logo-cuadrado.svg",
+      "bytes": 25405,
+      "sha256": "8de2df7065e412f8ac7b2c1f6d0bf1787f76518028484fe6eb94710095f44215"
+    },
+    {
+      "file": "00-maestros/blanco/logo.svg",
+      "bytes": 2209,
+      "sha256": "dac8d2dca3d404ea62e98b2fab23cf5ba6f3f71c9120361ddd67e9a176daf94b"
+    },
+    {
+      "file": "00-maestros/blanco/simbolo.svg",
+      "bytes": 421,
+      "sha256": "9cafef51449b0e5060c2052f3e9b425415fbf542467301eee5a3a404d7570e85"
+    },
+    {
+      "file": "00-maestros/carbon-calido/logo-com-cuadrado.svg",
+      "bytes": 26352,
+      "sha256": "6252479a52e08f2d96a0bf8b73b65487e4c5e4028ebe295b8b90809f4463500b"
+    },
+    {
+      "file": "00-maestros/carbon-calido/logo-com.svg",
+      "bytes": 3127,
+      "sha256": "552dbd48b4ec080a6019de393a52c1e089feb20c8ed6ff3be5be50b4f5b02fe5"
+    },
+    {
+      "file": "00-maestros/carbon-calido/logo-cuadrado.svg",
+      "bytes": 25405,
+      "sha256": "040bc76f523b745359e564d27339a1477982f7f6e065835dcbf2f718ec1e19e0"
+    },
+    {
+      "file": "00-maestros/carbon-calido/logo.svg",
+      "bytes": 2209,
+      "sha256": "ca24cc23c04aae7be7e7c6a598edaa532e0ec66b7b43c69bbc35af8bfdeeebcc"
+    },
+    {
+      "file": "00-maestros/carbon-calido/simbolo.svg",
+      "bytes": 421,
+      "sha256": "8dd3348bd6bea6d80f2fc7e37920cccacfa94315d3dbc0916024c626afeceaf8"
+    },
+    {
+      "file": "00-maestros/crema/logo-com-cuadrado.svg",
+      "bytes": 26352,
+      "sha256": "3d01f20b1d33af5660a2125f130737e9ce7bc6247b07bf3c0adc15d0e7e5b5a7"
+    },
+    {
+      "file": "00-maestros/crema/logo-com.svg",
+      "bytes": 3127,
+      "sha256": "61a18e887b07349cf31641c3207eba2b806a9db5b5a902e0f967749e5b46b679"
+    },
+    {
+      "file": "00-maestros/crema/logo-cuadrado.svg",
+      "bytes": 25405,
+      "sha256": "82cb211000bb7f6043b97a3f9a48f6a814d56ac4254ae8328aa2d1fb54911711"
+    },
+    {
+      "file": "00-maestros/crema/logo.svg",
+      "bytes": 2209,
+      "sha256": "26aa0b3071e69612f62cb7082f8a83e95bea2ef214ae0292754c1425cdde01d8"
+    },
+    {
+      "file": "00-maestros/crema/simbolo.svg",
+      "bytes": 421,
+      "sha256": "7fa96fb7bfa76aa3b64146709289d04f489bc18d2a4425009b4aa52da44e204a"
+    },
+    {
+      "file": "00-maestros/terracota/logo-com-cuadrado.svg",
+      "bytes": 26352,
+      "sha256": "d41cb3208b70482964788d6c23ee46dc1d072f0615a528479a2ad64e3589e67d"
+    },
+    {
+      "file": "00-maestros/terracota/logo-com.svg",
+      "bytes": 3127,
+      "sha256": "7aeb57f237ec681acb0747589ad8c5c8f3176095b5d1989e2868988b84aa06aa"
+    },
+    {
+      "file": "00-maestros/terracota/logo-cuadrado.svg",
+      "bytes": 25405,
+      "sha256": "69ae63a0618c6354796189322452773c66cd954df7e4171078d238231a950276"
+    },
+    {
+      "file": "00-maestros/terracota/logo.svg",
+      "bytes": 2209,
+      "sha256": "4f1646bb879c17d21b038086dd8aba95ad82d4f22d97c6f79a54dbf09bbfc1dc"
+    },
+    {
+      "file": "00-maestros/terracota/simbolo.svg",
+      "bytes": 421,
+      "sha256": "54715617941df842f4f9bd18927af334d961a418131c8a3ca2da108d66406e32"
+    },
+    {
+      "file": "00-maestros/tinta/logo-com-cuadrado.svg",
+      "bytes": 26352,
+      "sha256": "22a4554f7c93f324dee71d8b4fcbc6515cbb705fc6aa49c6432d6ecd4bd840c0"
+    },
+    {
+      "file": "00-maestros/tinta/logo-com.svg",
+      "bytes": 3127,
+      "sha256": "5bc071568cd714c1675742a777661e0b04d27c3ff0376f525b65efb2a35e56ab"
+    },
+    {
+      "file": "00-maestros/tinta/logo-cuadrado.svg",
+      "bytes": 25405,
+      "sha256": "99415c4dcf262d57d252b8fedfbe768ea777a344d3a4951c42919942130546a2"
+    },
+    {
+      "file": "00-maestros/tinta/logo.svg",
+      "bytes": 2209,
+      "sha256": "1252e6bbf537934f1446db75ca29171678b89c4c3ee3e2f05a58879973ad8ad3"
+    },
+    {
+      "file": "00-maestros/tinta/simbolo.svg",
+      "bytes": 421,
+      "sha256": "76473506781f30383a6017b0355228a618c5e110710ae11b049e9864287fc3e6"
+    },
+    {
+      "file": "01-logos/blanco/logo-com-cuadrado.png",
+      "bytes": 130691,
+      "sha256": "d5d7f96a7df83875e20f4fe2fa37d0514e4555c2ff0efa6cebe73da2f90ff94d",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/blanco/logo-com.png",
+      "bytes": 51767,
+      "sha256": "534f2d8bebab53d575e61aaccbb367110d01169dd56dead16b3e112b783abf49",
+      "width": 2400,
+      "height": 585,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/blanco/logo-cuadrado.png",
+      "bytes": 131598,
+      "sha256": "021ac67203f769436aa508942614086d8d556c982deb08879abb113d0d5783ea",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/blanco/logo.png",
+      "bytes": 51199,
+      "sha256": "f867abb33d0246bda97c35f843e2d526348a6ac2945fc9e28f107a78f00fef46",
+      "width": 2400,
+      "height": 840,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/blanco/simbolo.png",
+      "bytes": 17484,
+      "sha256": "ceb22c47d85aca889cd4b87dd5b607ac3124a5230c6d228f250f8dbd411156d4",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/carbon-calido/logo-com-cuadrado.png",
+      "bytes": 157288,
+      "sha256": "0a4522c1af01f99ad3bfe44a11a0802955906b1d2c915fc28c04de1ed8c53a5e",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/carbon-calido/logo-com.png",
+      "bytes": 63014,
+      "sha256": "0ba76e8e4538930da7855147b3ef60ee82b3b383d3b398f9cddc0d8c6af865bc",
+      "width": 2400,
+      "height": 585,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/carbon-calido/logo-cuadrado.png",
+      "bytes": 160876,
+      "sha256": "a04f6407643c64cb81e1a5a8c5c94cb50076873f705f2eec949a9ba6b0161631",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/carbon-calido/logo.png",
+      "bytes": 64833,
+      "sha256": "33d997cc88e1ae9784cee49245b9bdecdcf52dd75d28dcf5a3b2c140e38ed2db",
+      "width": 2400,
+      "height": 840,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/carbon-calido/simbolo.png",
+      "bytes": 22679,
+      "sha256": "ad7d431249d53fda105356f527a65928376c00e651ee1a6416df8fbd7d0ea811",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/crema/logo-com-cuadrado.png",
+      "bytes": 152668,
+      "sha256": "75f4259fc7f5803b98c6f219a023b8faaa25d12d9d92b0e657765760023ffbcf",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/crema/logo-com.png",
+      "bytes": 61576,
+      "sha256": "658e5dbe05cb62f5c2dab653a9dcf3e2a9d8402fa6f828f756d990319a09bd08",
+      "width": 2400,
+      "height": 585,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/crema/logo-cuadrado.png",
+      "bytes": 156097,
+      "sha256": "da451993ffa34592ab6b0157a79355696ccfe8b3fb7fd5e08e188f7aed8caf10",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/crema/logo.png",
+      "bytes": 62516,
+      "sha256": "fc727d054184d0170adc64659daeab23e740342d7b5b703bd3de8952966c71e8",
+      "width": 2400,
+      "height": 840,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/crema/simbolo.png",
+      "bytes": 21653,
+      "sha256": "bfc3390b3042f5aafb4f59449773fece069004dde07b6df1342635dc28549b07",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/terracota/logo-com-cuadrado.png",
+      "bytes": 160066,
+      "sha256": "6fd73800cd0ef81e76044cf5ad40f75b246c60ce89c6335610f0923d82f77bc7",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/terracota/logo-com.png",
+      "bytes": 64447,
+      "sha256": "b840db5c8436134d68d3a8742733974f4ba6e71724ace9c264c84071d5eac8b9",
+      "width": 2400,
+      "height": 585,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/terracota/logo-cuadrado.png",
+      "bytes": 164343,
+      "sha256": "a05536c1808560e21344345880f51a7806ebe57a5036ee6116791a48a4d0b1e3",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/terracota/logo.png",
+      "bytes": 66384,
+      "sha256": "b2387b6e882653501a583876e61debe27e2c72ef5af5ae1c86bf80443df23848",
+      "width": 2400,
+      "height": 840,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/terracota/simbolo.png",
+      "bytes": 23298,
+      "sha256": "0dc0588d138385979f6ab896f917bdaf4daf33490e1a94151ef12b5dc1603a88",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/tinta/logo-com-cuadrado.png",
+      "bytes": 156811,
+      "sha256": "517a610def75cc5d259b9a925ba1a55ceb39d24607c095aab444ca3a985629e9",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/tinta/logo-com.png",
+      "bytes": 63005,
+      "sha256": "38b6ea371c4f25b33f03ea887a976717ab4b14d81ec0e194164d4e97613243ba",
+      "width": 2400,
+      "height": 585,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/tinta/logo-cuadrado.png",
+      "bytes": 160604,
+      "sha256": "59870f0ac1f236aa2ad86357f75ce0592fbd7555cdc32f7a5de5c1d16b694169",
+      "width": 2400,
+      "height": 2400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/tinta/logo.png",
+      "bytes": 64764,
+      "sha256": "eb4c6e73169fc3947d5b562de3ce8087552af424f0d82abd1a21afb67f941a30",
+      "width": 2400,
+      "height": 840,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "01-logos/tinta/simbolo.png",
+      "bytes": 22673,
+      "sha256": "f23de13b7bc5806d46d6834748208e60725e923dcd7c9649e659a61171159b9d",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-160x70.png",
+      "bytes": 2944,
+      "sha256": "f9bf8bcba5bc3db13872ba068b717af9eee347130b44ec85b474c9643c0d811b",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-160x70@2x.png",
+      "bytes": 5717,
+      "sha256": "c79983f6c33bcce0eca0311a825d178ac077e7998f1ecf8886ad154575f7d035",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-240x96.png",
+      "bytes": 4246,
+      "sha256": "43e72e95b2400303aa9a50c05596177fe8476af844a349560de8734feffc92b7",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-240x96@2x.png",
+      "bytes": 8698,
+      "sha256": "9fa3336cae6d363123997aacafc94cf74f1311d54b72dcf2cb0910a126f63d83",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-400x160.png",
+      "bytes": 7117,
+      "sha256": "b3100c55fa455bfb7e37b28ba2d1f7a167c08f70ebcc6a7973890e8b52344385",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-400x160@2x.png",
+      "bytes": 15077,
+      "sha256": "cf7063e9d04a41a8f8966c97c1e93a77a3c336678c44e2be254b856266d5f9ae",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-com-160x70.png",
+      "bytes": 2589,
+      "sha256": "3c7716d3e0a9c09784bf90e61a492b13c8796a043155cf8e76aaec551f2af7c8",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-com-160x70@2x.png",
+      "bytes": 5209,
+      "sha256": "ef5e9934a0974f29d6846a6afee3e7560330c464af9172ddbeb247aceeb777a8",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-com-240x96.png",
+      "bytes": 3976,
+      "sha256": "fb6b62d45da831ee771273b10818585c6bb900221fbff648c3899cabcd234323",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-com-240x96@2x.png",
+      "bytes": 7944,
+      "sha256": "d67bb3be86db00264fd2a047584d77976accc1666c5863a4264cc41e576162fa",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-com-400x160.png",
+      "bytes": 6655,
+      "sha256": "aeeaabfb7e215ea3e9b6b6892812362c8aa97810344f6b2fc37f30618731bbe1",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/blanco/logo-com-400x160@2x.png",
+      "bytes": 14372,
+      "sha256": "24459baedc8f0b449fdfe4dfd80e0c0f1c13700ae911b6f7ecb89705a77cfd80",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-160x70.png",
+      "bytes": 3388,
+      "sha256": "5c4ba6add44c959378be01f7e9816f2de982f27eb3314c0d3c78be2e17e61ffb",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-160x70@2x.png",
+      "bytes": 6530,
+      "sha256": "5e1dda622920c76710f3ccf1d0ff3f228a84908773ca97e5ae0fa3bf67ca734a",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-240x96.png",
+      "bytes": 4858,
+      "sha256": "fb17445a296b393dd03149b078df843a78bb2f7807bafd50c5a0d5b59810bfca",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-240x96@2x.png",
+      "bytes": 9960,
+      "sha256": "a3f3fbb0c98af2fb52f693cb128f9e16f9991b511ebf9b65b4dbd3c72f279919",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-400x160.png",
+      "bytes": 8153,
+      "sha256": "583d7045bf7005d09486b5761d58719b350e9efe4b32e5e2915c7cce8fff9366",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-400x160@2x.png",
+      "bytes": 17503,
+      "sha256": "b3248f08e433c9a4386d6a9072adc34bf6ea9ac98cc6c4d9f11109f7e742a6d4",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-com-160x70.png",
+      "bytes": 2975,
+      "sha256": "1a7a16c38ab540dfdc656a70a3eac10d1cca2eefaa297e49a0be6bde52944dff",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-com-160x70@2x.png",
+      "bytes": 5934,
+      "sha256": "e380d927fa977acc45a5c44c72d22e4f62b9f38e0476dd79ce0b394c50525eb9",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-com-240x96.png",
+      "bytes": 4579,
+      "sha256": "707dd0811a76e7228f541601d7ac1e63d10df0ae7719a713c01d9ce4bd524e57",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-com-240x96@2x.png",
+      "bytes": 9088,
+      "sha256": "63eb56bb0c34af5faa9e0fee78f66f31585bf79fa31316831bb70f8d64c2ab00",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-com-400x160.png",
+      "bytes": 7629,
+      "sha256": "fd5419b3ee23a569499daf9f65e8e66a89423739d0432ace6c8d06a6ccc74499",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/crema/logo-com-400x160@2x.png",
+      "bytes": 16385,
+      "sha256": "0926e81eb40884c60ab25b9104bf43d793f1c937cc03102f397a9f8ec340de47",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/logo-adaptativo.svg",
+      "bytes": 2299,
+      "sha256": "18b964ec823a9d30a90e8b28fdbddd9e53890ed62eabe7e195d864427816b213"
+    },
+    {
+      "file": "02-web/logo-com-adaptativo.svg",
+      "bytes": 3217,
+      "sha256": "028a2ca457ee2e8362dbdccd302d29264926b544c1cba1fdc30af8d16a9f687a"
+    },
+    {
+      "file": "02-web/terracota/logo-160x70.png",
+      "bytes": 3524,
+      "sha256": "faf096b738384cdccf8ebf0c3bff54b32cda7dbb5248de857d752e7056be19f0",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-160x70@2x.png",
+      "bytes": 6687,
+      "sha256": "6ea2c02321420547af3b76e918f8bb29c6c53cfa90f6721ad3e1038ca2bb4472",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-240x96.png",
+      "bytes": 5012,
+      "sha256": "0a787a3a9011b3713c95d3982f6f3d717a18bbb34644032ff4ecf1046b1f2c94",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-240x96@2x.png",
+      "bytes": 10279,
+      "sha256": "e2bfd1053e884cb5260e2b8d98b00126fa8393b76f8431fe88e39fce60cc19bc",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-400x160.png",
+      "bytes": 8403,
+      "sha256": "a961b10b567419eb21ebd87c4b29144e100d4cea17537446ff313ec14be9f9e8",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-400x160@2x.png",
+      "bytes": 18290,
+      "sha256": "cedc0a685dec4a4ab178213d738b82a4a7695e6bced6c73c2f83b2406828e36c",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-com-160x70.png",
+      "bytes": 3116,
+      "sha256": "8b93878b4c59926629fc1e3179d9462523fbb4eb8a3bf495e49081cc8cde6985",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-com-160x70@2x.png",
+      "bytes": 6111,
+      "sha256": "77b2a5cb14648037de146c6b50bc6bdb1f65e74aba751edf968726864ad3283d",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-com-240x96.png",
+      "bytes": 4725,
+      "sha256": "a737487368db883ff1559a4edbf42f16c51a552c2af46d5a61386675088313ac",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-com-240x96@2x.png",
+      "bytes": 9333,
+      "sha256": "b9ded9ec3090fbdfab1a5f50a7a356ef3e2c122f1845d6623ad39c8aeb71335f",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-com-400x160.png",
+      "bytes": 7808,
+      "sha256": "d962b8675be434d15eed64c7509b9bd9dd11e66d31709b988b8d5d9b01454c80",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/terracota/logo-com-400x160@2x.png",
+      "bytes": 16964,
+      "sha256": "3269cb76a170087bfdf62279a8889980f048c7ca73c5292f9a46468891386d05",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-160x70.png",
+      "bytes": 3464,
+      "sha256": "5afe86d1237391955938da75a6a3a41f7bd2b652b651562333d2dcf8541f5c1a",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-160x70@2x.png",
+      "bytes": 6616,
+      "sha256": "066feb856de8e954e71b1b4b53ba11fe9982ddd0aa2900bff9c0092a7e1a602d",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-240x96.png",
+      "bytes": 4933,
+      "sha256": "d93cd7fd2ff85a778a00bc10674c353d0da4a1b80309f33688afc7830aef84e9",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-240x96@2x.png",
+      "bytes": 10129,
+      "sha256": "b5477dd79b1d6161402093756efc0447911cf404b6917e6c0d891739765cfbac",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-400x160.png",
+      "bytes": 8266,
+      "sha256": "dc3cf95698dd1a0c8cf96855f57fecc20e99927720015d1c2274661ab065cc8e",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-400x160@2x.png",
+      "bytes": 17954,
+      "sha256": "cb1d562a1ace0703e342133f713ee738433b6ed563e05719479447ac226b6864",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-com-160x70.png",
+      "bytes": 3089,
+      "sha256": "35688e97f859e1be961983d51ebe861805dc438e8a50d86e7fee6e56d58ae2b5",
+      "width": 160,
+      "height": 70,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-com-160x70@2x.png",
+      "bytes": 6030,
+      "sha256": "33e29fce8e7a9e0b172e3c25ea7b18123bbb16dfa8facadf422f376747bde6ba",
+      "width": 320,
+      "height": 140,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-com-240x96.png",
+      "bytes": 4671,
+      "sha256": "35b31a3b63ce2acedab18a8c797d6592379364226abc4a66b944acc982453c8b",
+      "width": 240,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-com-240x96@2x.png",
+      "bytes": 9219,
+      "sha256": "1cd5ec44768f1e80f5479175c10a69c913e029f3f90ea4bbad955d1f574b0958",
+      "width": 480,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-com-400x160.png",
+      "bytes": 7664,
+      "sha256": "e30ca884f1cdc31d2fa5c90203209f230b954486245af93e5f20239370b21d65",
+      "width": 400,
+      "height": 160,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "02-web/tinta/logo-com-400x160@2x.png",
+      "bytes": 16755,
+      "sha256": "24af60e98ed4efd895918075943b814ff1e2680cd9da736a60db1cf6dd35fee5",
+      "width": 800,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/favicon.ico",
+      "bytes": 12399,
+      "sha256": "4e73dce2d497c4d0af0dc215c32fb8bd7cf143f7e0165bde29cb969b4398971c"
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-1024.png",
+      "bytes": 17484,
+      "sha256": "ceb22c47d85aca889cd4b87dd5b607ac3124a5230c6d228f250f8dbd411156d4",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-128.png",
+      "bytes": 1989,
+      "sha256": "902fa5b7e8d19ffbc543f40da182103553a237ea24c2f44827809a37164d218c",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-16.png",
+      "bytes": 826,
+      "sha256": "a7834fec968fc27f57efd5516a618177cff42d831e70859097b7c097c1c7c3ba",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-180.png",
+      "bytes": 2619,
+      "sha256": "89783b4e5c97fd8183e773224860fed135fadc17e21318f29216b92094947bbc",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-192.png",
+      "bytes": 2755,
+      "sha256": "17a2ea532f71433725fcf45b498056b5d298f31c8ebb95a6dcd6c86ed44fc1ef",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-24.png",
+      "bytes": 931,
+      "sha256": "31c80199114e19bd5197a597478668eb98ad049ad69c52818eba6b145b3b72fe",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-256.png",
+      "bytes": 3515,
+      "sha256": "44a625a25faf4e7b31f5bd580a9e5393fac92beb790de31ea68f9adb36cc62ad",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-32.png",
+      "bytes": 1042,
+      "sha256": "657065ea5d6f7476eba827c90fcf807b9ce34e1aa744020d6d96c3f9c8aae4d7",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-48.png",
+      "bytes": 1108,
+      "sha256": "d0bffe1f1d012a1e073b64ef7b54802f6dee4b0bf66e9d48332f8d7033b769c2",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-512.png",
+      "bytes": 7232,
+      "sha256": "b0972c4462f4101591d72a05259aaadd8fd68d95363c183fec020c7bdb1c2d5f",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-64.png",
+      "bytes": 1245,
+      "sha256": "0291d6fa261abf3732dc3d5e638d5a251fcf6dcec06c0e66d7a62419b6011cc6",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/icono-96.png",
+      "bytes": 1609,
+      "sha256": "48946bd6d65bcf3fa57bd5737d4c8ff60d42b4313fb0a7325bf41c155bdb70ec",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/blanco-transparente/simbolo.svg",
+      "bytes": 464,
+      "sha256": "ae9ed9fc5e7a5c1b826c7fd75ab3cdb7643223a30b6be8b1c5f4f5a26933af54"
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/favicon.ico",
+      "bytes": 17033,
+      "sha256": "0c8697800750cf27726dfa87ab9b09140e779a68e3755bbfaa0d9471df414eac"
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-1024.png",
+      "bytes": 41920,
+      "sha256": "a16acf1959aeddd3b3d1c56e6655a59ead58202c597ea6757aed54a017e1f2d5",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-128.png",
+      "bytes": 2730,
+      "sha256": "683a647c8cddded428fa6be4031305c68a95de9063991fe11f57fd08292cebdc",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-16.png",
+      "bytes": 954,
+      "sha256": "900df9326e8540a5eb0107e1c13807e373e9f6aa79b701aed6e2ae98b81f8828",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-180.png",
+      "bytes": 3971,
+      "sha256": "79146e591495ed8773bfabb27c2e0400394a94d1cd01b87cb0d43188f5dd71d0",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-192.png",
+      "bytes": 4145,
+      "sha256": "abce0acd7936886ec92f625f76e5784d0baa20620adc22c4bfe91276a18e5510",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-24.png",
+      "bytes": 1113,
+      "sha256": "49a80e3058fb2c22b5065b34fdd73029964e20342cbb7bbadcac97c4edd5283d",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-256.png",
+      "bytes": 5727,
+      "sha256": "21b9a8aa607e3ed7f0ce1d6b701d2a46b7a575495d72503eb0b7924bd2280dda",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-32.png",
+      "bytes": 1260,
+      "sha256": "2f3f7841878c896a826c4ea157ac2280af07021cb9c939e34286c839dfcb2bd2",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-48.png",
+      "bytes": 1372,
+      "sha256": "125e5e7bc4b29a12f068121d046e807f617ba866cd2493b91bb231ec5a3e6111",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-512.png",
+      "bytes": 15037,
+      "sha256": "88dbe75d6f7a2317e0853c6069bfdacda1e0dff56ddb0b8acbb8379beebb8276",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-64.png",
+      "bytes": 1604,
+      "sha256": "a6ae126ef195f454efcf46db3ddaa4998ab111b62524e2a4df23cde8bd09a5f1",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/icono-96.png",
+      "bytes": 2139,
+      "sha256": "9d51b94b7c046c2ec5b4670bd1e7a3cba37f0c87042508fe71f6ae063d7b8083",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-sobre-terracota/simbolo.svg",
+      "bytes": 511,
+      "sha256": "0882451690e0d8355e8195b2f7ddb1e8ecf51a7ed45d8b9a98091c941317f089"
+    },
+    {
+      "file": "03-iconos/crema-transparente/favicon.ico",
+      "bytes": 14033,
+      "sha256": "529c9a4d515c3285b7489a124da53b19eee7bb57ceb18e818838a24d9c2336a1"
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-1024.png",
+      "bytes": 21653,
+      "sha256": "bfc3390b3042f5aafb4f59449773fece069004dde07b6df1342635dc28549b07",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-128.png",
+      "bytes": 2290,
+      "sha256": "8f3ea52571266ec0859bf81e17f0fbcebb43a0e7062ce763cba74ef967598b6b",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-16.png",
+      "bytes": 892,
+      "sha256": "497b793a8919ee936f02fb4f31e0f309733b1f55442f7a991fd9e82d28663117",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-180.png",
+      "bytes": 3064,
+      "sha256": "2c92f50ff02a8d0a881b393de3b48de89ed0b75007d0158a9cf8cdf4e31ada42",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-192.png",
+      "bytes": 3176,
+      "sha256": "6fab4af97f36a43c2c09bc369ce621c50a7a0a69782101cc62d3dd1b8093bed5",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-24.png",
+      "bytes": 1012,
+      "sha256": "d251c3d3c33c5b1c87003f3a2699d13b5bb97eef2c2c8a4c84da67fbb84f9700",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-256.png",
+      "bytes": 4120,
+      "sha256": "7fc4fe760b548c76eb44e7053ceb7c3555845c682b1f0574cf1d50c0e368bfcb",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-32.png",
+      "bytes": 1148,
+      "sha256": "8edc467378dc305966395ec44d4e9b2ecc45dac4ede6c1ede0bbb563ae311ac1",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-48.png",
+      "bytes": 1230,
+      "sha256": "749bea56eceb6bce68758c37ca0f92de01e0d8a9d9fa9b87f84ac5e10341022a",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-512.png",
+      "bytes": 9102,
+      "sha256": "629db966be9c854e35d62150090ab6ccc7037ed4bcc3ba5c42903906c6e3c279",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-64.png",
+      "bytes": 1373,
+      "sha256": "e43f738af9854eb3c6ba0ca8961973ead9e02eed8acbbfb593e99e36fa83bbbb",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/icono-96.png",
+      "bytes": 1834,
+      "sha256": "ac3ba74cf9ca85a0693554e4074df2816de1d1befdc01c6cc4f4e02a981ca5fb",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/crema-transparente/simbolo.svg",
+      "bytes": 464,
+      "sha256": "6cd5f7ae2fb71b035d96cdb859a34274ec7328a23d5c55c1c69c22357dd784f4"
+    },
+    {
+      "file": "03-iconos/favicon-adaptativo.svg",
+      "bytes": 511,
+      "sha256": "da66b854bf1232fab2ed6d4b2926c0f858730fcdd6fea7a7102fa2903daaeb34"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-128.png",
+      "bytes": 2828,
+      "sha256": "6db8568b9ad9ec27a835ad48f8fcfec7763f37fa1d26a3d9bebf787acf0b171c",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-128.svg",
+      "bytes": 545,
+      "sha256": "08504f4e3ffda22c73e00f7ee061e5dfd6f5aa42a020dc38d7f7531d362e2644"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-16.png",
+      "bytes": 490,
+      "sha256": "5dd73f18f3fdf53fc9dcaea2ee70a0e862829d5d96143ed6f34b66326ec30ace",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-16.svg",
+      "bytes": 579,
+      "sha256": "d5b728b9e6e07fd5037383d049d102f9f37cb8fa0fd75770d8c3450d6ac22e09"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-24.png",
+      "bytes": 655,
+      "sha256": "0acf4472879c615e6f056e1bb4c9e35c0e22ccb05501306dd0c1f8f446464718",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-24.svg",
+      "bytes": 594,
+      "sha256": "5a46118c01b58be4faed1970f847e6d5540671e271d93ac9f6a708a44572bf86"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-256.png",
+      "bytes": 6465,
+      "sha256": "646b8d39cd48ee284d0787cb5f4aaed4e6193e75778972618a5663ec085a977c",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-256.svg",
+      "bytes": 546,
+      "sha256": "a24064bf8c91a4fd9da0400f90a84c6d2845eac8eae85b9df59df0265da189b6"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-32.png",
+      "bytes": 843,
+      "sha256": "fb72806496d46fe8651dd2e7fca761023a38d8b249a6aedf2de1f4085ac360aa",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-32.svg",
+      "bytes": 578,
+      "sha256": "58a737079e320b2d74cbce970c27aeb31977f01bc69b567c15ed4abf8eeeaabd"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-48.png",
+      "bytes": 1053,
+      "sha256": "52af465b704ad75b0a83634b774db80695e669405487d9280bd9c258e699a737",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-48.svg",
+      "bytes": 557,
+      "sha256": "5465499bdbb98537dc6e8a37ceb336c0f807e2212c3f334afa0b18a6f2f41afa"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-64.png",
+      "bytes": 1356,
+      "sha256": "6e2d6b52a7145b4502f3a83478ea490ae47939ec62a878051553109236d29976",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon-64.svg",
+      "bytes": 542,
+      "sha256": "1563cae00c2da645431fb1a47cee4edc0c70d6d876c7eed80373f7ddf53be246"
+    },
+    {
+      "file": "03-iconos/favicon-pestana/favicon.ico",
+      "bytes": 13808,
+      "sha256": "f090697af6c235b78752095348f8a5a8f68d2b2d5fe30cdb900a423c928c6c9c"
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/favicon.ico",
+      "bytes": 16972,
+      "sha256": "0876ad357829dc02403b5386cb28389a91093c9cc3e1472e5eedb4e82559e6f1"
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-1024.png",
+      "bytes": 41750,
+      "sha256": "befb99f14f986c1ae39125117940eb7d9b9df0c05c23c6843c79b648806adbf8",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-128.png",
+      "bytes": 2727,
+      "sha256": "acfa89ba8d699e15a1a609a123c2be329fb8302ed2365471158e36b860015391",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-16.png",
+      "bytes": 956,
+      "sha256": "0417e134c5de2fe09a8eb11482144459e7e614d491cdbf86554976955201ae40",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-180.png",
+      "bytes": 3959,
+      "sha256": "756e04273d2265950ce9808c7f2408b06cfbecdec0aada2d422a7dd75b01ed39",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-192.png",
+      "bytes": 4126,
+      "sha256": "8cf1b8aa93099ff727bcaa0f91c536909a57c1321f365d68f8afe380b8ca3994",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-24.png",
+      "bytes": 1112,
+      "sha256": "05358c30f833164a28c3b7530adde61f1d5bf9b224d9ebb65fc9a818c5fab772",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-256.png",
+      "bytes": 5686,
+      "sha256": "95d1dc456baf3327ff9f688316c724ecc15a0989bbc02ac9b0ef5c9fabbc4646",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-32.png",
+      "bytes": 1257,
+      "sha256": "b0b2e077cef8bd07140e9c16d94289bb9b4f96d2cd7df7e6afa54a0aa23c2303",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-48.png",
+      "bytes": 1365,
+      "sha256": "9eae46ca1966d1e2c4f5a55df2a54e1878fae2448222ce53c248e282943243c3",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-512.png",
+      "bytes": 14962,
+      "sha256": "1cc606659de87bf1576700a74938def6d55a22e67b437850ef4311be41a01735",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-64.png",
+      "bytes": 1600,
+      "sha256": "ca2d1e67552d77914aae6a697306f5a3cb3b60cc4644d3a08cc21b9f53a3bde2",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/icono-96.png",
+      "bytes": 2135,
+      "sha256": "74becdc1ef95bc60c4116bb0630dacf9e5debca9effb134b0aae9b3650e7b5f3",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/terracota-sobre-crema/simbolo.svg",
+      "bytes": 511,
+      "sha256": "77b88b5c85aae5e0a9de90cf07301f94b38cda8e2f7901c27e7974b46ee91e4e"
+    },
+    {
+      "file": "03-iconos/tinta-transparente/favicon.ico",
+      "bytes": 14403,
+      "sha256": "9a7b1be6832629498d5cf12117092f2a09c8800f87ec7c7e01af59dacd0712e0"
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-1024.png",
+      "bytes": 22673,
+      "sha256": "f23de13b7bc5806d46d6834748208e60725e923dcd7c9649e659a61171159b9d",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-128.png",
+      "bytes": 2345,
+      "sha256": "48b3107404c731b5599c87ef9e186e919c2f4a9b4f8b72fe69627d55c852bcb3",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-16.png",
+      "bytes": 911,
+      "sha256": "9a9707056a14bbd94b98aaf9254a3aeebb094d0bef2141f11c9e6c8e2941175c",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-180.png",
+      "bytes": 3168,
+      "sha256": "6a4d6707e2803f9792cdb3c0caca7c5356b3c58a5e52392ec850acab1b4fb2f3",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-192.png",
+      "bytes": 3290,
+      "sha256": "6438e3bad9b54daeac4b07b4dee1a5a8c2d9a4a137de2d310595cd39f1678cc6",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-24.png",
+      "bytes": 1044,
+      "sha256": "a1e1074d5d975385619d6639bfa7733408b787a00e58e926756e39b00fece077",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-256.png",
+      "bytes": 4228,
+      "sha256": "a2817c11db50f22fc2f81289056444572da500841b91c69a4c33db032267bd17",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-32.png",
+      "bytes": 1174,
+      "sha256": "db4e9f6d54648584daf045399df423b087c6b1e24d48e8dc37a0729a6d479888",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-48.png",
+      "bytes": 1260,
+      "sha256": "67b501f885de352434d32a30d2dd470e93ede6b0e8a9415bd4a561c1c9a32e4b",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-512.png",
+      "bytes": 9409,
+      "sha256": "c55fc2e8a2d11151a76ce4f1732eda9326e0933ddcfad69bc818dce507fc579e",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-64.png",
+      "bytes": 1418,
+      "sha256": "6c442ccae7dd9563c0d588cf1c4223175a9708af26fc211c53edba415be3a8eb",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/icono-96.png",
+      "bytes": 1889,
+      "sha256": "339b1ac296ec9655370de902d8704d36eac1020ce50ef740e5b16bb5f04384d7",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/tinta-transparente/simbolo.svg",
+      "bytes": 464,
+      "sha256": "30c19f733809b3ab3765a8a08dc0f6baf3c778bb718195c5e8d4de3154be1320"
+    },
+    {
+      "file": "03-iconos/transparente/favicon.ico",
+      "bytes": 14704,
+      "sha256": "0d4f2d9ea447827b9d98f47de9c90423ac3ab5ddaa4aec663a813c2cb208c14e"
+    },
+    {
+      "file": "03-iconos/transparente/icono-1024.png",
+      "bytes": 23298,
+      "sha256": "0dc0588d138385979f6ab896f917bdaf4daf33490e1a94151ef12b5dc1603a88",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-128.png",
+      "bytes": 2398,
+      "sha256": "91ba0aefa720bdd064b095f25315700c29bd634ddd0bb432db09ae9033e51145",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-16.png",
+      "bytes": 924,
+      "sha256": "cc717926b4d03f5253a4a4c0e848d7f789f5dfaf2bf91f3704967465a9bb2abe",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-180.png",
+      "bytes": 3252,
+      "sha256": "89400e84add98852b93521ac3da8b746919fc12ab7a207e7f3a2f43c705e3adf",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-192.png",
+      "bytes": 3368,
+      "sha256": "7a56bb096d3db9ad0c3d9e52cb59d23d93a592f81b12c19b20bee888e07627f3",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-24.png",
+      "bytes": 1059,
+      "sha256": "777991581e9edc3bfba48e45c6aff27a853d3d9226eff6bd64b86fefb1ef8f67",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-256.png",
+      "bytes": 4332,
+      "sha256": "56dc0c8b23414b90ed796825fa5f895e2ce4ab95338049487d4b46e391fc9bfe",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-32.png",
+      "bytes": 1208,
+      "sha256": "bacc1338c8b45f1453cc06fee3395e1dd8566320eb1159e10847e8714648bbf5",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-48.png",
+      "bytes": 1275,
+      "sha256": "1ea6e615bbf1d423435a2d4d7628faec1e04ce0af37c4856928e75370ab383ad",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-512.png",
+      "bytes": 9654,
+      "sha256": "0986e8fe9c0e1650130289d00e5a88a1be96c86f2327bf43517e45fa4549fba6",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-64.png",
+      "bytes": 1447,
+      "sha256": "61035c2c4e50c9f6f10ed22982da45d5c76c51fbcbf4f98ffb6ad313835d5c3b",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/icono-96.png",
+      "bytes": 1927,
+      "sha256": "a1e19a44539013a671f23027818bcd8d4f7dc7e9adec6fc08edde17cf68d359a",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "03-iconos/transparente/simbolo.svg",
+      "bytes": 464,
+      "sha256": "11ed0d00e279f7e48f70ba4d3fc5e866696782bdfea5b6eaa944396235e4df2e"
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-hdpi/ic_foreground.png",
+      "bytes": 2434,
+      "sha256": "5be04201377fd97d33cdad7e1b1508146d730415d50a751d84a1544f1f9f5f52",
+      "width": 162,
+      "height": 162,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-hdpi/ic_monochrome.png",
+      "bytes": 2105,
+      "sha256": "3682e72ad676c84acdf275cc35fec77cca0e4150fd0217ce4cc72085639fb2e9",
+      "width": 162,
+      "height": 162,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-mdpi/ic_foreground.png",
+      "bytes": 1807,
+      "sha256": "f34315e94ffb7c915096f36a0f53d144c64a424410fb166c8b7ab4e0a9451f0b",
+      "width": 108,
+      "height": 108,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-mdpi/ic_monochrome.png",
+      "bytes": 1605,
+      "sha256": "e7ec96193964ca01bd080ad07392d9da39f6a4d75871b7f2ea93baea6f8ed3ea",
+      "width": 108,
+      "height": 108,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-xhdpi/ic_foreground.png",
+      "bytes": 3092,
+      "sha256": "aeec70b4dda71052cc9b1a8e9d3bb0c8a5e818c24f937a6f2ff1a197d9f9ff49",
+      "width": 216,
+      "height": 216,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-xhdpi/ic_monochrome.png",
+      "bytes": 2671,
+      "sha256": "2f9893143fc2c110960ca247f28a7c414b6a293a225e77d5af2aea7816accf2e",
+      "width": 216,
+      "height": 216,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-xxhdpi/ic_foreground.png",
+      "bytes": 4546,
+      "sha256": "86250e7cdee93bc48949804a47a50bc21f6a5e27065bfda60a376c690ff8c8b0",
+      "width": 324,
+      "height": 324,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-xxhdpi/ic_monochrome.png",
+      "bytes": 3859,
+      "sha256": "b03732d3a48d0562d673ce12ab6ffb5aa241fb802007a350e39528c049d16390",
+      "width": 324,
+      "height": 324,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-xxxhdpi/ic_foreground.png",
+      "bytes": 6118,
+      "sha256": "6ddc0c40731a98d9186a5a51ee0dde829477265fbc2f66b1be8d544a9f99bb4b",
+      "width": 432,
+      "height": 432,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/drawable-xxxhdpi/ic_monochrome.png",
+      "bytes": 5128,
+      "sha256": "f1c097ba2ef8782af626f1df8b00d72fdbeaf10ed0cb7d7a20633e1fde8b8cbe",
+      "width": 432,
+      "height": 432,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "bytes": 199,
+      "sha256": "c6884bf32c4fb8312d226faf701f36f7e352ce9ccf25ca195df14cf447a3fc31"
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-anydpi-v33/ic_launcher.xml",
+      "bytes": 255,
+      "sha256": "0bbcf833da6032afabe1674f35c90adc3b2c5217e66d0894ca44cb98714b266f"
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-hdpi/ic_launcher.png",
+      "bytes": 1755,
+      "sha256": "6590caf67aec28446f0652487b68dadcc899b045195d160a16ee9bc7803d3a8f",
+      "width": 72,
+      "height": 72,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-mdpi/ic_launcher.png",
+      "bytes": 1372,
+      "sha256": "125e5e7bc4b29a12f068121d046e807f617ba866cd2493b91bb231ec5a3e6111",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-xhdpi/ic_launcher.png",
+      "bytes": 2139,
+      "sha256": "9d51b94b7c046c2ec5b4670bd1e7a3cba37f0c87042508fe71f6ae063d7b8083",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-xxhdpi/ic_launcher.png",
+      "bytes": 3064,
+      "sha256": "c7d9cd79f0e7364a14781b4659ee2111398554da92d771a02f896283d672e647",
+      "width": 144,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/mipmap-xxxhdpi/ic_launcher.png",
+      "bytes": 4145,
+      "sha256": "abce0acd7936886ec92f625f76e5784d0baa20620adc22c4bfe91276a18e5510",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/android/res/values/colors.xml",
+      "bytes": 66,
+      "sha256": "2724e191bd32b58754613a06b3ccbe591f8035f463e64a4abfcffa0dd45553cb"
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/app-store-1024.png",
+      "bytes": 34401,
+      "sha256": "c91372dbb0a5b5f13562d75ba0ce6869f0e67e3e9d37cdebb383d6f1b84d905a",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/apple-touch-icon.png",
+      "bytes": 3675,
+      "sha256": "619d5157e44ff81086eb885f96641d078ccff872d701540b6331324c8d861b57",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/google-play-512.png",
+      "bytes": 12509,
+      "sha256": "e6572b60fa03387acda2858ea0f929e2fa5231286bc468893fb797591d7d9bb8",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/Contents.json",
+      "bytes": 2294,
+      "sha256": "0df3ab040040e163c36dceef6db3fdb34958d0788c4df1f110e4969cf790ac03"
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-20@1x.png",
+      "bytes": 1017,
+      "sha256": "9dca8bc087014b9a084126f019c7d01755ee586243caf3725319e5fdff548982",
+      "width": 20,
+      "height": 20,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-20@2x.png",
+      "bytes": 1384,
+      "sha256": "ff3f2434e90670cc85cc35dd3bbe7bdbb848bf1e902ac8047e12f7efef1d997c",
+      "width": 40,
+      "height": 40,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-29@1x.png",
+      "bytes": 1149,
+      "sha256": "2f1bb253bfb29cf555a20cb4d4676ac9a0996cdb0fc33322a0cf10a51f498fa9",
+      "width": 29,
+      "height": 29,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-29@2x.png",
+      "bytes": 1700,
+      "sha256": "14b42f21e0fc72e22b9efd1c44545a25cc22f6c8fecd925991c741ffda9f0ad1",
+      "width": 58,
+      "height": 58,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-40@1x.png",
+      "bytes": 1213,
+      "sha256": "be2126ffd4e443d8dcb0b4b5c9e717779e3972ce30f8d9eb10f1ef609f6a945f",
+      "width": 40,
+      "height": 40,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-40@2x.png",
+      "bytes": 1805,
+      "sha256": "cbfdfdcd3fe1f4dcc3c57395a074cd8046e91e8723e8515f521fb40d97247b69",
+      "width": 80,
+      "height": 80,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-76@1x.png",
+      "bytes": 1783,
+      "sha256": "b3a7c188efd4892ab6e0cea1e407d5034ae7281f5639f98df534f0bc5b90e7bd",
+      "width": 76,
+      "height": 76,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-76@2x.png",
+      "bytes": 3163,
+      "sha256": "8d977a5da50ffa88397b747ea6b356dc04af05f167482d6f688aa30af8db942c",
+      "width": 152,
+      "height": 152,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-ipad-83.5@2x.png",
+      "bytes": 3401,
+      "sha256": "42f74e6d5595a640cc4f1b07986c90c5b4461518db5b66bb989ba51d5655f017",
+      "width": 167,
+      "height": 167,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-20@2x.png",
+      "bytes": 1384,
+      "sha256": "ff3f2434e90670cc85cc35dd3bbe7bdbb848bf1e902ac8047e12f7efef1d997c",
+      "width": 40,
+      "height": 40,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-20@3x.png",
+      "bytes": 1739,
+      "sha256": "2a5b191870c6d6f089f4905ee3ebad07da69cb249809e51ca8f6b3a5e12800b4",
+      "width": 60,
+      "height": 60,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-29@2x.png",
+      "bytes": 1700,
+      "sha256": "14b42f21e0fc72e22b9efd1c44545a25cc22f6c8fecd925991c741ffda9f0ad1",
+      "width": 58,
+      "height": 58,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-29@3x.png",
+      "bytes": 2229,
+      "sha256": "52341f01c5fa2e9d1143f33993e72c05c256e2adf11ce4d9432ad44a15ab23e2",
+      "width": 87,
+      "height": 87,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-40@2x.png",
+      "bytes": 1805,
+      "sha256": "cbfdfdcd3fe1f4dcc3c57395a074cd8046e91e8723e8515f521fb40d97247b69",
+      "width": 80,
+      "height": 80,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-40@3x.png",
+      "bytes": 2486,
+      "sha256": "62ce0d7404963d2219a3f4f43dc8c8bcde00b2d8f9a0219dca18aba88e599ee1",
+      "width": 120,
+      "height": 120,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-60@2x.png",
+      "bytes": 2486,
+      "sha256": "62ce0d7404963d2219a3f4f43dc8c8bcde00b2d8f9a0219dca18aba88e599ee1",
+      "width": 120,
+      "height": 120,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-iphone-60@3x.png",
+      "bytes": 3675,
+      "sha256": "619d5157e44ff81086eb885f96641d078ccff872d701540b6331324c8d861b57",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/ios/AppIcon.appiconset/icon-marketing-1024.png",
+      "bytes": 34401,
+      "sha256": "c91372dbb0a5b5f13562d75ba0ce6869f0e67e3e9d37cdebb383d6f1b84d905a",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/manifest.webmanifest",
+      "bytes": 632,
+      "sha256": "e36cd4d2db91fe08d89a837ff9733c5f18a43b3972b62f1f14b5df2d14e64533"
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/pwa-any-192.png",
+      "bytes": 4145,
+      "sha256": "abce0acd7936886ec92f625f76e5784d0baa20620adc22c4bfe91276a18e5510",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/pwa-any-512.png",
+      "bytes": 15037,
+      "sha256": "88dbe75d6f7a2317e0853c6069bfdacda1e0dff56ddb0b8acbb8379beebb8276",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/pwa-maskable-192.png",
+      "bytes": 4145,
+      "sha256": "abce0acd7936886ec92f625f76e5784d0baa20620adc22c4bfe91276a18e5510",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/crema-sobre-terracota/pwa-maskable-512.png",
+      "bytes": 15037,
+      "sha256": "88dbe75d6f7a2317e0853c6069bfdacda1e0dff56ddb0b8acbb8379beebb8276",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/notificaciones/drawable-hdpi/ic_notification.png",
+      "bytes": 973,
+      "sha256": "109ba6fe9b9049bf3179efa3cf319d338884606a78161de89080434d5c5f9ee6",
+      "width": 36,
+      "height": 36,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/notificaciones/drawable-mdpi/ic_notification.png",
+      "bytes": 862,
+      "sha256": "535dca181a49a737484d4dcd1ab73e85178dd0d7b44a2cd292c8aa5267ed4618",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/notificaciones/drawable-xhdpi/ic_notification.png",
+      "bytes": 1108,
+      "sha256": "d0bffe1f1d012a1e073b64ef7b54802f6dee4b0bf66e9d48332f8d7033b769c2",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/notificaciones/drawable-xxhdpi/ic_notification.png",
+      "bytes": 1363,
+      "sha256": "8ca631042c545c2b60afb3e0779c3d9cce5becc40700e6966d0cd70e9b866880",
+      "width": 72,
+      "height": 72,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/notificaciones/drawable-xxxhdpi/ic_notification.png",
+      "bytes": 1609,
+      "sha256": "48946bd6d65bcf3fa57bd5737d4c8ff60d42b4313fb0a7325bf41c155bdb70ec",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-hdpi/ic_foreground.png",
+      "bytes": 2552,
+      "sha256": "a180436c0a8e00f19c855058517a4141c060528a7bbb6794009cbf0bde4f49d5",
+      "width": 162,
+      "height": 162,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-hdpi/ic_monochrome.png",
+      "bytes": 2105,
+      "sha256": "3682e72ad676c84acdf275cc35fec77cca0e4150fd0217ce4cc72085639fb2e9",
+      "width": 162,
+      "height": 162,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-mdpi/ic_foreground.png",
+      "bytes": 1915,
+      "sha256": "f518336842e433d55898f829c7ab5f883ad796458bf96d7e4f607d458ad48964",
+      "width": 108,
+      "height": 108,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-mdpi/ic_monochrome.png",
+      "bytes": 1605,
+      "sha256": "e7ec96193964ca01bd080ad07392d9da39f6a4d75871b7f2ea93baea6f8ed3ea",
+      "width": 108,
+      "height": 108,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-xhdpi/ic_foreground.png",
+      "bytes": 3290,
+      "sha256": "c19e3ef9d371aff444b5e62d4adb17b6a285dd2bd5cf94f66c99ea55c52df39e",
+      "width": 216,
+      "height": 216,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-xhdpi/ic_monochrome.png",
+      "bytes": 2671,
+      "sha256": "2f9893143fc2c110960ca247f28a7c414b6a293a225e77d5af2aea7816accf2e",
+      "width": 216,
+      "height": 216,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-xxhdpi/ic_foreground.png",
+      "bytes": 4778,
+      "sha256": "aae7ba0119b238e59d9eec226cf24b75c820265192aaf572bec09863245e13ea",
+      "width": 324,
+      "height": 324,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-xxhdpi/ic_monochrome.png",
+      "bytes": 3859,
+      "sha256": "b03732d3a48d0562d673ce12ab6ffb5aa241fb802007a350e39528c049d16390",
+      "width": 324,
+      "height": 324,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-xxxhdpi/ic_foreground.png",
+      "bytes": 6525,
+      "sha256": "fc5cd65700f49aec49fa03f9e46c90daae2157554c333c79d5c602a352e1c4ed",
+      "width": 432,
+      "height": 432,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/drawable-xxxhdpi/ic_monochrome.png",
+      "bytes": 5128,
+      "sha256": "f1c097ba2ef8782af626f1df8b00d72fdbeaf10ed0cb7d7a20633e1fde8b8cbe",
+      "width": 432,
+      "height": 432,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "bytes": 199,
+      "sha256": "c6884bf32c4fb8312d226faf701f36f7e352ce9ccf25ca195df14cf447a3fc31"
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-anydpi-v33/ic_launcher.xml",
+      "bytes": 255,
+      "sha256": "0bbcf833da6032afabe1674f35c90adc3b2c5217e66d0894ca44cb98714b266f"
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-hdpi/ic_launcher.png",
+      "bytes": 1742,
+      "sha256": "086c2e90ad2cdd04438760fdcb9d03b5a8520f6cc02cef6e7462c97e19b5dd0d",
+      "width": 72,
+      "height": 72,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-mdpi/ic_launcher.png",
+      "bytes": 1365,
+      "sha256": "9eae46ca1966d1e2c4f5a55df2a54e1878fae2448222ce53c248e282943243c3",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-xhdpi/ic_launcher.png",
+      "bytes": 2135,
+      "sha256": "74becdc1ef95bc60c4116bb0630dacf9e5debca9effb134b0aae9b3650e7b5f3",
+      "width": 96,
+      "height": 96,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-xxhdpi/ic_launcher.png",
+      "bytes": 3055,
+      "sha256": "2f3015770689e3af128a46a84916c6242aa6a278370b13ec5f7b4dc3db99278a",
+      "width": 144,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/mipmap-xxxhdpi/ic_launcher.png",
+      "bytes": 4126,
+      "sha256": "8cf1b8aa93099ff727bcaa0f91c536909a57c1321f365d68f8afe380b8ca3994",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/android/res/values/colors.xml",
+      "bytes": 66,
+      "sha256": "664192135b654520c4d693200988b1bce3aa49eb7f9d46cdf708564fa04d8da7"
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/app-store-1024.png",
+      "bytes": 34423,
+      "sha256": "2243f917d860974383f08d03a0fdeee2a3afa4ba29c72bc3f020cec0728e513a",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/apple-touch-icon.png",
+      "bytes": 3672,
+      "sha256": "bf4422aa6443bd5ae4cf37fa287c9e24eaa60883adef8576cd7f0906c8718ac7",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/google-play-512.png",
+      "bytes": 12522,
+      "sha256": "4437141e3d4cf1174eba3e6950de88a3049290af0f7d805ff4a992ff9a2343f7",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/Contents.json",
+      "bytes": 2294,
+      "sha256": "0df3ab040040e163c36dceef6db3fdb34958d0788c4df1f110e4969cf790ac03"
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-20@1x.png",
+      "bytes": 1013,
+      "sha256": "6e378c63771f1e9c2499b4bca4cf66333c2c4b472c3205dab231be5d242a990d",
+      "width": 20,
+      "height": 20,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-20@2x.png",
+      "bytes": 1384,
+      "sha256": "e1f448280dd48577cd5695c18f088891e0fc73a3ecb44f5e3da3301451cc1781",
+      "width": 40,
+      "height": 40,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-29@1x.png",
+      "bytes": 1150,
+      "sha256": "6b23b8e2dd254ef8ba372e5a493fefbfda93820202a56ffea918b87312631693",
+      "width": 29,
+      "height": 29,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-29@2x.png",
+      "bytes": 1700,
+      "sha256": "0992eba9e847ba78c645b98a572d1902544742c995fa7294f82617b842d079aa",
+      "width": 58,
+      "height": 58,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-40@1x.png",
+      "bytes": 1214,
+      "sha256": "a248199953b48f8f762eb939b7df7b9c7b9af0aa2a75ef9903281b36eed255d9",
+      "width": 40,
+      "height": 40,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-40@2x.png",
+      "bytes": 1808,
+      "sha256": "60d425b318830c033b255999c269ed7f5913d08ee403211f585fb9fad2922f48",
+      "width": 80,
+      "height": 80,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-76@1x.png",
+      "bytes": 1784,
+      "sha256": "f51f1d1e003ae769b05d04a65c15f4e45848e2bbfec1b728703e2edcc0e8fa40",
+      "width": 76,
+      "height": 76,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-76@2x.png",
+      "bytes": 3159,
+      "sha256": "6c2c9b535be689f5fe2135f7218ccb5fc59fe22738d83f0079efe00baae9a52d",
+      "width": 152,
+      "height": 152,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-ipad-83.5@2x.png",
+      "bytes": 3402,
+      "sha256": "e2471f28252b66b8eb95fcf70b4f5dc36dfebdecda34dd3f256bf2d1150a98c7",
+      "width": 167,
+      "height": 167,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-20@2x.png",
+      "bytes": 1384,
+      "sha256": "e1f448280dd48577cd5695c18f088891e0fc73a3ecb44f5e3da3301451cc1781",
+      "width": 40,
+      "height": 40,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-20@3x.png",
+      "bytes": 1730,
+      "sha256": "019837aee79930344979629f21d7e5150a717c7931b01e0e9079feea2255ea81",
+      "width": 60,
+      "height": 60,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-29@2x.png",
+      "bytes": 1700,
+      "sha256": "0992eba9e847ba78c645b98a572d1902544742c995fa7294f82617b842d079aa",
+      "width": 58,
+      "height": 58,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-29@3x.png",
+      "bytes": 2226,
+      "sha256": "557ea721f211c7a74e14e2da46af36314eb32b7de19dfd260bad28b513c48dd5",
+      "width": 87,
+      "height": 87,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-40@2x.png",
+      "bytes": 1808,
+      "sha256": "60d425b318830c033b255999c269ed7f5913d08ee403211f585fb9fad2922f48",
+      "width": 80,
+      "height": 80,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-40@3x.png",
+      "bytes": 2482,
+      "sha256": "ec2be2a8c595774f2b5d4ac7b5de2df5ca0aafa181e7a815bdc90e6f30b35a65",
+      "width": 120,
+      "height": 120,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-60@2x.png",
+      "bytes": 2482,
+      "sha256": "ec2be2a8c595774f2b5d4ac7b5de2df5ca0aafa181e7a815bdc90e6f30b35a65",
+      "width": 120,
+      "height": 120,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-iphone-60@3x.png",
+      "bytes": 3672,
+      "sha256": "bf4422aa6443bd5ae4cf37fa287c9e24eaa60883adef8576cd7f0906c8718ac7",
+      "width": 180,
+      "height": 180,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/ios/AppIcon.appiconset/icon-marketing-1024.png",
+      "bytes": 34423,
+      "sha256": "2243f917d860974383f08d03a0fdeee2a3afa4ba29c72bc3f020cec0728e513a",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": false,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/manifest.webmanifest",
+      "bytes": 632,
+      "sha256": "90f4929ad4088ac471ce5319396a9d5ed8117ae23b56a7311b505113ccf5574f"
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/pwa-any-192.png",
+      "bytes": 4126,
+      "sha256": "8cf1b8aa93099ff727bcaa0f91c536909a57c1321f365d68f8afe380b8ca3994",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/pwa-any-512.png",
+      "bytes": 14962,
+      "sha256": "1cc606659de87bf1576700a74938def6d55a22e67b437850ef4311be41a01735",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/pwa-maskable-192.png",
+      "bytes": 4126,
+      "sha256": "8cf1b8aa93099ff727bcaa0f91c536909a57c1321f365d68f8afe380b8ca3994",
+      "width": 192,
+      "height": 192,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "04-apps/terracota-sobre-crema/pwa-maskable-512.png",
+      "bytes": 14962,
+      "sha256": "1cc606659de87bf1576700a74938def6d55a22e67b437850ef4311be41a01735",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/crema-sobre-terracota/perfil-b-1080.png",
+      "bytes": 44843,
+      "sha256": "a2b82a98176f38069a14347f3fd1a4c7de120cb3e93cb7248478f3341b51ebaa",
+      "width": 1080,
+      "height": 1080,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/crema-sobre-terracota/perfil-b-320.png",
+      "bytes": 7515,
+      "sha256": "818d616897e07ffa3b734c116b0759d28785f22f4406e5718bb4288e5c047b54",
+      "width": 320,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/crema-sobre-terracota/perfil-b-400.png",
+      "bytes": 10497,
+      "sha256": "3904b29cebdd2dd08a1c64e807a5f29951c476b56e0d0c7ee6ce083812076af3",
+      "width": 400,
+      "height": 400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/crema-sobre-terracota/perfil-b-512.png",
+      "bytes": 15037,
+      "sha256": "88dbe75d6f7a2317e0853c6069bfdacda1e0dff56ddb0b8acbb8379beebb8276",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/crema-sobre-terracota/perfil-b-800.png",
+      "bytes": 28404,
+      "sha256": "f5ba01eb120c350d678152e41037787bb632b4249e40802621f0d22297258966",
+      "width": 800,
+      "height": 800,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/portadas/facebook-portada.png",
+      "bytes": 1143376,
+      "sha256": "f40930cb849297ffdadce31cf02a4e36e7f0063f9fa6fde6a970121b98c839b7",
+      "width": 1702,
+      "height": 630,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/portadas/whatsapp-business-portada.png",
+      "bytes": 908297,
+      "sha256": "0cd53c6ea061405c90eff057bb2e67871e0a3f471f0e9d217346bbb4d97c53de",
+      "width": 1211,
+      "height": 681,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/terracota-sobre-crema/perfil-b-1080.png",
+      "bytes": 44677,
+      "sha256": "1a5b76cddbf00a18b3bf07123fe11907fd4702c9749d3a6a601b9be1f03ede96",
+      "width": 1080,
+      "height": 1080,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/terracota-sobre-crema/perfil-b-320.png",
+      "bytes": 7473,
+      "sha256": "757ed5f88d1ecee2becf89c5582d1f266ed31da0a23074a97dac841d069d6fc4",
+      "width": 320,
+      "height": 320,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/terracota-sobre-crema/perfil-b-400.png",
+      "bytes": 10441,
+      "sha256": "6619544a6e0778f8a8bb08b087e0b656276918d23d6f9aa135e195b9bc0a065b",
+      "width": 400,
+      "height": 400,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/terracota-sobre-crema/perfil-b-512.png",
+      "bytes": 14962,
+      "sha256": "1cc606659de87bf1576700a74938def6d55a22e67b437850ef4311be41a01735",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "05-redes/terracota-sobre-crema/perfil-b-800.png",
+      "bytes": 28250,
+      "sha256": "63bd7274d85154cf5ce777aae4974ee9874d03632e5e1c4ea6d0d08627e9c09d",
+      "width": 800,
+      "height": 800,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "06-escritorio/crema-sobre-terracota.icns",
+      "bytes": 69296,
+      "sha256": "6a5200e3a4b74ba7029436f591e1545aa169036ba37a889d82dc27ca58c55cfb"
+    },
+    {
+      "file": "06-escritorio/crema-sobre-terracota.ico",
+      "bytes": 17033,
+      "sha256": "0c8697800750cf27726dfa87ab9b09140e779a68e3755bbfaa0d9471df414eac"
+    },
+    {
+      "file": "06-escritorio/terracota-sobre-crema.icns",
+      "bytes": 69002,
+      "sha256": "37f29c333e6d929e4c2436980b4a6f87ff36e21c67a428ed7b79bee67c7a4e5e"
+    },
+    {
+      "file": "06-escritorio/terracota-sobre-crema.ico",
+      "bytes": 16972,
+      "sha256": "0876ad357829dc02403b5386cb28389a91093c9cc3e1472e5eedb4e82559e6f1"
+    },
+    {
+      "file": "07-impresion/Generic-CMYK-Profile.icc",
+      "bytes": 55280,
+      "sha256": "0c8a584b288a306eac9e1d3f1e68bc1b64331c717ceb051420e6257f17b3509a"
+    },
+    {
+      "file": "07-impresion/colores-cmyk.json",
+      "bytes": 3975,
+      "sha256": "9180db65788e7ce13c06bc42e799a8cd2ec70fc4f3cffd4f471c197d938ee2e6"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo-com-cuadrado.eps",
+      "bytes": 57661,
+      "sha256": "133e7a7189234fcc20574c1e49637be73b32c8e8e0409c4c2d8e964b1e3500c3"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo-com.eps",
+      "bytes": 3891,
+      "sha256": "96779378345d0ec111e75b886e83aed36e9bfd2b8add1a3864dd221a828f570a"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo-cuadrado.eps",
+      "bytes": 56482,
+      "sha256": "2673638cda0527c41a6392fe92f8ec79b6ec03dc1af12e605ae81a334c72f980"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/logo.eps",
+      "bytes": 2760,
+      "sha256": "f11411f11700c6bac964b7eb675a9ad54bcbc4b69d65dbf7b2f69a20eac92d76"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/blanco/simbolo.eps",
+      "bytes": 691,
+      "sha256": "c64b699ce2f03d2db25d2dca489dd0c0933c11fe8de9fe0f2f5d9e8d6bfe2c8d"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo-com-cuadrado.eps",
+      "bytes": 57661,
+      "sha256": "17a5aeff8a948a82c94a7824aac77a71ade863f8917a8345ec88d5eb74023373"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo-com.eps",
+      "bytes": 3891,
+      "sha256": "b83b93d48b16e7bef57529d826dc1cd1380b048f8db3cb12413dcdf8fdba661d"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo-cuadrado.eps",
+      "bytes": 56482,
+      "sha256": "14b1d894abfcfaf5d78fc0463cea9b5e1d563f3d204a516e9afd584a8ddbd8d8"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/logo.eps",
+      "bytes": 2760,
+      "sha256": "a087dfaa6c2ad7fc66247ea96b2b483e28e308f6484d84ca9af77879a13b6c40"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/carbon-calido/simbolo.eps",
+      "bytes": 691,
+      "sha256": "86459701b31cd18977dac86323667ed920ec6b533295d78565c8e8d8007104b3"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo-com-cuadrado.eps",
+      "bytes": 57661,
+      "sha256": "a2de4623b4222d219548494aacf8687ad35c857044ec73e835bb71b07fbca5c0"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo-com.eps",
+      "bytes": 3891,
+      "sha256": "24fe2a02f279aad5b6ac8333d891cecd0cefd6d458cd87fdc53d5b935562d8cf"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo-cuadrado.eps",
+      "bytes": 56482,
+      "sha256": "f6d5d044c481a906689a0f07970462c787d67566d41284def756c15c3b2c4afb"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/logo.eps",
+      "bytes": 2760,
+      "sha256": "f77ea73a5b9ec3b3cc21f4514894ddc79a78ad459686ffe242bedd7a586262be"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/crema/simbolo.eps",
+      "bytes": 691,
+      "sha256": "9332ba6726e660f97c04877e2d468213256885bfa29f5c2e92536b1e1348778a"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo-com-cuadrado.eps",
+      "bytes": 57661,
+      "sha256": "770e037fac96c192aeabed9f89989a6c8f822442857e186220ee8a89c652bac4"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo-com.eps",
+      "bytes": 3891,
+      "sha256": "18da3d233f633f0c5c76ce978d78a42548f81db345bf57c036094da0961f24a8"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo-cuadrado.eps",
+      "bytes": 56482,
+      "sha256": "93f519d39946a930c65ce25d2a4dfcec021b384aca90d7f4eb522ee694311c64"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/logo.eps",
+      "bytes": 2760,
+      "sha256": "4436d40144fd0d4c93a36a17c74ca2e3c70f2f00d6b77e4c506b6a510fb415b2"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/terracota/simbolo.eps",
+      "bytes": 691,
+      "sha256": "0749f94738d59b129e2f452c46f42e7f10cb173fbae3bc8a5e60cf04c7e09a8c"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo-com-cuadrado.eps",
+      "bytes": 57661,
+      "sha256": "5130a2f1db4cf918d7d066422025ca426f740362c054c598130df02cc4da22b9"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo-com.eps",
+      "bytes": 3891,
+      "sha256": "27c6a299ff723cc84d9e2b51244116960de3972fe75cfe00bb5258668fb534ab"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo-cuadrado.eps",
+      "bytes": 56482,
+      "sha256": "4ddcbbe55f4517c1ee0c447dfadc681772cbc4cddf0ed863d8743a45f80dced2"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/logo.eps",
+      "bytes": 2760,
+      "sha256": "1e0e14a0db8d07294c4da634e01a9b8ca78bb9c63ec2425f6be3675584aa2a20"
+    },
+    {
+      "file": "07-impresion/eps-cmyk/tinta/simbolo.eps",
+      "bytes": 691,
+      "sha256": "028e6096b057459ef9b615791eb671647060ffab28a61bffe156fda4910dd5a4"
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-100mm.png",
+      "bytes": 24876,
+      "sha256": "5c276bc660911318df6cb108117af1621af57503f31a55f62680be8be10f66fd",
+      "width": 1181,
+      "height": 413,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-200mm.png",
+      "bytes": 54110,
+      "sha256": "a0bc185009e12daa8f573771a77af3af28d86e8962e771d852da132137e11fa1",
+      "width": 2362,
+      "height": 827,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-50mm.png",
+      "bytes": 11316,
+      "sha256": "74cec08fcbc66a0888d696eb96a1e299fbf8e8c7f486a246e4f5e851dc256f7d",
+      "width": 591,
+      "height": 207,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-com-100mm.png",
+      "bytes": 22608,
+      "sha256": "9ae91e18c045c1299b264063fdc70c969668275f59541613b93bdf8366ee165d",
+      "width": 1181,
+      "height": 288,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-com-200mm.png",
+      "bytes": 50762,
+      "sha256": "ad703e1c7b8d4738552e7d6d0855c084f7d84109e8cfc8cd86325ce1a1027b06",
+      "width": 2362,
+      "height": 576,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-com-50mm.png",
+      "bytes": 10285,
+      "sha256": "6b3943028d271c181246e2bd0374837446c2242fa79abacdd0c8f46509e2c6fb",
+      "width": 591,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-com-cuadrado-100mm.png",
+      "bytes": 65042,
+      "sha256": "11b30cf1edb52d4d885951b17ce74cf0118e47bceca1b5fe826f6952d9738871",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-com-cuadrado-200mm.png",
+      "bytes": 146521,
+      "sha256": "cd0d584daacca197876ac170e49b8f96c52ccba32d7cea4678da3707fe251d1d",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-com-cuadrado-50mm.png",
+      "bytes": 28980,
+      "sha256": "046598107898a8c6023e395ba396a879fe56b36cb68f84b36c9a4f727d507cfa",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-cuadrado-100mm.png",
+      "bytes": 66045,
+      "sha256": "57fd1d184d0722509365537a56967f81b18041639be39c547d3ef5f36bec5c3e",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-cuadrado-200mm.png",
+      "bytes": 147877,
+      "sha256": "8f77def5cee14dd04cbdca92cdf369077d04098b0c139934d39dc2ef8fc1fb33",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/logo-cuadrado-50mm.png",
+      "bytes": 29483,
+      "sha256": "be738413ecafd39af5441151171547d1fe64d94571c810865b04a6d8a1e57123",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/simbolo-100mm.png",
+      "bytes": 21106,
+      "sha256": "da1f139da8e0a2a090a124c3f7b57dd954eb626764ecb86a1ef0922726d7572c",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/simbolo-200mm.png",
+      "bytes": 51952,
+      "sha256": "afb7fb558c385e88f903b76ea38a5f8c8c91d4fe2db5de861e37e51fb1852446",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/blanco/simbolo-50mm.png",
+      "bytes": 8423,
+      "sha256": "c34e9399a8a369a98ff58180399cca96ba0750a4cb1bfef3f49b703b6ce7e968",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-100mm.png",
+      "bytes": 30323,
+      "sha256": "b95e48e3bb37f9f7156acca2c60da8539bd7b2cfd3899da43d1f68d558f2972c",
+      "width": 1181,
+      "height": 413,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-200mm.png",
+      "bytes": 69216,
+      "sha256": "7772bfd0c8cbff1dd5d27bbea04f01b92d61cff2b8c4e73169a77280b84f5bf0",
+      "width": 2362,
+      "height": 827,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-50mm.png",
+      "bytes": 13341,
+      "sha256": "bab4056e8f4ff1488dc31620bc4484c4eb89a9a963840bab498a55bc91cf276a",
+      "width": 591,
+      "height": 207,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-com-100mm.png",
+      "bytes": 26843,
+      "sha256": "b92831b683eb9efd018a2d56b433bd266ee06caf5146951833bc6c7db74b01fb",
+      "width": 1181,
+      "height": 288,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-com-200mm.png",
+      "bytes": 62102,
+      "sha256": "3b59757373996eb1aed1d9e94125aaa85246ae61436a7b1e6dee5e301819e042",
+      "width": 2362,
+      "height": 576,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-com-50mm.png",
+      "bytes": 12006,
+      "sha256": "6e3190512daed72dad9799c85286c73dfe3064b4cd062e2bd7b80069184ad474",
+      "width": 591,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-com-cuadrado-100mm.png",
+      "bytes": 79836,
+      "sha256": "30b5ca72e9ee7be7aede3ab2f19fb6083429ab01a41f426fa6beb846a561fe6b",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-com-cuadrado-200mm.png",
+      "bytes": 179160,
+      "sha256": "8d97ecb7baf587b7133fdba58e40b1a6670f6e2c9529cdfac19165f811f5ccef",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-com-cuadrado-50mm.png",
+      "bytes": 34922,
+      "sha256": "aefea013ba037d08d068d066f35b6c27d2b64702918f9827cb22a5a883aa8ce2",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-cuadrado-100mm.png",
+      "bytes": 81226,
+      "sha256": "7db13ab498339b2a5302e0fa874ee4b3849cb227286d2af91cc41ed585a6ca0a",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-cuadrado-200mm.png",
+      "bytes": 181615,
+      "sha256": "54518f1ada85f97de0391a88632e89b0e22a093927b68cdce361e5bc23371765",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/logo-cuadrado-50mm.png",
+      "bytes": 35486,
+      "sha256": "7dea221da6e90a039f36a64e9d1398d86dbed0fb932df7e83ad2df81fafca89a",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/simbolo-100mm.png",
+      "bytes": 26369,
+      "sha256": "5af52128e11aee09edb71b86c02c05dbe9faec170d314d362d0df575867eddef",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/simbolo-200mm.png",
+      "bytes": 71785,
+      "sha256": "2e74c448adb1d4c0e09b77e22593c48099448cafafde37b227c00104f5dfc1ed",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/carbon-calido/simbolo-50mm.png",
+      "bytes": 10786,
+      "sha256": "1f2088fc9ff3a8bc232d29f7f5cd7e17269a3612041dd970a7ae00f69a3e727d",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-100mm.png",
+      "bytes": 29491,
+      "sha256": "276dd3f541b0232b010eb1ac8b1978e380e8a23bae8b8b86dd64c662246b805b",
+      "width": 1181,
+      "height": 413,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-200mm.png",
+      "bytes": 66708,
+      "sha256": "ad37ae671f096ad6db9a5ccc6186f08928db964b0ad35cd83b33be8eb56c675b",
+      "width": 2362,
+      "height": 827,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-50mm.png",
+      "bytes": 13102,
+      "sha256": "e4ae50c052519c0a79f2ba5c25e0c93355cb7d51d91a0c338c295437b4317c29",
+      "width": 591,
+      "height": 207,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-com-100mm.png",
+      "bytes": 26094,
+      "sha256": "cd2ce1d03b81ced4eef35cb631293153e0a5d81a3e26d251f6fe230befc81738",
+      "width": 1181,
+      "height": 288,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-com-200mm.png",
+      "bytes": 60411,
+      "sha256": "84635d6429586c0ef68c317a9f6d0c0c0700ab4ed180ae70d332d2c5dced3c86",
+      "width": 2362,
+      "height": 576,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-com-50mm.png",
+      "bytes": 11830,
+      "sha256": "e05ae9afe52d7bb78b770e1d1a078df23c6ea98f5fdf4b75d9997e20b51f20a2",
+      "width": 591,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-com-cuadrado-100mm.png",
+      "bytes": 76499,
+      "sha256": "afc8870231ccf5d3d07754ecf811936fbbc03ab961537ec77fcc317e3429dc83",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-com-cuadrado-200mm.png",
+      "bytes": 173498,
+      "sha256": "69fe88ee0a84c33573931d559ad5a54a7ed6816a95ed0af0fdb2261fef1ec60b",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-com-cuadrado-50mm.png",
+      "bytes": 33838,
+      "sha256": "87dbd4fd0dd5be44e60338806b6bf243bb6ab3aae34eaf273c3f337753a90924",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-cuadrado-100mm.png",
+      "bytes": 77826,
+      "sha256": "86ed8821f88ddc3b36dd8a06612de7ef8d9c964ffe7e145199aae7293dc9501f",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-cuadrado-200mm.png",
+      "bytes": 176201,
+      "sha256": "c693380651b24135d5af53bb37dc177b6e6507b2e8f1b9cdbc64aae704f8f8b3",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/logo-cuadrado-50mm.png",
+      "bytes": 34374,
+      "sha256": "a2dcff5642548e9103facbf3d5731d7867e8f01c5fbb8eb2e19b507486306172",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/simbolo-100mm.png",
+      "bytes": 25676,
+      "sha256": "9174e6548a4977d8d2e814ca7c32bc966160786992e1d0db269550db48479beb",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/simbolo-200mm.png",
+      "bytes": 70310,
+      "sha256": "d158a33cf21ef3e0188155f21106c98567b0601129e27f5fbd5e149623cea246",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/crema/simbolo-50mm.png",
+      "bytes": 10482,
+      "sha256": "efa11e4fccc4258f384828a609c7cce62a86f77463461b049f7b28f70a0b67ae",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-100mm.png",
+      "bytes": 30837,
+      "sha256": "30e2c5f03b420243a9a6c513d3cd7341af77cdbd02e8610a004fe0550f88b9f6",
+      "width": 1181,
+      "height": 413,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-200mm.png",
+      "bytes": 70960,
+      "sha256": "fe0ec5ce7d8c22fb26d2c091e0d8874325334ca01a83799eb32a1bcc2705daed",
+      "width": 2362,
+      "height": 827,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-50mm.png",
+      "bytes": 13566,
+      "sha256": "3f6ab3856fdfae4a2b50eff4a0673012f6ebdc61388fefa714e42fc33a99e090",
+      "width": 591,
+      "height": 207,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-com-100mm.png",
+      "bytes": 27316,
+      "sha256": "814259cb35bccb0833a61c3e2b157cd55d32d53d5b8ea3aac62e1b37a80c9805",
+      "width": 1181,
+      "height": 288,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-com-200mm.png",
+      "bytes": 63380,
+      "sha256": "2cf929ee227a6f0d1adeee1ae91624e7398202e548f77a3fde5f0449884d89e5",
+      "width": 2362,
+      "height": 576,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-com-50mm.png",
+      "bytes": 12150,
+      "sha256": "baf94140d84dbe31fabff12b41057ae9afb2c8696a44fc20cd33a14857d919be",
+      "width": 591,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-com-cuadrado-100mm.png",
+      "bytes": 81610,
+      "sha256": "b70e494f21de78c23f07cc5f789679eb8b5c90713e6a54fb8ba798a6f6dc1152",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-com-cuadrado-200mm.png",
+      "bytes": 183053,
+      "sha256": "401797e27268bfe2007f20566e255ac87ac995780d113a38918288ac28a88c97",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-com-cuadrado-50mm.png",
+      "bytes": 35737,
+      "sha256": "370f4db1d6a8f1f46fb1755d036947c5ed571d8da84206af8894995c05d391d9",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-cuadrado-100mm.png",
+      "bytes": 83053,
+      "sha256": "ab40d6ca1bf4b65fd6778099869ed5c18192beb231d7c96374b132e7d954332f",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-cuadrado-200mm.png",
+      "bytes": 185614,
+      "sha256": "12d03601a1d08b0d960314418545ecb72ed9e6d3797bf0dc8122732b4054f364",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/logo-cuadrado-50mm.png",
+      "bytes": 36320,
+      "sha256": "2c3e37e30e21b92625eddbae70d5f2c823799066840c747132e592089b9e566c",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/simbolo-100mm.png",
+      "bytes": 27017,
+      "sha256": "cce9ba558e8a94672a487b58a2396282b0e0c5fa7e7bb21235722ab862f90061",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/simbolo-200mm.png",
+      "bytes": 72814,
+      "sha256": "82e84acaa09c2f68a93bc09f0c80bb18132218d3d6d97d9bdb45c1d251d2ebe9",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/terracota/simbolo-50mm.png",
+      "bytes": 11038,
+      "sha256": "0083a8b869d2580f8e5982e8f4b14f615d2bb3374d729778d2223406e733de57",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-100mm.png",
+      "bytes": 30333,
+      "sha256": "d811f287d9fe39ae4d661848c05d47927ed07008c0a738982923b1a22de2a306",
+      "width": 1181,
+      "height": 413,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-200mm.png",
+      "bytes": 69169,
+      "sha256": "2b637a99ef243c1991793cbed68a9fa44e96d866f96e6c56a69acd230e3770e0",
+      "width": 2362,
+      "height": 827,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-50mm.png",
+      "bytes": 13365,
+      "sha256": "7deec736ff2059687444428d185a2bb3b516703c33a78957baa2abccd32e6c7d",
+      "width": 591,
+      "height": 207,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-com-100mm.png",
+      "bytes": 26887,
+      "sha256": "598f9fdc112cd9282a4a36f964dcbeaf3ca347d1392d712faea1571fb4e6162e",
+      "width": 1181,
+      "height": 288,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-com-200mm.png",
+      "bytes": 62021,
+      "sha256": "7c7150baa2498d095ed2fcc61580ca1924ceca2491a6d61102d57825b03614b2",
+      "width": 2362,
+      "height": 576,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-com-50mm.png",
+      "bytes": 12015,
+      "sha256": "78534f9b7c5f546050c0d1c9925ea7c1fb0a6ed6ca999f3d873aa47156422db2",
+      "width": 591,
+      "height": 144,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-com-cuadrado-100mm.png",
+      "bytes": 79710,
+      "sha256": "c4c52ce075451429935c88fb7b35e33a44b69c68114a5c387c5763915354f7ee",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-com-cuadrado-200mm.png",
+      "bytes": 178968,
+      "sha256": "8be43f61b7a5a4be8beab8942c260f518b0b882c3f51ee47447de7f45f064e8a",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-com-cuadrado-50mm.png",
+      "bytes": 34970,
+      "sha256": "c5dd8d6ed0b312400d17f4ad1f94c8aba2c7e242e7fcee008f2450efc9c10f48",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-cuadrado-100mm.png",
+      "bytes": 81159,
+      "sha256": "00011aa48adbb3c5fdc38c3cd8d2ab5366ac0cf129ff00a87b46d608d69e0ceb",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-cuadrado-200mm.png",
+      "bytes": 181549,
+      "sha256": "c59887491f33e47991595285d3ed52c3b5537e5f73c2e8c02e3dd25653509b5d",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/logo-cuadrado-50mm.png",
+      "bytes": 35563,
+      "sha256": "87042035e62edc19a43e2c22a2f8e24fb649fe993b9b82ee3ef63fe3c3e80c78",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/simbolo-100mm.png",
+      "bytes": 26421,
+      "sha256": "66dc2c5671d0c5b9e9ccdb9135531a2b78a883706b840fbe69d74d3f2534fed9",
+      "width": 1181,
+      "height": 1181,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/simbolo-200mm.png",
+      "bytes": 71554,
+      "sha256": "6464388e1d04e5391aa0eabc7cf5799482da4428055426e76f6335498a1ff986",
+      "width": 2362,
+      "height": 2362,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "07-impresion/png-300ppp/tinta/simbolo-50mm.png",
+      "bytes": 10798,
+      "sha256": "7d38075c8fe9458787a8db0e62b54af73eebaafdfb4a59b7edae1e7add605824",
+      "width": 591,
+      "height": 591,
+      "hasAlpha": true,
+      "dpi": 300
+    },
+    {
+      "file": "08-vistas/comparacion-terracotas.png",
+      "bytes": 85630,
+      "sha256": "aa367067f429736ffb9fa98cbacca40815e11ba081d5206d589c148ef645e1fe",
+      "width": 1400,
+      "height": 760,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/comparacion-terracotas.svg",
+      "bytes": 5795,
+      "sha256": "6d9c1d6f0c444a2eaeb1247e1e7a622fbdee20f0fe53dffa96f30a74cdc9fd36"
+    },
+    {
+      "file": "08-vistas/entrega-marca.png",
+      "bytes": 145059,
+      "sha256": "4b50e88c3c1fd1f6c60752214b51dce906e0a3ed16f50c9aa6f10658baa86d84",
+      "width": 1500,
+      "height": 1200,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/entrega-marca.svg",
+      "bytes": 113052,
+      "sha256": "354b849cb8881fb72a8a59ba7f6a0669db8265c7d05b158707f49cb7d4ea5b50"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/LEAME.md",
+      "bytes": 467,
+      "sha256": "7b452803b1c0b218a5c4f8c2e3b2573174e03460a09fbf0078ee69c5f4a33dd0"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/comparativa.png",
+      "bytes": 113642,
+      "sha256": "40725e17480141da0c4e6381398ce57b5e17a0b96c3c7f9863186dbadb36c081",
+      "width": 1500,
+      "height": 1000,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/comparativa.svg",
+      "bytes": 27443,
+      "sha256": "ea3d03d43ad11f7e67ab2c36adc7712f43a924b88d7df4a273a3dc1f88c2996d"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-16.png",
+      "bytes": 471,
+      "sha256": "eb69fe19e27eac6da2a94c50b6da50141f93788b976db5355b02cfdf5ed09726",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-16.svg",
+      "bytes": 575,
+      "sha256": "4d37912c2c1e174f5a6ea35fbfaa1d2dac780d54eadea2ebea8b822f7bfa25be"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-24.png",
+      "bytes": 637,
+      "sha256": "c510cc7ffb004b4423ada71ccf97a96565808f22af64c1e27269da57ed9b24f7",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-24.svg",
+      "bytes": 590,
+      "sha256": "56debf09a56dd068666184b75016f9983953c47e91b2af023b095093d1337d9d"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-256.png",
+      "bytes": 6265,
+      "sha256": "1af95711b00c4f62de38829b3548d860d977cf57c4fd2723ae0dad86b054254a",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-256.svg",
+      "bytes": 542,
+      "sha256": "cd6568ae163f53a04b57c35c60f6ffb7c41d0aab7258fe720cedeba9fee09e36"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-32.png",
+      "bytes": 817,
+      "sha256": "f9026bde1aa3f6d1a7883711dbb8aae6460b0aa39f2dd4d19368a43b8588c683",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-32.svg",
+      "bytes": 574,
+      "sha256": "f0ca3b65f7ce3772853c3d92ba0f3face058f5da59d7c1eb9f02904f51117231"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-48.png",
+      "bytes": 992,
+      "sha256": "d06feeccd5a8f1c4ca42c9bce3a180251fa0849c0d82fd3816a87170f4fec501",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-48.svg",
+      "bytes": 553,
+      "sha256": "a5ea06295a6e7a8b0871262233b28ca8f416cb02cc21c8ae09189d000923c262"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-64.png",
+      "bytes": 1300,
+      "sha256": "39adc8cbf30dbbf0c7738668cee7094ad770c7e03266fd66da88616226b51eeb",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/crema-64.svg",
+      "bytes": 538,
+      "sha256": "62d6a8b2a84e6615cac04f187738e99a969fcbc655556833ad9431ed7d0e80b3"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-16.png",
+      "bytes": 490,
+      "sha256": "5dd73f18f3fdf53fc9dcaea2ee70a0e862829d5d96143ed6f34b66326ec30ace",
+      "width": 16,
+      "height": 16,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-16.svg",
+      "bytes": 579,
+      "sha256": "d5b728b9e6e07fd5037383d049d102f9f37cb8fa0fd75770d8c3450d6ac22e09"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-24.png",
+      "bytes": 655,
+      "sha256": "0acf4472879c615e6f056e1bb4c9e35c0e22ccb05501306dd0c1f8f446464718",
+      "width": 24,
+      "height": 24,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-24.svg",
+      "bytes": 594,
+      "sha256": "5a46118c01b58be4faed1970f847e6d5540671e271d93ac9f6a708a44572bf86"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-256.png",
+      "bytes": 6465,
+      "sha256": "646b8d39cd48ee284d0787cb5f4aaed4e6193e75778972618a5663ec085a977c",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-256.svg",
+      "bytes": 546,
+      "sha256": "a24064bf8c91a4fd9da0400f90a84c6d2845eac8eae85b9df59df0265da189b6"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-32.png",
+      "bytes": 843,
+      "sha256": "fb72806496d46fe8651dd2e7fca761023a38d8b249a6aedf2de1f4085ac360aa",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-32.svg",
+      "bytes": 578,
+      "sha256": "58a737079e320b2d74cbce970c27aeb31977f01bc69b567c15ed4abf8eeeaabd"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-48.png",
+      "bytes": 1053,
+      "sha256": "52af465b704ad75b0a83634b774db80695e669405487d9280bd9c258e699a737",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-48.svg",
+      "bytes": 557,
+      "sha256": "5465499bdbb98537dc6e8a37ceb336c0f807e2212c3f334afa0b18a6f2f41afa"
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-64.png",
+      "bytes": 1356,
+      "sha256": "6e2d6b52a7145b4502f3a83478ea490ae47939ec62a878051553109236d29976",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "08-vistas/prueba-favicon/terracota-64.svg",
+      "bytes": 542,
+      "sha256": "1563cae00c2da645431fb1a47cee4edc0c70d6d876c7eed80373f7ddf53be246"
+    },
+    {
+      "file": "09-guia-de-marca/3bstays-guia-de-marca.html",
+      "bytes": 8064,
+      "sha256": "721677cd9692fd9b1e63381e70e9c2e9c8a68b6306124a024cadae5908a9e46f"
+    },
+    {
+      "file": "09-guia-de-marca/contenido.json",
+      "bytes": 6641,
+      "sha256": "feb1264007a2713f362b8c676ed7b39b8d1f0e0df5378bf9413e87e6baae17dc"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/Figtree-400.ttf",
+      "bytes": 40116,
+      "sha256": "781ee3c195fe5975e6ff0a9100542d1b624c39d9696e68f26990b9c19a959950"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/Figtree-600.ttf",
+      "bytes": 40136,
+      "sha256": "bb4379044687eadbce302a2dc329ed3bba04f3c185d4e0b07a5cd26f3db9c974"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/Figtree-700.ttf",
+      "bytes": 40128,
+      "sha256": "284676751ac51dc87a0d4523b7444a7ebf26345b759395546558be22f079765d"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/OFL-Figtree.txt",
+      "bytes": 4388,
+      "sha256": "140d37233e7f3ce7313798befa9600893bcceaf41a55fa0fa5ad52f7f657a268"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/OFL-Outfit.txt",
+      "bytes": 4389,
+      "sha256": "c676351bf8576b9aba743cd5eaa8c0e7ee0d51f805d720447b4df4ddb6a2e416"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/Outfit-700.ttf",
+      "bytes": 55304,
+      "sha256": "69ab53513a82258cad46ae1317987af933fd7a08d171bbff7e925b4a02e8cf2c"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/Outfit-800.ttf",
+      "bytes": 55188,
+      "sha256": "aae352a92969d0e178055d111342cf171d7610c389d6e1e7a5809b9602c627e8"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/figtree-latin-ext.woff2",
+      "bytes": 10228,
+      "sha256": "f153aa07c1b16fbb12391c2512860c97819a0a9fd014f338b2b3f12496479d13"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/figtree-latin.woff2",
+      "bytes": 20184,
+      "sha256": "8330490a01c60c196eae00b823de8102275aaa5862e7b76a7af21b8745338928"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/outfit-latin-ext.woff2",
+      "bytes": 14760,
+      "sha256": "9e38b3f1575daba3435ef09d33a202585ed5bd204bd0a8c744955c750c2b9091"
+    },
+    {
+      "file": "09-guia-de-marca/fuentes/outfit-latin.woff2",
+      "bytes": 32228,
+      "sha256": "92684e4acde79ef07758cd09380b7e01e9824d8b061eddeda046f78c166d7b12"
+    },
+    {
+      "file": "LEAME.md",
+      "bytes": 3844,
+      "sha256": "9625c627e2ff897286019b49590815efe0ba9467ed1104f49d655bedd0bbebef"
+    },
+    {
+      "file": "VISTA-GENERAL.html",
+      "bytes": 7837,
+      "sha256": "0c3b562fb8e9018a98ace355f33991127deff172808821c72a5bb01aae554941"
+    },
+    {
+      "file": "icono.png",
+      "bytes": 23298,
+      "sha256": "0dc0588d138385979f6ab896f917bdaf4daf33490e1a94151ef12b5dc1603a88",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "icono.svg",
+      "bytes": 421,
+      "sha256": "54715617941df842f4f9bd18927af334d961a418131c8a3ca2da108d66406e32"
+    },
+    {
+      "file": "logo-con-dominio.png",
+      "bytes": 64447,
+      "sha256": "b840db5c8436134d68d3a8742733974f4ba6e71724ace9c264c84071d5eac8b9",
+      "width": 2400,
+      "height": 585,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "logo-con-dominio.svg",
+      "bytes": 3127,
+      "sha256": "7aeb57f237ec681acb0747589ad8c5c8f3176095b5d1989e2868988b84aa06aa"
+    },
+    {
+      "file": "logo-predeterminado.png",
+      "bytes": 66384,
+      "sha256": "b2387b6e882653501a583876e61debe27e2c72ef5af5ae1c86bf80443df23848",
+      "width": 2400,
+      "height": 840,
+      "hasAlpha": true,
+      "dpi": 72
+    },
+    {
+      "file": "logo-predeterminado.svg",
+      "bytes": 2209,
+      "sha256": "4f1646bb879c17d21b038086dd8aba95ad82d4f22d97c6f79a54dbf09bbfc1dc"
+    }
+  ]
+}

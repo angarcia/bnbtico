@@ -1,3 +1,5 @@
 *.pdf binary
 biblioteca-completa-2026-11-05/09-guia-de-marca/recursos/fuentes/OFL-*.txt -whitespace
 biblioteca-completa-2026-11-05/09-guia-de-marca/recursos/fuentes/OFL-*.txt -whitespace
+
+**/OFL-*.txt -whitespace

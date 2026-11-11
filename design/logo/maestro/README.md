@@ -1,3 +1,12 @@
+# Maestros vigentes · 3bstays · 2026-11-10
+
+- Biblioteca y reglas: [3bstays](../3bstays-2026-11-10/LEAME.md).
+- Maestros aprobados: 3bstays.svg, 3bstays-com.svg y 3bstays-simbolo.svg. Los nombres bnbtico.svg/.png y bnbtico-com.svg/.png son alias del nuevo logo para compatibilidad.
+- Generadores vigentes: generar-3bstays.cjs (biblioteca), integrar-3bstays.cjs (alias y originales recuperables), exportar-3bstays-eps.cjs (CMYK).
+- No ejecutar los generadores anteriores para regenerar la identidad vigente. Sus fuentes y entregas se conservan como histórico; las notas que siguen documentan el trabajo anterior.
+
+---
+
 # Maestro vectorial · 2026-11-05
 
 Referencia aprobada por Ana: `referencia-aprobada.png`, letras del logo cuadrado de Instagram, ambas B a altura normal y solo T elevada. La rana sale de las variantes vigentes de las cuatro carpetas de esta revisión.

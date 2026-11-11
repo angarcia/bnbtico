@@ -1,3 +1,21 @@
+## 2026-11-10 · Logotipo 3bstays con 3 angular y B de asta alta (Ana)
+
+Ana aprueba el logotipo con el 3 de remate plano ligeramente más bajo que la «s», la B angular abierta con el asta a la altura de las minúsculas y el hueco entre la B y «stays» más corto. Tras ver la primera entrega, Ana aprobó acercar «stays» otras 8 unidades del dibujo vectorial. El 3, la B y las minúsculas comparten base. Ana confirma que esta composición se lee bien. La B conserva la reducción del 29 % de su trazo en el logotipo completo.
+
+La biblioteca vigente y los archivos de la app usan la composición aprobada. La versión con dominio conserva las letras de «.com» y los iconos usan la B de asta alta con el grosor reforzado.
+
+## 2026-11-10 · Identidad visual 3bstays y símbolo B original (Ana)
+
+Ana elige la B con un trazo aproximadamente un 29 % más fino dentro del logotipo completo para equilibrar su peso con las letras «stays». El ajuste se aplica a las variantes con dominio y marco. El símbolo independiente conserva el grosor original para los tamaños de icono.
+
+Ana confirma como combinaciones predeterminadas: icono del móvil/PWA con fondo crema y B terracota, sin recuadro dibujado; favicon de pestaña con cuadrado terracota de esquinas redondeadas y B crema. La inversión entre soportes es deliberada y no cambia el símbolo.
+
+Ana confirma después que le gusta el fondo beige/crema del icono del teléfono: se mantiene B terracota sobre crema, sin recuadro dibujado, tanto en any como maskable y Apple Touch. Las variantes transparentes siguen disponibles para otros usos.
+
+Ana elige 3bstays como nombre en los logos: 3 ancho a la altura de las minúsculas, símbolo B original con el centro abierto y ligeramente más alto, y stays en minúsculas. Se descartan las exploraciones de centro cerrado, palo elevado y curvas modificadas. Se aprueba también 3bstays.com tras ver su diseño. Todos los iconos usan solo ese símbolo B, sin 3 adicional, BT ni marco. Tras comparar ambas tintas, Ana confirma conservar el terracota anterior de bnbtico #B44C30 en lugar del tostado #9E563E. Color principal: terracota original #B44C30; crema #FFFBF2 para inversión; tinta #1C2B2A en pantalla, carbón cálido #2B2926 en merchandising y blanco para fotos. Logos transparentes por defecto; fondos deliberados solo para perfiles, apps y soportes que los necesiten.
+
+Se reutilizan los vectores elegidos y se prepara la biblioteca `design/logo/3bstays-2026-11-10/`, con SVG/PNG, EPS CMYK, variantes con y sin dominio y marcos de puntos para usos grandes. Se archivan las entregas anteriores y se conservan alias de archivo para el código. Este trabajo sustituye recursos visuales; no cambia dominios, enlaces, infraestructura, nombres de paquetes, textos de producto ni los colores funcionales de la interfaz. La migración completa del nombre de producto queda fuera de esta sustitución de logos.
+
 ## 2026-11-09 · Presupuestos tras revisar reservas y sincronización de #7 (Ana)
 
 Tras revisar duplicación, dependencias estáticas y dos mediciones, Ana aprueba estos límites gzip: Calendario 9,1 kB (medido 8,864 kB), Airbnb completo 9,5 kB (9,322 kB), Marcar una reserva 1,65 kB (1,589 kB) y Campos del asistente 11,6 kB (11,504 kB). El JS inicial conserva 160 kB (medido 155,840 kB) y los demás límites se mantienen.

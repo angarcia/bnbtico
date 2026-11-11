@@ -1,0 +1,91 @@
+{
+  "fecha": "2026-11-10",
+  "assets": 465,
+  "checks": {
+    "png": 342,
+    "svg": 59,
+    "eps": 25,
+    "transparentLogos": 100,
+    "opaqueStores": 6,
+    "archivedOriginals": 265,
+    "pwaSafe": [
+      {
+        "file": "04-apps/terracota-sobre-crema/pwa-maskable-192.png",
+        "maxRadius": 0.3734959711314017,
+        "limit": 0.4
+      },
+      {
+        "file": "04-apps/terracota-sobre-crema/pwa-maskable-512.png",
+        "maxRadius": 0.3738206757029469,
+        "limit": 0.4
+      },
+      {
+        "file": "04-apps/crema-sobre-terracota/pwa-maskable-192.png",
+        "maxRadius": 0.3734959711314017,
+        "limit": 0.4
+      },
+      {
+        "file": "04-apps/crema-sobre-terracota/pwa-maskable-512.png",
+        "maxRadius": 0.3738206757029469,
+        "limit": 0.4
+      }
+    ],
+    "androidSafe": [
+      {
+        "file": "04-apps/crema-sobre-terracota/android/res/drawable-hdpi/ic_foreground.png",
+        "maxRadius": 0.29748347555608623,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/crema-sobre-terracota/android/res/drawable-mdpi/ic_foreground.png",
+        "maxRadius": 0.29694662427452917,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/crema-sobre-terracota/android/res/drawable-xhdpi/ic_foreground.png",
+        "maxRadius": 0.29862008312677035,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/crema-sobre-terracota/android/res/drawable-xxhdpi/ic_foreground.png",
+        "maxRadius": 0.29854630521455566,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/crema-sobre-terracota/android/res/drawable-xxxhdpi/ic_foreground.png",
+        "maxRadius": 0.2989832235018014,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/terracota-sobre-crema/android/res/drawable-hdpi/ic_foreground.png",
+        "maxRadius": 0.29748347555608623,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/terracota-sobre-crema/android/res/drawable-mdpi/ic_foreground.png",
+        "maxRadius": 0.29694662427452917,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/terracota-sobre-crema/android/res/drawable-xhdpi/ic_foreground.png",
+        "maxRadius": 0.29862008312677035,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/terracota-sobre-crema/android/res/drawable-xxhdpi/ic_foreground.png",
+        "maxRadius": 0.29854630521455566,
+        "limit": 0.3056
+      },
+      {
+        "file": "04-apps/terracota-sobre-crema/android/res/drawable-xxxhdpi/ic_foreground.png",
+        "maxRadius": 0.2989832235018014,
+        "limit": 0.3056
+      }
+    ]
+  },
+  "linksChecked": 50,
+  "geometry": "Coincide con maestros aprobados",
+  "webRuntime": "Pendiente de pruebas de terminal y revisión visual de app",
+  "epsRendering": "No se ha ejecutado un intérprete PostScript",
+  "git": "Sin commit ni despliegue"
+}

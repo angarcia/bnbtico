@@ -108,8 +108,8 @@ export function RootHeader({ title, home = "/explorar", action, aside }: { title
         action ? <div className="top">{action}</div> : null
       ) : (
         <div className="top">
-          <Link to={home} replace aria-label="bnbtico, inicio">
-            <img className="logo" src="/logo-horizontal.png" alt="bnbtico" width={115} height={38} />
+          <Link to={home} replace aria-label="3bstays, inicio">
+            <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
           </Link>
           {action}
         </div>
