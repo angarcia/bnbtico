@@ -34,7 +34,7 @@ import { hasStoredSession, webStore } from "../data/storage";
 import { effectiveDay, type CalendarDay } from "../domain/calendar";
 import { PEOPLE_FILTER_KEY } from "../domain/contact-return";
 import { shortDate } from "../domain/dates";
-import { RANGE_BUSY_MESSAGE } from "../domain/range";
+import { RANGE_BUSY_MESSAGE, type RangeState } from "../domain/range";
 import { hasBusyNight, listingStay, stayLine } from "../domain/stay-price";
 import { proceedToWhatsApp } from "./contact-flow";
 import { useCurrency } from "./currency";
@@ -126,6 +126,18 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
     if (status.kind !== "sending") setStatus({ kind: "idle" });
   };
 
+  function changeDates({ arrival, departure }: RangeState) {
+    setRejected(false);
+    change({ type: "fields", patch: { arrival, departure } });
+    // La ficha comparte las fechas de la pestaña. Una llegada sola espera aquí su salida.
+    if (arrival && departure) {
+      stayDates.write({ arrival, departure });
+      setPicking(false);
+    } else {
+      stayDates.write(null);
+    }
+  }
+
   function onKeyDown(e: KeyboardEvent<HTMLElement>) {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -133,7 +145,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
       return;
     }
     if (e.key !== "Tab" || !sheet.current) return;
-    const items = Array.from(sheet.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+    const items = sheet.current.querySelectorAll<HTMLElement>(FOCUSABLE);
     const first = items[0];
     const last = items[items.length - 1];
     if (!first || !last) return;
@@ -244,13 +256,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
                   value={{ arrival: draft.arrival, departure: draft.departure }}
                   busy={busy}
                   onReject={() => setRejected(true)}
-                  onChange={(r) => {
-                    setRejected(false);
-                    change({ type: "fields", patch: r });
-                    // Llegada y salida son las de la pestaña (la ficha las ve al momento); una llegada sola espera aquí su salida.
-                    stayDates.write(r.arrival && r.departure ? { arrival: r.arrival, departure: r.departure } : null);
-                    if (r.arrival && r.departure) setPicking(false);
-                  }}
+                  onChange={changeDates}
                 />
               </div>
               {rejected ? (
@@ -263,11 +269,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
                   <button
                     type="button"
                     className="btn-text"
-                    onClick={() => {
-                      setRejected(false);
-                      change({ type: "fields", patch: { arrival: null, departure: null } });
-                      stayDates.write(null);
-                    }}
+                    onClick={() => changeDates({ arrival: null, departure: null })}
                   >
                     Quitar fechas
                   </button>
