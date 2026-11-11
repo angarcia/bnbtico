@@ -38,7 +38,7 @@ test("genera y copia el enlace real por casa y lo recupera al volver", async ({ 
   await expect(page.getByRole("button", { name: "Conectar Airbnb", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Volver", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`casa=${l.id}.*mes=${month}`));
-  await page.getByRole("button", { name: /Sincronización con Airbnb/ }).click();
+  await page.getByRole("button", { name: /Conectar con Airbnb/ }).click();
   await expect(field).toHaveValue(url);
   await page.reload();
   await expect(field).toHaveValue(url);

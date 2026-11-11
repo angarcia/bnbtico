@@ -51,7 +51,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   const client = useQueryClient();
   const online = useCalendarOnline();
   const info = useQuery({ ...airbnbQuery(userId, listing.id), enabled: !!userId });
-  const connected = info.data?.connected || info.data?.exportGenerated;
+  const connected = info.data?.connected;
   const [updating, setUpdating] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const active = useRef(true);

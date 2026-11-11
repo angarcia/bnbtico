@@ -32,12 +32,18 @@ export function validateAirbnbUrl(raw: string): string {
   let url: URL;
   try { url = new URL(raw); } catch { throw new IcalError("url"); }
   const keys = [...url.searchParams.keys()];
+  const tokens = url.searchParams.getAll("t");
+  const locales = url.searchParams.getAll("locale");
   if (
     url.protocol !== "https:" || !["www.airbnb.com", "www.airbnb.ca"].includes(url.hostname) ||
     url.username || url.password || url.port || url.hash ||
     !/^\/calendar\/ical\/[0-9]{1,30}\.ics$/.test(url.pathname) ||
-    keys.length !== 1 || keys[0] !== "t" || !/^[a-f0-9]{32}$/i.test(url.searchParams.get("t") ?? "")
+    keys.some(key => key !== "t" && key !== "locale") ||
+    tokens.length !== 1 || !/^[a-f0-9]{32}$/i.test(tokens[0] ?? "") ||
+    locales.length > 1 || locales.some(locale => !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i.test(locale))
   ) throw new IcalError("url");
+  // El idioma solo afecta a la presentación. La importación usa el enlace con su token.
+  url.search = `?t=${tokens[0]}`;
   return url.href;
 }
 

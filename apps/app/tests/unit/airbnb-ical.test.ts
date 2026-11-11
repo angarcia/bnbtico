@@ -72,6 +72,14 @@ describe("Airbnb · interpretación de la instantánea", () => {
 });
 
 describe("Airbnb · destino de descarga", () => {
+  it.each(["www.airbnb.ca", "www.airbnb.com"])("normaliza el idioma opcional en %s", (host) => {
+    const canonical = TEST_AIRBNB_URL.replace("www.airbnb.ca", host);
+    expect(validateAirbnbUrl(`${canonical}&locale=en-CA`)).toBe(canonical);
+    const url = new URL(canonical);
+    url.search = `locale=en-CA&t=${url.searchParams.get("t")}`;
+    expect(validateAirbnbUrl(url.href)).toBe(canonical);
+  });
+
   it("admite únicamente los enlaces HTTPS directos de los hosts admitidos", () => {
     expect(validateAirbnbUrl(TEST_AIRBNB_URL)).toBe(TEST_AIRBNB_URL);
     expect(validateAirbnbUrl(TEST_AIRBNB_URL.replace("airbnb.ca", "airbnb.com"))).toBe(TEST_AIRBNB_URL.replace("airbnb.ca", "airbnb.com"));
@@ -92,6 +100,9 @@ describe("Airbnb · destino de descarga", () => {
     `${TEST_AIRBNB_URL}#fragmento`,
     `${TEST_AIRBNB_URL}&t=otro`,
     `${TEST_AIRBNB_URL}&destino=http://localhost`,
+    `${TEST_AIRBNB_URL}&locale=en-CA&locale=es-CR`,
+    `${TEST_AIRBNB_URL}&locale=http://localhost`,
+    `${TEST_AIRBNB_URL}&locale=`,
   ])("rechaza destinos no autorizados sin incluir la URL en el error", (url) => {
     let caught: unknown;
     try { validateAirbnbUrl(url); } catch (error) { caught = error; }

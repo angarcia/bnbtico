@@ -70,6 +70,11 @@ test("cancelar no desconecta; confirmar retira solo importados y conserva precio
   expect(await h.calendar("owner").days(l.id)).toEqual([{ day: day(11), available: false, specialPriceCrc: 75000 }]);
   expect(await exports.read(exported.token!)).toMatchObject({ nights: [day(11)] });
   await expect(page.getByText("Los calendarios se actualizan periódicamente. Los cambios pueden tardar en aparecer en la otra plataforma. Confirme la disponibilidad antes de acordar una estancia", { exact: true })).toBeVisible();
+  await page.goto("/propietario/calendario");
+  const row = page.locator(".cal-airbnb");
+  await expect(row).toHaveClass("card cal-airbnb");
+  await expect(row.getByRole("button", { name: /Conectar con Airbnb/ })).toBeVisible();
+  await expect(row.getByRole("button", { name: "Actualizar importación de Airbnb" })).toHaveCount(0);
 });
 
 test("cancelar conserva el feed; revocar lo invalida y generar otro deja el antiguo inaccesible", async ({ page }) => {
