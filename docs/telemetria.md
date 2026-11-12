@@ -107,7 +107,7 @@ Una sola fuente: `src/shared/security.ts` (`contentSecurityPolicy`, `securityHea
 
 ## Cron diario
 
-`triggers.crons` `17 9 * * *` (03:17 en Costa Rica) en cada entorno de `wrangler.jsonc` (no se heredan). `src/server/cron.ts`: una lectura de `listings_public` con la anon key (el proyecto gratuito de Supabase se pausa tras 7 días sin actividad), el recorte de telemetría y una línea de log JSON (`{"event":"keepalive","ok":true,"status":200,"ms":…,"cron":…,"environment":…,"pruned":…}`) visible en Workers Logs. Si PostgREST falla, la ejecución queda como fallida en el panel.
+El trigger `17 * * * *` de `wrangler.jsonc` ejecuta las tareas diarias a las 09:17 UTC (03:17 en Costa Rica). `src/server/cron.ts` lee `listings_public`, recorta telemetría y registra el evento `keepalive` en Workers Logs. Si falla esa lectura, la ejecución queda como fallida. La verificación y reversión del trigger independiente de Airbnb están en [Operación de Airbnb](operacion-airbnb.md).
 
 ## `db-max-rows`
 

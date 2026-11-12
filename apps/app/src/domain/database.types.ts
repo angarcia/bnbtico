@@ -65,14 +65,14 @@ isOneToOne: false
                   ]
                 },"airbnb_connections": {
                   Row: {
-                    "connected": boolean,"error_code": string | null,"last_error_at": string | null,"last_success_at": string | null,"listing_id": string,"private_url": string | null,"version": number
+                    "connected": boolean,"error_code": string | null,"last_auto_cycle": string | null,"last_error_at": string | null,"last_success_at": string | null,"listing_id": string,"private_url": string | null,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "connected"?: boolean,"error_code"?: string | null,"last_error_at"?: string | null,"last_success_at"?: string | null,"listing_id": string,"private_url"?: string | null,"version"?: number
+                    "connected"?: boolean,"error_code"?: string | null,"last_auto_cycle"?: string | null,"last_error_at"?: string | null,"last_success_at"?: string | null,"listing_id": string,"private_url"?: string | null,"version"?: number
                   }
                   Update: {
-                    "connected"?: boolean,"error_code"?: string | null,"last_error_at"?: string | null,"last_success_at"?: string | null,"listing_id"?: string,"private_url"?: string | null,"version"?: number
+                    "connected"?: boolean,"error_code"?: string | null,"last_auto_cycle"?: string | null,"last_error_at"?: string | null,"last_success_at"?: string | null,"listing_id"?: string,"private_url"?: string | null,"version"?: number
                   }
                   Relationships: [
                     {
@@ -801,6 +801,9 @@ isOneToOne: true
 "airbnb_check_owner":
 { Args: { "p_listing": string }; Returns: undefined
                            },
+"airbnb_due_for_cycle":
+{ Args: { "p_cycle": string }; Returns: Json
+                           },
 "airbnb_import_context":
 { Args: { "p_listing": string,"p_request": string }; Returns: Json
                            },
@@ -824,6 +827,9 @@ isOneToOne: true
                            },
 "begin_airbnb_update":
 { Args: { "p_listing": string,"p_request": string,"p_url"?: string }; Returns: Json
+                           },
+"claim_airbnb_cycle":
+{ Args: { "p_cycle": string,"p_listing": string,"p_request": string }; Returns: Json
                            },
 "claim_airbnb_import":
 { Args: { "p_listing": string,"p_request": string }; Returns: Json

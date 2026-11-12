@@ -57,7 +57,7 @@ describe("wrangler · worker aislado del refactor", () => {
     expect(wrangler.env.production.preview_urls).toBe(false);
     expect(wrangler.env.production.vars).toEqual({ ENVIRONMENT: "production", LAUNCHED: "false" });
     for (const config of [wrangler, wrangler.env.pruebas, wrangler.env.production]) {
-      expect(config.triggers).toEqual({ crons: ["17 * * * *"] });
+      expect(config.triggers).toEqual({ crons: ["17 * * * *", "17 */3 * * *"] });
       expect(config.vars.LISTING_CACHE).toBeUndefined();
     }
   });

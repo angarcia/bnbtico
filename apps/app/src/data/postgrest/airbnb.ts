@@ -1,4 +1,4 @@
-import { isRecord, readAirbnbSummary, type AirbnbService, type OwnerAirbnbApi } from "../../domain/airbnb";
+import { isRecord, readAirbnbSummary, type AirbnbCycleService, type AirbnbService, type OwnerAirbnbApi } from "../../domain/airbnb";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { IcalError } from "../../domain/ical";
 
@@ -37,10 +37,23 @@ function attempt(value: unknown): { run: boolean } {
   return { run: value.run };
 }
 
-export function createAirbnbService(cfg: AirbnbServiceConfig): AirbnbService {
+export function createAirbnbService(cfg: AirbnbServiceConfig): AirbnbService & AirbnbCycleService {
   const rpc = airbnbRpc(cfg);
   const service = (name: string, args: Record<string, unknown>) => rpc(name, args, cfg.serviceKey, cfg.serviceKey);
   return {
+    async due(cycle) {
+      const raw = await service("airbnb_due_for_cycle", { p_cycle: cycle });
+      if (!Array.isArray(raw) || raw.length > 13) throw new Error("Lista de calendarios no válida.");
+      return raw.map((id: unknown) => {
+        if (typeof id !== "string" || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) {
+          throw new Error("Identificador de calendario no válido.");
+        }
+        return id;
+      });
+    },
+    async claimCycle(listingId, requestId, cycle) {
+      return attempt(await service("claim_airbnb_cycle", { p_listing: listingId, p_request: requestId, p_cycle: cycle }));
+    },
     async begin(jwt, listingId, url, requestId) { return attempt(await rpc("begin_airbnb_import", { p_listing: listingId, p_url: url, p_request: requestId }, jwt)); },
     async update(jwt, listingId, requestId, url) { return attempt(await rpc("begin_airbnb_update", { p_listing: listingId, p_request: requestId, p_url: url ?? null }, jwt)); },
     async disconnect(jwt, listingId, requestId) { await rpc("disconnect_airbnb", { p_listing: listingId, p_request: requestId }, jwt); },

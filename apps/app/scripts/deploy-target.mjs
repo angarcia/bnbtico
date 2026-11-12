@@ -2,8 +2,8 @@ import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 
 const targets = new Map([
-  ["production", { name: "3bstays-production", routes: [{ pattern: "3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *"] } }],
-  ["pruebas", { name: "3bstays-pruebas", routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }], workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *"] } }],
+  ["production", { name: "3bstays-production", routes: [{ pattern: "3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *", "17 */3 * * *"] } }],
+  ["pruebas", { name: "3bstays-pruebas", routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }], workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *", "17 */3 * * *"] } }],
   ["refactor", { name: "3bstays-refactor", routes: [{ pattern: "refactor.3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: [] } }],
 ]);
 const branches = new Map([

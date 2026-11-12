@@ -24,6 +24,7 @@ export type Env = ReminderEnv & {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  AIRBNB_AUTO_SYNC?: string;
   PURGE_SECRET?: string;
   CF_ZONE_ID?: string;
   CF_PURGE_TOKEN?: string;

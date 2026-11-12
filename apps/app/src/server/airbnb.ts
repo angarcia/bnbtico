@@ -10,17 +10,20 @@ export interface AirbnbDeps { service(env: Env): AirbnbService | null; fetch: ty
 const NO_STORE = { "cache-control": "no-store" };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-/** Motor único de ingestión: primera conexión, arnés y futuras #7/#8 llaman a este mismo camino. */
-export async function runAirbnbImport(service: AirbnbService, listingId: string, requestId: string, download: Pick<AirbnbDeps, "fetch">): Promise<void> {
+/** Motor único para conexión, actualización manual y actualización programada. */
+export async function runAirbnbImport(service: Pick<AirbnbService, "context" | "finish">, listingId: string, requestId: string, download: Pick<AirbnbDeps, "fetch">): Promise<"skipped" | "readOk" | "readError"> {
   const context = await service.context(listingId, requestId);
-  if (!context) return;
+  if (!context) return "skipped";
+  let blocks;
   try {
-    const blocks = await readAirbnbCalendar(context.url, download);
-    await service.finish(listingId, requestId, blocks, null);
+    blocks = await readAirbnbCalendar(context.url, download);
   } catch (error) {
     // Nada de String(error), stack remoto ni URL en registros/respuesta.
     await service.finish(listingId, requestId, null, error instanceof IcalError ? error.code : "download");
+    return "readError";
   }
+  await service.finish(listingId, requestId, blocks, null);
+  return "readOk";
 }
 
 export function registerAirbnb(app: Hono<{ Bindings: Env }>, deps: AirbnbDeps) {
