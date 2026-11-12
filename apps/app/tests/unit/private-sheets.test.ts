@@ -170,7 +170,8 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
         const settled = (await dialog.boundingBox())!;
         return settled.y + settled.height;
       }).toBeLessThanOrEqual(viewport.height + 1);
-      for (const option of await list.getByRole("option").all()) expect((await option.boundingBox())!.height).toBeGreaterThanOrEqual(52);
+      // Redondeado: en Linux el alto sale con subpíxeles (51,99998 px en CI el 2026-11-12) aunque el CSS diga 52.
+      for (const option of await list.getByRole("option").all()) expect(Math.round((await option.boundingBox())!.height)).toBeGreaterThanOrEqual(52);
       await page.keyboard.press("Shift+Tab");
       const all = list.getByRole("option", { name: "Todas las casas", exact: true });
       await expect(all).toBeFocused();
