@@ -1,6 +1,6 @@
 # Guion del cambio de dominio a 3bstays.com (2026-11-11)
 
-Status: ready-for-human
+Status: ready-for-human: A, B, C1–C3 y D hechos el 2026-11-11; quedan C7 (limpieza) y C8 (alternativas)
 
 **Qué cambia en el código** (rama `marca-3bstays`):
 
@@ -67,13 +67,13 @@ El dominio **sigue registrado en GoDaddy**: la renovación y el pago siguen all�
 
 ### A2 · Cloudflare Access: proteger pruebas.3bstays.com
 
-No se crean aplicaciones nuevas: **a cada aplicación existente se le añade el destino `pruebas.3bstays.com`** con el mismo path. Las políticas se conservan.
+**La aplicación principal (la del login) va aparte:** se crea una aplicación nueva `3bstays pruebas`, solo con `pruebas.3bstays.com` y la misma política Emails. Si se añade el dominio nuevo a «bnbtico nueva», el login devuelve a `nueva.bnbtico.com`; así pasó el 2026-11-11. A **las excepciones** (Bypass, sin login) sí se les añade el destino `pruebas.3bstays.com` con el mismo path.
 
 Zero Trust → **Access** → **Applications** → en cada aplicación, **⋯** → **Edit** → **+ Add public hostname**. Subdomain `pruebas`, Domain `3bstays.com` y, en Path, el mismo que el destino viejo, sin `/` inicial. Después, **Save application**.
 
 | Aplicación (política) | Destinos que hay hoy en `nueva.bnbtico.com` | Destinos que se añaden en `pruebas.3bstays.com` |
 |---|---|---|
-| bnbtico nueva (Emails) | sin path | sin path |
+| bnbtico nueva (Emails) | sin path | — (va en la aplicación nueva **3bstays pruebas**, Emails, sin path) |
 | bnbtico nueva · purga (Bypass para todos) | `_purge/*` | `_purge/*` |
 | nueva (Bypass para todos) | `ical/*` | `ical/*` |
 | bnbtico nueva · fichas públicas (Bypass para todos) | `casa/*`, `assets/*`, `fonts/*`, `icons/*`, `favicon.ico`, `logo-horizontal.png`, `sw.js`, `manifest.webmanifest` | los mismos 8; recomendado añadir también `og.jpg`, en los dos dominios, para la vista previa al compartir por WhatsApp |
@@ -229,6 +229,8 @@ Para cada uno de `tresbstays.com` y `threebstays.com`:
 
 ## D · Retirar Vercel y apagar bnbtico.com (decisión del 2026-11-11)
 
+**Hecho el 2026-11-11.** `bnbtico.com` ya no resuelve; el proyecto y la app de GitHub de Vercel están retirados. Los registros de correo de Google Workspace siguen en la zona `bnbtico.com`.
+
 bnbtico.com **se apaga sin redirección**. Vercel sigue sirviendo dos cosas que hay que quitar:
 
 - `bnbtico.com`: la portada con la marca vieja, que es pública.
@@ -272,7 +274,7 @@ Hacerlo **después de C1**, cuando `pruebas.3bstays.com` ya funcione. Nada de lo
 
 ### D5 · Lo que desbloquea (lo hago yo, en otro paso)
 
-- `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql` esperaba a que la app vieja dejara de subir fotos por su cuenta. Sin Vercel ya se puede pasar a `supabase/migrations/`, con sus pruebas, y aplicar en pruebas.
+- **Hecho el 2026-11-11:** `corte_fotos_solo_rpc`, rehecha sobre las reglas vigentes. Antes era `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, que esperaba a que la app vieja dejara de subir fotos por su cuenta. Sin Vercel ya se puede pasar a `supabase/migrations/`, con sus pruebas, y aplicar en pruebas.
 
 ### Más adelante, no hoy
 

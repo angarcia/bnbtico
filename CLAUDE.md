@@ -67,7 +67,7 @@ Catálogo de casas en alquiler en Costa Rica, con foco inicial en el Caribe (Lim
 - `docs/plan-implementacion.md` — fases de construcción, alcance de v1, stack. **Manda sobre `roadmap.md`.**
 - `docs/decisiones.md` — registro de decisiones con fecha, la más reciente arriba.
 - `docs/antes-de-produccion.md` — lo decidido que se deja para antes del lanzamiento (p. ej. protección contra el abuso del envío de códigos). Revisar al cortar a producción.
-- `docs/corte-fase-r.md` — guion del corte de infraestructura, separado de la retirada de Next; conserva `apps/app`, la migración pendiente de fotos (`supabase/migrations-pendientes/`) y decisiones abiertas (Google Analytics en la portada).
+- `docs/corte-fase-r.md` — guion del corte de infraestructura, separado de la retirada de Next; conserva `apps/app`, la migración de fotos solo por RPC (aplicada el 2026-11-11 como `corte_fotos_solo_rpc`) y decisiones abiertas (Google Analytics en la portada).
 - `docs/pruebas-manuales.md` — **guía de pruebas manual única** (2026-10-30, escrita desde cero tras los rediseños): preparación, cliente, anfitrión, admin y recorridos de punta a punta, desde el teléfono en pruebas.3bstays.com. Sustituye a las guías por fase (`docs/pruebas-manuales-fase-*.md`, `-revision-ux.md`, `-mejoras-2026-10-27.md`), que quedan como histórico. Al cambiar una pantalla, actualizar sus comprobaciones aquí.
 - `docs/entorno-local.md` — levantar y probar la app en el Mac sin servicios externos: Node 22, Supabase local, cuentas de prueba, admin con `seed_admin`, comandos de prueba y problemas frecuentes.
 - `docs/telemetria.md` — balizas de Web Vitals, errores y eventos, consultas p75, CSP, Turnstile y cron.
