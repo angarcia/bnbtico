@@ -37,9 +37,9 @@ describe("portada · el HTML estático", () => {
     expect(portada).toContain('<html lang="es-CR">');
     expect(portada).toContain(`<title>${SITE_TITLE}</title>`);
     expect(portada).toContain(`<meta name="description" content="${SITE_DESCRIPTION}" />`);
-    // El lema de la marca (2026-11-11) abre la descripción y va bajo el logo.
-    expect(SITE_DESCRIPTION.startsWith("Bueno, bonito y bien tico.")).toBe(true);
-    expect(portada).toContain('<p class="soon-tagline">Bueno, bonito y bien tico</p>');
+    // El lema «Bueno, bonito y bien tico» se retiró de la web hasta registrarlo como marca (2026-11-12).
+    expect(SITE_DESCRIPTION).not.toMatch(/bien tico/i);
+    expect(portada).not.toMatch(/bien tico|soon-tagline/i);
     expect(portada).toContain(`<link rel="canonical" href="${SITE_URL}/" />`);
     for (const [k, v] of [
       ["og:type", "website"],
