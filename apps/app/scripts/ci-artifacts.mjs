@@ -28,6 +28,22 @@ function command(executable, args, log, env = environment, stdout = log) {
   }
 }
 
+// El reporter JSON escribe el informe por stdout de una sola vez («{\n  "config": …\n}»). Lo que otro proceso cuele
+// delante o detrás (en CI, p. ej., líneas «[WebServer]») no es parte del informe y lo dejaba sin parsear: va al log
+// privado, que no se publica, y el informe queda tal cual lo escribió Playwright. Si no se puede separar, no se toca y
+// el saneador lo rechaza como antes.
+function isolateReport(file, log) {
+  const text = readFileSync(file, "utf8");
+  try { JSON.parse(text); return; } catch {}
+  const start = text.indexOf('{\n  "config": {');
+  const end = text.lastIndexOf("\n}");
+  if (start < 0 || end < start) return;
+  const report = text.slice(start, end + 2);
+  try { JSON.parse(report); } catch { return; }
+  appendFileSync(log, `${text.slice(0, start)}${text.slice(end + 2)}`, { mode: 0o600 });
+  writeFileSync(file, `${report}\n`, { mode: 0o600 });
+}
+
 async function publish(root, code, gateCode = 0) {
   await sanitizeRun({ root, input: "render", output: "publish" });
   const output = join(root, "publish");
@@ -54,8 +70,10 @@ async function e2e(root, current, total) {
   const listCode = command("pnpm", ["exec", "playwright", "test", "--list", "--reporter=json", shard, "--workers=1"],
     join(logs, "discovery.log"), env, manifest);
   ensure(listCode === 0);
+  isolateReport(manifest, join(logs, "discovery.log"));
   const code = command("pnpm", ["exec", "playwright", "test", "--reporter=json", `--output=${join(raw, "results")}`, shard, "--workers=1"],
     join(logs, "runner.log"), env, join(raw, "runner.json"));
+  isolateReport(join(raw, "runner.json"), join(logs, "runner.log"));
   writeFileSync(join(raw, "e2e-exit.txt"), `${code}\n`, { mode: 0o600 });
   // Solo el código numérico; los logs y el contenido de los artefactos siguen privados.
   console.log(`Playwright: código de salida ${code}.`);
