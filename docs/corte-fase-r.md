@@ -18,7 +18,7 @@ Fecha de redacción: 2026-10-23 (ticket 13, parte preparada). **No se ejecuta ha
   - producción con `LAUNCHED` distinto de `"true"` (`landingOnly`, `src/domain/seo.ts`): `/` es la portada; también se sirven `robots.txt` (indexable), `sitemap.xml` (solo `https://bnbtico.com/`, sin consultar Supabase), `favicon.ico`, `og.jpg`, `portada/*`, `fonts/*.woff2` e `icons/*.png`. Todo lo demás (`/explorar`, `/casa/CT-…`, `/sw.js`, `/assets/*`, balizas, purga…) responde **404 con la portada**. El cron diario no hace nada (aún no hay Supabase de producción).
   - `HEAD /` responde 200 en todos los entornos.
 - **`wrangler.jsonc` entorno `production`:** `LAUNCHED: "false"`, `assets.run_worker_first: true` (todo pasa por el worker para poder cerrar la SPA), `workers_dev`/`preview_urls` en `false` y **sin rutas**. Las rutas del día del corte están en comentarios. Comprobado con `CLOUDFLARE_ENV=production pnpm build` + `vite preview` + `wrangler deploy --dry-run` (bindings `ENVIRONMENT=production`, `LAUNCHED=false`).
-- **Migración pendiente** `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql` (nota del ticket 08): fuera de `supabase/migrations/` para que no se aplique sola. Ensayada en local: con ella aplicada solo fallan las dos pruebas de `tests/db/cliente-directo-fotos.test.ts` que comprueban el comportamiento viejo (paso 8); `fotos.spec.ts`, `publicar.spec.ts` y `admin.spec.ts` en verde. El arnés de base ya siembra las fotos con la service role, así que vale antes y después.
+- **Migración de fotos solo por RPC:** aplicada el 2026-11-11 como `supabase/migrations/20261112040347_corte_fotos_solo_rpc.sql`, al retirarse Vercel. Se rehízo sobre las reglas vigentes: el borrador del 2026-10-23 habría devuelto la subida a `listing_editable` y roto las fotos que van a revisión al editar una casa publicada. *(Texto original de esta línea en el historial de git.)*
 
 ## 0. Comprobaciones previas (sin tocar nada)
 
@@ -98,7 +98,7 @@ La retirada del árbol versionado es independiente del corte de infraestructura.
 
 Cuando la app vieja ya no sirve a nadie (tras el paso 3):
 
-1. Desde la raíz: `pnpm exec supabase migration new corte_fotos_solo_rpc < /dev/null`, copiar encima `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, borrar la carpeta `supabase/migrations-pendientes/`.
+1. **Hecho el 2026-11-11** (ver arriba). Pasos originales: desde la raíz, `pnpm exec supabase migration new corte_fotos_solo_rpc < /dev/null`, copiar encima `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, borrar la carpeta `supabase/migrations-pendientes/`.
 2. `pnpm exec supabase migration up --local` y `pnpm --filter app db:types` (no deberían cambiar los tipos).
 3. Ajustar `tests/db/cliente-directo-fotos.test.ts`:
    - «máximo 15 fotos, también con un insert directo»: el insert directo ahora falla por privilegios (`permission denied for table listing_photos`, código `42501`); el tope de 15 por RPC no cambia.

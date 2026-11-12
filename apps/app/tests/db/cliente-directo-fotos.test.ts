@@ -40,13 +40,28 @@ describe("migración cliente_directo · fotos y topes", () => {
       expect((await positions(id)).map((p) => p.path)).toEqual(paths);
     });
 
-    it("máximo 15 fotos, también con un insert directo", async () => {
+    it("máximo 15 fotos", async () => {
       const { id } = await h.seed({ status: "draft" });
       for (let i = 0; i < 15; i++) expect((await add(owner, id)).error).toBeNull();
       expect((await add(owner, id)).error?.message).toBe("Máximo 15 fotos.");
-      const direct = await owner.from("listing_photos").insert({ listing_id: id, path: `${id}/x.jpg`, position: 15 });
-      expect(direct.error?.message).toBe("Máximo 15 fotos.");
       expect(await positions(id)).toHaveLength(15);
+    });
+
+    // Corte de la fase R (decisión 2026-11-11, Vercel retirado): las filas solo cambian por las RPCs security definer.
+    it("ni el dueño ni un anónimo escriben listing_photos directamente: insert, update y delete fallan por permisos", async () => {
+      const { id } = await h.seed({ status: "draft" });
+      expect((await add(owner, id)).error).toBeNull();
+      const [photo] = await positions(id);
+      const anon = anonClient();
+      for (const db of [owner, anon]) {
+        const insert = await db.from("listing_photos").insert({ listing_id: id, path: folder(id), position: 1 });
+        expect(insert.error?.code).toBe("42501");
+        const update = await db.from("listing_photos").update({ position: 5 }).eq("listing_id", id);
+        expect(update.error?.code).toBe("42501");
+        const remove = await db.from("listing_photos").delete().eq("listing_id", id);
+        expect(remove.error?.code).toBe("42501");
+      }
+      expect(await positions(id)).toEqual([photo]);
     });
 
     it("solo carpetas de esa casa (<casa>/<uuid>)", async () => {
@@ -144,11 +159,10 @@ describe("migración cliente_directo · fotos y topes", () => {
       expect((await upload(owner, `${folder(id)}/480.jpg`)).error).not.toBeNull();
     });
 
-    it("solo nombres conocidos: variantes 480/800/1600 o la foto única de antes", async () => {
+    it("solo las variantes 480/800/1600; la foto única de la app vieja ya no se sube", async () => {
       const { id } = await h.seed({ status: "draft" });
       expect((await upload(owner, `${folder(id)}/800.jpg`)).error).toBeNull();
-      expect((await upload(owner, `${folder(id)}.jpg`)).error).toBeNull();
-      for (const name of [`${folder(id)}/900.jpg`, `${id}/foto.jpg`, `${folder(id)}/800.png`, `${folder(id)}/a/800.jpg`]) {
+      for (const name of [`${folder(id)}.jpg`, `${folder(id)}/900.jpg`, `${id}/foto.jpg`, `${folder(id)}/800.png`, `${folder(id)}/a/800.jpg`]) {
         expect((await upload(owner, name)).error, name).not.toBeNull();
       }
     });
