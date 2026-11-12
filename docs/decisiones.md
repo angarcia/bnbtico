@@ -1,3 +1,13 @@
+## 2026-11-11 · La portada se publica en 3bstays.com
+
+- **Decisión (Daniel, 2026-11-11):** publicar **solo la portada** en `3bstays.com` antes del lanzamiento.
+- **Cómo:**
+  - El worker `3bstays-production` recibe la ruta `3bstays.com`. `scripts/deploy-target.mjs` acepta para producción esa ruta y ninguna otra.
+  - `main` avanza hasta `develop`; era un antepasado directo, sin commits propios.
+  - Con `LAUNCHED=false`, el worker sirve la portada en `/` (y `robots.txt`, el sitemap y sus imágenes) y responde 404 con la portada a todo lo demás. El cron no hace nada (`landingOnly`).
+- **Sin secretos en producción:** desde `main` el workflow no sube ningún secreto al worker. Antes solo se quitaban el reloj de pruebas y Stripe; los de Supabase, la purga y Twilio eran los de pruebas y la portada no los usa.
+- **`www.3bstays.com`** se redirige a `3bstays.com` con una regla de Cloudflare, no con una segunda ruta.
+- **El botón de propietarios** abre WhatsApp al número de `WA_OWNERS` («Escríbanos por WhatsApp»). Sin ese número, la portada muestra «Abrimos pronto en el Caribe sur.».
 ## 2026-11-11 · Fotos solo por las RPCs: corte de la fase R, paso 8
 
 - **Decisión (Daniel, 2026-11-11):** con Vercel retirado, ningún navegador usa ya la app vieja, la única que escribía `listing_photos` directamente y subía la foto única `<casa>/<uuid>.jpg`. Se aplica el cierre que estaba pendiente.
