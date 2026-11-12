@@ -12,3 +12,14 @@ playwright-report/
 .DS_Store
 Claude outputs/
 *.tsbuildinfo
+
+# Lo genera `next dev`
+apps/web/AGENTS.md
+
+# Descargas de Overpass de scripts/osm-limites/generar.mjs
+scripts/osm-limites/.cache/
+# Descargas de Overpass de scripts/osm-zonas/borrador.mjs
+scripts/osm-zonas/.cache/
+
+# Fotos de prueba descargadas por .scratch/datos-prueba (no se versionan)
+.scratch/datos-prueba/fotos/

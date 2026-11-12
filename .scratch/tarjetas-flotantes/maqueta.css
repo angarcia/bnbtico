@@ -1,0 +1,133 @@
+/* Maqueta de «tarjetas flotantes» (2026-11-03). Se inyecta encima de global.css en las capturas
+   (apps/app/tests/capturas/flotantes.spec.ts); no es código de la app. Base de T0 en el README.
+   Esconder al bajar: reutiliza `html.tabbar-away` (la clase que ya pone hiding-tabbar.ts); en la app sería `html.chrome-away`. */
+
+/* ---------- T0: tokens ---------- */
+:root{
+  --float-bg:color-mix(in srgb,var(--bg) 80%,transparent);
+  --float-bg-strong:color-mix(in srgb,var(--bg) 90%,transparent);    /* barras con texto pequeño o campos: ficha, asistente, calendario */
+  --float-blur:blur(16px) saturate(1.2);
+  --float-edge:color-mix(in srgb,var(--fg) 9%,transparent);           /* borde de 1 px, no la línea de 2 px */
+  --float-shadow:0 1px 2px rgba(28,43,42,.08),0 12px 28px -14px rgba(28,43,42,.38);
+  --float-r:12px;          /* tarjetas */
+  --float-r-bar:16px;      /* barras de abajo */
+  --float-gap:12px;        /* separación del borde */
+  --float-bottom:calc(var(--float-gap) + env(safe-area-inset-bottom));
+  --float-top:calc(var(--float-gap) + env(safe-area-inset-top));
+  --float-away:transform 240ms var(--ease-out),opacity 200ms var(--ease-out);
+  --nav-h:80px;            /* píldora de 68 + 12 de aire: la usan .view, toasts, «Mapa» y el banner */
+}
+@media (prefers-color-scheme:dark){:root{--float-edge:color-mix(in srgb,#fff 10%,transparent);--float-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 28px -12px rgba(0,0,0,.6)}}
+
+.float-card,
+.tabbar,
+.explore-top .search-pill,.explore-top .filters-btn,.explore-top .currency-switch,
+.hero .top .icon-btn,.hero .top .heart-hero,
+.listing-view > .cta-bar .cta-prices,.sticky-actions,.cal-panel{
+  background:var(--float-bg);
+  -webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur);
+  border:1px solid var(--float-edge);
+  box-shadow:var(--float-shadow);
+}
+
+/* ---------- T1: barra de pestañas, píldora flotante con iconos y etiquetas (Daniel, 2026-11-04) ---------- */
+html .tabbar,html.tabbar-away .tabbar,.app:has(.cal-panel) .tabbar{
+  left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);
+  width:auto;max-width:536px;margin:0 auto;height:68px;
+  padding:0 6px;border-radius:var(--float-r-bar);
+  transform:none;transition:var(--float-away);
+}
+html.tabbar-away .tabbar,.app:has(.cal-panel) .tabbar{transform:translateY(calc(100% + var(--float-bottom) + 8px));opacity:0}
+.tabbar .nav,.tabbar.three .nav{min-height:56px;gap:2px;font-size:12px;letter-spacing:.005em}
+.tabbar .nav svg{position:relative;width:24px;height:24px}
+.tabbar .nav > span{position:relative}
+/* La pestaña activa: icono y etiqueta terracota sobre una pastilla suave del mismo tono. */
+.tabbar .nav::before{content:"";position:absolute;inset:4px 2px;border-radius:12px;background:transparent;transition:background-color 150ms ease}
+.tabbar .nav[aria-current="page"]::before{background:color-mix(in srgb,var(--brand) 12%,transparent)}
+.nav-count{top:6px;right:calc(50% - 24px);border:2px solid var(--bg)}
+
+/* ---------- T2: Explorar, mapa arriba y la cabecera flotando encima ---------- */
+.explore-top{
+  position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;
+  padding:0;gap:10px;background:none;border:0;z-index:6;pointer-events:none;transition:var(--float-away);
+}
+.explore-top > *{pointer-events:auto}
+html.tabbar-away .explore-top{transform:translateY(calc(-100% - var(--float-top) - 8px));opacity:0}
+.explore-top .search-pill{min-height:52px;border-radius:var(--float-r);padding:0 16px}
+.explore-top .chiprow{pointer-events:none;justify-content:space-between}
+.explore-top .chiprow > *{pointer-events:auto}
+.explore-top .filters-btn{width:48px;height:48px;border-radius:var(--float-r)}
+.explore-top .filters-btn .badge-count{border-color:var(--bg)}
+.explore-top .currency-switch{padding:4px;gap:2px;border-radius:var(--float-r)}
+.explore-top .currency-switch button{min-height:38px;min-width:44px;border-radius:8px;color:var(--fg-title)}
+.explore-top .currency-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--primary) 18%,transparent);color:var(--primary-ink)}
+/* El mapa sale de la lista y se pone arriba, a sangre, debajo de las tarjetas; la lista sigue igual. */
+.app:has(.explore-top) .view{padding-top:0}
+.app:has(.explore-top) .listing-grid{display:contents}
+.app:has(.explore-top) .explore-map{
+  order:-1;height:min(400px,56dvh);margin:0 calc(-1 * var(--gutter)) 4px;
+  border-radius:0 0 20px 20px;
+}
+.app:has(.explore-top) .explore-map .leaflet-control-attribution{border-top-left-radius:8px;font-size:11px}
+.app:has(.explore-top) .listing-grid > :not(.explore-map){margin-bottom:18px}
+/* Solo maqueta: baja el contenido del mapa lo que tapan las tarjetas. En la app, fitBounds con paddingTopLeft = alto de la cabecera. */
+.app:has(.explore-top) .explore-map .leaflet-map-pane{translate:0 64px}
+/* «Mapa» (aparece cuando el mapa queda arriba, fuera de la vista): encima de la píldora; su color, en T6. */
+.map-label{bottom:calc(var(--nav-h) + 12px + env(safe-area-inset-bottom))}
+html.tabbar-away .map-label{transform:translate(-50%,calc(var(--nav-h) - 8px))}
+
+/* ---------- T3: ficha, botones sobre la foto y barra de WhatsApp ---------- */
+.hero .top{
+  position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:6;
+  transition:var(--float-away);
+}
+html.tabbar-away .hero .top{transform:translateY(calc(-100% - var(--float-top) - 8px));opacity:0}
+.hero .top .icon-btn,.hero .top .heart-hero{width:44px;height:44px;border-radius:var(--float-r);color:var(--fg)}
+.hero .top .row{gap:8px}
+.hero-counter{border-radius:8px}
+/* Parte de abajo de la ficha (Daniel, 2026-11-04): dos piezas flotantes, no una barra. Arriba la tarjeta clara con los precios
+   (colones a la izquierda, ≈ dólares a la derecha); debajo, a 10 px, el botón verde con su propia sombra, del mismo ancho.
+   No se esconden al bajar. Sin la nota «Precios orientativos…». */
+.listing-view > .cta-bar{
+  left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);width:auto;max-width:536px;margin:0 auto;transform:none;
+  padding:0;gap:10px;background:none;border:0;box-shadow:none;
+}
+.listing-view > .cta-bar .cta-prices{padding:12px 16px;border-radius:var(--float-r);align-items:center;background:var(--float-bg-strong)}
+.listing-view > .cta-bar .price{font-size:22px}
+.listing-view > .cta-bar .price.is-stay .price-fig{font-size:19px}
+.listing-view > .cta-bar .btn-wa{min-height:54px;border-radius:var(--float-r);
+  box-shadow:0 1px 2px rgba(6,59,30,.18),0 12px 26px -12px rgba(6,59,30,.55)}
+.listing-view > .cta-bar .price-disclaimer{display:none}
+/* `view-transition-name` hace de la barra (y de .hero .top) una «raíz de fondo»: el desenfoque de las tarjetas de dentro no vería la
+   página. En la app, el nombre de la transición pasa a cada pieza; en la maqueta, se quita. */
+.cta-bar,.hero .top{view-transition-name:none}
+.listing-view .cta-spacer{margin-bottom:calc(var(--float-gap) + 12px)}
+
+/* ---------- T4: barras de formularios (asistente, editar, Filtros «Ver N casas», Buscar, revisión) ---------- */
+.sticky-actions{
+  left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);width:auto;max-width:536px;margin:0 auto;transform:none;
+  padding:8px;gap:8px;border-radius:var(--float-r-bar);background:var(--float-bg-strong);
+}
+.sticky-actions .btn{min-height:48px;border-radius:8px}
+.publish-form::after{height:calc(64px + 28px + var(--kb,0px) + env(safe-area-inset-bottom))}
+
+/* ---------- T5: panel del calendario ---------- */
+.cal-panel{
+  left:var(--float-gap);right:var(--float-gap);bottom:var(--float-bottom);width:auto;max-width:536px;margin:0 auto;transform:none;
+  padding:14px 14px 12px;border-radius:var(--float-r-bar);background:var(--float-bg-strong);
+}
+
+/* ---------- T6: flotantes sueltos ---------- */
+.toast,.update-banner{border-radius:var(--float-r)}
+/* «Mapa» (Explorar) y «Ver ficha» (detalle de la casa): mismas medidas; el color, en tres variantes para elegir (Daniel, 2026-11-04:
+   el 92 % de tinta es demasiado oscuro). Por defecto, la (a). */
+.map-label,.float-btn{height:44px;padding:0 18px;border-radius:var(--float-r);
+  -webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur);box-shadow:var(--float-shadow)}
+.float-btn{bottom:var(--float-bottom)}
+.map-label svg,.float-btn svg{color:currentColor}
+/* (a) Tinta al 60 % con desenfoque, texto crema: 3,9:1 sobre blanco o crema, 5,9:1 sobre arena y más sobre fotos oscuras; para 4,5:1 en el peor caso, 66 %. */
+.map-label,.float-btn{background:rgba(28,43,42,.6);color:#FFFBF2;border:1px solid rgba(255,251,242,.14)}
+/* (b) Clara, como las demás tarjetas (crema al 80 %), texto e icono en tinta: de 9,8:1 a 14:1. */
+html.mq-btn-b .map-label,html.mq-btn-b .float-btn{background:var(--float-bg);color:var(--fg);border:1px solid var(--float-edge)}
+/* (c) Verde salvia (token selection #7FA98A) al 90 %, texto selectionInk #16331F: 5,8:1 sobre crema, 4,5:1 sobre fondo muy oscuro. */
+html.mq-btn-c .map-label,html.mq-btn-c .float-btn{background:color-mix(in srgb,var(--selection) 90%,transparent);color:var(--selection-ink);border:1px solid color-mix(in srgb,var(--selection-ink) 12%,transparent)}

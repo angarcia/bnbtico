@@ -1,0 +1,190 @@
+// Edición de una casa publicada (spec .scratch/editar-casa): unos datos cambian al momento (capacidad, características,
+// precio) y otros pasan por la revisión del admin (nombre, tipo, ubicación, descripción y fotos nuevas), mientras los
+// clientes siguen viendo la versión aprobada. Desde la revisión UX 2026-10-29 (A5), cada dato y cada foto nueva va a
+// revisión en cuanto se guarda y el admin decide uno a uno; para cada dato cuenta el último valor enviado.
+// Editar sigue las reglas de crear (ronda de Ana del 2026-11-02, ticket 12): las del asistente (requiredProblems, warnings,
+// parseStep, normalize, storable), con los mismos mensajes en SQL, el dominio y el fake. Solo bloquea lo obligatorio al
+// crear del dato que se edita (tipo, ubicación, nombre, precio por noche; las fotos, en su pantalla); lo demás es un aviso
+// en ocre (`fieldWarning`). Excepción: un dato que se publica al momento y ya tenía un valor válido no se deja vacío ni
+// inválido. Editar un dato valida solo ese dato, nunca la casa entera. Planear el guardado de un dato (planEdit) va en
+// edit-plan.ts, que solo lee «Editar un dato» (así no pesa en el trozo que comparte con la ficha editable).
+// Módulo de dominio: sin imports de framework.
+import { emptyDraft, KIND_LABELS, TITLE_MIN, type Kind, type ListingDraft, type Listing, type Photo, type Step } from "./listing";
+import { bathroomSharedError } from "./listing-rules";
+import { warnings } from "./publish-rules";
+import { parseStep, type FormInput } from "./step-forms";
+import type { ZoneSource } from "./zones";
+import type { EditStatus } from "./edit-label";
+import { editedFields, type ReviewedField } from "./edit-summary";
+
+export type { EditStatus } from "./edit-label";
+export { editLabel, editOverview, EDIT_LABELS } from "./edit-label";
+export { EDIT_MESSAGES } from "./edit-messages";
+export { editSummary, editedFields, FIELD_COLUMN, COLUMN_FIELD, type EditFieldColumn, type ReviewedField } from "./edit-summary";
+
+export interface EditLocation {
+  lat: number;
+  lng: number;
+  zone: string;
+  zoneId: string | null;
+  zoneSource: ZoneSource;
+}
+
+/** Estado de un dato o una foto pendiente: en revisión o con cambios pedidos (y la nota del admin). */
+export interface EditItemState {
+  status: EditStatus;
+  reviewNote: string | null;
+  /** El envío que el admin abre (y con el que decide). */
+  submittedAt: string;
+}
+
+export type EditPhoto = Photo & EditItemState;
+
+export interface ListingEdit {
+  /** Resumen: «review» si algo espera al admin; si no, «changes». */
+  status: EditStatus;
+  /** Cada dato con revisión que cambia, con su estado. */
+  fields: Partial<Record<ReviewedField, EditItemState>>;
+  title: string | null;
+  kind: Kind | null;
+  /** Va con el tipo: solo cuenta si el tipo resultante es habitación. */
+  bathroomShared: boolean | null;
+  /** "" = borrar la descripción; null = sin cambio. */
+  description: string | null;
+  location: EditLocation | null;
+  /** El envío más antiguo de lo que espera al admin (orden de su cola); null si nada espera. */
+  submittedAt: string | null;
+  /** Fotos nuevas, por posición, cada una con su estado; al aprobarla va al final de la ficha. */
+  photos: EditPhoto[];
+}
+
+
+
+export const EDIT_COPY = {
+  savedLive: "Guardado. Ya se ve en su ficha.",
+  sentToReview: "Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos.",
+  discardTitle: "¿Descartar este cambio?",
+  discardBody: "Su ficha sigue como está.",
+  photosNotice: "Las fotos nuevas las revisamos antes de publicarlas, normalmente en menos de 24 horas.",
+} as const;
+
+/** Lo que el cliente ve mientras tanto, en el aviso de la pantalla de un dato con revisión. */
+function approvedValue(field: ReviewedField, l: Listing): string {
+  if (field === "nombre") return `«${l.title}»`;
+  if (field === "tipo") return `«${l.kind ? KIND_LABELS[l.kind] : ""}»`;
+  if (field === "ubicacion") return `«${l.zone}»`;
+  return l.description.trim() ? "la descripción de ahora" : "la ficha sin descripción";
+}
+
+/** «Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven «…».» */
+export function reviewNotice(field: ReviewedField, l: Listing): string {
+  return `Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven ${approvedValue(field, l)}.`;
+}
+
+export type EditField = "fotos" | "nombre" | "tipo" | "ubicacion" | "capacidad" | "caracteristicas" | "descripcion" | "precio";
+export type FormField = Exclude<EditField, "fotos">;
+
+/** Orden de las filas de la ficha editable (maqueta 08a). */
+export const FIELD_ORDER: readonly FormField[] = ["nombre", "tipo", "capacidad", "caracteristicas", "descripcion", "precio", "ubicacion"];
+export const IMMEDIATE_FIELDS: readonly FormField[] = ["capacidad", "caracteristicas", "precio"];
+export const REVIEWED_FIELDS: readonly FormField[] = ["nombre", "tipo", "ubicacion", "descripcion"];
+const EDIT_FIELDS: readonly EditField[] = ["fotos", ...FIELD_ORDER];
+
+export const FIELD_TITLES: Record<EditField, string> = {
+  fotos: "Fotos",
+  nombre: "Nombre",
+  tipo: "Tipo",
+  ubicacion: "Ubicación",
+  capacidad: "Personas, dormitorios y baños",
+  caracteristicas: "Características",
+  descripcion: "Descripción",
+  precio: "Precio",
+};
+
+/** Título de un dato en la ficha editable y en su pantalla: una Habitación solo pregunta personas (es 1 habitación y 1
+ *  baño; si el baño es privado o compartido va con el tipo, que pasa por revisión). */
+export const fieldTitle = (field: EditField, kind?: Kind | null): string => (field === "capacidad" && kind === "habitacion" ? "Personas" : FIELD_TITLES[field]);
+
+/** La pantalla del asistente cuyos campos y reglas reutiliza cada dato. */
+export const FIELD_STEP: Record<FormField, Step> = { tipo: 1, ubicacion: 2, capacidad: 4, caracteristicas: 5, nombre: 6, descripcion: 6, precio: 8 };
+
+/** Columnas que `update_listing_live` acepta. */
+export const LIVE_KEYS = ["capacity", "bedrooms", "bathrooms", "features", "parkingPaid", "nightlyPriceCrc", "acceptsMonthly", "monthlyPriceCrc"] as const;
+export type LivePatch = Partial<Pick<ListingDraft, (typeof LIVE_KEYS)[number]>>;
+/** Columnas que `save_edit` acepta (la ubicación, siempre las cinco juntas). */
+export const EDIT_KEYS = ["title", "kind", "bathroomShared", "description", "lat", "lng", "zone", "zoneId", "zoneSource"] as const;
+export type EditPatch = Partial<Pick<ListingDraft, (typeof EDIT_KEYS)[number]>>;
+
+/** Lo que lee cada pantalla de su formulario. */
+const PARSED_KEYS: Record<FormField, readonly (keyof ListingDraft)[]> = {
+  nombre: ["title"],
+  descripcion: ["description"],
+  tipo: ["kind", "bathroomShared"],
+  ubicacion: ["lat", "lng", "province", "canton", "district", "zone", "zoneId", "zoneSource"],
+  capacidad: ["capacity", "bedrooms", "bathrooms"],
+  caracteristicas: ["features", "parkingPaid"],
+  precio: ["nightlyPriceCrc", "acceptsMonthly", "monthlyPriceCrc"],
+};
+
+export function editFieldFromParam(campo: string): EditField | null {
+  return (EDIT_FIELDS as readonly string[]).includes(campo) ? (campo as EditField) : null;
+}
+
+const DRAFT_KEYS = Object.keys(emptyDraft()) as (keyof ListingDraft)[];
+
+/** La casa como la verá el cliente si se aprueba la edición: lo cambiado encima de lo aprobado. */
+export function mergeEdit(l: Listing, e: ListingEdit | null): ListingDraft {
+  const d = Object.fromEntries(DRAFT_KEYS.map((k) => [k, l[k]])) as unknown as ListingDraft;
+  d.photoCount = l.photos.length + (e?.photos.length ?? 0);
+  if (!e) return d;
+  if (e.title !== null) d.title = e.title;
+  if (e.description !== null) d.description = e.description;
+  if (e.kind !== null) d.kind = e.kind;
+  d.bathroomShared = d.kind === "habitacion" ? (e.bathroomShared ?? d.bathroomShared) : null;
+  if (e.location) Object.assign(d, e.location);
+  return d;
+}
+
+export function isEmptyEdit(e: ListingEdit): boolean {
+  return editedFields(e).length === 0 && e.photos.length === 0;
+}
+
+export const pick = <K extends keyof ListingDraft>(d: Partial<ListingDraft>, keys: readonly K[]): Partial<Pick<ListingDraft, K>> => {
+  const out: Partial<Pick<ListingDraft, K>> = {};
+  for (const k of keys) if (k in d) out[k] = d[k];
+  return out;
+};
+
+/** Lee el formulario de un dato con las reglas de su pantalla del asistente y devuelve solo sus claves. Con `shown` (lo
+ *  que mostraba la pantalla): un nombre sin tocar no se lee, ni se envía ni se recorta (uno viejo de más de 32), y un tipo
+ *  de antes (casa, apartamento) que se deja en «Alojamiento completo» se queda como está. */
+export function parseField(field: FormField, input: FormInput, shown?: ListingDraft): Partial<ListingDraft> {
+  if (field === "nombre" && shown && (input.title?.[0] ?? "").trim() === shown.title.trim()) return {};
+  const parsed = parseStep(FIELD_STEP[field], input);
+  if (field === "tipo") {
+    // El tipo lleva el dato del baño, que en el asistente se pide en la pantalla de la capacidad.
+    parsed.bathroomShared = parseStep(4, input).bathroomShared ?? null;
+    if (parsed.kind === "completo" && (shown?.kind === "casa" || shown?.kind === "apartamento")) parsed.kind = shown.kind;
+  }
+  return pick(parsed, PARSED_KEYS[field]);
+}
+
+/** La pantalla del asistente cuyo aviso (`warnings`) va en la fila de cada dato. */
+const WARNING_STEP: Partial<Record<FormField, Step>> = { capacidad: 4, caracteristicas: 5, descripcion: 6, precio: 8 };
+
+/** El aviso en ocre de un dato, el mismo que «Revisar y enviar» al crear; null si no hay. El baño de una Habitación va con
+ *  el tipo (A5), que es donde se elige: avisa en la fila Tipo y no en la de la capacidad. Un nombre viejo de más de 32 no
+ *  calla el aviso de la descripción. */
+export function fieldWarning(field: FormField, d: ListingDraft): string | null {
+  if (field === "tipo") return bathroomSharedError(d);
+  const step = WARNING_STEP[field];
+  const checked = field === "capacidad" ? { ...d, bathroomShared: true } : field === "descripcion" ? { ...d, title: "x".repeat(TITLE_MIN) } : d;
+  return (step && warnings(checked).find((w) => w.step === step)?.error) || null;
+}
+
+/** «5 fotos · Editar», «5 fotos · 1 nueva en revisión · Editar», «1 foto · Editar». */
+export function photoPill(approved: number, pending: number): string {
+  const count = approved === 1 ? "1 foto" : `${approved} fotos`;
+  const news = pending === 0 ? "" : pending === 1 ? " · 1 nueva en revisión" : ` · ${pending} nuevas en revisión`;
+  return `${count}${news} · Editar`;
+}

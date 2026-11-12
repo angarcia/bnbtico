@@ -1,0 +1,37 @@
+/* Portada de 3bstays.com hasta el lanzamiento (public/portada.html). Hoja propia y pequeña: la portada no carga la app.
+   Tokens del sistema «Sol y sal» (design/tokens/tokens.json 0.2.0); las mismas fuentes autoalojadas que la app. */
+@font-face{font-family:Outfit;font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/outfit-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:Figtree;font-style:normal;font-weight:300 900;font-display:swap;src:url(/fonts/figtree-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Outfit Fallback";src:local(Arial);ascent-override:100.18%;descent-override:26.05%;line-gap-override:0%;size-adjust:99.82%}
+@font-face{font-family:"Figtree Fallback";src:local(Arial);ascent-override:94.32%;descent-override:24.82%;line-gap-override:0%;size-adjust:100.72%}
+:root{--display:Outfit,"Outfit Fallback",system-ui,sans-serif;--body:Figtree,"Figtree Fallback",system-ui,sans-serif;--bg:#FFFBF2;--fg:#1C2B2A;--muted:#5C6B69;--sun-soft:#FBE8C2;--sun-ink:#7A4E07;color-scheme:light}
+@media (prefers-color-scheme: dark){:root{--bg:#141917;--fg:#EDEFEA;--muted:#A3ADA6;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+h1,h2{font-family:var(--display);margin:0;letter-spacing:-0.02em;line-height:1.1;text-wrap:balance;font-weight:800}
+p{margin:0}
+.small{font-size:13px}.muted{color:var(--muted)}
+.soon{position:relative;min-height:100dvh;display:grid;place-items:end center;padding:24px 20px calc(44px + env(safe-area-inset-bottom));overflow:hidden;color:#FFFBF2;background:#1C2B2A}
+.soon-bg{position:absolute;inset:0;z-index:0}
+.soon-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:85% 70%}
+.soon-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(28,43,42,.10) 0%,rgba(28,43,42,.22) 40%,rgba(28,43,42,.70) 72%,rgba(28,43,42,.92) 100%)}
+.soon-card{position:relative;z-index:1;max-width:420px;width:100%;text-align:center;display:grid;gap:14px;justify-items:center}
+.soon-eyebrow{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:#FBE8C2;color:#7A4E07;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.soon-title{color:#FFFBF2;font-size:30px;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.soon-text{color:rgba(255,251,242,.92);font-size:16px;line-height:1.45;text-wrap:balance;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.soon-place{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,251,242,.7)}
+.soon-logo{width:210px;height:auto}
+.soon-tagline{margin-top:-6px;font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:.01em;color:#FBE8C2;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.soon-more{max-width:560px;margin:0 auto;padding:36px 20px calc(40px + env(safe-area-inset-bottom));display:grid;gap:14px}
+.soon-more h2{font-size:22px;margin-top:8px}
+.soon-more p{line-height:1.55}
+@media (min-width:760px){.soon-bg img{object-position:74% 50%}.soon{place-items:center}.soon-shade{background:linear-gradient(180deg,rgba(28,43,42,.25),rgba(28,43,42,.55))}.soon-title{font-size:40px}}
+.soon-offer{max-width:560px;margin:24px auto 0;padding:20px;border-radius:24px;background:#FBE8C2;color:#1C2B2A;display:grid;gap:10px;width:calc(100% - 40px)}
+.soon-offer h2{font-size:22px}
+.soon-offer b{color:var(--sun-ink)}
+.soon-later{font-weight:700;color:var(--sun-ink)}
+.soon-cta{display:flex;align-items:center;justify-content:center;min-height:52px;padding:0 20px;border-radius:999px;background:#2F5D45;color:#FFFBF2;font-family:var(--display);font-weight:800;font-size:16px;text-decoration:none}
+.soon-steps{margin:0;padding-left:22px;display:grid;gap:10px}
+.soon-steps li{line-height:1.5}
+.soon-steps li::marker{font-family:var(--display);font-weight:800;color:#2F5D45}

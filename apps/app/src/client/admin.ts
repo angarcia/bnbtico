@@ -1,0 +1,313 @@
+// Consultas y acciones de la zona del admin (ticket 09). La cola se persiste con la sesión (clave privada) y se pide de
+// nuevo siempre al abrirla o volver a la app (staleTime 0). Revisar es optimista: la casa sale de la cola al instante y,
+// si la base se niega, vuelve con su mensaje. La purga de la ficha pública la encola la base (trigger con pg_net).
+import { queryOptions, useMutation, useMutationState, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
+import type { AdminListingsApi, MfaFactor } from "../domain/api";
+import type { ListingEdit } from "../domain/edit";
+import { editOverview } from "../domain/edit-label";
+import type { ReviewedField } from "../domain/edit-summary";
+import { toDomainError } from "../domain/errors";
+import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
+import { ownerNoticeUrl, firstName } from "../domain/owner-notice";
+import { authApi } from "./session";
+import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "./listing-cache";
+import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "./listing-keys";
+
+export const adminApi = async (): Promise<AdminListingsApi> => {
+  await authApi();
+  return (await import("./supabase-data")).adminApi();
+};
+
+export const adminQueueQuery = (userId: string) =>
+  queryOptions({
+    queryKey: adminQueueKey(userId),
+    queryFn: async () => (await adminApi()).queue(),
+    staleTime: 0,
+  });
+
+/** Casas del admin (diseño 23): solo lectura; se piden de nuevo al abrir la pantalla. */
+export const adminHousesQuery = (userId: string) =>
+  queryOptions({
+    queryKey: adminHousesKey(userId),
+    queryFn: async () => (await adminApi()).houses(),
+    staleTime: 0,
+  });
+
+const fromQueue = (q: AdminQueue | undefined, id: string) => q && [...q.review, ...q.changes, ...q.rejected].find((i) => i.listing.id === id);
+
+export const adminListingQuery = (userId: string, id: string, client: QueryClient) => {
+  const queue = client.getQueryState(adminQueueQuery(userId).queryKey);
+  return queryOptions({
+    queryKey: adminListingKey(userId, id),
+    queryFn: async () => (await adminApi()).get(id),
+    staleTime: 0,
+    initialData: () => fromQueue(queue?.data as AdminQueue | undefined, id),
+    initialDataUpdatedAt: queue?.dataUpdatedAt,
+  });
+};
+
+// ---------- Resultado de la última decisión (lo muestra la cola, adonde se vuelve al decidir) ----------
+/** `notice`: el botón «Avisar a <nombre> por WhatsApp» con el wa.me ya escrito (solo si se guardó). */
+export type ReviewOutcome = { kind: "saved" | "failed"; title: string; text: string; notice?: { name: string; href: string } } | null;
+let outcome: ReviewOutcome = null;
+const outcomeListeners = new Set<() => void>();
+const setOutcome = (o: ReviewOutcome) => {
+  outcome = o;
+  outcomeListeners.forEach((l) => l());
+};
+export const clearReviewOutcome = () => setOutcome(null);
+export function useReviewOutcome(): ReviewOutcome {
+  return useSyncExternalStore(
+    (l) => (outcomeListeners.add(l), () => void outcomeListeners.delete(l)),
+    () => outcome,
+    () => null,
+  );
+}
+
+const SAVED: Record<ReviewDecision, string> = {
+  approve: "Aprobada y publicada. El enlace ya funciona.",
+  changes: "Cambios pedidos. El anfitrión verá su mensaje.",
+  reject: "Rechazada. El anfitrión verá el motivo.",
+};
+
+export interface ReviewInput {
+  item: QueueItem;
+  decision: ReviewDecision;
+  note: string;
+}
+
+/**
+ * La cola tal como debe verse: lo que dice la base más las decisiones aún en curso. Sin esto, una lectura de la cola que
+ * llegue antes de que la base guarde la decisión (la cola se pide al abrirla, staleTime 0) devolvería la casa a la cola.
+ */
+export function useQueueWithPending(userId: string, queue: AdminQueue | undefined): AdminQueue | undefined {
+  const pending = useMutationState({
+    filters: { mutationKey: adminReviewKey(userId), status: "pending" },
+    select: (m) => ({ input: m.state.variables as ReviewInput, at: new Date(m.state.submittedAt).toISOString() }),
+  });
+  if (!queue) return queue;
+  return pending.reduce((q, { input, at }) => applyDecision(q, input.item.listing.id, input.decision, input.note, at), queue);
+}
+
+/** Decisión optimista. Los callbacks van en el hook: corren aunque la pantalla de detalle ya no esté. */
+export function useReview(userId: string) {
+  const client = useQueryClient();
+  const queueKey = adminQueueQuery(userId).queryKey;
+  const itemKey = (id: string) => adminListingKey(userId, id);
+  return useMutation({
+    mutationKey: adminReviewKey(userId),
+    mutationFn: async ({ item, decision, note }: ReviewInput) => (await adminApi()).review(item.listing.id, decision, note),
+    onMutate: async ({ item, decision, note }) => {
+      const id = item.listing.id;
+      await client.cancelQueries({ queryKey: queueKey });
+      const previous = { queue: client.getQueryData<AdminQueue>(queueKey), item: client.getQueryData<QueueItem | null>(itemKey(id)) };
+      const at = new Date().toISOString();
+      client.setQueryData<AdminQueue>(queueKey, (q) => (q ? applyDecision(q, id, decision, note, at) : q));
+      client.setQueryData<QueueItem | null>(itemKey(id), (i) =>
+        i ? { ...i, listing: { ...i.listing, status: DECISION_STATUS[decision], reviewNote: note.trim() || null, reviewedAt: at } } : i,
+      );
+      const notice = {
+        name: firstName(item.ownerName),
+        href: ownerNoticeUrl(item.listing.whatsappPhone, {
+          kind: decision,
+          ownerName: item.ownerName,
+          title: item.listing.title,
+          publicId: item.listing.publicId,
+          origin: window.location.origin,
+          note,
+        }),
+      };
+      setOutcome({ kind: "saved", title: item.listing.title, text: SAVED[decision], notice });
+      return previous;
+    },
+    onError: (error, { item }, previous) => {
+      if (previous?.queue) client.setQueryData(queueKey, previous.queue);
+      if (previous?.item !== undefined) client.setQueryData(itemKey(item.listing.id), previous.item);
+      setOutcome({ kind: "failed", title: item.listing.title, text: toDomainError(error).message });
+    },
+    onSettled: (_data, _error, { item }) => refreshAdminReview(client, userId, item.listing),
+  });
+}
+
+// ---------- Pausar, bloquear y eliminar (spec .scratch/admin-casas-acciones) ----------
+export type HouseAction =
+  | { kind: "pause" | "block"; id: string; publicId: string; reason: string }
+  | { kind: "resume" | "unblock"; id: string; publicId: string }
+  | { kind: "delete"; id: string; publicId: string; reason: string; confirm: string };
+
+/** Lo que dice la lista al terminar la acción. */
+export const HOUSE_ACTION_DONE: Record<HouseAction["kind"], string> = {
+  pause: "Casa pausada",
+  resume: "Casa reanudada",
+  block: "Casa bloqueada",
+  unblock: "Casa desbloqueada",
+  delete: "Casa eliminada",
+};
+
+/** Una acción del admin sobre una casa: sin optimismo (el motivo y el código los comprueba la base), y al terminar se piden de
+ *  nuevo la lista, la cola y lo público de esa casa (la base ya purgó la ficha del borde). */
+export function useHouseAction(userId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (a: HouseAction): Promise<void> => {
+      const api = await adminApi();
+      switch (a.kind) {
+        case "pause":
+          return api.pauseListing(a.id, a.reason);
+        case "block":
+          return api.blockListing(a.id, a.reason);
+        case "resume":
+          return api.resumeListing(a.id);
+        case "unblock":
+          return api.unblockListing(a.id);
+        case "delete":
+          return api.deleteListing(a.id, a.reason, a.confirm);
+      }
+    },
+    onSettled: (_data, _error, a) => refreshAdminHouse(client, userId, a.publicId),
+  });
+}
+
+// ---------- Ediciones de casas publicadas (spec .scratch/editar-casa §4) ----------
+/** Ediciones en revisión, la que más espera primero; se piden de nuevo al abrir la cola. */
+export const adminEditsQuery = (userId: string) =>
+  queryOptions({
+    queryKey: adminEditsKey(userId),
+    queryFn: async () => (await adminApi()).editQueue(),
+    staleTime: 0,
+  });
+
+/** Una edición con la casa aprobada; abre con la de la cola si ya está. */
+export const adminEditQuery = (userId: string, id: string, client?: QueryClient) => {
+  const edits = client?.getQueryState(adminEditsQuery(userId).queryKey);
+  return queryOptions({
+    queryKey: adminEditKey(userId, id),
+    queryFn: async () => (await adminApi()).getEdit(id),
+    staleTime: 0,
+    initialData: () => (edits?.data as QueueItem[] | undefined)?.find((i) => i.listing.id === id),
+    initialDataUpdatedAt: edits?.dataUpdatedAt,
+  });
+};
+
+/** Qué se decide: un dato con revisión o una foto nueva (revisión por dato, A5). */
+export type EditTarget = { field: ReviewedField } | { photoId: string };
+
+export interface EditReviewInput {
+  item: QueueItem;
+  target: EditTarget;
+  decision: EditDecision;
+  note: string;
+}
+
+/** La cola de ediciones sin las que se quedan sin nada en revisión por una decisión en curso (como useQueueWithPending). */
+export function useEditsWithPending(userId: string, edits: QueueItem[] | undefined): QueueItem[] | undefined {
+  const pending = useMutationState({
+    filters: { mutationKey: adminEditReviewKey(userId), status: "pending" },
+    select: (m) => m.state.variables as EditReviewInput,
+  });
+  if (!edits || !pending.length) return edits;
+  return edits.filter((i) => {
+    const mine = pending.filter((p) => p.item.listing.id === i.listing.id);
+    return !mine.length || !!decided(i, mine)?.listing.edit && decided(i, mine)!.listing.edit!.status === "review";
+  });
+}
+
+/** Si tras esta decisión ya no queda nada de la casa en revisión (la pantalla vuelve entonces a la cola). */
+export const lastInReview = (input: EditReviewInput): boolean => decided(input.item, [input]).listing.edit?.status !== "review";
+
+/** La casa con las decisiones ya tomadas aplicadas: lo aprobado sale de la edición; lo de cambios pedidos queda con su nota. */
+function decided(item: QueueItem, inputs: readonly EditReviewInput[]): QueueItem {
+  const e = item.listing.edit;
+  if (!e) return item;
+  const fields = { ...e.fields };
+  let photos = [...e.photos];
+  let next: ListingEdit = { ...e };
+  for (const { target, decision, note } of inputs) {
+    if ("field" in target) {
+      const state = fields[target.field];
+      if (!state) continue;
+      if (decision === "approve") {
+        delete fields[target.field];
+        next = { ...next, ...clearedField(target.field) };
+      } else fields[target.field] = { ...state, status: "changes", reviewNote: note.trim() };
+    } else {
+      photos = decision === "approve" ? photos.filter((p) => p.id !== target.photoId) : photos.map((p) => (p.id === target.photoId ? { ...p, status: "changes", reviewNote: note.trim() } : p));
+    }
+  }
+  const items = [...Object.values(fields), ...photos];
+  const edit = items.length ? { ...next, fields, photos, ...editOverview(items) } : null;
+  return { ...item, listing: { ...item.listing, edit } };
+}
+
+const clearedField = (field: ReviewedField): Partial<ListingEdit> =>
+  field === "nombre" ? { title: null } : field === "descripcion" ? { description: null } : field === "tipo" ? { kind: null, bathroomShared: null } : { location: null };
+
+/** Decisión optimista sobre un dato o una foto: el bloque cambia al instante (aprobado sale; cambios pedidos, con su nota) y,
+ *  si ya no queda nada en revisión, la casa sale de la cola. Si la base se niega, vuelve atrás y el bloque dice por qué. */
+export function useReviewEdit(userId: string) {
+  const client = useQueryClient();
+  const editsKey = adminEditsQuery(userId).queryKey;
+  return useMutation<void, Error, EditReviewInput, { edits: QueueItem[] | undefined; item: QueueItem | null | undefined }>({
+    mutationKey: adminEditReviewKey(userId),
+    mutationFn: async ({ item, target, decision, note }) => {
+      const api = await adminApi();
+      const e = item.listing.edit;
+      if ("field" in target) return api.reviewEditField(item.listing.id, target.field, decision, note, e?.fields[target.field]?.submittedAt ?? null);
+      return api.reviewEditPhoto(target.photoId, decision, note, e?.photos.find((p) => p.id === target.photoId)?.submittedAt ?? null);
+    },
+    onMutate: async (input) => {
+      const itemKey = adminEditKey(userId, input.item.listing.id);
+      await client.cancelQueries({ queryKey: editsKey });
+      await client.cancelQueries({ queryKey: itemKey });
+      const edits = client.getQueryData<QueueItem[]>(editsKey);
+      const item = client.getQueryData<QueueItem | null>(itemKey);
+      const next = decided(item ?? input.item, [input]);
+      client.setQueryData(itemKey, next);
+      client.setQueryData<QueueItem[]>(editsKey, (q) =>
+        next.listing.edit?.status === "review" ? q?.map((i) => (i.listing.id === next.listing.id ? next : i)) : q?.filter((i) => i.listing.id !== next.listing.id),
+      );
+      if (!next.listing.edit || next.listing.edit.status !== "review") setOutcome({ kind: "saved", title: input.item.listing.title, text: EDIT_REVIEW_SAVED[input.decision] });
+      return { edits, item };
+    },
+    onError: (error, { item }, previous) => {
+      if (previous?.edits) client.setQueryData(editsKey, previous.edits);
+      if (previous?.item !== undefined) client.setQueryData(adminEditKey(userId, item.listing.id), previous.item);
+      setOutcome({ kind: "failed", title: item.listing.title, text: toDomainError(error).message });
+    },
+    onSettled: (_data, _error, { item }) => refreshAdminEdit(client, userId, item.listing),
+  });
+}
+
+// ---------- Segundo factor (app de autenticación) ----------
+/** El factor de la cuenta: si la pantalla se monta dos veces no se inscribe otro (cambiaría el QR ya escaneado). */
+let factor: { userId: string; value: MfaFactor } | null = null;
+let loading: Promise<MfaFactor> | null = null;
+
+/** El factor TOTP del admin: el verificado, o uno recién inscrito con su QR y su clave. */
+export async function loadSecondFactor(userId: string): Promise<MfaFactor> {
+  if (factor?.userId === userId) return factor.value;
+  if (loading) return loading;
+  loading = (async () => {
+    try {
+      const value = await (await authApi()).enrolMfa();
+      factor = { userId, value };
+      return value;
+    } finally {
+      loading = null;
+    }
+  })();
+  return loading;
+}
+
+export async function verifySecondCode(userId: string, code: string) {
+  const { factorId } = await loadSecondFactor(userId);
+  try {
+    await (await authApi()).verifyMfa(factorId, code);
+  } catch (error) {
+    // El factor ya no existe (lo quitaron en otro sitio): la próxima vez se inscribe uno nuevo.
+    if (toDomainError(error).kind === "conflict") factor = null;
+    throw error;
+  }
+  factor = { userId, value: { factorId, verified: true } };
+}

@@ -5,13 +5,13 @@
 
 ## Decisión
 
-**Excepción manual aprobada · 2026-10-13:** administración puede crear consultas por casa a petición de un cliente activo y verificado, con autorización específica registrada para compartir el contacto con los destinatarios seleccionados. Aparecen en Mis consultas del propietario como enviadas por bnbtico, no como aperturas de WhatsApp. Máximo 10 propietarios y una casa por propietario en cada envío; controles de compatibilidad y duplicados. Bienvenidas separadas por rol y números de soporte diferentes, enviadas manualmente por administración. Ver `decisiones.md` y `admin-concierge.js`; no hay automatización, API ni WhatsApp real en la demo.
+**Excepción manual aprobada · 2026-10-13:** administración puede crear consultas por casa a petición de un cliente activo y verificado, con autorización específica registrada para compartir el contacto con los destinatarios seleccionados. Aparecen en Mis consultas del propietario como enviadas por 3bstays, no como aperturas de WhatsApp. Máximo 10 propietarios y una casa por propietario en cada envío; controles de compatibilidad y duplicados. Bienvenidas separadas por rol y números de soporte diferentes, enviadas manualmente por administración. Ver `decisiones.md` y `admin-concierge.js`; no hay automatización, API ni WhatsApp real en la demo.
 
 **Alcance vigente del lanzamiento · 2026-10-13:** únicamente contacto directo iniciado por el cliente desde la ficha, tras login, identidad y WhatsApp verificados y consentimiento explícito. Fechas, personas y consulta opcionales. Mis consultas registra intentos de apertura, sin afirmar envío/entrega. El propietario puede reabrir el chat con un mensaje editable que incluye los datos existentes y omite bloques vacíos. Sin aceptar/rechazar ni selector de contacto por casa. Las preferencias y aceptación descritas abajo quedan como exploración histórica, fuera del lanzamiento. La demo solo muestra el texto y simula la apertura; no comparte teléfonos reales ni envía mensajes.
 
 Actualización 2026-10-13: en Mis consultas, el propietario puede aplicar contacto directo Sí/No a todas sus casas actuales y como predeterminado de las futuras. La confirmación avisa que reemplaza excepciones actuales. Después se puede cambiar una casa individualmente sin afectar las demás ni el predeterminado. Inicialmente No. Las verificaciones y el consentimiento del cliente se mantienen; Buscan casa y contactos previos no cambian. Preferencia simulada en memoria, no integración con WhatsApp Business.
 
-Volver al flujo sencillo, sin chat interno ni números intermediarios para las conversaciones entre usuarios. bnbtico conecta a las partes; las conversaciones, reservas y pagos se acuerdan fuera. La suscripción remunera el anuncio y los contactos, sin comisión por alquiler. Las alternativas de chat y puente de WhatsApp quedan históricas en `chat-privado.md`.
+Volver al flujo sencillo, sin chat interno ni números intermediarios para las conversaciones entre usuarios. 3bstays conecta a las partes; las conversaciones, reservas y pagos se acuerdan fuera. La suscripción remunera el anuncio y los contactos, sin comisión por alquiler. Las alternativas de chat y puente de WhatsApp quedan históricas en `chat-privado.md`.
 
 Requisito 2026-10-12: además de Veriff, ambos participantes deben tener su WhatsApp verificado mediante OTP antes de contactar/responder; también antes de enviar «Pedir casa». Registro/login siguen sin verificaciones iniciales. El OTP requiere integración separada pendiente y no autoriza compartir el teléfono ni importa chats. Fuente: [identidad-y-seguridad.md](identidad-y-seguridad.md). Todavía no implementado en la demo.
 
@@ -27,13 +27,13 @@ Con **Sí**, el propietario autoriza por adelantado el contacto para esa casa. U
 
 Cambiar a No conserva contactos ya aceptados e historial y no retira números compartidos. Activar Sí no envía mensajes a consultas antiguas. El cliente puede continuar una consulta vigente usando la nueva preferencia, sin duplicar el registro ni reiniciar los siete días. «Solicitudes» compartidas no se aceptan automáticamente.
 
-Desactivar una casa la oculta del catálogo y bloquea nuevos contactos desde bnbtico; no cierra chats externos. Reactivarla exige aprobación, identidad/WhatsApp válidos y cuenta activa. La demo no altera facturas ni suscripciones. Estas reglas requieren autorización de servidor en producción.
+Desactivar una casa la oculta del catálogo y bloquea nuevos contactos desde 3bstays; no cierra chats externos. Reactivarla exige aprobación, identidad/WhatsApp válidos y cuenta activa. La demo no altera facturas ni suscripciones. Estas reglas requieren autorización de servidor en producción.
 
 Implementación de demo: `house-controls.js`; prueba `tests/prototype/house-controls.cjs`. Calendario abre la casa elegida. Editar prepara su borrador y envía cambios a revisión sin sustituir automáticamente el anuncio público. Comprobaciones simuladas, sin OTP, datos reales ni persistencia.
 
 ### Flujo con Contacto directo: No
 
-Decisión 2026-10-12: descartados por ahora los avisos automáticos y botones de aceptación en WhatsApp Business. Los pasos siguientes se realizan en bnbtico, hasta abrir el chat directo. No implementar el flujo explorado de notificación desde el número de bnbtico y aceptación dentro de WhatsApp. Esto no elimina el OTP de verificación del número ni el soporte manual.
+Decisión 2026-10-12: descartados por ahora los avisos automáticos y botones de aceptación en WhatsApp Business. Los pasos siguientes se realizan en 3bstays, hasta abrir el chat directo. No implementar el flujo explorado de notificación desde el número de 3bstays y aceptación dentro de WhatsApp. Esto no elimina el OTP de verificación del número ni el soporte manual.
 
 1. El cliente toca **Solicitar contacto**. Se exige cuenta e identidad verificada antes del envío; en la demo la identidad se da por aprobada, no se comprueba realmente.
 2. Un aviso explica que el teléfono se compartirá con ese owner y que WhatsApp permite verlo/guardarlo. Marca una casilla inicialmente desmarcada y toca **Enviar solicitud**. Abrir o cancelar el aviso no crea una solicitud.
@@ -49,7 +49,7 @@ Los números no figuran en el anuncio público. Recomendar WhatsApp Business o u
 - Reintentar abre la misma solicitud sin nuevo aviso ni cambio de fecha.
 - «No me interesa» es una marca del owner: no reinicia el plazo, no envía un mensaje y no bloquea solicitudes futuras. Puede reactivarla antes de vencer.
 - Una solicitud pendiente expirada ya no habilita una nueva aceptación; el cliente puede enviar otra desde la ficha. La nueva solicitud necesita aceptación propia, sin heredar la anterior.
-- La caducidad conserva el historial y no retira un contacto ya aceptado ni cierra WhatsApp. El límite solo afecta a solicitudes de bnbtico, no a mensajes externos.
+- La caducidad conserva el historial y no retira un contacto ya aceptado ni cierra WhatsApp. El límite solo afecta a solicitudes de 3bstays, no a mensajes externos.
 
 ## Pedir casa
 
@@ -82,4 +82,13 @@ Pruebas: `node tests/prototype/direct-whatsapp.cjs`, `node tests/prototype/conta
 
 Antes de producción: permisos e identidad en backend; consentimiento auditable; reloj de servidor y deduplicación atómica; acceso privado a teléfonos solo para participantes autorizados; límites de búsqueda; retención y avisos de privacidad. No almacenar números en la API pública ni tratar el estado del navegador como autorización.
 
-Copia de la versión con chat antes de volver: `backups/bnbtico-antes-volver-whatsapp-2026-10-07.tar.gz`. No se modifica la marca, el asistente de titularidad ni las reclamaciones.
+Copia de la versión con chat antes de volver: `backups/3bstays-antes-volver-whatsapp-2026-10-07.tar.gz`. No se modifica la marca, el asistente de titularidad ni las reclamaciones.
+
+## Mensajes con fechas y con «Desde» (2026-10-29)
+
+La hoja de contacto de la ficha arranca con lo que el cliente puso en la búsqueda de Explorar (llegada, salida, personas); todo se puede editar. El texto lo redacta `composeInquiryMessage` (`src/domain/inquiry.ts`):
+
+- Sin datos: «Hola, vi <casa> en 3bstays y me interesa. ¿Está disponible? Gracias.»
+- Con fechas: «… ¿Está disponible del 23 al 27 de noviembre?»; con personas: «… para 4 personas?»; con las dos: «¿Está disponible del 23 al 27 de noviembre para 4 personas?».
+- Mensual (filtro «Solo alquiler mensual» y «Desde» elegido, sin llegada y salida válidas): «Hola, vi <casa> en 3bstays. Me interesa alquilar por meses desde el 16 de noviembre, para 2 personas. ¿Está disponible? Gracias.» Si hay llegada y salida válidas, mandan las fechas.
+- El mensaje de «¿No encuentra lo que busca?» usa la zona y las fechas de la búsqueda, no solo la provincia.

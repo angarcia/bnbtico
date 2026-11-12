@@ -11,7 +11,7 @@ function accountSimpleVerification(a){
     ?'<p class="small"><span class="badge badge-ok">✓ Identidad verificada</span> <span class="badge badge-ok">✓ WhatsApp verificado</span></p>'
     :'<p class="small"><span class="badge badge-ok">✓ WhatsApp verificado</span> <span class="badge badge-mute">Identidad sin verificar</span></p>';
   const pending=identity?'':`<p class="small">Tu WhatsApp verificado es lo único necesario para ${owner?'publicar':'contactar'}. Si verificás tu identidad con Veriff, ${owner?'los clientes':'los propietarios'} verán el sello <b>Identidad verificada</b> junto a tu nombre.</p><button class="btn btn-ghost" data-go="account-identity">Verificar mi identidad · opcional</button>`;
-  const inactive=u?.active===false?'<div class="note"><div><b>Cuenta desactivada</b><p>No podés publicar ni contactar. Escribile a bnbtico por WhatsApp si creés que es un error.</p></div></div>':'';
+  const inactive=u?.active===false?'<div class="note"><div><b>Cuenta desactivada</b><p>No podés publicar ni contactar. Escribile a 3bstays por WhatsApp si creés que es un error.</p></div></div>':'';
   return line+pending+inactive;
 }
 function accountSimpleEdit(a){
@@ -21,7 +21,7 @@ function accountSimpleScreen(){
   if(!accountAccess.session())return accountLoginScreen();
   const a=accountAccess.user(),owner=S.role==='owner';
   return header(owner?'Cuenta':'Mi cuenta')+`<section class="card stack"><div class="row" style="gap:12px;align-items:center">${a.photo?`<img src="${safe(a.photo)}" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`:''}<div><h3 style="margin:0">${safe(a.name)}</h3><span class="small muted">${safe(a.phone)}</span></div></div>${accountSimpleVerification(a)}</section>`
-    +`<button class="btn btn-wa" data-go="support-info">${I.wa} Escribile a bnbtico por WhatsApp</button>`
+    +`<button class="btn btn-wa" data-go="support-info">${I.wa} Escribile a 3bstays por WhatsApp</button>`
     +(owner?'<button class="btn btn-ghost" data-go="o-sub">Promoción y suscripción</button>':'<button class="btn btn-ghost" data-role-switch="owner">¿Tenés una casa? Publicala</button>')
     +(accountEditOpen?accountSimpleEdit(a):'<button class="btn btn-ghost" data-account-edit="open">Editar perfil</button>')
     +'<p style="text-align:center"><button class="btn-link" data-account="logout">Cerrar sesión</button></p>'

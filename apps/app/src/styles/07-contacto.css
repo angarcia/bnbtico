@@ -1,0 +1,52 @@
+
+/* ---------- Hoja de contacto (pantalla 04): sobre la ficha atenuada, 28 px arriba ---------- */
+/* Antes de hidratar el botón es una caja del mismo tamaño que todavía no responde: se ve, pero apagado. */
+.btn-wa.is-pending{opacity:.6}
+/* «Abriendo WhatsApp…»: la consulta se está registrando; el toque se nota al momento y no admite otro. */
+.btn-wa.is-sending{opacity:.8;cursor:progress}
+.cta-note{text-align:center;margin-top:-4px}
+html.sheet-open,html.sheet-open body{overflow:hidden}
+.sheet-backdrop{position:fixed;inset:0;background:rgba(28,43,42,.35);z-index:30;animation:fade-in 200ms ease-out backwards}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:560px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;z-index:31;
+  display:flex;flex-direction:column;gap:14px;padding:10px 20px calc(26px + env(safe-area-inset-bottom));border-radius:var(--r-sheet) var(--r-sheet) 0 0;background:var(--bg);
+  box-shadow:0 -12px 30px -16px rgba(28,43,42,.45);animation:sheet-in 280ms var(--ease-drawer) backwards}
+.sheet:focus{outline:none}
+/* `.kb`: sitio extra mientras un campo con teclado tiene el foco (iPhone no encoge la vista): el campo sube por encima. */
+.sheet.kb{padding-bottom:calc(26px + 320px + env(safe-area-inset-bottom))}
+.sheet textarea,.sheet input{scroll-margin-top:16px}
+@keyframes sheet-in{from{transform:translate(-50%,100%)}}
+.sheet .grabber{align-self:center;width:40px;height:5px;border-radius:2px;background:var(--line);flex-shrink:0}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet-head > div{display:flex;flex-direction:column;gap:2px}
+.sheet-head .icon-btn{margin:-6px -8px 0 0;background:transparent;box-shadow:none}
+.sheet form{display:flex;flex-direction:column;gap:14px}
+.sheet label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.sheet input:not([type=checkbox]),.sheet textarea{min-height:48px;padding:0 12px;font-size:18px}
+.sheet textarea{padding:12px 14px;resize:none;min-height:0}
+/* Fechas de la hoja (revisión UX 2026-10-29, N2): casillas como un campo, que abren el calendario de «¿Cuándo?». */
+.sheet .date-box{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;min-height:56px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface);text-align:left}
+.sheet .date-box-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.sheet .date-box b{font-size:17px;font-weight:var(--w-medium)}
+.sheet .date-box.is-empty b{color:var(--muted)}
+.sheet .date-box[aria-expanded="true"]{border-color:var(--primary)}
+.sheet .contact-calendar{display:flex;flex-direction:column;gap:6px;margin-top:-6px}
+.sheet .contact-calendar .range-scroll{max-height:min(44dvh,340px)}
+/* Todos los meses pintados: con su alto estimado (content-visibility), llevar el mes elegido arriba se quedaba corto. */
+.sheet .contact-calendar .range-month{content-visibility:visible}
+/* El mensaje, como vista previa: gris claro y sin caja de texto. */
+.sheet .field-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+/* El total orientativo de las fechas, sobre la vista previa del mensaje (o el aviso de noches ocupadas). */
+.sheet .stay-line{margin:0;font-size:16px;font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
+.sheet .stay-line.is-busy{color:var(--busy-ink)}
+.sheet .stay-line.is-pending{color:var(--muted)}
+/* «Marcar una reserva»: la fila de los días del color de la hoja; la sombra tapa el medio píxel de arriba, donde asomaban los números del mes anterior. */
+.sheet .mark-calendar .range-weekdays{background:var(--bg);box-shadow:0 -2px 0 var(--bg)}
+.sheet .message-preview + .hint{margin-top:0}
+.sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:16px;white-space:pre-line}
+.sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]){width:72px;text-align:center;font-variant-numeric:tabular-nums}
+.sheet .hint{font-size:14px;color:var(--muted);margin-top:-8px}
+.sheet .consent{text-align:center;font-size:14px;color:var(--muted);margin-top:-6px}
+.sheet .safety{text-align:center;font-size:14px;font-weight:var(--w-medium);color:var(--ochre)}
+.sheet [aria-invalid="true"]{border-color:var(--bad)}
+@media (prefers-reduced-motion:reduce){.sheet{animation-name:fade-in}}

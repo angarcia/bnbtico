@@ -1,0 +1,15 @@
+
+/* ---------- Tarjetas flotantes (tanda 1, 2026-11-04) ---------- */
+/* Al final del archivo: gana al fondo y la sombra propios de cada pieza (chip, píldora, selector). Sin desenfoque
+   (navegadores viejos), opaca; con él, translúcida. Sin `transform` en reposo en las piezas con desenfoque
+   (Safari deja de desenfocar): se centran con left/right y margin:auto. */
+.float-card{background:var(--float-bg-solid);border:1px solid var(--float-edge);box-shadow:var(--float-shadow)}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}.float-card.is-strong{background:var(--float-bg-strong)}}
+/* El escondido común (client/hiding-chrome.ts pone `html.chrome-away` al bajar y lo quita al subir): cada pieza `.chrome-hide`
+   dice hacia dónde sale con `--away`. La que tiene el foco del teclado se queda; con movimiento reducido, solo se funde. */
+.chrome-hide{transition:var(--float-away)}
+html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);opacity:0;pointer-events:none}
+/* Escondida, tampoco responden sus partes que piden el toque (`pointer-events:auto` en la cabecera de Explorar, que deja pasar
+   el toque entre sus tarjetas): ni a medio salir ni, con movimiento reducido, fundida en su sitio. Con el foco del teclado, sí. */
+html.chrome-away .chrome-hide:not(:has(:focus-visible)) *{pointer-events:none}
+@media (prefers-reduced-motion:reduce){.chrome-hide{transition:opacity 160ms ease-out}html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:none}}

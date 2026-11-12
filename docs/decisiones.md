@@ -1,3 +1,1217 @@
+## 2026-11-11 · La portada se publica en 3bstays.com
+
+- **Decisión (Daniel, 2026-11-11):** publicar **solo la portada** en `3bstays.com` antes del lanzamiento.
+- **Cómo:**
+  - El worker `3bstays-production` recibe la ruta `3bstays.com`. `scripts/deploy-target.mjs` acepta para producción esa ruta y ninguna otra.
+  - `main` avanza hasta `develop`; era un antepasado directo, sin commits propios.
+  - Con `LAUNCHED=false`, el worker sirve la portada en `/` (y `robots.txt`, el sitemap y sus imágenes) y responde 404 con la portada a todo lo demás. El cron no hace nada (`landingOnly`).
+- **Sin secretos en producción:** desde `main` el workflow no sube ningún secreto al worker. Antes solo se quitaban el reloj de pruebas y Stripe; los de Supabase, la purga y Twilio eran los de pruebas y la portada no los usa.
+- **`www.3bstays.com`** se redirige a `3bstays.com` con una regla de Cloudflare, no con una segunda ruta.
+- **El botón de propietarios** abre WhatsApp al número de `WA_OWNERS` («Escríbanos por WhatsApp»). Sin ese número, la portada muestra «Abrimos pronto en el Caribe sur.».
+## 2026-11-11 · Fotos solo por las RPCs: corte de la fase R, paso 8
+
+- **Decisión (Daniel, 2026-11-11):** con Vercel retirado, ningún navegador usa ya la app vieja, la única que escribía `listing_photos` directamente y subía la foto única `<casa>/<uuid>.jpg`. Se aplica el cierre que estaba pendiente.
+- **Qué cambia** (migración `corte_fotos_solo_rpc`):
+  - `authenticated` y `anon` pierden `insert`, `update` y `delete` sobre `listing_photos`. Las filas solo cambian por las RPCs `security definer`. La lectura del dueño se conserva con `photos_owner_read`, que tiene el mismo alcance que la antigua `photos_owner_write`.
+  - Storage solo acepta `<casa>/<uuid>/{480,800,1600}.jpg`. Las fotos antiguas ya subidas siguen viéndose y se pueden borrar.
+- **Rehecha, no copiada:** el borrador de `supabase/migrations-pendientes/` (2026-10-23) volvía a poner `listing_editable` en la subida. Desde entonces la regla es `listing_photo_uploadable`, que permite subir las fotos que van a revisión al editar una casa publicada. La migración conserva esa regla y solo endurece el patrón del nombre.
+- **Pruebas:** `tests/db/cliente-directo-fotos.test.ts`. La escritura directa falla por permisos (`42501`) con sesión y sin ella, y la foto única se rechaza.
+
+## 2026-11-11 · Se retira Vercel y bnbtico.com se apaga
+
+- **Decisión (Daniel, 2026-11-11):** eliminar Vercel por completo. `bnbtico.com` (la portada con la marca anterior) y `pruebas.bnbtico.com` (la app vieja de Next) **se apagan sin redirección** a 3bstays.com.
+- **Motivo:** desde la fase R, la app vive en Cloudflare Workers y nada depende de Vercel. Su app de GitHub seguía comentando en cada PR («Skipped Deployment») y bnbtico.com seguía mostrando en público la marca que Airbnb pidió dejar.
+- **Cómo:** bloque D de `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`:
+  - quitar los dominios y borrar el proyecto en Vercel;
+  - quitar la app de Vercel en GitHub;
+  - borrar en Cloudflare los registros DNS de `bnbtico.com` que apuntan a Vercel;
+  - quitar las Redirect URLs viejas en Supabase.
+
+  La zona `bnbtico.com` se queda en Cloudflare hasta que se borre el worker viejo. Si el dominio se conserva o caduca, lo decide el abogado.
+- **Desbloquea:** `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, que esperaba a que la app vieja dejara de escribir fotos directamente.
+
+## 2026-11-11 · Cambio de dominio a 3bstays.com e identificadores internos
+
+- **Decisión (Daniel, 2026-11-11):**
+  - El cambio de dominio se hace hoy.
+  - Pruebas pasa a **`pruebas.3bstays.com`**; `nueva.` desaparece.
+  - Los workers se renombran a `3bstays-pruebas`, `3bstays-production` y `3bstays-refactor`.
+  - Se aprovecha que aún no hay datos reales para renombrar también lo interno.
+- **Qué cambia en la app:**
+  - Textos, SEO y manifest.
+  - Las claves del teléfono pasan a `3bstays-*`. Las antiguas `bnbtico*` y la IndexedDB `bnbtico` se borran una vez tras cargar (`src/client/legacy-storage.ts`), así que los probadores vuelven a entrar.
+  - El UID de los eventos de la exportación a Airbnb pasa a `3bstays-…@3bstays.com`.
+  - El prefijo de idempotencia de Stripe y los nombres internos del build.
+- **Qué cambia en la base** (migraciones `marca_3bstays` y `marca_3bstays_internos`):
+  - Los mensajes de error.
+  - `inquiries.source` `'bnbtico'` pasa a `'support'`.
+  - El correo de relleno de los admins pasa a `@admin.3bstays.invalid`.
+  - Los trabajos de pg_cron pasan a `3bstays-reabrir-casas` y `3bstays-suscripciones`.
+- **Se dejan con el nombre anterior:**
+  - El proyecto de Supabase `bnbtico-pruebas` y el `project_id` local, porque cambiarlo recrea los contenedores.
+  - El bucket `bnbtico-copias`, con su prefijo. Producción usará un bucket propio.
+- **Después, el mismo día:** el candado pasa a `3bstays.promo_slot` y el secreto del reloj de pruebas a `3bstays_test_clock` (migración `marca_3bstays_candado_y_reloj`, que también renombra el secreto en Vault), para que el esquema de producción nazca sin bnbtico. El proyecto de producción será uno nuevo (`3bstays-prod`).
+- **Pasos en los paneles:** `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`.
+
+## 2026-11-11 · Se retiran los logos de bnbtico y queda una sola biblioteca de marca
+
+- **Decisión (Daniel, 2026-11-11):** borrar del repositorio los iconos y logos antiguos y dejar los nuevos en su carpeta. `design/logo/` solo contiene la biblioteca `3bstays-2026-11-10/`, su README, `.gitignore` y `.gitattributes`.
+- **Qué se retira** (unos 4 070 archivos, ~190 MB):
+  - `logos-obsoletos/`, `historico/`, `propuestas/` y `maestro/`.
+  - Los alias con nombre bnbtico (raíz, `bnbtico-actualizado/` y `redes-sociales/`).
+  - `personalizado/` y `design/merchandising/`. El juego de impresión vigente es `3bstays-2026-11-10/07-impresion/`.
+  - Todo sigue en el historial de git.
+- **Qué se conserva, movido:**
+  - Los dos SVG de partida aprobados, en `3bstays-2026-11-10/00-maestros/fuente/`.
+  - `generar-3bstays.cjs` y `exportar-3bstays-eps.cjs`, en `3bstays-2026-11-10/scripts/`, con las rutas ajustadas.
+  - `integrar-3bstays.cjs` y `verificar-3bstays.cjs` se retiran: mantenían los alias y su archivo. Los iconos de `apps/app/public` se copian a mano desde la biblioteca.
+- **Pantallas de diseño:** apuntan a `logo-predeterminado.png`.
+
+## 2026-11-10 · La marca pasa a llamarse 3bstays
+
+- **Motivo:** la norma de marca de Airbnb (https://www.airbnb.ca/help/article/3233) prohíbe «air», «bnb», «b&b» y términos parecidos en el nombre, el dominio y los usuarios de redes. bnbtico tiene que cambiar.
+- **Decisión (fundadores, 2026-11-10):** el nombre nuevo es **3bstays**. Las «3 B» son «bueno, bonito y barato», un dicho que se entiende en Costa Rica y en todo el mundo hispanohablante. Dominios: 3bstays.com (principal), más tresbstays.com y threebstays.com como alternativas, para quien lo escriba como lo oye.
+- **Riesgos conocidos, aceptados:**
+  - [Bueno Bonito Barato Hostel](https://www.tripadvisor.com/Hotel_Review-g309226-d3258650-Reviews-Bueno_Bonito_Barato_Hostel-La_Fortuna_de_San_Carlos_Arenal_Volcano_National_Park_Provi.html), en La Fortuna.
+  - Tiendas 3B, la cadena mexicana de descuento.
+  - Que «barato» le reste a las casas ante el propietario.
+  - Que el nombre se dicte mal.
+  - Ninguno se ha valorado todavía en el RNP.
+- **Pendiente:**
+  - Búsqueda en el RNP Digital y consulta con un abogado de propiedad intelectual antes de registrar.
+  - Comprobar @3bstays en Instagram.
+  - Valorar comprar también 3bstay.com, que está libre.
+  - Lista de cambios de marca: logo, favicon, app/PWA, copy, redes, dominios del worker y enlaces `/casa/CT-####`.
+- **Proceso:** se estudiaron unos 400 nombres. Detalle en `.scratch/nombre-nuevo/finalistas.md` y `propuestas-2026-11-09.md`.
+## 2026-11-10 · Logotipo 3bstays con 3 angular y B de asta alta (Ana)
+
+Ana aprueba el logotipo con el 3 de remate plano ligeramente más bajo que la «s», la B angular abierta con el asta a la altura de las minúsculas y el hueco entre la B y «stays» más corto. Tras ver la primera entrega, Ana aprobó acercar «stays» otras 8 unidades del dibujo vectorial. El 3, la B y las minúsculas comparten base. Ana confirma que esta composición se lee bien. La B conserva la reducción del 29 % de su trazo en el logotipo completo.
+
+La biblioteca vigente y los archivos de la app usan la composición aprobada. La versión con dominio conserva las letras de «.com» y los iconos usan la B de asta alta con el grosor reforzado.
+
+## 2026-11-10 · Identidad visual 3bstays y símbolo B original (Ana)
+
+Ana elige la B con un trazo aproximadamente un 29 % más fino dentro del logotipo completo para equilibrar su peso con las letras «stays». El ajuste se aplica a las variantes con dominio y marco. El símbolo independiente conserva el grosor original para los tamaños de icono.
+
+Ana confirma como combinaciones predeterminadas: icono del móvil/PWA con fondo crema y B terracota, sin recuadro dibujado; favicon de pestaña con cuadrado terracota de esquinas redondeadas y B crema. La inversión entre soportes es deliberada y no cambia el símbolo.
+
+Ana confirma después que le gusta el fondo beige/crema del icono del teléfono: se mantiene B terracota sobre crema, sin recuadro dibujado, tanto en any como maskable y Apple Touch. Las variantes transparentes siguen disponibles para otros usos.
+
+Ana elige 3bstays como nombre en los logos: 3 ancho a la altura de las minúsculas, símbolo B original con el centro abierto y ligeramente más alto, y stays en minúsculas. Se descartan las exploraciones de centro cerrado, palo elevado y curvas modificadas. Se aprueba también 3bstays.com tras ver su diseño. Todos los iconos usan solo ese símbolo B, sin 3 adicional, BT ni marco. Tras comparar ambas tintas, Ana confirma conservar el terracota anterior de bnbtico #B44C30 en lugar del tostado #9E563E. Color principal: terracota original #B44C30; crema #FFFBF2 para inversión; tinta #1C2B2A en pantalla, carbón cálido #2B2926 en merchandising y blanco para fotos. Logos transparentes por defecto; fondos deliberados solo para perfiles, apps y soportes que los necesiten.
+
+Se reutilizan los vectores elegidos y se prepara la biblioteca `design/logo/3bstays-2026-11-10/`, con SVG/PNG, EPS CMYK, variantes con y sin dominio y marcos de puntos para usos grandes. Se archivan las entregas anteriores y se conservan alias de archivo para el código. Este trabajo sustituye recursos visuales; no cambia dominios, enlaces, infraestructura, nombres de paquetes, textos de producto ni los colores funcionales de la interfaz. La migración completa del nombre de producto queda fuera de esta sustitución de logos.
+
+## 2026-11-09 · Presupuestos tras revisar reservas y sincronización de #7 (Ana)
+
+Tras revisar duplicación, dependencias estáticas y dos mediciones, Ana aprueba estos límites gzip: Calendario 9,1 kB (medido 8,864 kB), Airbnb completo 9,5 kB (9,322 kB), Marcar una reserva 1,65 kB (1,589 kB) y Campos del asistente 11,6 kB (11,504 kB). El JS inicial conserva 160 kB (medido 155,840 kB) y los demás límites se mantienen.
+
+Se unifica la actualización directa y de gestión y se separan API/fila, gestión y exportación, todos dentro del mismo presupuesto total de Airbnb. El conjunto completo aumenta por comprimir más archivos por separado; el código específico de Airbnb requerido estáticamente por Calendario baja de 8,228 a 2,907 kB. No se atribuye a ello una mejora de latencia no medida. Campos no cambia de fuente; su pequeño exceso corresponde al artefacto generado. Motivo: cubrir carga, recuperación y protección de reservas aprobadas, y evitar adelantar las pantallas de gestión/exportación al calendario. Referencia: `.scratch/calendarios-externos/revision-tamano-07.md`.
+
+## 2026-11-09 · Mantener el icono de actualizar dentro del módulo de Airbnb (Ana)
+
+Tras aclarar que el traslado no cambia el aspecto ni el comportamiento del botón verde claro, Ana autoriza dejar el icono de actualizar exclusivamente en el módulo de Airbnb. Sustituye su aceptación previa del exceso de 7 bytes gzip del grupo «Campos del asistente» (11,51 kB frente a 11,5 kB). Se conservan los límites configurados; falta comprobar el tamaño del nuevo build.
+
+## 2026-11-09 · Acceso a sincronización desde el Calendario (Ana)
+
+Ana aprueba el título «Sincronización con Airbnb», con actualización por icono a la izquierda y gestión por título/chevrón. El icono de actualizar queda desactivado sin internet. Antes de conectar, «Conectar con Airbnb» permanece unido a las acciones superiores dentro de la misma tarjeta blanca, sin separación; al conectar, la sincronización se muestra sobre el fondo crema sin tarjeta blanca. Los iconos de reserva y pausa pierden su recuadro, conservando el menú de edición. Motivo: distinguir la acción directa de actualizar de los accesos a gestión. Referencia: `.scratch/calendarios-externos/diseno-v0.2-propuesta.md`.
+
+## 2026-11-09 · Disponibilidad y actualización previa al marcar una reserva (Ana)
+
+Ana aprueba incluir en el bloque de #7 que «Marcar una reserva» reciba los días ya ocupados del calendario efectivo, tanto manuales como de Airbnb. No se pueden seleccionar noches ocupadas ni atravesarlas; se mantiene la salida excluida. La base comprueba de nuevo las noches al guardar y rechaza toda la operación si alguna se ocupó entretanto, sin modificar precios ni el comportamiento del editor general.
+
+Antes de habilitar la selección se actualiza Airbnb cuando exista conexión, reutilizando una lectura reciente o una importación en curso. Si falla, se conserva la última disponibilidad válida y solo se permite continuar tras confirmar expresamente el aviso; nunca se interpreta un error de lectura como disponibilidad. El contacto por WhatsApp conserva la comprobación en la base, sin descargar Airbnb por cada consulta ni crear bloqueos. La actualización automática cada tres horas sigue perteneciendo a #8. Motivo: reducir selecciones incompatibles y desfases sin multiplicar descargas por visitas. Referencia: `.scratch/calendarios-externos/reservas-07.md`.
+
+## 2026-11-09 · Presupuesto del módulo diferido de Airbnb con gestión (Ana)
+
+Ana aprueba ampliar únicamente el presupuesto diferido de Airbnb de 6,5 a 8 kB gzip para incorporar las operaciones de #7: estado/error posterior, actualización, sustitución, desconexión y revocación con confirmación y recuperación de respuestas ambiguas. Medición: 7,7 kB. El JS inicial privado permanece limitado a 160 kB y mide 153,96 kB; los demás límites no cambian. Motivo: incluir la gestión aprobada junto con las dos direcciones de #5/#6 bajo un presupuesto explícito. Referencias: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-07.md`.
+
+## 2026-11-08 · Presupuesto del módulo diferido de Airbnb con exportación (Ana)
+
+Ana aprueba ampliar de 5 a 6,5 kB gzip el límite del grupo diferido de Airbnb para incorporar la generación y copia del enlace de exportación de #6. La medición es 6,21 kB; el grupo incluye importación, estado, controles por origen y exportación, sin parser iCal ni la librería de pruebas en el navegador. Motivo: cubrir el alcance aprobado de ambas direcciones con un presupuesto explícito. El límite de JS inicial privado permanece en 160 kB (medición: 153,97 kB) y los demás presupuestos se conservan. Referencia: `apps/app/.size-limit.json` y `.scratch/calendarios-externos/plan-06.md`.
+
+## 2026-11-08 · Priorizar compactación automática para continuar en el mismo chat (Ana)
+
+Ana pide compactación automática para reducir contexto sin abrir otro chat. En su configuración personal de Codex se establece `model_post_turn_compact_threshold_percent = 70`, un umbral ajustable al terminar una respuesta. Se mantienen los límites automáticos propios del modelo. La opción está documentada en https://learn.chatgpt.com/docs/config-file/config-reference; escribir una instrucción en una skill no ejecuta esa operación.
+
+`credit-saver` prioriza la compactación nativa y un resumen breve según la tarea y las skills activas. Solo propone otro chat cuando cambie sustancialmente la tarea o siga siendo difícil manejar el contexto. No se compacta manualmente cada mensaje ni se promete un ahorro medido por bajar el umbral. La configuración queda guardada; no acredita por sí sola que la sesión activa ya la haya cargado o se haya compactado.
+
+## 2026-11-08 · Commits locales al terminar cambios del proyecto (Ana)
+
+Ana autoriza de forma permanente preparar y crear un commit local al terminar cambios del proyecto con las comprobaciones necesarias. El agente revisa el estado y el diff, incluye solo los archivos o fragmentos de la tarea y conserva trabajo y staging ajenos. Si falta validación o no puede separar el cambio, informa de lo pendiente.
+
+Es una excepción a que Ana ejecute los comandos de consola: no autoriza cambiar de rama, descartar trabajo, hacer push, merge ni desplegar. Los demás comandos mantienen la regla anterior. Se registra en `AGENTS.md` y en `credit-saver`.
+
+## 2026-11-08 · Superpowers proporcional a complejidad y riesgo (Ana)
+
+Ana aprueba mantener `credit-saver` en todas las tareas y usar los procesos de Superpowers de forma proporcional. Las preguntas y cambios pequeños reversibles se resuelven sin imponer un ciclo completo de documentos, planificación, revisiones o subagentes. Los fallos difíciles y cambios importantes mantienen las técnicas pertinentes de diagnóstico y revisión, sin reiniciar acuerdos ya aprobados.
+
+La reducción de proceso no elimina verificaciones necesarias ni amplía permisos, especialmente en cambios de datos, seguridad, pagos o despliegue. La preferencia se recoge en las instrucciones del proyecto y en `credit-saver`, sin modificar el paquete instalado de Superpowers.
+
+## 2026-11-08 · Priorizar ahorro, recomendar modelo y avisar de contexto extenso (Ana)
+
+Ana pide priorizar las medidas de ahorro en todas las tareas. `credit-saver` ordena las decisiones por coste total hasta obtener un resultado correcto: modelo y esfuerzo adecuados, contexto pertinente, reducción de ejecución y trabajo repetidos, conversación concisa, comandos ejecutados por Ana y validación ajustada al cambio. Se mantienen las comprobaciones necesarias; no se mide el ahorro solo por cantidad de comandos o longitud de instrucciones.
+
+`credit-saver` recomendará modelo y esfuerzo según complejidad, partiendo de la selección actual de Ana (Sol Medium) y de las opciones disponibles. Una recomendación no equivale a cambiar el selector: si no dispone de un control compatible, indicará qué elegir sin afirmar que lo cambió. No se generan otros chats ni delegaciones solo para cambiar de modelo, ni se prometen ahorros sin medición.
+
+Cuando el chat acumule muchas tareas, sea demasiado extenso o muestre pérdida repetida de contexto, se avisará brevemente en una pausa natural y se preparará un resumen corto para continuar. Se usarán métricas reales si están disponibles, sin inventar porcentajes ni repetir el aviso en cada turno. Ana decide cuándo abrir otro chat; el aviso no cancela trabajo autorizado.
+
+## 2026-11-08 · Conversación breve sin activar trabajo adicional (Ana)
+
+Ana pide reducir el trabajo que se activa al conversar. `credit-saver` y las instrucciones del proyecto distinguen preguntas y exploración de las peticiones de ejecución: responder con el contexto disponible, sin lecturas, planes, pruebas, ediciones o commits innecesarios. No se atribuye un ahorro medido a esta regla.
+
+Una petición explícita o la aceptación clara de una propuesta concreta autoriza su ejecución. La regla no cancela tareas ya autorizadas ni exige volver a pedir confirmación. Se mantiene la preferencia de que Ana ejecute los comandos de consola.
+
+## 2026-11-07 · Credit Saver transversal y comandos ejecutados por Ana
+
+Ana establece el uso de `credit-saver` en todas las tareas, junto con las skills especializadas. Se amplía su descripción y se explicita esta regla en `AGENTS.md`.
+
+El agente entrega los comandos de consola con su directorio y la salida necesaria para continuar; Ana los ejecuta y comparte los resultados. Pedir resolver una tarea no autoriza por sí solo ejecutar esos comandos. Una petición expresa de Ana para ejecutarlos cambia esa regla para el alcance indicado. La inspección y edición normal de archivos sigue permitida.
+
+## 2026-11-07 · Prácticas de código comunes y específicas por rol (Ana)
+
+Las reglas compartidas de TypeScript, validación de fronteras, cambios acotados, reutilización y pruebas de comportamiento se mantienen una sola vez en `AGENTS.md` (enlace a `CLAUDE.md`). Las skills de frontend y backend añaden únicamente prácticas propias de su responsabilidad, para evitar duplicación y recomendaciones genéricas crecientes.
+
+Frontend explicita el manejo del estado del servidor, responsabilidades de componentes y hooks, limpieza de efectos, respuestas fuera de orden y controles semánticos. Backend explicita validación y errores del contrato, SQL parametrizado, transacciones e integridad y concurrencia en la base. Estas reglas orientan el trabajo futuro; no implican refactorizar código existente fuera de una tarea autorizada.
+
+## 2026-11-07 · Origen Airbnb visible en el calendario (Ana)
+
+Ana aprueba un icono de enlace en cada noche importada y la leyenda «Bloqueado por Airbnb», para reconocer el origen sin seleccionar el día. Se conservan el número y el precio visible en esas noches; el panel mantiene el detalle manual/Airbnb/ambos. La marca pertenece al calendario privado, sin mostrar el proveedor en la ficha pública.
+
+## 2026-11-07 · Gestión de conexiones iCal solo por el propietario (Ana)
+
+Ana aprueba que solo el propietario pueda conectar, sustituir, desconectar y revocar los enlaces de su casa. Esta épica no añade gestión de conexiones para administradores. El trabajo automático autorizado sigue operando con las reglas aprobadas; no equivale a conceder gestión interactiva a otros usuarios.
+
+Quedan aprobadas las reglas de producto consultadas P1–P6. Se inspeccionó después una muestra real de Airbnb compatible con el alcance inicial y se preparó el contrato técnico de #5, pendiente de contraste final y pruebas al implementar. Referencias: `.scratch/calendarios-externos/spec.md`, `validacion-muestra.md` y `contrato-tecnico-05.md` en la misma carpeta.
+
+## 2026-11-07 · Invalidar conexiones al eliminar definitivamente una casa (Ana)
+
+Ana aprueba detener las importaciones e invalidar el enlace de exportación al eliminar definitivamente una casa. Los trabajos en curso no deben restablecer la conexión y el enlace debe dejar de servir el calendario, también mediante cachés. No se promete retirar inmediatamente los bloqueos que Airbnb ya hubiera leído. Esta decisión concreta el efecto sobre iCal; no añade ni autoriza un nuevo flujo de eliminación de casas.
+
+Referencia: P5 en `.scratch/calendarios-externos/spec.md`. Los permisos y los demás estados todavía pendientes se mantienen por definir.
+
+## 2026-11-07 · Recuperación de conexiones y ciclos fijos de tres horas (Ana)
+
+Ana aprueba reactivar automáticamente las conexiones suspendidas por un bloqueo administrativo cuando este se levanta. Se vuelve a leer Airbnb para incorporar cambios y cancelaciones y se habilita el enlace de exportación. Si falla la lectura, se conservan los últimos bloqueos válidos y se muestra el error. Las conexiones desconectadas o revocadas por el anfitrión permanecen desactivadas; la recuperación no exige configurarlas de nuevo si solo estaban suspendidas por bnbtico.
+
+Ana también aprueba P6: actualizaciones cada tres horas en horarios fijos de Costa Rica. «Actualizar ahora» no desplaza el siguiente ciclo; si una actualización falla, se reintenta en el siguiente ciclo. El horario exacto y su verificación operativa se concretan técnicamente antes de #8. Siguen pendientes los demás detalles de estados y permisos de P5. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Suspender calendarios externos al bloquear o rechazar una casa (Ana)
+
+Ana aprueba suspender las conexiones de importación y exportación si bnbtico bloquea o rechaza la casa, conservando los datos existentes. Durante la suspensión no se realizan nuevas lecturas de Airbnb ni se sirve disponibilidad mediante el enlace de exportación. Es una suspensión, no una desconexión o revocación definitiva. No se promete retirar inmediatamente los bloqueos que Airbnb ya hubiera leído.
+
+Este caso se distingue de la pausa del anfitrión, que mantiene las actualizaciones. La recuperación al levantar un bloqueo, los demás estados y permisos pendientes de P5 y la programación P6 aún deben concretarse. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Airbnb sigue actualizando las casas pausadas por su anfitrión (Ana)
+
+Ana aprueba esta parte de P5: pausar la casa en bnbtico no detiene las actualizaciones de Airbnb. Se mantiene el calendario al día para cuando vuelva a publicarse, incluidos cambios y cancelaciones importados. La actualización del calendario no levanta la pausa ni hace reaparecer la casa en Explorar.
+
+Los demás estados y permisos de P5, y P6, siguen pendientes; no se equipara una pausa del anfitrión con un bloqueo administrativo. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Conexiones por casa y cancelaciones de Airbnb (Ana)
+
+Ana aprueba P4: una conexión de importación Airbnb y un enlace activo de exportación bnbtico por casa, independientes. Revocar invalida el enlace anterior; generar otro es una acción posterior y produce uno distinto.
+
+Ana recalca que hay que distinguir los bloqueos procedentes de Airbnb y reflejar aquí una reserva cancelada allí. La siguiente lectura completa válida retira el bloqueo de esa reserva sin afectar bloqueos manuales, precios ni otros bloqueos importados coincidentes. El calendario privado permite consultar el origen según el diseño móvil aprobado. No se promete actualización instantánea: la gestión manual se entrega en #7 y la actualización automática cada tres horas en #8.
+
+P5–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Calendario iCal válido sin bloqueos (Ana)
+
+Ana aprueba P3: si Airbnb devuelve un calendario completo y válido sin bloqueos, se retiran los bloqueos importados anteriores; se conservan los manuales y los precios. Si la lectura falla o está incompleta, se conservan los últimos bloqueos válidos. Así se distingue una liberación válida de noches de un fallo de lectura.
+
+P4–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Alcance inicial de eventos iCal (Ana)
+
+Ana aprueba P2: empezar con bloqueos de días completos con inicio y fin, sin eventos por horas ni repeticiones automáticas. Ante un evento que no se pueda interpretar, informar del error y conservar los últimos bloqueos válidos, sin publicar resultados parciales que liberen noches.
+
+Antes de implementar se comprobará la compatibilidad con una muestra real anonimizada del calendario de Airbnb. Los detalles del parser se concretan con esa evidencia; esta aprobación no confirma por sí sola compatibilidad externa. P3–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Ventana de importación y exportación iCal (Ana)
+
+Ana aprueba P1: importar y exportar las noches desde hoy de Costa Rica hasta hoy + 365 días, ambas incluidas, para mantener la ventana del calendario existente. Los eventos que crucen sus límites se recortan a esa ventana. La fecha final de un evento sigue siendo exclusiva: para representar la última noche admitida, el fin exportado es hoy + 366. Este acuerdo no amplía la salida máxima del selector manual vigente.
+
+Las reglas P2–P6 siguen pendientes y se consultan una por una. Referencia: `.scratch/calendarios-externos/spec.md`.
+
+## 2026-11-07 · Diseño móvil de calendarios Airbnb aprobado (Ana)
+
+Ana aprueba la especificación escrita `.scratch/calendarios-externos/diseno-v0.1.md`: acceso desde Calendario, importación y exportación separadas, estados, confirmaciones y edición por procedencia. No hay maquetas nuevas ni implementación verificada. Escritorio sigue aplazado.
+
+Las reglas P1–P6 de `.scratch/calendarios-externos/spec.md` no quedan aprobadas por este acuerdo; Ana pide consultarlas una por una. Las historias conservan sus dependencias y condiciones de entrada pendientes. Esta aprobación no inicia la implementación ni modifica GitHub.
+
+## 2026-11-07 · Calendarios Airbnb: móvil primero, escritorio aplazado (Ana)
+
+La preparación y las entregas de la épica #4 y las historias #5–#8 se limitan por ahora a móvil, porque la web de escritorio todavía no está lista. La adaptación y validación específicas de escritorio quedan pendientes y no bloquean estas entregas. Se mantiene el orden diseño conjunto → #5 → #6 → #7 → #8, probando cada entrega antes de continuar.
+
+Este acuerdo acota el alcance; no aprueba por sí solo el diseño propuesto ni las reglas pendientes de `.scratch/calendarios-externos/`, ni autoriza implementar la UI.
+
+## 2026-11-07 · Skills por historia y prompts solo bajo pedido (Ana)
+
+El PO identifica en cada historia la skill principal y los apoyos necesarios según el trabajo real, incluyendo su orden si hay fases. Esta información se conserva en el cuerpo de la historia y en `body` al exportar el JSON, sin añadir campos a GitHub Projects.
+
+Ana decide cuándo necesita prompts: el PO no los genera automáticamente al crear historias. Cuando se pidan, los entrega listos para copiar con las skills, la referencia de la historia vigente y sus condiciones de entrada. Así se facilita pasar del backlog al trabajo sin convertir historias bloqueadas en órdenes de implementación ni ampliar permisos de ejecución.
+
+## 2026-11-07 · Revisar documentación antes de proponer commits (Ana)
+
+Ana establece una regla transversal para todas las skills de bnbtico: revisar la documentación afectada antes de proponer o preparar un commit e incluir en su lista de archivos y comandos los documentos modificados por esa tarea. Responde a que las propuestas de commit estaban dejando fuera `docs/decisiones.md`.
+
+Las decisiones nuevas o modificadas se registran aquí el mismo día, con su motivo. Implementar una decisión ya aprobada no exige inventar una entrada: se actualizan las guías afectadas, incluida la de pruebas manuales cuando cambien pantallas. Los cambios ajenos a la tarea quedan fuera del commit propuesto.
+
+Se incorpora `ana-devops` para CI/CD y operación, con optimización de despliegues basada en mediciones, sin retirar comprobaciones obligatorias. Su uso no autoriza el corte de infraestructura ni operaciones remotas.
+
+## 2026-11-07 · Tipo de alojamiento bajo el nombre (Ana)
+
+Las tarjetas de Explorar, Favoritos y mapa y la ficha muestran una línea de texto bajo el nombre: «Alojamiento completo» o «Habitación · baño privado/compartido». Si no se conoce el tipo de baño, solo «Habitación». Sustituye la antigua pastilla Habitación de la ficha. El icono de cama representa dormitorios, sin reutilizarlo para identificar el tipo.
+
+## 2026-11-07 · Iconos en las tarjetas del catálogo (Ana)
+
+Explorar y Favoritos muestran personas, dormitorios y número de baños con sus iconos. La ficha también usa esos tres iconos junto a la capacidad y conserva el detalle de baño privado o compartido. Bajo el precio se muestran los iconos de las características presentes, reutilizando el mapa de iconos de la ficha, con nombre accesible y título. Las características ausentes no se muestran.
+
+## 2026-11-07 · Dormitorios en los contadores de capacidad (Ana)
+
+Se sustituye «Habitaciones» por «Dormitorios» en Filtros y en Crear casa; el contador compartido de edición usa el mismo nombre. Las líneas de capacidad de las tarjetas y la ficha usan «1 dormitorio» o «N dormitorios». «Habitación» se conserva como tipo de alojamiento.
+
+## 2026-11-07 · Selector único de tipo de alojamiento en Filtros (Ana)
+
+El selector va entre Personas y Habitaciones en Filtros. Las opciones «Cualquiera», «Completo» y «Habitación» se muestran en una fila con iconos y check, con Cualquiera por defecto y una sola selección. Completo representa el alojamiento completo, incluidas las casas y apartamentos anteriores. Habitaciones solo aparece y se aplica al seleccionar Completo. Con Cualquiera o Habitación se oculta el contador y se descarta el mínimo, también si venía en un enlace guardado. Al volver a Completo, el contador aparece sin mínimo. Personas siempre permanece disponible.
+
+## 2026-11-06 · Todo el país con el Caribe primero y tipo de alojamiento en Filtros (ronda de Ana, ticket 06 rehecho)
+
+- **Decisión (Daniel, 2026-11-06):** del ticket 06 entran el tipo de alojamiento, todo el país sin zona, el Caribe primero, fuera las pastillas de provincia y la lista y el mapa con las mismas casas. **No entra el filtro de baños.** Sustituye «Caribe por defecto» (Explorar arrancaba en Limón).
+- **Cómo:** `search_listings` (migración `20261107042744_caribe_primero_y_tipo`) ordena con las de Limón primero y, dentro de cada grupo, las más nuevas, antes de aplicar el límite de 60, y acepta `p_kinds`. «Alojamiento completo» = `completo`, `casa` y `apartamento`. `?tipo=` cuenta en el contador de Filtros. Un `?prov=` de enlaces viejos sigue filtrando. El mapa no cambia: ya se ajusta a las casas de la lista. Sin estilos nuevos: el tipo usa las pastillas que ya existían, sobre el rediseño de Filtros de Ana del mismo día.
+
+## 2026-11-06 · La base local se pone al día sola con las migraciones
+
+- **Problema:** Supabase local solo aplica las migraciones al crear la base. Tras un `git pull` con `save_edit_full`, la base de Ana se quedó con el esquema viejo y sus e2e fallaron. `preparar-entorno-local.sh` ocultaba el error de `migration up`, que además se niega a aplicar una migración con fecha anterior a la última aplicada, que es lo que pasa al juntar ramas.
+- **Decisión:** `pnpm db:al-dia` (`apps/app/scripts/base-local.mjs`) aplica lo que falte con `--include-all` y avisa si quedó fuera de orden. Si la base tiene migraciones que ya no están en el repositorio, se para y explica el arreglo; `--reset` la deja igual que el repositorio y vuelve a crear las casas de prueba. Lo llaman antes `pnpm dev`, `test:e2e`, `test:db`, `datos:prueba` y `preparar-entorno-local.sh`. En CI la base es nueva y no hace nada.
+- **Regla:** todo cambio de base va en una migración, nunca a mano en la base local. Al añadir una: `pnpm db:al-dia`, `pnpm db:types` y, si hace falta, `casas-de-prueba.mjs` en el mismo commit.
+
+## 2026-11-06 · Refina la búsqueda de Explorar sin tarjetas blancas (Ana)
+
+Ana toma como referencia el selector de Consultas y Calendario y pide quitar las tarjetas blancas, especialmente en el desplegable. Se mantiene la búsqueda a pantalla completa: sección abierta sobre el fondo crema, filas cerradas con borde y chevrón, y sugerencias con el nombre completo y un check dorado para la zona elegida. La lista mantiene visible la opción al recorrerla con el teclado. Las reglas de zona, fechas, personas y filtros no cambian.
+
+En Filtros, Zona y Fechas siguen abriendo la búsqueda. Personas y Habitaciones se ajustan directamente con los contadores de Publicar, sobre el fondo crema y separados por un divisor. Habitaciones conserva el criterio de mínimo y lo expresa como «1+» a «4+».
+
+En «Su búsqueda», Zona y Fechas se muestran sobre el fondo crema con iconos, divisor y flechas. La selección «Todas» se resume como «Todas las provincias». El encabezado del rango se llama «Precio» y los campos en dólares prescinden de la nota del tipo de cambio.
+
+## 2026-11-06 · Marca como vistas las consultas visibles (Ana)
+
+Solo se marca como vista una consulta cuyo nombre de cliente se mantiene visible un momento en Consultas, también desde el acceso de Mis casas y dentro del filtro elegido. Las que quedan fuera de pantalla no cambian. Bajan «Nueva» y el contador sin reordenar las tarjetas durante la visita; tocar «Abrir WhatsApp» antes de verla también la marca. Se reutiliza el registro existente; no se infiere nada de lo ocurrido dentro de WhatsApp.
+
+## 2026-11-06 · Oculta el borrador automático en Consultas (Ana)
+
+Se oculta el borrador automático en Consultas porque el cliente puede editarlo antes de enviar o no enviar nada. Se conserva en el registro y se muestran las notas personalizadas. La tarjeta mantiene el nombre, los datos de la estancia, «Nueva» y «Abrir WhatsApp».
+
+## 2026-11-06 · Enlace a la ficha en los mensajes de consulta (Ana)
+
+Al abrir WhatsApp para contactar a un anfitrión, el mensaje preparado empieza con la URL pública de la casa de esa consulta, sin parámetros, seguida de una línea en blanco y el texto habitual. El enlace se añade al abrir WhatsApp, también al volver de verificar el número; la vista previa y el texto guardado en Consultas se conservan. El anfitrión sigue abriendo el chat del cliente desde Consultas sin texto preparado.
+
+## 2026-11-06 · Un solo acceso para editar el perfil (Ana)
+
+Se aplica el apartado9 aprobado: se mantiene Editar junto a los datos personales y se elimina la fila duplicada Mi perfil del cliente. Los campos, destino, guardado y validación se conservan. Pruebas de cliente y propietario preparadas; Ana hará la ejecución conjunta antes de publicar los commits.
+
+## 2026-11-06 · Explicaciones del Calendario dentro de sus hojas (Ana)
+
+Se aplica el apartado8 aprobado: filas compactas, explicación de reserva en su hoja y explicación de pausa conservada en la suya. Se mantienen las confirmaciones y las reglas existentes de disponibilidad, selección, precios y guardado. No cambia el calendario ni se introduce guardado automático. Pruebas adaptadas, ejecución conjunta pendiente.
+
+## 2026-11-06 · Una salida inferior en el mapa de Explorar (Ana)
+
+Se aplica el apartado7 aprobado: se quita la flecha superior y la salida inferior se nombra «Ver lista · N casas». El foco inicial pasa a esa salida; se conserva el cierre existente y la navegación de Atrás, sin tocar el asistente de Publicar. Pruebas de foco y navegación adaptadas, pendientes de la tanda conjunta de Ana.
+
+## 2026-11-06 · Detalle editable con fotos accesibles y estadísticas compactas (Ana)
+
+Se aplica el apartado 6 aprobado: margen exterior12, cámara y recuento crema con acceso táctil44, estadísticas doradas centradas y nota breve. No cambia el botón flotante Ver ficha, la proporción de la portada, las métricas ni las reglas de edición. El ajuste visual se limita al detalle del propietario; admin conserva su aviso y marco. Pruebas preparadas para la ejecución conjunta solicitada por Ana.
+
+## 2026-11-06 · Cuenta resumida y listado de suscripciones completo (Ana)
+
+Se aplica el apartado 5 de los cambios aprobados: Cuenta agrupa las casas al día sin esconder pagos, recordatorios o bloqueos, y «Ver suscripciones» abre todas. El listado prioriza reactivación y pagos sin presentar bloqueadas como activables. Se mantienen importes reales por casa, fechas, oferta vigente, avisos y confirmación al parar; no se aplican las cifras provisionales de las capturas. Ana solicita preparar también los demás bloques y ejecutar las pruebas conjuntamente al día siguiente; esta implementación queda pendiente de esas pruebas.
+
+## 2026-11-06 · Mis casas más compacto, divisor neutro y barra de estados conservada (Ana)
+
+Ana rechaza que el ajuste se limite a aumentar iconos y pide reducir el espacio blanco. Tras ver la captura compacta, acepta esa composición con un divisor sin verde y confirma que la barra de estados le gustaba como estaba. Se conserva esa barra con sus cantidades, colores y accesos; se alinean barra y tarjetas a 16 px de los bordes. Las tarjetas con acciones agrupan nombre y zona, usan una línea neutra encima de las acciones y prescinden de la banda verde de la propuesta. Compartir conserva icono y texto verde; Calendario y Consultas pasan a 28 px dentro de objetivos de 44 px, separados 16 px. El ajuste no modifica la presentación del detalle editable ni las reglas de casas, pagos, contadores o navegación.
+
+## 2026-11-06 · Consultas y selector compartido con Calendario (Ana)
+
+Se aplica el apartado 4 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`: selector común con hoja inferior, nombres completos, X, lista desplazable y selección dorada con check. Consultas ofrece «Todas las casas»; Calendario solo una casa concreta. Cada pantalla conserva su lista de casas elegibles; con una sola se oculta el selector. Se conservan las rutas, el filtro antes de las últimas 20 consultas, las nuevas primero y el funcionamiento con la caché sin red.
+
+El nombre de casa se muestra sin foto ni pastilla únicamente en consultas mezcladas; «Nueva» pasa a dorado suave y «Abrir WhatsApp» a icono oficial y texto sin banda verde, con objetivo táctil de 44 px. No cambian la apertura de WhatsApp ni la marca de consulta abierta. Se preparan pruebas de selección, nombres largos, foco, teclado, cierre y navegación; Ana ejecuta las comprobaciones antes del commit de este bloque.
+
+## 2026-11-06 · Mis casas: acciones por casa y contador de consultas (Ana)
+
+Se implementa el apartado 3 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md` tras confirmar Ana las 43 E2E de Publicar. Compartir usa el verde final aprobado, icono y texto breve; se retira del componente compartido la variante dorada anterior, también en el detalle editable. Calendario y Consultas se presentan como iconos accesibles de 44 px con varias casas, conservando las restricciones vigentes. Cada acceso incluye la casa en su ruta y el contador solo suma consultas que aún no se abrieron de esa casa; usa la consulta privada existente y no cuenta mensajes de WhatsApp.
+
+Se corrige el ancho de las acciones de pago para que no sumen 100 % más márgenes y se recorten dentro de la tarjeta. Se conservan fotos, estados, borradores, pagos y sus reglas. Ana prueba el bloque en local y ejecuta las comprobaciones; se prepara un commit por bloque probado antes de continuar.
+
+## 2026-11-06 · Organización y entregas de marca para perfiles (Ana)
+
+Ana solicita revisar y preparar en Git los archivos de marca. La biblioteca completa es la entrega de referencia; las carpetas intermedias se identifican como tales y conservan sus rutas por compatibilidad y por la procedencia del inventario. Propuestas, referencias históricas y logos obsoletos quedan diferenciados mediante sus índices. Los ZIP locales duplican las carpetas y no se versionan.
+
+Se documentan también las adaptaciones aprobadas en este chat: B terracota sobre crema para el perfil de correo; BT sin recuadro sobre crema con margen circular para Instagram; portada Facebook con BNBTICO.COM, descripción de la plataforma y «Reservas directas, sin comisión de plataforma»; portada WhatsApp con BNBTICO.COM dentro de puntos a la izquierda, sin copy adicional, con más margen arriba y el cuadro reducido un 10 %. Se reutiliza la foto de Playa Negra aportada por Ana y los trazados originales. No se publican imágenes en las redes ni se despliega la aplicación.
+
+## 2026-11-06 · Publicar casa: cabecera y nota simplificadas (Ana)
+
+Se aplica el apartado 2 de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`: quitar el rótulo visible «Su casa» de la primera etapa y la nota de seguir después en Mis casas. Se conserva el número de paso visible, la descripción accesible completa, las etapas siguientes, los ocho tramos de progreso y el guardado. Atrás y Continuar ya tenían la composición aprobada y se conservan. Las expectativas existentes de las pruebas de navegador se adaptan al nuevo rótulo visible, sin cambiar las reglas del asistente. Pendiente de revisión visual y comprobaciones de Ana.
+
+Tras contrastar la referencia completa y la corrección de Ana, la X pasa arriba a la derecha, sin texto visible; progreso y contador quedan debajo de la cabecera. Entrada sin cuenta, verificación y pasos reutilizan esa estructura, incluidos los estados de carga. Capacidad adopta las filas abiertas de la referencia, iconos y controles de 44 px; el primer paso sin cuenta comparte la barra inferior. Ana pide continuar por bloques completos y probarlos directamente en local, sin enseñar ni pedir aceptación por cada ajuste. Los comandos de comprobación los sigue ejecutando ella.
+
+## 2026-11-05 · Aplicar los cambios aprobados por tandas: botones y notas (Ana)
+
+Ana autoriza implementar uno a uno los cambios de `.scratch/auditoria-conversion-2026-11-04/cambios-aprobados.md`, enseñando cada tanda para revisión. Se empieza por la regla visual compartida: acciones verde B con sombra ligera y sin borde, desactivados grises claros y notas informativas neutras. Se conserva el refactor de CSS, los estados reales, los iconos existentes y los colores funcionales de pagos, WhatsApp y errores. No se modifican cobros ni promociones.
+
+La aplicación local sirve de revisión; Ana ejecuta los comandos de terminal. El seguimiento está en `.scratch/auditoria-conversion-2026-11-04/plan-implementacion.md`. Esta entrada registra la implementación de acuerdos previos: la aceptación visual y las comprobaciones de cada tanda se anotan allí sin darlas por hechas.
+
+## 2026-11-05 · Guía de marca e historia de origen (Ana)
+
+Ana solicita una guía de marca con fundamentos, reglas visuales, comunicación y aplicaciones. Aporta su experiencia: propietaria de una casa en el Caribe, alquileres a través de plataformas con comisiones y contactos directos por Facebook en temporada baja, con turismo local y oferta dispersa. La guía cuenta ese origen como experiencia de la fundadora y oportunidad percibida, sin afirmar que no existen competidores ni usar el nombre de la villa como parte de la marca.
+
+Dirección de voz recomendada y recogida tras su preferencia: cercana, cálida y de confianza; trato de usted. El Caribe se expresa en fotografías, luz y paleta. La guía documenta Figtree para interfaz y Outfit solo en portada; el lettering del logo se conserva como trazados. Se añade una norma compositiva recomendada de espacio libre x/4 y referencias digitales de tamaño para revisión; los mínimos físicos y los Pantone quedan sujetos a prueba con el proveedor.
+
+Guía de 15 páginas y fuente HTML en `design/logo/biblioteca-completa-2026-11-05/09-guia-de-marca/`, con fuentes y licencias OFL. Edición 1.0 para revisión; no modifica pantallas ni implica un despliegue.
+
+## 2026-11-05 · Tinta para pantalla y carbón cálido para merchandising (Ana)
+
+Ana elige carbón cálido **#2B2926** en lugar del negro puro para las versiones de merchandising. Para los logos oscuros de pantalla solicita usar la tinta de marca **#1C2B2A**. Las dos variantes siguen siendo transparentes; el logotipo predeterminado continúa en terracota #B44C30. Se mantienen las formas y el marco de puntos aprobados.
+
+Maestros explícitos `tinta-transparente` y `carbon-calido-transparente` en la biblioteca y el juego unificado. Los nombres anteriores `negro-transparente` se conservan como alias: tinta en los recursos digitales y carbón cálido en la carpeta de merchandising. Los maestros de imprenta a color oscuro pasan a la carpeta `carbon-calido-transparente`; los anteriores en negro puro se guardan en logos-obsoletos. El perfil CMYK es el ICC genérico incluido, sin asignar equivalencia Pantone ni prometer una tinta de imprenta o hilo exactos. Colores de interfaz sin cambios.
+
+## 2026-11-05 · Todos los logos transparentes por defecto (Ana)
+
+Ana fija la regla general: todos los logos y maestros son transparentes por defecto, incluidos los interiores de los marcos de puntos; solo se incluye un fondo deliberado cuando el uso lo necesita, como perfiles e iconos de instalación. Se conservan esas variantes separadas. Ana confirma como principal las letras BNBTICO en terracota, sin marco ni placa: el fondo real de la pantalla debe verse detrás. Las versiones con marco de puntos también conservan el interior transparente. Los archivos principales de acceso rápido son `design/logo/biblioteca-completa-2026-11-05/logo-predeterminado.svg` y `.png`, copias exactas del maestro terracota transparente. Los acabados con fondo se reservan para perfiles e iconos. La vista general muestra el principal directamente sobre el fondo de la página.
+
+## 2026-11-05 · Archivar la rana y sustituir las rutas activas por la marca nueva (Ana)
+
+Ana autoriza guardar el juego antiguo en `design/logo/logos-obsoletos/2026-11-05/` y garantizar sustitutos para los archivos que referencia el código. Se conservan los originales con su ruta y hashes SHA-256 antes de sustituir 53 recursos o crear su reemplazo: alias PNG/ICO de diseño usados por maquetas y tarjetas, cabeceras y PWA de ambas apps, favicon, portada e imagen OG de compartir enlaces. Los logos tipográficos colocados en pantallas son transparentes. La portada y el OG usan blanco transparente sobre la foto; la sombra CSS anterior del logo se retira.
+
+El PNG original del prototipo se archiva intacto (idéntico al de Git); el prototipo pide ahora `assets/bnbtico.svg` y el módulo `logo-vigente.js` elimina el recorte y la placa antiguos. Los nombres públicos de las otras imágenes se mantienen para compatibilidad; `sustituciones.json` documenta su procedencia nueva y el respaldo anterior. No hay despliegue ni cambios de colores de interfaz.
+
+## 2026-11-05 · Entrega de marca por plataforma y logos web transparentes (Ana)
+
+Ana solicita reutilizar los recursos aprobados y completar tamaños para web, tiendas, PWA, redes sociales e impresión. Para **web, las cuatro composiciones (letras solas o dentro del marco de puntos) se usan siempre sin placa de fondo**, en terracota, negro o crema; blanco transparente para fotos. El crema #FFFBF2 puede ser el fondo de la pantalla, pero no se incluye como rectángulo en el archivo colocado sobre ella. Los acabados con fondo se conservan para avatares de Instagram/Facebook y otras redes e iconos de aplicaciones; terracota sobre crema y crema sobre terracota siguen siendo las combinaciones acordadas.
+
+Biblioteca en `design/logo/biblioteca-completa-2026-11-05/`, con vista `VISTA-GENERAL.html`, accesos `EMPEZAR-AQUI/`, selección `LOGOS-TRANSPARENTES/`, recursos por plataforma e imprenta. Los SVG maestros y símbolos aprobados se reutilizan; no se añade un diseño. EPS y PDF vectoriales CMYK con perfil ICC genérico incluido; PNG de impresión RGB a 300 ppp (PNG no admite CMYK). Las capas de Icon Composer y los recursos Android se entregan para integración posterior; no se despliega ni modifica la app.
+
+## 2026-11-05 · Iconos pequeños elegidos: contorno con BT y B reforzada (Ana)
+
+Ana elige **contorno continuo con BT para 96, 64 y 48 px**, y **la B original más ancha y reforzada para 32, 24 y 16 px**. Referencias: `02-contorno-bt` de `design/logo/propuestas/marco-solido-2026-11-05/` y `02-b-mas-ancha` de `design/logo/propuestas/microiconos-2026-11-05/`, confirmadas con imágenes en este chat. Esta elección sustituye las alternativas pendientes descritas en la entrada anterior para esos seis tamaños.
+
+Juego definitivo en `design/logo/iconos-elegidos-2026-11-05/`: SVG, PNG nativos y 2×/3×, e ICO con las seis representaciones. Se verifica coincidencia exacta de las seis versiones crema con las referencias seleccionadas. La B usa el trazado aprobado ensanchado al 180 %, con refuerzo óptico; el nombre completo conserva las letras originales. Los iconos usan terracota #B44C30 sobre crema #FFFBF2 o blanco, crema sobre oscuros sólidos y blanco transparente sobre fotos. El contorno es continuo en los iconos; las cuatro composiciones del nombre completo mantienen su marco de puntos donde corresponde.
+
+La forma se elige por tamaño visible: en 16 px sobre pantalla 2× se usa la B de 16 a doble resolución, manteniendo ese perfil de B a doble resolución. La revisión entrega recursos elegidos, sin sustituir aún los iconos de la app ni desplegar cambios.
+
+Ajuste final de Ana: el acabado predeterminado de todo el juego es terracota #B44C30 sobre crema #FFFBF2. Se añade crema sobre terracota como alternativa para fondos oscuros, tanto en las cuatro composiciones como en los iconos. En las pestañas del navegador el favicon dedicado conserva la B de 16 px en todas sus densidades; las formas por tamaño visible quedan B en 16/24/32 y contorno con BT en 48/64/96. Kit limpio listo para uso en `design/logo/kit-final-2026-11-05/`, sin las exploraciones.
+
+## 2026-11-05 · Logo sin rana, letras unificadas y maestro vectorial (Ana)
+
+Ana confirma como referencia exacta las letras de `design/logo/redes-sociales/bnbtico-instagram-cuadrado-puntos.png`: ambas B a altura normal y solo la T elevada. Pide quitar la rana, vectorizar y generar archivos consistentes; incluir BNBTICO.COM, opciones simples para favicon y versiones para fotos y fondos oscuros. Aporta una imagen de la M para el dominio, conservada en `design/logo/maestro/referencia-m.png`.
+
+Se trazan los contornos de la referencia aprobada, sin sustituirlos por otra fuente ni regenerarlos con IA. SVG maestros en `design/logo/maestro/`; C y O del sufijo reutilizan los glifos del nombre. Juego de SVG/PNG en `design/logo/unificado-2026-11-05/`: terracota sobre transparente/blanco/arena/crema, blanco/crema para oscuro, blanco transparente para fotos, sin base opaca y negro para impresión. Se actualizan las cuatro carpetas de diseño indicadas en la conversación y se conservan sus originales en `design/logo/historico/2026-11-05-antes-unificacion/`.
+
+Las cinco propuestas compactas de `design/logo/propuestas/iconos-compactos-2026-11-05/` (B original, BT, nombre en dos líneas, B geométrica sólida y solo cuadrado de puntos) quedan **pendientes de elección**. La B sólida muestra mejor lectura a 16–32 px; no se adopta automáticamente. Esta revisión prepara recursos de diseño: la sustitución del icono en la app, del prototipo y de otros PDF de imprenta no forma parte de este cambio.
+
+Ana aclara en la misma revisión que «arena» significa el crema habitual #FFFBF2 y descarta la base opaca sobre fotografías. Pide las cuatro composiciones para cada uso: BNBTICO, BNBTICO.COM, cuadrado con BNBTICO y cuadrado con BNBTICO.COM. Cada una incluye el mismo juego de colores/fondos. El cuadrado vacío es la opción E para tamaños pequeños, con marco doble en grande y una fila de 12 puntos en 16–32 px; sigue pendiente la elección del símbolo.
+
+Ana aprueba las cuatro composiciones mostradas sobre crema y pide versiones sobre negro y foto, además de explorar BT dentro del cuadrado. Se añaden negro puro #000000 y tres propuestas pequeñas F/G/H con BT y una fila de 12/20/28 puntos. Los puntos de todos los marcos pasan a círculos geométricos de radio uniforme; las opciones E/F/G/H tienen SVG de tamaño nativo a 16/32/48/64 px con centros ajustados a medios píxeles. A 16 px el marco se reduce a 12 puntos; para lectura se recomienda el cuadrado vacío porque BT resulta demasiado pequeño. Son ocho alternativas compactas en total, pendientes de elección. Paquete específico: `design/logo/negro-y-fotos-2026-11-05/`.
+
+Ana explora una reducción progresiva del símbolo: cuadrado con BT → BT sin marco → B sola (corrige expresamente el último escalón a B). Prueba con glifos originales y refuerzo óptico en `design/logo/propuestas/sistema-adaptativo-2026-11-05/`; orientación para revisar: 64 px o más / 32–48 px / 16–24 px. La propuesta está pendiente de elección y no sustituye los iconos de la app.
+
+Ana fija la tinta de las cuatro composiciones según el soporte: crema #FFFBF2 sobre negro y demás colores oscuros sólidos; blanco #FFFFFF con transparencia sobre fotografías. Se sustituyen las variantes `blanco-sobre-negro` y `blanco-sobre-oscuro` por `crema-sobre-negro` y `crema-sobre-oscuro`. El verde selva conserva crema. Las variantes anteriores se archivan; se comprueba que los ocho archivos SVG/PNG para fotos mantienen exactamente sus huellas.
+
+## 2026-11-04 · Logo e icono en terracota oscuro `#B44C30` (Ana)
+
+Decisión final tras comparar `#D65C3C` y `#B44C30` en el logo horizontal, el nombre, el símbolo y el icono: **se adopta `#B44C30` para los archivos de marca sobre fondo claro**. Sustituye la indicación anterior de no recolorear los logos. Se conserva la rana, la hoja, las proporciones y la transparencia; no se redibuja ni se modifica el original del prototipo.
+
+- Icono principal: beige `#FFFBF2`, rana y hoja `#B44C30`, sin nombre. Versiones de la PWA, iPhone, Android maskable y favicon sincronizadas; se mantienen las zonas seguras y el recorte de esquinas a cargo del sistema.
+- Los archivos inversos de fondo terracota usan también `#B44C30`; los logos crema, blanco y tinta conservan sus colores.
+- **La interfaz mantiene sus colores y selecciones actuales**: no se cambia `--brand` (`#D65C3C`), `--brand-ink` (`#B44C30`), el menú, los calendarios, los verdes ni los dorados de pago. Los tokens documentan esta separación sin cambiar sus valores de color.
+
+Archivos y usos: `design/logo/README.md`. Comparación aprobada: `.scratch/exploracion-color-marca-2026-11-04/evidencias/11-logos-icono-b44c30.jpg`.
+
+## 2026-11-04 · Conservar el terracota y usar el icono beige con la rana (Ana)
+
+Tras comparar dorados y cobres, se conserva el aspecto y el terracota actuales. Los logos de `design/logo` y el logo horizontal de la app ya comparten `#D65C3C`; no se recolorean. La tinta `#B44C30` sigue destinada a los usos de texto pequeño y contraste.
+
+El icono principal pasa a ser **fondo beige `#FFFBF2`, rana y hoja terracota `#D65C3C`, sin nombre dentro**, como la referencia elegida por Ana. Se usa el juego `design/logo/icono-crema-*` para la PWA y el icono de iPhone; los maskable de Android usan los mismos colores conservando su zona segura. Los PNG son cuadrados y opacos: el sistema aplica las esquinas. La variante de fondo terracota queda disponible como alternativa, no como icono principal. Ver `design/logo/README.md`.
+
+## 2026-11-04 · Aplazar los informes HTML y las trazas descargables de CI
+
+Daniel aprobó aplazar la publicación de los informes HTML de Playwright y de sus trazas descargables en CI hasta que una revisión apruebe el saneador de fragmentos de código. Hasta entonces, CI publica solo el JSON normalizado, los logs saneados, los códigos de salida y el resumen.
+
+- Las pruebas, las puertas (`normalize`, `gate`) y las condiciones del despliegue no cambian. Un fallo sigue bloqueando el despliegue.
+
+## 2026-11-04 · Presupuesto inicial privado de 160 kB gzip
+
+Daniel autorizó ampliar únicamente el límite inicial de 150 a 160 kB gzip durante el refactor conservador.
+
+- El ticket 16 midió 150.395 bytes: excedía el límite anterior por 395 bytes. El nuevo límite concede 10.000 bytes de margen adicional.
+- Se conservan las exclusiones del clasificador y los otros 32 presupuestos. No se retiran código ni comprobaciones para cambiar el resultado.
+- Esta autorización no demuestra impacto nulo en rendimiento. Lighthouse, hidratación, comprobaciones de red y revisión independiente siguen siendo obligatorias.
+- Las mediciones anteriores conservan sus límites históricos; no se reinterpretan como pruebas ejecutadas con el límite nuevo.
+
+## 2026-11-04 · Retirar Next del repositorio sin cortar Vercel ni renombrar la aplicación
+
+Daniel autorizó retirar los 144 archivos versionados de `apps/web` en el ticket 09 del refactor conservador. La aplicación activa conserva `apps/app` y el nombre de paquete `app`. Sustituye la previsión de renombrarla a `apps/web` al hacer el corte.
+
+- **Motivo:** mantener una sola aplicación y comandos coherentes, sin mezclar la limpieza del repositorio con un cambio de infraestructura.
+- **Alcance:** código, assets, pruebas y configuración versionados del paquete Next; comandos raíz, workspace, lockfile y referencias operativas. No se borran directorios, archivos locales ni secretos. No se sustituyen assets de la aplicación activa.
+- **Cobertura:** se conservan las pruebas activas y se trasladan las comprobaciones de permisos sin equivalente directo a `apps/app/tests/db/permisos-heredados.test.ts`, mediante REST. No cambia SQL ni autorización.
+- **Dependencias:** se retiran las exclusivas de Next; las versiones compartidas y la política de scripts de instalación permanecen iguales. No se amplían presupuestos ni se retiran puertas de CI.
+- **Vercel y portada:** Daniel confirmó que los builds están desactivados. Se conservan el proyecto, sus despliegues y DNS. Los cambios futuros de portada no llegarán al dominio servido por Vercel hasta un corte autorizado.
+- **Alternativa descartada:** renombrar la aplicación durante esta retirada obligaría a cambiar rutas de herramientas y CI sin aportar aislamiento ni funcionalidad.
+- **Marcha atrás:** revertir este cambio aislado recupera el paquete versionado y sus comandos. No restaura datos ni cambia despliegues. No habilitar builds de Vercel sin autorización separada.
+
+## 2026-11-04 · Publicar sin cuenta hasta las fotos: el WhatsApp se verifica antes de las fotos (Ana)
+
+Sustituye «el código se pide después del paso 1» (publicar v2, §E). Capturas `sin-cuenta-*.png` en `.scratch/revision-ux/maquetas/2026-11-04/`.
+
+- **Sin cuenta se hacen los pasos 1–6** (tipo, ubicación, personas, características, nombre y descripción) con las mismas pantallas y reglas del asistente, en `/publicar/nueva/$paso`. Lo escrito se guarda en el teléfono (`bnbtico-publicar-borrador`, 7 días, como antes el paso 1); al volver a «Publicar» sigue ahí.
+- **Al llegar a las Fotos** se pide el WhatsApp: «Para subir las fotos, verifique su WhatsApp» y «Lo que ya escribió se guarda…». Las fotos necesitan cuenta (se suben al almacenamiento de la casa). `/publicar/nueva/7` en adelante lleva a verificar.
+- **Tras el código**, `/publicar/continuar` crea la casa con todo lo escrito en una sola escritura y sigue en Fotos. Con un borrador ya empezado se elige como siempre; el segundo botón dice «Seguir con «nombre»» si se llegó a escribir.
+- **Cómo:** un tercer puerto del asistente (`publish/local-port.ts`) junto al del anfitrión y el del admin; `planStep` es la misma regla. Quien ya tiene sesión no nota nada.
+- **Telemetría:** `wizard_step` sin casa en `/publicar/nueva/…`, para ver dónde se abandona antes del código; `publish_verify` ahora cuenta a quien llega a las Fotos.
+- **Por qué:** pedir el número tras el paso 1 frena a quien solo quiere ver cómo es publicar; después de escribir su casa, el código se siente como guardarla.
+
+## 2026-11-04 · «Compartir ficha» en dorado, sin etiqueta «Revisión», borradores sin foto y paso 2 con la búsqueda sobre el mapa (Ana)
+
+Capturas en `.scratch/revision-ux/maquetas/2026-11-04/`.
+
+- **«Compartir ficha» en dorado** (el de «Activar suscripción»), en Mis casas y en el detalle de la casa activa: no es dinero, pero compartir la ficha es publicidad de bnbtico. Excepción a «dorado solo para dinero» (tokens 0.3.1, `sun.role`; `tests/unit/ocre.test.ts`). Se valoró dejarlo verde con el icono dorado; Ana prefirió el botón dorado.
+- **Sin la etiqueta «Revisión»** en los datos de una casa publicada que se revisan al cambiarlos: salía aunque no hubiera nada pendiente y parecía un estado. Solo quedan «En revisión» y «Cambios pedidos». La nota de arriba nombra los datos («Los cambios de nombre, tipo, descripción y ubicación, y las fotos nuevas, los revisamos antes de publicarlos…») y, al abrir uno, siguen el aviso y «Enviar a revisión».
+- **Borrador sin foto:** en lugar del recuadro con una casita, que parecía una imagen rota, un hueco con borde discontinuo y cámara: «Aún sin fotos» en Mis casas y, en el detalle, «Añadir fotos», que lleva al paso de las fotos.
+- **Paso 2 («¿Dónde está su casa?»):** la búsqueda flota encima del mapa como en Explorar; «+ / −» abajo a la izquierda; debajo, una sola línea: «Los clientes solo ven la zona, no su dirección.» (sale «Toque el mapa o arrastre el punto…»). El mapa gana alto (unos 445 px en un teléfono de 390) y el paso sigue sin scroll a 375×667.
+
+## 2026-11-04 · Una sola tarjeta: de borde a borde, foto 3:2, puntitos; Favoritos sin logo y tarjeta del mapa (Ana)
+
+Sustituye, del 2026-11-04 de abajo, el contador «1 / N» y la foto 4:3 de la tarjeta de Explorar. Capturas en `.scratch/revision-ux/maquetas/2026-11-03/`.
+
+- **Tarjeta de Explorar** (`ListingCard`): en el teléfono, de borde a borde (sin margen lateral), foto **3:2** y las cuatro esquinas redondeadas; **puntitos** centrados abajo en vez de «1 / N» (máximo 5; el del borde, más pequeño si hay más fotos). En escritorio, la cuadrícula de siempre.
+- **Puntitos también en la ficha** (`PhotoDots`, en `src/shared`, el mismo componente en la tarjeta y en la foto grande con SSR); la ficha anuncia «Foto N de M» a los lectores de pantalla.
+- **Favoritos usa la misma tarjeta** que Explorar (fotos deslizables, corazón y botón de WhatsApp que abre la hoja de contacto aquí mismo; sustituye «Enviar WhatsApp», que llevaba a la ficha). **Sin barra de arriba con el logo** (ninguna pestaña la lleva ya): una fila con «N casas guardadas…» a la izquierda y «₡ | $» al extremo derecho (alineación del 2026-11-06, toque de 44 px).
+- **Mis casas:** la misma forma (de borde a borde, foto 3:2).
+- **Tarjeta del mapa** (al tocar un precio): versión compacta. Foto a la izquierda con el corazón en su esquina; nombre, zona, «N personas · N habitaciones» y precio; el mismo botón de WhatsApp **arriba a la derecha** (abajo pisaría la línea de personas). Sin fotos deslizables: en una foto tan pequeña se confunde con arrastrar el mapa.
+- Pruebas: dos e2e intermitentes que paraban el despliegue de `develop` (fase 3: tocaba la barra de abajo escondida tras bajar la lista; publicar: navegaba mientras la página recargaba) esperan ya lo que corresponde.
+
+## 2026-11-04 · «Marcar una reserva» y «Pausar la casa» (ronda de Ana, ticket 04 rehecho; Daniel)
+
+- **«Marcar una reserva»** en el calendario de cada casa: hoja con el calendario de rango (llegada y salida) que marca de una vez como ocupadas las noches de llegada a salida − 1, conservando los precios especiales; confirmación «4 noches marcadas como ocupadas · 7–10 dic».
+- **Se mantiene cerrar la casa entera,** renombrado **«Pausar la casa»** (sustituye «Cerrar la casa hasta…»): no sale en Explorar ni recibe consultas; la fecha de vuelta es opcional. En Mis casas, «Pausada hasta el <fecha>» / «Pausada» (distinta de «Pausada por bnbtico»). Textos de las RPCs y de la ficha alineados («La casa está pausada…», «Calendario no disponible»; migración `casa_pausada_textos`). Sin migración de datos.
+
+## 2026-11-04 · Fotos deslizables y WhatsApp en la tarjeta de Explorar, solo vertical y arreglos (Daniel)
+
+- **Tarjeta de Explorar** (ronda de Ana, ticket 09, alcance reducido): las fotos se deslizan dentro de la foto de siempre, con el contador «1 / N»; las 2+ no se piden hasta deslizar esa tarjeta. **Botón de WhatsApp** claro (círculo `--surface`, borde fino, icono en `--wa-icon`, verde un poco más oscuro que `--wa` para llegar a 3:1) a la derecha del texto: abre la misma hoja de contacto sobre Explorar (con los días de esa casa y las fechas de la pestaña); nunca `wa.me` directo. El formato de la tarjeta (4:3, márgenes, tipografía) no cambia; lo demás del 09 queda para más adelante.
+- **Solo vertical en el teléfono:** la app instalada va en vertical (manifiesto) y, en un teléfono en horizontal, un aviso a pantalla completa («Gire el teléfono para usar bnbtico») tapa la app hasta volver a vertical, sin JS y sin perder el estado. Tabletas y ordenador, sin aviso. La portada estática no lo lleva (va por `main`).
+- **«Descartar»** (borrador y cambio en revisión) pregunta con la hoja de la app, no con el diálogo del navegador.
+- **Al tocar «+»** se va directo al paso 1 con su esqueleto; la tarjeta «Publique su casa en pocos pasos» solo sale si falla la creación del borrador (sustituye lo de la revisión UX C4 de enseñar «qué tener a mano» en ese momento). «Tiene un borrador sin enviar» solo con una lectura de esta visita; «Atrás» desde el paso 1 vuelve a Mis casas.
+- Arreglo: el mapa de Explorar se quedaba sin fondo si Leaflet llegaba antes que las casas (React reescribía la clase de su caja y borraba las de Leaflet). Regla: nunca un `className` dinámico en el elemento que se pasa a `L.map`.
+- **El ticket 11** (deslizador de precio con histograma) **no se hace.**
+
+## 2026-11-04 · Tarjetas flotantes, tanda 1: base, barra de abajo, Explorar y botones (Daniel)
+
+Sustituye «Solo la barra de abajo; las cabeceras se quedan» (2026-10-30), «lo que flota sobre mapas o fotos, opaco» (2026-10-29) y el token `bottomNav` «plana, pegada al borde, sin píldora». Maquetas, decisiones e inventario: `.scratch/tarjetas-flotantes/`.
+- **Tarjetas flotantes:** crema translúcida (80 %; 90 % donde hay texto pequeño) con desenfoque, borde fino, sombra suave, esquinas 12/16, a 12 px del borde más el área segura; respaldo opaco sin `backdrop-filter`; tema oscuro. Tokens `--float-*` y `tokens.json` 0.3.0.
+- **Se esconden al bajar y vuelven al subir** con un mecanismo común (`client/hiding-chrome.ts`, `html.chrome-away`); lo enfocado con teclado no se esconde; con movimiento reducido solo se funden. 
+- **Barra de abajo:** tras probarla, Daniel prefiere la de antes: **plana y pegada al borde**, con iconos y etiquetas, **que se oculta al bajar** y vuelve al subir (la píldora flotante se descartó el mismo día).
+- **Explorar:** mapa arriba a todo el ancho con el buscador, los filtros y «₡ | $» flotando encima; los precios del mapa no quedan bajo las tarjetas. Favoritos y el mapa a pantalla completa con el mismo estilo.
+- **«Mapa», «N casas» y «Ver ficha»:** variante clara (crema translúcida, texto en tinta). Toasts y banner de versión siguen a la barra (`--chrome-bottom`).
+- **La tanda 2 se descarta de momento** (Daniel: «no quiero tantas cosas flotantes»): la ficha (barra de precio y WhatsApp, botones de la foto), las barras de acción y el calendario siguen como estaban; sus commits se revirtieron antes de subir. Cabeceras de pantalla («‹ Título»): tampoco.
+- Escondidas, las piezas no responden al toque (salvo con el foco del teclado).
+
+## 2026-11-04 · «Ver ficha» flotante en el detalle de la casa (ronda de Ana, ticket 05 rehecho; Daniel)
+
+En el detalle de la casa del anfitrión, «Ver ficha» sale de la cabecera y pasa a un botón flotante abajo y centrado, con un ojo y el mismo aspecto que «Mapa» de Explorar (regla visual compartida `.float-btn,.map-label,.map-count`; esquinas de 6 px, no píldora). La pantalla deja 80 px más el área segura debajo para no tapar lo último. El modo admin no cambia.
+
+## 2026-11-03 · El admin edita las casas, versión simple (ronda de Ana, ticket 10; Daniel)
+
+La única admin es Ana: no se controla al propio admin. Ana edita cualquier dato de cualquier casa (salvo eliminadas), borradores incluidos, al momento y sin revisión, con las mismas pantallas y reglas de datos que el anfitrión; puede enviar a revisión el borrador de otro. Sin nota, sin «Editado por bnbtico» ni aviso al anfitrión; una línea `listing.edit` en `admin_actions` por guardado. La revisión dato a dato no cambia («Aprobar» / «Pedir cambios» con nota); si Ana edita un dato que el anfitrión tenía pendiente, manda lo de Ana y el pendiente se descarta. Sustituye el plan con D1–D7 del ticket 10.
+
+## 2026-11-03 · Editar sigue las reglas de crear (ronda de Ana, ticket 12 rehecho; Daniel, opción B)
+
+Sustituye «La edición de una casa publicada no cambia: sigue con las reglas por dato (`validateStep`)» del 2026-10-30.
+- **Mismos límites, mensajes, contadores y obligatorios que al crear** (tipo, ubicación, nombre 5–32 —vacío: «Póngale un nombre a la casa.»—, precio por noche, ≥ 1 foto); lo demás es aviso en ocre y no bloquea (descripción fuera de 80–2000, capacidad, parqueo, precio al mes mal escrito). Tope de 2000 en la descripción también en SQL al crear.
+- **Excepción:** en lo que se publica al momento (personas, habitaciones, baños, características/parqueo, precios), un dato que ya tenía valor válido no se puede vaciar ni dejar inválido.
+- **Cada dato se valida solo** (cliente y SQL): cambiar el precio ya no falla porque falten los baños; renombrar no falla por la descripción; cambiar el tipo no exige habitaciones ni baños. El baño de una Habitación va con el tipo (revisión) y su aviso sale en la fila «Tipo».
+- Menores: «Enviar a revisión» no espera al mapa; un tipo viejo (`casa`/`apartamento`) sale marcado como «Alojamiento completo»; un nombre viejo de más de 32 sin tocar no se recorta; contador y ayuda de fotos como en el asistente. CHECK de `listing_edits.title` 5–32 (`NOT VALID`). Migración `editar_como_crear`.
+
+## 2026-11-03 · Publicar: una Habitación es siempre 1 habitación y «Corregir» vuelve al resumen (ronda de Ana, ticket 03 rehecho; Daniel)
+
+- **Habitación = 1 habitación:** el asistente y la edición no preguntan habitaciones cuando el tipo es Habitación; se guarda 1, también en la base (trigger `listings_habitacion_una`, migración `habitacion_una_habitacion`), venga de donde venga el cambio (incluido aprobar un cambio de tipo). **Tampoco pregunta baños** (Daniel, tras probarlo): el paso 4 de una Habitación tiene solo Personas y «Baño de la habitación»; se guarda `bathrooms = 1` (el mismo trigger, migración `habitacion_un_bano`). En vez del número se dice el tipo de baño: ficha «2 personas · 1 habitación · baño compartido» (y la etiqueta de arriba dice solo «Habitación», para no repetirlo), resumen «2 pers. · baño compartido». En la edición la fila y su pantalla son solo «Personas» (el baño privado o compartido se cambia en Tipo, con revisión).
+- **Corregir desde «Revisar y enviar»:** las filas abren su paso con `?volver=revisar`; «Continuar» y «Atrás» vuelven directo al resumen (sin recorrer los pasos siguientes). Sin el parámetro, el orden de siempre.
+
+## 2026-11-03 · zod sale del JS inicial: los filtros de Explorar se leen a mano
+
+El CI marcó 150,03 KB en la zona privada inicial (límite 150) con el ticket 08. zod/mini (~5,2 KB gz) solo entraba por `domain/filters.ts`: su esquema de la URL pasa a una lectura escrita a mano (`parseSearch`, misma salida en 20 000 entradas aleatorias), como ya se hizo con la lista de favoritos y el paso 1 de publicar. zod va en su propio trozo diferido (`zod-*`, límite nuevo de 6 KB) y una prueba de arquitectura impide que vuelva al arranque. La zona privada inicial queda en 144,81 KB. Los demás esquemas zod (formularios del asistente y de la edición) no cambian.
+
+## 2026-11-03 · «Anfitrión» en toda la interfaz (ronda de Ana, ticket 02 rehecho; Daniel)
+
+«Anfitrión/anfitriona/anfitriones» sustituye a «propietario/propietaria/propietarios/dueño» en todo el texto visible (ficha, hoja de contacto, Cuenta, ayuda, admin, avisos y los tres mensajes de `create_inquiry`, migración `anfitrion_en_consultas`): los anfitriones pueden ser propietarios o agencias. En el código sigue `Owner`/`owner` y las rutas `/propietario/...`; la landing no se toca. La app compara el mensaje de `create_inquiry` para «Ingrese con su WhatsApp…»: la migración va antes que el código.
+
+## 2026-11-03 · Calendario de la ficha para elegir fechas, compartidas con la hoja de contacto (ronda de Ana, ticket 08 rehecho; Daniel)
+
+Cierra A3 (2026-10-26) y el «solo para mirar» de N4 (2026-10-29).
+- **Calendario de la ficha seleccionable,** con el estilo de rango de «¿Cuándo?»; abre con las fechas de la búsqueda. **Ficha y hoja comparten las fechas** (`sessionStorage["bnbtico-fechas"]`, `shared/stay-dates.ts`): cambiar unas cambia las otras y el total. Volver a Explorar vuelve a escribir las de su búsqueda (se deja así).
+- **No se llega en un día ocupado;** un rango con una noche ocupada se rechaza («Hay noches ocupadas entre esas fechas.»); la salida puede caer en el primer ocupado. Si las fechas ya traen noches ocupadas, ficha y hoja lo avisan y no hay total.
+- **Barra de precio (opción B):** con fechas, «≈ ₡285 000 / 3 noches»; **el mensual en la barra solo con 30 noches o más** (entonces crece ~20 px tras cargar; va fija abajo). Sin fechas, una sola línea.
+- **Casilla «Alquiler mensual»**, la primera de las características y a dos columnas, con el precio debajo («A negociar» si no hay).
+- **Hoja de contacto:** días ocupados deshabilitados, total encima del mensaje y **«Abrir WhatsApp» bloqueado** con noches ocupadas o mientras cargan los días. Su trozo pasa de 6,5 a 7,5 KB de límite (diferido).
+- Presupuesto: la zona privada inicial queda en 149,93 de 150 KB (casi sin margen).
+
+## 2026-11-03 · Total orientativo en Explorar y fin del modo mensual (ronda de Ana, ticket 07 rehecho; Daniel)
+
+Sustituye «nunca un total» (2026-10-29), «precio siempre por noche aunque haya fechas» (ronda de Ana 2026-10-28) y el chip «Solo alquiler mensual» con «Desde» (2026-10-27/29).
+- **Con llegada y salida,** la tarjeta y el mapa de Explorar muestran «≈ ₡180 000 por 4 noches» (orientativo; nunca «total a pagar»): suma noche a noche con los precios especiales; con 30 noches o más y precio al mes, mes × noches / 30; sin precio al mes, la suma por noches. Sin fechas, el precio por noche como siempre.
+- **Se calcula en `search_listings`** solo para las casas que se devuelven: la RPC recibe todos los filtros y el límite (`20261103071821_total_orientativo_en_busqueda.sql`) y devuelve `stay_total_crc` y `sort_rank`; el adaptador ordena por `sort_rank` (más nuevas primero, como antes).
+- **Fin del modo mensual en Explorar:** fuera el chip, «Desde» y la línea «N casas aceptan alquiler mensual»; los enlaces viejos `?mensual=1`, `modo=monthly` y `desde=` se ignoran. El mensaje de WhatsApp ya no tiene la variante «por meses desde…» (las fechas siguen siendo opcionales). Al publicar no cambia nada.
+- Telemetría: fuera `monthly_filter_tap` (el worker la rechaza; las filas viejas se conservan).
+
+## 2026-11-02 · Decisiones de producto de la ronda de Ana que no tocan código (Daniel)
+
+- **Suscripción en las apps de tiendas:** cuando haya apps de iOS y Android, la suscripción se podrá pagar también con las suscripciones de Apple y Google, además de en la web (sustituye «checkout solo en web» de `docs/business-model.md`). El login con Google, Apple o biometría se revisa entonces.
+- **Favoritos sin cuenta** (se mantiene la regla); como mucho, sugerir crear cuenta tras el primer favorito.
+- **El nombre de la casa sigue obligatorio** de momento.
+- **Ideas para más adelante:** «casa del día» (contador de días sin publicarse en redes y lista en el admin); publicar fácil la casa de un anfitrión nuevo desde el admin.
+
+## 2026-11-02 · Ronda de Ana del 2 nov, revertida (Daniel)
+
+Daniel la revirtió el mismo día: la calidad del resultado no servía. El código, `CLAUDE.md` y los documentos vuelven al estado del commit `782b951`; ninguna decisión de esa ronda queda vigente. Las migraciones de la ronda se deshacen con `revertir_ronda_2_nov`. El análisis, los tickets y las capturas quedan en `.scratch/ronda-ana-2026-11-02/` solo como referencia.
+
+## 2026-10-30 · Guía de pruebas única y valoraciones de clientes fuera de v1 (Daniel)
+
+- **Una sola guía de pruebas manual,** `docs/pruebas-manuales.md`, escrita desde cero tras los rediseños (preparación, cliente, anfitrión, admin y recorridos de punta a punta). Las guías por fase quedan como histórico. Al cambiar una pantalla se actualizan sus comprobaciones en la guía.
+- **Valorar clientes no entra en la v1** (Consultas solo tiene «Abrir WhatsApp»); queda para después del lanzamiento.
+
+## 2026-10-30 · Admin · Casas: pausar, bloquear y eliminar, y aviso manual por WhatsApp (Daniel)
+
+Spec `.scratch/admin-casas-acciones/spec.md`; migración `admin_casas_acciones`. «Casas» del admin deja de ser solo una lista: tocar una casa abre una hoja con sus datos y las acciones.
+
+- **No se toca `status`:** la retención son columnas aparte de `listings` (`admin_hold` = `paused` | `blocked`, `admin_hold_reason`, `admin_hold_at`; `deleted_at`, `deleted_reason`). Cinco RPCs con `is_admin()` (aal2), motivo obligatorio y registro en `admin_actions` (`listing.pause|resume|block|unblock|delete`); cada una purga la ficha del borde con `purge_listing_page`.
+- **Pausar** (Activa, Pendiente de pago o Inactiva): sale de `listings_public`, Explorar, zonas, sitemap, favoritos y consultas nuevas; el enlace da 410 («Este enlace ya no está activo», motivo genérico). El propietario la sigue viendo y editando, con «Pausada por bnbtico» y el motivo; la reanuda solo el admin. La suscripción no cambia.
+- **Bloquear:** igual para el público; el propietario ve «Bloqueada por bnbtico», el motivo y «Escribir a bnbtico» (WhatsApp de propietarios) y no edita nada (guardas en `listings_protect`, `own_published_listing`, fotos, calendario, disponibilidad, Storage y suscripción). **La suscripción se para:** se borran los avisos en cola, `run_subscription_day` y `claim_reminders` la ignoran, un método de pago nuevo no la activa y la app no pide pagar. **Al desbloquear** vuelve al estado en que estaba y el último día gratis de la oferta se corre tantos días como duró el bloqueo (la oferta no se consume bloqueada); si estaba pendiente de pago y ya hay método, se activa. De pausada se puede pasar a bloqueada; de bloqueada solo se desbloquea.
+- **Eliminar** (cualquier estado): borrado lógico, confirmado escribiendo el `CT-####`. Desaparece para todos, propietario y admin incluidos (RLS de `listings` con `deleted_at is null`; las tablas que cuelgan lo heredan; `owner_billing`, `owner_inquiries`, `owner_activity` y `open_drafts` lo filtran). Datos, fotos, consultas y favoritos se conservan; se recupera por SQL (`deleted_at = null` con `app.allow_status`). El enlace público da 404. La plaza de la oferta no se reutiliza.
+- **Sin aviso automático por WhatsApp** (decisión del dueño del producto): el admin avisa a mano con el botón **«Avisar a <nombre> por WhatsApp»**, que abre `wa.me` con un texto en usted (`domain/owner-notice.ts`): tras decidir una casa nueva (en el aviso de Anuncios), en el detalle de una casa ya decidida y en la hoja de una pausada o bloqueada. El texto de Anuncios pasa a «El propietario ve la decisión en Mis casas; avísele por WhatsApp con el botón.»
+- Colores: la retención no usa ocre (es solo dinero): pausada en el tono de «en revisión», bloqueada en rojo.
+- Presupuesto: la zona privada inicial queda en ~149,6 kB gzip; el trozo del admin y el de las pantallas del propietario suben (límites de `.size-limit.json` ajustados).
+- Copia: «Puede verlos en dólares desde Explorar.» (Cuenta no tiene selector ₡|$).
+
+## 2026-10-30 · Barra de abajo que se esconde en toda la app, casas en tarjeta y «Mapa» (Ana y Daniel)
+
+Ronda de Ana del 2026-10-30 (grupos 1–3; `.scratch/ronda-ana-2026-10-30/`, ticket 01).
+
+- **La barra de abajo se esconde al desplazarse hacia delante y vuelve hacia atrás en todas las pantallas que la tienen** (Explorar, Favoritos, Mis casas, Calendario, Consultas, Cuenta), no solo en el calendario: un solo sitio (`client/hiding-tabbar.ts`, llamado en `TabsFrame`). Solo la barra de abajo; las cabeceras se quedan. «Mapa» baja con ella.
+- **«Mapa» se va al acabarse la lista de casas:** tapaba «Publicar mi casa gratis».
+- **Casas en tarjeta con más aire** en Explorar y Mis casas (foto a sangre, texto con relleno, esquinas pequeñas; 32 px entre casas).
+- **Icono de «Mis casas»:** una casa en vez del pin del mapa.
+- «¿No encuentra lo que busca?» no salía en nueva.bnbtico.com porque faltaban `WA_GUESTS`/`WA_OWNERS` en GitHub; Daniel las puso el 2026-10-30.
+
+## 2026-10-30 · Publicar avanza siempre: obligatorios en terracota, avisos en ocre (Ana y Daniel)
+
+Ronda de Ana del 2026-10-30 (grupo 5; `.scratch/ronda-ana-2026-10-30/spec.md`, ticket 02). Sustituye lo del paso 9 del 2026-10-29 (A9: «Enviar a revisión» espera a que esté todo).
+
+- **«Continuar» nunca bloquea**, salvo el tipo en el paso 1 (crea el borrador y decide los demás campos). Los pasos guardan lo que se pueda; lo que no cabe en la tabla (personas o precio menores que 1, número vacío o mal escrito) se guarda como vacío en vez de fallar (`storable` en `domain/publish-rules.ts`; el fake y PostgREST coinciden, con prueba de contrato).
+- **Obligatorio para enviar a revisión:** tipo, ubicación en el mapa (reglas de zona de siempre), nombre (5–32 caracteres), precio por noche y **al menos una foto**. `submit_listing` exige solo eso (migración `publicar_avanzar_siempre`; el tope de 15 fotos se queda).
+- **Todo lo demás es aviso en ocre y no bloquea:** capacidad, habitaciones y baños, baño compartido, descripción fuera de 80–2000, parqueo sin decir si se paga, precio al mes mal escrito. «Revisar y enviar» pinta lo obligatorio que falta en terracota (con su acción) y los avisos en ocre; «Enviar a revisión» se activa en cuanto no queda ningún terracota.
+- **La capacidad deja de ser obligatoria:** si falta, el admin la pide con «Pedir cambios» al revisar.
+- **Las fotos pasan a ser obligatorias al enviar** (antes bastaba con una al aprobar; el admin sigue sin poder aprobar una casa sin foto).
+- «Falta: …» de Mis casas y el paso donde se retoma un borrador cuentan solo los obligatorios. La edición de una casa publicada no cambia: sigue con las reglas por dato (`validateStep`).
+
+## 2026-10-30 · SEO: páginas de zona fuera de v1 (Daniel)
+
+Decisión sobre el SEO del análisis de viabilidad (`docs/viabilidad-y-proyecciones.md`, punto 9.5). Sin páginas por provincia ni cantón en v1; la regla 1 de `CLAUDE.md` no cambia.
+
+- **Canal principal:** captación directa de propietarios y reparto de la ficha por WhatsApp (`docs/marketing.md`). El tráfico orgánico de zona no sostiene la oferta en el lanzamiento.
+- **Lo que ya indexa Google en v1:** la portada, la ficha `/casa/CT-####` (SSR con título, foto y precio) y el sitemap de casas. Cubre búsquedas de una casa concreta; no cubre consultas genéricas como «casas en Puerto Viejo».
+- **Sin datos de búsqueda:** el dominio no tiene impresiones en Search Console y GA4 no conectó (timeout). Decidir zonas sobre supuestos sería apostar a ciegas.
+- **Si se reabre (post-lanzamiento):**
+  - Ruta del worker `GET /casas/:provincia/:canton`, con el mismo `renderToString` que la ficha y una sola consulta por pantalla (casas activas de la zona, foto de portada resuelta).
+  - Caché del borde con `Cache-Tag: zona:<slug>`; Postgres (`pg_net`) purga las zonas afectadas al aprobar, bloquear, pausar, cambiar precio o portada, y al aprobar un cambio de cantón (se purgan la zona vieja y la nueva).
+  - Indexable con 10 o más casas activas y texto propio por zona; con menos, `noindex`; con cero, 404 y `noindex`. Umbrales propuestos, sin medir.
+  - Sitemap de zonas generado desde el mismo recuento y regenerado al purgar; paginación de 24 con `rel=next` y canónica por página; filtros de Explorar con `noindex`.
+  - La regla 1 pasaría a «SSR solo en la ficha y en las páginas de zona»; la prueba de hidratación de CI se amplía a la página de zona.
+- **Disparadores para reabrirlo:** impresiones sostenidas en Search Console para consultas por zona, y una zona con 10 o más casas activas.
+- **Decisiones abiertas al reabrirlo:** esquema de URL (propuesta: cantón, no distrito); quién escribe el texto de cada zona.
+
+## 2026-10-29 · Revisión UX, segunda ronda: navegación, Cuenta, calendarios y negritas (Ana)
+
+Decisión de Ana, punto por punto sobre la app y maquetas hechas con ella. Detalle, maquetas y estado de cada punto: `.scratch/revision-ux/2026-10-29-revision-ux.md`. Construido el 2026-10-30 salvo lo marcado como pendiente.
+
+- **Pestañas (C4):** viajero, **Explorar · Favoritos · Ingresar** («Cuenta» con sesión); propietario, **Explorar · Mis casas · Calendario · Consultas · Cuenta**, con Favoritos como fila de Cuenta. Fuera la barra superior con el logo salvo en Favoritos (logo y ₡ | $). «Ingresar» sale de la cabecera de Explorar. El selector ₡ | $ solo en Explorar, Favoritos y el Calendario del propietario.
+- **Cuenta (C5):** pestaña sin flecha ni título; el número en su línea con «WhatsApp verificado» debajo; la fila del método de pago solo cuando toca.
+- **Puertas para publicar (A8):** tarjeta al final de Explorar para quien no tiene casas y fila en ocre «¿Quiere publicar su casa gratis?» en Ingresar y en Cuenta. Sin botón de publicar en la cabecera de Explorar.
+- **Consultas (C1):** la pestaña «Actividad» pasa a **«Consultas»**, solo las consultas, las nuevas primero, «Todas» por defecto; las cifras de 30 días van al detalle de cada casa. Sustituye en esto lo del 2026-10-29 de Daniel (Actividad).
+- **Mis casas (A3, A4):** ordenada por acción pendiente (cambios pedidos, pago, borrador; luego activas; al final en revisión); el borrador abre con «Seguir publicando» y lo que falta; una casa no activa no ofrece «Compartir ficha».
+- **Suscripción (A2):** oferta arriba; las casas que necesitan algo, primero; «Parar suscripción» como texto al final; «¿Cómo funciona el cobro?» plegado; sin método, el próximo cobro dice «Nada hasta el …».
+- **Paso 9 (A9):** lo que falta es una acción que lleva a su pantalla, y «Enviar a revisión» espera a que esté todo.
+- **Calendario del propietario (A1, C4):** abre arriba del todo con la casa (selector a todo el ancho), «Cerrar la casa hasta…», ₡ | $ y el mes actual entero. Casillas de 47 × 92 px, 6 px entre ellas y 14 px de margen; número arriba y **precio completo sin «₡» ni redondeo** («38 900»; sustituye «₡38 mil» del 2026-10-29 de Daniel); fondo verde al 6 %; ocupados en terracota con rayas y solo el número; días pasados tachados; **sin ★** (solo se ve la cifra distinta); selección con un marco terracota al 60 %, sin relleno. Con días seleccionados el panel va pegado abajo y se van las pestañas; «Guardar cambios» de 44 px y en gris hasta que hay un cambio. La barra de pestañas se esconde al bajar y vuelve al subir (solo en el Calendario).
+- **Calendario de la ficha (N4):** el mismo formato, un mes a la vez con ‹ ›, solo para mirar. Elegir días ahí queda para la siguiente revisión.
+- **Hoja de contacto (N2):** las fechas con el mismo calendario de rango que «¿Cuándo?» (dos casillas «Elegir fecha» que lo abren; con el mensual, una sola «Desde»), no con el selector del sistema. El mensaje deja de ser editable: vista previa en gris que sigue a fechas y personas, y debajo «Podrá añadir lo que quiera en WhatsApp antes de enviarlo.»; la consulta guarda siempre el mensaje redactado. Personas sigue con «–» sin indicar (Daniel, 2026-10-29).
+- **«¿Cuándo?» (N9):** el calendario mide lo que queda libre para que «Siguiente» se vea siempre encima de la barra de abajo.
+- **Negritas (T1):** 600 para títulos de pantalla y de casa, precios principales y el botón principal; 500 para lo demás (variables `--w-strong` y `--w-medium`). Títulos en `--fg` al 85 % (`--fg-title`).
+- **Mapa de Explorar (C2):** el alto y la estructura no cambian. En Safari (sin `requestIdleCallback`) Leaflet se pide al pintar, no 1,5 s después, y mientras llega la caja ya enseña los precios; el encuadre deja medio marcador de margen y los marcadores que se pisan van juntos en uno, «N casas» (en el mapa grande, tocarlo acerca el mapa a esas casas; en el pequeño, abre el grande).
+- **Cambios de una casa publicada, dato a dato (A5).** Sustituye «una sola edición a la vez» y la revisión de la edición entera (2026-10-29, editar casa): el nombre, el tipo, la descripción, la ubicación y cada foto nueva van a revisión en cuanto se guardan («Enviar a revisión», con el aviso «Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven «…».»); fuera el estado «Edición sin enviar», el bloque ocre y el botón general. Se puede cambiar otro dato, o el mismo, mientras hay cambios en revisión: cuenta el último valor enviado. En la ficha editable cada dato pendiente enseña su valor nuevo con «En revisión» o «Cambios pedidos» (y la nota) y su propio «Descartar». El admin aprueba o pide cambios en cada dato y cada foto por separado; lo aprobado se publica al momento; si el propietario lo vuelve a enviar o lo descarta mientras el admin lo tiene abierto, no se decide. Base: `listing_edit_fields` (estado, nota y envío por dato) y lo mismo en `listing_edit_photos`; RPCs `discard_edit_field`, `review_edit_field` y `review_edit_photo`; fuera `submit_edit` y `review_edit` (migración `20261030092712_revision_por_dato`, pendiente de `db push` a `bnbtico-pruebas`). Una descripción aprobada fuera de la regla ya no bloquea cambiar otro dato (como el nombre en publicar v2).
+
+## 2026-10-29 · Letra, ficha, calendarios y un sistema de color más sobrio (Daniel)
+
+Decisión de Daniel, comparando con Airbnb en el teléfono, sobre capturas y muestras de cada opción. Tokens 0.2.2.
+
+- **Letra +2 px** en todo el texto de 22 px o menos (base 15 → 17, pequeño 13 → 15, etiquetas 12 → 14, pestañas 11 → 13); los títulos de 24 px o más no cambian. Para que todo quepa: cifras de las casillas de calendario más pequeñas; «Precios orientativos…» de la barra fija a 13 px (12 px por debajo de 400 px) para que la barra no pase de 150 px en un iPhone SE (C3); mapa del paso 2 con mínimo de 160 px; en pantallas bajas, las notas del paso 9 a 14 px; la fila «L K M J V S D» del calendario del propietario, fija a 26 px.
+- **Una sola letra:** Figtree para todo, con los títulos en 600 (antes Outfit 800, «tipo cómic»). Una fuente menos que descargar. Outfit sigue en `/fonts` solo para la portada.
+- **Esquinas menos redondeadas:** botones, campos, chips, selector «₡ | $» y búsqueda 8 px; etiquetas 6 px; tarjetas y fotos 12 px; hojas 16 px. Botones de icono, avatares y puntos siguen en círculo.
+- **Cabecera de la ficha, centrada como en Airbnb:** nombre, «zona · ubicación aproximada» y «N personas · habitaciones · baños»; una línea; la persona que alquila en su fila (avatar de 40 px, nombre y debajo «WhatsApp verificado»); otra línea; la descripción. Corrige en parte la revisión UX A10: la persona baja de justo bajo el nombre a después de la zona y las personas, que así se ven sin scroll en un iPhone SE.
+- **Descripción en párrafos y «Ver más»:** una línea en blanco separa párrafos; si en el teléfono pasa de unas 9 líneas (estimación por caracteres y saltos en `src/domain/description.ts`, igual en servidor e hidratación: sin saltos de la página) se ven 8 con la última difuminada y «Ver más», que abre la descripción entera a pantalla completa («Descripción», flecha). Atrás del teléfono, la flecha y Escape la cierran sin salir de la ficha.
+- **Calendario de la ficha con el precio de cada noche.** Corrige la fase 4 («cifra solo en los días ★»). Casillas de 58 px, juntas (2 px), esquinas de 8 px; disponibles en verde tonal suave (9 %). Un día ocupado no dice su precio a los lectores de pantalla. Se probó una cuadrícula de líneas y se descartó.
+- **Rango de «¿Cuándo?»:** los extremos son cuadrados de 8 px, no círculos.
+- **Precios de las casillas sin la «k» inglesa:** «₡55 mil», «₡1,2 M» (con espacio que no se parte), en los dos calendarios; por debajo de 360 px de ancho el «₡» se oculta y queda «55 mil» (el precio base con su «₡» va debajo de la rejilla).
+- **Un verde, un terracota:** el verde lleno (al 85 %) solo para la acción principal («Continuar», «Compartir ficha», «Enviar a revisión»…); todo lo demás en **verde tonal** (el verde al 14 %): botones secundarios (los de contorno, «Ver más», «Explorar casas», «Ingresar», «Atrás»…), lo elegido (chips, selector «₡ | $», «Disponible / Ocupado») y el salvia claro de antes (`--state-soft`, días libres, «1 activa», avatares, «Activa», notas verdes), estos últimos mezclados con el crema para ser opacos sobre fotos. Desaparece el salvia `#7FA98A` de la interfaz. El terracota sale del logo (`#D65C3C`): ocupados al 9 % con rayas y «Ocupado» en `--brand-ink`; en «¿Cuándo?», extremos al 50 % y banda al 9 %; la pestaña activa de la barra, el icono en el color del logo y la etiqueta en `--brand-ink` (el del logo no llega a 4,5:1 en texto pequeño). El botón de WhatsApp no cambia (es la acción clave y su verde se reconoce).
+- **Ocre y beige más suaves:** ocre del pago al 70 %; beige de lo que no está elegido (chips, selectores) al 55 %.
+- **+ / − y ✕ sin fondo:** solo el signo en verde (26 px), con la zona táctil de 44 px y un fondo tonal un instante al tocar; desactivados, tenues. En «¿Quiénes?», sin personas sale «–» en gris, como en la hoja de contacto y el asistente (antes «Sin indicar»).
+- **Sin contornos (las líneas de separación sí):** los controles no llevan contorno; se distinguen por un fondo semitransparente (− / + en verde tonal, lo elegido en verde tonal al 26 %, filtros y selectores en beige, campos en blanco con borde verde solo al escribir, botones terracota de contorno en terracota tonal). Botones de icono, contadores y barras también cuadrados (8 px); solo los avatares de las personas y los puntos de estado siguen redondos. Los botones sobre las fotos (volver, compartir, corazón), crema al 70 %. Las líneas que separan secciones se mantienen: la de debajo de la cabecera de Explorar (con más aire) y las de la ficha alrededor de la persona.
+- **Blancos al 70 %** (`--surface-soft`) en tarjetas y recuadros fijos; campos, hojas y lo que flota sobre mapas o fotos, opacos. Los recuadros con un botón dentro pasan de arena o verde a blanco con borde («Compare y escriba directo», «¿No encuentra lo que busca?», «Revise las fechas»).
+- **Pendiente:** llevar la misma regla (un tono base y mezclas con el crema, más una tinta oscura para texto) al ocre y a los tokens de `design/tokens/tokens.json` de forma completa, con muestrario.
+
+## 2026-10-29 · Suscripción por casa, Cuenta y Actividad (Daniel, ronda de Ana, F y G)
+
+Decisión de Daniel. Especificación: `.scratch/cuenta-y-actividad/spec.md`.
+
+- **«Suscripción» desde una casa** es `/propietario/suscripcion?casa=CT-####`: solo esa casa, «Método de pago» y «Cómo funciona», sin la oferta de lanzamiento; con dos o más casas, el enlace «Ver todas sus casas» lleva a «Promoción y suscripción» (sin `casa`). `#pago=CT-####` sigue resaltando la casa. Al abrirla con `casa` se vuelve a leer `owner_billing` siempre, y `casa` solo se quita cuando los datos llegaron de la base después de abrir la pantalla, sin error, y la casa no está (sin red o si la lectura falla, `casa` se queda y no se enseñan las demás casas; igual en Actividad con `?casa=`) (una casa aprobada hace minutos puede faltar en la copia guardada en el teléfono). La pasarela vuelve a `?casa=CT-1042#pago=CT-1042` cuando se pagó desde una casa (`?pago=ok` se limpia al volver, sin perder `casa` ni el hash).
+- **«Activar suscripción»** en ocre sustituye a «Reactivar» en las casas paradas. Revierte en esto lo del 2026-10-27 («Fase 5, ticket 05»).
+- **Cuenta:** la fila «Método de pago» sale en ocre con «Falta · añádalo antes de que termine su oferta» solo cuando no hay método y alguna casa ya lo necesita (la misma regla que «Añadir método de pago»: pendiente de pago o con un aviso de 90/30/7/0 días en curso); sin método y sin aviso, fila normal con «Ninguno todavía»; las líneas de la suscripción pendientes o inactivas van en ocre y cada una lleva a la suscripción de su casa.
+- **«Cerrar sesión»** al final de Cuenta, discreto, con confirmación («¿Cerrar sesión?», «Tendrá que recibir un código nuevo para volver a entrar.»). La hoja de confirmación se comparte con «Parar suscripción» (`confirm-sheet`, con su propia entrada de `size-limit`, «Hoja de confirmación», y su exclusión del JS inicial); al cerrarla el foco vuelve al botón que la abrió.
+- **La sesión no caduca mientras se use:** sin `timebox` ni `inactivity_timeout` en `[auth.sessions]` (ver `docs/configuracion-supabase.md`). Passkeys, después del lanzamiento.
+- **Identidad:** la línea «Pronto podrá verificar también su identidad (opcional).» de Cuenta es el único texto de identidad de la v1.
+- **Actividad:** cada consulta lleva la etiqueta de su casa (miniatura redonda y nombre) y, con dos o más casas publicadas, chips «Todas · <casa>…» bajo «Últimas consultas», en la URL como `?casa=<uuid>`. El filtro se aplica antes de tomar las 20 más recientes, así una casa tranquila no sale vacía. Un borrador no lleva chip. Revierte la retirada de los chips del 2026-10-27 («Navegación simple»).
+- **Resoluciones:** `scopeBilling` y las reglas de los chips están en `src/domain` (archivos nuevos) para no engordar los trozos con presupuesto; el enlace «Cambiar»/«Añadir» de «Método de pago» en la pantalla sin `casa` vuelve sin `casa`; el botón de pago de una casa en esa pantalla vuelve con su `casa`.
+
+## 2026-10-29 · Publicar v2: enviar sin fotos, verificar después del paso 1 (Daniel, ronda de Ana, E)
+
+Plan: `.scratch/publicar-v2/`. Sustituye al mínimo de 5 fotos y a la descripción obligatoria (fase 2, ticket 19; C4 del 2026-10-26) y al botón de WhatsApp de la portada (C1) cuando la portada no es solo-portada.
+
+- **Enviar sin fotos ni descripción.** Para enviar a revisión hacen falta el WhatsApp verificado, tipo, punto y zona, capacidad, nombre de 5 a 32 caracteres y precio por noche. La descripción es opcional (vacía o de 80 a 2000); las fotos, de 0 a 15 (`MAX_PHOTOS`).
+- **Aprobar exige al menos una foto** (`MIN_PHOTOS_TO_APPROVE = 1`, también en SQL). Con 0 fotos el admin ve «Sin fotos: solo puede pedir cambios.», «Aprobar» se rechaza con «Para aprobarla hace falta al menos una foto.» y «Pedir cambios» propone la nota «Para publicarla necesitamos al menos una foto de la casa.».
+- **Nombre de 5 a 32 caracteres, sin migración de datos:** los nombres más largos que ya existen se quedan hasta que se editen. La migración `20261029155916_publicar_v2.sql` redefine también las funciones de la edición de la decisión D (`listing_edit_check`, `save_edit`): la edición sigue el 5–32 y `save_edit` solo topa la descripción en 2000.
+- **`/publicar` sin cuenta:** el paso 1 (tipo) se responde sin cuenta y se guarda en el teléfono siete días (`bnbtico-publicar-paso1`; lectura escrita a mano, sin zod, para que zod no entre en el JS inicial). Después, `/publicar/verificar` (Ingresar y Código en modo publicar, evento `publish_verify`) y `/publicar/continuar`, que crea el borrador con lo guardado y abre el paso 2; una recarga a mitad reutiliza un borrador vacío de menos de 10 minutos en vez de crear otro.
+- **Sin «Ya tengo cuenta» en este flujo:** parte del teléfono; quien ya tiene cuenta entra con su número y el código y sigue igual.
+- **Correo opcional después de enviar:** «¿Quiere añadir un correo?» (una vez; «Ahora no» se recuerda en `bnbtico-correo-omitido`). Sustituye a «Añadir correo a mi perfil» / «Ahora no · continuar» tras el código.
+- **Registro:** a toda cuenta nueva sin `next` de contacto ni de publicar se le pregunta «¿Tiene una casa para alquilar?» («Sí, quiero publicarla» / «No, busco casa»), con el enlace «Añadir un correo de recuperación».
+- **Portada:** el botón de propietarios lleva a `/publicar` salvo en `landingOnly` (producción antes del lanzamiento, donde sigue el de WhatsApp). `withOwnerCta` conserva los marcadores `<!--cta-propietarios-->`: en producción con `WA_OWNERS` la portada gana dos comentarios HTML invisibles.
+- **Tamaño:** nueva entrada de `size-limit` «Entrada de publicar» (5 KB) para el trozo diferido de `/publicar`; ningún límite existente sube.
+
+## 2026-10-29 · Editar una casa publicada sin sacarla de Explorar (Daniel, ronda de Ana, D)
+
+Especificación: `.scratch/editar-casa/spec.md`; maquetas `design/pantallas/v2/08-casa-editable.html` (08a–08d).
+
+- **Datos al momento y datos con revisión:** personas, habitaciones y baños, características (con el tipo de parqueo), precio por noche, alquiler mensual y su precio, el orden de las fotos y quitar una foto se guardan al momento (`update_listing_live` y las RPCs de fotos). Nombre, tipo, ubicación, descripción y las fotos nuevas pasan por la revisión del admin.
+- **Una edición por casa** en `listing_edits` (clave primaria `listing_id`; fotos nuevas en `listing_edit_photos`): `open` (sin enviar) → `review` (enviada) → aplicada (la fila se borra) o `changes` (el admin pide cambios; se corrige y se reenvía). Mientras haya una, no se abre otra; en revisión queda congelada. «Descartar cambios» está siempre (sin enviar, en revisión o con cambios pedidos) y borra la edición y sus fotos nuevas.
+- **Sin «Rechazar» para una edición:** el admin aprueba o pide cambios; el propietario siempre puede descartarla.
+- **Una casa publicada nunca vuelve a borrador:** fuera `reopenForEdit`/`useReopen` y la fila «Editar la ficha · vuelve a revisión» para las activas; `listings_protect` ya no deja pasar de `active` a `draft` (sigue para `changes` y `rejected` de las que nunca se publicaron).
+- **La versión aprobada sigue pública todo el tiempo:** la casa sigue activa y `listings_public`, la búsqueda y la ficha SSR leen solo `listings` y `listing_photos`, que la edición no toca hasta que se aprueba.
+- **Storage:** se puede subir a la carpeta de una casa publicada mientras su edición no esté en revisión (`listing_photo_uploadable`, con el mismo tope de 45 objetos, 15 fotos × 3 variantes); borrar un objeto solo si ninguna fila de `listing_photos` ni de `listing_edit_photos` lo enlaza (`photo_unreferenced`), así el navegador limpia lo que quitó o descartó y nunca una foto en uso.
+- **Tres migraciones en vez de una** (`editar_casa_publicada`, `editar_casa_ediciones`, `editar_casa_revision`): tablas, datos al momento y guardas; las RPCs de la edición; la revisión del admin. Cada una con sus pruebas antes de la siguiente.
+- **Ficha editable** (`/propietario/casas/$id`, trozo diferido `casa-editable-*`): arriba solo el bloque de dinero (pendiente de pago o parada, en ocre); el aviso de la edición en arena; la portada con «N fotos · Editar»; una fila por dato. El aviso sigue la copia del spec («Mientras tanto, los clientes ven la versión aprobada.»), sin el «Le avisamos por WhatsApp» de la maqueta: el aviso automático por WhatsApp de la decisión queda fuera de alcance. El bloque de la parada se titula «Suscripción parada» (no «pausada» como la maqueta), con el texto de la maqueta. En la ventana del aviso (90/30/7 días) la tarjeta ocre sale en Mis casas; en la ficha, la fila «Suscripción».
+- **Tamaño:** las reglas de los formularios (`step-forms-*`), que comparten el asistente y la edición, van en su propio trozo con su entrada de `size-limit` (1 KB), fuera del JS inicial.
+
+## 2026-10-29 · Explorar al estilo Airbnb: Dónde · Cuándo · Quiénes, fechas libres y el mapa en la lista (Daniel, ronda de Ana, A)
+
+Especificación: `.scratch/explorar-airbnb/spec.md`; maquetas en `design/pantallas/v2/`.
+
+- **Estructura de Explorar:** sin barra superior. Cabecera propia (fija al subir, según la maqueta aprobada): píldora de búsqueda «Empiece su búsqueda» (o el resumen «Cocles · 23–27 nov · 4 personas») y el botón de cuenta; debajo, la fila de chips con «Solo alquiler mensual», el botón de filtros («Filtros (2 activos)») y «₡ | $» al final. Las otras cuatro pestañas conservan la barra superior. Una casa por fila (tarjeta grande).
+- **Pantalla de búsqueda** (`/explorar/buscar`, pantalla completa, trozo diferido `buscar-*`): tres tarjetas, una abierta a la vez: ¿Dónde?, ¿Cuándo? y ¿Quiénes? (1 a 50 personas). «Cerrar la búsqueda» vuelve sin aplicar.
+- **Zona:** se busca entre las zonas que tienen casas (`zones_with_listings`, con su provincia); con una zona elegida manda la zona y se muestran las casas a **5 km o menos** de su punto (más las que la tienen como `zone_id`); elegir una provincia quita la zona. Sin zona, Explorar sigue arrancando en Limón.
+- **Filtro de fechas, ahora:** se deja de esperar el disparador de A11 (revisión UX 2026-10-26). Una casa **no aparece** (queda fuera) si alguna noche de llegada a salida (la salida no cuenta) está ocupada. **Mensual:** «Desde» = 30 noches desde esa fecha. **Las casas cerradas a consultas nunca aparecen**, tengan o no fecha de reapertura (`reopen_at` no cuenta: solo `available`). Se mantiene «nunca "Disponible"» y nunca un total.
+- **Mapa:** el mapa con precios es el primer elemento de la lista; el botón flotante «Mapa» lo abre a pantalla completa y «N casas» vuelve a la lista (Atrás también). Sin agrupación de marcadores en v1 (hay pocas casas).
+- **WhatsApp:** la hoja de contacto arranca con las fechas y las personas de la búsqueda, y el mensual escribe «Me interesa alquilar por meses desde el …» (ver `docs/contacto-whatsapp.md`).
+- **Resoluciones del plan:** la copia de la maqueta manda sobre la del spec («8 casas en Cocles y alrededores», «Talamanca, Limón», «Cerrar la búsqueda», la línea mensual «Casas libres del … al …» y «Añadir fechas/personas» en las tarjetas cerradas); el botón de filtros conserva el nombre accesible «Filtros»; el rango del calendario usa los colores del ajuste de accesibilidad de B (`#D9775A` en los extremos, `#F7E6D8` en la banda) y no la «salvia» del spec; la zona de Cocles es `704-cocles` (Talamanca es 704); `search_submit` guarda qué partes iban puestas en la columna nueva `events.search_flags` (`zona|fechas|personas`; la tabla no tiene carga útil); la provincia entra en `zones_with_listings`.
+- **Resoluciones de la revisión:** la cabecera de Explorar es fija (maqueta aprobada); los colores de los marcadores son los de las maquetas; el chip «Solo alquiler mensual» encendido se acorta con «…» a 360/375 px; la marca «fechas» de `search_submit` cuenta solo las fechas que de verdad se mandan; el mapa a pantalla completa y su pegamento con Leaflet van cada uno en su trozo diferido (`explore-map-full-*` y `explore-map-leaflet-*`); si la base rechaza las fechas («Revise las fechas.», p. ej. un enlace viejo), Explorar dice «Revise las fechas de su búsqueda.» con «Quitar fechas» en vez del error de conexión; en ¿Dónde? una zona que ya no está en la lista se muestra como «Añadir zona»; sin agrupar marcadores en v1; **antes del lanzamiento hay que revisar la política de uso de teselas de OpenStreetMap** (`docs/antes-de-produccion.md`).
+
+## 2026-10-29 · Densidad, tarjetas con la etiqueta en la foto y calendario en vertical (ronda de Ana, B y C)
+
+- **Margen 16 px:** las pantallas, las filas de chips, la tira de fotos y las barras fijas (superior, «Atrás / Continuar», la de la ficha y el panel del calendario) usan `--gutter` (16 px, antes 20). La portada no cambia.
+- **Iconos más grandes:** pestañas 26 px (antes 22), iconos de las filas 24 px, características de la ficha 26 px.
+- **Terracota de texto `#B44C30`** (blanco encima 5,1:1; sustituye a `#BF4D2E`) para el texto pequeño terracota, contadores, «Nueva», marcadores del mapa y la pestaña activa; `#D65C3C` queda solo para el logo, los corazones y lo grande.
+- **La selección no depende solo del color:** ✓ delante de los chips elegidos (los de `aria-pressed`; no los de navegación) y el lado elegido de «₡ | $» en negrita.
+- **Prueba de contraste en CI** (`tests/unit/contrast.test.ts`): los pares de colores con texto del tema claro, ≥ 4,5:1. Colores del calendario: libre `#DCE8DF`, ocupado `#F7E3D3` con texto `#9A4B2A`; «¿Cuándo?» `#D9775A` con número `#1C2B2A` y banda `#F7E6D8`. Tokens 0.2.1.
+- **Ocre (`--sun`) solo para dinero y avisos de pago**, con una prueba que lo vigila (`tests/unit/ocre.test.ts`, lista de permitidos). Se queda: «Pendiente de pago» (etiqueta, tarjeta y nota), «Añadir método de pago» / «Activar suscripción», la tarjeta de oferta y la casilla «por pagar» de Mis casas, Promoción y suscripción, y el aviso «no pague por adelantado» de la hoja de contacto. Cambia: «Cambios pedidos» pasa a la etiqueta de revisión; la nota de bnbtico y la tarjeta «Le pedimos cambios» / «Anuncio rechazado» a arena, con «Corregir y reenviar» en verde; en el admin, la casilla «con cambios» a revisión, el aviso de sincronización fallida y «Faltan fotos» a arena y «Zona propuesta por el dueño» a neutro; «No disponible por ahora» (ficha) a neutro; «Actualizar» del aviso de versión en verde. En el tema oscuro el texto del contador sobre `--brand-ink` pasa a `--bg` (contraste ≥ 4,5:1, probado).
+- **Mis casas siempre en lista, una casa por fila** (también con una sola; Daniel, 2026-10-29): foto cuadrada con la etiqueta de estado encima (`cardLabel`), nombre y zona; sin precio ni texto extra. Un borrador es un solo elemento: «Seguir publicando» en contorno y «Descartar» (texto); nada arriba salvo el aviso del pago. Activa: «Compartir ficha» relleno + «Calendario» en contorno; pendiente de pago: «Añadir método de pago» (ocre); parada: «Activar suscripción» (ocre); como mucho un botón relleno por tarjeta. «Nueva» pasa a un «+» redondo en contorno junto al título (`aria-label` «Nueva casa»). Las líneas de la suscripción se ven en el detalle (fila «Suscripción»). La cabeza de la tarjeta es `HouseCardTop` (`client/house-card.tsx`), para Mis casas y Actividad; va en el trozo de las pestañas (22,52 KB de 24,5).
+- **Actividad usa la misma tarjeta** (`HouseCardTop`): con dos o más casas, de dos en dos con las cifras apiladas; con una sola, a toda la fila y las tres cifras en grande debajo (una casa que no está activa muestra su etiqueta y el mensaje vacío). Se mantiene «toques en WhatsApp» (no el «WhatsApp» corto de la maqueta).
+- **Calendario del propietario en vertical:** sin flechas; los meses van uno debajo de otro, del actual al último de la ventana (hoy + 365), con la fila «L K M J V S D» fija bajo la barra superior y el título de cada mes fijo debajo. Casillas altas (≥ 64 px, `MonthGrid size="tall"`) con el número arriba a la izquierda y el precio corto dentro («₡95k»; el completo, en el panel al tocar); cada mes llena el alto visible. Solo se montan las rejillas a una pantalla de la vista (un `IntersectionObserver`; no se desmontan). Se eligen días de meses distintos a la vez. `?mes=` lleva a ese mes al abrir y desplazarse no reescribe la URL. Ocupado en `#F7E3D3` con rayas finas y «Ocupado» en `#9A4B2A` (también en la ficha, que sigue con su mes y sus flechas). Trozo del calendario: 7,34 KB de 8.
+- **Ficha con la foto cuadrada a todo el ancho:** en el teléfono el hero es 1:1, de borde a borde y sin esquinas, pegado arriba (detrás del notch, como el diseño `design/pantallas/v2/06-ficha.html`); solo los botones se apartan del área segura (`top: calc(12px + env(safe-area-inset-top))`). En escritorio sigue a 480 px con esquinas. La portada mantiene `fetchpriority="high"`, `loading="eager"`, `decoding="sync"` y `sizes="100vw"`; su `srcset` ya era solo 480/800, así que no hizo falta el plan B de quitar la de 1600. Lighthouse: ficha en frío 1,63 s (< 2,0 s).
+- **Ficha sin «₡ | $»: la barra muestra colones y dólares** (Daniel, 2026-10-29; revierte el selector de la ficha de «Navegación simple», 2026-10-27). A la izquierda la noche y el mensual en colones; a la derecha, «≈ $» por noche y por mes (con el tipo de referencia en el `title`); debajo del botón, «Precios orientativos: el precio final lo acuerda con el propietario.» (también con «No disponible por ahora»). Fuera «· orientativo» y la cifra fantasma. La barra no depende de la moneda elegida y el tipo de cambio lo siembra el worker, así que el servidor y la hidratación pintan lo mismo: no hace falta caja tras hidratar. «₡ | $» sigue en la barra superior de las pestañas (Explorar, Favoritos, calendarios); el calendario de la ficha sigue la moneda elegida en sus cifras. Para que en un iPhone SE se sigan viendo la zona y las personas sin scroll, la barra pasa a 8 px entre filas y 16 px abajo (más el área segura).
+- **Nombre de la casa a 28 px en la ficha** (como la maqueta v2 `06-ficha`; antes 30 px, regla del 2026-10-26; los nombres largos siguen a 24 px) y **filas del paso 9 de 40 px en pantallas de 700 px de alto o menos** (antes 44). Motivo: en CI (Chromium en Linux) las mismas fuentes salen ~4 % más anchas que en el Mac; a 30 px «Casa Cocles mensual» pasaba a dos líneas a 320 px, la zona se quedaba bajo la barra fija, y en el paso 9 la nota de la oferta ocupaba tres líneas y la pantalla hacía scroll a 375 × 667.
+- **"Cerrar la casa hasta…" arriba del Calendario de cada casa activa (antes "Anuncio visible" en el detalle):** misma función (`set_listing_available`), reapertura opcional; la hoja se llama "Cerrar la casa". Cerrada, la fila dice «Cerrada hasta el 3 dic» (o «Cerrada: no aparece en Explorar ni recibe consultas») con «Abrir la casa», en un toque. La hoja va en su propio trozo diferido (`close-sheet-*`, 1,12 KB de 1,5) y sale del trozo de las pestañas.
+
+## 2026-10-28 · Arreglos de la revisión de Ana
+
+Decisión de Daniel, tras las pruebas de Ana desde el teléfono.
+
+- **Paso 2, «Otra…»:** mientras se escribe, la lista «Zona» dice «Otra…»; después muestra el nombre elegido como opción marcada, con «Otra…» al final para cambiarlo; «Continuar» espera mientras «Otra…» está abierta. El campo sube por encima del teclado y de la barra «Atrás / Continuar» (también al tocarlo ya enfocado, cuando el teclado encoge la vista y al cerrarlo); el sitio de la barra es ahora el último elemento del paso, no un relleno, para que un paso que no cabe pueda subir su último campo.
+- **Paso «Nombre y descripción»:** la descripción llena el alto que queda hasta la barra o el teclado, con el teclado abierto y cerrado (`publish/fill-height.ts`).
+- **Mis casas:** toda la tarjeta abre el detalle (enlace estirado en el título); «Compartir ficha», «Calendario», «Seguir», «Descartar», «Reactivar» y el pago siguen por encima. Sin manejadores de toque: arrastrar sobre una tarjeta desplaza la lista.
+- **Favoritos:** «Escribir» pasa a «Enviar WhatsApp», con el icono y el verde de «Contactar por WhatsApp», en pequeño. Mismo destino (la ficha con la hoja de contacto abierta).
+- **Pestaña:** «Mi casa» con una sola casa, «Mis casas» con dos o más (`tabsFor`). Los títulos de pantalla no cambian.
+- **Detalle de una casa:** fuera la fila «Calendario y precios»; la pestaña Calendario y el botón «Calendario» de la tarjeta de Mis casas ya lo cubren. Se borran `occupiedNightsLabel` y `occupiedNightsIn`.
+- **Filtro mensual:** el chip de Explorar y el interruptor de Filtros dicen «Solo alquiler mensual» (`MONTHLY_FILTER_LABEL`); la característica de la ficha, el resumen del admin, la pregunta del asistente y la línea de resultados no cambian. Cabe en una fila a 360 y 375 px.
+
+## 2026-10-27 · Fotos: ordenar arrastrando
+
+Decisión de Daniel (lluvia de ideas «Mejoras fase R y 3», proyecto 3 de 4). Especificación: `.scratch/fotos-arrastrar/spec.md`.
+
+- **Qué:** mantener pulsada una foto (~400 ms) la levanta (×1,05, vibración en Android). Al arrastrar, las demás se apartan. Al soltar, el orden se aplica al instante y se guarda con una sola llamada a `reorder_listing_photos`. Si falla, vuelve el anterior con «No pudimos cambiar las fotos. Intente de nuevo.». Moverse más de 8 px antes o un toque corto cancela, y el scroll sigue funcionando.
+- **Quitado:** tocar para elegir, «Hacer portada», «← Antes» y «Después →». La portada es la primera y se cambia arrastrando a la casilla 1.
+- **Accesible:** dos botones ocultos por foto, «Mover foto N antes/después», que se ven al enfocarlos con el teclado. Usan `aria-disabled` en los extremos, para no perder el foco. El foco sigue a la foto y se anuncia «Foto movida a la posición N».
+- **Regla que cambia:** «nada se reordena en el navegador por su cuenta» deja de valer para el orden (optimista). Subir y quitar siguen releyendo antes de mostrar.
+- **Cómo:** sin librería: Pointer Events, `setPointerCapture`, rAF, solo `transform`. Un `touchmove` no pasivo impide que el navegador se quede el gesto tras levantar. Pruebas con toques reales por CDP (`tests/e2e/helpers/touch.ts`).
+- **Trozo propio:** el paso de las fotos es ahora un trozo diferido (se pide al llegar al paso 7) con entrada nueva en `size-limit`, «Fotos del asistente» (5 KB; mide 4,97 KB). El asistente de publicar pasó de 14,95 a 13,02 KB de 15.
+- **Si el trozo no carga:** una barrera de error en el paso muestra «No pudimos cargar las fotos. Revise su conexión.» con «Reintentar».
+- **Decisiones menores:** soltar fuera de la rejilla deja la foto en la última casilla mostrada. Un segundo dedo cancela antes de levantar y se ignora después. Durante una subida no se puede arrastrar. La foto soltada salta a su casilla, sin animación de asiento.
+- **Pruebas manuales:** U54–U58 en `docs/pruebas-manuales-revision-ux.md` (los U44–U48 de la especificación ya estaban en uso por «Navegación simple»).
+
+## 2026-10-27 · Ubicación por punto: el mapa decide provincia, cantón y zona
+
+Decisión de Daniel. Especificación: `.scratch/ubicacion-por-punto/spec.md`. Sustituye al paso 2 «¿Dónde está?» (selects de provincia y cantón + zona en texto) y al paso 3 (mapa) de `docs/diseno-v1.md`.
+
+- **El pin es la fuente de verdad.** Provincia, cantón y distrito los calcula Postgres (`place_at`, PostGIS) y no se editan; `submit_listing` los recalcula.
+- **La zona** deja de ser texto libre: un selector con las zonas a menos de 5 km (`zones_near`), el distrito y «Otra…» (Photon a 5 km y «Usar "…"»). Cascada de selects y zonas frecuentes, fuera.
+- **Los ids de paso siguen estables (1, 2, 4–9);** el usuario ve 8 pasos y el precio sigue siendo el id 8. El `/3` viejo redirige a `/2`. La especificación decía «los números de paso se desplazan»; esto es lo equivalente y más seguro (las URL viejas no se vuelven ambiguas).
+- **Límites:** OpenStreetMap admin_level 4/6/8 (Overpass, 2026-10-27), ODbL, en el esquema privado `geo`; los polígonos nunca se exponen. Conte Burica (14365588, expediente 25.750) se excluye y se une a Pavón. **Códigos de distrito asignados a mano, marcados «COMPROBAR»:** Cabagra 60310 y Colorado (Abangares) 50704 (OSM traía 51201). Rechazados: IGN (términos de uso comercial), INEC/HDX, geoBoundaries y GADM (motivos en la especificación).
+- **Respaldo de costa de 500 m** para puntos en la orilla.
+- **Zonas del Caribe cargadas sin la revisión de Daniel:** el borrador de OSM (con `city|town` añadido a la consulta) está en `zones` (en `public`, con `lat/lng` generadas desde `point`); solo las 55 «sí» están activas y las 1037 «revisar» van inactivas. Revisión pendiente en `docs/antes-de-produccion.md` y `.scratch/ubicacion-por-punto/zonas.md`.
+- **La migración de datos `20261028065239_distritos_osm.sql` es un enlace simbólico de git** a `supabase/datos/…` (unos 8 MB); funciona con la CLI v2.121 en local. **Comprobar en el primer `supabase db push` remoto;** si la CLI lo rechaza, se sustituye por una copia.
+- **Orden del despliegue en `bnbtico-pruebas`** (compartido con la entrada de «mensual»): `git push` de `develop`, vaciar las casas de prueba y entonces `supabase db push`; hasta entonces la app vieja deja de crear borradores.
+- **`size-limit`:** el trozo de publicar queda en ~14,94 de 15 KB (casi al límite; el siguiente cambio ahí obliga a repartir en otro trozo diferido con su propia entrada, sin subir el límite).
+- **Arreglos de la revisión final (2026-10-28):** en «Otra…», un nombre que ya está entre las opciones (sin tildes ni mayúsculas) elige esa opción en vez de proponer una zona nueva; Enter sin nada marcado elige «Usar "…"»; `place_at` desempata por código de distrito (migración `20261028090823`), para que un punto en el borde de dos distritos dé siempre el mismo.
+
+## 2026-10-27 · «Alquiler mensual» como característica, con precio al mes opcional
+
+Decisión de Daniel. Especificación: `.scratch/mensual-como-caracteristica/spec.md`. Sustituye a «Vacacional / Mensual / las dos, con un precio por modalidad» de `docs/diseno-v1.md`.
+
+- **Orden del despliegue y la app vieja:** primero `git push` de `develop` (despliegue), después se vacían las casas de `bnbtico-pruebas` y al final `supabase db push`. Desde el `db push`, la app vieja (`apps/web` en Vercel, pruebas.bnbtico.com) ya no puede crear borradores ni guardar pasos (su `accepts_nightly:false` y sus escrituras nulas chocan con el `check` y el `not null`): la publicación se prueba solo desde nueva.bnbtico.com.
+- **Toda casa se alquila por noches.** `accepts_nightly` es siempre `true` (con `check` en la base) y el precio por noche es obligatorio.
+- **«¿Acepta alquiler por meses?» vive en la pantalla del precio**, con «No» por defecto y sin paso propio: el asistente sigue en 9 pasos (8 desde la ubicación por punto) (el paso 1 queda solo con «¿Qué es?»).
+- **El precio al mes es opcional.** Vacío = «Precio a negociar con el dueño».
+- **Un solo chip «Alquiler mensual»** en Explorar (`?mensual=1`; `modo=monthly` se mantiene como enlace viejo). Con él activo se oculta el rango de precio por noche, sin borrarlo de la URL. Desaparecen las píldoras Vacacional/Mensual, la etiqueta «Vacacional» de la ficha y el segundo precio de las tarjetas.
+- **Medición:** evento `monthly_filter_tap` (toque en el chip, al activarlo o al quitarlo, sin casa). Consulta en `docs/telemetria.md`.
+- **Textos elegidos al construirlo:** resumen de la casa «mensual a negociar»; error «Indique el precio al mes en colones o déjelo vacío.»; la línea de resultados lleva ` en <provincia>` al final.
+- **Migración extra `20261028053953`** (`save_listing_days`): el mensaje de error del calendario ya no dice «solo por mes», porque ese caso no existe.
+- **Arreglo en `step-form.tsx`:** el hueco del teclado se quita en `setTimeout(0)`, para que el toque en un chip no se pierda mientras un campo tiene el foco.
+- **Antes de subir estas migraciones a `bnbtico-pruebas` hay que borrar sus casas de prueba** (tarea 9 del plan, la hace Daniel): los datos viejos con modalidades no cumplen las nuevas restricciones. No se toca el remoto sin ese paso.
+- Fuera de alcance: filtro por rango de precio mensual, estancia mínima (`min_nights`, `min_months`), disponibilidad mensual en el calendario y quitar las columnas heredadas.
+
+## 2026-10-27 · Navegación simple: una barra que crece, Cuenta arriba y «Actividad»
+
+Decisión de Daniel. Sustituye la decisión N2 de la revisión UX (`.scratch/revision-ux/2026-10-26-revision-ux.md`, «las pestañas del propietario nunca se ocultan») y la barra inferior de `docs/diseno-v1.md`. Especificación: `.scratch/navegacion-simple/spec.md`.
+
+- **Una sola barra inferior que crece.** Sin casas: Explorar · Favoritos (2 pestañas). Con al menos una casa en cualquier estado, borrador incluido: Explorar · Favoritos · Mis casas · Calendario · Actividad (5). **Nunca más de 5**: lo nuevo va en Cuenta o dentro de una pestaña. La barra del admin no cambia y solo sale dentro de `/admin`.
+- **El propietario se deriva, no se elige.** Es propietario mientras la consulta de casas propias (persistida en IndexedDB) devuelva alguna; `bnbtico-mis-casas` en localStorage sirve de pista para el primer pintado y la barra no salta al abrir la app instalada. Se quitan `bnbtico-role` y el control «cambiar de vista». Al borrar la última casa vuelve a ser cliente y aterriza en Explorar; tras ingresar, el propietario va a Mis casas y el resto a Explorar.
+- **Cuenta en la esquina superior**, como pantalla completa con flecha de volver (ya no es pestaña). Sin casas lleva una fila «Publicar mi casa».
+- **₡ | $ en la barra superior y en la ficha.** Barra fija arriba (logo · ₡ | $ · iniciales o «Ingresar») solo en las cinco pestañas; en la ficha el selector va en su cabecera, en una caja de tamaño fijo hasta hidratar (el servidor siempre pinta colones). La preferencia sigue en `bnbtico_currency`. Sale de la línea de resultados de Explorar y de la fila «Moneda» de Cuenta. El plan de reserva por tamaño (selector de vuelta a Explorar) no hizo falta.
+- **«Actividad» sustituye a Inicio y a Mis consultas** (`owner_activity()`: visitas, toques en WhatsApp y consultas de los últimos 30 días por casa, más las 20 últimas consultas con «Abrir WhatsApp»). `/propietario` redirige a `/propietario/casas` y `/propietario/consultas` a `/propietario/actividad`, para que sigan valiendo los enlaces de los avisos ya enviados.
+- *(Superado el 2026-10-29: Mis casas es siempre la lista y el borrador sale una sola vez, en su tarjeta; ver «Densidad, tarjetas…».)* **Una casa se ve directa** en Mis casas (su detalle como raíz de la pestaña, con «Añadir otra casa»); con dos o más, la lista. Un único aviso arriba, con el de pago por encima de «Seguir publicando». Sin tarjeta de la oferta de lanzamiento: cada casa muestra su estado y «Promoción y suscripción» (Cuenta) guarda el detalle.
+- Las maquetas `design/pantallas/09-prop-inicio.html` y `20-prop-cuenta.html` quedan superadas en la navegación.
+- **Tamaños medidos al cerrar (gzip):** «Zona privada · JS inicial» 144,25 KB (límite 150); «Pantallas de las pestañas» 22,74 KB (límite 24,5); «Actividad» 1,86 KB (límite 4); «Favoritos» 1,96 KB.
+
+## 2026-10-27 · Pasada de escritorio en espera hasta cerrar el móvil
+
+Decisión de Daniel.
+
+- **Qué:** la pasada de escritorio no se diseña ni se construye todavía; se retoma cuando todas las pantallas del móvil estén definidas y probadas (las de la fase 5 aún están en su prueba manual). Motivo: el móvil es lo primero (CLAUDE.md) y diseñar el escritorio sobre pantallas que aún cambian obliga a rehacerlo.
+- **Lo hecho hasta hoy, como borrador sin aprobar:** inventario de las 24 pantallas con lo que cambiaría cada una (`.scratch/escritorio/inventario.md`) y cuatro maquetas de la navegación (`design/pantallas/escritorio/E01–E04`: barra superior para el cliente sobre Explorar; barra lateral de 232 px, la del admin, para el propietario sobre Inicio, Mis casas y Calendario; corte en 1024 px). Quedan abiertas: la navegación, si el asistente y el código van sin barra, Filtros como panel o columna, y el orden de construcción.
+- Sigue valiendo lo ya hecho en la revisión UX (N5): Explorar en 3–4 columnas y la ficha en dos columnas, solo con CSS.
+
+## 2026-10-27 · «¿No encuentra lo que busca?»: decisiones de implementación (fase 6, ticket 01)
+
+- El botón «Escribir a bnbtico por WhatsApp» se abre como «Abrir WhatsApp» de Ayuda (otra pestaña), en contorno verde.
+- «Quitar filtros» conserva la zona y quita lo demás.
+- El número sale de `src/client/support-numbers.ts` (el mismo `VITE_WA_GUESTS` que Ayuda) para no cargar los textos de Ayuda en el JS inicial; la zona privada queda en 142,60 KB.
+- Evento `search_help_tap` sin casa ni mensaje; si la base no lo acepta aún, el worker responde 204 y solo registra el fallo.
+- `pnpm dev:vars` pone un número de atención a clientes de prueba (`+506 6000 0000`) en `.env.local` para las pruebas locales y de CI.
+
+## 2026-10-27 · Fase 6 («Buscan casa») aplazada hasta después del lanzamiento; en su lugar, «¿No encuentra lo que busca?» por WhatsApp
+
+Decisión de Daniel.
+
+- **Qué:** la búsqueda asistida (el cliente publica lo que busca y hasta 10 propietarios compatibles le escriben) no entra en la v1. Se retoma después del lanzamiento (`plan-implementacion.md`, «Después del lanzamiento»). Lo analizado hoy (contradicciones entre decisiones, qué sobra y qué falta en `requests`/`request_matches`, reglas del prototipo, opciones para cada decisión) queda en `.scratch/fase-6/notas.md`.
+- **Por qué:** al principio habrá pocas casas, casi todas en Limón: una búsqueda llegaría a muy pocos propietarios y el cliente ve todo el catálogo en Explorar en un minuto. Es la parte que más complicaría la app (dos pantallas nuevas, reparto, caducidad, el número del cliente para varios propietarios, avisos por WhatsApp) y las pantallas de las pestañas ya están al borde (24,46 de 24,5 KB). Lanzar antes da datos reales para diseñarla. Recupera lo que ya decía «Lanzamiento ligero» (2026-10-13) frente al plan del 2026-10-15.
+- **Sustituto:** en Explorar, al final de la lista y cuando no hay resultados, «¿No encuentra lo que busca?» con un enlace al WhatsApp de atención a clientes (`VITE_WA_GUESTS`, el de Ayuda) y un mensaje redactado con la zona y las personas de la búsqueda. bnbtico ayuda a mano, como prevé «Atención manual y consultas creadas por administración» (2026-10-13). Sin tablas, RPCs ni pantallas nuevas; sin número configurado, la nota no sale. Ticket `.scratch/fase-6/issues/01-no-encuentra-whatsapp.md`.
+- **Cuándo retomarla:** cuando lleguen a menudo peticiones de casa por ese WhatsApp o una provincia tenga muchas más casas de las que un cliente revisa a mano. `requests` y `request_matches` (de `0001`) siguen vacías y sin usar, también en `bnbtico-pruebas` (comprobado el 2026-10-27).
+- **Consecuencias:** la pasada de escritorio pasa a ser lo siguiente antes de la fase 7 (puesta en espera el mismo día, ver arriba). Siguen fuera las barras de «Buscan casa» en el calendario y el reparto por tandas.
+
+## 2026-10-27 · Cierre de la fase 5: recorrido con el reloj de pruebas, plan manual y pendientes
+
+- **Fase 5 construida** (tickets 01–08 de `.scratch/fase-5/`): plaza de la oferta en la primera aprobación, estados Activa / Pendiente de pago / Inactiva con parar y reactivar, 410 con motivo, avisos 90/30/7/0 en la app y por WhatsApp (outbox), método de pago en Stripe en modo de prueba sin cobrar, «Promoción y suscripción», Cuenta, Inicio, Mis casas, detalle y Casas del admin. La migración `fase5_suscripcion` ya está aplicada en `bnbtico-pruebas`.
+- **Recorrido en Playwright** `tests/e2e/fase5.spec.ts`, cada actor en su contexto Pixel 7 y con el reloj de pruebas local (`POST /_pruebas/oferta/CT-####` con `TEST_CLOCK_SECRET` de `.dev.vars`): envío → aprobación aal2 → Activa con oferta → 90/30/7/0 (texto exacto de `reminderWhatsApp` con `#pago=` guardado como enviado, tarjeta en la app, repetir la llamada no reenvía nada) → −1: Pendiente de pago, 410 «regularice» y fuera de Explorar → pasarela falsa → Activa → parar: 410 «paró» → reactivar. El secreto de Vault `bnbtico_test_clock` se crea en `beforeAll` y se borra siempre en `afterAll`.
+- **Corre en CI**, a diferencia de `frescura.spec.ts` y `fase4.spec.ts`: no depende de pg_net. La copia de la ficha guardada en la caché del worker se borra desde la prueba con `POST /_purge/CT-####` (lo que hace pg_net en pruebas tras cada cambio de estado); Vault y `docker exec` ya los usa `test:db` en el runner.
+- **Plan manual** `docs/pruebas-manuales-fase-5.md`: A, acciones de Daniel una a una (Stripe de prueba y su webhook a `workers.dev`, sandbox de Twilio y unión desde el teléfono, siete secretos de GitHub, bypass de Access para `/webhooks/*` y `/_pruebas/*`, Vault `bnbtico_test_clock`, desplegar con un solo cron `17 * * * *`); B, recorridos con los `curl` del reloj; C, qué reportar. Se usa una casa de prueba: el recorrido gasta su oferta y cada aviso sale una vez por casa y umbral.
+- **Pendiente antes de producción** (en `docs/antes-de-produccion.md`): pasarela real con empresa en Costa Rica, plantillas aprobadas de WhatsApp, alertas de avisos y webhooks, condiciones de la oferta en los términos, sin reloj de pruebas en producción, y las pantallas de las pestañas a 24,47 de 24,5 KB.
+
+## 2026-10-27 · Fase 5, ticket 05: «Promoción y suscripción» y la suscripción en Cuenta
+
+Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spec.md`).
+
+- **Pantalla `/propietario/suscripcion`** (flujo privado, sin barra) en su trozo diferido `suscripcion-*.js` (≤ 7 KB gz, 5,42), precargado en reposo con las pantallas del propietario y al apuntar sus enlaces, que ahora son `<Link>` con `hash="pago=CT-####"`. Cada casa: insignia, `subscriptionLine`, tarjeta ocre (pendiente de pago o ventana de 90 días) y «Añadir método de pago» por `payButtonDue`, «Parar suscripción» (contorno, con hoja de confirmación) o «Reactivar» (relleno), y la línea de avisos con los ya enviados. El botón del bloque «Método de pago» sale si alguna casa lo pide; si no, «Puede añadirlo cuando le avisemos.»; con método, «Cambiar» siempre.
+- **Parar/reactivar optimistas:** el estado nuevo sale de `nextStatus` del dominio (el mismo que el SQL); se escribe en `["billing", uid]` y en las casas propias, vuelve atrás con el mensaje de la base y al terminar se invalidan facturación, casas propias, ficha, catálogo y contador.
+- **Sesión de pago:** el adaptador del navegador expone `accessToken()` (supabase-js `getSession`, renueva si hace falta); la pantalla hace `POST /api/pago/sesion` con `Authorization: Bearer` y `{ publicId }` y navega con `location.assign`. Los errores muestran el `error` del worker o «Sin conexión…».
+- **Vuelta `?pago=ok`:** se quita de la URL con `replace` (conservando `#pago=`) y se vuelve a pedir `owner_billing` cada segundo hasta que hay método o pasan 10 s («Lo estamos confirmando…»). «Guardado» = la cuenta tiene método (tras «Cambiar», también vale el anterior: no hay fecha de actualización en la lectura del navegador).
+- **Cuenta:** la tarjeta «Suscripción» (una línea por casa con suscripción, más las casas en revisión nunca aprobadas como «En revisión · ₡0», y `nextCharge`) y la fila «Método de pago» viven en el trozo de la pantalla y Cuenta las carga con `lazy`; mientras llegan o si `owner_billing` falla, la tarjeta de siempre y sin fila. El importador vive en `src/client/lazy-screens.ts` (JS inicial, lo usa el router) para que Cuenta no repita la lista de precarga de Vite (+0,3 KB).
+- **Reparto de trozos:** `billing.ts` deja de importar `owner.ts` y es `owner.ts` quien lo importa (para la clave en `refresh`), así Rolldown lo deja en `owner-*` y no abre un trozo `billing-*` que caería en la zona privada. Las pestañas pasan de 24,10 a 24,46 KB / 24,5 (sin subir el límite): reglas del dominio que la pantalla usa por primera vez (`nextStatus`, `nextCharge`, `parsePayHash`, `shortDate`) entran en el trozo compartido `subscription-*`, y `image.ts`, que iba dentro de ese trozo, sale a `image-*` (ya contado con las pestañas). Zona privada 142,04 → 142,16 KB (la ruta y el importador).
+- Fuera de la especificación: la lista de casas de la pantalla no enseña la plaza ni el tramo (están en Inicio); el texto «Cómo funciona» y la nota «en bnbtico nunca se escribe el número de la tarjeta» son redacción propia en usted.
+
+## 2026-10-27 · Fase 5, ticket 06: estados de la suscripción en las pantallas y motivo del 410
+
+Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spec.md`).
+
+- **Una consulta `["billing", uid]`** (`src/client/billing.ts`, `owner_billing`, privada, persistida con la sesión, 30 s, un solo reintento) para Inicio, Mis casas y el detalle; la usará también el ticket 05. La de casas propias no cambia. Si falla, las pantallas salen sin las partes de la suscripción; el contador de la oferta usa `launch_offer_taken` y, si falla, las casas activas (`["offer-taken"]` sustituye a `["active-count"]`).
+- **`describe.situation` ya no promete la oferta:** activa → «Visible en Explorar y con su enlace» (o «Pausado: no aparece en Explorar»), pendiente de pago → «La ficha vuelve a verse al pagar.», inactiva → «Parada · no aparece en Explorar». La línea «Gratis hasta el …» sale de `subscriptionLine` cuando hay datos de facturación.
+- **Enlaces a «Promoción y suscripción»** (`/propietario/suscripcion`, con `#pago=CT-####`): un `<a href>` que navega dentro de la SPA con `router.history.push`, porque la ruta la crea el ticket 05. Hasta entonces abre «No encontramos esta página». «Ver mi suscripción» de Inicio va allí (antes, a Cuenta).
+- **410 con motivo:** el worker pide `listing_blocked_reason` solo tras `linkState = blocked`, con `catch → other`; `SsrData` lleva `reason` para hidratar igual. El texto vive en `src/domain/blocked.ts` (lo reexporta `subscription.ts`) para que las reglas de la suscripción no entren en la ficha ni en el JS inicial.
+- **Tamaño:** las reglas de la suscripción quedan en un trozo compartido diferido (`subscription-*.js`, con `can`), que usan las pantallas del propietario y el adaptador de `supabase-data`; sale de «zona privada» y entra en «pantallas de las pestañas», cuyo límite pasa de 22 a 24,5 KB (≈ +2,8 KB gz reales: textos y reglas de los estados de pago).
+
+## 2026-10-27 · Fase 5, ticket 03: envío de los avisos desde el worker
+
+Decisiones de implementación dentro de la especificación (`.scratch/fase-5/spec.md`).
+
+- **Cron cada hora** (`17 * * * *`) en los tres entornos, con el mismo número de triggers: lo diario (keep-alive, recorte, tipo de cambio) solo en la ejecución de las 09 UTC; los avisos solo de 08:00 a 17:59 de Costa Rica. Un lote = 1 `claim_reminders` + ≤ 20 envíos + 1 `finish_reminders`.
+- **Remitente apagado salvo que esté todo:** sin `WHATSAPP_SENDER`, sin los secretos de Twilio o, en pruebas, sin `WHATSAPP_ALLOWLIST`, el worker no reclama nada y los avisos esperan en cola (no se queman como «omitidos»). En producción, apagado en esta fase aunque haya secretos. Los números fuera de la lista se omiten (definitivo).
+- **Twilio:** HTTP 4xx/5xx = rechazo seguro (vuelve a la cola, hasta 5 intentos); error de red o sin respuesta en 10 s = dudoso (`unknown`, nunca se reintenta). Si falla `finish_reminders`, las filas se quedan en «sending» y no se reenvían (para una alerta).
+- **Base del enlace:** bnbtico.com en producción; en pruebas la variable `PUBLIC_ORIGIN` (`https://nueva.bnbtico.com`, pasa a `pruebas.bnbtico.com` el día del corte) porque el cron no tiene petición; la ruta del reloj usa `PUBLIC_ORIGIN` o el origen de la petición.
+- **Reloj de pruebas** `POST /_pruebas/oferta/CT-####`: 404 en producción o sin `TEST_CLOCK_SECRET`, 401 con otro secreto, 409 con el mensaje de la base si falta el secreto de Vault. El deploy desde `main` nunca sube `TEST_CLOCK_SECRET`.
+- `WhatsAppSender` vive en `src/domain/whatsapp-sender.ts` (`whatsapp.ts` ya era el de los enlaces `wa.me`).
+## 2026-10-27 · Fase 5, ticket 04: método de pago con Stripe en modo de prueba
+
+Decisiones de implementación dentro de la especificación aprobada.
+
+- **Checkout de Stripe en modo `setup`, página alojada de Stripe** (navegación de primer nivel; la CSP del shell no cambia): `currency=usd` (Stripe la exige en `setup`; no se cobra nada) y solo tarjetas (`payment_method_types[0]=card`), porque solo sabemos mostrar marca, últimos 4 y vencimiento; `locale=es-419`. El cliente de Stripe se crea con nombre y `metadata[owner_id]` (sin el teléfono) y clave de idempotencia por propietario.
+- **Eventos aceptados:** solo `checkout.session.completed` de una sesión `setup`, fuera de `livemode`, con el SetupIntent `succeeded`; todo lo demás se registra en `payment_events` como ignorado (también los tipos desconocidos). Un `client_reference_id` que no es un uuid se trata como sin propietario.
+- **Producción sin pagos en esta fase** y ninguna `sk_live_`/`rk_live_` en otro entorno: el worker solo acepta claves `sk_test_`/`rk_test_`. La pasarela falsa (`PAYMENTS=fake`) solo con `ENVIRONMENT=local`; su sesión es un token firmado con `FAKE_PAYMENTS_SECRET` (una hora) y su evento pasa por el mismo camino del webhook. `/webhooks/stripe` responde 503 (no 404) si Stripe no está configurado, para que Stripe reintente.
+
+## 2026-10-27 · Fase 5, ticket 02: suscripción en la base
+
+Decisiones de implementación dentro de la especificación aprobada (`.scratch/fase-5/spec.md`, ya ajustada).
+
+- **El texto del WhatsApp no se compone en SQL:** `claim_reminders` devuelve los datos (casa, propietario, número actual, umbral, fin de la oferta) y el worker lo compone con `reminderWhatsApp` del dominio; `finish_reminders` guarda el número y el texto enviados. Una sola plantilla.
+- **«Quedan N de 50» = la plaza más alta asignada** (`launch_offer_taken`): una plaza no se reutiliza aunque se borre su casa.
+- **Relleno:** toman plaza todas las casas publicadas alguna vez (`first_published_at`), también las que se están editando, en ese orden y con el día de Costa Rica de la primera publicación.
+- **La purga de la ficha también salta entre pendiente de pago e inactiva**, porque cambia el motivo del 410.
+- Un aviso de una cuenta desactivada se omite al reclamar. El reloj de pruebas recibe el `CT-####` (la ruta del worker lo trae así) y `payment_setup_context` la pasarela.
+
+## 2026-10-27 · Fase 5: suscripción, estados y avisos (especificación aprobada)
+
+Aprobado por Daniel. Especificación y tickets en `.scratch/fase-5/`.
+
+- **Pasarela en modo de pruebas: Stripe**, con las claves de prueba de la cuenta de Ana (personal, en euros). El propietario guarda la tarjeta en la página de Stripe en modo «guardar sin cobrar» (Checkout `mode=setup`) y vuelve: ningún dato de tarjeta pasa por bnbtico, sin scripts de terceros en nuestras páginas y sin cambios en la CSP. Detrás de una interfaz `PaymentProvider` con un proveedor falso en local, CI y Playwright. La pasarela del cobro real se decide cuando haya empresa en Costa Rica (Stripe no abre cuentas a empresas ticas y no tiene SINPE Móvil); la cuenta personal de Ana nunca se usa para cobrar de verdad, y las tarjetas guardadas en Stripe no pasan a otra pasarela.
+- **Avisos por WhatsApp en pruebas: sandbox de Twilio.** El número de prueba se une mandando «join <código>» (dura 3 días; el texto libre vale durante 24 h desde el último mensaje del número). Remitente `WhatsAppSender` con un falso en local y CI; en pruebas solo se escribe a los números de una lista (`WHATSAPP_ALLOWLIST`). Producción necesitará una plantilla aprobada por Meta.
+- **Reloj de pruebas: se acerca el fin de oferta de una casa**, no se mueve el reloj. Una RPC solo de servicio (`test_set_offer_days_left`) que exige un secreto de Vault que solo existe en pruebas y local, llamada por una ruta del worker que responde 404 en producción. Las pantallas, el enlace bloqueado y los avisos usan la fecha real.
+- **La oferta sigue corriendo con la casa parada o en edición** (como el prototipo). La plaza se asigna en la primera aprobación, por orden, y es de la casa para siempre; «Quedan N de 50» cuenta plazas asignadas.
+- **Otras de la especificación:** un método de pago por propietario (vale para todas sus casas); «Añadir método de pago» solo sin método y dentro de los 90 días o con la casa pendiente de pago, en todas las pantallas; el último día de la oferta es gratis y la casa se oculta al día siguiente; avisos enviados solo de 8:00 a 18:00 de Costa Rica y nunca dos veces (un envío de resultado dudoso no se repite: queda para una alerta); el cron del worker pasa a cada hora para no gastar más tareas programadas del plan gratuito; «Parar» y «Reactivar» viven en «Promoción y suscripción».
+
+## 2026-10-26 · Zonas con sugerencias de Photon y zoom del mapa (ticket 22; E1 y E2)
+
+Aprobado por Daniel.
+
+- **Photon** (Komoot, datos de OpenStreetMap, sin clave): [photon.komoot.io](https://photon.komoot.io/) y [README](https://github.com/komoot/photon). Política del servidor público: se puede usar «as long as the number of requests stay in a reasonable limit»; el uso intensivo se limita o se bloquea, sin garantía de disponibilidad. No piden clave ni cabecera propia (desde el navegador no se puede poner `User-Agent`; la petición lleva el `Referer`/`Origin` de bnbtico, que nos identifica). Los datos son de OpenStreetMap (ODbL): la lista de sugerencias lleva «Datos © OpenStreetMap · Photon» con enlace a la página de derechos. `lang=es` no existe en el servidor público (400): no se manda `lang` (nombres locales, que en Costa Rica están en español).
+- **Uso razonable:** mínimo 3 caracteres, espera de 300 ms entre teclas, se cancela la petición anterior (AbortController) y se descarta su respuesta; solo se busca en el paso 2 del asistente (lo usan propietarios, pocas veces). Si un día hiciera falta más volumen, Photon se puede autoalojar o se puede pasar a otro servicio sin tocar la pantalla (todo está en `domain/zones.ts`).
+- **Consulta:** `bbox` de Costa Rica (el mismo de `inCostaRica`), `osm_tag=place` y `osm_tag=natural:beach` (pueblos, barrios, localidades y playas; fuera restaurantes y hoteles), sesgo `lat/lon` al centro de la provincia elegida. El parser deja solo `countrycode = CR` dentro del país, quita repetidos (mismo nombre y cantón) y ordena primero las del cantón elegido, luego las de la provincia y luego el resto; como mucho 5.
+- **Zonas frecuentes del Caribe sur** con coordenadas fijas en el dominio (tomadas de OpenStreetMap): Puerto Viejo, Playa Negra, Cocles, Playa Chiquita, Punta Uva, Manzanillo, Cahuita y Limón centro, en una fila de chips que se desliza de lado (una sola línea: el paso sigue sin scroll a 375×667), más «Otra», que vacía el campo y deja escribir. El texto libre sigue valiendo siempre, también con Photon caído.
+- **Se guarda el nombre tal como lo elige el propietario** (`listings.zone`, como antes). **El centro de la zona no va a la base:** se guarda en `sessionStorage` por casa (`bnbtico_zone:<id>`) solo para abrir el mapa del paso 3 con zoom 15. Motivo: el centro solo sirve para encuadrar el mapa antes de que el propietario marque el pin (que es lo que se guarda); columnas nuevas pedirían migración, contrato, `saveStep` y cuidar que no salgan en `listings_public`, para un dato que no se vuelve a usar. En otro dispositivo, o si la zona se escribió a mano, el paso 3 usa la zona frecuente con ese nombre si la hay y, si no, la provincia (como antes). Con el pin ya marcado, el mapa abre en el pin (zoom 13), sin cambios.
+- **CSP:** `https://photon.komoot.io` en `connect-src` solo del shell (`_headers` del build); la ficha y la portada no lo llevan.
+- **Pruebas sin red:** Playwright intercepta Photon en todas las pruebas por defecto (respuesta vacía en el contexto; cada prueba lo puede sustituir con `page.route`).
+
+## 2026-10-26 · Tipo de cambio diario en vez de la constante ₡510 (ticket 21)
+
+Aprobado por Daniel. Sustituye «el tipo sigue siendo la constante `FX_CRC_PER_USD` (₡510)» del ticket 15.
+
+- **Licencias comprobadas en la documentación oficial (2026-10-26):**
+  - [fawazahmed0/exchange-api](https://github.com/fawazahmed0/exchange-api) (servida por jsDelivr): licencia **CC0-1.0** ([LICENSE](https://github.com/fawazahmed0/exchange-api/blob/main/LICENSE)), «No Rate limits», actualización diaria; **no exige atribución**. El README pide usar su dominio de respaldo si jsDelivr falla: `https://{date}.currency-api.pages.dev/v1/…` (aquí `latest`). Sin garantías de servicio.
+  - [ExchangeRate-API, acceso abierto](https://www.exchangerate-api.com/docs/free) (`open.er-api.com/v6/latest/USD`, sin clave): **exige atribución** en las páginas donde se usan sus tipos, con este enlace exacto: `<a href="https://www.exchangerate-api.com">Rates By Exchange Rate API</a>`. Una petición al día no tiene límite (429 si se abusa). Sus [términos](https://www.exchangerate-api.com/terms) permiten el uso comercial y guardar los datos para el uso propio, pero prohíben redistribuirlos como servicio (ofrecer acceso programático a tipos de cambio). Guardar el tipo del día para pintar nuestros precios es uso propio; la tabla es legible por PostgREST porque la app la lee, no es un servicio de tipos.
+- **Decisión de Daniel aplicada:** principal = fawazahmed0 (sin atribución), primero por jsDelivr y después por su dominio de respaldo; respaldo = ExchangeRate-API. La atribución solo se muestra cuando el tipo vigente viene de ExchangeRate-API, y solo en dos sitios: una línea pequeña y gris bajo el selector de Mi cuenta («Tipo de referencia del 2 nov. · Rates By Exchange Rate API», enlazado) y al final de la nota de Explorar en dólares («… en colones. · Rates By Exchange Rate API»). Nada en la ficha. Como texto del enlace se usa el que pide su documentación.
+- **Cron:** el `scheduled` diario del worker (`17 9 * * *`) pide las fuentes en orden (8 s por petición) y se queda con la primera respuesta válida dentro de **300–900 colones por dólar** (fuera de ese rango se trata como errónea; la tabla tiene el mismo check). Lo guarda con la service role por fetch a PostgREST (`src/data/postgrest/fx.ts`, como la telemetría; sin supabase-js en el cron), un tipo por día (upsert). Si fallan todas, no escribe: queda el último guardado; el log `{"event":"fx",…}` dice qué falló. Un fallo del tipo no hace fallar el cron (eso queda para el keep-alive). Sin clave de servicio o en «solo portada», no se pide.
+- **Tabla `fx_rates`** (migración `20261027044539_tipo_de_cambio`, solo local): `day` (clave), `crc_per_usd numeric(10,4)`, `source` (`fawazahmed0` / `exchangerate-api` / `constante`), `fetched_at`. RLS con lectura para anon y authenticated; escribir, solo la service role. Fila inicial `2026-10-26 · 510 · constante` para que todo funcione antes del primer cron (su fecha es la de la migración, no la de un tipo real).
+- **App:** `PublicListingsApi.fxRate()` (el día más reciente) con contrato en los dos adaptadores; consulta `["fx"]` con staleTime de 6 h, persistida con la caché pública; mientras llega la primera vez se usa el inicial. Se pide solo donde hace falta: con «$» elegido (tarjetas, Favoritos, Filtros, que espera a tenerlo para rellenar los campos) y siempre en la ficha (la cifra de referencia) y en Mi cuenta. `formatMoney`, `formatUSD`, `compactPrice`, `priceInputToColones` y `colonesToPriceInput` reciben el tipo (desaparece `FX_CRC_PER_USD`).
+- **Ficha SSR:** el worker lee el tipo a la vez que la casa y los días; `ssr-data.fx` lleva el usado y la hidratación siembra la misma consulta (sin desajustes ni petición). Si falla la lectura del tipo, la ficha sale con el inicial y **sin caché del borde** (`no-store`), como cuando fallan los días. La ficha cacheada en el borde (hasta un día) puede llevar el tipo del día anterior: aceptable para una referencia.
+- **Dónde se ve la fecha, sin agrandar nada:** nota de Explorar en dólares «Dólares solo para orientarle: ≈ ₡456 por US$1 (tipo de referencia del 2 nov.). Los propietarios…» (del mismo largo que la anterior); ayuda del precio de Filtros igual; Mi cuenta «≈ ₡456 por US$1 (2 nov.)»; en la ficha, en el `title` de la cifra de referencia («Orientativo: ≈ ₡456 por US$1, tipo de referencia del 2 nov.»): la barra fija no crece (revisión UX C3 quiere achicarla).
+- **CSP sin cambios:** las fuentes las pide el worker, no el navegador.
+
+## 2026-10-27 · Suscripción a ₡2 900 al mes por casa
+
+- **Precio:** después del período gratis de la oferta de lanzamiento, la suscripción cuesta **₡2 900 al mes por casa activa** (antes, la referencia era ₡9 900), sin permanencia ni comisiones. La oferta (12 / 6 / 3 meses para las primeras 50 / 50 / 100 casas) no cambia. Decidido por Daniel.
+- **Dónde:** `MONTHLY_FEE_CRC` en `apps/app/src/domain/offer.ts` (Inicio, Mis casas, paso 9 del asistente y Cuenta, que ahora usa la constante en vez del texto fijo), las dos portadas (la viva en `main` y la de la app nueva), la app vieja hasta el corte, CLAUDE.md, `business-model.md` (incluido el cálculo de ingresos: 150 casas de pago = ₡435 000/mes), `diseno-v1.md`, `marketing.md`, `pitch.md` y el plan. Las maquetas de `design/pantallas/`, el prototipo y los documentos históricos se dejan como estaban.
+
+## 2026-10-26 · Revisión UX (`.scratch/revision-ux/2026-10-26-revision-ux.md`)
+
+Acordado con Daniel punto por punto; se implementa todo junto cuando terminen los tickets 18–20.
+
+- **La barra fija de la ficha, en una línea (C3).** Corrige en parte la línea del ticket 15 de hoy: la referencia en la otra moneda queda como «≈ $186 · orientativo» (el «orientativo» es por el tipo fijo de ₡510) y «el precio final lo acuerda con el propietario» sale de la barra fija al cuerpo de la ficha, donde ya está «fechas, precio y pago los acuerda directamente con el propietario». Las dos cifras siguen apiladas y la barra no cambia de alto. Motivo: en un iPhone SE la frase en dos líneas dejaba la barra en ~260 px (40 % de la pantalla) y la primera vista de la ficha no enseñaba ni la zona ni las personas. Objetivo: barra ≤ ~150 px a 375 px de ancho. El nombre de la casa va a 30 px hasta dos líneas y a 24 px si es más largo (regla por longitud, igual en servidor e hidratación).
+- **Publicar casa: las mismas 9 pantallas, menos fricción (C4).** *(Superada en parte el 2026-10-29: se envía sin fotos y la cuenta se pide después del paso 1; ver «Publicar v2».)* No se recortan pantallas (sigue valiendo el porqué del 2026-10-21) y se mide antes de tocarlas. Cambios: «Publicar casa» y «Nueva» entran directos al paso 1 (la pantalla intermedia solo si hay un borrador sin enviar); Inicio dice antes qué tener a mano (5 fotos horizontales, el precio, unos 10 minutos); **en el paso 7 se puede continuar con menos de 5 fotos** y el mínimo se exige al enviar (el paso 9 lo recuerda y lleva al 7; `submit_listing` ya lo exige en SQL); **la cabecera pasa de «Paso n de 9» a tres etapas** («Su casa» 1–5, «Fotos y texto» 6–7, «Precio» 8–9; la barra conserva los 9 tramos agrupados), lo que modifica la cabecera decidida el 2026-10-21; el paso 9 pasa a «Revisar y enviar» con resumen y vista previa de la ficha; y un evento `wizard_step` (paso alcanzado, sin datos personales) para ver dónde se abandona. Motivo: el paso 7 bloqueaba «Continuar» sin 5 fotos y dejaba borradores al 70 % que no se terminaban.
+- **La persona que alquila, arriba en la ficha (A10).** Bajo el nombre de la casa, iniciales y «<nombre de pila> · WhatsApp verificado»; sustituye a la etiqueta suelta «WhatsApp verificado» de la fila de etiquetas (diseño v1, pantalla 3), que se queda con «Vacacional / Mensual». Motivo: sin reseñas, la persona verificada es la prueba de confianza, y estaba al final de la ficha. Sin foto del propietario en v1.
+- **El propietario ve sus visitas y consultas (A2).** «N visitas · N consultas · últimos 30 días» en Inicio y en el detalle de la casa (RPC `owner_listing_stats`, solo el dueño o el admin; `events` sigue sin leerse desde el navegador). «Visitas» en vez de «aperturas» (diseño v1, pantalla 9). Las del propio dueño no cuentan: la ficha no manda `listing_view` si la casa está en la lista de casas propias que Mis casas guarda en el teléfono (solo los CT-####; se borra al cerrar sesión). Sin datos: «Comparta su enlace para que lleguen las primeras visitas».
+- **Sin filtro de fechas en Explorar hasta que los calendarios sean fiables (A11).** El buscador deja de decir «Cualquier fecha» («Limón · cualquier grupo»). Filtrar por fechas depende de que los propietarios marquen sus noches ocupadas y, al principio, casi no lo harán (llevan sus reservas por WhatsApp): el filtro escondería poco, justo a los más cuidadosos, y daría falsa confianza. Se añade cuando más de la mitad de las casas activas tengan alguna noche ocupada marcada en los últimos 30 días, con resultados rotulados «Sin noches ocupadas en esas fechas», nunca «Disponible».
+
+## 2026-10-26 · Arreglos de la prueba manual de la fase R (tickets 14–20)
+
+Aprobados por Daniel tras probar `nueva.bnbtico.com`. Tickets en `.scratch/fase-r/issues/14-*.md` a `20-*.md`.
+
+- **Una sola regla para el modo de la barra y de Cuenta (B12c).** El modo guardado puede ser cliente, propietario o **admin**. Las zonas mandan (`/admin` → barra del admin, `/propietario` → la del propietario); fuera de ellas (Cuenta, Explorar, Favoritos) vale el modo. Entrar en la zona del admin con el segundo código guarda el modo admin, que solo vale con la sesión en aal2 (si baja a aal1, cliente). «Buscar una casa» vuelve a cliente desde propietario o admin. Antes el admin veía la barra de cliente en Cuenta.
+- **«Cerrar» en el asistente (B11f).** La flecha de la cabecera (que ya llevaba a Mis casas, pero no se entendía como salida) pasa a ser «✕ Cerrar»: espera a los guardados en curso de esa casa («Guardando…») y lleva a Mis casas; el borrador se retoma con «Seguir con el borrador».
+- **B9d («no salió la invitación a añadir correo»): el flujo es correcto para una cuenta nueva de verdad.** «¡Listo! Su cuenta está creada» sale tras «Crear una cuenta» si el perfil no tiene correo, también con `next` (ficha, ruta privada) y en el contacto. No sale (por diseño) si se entró con «Ya tengo cuenta» o si el perfil ya tenía correo. Lo más probable en pruebas: el número usado ya tenía cuenta en `bnbtico-pruebas` (el proyecto lo comparte la app vieja y las pruebas anteriores; p. ej. `8888 9999` con correo de una vuelta previa del plan) y por eso no se ofreció. Lo que sí estaba mal era lo contrario: «Crear una cuenta» con un número que ya tenía cuenta sin correo decía «Su cuenta está creada». Con el flujo único del ticket 18 se sabe si la cuenta se acaba de crear y la pantalla solo sale entonces. El correo-rótulo del admin (`…@admin.bnbtico.invalid`) va en `auth.users`, no en `profiles.email`, así que no interviene.
+- **Moneda única (ticket 15).** Un solo selector «₡ | $» (colones por defecto, `localStorage` como antes) en Explorar y en Cuenta («Moneda»), que cambia toda la app: tarjetas, ficha, Favoritos (que deja de tener el suyo), calendario de la ficha y los precios de Filtros. En Explorar va a la derecha del número de casas, no en la fila del logo: a 360 px el logo, «Ingresar» y el selector no caben, y junto al título lo partía en dos líneas. **La ficha ya no cambia de moneda**: precio en la moneda elegida y debajo la otra como referencia, sin botón («≈ $186 · orientativo; el precio final lo acuerda con el propietario»); las dos cifras siguen apiladas para que la barra no cambie de alto. El tipo sigue siendo la constante `FX_CRC_PER_USD` (₡510), orientativo.
+- **Filtros en la moneda elegida.** Los precios se escriben en ₡ o en $ y la búsqueda guarda colones enteros (`priceInputToColones`, `colonesToPriceInput`; $86 → ₡43 860). **Mínimo mayor que el máximo ya no se intercambia:** aviso «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» desactivado. Una URL con `min > max` se trata como **sin rango** (se ignoran los dos), no como error: el enlace sigue abriendo Explorar.
+- El toque medido en `medicion.spec.ts` pasa a ser el corazón de la ficha (ya no hay botón de moneda).
+
+- **Chips de Explorar en una fila y modalidad no excluyente (ticket 16).** En Explorar quedan Vacacional, Mensual y «Más filtros» (con el contador); Piscina, Mascotas y Frente al mar se van a «Qué necesitan» de Filtros, donde ya estaban. Vacacional y Mensual se marcan a la vez: ninguno o los dos = todas; uno = solo esa. En la URL `modo=nightly|monthly|both` (los enlaces viejos siguen valiendo); el dominio guarda `modes` y la consulta usa `modeFilter`. Filtros gana la sección «Modalidad» con los mismos chips. El precio de Filtros sigue siendo por noche aunque solo esté marcado Mensual (sin cambio; pendiente si hace falta).
+
+- **Barra inferior en Ingresar (ticket 17).** Ingresar (sin sesión) y Mi cuenta llevan la barra con «Mi cuenta» activa; solo la pantalla del código va sin barra. Cambia lo decidido en el ticket 05 (Ingresar como pantalla de flujo según el diseño 06): así se puede salir a Explorar o Favoritos sin buscar la flecha.
+
+- **Entrar solo con el WhatsApp (ticket 18).** Un único flujo: primero país y número. `AuthApi.start({ phone })` intenta `signInWithOtp` con `shouldCreateUser: false`; si el número tiene cuenta se envía el código y entra; si GoTrue responde que no hay usuario (`otp_disabled`) **no se envió nada**, la pantalla pide el nombre («Es su primera vez en bnbtico», con el número a la vista y «Cambiar número») y `start({ phone, name })` envía el único código con `shouldCreateUser: true`. Comprobado contra GoTrue local: el primer intento no cuenta para el tope de un código por segundo y número ni para el enfriamiento de 30 s, así que nunca salen dos códigos por un toque. Desaparecen «Ya tengo cuenta» y `?modo=entrar` (un enlace viejo abre el mismo flujo). El número pendiente sabe ahora si la cuenta se crea con ese código (`register`) o ya existía (`login`): «¡Listo! Su cuenta está creada» solo sale al crear una cuenta sin correo (cierra el fallo de B9d). Turnstile: el contenedor no se desmonta entre los dos pasos y cada envío lleva su token.
+- **Riesgo de enumeración de números: aceptado.** El primer paso dice, de hecho, si un número tiene cuenta (pide el código o pide el nombre). Ya pasaba antes con «Ya tengo cuenta» («No hay una cuenta con ese WhatsApp»), así que el riesgo no crece. Mitigaciones: Turnstile en cada petición (cuando se active, A5), límites por IP de Supabase Auth y que saber que alguien tiene cuenta en bnbtico revela poco (no hay datos del perfil, y el número del propietario ya es visible para quien le escribe). Si hiciera falta cerrarlo, la alternativa sería pedir siempre el nombre (y no usarlo si la cuenta existe), a costa de un paso más para todos.
+
+- **Nombre de 5 a 60 caracteres y descripción de 80 a 2000 (ticket 19).** *(Superada el 2026-10-29: nombre de 5 a 32 y descripción opcional; ver «Publicar v2».)* Misma regla en `validateStep(6)` (contando caracteres, como `char_length`), el fake y `submit_listing` (migración `20261027040909_nombre_y_descripcion`, aplicada solo en local), con contador visible en el paso 6 («14 / 60 · mínimo 5», «108 / 2000 · mínimo 80»; en rojo fuera del rango) y `maxLength` 60 y 2000. Mensajes: «El nombre de la casa debe tener entre 5 y 60 caracteres.» y «La descripción debe tener entre 80 y 2000 caracteres.». **Sin `check` en la tabla:** los borradores se guardan a medias, y con un `check` (aunque fuera `not valid`) cualquier update de una casa existente que no cumpla fallaría. Una casa publicada antes de la regla se sigue viendo y su dueño la edita; solo al reenviarla a revisión tiene que cumplirla (`tests/db/nombre-descripcion.test.ts`).
+
+- **«Disponible para consultas» pasa a «Anuncio visible» (ticket 20)** con la línea «Si lo apaga, la casa no aparece en Explorar y su ficha dice que no está disponible por ahora. Su calendario no cambia.»; apagado, «Pausado hasta el …: no aparece en Explorar» o «Pausado: no aparece en Explorar hasta que lo encienda», y en Mis casas la etiqueta «Pausado». La hoja de cierre se llama «Pausar anuncio» («¿Cuándo vuelve a verse? (opcional)»). **Cambio de comportamiento:** hasta ahora una casa cerrada seguía en Explorar sin botón de contacto; ahora `searchPublic` (PostgREST y fake, con contrato) filtra `available = true`. La ficha sigue abriéndose (badge y botón deshabilitado «No disponible por ahora», «Calendario cerrado») y Favoritos la sigue mostrando. Sin migración (la vista ya tenía `available`). Las provincias de Filtros se siguen contando con todas las casas activas, también las pausadas (una provincia con solo casas pausadas daría cero resultados; raro, se deja).
+
+- **Prueba de la hoja de cierre:** con el foco en un campo de la fecha, `:focus` de Playwright ya no ve el `input` en el Chrome actual; la prueba mira `document.activeElement` (fallaba antes de estos cambios).
+
+## 2026-10-23 · Cierre de la fase 4: recorrido de punta a punta, plan manual y pendientes
+
+- **Fase 4 construida** (tickets 01–06 de `.scratch/fase-4/`): calendario del propietario, «Disponible para consultas» con fecha de reapertura y reapertura nocturna con `pg_cron`, y «Disponibilidad» en la ficha pública, fresca tras cada cambio. Sin temporadas, fin de semana ni «Configurar tarifas» (nota añadida en `docs/design.md`, que aún las describía).
+- **Recorrido en Playwright** `tests/e2e/fase4.spec.ts`, cada actor en su contexto Pixel 7: la propietaria envía la casa → «Marcar las noches ocupadas» → 3 noches y una ★ con la casa en revisión (sus días no son públicos) → el admin (aal2) aprueba → un cliente anónimo ve ocupados y ★ → la propietaria libera una noche y cambia la ★ → la carga nueva del cliente lo trae (purga) → cierre con fecha: «No disponible… Vuelve a estar disponible el …» y «Calendario cerrado» → `reopen_due_listings` → abierta con el calendario intacto. Usa el mismo mecanismo de frescura que `frescura.spec.ts` (secretos de Vault locales creados y siempre borrados en `afterAll`) y, como ella, se omite en el runner Linux de CI, donde la base no llega al preview.
+- **La respuesta de pg_net llega después que la purga:** `net._http_response` se escribe cuando pg_net procesa la respuesta, que puede ser después de que la ficha nueva ya se vea. En las pruebas se espera con `expect.poll` en vez de leerla una vez.
+- **Plan manual** en `docs/pruebas-manuales-fase-4.md` (A: migración con `pg_cron`, secretos de Vault, despliegue; B: recorridos desde iPhone y Android con la reapertura a medianoche comprobada a la mañana siguiente; C: qué reportar). La frescura se comprueba en `nueva.bnbtico.com` (la purga apunta a ese dominio), no en `workers.dev`.
+- **Pendiente antes de producción** (en `docs/antes-de-produccion.md`): `pg_cron` comprobado en producción con alerta si falla la reapertura nocturna; secretos de purga de Vault apuntando a bnbtico.com; revisar la ventana de 12 meses con propietarios reales; zona privada en 139,5 de 150 KB por el reparto de trozos de Rolldown.
+
+## 2026-10-23 · Fase 4, ticket 05: disponibilidad en la ficha pública, fresca tras cada cambio
+
+- **La ficha vuelve a tener calendario.** El diseño 03 no lo traía; la sección «Disponibilidad» la aprobó Daniel con la especificación de la fase 4. Va tras las características y antes de «Zona aproximada»: rejilla del mes de solo lectura (`MonthGrid`), ocupados en terracota claro, disponibles en blanco, cifra solo en los días ★ en la moneda de la página, «Precio base ₡95 000 por noche; los días con ★ tienen otro precio.» (solo mensual: sin cifras ni línea), flechas del mes actual a +12. Casa cerrada: «Calendario cerrado» + «Vuelve a estar disponible el …», ya en el HTML del servidor (no es la rejilla).
+- **Sin coste para el LCP:** el worker pide `getPublic` y `getPublicDays` a la vez y deja los días en `ssr-data` (misma clave de caché y `s-maxage`); el HTML lleva solo una caja vacía de alto fijo (432 px) y la rejilla llega tras hidratar en un trozo diferido `listing-calendar-*` (1,72 KB gz con la rejilla; las reglas `calendar-*`, 2,3 KB, se comparten con el calendario del propietario), pedido en reposo o al acercarse la sección. Hidratación +0,37 KB gz; zona privada 139,07 → 139,48 KB; ficha en Lighthouse 1,62 s (sin cambio).
+- **SPA:** consulta pública `["listing-days", publicId]` (persistida con las públicas, 60 s), sembrada desde `ssr-data` al hidratar.
+- **Purga en local:** sin zona de Cloudflare, `/_purge` en `ENVIRONMENT=local` borra la copia de la caché del worker y responde 200 (en los demás entornos sigue siendo 503 sin configuración); `pnpm dev:vars` genera un `PURGE_SECRET` local y `vite preview` admite el host `host.docker.internal`. Así una prueba de Playwright demuestra que el worker local cachea de verdad y que guardar, cerrar y la reapertura nocturna refrescan la ficha en segundos.
+- **Si fallan solo los días, la ficha sale igual:** `getPublicDays` con `.catch(() => null)`; 200 sin «Disponibilidad» (ni caja ni error), `ssr-data` con `days: null`, sin guardar en la caché del borde y con `Cache-Control: no-store` (la siguiente visita lo reintenta; el service worker va red primero). Así un error pasajero de PostgREST o una base sin `fase4_calendario` no tumban la página más importante. En la SPA, si la consulta falla (un reintento), la sección se quita. Si falla `getPublic`, 503 como antes.
+- `costaRicaToday` se repite en una línea dentro del trozo: importarla de `domain/inquiry` hacía que Rolldown partiera de nuevo los trozos de la hoja de contacto (+0,07 KB en la zona privada y en la hoja).
+
+## 2026-10-23 · Fase 4, ticket 04: «No disponible» con fecha de reapertura y fila del calendario en el detalle
+
+- **Apagar el interruptor abre la hoja «Cerrar a consultas»** (fecha opcional de mañana a +365 con `validateReopenDate`, ayuda «Sin fecha, queda cerrada hasta que usted la abra.»); el cierre se aplica al confirmar, optimista con vuelta atrás y el mensaje de la base. **Encender es un toque** y borra la fecha. Escape, el fondo y «Cancelar» cierran sin cambiar nada; el foco vuelve al interruptor.
+- La hoja es un módulo propio (`src/client/close-sheet.tsx`) que solo importa el detalle: va en el trozo `propietario`, con la misma semántica de diálogo que la hoja de contacto pero sin importarla (no arrastra su trozo).
+- Bajo el interruptor: «Cerrada hasta el 2 de noviembre» / «Cerrada a consultas» cuando está cerrada. La fila «Calendario y precios» muestra «<Mes>: N noches ocupadas» / «Sin noches ocupadas este mes» desde la consulta `["calendar", uid, casa]` (la misma que la pantalla del calendario; mientras llega, el texto de antes).
+- `useSetAvailable` recibe `{ available: true } | { available: false, reopenAt }` y parchea también `reopenAt` en la caché.
+- Tamaños: pestañas 18,59 → 19,55 / 20 KB (no hizo falta subir el límite); zona privada inicial 139,06 → 139,07 / 150 KB.
+
+## 2026-10-23 · Fase 4, ticket 03: pantalla del calendario del propietario
+
+- **Trozo propio** `calendario-*.js` (4,1 KB gz) más las reglas del dominio `calendar-*.js` (2,2 KB gz, que Rolldown separa al compartirlas con el adaptador de datos): entrada de `size-limit` nueva de 8 KB (6,25 KB). Fuera de la zona privada inicial y de las pantallas de las pestañas; se precarga en reposo con las del propietario y al apuntar a su enlace.
+- **Coste en el JS inicial: 136,51 → 139,06 KB gz (de 150) sin código nuevo en el arranque.** Al aparecer otro trozo diferido que importa el router, la rejilla y el dinero, Rolldown parte módulos que ya iban en el arranque (`start-shell` en dos, y `money`/`dates`/`geo` fuera de `listing-page`); se comprime algo peor. Se probaron alternativas (ganchos del router desde un módulo del shell, quitar imports): ninguna lo evita sin tocar la configuración de trozos de todo el build; se deja así y se vigila en el ticket 05.
+- **`MonthGrid` compartida** (`src/shared/month-grid.tsx`): botones en el calendario, rejilla de solo lectura (`role="grid"`) para la ficha del ticket 05; solo importa React y el dominio (lo comprueba la prueba de arquitectura).
+- **Guardado optimista en el mismo toque:** la rejilla cambia y el panel se cierra antes de llamar a la base (medido en Playwright, < 50 ms); si la base se niega o no hay red, vuelve a los días de antes y avisa con un aviso breve. Un precio inválido se rechaza antes, en el panel, sin tocar la rejilla. La consulta `["calendar", uid, casa]` trae la ventana entera (cambiar de mes no usa la red), es privada y se borra al cerrar sesión. Un guardado bueno invalida la ficha pública y `["listing-days", CT-####]`.
+- **Selector de casa** como lista propia (no `<select>`), con todas las casas salvo las rechazadas; la última elegida queda en `localStorage` (`bnbtico-calendario-casa`). Mientras llegan los días, la rejilla se ve sin poder tocarse.
+- **Desviaciones del diseño 17:** H1 a 28 px solo en esta pantalla (como el diseño, para que quepa el selector); el campo de precio a 16 px (con 14 px el iPhone amplía la página al enfocarlo); «Usar el precio base (₡…)» bajo los controles cuando hay un día ★ seleccionado (no está en el diseño). Teclado del iPhone: el panel gana 320 px abajo mientras el precio tiene el foco, como la hoja de contacto.
+
+## 2026-10-23 · Fase 4, ticket 02: calendario y reapertura en la base y la API
+
+- **Días y tarifas solo con RPCs.** Fuera las políticas `days_owner_write` y `rates_owner_write` y los grants de escritura (insert, update, delete, truncate) de `listing_days` **y también de `listing_rates`**, aunque las tarifas no se usan en v1: nadie escribe por REST filas sin validar. Los días se guardan con `save_listing_days` (todo o nada, ventana hoy CR … +365, precio de 1 a 100 000 000, solo diferencias). La lectura del propietario filtra por dueño con un join a `listings` (la RLS deja leer a cualquiera los días de una casa activa); la pública es `public_listing_days`.
+- **Mensajes nuevos**, ya en `CALENDAR_MESSAGES` desde el ticket 01 y copiados tal cual en la migración: «Esta casa se alquila solo por mes: no lleva precio por noche.» (precio en una casa solo mensual) y «La fecha de reapertura solo se pone al cerrar la casa.» (fecha con `p_available = true`).
+- **Una purga por guardado:** `save_listing_days` llama a `purge_listing_page` una vez al final si la casa está activa; sin trigger por fila en `listing_days` (30 días = una petición). Cerrar o abrir purga por el trigger de `listings`, como antes.
+- **`pg_cron`** (`create extension if not exists pg_cron with schema pg_catalog`): el trabajo `bnbtico-reabrir-casas` a las `0 6 * * *` (00:00 en Costa Rica) llama a `reopen_due_listings()`, que solo puede ejecutar `service_role`. **La reapertura nunca toca el estado:** una casa oculta o en revisión sigue igual, solo deja de estar cerrada a consultas. `set_listing_available` pasa a tres argumentos (`p_reopen_at` opcional, de mañana a +365; abrir a mano borra la fecha).
+- `Listing` (propietario) gana `reopenAt`, para que el detalle pueda decir «Cerrada hasta el …» (ticket 05).
+
+## 2026-10-23 · Portada «Muy pronto»: logo claro sobre la foto
+
+- Decisión de Daniel: en la portada «Muy pronto» (`apps/web` en `main` y `apps/app/public/portada.html`) el logo va en su versión **clara (crema)**, no en la terracota que usa el resto del diseño v1. Sobre la foto de Playa Negra con la franja oscura se lee mejor; es el caso «crema sobre verde/oscuro» que prevé `design/logo/README.md`. En el resto de pantallas (fondos claros) sigue el terracota.
+
+## 2026-10-23 · Fase 3, cierre: recorrido completo, plan de pruebas y fotos en caché sin fundido
+
+- **Fotos que ya están en el teléfono aparecen sin fundido.** El fundido de 240 ms al cargar (commit `16d0204`, «Pulir el tacto») retrasaba el LCP del shell instalado de 0,24 s a 0,51 s en Lighthouse: la foto de la primera tarjeta de Explorar llega del service worker en unos milisegundos, pero Chrome no la cuenta como pintada hasta que termina de aparecer (retraso de render de 279 ms en el informe). Ahora, si la foto carga en menos de 100 ms desde que se monta, se muestra de golpe (`data-instant`); las que llegan de la red siguen con fundido. Shell instalado: 0,51 → 0,28 s. Encontrado con `git bisect` manual entre el cierre del ticket 12 y `64665a4` (`c96dbcd` 0,24 s, `16d0204` 0,54 s).
+- **Plan de pruebas manual de la fase 3** en `docs/pruebas-manuales-fase-3.md` (aparte del de la fase R): para ver WhatsApp abrirse con un chat de verdad, Ana publica una casa con su número real y Daniel la contacta con el suyo (+1, que sirve además de número de otro país).
+- **Pendiente antes de producción** (en `docs/antes-de-produccion.md`): revisar con datos reales el tope de 20 casas al día y la renovación en 7 días; texto de privacidad (el propietario ve nombre y WhatsApp del cliente; las consultas se guardan); conservación de las consultas (propuesta: 24 meses); WhatsApp por casa con Twilio Verify.
+
+## 2026-10-23 · Fase 3, ticket 05: Mis consultas del propietario
+
+- **«Abrir WhatsApp» en una consulta:** la consulta deja de ser «Nueva» en la caché al momento y se pide `mark_inquiry_opened` (con keepalive); se espera a la base como mucho 400 ms y luego se abre `wa.me/<cliente>` sin texto en la misma pestaña. Si la base falla no se deshace en pantalla: la próxima lectura la vuelve a mostrar como «Nueva» y se marca al tocarla otra vez.
+- **Una sola consulta `["inquiries", uid]`** (privada, 30 s) para la pantalla, la tarjeta «N consultas nuevas» de Inicio y el contador terracota de la pestaña. La barra la pide solo dentro de `/propietario/*`; en Cuenta (modo propietario) solo lee la caché. Inicio sin consultas nuevas dice «Sin consultas nuevas».
+- **Pantalla en su propio trozo** (`consultas-*.js`, 4 KB), precargado en reposo con las del propietario. El límite de «pantallas de las pestañas» sube de 18 a 20 KB: ahora incluye Mis consultas y el módulo de consultas del propietario (`owner-*.js`), que Rolldown separa al compartirlo dos pantallas diferidas.
+- Las consultas creadas por bnbtico (`source = 'bnbtico'`, v1.1) solo llevan la etiqueta «Creada por bnbtico»; sin tarjeta especial.
+
+## 2026-10-23 · Fase 3, ticket 04: registrar la consulta y abrir WhatsApp
+
+- **Un toque, una consulta:** con sesión guardada, «Abrir WhatsApp» llama directamente a `create_inquiry` (sin comprobar antes la sesión aparte: una petición menos); si la base pide ingresar o la sesión venció, a Ingresar con lo escrito guardado y la vuelta a la hoja. Al responder, `wa.me` en la misma pestaña.
+- **Al salir hacia WhatsApp la hoja se cierra y lo escrito se borra:** quien vuelve (atrás o desde la app) ve la ficha, no una hoja «enviando». Repetir en 7 días renueva la misma consulta.
+- **Errores:** el mensaje de la base tal cual; si no hay respuesta de la base (sin red o sin poder bajar el trozo de datos), «Sin conexión. Revise su internet e intente de nuevo.».
+
+## 2026-10-23 · Fase 3, ticket 06: favoritos en el teléfono, corazón fuera del enlace
+
+- **Tarjeta de Explorar:** el corazón va encima de la foto (arriba a la derecha, diseño 01) pero fuera del enlace de la tarjeta (un botón dentro de un enlace no es HTML válido ni accesible). La píldora «No disponible», que ocupaba esa esquina, pasa a la izquierda debajo de «Mensual».
+- **Lista del teléfono:** `localStorage` `bnbtico-favoritos`, sin zod (`parseFavorites` a mano: el módulo entra en el JS que hidrata la ficha SSR y zod/mini sumaba ~7 KB gz allí). El toque cambia la lista al momento; con sesión guardada se escribe después en `favorites` y, si falla, se vuelve atrás con un aviso breve abajo. Sin sesión guardada nunca se toca la red. Cerrar sesión no borra la lista («guardadas en este teléfono»). Al ingresar y al abrir la app con sesión: `addMany(teléfono)` → `list()` → el teléfono se queda con la mezcla (lo quitado en el teléfono sin sesión vuelve si seguía en la cuenta).
+- **Pantalla Favoritos:** las tarjetas salen de `listings_public` con `public_id in (…)` en una sola consulta (`PublicListingsApi.getManyPublic`, nueva, con contrato), caché pública persistida (`favorite-listings`); los `CT-####` que no vuelven se quitan del teléfono sin avisar.
+
+## 2026-10-23 · Fase 3, ticket 03: cuenta obligatoria para contactar, con vuelta a la hoja
+
+- **Ida:** sin sesión, «Abrir WhatsApp» guarda lo escrito (30 min en la pestaña) y lleva a `/cuenta?next=/casa/CT-####?contacto=1` (Crear cuenta por defecto, con «Ya tengo cuenta» al lado). Saber que no hay sesión no descarga supabase-js: basta con no tener `bnbtico-auth` guardado; si lo hay, lo confirma el mismo cliente de supabase-js que usará el ticket 04. La hoja lo avisa bajo el botón: «Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.».
+- **Vuelta:** solo la ficha de la SPA reabre la hoja (tras el código siempre se llega por el router); con `contacto=1` y un borrador de esa casa la abre y quita el parámetro con `replace`. Borrador caducado → la hoja con el mensaje por defecto; sin borrador → solo la ficha.
+- **Tarjeta «vuelve a <casa>»** (diseño 07, foto y nombre) en Código y también en Ingresar; «Volver» en Ingresar lleva a la ficha. La cuenta nueva pasa por «¡Listo!» y «Ahora no · continuar» vuelve a la ficha (antes un `next` con búsqueda propia se rompía en ese enlace).
+
+## 2026-10-23 · Fase 3, ticket 02: hoja de contacto y pantallas diferidas
+
+- **JS inicial:** solo Explorar, Filtros y la ficha van en el arranque del shell; cuenta, propietario y Favoritos se descargan al abrirlas, al apuntar o tocar su enlace y en reposo tras el primer pintado. La zona privada baja de 146,4 a 134,4 KB gz y deja sitio a la fase 3. Coste: la primera visita a una de esas pantallas sin el SW instalado pide un trozo de ~6 KB.
+- **Hoja de contacto:** trozo aparte (3,8 KB gz) que se pide al tocar el botón y en reposo tras hidratar la ficha; la ficha SSR solo crece 0,5 KB. Antes de hidratar, el botón es una caja apagada del mismo tamaño. Lo escrito dura 30 minutos en la pestaña. «Abrir WhatsApp» pasa por una sola función (`proceedToWhatsApp`) que los tickets 03 y 04 completan; hasta entonces dice «Disponible muy pronto».
+- **Teclado del iPhone en la hoja:** como en el asistente, 320 px de sitio mientras un campo con teclado tiene el foco; se quita con 400 ms de retraso para que el botón no se mueva bajo el dedo.
+
+## 2026-10-23 · Fase 3: el WhatsApp de la casa solo se entrega al contactar; sin número distinto por casa todavía
+
+- **Número de la casa:** no está en la vista pública, ni en el HTML de la ficha, ni en ninguna caché. Lo devuelve la RPC `create_inquiry` solo a un cliente con sesión y WhatsApp verificado, en el mismo momento en que registra la consulta (que es lo que el propietario ve en Mis consultas). Así nadie puede recoger los números del catálogo sin cuenta. Tope de 20 casas distintas por cliente al día; una consulta por cliente y casa cada 7 días (repetir la actualiza). Decisión de Daniel.
+- **WhatsApp distinto por casa, aplazado:** verificar un segundo número exige mandar un código con Twilio Verify desde el worker (Supabase Auth solo verifica el número de la cuenta). Daniel no quiere meter Twilio todavía: en la fase 3 cada casa usa el WhatsApp de la cuenta, como hoy. Diseño guardado en `.scratch/fase-3/issues/07-whatsapp-por-casa.md`.
+- **Otras decisiones de la especificación** (`.scratch/fase-3/spec.md`): consentimiento sin casilla (diseño 04), con la línea «<Nombre> verá su nombre y su WhatsApp.»; `wa.me` en la misma pestaña tras registrar la consulta (iPhone bloquea ventanas abiertas tras una espera); «Nueva» = consulta que el propietario aún no abrió; favoritos en el teléfono sin cuenta y sincronizados con `favorites` con sesión; el interruptor «Contacto directo Sí/No» del prototipo no entra (dependía de solicitud/aceptación, descartada en `CLAUDE.md`).
+- **Detalle del ticket 01 (base y API, migración `fase3_consultas`):** el tope de 20 casas cuenta las casas distintas con consulta creada o renovada en las últimas 24 h, sin contar la que se está contactando (renovar una casa ya contactada hoy siempre se puede). `owner_inquiries()` devuelve solo las consultas del propietario de la sesión, también para el admin (el admin las ve en la tabla, sin el número). Favoritos: el `CT-####` se resuelve contra `listings_public`, así que quitar el favorito de una casa que ya no está publicada no hace nada (la fila queda y vuelve a aparecer si la casa se vuelve a publicar); `FavoritesApi.list()` devuelve también la fecha de guardado para mezclar con los del teléfono por fecha. Mensajes de la RPC en `INQUIRY_MESSAGES` (`src/domain/inquiry.ts`), iguales en la base y en el fake.
+
+## 2026-10-23 · Portada estática en la app nueva y producción «solo portada» hasta el lanzamiento (fase R, ticket 13, parte preparada)
+
+- **Portada:** `apps/app/public/portada.html` (+ `public/portada/`, `public/og.jpg`), HTML estático sin JavaScript con las mismas etiquetas SEO, JSON-LD, imagen OG y copy que la de Next. El worker la sirve en `/` (`"/"` en `run_worker_first`) con una CSP propia más estricta que la del shell (sin Supabase ni Turnstile).
+- **Convivencia con la SPA:** en pruebas y local `/` sigue llevando a Explorar y `/?pronto=1` muestra la portada (como en la app vieja). En producción, mientras la variable `LAUNCHED` no sea `"true"`, el worker sirve solo la portada, `robots.txt` (indexable), un `sitemap.xml` con solo `/` y los ficheros que enlaza la portada; todo lo demás es 404 con la portada, y el cron no consulta nada. Para que la SPA no se cuele por el respaldo de Static Assets, el entorno `production` pasa todas las peticiones por el worker (`run_worker_first: true`); al lanzar vuelve a la lista. Elegido frente a un worker o un despliegue aparte para la portada: un solo build, una sola variable que cambiar.
+- **Sin Google Analytics en la portada nueva:** rompería la CSP estricta; decisión de Daniel pendiente (opciones en `docs/corte-fase-r.md`). Al cortar, bnbtico.com deja de medir con GA hasta que se decida.
+- **El corte en sí** (DNS, Access, Vault, borrar `apps/web`, renombrar, merge a `main`, Vercel fuera) no se ha hecho: espera la aprobación del plan de pruebas. Guion en `docs/corte-fase-r.md`; la migración que deja las fotos solo por RPC espera en `supabase/migrations-pendientes/`.
+
+## 2026-10-23 · Números de WhatsApp de cualquier país; selector con Costa Rica por defecto
+
+- **Por qué:** muchos clientes (y algunos propietarios) del Caribe tico tienen número de fuera. Decisión de Daniel. Antes la pantalla de ingresar mostraba un `+506` fijo; el dominio ya aceptaba otros países con «+».
+- **Pantalla de ingresar y de crear cuenta:** `<select>` nativo «País de su WhatsApp» delante del número: Costa Rica (+506) por defecto y primero, después Estados Unidos/Canadá, Nicaragua, Panamá, México, Colombia, Venezuela, Argentina, España, Alemania, Francia, Italia, Reino Unido, Países Bajos y Suiza, y «Otro país», que pide el número completo con «+» y código. Si se escribe con «+», manda lo escrito sobre el país elegido.
+- **Dominio (`src/domain/phone.ts`):** `composePhone(país, número)` → E.164 o null. Costa Rica mantiene la regla de móviles `[5-8]\d{7}`; +1 exige 10 dígitos (acepta el 1 delante); el resto, 6–14 dígitos nacionales sin el 0 de marcación interna (Italia lo conserva). `formatPhone` separa el código de país (tabla de prefijos de 1, 2 y 3 cifras) y agrupa el resto: `+1 415 555 0100`, `+34 600 112 233`, `+505 8123 4567`. A Supabase sigue llegando E.164; `wa.me` usa solo dígitos.
+- **Local:** número de prueba `14155550100` (código 123456) en `[auth.sms.test_otp]`. En el alojado no se añade nada.
+- **Riesgo:** los códigos a números internacionales cuestan más y abren la puerta al «SMS pumping». Mitigan Turnstile, el tope de envíos por hora y los 30 s entre códigos; además conviene limitar en Twilio Verify los países permitidos (Geo Permissions) a los de la lista.
+
+## 2026-10-23 · Segundo factor del admin por app de autenticación (TOTP) en vez de WhatsApp
+
+- **Por qué:** en `bnbtico-pruebas` (plan gratuito) el MFA por teléfono de Supabase solo está disponible en el plan Pro. TOTP (Google Authenticator, 1Password…) está en todos los planes y no cuesta envíos. Decisión de Daniel. Solo el admin lo usa; clientes y propietarios siguen ingresando con el código por WhatsApp.
+- **Qué no cambia:** la exigencia `auth.jwt()->>'aal' = 'aal2'` en `is_admin()` y `review_listing` (no depende del tipo de factor).
+- **Flujo:** `/admin/codigo` la primera vez inscribe un factor TOTP y muestra el QR (`<img>` con el data URL SVG de Supabase; la CSP ya admite `img-src data:`) y la clave en texto; el primer código lo verifica. Después, solo el código de la app. Sin reenvíos ni esperas: se retira el reintento por límite de envío del ticket 12. `MfaApi` pasa a `enrolMfa()` → factor verificado o recién inscrito (QR + clave) y `verifyMfa(factorId, code)` (reto y verificación juntos).
+- **Hallazgo:** GoTrue rotula el factor TOTP con el correo del usuario de auth y, sin correo, falla («AccountName must be set»); las cuentas de bnbtico solo tienen teléfono. Migración `admin_totp_correo`: `seed_admin` le pone al admin `<número>@admin.bnbtico.invalid` (dominio reservado, sin confirmar, no abre otro ingreso). Una cuenta que no es admin no puede inscribir un factor.
+- **Local:** vuelve la configuración simple anterior al ticket 09 (`twilio_verify` de relleno, sin hook `send_sms` ni `local_test`); `[auth.mfa.totp]` activo y `[auth.mfa.phone]` apagado. Las pruebas calculan el TOTP (RFC 6238) con `node:crypto` a partir de la clave.
+- **Quién es admin en pruebas:** la cuenta real de Daniel. La de prueba `8899 0001` ingresa con un código conocido y quien escaneara el QR primero quedaría como admin; se le quita `is_admin` en el alojado.
+
+## 2026-10-23 · Endurecimiento y telemetría de primera parte (fase R, ticket 11)
+
+- **CSP en dos sitios, una fuente** (`src/shared/security.ts`): el worker la pone en el HTML que genera (ficha y páginas de estado, también en caché) y el build la escribe en `dist/client/_headers` para el shell y los estáticos, con la URL de Supabase del build. No se pasa el shell por el worker: cada navegación sería una invocación más del plan gratuito. `script-src 'self'` y `style-src 'self'` sin `'unsafe-inline'`; la única excepción de terceros es Turnstile (`https://challenges.cloudflare.com` en `script-src` y `frame-src`), solo en el shell. Playwright falla ante cualquier violación.
+- **La regla «lint» es la prueba de arquitectura**, que corre en `pnpm test` y antes de `pnpm build`: prohíbe `dangerouslySetInnerHTML`, `innerHTML`, `eval`, atributos `style` en JSX y scripts en línea en `index.html`. Sin ESLint (una cadena de dependencias por una regla).
+- **Turnstile** en Ingresar y en «Pedir otro código», invisible salvo que Cloudflare pida interacción; script bajo demanda. En Supabase local la protección de bots queda apagada (las pruebas de base no mandan token); se comprobó encendida una vez. Al activarla en `bnbtico-pruebas`, la app vieja deja de poder pedir códigos.
+- **Telemetría:** `POST /vitals|/errors|/events` → tablas `web_vitals`, `client_errors`, `events` sin acceso para `anon`/`authenticated`, escritas por el worker con la service role; solo ruta, tipo de página, build y país. Retención de 90 días con el cron diario del worker, que además hace el keep-alive de PostgREST. Consultas en `docs/telemetria.md`.
+- **Copia diaria** con `pg_dump` (Postgres 17 en Docker) a R2 desde GitHub Actions, 30 días, sin las fotos de Storage. Prueba mensual de restauración en `docs/copias-de-seguridad.md`.
+
+## 2026-10-23 · Admin con segundo factor en SQL y purga de la ficha desde Postgres (fase R, ticket 09)
+
+- **aal2 en una sola función:** `is_admin()` exige ahora `auth.jwt()->>'aal' = 'aal2'` además de `profiles.is_admin`. Todas las políticas de admin, las excepciones de admin de los triggers y `review_listing` pasan por ella, así que un admin sin el segundo código se comporta como un usuario normal (y `review_listing` le dice «Confirme el segundo código para revisar anuncios.»). **Consecuencia:** al aplicar la migración en `bnbtico-pruebas`, la app vieja de Vercel deja de poder revisar (su admin entra en aal1); hasta el corte, se revisa desde `nueva.bnbtico.com`.
+- **Purga:** el navegador no puede llamar a `/_purge` (el secreto no puede estar en él). Un trigger `after update/delete` en `listings` (casa que es o fue activa y cambia algo) y en `listing_photos` encola con `pg_net` un `POST <worker_purge_url>/_purge/CT-####` con `Bearer <worker_purge_secret>`, ambos en Vault. Sin los secretos no hace nada; un fallo al encolar no rompe la transacción.
+- **Local:** el reto MFA por teléfono no admite los números de prueba de `test_otp` y, con Twilio Verify, GoTrue comprueba el código contra Twilio. En local el proveedor de relleno pasa a `twilio` y un hook `send_sms` (función en `supabase/seed/local-sms-hook.sql`, cargada solo por `[db.seed]`) guarda el código en `local_test.sms`, de donde lo leen las pruebas. El alojado sigue con Twilio Verify (canal whatsapp).
+
+## 2026-10-23 · Un anuncio nuevo solo nace como borrador (migración listings_alta_segura)
+
+- **Por qué:** con el asistente en el navegador (fase R, ticket 07) se revisó la creación por REST: la política de insert solo exigía `owner_id = auth.uid()` y `listings_protect` solo vigilaba updates, así que un propietario podía insertar una casa ya `active` (sin revisión) y con cualquier WhatsApp.
+- **Qué:** trigger `before insert` (no afecta al servicio ni al admin): estado `draft`, sin datos de revisión («Un anuncio nuevo empieza como borrador.») y `whatsapp_phone` copiado del perfil; `listings_protect` congela también `whatsapp_phone`. Guardar una pantalla del asistente es una sola petición con `keepalive` (el navegador manda el borrador que ya tiene; la base protege estado y dueño y `submit_listing` vuelve a validar todo).
+
+## 2026-10-21 · Revisión de arquitectura tras las fases 0–2: app client-first con Vite + Hono en Cloudflare, Supabase directo desde el navegador
+
+Decisión de Daniel tras una entrevista de arquitectura (en inglés, registro completo en el plan de la sesión) en la que se desafiaron plataforma, framework, backend y lenguaje antes de que reescribir fuera caro. Cuatro agentes arquitectos propusieron cuatro diseños bajo restricciones opuestas (quedarse en Next, app shell en cliente, backend propio tipado, cambiar de framework/host); el consenso y las decisiones van abajo.
+
+- **Diagnóstico.** La web no se sentía fluida con casi nada de datos. La causa no era el lenguaje ni Postgres sino el modelo de render por petición: `proxy.ts` llamaba a `supabase.auth.getUser()` (red) en cada petición, incluidos prefetches y server actions; cada página volvía a verificar la sesión 2–3 veces en cadena (`current()` y de nuevo en `repo.ts`); nada cacheado (el layout leía la cookie de rol y volvía dinámica toda ruta); sin estado en cliente (cambiar moneda = ida y vuelta al servidor); fotos a 1600 px sin `srcset` ni `lazy`; más los arranques en frío de Vercel Hobby. Viajes en serie por navegación con sesión: Explorar 6, Mis casas 5, cada paso de Publicar ~10, cada foto ~14. Un backend en Go detrás de los mismos patrones daría la misma sensación. Lo que sí está bien y se conserva: el modelo de datos, las RPCs, el trigger `listings_protect`, la RLS, la vista pública y las 20 pruebas de integración.
+- **Q1 · Zona privada client-first (app shell).** Shell estático precacheado por un service worker; los datos los pide el navegador a PostgREST con el JWT del usuario y los cachea TanStack Query (persistido en IndexedDB); escrituras optimistas; navegar entre pantallas visitadas no toca la red. Es la única forma de cumplir los presupuestos de fluidez y de tener un shell empaquetable en Capacitor. **Cuatro condiciones aceptadas como requisitos:** (1) CSP estricta (`script-src 'self'`, sin scripts inline ni de terceros en la zona privada; GA sale de ahí); (2) nada de HTML desde texto de usuario, con regla de lint que prohíbe `dangerouslySetInnerHTML`; (3) valores por defecto de Supabase (token de 1 h, rotación del refresh con detección de reutilización, logout que revoca); (4) admin con **MFA de Supabase por teléfono**: las políticas y RPCs de admin exigen `auth.jwt()->>'aal' = 'aal2'` en SQL (un step-up solo en cliente no protege un token robado). Riesgo asumido: el token vive en el navegador; lo que expone un token de usuario son sus propias casas (con dirección exacta), favoritos y consultas; no hay dinero.
+- **Q1b · Una sola ruta con SSR: `/casa/CT-####`.** El rastreador de WhatsApp no ejecuta JavaScript, así que esa página necesita OG en el HTML (requisito duro); además se renderiza completa en servidor (`renderToString`) para que foto, título y precio se vean a ~0,6–0,9 s desde un toque en WhatsApp, frente a ~1,0–1,3 s si solo se inyectaran las etiquetas (estimaciones; se miden la primera semana). Tres reglas: SSR solo en esa ruta; el mapa y lo que depende de la sesión (moneda, «Ingresar», corazón) se montan tras la hidratación en cajas de tamaño fijo; una prueba de CI falla ante cualquier aviso de hidratación. La portada es un HTML estático; Explorar anónimo se renderiza en cliente; el sitemap es una consulta cacheada 1 h.
+- **Q2 · Vite SPA + worker Hono (se deja Next).** React 19, TanStack Router (rutas y parámetros tipados), TanStack Query, Vite con dos builds (navegador y worker), Hono como servidor del worker (SSR de la ficha, sitemap, balizas, luego webhooks y cron). Todas las piezas son estables y están bien representadas en los datos de entrenamiento de los agentes, que escriben todo el código; el pegamento de SSR (~150 líneas) es nuestro y legible de una sentada. Descartados: TanStack Start (1.0 a finales de 2025, los agentes emiten código desfasado, sus convenciones ocultan el pegamento), Next 16 híbrido (dos modelos de render, OpenNext en Cloudflare, sin export estático para Capacitor), SvelteKit (se pierde todo el JSX), Solid, Expo (web de segunda), Flutter, HTMX.
+- **Q3 · Postgres sigue siendo el backend (Supabase directo).** Navegador → PostgREST con el JWT; RLS y grants por columna = autorización; RPCs plpgsql = invariantes y transiciones. Seis reglas: (1) módulo de dominio en TypeScript sin imports de framework y con las cadenas de PostgREST solo en un adaptador; (2) una interfaz `ListingsApi` con adaptador PostgREST y un fake en memoria, y **una sola suite de contrato** que corre contra los dos; (3) invariantes en SQL, flujos en TypeScript, sin nuevo plpgsql de flujo; (4) tipos generados con `supabase gen types` versionados y comprobados en CI; (5) una función de consulta por pantalla que devuelve el objeto de la pantalla; (6) toda transición de estado es una RPC, la llame el navegador, el worker o `pg_cron`. **La fase 5 cabe sin servicio nuevo:** webhooks de pago en el worker (firma → `payment_events(provider, event_id)` único para idempotencia → RPC `apply_payment_event`), avisos 90/30/7/0 con patrón outbox (`pg_cron` encola en `subscription_reminders`, el cron del worker envía la plantilla y marca `sent_at`), reapertura a medianoche en SQL. Un servicio en Go queda como opción cuando el worker pase de ~1 500 líneas, un trabajo dure más de 30 s o Daniel lo prefiera. Descartados: API propia desde el día uno, AWS nativo (perdería Supabase Auth con OTP por WhatsApp, PostgREST y la RLS como API), Firebase/Neon.
+- **Q4 · Cloudflare Workers (plan gratuito) y Supabase Free, con disparadores medidos para pagar.** Presupuesto aceptado: 10–20 USD/mes. AWS descartado por complejidad para este producto; Vercel Pro por coste y arranques en frío; Fly porque necesitaría un CDN delante igualmente. Despliegue como en Vercel pero con pruebas delante: GitHub Actions + `wrangler-action`; push a `develop` → typecheck, unitarias, pruebas de base contra Supabase local en el runner, build, `wrangler deploy --env pruebas`; push a `main` → producción; PR → versión de vista previa. Pasos únicos en el panel: token de API, DNS de bnbtico.com en Cloudflare (pendiente confirmar dónde está hoy), política de Access para pruebas (sustituye a la contraseña en código), `wrangler secret put`. Disparadores: Workers de pago (5 USD) ante un error de límite de CPU, p95 de `cpuTime` > 7 ms o > 50 000 peticiones/día; Supabase Pro (25 USD) a 800 MB de Storage, 4 GB de egreso al mes o 400 MB de base (Supabase avisa al 80 %). Desde la primera semana, en cualquier plan: copia diaria con `pg_dump` desde GitHub Actions a R2, y variantes de imagen generadas en el navegador con carga perezosa. La vieja complejidad de Cloudflare venía de OpenNext alrededor de Next; con un worker plano, `wrangler.jsonc` son ~30 líneas.
+- **Q5 · Presupuestos de rendimiento** como objetivos p75 de usuarios reales en Costa Rica: respuesta visual al toque < 50 ms; pantalla ya visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha pública en frío LCP < 1,5 s; apertura de la PWA instalada < 500 ms; JS inicial de la zona privada < 150 KB gz. Tres puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms: LCP < 2,0 s ficha, < 2,5 s shell; más laxos que los presupuestos porque el perfil es más duro). Medición real con `web-vitals` (primera parte, compatible con la CSP) → `POST /vitals` en el worker → tabla `web_vitals` con país. Daniel está en Vancouver (RTT a us-east-1 ≈ 65–80 ms, parecido a Costa Rica): su teléfono sirve para la latencia; para ancho de banda y CPU, DevTools «Slow 4G» + CPU 4×.
+- **Q6 · Migración.** La app nueva se construye en `apps/app` y se despliega en `nueva.bnbtico.com` desde el primer día; la actual sigue en `pruebas.bnbtico.com` (Vercel) sin arreglos. Paridad = 20 pruebas de base + suite Playwright portada (Pixel 7) + `docs/pruebas-manuales-fase-2.md` desde el móvil + las 3 puertas de CI + vista previa de WhatsApp. Luego se mueve el DNS (ambos nombres a la vez; la portada pasa como HTML estático al worker), se borra la app vieja y `apps/app` pasa a llamarse `apps/web`. Orden de construcción por riesgo: (1) esqueleto con el pegamento SSR de la ficha + sesión OTP en cliente + pipeline; (2) módulo de dominio, tipos, `ListingsApi`, fake y suite de contrato (cierra de paso el bug de `saveStep`, que solo persistía 4 de los campos que `normalize()` limpia); (3) Explorar, filtros y ficha con variantes de imagen; (4) zona del propietario con subida directa de fotos; (5) admin con MFA; (6) cuenta, ayuda, favoritos; (7) service worker; (8) CSP, Turnstile, `web-vitals`, copia `pg_dump`; (9) paridad y corte.
+- **Q7–Q14.** Service worker: precachea shell, assets y fuentes; fotos de Storage cache-first 30 días/400; HTML de `/casa/*` network-first 3 s; nunca cachea PostgREST ni Auth; actualización con aviso y sin recargar dentro del asistente; `start_url` `/explorar`; sin escrituras offline en v1. Analítica: eventos de primera parte → worker → tabla (GA solo en páginas públicas con nonce si una campaña lo pide). Errores: baliza de 1 KB → worker → tabla; Sentry solo si hace falta. Imágenes: tres variantes JPEG 480/800/1600 (calidad 0,8) en la subida, ruta `<casa>/<uuid>/<tamaño>.jpg`, caché de un año, `srcset` + `lazy`, hero 800 con `fetchpriority="high"`, OG = 800; WebP después. Sesión: supabase-js en localStorage detrás de un adaptador de almacenamiento (costura para Capacitor), estado pendiente del código en sessionStorage, espera de 30 s, Turnstile en el formulario del código. Local: siempre `supabase start`; el proveedor demo desaparece; **el pendiente de ES256 deja de aplicar** porque ningún servidor verifica JWT (la ficha usa la anon key y los trabajos del worker la service role). Pruebas: Vitest sobre el dominio, suite de contrato (fake + PostgREST), Playwright Pixel 7, puertas de CI; sin mocks de supabase-js fuera del fake; `tests/prototype` intactas. Aplazado con fecha: Twilio vs Meta (fase 5), páginas por provincia para Google (tras el lanzamiento, revisando la regla de una sola ruta SSR), Capacitor vs React Native (tras el lanzamiento).
+- **Qué supera esta entrada.** El stack de `plan-implementacion.md` (Next, Vercel, «Cloudflare Pages con OpenNext» en la fase 7, «nada exclusivo de Vercel»), la regla «Server Components + Server Actions, sin rutas API» de la fase 2, y el pendiente ES256 de la entrada de abajo. El `docs/architecture.md` anterior pasa a `docs/historico/architecture-hasta-2026-10-21.md` y el nuevo resume esta arquitectura.
+
+## 2026-10-21 · Pestañas que responden al instante y una sola verificación de sesión
+
+- **Síntoma (pruebas, iPhone):** al tocar una pestaña «tardaba en seleccionarse». Medido en local la pantalla respondía en 30–75 ms: el problema era que no había ninguna reacción visible hasta que llegaba la respuesta entera del servidor (sin `loading.tsx`, la pestaña solo se marcaba al cambiar la ruta), y que cada navegación encadenaba 4–5 llamadas a Supabase (sesión en el proxy, sesión otra vez en la página, perfil, datos) más la red Costa Rica ↔ `us-east-1` y los arranques en frío de Vercel.
+- **Respuesta instantánea:** `BottomNav` marca la pestaña tocada de forma optimista (estado ligado a la ruta de origen, caduca al cambiar la ruta) y las carpetas de las pestañas (`explorar`, `favoritos`, `cuenta`, `propietario`) tienen un `loading.tsx` con esqueleto (`LoadingSkeleton`), que en producción se precarga desde la barra. **No** se pone en `(app)` entero: con streaming el código HTTP ya es 200 cuando la página llama a `notFound()`, y `/admin` y `/casa/[id]` deben seguir devolviendo 404.
+- **Una verificación de sesión, sin red (REVERTIDO el mismo día):** tras desplegarlo, pruebas.bnbtico.com dejó de responder en todas las peticiones (página en blanco, carga infinita). El camino ES256 no se pudo ejercitar en local (Supabase local firma HS256, donde `getClaims` cae a `getUser`), así que el proxy y `current()` vuelven a `getUser`. Pendiente: reproducir ES256 en local (`supabase gen signing-key` + `auth.signing_keys_path` en `config.toml`) y volver a intentarlo con esa prueba. Lo que se intentó: el proyecto firma los tokens con **ES256** (clave `in_use`, la HS256 queda como `previously_used`), así que `proxy.ts` y `current()` usan `getClaims()` en vez de `getUser()`: el token se verifica en el propio servidor con la clave pública en memoria y solo se sale a la red para renovar uno caducado. En Supabase local (HS256) `getClaims` cae a `getUser` solo. Las mutaciones (`updateProfile`) siguen con `getUser`. Inicio lanza sus tres consultas en paralelo.
+- **Pendiente de medir en pruebas** (lo mira Daniel): la región de la función en Vercel y la duración de los arranques en frío.
+
+## 2026-10-21 · Publicar casa en 9 pantallas cortas, sin scroll
+
+- **Por qué:** al probar la fase 2 en el teléfono, el formulario de 5 pasos obligaba a hacer scroll en casi todas las pantallas y el teclado tapaba la descripción. El objetivo pasa a ser **una pantalla, una pregunta, sin scroll** en un teléfono pequeño (375×667), con o sin teclado.
+- **Las 9 pantallas:** 1 Alojamiento (Vacacional / Mensual y Alojamiento completo / Habitación) · 2 Dónde está (provincia, cantón, zona) · 3 Mapa (ocupa la altura libre) · 4 Capacidad (contadores y baño si es habitación) · 5 Características (9 chips, tipo de parqueo) · 6 Nombre y descripción (la descripción crece hasta llenar la pantalla) · 7 Fotos (la rejilla hace scroll por dentro, la pantalla no) · 8 Precio (por noche y/o por mes) · 9 Enviar (WhatsApp de la casa, oferta, «Enviar a revisión»). Barra de progreso de 9 segmentos; cabecera «Paso n de 9». Supera el punto 11 de `docs/diseno-v1.md` y las maquetas 11–15 de `design/pantallas/`, que se conservan como referencia de estilo.
+- **Teclado:** `interactiveWidget: "resizes-content"` para que el teclado encoja la pantalla en vez de taparla (Android). **iPhone lo ignora** (Safari y Chrome, también la app instalada), y medir el teclado con `visualViewport` resultó frágil. Regla final (misma tarde, tras verlo fallar en pruebas): al enfocar un campo de texto, la pantalla de publicar gana 320 px de sitio abajo (`--kb` en la raíz, `calc(100dvh + var(--kb))`) y el campo se desplaza solo hasta debajo de la cabecera (`scroll-margin-top: 88px`), donde ningún teclado llega; al salir del campo, la pantalla vuelve a su altura. Las casillas de chips y tarjetas no cuentan. `casas.spec.ts` lo comprueba en el paso 2. Los campos llevan `enterKeyHint` «Siguiente» y el último de cada pantalla «Listo», que envía el paso (Enter en la descripción sigue siendo salto de línea). Barra Atrás/Continuar de 76 px (antes 96) y sin el relleno de la barra de pestañas, que en publicar está oculta.
+- **Cantón de lista:** los 84 cantones oficiales por provincia en `apps/web/src/lib/listings/cantones.ts` (incluidos Monteverde y Puerto Jiménez); la validación exige que el cantón pertenezca a la provincia. La base sigue guardando el nombre como texto (sin migración ni tabla de cantones). La zona, playa o barrio sigue en texto libre. Los borradores con cantón escrito a mano muestran «Seleccione el cantón».
+- **Código:** `Step` 1–9 y `STEP_NAMES` en `schema.ts`; `parseStepForm` / `validateStep` por pantalla; las RPCs y los estados no cambian. Pruebas: unitarias de cantones y del esquema, y `casas.spec.ts` recorre las 9 pantallas comprobando que ninguna hace scroll.
+
+## 2026-10-20 · Diseño v1 «Sol y sal» aplicado a las fases 1 y 2
+
+- **El diseño manda** (`docs/diseno-v1.md` + `design/pantallas`, tokens 0.2.0): en lo visual, en la estructura de cada pantalla y en el copy. El prototipo HTML sigue siendo la referencia de comportamiento solo donde el diseño no diga otra cosa. Decisión de Daniel al aplicar el rediseño.
+- **Sistema visual en `app/globals.css`:** paleta crema / tinta / verde selva / salvia / arena / ocre / terracota; Outfit + Figtree con `next/font`; tarjetas de 24 px con sombra plana; botones píldora (un relleno por pantalla, el resto contorno); chips arena/salvia; barra inferior plana de 84 px con la pestaña activa en terracota, oculta en pantallas de flujo con botones fijos (`.app:has(.sticky-actions)`). Logo e iconos de `design/logo` (`public/logo-horizontal*.png`, iconos 192/512/180 y maskable). La portada «Muy pronto» también lleva la paleta nueva.
+- **Copy en usted** en toda la app, mensajes de servidor y pruebas (regla de CLAUDE.md del 2026-10-20).
+- **Modelo del paso 1 según el diseño (migración `diseno_v1`):** modalidad Vacacional y/o Mensual (`accepts_nightly` + `accepts_monthly`, al menos una) y tipo Alojamiento completo / Habitación (`listing_kind` gana `completo`; `casa` y `apartamento` quedan para filas anteriores) con `bathroom_shared` cuando es habitación. Un precio por modalidad; «estancia mínima», «precio mensual: consultar» y «mínimo de meses» salen del formulario (las columnas quedan). `submit_listing` valida lo mismo y sus mensajes están en usted.
+- **Pantallas que cambian de estructura:** Filtros es una pantalla propia (`/explorar/filtros`, botón «Ver N casas»); Explorar lleva buscador-resumen, chips Vacacional/Mensual/Piscina/Mascotas/Frente al mar y rejilla de dos columnas; la ficha pierde el calendario de solo lectura, la tarjeta del propietario, la nota larga y la referencia `CT-####` (hero con contador de fotos, rejilla de características con icono, zona aproximada y barra con «≈ $185 · el precio final lo acuerda con el propietario»); nueva pantalla «¡Listo! Su casa está en revisión» tras enviar; Inicio del propietario con la casa, «Comparta su ficha» y la tarjeta de la oferta («Quedan N de 50» con las casas activas reales); Mis casas con casillas de resumen; detalle de la casa en lista con el interruptor «Disponible para consultas»; Cuenta del propietario con la tarjeta de suscripción simplificada; admin con casillas, filtros Por revisar / Cambios pedidos / Rechazados, lista de comprobación y «Aprobar y publicar».
+- **Fuera por ahora** (fases siguientes): corazón de favoritos en tarjetas y ficha, hoja de contacto, consultas con contador, calendario, «Usar otro» WhatsApp por casa, método de pago, «Cambiar mi WhatsApp», página de términos, home y landing de propietarios.
+- **Pruebas:** 137 en Vitest y 11 flujos en Playwright reescritos al copy y los flujos nuevos (contadores, tarjetas de elección, Filtros, pantalla «enviada», interruptor). Migración aplicada en `bnbtico-pruebas` el mismo día.
+
+## 2026-10-20 · Dirección visual «Sol y sal» y tokens 0.2.0
+
+- **Dirección elegida** entre cuatro propuestas (A «Caribe de noche» oscura y serif, B «Sol y sal» tropical clara, C «Clasificados» utilitaria, D «Feed» de una casa por pantalla): **B «Sol y sal»**, con las fotos limpias arriba y título y datos debajo (se descartó la variante con el título sobre la foto). Lienzo: «bnbtico · propuestas de diseño» (Design artifact de Claude); A, C y D se conservan como referencia.
+- **Paleta** (`design/tokens/tokens.json` 0.2.0): fondo crema `#FFFBF2`, tinta `#1C2B2A`, **verde selva `#2F5D45`** para botones (relleno en primarios, contorno fino en secundarios como «Ingresar»), **salvia `#7FA98A`** solo para selección (chips activos) y **salvia claro `#DCE8DF`** para estados suaves («Activa», «WhatsApp verificado»); **terracota `#D65C3C`** como color de marca (logo, corazón de favoritos) y `#BF4D2E` para la pestaña activa; **ocre `#F2B544`** reservado a avisos de pago; verde WhatsApp solo en «Contactar por WhatsApp». Sustituye el coral `#FF385C`/`#D92349` y el turquesa de las primeras maquetas: el turquesa saturado competía con el terracota y leía «piscina», y el verde selva casa con las fotos (selva, no mar).
+- **Logo:** se usa la versión de la **rana** (la de producción en bnbtico.com), recoloreada en terracota. Recortes en `Claude outputs/bnbtico-rana*.png`; el original `design/prototype/assets/bnbtico-original.png` no se toca.
+- **Tipografía:** Outfit (700/800) para títulos y cifras, Figtree (400–700) para texto y UI. Sustituyen a Bricolage Grotesque y Nunito Sans.
+- **Barra inferior:** plana, pegada al borde, fondo crema con línea superior `#EADFC8`, icono + etiqueta en cada pestaña, activa en terracota. Se descartaron la píldora flotante oscura y las variantes con cápsula.
+- **Reglas de componentes:** píldoras sobre fotos (precio, contador, «Mensual») en tinta translúcida `rgba(28,43,42,.86)` con texto crema; botón de WhatsApp a ancho completo con el precio en una línea encima (radio 18, no píldora); margen superior de 56 px reservado a la barra del sistema (no se dibuja barra falsa). Fotos de Crystal Jungle Villa como contenido de ejemplo.
+- **v1 mínima del propietario (2026-10-20, tarde):** la primera versión debe ser muy fácil de usar para captar propietarios pronto. Queda en publicar → compartir → responder. Publicar en 5 pasos con solo lo imprescindible (sin mínimo de noches). **Tipo de alojamiento: «Alojamiento completo» o «Habitación»**, sin casa/apartamento/cabina/quinta; si es habitación se pregunta baño privado o compartido. Tras enviar, pantalla «Tu casa está en revisión» con los 3 pasos y aviso por WhatsApp. **Calendario simple:** solo marcar noches ocupadas y cambiar el precio de fechas concretas (★); temporadas, fin de semana y «Configurar tarifas» quedan fuera de v1. **Inicio** con una sola acción según estado (publicar / en revisión / compartir ficha) más las consultas nuevas y la barra de la oferta. **Detalle de casa:** compartir, calendario, editar, WhatsApp de la casa (se mantiene: agencias con varios contactos) e interruptor «Disponible para consultas»; parar la suscripción pasa a Cuenta. **Mis consultas** es solo el registro de quién escribió con «Abrir WhatsApp»; la valoración de clientes por estrellas sale de v1 (v2). La ficha pública no muestra la referencia `CT-####` (solo va en el enlace y en las pantallas del propietario). Todas las pantallas de v1 están en el lienzo, filas «v1 · cliente» y «v1 · propietario».
+- 
+- **Cierre de la v1 en el lienzo (misma sesión).** Cabecera consistente: pantallas raíz con logo a 38 px + H1 grande; pantallas de flujo con flecha + título, sin logo. Se mantiene el logo original (rana + hoja, lettering propio): se probaron alternativas de rana y de otros animales y se descartaron por infantiles; kit completo en `design/logo/` (claro/oscuro/transparente, iconos, maskable, favicon). «Orientativo» desaparece de la interfaz salvo la línea positiva de la ficha («el precio final lo acordás con el propietario»). Tarjeta de oferta de lanzamiento: fondo blanco, título y contador en tinta ocre, barra ocre. Pantallas exportadas como HTML estático en `design/pantallas/` y especificación por pantalla en `docs/diseno-v1.md`.
+
+- **Tratamiento de usted en toda la interfaz.** Se abandona el voseo («Tocá», «tu casa», «vos») por el usted («Toque», «su casa», «usted»): suena tico, respetuoso y de confianza, que es lo que importa cuando hay dinero y casas de por medio. Se aplica al lienzo (cliente, propietario, admin y landings), a `design/pantallas/` y al copy de `apps/web`. El saludo de Explorar pasa de «¿A dónde vas, mae?» a «¿Para dónde va?».
+- **Admin y landings diseñados.** Admin en móvil (Anuncios, Revisar, Casas, Usuarios, Ficha de propietario) y en escritorio (barra lateral + tablas, revisión a dos columnas), alcance mínimo + Casas y Usuarios. Dos landings: la home de bnbtico.com habla al cliente (buscar, casas recientes, zonas, cómo funciona, FAQ) y `bnbtico.com/propietarios` es la de captación que se manda como promo (precio ₡9 900 con «una reserva de fin de semana lo paga», oferta de lanzamiento, comparativa, FAQ de propietario). Copy de confianza: «WhatsApp verificado y ficha revisada» en lugar de «identidad verificada».
+**Pendiente:** llevar Sol y sal al resto de pantallas de la v1 (filtros, ingreso con código, publicar, calendario, Mis consultas) y aplicarla en `apps/web`; el prototipo HTML sigue siendo la especificación funcional, no la visual.
+
+## 2026-10-19 · Fase 2 construida en `develop`: publicar, aprobar y ver
+
+- **Casas solo en Supabase.** El proveedor `demo` sigue para la cuenta; las pantallas de casas (publicar, admin, Explorar, ficha) muestran «Esta pantalla necesita Supabase» si no hay variables. Playwright de casas (`tests/e2e/casas.spec.ts`) corre contra Supabase local y se salta sin `SUPABASE_SERVICE_ROLE_KEY` en `apps/web/.env.local` (clave de servicio local, solo para preparar datos; la app nunca la usa).
+- **Esquema (migraciones `fase2_casas` y `fase2_tipo_sin_default`):** `listings` gana `canton`, `min_nights`, `min_months`, `parking_paid` y `monthly_mode` (sin esta columna «sin elegir» y «consultar» eran indistinguibles); `kind` pierde el default `'casa'` de `0001` (el prototipo exige elegir: «no elegimos por vos»). RPCs `submit_listing`, `review_listing`, `set_listing_available`, `listing_link_state`, `seed_admin`. Bucket `listings` (público para leer, escritura del dueño por carpeta). Vista `listings_public` recreada.
+- **Protección del estado.** La política de `update` de `0001` dejaba al dueño cambiar `status` por REST (podía activarse solo). Trigger `listings_protect`: fuera de las RPCs y sin ser admin, el estado solo puede pasar a `draft` desde `active`/`changes`/`rejected`, `owner_id`, `public_id`, `review_note`, `reviewed_*` no cambian, y **fuera de `draft`/`changes` no se edita nada** (ni fila, ni fotos, ni Storage: funciones `listing_editable` / `listing_visible`). `is_admin()` pasa a `security definer`: la versión de `0001` recursaba con la política de `profiles` («stack depth limit exceeded») al leer filas ajenas.
+- **Permisos por columna, no solo por fila (migración `fase2_permisos`, tras la revisión de la rama).** `profiles`: se revoca `update` a `anon`/`authenticated` y se concede solo sobre `full_name`, `email`, `description`; antes cualquiera podía marcarse `is_admin` por REST. `listings`: la tabla solo la leen dueño y admin; el público lee la vista `listings_public`, que ya no expone WhatsApp, dirección ni coordenadas exactas (las desplaza Postgres con `approx_point`, determinista por `CT-####`, 150–499 m). Regla para lo que viene (`inquiries`, `subscriptions.payment_method_token`): las columnas sensibles se protegen con `revoke`/`grant` por columna o con vistas, además de la RLS. El borrador de una casa que ya estuvo publicada no se puede borrar (conserva su `CT-####`). `kind`, `accepts_monthly`, personas, habitaciones, baños, precio y mínimo de noches nacen nulos: el borrador no inventa valores y `submit_listing` los exige; el pin debe estar dentro de Costa Rica.
+- **Admin por `is_admin`.** Entra con su WhatsApp como cualquiera; `/admin` responde 404 a quien no lo tiene. En local y en Playwright el número `8899 0001` se marca con `seed_admin` (solo ejecutable con la clave de servicio); en pruebas lo marca Daniel desde el editor SQL (`docs/configuracion-supabase.md`, paso 8). Reiniciar Supabase local (`supabase stop && supabase start`) tras tocar `config.toml`: `db reset` no lo recarga.
+- **Borrador en base de datos desde el paso 1**; cada «Continuar» guarda su paso y valida (`src/lib/listings/schema.ts`, portado de `tests/prototype/publication.cjs`). `/propietario/publicar` ofrece seguir el borrador pendiente. El formulario envía con `onSubmit` + `startTransition` además de `action`: React 19 vacía los campos no controlados al terminar una acción y el propietario perdía lo escrito tras un error.
+- **Fotos:** redimensión en el navegador a 1600 px (JPEG 0,85), 5–15 por casa, HEIC rechazado con aviso. Subida directa a Storage con **URL firmada por una Server Action** (las cookies de sesión son httpOnly, así que el navegador no tiene sesión de Supabase); la fila en `listing_photos` la crea otra acción. Portada = posición 0.
+- **Aprobar pasa directo a `active`** (oferta gratuita; la suscripción es fase 5) y marca `is_owner`. Pedir cambios y rechazar exigen motivo (≤ 2000); el propietario lo ve como «Nota de bnbtico» en Mis casas y en el detalle, y con «Corregir y reenviar» vuelve a `review`.
+- **Editar una casa activa la pasa a borrador** al confirmar «Tu casa dejará de verse mientras la revisamos»: así nunca se publica contenido sin revisar. El enlace muestra «Este enlace ya no está activo» (`listing_link_state` devuelve `blocked` para todo lo que fue revisado alguna vez; 404 solo para borradores que nunca se enviaron o ids inexistentes).
+- **WhatsApp de la casa** se copia del perfil al crear y se muestra en solo lectura; editarlo por casa con su propia verificación va con el contacto (fase 3). «Contactar por WhatsApp» aparece deshabilitado con «Disponible pronto».
+- **Ficha pública** dentro del grupo `(app)`: Open Graph y Twitter con la portada, canonical a bnbtico.com, descripción «Casa en Manzanillo, Limón · 5 personas · ₡85 000 por noche · orientativo»; mapa Leaflet + OpenStreetMap con círculo de 500 m sobre un punto desplazado de forma determinista (`geo.ts`), nunca el exacto; calendario de solo lectura sin cifras por día (fase 4); una sola nota; barra fija de precio por encima de la barra de pestañas. Sitemap con las fichas activas (falla a portada sola si no hay base).
+- **Explorar:** filtros en la URL (`?prov=&ppl=&beds=&pool=1&min=&max=&mas=1`), Limón por defecto mientras tenga casas, solo provincias con casas, «Qué necesitan» y «Precio» plegados en móvil tras «Más filtros» con contador, selects y casillas envían al cambiar, mín > máx se intercambian. Moneda ₡/$ en cookie `bnbtico_currency`, con el tipo de referencia fijo `FX_CRC_PER_USD = 510`.
+- **Vista previa de WhatsApp en pruebas:** `proxy.ts` deja pasar sin contraseña a los rastreadores de vista previa (`WhatsApp`, `facebookexternalhit`, `Twitterbot`, `TelegramBot`) solo en `/casa/*`; el resto de pruebas.bnbtico.com sigue cerrado. Crear un borrador es siempre un POST (abrir `/propietario/publicar` no crea filas).
+- **Pruebas:** 140 en Vitest (incluidas 20 de integración contra Supabase local en `tests/db`, en serie, que se saltan sin la clave de servicio) y 11 flujos en Playwright con un solo worker (comparten base y números de prueba). Las pruebas de la fase 1 pasan en demo y en Supabase. Revisión independiente de la rama hecha; sus hallazgos críticos e importantes están corregidos aquí; los menores quedan anotados en el mensaje de cierre.
+- **Pruebas (`bnbtico-pruebas`), 2026-10-19:** migraciones aplicadas con `db push`, bucket `listings` presente, y **`8899 0001` es la cuenta admin** también allí (creada y marcada por la API de administración con la sesión de la CLI; añadida a los códigos de prueba con `123456`). Los otros tres números siguen siendo cuentas normales para probar propietaria y cliente. **Pendiente de Daniel:** la comprobación desde el móvil siguiendo `docs/pruebas-manuales-fase-2.md`.
+
+## 2026-10-19 · Portada de bnbtico.com con foto, logo sin fondo y SEO
+
+- **Foto de fondo:** Playa Negra (Puerto Viejo de Talamanca), propia, a pantalla completa con degradado oscuro abajo y encuadre hacia la derecha en móvil (`public/portada-playa-negra.jpg`). Texto en blanco sobre la arena; línea «Playa Negra · Puerto Viejo de Talamanca».
+- **Logo sin recuadro blanco:** `public/bnbtico-logo.png` se deriva del original (recorte de la rana y blanco a transparencia, mismo trazo). El original no se toca y la barra de la app lo sigue usando con su recuadro.
+- **Copy:** frase del usuario «Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.» («alquilar», no «reservar»: bnbtico no gestiona reservas). H1 «Alquilá en el Caribe de Costa Rica, directo con quien te recibe»; «Muy pronto» como etiqueta. Tres bloques: qué es, dónde empezamos (Caribe sur de Limón), cómo funciona; cierre con la oferta de 12 meses gratis para las primeras 50 casas.
+- **SEO:** título «bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica», descripción, canonical `https://bnbtico.com`, Open Graph y Twitter con `public/og.jpg` (1200×630, foto + logo), JSON-LD Organization + WebSite, `robots.ts` (indexa solo bnbtico.com; pruebas y local piden no indexar), `sitemap.ts` con la portada (las fichas se añaden en la fase 2). Constantes en `src/lib/seo.ts`. Pendiente: alta en Search Console y envío del sitemap; versión en inglés con `hreflang` después del lanzamiento.
+- **Vista previa local:** `/?pronto=1` fuerza la portada donde la raíz redirige a la app. `HEAD /` responde 200 desde el proxy para las sondas de disponibilidad (el panel de vista previa apagaba el servidor al recibir el 307).
+- **Ramas:** la portada se cambia en `main` y se trae a `develop` con un merge, para que las dos sigan iguales.
+
+## 2026-10-15 · Proveedor Supabase probado de punta a punta en local
+
+- Supabase local (CLI `supabase` como dependencia de desarrollo en la raíz; `pnpm db:start`, `pnpm db:reset`) con la migración `0001_init.sql` aplicada sin errores. Los triggers crean el perfil con el nombre enviado como metadato y marcan `phone_verified_at` al confirmar el teléfono: comprobado en la base tras los flujos.
+- Los cuatro flujos de Playwright pasan contra Supabase real además de contra el demo. Para ello `config.toml` lleva, **solo para local**, un proveedor Twilio Verify de relleno (GoTrue rechaza cualquier código sin proveedor activo), números de prueba con código fijo 123456 (`[auth.sms.test_otp]`) y `max_frequency = "1s"`. En el proyecto alojado se configura Twilio en el panel y se deja el límite por defecto de 60 s.
+- La app traduce el límite de envíos de Supabase («you can only request this after N seconds») a «Esperá N segundos antes de pedir otro código».
+- Pendiente para que sea real: proyecto `bnbtico-pruebas` en Supabase, cuenta de Twilio Verify con canal WhatsApp, variables en Vercel Preview, y la prueba desde un móvil de Costa Rica que decide WhatsApp o SMS.
+
+## 2026-10-15 · Cierre de la fase 1: revisión de seguridad y robustez de la cuenta
+
+- **Sesión real estable:** `proxy.ts` refresca la sesión de Supabase en cada petición (`src/lib/auth/refresh.ts`); sin eso los Server Components renovaban el token sin poder guardarlo y la sesión caía al caducar (~1 h).
+- **Perfil por trigger:** `profiles` lo crea un trigger en `auth.users` con el nombre enviado como metadato (`full_name`), y otro trigger marca `phone_verified_at` cuando Supabase confirma el teléfono. La app ya no inserta el perfil; si tras verificar no existe, cierra la sesión y avisa.
+- **Códigos con freno:** 30 s entre códigos para el mismo número en los dos proveedores (como el prototipo), botón «Pedir otro código» con cuenta atrás y deshabilitado mientras envía; `sms_sent = 30` por hora en `supabase/config.toml` (en el proyecto alojado: Authentication → Rate Limits). Pendiente: activar Fraud Guard en Twilio Verify.
+- **Seguridad:** el destino `next` tras verificar solo admite rutas internas (`src/lib/safe-next.ts`), nada de `//otro.com`; `SESSION_SECRET` es obligatorio (≥ 32 caracteres) en producción, la app no arranca sin él.
+- **Teléfonos:** sin «+» solo se aceptan móviles de Costa Rica (8 dígitos que empiezan por 5–8, con o sin 506); cualquier otro país lleva su código con «+». Antes un número largo sin «+» se interpretaba con otro código de país.
+- **Demo en pruebas:** una cookie firmada por cuenta (`bnbtico_demo_acct_<número>`) en vez de una sola con todas; con tres cuentas y descripciones largas la cookie única superaba 4 KB y el navegador la descartaba.
+- **Rol:** cerrar sesión restablece el modo cliente; cambiar de modo ya no marca `is_owner` (se activa al publicar la primera casa, fase 2).
+- **PWA tras contraseña:** iconos 192/512, `apple-touch-icon` y manifest quedan fuera de la contraseña de pruebas; el manifest declara los dos iconos.
+- **Pruebas:** contrato de `AuthProvider` ejecutado contra demo y Supabase (cliente simulado en `tests/unit/helpers/fake-supabase.ts`), `proxy`, refresco de sesión, `appEnabled` (sustituye a una prueba e2e que nunca corría), `safeNext`, secreto. En local Playwright usa el Chrome instalado con `CHROMIUM_PATH`.
+- **Pendiente de Daniel:** `SESSION_SECRET` en Vercel Preview (la build de producción falla sin él), `NEXT_PUBLIC_GA_ID=""` en Preview para no ensuciar Analytics con las pruebas.
+
+## 2026-10-15 · Fase 1 construida en `develop`: cuenta con WhatsApp verificado
+
+- **Pantallas** (portadas del prototipo, sin nada de Veriff): registro con nombre y WhatsApp, iniciar sesión, código de 6 dígitos (5 intentos, 5 minutos), «Tu cuenta está lista» con correo de recuperación opcional, Mi cuenta con sello «WhatsApp verificado», editar perfil, cerrar sesión, recuperar cuenta, «Escribile a bnbtico por WhatsApp» con un canal por rol, cambio a modo propietario (sus pantallas son marcadores que indican la fase en que llegan).
+- **Envío del código, intercambiable:** `src/lib/auth/` define una interfaz con dos proveedores. `demo` (sin Supabase configurado): código fijo `123456`, cuentas y sesión en cookies firmadas del navegador. `supabase`: Supabase Auth por teléfono con canal WhatsApp (Twilio Verify) y perfil en `profiles`; se activa solo con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`, pendiente de probar con el proyecto real.
+- **Entornos:** `NEXT_PUBLIC_STAGE=pruebas` muestra la app (pruebas.bnbtico.com y local); sin ella, bnbtico.com sigue en «Muy pronto». `PREVIEW_PASSWORD` protege pruebas. Números de atención en `NEXT_PUBLIC_WA_OWNERS` / `NEXT_PUBLIC_WA_GUESTS`; sin ellos el botón «Abrir WhatsApp» aparece deshabilitado.
+- **Teléfonos:** E.164; 8 dígitos se asumen de Costa Rica (+506). Formato visible `+506 8888 1234`.
+- **Esquema:** `profiles` gana `email` y `description` y política de inserción propia.
+- **Pruebas:** Vitest (teléfono, cookies firmadas, auth demo, dinero) y Playwright móvil (registro → código → cuenta → editar → cerrar → entrar; número sin cuenta; modo propietario y ayuda por rol).
+- **Pendiente de Daniel:** Supabase (proyecto `bnbtico-pruebas`) y Twilio para pasar a envío real; variables en Vercel Preview: `NEXT_PUBLIC_STAGE=pruebas`, `PREVIEW_PASSWORD`, `SESSION_SECRET`.
+
 ## 2026-10-15 · Alojamiento: se vuelve a Vercel (Hobby) para las pruebas
 
 - Cloudflare Workers funciona (probado con Next 16 + OpenNext), pero su panel resultó más complicado de configurar sin ayuda. Se revierte la configuración (commit `3c609b6`) y se sigue en Vercel Hobby, proyecto `bnbtico` sobre la rama `main`, con `bnbtico.vercel.app` ya desplegado.

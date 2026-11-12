@@ -1,0 +1,358 @@
+[
+  {
+    "name": "Zona privada · JS inicial (todo salvo los trozos diferidos: Leaflet, los precios del mapa antes de Leaflet, supabase-js, el asistente de publicar, el paso de las fotos, la zona del admin, Web Vitals tras load, la hoja de contacto y su calendario de fechas, las reglas del rango con días ocupados y las fechas de la pestaña con el total de la estancia, que comparte con el calendario de la ficha, las hojas «Pausar la casa» y «Marcar una reserva», Actividad, el calendario, el de la ficha las pantallas que se abren desde las pestañas y la tarjeta para publicar del final de Explorar, con la oferta; zod, que ya no entra: los filtros de la URL se leen a mano)",
+    "path": [
+      "dist/client/assets/*.js",
+      "!dist/client/assets/approx-map-leaflet-*.js",
+      "!dist/client/assets/location-leaflet-*.js",
+      "!dist/client/assets/leaflet-*.js",
+      "!dist/client/assets/supabase-data-*.js",
+      "!dist/client/assets/publicar-*.js",
+      "!dist/client/assets/photos-*.js",
+      "!dist/client/assets/resize-*.js",
+      "!dist/client/assets/concurrency-*.js",
+      "!dist/client/assets/admin-*.js",
+      "!dist/client/assets/review-*.js",
+      "!dist/client/assets/vitals-*.js",
+      "!dist/client/assets/contact-sheet-*.js",
+      "!dist/client/assets/inquiry-*.js",
+      "!dist/client/assets/cuenta-*.js",
+      "!dist/client/assets/propietario-*.js",
+      "!dist/client/assets/favoritos-*.js",
+      "!dist/client/assets/actividad-*.js",
+      "!dist/client/assets/owner-*.js",
+      "!dist/client/assets/can-*.js",
+      "!dist/client/assets/subscription-*.js",
+      "!dist/client/assets/image-*.js",
+      "!dist/client/assets/useMutation-*.js",
+      "!dist/client/assets/calendario-*.js",
+      "!dist/client/assets/airbnb-*.js",
+      "!dist/client/assets/calendar-*.js",
+      "!dist/client/assets/month-grid-*.js",
+      "!dist/client/assets/listing-calendar-*.js",
+      "!dist/client/assets/suscripcion-*.js",
+      "!dist/client/assets/close-sheet-*.js",
+      "!dist/client/assets/mark-sheet-*.js",
+      "!dist/client/assets/confirm-sheet-*.js",
+      "!dist/client/assets/buscar-*.js",
+      "!dist/client/assets/explore-map-leaflet-*.js",
+      "!dist/client/assets/explore-map-full-*.js",
+      "!dist/client/assets/casa-editable-*.js",
+      "!dist/client/assets/editar-*.js",
+      "!dist/client/assets/edit-*.js",
+      "!dist/client/assets/edit-map-leaflet-*.js",
+      "!dist/client/assets/edit-summary-*.js",
+      "!dist/client/assets/step-forms-*.js",
+      "!dist/client/assets/publish-rules-*.js",
+      "!dist/client/assets/fields-*.js",
+      "!dist/client/assets/photo-grid-*.js",
+      "!dist/client/assets/publicar-entrada-*.js",
+      "!dist/client/assets/wizard-parts-*.js",
+      "!dist/client/assets/publish-return-*.js",
+      "!dist/client/assets/publish-promo-*.js",
+      "!dist/client/assets/offer-*.js",
+      "!dist/client/assets/range-calendar-*.js",
+      "!dist/client/assets/range-????????.js",
+      "!dist/client/assets/stay-price-*.js",
+      "!dist/client/assets/stay-dates-*.js",
+      "!dist/client/assets/map-preview-*.js",
+      "!dist/client/assets/map-pins-*.js",
+      "!dist/client/assets/zod-*.js",
+      "!dist/client/assets/asistir-*.js",
+      "!dist/client/assets/editor-port-*.js"
+    ],
+    "limit": "160 KB",
+    "gzip": true
+  },
+  {
+    "name": "Búsqueda de Explorar · trozo diferido (la pantalla de buscar: ¿Dónde?, el calendario de llegada y salida y ¿Quiénes?; se precarga al tocar la píldora)",
+    "path": [
+      "dist/client/assets/buscar-*.js",
+      "dist/client/assets/range-calendar-*.js"
+    ],
+    "limit": "6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mapa de Explorar · trozo diferido (Leaflet con los marcadores de precio, para la caja de la lista y el mapa a pantalla completa; los marcadores que se pisan juntos, map-pins-*, y los precios antes de Leaflet, map-preview-*; Leaflet aparte)",
+    "path": [
+      "dist/client/assets/explore-map-leaflet-*.js",
+      "dist/client/assets/map-preview-*.js",
+      "dist/client/assets/map-pins-*.js"
+    ],
+    "limit": "2.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mapa de Explorar a pantalla completa · trozo diferido",
+    "path": [
+      "dist/client/assets/explore-map-full-*.js"
+    ],
+    "limit": "1.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Leaflet · trozo compartido (la ficha, el asistente de publicar y Explorar)",
+    "path": [
+      "dist/client/assets/leaflet-*.js"
+    ],
+    "limit": "44 KB",
+    "gzip": true
+  },
+  {
+    "name": "Mapa de la revisión de una edición · trozo diferido (los dos puntos, antes y ahora, en la revisión del admin; Leaflet aparte)",
+    "path": [
+      "dist/client/assets/edit-map-leaflet-*.js"
+    ],
+    "limit": "2 KB",
+    "gzip": true
+  },
+  {
+    "name": "Hoja de contacto · trozo diferido (se pide al tocar «Contactar por WhatsApp» o en reposo tras hidratar la ficha; con el calendario de rango de las fechas, range-calendar-*, que comparte con la búsqueda, y lo que comparte con el calendario de la ficha: las reglas del rango con días ocupados, range-*, y las fechas de la pestaña con el total de la estancia, stay-dates-* y stay-price-*; límite de 6,5 a 7,5 KB, ronda de Ana 2 nov, ticket 08, aprobado por Daniel)",
+    "path": [
+      "dist/client/assets/contact-sheet-*.js",
+      "dist/client/assets/inquiry-*.js",
+      "dist/client/assets/range-calendar-*.js",
+      "dist/client/assets/range-????????.js",
+      "dist/client/assets/stay-dates-*.js",
+      "dist/client/assets/stay-price-*.js"
+    ],
+    "limit": "7.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Pantallas de las pestañas · trozos diferidos (cuenta, propietario, actividad, favoritos, la consulta de la suscripción dentro de owner-*, y las reglas de la suscripción que comparten con supabase-data y «Promoción y suscripción», y la tarjeta y la fila para publicar con la oferta; se precargan al apuntar o tocar la pestaña y en reposo)",
+    "path": [
+      "dist/client/assets/cuenta-*.js",
+      "dist/client/assets/propietario-*.js",
+      "dist/client/assets/favoritos-*.js",
+      "dist/client/assets/actividad-*.js",
+      "dist/client/assets/owner-*.js",
+      "dist/client/assets/can-*.js",
+      "dist/client/assets/subscription-*.js",
+      "dist/client/assets/image-*.js",
+      "dist/client/assets/useMutation-*.js",
+      "dist/client/assets/publish-promo-*.js",
+      "dist/client/assets/offer-*.js"
+    ],
+    "limit": "25.2 KB",
+    "gzip": true
+  },
+  {
+    "name": "Ficha editable · trozo diferido (la ficha de una casa publicada; se precarga con las pantallas del propietario)",
+    "path": [
+      "dist/client/assets/casa-editable-*.js",
+      "dist/client/assets/edit-messages-*.js"
+    ],
+    "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Reglas y mutaciones de la edición · trozo compartido (las reglas de cada dato, el aviso de revisión y las mutaciones de la edición, también descartar un dato, que leen la ficha editable y «Editar un dato»; edit-<hash de 8>, para que no entren edit-messages ni edit-label)",
+    "path": [
+      "dist/client/assets/edit-????????.js"
+    ],
+    "limit": "2.25 kB",
+    "gzip": true
+  },
+  {
+    "name": "Resumen, mensajes y estado de la edición · trozo compartido (qué cambia una edición, «nombre, descripción, 2 fotos nuevas», cada dato en la base, los mensajes y la etiqueta; lo leen la ficha editable, las reglas de la edición, los adaptadores de datos y la zona del admin; edit-messages-*)",
+    "path": [
+      "dist/client/assets/edit-messages-*.js"
+    ],
+    "limit": "0.75 KB",
+    "gzip": true
+  },
+  {
+    "name": "zod/mini · trozo diferido compartido (los esquemas del asistente de publicar y de la edición; fuera del JS inicial)",
+    "path": [
+      "dist/client/assets/zod-*.js"
+    ],
+    "limit": "6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Reglas de los formularios · trozo compartido (lo que leen el asistente de publicar y la edición de una casa publicada de cada formulario)",
+    "path": [
+      "dist/client/assets/step-forms-*.js"
+    ],
+    "limit": "1 KB",
+    "gzip": true
+  },
+  {
+    "name": "Reglas de publicar y de validación de las casas · trozo compartido (los mensajes y la validación de cada pantalla, qué es obligatorio para enviar, los avisos, lo que cabe en la tabla y guardar cada pantalla; las leen el asistente, Mis casas y los adaptadores de datos)",
+    "path": [
+      "dist/client/assets/publish-rules-*.js"
+    ],
+    "limit": "2 KB",
+    "gzip": true
+  },
+  {
+    "name": "Editar un dato · trozo diferido (las pantallas de cada dato de una casa publicada)",
+    "path": [
+      "dist/client/assets/editar-*.js"
+    ],
+    "limit": "6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Campos del asistente · trozo diferido compartido por publicar y editar (los campos y el formulario de cada pantalla, y la ubicación con su buscador; sin Leaflet ni el paso de las fotos)",
+    "path": [
+      "dist/client/assets/fields-*.js"
+    ],
+    "limit": "11.6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Asistente de publicar · trozo diferido (sin Leaflet ni el paso de las fotos)",
+    "path": [
+      "dist/client/assets/publicar-*.js",
+      "dist/client/assets/location-leaflet-*.js",
+      "!dist/client/assets/publicar-entrada-*.js"
+    ],
+    "limit": "15 KB",
+    "gzip": true
+  },
+  {
+    "name": "Entrada de publicar · trozo diferido (/publicar sin cuenta, la verificación, la vuelta tras el código y «¿Quiere añadir un correo?»; las piezas del paso 1 que comparte con el asistente)",
+    "path": [
+      "dist/client/assets/publicar-entrada-*.js",
+      "dist/client/assets/wizard-parts-*.js",
+      "dist/client/assets/publish-return-*.js"
+    ],
+    "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Rejilla de fotos · trozo diferido compartido por el paso 7 y el editor de fotos (la rejilla, la cola de subida, el arrastre y el estado de cada foto nueva; la leen photos-* y editar-*)",
+    "path": [
+      "dist/client/assets/photo-grid-*.js"
+    ],
+    "limit": "4.75 kB",
+    "gzip": true
+  },
+  {
+    "name": "Fotos del asistente · trozo diferido (el paso 7: rejilla, subida y orden; se pide al llegar a las fotos)",
+    "path": [
+      "dist/client/assets/photos-*.js",
+      "dist/client/assets/resize-*.js",
+      "dist/client/assets/concurrency-*.js"
+    ],
+    "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Zona del admin · trozo diferido (cola, revisar, casas y segundo código)",
+    "path": [
+      "dist/client/assets/admin-*.js",
+      "dist/client/assets/review-*.js"
+    ],
+    "limit": "14 KB",
+    "gzip": true
+  },
+  {
+    "name": "Editar casas del admin · trozo diferido (asistir-*, ticket 10 de la ronda de Ana: la ficha editable, el asistente, «Editar un dato» y el calendario de una casa ajena con el puerto del admin, y la lista de borradores; las pantallas son las del anfitrión, en sus trozos)",
+    "path": [
+      "dist/client/assets/asistir-*.js"
+    ],
+    "limit": "3 KB",
+    "gzip": true
+  },
+  {
+    "name": "Puerto de la edición · trozo compartido (editor-port-*: de quién se lee y con qué se guarda una casa en el asistente, la ficha editable, «Editar un dato», las fotos y el calendario, y la consulta del calendario; lo leen esas pantallas y la zona del admin)",
+    "path": [
+      "dist/client/assets/editor-port-*.js"
+    ],
+    "limit": "1.25 KB",
+    "gzip": true
+  },
+  {
+    "name": "Favoritos · trozo diferido (la pantalla; el corazón y la lista del teléfono van en el JS inicial)",
+    "path": [
+      "dist/client/assets/favoritos-*.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
+  },
+  {
+    "name": "Actividad · trozo diferido (la pantalla del propietario; la consulta y el contador de la pestaña van en el JS inicial)",
+    "path": [
+      "dist/client/assets/actividad-*.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
+  },
+  {
+    "name": "Calendario · trozo diferido (la pantalla del propietario y las reglas del calendario, que comparte con el adaptador de datos, la rejilla del mes, que comparte con la ficha, su consulta, el selector ₡ | $ y la barra de pestañas que se esconde al bajar; se precarga con las pantallas del propietario)",
+    "path": [
+      "dist/client/assets/calendario-*.js",
+      "dist/client/assets/calendar-*.js",
+      "dist/client/assets/month-grid-*.js"
+    ],
+    "limit": "9.1 kB",
+    "gzip": true
+  },
+  {
+    "name": "Airbnb · importación, exportación y gestión de conexiones por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
+    "path": ["dist/client/assets/airbnb-*.js"],
+    "limit": "9.5 kB",
+    "gzip": true
+  },
+  {
+    "name": "Hoja «Pausar la casa» · trozo diferido (antes «Cerrar la casa»; se pide al tocar «Pausar la casa» o en reposo en el Calendario)",
+    "path": [
+      "dist/client/assets/close-sheet-*.js"
+    ],
+    "limit": "1.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Hoja «Marcar una reserva» · trozo diferido (se pide al tocar «Marcar una reserva» o en reposo en el Calendario; el calendario de rango, range-calendar-*, es el de la búsqueda y la hoja de contacto y cuenta en sus límites)",
+    "path": [
+      "dist/client/assets/mark-sheet-*.js"
+    ],
+    "limit": "1.65 KB",
+    "gzip": true
+  },
+  {
+    "name": "Promoción y suscripción · trozo diferido (la pantalla del propietario, y la tarjeta «Suscripción» y la fila «Método de pago» de Cuenta; se precarga con las pantallas del propietario)",
+    "path": [
+      "dist/client/assets/suscripcion-*.js"
+    ],
+    "limit": "7 KB",
+    "gzip": true
+  },
+  {
+    "name": "Hoja de confirmación · trozo diferido (la comparten «Promoción y suscripción», Cuenta, Mis casas y la ficha editable: parar una suscripción, cerrar sesión, descartar un borrador o un cambio en revisión)",
+    "path": [
+      "dist/client/assets/confirm-sheet-*.js"
+    ],
+    "limit": "1 KB",
+    "gzip": true
+  },
+  {
+    "name": "Calendario de la ficha · trozo diferido (se pide tras hidratar, en reposo o al acercarse la sección: la sección y la rejilla del mes; las reglas del calendario, calendar-*, ~2,2 KB, las comparte con el del propietario y las mide su entrada)",
+    "path": [
+      "dist/client/assets/listing-calendar-*.js",
+      "dist/client/assets/month-grid-*.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
+  },
+  {
+    "name": "Web Vitals · trozo que se importa tras load (web-vitals y su baliza)",
+    "path": [
+      "dist/client/assets/vitals-*.js"
+    ],
+    "limit": "5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Service worker · /sw.js (se descarga aparte, fuera de la zona privada)",
+    "path": [
+      "dist/client/sw.js"
+    ],
+    "limit": "4 KB",
+    "gzip": true
+  }
+]

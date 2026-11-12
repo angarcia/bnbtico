@@ -1,0 +1,522 @@
+name: app
+
+on:
+  push:
+    branches: [develop, main, refactor/limpieza-segura]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: Particiones E2E (solo verificación, sin publicar)
+        required: true
+        default: "2"
+        type: choice
+        options: ["2", "3"]
+
+concurrency:
+  group: app-${{ github.ref == 'refs/heads/main' && github.ref || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Sin material de trabajo, copias históricas, documentación ni herramientas manuales de la raíz.
+  # Checkout parcial: design/ solo se descarga donde lo necesitan las pruebas.
+  # En modo no cónico, los patrones positivos incluyen y los negativos excluyen.
+  plan:
+    concurrency:
+      group: app-verify-plan-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      environment: ${{ steps.target.outputs.environment }}
+      build: ${{ steps.target.outputs.build }}
+      matrix: ${{ steps.shards.outputs.matrix }}
+      total: ${{ steps.shards.outputs.total }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Seleccionar destino
+        id: target
+        working-directory: apps/app
+        run: node scripts/deploy-target.mjs select
+      - name: Matriz E2E
+        id: shards
+        working-directory: apps/app
+        env:
+          SHARD_COUNT: ${{ inputs.shards || '2' }}
+        run: |
+          matrix=$(node scripts/ci-e2e.mjs matrix "$SHARD_COUNT")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "total=$SHARD_COUNT" >> "$GITHUB_OUTPUT"
+
+  quality:
+    concurrency:
+      group: app-verify-quality-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-quality
+    defaults:
+      run:
+        working-directory: apps/app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          # El inventario E2E también lee las fotos al cargar los archivos de pruebas.
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/*
+            /design/prototype/
+            /design/pantallas/
+            !/design/pantallas/*
+            /design/pantallas/fotos/
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Tipos
+        run: pnpm typecheck
+      - name: Navegador para el canario unitario
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Pruebas unitarias
+        run: pnpm test
+      - name: Prototipo
+        working-directory: .
+        run: pnpm test:prototype
+      - name: Inventario de dos y tres particiones
+        id: inventory
+        run: node scripts/ci-artifacts.mjs inventory "$RUNNER_TEMP/$CI_ARTIFACT_NAME"
+      - name: Inventario E2E
+        if: always() && steps.inventory.outputs.safe_to_upload == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-inventory-attempt-${{ github.run_attempt }}
+          path: ${{ steps.inventory.outputs.publish }}
+          retention-days: 3
+      - name: Borrar diagnósticos privados
+        if: always()
+        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"
+
+  database:
+    concurrency:
+      group: app-verify-database-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Supabase de contratos
+        working-directory: .
+        run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime
+      - name: Tipos de la base al día con las migraciones
+        run: |
+          pnpm db:types
+          git diff --exit-code -- src/domain/database.types.ts || { echo "::error::database.types.ts no coincide con las migraciones: ejecute pnpm --filter app db:types y confirme el resultado."; exit 1; }
+      - name: Pruebas de base (contrato contra PostgREST)
+        run: pnpm test:db
+
+  e2e:
+    concurrency:
+      group: app-verify-e2e-${{ github.ref }}-${{ matrix.shard }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-e2e-${{ matrix.shard }}-of-${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: apps/app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/*
+            /design/pantallas/
+            !/design/pantallas/*
+            /design/pantallas/fotos/
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Dependencias
+        run: |
+          umask 077
+          printf 'paso\tsegundos\tcodigo\n' > "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv"
+          /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'dependencias\t%e\t%x' pnpm install --frozen-lockfile > "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
+
+      - name: Supabase local (Docker del runner)
+        working-directory: .
+        run: /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'supabase\t%e\t%x' pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime >> "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
+      - name: Variables locales para las pruebas de navegador
+        run: /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'variables-locales\t%e\t%x' pnpm dev:vars >> "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
+      - name: Build local para las pruebas de navegador (contra Supabase local)
+        run: /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'build-local\t%e\t%x' pnpm build >> "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
+      - name: Navegador de Playwright
+        run: /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'navegador\t%e\t%x' pnpm exec playwright install --with-deps chromium >> "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
+      - name: Sanear tiempos de preparación
+        id: preparation
+        if: always()
+        # Publica solo el TSV de tiempos y códigos; preparation.log se queda privado y lo borra «Borrar diagnósticos privados».
+        run: node scripts/ci-artifacts.mjs preparation "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv"
+      - name: Tiempos de preparación E2E
+        if: always() && steps.preparation.outputs.safe_to_upload == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-preparation-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}
+          path: ${{ steps.preparation.outputs.publish }}
+          retention-days: 3
+      - name: Ficha real, hidratación y shell (Pixel 7)
+        id: e2e
+        run: node scripts/ci-artifacts.mjs e2e "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "${{ matrix.shard }}" "${{ matrix.total }}"
+      - name: Diagnóstico de Playwright
+        if: always() && steps.e2e.outputs.safe_to_upload == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}
+          path: ${{ steps.e2e.outputs.publish }}
+          retention-days: 3
+      - name: Puerta de tamaño (zona privada < 160 KB gz)
+        run: pnpm size
+      - name: Borrar diagnósticos privados
+        if: always()
+        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.tsv" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"
+
+  lighthouse:
+    concurrency:
+      group: app-verify-lighthouse-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-lighthouse
+    defaults:
+      run:
+        working-directory: apps/app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/*
+            /design/pantallas/
+            !/design/pantallas/*
+            /design/pantallas/fotos/
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Supabase de Lighthouse
+        working-directory: .
+        run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime
+      - run: pnpm dev:vars
+      - run: pnpm build
+      # Perfil móvil por defecto de Lighthouse (RTT 150 ms, 1,6 Mbit/s, CPU 4×) con throttling devtools, contra el mismo
+      # build local y Supabase local; mediana de 3 ejecuciones. Ver tests/lighthouse/lighthouse.spec.ts.
+      # Bloquea en todas las ramas: si falla, no se despliega. (2026-10-23: en develop dejó de bloquear unas horas porque
+      # la ficha rozaba los 2,0 s en el runner; con la portada sin competencia mide 1,60 s en el Mac. Ticket 12.)
+      - name: Puerta de Lighthouse (LCP ficha < 2,0 s, shell instalado < 2,5 s)
+        id: lighthouse
+        run: CHROMIUM_PATH="$(command -v google-chrome)" node scripts/ci-artifacts.mjs lighthouse "$RUNNER_TEMP/$CI_ARTIFACT_NAME"
+      - name: Informes de Lighthouse
+        if: always() && steps.lighthouse.outputs.safe_to_upload == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-attempt-${{ github.run_attempt }}
+          path: ${{ steps.lighthouse.outputs.publish }}
+          retention-days: 3
+      - name: Publicar Lighthouse en el pull request
+        if: always() && steps.lighthouse.outputs.safe_to_upload == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_SUMMARY: ${{ steps.lighthouse.outputs.publish }}/lighthouse/resumen.md
+        run: |
+          test -f "$LIGHTHOUSE_SUMMARY" || exit 0
+          marker='<!-- 3bstays:lighthouse -->'
+          body="$(printf '%s\n' "$marker"; cat "$LIGHTHOUSE_SUMMARY"; printf '\nCommit `%s` · resumen en el artefacto «lighthouse-attempt-%s».\n' "${{ github.sha }}" "${{ github.run_attempt }}")"
+          id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
+          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
+      - name: Borrar diagnósticos privados
+        if: always()
+        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"
+
+  report:
+    concurrency:
+      group: app-verify-report-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
+    needs: [plan, quality, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-report
+      CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: e2e-*-attempt-${{ github.run_attempt }}
+          path: ci-artifacts/
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: playwright-*-attempt-${{ github.run_attempt }}
+          path: ci-artifacts/
+      - name: Resumen combinado
+        id: summary
+        if: always()
+        env:
+          SHARD_COUNT: ${{ needs.plan.outputs.total }}
+        run: node apps/app/scripts/ci-artifacts.mjs report "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "ci-artifacts/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json" ci-artifacts "$SHARD_COUNT"
+      - name: Informe combinado
+        if: always() && steps.summary.outputs.safe_to_upload == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-summary-attempt-${{ github.run_attempt }}
+          path: ${{ steps.summary.outputs.publish }}
+          retention-days: 3
+      - name: Borrar diagnósticos privados
+        if: always()
+        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"
+
+  deploy:
+    concurrency:
+      group: app-publish-${{ needs.plan.outputs.environment }}
+      cancel-in-progress: false
+    needs: [plan, quality, database, e2e, lighthouse, report]
+    if: >-
+      ${{ always() && (github.event_name == 'push' || github.event_name == 'pull_request') &&
+          needs.plan.result == 'success' && needs.quality.result == 'success' &&
+          needs.database.result == 'success' && needs.e2e.result == 'success' &&
+          needs.lighthouse.result == 'success' && needs.report.result == 'success' &&
+          needs.plan.outputs.build == 'true' &&
+          (needs.plan.outputs.environment == 'production' ||
+           needs.plan.outputs.environment == 'pruebas' ||
+           needs.plan.outputs.environment == 'refactor') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/app
+    env:
+      # main → producción (sin ruta todavía); develop y pull requests → pruebas (pruebas.3bstays.com).
+      DEPLOY_ENV: ""
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/.scratch/
+            !/backups/
+            !/docs/
+            !/scripts/
+            !/.claude/
+            !/design/
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Seleccionar destino
+        id: target
+        run: node scripts/deploy-target.mjs select
+      - name: Comprobar candidato al entrar
+        id: freshness-entry
+        if: steps.target.outputs.publish == 'deploy' || steps.target.outputs.publish == 'preview'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          PUBLISH_MODE: ${{ steps.target.outputs.publish }}
+        run: node scripts/deploy-freshness.mjs
+      - name: Build para desplegar (navegador y worker)
+        if: steps.target.outputs.build == 'true'
+        env:
+          CLOUDFLARE_ENV: ${{ steps.target.outputs.environment }}
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          # Números de atención por WhatsApp (Ayuda); sin ellos el botón sale deshabilitado.
+          VITE_WA_OWNERS: ${{ vars.WA_OWNERS || secrets.WA_OWNERS }}
+          VITE_WA_GUESTS: ${{ vars.WA_GUESTS || secrets.WA_GUESTS }}
+          # Sitekey de Turnstile (pública); sin ella el código se pide sin token (y falla si Supabase Auth exige captcha).
+          VITE_TURNSTILE_SITE_KEY: ${{ steps.target.outputs.environment != 'refactor' && (vars.TURNSTILE_SITE_KEY || secrets.TURNSTILE_SITE_KEY) || '' }}
+        run: |
+          test ! -e .dev.vars && test ! -e .env.local
+          test -n "$VITE_SUPABASE_URL" -a -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Faltan SUPABASE_URL o SUPABASE_ANON_KEY en GitHub (variables o secretos)."; exit 1; }
+          pnpm build
+      - name: Validar destino generado
+        id: target-check
+        if: steps.target.outputs.build == 'true'
+        env:
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+        run: node scripts/deploy-target.mjs validate dist/3bstays/wrangler.json
+      - name: Puerta de tamaño (zona privada < 160 KB gz)
+        run: pnpm size
+
+      - name: Comprobar candidato antes de publicar
+        id: freshness-publish
+        if: steps.target.outputs.publish == 'deploy' || steps.target.outputs.publish == 'preview'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          PUBLISH_MODE: ${{ steps.target.outputs.publish }}
+        run: node scripts/deploy-freshness.mjs
+
+      - name: Secreto anon del refactor
+        if: steps.target.outputs.environment == 'refactor' && steps.target.outputs.publish == 'deploy'
+        env:
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+        run: node scripts/deploy-target.mjs secrets "$RUNNER_TEMP/worker-secrets.json"
+
+      - name: Secretos del worker
+        if: (steps.target.outputs.environment == 'pruebas' || steps.target.outputs.environment == 'production') && (steps.target.outputs.publish == 'deploy' || steps.target.outputs.publish == 'preview')
+        working-directory: .
+        env:
+          # Producción antes del lanzamiento solo sirve la portada (LAUNCHED=false): desde main no recibe ningún secreto.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref == 'refs/heads/main' && '' || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ github.ref == 'refs/heads/main' && '' || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          PURGE_SECRET: ${{ github.ref == 'refs/heads/main' && '' || secrets.PURGE_SECRET }}
+          CF_ZONE_ID: ${{ github.ref == 'refs/heads/main' && '' || secrets.CLOUDFLARE_ZONE_ID }}
+          CF_PURGE_TOKEN: ${{ github.ref == 'refs/heads/main' && '' || secrets.CLOUDFLARE_PURGE_TOKEN }}
+          # Fase 5: avisos por WhatsApp (Twilio sandbox) y reloj de pruebas; sin ellos, apagados.
+          TWILIO_ACCOUNT_SID: ${{ github.ref == 'refs/heads/main' && '' || secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && '' || secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ github.ref == 'refs/heads/main' && '' || secrets.TWILIO_WHATSAPP_FROM }}
+          WHATSAPP_ALLOWLIST: ${{ github.ref == 'refs/heads/main' && '' || secrets.WHATSAPP_ALLOWLIST }}
+          TEST_CLOCK_SECRET: ${{ github.ref == 'refs/heads/main' && '' || secrets.TEST_CLOCK_SECRET }}
+          # Fase 5: Stripe en modo de prueba (cuenta de Ana); nunca desde main (en producción los pagos están apagados).
+          STRIPE_SECRET_KEY: ${{ github.ref == 'refs/heads/main' && '' || secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ github.ref == 'refs/heads/main' && '' || secrets.STRIPE_WEBHOOK_SECRET }}
+        # Los que aún no existan en GitHub no se suben (la purga responde 503 hasta tenerlos).
+        run: |
+          jq -n 'env | {SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, PURGE_SECRET, CF_ZONE_ID, CF_PURGE_TOKEN, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, WHATSAPP_ALLOWLIST, TEST_CLOCK_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET} | with_entries(select(.value != null and .value != ""))' > "$RUNNER_TEMP/worker-secrets.json"
+
+      - name: Desplegar
+        id: deploy
+        if: steps.target.outputs.publish == 'deploy' && steps.target-check.outcome == 'success' && steps.freshness-publish.outcome == 'success'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/app
+          packageManager: pnpm
+          wranglerVersion: "4.152.0"
+          command: deploy --config dist/3bstays/wrangler.json --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
+
+      - name: Versión de vista previa
+        id: preview
+        if: steps.target.outputs.publish == 'preview' && steps.target-check.outcome == 'success' && steps.freshness-publish.outcome == 'success'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/app
+          packageManager: pnpm
+          wranglerVersion: "4.152.0"
+          command: versions upload --config dist/3bstays/wrangler.json --preview-alias pr-${{ github.event.number }} --secrets-file ${{ runner.temp }}/worker-secrets.json --message "${{ github.sha }}"
+
+      - name: Publicar la URL de vista previa en el pull request
+        if: steps.preview.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTPUT: ${{ steps.preview.outputs.command-output }}
+          URL: ${{ steps.preview.outputs.deployment-url }}
+        run: |
+          alias_url=$(printf '%s' "$OUTPUT" | grep -oE 'https://pr-[a-z0-9-]+\.[a-z0-9.-]+\.workers\.dev' | head -1)
+          # Comentario propio con marca (no --edit-last: el último comentario del bot puede ser el de Lighthouse).
+          marker='<!-- 3bstays:vista-previa -->'
+          body="$(printf '%s\nVista previa de `%s`: %s' "$marker" "${{ github.sha }}" "${alias_url:-$URL}")"
+          id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
+          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
+
+      - name: Borrar los secretos del disco
+        if: always()
+        working-directory: .
+        run: rm -f "$RUNNER_TEMP/worker-secrets.json"

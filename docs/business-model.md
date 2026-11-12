@@ -11,7 +11,7 @@ Referencia actual, sin aumento aprobado. La usuaria acepta evaluar una subida pa
 
 | Concepto | Valor de referencia |
 |---|---|
-| Suscripción por casa activa | ₡9.900 / mes |
+| Suscripción por casa activa | ₡2.900 / mes (decidido el 2026-10-27; antes, referencia de ₡9.900) |
 | Oferta de lanzamiento | Primeras 50 casas: 1 año gratis; siguientes 50: 6 meses; siguientes 100: 3 meses |
 | Pago anual | 10 meses (2 gratis) |
 | Casa en revisión o pausada | ₡0 |
@@ -32,7 +32,7 @@ La promoción se limita a **200 casas en total**, con estos tramos:
 - Cada casa ocupa una plaza, aunque varias pertenezcan al mismo propietario o agencia. El beneficio se asigna por casa: una cuenta no obtiene automáticamente el mismo período para todas sus propiedades.
 - Criterio propuesto: asignar plaza y comenzar el período al publicarse por primera vez la casa aprobada. El evento exacto de asignación y las reglas sobre duplicados o republicación aún deben concretarse; crear una cuenta no asegura una plaza bajo esta propuesta.
 - El beneficio es publicar la casa durante ese período sin pagar la suscripción; no se limita al registro de la cuenta. La identidad obligatoria y los requisitos de publicación se mantienen.
-- Sustituye tanto el primer mes gratis anterior como las propuestas de tres meses para todas las casas o de cupos por propietario. Para la casa 201 en adelante no se ha aprobado un período gratuito en esta promoción. La cuota posterior sigue siendo una referencia de ₡9.900/mes por casa; no se ha aprobado otra cifra.
+- Sustituye tanto el primer mes gratis anterior como las propuestas de tres meses para todas las casas o de cupos por propietario. Para la casa 201 en adelante no se ha aprobado un período gratuito en esta promoción. La cuota posterior es ₡2.900/mes por casa (decidido el 2026-10-27; hasta entonces la referencia era ₡9.900).
 - Una posible fecha límite adicional al cupo y la combinación con el descuento anual siguen pendientes. Empezar sin tarjeta y requerir aceptación de la suscripción al terminar son propuestas por concretar en el flujo de cobro, no funciones implementadas.
 - Primero se desarrollará la app; el contacto comercial con propietarios y agencias comenzará cuando esté funcionando. Preparación y mensajes en [marketing.md](marketing.md).
 
@@ -53,7 +53,7 @@ Se estudia un descuento por volumen manteniendo la suscripción por casa activa,
 
 El ejemplo «50 casas a US$7 = US$350/mes» ilustra un descuento uniforme; no es el resultado de una escala marginal. Si se eligen tramos marginales, US$7 se aplicaría solo a las casas de ese tramo y cambiaría el total. Resolver esa diferencia antes de mostrar precios o implementar cobros.
 
-- US$20 es una referencia redonda usada en la conversación, no una conversión fija de ₡9.900. La tarifa individual documentada sigue siendo ₡9.900/mes como referencia; moneda y precios finales pendientes.
+- US$20 es una referencia redonda usada en la conversación, no una conversión fija de ₡9.900. La tarifa individual pasó a ₡2.900/mes el 2026-10-27 (antes, ₡9.900 como referencia).
 - La promoción sigue asignándose por casa: 12, 6 o 3 meses según su posición. No cobrar durante el período gratuito propio de cada casa. Definir cómo cuentan las casas gratuitas al calcular un descuento y cómo se gestionan los vencimientos distintos dentro de una agencia.
 - Casas en revisión o pausadas mantienen la regla vigente de ₡0. Definir también altas, bajas, cambio de tramo y relación con el descuento anual antes de contratar.
 - Validar soporte, verificaciones, moderación, pasarela y consultas recibidas antes de fijar un precio sostenible. No se ha demostrado rentabilidad a US$7.
@@ -66,7 +66,7 @@ La plataforma sí gestiona el cobro de la suscripción, con una pasarela costarr
 
 - **Tarjeta:** tokenizada, renovación automática mensual o anual.
 - **SINPE Móvil:** no es recurrente. Cada ciclo el owner paga desde su banco; la pasarela confirma por webhook. La app recuerda por WhatsApp 3 días antes; si no paga, la casa pasa a `past_due` con 5 días de gracia y luego a `paused`.
-- El checkout se hace en la **web** (enlace desde la app) para evitar las comisiones y reglas de compras in-app de Apple/Google. Validar antes de lanzar si la suscripción califica como "servicio consumido fuera de la app".
+- ~~El checkout se hace solo en la **web**~~ (sustituido el 2026-11-02, Daniel): cuando haya apps de iOS y Android, la suscripción también se podrá pagar con las suscripciones de Apple y Google, además de en la web. Pendiente: comisión de las tiendas (15–30 %) y conciliar los dos canales.
 
 ## Aclaraciones de la sesión
 - **"¿Se puede pagar por esos medios desde la app?"** Sí: la app gestiona el cobro de la suscripción (es dinero para la plataforma, no entre owner y cliente). Tarjeta = recurrente automático. SINPE Móvil = el owner inicia el pago cada ciclo; la pasarela lo confirma por API, así no hay conciliación manual. Vale la pena mantener SINPE porque muchos owners no usan tarjeta online.
@@ -77,7 +77,7 @@ La plataforma sí gestiona el cobro de la suscripción, con una pasarela costarr
 Marca bnbtico, rana sobre hoja en rojo coral, aplicada al prototipo el 2026-10-05. CasaTica permanece como nombre del repositorio y archivo HTML. Disponibilidad de dominio, redes y marca pendientes; no considerar propuestas anteriores como disponibilidad confirmada.
 
 ## Economía unitaria (orientativa)
-- Ingreso por casa que paga la tarifa individual de referencia: ₡9.900/mes. 150 casas de pago a esa tarifa suman ₡1.485.000/mes antes de costes. Las casas gratuitas y los futuros descuentos para agencias cambian ese cálculo; no equiparar casas publicadas y casas de pago.
+- Ingreso por casa que paga la tarifa individual: ₡2.900/mes (desde el 2026-10-27). 150 casas de pago a esa tarifa suman ₡435.000/mes antes de costes (con la referencia anterior de ₡9.900 eran ₡1.485.000). Las casas gratuitas y los futuros descuentos para agencias cambian ese cálculo; no equiparar casas publicadas y casas de pago.
 - Retorno para el owner: una noche de la casa media del catálogo (₡80–150k) ya cubre el mes.
 - Coste de identidad de ambos roles: altas de clientes y propietarios, reintentos facturables y reverificaciones justificadas, además del mínimo mensual del proveedor. No cobrar ni repetir por cada casa o cada conversación. Ver `identidad-y-seguridad.md`.
 

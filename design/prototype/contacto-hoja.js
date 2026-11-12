@@ -13,7 +13,7 @@ function contactCompose(id,d={}){
   const h=HOUSES.find(x=>x.id===id);if(!h)return CONTACT_DEFAULT_MESSAGE;
   const dates=contactDates(d),people=Number(d.people)>0?`${Number(d.people)} persona${Number(d.people)===1?'':'s'}`:'';
   const ask=dates&&people?`¿Está disponible ${dates} para ${people}?`:dates?`¿Está disponible ${dates}?`:people?`¿Está disponible para ${people}?`:'¿Está disponible?';
-  return `Hola, vi ${h.t} en bnbtico y me interesa. ${ask} Gracias.`;
+  return `Hola, vi ${h.t} en 3bstays y me interesa. ${ask} Gracias.`;
 }
 if(typeof document!=='undefined'&&document.head){const st=document.createElement('style');st.textContent='@container (max-width:799px){.detail-side [data-contact]{display:none}}';document.head.appendChild(st);}
 {const previous=SCREENS.detail;SCREENS.detail=()=>{

@@ -1,0 +1,85 @@
+
+/* ---------- Asistente de publicar (ticket 07; decisión 2026-10-21) ---------- */
+.strong{font-weight:var(--w-medium)}
+.label-plain{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.choice{cursor:pointer}
+.counters{padding:0;border-radius:var(--r-tile)}
+/* Publicar: título y cierre arriba; progreso y cuenta en sus propias filas. */
+.wizard-heading{display:flex;flex-direction:column;gap:8px;flex:none}
+.header-flow.publish-header{margin:0;min-height:44px}
+.publish-header h1{white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+.publish-header .header-close{flex:0 0 44px;width:44px;height:44px;padding:0;justify-content:center;color:var(--muted)}
+.wizard-heading .stage-label{align-self:flex-end;color:var(--muted);font-variant-numeric:tabular-nums;min-height:17px}
+.wizard-heading .stage-summary{align-self:stretch;flex-direction:row;align-items:baseline;justify-content:space-between;gap:8px}
+.stage-summary h2{font-size:23px;line-height:1.2;color:var(--fg)}
+.stage-summary>span{flex:none}
+/* Un solo título en el resumen; compactar espacios, conservando objetivos táctiles y toda la información. */
+.publish-form.publish-review{gap:8px}
+.publish-review .review-row{min-height:44px}
+.publish-form .counters{background:transparent;border:0;border-radius:0;box-shadow:none}
+:is(.publish-form,.filter-counters) .counter{padding-inline:0;gap:8px}
+.publish-form .counter{min-height:78px;padding-block:12px}
+:is(.publish-form,.filter-counters) .counter-label{display:flex;align-items:center;gap:12px;min-width:0;font-weight:400;overflow-wrap:anywhere}
+:is(.publish-form,.filter-counters) .counter-label svg{flex:none;color:var(--muted)}
+:is(.publish-form,.filter-counters) .counter .ctl{flex:none;gap:0}
+:is(.publish-form,.filter-counters) .counter .ctl button{width:44px;height:44px;flex:none}
+:is(.publish-form,.filter-counters) .counter .ctl b{width:28px}
+.grow-col textarea{flex:1}
+/* Con el teclado, el alto que le queda hasta la barra o el teclado (publish/fill-height.ts). */
+.grow-col textarea:focus{flex:1 0 var(--fill,0%)}
+.publish-form .grow-col:focus-within{flex:1 0 auto}
+.map-hint{left:12px;bottom:12px;z-index:500}
+.map-locate{position:absolute;right:10px;bottom:10px;z-index:500;box-shadow:var(--shadow);color:var(--primary)}
+.photos-count{font-weight:var(--w-medium)}
+.photos-grid .remove{border:0;cursor:pointer;z-index:1}
+.photos-grid .tag{pointer-events:none}
+/* Foto nueva de una edición: «En revisión» abajo, para no chocar con el ✕ en las casillas pequeñas. */
+.photos-grid .photo.is-pending .tag{top:auto;bottom:8px;left:8px}
+.photos-grid .tag.tag-pending{background:var(--muted);color:var(--bg)}
+.photos-grid .photo.uploading{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:0 12px}
+/* Arrastrar fotos: deslizar en vertical hace scroll hasta levantar la foto; levantada, el navegador ya no se queda el gesto. */
+.photos-grid .photo:not(.uploading){touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transform-origin:0 0}
+.photos-grid.is-dragging .photo{touch-action:none}
+/* Las demás se apartan solo con transform; al llegar el orden nuevo se quitan los transforms sin transición (is-settling). */
+.photos-grid.is-dragging .photo:not(.is-lifted){transition:transform 150ms var(--ease-out)}
+.photos-grid.is-settling .photo{transition:none !important}
+/* Movimiento reducido: mismo selector que la transición de arriba (si no, gana ella) — las fotos saltan a su sitio. */
+@media (prefers-reduced-motion:reduce){.photos-grid.is-dragging .photo:not(.is-lifted){transition:none}}
+.photos-grid .photo.is-lifted{z-index:2;transform-origin:50% 50%;box-shadow:var(--shadow-lift, 0 12px 28px rgba(28,43,42,.28))}
+/* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
+.sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:8px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:var(--w-medium)}
+.wa-card{gap:12px;padding:12px 14px;border-radius:var(--r-input)}
+.input-money input:not([type=checkbox]):not([type=file]):not([type=radio]){border:0;background:transparent;min-height:0;padding:0}
+
+/* Admin (ticket 09): cola de anuncios (21) y revisar (22) */
+.queue-card{padding:12px;align-items:flex-start;text-decoration:none;color:inherit}
+.queue-card .chev{align-self:center;color:var(--muted)}
+.queue-title{font-size:19px;line-height:1.1}
+.queue-foot{padding:0 4px}
+.search-field{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px;border-radius:8px;background:var(--surface);border:1px solid transparent;color:var(--muted)}
+.search-field input:not([type=checkbox]):not([type=file]):not([type=radio]){flex:1;min-width:0;min-height:46px;padding:0;border:0;border-radius:0;background:transparent;font-size:18px;color:var(--fg);outline:none;-webkit-appearance:none;appearance:none}
+.search-field input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.search-field:focus-within{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.house-row{padding:12px 14px}
+.house-thumb{width:56px;height:56px;border-radius:10px}
+.house-body{gap:2px}
+.house-title{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.house-row .badge{align-self:center;flex-shrink:0}
+.review-photo{width:200px}
+.review-photo-sm{width:110px}
+.review-owner{padding:12px 14px;border-radius:8px}
+.review-spacer{height:124px}
+.review-actions{flex-direction:column;gap:8px}
+.review-actions .row .btn{min-height:44px;font-size:16px;font-family:var(--body)}
+.diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.diff-col{display:flex;flex-direction:column;gap:2px;margin:0;overflow-wrap:anywhere}
+.diff-before span{color:var(--muted)}
+.diff-old summary,.diff-fold summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.diff-photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.diff-photos img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:var(--r-input)}
+.tabbar .nav{position:relative}
+.nav-count{position:absolute;top:2px;right:16px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:var(--w-medium);display:flex;align-items:center;justify-content:center}
+
+/* Aviso de versión nueva (service worker): se apoya en la barra de abajo (--chrome-bottom) o, sin ella, a 12 px del borde. */
+.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:7}

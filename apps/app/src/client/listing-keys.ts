@@ -1,0 +1,15 @@
+export const ownListingsKey = (userId: string) => ["own-listings", userId] as const;
+export const ownListingKey = (userId: string, id: string) => ["own-listing", userId, id] as const;
+export const ownActivityKey = (userId: string) => ["own-activity", userId] as const;
+export const ownStatsKey = (userId: string, id: string) => ["own-stats", userId, id] as const;
+export const ownResumableKey = (userId: string) => ["own-resumable", userId] as const;
+export const adminQueueKey = (userId: string) => ["admin-queue", userId] as const;
+export const adminListingKey = (userId: string, id: string) => ["admin-listing", userId, id] as const;
+export const adminHousesKey = (userId: string) => ["admin-houses", userId] as const;
+export const adminEditsKey = (userId: string) => ["admin-edits", userId] as const;
+export const adminEditKey = (userId: string, id: string) => ["admin-edit", userId, id] as const;
+export const adminReviewKey = (userId: string) => ["admin-review", userId] as const;
+export const adminEditReviewKey = (userId: string) => ["admin-review-edit", userId] as const;
+export const publicListingKey = (publicId: string) => ["listing", publicId] as const;
+export const listingsKey = ["listings"] as const;
+export const offerTakenKey = ["offer-taken"] as const;

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escritorio · Cliente · Explorar con barra superior</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="escritorio.css">
+</head>
+<body>
+<svg width="0" height="0" class="sprite" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <img class="logo" src="../../logo/3bstays-2026-11-10/logo-predeterminado.png" alt="3bstays">
+    <nav aria-label="Navegación principal">
+      <a href="#" aria-current="page"><svg class="ic"><use href="#i-search"/></svg>Explorar</a>
+      <a href="#"><svg class="ic"><use href="#i-heart"/></svg>Favoritos</a>
+      <a href="#"><svg class="ic"><use href="#i-user"/></svg>Mi cuenta</a>
+    </nav>
+    <div class="right">
+      <span class="seg" aria-label="Moneda"><b class="on">₡</b><b>$</b></span>
+      <a class="btn btn-outline btn-sm" href="#">Ingresar</a>
+    </div>
+  </div>
+</header>
+
+<main class="explore">
+  <h1>¿Para dónde va?</h1>
+  <div class="search">
+    <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+    <span class="grow"><b>Limón</b><span class="small muted">cualquier grupo</span></span>
+  </div>
+  <div class="chips">
+    <button class="chip" aria-pressed="true">Vacacional</button>
+    <button class="chip">Mensual</button>
+    <button class="chip">Más filtros</button>
+  </div>
+  <div class="result-line">
+    <span class="small muted"><b class="num ink">12 casas</b> en Limón</span>
+  </div>
+  <div class="grid">
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/hero.jpg" alt=""><span class="heart">♥</span><span class="price num">₡95 000</span></div><b>Crystal Jungle Villa</b><span>Cocles · 6 personas · Piscina</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/garden.jpg" alt=""><span class="heart">♡</span><span class="price num">₡52 000</span></div><b>Cabina Punta Uva</b><span>Punta Uva · 2 personas · Wifi</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/bistro.jpg" alt=""><span class="heart">♡</span><span class="price num">₡68 000</span></div><b>Rancho Manzanillo</b><span>Manzanillo · 4 personas · Mascotas</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/facade.jpg" alt=""><span class="heart">♡</span><span class="price num">₡120 000</span></div><b>Casa Playa Negra</b><span>Playa Negra · 8 personas · Frente al mar</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/bedroom.jpg" alt=""><span class="heart">♡</span><span class="price num">₡38 000</span></div><b>Habitación Cahuita</b><span>Cahuita · 2 personas · Aire acondicionado</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/kitchen.jpg" alt=""><span class="heart">♡</span><span class="price num">₡75 000</span></div><b>Apartamento Cocles</b><span>Cocles · 4 personas · Wifi</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/aerial.jpg" alt=""><span class="heart">♡</span><span class="price num">₡150 000</span></div><b>Villa Selva Azul</b><span>Punta Uva · 10 personas · Piscina</span></a>
+    <a class="lcard" href="#"><div class="photo"><img src="../fotos/beach.jpg" alt=""><span class="heart">♡</span><span class="price num">₡60 000</span></div><b>Cabinas Chiquita</b><span>Playa Chiquita · 3 personas · Parqueo</span></a>
+  </div>
+</main>
+<span class="mock-tag">E01 · barra superior del cliente · maqueta</span>
+</body>
+</html>

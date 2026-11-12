@@ -4,7 +4,10 @@
 -- Ejemplo (ajustar los uuid a usuarios existentes):
 -- insert into profiles (id, full_name, phone, phone_verified_at, is_owner) values
 --   ('00000000-0000-0000-0000-000000000001','Yorleny S.','+50688880001', now(), true);
--- insert into listings (owner_id, status, title, description, province, zone, capacity, bedrooms, bathrooms, features, nightly_price_crc, whatsapp_phone)
+-- El punto cae en su cantón (place_at: Limón, Talamanca, Cahuita) y la zona es de la lista, a 5 km o menos del punto.
+-- insert into listings (owner_id, status, title, description, province, canton, district, zone, zone_id, zone_source, lat, lng,
+--   capacity, bedrooms, bathrooms, features, nightly_price_crc, whatsapp_phone)
 -- values ('00000000-0000-0000-0000-000000000001','active','Casa Manzanillo, a pie de playa',
---   'Casa de madera a 80 m de la playa de Manzanillo, con rancho y hamacas.','Limón','Manzanillo',5,2,2,
+--   'Casa de madera a 80 m de la playa de Manzanillo, con rancho y hamacas.','Limón','Talamanca','Cahuita','Manzanillo',
+--   '704-manzanillo','list',9.6317,-82.6572,5,2,2,
 --   '{pets,ac,wifi,parking,kids_free,beachfront}', 85000, '+50688880001');

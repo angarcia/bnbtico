@@ -1,0 +1,162 @@
+{
+ "a": {
+  "publicId": "CT-1047",
+  "id": "3cc72a5f-b1a3-4c57-9b8b-58ff254eae6e",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Cocles frente al mar"
+ },
+ "b": {
+  "publicId": "CT-1048",
+  "id": "21f7c0ba-938b-4a44-a10b-dfec315ba605",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Cabaña Manzanillo con rancho"
+ },
+ "c": {
+  "publicId": "CT-1049",
+  "id": "51ea6458-6b1b-4035-bb68-b6edf4401dd9",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Loft Puerto Viejo cerca de todo"
+ },
+ "d": {
+  "publicId": "CT-1050",
+  "id": "67a02ad0-4839-423f-9286-597aa2541ce5",
+  "status": "active",
+  "hold": null,
+  "owner": "marco",
+  "title": "Habitación Playa Chiquita"
+ },
+ "e": {
+  "publicId": "CT-1051",
+  "id": "ea7bccd1-5c44-42ac-9277-2707f3a2c88f",
+  "status": "active",
+  "hold": null,
+  "owner": "marco",
+  "title": "Habitación privada en Cahuita"
+ },
+ "f": {
+  "publicId": "CT-1052",
+  "id": "96273ba5-406a-4cab-8692-c41e348ac4b6",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Villa Punta Uva en la selva"
+ },
+ "g": {
+  "publicId": "CT-1053",
+  "id": "ba80c640-fd97-4d1e-8f65-f8feeef0f3f2",
+  "status": "active",
+  "hold": null,
+  "owner": "marco",
+  "title": "Apartamento Limón centro"
+ },
+ "h": {
+  "publicId": "CT-1054",
+  "id": "6c1bfe56-8f64-4ea6-9651-c9fd558a8130",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Playa Negra tranquila"
+ },
+ "i": {
+  "publicId": "CT-1055",
+  "id": "3a153643-ed8b-43d2-94d5-9c5de92ef7ce",
+  "status": "active",
+  "hold": null,
+  "owner": "marco",
+  "title": "Casa Santa Teresa cerca del mar"
+ },
+ "j": {
+  "publicId": "CT-1056",
+  "id": "4526cfbb-65da-49bb-b67d-2583c6e3f2e0",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Jaguar Puerto Viejo"
+ },
+ "k": {
+  "publicId": "CT-1057",
+  "id": "1dcdab40-bb2b-40da-b332-cbd5e8e943b4",
+  "status": "draft",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Cabina Hone Creek"
+ },
+ "l": {
+  "publicId": "CT-1058",
+  "id": "db539e5d-9585-46bc-8038-00777faa7797",
+  "status": "review",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Cabaña Hone Creek con jardín"
+ },
+ "m": {
+  "publicId": "CT-1059",
+  "id": "896ca8cd-d248-4b14-9efc-b2239ee64131",
+  "status": "review",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Playa Bite con hamaca"
+ },
+ "n": {
+  "publicId": "CT-1060",
+  "id": "d0897908-0f6b-4f9c-9b64-f417e3463985",
+  "status": "changes",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Cabina Playa Grande Cahuita"
+ },
+ "o": {
+  "publicId": "CT-1061",
+  "id": "52de711a-979a-4c01-809b-a0606c8812e2",
+  "status": "rejected",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Siquirres vista al río"
+ },
+ "p": {
+  "publicId": "CT-1062",
+  "id": "cb1ff12c-8f16-4ae5-a513-f2c758a25d3e",
+  "status": "payment_due",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Playa Chiquita jardín"
+ },
+ "q": {
+  "publicId": "CT-1063",
+  "id": "73d9b5cc-ea35-4649-8a3a-ec4097be9c79",
+  "status": "inactive",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Cabaña Pocora junto al río"
+ },
+ "r": {
+  "publicId": "CT-1064",
+  "id": "ed2f2720-4e99-4f2b-a038-2330086cfda0",
+  "status": "active",
+  "hold": "paused",
+  "owner": "marco",
+  "title": "Casa Cocles con terraza"
+ },
+ "s": {
+  "publicId": "CT-1065",
+  "id": "f1c568a8-1c30-474a-b6f6-a8c4d9d2e373",
+  "status": "active",
+  "hold": "blocked",
+  "owner": "yorleny",
+  "title": "Casa Guápiles con piscina"
+ },
+ "t": {
+  "publicId": "CT-1066",
+  "id": "07f20db7-d32c-4379-8da4-88e3939f58f9",
+  "status": "active",
+  "hold": null,
+  "owner": "yorleny",
+  "title": "Casa Punta Uva bambú"
+ }
+}

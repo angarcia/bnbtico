@@ -1,0 +1,42 @@
+<!doctype html><meta charset="utf-8"><style>
+body{margin:0;font:15px/1.4 -apple-system,system-ui,sans-serif;background:#FFFBF2;color:#1C2B2A}
+.wrap{display:flex;gap:24px;padding:24px}
+.ph{width:340px;height:640px;background:#FFFBF2;border:1px solid #d9d2c3;border-radius:28px;padding:20px 16px;box-sizing:border-box;overflow:hidden;position:relative}
+h3{margin:0 0 4px;font-size:13px;color:#7a776f;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+h2{margin:0 0 14px;font-size:20px}
+.row{padding:12px 4px;border-bottom:1px solid #ebe5d8;display:flex;justify-content:space-between}
+.m{color:#6b6a63}.g{font-size:12px;color:#B2563A;font-weight:600;margin:16px 4px 2px;letter-spacing:.05em}
+.card{background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px;overflow:hidden}
+.ph-img{height:140px;background:linear-gradient(#bcd3e0,#d8cbb0)}.card div{padding:8px 12px}
+.map{position:absolute;inset:70px 0 0 0;background:#e8efe3}
+.pin{position:absolute;background:#fff;border-radius:6px;padding:4px 8px;font-size:13px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.lab{position:absolute;font-size:12px;color:#5a6a5a}
+.title{font-size:22px;font-weight:700;padding:24px 24px 0}
+.sel{background:#F7E4DC}
+</style>
+<body>
+<div class="title" id="t"></div>
+<div class="wrap" id="w"></div>
+<script>
+const o=new URLSearchParams(location.search).get('o');
+const map=`<div class="ph"><h3>Mapa</h3><h2>Casas en todas partes</h2><div class="map">
+<span class="lab" style="left:20px;top:30px">Guanacaste</span><span class="pin" style="left:30px;top:50px">₡70 000</span>
+<span class="lab" style="left:90px;top:200px">Puntarenas</span><span class="pin" style="left:100px;top:220px">₡55 000</span>
+<span class="lab" style="left:200px;top:300px">Limón</span><span class="pin" style="left:190px;top:330px">₡45 000</span><span class="pin" style="left:240px;top:390px">₡60 000</span><span class="pin" style="left:170px;top:440px">₡38 000</span></div></div>`;
+const card=(t,p)=>`<div class="card"><div class="ph-img"></div><div><b>${t}</b><br><span class="m">${p}</span></div></div>`;
+if(o==='1'){t.textContent='Opción 1 · Solo en el mapa';
+w.innerHTML=`<div class="ph"><h3>¿Dónde?</h3><h2>Zonas mezcladas (como hoy)</h2>
+<div class="row"><span>Puerto Viejo</span><span class="m">Talamanca, Limón</span></div>
+<div class="row"><span>Cahuita</span><span class="m">Talamanca, Limón</span></div>
+<div class="row"><span>Playa Negra</span><span class="m">Talamanca, Limón</span></div>
+<div class="row"><span>Jacó</span><span class="m">Garabito, Puntarenas</span></div>
+<div class="row"><span>Tamarindo</span><span class="m">Santa Cruz, Guanacaste</span></div></div>
+<div class="ph"><h3>Explorar · lista</h3><h2>12 casas <span class="m" style="font-weight:400">en Limón</span></h2>${card('Casa en Cocles','₡45 000 / noche')}${card('Casa en Cahuita','₡60 000 / noche')}<p class="m">Siempre una provincia o una zona; nunca «todas».</p></div>${map}`;}
+else{t.textContent='Opción 2 · Mapa en todas partes + provincia en «¿Dónde?»';
+w.innerHTML=`<div class="ph"><h3>¿Dónde?</h3><h2>Agrupadas por provincia</h2>
+<div class="row sel"><span>Todas las provincias</span><span class="m">40</span></div>
+<div class="g">LIMÓN</div><div class="row"><span>Todo Limón</span><span class="m">12</span></div>
+<div class="row"><span>Puerto Viejo</span><span class="m">Talamanca</span></div><div class="row"><span>Cahuita</span><span class="m">Talamanca</span></div>
+<div class="g">PUNTARENAS</div><div class="row"><span>Todo Puntarenas</span><span class="m">9</span></div><div class="row"><span>Jacó</span><span class="m">Garabito</span></div></div>
+<div class="ph"><h3>Explorar · lista</h3><h2>40 casas <span class="m" style="font-weight:400">en todas las provincias</span></h2>${card('Casa en Jacó','₡55 000 / noche')}${card('Casa en Cocles','₡45 000 / noche')}<p class="m">Todas, una provincia o una zona.</p></div>${map}`;}
+</script>

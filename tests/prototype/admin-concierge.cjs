@@ -35,7 +35,7 @@ assert.equal(run('relay.threads[0].initiatedBy'),'admin');
 assert.equal(run("conciergeCreate(draft,['CT-1042'])"),false,'repeat cannot overwrite or duplicate the existing contact');
 assert.equal(run('S.leads.length'),1);
 run("S.role='owner';");
-assert.match(run("SCREENS['o-leads']()"),/Consulta enviada por bnbtico a petición del cliente/);
+assert.match(run("SCREENS['o-leads']()"),/Consulta enviada por 3bstays a petición del cliente/);
 assert.doesNotMatch(run("SCREENS['o-leads']()"),/Apertura de WhatsApp · registro/);
 assert.match(run('launchOwnerMessage(relay.threads[0])'),/¿Aceptan mascotas\?/);
 assert.doesNotMatch(run("SCREENS['o-leads']()"),/Autorización por WhatsApp de ejemplo/,'admin consent notes are private');

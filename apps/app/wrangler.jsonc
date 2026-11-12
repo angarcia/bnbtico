@@ -1,0 +1,76 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "3bstays",
+  "main": "src/server/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // Sin esto, las navegaciones a estas rutas recibirían el index.html de la SPA sin pasar por el worker. `/` pasa por el
+    // worker para la portada estática (`/?pronto=1`, y producción antes del lanzamiento).
+    "run_worker_first": ["/", "/casa/*", "/robots.txt", "/sitemap.xml", "/_purge/*", "/_pruebas/*", "/vitals", "/errors", "/events", "/api/pago/*", "/api/calendarios/*", "/ical/*", "/webhooks/*", "/_pago-falso/*"]
+  },
+  // Las vinculaciones no se heredan: cada entorno repite version_metadata.
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
+  // El feed usa una capacidad secreta en la URL. Conservar logs explícitos saneados, sin invocaciones que graben esa URL.
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
+  // Cron diario (src/server/cron.ts): keep-alive a PostgREST y recorte de la telemetría. Los triggers no se heredan: cada
+  // entorno los repite. 09:17 UTC = 03:17 en Costa Rica.
+  // Fase 5: cada hora (un trigger por entorno, el plan gratuito permite 5 por cuenta): lo diario solo en la de las 09 UTC
+  // y los avisos por WhatsApp de 08:00 a 17:59 de Costa Rica (src/server/cron.ts runHourly).
+  "triggers": { "crons": ["17 * * * *"] },
+  // Local: SUPABASE_URL y SUPABASE_ANON_KEY salen de .dev.vars (pnpm dev:vars, desde `supabase status`).
+  "vars": { "ENVIRONMENT": "local" },
+  "env": {
+    "refactor": {
+      "name": "3bstays-refactor",
+      "vars": {
+        "ENVIRONMENT": "pruebas",
+        "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co",
+        "LISTING_CACHE": "no-store"
+      },
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "triggers": { "crons": [] },
+      "routes": [{ "pattern": "refactor.3bstays.com", "custom_domain": true }],
+      "workers_dev": false,
+      "preview_urls": false
+    },
+    "pruebas": {
+      "vars": {
+        "ENVIRONMENT": "pruebas",
+        "SUPABASE_URL": "https://bpxiggdzgzolcazaaboj.supabase.co",
+        // Avisos por WhatsApp (src/server/reminders.ts): Twilio sandbox, apagado hasta que estén los secretos
+        // TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM y WHATSAPP_ALLOWLIST. PUBLIC_ORIGIN es la base del
+        // enlace del aviso. El secreto TEST_CLOCK_SECRET abre
+        // /_pruebas/oferta/CT-####. Pagos (src/server/billing.ts): Stripe en modo de prueba, 503 hasta que estén los secretos
+        // STRIPE_SECRET_KEY y STRIPE_WEBHOOK_SECRET (va aquí y no en el panel: cada despliegue reescribe las variables).
+        "WHATSAPP_SENDER": "twilio",
+        "PAYMENTS": "stripe",
+        "PUBLIC_ORIGIN": "https://pruebas.3bstays.com"
+      },
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "triggers": { "crons": ["17 * * * *"] },
+      // Dominio de pruebas desde el cambio de marca (2026-11-11), protegido con Cloudflare Access.
+      "routes": [{ "pattern": "pruebas.3bstays.com", "custom_domain": true }],
+      "workers_dev": true,
+      "preview_urls": true
+    },
+    // 3bstays.com. Hasta el lanzamiento sirve SOLO la portada (LAUNCHED distinto de "true", src/domain/seo.ts
+    // landingOnly): por eso todas las peticiones pasan por el worker (run_worker_first: true), que deja salir la portada,
+    // robots, sitemap y sus ficheros y responde 404 con la portada a todo lo demás. Al lanzar: LAUNCHED "true",
+    // SUPABASE_URL del proyecto de producción y el mismo run_worker_first en lista que el nivel superior.
+    // Portada en 3bstays.com desde el 2026-11-11 (solo portada hasta el lanzamiento). www.3bstays.com no va aquí: se
+    // redirige a 3bstays.com con una regla de Cloudflare. Un dominio personalizado no convive con un registro DNS
+    // existente para el mismo nombre.
+    "production": {
+      "vars": { "ENVIRONMENT": "production", "LAUNCHED": "false" },
+      "routes": [{ "pattern": "3bstays.com", "custom_domain": true }],
+      // assets no se hereda por partes: si el entorno lo define, se repite entero.
+      "assets": { "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": true },
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "triggers": { "crons": ["17 * * * *"] },
+      "workers_dev": false,
+      "preview_urls": false
+    }
+  }
+}

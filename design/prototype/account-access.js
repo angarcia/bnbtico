@@ -3,7 +3,7 @@
 var accountAccess;
 if(typeof launchVerificationNote==='function'){
 accountAccess=(()=>{
- const KEY='bnbtico-account-demo-v1',roles=['guest','owner'];
+ const KEY='3bstays-account-demo-v1',roles=['guest','owner'];
  const state={accounts:{},sessions:{},challenge:null,emailLink:null,recovery:null,recoveryGrant:null,error:'',notice:'',mode:'register',name:'',phone:'',returnTo:null,storageAvailable:true};
  const role=()=>roles.includes(S.role)?S.role:'guest';
  const now=()=>relayNow();
@@ -94,7 +94,7 @@ accountAccess=(()=>{
  }
  function recover(email){
   const address=String(email||'').trim().toLowerCase();state.recovery=null;state.recoveryGrant=null;
-  if(!user()?.emailVerified||user().email!==address)return fail('No hay un correo confirmado coincidente en esta demo. Pedí ayuda a bnbtico.');
+  if(!user()?.emailVerified||user().email!==address)return fail('No hay un correo confirmado coincidente en esta demo. Pedí ayuda a 3bstays.');
   state.recovery={role:role(),email:address,expiresAt:now()+15*60000};state.error='';return true;
  }
  function confirmRecovery(){
@@ -135,7 +135,7 @@ SCREENS.profile=SCREENS['o-profile']=accountProfileScreen;
 SCREENS['account-email-offer']=()=>header('Tu cuenta está lista')+`<section class="card stack"><h3>Protegé el acceso a tu cuenta</h3><p>Tu WhatsApp ya está verificado. Añadí un correo para recuperar tu cuenta si perdés acceso a ese número.</p><p class="small">Es opcional. Podés añadirlo y confirmarlo después en Mi perfil.</p><button class="btn btn-primary" data-go="${accountProfileRoute()}">Añadir correo a mi perfil</button><button class="btn btn-ghost" data-account="continue">Ahora no · continuar</button>${accountDemoNote()}</section>`;
 SCREENS['account-phone']=()=>accountAccess.state.challenge?accountCodeScreen():header('Cambiar WhatsApp',accountAccess.session()?accountProfileRoute():'account-recovery')+`<section class="card stack"><p>Verificá el nuevo WhatsApp antes de sustituir el anterior. Conservás tu cuenta y tu verificación de identidad. Al completar el cambio se revocan las demás sesiones.</p>${S.role==='owner'?'<p class="small">Los WhatsApps propios de cada casa no se cambian automáticamente. Podés revisarlos desde Editar casa.</p>':''}<label for="account-new-phone">Nuevo WhatsApp con código de país</label><input id="account-new-phone" type="tel" placeholder="+506 80000002"><button class="btn btn-primary" data-account="change-phone">Verificar nuevo WhatsApp</button>${accountFeedback()}${accountDemoNote()}</section>`;
 SCREENS['o-whatsapp']=SCREENS['account-phone'];
-SCREENS['account-recovery']=()=>header('Recuperar mi cuenta','login')+`<section class="card stack"><p>Usá el correo que añadiste y confirmaste en tu perfil. Después podrás verificar tu nuevo WhatsApp para recuperar el acceso.</p><label for="account-recovery-email">Correo confirmado</label><input id="account-recovery-email" type="email"><button class="btn btn-primary" data-account="recover">Recuperar con mi correo</button>${accountAccess.state.recovery?'<p class="note">Enlace de ejemplo preparado. No se envió ningún correo.</p><button class="btn btn-ghost" data-account="recover-confirm">Simular apertura del enlace de recuperación</button>':''}${accountFeedback()}<h3>¿No tenés un correo confirmado?</h3><p class="small">Pedí ayuda a bnbtico para revisar la recuperación. Indicar tu nombre y otro número no basta para recuperar una cuenta. No mandés documentos ni códigos por este formulario.</p><button class="btn btn-ghost" data-go="support-info">Pedir ayuda a bnbtico</button>${accountDemoNote()}</section>`;
+SCREENS['account-recovery']=()=>header('Recuperar mi cuenta','login')+`<section class="card stack"><p>Usá el correo que añadiste y confirmaste en tu perfil. Después podrás verificar tu nuevo WhatsApp para recuperar el acceso.</p><label for="account-recovery-email">Correo confirmado</label><input id="account-recovery-email" type="email"><button class="btn btn-primary" data-account="recover">Recuperar con mi correo</button>${accountAccess.state.recovery?'<p class="note">Enlace de ejemplo preparado. No se envió ningún correo.</p><button class="btn btn-ghost" data-account="recover-confirm">Simular apertura del enlace de recuperación</button>':''}${accountFeedback()}<h3>¿No tenés un correo confirmado?</h3><p class="small">Pedí ayuda a 3bstays para revisar la recuperación. Indicar tu nombre y otro número no basta para recuperar una cuenta. No mandés documentos ni códigos por este formulario.</p><button class="btn btn-ghost" data-go="support-info">Pedir ayuda a 3bstays</button>${accountDemoNote()}</section>`;
 SCREENS['account-identity']=()=>header('Verificá tu identidad',accountProfileRoute())+`<section class="card stack"><p>${S.role==='owner'?'Antes de publicar tu primera casa':'Antes de contactar a un propietario'}, completá la verificación de identidad con Veriff. Tu WhatsApp ya está verificado.</p>${launchVerificationNote()}<p class="note">Simulación: no subas documentos ni fotos. No hay conexión con Veriff.</p><button class="btn btn-primary" data-account="identity">Simular verificación aprobada</button></section>`;
 const accountOldChrome=chrome;
 chrome=body=>{

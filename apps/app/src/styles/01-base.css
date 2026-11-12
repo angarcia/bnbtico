@@ -1,0 +1,217 @@
+/* 3bstays · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.3.3 */
+/* Fuentes alojadas aquí (variables, subconjuntos latin y latin-ext): Figtree para todo; los títulos en 600, más sobrios que el
+   Outfit 800 de antes (Daniel, 2026-10-29). Outfit sigue en /fonts solo para la portada. */
+@font-face{font-family:Figtree;font-style:normal;font-weight:300 900;font-display:swap;src:url(/fonts/figtree-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:Figtree;font-style:normal;font-weight:300 900;font-display:swap;src:url(/fonts/figtree-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+/* Respaldo con las métricas ajustadas para que el cambio de fuente no mueva el texto. */
+@font-face{font-family:"Figtree Fallback";src:local(Arial);ascent-override:94.32%;descent-override:24.82%;line-gap-override:0%;size-adjust:100.72%}
+:root{--display:Figtree,"Figtree Fallback",system-ui,sans-serif;--body:Figtree,"Figtree Fallback",system-ui,sans-serif}
+:root{
+  --bg:#FFFBF2;--surface:#FFFFFF;--surface-soft:color-mix(in srgb,var(--surface) 70%,transparent);--surface-2:#F6E7C8;--beige-soft:color-mix(in srgb,var(--surface-2) 55%,transparent);--chosen:color-mix(in srgb,var(--primary) 26%,transparent);--fg:#1C2B2A;--fg-title:#3E4A48;--muted:#5C6B69;--line:#E6DCC6;--line-nav:#EADFC8;--line-soft:#F0E6D2;
+  /* Pesos (revisión UX 2026-10-29, T1): 600 para títulos de pantalla y de casa, precios principales y el botón principal; 500 para el resto. */
+  --w-strong:600;--w-medium:500;
+  --brand:#D65C3C;--brand-ink:#B44C30;
+  --primary:#2F5D45;--primary-on:#FFFBF2;--primary-ink:#1F4231;
+  --selection:#7FA98A;--selection-ink:#16331F;
+  /* Salvia claro → verde tonal (Daniel, 2026-10-29): el verde al 14 % mezclado con el crema, opaco para que valga también
+     sobre las fotos (etiqueta «Activa»). */
+  --state-soft:color-mix(in srgb,var(--primary) 14%,var(--bg));--state-ink:#2F5D45;
+  --sun:#F2B544;--sun-soft:#FBE8C2;--sun-ink:#7A4E07;--review-soft:#F0E6D2;
+  --overlay:rgba(28,43,42,.86);--overlay-btn:rgba(255,251,242,.7);
+  --wa:#25D366;--wa-ink:#063B1E;--wa-icon:#1A9C55;--ochre:#A85A00;
+  --ok:#2F5D45;--warn:#C97A12;--bad:#C2432F;--bad-soft:#FBE3DF;--busy:#F5DDD4;--busy-ink:#9E3D22;
+  --shadow:0 2px 0 var(--line);--shadow-float:0 2px 0 var(--line),0 10px 24px -14px rgba(28,43,42,.35);
+  /* Esquinas menos redondeadas (Daniel, 2026-10-29): botones, campos y chips 8 px, etiquetas 6 px, tarjetas 12 px;
+     todo cuadrado salvo los avatares de las personas y los puntos de estado (también los botones de icono, 2026-10-29). */
+  --r:12px;--r-thumb:10px;--r-tile:12px;--r-input:8px;--r-cta:8px;--r-sheet:16px;
+  /* La barra de abajo, plana y pegada al borde (Daniel, 2026-11-04, tras probar la píldora de la tanda 1): 84 px sin el área
+     segura; los dejan libres .view, «Mapa», el mapa a pantalla completa y lo que se apoya en la barra (--chrome-bottom). */
+  --nav-h:84px;--gutter:16px;
+  /* Tarjetas flotantes (tanda 1, Daniel 2026-11-04): crema translúcida con desenfoque (la fuerte, para texto pequeño o campos;
+     la opaca, donde no hay desenfoque), borde de 1 px y sombra suave; esquinas de 12 (tarjetas) y 16 (barras); a 12 px del
+     borde más el área segura. `--chrome-bottom`: dónde se apoya lo que va encima de la barra de abajo (toasts, aviso de
+     versión, «Ver ficha»): sobre la barra si está a la vista, si no a 12 px del borde (reglas de html, más abajo). */
+  --float-bg:color-mix(in srgb,var(--bg) 80%,transparent);--float-bg-strong:color-mix(in srgb,var(--bg) 90%,transparent);--float-bg-solid:var(--bg);
+  --float-blur:blur(16px) saturate(1.2);--float-edge:color-mix(in srgb,var(--fg) 9%,transparent);
+  --float-shadow:0 1px 2px rgba(28,43,42,.08),0 12px 28px -14px rgba(28,43,42,.38);
+  --float-r:12px;--float-r-bar:16px;--float-gap:12px;
+  --float-top:calc(var(--float-gap) + env(safe-area-inset-top));--float-bottom:calc(var(--float-gap) + env(safe-area-inset-bottom));
+  --float-away:transform 240ms var(--ease-out),opacity 200ms var(--ease-out);
+  --chrome-bottom:var(--float-bottom);
+  --cal-free:color-mix(in srgb,var(--primary) 12%,var(--bg));/* Terracota = el del logo (#D65C3C) mezclado con el crema, menos naranja (Daniel, 2026-10-29); texto en --brand-ink. */
+  --cal-busy:color-mix(in srgb,var(--brand) 9%,var(--bg));--cal-busy-ink:var(--brand-ink);--when-pick:color-mix(in srgb,var(--brand) 50%,var(--bg));--when-pick-ink:#1C2B2A;--when-band:color-mix(in srgb,var(--brand) 9%,var(--bg));
+  /* La banda del rango elegido en el calendario de la ficha: la de «¿Cuándo?», translúcida para que el verde de los libres siga debajo (ronda de Ana 2 nov, ticket 08). */
+  --stay-band:color-mix(in srgb,var(--brand) 14%,transparent);--stay-band-solid:color-mix(in srgb,var(--brand) 14%,color-mix(in srgb,var(--primary) 6%,var(--bg)));
+  --ease-out:cubic-bezier(0.23,1,0.32,1);--ease-drawer:cubic-bezier(0.32,0.72,0,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917;--surface:#1C2320;--surface-soft:color-mix(in srgb,var(--surface) 70%,transparent);--surface-2:#2B2A22;--beige-soft:color-mix(in srgb,var(--surface-2) 55%,transparent);--chosen:color-mix(in srgb,var(--primary) 26%,transparent);--fg:#EDEFEA;--fg-title:#CCCFCA;--muted:#A3ADA6;--line:#2F3934;--line-nav:#2F3934;--line-soft:#2F3934;
+  --brand:#E8785A;--brand-ink:#F0A48C;--primary:#7FA98A;--primary-on:#16331F;--primary-ink:#B9D2BF;
+  --selection:#3E6B52;--selection-ink:#DCE8DF;--state-soft:color-mix(in srgb,var(--primary) 18%,var(--bg));--state-ink:#B9D2BF;
+  --sun:#F0B24F;--sun-soft:#3B2E17;--sun-ink:#F3D6A1;--review-soft:#2B2A22;--overlay:rgba(11,11,12,.86);--overlay-btn:rgba(28,35,32,.7);
+  --bad:#E8785A;--bad-soft:#4A2521;--ochre:#F0B24F;--wa-icon:var(--wa);--cal-busy:#4A2521;--cal-busy-ink:#F0A48C;--cal-free:#1F3A2C;--shadow:0 2px 0 var(--line);
+  --float-edge:color-mix(in srgb,#FFFFFF 10%,transparent);--float-shadow:0 1px 2px rgba(0,0,0,.3),0 12px 28px -12px rgba(0,0,0,.6);color-scheme:dark}}
+
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-0.01em;line-height:1.1;text-wrap:balance}
+h1{font-size:34px;font-weight:var(--w-strong);line-height:1.05}
+h2{font-size:24px;font-weight:var(--w-strong)}
+h3{font-size:19px;font-weight:var(--w-strong)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+/* Sin líneas en reposo (Daniel, 2026-10-29): el campo con el cursor se marca con el borde verde. */
+input:not([type=checkbox]):not([type=file]):not([type=radio]):focus,select:focus,textarea:focus,.input-money:focus-within,.cal-price:focus-within{border-color:var(--primary)}
+input,select,textarea{font:inherit;color:inherit}
+img{max-width:100%;display:block}
+p{margin:0}
+a{color:var(--primary)}
+.num{font-variant-numeric:tabular-nums}
+.display{font-family:var(--display);letter-spacing:-0.01em}
+
+/* ---------- Texto ---------- */
+.small{font-size:15px}.xs{font-size:14px}.muted{color:var(--muted)}.center{text-align:center}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:var(--w-medium)}
+.ink{color:var(--fg)}.primary{color:var(--primary)}
+.link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none}
+.btn-link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none;padding:6px 0;text-align:left;min-height:44px;display:inline-flex;align-items:center}
+.btn-link.muted{color:var(--muted)}
+.field-error{color:var(--bad);font-size:15px;font-weight:var(--w-medium)}
+.counter-out{color:var(--bad);font-weight:var(--w-medium)}
+/* Turnstile: invisible salvo que Cloudflare pida interacción. */
+.captcha{display:flex;justify-content:center}
+.captcha:empty{display:none}
+
+/* ---------- Layout ---------- */
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:8px}
+.between{justify-content:space-between}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+
+/* ---------- Superficies ---------- */
+.card{background:var(--surface-soft);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
+.card-arena{background:var(--surface);box-shadow:var(--shadow);border-radius:var(--r);padding:16px}
+.card-soft{background:var(--state-soft);color:var(--state-ink);border-radius:var(--r-tile);padding:14px 16px}
+.card-sun{background:var(--sun-soft);color:var(--sun-ink);border-radius:var(--r);padding:14px 16px}
+.note{background:var(--surface-soft);color:var(--fg);border:1px solid var(--line-soft);border-radius:var(--r-input);padding:12px 14px;font-size:16px;display:flex;gap:12px}
+.note-sun{background:var(--sun-soft);color:var(--sun-ink)}
+.note-arena{background:var(--surface);color:var(--fg)}
+.note[role="alert"]{background:var(--bad-soft);color:var(--bad)}
+.tile{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:var(--r-tile)}
+.tile b{font-family:var(--display);font-weight:var(--w-medium);font-size:24px;line-height:1}
+.tile span{font-size:14px;font-weight:var(--w-medium)}
+.tile-soft{background:var(--state-soft);color:var(--state-ink)}
+.tile-sun{background:var(--sun-soft);color:var(--sun-ink)}
+.tile-review{background:var(--review-soft);color:var(--muted)}
+.tile-draft{background:var(--beige-soft);color:var(--fg);text-decoration:none}
+.tile-arena{background:var(--surface-2);color:var(--muted)}
+.list{display:flex;flex-direction:column;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.list-item{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 16px;border-bottom:1px solid var(--line-soft);text-decoration:none;color:inherit;text-align:left;width:100%}
+.list-item:last-child{border-bottom:0}
+.list-item .body{flex:1;min-width:0}
+.list-item .body small{display:block;font-size:14px;color:var(--muted)}
+.list-item[aria-disabled="true"]{color:#A3ADA6}
+.list-item .chev{color:var(--muted);flex-shrink:0}
+/* En ocre, como «Activar suscripción» (`btn-sun`): falta un método de pago o es la puerta para publicar (revisión UX 2026-10-29). */
+.list-item-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)} .list-item-sun .body small,.list-item-sun .chev,.list-item-sun .primary{color:var(--fg)}
+.list-item.list-item-sun{border-radius:var(--r-input)}
+.sub-row-link{color:inherit;text-decoration:none}
+.divider{border:0;border-top:1px solid var(--line-soft);margin:0}
+
+/* ---------- Botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-input);font-weight:var(--w-medium);font-size:17px;text-decoration:none;white-space:nowrap}
+/* Verde B aprobado por Ana (2026-11-04): acciones con fondo tonal opaco, texto verde, sombra ligera y sin borde.
+   Los secundarios discretos conservan su menor peso; pagos y WhatsApp mantienen sus colores funcionales. */
+.btn-primary,.btn-soft,.btn-outline{background:var(--state-soft);color:var(--primary);border:0;box-shadow:0 2px 5px color-mix(in srgb,var(--primary) 14%,transparent)}
+.btn-ghost{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
+.btn-outline-bad{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
+/* Eliminar casa (admin): contorno rojo, sin relleno; confirmado, relleno rojo. */
+.btn-danger-outline{background:transparent;border:1.5px solid var(--bad);color:var(--bad)}
+.btn-danger{background:var(--bad);color:var(--bg)}
+.btn-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)}
+.btn-wa{background:var(--wa);color:var(--wa-ink);min-height:56px;border-radius:var(--r-cta);font-family:var(--display);font-weight:var(--w-medium);font-size:18px;width:100%}
+.btn-lg{min-height:52px;font-size:18px;font-family:var(--display)}
+.btn-xl{min-height:56px;font-size:18px;font-family:var(--display);border-radius:var(--r-cta)}
+.btn-sm{min-width:44px;min-height:44px;padding:0 14px;font-size:15px;border-radius:8px}
+.btn-block{width:100%}
+.btn:disabled,.btn[aria-disabled="true"],.btn.is-disabled{background:#f2f1ed;color:#898d88;border:0;box-shadow:none;opacity:1;cursor:not-allowed}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--fg)}
+/* Botones sobre las fotos: crema al 70 %, sin desenfoque (Daniel, 2026-10-29; --overlay-btn). */
+.icon-btn.overlay{background:var(--overlay-btn)}
+
+/* ---------- Chips, píldoras, etiquetas ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 16px;border-radius:8px;background:var(--beige-soft);color:var(--fg);font-weight:var(--w-medium);font-size:16px;text-decoration:none;white-space:nowrap}
+/* Lo elegido, en verde tonal al 26 %, sin borde (sustituye al salvia; Daniel, 2026-10-29: sin líneas, fondos semitransparentes). */
+.chip[aria-pressed="true"],.chip[aria-current="true"],.chip[aria-current="page"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
+/* La selección no depende solo del color (spec «Densidad y tarjetas», § Accessibility); los chips de navegación, sin ✓. Texto alternativo vacío: el nombre accesible no cambia (ya dice «pulsado»). */
+/* La primera declaración es el respaldo para navegadores sin texto alternativo en `content` (la segunda los deja leer sin la marca). */
+.chip[aria-pressed="true"]::before{content:"✓ ";content:"✓ " / ""}
+.chip-sm{min-height:36px;padding:0 14px;font-size:15px}
+.chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter)}
+.chiprow::-webkit-scrollbar{display:none}
+.chiprow.fit{overflow-x:visible;margin:0;padding:0;flex-wrap:nowrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:14px;font-weight:var(--w-medium);background:var(--surface-2);color:var(--fg);align-self:flex-start}
+.badge-ok{background:var(--state-soft);color:var(--state-ink)}
+.badge-warn,.badge-sun{background:var(--sun-soft);color:var(--sun-ink)}
+.badge-review,.badge-mute{background:var(--review-soft);color:var(--muted)}
+.badge-bad{background:var(--busy);color:var(--busy-ink)}
+.badge-admin{background:var(--state-soft);color:var(--state-ink);padding:6px 12px}
+.pill{position:absolute;padding:6px 10px;border-radius:999px;background:var(--overlay);color:#FFFBF2;font-weight:var(--w-medium);font-size:15px;font-variant-numeric:tabular-nums}
+.pill span{font-weight:500;opacity:.8}
+.pill-sm{font-size:14px;padding:5px 10px}
+.count-badge{position:absolute;top:2px;right:14px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand-ink);color:#FFFBF2;font-size:13px;font-weight:var(--w-medium);display:inline-flex;align-items:center;justify-content:center}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .count-badge{color:var(--bg)}}
+
+/* ---------- Formularios ---------- */
+label{font-size:15px;font-weight:var(--w-medium);color:var(--muted);display:block}
+.field{display:flex;flex-direction:column;gap:6px}
+input:not([type=checkbox]):not([type=file]):not([type=radio]),select,textarea{width:100%;min-height:52px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface);color:var(--fg);font-size:18px}
+textarea{padding:12px 16px;line-height:1.4;resize:vertical;min-height:96px}
+select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6B69' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+.input-prefix{display:flex;gap:8px}
+.input-prefix .prefix{display:flex;align-items:center;min-height:52px;padding:0 14px;border:1.5px solid transparent;border-radius:var(--r-input);background:var(--surface-2);font-size:18px;font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
+.input-money{display:flex;align-items:center;gap:8px;min-height:56px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface)}
+.input-money .cur{font-weight:var(--w-medium);color:var(--muted);font-size:20px}
+.input-money input{border:0;background:transparent;min-height:0;padding:0;font-size:24px;font-weight:var(--w-medium);font-family:var(--display)}
+.check{display:flex;align-items:center;gap:10px;font-size:16px;color:var(--fg);font-weight:500;min-height:28px}
+.check input{width:20px;height:20px;accent-color:var(--primary);margin:0}
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:84px;padding:14px;border:2px solid transparent;border-radius:var(--r-tile);background:var(--surface-soft);text-align:left;color:var(--fg)}
+.choice b{font-weight:var(--w-medium);font-size:18px}
+.choice span{font-size:15px;color:var(--muted)}
+.choice[aria-pressed="true"]{background:var(--chosen)}
+.choice[aria-pressed="true"] span{color:var(--primary)}
+.counter{display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:0 10px 0 16px;border-bottom:1px solid var(--line-soft)}
+.counter:last-child{border-bottom:0}
+.counter .ctl{display:flex;align-items:center;gap:4px}
+.counter .ctl button{width:40px;height:40px;border-radius:8px;font-size:22px;display:inline-flex;align-items:center;justify-content:center}
+.counter .ctl .minus{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
+.counter .ctl .plus{background:var(--chosen);color:var(--primary-ink)}
+.counter .ctl b{width:32px;text-align:center;font-variant-numeric:tabular-nums}
+.code-boxes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.code-boxes span{display:flex;align-items:center;justify-content:center;height:60px;border:1.5px solid transparent;border-radius:var(--r-input);background:var(--surface);font-family:var(--display);font-weight:var(--w-medium);font-size:26px;font-variant-numeric:tabular-nums}
+.code-boxes span.filled{border-color:var(--primary)}
+.code-boxes span.active{border:2px solid var(--primary);background:var(--state-soft)}
+.sr-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.feature-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.feature-choices .chip{position:relative;min-height:44px;padding-inline:6px 26px;gap:4px;justify-content:flex-start;cursor:pointer}
+.feature-choices .chip svg{flex:none}
+.feature-choices .chip>svg{width:16px;height:16px}
+.feature-choices .chip[aria-pressed="true"]::before{content:none}
+.feature-choices .chip:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:2px}
+.feature-check{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);display:flex;width:14px;height:14px}
+.feature-check svg{stroke-width:3}
+@media(max-width:360px){
+  .feature-choices .chip{padding-inline:2px 24px;gap:2px}
+}
+/* Esqueleto de carga (app/(app)/loading.tsx): bloques arena con brillo suave. */
+.skeleton .sk{display:block;border-radius:var(--r-input);background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skeleton .sk{animation:none}}
+.progress{display:flex;gap:4px}
+.progress span{flex:1;height:6px;border-radius:2px;background:var(--line);position:relative;overflow:hidden}
+/* El tramo se llena de izquierda a derecha al avanzar y se vacía al volver (la barra se conserva entre pantallas). */
+.progress span::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--primary);transform:scaleX(0);transform-origin:left;transition:transform 320ms var(--ease-out)}
+.progress span.on::after{transform:scaleX(1)}
