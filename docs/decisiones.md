@@ -1,3 +1,11 @@
+## 2026-11-12 · El lema «Bueno, bonito y bien tico» sale de la web hasta registrarlo
+
+- **Decisión (Daniel, 2026-11-12):** quieren registrar el lema como marca, así que no se publica mientras tanto.
+- **Qué se quita:** el texto bajo el logo de la portada y el principio de la descripción del sitio (meta, Open Graph y JSON-LD). La descripción vuelve a ser «Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.».
+- **Qué se queda:** el botón «Escríbanos por WhatsApp».
+- **Pruebas:** comprueban que la portada y la descripción no lo contienen.
+- Estuvo publicado en `3bstays.com` desde el despliegue del 2026-11-12 hasta que este cambio llegue a `main`. Conviene contárselo al abogado de propiedad intelectual.
+
 ## 2026-11-11 · La portada se publica en 3bstays.com
 
 - **Decisión (Daniel, 2026-11-11):** publicar **solo la portada** en `3bstays.com` antes del lanzamiento.

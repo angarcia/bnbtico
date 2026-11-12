@@ -2,7 +2,7 @@
 export const SITE_URL = "https://3bstays.com";
 export const SITE_NAME = "3bstays";
 export const SITE_TITLE = "3bstays · Casas y alojamientos en alquiler en el Caribe de Costa Rica";
-export const SITE_DESCRIPTION = "Bueno, bonito y bien tico. Una nueva forma de descubrir y alquilar alojamientos en Costa Rica, directo con quien lo recibe.";
+export const SITE_DESCRIPTION = "Una nueva forma de descubrir y alquilar alojamientos en Costa Rica. Más cerca de lo local.";
 
 export type Environment = "local" | "pruebas" | "production";
 
