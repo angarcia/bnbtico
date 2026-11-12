@@ -8,6 +8,14 @@
 - **Sin secretos en producción:** desde `main` el workflow no sube ningún secreto al worker. Antes solo se quitaban el reloj de pruebas y Stripe; los de Supabase, la purga y Twilio eran los de pruebas y la portada no los usa.
 - **`www.3bstays.com`** se redirige a `3bstays.com` con una regla de Cloudflare, no con una segunda ruta.
 - **El botón de propietarios** abre WhatsApp al número de `WA_OWNERS` («Escríbanos por WhatsApp»). Sin ese número, la portada muestra «Abrimos pronto en el Caribe sur.».
+## 2026-11-11 · Fotos solo por las RPCs: corte de la fase R, paso 8
+
+- **Decisión (Daniel, 2026-11-11):** con Vercel retirado, ningún navegador usa ya la app vieja, la única que escribía `listing_photos` directamente y subía la foto única `<casa>/<uuid>.jpg`. Se aplica el cierre que estaba pendiente.
+- **Qué cambia** (migración `corte_fotos_solo_rpc`):
+  - `authenticated` y `anon` pierden `insert`, `update` y `delete` sobre `listing_photos`. Las filas solo cambian por las RPCs `security definer`. La lectura del dueño se conserva con `photos_owner_read`, que tiene el mismo alcance que la antigua `photos_owner_write`.
+  - Storage solo acepta `<casa>/<uuid>/{480,800,1600}.jpg`. Las fotos antiguas ya subidas siguen viéndose y se pueden borrar.
+- **Rehecha, no copiada:** el borrador de `supabase/migrations-pendientes/` (2026-10-23) volvía a poner `listing_editable` en la subida. Desde entonces la regla es `listing_photo_uploadable`, que permite subir las fotos que van a revisión al editar una casa publicada. La migración conserva esa regla y solo endurece el patrón del nombre.
+- **Pruebas:** `tests/db/cliente-directo-fotos.test.ts`. La escritura directa falla por permisos (`42501`) con sesión y sin ella, y la foto única se rechaza.
 
 ## 2026-11-11 · Se retira Vercel y bnbtico.com se apaga
 
