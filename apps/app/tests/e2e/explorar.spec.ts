@@ -124,7 +124,11 @@ test("Explorar sin barra superior: píldora «Empiece su búsqueda», cuenta, fi
   for (const box of await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width))) expect(Math.abs(box - viewport)).toBeLessThanOrEqual(1);
   // La primera es la más nueva (Casa Cocles mensual): nombre, zona, personas y habitaciones, y el precio de la noche.
   await expect(cards.first().locator("h2")).toHaveText("Casa Cocles mensual");
-  await expect(cards.first()).toContainText("Cocles2 personas · 1 dormitorio · 1 baño₡45 000 / noche");
+  await expect(cards.first().locator(".card-zone")).toHaveText("Cocles");
+  for (const label of ["2 personas", "1 dormitorio", "1 baño"]) {
+    await expect(cards.first().locator(".card-capacity").getByTitle(label, { exact: true })).toBeVisible();
+  }
+  await expect(cards.first().locator(".card-price")).toHaveText("₡45 000 / noche");
   await expect(cards.first().locator(".pill")).toHaveCount(0);
   await expect(cards.first().locator(".card-capacity svg")).toHaveCount(3);
   const beachHouse = cards.filter({ hasText: "Casa Manzanillo" });

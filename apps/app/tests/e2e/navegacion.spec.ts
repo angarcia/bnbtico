@@ -417,7 +417,7 @@ test("sin barra superior con el logo en ninguna pestaña; Favoritos lleva «₡ 
 // más el área segura, opaca, con la línea fina arriba e iconos de 26 px con su etiqueta; la elegida, en terracota.
 test("densidad: márgenes de 16 px y la barra de abajo plana, pegada al borde, con iconos de 26 px y etiquetas", async ({ page }) => {
   await h.reset();
-  await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
+  await h.seed({ status: "active", draft: { title: "Casa Cahuita", features: ["pool"] } });
   await page.goto("/explorar");
   await expect(nav(page).getByRole("link")).toHaveCount(5);
   const padding = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).paddingLeft);

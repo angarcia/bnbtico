@@ -75,7 +75,11 @@ test("sin cuenta: guardar en Explorar y en la ficha SSR, Favoritos, quitar, ingr
   await expect(page.getByTestId("favorites-count")).toHaveText("2 casas · guardadas en este teléfono");
   // La misma tarjeta que Explorar (2026-11-03).
   await expect(page.locator(".listing-card h2")).toHaveText(["Casa Playa Negra", "Casa Cocles"]);
-  await expect(page.locator(".listing-card").first()).toContainText("Playa Negra2 personas · 1 dormitorio");
+  const firstCard = page.locator(".listing-card").first();
+  await expect(firstCard.locator(".card-zone")).toHaveText("Playa Negra");
+  for (const label of ["2 personas", "1 dormitorio", "1 baño"]) {
+    await expect(firstCard.locator(".card-capacity").getByTitle(label, { exact: true })).toBeVisible();
+  }
   await expect(page.locator(".listing-card").first()).toContainText("₡95 000 / noche");
   await expect(page.getByText("Compare y escriba directo")).toBeVisible();
   // Sin barra superior ni logo (2026-11-03): «₡ | $» va en la fila de la cuenta, y la elección es la de toda la app.
