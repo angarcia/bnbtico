@@ -221,7 +221,9 @@ describe("workflow · aislamiento y puertas", () => {
     // Producción antes del lanzamiento solo sirve la portada: desde main el worker no recibe ningún secreto.
     const secrets = step("Secretos del worker");
     for (const name of ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ANON_KEY", "PURGE_SECRET", "CF_ZONE_ID", "CF_PURGE_TOKEN", "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM", "WHATSAPP_ALLOWLIST", "TEST_CLOCK_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]) {
-      expect(secrets, name).toMatch(new RegExp(`${name}: \\$\\{\\{ github\\.ref == 'refs/heads/main' && '' \\|\\| `));
+      // «main && '' || x» devolvía siempre x: en las expresiones de Actions '' es falso (incidente 2026-11-12).
+      expect(secrets, name).toMatch(new RegExp(`${name}: \\$\\{\\{ github\\.ref != 'refs/heads/main' && .+ \\|\\| '' \\}\\}`));
+      expect(secrets, name).not.toMatch(new RegExp(`${name}: .*&& '' \\|\\|`));
     }
   });
 
