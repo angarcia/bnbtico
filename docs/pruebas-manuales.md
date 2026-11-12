@@ -34,7 +34,7 @@ Se prueba **desde el teléfono**, en `https://pruebas.3bstays.com`. Marque cada 
 
 - **App:** `https://pruebas.3bstays.com` (rama `develop`, worker `3bstays-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Está protegida con Cloudflare Access: la primera vez pide el correo y un PIN de un solo uso. Sin Access quedan `/casa/*`, `/_purge/*`, `/assets/*`, `/fonts/*`, `/icons/*`, `/webhooks/*` y `/_pruebas/*`, así que una ficha se puede abrir sin PIN.
 - **Desde la red corporativa (VPN):** `https://3bstays-pruebas.ana-garcia-saiz.workers.dev`. Es el mismo worker y la misma base, sin Access. Única diferencia: la purga de la ficha apunta a `pruebas.3bstays.com`, así que en `workers.dev` una ficha puede salir vieja unos minutos después de un cambio.
-- **No se usa** `pruebas.bnbtico.com`: sigue siendo la app vieja (Vercel) hasta el corte de la fase R.
+- **No se usa** `pruebas.bnbtico.com`: era la app vieja de Vercel y se apaga (decisión 2026-11-11).
 - **Portada:** `/?pronto=1`. En pruebas, `/` lleva a Explorar.
 - **App instalada:** después de cada despliegue, ciérrela y vuelva a abrirla para tomar la versión nueva.
 

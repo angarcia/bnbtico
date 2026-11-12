@@ -227,7 +227,54 @@ Para cada uno de `tresbstays.com` y `threebstays.com`:
    - Deploy.
 4. **Comprobar:** `curl -sI https://tresbstays.com/casa/CT-1234` da `301` con `location: https://3bstays.com/casa/CT-1234`.
 
+## D · Retirar Vercel y apagar bnbtico.com (decisión del 2026-11-11)
+
+bnbtico.com **se apaga sin redirección**. Vercel sigue sirviendo dos cosas que hay que quitar:
+
+- `bnbtico.com`: la portada con la marca vieja, que es pública.
+- `pruebas.bnbtico.com`: la app vieja de Next, con `PREVIEW_PASSWORD`.
+
+Hacerlo **después de C1**, cuando `pruebas.3bstays.com` ya funcione. Nada de lo nuevo depende de Vercel.
+
+### D1 · Vercel: el proyecto `bnbtico`
+
+1. https://vercel.com → equipo **bnbtico** → proyecto **bnbtico**.
+2. **Settings** → **Domains**: en cada dominio (`bnbtico.com`, `www.bnbtico.com` y `pruebas.bnbtico.com`), pulsar **⋯** → **Remove**.
+3. **Settings** → **Git** → **Disconnect**. El repositorio deja de estar conectado y el bot ya no comenta en los PR.
+4. **Settings** → **Advanced** (abajo del todo) → **Delete Project** → escribir el nombre para confirmarlo. Se borran también sus variables (`PREVIEW_PASSWORD`, claves de Supabase y `NEXT_PUBLIC_*`) y sus despliegues. **No se puede deshacer.**
+5. Si el equipo `bnbtico` de Vercel no tiene más proyectos: **Settings** del equipo → **Billing**. Comprobar que está en Hobby, sin nada que pagar. Opcional: borrar el equipo.
+
+### D2 · GitHub: la app de Vercel
+
+1. https://github.com/settings/installations, o en la organización: **Settings** → **Integrations** → **GitHub Apps**. Buscar **Vercel** → **Configure**.
+2. En **Repository access**, quitar `angarcia/bnbtico`. Si no se usa Vercel en ningún otro repositorio, **Uninstall** abajo del todo.
+3. En el repositorio → **Settings** → **Environments** queda **Preview**, que creó Vercel: se puede borrar. **No borrar `Production`**: lo usa el despliegue de producción del workflow.
+
+### D3 · Cloudflare: zona bnbtico.com
+
+1. Zona **bnbtico.com** → **DNS** → **Records**.
+2. **Borrar** los registros que apuntan a Vercel: `A` con `76.76.21.21` (o `216.198.79.*`), y `CNAME` con `cname.vercel-dns.com` (normalmente `@`, `www` y `pruebas`).
+3. **No borrar todavía:**
+   - `nueva`: lo gestiona el worker viejo y se quita en C7.
+   - Los registros de correo, si existen (`MX`, `TXT` de SPF, DKIM y DMARC). Si nadie usa correo `@bnbtico.com`, se pueden borrar en C7.
+4. **Comprobar** desde fuera de la red corporativa. Tienen que dar error de conexión o de DNS, no la portada:
+   ```bash
+   curl -sI https://bnbtico.com
+   ```
+   ```bash
+   curl -sI https://pruebas.bnbtico.com
+   ```
+5. **La zona `bnbtico.com` se queda en Cloudflare** hasta C7, para borrar el worker viejo. Que el dominio se conserve o caduque en GoDaddy lo decide el abogado.
+
+### D4 · Supabase
+
+- `bnbtico-pruebas` → Authentication → URL Configuration → **Redirect URLs**: quitar `https://pruebas.bnbtico.com` y `https://bnbtico.com`.
+
+### D5 · Lo que desbloquea (lo hago yo, en otro paso)
+
+- `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql` esperaba a que la app vieja dejara de subir fotos por su cuenta. Sin Vercel ya se puede pasar a `supabase/migrations/`, con sus pruebas, y aplicar en pruebas.
+
 ### Más adelante, no hoy
 
-- Las redirecciones de `bnbtico.com` y `pruebas.bnbtico.com` (siguen en Vercel), según lo que diga el abogado.
+- Si se conserva el dominio `bnbtico.com` o se deja caducar en GoDaddy: lo decide el abogado.
 - El bucket de copias `bnbtico-copias`. Producción tendrá el suyo.

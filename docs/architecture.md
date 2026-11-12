@@ -8,7 +8,7 @@ El navegador es el cliente de Postgres. La app es un shell estático que habla c
 
 ## Piezas
 
-La aplicación y el worker viven en `apps/app`, paquete `app`. La retirada de Next del repositorio (2026-11-04) no renombra ese directorio ni modifica los despliegues vigentes de Vercel. El corte de infraestructura sigue siendo una operación separada.
+La aplicación y el worker viven en `apps/app`, paquete `app`. La retirada de Next del repositorio (2026-11-04) no renombra ese directorio. Vercel se retira el 2026-11-11: `bnbtico.com` y `pruebas.bnbtico.com` se apagan. El corte de infraestructura sigue siendo una operación separada.
 
 | Pieza | Qué es | Dónde corre |
 |---|---|---|

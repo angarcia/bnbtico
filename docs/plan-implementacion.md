@@ -63,7 +63,7 @@ El ticket 09 del refactor conservador retira solo los archivos versionados de `a
 - **Supabase de pruebas** (`bnbtico-pruebas`, ref `bpxiggdzgzolcazaaboj`) enlazado al repo; migración `0001` aplicada. Las tres migraciones de la fase 2 aplicadas el 2026-10-19, bucket `listings` creado y cuenta admin `8899 0001` marcada (`docs/configuracion-supabase.md`, paso 8). **Pendiente:** la comprobación desde el móvil con `docs/pruebas-manuales-fase-2.md`.
 - **Supabase local** en Docker: `pnpm db:start` / `pnpm db:reset`; `apps/web/.env.local` apunta a él y lleva `SUPABASE_SERVICE_ROLE_KEY` (solo para las pruebas). Números de prueba `8888 1234`, `8777 0001`, `8888 9999` y `8899 0001` (admin) con código 123456. Tras tocar `config.toml`, `supabase stop && supabase start`.
 - **Portada de 3bstays.com** (rama `main`): foto de Playa Negra, SEO, sitemap (ahora también con las fichas activas), JSON-LD. Pendiente de Daniel: Search Console.
-- **Vercel**: `main` → bnbtico.com (solo portada), `develop` → pruebas.bnbtico.com con `PREVIEW_PASSWORD`, Supabase y `NEXT_PUBLIC_GA_ID=off`.
+- **Vercel**: retirado el 2026-11-11. `bnbtico.com` y `pruebas.bnbtico.com` se apagan sin redirección; el proyecto se borra.
 - **Para trabajar en local** (app vieja): `.claude/launch.json` arranca `pnpm --filter web dev`; Playwright usa el Chrome instalado con `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"` y un solo worker; `next dev` genera `apps/web/AGENTS.md`, que no se versiona. La app nueva añade su propia entrada en `launch.json` en la fase R (Vite + worker en un proceso) y siempre necesita `supabase start`.
 
 ### Fase 3 · por dónde empezar (sobre la app nueva, tras la fase R)
@@ -134,7 +134,7 @@ El ticket 09 del refactor conservador retira solo los archivos versionados de `a
 
 ### Fase 7 · Lanzamiento
 **Objetivo:** abrir 3bstays.com.
-**Incluye:** (la web ya vive en Cloudflare Workers desde la fase R; Vercel se da de baja en el corte) borrar datos de prueba, cargar las primeras casas reales con sus propietarios (ellos publican; nosotros acompañamos), privacidad y condiciones de uso publicadas, números de WhatsApp de bnbtico reales, Meta aprobada o Twilio en producción, prueba de restauración de la copia diaria (que existe desde la fase R) y decisión sobre Supabase Pro, un panel mínimo de salud sobre las tablas de errores y `web_vitals` y los Workers Logs, landing abierta.
+**Incluye:** (la web ya vive en Cloudflare Workers desde la fase R; Vercel se retiró el 2026-11-11) borrar datos de prueba, cargar las primeras casas reales con sus propietarios (ellos publican; nosotros acompañamos), privacidad y condiciones de uso publicadas, números de WhatsApp de bnbtico reales, Meta aprobada o Twilio en producción, prueba de restauración de la copia diaria (que existe desde la fase R) y decisión sobre Supabase Pro, un panel mínimo de salud sobre las tablas de errores y `web_vitals` y los Workers Logs, landing abierta.
 **Hecho cuando:** un cliente que no conocemos escribe a un owner que no conocemos.
 
 ## Después del lanzamiento (en este orden salvo que cambie)

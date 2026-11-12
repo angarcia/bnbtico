@@ -11,7 +11,7 @@ Guía paso a paso (2026-10-15). Todo lo que requiere crear cuentas, aceptar cond
 | Proyecto Supabase `bnbtico-pruebas` | Base de datos, login por teléfono, fotos | Plan Free |
 | Servicio Twilio Verify | Enviar el código por WhatsApp (o SMS) | Céntimos por código |
 | Variables y secretos de GitHub (sección 10) | Que el worker de Cloudflare y el navegador usen lo anterior | — |
-| Variables en Vercel (entorno Preview), hasta el corte | Que la app vieja de `pruebas.bnbtico.com` use lo anterior | — |
+| ~~Variables en Vercel~~ | Retirado el 2026-11-11 con el proyecto de Vercel | — |
 
 ## 1. Proyecto en Supabase
 
@@ -63,7 +63,7 @@ En **Authentication → URL Configuration**: Site URL `https://pruebas.3bstays.c
 
 **Sesión:** `[auth.sessions] timebox` e `inactivity_timeout` se dejan sin poner en local, `bnbtico-pruebas` y producción: la sesión no caduca mientras se use (decisión 2026-10-29). Revisarlo en el panel de Auth → Sessions al crear un proyecto.
 
-## 5. Variables en Vercel (app vieja, hasta el corte)
+## 5. Variables en Vercel (histórico: Vercel se retiró el 2026-11-11)
 
 Proyecto `3bstays` → **Settings → Environment Variables**, entorno **Preview** (rama `develop`):
 
@@ -100,7 +100,7 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 
 - Los cambios de esquema van en **migraciones nuevas** (`pnpm exec supabase migration new <nombre>`), nunca editando `0001_init.sql`.
 - Los datos de prueba se borran antes del lanzamiento (`docs/plan-implementacion.md`, fase 7).
-- El proyecto de producción se crea en la fase 7 repitiendo estos pasos con `3bstays-prod`, variables en el entorno **Production** de Vercel y Twilio en modo producción o la API de Meta.
+- El proyecto de producción se crea en la fase 7 repitiendo estos pasos con `3bstays-prod`, variables en GitHub y Cloudflare (sección 10) y Twilio en modo producción o la API de Meta.
 
 ## 8. Fase 2: casas, fotos y admin
 

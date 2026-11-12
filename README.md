@@ -56,7 +56,7 @@ Playwright usa viewport móvil. Instale Chromium con `pnpm --filter app exec pla
 
 El paquete antiguo `apps/web` se retira del repositorio. La aplicación activa conserva `apps/app` y el nombre `app`. No se borran archivos locales, secretos ni directorios.
 
-Vercel conserva su proyecto y el despliegue vigente, con los builds desactivados según confirmó Daniel. Esta retirada no mueve DNS ni publica cambios de portada. El corte de infraestructura sigue pendiente de autorización separada en `docs/corte-fase-r.md`.
+Vercel se retira (decisión 2026-11-11): `bnbtico.com` y `pruebas.bnbtico.com` se apagan y su proyecto se borra. La app se despliega solo en Cloudflare Workers (`pruebas.3bstays.com`).
 
 ## Prototipo
 

@@ -1,3 +1,16 @@
+## 2026-11-11 · Se retira Vercel y bnbtico.com se apaga
+
+- **Decisión (Daniel, 2026-11-11):** eliminar Vercel por completo. `bnbtico.com` (la portada con la marca anterior) y `pruebas.bnbtico.com` (la app vieja de Next) **se apagan sin redirección** a 3bstays.com.
+- **Motivo:** desde la fase R, la app vive en Cloudflare Workers y nada depende de Vercel. Su app de GitHub seguía comentando en cada PR («Skipped Deployment») y bnbtico.com seguía mostrando en público la marca que Airbnb pidió dejar.
+- **Cómo:** bloque D de `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`:
+  - quitar los dominios y borrar el proyecto en Vercel;
+  - quitar la app de Vercel en GitHub;
+  - borrar en Cloudflare los registros DNS de `bnbtico.com` que apuntan a Vercel;
+  - quitar las Redirect URLs viejas en Supabase.
+
+  La zona `bnbtico.com` se queda en Cloudflare hasta que se borre el worker viejo. Si el dominio se conserva o caduca, lo decide el abogado.
+- **Desbloquea:** `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, que esperaba a que la app vieja dejara de escribir fotos directamente.
+
 ## 2026-11-11 · Cambio de dominio a 3bstays.com e identificadores internos
 
 - **Decisión (Daniel, 2026-11-11):**
