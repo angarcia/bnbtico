@@ -67,12 +67,16 @@ export function ListingCard({ listing: l, nights = 0, priority = false }: { list
       <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="listing-card">
         <div className="photo">{l.photos.length ? <CardPhotos photos={l.photos} priority={priority} /> : null}</div>
         <div className="listing-card-text">
-          <h2>{l.title}</h2>
-          <span className="accommodation-type">{accommodationLabel(l)}</span>
+          <div className="listing-card-heading">
+            <h2>{l.title}</h2>
+            <span className="accommodation-type">{accommodationLabel(l)}</span>
+          </div>
           <span className="muted card-zone"><I.pin size={18} />{l.zone}</span>
           <CardCapacity listing={l} />
-          {price ? <CardPriceText price={price} /> : null}
           <CardFeatures listing={l} />
+          {price || l.available ? (
+            <div className="listing-card-footer">{price ? <CardPriceText price={price} /> : null}</div>
+          ) : null}
         </div>
       </Link>
       <FavoriteButton publicId={l.publicId} className="heart-card" size={24} />
@@ -83,15 +87,18 @@ export function ListingCard({ listing: l, nights = 0, priority = false }: { list
 
 export function CardCapacity({ listing: l, compact = false }: { listing: PublicListing; compact?: boolean }) {
   const [people, rooms] = cardFacts(l).split(" · ");
-  const bathrooms = l.kind === "habitacion" ? 1 : l.bathrooms;
+  const isRoom = l.kind === "habitacion";
+  const bathrooms = l.bathrooms;
   const bath = `${bathrooms} ${bathrooms === 1 ? "baño" : "baños"}`;
   return (
     <span className="muted card-capacity">
       <span title={people}><I.users size={18} /><span className={compact ? "sr-only" : undefined}>{people}</span>{compact ? <span aria-hidden="true">{l.capacity}</span> : null}</span>
-      <span aria-hidden="true"> · </span>
-      <span title={rooms}><I.bed size={18} /><span className={compact ? "sr-only" : undefined}>{rooms}</span>{compact ? <span aria-hidden="true">{l.kind === "habitacion" ? 1 : l.bedrooms || "Estudio"}</span> : null}</span>
-      <span aria-hidden="true"> · </span>
-      <span title={bath}><I.bath size={18} /><span className={compact ? "sr-only" : undefined}>{bath}</span>{compact ? <span aria-hidden="true">{bathrooms}</span> : null}</span>
+      {!isRoom && <>
+        {compact && <span aria-hidden="true"> · </span>}
+        <span title={rooms}><I.bed size={18} /><span className={compact ? "sr-only" : undefined}>{rooms}</span>{compact && <span aria-hidden="true">{l.bedrooms || "Estudio"}</span>}</span>
+        {compact && <span aria-hidden="true"> · </span>}
+        <span title={bath}><I.bath size={18} /><span className={compact ? "sr-only" : undefined}>{bath}</span>{compact && <span aria-hidden="true">{bathrooms}</span>}</span>
+      </>}
     </span>
   );
 }

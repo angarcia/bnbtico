@@ -65,11 +65,13 @@ html.map-open{overflow:hidden}
 .map-card .photo{flex:none;width:108px;align-self:stretch;min-height:116px}
 .map-card-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:10px 14px;font-size:16px}
 .map-card-text > .muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.map-card:has(.card-wa) h2{padding-right:44px}
-.map-card h2{font-family:var(--display);font-size:19px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.map-card .card-price{margin-top:auto}
+.map-card h2{font-family:var(--display);font-size:19px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.map-card-footer{display:grid;align-content:center;gap:6px;margin-top:auto}
+.map-card-footer .card-price{margin-top:0}
+.map-card-footer .card-features{gap:6px;margin-top:0}
+.map-card:has(> .card-wa) .map-card-footer{min-height:44px;padding-right:44px}
 .map-card .heart-card{right:auto;left:64px;top:4px}
-.map-card .card-wa{right:8px;top:8px;bottom:auto}
+.map-card .card-wa{right:8px;bottom:10px;border-radius:var(--r-cta)}
 /* Búsqueda a pantalla completa (/explorar/buscar): sección abierta sin fondo blanco y filas crema como el selector de casa. */
 .btn-text{min-height:44px;white-space:nowrap;padding:0 8px;color:var(--muted);font-weight:var(--w-medium);text-decoration:underline;text-underline-offset:3px}
 .badge-sel{background:var(--chosen);color:var(--primary-ink)}
@@ -142,5 +144,5 @@ html.map-open{overflow:hidden}
 .filters-search .list-item>svg{flex:none;color:var(--muted)}
 .filters-search-value{flex:1;min-width:0;text-align:right;overflow-wrap:anywhere;color:var(--muted);font-size:14px}
 
-.map-card-text > .card-capacity,.map-card-text > .card-zone{white-space:normal;overflow:visible}
-.map-card .card-features{gap:6px;margin-top:6px}
+.map-card-text > .card-capacity{white-space:normal;overflow:visible}
+.map-card-text > .card-zone{white-space:normal;overflow-wrap:anywhere}

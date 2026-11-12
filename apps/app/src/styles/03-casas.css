@@ -12,7 +12,7 @@
 .listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:0}
 .listing-card .sk-line{margin:12px 14px 14px}
 .listing-card h2,.listing-card h3{font-family:var(--display);font-size:20px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
-.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 14px}
+.listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 8px}
 /* Fotos deslizables (ticket 09 de la ronda del 2 nov): la tira llena la caja de la foto; cada foto, en su casilla (el fondo de
    `.photo` mientras no está montada o no ha llegado). Sin barra de desplazamiento; el gesto no arrastra la página de lado. */
 .card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -25,12 +25,21 @@
 .card-strip{touch-action:pan-x pan-y;-webkit-touch-callout:none}
 .listing-card:has(.card-strip),.card-strip img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
 .card-slide{position:relative;flex:0 0 100%;scroll-snap-align:start}
-/* Botón de WhatsApp: redondo y claro (el fondo de las tarjetas, borde fino, sin sombra) con el icono en verde WhatsApp
+/* Botón de WhatsApp: fondo claro, borde fino y sin sombra, con el icono en verde WhatsApp
    oscurecido (--wa-icon, ≥ 3:1: el #25D366 de marca no llega sobre blanco), abajo a la derecha de la parte de texto, fuera
    del enlace; el texto le deja su sitio (Daniel, 2026-11-04). */
-.listing-cell:has(.card-wa) .listing-card-text{padding-right:70px}
+.listing-card-heading{display:flex;align-items:center;gap:12px}
+.listing-card-heading h2{flex:1;min-width:0;overflow-wrap:anywhere}
+.listing-card-heading .accommodation-type{max-width:42%;text-align:center}
+.listing-card-footer{display:grid;align-items:center;margin-top:4px}
+.listing-card-text > .card-features{margin-top:12px}
+.listing-card-text > .card-features + .listing-card-footer{margin-top:0}
+.listing-cell:has(> .card-wa) .listing-card-footer{min-height:50px;padding-right:62px}
+.listing-card-footer .card-price{margin-top:0}
 .card-wa{position:absolute;right:14px;bottom:14px;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;padding:0;display:grid;place-items:center;background:var(--surface);color:var(--wa-icon);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ease-out)}
 .card-wa:active{transform:scale(0.92)}
+.listing-cell .card-wa{bottom:10px;width:50px;height:50px;border-radius:var(--r-cta)}
+.listing-cell .card-wa svg{width:28px;height:28px}
 .card-price{margin-top:3px}
 .card-price b{font-weight:var(--w-strong)}
 /* «≈ ₡180 000 por 4 noches»: si no cabe en una línea (tarjeta del mapa), baja entero «por 4 noches», no solo «noches». */
@@ -154,7 +163,8 @@
 .map-box{isolation:isolate}
 
 /* Capacidad y características de Explorar y Favoritos: los mismos iconos de la ficha. */
-.card-capacity{display:flex;align-items:center;flex-wrap:wrap;column-gap:6px}
+.card-capacity{display:flex;align-items:center;column-gap:6px}
+.listing-card-text .card-capacity{flex-wrap:wrap;gap:2px 10px}
 .card-capacity > span:has(svg){display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .card-capacity svg,.card-features svg{flex-shrink:0}
 .card-features{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px;color:var(--muted)}

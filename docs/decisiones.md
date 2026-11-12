@@ -1,3 +1,7 @@
+## 2026-11-12 · Tarjetas compactas de Explorar y Favoritos
+
+Ana aprueba el botón cuadrado de WhatsApp abajo a la derecha. En la lista queda junto al precio, con menos espacio debajo; los iconos de características van encima. En el mapa, el tipo queda alineado a la izquierda en su propia línea encima de la zona para evitar que se junten cuando el nombre de la zona sea largo. Las características quedan debajo del precio para separar las dos filas de iconos.
+
 ## 2026-11-12 · Horario operativo de la importación automática de Airbnb (#8)
 
 Se concreta el ciclo fijo ya aprobado con `17 */3 * * *`, en el mismo Worker y con una invocación aparte del cron horario. Se identifica por su hora programada y admite menos de una hora de retraso. El lote inicial admite 12 casas por invocación para ajustarse al presupuesto de Workers Free. El indicador de cola permite detectar cuándo ampliar capacidad. La [guía de operación](operacion-airbnb.md) detalla la comprobación y reversión.
