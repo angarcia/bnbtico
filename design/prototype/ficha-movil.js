@@ -3,7 +3,7 @@
 // los días con precio distinto al base, «Lo que ofrece» lista solo lo que sí hay, y los avisos se funden en uno.
 // La ficha web no cambia.
 function fichaMovilNote(h){
-  return `<div class="note small">Sin comisiones: fechas, precio y pago los acordás con ${safe(h.owner.split(' ')[0])} por WhatsApp. bnbtico no procesa pagos; no transfieras sin confirmar la casa. Para escribirle necesitás tu WhatsApp verificado (la identidad con Veriff es opcional). Los números quedan visibles para ambas partes.</div>`;
+  return `<div class="note small">Sin comisiones: fechas, precio y pago los acordás con ${safe(h.owner.split(' ')[0])} por WhatsApp. 3bstays no procesa pagos; no transfieras sin confirmar la casa. Para escribirle necesitás tu WhatsApp verificado (la identidad con Veriff es opcional). Los números quedan visibles para ambas partes.</div>`;
 }
 {const previous=SCREENS.detail;SCREENS.detail=()=>{
   let html=previous();
@@ -25,7 +25,7 @@ function fichaMovilNote(h){
     // «Lo que ofrece»: solo lo que sí tiene.
     .replace(/<div style="opacity:\.4;text-decoration:line-through">[\s\S]*?<\/div>/g,'')
     // Un solo aviso al final, en lugar de dos notas y una tarjeta.
-    .replace(/<div class="note">⚠ bnbtico no procesa pagos[^<]*<\/div>/,'')
+    .replace(/<div class="note">⚠ 3bstays no procesa pagos[^<]*<\/div>/,'')
     .replace(/<p class="small note">Para contactar necesitás cuenta con WhatsApp verificado[^<]*<\/p>/,'')
     .replace('<div class="cta-bar">',`${fichaMovilNote(h)}<div class="cta-bar">`);
   return html;

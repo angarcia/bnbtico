@@ -1,6 +1,6 @@
 import { expect, test } from "./helpers/test";
 
-// Portada estática (ticket 13): la que verá bnbtico.com hasta el lanzamiento; en pruebas y local, con `/?pronto=1`.
+// Portada estática (ticket 13): la que verá 3bstays.com hasta el lanzamiento; en pruebas y local, con `/?pronto=1`.
 test("`/?pronto=1` muestra la portada sin JavaScript, con su imagen, su CSP y sus etiquetas", async ({ page, request }) => {
   const requested: string[] = [];
   page.on("request", (r) => requested.push(r.url()));
@@ -18,12 +18,12 @@ test("`/?pronto=1` muestra la portada sin JavaScript, con su imagen, su CSP y su
   await expect(page.getByText("Abrimos pronto en el Caribe sur.")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Quiero publicar mi casa gratis" })).toHaveCount(0);
   await expect(page.locator(".soon-steps li")).toHaveCount(3);
-  await expect(page).toHaveTitle("bnbtico · Casas y alojamientos en alquiler en el Caribe de Costa Rica");
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://bnbtico.com/");
-  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", "https://bnbtico.com/og.jpg");
+  await expect(page).toHaveTitle("3bstays · Casas y alojamientos en alquiler en el Caribe de Costa Rica");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://3bstays.com/");
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", "https://3bstays.com/og.jpg");
   const playa = page.getByRole("img", { name: /Playa Negra, en Puerto Viejo/ });
   await expect.poll(() => playa.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
-  await expect.poll(() => page.getByRole("img", { name: "bnbtico" }).evaluate((img: HTMLImageElement) => img.naturalWidth > 0)).toBe(true);
+  await expect.poll(() => page.getByRole("img", { name: "3bstays" }).evaluate((img: HTMLImageElement) => img.naturalWidth > 0)).toBe(true);
   // La fuente de títulos llega (autoalojada) y nada sale del origen ni carga la app.
   await expect.poll(() => page.evaluate(() => document.fonts.check('800 30px "Outfit"'))).toBe(true);
   await page.waitForLoadState("networkidle");

@@ -24,8 +24,8 @@ describe("wrangler · worker aislado del refactor", () => {
 
   it("solo publica en su dominio y desactiva workers.dev y URLs de preview", () => {
     expect(wrangler.env.refactor).toMatchObject({
-      name: "bnbtico-refactor",
-      routes: [{ pattern: "refactor.bnbtico.com", custom_domain: true }],
+      name: "3bstays-refactor",
+      routes: [{ pattern: "refactor.3bstays.com", custom_domain: true }],
       workers_dev: false,
       preview_urls: false,
       version_metadata: { binding: "CF_VERSION_METADATA" },
@@ -45,9 +45,9 @@ describe("wrangler · worker aislado del refactor", () => {
   });
 
   it("mantiene los destinos, cron y caché de los entornos actuales", () => {
-    expect(wrangler.name).toBe("bnbtico");
+    expect(wrangler.name).toBe("3bstays");
     expect(wrangler.vars).toEqual({ ENVIRONMENT: "local" });
-    expect(wrangler.env.pruebas.routes).toEqual([{ pattern: "nueva.bnbtico.com", custom_domain: true }]);
+    expect(wrangler.env.pruebas.routes).toEqual([{ pattern: "pruebas.3bstays.com", custom_domain: true }]);
     expect(wrangler.env.pruebas.name).toBeUndefined();
     expect(wrangler.env.pruebas.workers_dev).toBe(true);
     expect(wrangler.env.pruebas.preview_urls).toBe(true);

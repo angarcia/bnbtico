@@ -67,10 +67,10 @@ export function serializeManualCalendar(snapshot: IcalExportSnapshot, now: numbe
   const { first, last } = calendarWindow(costaRicaToday(now));
   const nights = [...new Set(safe.nights)].filter(day => day >= first && day <= last).sort();
   const stamp = new Date(now).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//bnbtico//Calendario de disponibilidad//ES", "CALSCALE:GREGORIAN"];
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//3bstays//Calendario de disponibilidad//ES", "CALSCALE:GREGORIAN"];
   for (const day of nights) {
     const start = day.replaceAll("-", "");
-    lines.push("BEGIN:VEVENT", `UID:bnbtico-${safe.id}-${start}@bnbtico.com`, `DTSTAMP:${stamp}`,
+    lines.push("BEGIN:VEVENT", `UID:3bstays-${safe.id}-${start}@3bstays.com`, `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${start}`, `DTEND;VALUE=DATE:${addDays(day, 1).replaceAll("-", "")}`,
       "SUMMARY:Ocupado", "TRANSP:OPAQUE", "END:VEVENT");
   }

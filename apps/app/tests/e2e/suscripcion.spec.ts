@@ -55,7 +55,7 @@ async function fresh(page: Page, path: string) {
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
-        const req = indexedDB.deleteDatabase("bnbtico");
+        const req = indexedDB.deleteDatabase("3bstays");
         req.onsuccess = req.onerror = req.onblocked = () => resolve();
       }),
   );

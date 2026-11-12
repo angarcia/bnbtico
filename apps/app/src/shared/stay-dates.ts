@@ -1,4 +1,4 @@
-// Las fechas de la estancia (llegada y salida), una sola fuente en la pestaña: `sessionStorage["bnbtico-fechas"]`, la clave
+// Las fechas de la estancia (llegada y salida), una sola fuente en la pestaña: `sessionStorage["3bstays-fechas"]`, la clave
 // que escribe Explorar con las de su búsqueda (ronda de Ana 2 nov, ticket 08). La leen y la escriben el calendario y la barra
 // de la ficha y la hoja de contacto; el aviso en memoria hace que unos y otros se enteren al momento. Lo pasado o mal formado
 // se descarta como siempre (`readSearchDates`).

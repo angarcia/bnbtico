@@ -1,4 +1,4 @@
-// Aviso por WhatsApp al propietario de lo que decidió el admin (revisión de una casa nueva, pausar, bloquear). bnbtico no lo
+// Aviso por WhatsApp al propietario de lo que decidió el admin (revisión de una casa nueva, pausar, bloquear). 3bstays no lo
 // manda solo: el admin toca «Avisar a <nombre> por WhatsApp» y se abre wa.me con este texto ya escrito, en usted.
 import type { ListingStatus } from "./listing";
 import { waUrl } from "./whatsapp";
@@ -23,7 +23,7 @@ export const firstName = (fullName: string) => fullName.trim().split(/\s+/)[0] ?
 const clean = (note: string) => note.trim().replace(/[.\s]+$/, "");
 
 export function ownerNotice(i: OwnerNoticeInput): string {
-  const hi = `Hola, ${firstName(i.ownerName)}. Le escribimos de bnbtico:`;
+  const hi = `Hola, ${firstName(i.ownerName)}. Le escribimos de 3bstays:`;
   const house = `su casa «${i.title}»`;
   switch (i.kind) {
     case "approve":
@@ -33,9 +33,9 @@ export function ownerNotice(i: OwnerNoticeInput): string {
     case "reject":
       return `${hi} revisamos ${house} y no podemos publicarla: ${clean(i.note)}. Si tiene dudas, respóndanos a este mensaje.`;
     case "paused":
-      return `${hi} ${house} está pausada en bnbtico: ${clean(i.note)}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
+      return `${hi} ${house} está pausada en 3bstays: ${clean(i.note)}. Puede seguir editándola desde Mis casas; cuando todo esté en orden, la reanudamos.`;
     case "blocked":
-      return `${hi} ${house} está bloqueada en bnbtico: ${clean(i.note)}. Si tiene dudas, respóndanos a este mensaje.`;
+      return `${hi} ${house} está bloqueada en 3bstays: ${clean(i.note)}. Si tiene dudas, respóndanos a este mensaje.`;
   }
 }
 

@@ -25,7 +25,7 @@ assert.match(phone,/Frente al mar/);
 assert.doesNotMatch(phone,/<\/span>Piscina<\/div>/);
 // Un único aviso, con lo esencial de los anteriores.
 assert.equal((phone.match(/class="note/g)||[]).length,1);
-assert.match(phone,/bnbtico no procesa pagos/);
+assert.match(phone,/3bstays no procesa pagos/);
 assert.match(phone,/WhatsApp verificado \(la identidad con Veriff es opcional\)/);
 // Selector de moneda junto al calendario (una sola vez).
 assert.equal((phone.match(/aria-label="Moneda"/g)||[]).length,1);

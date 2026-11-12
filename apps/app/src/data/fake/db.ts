@@ -99,7 +99,7 @@ export interface FakeInquiry {
   createdAt: string;
   updatedAt: string;
   ownerOpenedAt: string | null;
-  source: "listing" | "bnbtico";
+  source: "listing" | "support";
 }
 
 export interface FakeFavorite {
@@ -197,7 +197,7 @@ export class FakeDb {
   readonly paymentCustomers = new Map<string, string>();
   /** payment_events: `${provider}|${evento}` → resultado. */
   readonly paymentEvents = new Map<string, string>();
-  /** El secreto bnbtico_test_clock de Vault (pruebas y local; nunca en producción). */
+  /** El secreto 3bstays_test_clock de Vault (pruebas y local; nunca en producción). */
   testClock = false;
   /** fx_rates: un tipo por día, con la fila inicial de la migración. */
   readonly fxRates = new Map<string, FxRate>([[FX_INITIAL.day, { ...FX_INITIAL }]]);

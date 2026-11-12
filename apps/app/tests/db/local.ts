@@ -89,7 +89,7 @@ export async function stepUp(client: SupabaseClient<Database>): Promise<void> {
   let secret = factorId ? totpSecretOf(factorId) : "";
   if (!factorId) {
     for (const f of factors.data.all) if (f.status === "unverified") await client.auth.mfa.unenroll({ factorId: f.id });
-    const enrolled = await client.auth.mfa.enroll({ factorType: "totp", friendlyName: "bnbtico admin" });
+    const enrolled = await client.auth.mfa.enroll({ factorType: "totp", friendlyName: "3bstays admin" });
     if (enrolled.error) throw enrolled.error;
     factorId = enrolled.data.id;
     secret = enrolled.data.totp.secret;

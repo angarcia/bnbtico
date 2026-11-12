@@ -22,7 +22,7 @@ Cloudflare R2 con GitHub Actions (`.github/workflows/backup.yml`, workflow «cop
 | `R2_ACCOUNT_ID` | secreto | Id de la cuenta de Cloudflare (endpoint `https://<id>.r2.cloudflarestorage.com`). |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | secretos | Token de API de R2 con «Object Read & Write» limitado al bucket de copias. |
 | `R2_BUCKET` | variable (opcional) | Bucket; por defecto `bnbtico-copias`. Privado. |
-| `BACKUP_PREFIX` | variable (opcional) | Carpeta y prefijo del archivo; por defecto `bnbtico-pruebas`. Al cortar a producción: `bnbtico-prod` (y `SUPABASE_DB_URL` del proyecto de producción). |
+| `BACKUP_PREFIX` | variable (opcional) | Carpeta y prefijo del archivo; por defecto `bnbtico-pruebas`. Al cortar a producción: `3bstays-prod` (y `SUPABASE_DB_URL` del proyecto de producción). |
 
 Opcional además: una regla de ciclo de vida en el bucket (R2 → bucket → Settings → Object lifecycle rules → borrar a los 31 días) como segunda red por si el job deja de correr.
 

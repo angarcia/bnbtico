@@ -2,7 +2,7 @@
 // Aquí solo la forma de lo guardado y las operaciones puras (añadir, quitar, mezclar). Sin zod: este módulo entra en el
 // JS que hidrata la ficha SSR (el corazón) y zod/mini sumaba ~7 KB gz allí.
 
-export const FAVORITES_KEY = "bnbtico-favoritos";
+export const FAVORITES_KEY = "3bstays-favoritos";
 export const MAX_FAVORITES = 100;
 
 export interface FavoriteEntry {

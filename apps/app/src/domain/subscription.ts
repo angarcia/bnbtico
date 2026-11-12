@@ -45,7 +45,7 @@ export const SUBSCRIPTION_MESSAGES = {
   dayPassed: "Solo cambia con los días una casa activa.",
   /** payment_setup_context sin sesión. */
   session: "Su sesión venció. Ingrese de nuevo.",
-  /** test_set_offer_days_left sin el secreto bnbtico_test_clock en Vault (producción). */
+  /** test_set_offer_days_left sin el secreto 3bstays_test_clock en Vault (producción). */
   testClockOff: "El reloj de pruebas no está habilitado.",
 } as const;
 
@@ -187,7 +187,7 @@ export function reminderCard(days: number): { title: string; body: string } | nu
   const when = days === 0 ? "hoy" : days === 1 ? "mañana" : `en ${days} días`;
   return {
     title: `Su oferta gratuita termina ${when}`,
-    body: `No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en bnbtico; después, ${FEE_LINE()}. También se lo recordamos por WhatsApp.`,
+    body: `No se le cobrará nada hasta entonces. Añada un método de pago antes de esa fecha para que su casa siga saliendo en 3bstays; después, ${FEE_LINE()}. También se lo recordamos por WhatsApp.`,
   };
 }
 
@@ -202,11 +202,11 @@ export interface ReminderMessage {
 /** Texto del aviso por WhatsApp; el que guarda la base para el envío debe ser idéntico (tickets 02/03). */
 export function reminderWhatsApp(m: ReminderMessage): string {
   const name = m.name?.trim();
-  const hello = name ? `Hola, ${name}. Somos bnbtico.` : "Hola. Somos bnbtico.";
+  const hello = name ? `Hola, ${name}. Somos 3bstays.` : "Hola. Somos 3bstays.";
   if (m.daysBefore === 0) {
-    return `${hello} La oferta gratuita de «${m.title}» termina hoy. Si no añade un método de pago, desde mañana su casa deja de mostrarse en bnbtico: ${m.link} Hoy todavía no se le cobra nada; después, ${FEE_LINE()}; puede pararla cuando quiera.`;
+    return `${hello} La oferta gratuita de «${m.title}» termina hoy. Si no añade un método de pago, desde mañana su casa deja de mostrarse en 3bstays: ${m.link} Hoy todavía no se le cobra nada; después, ${FEE_LINE()}; puede pararla cuando quiera.`;
   }
-  return `${hello} La oferta gratuita de «${m.title}» termina el ${longDate(m.endsOn) ?? m.endsOn}: hasta entonces no se le cobra nada. Para que su casa siga saliendo en bnbtico después, añada un método de pago aquí: ${m.link} Desde esa fecha, ${FEE_LINE()}; puede pararla cuando quiera.`;
+  return `${hello} La oferta gratuita de «${m.title}» termina el ${longDate(m.endsOn) ?? m.endsOn}: hasta entonces no se le cobra nada. Para que su casa siga saliendo en 3bstays después, añada un método de pago aquí: ${m.link} Desde esa fecha, ${FEE_LINE()}; puede pararla cuando quiera.`;
 }
 
 /** Enlace del aviso: `<base>/propietario/suscripcion#pago=CT-####`. */

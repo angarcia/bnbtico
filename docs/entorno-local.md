@@ -1,18 +1,18 @@
 # Entorno de pruebas local
 
-Guía para levantar bnbtico en su Mac y probarlo usted mismo, desde la terminal, sin Claude ni ningún servicio de pago. Todo corre en su ordenador:
+Guía para levantar 3bstays en su Mac y probarlo usted mismo, desde la terminal, sin Claude ni ningún servicio de pago. Todo corre en su ordenador:
 
 - la base de datos es un Supabase local en Docker;
 - los códigos de WhatsApp son fijos (`123456`) y no se envía nada;
 - los avisos de WhatsApp y los pagos usan remitentes y pasarelas **falsos**;
 - Turnstile usa la clave de prueba de Cloudflare, que siempre deja pasar.
 
-Nada de lo que haga aquí toca `nueva.bnbtico.com`, el Supabase alojado ni a usuarios reales.
+Nada de lo que haga aquí toca `pruebas.3bstays.com`, el Supabase alojado ni a usuarios reales.
 
 **Resumen:** en un Mac nuevo, haga una vez los pasos 1.1, 1.2, 1.4 y 1.6 (herramientas de Apple, Homebrew, Docker y descargar el código). Después, cada vez que quiera probar, basta con esto desde la carpeta `docs/` del proyecto (sección 2):
 
 ```bash
-cd ~/bnbtico/docs && ./preparar-entorno-local.sh
+cd ~/3bstays/docs && ./preparar-entorno-local.sh
 ```
 
 Y para pararlo todo al terminar: `./parar-entorno-local.sh`.
@@ -122,7 +122,7 @@ brew install --cask google-chrome
 
 ### 1.6 Descargar el código
 
-El repositorio es privado: necesita una cuenta de GitHub con acceso a `angarcia/bnbtico` (pídale a Daniel que le invite).
+El repositorio es privado: necesita una cuenta de GitHub con acceso a `angarcia/3bstays` (pídale a Daniel que le invite).
 
 ```bash
 brew install gh
@@ -134,19 +134,19 @@ Inicie sesión: elija «GitHub.com», «HTTPS», «Yes» a usar sus credenciales
 gh auth login
 ```
 
-Descargue el proyecto en la carpeta `~/bnbtico` y entre en la rama de trabajo:
+Descargue el proyecto en la carpeta `~/3bstays` y entre en la rama de trabajo:
 
 ```bash
-gh repo clone angarcia/bnbtico ~/bnbtico
+gh repo clone angarcia/3bstays ~/3bstays
 ```
 
 ```bash
-cd ~/bnbtico && git checkout develop
+cd ~/3bstays && git checkout develop
 ```
 
 ### 1.7 Instalar las dependencias
 
-Desde `~/bnbtico`:
+Desde `~/3bstays`:
 
 ```bash
 pnpm install --frozen-lockfile
@@ -189,7 +189,7 @@ Lo que hace el script de arranque, paso a paso, es lo que explica la sección 3.
 Abra Docker Desktop y, en la Terminal, entre en la carpeta del proyecto:
 
 ```bash
-cd ~/bnbtico
+cd ~/3bstays
 ```
 
 **Paso 1 — base de datos.** La primera vez tarda unos minutos porque descarga imágenes de Docker. Después tarda segundos. Si ya está arrancada, avisa y no pasa nada.
@@ -293,7 +293,7 @@ docker exec -i supabase_db_bnbtico psql -U postgres -c "delete from auth.mfa_fac
 
 Como admin: **Anuncios** → toque la casa → «Aprobar y publicar». Con la promoción de lanzamiento, la casa pasa directamente a **Activa** y ya sale en Explorar y en su ficha `/casa/CT-####`.
 
-Para recorridos completos (cliente, anfitrión, admin), siga `docs/pruebas-manuales.md`. Está escrita para `nueva.bnbtico.com`, pero en local vale igual: cambie la dirección por `http://127.0.0.1:5173`.
+Para recorridos completos (cliente, anfitrión, admin), siga `docs/pruebas-manuales.md`. Está escrita para `pruebas.3bstays.com`, pero en local vale igual: cambie la dirección por `http://127.0.0.1:5173`.
 
 ## 6. Pruebas automáticas
 
@@ -376,7 +376,7 @@ pnpm db:stop
 | Síntoma | Causa y solución |
 | --- | --- |
 | `permission denied: ./preparar-entorno-local.sh` | El archivo perdió el permiso de ejecución. Láncelo con `bash preparar-entorno-local.sh`, o devuélvaselo una vez con `chmod +x preparar-entorno-local.sh`. |
-| `no such file or directory: ./preparar-entorno-local.sh` | No está en la carpeta `docs/`. Entre con `cd ~/bnbtico/docs` y repita. |
+| `no such file or directory: ./preparar-entorno-local.sh` | No está en la carpeta `docs/`. Entre con `cd ~/3bstays/docs` y repita. |
 | El script se para con «✗ …» | El mensaje dice qué falta y en qué paso de esta guía se arregla. Arréglelo y vuelva a lanzarlo: lo ya hecho se salta. |
 | `brew: command not found` | Falta el paso de `shellenv` de 1.2. Ejecútelo y abra una Terminal nueva. |
 | `node -v` no dice `v22.…`, o `Unexpected module status` y errores raros de Vite o Vitest | Node equivocado. Repita `brew link --overwrite --force node@22` (1.3) y abra una Terminal nueva. Si había otro Node de Homebrew enlazado, antes: `brew unlink node`. |

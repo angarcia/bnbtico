@@ -26,7 +26,7 @@ test.beforeEach(async ({ page, context }) => {
   await context.route("https://wa.me/**", (route) => route.fulfill({ body: "<title>WhatsApp</title>", contentType: "text/html" }));
 });
 
-const helpButton = (page: Page) => page.getByRole("link", { name: "Escribir a bnbtico por WhatsApp" });
+const helpButton = (page: Page) => page.getByRole("link", { name: "Escribir a 3bstays por WhatsApp" });
 
 /** Toca el botón y devuelve el texto del enlace de WhatsApp que abre (en otra pestaña, como Ayuda). */
 async function tapHelp(page: Page): Promise<string | null> {
@@ -61,7 +61,7 @@ test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsque
 
   // `mensual=1` de un enlace viejo ya no cuenta (fin del modo mensual): el mensaje lleva el precio por noche y no «Busca alquiler mensual».
   // Sin zona ni provincia (todo el país, ticket 06) el mensaje no lleva «Zona:».
-  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nPersonas: 12.\nNecesito: Piscina.\nPrecio por noche: hasta ₡1.\nFechas: ");
+  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en 3bstays.\nPersonas: 12.\nNecesito: Piscina.\nPrecio por noche: hasta ₡1.\nFechas: ");
   // La baliza: solo nombre, página y ruta (sin la búsqueda ni el mensaje).
   await expect.poll(helpEvents).toEqual(["search_help_tap - explorar /explorar"]);
 
@@ -87,7 +87,7 @@ test("con resultados: la nota al final de la rejilla; sin zona (todo el país) e
   await note.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/resultados-360.png` });
 
-  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en bnbtico.\nFechas: ");
+  expect(await tapHelp(page)).toBe("Hola, estoy buscando casa en 3bstays.\nFechas: ");
   await expect.poll(helpEvents).toEqual(["search_help_tap - explorar /explorar"]);
   // Sin filtros puestos, la rejilla no ofrece «Quitar filtros».
   await expect(page.getByRole("button", { name: "Quitar filtros" })).toHaveCount(0);

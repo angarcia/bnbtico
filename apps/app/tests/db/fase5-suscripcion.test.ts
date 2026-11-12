@@ -131,8 +131,8 @@ describe("permisos de las funciones", () => {
     expect(row.data?.status).toBe("active");
   });
 
-  it("el job bnbtico-suscripciones está registrado a las 06:05 UTC (00:05 en Costa Rica)", () => {
-    expect(sql("select schedule || '|' || active || '|' || command from cron.job where jobname = 'bnbtico-suscripciones'")).toBe("5 6 * * *|true|select public.run_subscription_day()");
+  it("el job 3bstays-suscripciones está registrado a las 06:05 UTC (00:05 en Costa Rica)", () => {
+    expect(sql("select schedule || '|' || active || '|' || command from cron.job where jobname = '3bstays-suscripciones'")).toBe("5 6 * * *|true|select public.run_subscription_day()");
   });
 });
 
@@ -191,16 +191,16 @@ describe("outbox de avisos", () => {
 });
 
 describe("reloj de pruebas", () => {
-  it("sin el secreto bnbtico_test_clock en Vault se rechaza; con él, solo mueve el fin de la oferta", async () => {
+  it("sin el secreto 3bstays_test_clock en Vault se rechaza; con él, solo mueve el fin de la oferta", async () => {
     const l = await h.seed({ status: "active" });
-    expect(sql("select count(*) from vault.secrets where name = 'bnbtico_test_clock'")).toBe("0");
+    expect(sql("select count(*) from vault.secrets where name = '3bstays_test_clock'")).toBe("0");
     expect(() => sql(`select test_set_offer_days_left('${l.publicId}', 3)`)).toThrow(/El reloj de pruebas no está habilitado/);
     const out = inTransaction(`
-      select vault.create_secret('on', 'bnbtico_test_clock') is not null;
+      select vault.create_secret('on', '3bstays_test_clock') is not null;
       select test_set_offer_days_left('${l.publicId}', 3);
       select status from listings where id = '${uuid(l.id)}';`);
     expect(out.split("\n").slice(-2)).toEqual([costaRicaToday(Date.now() + 3 * 86_400_000), "active"]);
-    const wrong = () => inTransaction(`select vault.create_secret('off', 'bnbtico_test_clock') is not null; select test_set_offer_days_left('${l.publicId}', 3);`);
+    const wrong = () => inTransaction(`select vault.create_secret('off', '3bstays_test_clock') is not null; select test_set_offer_days_left('${l.publicId}', 3);`);
     expect(wrong).toThrow(/El reloj de pruebas no está habilitado/);
   });
 });

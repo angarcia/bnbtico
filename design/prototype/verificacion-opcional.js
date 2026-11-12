@@ -60,7 +60,7 @@ document.addEventListener('click',event=>{
   const h=HOUSES.find(x=>x.id===S.params.id)||HOUSES[0];
   return previous()
     .replace(verified(h.ownerV),verificationBadges(h.owner))
-    .replace(`Owner ${h.ownerV?"verificado con cédula":"en revisión"} · responde en ~1 h · en bnbtico desde 2026`,`Publica en bnbtico desde 2026 · responde en ~1 h`)
+    .replace(`Owner ${h.ownerV?"verificado con cédula":"en revisión"} · responde en ~1 h · en 3bstays desde 2026`,`Publica en 3bstays desde 2026 · responde en ~1 h`)
     .replace(`<b>${h.owner}</b>`,`<b>${h.owner}</b>${verificationBadges(h.owner,'xs')}`)
     .replace('Para contactar necesitás cuenta, identidad verificada con Veriff y WhatsApp verificado. Contacto directo no significa contacto sin verificar. Los números se comparten al continuar por WhatsApp.','Para contactar necesitás cuenta con WhatsApp verificado. La verificación de identidad con Veriff es opcional y se muestra como sello a la otra parte. Los números se comparten al continuar por WhatsApp.')
     .replace('1. Verificás tu cuenta y aceptás compartir tu número.','1. Creás tu cuenta con tu WhatsApp y aceptás compartir tu número.');

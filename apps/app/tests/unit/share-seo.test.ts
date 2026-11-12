@@ -13,23 +13,23 @@ describe("parsePublicId", () => {
 
 it("publicPath y publicUrl", () => {
   expect(publicPath("CT-1001")).toBe("/casa/CT-1001");
-  expect(publicUrl("CT-1001", "https://bnbtico.com/")).toBe("https://bnbtico.com/casa/CT-1001");
+  expect(publicUrl("CT-1001", "https://3bstays.com/")).toBe("https://3bstays.com/casa/CT-1001");
 });
 
 describe("shareBase", () => {
-  it("usa bnbtico.com en producción", () => {
-    expect(shareBase("production", "https://bnbtico-production.workers.dev")).toBe("https://bnbtico.com");
+  it("usa 3bstays.com en producción", () => {
+    expect(shareBase("production", "https://3bstays-production.workers.dev")).toBe("https://3bstays.com");
   });
   it("usa el origen actual en pruebas y en local", () => {
-    expect(shareBase("pruebas", "https://nueva.bnbtico.com/")).toBe("https://nueva.bnbtico.com");
+    expect(shareBase("pruebas", "https://pruebas.3bstays.com/")).toBe("https://pruebas.3bstays.com");
     expect(shareBase("local", "http://127.0.0.1:5173")).toBe("http://127.0.0.1:5173");
-    expect(shareBase("local", null)).toBe("https://bnbtico.com");
+    expect(shareBase("local", null)).toBe("https://3bstays.com");
   });
 });
 
 describe("robots.txt", () => {
   it("en producción permite indexar y anuncia el sitemap", () => {
-    expect(robotsTxt("production")).toBe("User-agent: *\nAllow: /\nSitemap: https://bnbtico.com/sitemap.xml\n");
+    expect(robotsTxt("production")).toBe("User-agent: *\nAllow: /\nSitemap: https://3bstays.com/sitemap.xml\n");
   });
   it("en pruebas y en local pide no indexar", () => {
     expect(robotsTxt("pruebas")).toBe("User-agent: *\nDisallow: /\n");

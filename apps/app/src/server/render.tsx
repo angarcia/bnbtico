@@ -39,11 +39,11 @@ function listingHead(l: PublicListing): string[] {
   const description = escapeHtml(d.previewText);
   const cover = l.photos[0];
   return [
-    `<title>${title} · bnbtico</title>`,
+    `<title>${title} · 3bstays</title>`,
     `<meta name="description" content="${description}" />`,
     `<link rel="canonical" href="${canonical}" />`,
     `<meta property="og:type" content="website" />`,
-    `<meta property="og:site_name" content="bnbtico" />`,
+    `<meta property="og:site_name" content="3bstays" />`,
     `<meta property="og:locale" content="es_CR" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
@@ -82,7 +82,7 @@ function body(data: SsrData): string {
 
 export function renderDocument(template: string, data: SsrData): string {
   const head =
-    data.page === "listing" ? listingHead(data.listing) : [`<title>${STATUS_HEAD[data.page]} · bnbtico</title>`, `<meta name="robots" content="noindex" />`];
+    data.page === "listing" ? listingHead(data.listing) : [`<title>${STATUS_HEAD[data.page]} · 3bstays</title>`, `<meta name="robots" content="noindex" />`];
   head.push(`<script type="application/json" id="${SSR_DATA_ID}">${jsonForScript(data)}</script>`);
   return template.replace(HEAD, () => head.join("\n    ")).replace(ROOT, () => body(data));
 }

@@ -92,7 +92,7 @@ describe("sesión del propietario en memoria, solo para editar-casa", () => {
     expect(local.signIn).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["https://pruebas.bnbtico.com", "http://127.0.0.1.ejemplo.com", "http://localhost:4273@ejemplo.com"])(
+  it.each(["https://pruebas.3bstays.com", "http://127.0.0.1.ejemplo.com", "http://localhost:4273@ejemplo.com"])(
     "rechaza el navegador alojado %s antes de autenticar",
     async (url) => {
       local.signIn.mockResolvedValue(client());

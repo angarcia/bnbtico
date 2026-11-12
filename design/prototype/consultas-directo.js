@@ -7,7 +7,7 @@ function consultaOpenable(lead){
 const consultasLeads=SCREENS['o-leads'];
 SCREENS['o-leads']=()=>consultasLeads()
   .replace('Clientes que intentaron abrir tu WhatsApp desde una ficha. No confirma que enviaron el mensaje. Respondés por WhatsApp; no tenés que aceptar ni rechazar consultas aquí.','Clientes que te escribieron por WhatsApp desde una ficha. Tocá una consulta para seguir la conversación en WhatsApp; aquí no hay nada que aceptar ni rechazar.')
-  .replace('Contactos desde tus fichas y consultas enviadas por bnbtico a petición de clientes. No confirma que enviaron el mensaje. Respondés por WhatsApp; no tenés que aceptar ni rechazar consultas aquí.','Clientes que te escribieron desde una ficha o a través de bnbtico. Tocá una consulta para seguir la conversación en WhatsApp; aquí no hay nada que aceptar ni rechazar.')
+  .replace('Contactos desde tus fichas y consultas enviadas por 3bstays a petición de clientes. No confirma que enviaron el mensaje. Respondés por WhatsApp; no tenés que aceptar ni rechazar consultas aquí.','Clientes que te escribieron desde una ficha o a través de 3bstays. Tocá una consulta para seguir la conversación en WhatsApp; aquí no hay nada que aceptar ni rechazar.')
   .replace(/(<button class="btn btn-wa" data-relay-lead="\d+"[^>]*>)([\s\S]*?<\/svg>)? ?Contactar por WhatsApp<\/button>/g,(m,open,icon)=>`${open}${icon||''} Abrir WhatsApp</button>`);
 // Se registra en window en fase de captura para adelantarse al manejador de relay.js, que abre la hoja con plantilla.
 (typeof window!=='undefined'?window:document).addEventListener('click',event=>{

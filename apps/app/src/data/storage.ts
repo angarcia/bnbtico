@@ -18,8 +18,8 @@ export interface KeyValueStore extends SessionStorageAdapter {
 }
 
 /** Clave de la sesión de Supabase en el almacenamiento. Saber si existe permite pintar sin esperar a supabase-js. */
-export const SESSION_STORAGE_KEY = "bnbtico-auth";
-export const PENDING_OTP_KEY = "bnbtico-otp";
+export const SESSION_STORAGE_KEY = "3bstays-auth";
+export const PENDING_OTP_KEY = "3bstays-otp";
 
 /** ¿Hay una sesión guardada en el dispositivo? Se sabe al instante, sin supabase-js (puede haber caducado: eso lo dice él). */
 export function hasStoredSession(): boolean {
@@ -43,7 +43,7 @@ export function memoryStore(): KeyValueStore {
 export function webStore(kind: "local" | "session"): KeyValueStore {
   try {
     const s = kind === "local" ? globalThis.localStorage : globalThis.sessionStorage;
-    const probe = "bnbtico-probe";
+    const probe = "3bstays-probe";
     s.setItem(probe, "1");
     s.removeItem(probe);
     return {

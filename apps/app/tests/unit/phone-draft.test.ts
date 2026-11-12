@@ -29,8 +29,8 @@ describe("acceso al borrador del teléfono", () => {
     storage.setItem(PUBLISH_STEP1_KEY, storeStep1("habitacion", NOW));
     storage.setItem("otra-clave", "conservar");
     writePhoneDraft(draft);
-    expect(PUBLISH_DRAFT_KEY).toBe("bnbtico-publicar-borrador");
-    expect(PUBLISH_STEP1_KEY).toBe("bnbtico-publicar-paso1");
+    expect(PUBLISH_DRAFT_KEY).toBe("3bstays-publicar-borrador");
+    expect(PUBLISH_STEP1_KEY).toBe("3bstays-publicar-paso1");
     expect(storage.getItem(PUBLISH_DRAFT_KEY)).toBe(storeLocalDraft(draft, NOW));
     expect(storage.getItem(PUBLISH_STEP1_KEY)).toBeNull();
     expect(storage.getItem("otra-clave")).toBe("conservar");

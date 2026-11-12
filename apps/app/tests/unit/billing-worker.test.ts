@@ -9,7 +9,7 @@ import { decodeSession, encodeSession, FAKE_SIGNATURE_HEADER } from "../../src/s
 import { SUBSCRIPTION_MESSAGES as M } from "../../src/domain/subscription";
 import { fakeHarness } from "./fake-harness";
 
-const ORIGIN = "https://nueva.bnbtico.com";
+const ORIGIN = "https://pruebas.3bstays.com";
 const NOW = Date.parse("2026-10-27T18:00:00Z");
 const T = Math.floor(NOW / 1000);
 const WHSEC = "whsec_prueba_0123456789abcdef";
@@ -175,7 +175,7 @@ describe("POST /api/pago/sesion", () => {
     const [customer, checkout] = t.stripe.calls;
     expect(customer!.url).toBe("https://api.stripe.com/v1/customers");
     expect(customer!.headers.authorization).toBe(`Bearer ${SK}`);
-    expect(customer!.headers["idempotency-key"]).toBe(`bnbtico-customer-${t.h.ownerId("owner")}`);
+    expect(customer!.headers["idempotency-key"]).toBe(`3bstays-customer-${t.h.ownerId("owner")}`);
     expect(customer!.form.get("metadata[owner_id]")).toBe(t.h.ownerId("owner"));
     expect(customer!.form.has("phone")).toBe(false);
 

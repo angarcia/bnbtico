@@ -19,6 +19,6 @@ export function holdFromRow(kind: string | null | undefined, reason: string | nu
 /** La etiqueta de una casa retenida (sobre la foto, en Mis casas) con su color: va en el JS inicial; los textos largos
  *  (HOLD_COPY) van aparte, en admin-actions.ts. */
 export const HOLD_LABELS: Record<HoldKind, { text: string; cls: "state-review" | "state-bad" }> = {
-  paused: { text: "Pausada por bnbtico", cls: "state-review" },
-  blocked: { text: "Bloqueada por bnbtico", cls: "state-bad" },
+  paused: { text: "Pausada por 3bstays", cls: "state-review" },
+  blocked: { text: "Bloqueada por 3bstays", cls: "state-bad" },
 };

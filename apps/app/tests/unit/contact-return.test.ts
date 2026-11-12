@@ -9,7 +9,7 @@ describe("vuelta a la hoja de contacto tras ingresar", () => {
   it("la ficha con la hoja abierta y el enlace a Ingresar que vuelve a ella (pasando por safeNext)", () => {
     expect(contactNext("CT-1042")).toBe("/casa/CT-1042?contacto=1");
     expect(signInToContact("CT-1042")).toBe("/cuenta?next=%2Fcasa%2FCT-1042%3Fcontacto%3D1");
-    expect(contactDraftKey("CT-1042")).toBe("bnbtico-contacto:CT-1042");
+    expect(contactDraftKey("CT-1042")).toBe("3bstays-contacto:CT-1042");
   });
 
   it("reconoce una ficha en `next`; nada más", () => {
@@ -54,10 +54,10 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
     const open = vi.fn();
     const created = vi.fn();
     const create = vi.fn(async () => ({ inquiryId: "i1", whatsappPhone: "+506 6000-1234" }));
-    const outcome = await proceedToWhatsApp({ ...contact, origin: "https://bnbtico.com", navigate, hasSession: signedIn, create, open, created });
+    const outcome = await proceedToWhatsApp({ ...contact, origin: "https://3bstays.com", navigate, hasSession: signedIn, create, open, created });
     expect(outcome).toEqual({ kind: "sent" });
     expect(create).toHaveBeenCalledExactlyOnceWith("CT-1042", draft);
-    expect(open).toHaveBeenCalledExactlyOnceWith(`https://wa.me/50660001234?text=${encodeURIComponent(`https://bnbtico.com/casa/CT-1042\n\n${draft.message}`)}`);
+    expect(open).toHaveBeenCalledExactlyOnceWith(`https://wa.me/50660001234?text=${encodeURIComponent(`https://3bstays.com/casa/CT-1042\n\n${draft.message}`)}`);
     expect(created).toHaveBeenCalledExactlyOnceWith("CT-1042");
     expect(navigate).not.toHaveBeenCalled();
   });
@@ -113,7 +113,7 @@ describe("¿se viene de la hoja de contacto?", () => {
 describe("fechas de la búsqueda de Explorar en la pestaña (la hoja de contacto arranca con ellas)", () => {
   const T = "2026-11-01";
   it("clave", () => {
-    expect(DATES_FILTER_KEY).toBe("bnbtico-fechas");
+    expect(DATES_FILTER_KEY).toBe("3bstays-fechas");
   });
   it("lee llegada y salida", () => {
     expect(readSearchDates('{"llegada":"2026-11-23","salida":"2026-11-27"}', T)).toEqual({ arrival: "2026-11-23", departure: "2026-11-27" });

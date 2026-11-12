@@ -1,5 +1,5 @@
 // Pasarela de pago (fase 5, ticket 04): solo guarda un método de pago, nunca cobra. La implementan StripeProvider
-// (src/server/stripe.ts) y FakeProvider (src/server/fake-payments.ts, solo en local). bnbtico no pinta ningún campo de
+// (src/server/stripe.ts) y FakeProvider (src/server/fake-payments.ts, solo en local). 3bstays no pinta ningún campo de
 // tarjeta: la pasarela abre su propia página y avisa por un webhook firmado.
 import type { PaymentEvent, PaymentProviderName } from "./subscription";
 

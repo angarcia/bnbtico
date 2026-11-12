@@ -114,7 +114,7 @@ describe("editar una casa publicada · al momento y guardas", () => {
   it("listings_protect: un update directo del título o a borrador de una casa activa se rechaza", async () => {
     const { id } = await h.seed({ status: "active" });
     expect((await owner.from("listings").update({ title: "Otro nombre" }).eq("id", id)).error?.message).toBe("Esta casa está publicada: cambie sus datos desde Mis casas.");
-    expect((await owner.from("listings").update({ status: "draft" }).eq("id", id)).error?.message).toBe("Solo bnbtico puede cambiar el estado de un anuncio.");
+    expect((await owner.from("listings").update({ status: "draft" }).eq("id", id)).error?.message).toBe("Solo 3bstays puede cambiar el estado de un anuncio.");
     const review = await h.seed({ status: "review" });
     expect((await owner.from("listings").update({ title: "Otro nombre" }).eq("id", review.id)).error?.message).toBe(
       "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.",
@@ -545,8 +545,8 @@ describe("revisión dato a dato", () => {
 
   it("quien no es admin y el admin sin segundo código no deciden; lo ya decidido no se decide otra vez", async () => {
     const { id } = await sent();
-    expect((await review(id, "title", "approve", "", other)).error?.message).toBe("Solo bnbtico puede revisar anuncios.");
-    expect((await review(id, "title", "approve", "", owner)).error?.message).toBe("Solo bnbtico puede revisar anuncios.");
+    expect((await review(id, "title", "approve", "", other)).error?.message).toBe("Solo 3bstays puede revisar anuncios.");
+    expect((await review(id, "title", "approve", "", owner)).error?.message).toBe("Solo 3bstays puede revisar anuncios.");
     expect((await review(id, "title", "approve", "", adminAal1)).error?.message).toBe("Confirme el segundo código para revisar anuncios.");
     expect((await review(id, "title", "approve", "", anonClient())).error).not.toBeNull();
     expect((await review(crypto.randomUUID(), "title", "approve")).error?.message).toBe("No encontramos esa edición.");

@@ -93,7 +93,7 @@ export function createStripeProvider(cfg: StripeConfig): PaymentProvider {
       let customerRef = req.customerRef;
       if (!customerRef) {
         // La clave de idempotencia evita dos clientes si el propietario toca dos veces (Stripe la recuerda 24 h).
-        const customer = await call("POST", "/customers", { name: req.owner.fullName, "metadata[owner_id]": req.owner.id }, `bnbtico-customer-${req.owner.id}`);
+        const customer = await call("POST", "/customers", { name: req.owner.fullName, "metadata[owner_id]": req.owner.id }, `3bstays-customer-${req.owner.id}`);
         customerRef = str(customer.id);
         if (!customerRef) throw new StripeError(502);
       }

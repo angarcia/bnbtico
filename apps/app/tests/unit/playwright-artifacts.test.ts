@@ -143,7 +143,7 @@ async function close(server: Server) {
 }
 
 beforeEach(async () => {
-  folder = await mkdtemp(join(tmpdir(), "bnbtico-artifacts-test-"));
+  folder = await mkdtemp(join(tmpdir(), "3bstays-artifacts-test-"));
   root = join(folder, "run");
   await initializeRun(root);
 });
@@ -168,7 +168,7 @@ describe("artefactos Playwright publicables", () => {
     const key = `API_${randomUUID()}`;
     const raw = {
       status: "failed", expected: 2, unexpected: 1, duration: 1234.5, retries: 0,
-      storageState: { cookies: [{ name: "session", value: cookie }], origins: [{ origin: "http://127.0.0.1:1234", localStorage: [{ name: "bnbtico-auth", value: JSON.stringify({ access_token: access, refresh_token: refresh }) }] }] },
+      storageState: { cookies: [{ name: "session", value: cookie }], origins: [{ origin: "http://127.0.0.1:1234", localStorage: [{ name: "3bstays-auth", value: JSON.stringify({ access_token: access, refresh_token: refresh }) }] }] },
       headers: [{ name: "Authorization", value: `Bearer ${access}` }, { name: "apikey", value: key }],
       error: { message: `Falló la consulta: ${access}`, stack: `Error: ${refresh}\n at prueba.ts:3:4` },
       encoded: Buffer.from(JSON.stringify({ refresh_token: refresh })).toString("base64"),
@@ -841,7 +841,7 @@ test("fragmentos", async () => {
       testDir: root, testMatch: "fixture.spec.cjs", workers: 1, retries: 0, timeout: 20_000,
       outputDir: join(root, "raw", "results"),
       reporter: [["blob", { outputDir: join(root, "raw", "blob") }], ["json", { outputFile: join(root, "raw", "e2e.json") }], ["html", { outputFolder: join(root, "raw", "html"), open: "never" }]],
-      use: { trace: "retain-on-failure", launchOptions: { executablePath }, storageState: { cookies: [{ name: "session", value: canaries[3], domain: "127.0.0.1", path: "/" }], origins: [{ origin, localStorage: [{ name: "bnbtico-auth", value: JSON.stringify({ access_token: canaries[0], refresh_token: canaries[1] }) }] }] } },
+      use: { trace: "retain-on-failure", launchOptions: { executablePath }, storageState: { cookies: [{ name: "session", value: canaries[3], domain: "127.0.0.1", path: "/" }], origins: [{ origin, localStorage: [{ name: "3bstays-auth", value: JSON.stringify({ access_token: canaries[0], refresh_token: canaries[1] }) }] }] } },
     };
     await writeFile(join(root, "fixture.config.cjs"), `module.exports = ${JSON.stringify(config)};`);
     await writeFile(join(root, "fixture.spec.cjs"), `
@@ -970,4 +970,20 @@ test("caso diagnóstico", async ({ page }) => {
       await close(server);
     }
   }, 60_000);
+
+  it("un texto con pinta de base64 que al decodificarlo empieza por «{» sin ser JSON no tumba el saneo y se conserva", async () => {
+    const parecido = Buffer.from("{esto no es json, es texto").toString("base64");
+    await writeFile(join(root, "raw", "e2e-normalized.json"), JSON.stringify({ status: "passed", nota: parecido }));
+    await sanitizeRun({ root });
+    const output = JSON.parse(await readFile(join(root, "publish", "e2e-normalized.json"), "utf8"));
+    expect(output).toMatchObject({ status: "passed", nota: parecido });
+  });
+
+  it("un rechazo dice en qué archivo fue, sin su contenido", async () => {
+    await writeFile(join(root, "raw", "roto.json"), "{no es json secreto-123");
+    const error = await sanitizeRun({ root }).catch((e) => e);
+    expect(error.code).toBe("json");
+    expect(error.where).toBe("roto.json");
+    expect(String(error.where) + error.message).not.toContain("secreto-123");
+  });
 });

@@ -144,7 +144,7 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       if (!l) throw new DomainError(NOT_FOUND, "not_found");
       if (l.status === "draft") return void touch(l, {});
       // Una casa publicada ya no vuelve a borrador (trigger listings_protect): se edita con updateLive y saveEdit.
-      if (l.status !== "changes" && l.status !== "rejected") throw new DomainError("Solo bnbtico puede cambiar el estado de un anuncio.", "validation");
+      if (l.status !== "changes" && l.status !== "rejected") throw new DomainError("Solo 3bstays puede cambiar el estado de un anuncio.", "validation");
       touch(l, { status: "draft" });
     },
 

@@ -48,9 +48,9 @@ test("cancelar no desconecta; confirmar retira solo importados y conserva precio
   const exported = await exports.owner(jwt, l.id, true);
   await injectSession(page, "owner");
   await page.goto(`/propietario/casas/${l.id}/airbnb`);
-  await expect(page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 667 });
-  await page.screenshot({ path: "/tmp/bnbtico-gestion-07-375.jpg", fullPage: true, mask: [page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true })] });
+  await page.screenshot({ path: "/tmp/3bstays-gestion-07-375.jpg", fullPage: true, mask: [page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true })] });
   await page.context().setOffline(true);
   await expect(page.getByRole("button", { name: "Actualizar ahora", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Desconectar Airbnb", exact: true })).toBeDisabled();
@@ -59,7 +59,7 @@ test("cancelar no desconecta; confirmar retira solo importados y conserva precio
   const dialog = page.getByRole("dialog", { name: "¿Desconectar Airbnb?" });
   await expect(dialog).toContainText("Sus bloqueos manuales y precios se conservan.");
   await page.setViewportSize({ width: 390, height: 844 });
-  await dialog.screenshot({ path: "/tmp/bnbtico-gestion-07-confirmacion-390.jpg" });
+  await dialog.screenshot({ path: "/tmp/3bstays-gestion-07-confirmacion-390.jpg" });
   await dialog.getByRole("button", { name: "Cancelar", exact: true }).click();
   expect(await service.overview(jwt, l.id)).toMatchObject({ connected: true, nights: 3 });
   await page.getByRole("button", { name: "Desconectar Airbnb", exact: true }).click();
@@ -82,7 +82,7 @@ test("cancelar conserva el feed; revocar lo invalida y generar otro deja el anti
   await exports.owner(jwt, l.id, true);
   await injectSession(page, "owner");
   await page.goto(`/propietario/casas/${l.id}/airbnb`);
-  const field = page.getByLabel("Enlace de bnbtico para Airbnb", { exact: true });
+  const field = page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true });
   await expect(field).toBeVisible();
   const previous = await field.inputValue();
   await page.getByRole("button", { name: "Revocar enlace", exact: true }).click();

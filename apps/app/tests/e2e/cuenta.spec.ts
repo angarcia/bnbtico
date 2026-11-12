@@ -32,7 +32,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expect(page.locator("#account-phone-error")).toHaveText("Ese número no parece válido para el país elegido.");
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Es su primera vez en 3bstays" })).toBeVisible();
   await expect(page.getByText("+506 8888 9999")).toBeVisible();
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
   await expect(page.locator("#account-name-error")).toHaveText("Escriba su nombre.");
@@ -93,7 +93,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
 
   await signOut(page);
   await expect(entryHeading(page)).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem("bnbtico-auth"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("3bstays-auth"))).toBeNull();
 
   // Con cuenta: el código sale al primer paso, sin pedir el nombre.
   await page.getByLabel("Número de WhatsApp").fill("+506 8888 9999");
@@ -130,7 +130,7 @@ test("un enlace viejo con ?modo=entrar abre el mismo flujo; «Cambiar número» 
   await expect(page.locator(".field-error")).toHaveText("Ese número no parece válido para el país elegido.");
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Es su primera vez en 3bstays" })).toBeVisible();
   await page.getByRole("button", { name: "Cambiar número" }).click();
   await expect(entryHeading(page)).toBeVisible();
   await expect(page.getByLabel("Número de WhatsApp")).toBeVisible();
@@ -210,7 +210,7 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
   await expect(page.getByRole("link", { name: /Mi perfil/ })).toHaveCount(0);
   await expect(page.getByText("Próximo cobro")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Buscar una casa/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Ayuda por WhatsApp/ })).toContainText("Línea de bnbtico para clientes");
+  await expect(page.getByRole("link", { name: /Ayuda por WhatsApp/ })).toContainText("Línea de 3bstays para clientes");
   await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
   await expect(page.getByText("atención a clientes")).toBeVisible();
 
@@ -239,7 +239,7 @@ test("recuperar la cuenta y Favoritos sin sesión", async ({ page }) => {
   await page.goto("/cuenta");
   await page.getByRole("link", { name: "No tengo acceso a mi WhatsApp" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Recuperar mi cuenta" })).toBeVisible();
-  await page.getByRole("link", { name: "Escribir a bnbtico por WhatsApp" }).click();
+  await page.getByRole("link", { name: "Escribir a 3bstays por WhatsApp" }).click();
   await expect(page.getByText("atención a clientes")).toBeVisible();
   await page.goto("/favoritos");
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();

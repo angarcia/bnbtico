@@ -6,7 +6,7 @@ export type BlockedReason = "stopped" | "payment" | "other";
 export function blockedReason(reason: BlockedReason | null): string {
   switch (reason) {
     case "stopped":
-      return "El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.";
+      return "El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde 3bstays.";
     case "payment":
       return "Este anuncio está fuera del catálogo hasta que el anfitrión regularice su suscripción.";
     default:

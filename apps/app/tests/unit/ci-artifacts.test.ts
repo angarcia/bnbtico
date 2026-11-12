@@ -103,7 +103,10 @@ if (isTest && !isList && ${JSON.stringify(mode)} === "normalizer" && result.stat
 }
 if (isTest && !isList && ${JSON.stringify(mode)} === "publish-sanitize" && result.status === 0)
   writeFileSync(require("node:path").join(process.env.PW_ARTIFACT_ROOT, "render", "unsupported.bin"), Buffer.from([255, 254, 250]));
+if (isTest && ${JSON.stringify(mode)} === "stdout-noise")
+  process.stdout.write("[WebServer] (!) aviso del servidor con {llaves} y Authorization: Bearer ${secret}\\n");
 process.stdout.write(result.stdout || "");
+if (isTest && ${JSON.stringify(mode)} === "stdout-noise") process.stdout.write("\\n[WebServer] cierre\\n");
 process.stderr.write(result.stderr || "");
 if (isTest && !isList && ${JSON.stringify(mode)} === "stderr")
   process.stderr.write("Error externo sintético\\nAuthorization: Bearer ${secret}\\n");
@@ -125,13 +128,13 @@ process.exit(isTest && !isList && ${JSON.stringify(mode)} === "exit7" ? 7 : (res
 }
 
 describe("conexión privada de artefactos", () => {
-  it.each(["passing", "failing", "interrupted", "incomplete", "exit7", "stderr", "duplicate-attachment"])(
+  it.each(["passing", "failing", "interrupted", "incomplete", "exit7", "stderr", "duplicate-attachment", "stdout-noise"])(
     "publica diagnóstico saneado de %s sin ocultar el resultado original", async mode => {
       const { result, outputs, root } = execute(mode);
       expect(outputs, result.stderr).toContain("safe_to_upload=true\n");
       expect(outputs.trim().endsWith("safe_to_upload=true")).toBe(true);
       expect(outputs).toContain(`publish=${root}/publish\n`);
-      expect(result.status).toBe(["passing", "stderr", "duplicate-attachment"].includes(mode) ? 0 : mode === "exit7" ? 7 : mode === "interrupted" ? 130 : 1);
+      expect(result.status).toBe(["passing", "stderr", "duplicate-attachment", "stdout-noise"].includes(mode) ? 0 : mode === "exit7" ? 7 : mode === "interrupted" ? 130 : 1);
       expect(result.stdout + result.stderr).not.toContain(secret);
       const rawJson = readFileSync(join(root, "raw/runner.json"), "utf8");
       expect(rawJson).toContain(secret);
@@ -141,7 +144,11 @@ describe("conexión privada de artefactos", () => {
       expect(raw.suites[0].specs[0].tests[0].results[0].stderr).toEqual([{ text: `copia ${secret}\n` }]);
       expect(existsSync(join(root, "raw/runner.log"))).toBe(false);
       const privateLog = readFileSync(join(root, "logs/runner.log"), "utf8");
-      expect(privateLog).toBe(mode === "stderr" ? `Error externo sintético\nAuthorization: Bearer ${secret}\n` : "");
+      if (mode === "stdout-noise") {
+        // El ruido que otro proceso coló en stdout se queda en el log privado y no estropea el informe.
+        expect(privateLog).toContain(`[WebServer] (!) aviso del servidor con {llaves} y Authorization: Bearer ${secret}`);
+        expect(privateLog).toContain("[WebServer] cierre");
+      } else expect(privateLog).toBe(mode === "stderr" ? `Error externo sintético\nAuthorization: Bearer ${secret}\n` : "");
       const publish = join(root, "publish");
       await inspectDirectory(publish);
       expect(readdirSync(publish, { recursive: true }).filter(name => String(name).endsWith(".log"))).toEqual([]);

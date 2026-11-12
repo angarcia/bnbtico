@@ -105,7 +105,7 @@ function situation(l: Listing, now: number): string {
 
 function previewText(l: Listing | PublicListing, main: Price | null): string {
   const place = [l.zone, l.province].filter(Boolean).join(", ");
-  const what = l.kind ? `${KIND_LABELS[l.kind]}${place ? ` en ${place}` : ""}` : l.title || "Casa en bnbtico";
+  const what = l.kind ? `${KIND_LABELS[l.kind]}${place ? ` en ${place}` : ""}` : l.title || "Casa en 3bstays";
   const people = l.capacity ? `${l.capacity} ${l.capacity === 1 ? "persona" : "personas"}` : null;
   const price = main ? `${formatCRC(main.amount)} por ${main.unit} · orientativo` : null;
   return [what, people, price].filter(Boolean).join(" · ");

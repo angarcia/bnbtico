@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const script = fileURLToPath(new URL("../../scripts/ci-e2e.mjs", import.meta.url));
 const temporary: string[] = [];
 const fixture = () => {
-  const dir = mkdtempSync(join(tmpdir(), "bnbtico-ci-test-"));
+  const dir = mkdtempSync(join(tmpdir(), "3bstays-ci-test-"));
   temporary.push(dir);
   return dir;
 };

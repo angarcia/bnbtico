@@ -17,10 +17,10 @@ const NOW = Date.parse("2026-10-23T15:00:00Z");
 
 describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
   it("clave por casa", () => {
-    expect(contactDraftKey("CT-1015")).toBe("bnbtico-contacto:CT-1015");
+    expect(contactDraftKey("CT-1015")).toBe("3bstays-contacto:CT-1015");
   });
 
-  // Las fechas ya no van en el borrador: son las de la pestaña (`bnbtico-fechas`), que comparten Explorar, la ficha y la hoja
+  // Las fechas ya no van en el borrador: son las de la pestaña (`3bstays-fechas`), que comparten Explorar, la ficha y la hoja
   // (ronda de Ana 2 nov, ticket 08).
   it("guarda personas, mensaje, si se editó y si la hoja estaba abierta; las fechas no", () => {
     const s = redraft(startDraft(TITLE), { type: "fields", patch: { arrival: "2026-12-20", departure: "2026-12-27", people: 4 } }, TITLE);

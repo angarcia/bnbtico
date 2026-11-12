@@ -79,8 +79,8 @@ export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: strin
 
 // ---------- Avisos y piezas de Mis casas ----------
 
-/** Casa pausada o bloqueada por bnbtico (spec .scratch/admin-casas-acciones): el motivo que escribió el admin y, bloqueada,
- *  «Escribir a bnbtico» (WhatsApp de propietarios). La etiqueta ya va sobre la foto. `card`: la versión corta de Mis casas. */
+/** Casa pausada o bloqueada por 3bstays (spec .scratch/admin-casas-acciones): el motivo que escribió el admin y, bloqueada,
+ *  «Escribir a 3bstays» (WhatsApp de propietarios). La etiqueta ya va sobre la foto. `card`: la versión corta de Mis casas. */
 export function HoldNotice({ listing: l, card = false }: { listing: Listing; card?: boolean }) {
   const hold = l.adminHold;
   if (!hold) return null;
@@ -93,7 +93,7 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
         target="_blank"
         rel="noopener"
       >
-        Escribir a bnbtico
+        Escribir a 3bstays
       </a>
     ) : null;
   if (card)

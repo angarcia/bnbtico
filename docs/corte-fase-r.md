@@ -1,5 +1,7 @@
 # Guion del corte de la fase R
 
+> **Nota (2026-11-11):** la marca pasó a 3bstays y el dominio a `3bstays.com`; pruebas está en `pruebas.3bstays.com` (worker `3bstays-pruebas`). Este guion conserva los nombres de bnbtico de cuando se escribió; el cambio de dominio está en `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`.
+
 Fecha de redacción: 2026-10-23 (ticket 13, parte preparada). **No se ejecuta hasta que Daniel apruebe `docs/pruebas-manuales-fase-r.md`.** Lo hace Daniel (o un agente con su permiso explícito para cada paso que toca Cloudflare, Supabase alojado, GitHub o Vercel). Pasos en orden; cada uno dice cómo volver atrás.
 
 **Actualización 2026-11-04:** el ticket 09 retira solo el paquete Next versionado. Daniel confirmó que Vercel tiene los builds desactivados. Se conservan `apps/app` y el nombre `app`; no hay renombrado. Ningún paso de DNS, Access, Vault, migraciones, publicación o eliminación del proyecto Vercel queda autorizado por esta retirada.

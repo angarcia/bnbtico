@@ -30,7 +30,7 @@ const adminKey = (prefix: string, userId = "admin-a") => prefix === "admin-edit"
 
 function storageOptions() {
   const storage = memoryStore();
-  const persister = createAsyncStoragePersister({ storage, key: "bnbtico-query", throttleTime: 0 });
+  const persister = createAsyncStoragePersister({ storage, key: "3bstays-query", throttleTime: 0 });
   return { storage, options: { ...persistOptions, queryClient: client, persister } };
 }
 
@@ -130,7 +130,7 @@ describe("limpieza privada del shell", () => {
     expect(client.getQueryState(key)).toBeUndefined();
     const { storage, options } = storageOptions();
     await persistQueryClientSave(options);
-    expect(storage.getItem("bnbtico-query")).not.toContain("respuesta de A");
+    expect(storage.getItem("3bstays-query")).not.toContain("respuesta de A");
   });
 
   it("descarta también la respuesta privada cuyo transporte no consume AbortSignal", async () => {
@@ -174,7 +174,7 @@ describe("persistencia privada y restauración", () => {
     const expected = [...publicPersisted, ...(signedIn ? privatePersisted : [])].map((prefix) => [prefix, "admin-a"]);
     expect(saved?.clientState.queries.map((q) => q.queryKey).sort()).toEqual(expected.sort());
     expect(saved?.buster).toBe("private-cache-test");
-    expect(storage.getItem("bnbtico-query")).not.toBeNull();
+    expect(storage.getItem("3bstays-query")).not.toBeNull();
   });
 
   it("restaura el formato previo y refresca solo las privadas persistibles, sin borrar sus datos", async () => {
@@ -237,7 +237,7 @@ describe("persistencia privada y restauración", () => {
     await persistQueryClientRestore(options);
 
     expect(client.getQueryCache().getAll()).toEqual([]);
-    expect(storage.getItem("bnbtico-query")).toBeNull();
+    expect(storage.getItem("3bstays-query")).toBeNull();
   });
 
   it("conserva claves y staleTime de las consultas de cuenta y admin", () => {

@@ -66,7 +66,7 @@ beforeEach(() => {
   state.error = null;
   state.queries = [];
   state.outcome = null;
-  vi.stubGlobal("window", { location: { origin: "https://bnbtico.test" } });
+  vi.stubGlobal("window", { location: { origin: "https://3bstays.test" } });
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -86,7 +86,7 @@ describe("Admin: composición pública antes de separar pantallas", () => {
   it.each(guarded)("%s niega la sección y desactiva sus consultas cuando no es admin", (Screen) => {
     state.account = { isAdmin: false };
     const html = renderToString(<Screen />);
-    expect(html).toContain("Esta sección es solo para el equipo de bnbtico");
+    expect(html).toContain("Esta sección es solo para el equipo de 3bstays");
     expect(html).toContain('href="/explorar"');
     expect(state.queries.filter((q) => q.queryKey[0] !== "account").every((q) => q.enabled === false)).toBe(true);
   });
@@ -203,7 +203,7 @@ describe("Admin: composición pública antes de separar pantallas", () => {
     state.account = undefined;
     expect(renderToString(<screens.SegundoCodigoScreen />)).toContain("Cargando su cuenta");
     state.account = { isAdmin: false };
-    expect(renderToString(<screens.SegundoCodigoScreen />)).toContain("Esta sección es solo para el equipo de bnbtico");
+    expect(renderToString(<screens.SegundoCodigoScreen />)).toContain("Esta sección es solo para el equipo de 3bstays");
     state.account = { isAdmin: true };
     const html = renderToString(<screens.SegundoCodigoScreen />);
     expect(html).toContain('data-back="/cuenta"');

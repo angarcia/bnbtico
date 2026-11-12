@@ -109,7 +109,7 @@ export function createFakeAuth(db: FakeDb, deps: { session: KeyValueStore; pendi
       if (existing?.verified) return { factorId: existing.id, verified: true };
       const factor = { id: db.newId(), secret: newTotpSecret(), verified: false };
       db.mfaFactors.set(p.id, factor);
-      const uri = `otpauth://totp/bnbtico:${p.phone}?secret=${factor.secret}&issuer=bnbtico`;
+      const uri = `otpauth://totp/3bstays:${p.phone}?secret=${factor.secret}&issuer=3bstays`;
       return { factorId: factor.id, verified: false, secret: factor.secret, qrCode: `data:image/svg+xml;utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg"><title>${uri}</title></svg>`)}` };
     },
     async verifyMfa(factorId, code) {

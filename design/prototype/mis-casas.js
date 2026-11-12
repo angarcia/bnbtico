@@ -33,7 +33,7 @@ const casaPhone=()=>S.dev==='phone';
   return (typeof houseActionsStyle==='string'?houseActionsStyle:'')+header(safe(h.t),'o-houses')
     +`<div class="photo ${h.photo}"><span>${safe(h.loc.split(',')[0])}</span></div>`
     +`<section class="card stack"><div class="row between"><b class="num">${fmt(h)}/${h.unit}</b><span class="badge ${s.badge}">${s.label}</span></div>${houseStateBlock(h.id)}</section>`
-    +`<section class="card stack"><b>Ficha</b><button class="btn btn-primary" data-launch-share="${h.id}" ${houseAvailable(h.id)?'':'disabled'}>Compartir ficha</button><p class="xs muted">Enviá el enlace por WhatsApp o compartilo en tus redes. Para escribirte desde bnbtico, tus clientes solo necesitan su WhatsApp verificado.</p></section>`
+    +`<section class="card stack"><b>Ficha</b><button class="btn btn-primary" data-launch-share="${h.id}" ${houseAvailable(h.id)?'':'disabled'}>Compartir ficha</button><p class="xs muted">Enviá el enlace por WhatsApp o compartilo en tus redes. Para escribirte desde 3bstays, tus clientes solo necesitan su WhatsApp verificado.</p></section>`
     +`<section class="card stack"><b>Gestión</b>${houseControls(h)}${houseReopeningNote(h.id)}</section>`;
 };}
 render();

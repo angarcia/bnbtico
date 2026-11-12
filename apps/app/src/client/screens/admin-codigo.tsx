@@ -78,7 +78,7 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
             escriba abajo el código de 6 dígitos que le muestre.
           </p>
         ) : (
-          <p className="muted">Abra su app de autenticación y escriba el código de 6 dígitos de bnbtico.</p>
+          <p className="muted">Abra su app de autenticación y escriba el código de 6 dígitos de 3bstays.</p>
         )}
       </div>
       {enrol ? (

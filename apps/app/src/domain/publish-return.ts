@@ -4,7 +4,7 @@
 import { emptyDraft, FEATURES, KINDS, normalize, type Feature, type ListingDraft } from "./listing";
 
 /** El tipo de alojamiento elegido en el paso 1, en localStorage hasta crear la casa. */
-export const PUBLISH_STEP1_KEY = "bnbtico-publicar-paso1";
+export const PUBLISH_STEP1_KEY = "3bstays-publicar-paso1";
 /** Siete días. */
 export const PUBLISH_STEP1_TTL_MS = 604_800_000;
 
@@ -35,7 +35,7 @@ export function readStep1(raw: string | null, now: number): { kind: Step1Kind } 
 }
 
 /** Los pasos 1–6 escritos sin cuenta, en localStorage hasta crear la casa (mismo plazo que el paso 1). */
-export const PUBLISH_DRAFT_KEY = "bnbtico-publicar-borrador";
+export const PUBLISH_DRAFT_KEY = "3bstays-publicar-borrador";
 
 /** El borrador sin fotos (no las hay sin cuenta). */
 export function storeLocalDraft(draft: ListingDraft, now: number): string {
@@ -89,7 +89,7 @@ export function readPublishDraft(draftRaw: string | null, step1Raw: string | nul
 }
 
 /** Marca de «Ahora no» en la pregunta del correo. */
-export const EMAIL_SKIPPED_KEY = "bnbtico-correo-omitido";
+export const EMAIL_SKIPPED_KEY = "3bstays-correo-omitido";
 
 /** Cuenta recién verificada sin correo y sin haber dicho «Ahora no». */
 export function shouldAskEmail(account: { email: string | null } | undefined, skipped: string | null): boolean {

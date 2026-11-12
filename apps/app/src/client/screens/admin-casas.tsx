@@ -126,7 +126,7 @@ const MODE_COPY: Record<Exclude<SheetMode, "detail">, { title: string; body: str
   },
   block: {
     title: "Bloquear casa",
-    body: "Igual para el público. El anfitrión verá el motivo y «Escribir a bnbtico», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.",
+    body: "Igual para el público. El anfitrión verá el motivo y «Escribir a 3bstays», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.",
     label: "Motivo (lo verá el anfitrión)",
     confirm: "Bloquear casa",
     field: "block-reason",

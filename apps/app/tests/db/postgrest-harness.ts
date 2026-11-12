@@ -124,9 +124,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       return data ? { customerRef: data.customer_ref, methodRef: data.method_ref } : null;
     },
     async setTestClock(on) {
-      const was = sql("select count(*) from vault.secrets where name = 'bnbtico_test_clock'") !== "0";
-      sql("delete from vault.secrets where name = 'bnbtico_test_clock'");
-      if (on) sql("select vault.create_secret('on', 'bnbtico_test_clock')");
+      const was = sql("select count(*) from vault.secrets where name = '3bstays_test_clock'") !== "0";
+      sql("delete from vault.secrets where name = '3bstays_test_clock'");
+      if (on) sql("select vault.create_secret('on', '3bstays_test_clock')");
       return was;
     },
     async adminActions(listingId) {

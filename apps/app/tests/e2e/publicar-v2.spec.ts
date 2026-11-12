@@ -12,7 +12,7 @@ import { enterCode, injectSession } from "./helpers/session";
 test.describe.configure({ mode: "serial" });
 
 const READY = "¡Listo! Su cuenta está creada";
-const STEP1_KEY = "bnbtico-publicar-paso1";
+const STEP1_KEY = "3bstays-publicar-paso1";
 const UUID = "[0-9a-f-]{36}";
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 let h: ListingsHarness;
@@ -85,7 +85,7 @@ test("verificar desde publicar habla de subir las fotos y nunca pasa por «¡Lis
     await expect(page.getByRole("link", { name: "No tengo acceso a mi WhatsApp" })).toBeVisible();
     await page.getByLabel("Número de WhatsApp").fill("8888 9999");
     await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-    await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Es su primera vez en 3bstays" })).toBeVisible();
     await page.getByLabel("Nombre").fill("Ana Prueba");
     await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
     await expect(page).toHaveURL(/\/cuenta\/codigo\?next=%2Fpublicar%2Fcontinuar$/);
@@ -117,7 +117,7 @@ test("un enlace viejo a «¡Listo!» con la vuelta a publicar sigue hacia ella",
 
 // §E.3, desde el 2026-11-04 (Ana): /publicar sin cuenta hasta las fotos. Los pasos 1–6 se responden en el teléfono, el
 // WhatsApp se verifica al llegar a las Fotos y la casa se crea con todo al volver, en las Fotos.
-const DRAFT_KEY = "bnbtico-publicar-borrador";
+const DRAFT_KEY = "3bstays-publicar-borrador";
 const DESCRIPTION = "Cabina de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.";
 const continuar = (page: Page) => page.getByRole("button", { name: "Continuar" }).click();
 

@@ -119,8 +119,8 @@ test("tras hidratar: el formato del calendario del propietario (N4): ocupados so
 
   // La moneda de la página manda también en el calendario.
   await page.evaluate(() => {
-    localStorage.setItem("bnbtico_currency", "USD");
-    dispatchEvent(new StorageEvent("storage", { key: "bnbtico_currency" }));
+    localStorage.setItem("3bstays_currency", "USD");
+    dispatchEvent(new StorageEvent("storage", { key: "3bstays_currency" }));
   });
   await expect(cell(page, on(20))).toHaveText(`20${formatUSD(150000, 510)}`);
   expect(await boxHeight(page), "en dólares, el mismo alto").toBe(before);
@@ -215,7 +215,7 @@ test("ficha dentro de la SPA: si fallan los días, la ficha se ve sin «Disponib
 
 // ---------- Ronda de Ana del 2 nov, ticket 08: el calendario de la ficha elige llegada y salida ----------
 
-const FECHAS = "bnbtico-fechas";
+const FECHAS = "3bstays-fechas";
 const FX = 510;
 const stored = (page: Page) => page.evaluate((k) => sessionStorage.getItem(k), FECHAS);
 const total = (page: Page) => section(page).getByTestId("stay-total");

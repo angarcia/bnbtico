@@ -9,7 +9,7 @@ import { fakeHarness } from "./fake-harness";
 
 const template = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
 const SHELL = "<!doctype html><title>shell</title>";
-const ORIGIN = "https://nueva.bnbtico.com";
+const ORIGIN = "https://pruebas.3bstays.com";
 
 function memoryCache(): CacheLike & { store: Map<string, Response> } {
   const store = new Map<string, Response>();
@@ -112,16 +112,16 @@ describe("worker · ficha /casa/CT-####", () => {
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
     const cover = casa.photoPaths[0]!;
     const desc = "Alojamiento completo en Playa Negra, Limón · 4 personas · ₡95\u00a0000 por noche · orientativo";
-    expect(html).toContain("<title>Casa &quot;Sol&quot; &lt;y&gt; Mar · bnbtico</title>");
+    expect(html).toContain("<title>Casa &quot;Sol&quot; &lt;y&gt; Mar · 3bstays</title>");
     expect(html).toContain(`<meta name="description" content="${desc}" />`);
-    expect(html).toContain(`<link rel="canonical" href="https://bnbtico.com/casa/${casa.publicId}" />`);
-    expect(html).toContain(`<meta property="og:url" content="https://bnbtico.com/casa/${casa.publicId}" />`);
+    expect(html).toContain(`<link rel="canonical" href="https://3bstays.com/casa/${casa.publicId}" />`);
+    expect(html).toContain(`<meta property="og:url" content="https://3bstays.com/casa/${casa.publicId}" />`);
     expect(html).toContain('<meta property="og:title" content="Casa &quot;Sol&quot; &lt;y&gt; Mar" />');
     expect(html).toContain(`<meta property="og:description" content="${desc}" />`);
     expect(html).toContain(`<meta property="og:image" content="http://supabase.test/storage/v1/object/public/listings/${cover}" />`);
     expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />');
     expect(html).toContain(`<link rel="preload" as="image" href="http://supabase.test/storage/v1/object/public/listings/${cover}" fetchpriority="high" />`);
-    expect(html).not.toContain("<title>bnbtico</title>");
+    expect(html).not.toContain("<title>3bstays</title>");
   });
 
   it("con fotos subidas en tres variantes: Open Graph y precarga con la de 800, hero con srcset 480/800", async () => {
@@ -440,7 +440,7 @@ describe("worker · enlaces que no se muestran", () => {
     expect(a.status).toBe(410);
     const ha = await a.text();
     expect(ssrData(ha)).toEqual({ page: "blocked", reason: "stopped" });
-    expect(ha).toContain("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde bnbtico.");
+    expect(ha).toContain("El anfitrión paró la suscripción de este anuncio, así que el enlace ya no muestra la ficha ni permite contactarlo desde 3bstays.");
     expect(ha).toContain("Si ya habló con el anfitrión por WhatsApp");
     expect(ha).not.toContain("Contactar por WhatsApp");
 
@@ -562,8 +562,8 @@ describe("worker · sitemap, robots y shell", () => {
     expect(res.headers.get("cache-control")).toBe("public, max-age=3600, s-maxage=3600");
     const xml = await res.text();
     expect(xml.match(/<loc>/g)).toHaveLength(2);
-    expect(xml).toContain("<loc>https://bnbtico.com/</loc>");
-    expect(xml).toContain(`<loc>https://bnbtico.com/casa/${a.publicId}</loc>`);
+    expect(xml).toContain("<loc>https://3bstays.com/</loc>");
+    expect(xml).toContain(`<loc>https://3bstays.com/casa/${a.publicId}</loc>`);
   });
 
   it("robots.txt bloquea todo fuera de producción", async () => {

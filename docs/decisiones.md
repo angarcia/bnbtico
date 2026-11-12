@@ -1,3 +1,69 @@
+## 2026-11-11 · Se retira Vercel y bnbtico.com se apaga
+
+- **Decisión (Daniel, 2026-11-11):** eliminar Vercel por completo. `bnbtico.com` (la portada con la marca anterior) y `pruebas.bnbtico.com` (la app vieja de Next) **se apagan sin redirección** a 3bstays.com.
+- **Motivo:** desde la fase R, la app vive en Cloudflare Workers y nada depende de Vercel. Su app de GitHub seguía comentando en cada PR («Skipped Deployment») y bnbtico.com seguía mostrando en público la marca que Airbnb pidió dejar.
+- **Cómo:** bloque D de `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`:
+  - quitar los dominios y borrar el proyecto en Vercel;
+  - quitar la app de Vercel en GitHub;
+  - borrar en Cloudflare los registros DNS de `bnbtico.com` que apuntan a Vercel;
+  - quitar las Redirect URLs viejas en Supabase.
+
+  La zona `bnbtico.com` se queda en Cloudflare hasta que se borre el worker viejo. Si el dominio se conserva o caduca, lo decide el abogado.
+- **Desbloquea:** `supabase/migrations-pendientes/corte_fotos_solo_rpc.sql`, que esperaba a que la app vieja dejara de escribir fotos directamente.
+
+## 2026-11-11 · Cambio de dominio a 3bstays.com e identificadores internos
+
+- **Decisión (Daniel, 2026-11-11):**
+  - El cambio de dominio se hace hoy.
+  - Pruebas pasa a **`pruebas.3bstays.com`**; `nueva.` desaparece.
+  - Los workers se renombran a `3bstays-pruebas`, `3bstays-production` y `3bstays-refactor`.
+  - Se aprovecha que aún no hay datos reales para renombrar también lo interno.
+- **Qué cambia en la app:**
+  - Textos, SEO y manifest.
+  - Las claves del teléfono pasan a `3bstays-*`. Las antiguas `bnbtico*` y la IndexedDB `bnbtico` se borran una vez tras cargar (`src/client/legacy-storage.ts`), así que los probadores vuelven a entrar.
+  - El UID de los eventos de la exportación a Airbnb pasa a `3bstays-…@3bstays.com`.
+  - El prefijo de idempotencia de Stripe y los nombres internos del build.
+- **Qué cambia en la base** (migraciones `marca_3bstays` y `marca_3bstays_internos`):
+  - Los mensajes de error.
+  - `inquiries.source` `'bnbtico'` pasa a `'support'`.
+  - El correo de relleno de los admins pasa a `@admin.3bstays.invalid`.
+  - Los trabajos de pg_cron pasan a `3bstays-reabrir-casas` y `3bstays-suscripciones`.
+- **Se dejan con el nombre anterior:**
+  - El proyecto de Supabase `bnbtico-pruebas` y el `project_id` local, porque cambiarlo recrea los contenedores.
+  - El bucket `bnbtico-copias`, con su prefijo. Producción usará un bucket propio.
+- **Después, el mismo día:** el candado pasa a `3bstays.promo_slot` y el secreto del reloj de pruebas a `3bstays_test_clock` (migración `marca_3bstays_candado_y_reloj`, que también renombra el secreto en Vault), para que el esquema de producción nazca sin bnbtico. El proyecto de producción será uno nuevo (`3bstays-prod`).
+- **Pasos en los paneles:** `.scratch/nombre-nuevo/guion-cambio-de-dominio.md`.
+
+## 2026-11-11 · Se retiran los logos de bnbtico y queda una sola biblioteca de marca
+
+- **Decisión (Daniel, 2026-11-11):** borrar del repositorio los iconos y logos antiguos y dejar los nuevos en su carpeta. `design/logo/` solo contiene la biblioteca `3bstays-2026-11-10/`, su README, `.gitignore` y `.gitattributes`.
+- **Qué se retira** (unos 4 070 archivos, ~190 MB):
+  - `logos-obsoletos/`, `historico/`, `propuestas/` y `maestro/`.
+  - Los alias con nombre bnbtico (raíz, `bnbtico-actualizado/` y `redes-sociales/`).
+  - `personalizado/` y `design/merchandising/`. El juego de impresión vigente es `3bstays-2026-11-10/07-impresion/`.
+  - Todo sigue en el historial de git.
+- **Qué se conserva, movido:**
+  - Los dos SVG de partida aprobados, en `3bstays-2026-11-10/00-maestros/fuente/`.
+  - `generar-3bstays.cjs` y `exportar-3bstays-eps.cjs`, en `3bstays-2026-11-10/scripts/`, con las rutas ajustadas.
+  - `integrar-3bstays.cjs` y `verificar-3bstays.cjs` se retiran: mantenían los alias y su archivo. Los iconos de `apps/app/public` se copian a mano desde la biblioteca.
+- **Pantallas de diseño:** apuntan a `logo-predeterminado.png`.
+
+## 2026-11-10 · La marca pasa a llamarse 3bstays
+
+- **Motivo:** la norma de marca de Airbnb (https://www.airbnb.ca/help/article/3233) prohíbe «air», «bnb», «b&b» y términos parecidos en el nombre, el dominio y los usuarios de redes. bnbtico tiene que cambiar.
+- **Decisión (fundadores, 2026-11-10):** el nombre nuevo es **3bstays**. Las «3 B» son «bueno, bonito y barato», un dicho que se entiende en Costa Rica y en todo el mundo hispanohablante. Dominios: 3bstays.com (principal), más tresbstays.com y threebstays.com como alternativas, para quien lo escriba como lo oye.
+- **Riesgos conocidos, aceptados:**
+  - [Bueno Bonito Barato Hostel](https://www.tripadvisor.com/Hotel_Review-g309226-d3258650-Reviews-Bueno_Bonito_Barato_Hostel-La_Fortuna_de_San_Carlos_Arenal_Volcano_National_Park_Provi.html), en La Fortuna.
+  - Tiendas 3B, la cadena mexicana de descuento.
+  - Que «barato» le reste a las casas ante el propietario.
+  - Que el nombre se dicte mal.
+  - Ninguno se ha valorado todavía en el RNP.
+- **Pendiente:**
+  - Búsqueda en el RNP Digital y consulta con un abogado de propiedad intelectual antes de registrar.
+  - Comprobar @3bstays en Instagram.
+  - Valorar comprar también 3bstay.com, que está libre.
+  - Lista de cambios de marca: logo, favicon, app/PWA, copy, redes, dominios del worker y enlaces `/casa/CT-####`.
+- **Proceso:** se estudiaron unos 400 nombres. Detalle en `.scratch/nombre-nuevo/finalistas.md` y `propuestas-2026-11-09.md`.
 ## 2026-11-10 · Logotipo 3bstays con 3 angular y B de asta alta (Ana)
 
 Ana aprueba el logotipo con el 3 de remate plano ligeramente más bajo que la «s», la B angular abierta con el asta a la altura de las minúsculas y el hueco entre la B y «stays» más corto. Tras ver la primera entrega, Ana aprobó acercar «stays» otras 8 unidades del dibujo vectorial. El 3, la B y las minúsculas comparten base. Ana confirma que esta composición se lee bien. La B conserva la reducción del 29 % de su trazo en el logotipo completo.

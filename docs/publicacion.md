@@ -5,7 +5,7 @@
 
 ## Decisiones vigentes
 
-- bnbtico se centra en **alquileres vacacionales**, no en dos modalidades excluyentes. Cada anuncio tiene precio por noche.
+- 3bstays se centra en **alquileres vacacionales**, no en dos modalidades excluyentes. Cada anuncio tiene precio por noche.
 - Tipo obligatorio: **Casa, Apartamento o Habitación**. Cabina y quinta pueden describirse en el texto, no son categorías.
 - **¿Aceptás largo plazo?** es obligatorio, Sí/No, **sin opción preseleccionada**. Sustituye la propuesta intermedia de No por defecto.
 - Si acepta largo plazo, elegir **Indicar precio mensual orientativo** o **Consultar con el propietario**. La primera exige importe positivo; la segunda no pide importe. Mínimo de meses opcional. No se interpreta un precio desconocido como cero.

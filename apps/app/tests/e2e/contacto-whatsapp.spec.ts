@@ -127,7 +127,7 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   await expect(page).toHaveURL(new RegExp(`/casa/${casa.publicId}$`));
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
   await expect(s).toHaveCount(0);
-  expect(await page.evaluate((k) => sessionStorage.getItem(k), `bnbtico-contacto:${casa.publicId}`)).toBeNull();
+  expect(await page.evaluate((k) => sessionStorage.getItem(k), `3bstays-contacto:${casa.publicId}`)).toBeNull();
   expect(await storedEverywhere(page)).not.toContain(digits(TEST_PHONES.owner));
 
   // Repetir en menos de 7 días renueva la misma consulta. Las personas se olvidan con el borrador; las fechas son las de la
@@ -151,7 +151,7 @@ test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la ca
   await expect(page).toHaveURL(new RegExp(`/casa/${otra.publicId}$`));
   await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   await openButton(page).click();
-  await expect.poll(() => wa).toEqual([waExpected(HOUSE_PHONE, "Hola, vi Cabina Cocles en bnbtico y me interesa. ¿Está disponible? Gracias.", otra.publicId, baseURL)]);
+  await expect.poll(() => wa).toEqual([waExpected(HOUSE_PHONE, "Hola, vi Cabina Cocles en 3bstays y me interesa. ¿Está disponible? Gracias.", otra.publicId, baseURL)]);
   expect(inquiries(otra.publicId, "i.whatsapp_phone")).toBe(HOUSE_PHONE);
   await backFromWhatsApp(page);
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toBeVisible();
@@ -199,6 +199,6 @@ test("sesión vencida (la base la rechaza): a Ingresar con la vuelta a la hoja y
   await openButton(page).click();
   await expect(page).toHaveURL(new RegExp(`/cuenta\\?next=%2Fcasa%2F${casa.publicId}%3Fcontacto%3D1$`));
   expect(wa).toEqual([]);
-  const stored = await page.evaluate((k) => sessionStorage.getItem(k), `bnbtico-contacto:${casa.publicId}`);
+  const stored = await page.evaluate((k) => sessionStorage.getItem(k), `3bstays-contacto:${casa.publicId}`);
   expect(stored).toContain('"people":5');
 });

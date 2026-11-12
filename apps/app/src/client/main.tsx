@@ -46,4 +46,5 @@ function afterLoad(work: () => void) {
   else addEventListener("load", work, { once: true });
 }
 afterLoad(() => void import("./vitals").then((m) => m.startVitals(landingPath)));
+afterLoad(() => void import("./legacy-storage").then((m) => m.clearLegacyStorage()));
 if (import.meta.env.PROD && "serviceWorker" in navigator) afterLoad(() => void import("./sw-register").then((m) => m.registerServiceWorker()));

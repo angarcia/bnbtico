@@ -17,12 +17,16 @@ const LIMITS = Object.freeze({ file: 32 * 1024 * 1024, total: 256 * 1024 * 1024,
 const SENSITIVE = new Set(["accesstoken", "refreshtoken", "idtoken", "token", "secret", "clientsecret", "password", "authorization", "proxyauthorization", "apikey", "xapikey", "servicerolekey", "supabaseservicerolekey", "codeverifier", "qrcode", "otpauthurl", "otpauthuri"]);
 const HEADERS = new Set(["authorization", "proxyauthorization", "apikey", "xapikey", "cookie", "setcookie"]);
 const norm = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
-const fail = (code) => { throw new ArtifactError(code); };
+// Dónde se estaba leyendo al fallar: solo nombres de archivo (sin su contenido), para poder diagnosticar en CI.
+const trail = [];
+const label = (name) => path.posix.basename(String(name)).replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 60) || "?";
+const fail = (code) => { throw new ArtifactError(code, trail.map(label).join(" > ")); };
 
 class ArtifactError extends Error {
-  constructor(code) {
+  constructor(code, where = "") {
     super(`No se publicaron artefactos (${code}).`);
     this.code = code;
+    this.where = where;
   }
 }
 
@@ -109,6 +113,10 @@ function image(bytes) {
     || bytes.subarray(0, 4).equals(Buffer.from([0, 1, 0, 0]));
 }
 
+function isJson(text) {
+  try { JSON.parse(text); return true; } catch { return false; }
+}
+
 function json(text) {
   try { return JSON.parse(text); } catch { fail("json"); }
 }
@@ -118,6 +126,15 @@ function structuredLog(text) {
 }
 
 async function parse(name, bytes, ctx, depth = 0) {
+  trail.push(name);
+  try {
+    return await parseNode(name, bytes, ctx, depth);
+  } finally {
+    trail.pop();
+  }
+}
+
+async function parseNode(name, bytes, ctx, depth) {
   account(ctx, bytes.length, depth);
   const node = { name, bytes, depth, kind: "opaque" };
   ctx.nodes.push(node);
@@ -177,7 +194,8 @@ async function parse(name, bytes, ctx, depth = 0) {
       if (event.method === "onBlobReportMetadata" && event.params?.version !== 2) fail("blob-version");
     }
   } else if (/\.(json|stacks|map)$/.test(name)
-    || (!name.endsWith(".log") && /^[\s]*[\[{]/.test(text))
+    // Un texto que solo parecía base64/URI y al decodificarlo empieza por «{» o «[» sin ser JSON es texto, no un JSON roto.
+    || (!name.endsWith(".log") && /^[\s]*[\[{]/.test(text) && (name !== "encoded.txt" || isJson(text)))
     || (name.endsWith(".log") && structuredLog(text))) {
     node.kind = "json";
     node.value = json(text);

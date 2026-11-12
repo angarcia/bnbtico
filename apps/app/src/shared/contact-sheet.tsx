@@ -1,6 +1,6 @@
 // Hoja de contacto (pantalla 04 del diseño v1). Trozo diferido: se descarga al tocar «Contactar por WhatsApp» (y en reposo
 // tras hidratar la ficha). Funciona igual en la ficha del servidor (sin router) y en la ruta de la SPA.
-// - Lo escrito se guarda en la pestaña 30 minutos (`bnbtico-contacto:<CT-####>`): cerrar, recargar o ir a Ingresar no lo pierde
+// - Lo escrito se guarda en la pestaña 30 minutos (`3bstays-contacto:<CT-####>`): cerrar, recargar o ir a Ingresar no lo pierde
 //   (sin sesión, «Abrir WhatsApp» lleva a Ingresar y la ficha de la SPA reabre la hoja al volver: `contact-flow.ts`).
 // - El mensaje se redacta solo con fechas y personas (reductor `redraft` del dominio) y se ve como vista previa, sin caja
 //   de texto: lo que quiera añadir lo escribe en WhatsApp (revisión UX 2026-10-29, N2). Las fechas, con el mismo calendario
@@ -343,7 +343,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
           </button>
           {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}
           <span className="consent">{name} verá su nombre y su WhatsApp.</span>
-          <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. bnbtico no procesa ni pide pagos.</span>
+          <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.</span>
         </form>
       </section>
     </>,

@@ -16,10 +16,6 @@ La identidad visual vigente es **3bstays**, aprobada el 10 noviembre 2026.
 
 Predeterminado: terracota original #B44C30 sin fondo; crema #FFFBF2 para inversión; tinta #1C2B2A en pantalla; carbón cálido #2B2926 en merchandising; blanco para fotos. El 3 tiene remate superior plano, «stays» va en minúsculas y el símbolo B tiene asta alta y centro abierto. Todos los iconos usan solo B.
 
-La raíz y las carpetas bnbtico-actualizado y redes-sociales mantienen nombres compatibles con contenido actualizado. Los nombres BT de algunos perfiles son solo alias: el dibujo es ahora B. Los archivos de merchandising de imagenes-actualizadas también están sustituidos.
-
-Las entregas intermedias anteriores y la antigua biblioteca están en [logos-obsoletos/2026-11-10-bnbtico](logos-obsoletos/2026-11-10-bnbtico/LEAME.md); sus enlaces con los nombres antiguos son históricos. Las propuestas se conservan para trazabilidad, sin usarlas como identidad vigente. No se duplican ZIP de entrega.
-
-Esta sustitución de recursos no cambia dominios, enlaces, nombres de paquetes ni otros textos del producto. No se ha publicado ni hecho commit.
+Esta carpeta solo contiene la marca vigente. La marca anterior (bnbtico), sus propuestas y sus alias se retiraron el 2026-11-11; están en el historial de git. Los SVG de partida y los generadores están en `3bstays-2026-11-10/00-maestros/fuente/` y `3bstays-2026-11-10/scripts/`.
 
 Favicon de pestaña elegido: cuadrado terracota #B44C30 con B crema #FFFBF2 y esquinas redondeadas. Archivos en 3bstays-2026-11-10/03-iconos/favicon-pestana/. Para el móvil/PWA se conserva crema con B terracota, sin recuadro dibujado.

@@ -58,7 +58,7 @@ const STATUS_CARD_LABELS: Record<Listing["status"], CardLabel> = {
   rejected: { text: "Rechazada", cls: "state-bad" },
 };
 
-/** Una sola etiqueta sobre la foto. Prioridad: bnbtico (Pausada, Bloqueada) > pago (Pendiente de pago, Inactiva) > edición > Pausada (por el anfitrión, «Pausar la casa») > estado. */
+/** Una sola etiqueta sobre la foto. Prioridad: 3bstays (Pausada, Bloqueada) > pago (Pendiente de pago, Inactiva) > edición > Pausada (por el anfitrión, «Pausar la casa») > estado. */
 export function cardLabel(l: Pick<Listing, "status" | "available" | "reopenAt"> & { adminHold?: Listing["adminHold"] }, edit: Pick<ListingEdit, "status"> | null = null): CardLabel {
   if (l.adminHold) return HOLD_LABELS[l.adminHold.kind];
   if (l.status === "payment_due" || l.status === "inactive") return STATUS_CARD_LABELS[l.status];

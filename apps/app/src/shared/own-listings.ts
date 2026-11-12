@@ -4,7 +4,7 @@
 // es además la pista de la barra inferior en el primer pintado.
 import { webStore } from "../data/storage";
 
-const KEY = "bnbtico-mis-casas";
+const KEY = "3bstays-mis-casas";
 
 export function rememberOwnListings(publicIds: readonly string[]): void {
   if (typeof window === "undefined") return;

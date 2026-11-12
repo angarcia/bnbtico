@@ -145,7 +145,7 @@ describe("Cuenta: composición pública antes de dividir responsabilidades", () 
     expect(html).toContain("WhatsApp verificado");
     expect(html).toContain("Pronto podrá verificar también su identidad (opcional).");
     expect(html).toContain("Publicar mi casa");
-    expect(html).toContain("Línea de bnbtico para clientes");
+    expect(html).toContain("Línea de 3bstays para clientes");
     expect(html).not.toContain("Próximo cobro");
     expect(html).not.toContain('id="account-name"');
   });
@@ -170,7 +170,7 @@ describe("Cuenta: composición pública antes de dividir responsabilidades", () 
     expect(html).toContain("Próximo cobro");
     expect(html).toContain(count === 0 ? "Ninguna casa guardada" : count === 1 ? "1 casa guardada" : "2 casas guardadas");
     expect(html).toContain("Revisión de anuncios · admin");
-    expect(html).toContain("Línea de bnbtico para anfitriones");
+    expect(html).toContain("Línea de 3bstays para anfitriones");
     expect(html).not.toContain("Publicar mi casa");
   });
 

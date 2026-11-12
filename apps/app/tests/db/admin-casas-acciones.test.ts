@@ -66,7 +66,7 @@ describe("admin · pausar, bloquear y eliminar · en la base", () => {
   it("una casa bloqueada no se edita ni por REST; una pausada tampoco (ya estaba publicada: se edita desde su ficha)", async () => {
     const s = await h.seed({ status: "active" });
     await rpc(admin, "admin_block_listing", s.id);
-    expect((await owner.from("listings").update({ title: "Otro nombre" }).eq("id", s.id)).error?.message).toBe("Esta casa está bloqueada por bnbtico. Escríbanos por WhatsApp.");
+    expect((await owner.from("listings").update({ title: "Otro nombre" }).eq("id", s.id)).error?.message).toBe("Esta casa está bloqueada por 3bstays. Escríbanos por WhatsApp.");
     const { data } = await owner.from("listings").select("title").eq("id", s.id).single();
     expect(data?.title).toBe("Cabina Cahuita");
   });

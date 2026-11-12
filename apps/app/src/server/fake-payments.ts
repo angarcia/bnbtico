@@ -98,7 +98,7 @@ export function fakeCheckoutPage(token: string, cancelUrl: string): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex" />
-<title>Pasarela de prueba · bnbtico</title>
+<title>Pasarela de prueba · 3bstays</title>
 </head>
 <body>
 <main>

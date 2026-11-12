@@ -92,7 +92,7 @@ export function CasasScreen() {
   const billing = useBilling(userId);
   const notice = list ? noticeFor(list, billing && { today: billing.today, houses: billing.all.map((x) => ({ listingId: x.house.listingId, sub: x.sub })) }) : null;
   const view = list ? casasView(list.length) : null;
-  // Una casa pausada o bloqueada por bnbtico no cuenta como activa: no se ve en Explorar.
+  // Una casa pausada o bloqueada por 3bstays no cuenta como activa: no se ve en Explorar.
   const count = (s: Listing["status"]) => list?.filter((l) => l.status === s && !l.adminHold).length ?? 0;
   // Casillas a 0 fuera: no llaman la atención sobre nada (revisión UX N1).
   // El borrador también cuenta y lleva a él (A3).
@@ -167,7 +167,7 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
     <article className={`card house-card${shareable || tools ? " house-card-compact" : ""}`}>
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
-      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de bnbtico: {l.reviewNote}</p> : null}
+      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de 3bstays: {l.reviewNote}</p> : null}
       <HoldNotice listing={l} card />
       {shareable || tools ? (
         <div className="house-actions">

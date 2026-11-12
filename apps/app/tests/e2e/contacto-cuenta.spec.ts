@@ -28,7 +28,7 @@ const sheet = (page: Page) => page.getByRole("dialog", { name: `Escríbale a ${o
 const message = (page: Page) => messagePreview(sheet(page));
 const accountUrl = () => new RegExp(`/cuenta\\?next=%2Fcasa%2F${casa.publicId}%3Fcontacto%3D1$`);
 const listingUrl = () => new RegExp(`/casa/${casa.publicId}$`);
-const defaultMessage = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible? Gracias.`;
+const defaultMessage = `Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible? Gracias.`;
 
 test.beforeAll(async () => {
   const h = await postgrestHarness();
@@ -111,7 +111,7 @@ test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → Wh
   await page.getByRole("button", { name: "Contactar por WhatsApp", exact: true }).click();
   await expect(sheet(page).getByText(SIGNED_OUT)).toBeVisible();
   await sheet(page).getByLabel("Personas (opcional)").fill("2");
-  const twoPeople = `Hola, vi ${TITLE} en bnbtico y me interesa. ¿Está disponible para 2 personas? Gracias.`;
+  const twoPeople = `Hola, vi ${TITLE} en 3bstays y me interesa. ¿Está disponible para 2 personas? Gracias.`;
   await expect(message(page)).toHaveText(twoPeople);
   await sheet(page).getByRole("button", { name: "Continuar" }).click();
 
@@ -121,7 +121,7 @@ test("ficha de la SPA sin sesión → cuenta nueva con nombre → código → Wh
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100);
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
-  await expect(page.getByRole("heading", { name: "Es su primera vez en bnbtico" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Es su primera vez en 3bstays" })).toBeVisible();
   await expect(page.getByTestId("return-card")).toHaveText(cardText());
   await page.getByLabel("Nombre").fill("Ana Nueva");
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -151,7 +151,7 @@ test("WhatsApp de otro país (+1 415 555 0100); con el borrador caducado (más d
   await page.evaluate((key) => {
     const draft = JSON.parse(sessionStorage.getItem(key)!) as { savedAt: number };
     sessionStorage.setItem(key, JSON.stringify({ ...draft, savedAt: Date.now() - 31 * 60_000 }));
-  }, `bnbtico-contacto:${casa.publicId}`);
+  }, `3bstays-contacto:${casa.publicId}`);
   const wa = await catchWhatsApp(page);
   await enterCode(page);
   await expect(page).toHaveURL(listingUrl());

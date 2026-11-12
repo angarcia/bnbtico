@@ -10,7 +10,7 @@ import { fakeHarness } from "./fake-harness";
 const PUBLIC = new URL("../../public/", import.meta.url);
 const portada = readFileSync(new URL("portada.html", PUBLIC), "utf8");
 const SHELL = "<!doctype html><title>shell</title>";
-const ORIGIN = "https://bnbtico.com";
+const ORIGIN = "https://3bstays.com";
 
 function setup(over: Partial<Env> = {}) {
   const h = fakeHarness();
@@ -33,7 +33,7 @@ function setup(over: Partial<Env> = {}) {
 const production = { ENVIRONMENT: "production" as const };
 
 describe("portada · el HTML estático", () => {
-  it("título, descripción, canónica, Open Graph y Twitter con bnbtico.com y la imagen OG de 1200×630", () => {
+  it("título, descripción, canónica, Open Graph y Twitter con 3bstays.com y la imagen OG de 1200×630", () => {
     expect(portada).toContain('<html lang="es-CR">');
     expect(portada).toContain(`<title>${SITE_TITLE}</title>`);
     expect(portada).toContain(`<meta name="description" content="${SITE_DESCRIPTION}" />`);
@@ -42,7 +42,7 @@ describe("portada · el HTML estático", () => {
       ["og:type", "website"],
       ["og:locale", "es_CR"],
       ["og:url", `${SITE_URL}/`],
-      ["og:site_name", "bnbtico"],
+      ["og:site_name", "3bstays"],
       ["og:title", SITE_TITLE],
       ["og:description", SITE_DESCRIPTION],
       ["og:image", `${SITE_URL}/og.jpg`],
@@ -65,7 +65,7 @@ describe("portada · el HTML estático", () => {
     const scripts = [...portada.matchAll(/<script\b([^>]*)>/g)].map((m) => m[1]!);
     expect(scripts).toEqual([' type="application/ld+json"']);
     expect(portada).not.toMatch(/<style\b|\sstyle=|\son[a-z]+=/i);
-    expect(portada).not.toMatch(/googletagmanager|gtag|https?:\/\/(?!bnbtico\.com|schema\.org)/);
+    expect(portada).not.toMatch(/googletagmanager|gtag|https?:\/\/(?!3bstays\.com|schema\.org)/);
   });
 
   it("todo lo que enlaza existe en public/", () => {
@@ -79,7 +79,7 @@ describe("portada · el HTML estático", () => {
   it("el copy de la portada vieja, tratando de usted", () => {
     expect(portada).toContain("Alquile en el Caribe de Costa Rica, directo con quien lo recibe");
     expect(portada).toContain("Muy pronto");
-    expect(portada).toContain("Qué es bnbtico");
+    expect(portada).toContain("Qué es 3bstays");
     // Revisión UX C1: la oferta pasa a su tarjeta bajo la foto.
     expect(portada).toContain("Las primeras 50 casas: 12 meses gratis.");
     expect(portada).toContain("<!--cta-propietarios-->");
@@ -156,7 +156,7 @@ describe("portada · producción antes del lanzamiento (LAUNCHED distinto de «t
     expect(await (await t.request("/robots.txt")).text()).toContain("Allow: /");
     const xml = await (await t.request("/sitemap.xml")).text();
     expect(xml.match(/<loc>/g)).toHaveLength(1);
-    expect(xml).toContain("<loc>https://bnbtico.com/</loc>");
+    expect(xml).toContain("<loc>https://3bstays.com/</loc>");
     expect(t.sitemap).not.toHaveBeenCalled();
   });
 
@@ -191,7 +191,7 @@ describe("wrangler.jsonc · preparado para el corte", () => {
     expect(p.workers_dev).toBe(false);
   });
 
-  it("pruebas sigue en nueva.bnbtico.com hasta el corte", () => {
-    expect(wrangler.env.pruebas.routes).toEqual([{ pattern: "nueva.bnbtico.com", custom_domain: true }]);
+  it("pruebas se sirve en pruebas.3bstays.com", () => {
+    expect(wrangler.env.pruebas.routes).toEqual([{ pattern: "pruebas.3bstays.com", custom_domain: true }]);
   });
 });

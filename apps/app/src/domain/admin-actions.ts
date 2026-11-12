@@ -17,7 +17,7 @@ export const ADMIN_HOLD_MESSAGES = {
   notBlocked: "Esta casa no está bloqueada.",
   confirmCode: "Escriba el código de la casa (CT-####) para confirmar.",
   /** Lo que ve el propietario al tocar una casa bloqueada (la base lo repite en cada acción suya). */
-  ownerBlocked: "Esta casa está bloqueada por bnbtico. Escríbanos por WhatsApp.",
+  ownerBlocked: "Esta casa está bloqueada por 3bstays. Escríbanos por WhatsApp.",
 } as const;
 
 /** Lo que se puede rechazar sin preguntar a la base. La base recorta a 2000; aquí se avisa antes de perder texto. */
@@ -34,11 +34,11 @@ export const deleteConfirmMatches = (publicId: string, typed: string) => typed.t
 /** Lo que dice el propietario de su casa retenida en el detalle: el título del aviso y lo que sigue. */
 export const HOLD_COPY: Record<HoldKind, { title: string; body: string }> = {
   paused: {
-    title: "Pausada por bnbtico",
+    title: "Pausada por 3bstays",
     body: "Su casa no aparece en Explorar y el enlace de su ficha no funciona por ahora. Puede seguir editándola; cuando todo esté en orden, la reanudamos nosotros.",
   },
   blocked: {
-    title: "Bloqueada por bnbtico",
+    title: "Bloqueada por 3bstays",
     body: "Su casa no aparece en Explorar, el enlace de su ficha no funciona y no se puede editar. Mientras esté bloqueada no se cobra su suscripción.",
   },
 };

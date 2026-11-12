@@ -3,7 +3,7 @@
 // frase «Abrimos pronto en el Caribe sur.», nunca un botón que no lleva a ningún sitio.
 import { waUrl } from "./whatsapp";
 
-export const OWNER_CTA_TEXT = "Hola, tengo una casa en el Caribe sur y quiero publicarla en bnbtico.";
+export const OWNER_CTA_TEXT = "Hola, tengo una casa en el Caribe sur y quiero publicarla en 3bstays.";
 
 const BLOCK = /<!--cta-propietarios-->[\s\S]*?<!--\/cta-propietarios-->/;
 

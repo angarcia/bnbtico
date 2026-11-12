@@ -4,7 +4,7 @@ import type { Query } from "@tanstack/react-query";
 import { PERSISTED_PRIVATE_KEYS } from "./query-policy";
 import { sessionState } from "./session";
 
-const DB = "bnbtico";
+const DB = "3bstays";
 const STORE = "query-cache";
 /** Lecturas públicas, siempre; las privadas (la cuenta), solo mientras haya sesión: al cerrarla se borran de la caché. */
 const PUBLIC_KEYS = new Set(["listings", "provinces", "listing", "listing-days", "offer-taken", "favorite-listings", "fx"]);
@@ -44,7 +44,7 @@ function idbStorage() {
 }
 
 export const persistOptions = {
-  persister: createAsyncStoragePersister({ storage: idbStorage(), key: "bnbtico-query", throttleTime: 1000 }),
+  persister: createAsyncStoragePersister({ storage: idbStorage(), key: "3bstays-query", throttleTime: 1000 }),
   maxAge: PERSIST_MAX_AGE,
   // Cada despliegue empieza con la caché vacía: la forma de los datos puede haber cambiado.
   buster: __BUILD_ID__,

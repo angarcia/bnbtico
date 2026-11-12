@@ -9,7 +9,7 @@ const script = fileURLToPath(new URL("../../scripts/deploy-target.mjs", import.m
 const workflow = readFileSync(new URL("../../../../.github/workflows/app.yml", import.meta.url), "utf8");
 const temporary: string[] = [];
 const fixture = () => {
-  const dir = mkdtempSync(join(tmpdir(), "bnbtico-deploy-test-"));
+  const dir = mkdtempSync(join(tmpdir(), "3bstays-deploy-test-"));
   temporary.push(dir);
   return dir;
 };
@@ -22,12 +22,12 @@ const step = (name: string) => {
 };
 
 describe("destino de despliegue", () => {
-  function select(eventName: string, ref: string, head = "", base = "", repo = "bnbtico/app") {
+  function select(eventName: string, ref: string, head = "", base = "", repo = "3bstays/app") {
     const dir = fixture();
     const event = join(dir, "event.json");
     const output = join(dir, "output");
     writeFileSync(event, JSON.stringify({ pull_request: { head: { ref: head, repo: { full_name: repo } }, base: { ref: base } } }));
-    const result = run(["select"], { GITHUB_EVENT_NAME: eventName, GITHUB_REF: ref, GITHUB_REPOSITORY: "bnbtico/app", GITHUB_EVENT_PATH: event, GITHUB_OUTPUT: output });
+    const result = run(["select"], { GITHUB_EVENT_NAME: eventName, GITHUB_REF: ref, GITHUB_REPOSITORY: "3bstays/app", GITHUB_EVENT_PATH: event, GITHUB_OUTPUT: output });
     expect(result.status, result.stderr).toBe(0);
     return Object.fromEntries(readFileSync(output, "utf8").trim().split("\n").map((line) => line.split("=")));
   }
@@ -106,19 +106,19 @@ describe("destino de despliegue", () => {
 describe("validación de la configuración generada y secretos", () => {
   const configs = {
     refactor: {
-      name: "bnbtico-refactor", targetEnvironment: "refactor",
-      routes: [{ pattern: "refactor.bnbtico.com", custom_domain: true }],
+      name: "3bstays-refactor", targetEnvironment: "refactor",
+      routes: [{ pattern: "refactor.3bstays.com", custom_domain: true }],
       workers_dev: false, preview_urls: false, triggers: { crons: [] },
       vars: { ENVIRONMENT: "pruebas", SUPABASE_URL: "https://bpxiggdzgzolcazaaboj.supabase.co", LISTING_CACHE: "no-store" },
     },
     pruebas: {
-      name: "bnbtico-pruebas", targetEnvironment: "pruebas",
-      routes: [{ pattern: "nueva.bnbtico.com", custom_domain: true }],
+      name: "3bstays-pruebas", targetEnvironment: "pruebas",
+      routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }],
       workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *"] },
       vars: { ENVIRONMENT: "pruebas" },
     },
     production: {
-      name: "bnbtico-production", targetEnvironment: "production",
+      name: "3bstays-production", targetEnvironment: "production",
       workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *"] },
       vars: { ENVIRONMENT: "production", LAUNCHED: "false" },
     },
@@ -135,9 +135,9 @@ describe("validación de la configuración generada y secretos", () => {
   });
 
   it.each([
-    { name: "bnbtico-pruebas" },
+    { name: "3bstays-pruebas" },
     { targetEnvironment: "pruebas" },
-    { routes: [{ pattern: "nueva.bnbtico.com", custom_domain: true }] },
+    { routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }] },
     { routes: [] },
     { workers_dev: true },
     { preview_urls: true },
@@ -159,7 +159,7 @@ describe("validación de la configuración generada y secretos", () => {
   });
 
   it("producción sigue sin rutas declaradas", () => {
-    expect(validate("production", { ...configs.production, routes: [{ pattern: "bnbtico.com", custom_domain: true }] }).status).not.toBe(0);
+    expect(validate("production", { ...configs.production, routes: [{ pattern: "3bstays.com", custom_domain: true }] }).status).not.toBe(0);
   });
 
   it("escribe solo anon aunque existan otros secretos, sin imprimir valores", () => {
@@ -197,7 +197,7 @@ describe("workflow · aislamiento y puertas", () => {
     expect(step("Desplegar")).toContain("if: steps.target.outputs.publish == 'deploy' && steps.target-check.outcome == 'success'");
     expect(step("Versión de vista previa")).toContain("if: steps.target.outputs.publish == 'preview' && steps.target-check.outcome == 'success'");
     for (const name of ["Desplegar", "Versión de vista previa"]) {
-      expect(step(name)).toContain("--config dist/bnbtico/wrangler.json");
+      expect(step(name)).toContain("--config dist/3bstays/wrangler.json");
       expect(step(name)).not.toContain("always()");
     }
   });
@@ -219,7 +219,7 @@ describe("workflow · aislamiento y puertas", () => {
     expect(check).toContain("id: target-check");
     expect(check).toContain("if: steps.target.outputs.build == 'true'");
     expect(check).toContain("DEPLOY_ENV: ${{ steps.target.outputs.environment }}");
-    expect(check).toContain("node scripts/deploy-target.mjs validate dist/bnbtico/wrangler.json");
+    expect(check).toContain("node scripts/deploy-target.mjs validate dist/3bstays/wrangler.json");
     for (const name of ["Tipos", "Pruebas unitarias", "Tipos de la base al día con las migraciones", "Pruebas de base (contrato contra PostgREST)", "Ficha real, hidratación y shell (Pixel 7)", "Puerta de Lighthouse (LCP ficha < 2,0 s, shell instalado < 2,5 s)", "Puerta de tamaño (zona privada < 160 KB gz)"]) {
       expect(step(name)).not.toMatch(/if:|continue-on-error/);
       expect(workflow.indexOf(`- name: ${name}\n`)).toBeLessThan(workflow.indexOf("- name: Desplegar\n"));

@@ -45,7 +45,7 @@ test("una ruta desconocida muestra el shell con su aviso", async ({ page }) => {
 
 // Solo en vertical en el teléfono (decisión 2026-11-03): en un teléfono en horizontal, el aviso tapa la app y no deja tocar
 // nada; al volver a vertical se va y la app sigue donde estaba (sin recargar). No sale en tabletas ni en el ordenador.
-const ROTATE = "Gire el teléfono para usar bnbtico";
+const ROTATE = "Gire el teléfono para usar 3bstays";
 
 test("teléfono en horizontal: el aviso tapa la app, no deja tocar y al volver a vertical sigue donde estaba", async ({ page }) => {
   const problems = watchConsole(page);

@@ -154,7 +154,7 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
     ref.current.scrollIntoView({ block: "center" });
     ref.current.focus({ preventScroll: true });
   }, [target]);
-  // Bloqueada por bnbtico: la suscripción está parada; no hay nada que pagar, parar ni reactivar.
+  // Bloqueada por 3bstays: la suscripción está parada; no hay nada que pagar, parar ni reactivar.
   const blocked = sub.hold === "blocked";
   const label = blocked ? { label: "Bloqueada", badge: "badge-bad" } : STATUS_LABELS[sub.status];
   // «Pendiente de pago» ya lo dice la etiqueta: la línea solo sale cuando añade algo.
@@ -344,7 +344,7 @@ export function SuscripcionScreen() {
           {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">Puede añadirlo cuando le avisemos.</span>}
         </>
       )}
-      <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en bnbtico nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
+      <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en 3bstays nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
     </section>
   );
   // «Cómo funciona», plegado y en blanco (A2, A6).

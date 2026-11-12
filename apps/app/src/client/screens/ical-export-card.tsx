@@ -116,20 +116,20 @@ export function IcalExportCard({ id, userId }: { id: string; userId: string }) {
 
   return <section className="card stack gap-16" aria-labelledby="ical-export-title" aria-busy={!!busy}>
     <h2 id="ical-export-title">Exportar hacia Airbnb</h2>
-    <p>Lleve a Airbnb las noches que marque como ocupadas en bnbtico.</p>
+    <p>Lleve a Airbnb las noches que marque como ocupadas en 3bstays.</p>
     {busy === "loading" ? <p role="status">Cargando enlace…</p> : null}
     {!online ? <p className="note small">Sin conexión. Para consultar o generar el enlace, vuelva a conectarse.</p> : null}
     {problem ? <p className="field-error" role="alert">{problem}</p> : null}
     {revoked ? <p className="note small">Retire también el enlace anterior de Airbnb. Los bloqueos que ya leyó pueden seguir apareciendo allí.</p> : null}
     {!data && !busy ? <button type="button" className="btn btn-ghost btn-lg" disabled={!online} onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</button> : null}
-    {data?.suspended ? <p className="note">La exportación está suspendida mientras la casa esté bloqueada o rechazada por bnbtico. Los datos se conservan.</p> : null}
+    {data?.suspended ? <p className="note">La exportación está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</p> : null}
     {data && !data.generated && !data.suspended ? <>
       <p>Todavía no ha generado un enlace de exportación.</p>
       <button type="button" className="btn btn-primary btn-lg" disabled={!!busy || !online} onClick={() => void generate()}>{busy === "generating" ? "Generando enlace…" : "Generar enlace"}</button>
     </> : null}
     {url ? <>
       <div>
-        <label htmlFor="ical-export-url">Enlace de bnbtico para Airbnb</label>
+        <label htmlFor="ical-export-url">Enlace de 3bstays para Airbnb</label>
         <textarea id="ical-export-url" ref={field} rows={3} readOnly value={url} autoComplete="off" spellCheck={false} aria-describedby="ical-export-help ical-export-copy-error" />
       </div>
       <button type="button" className="btn btn-primary btn-lg" onClick={() => void copy()}>Copiar enlace</button>

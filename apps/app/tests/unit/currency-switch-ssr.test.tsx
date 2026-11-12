@@ -55,7 +55,7 @@ describe("barra de la ficha en el servidor", () => {
     const l = listing({ acceptsMonthly: true, monthlyPriceCrc: 650000 });
     const html = renderToString(
       <Providers>
-        <ListingPage listing={l} base="https://bnbtico.com" />
+        <ListingPage listing={l} base="https://3bstays.com" />
       </Providers>,
     );
     expect(html).toContain(`data-testid="main-price"><span class="price-fig">${formatCRC(85000)}`);
@@ -73,7 +73,7 @@ describe("barra de la ficha en el servidor", () => {
   it("una casa no disponible lleva la nota también", () => {
     const html = renderToString(
       <Providers>
-        <ListingPage listing={listing({ available: false })} base="https://bnbtico.com" />
+        <ListingPage listing={listing({ available: false })} base="https://3bstays.com" />
       </Providers>,
     );
     expect(html).toContain("No disponible por ahora");
@@ -83,7 +83,7 @@ describe("barra de la ficha en el servidor", () => {
   it("la vista previa del borrador no lleva selector", () => {
     const html = renderToString(
       <Providers>
-        <ListingPage listing={listing()} base="https://bnbtico.com" preview />
+        <ListingPage listing={listing()} base="https://3bstays.com" preview />
       </Providers>,
     );
     expect(html).not.toContain("currency-switch");

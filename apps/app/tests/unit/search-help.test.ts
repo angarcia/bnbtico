@@ -8,11 +8,11 @@ const lines = (f: Partial<Filters>) => searchHelpMessage({ ...none, ...f }).spli
 
 describe("searchHelpMessage", () => {
   it("sin filtros: el saludo y «Fechas: » para que el cliente las escriba", () => {
-    expect(searchHelpMessage(none)).toBe("Hola, estoy buscando casa en bnbtico.\nFechas: ");
+    expect(searchHelpMessage(none)).toBe("Hola, estoy buscando casa en 3bstays.\nFechas: ");
   });
 
   it("la provincia sale como zona; «Todas las zonas» no se escribe", () => {
-    expect(lines({ prov: "Limón" })).toEqual(["Hola, estoy buscando casa en bnbtico.", "Zona: Limón.", "Fechas: "]);
+    expect(lines({ prov: "Limón" })).toEqual(["Hola, estoy buscando casa en 3bstays.", "Zona: Limón.", "Fechas: "]);
     expect(searchHelpMessage({ ...none, prov: "Todas" })).not.toMatch(/Zona|Todas/);
   });
 
@@ -51,7 +51,7 @@ describe("searchHelpMessage", () => {
   it("todo junto, en orden y con «Fechas: » al final", () => {
     expect(searchHelpMessage({ ...none, prov: "Limón", ppl: 4, features: ["pool", "pets"], max: 80000 })).toBe(
       [
-        "Hola, estoy buscando casa en bnbtico.",
+        "Hola, estoy buscando casa en 3bstays.",
         "Zona: Limón.",
         "Personas: 4.",
         "Necesito: Piscina, Mascotas.",

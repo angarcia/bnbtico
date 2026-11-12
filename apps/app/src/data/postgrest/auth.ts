@@ -111,7 +111,7 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
       const account = await readProfile(data.user.id);
       if (!account) {
         await db.auth.signOut({ scope: "local" });
-        throw new DomainError("No pudimos crear su perfil. Escríbale a bnbtico por WhatsApp.", "unknown");
+        throw new DomainError("No pudimos crear su perfil. Escríbale a 3bstays por WhatsApp.", "unknown");
       }
       pending.clear();
       return account;
@@ -155,9 +155,9 @@ export function createPostgrestAuth(db: SupabaseClient<Database>, deps: { pendin
           if (removed.error) throw toDomainError(removed.error);
         }
       }
-      const enrolled = await db.auth.mfa.enroll({ factorType: "totp", friendlyName: "bnbtico admin", issuer: "bnbtico" });
+      const enrolled = await db.auth.mfa.enroll({ factorType: "totp", friendlyName: "3bstays admin", issuer: "3bstays" });
       // Sin correo en auth.users GoTrue no puede rotular el factor y responde 500; seed_admin se lo pone al admin.
-      if (enrolled.error?.status === 500) throw new DomainError("El segundo código no está disponible para esta cuenta. Escríbale a bnbtico por WhatsApp.", "forbidden");
+      if (enrolled.error?.status === 500) throw new DomainError("El segundo código no está disponible para esta cuenta. Escríbale a 3bstays por WhatsApp.", "forbidden");
       if (enrolled.error) throw toDomainError(enrolled.error);
       return { factorId: enrolled.data.id, verified: false, qrCode: enrolled.data.totp.qr_code, secret: enrolled.data.totp.secret };
     },
