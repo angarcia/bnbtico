@@ -121,6 +121,8 @@ try {
 } catch (error) {
   // Solo el código fijo (p. ej. «json» del saneador o «ci» de este guion), nunca contenido de los artefactos.
   const code = typeof error?.code === "string" && /^[a-z0-9-]{1,40}$/.test(error.code) ? error.code : "error";
-  console.error(`Diagnóstico no publicable (${code}); no se autoriza la subida.`);
+  // Y dónde: solo nombres de archivo saneados por el propio saneador («runner.json > encoded.txt»), sin contenido.
+  const where = typeof error?.where === "string" && /^[A-Za-z0-9._> -]{1,300}$/.test(error.where) ? ` en ${error.where}` : "";
+  console.error(`Diagnóstico no publicable (${code}${where}); no se autoriza la subida.`);
   process.exitCode = 1;
 }

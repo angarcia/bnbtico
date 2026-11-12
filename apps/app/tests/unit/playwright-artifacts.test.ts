@@ -970,4 +970,20 @@ test("caso diagnóstico", async ({ page }) => {
       await close(server);
     }
   }, 60_000);
+
+  it("un texto con pinta de base64 que al decodificarlo empieza por «{» sin ser JSON no tumba el saneo y se conserva", async () => {
+    const parecido = Buffer.from("{esto no es json, es texto").toString("base64");
+    await writeFile(join(root, "raw", "e2e-normalized.json"), JSON.stringify({ status: "passed", nota: parecido }));
+    await sanitizeRun({ root });
+    const output = JSON.parse(await readFile(join(root, "publish", "e2e-normalized.json"), "utf8"));
+    expect(output).toMatchObject({ status: "passed", nota: parecido });
+  });
+
+  it("un rechazo dice en qué archivo fue, sin su contenido", async () => {
+    await writeFile(join(root, "raw", "roto.json"), "{no es json secreto-123");
+    const error = await sanitizeRun({ root }).catch((e) => e);
+    expect(error.code).toBe("json");
+    expect(error.where).toBe("roto.json");
+    expect(String(error.where) + error.message).not.toContain("secreto-123");
+  });
 });
