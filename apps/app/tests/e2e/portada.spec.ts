@@ -16,7 +16,8 @@ test("`/?pronto=1` muestra la portada sin JavaScript, con su imagen, su CSP y su
   // Fuera de producción antes del lanzamiento el botón lleva al asistente, no a WhatsApp ni a la frase.
   await expect(page.getByRole("link", { name: "Publicar mi casa" })).toHaveAttribute("href", "/publicar");
   await expect(page.getByText("Abrimos pronto en el Caribe sur.")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Quiero publicar mi casa gratis" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Escríbanos por WhatsApp" })).toHaveCount(0);
+  await expect(page.getByText("Bueno, bonito y bien tico", { exact: true })).toBeVisible();
   await expect(page.locator(".soon-steps li")).toHaveCount(3);
   await expect(page).toHaveTitle("3bstays · Casas y alojamientos en alquiler en el Caribe de Costa Rica");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://3bstays.com/");

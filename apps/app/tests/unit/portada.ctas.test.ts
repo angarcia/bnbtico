@@ -12,7 +12,7 @@ describe("botón de propietarios de la portada", () => {
   it("con número, un enlace a WhatsApp con el mensaje redactado en vez de la frase", () => {
     const out = withOwnerCta(HTML, "+506 6000 0000");
     expect(out).toContain(`href="https://wa.me/50660000000?text=${encodeURIComponent(OWNER_CTA_TEXT)}"`);
-    expect(out).toContain(">Quiero publicar mi casa gratis</a>");
+    expect(out).toContain(">Escríbanos por WhatsApp</a>");
     expect(out).not.toContain("Abrimos pronto");
     expect(out.startsWith("<p>antes</p>") && out.endsWith("<p>después</p>")).toBe(true);
   });

@@ -10,7 +10,7 @@ const BLOCK = /<!--cta-propietarios-->[\s\S]*?<!--\/cta-propietarios-->/;
 export function withOwnerCta(html: string, ownersNumber: string | undefined): string {
   if (!ownersNumber?.trim()) return html;
   const href = waUrl(ownersNumber, OWNER_CTA_TEXT).replace(/&/g, "&amp;");
-  return html.replace(BLOCK, `<!--cta-propietarios--><a class="soon-cta" href="${href}" rel="noopener">Quiero publicar mi casa gratis</a><!--/cta-propietarios-->`);
+  return html.replace(BLOCK, `<!--cta-propietarios--><a class="soon-cta" href="${href}" rel="noopener">Escríbanos por WhatsApp</a><!--/cta-propietarios-->`);
 }
 
 // Publicar v2: tras el lanzamiento (y en pruebas) el botón lleva al asistente en vez de a WhatsApp. El build conserva los
