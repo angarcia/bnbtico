@@ -318,8 +318,8 @@ const wrangler = JSON.parse(
 );
 
 describe("wrangler.jsonc · fase 5", () => {
-  it("un solo cron por entorno y cada hora (el plan gratuito permite 5 triggers por cuenta)", () => {
-    for (const cfg of [wrangler, wrangler.env.pruebas, wrangler.env.production]) expect(cfg.triggers.crons).toEqual(["17 * * * *"]);
+  it("conserva el cron horario junto al ciclo de Airbnb", () => {
+    for (const cfg of [wrangler, wrangler.env.pruebas, wrangler.env.production]) expect(cfg.triggers.crons).toEqual(["17 * * * *", "17 */3 * * *"]);
   });
 
   it("la ruta del reloj de pruebas pasa por el worker", () => {

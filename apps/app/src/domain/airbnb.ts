@@ -32,6 +32,11 @@ export interface OwnerAirbnbApi {
   disconnect(listingId: string, requestId: string): Promise<void>;
 }
 
+export interface AirbnbCycleService extends Pick<AirbnbService, "context" | "finish"> {
+  due(cycle: string): Promise<string[]>;
+  claimCycle(listingId: string, requestId: string, cycle: string): Promise<{ run: boolean }>;
+}
+
 export const AIRBNB_BUSY_MESSAGE = "Hay noches ocupadas entre esas fechas.";
 
 /** Validación de respuestas externas, sin conversiones de tipos para confiar en JSON remoto. */

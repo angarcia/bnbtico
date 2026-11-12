@@ -14,11 +14,9 @@
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
   // El feed usa una capacidad secreta en la URL. Conservar logs explícitos saneados, sin invocaciones que graben esa URL.
   "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
-  // Cron diario (src/server/cron.ts): keep-alive a PostgREST y recorte de la telemetría. Los triggers no se heredan: cada
-  // entorno los repite. 09:17 UTC = 03:17 en Costa Rica.
-  // Fase 5: cada hora (un trigger por entorno, el plan gratuito permite 5 por cuenta): lo diario solo en la de las 09 UTC
-  // y los avisos por WhatsApp de 08:00 a 17:59 de Costa Rica (src/server/cron.ts runHourly).
-  "triggers": { "crons": ["17 * * * *"] },
+  // Cron horario: tareas diarias a las 09:17 UTC y avisos en horario de Costa Rica (src/server/cron.ts).
+  // Airbnb tiene su propio ciclo cada tres horas. Los triggers no se heredan y refactor no programa ninguno.
+  "triggers": { "crons": ["17 * * * *", "17 */3 * * *"] },
   // Local: SUPABASE_URL y SUPABASE_ANON_KEY salen de .dev.vars (pnpm dev:vars, desde `supabase status`).
   "vars": { "ENVIRONMENT": "local" },
   "env": {
@@ -49,7 +47,7 @@
         "PUBLIC_ORIGIN": "https://pruebas.3bstays.com"
       },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "triggers": { "crons": ["17 * * * *"] },
+      "triggers": { "crons": ["17 * * * *", "17 */3 * * *"] },
       // Dominio de pruebas desde el cambio de marca (2026-11-11), protegido con Cloudflare Access.
       "routes": [{ "pattern": "pruebas.3bstays.com", "custom_domain": true }],
       "workers_dev": true,
@@ -68,7 +66,7 @@
       // assets no se hereda por partes: si el entorno lo define, se repite entero.
       "assets": { "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": true },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "triggers": { "crons": ["17 * * * *"] },
+      "triggers": { "crons": ["17 * * * *", "17 */3 * * *"] },
       "workers_dev": false,
       "preview_urls": false
     }

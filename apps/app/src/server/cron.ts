@@ -72,7 +72,7 @@ export async function runDaily(env: Env, deps: CronDeps, cron: string): Promise<
 export const DAILY_UTC_HOUR = 9;
 
 /**
- * Cron horario (fase 5): un solo trigger por entorno (el plan gratuito permite 5 por cuenta y ya hay 3). `runDaily` solo
+ * Cron horario (fase 5). `runDaily` solo
  * en la ejecución de las 09 UTC; los avisos por WhatsApp solo de 08:00 a 17:59 de Costa Rica; «solo portada» no hace
  * nada más que lo que ya hace runDaily. Un fallo de los avisos se registra (una línea JSON) y nunca tumba el keep-alive.
  */

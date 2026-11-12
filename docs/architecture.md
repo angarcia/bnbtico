@@ -60,6 +60,10 @@ Validación final local aportada por Ana: tipos, 2258 unitarias, 8 pruebas DB de
 
 Ampliación aprobada el 2026-11-09: «Marcar una reserva» usa los días efectivos y comprueba Airbnb antes de habilitar la selección, reutilizando un éxito de menos de un minuto o esperando una lectura en curso. Tras fallo, requiere confirmación explícita del último calendario válido; una lectura denegada no se interpreta como disponibilidad. `mark_listing_reservation` bloquea la casa y vuelve a comprobar ocupación manual/importada dentro de la transacción, reutilizando `listing_days_update` sin tocar precios. `save_listing_days` comparte el bloqueo para serializar la edición manual con esa operación. La marca `CalendarChange.requireFree` se envía exclusivamente por esa RPC; el editor general conserva su comportamiento. Consulta WhatsApp conserva su comprobación en la base, sin lectura externa por visita. Migración `20261109181419_proteger_reserva_calendario.sql`, confirmada por el script al día en Supabase local. Guía: A101a–A101e y GC09–GC10.
 
+### Importación automática de Airbnb (#8)
+
+El trigger `17 */3 * * *` del Worker usa la hora programada para seleccionar conexiones activas. Las RPC `airbnb_due_for_cycle` y `claim_airbnb_cycle` son exclusivas del rol de servicio. La segunda aplica el bloqueo por casa y registra el ciclo antes de llamar a `airbnb_reserve`. La descarga y la publicación usan `runAirbnbImport` y la finalización versionada de #5/#7. La [guía de operación](operacion-airbnb.md) describe los límites, la simulación local y las comprobaciones del trigger alojado.
+
 ### Sesión de la aplicación
 
 - supabase-js guarda la sesión en localStorage detrás de un adaptador de almacenamiento (Capacitor la moverá a Keychain/Keystore). Token de acceso de 1 h, rotación del refresh con detección de reutilización, logout que revoca.

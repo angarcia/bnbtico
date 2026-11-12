@@ -5,6 +5,8 @@ import { createAnonListings } from "../data/postgrest/client";
 import { createFxWriter } from "../data/postgrest/fx";
 import { createTelemetryWriter } from "../data/postgrest/telemetry";
 import { parseAllowlist } from "../domain/whatsapp-sender";
+import { landingOnly } from "../domain/seo";
+import { AIRBNB_CRON, runAirbnbCycle } from "./airbnb-cycle";
 import { createApp, type CacheLike, type Env } from "./app";
 import { runHourly } from "./cron";
 import { reminderBase, sendReminders, senderFromEnv, type ReminderRuntime } from "./reminders";
@@ -12,6 +14,13 @@ import { reminderBase, sendReminders, senderFromEnv, type ReminderRuntime } from
 export type { Env } from "./app";
 
 const log = (line: string) => console.log(line);
+const airbnb = {
+  service: (env: Env) => env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL
+    ? createAirbnbService({ supabaseUrl: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY,
+      serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, fetch: (input, init) => fetch(input, init) })
+    : null,
+  fetch: ((input, init) => fetch(input, init)) satisfies typeof fetch,
+};
 
 const reminders = (env: Env): ReminderRuntime | null => {
   if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.SUPABASE_URL) return null;
@@ -37,10 +46,7 @@ const app = createApp({
         serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, fetch: (input, init) => fetch(input, init) }).read(token);
     },
   },
-  airbnb: {
-    service: env => env.SUPABASE_SERVICE_ROLE_KEY ? createAirbnbService({ supabaseUrl: env.SUPABASE_URL, anonKey: env.SUPABASE_ANON_KEY, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, fetch: (i, init) => fetch(i, init) }) : null,
-    fetch: (i, init) => fetch(i, init),
-  },
+  airbnb,
   // `vite dev` inyecta scripts en línea (React Refresh): la CSP solo se envía en el build (preview y despliegue).
   securityHeaders: !import.meta.env.DEV,
   billing: {
@@ -55,6 +61,10 @@ export default {
   fetch: app.fetch,
   // Se espera (sin waitUntil): si el keep-alive falla, la ejecución queda como fallida en el panel de Cloudflare.
   async scheduled(controller: { cron: string; scheduledTime: number }, env: Env) {
+    if (controller.cron === AIRBNB_CRON) {
+      const service = landingOnly(env) || env.AIRBNB_AUTO_SYNC === "off" ? null : airbnb.service(env);
+      return runAirbnbCycle(service, { fetch: airbnb.fetch, now: Date.now, log }, controller.cron, controller.scheduledTime);
+    }
     const rt = reminders(env);
     const send = rt ? () => sendReminders(rt, { base: reminderBase(env, null), log }) : null;
     await runHourly(env, { fetch: (i, init) => fetch(i, init), log, now: () => Date.now(), telemetry: telemetry(env), fx: fxWriter(env), reminders: send }, controller.cron, controller.scheduledTime);

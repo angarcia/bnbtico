@@ -24,6 +24,9 @@ describe("Airbnb · grants y permisos reales", () => {
       expect((await client.rpc("airbnb_import_context", { p_listing: l.id, p_request: request })).error?.code).toBe("42501");
       expect((await client.rpc("finish_airbnb_import", { p_listing: l.id, p_request: request, p_blocks: [] })).error?.code).toBe("42501");
       expect((await client.rpc("claim_airbnb_import", { p_listing: l.id, p_request: crypto.randomUUID() })).error?.code).toBe("42501");
+      const cycle = "2026-11-12T09:17:00Z";
+      expect((await client.rpc("airbnb_due_for_cycle", { p_cycle: cycle })).error?.code).toBe("42501");
+      expect((await client.rpc("claim_airbnb_cycle", { p_listing: l.id, p_request: crypto.randomUUID(), p_cycle: cycle })).error?.code).toBe("42501");
     }
     expect((await admin.rpc("begin_airbnb_import", { p_listing: l.id, p_url: TEST_AIRBNB_URL, p_request: crypto.randomUUID() })).error?.code).toBe("P0001");
     const info = await service.overview(await h.jwt("owner"), l.id);

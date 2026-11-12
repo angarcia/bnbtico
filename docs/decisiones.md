@@ -1,3 +1,7 @@
+## 2026-11-12 · Horario operativo de la importación automática de Airbnb (#8)
+
+Se concreta el ciclo fijo ya aprobado con `17 */3 * * *`, en el mismo Worker y con una invocación aparte del cron horario. Se identifica por su hora programada y admite menos de una hora de retraso. El lote inicial admite 12 casas por invocación para ajustarse al presupuesto de Workers Free. El indicador de cola permite detectar cuándo ampliar capacidad. La [guía de operación](operacion-airbnb.md) detalla la comprobación y reversión.
+
 ## 2026-11-12 · El lema «Bueno, bonito y bien tico» sale de la web hasta registrarlo
 
 - **Decisión (Daniel, 2026-11-12):** quieren registrar el lema como marca, así que no se publica mientras tanto.

@@ -114,13 +114,13 @@ describe("validación de la configuración generada y secretos", () => {
     pruebas: {
       name: "3bstays-pruebas", targetEnvironment: "pruebas",
       routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }],
-      workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *"] },
+      workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *", "17 */3 * * *"] },
       vars: { ENVIRONMENT: "pruebas" },
     },
     production: {
       name: "3bstays-production", targetEnvironment: "production",
       routes: [{ pattern: "3bstays.com", custom_domain: true }],
-      workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *"] },
+      workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *", "17 */3 * * *"] },
       vars: { ENVIRONMENT: "production", LAUNCHED: "false" },
     },
   };
