@@ -459,16 +459,17 @@ jobs:
         if: (steps.target.outputs.environment == 'pruebas' || steps.target.outputs.environment == 'production') && (steps.target.outputs.publish == 'deploy' || steps.target.outputs.publish == 'preview')
         working-directory: .
         env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
-          PURGE_SECRET: ${{ secrets.PURGE_SECRET }}
-          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-          CF_PURGE_TOKEN: ${{ secrets.CLOUDFLARE_PURGE_TOKEN }}
+          # Producción antes del lanzamiento solo sirve la portada (LAUNCHED=false): desde main no recibe ningún secreto.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref == 'refs/heads/main' && '' || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ github.ref == 'refs/heads/main' && '' || vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+          PURGE_SECRET: ${{ github.ref == 'refs/heads/main' && '' || secrets.PURGE_SECRET }}
+          CF_ZONE_ID: ${{ github.ref == 'refs/heads/main' && '' || secrets.CLOUDFLARE_ZONE_ID }}
+          CF_PURGE_TOKEN: ${{ github.ref == 'refs/heads/main' && '' || secrets.CLOUDFLARE_PURGE_TOKEN }}
           # Fase 5: avisos por WhatsApp (Twilio sandbox) y reloj de pruebas; sin ellos, apagados.
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
-          WHATSAPP_ALLOWLIST: ${{ secrets.WHATSAPP_ALLOWLIST }}
+          TWILIO_ACCOUNT_SID: ${{ github.ref == 'refs/heads/main' && '' || secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && '' || secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ github.ref == 'refs/heads/main' && '' || secrets.TWILIO_WHATSAPP_FROM }}
+          WHATSAPP_ALLOWLIST: ${{ github.ref == 'refs/heads/main' && '' || secrets.WHATSAPP_ALLOWLIST }}
           TEST_CLOCK_SECRET: ${{ github.ref == 'refs/heads/main' && '' || secrets.TEST_CLOCK_SECRET }}
           # Fase 5: Stripe en modo de prueba (cuenta de Ana); nunca desde main (en producción los pagos están apagados).
           STRIPE_SECRET_KEY: ${{ github.ref == 'refs/heads/main' && '' || secrets.STRIPE_SECRET_KEY }}

@@ -59,12 +59,12 @@
     // landingOnly): por eso todas las peticiones pasan por el worker (run_worker_first: true), que deja salir la portada,
     // robots, sitemap y sus ficheros y responde 404 con la portada a todo lo demás. Al lanzar: LAUNCHED "true",
     // SUPABASE_URL del proyecto de producción y el mismo run_worker_first en lista que el nivel superior.
-    // Sin rutas todavía: al abrir producción se añade
-    //   "routes": [{ "pattern": "3bstays.com", "custom_domain": true }],
-    // (y www.3bstays.com si se decide servirlo aquí en vez de redirigirlo). Un dominio personalizado no convive con un
-    // registro DNS existente para el mismo nombre.
+    // Portada en 3bstays.com desde el 2026-11-11 (solo portada hasta el lanzamiento). www.3bstays.com no va aquí: se
+    // redirige a 3bstays.com con una regla de Cloudflare. Un dominio personalizado no convive con un registro DNS
+    // existente para el mismo nombre.
     "production": {
       "vars": { "ENVIRONMENT": "production", "LAUNCHED": "false" },
+      "routes": [{ "pattern": "3bstays.com", "custom_domain": true }],
       // assets no se hereda por partes: si el entorno lo define, se repite entero.
       "assets": { "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": true },
       "version_metadata": { "binding": "CF_VERSION_METADATA" },

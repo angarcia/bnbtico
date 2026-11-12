@@ -119,6 +119,7 @@ describe("validación de la configuración generada y secretos", () => {
     },
     production: {
       name: "3bstays-production", targetEnvironment: "production",
+      routes: [{ pattern: "3bstays.com", custom_domain: true }],
       workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *"] },
       vars: { ENVIRONMENT: "production", LAUNCHED: "false" },
     },
@@ -158,8 +159,13 @@ describe("validación de la configuración generada y secretos", () => {
     expect(run(["validate", join(fixture(), "ausente")], { DEPLOY_ENV: "refactor" }).status).not.toBe(0);
   });
 
-  it("producción sigue sin rutas declaradas", () => {
-    expect(validate("production", { ...configs.production, routes: [{ pattern: "3bstays.com", custom_domain: true }] }).status).not.toBe(0);
+  // Portada en 3bstays.com (decisión 2026-11-11): producción solo con su dominio, ni otro ni ninguno.
+  it("producción solo con la ruta 3bstays.com", () => {
+    expect(validate("production", configs.production).status).toBe(0);
+    const { routes: _sinRuta, ...sinRuta } = configs.production;
+    expect(validate("production", sinRuta).status).not.toBe(0);
+    expect(validate("production", { ...configs.production, routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }] }).status).not.toBe(0);
+    expect(validate("production", { ...configs.production, routes: [{ pattern: "3bstays.com", custom_domain: true }, { pattern: "otro.com", custom_domain: true }] }).status).not.toBe(0);
   });
 
   it("escribe solo anon aunque existan otros secretos, sin imprimir valores", () => {
@@ -212,6 +218,11 @@ describe("workflow · aislamiento y puertas", () => {
     expect(step("Secretos del worker")).toContain("(steps.target.outputs.environment == 'pruebas' || steps.target.outputs.environment == 'production')");
     expect(step("Secretos del worker")).toContain("(steps.target.outputs.publish == 'deploy' || steps.target.outputs.publish == 'preview')");
     expect(step("Borrar los secretos del disco")).toContain("if: always()");
+    // Producción antes del lanzamiento solo sirve la portada: desde main el worker no recibe ningún secreto.
+    const secrets = step("Secretos del worker");
+    for (const name of ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ANON_KEY", "PURGE_SECRET", "CF_ZONE_ID", "CF_PURGE_TOKEN", "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM", "WHATSAPP_ALLOWLIST", "TEST_CLOCK_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]) {
+      expect(secrets, name).toMatch(new RegExp(`${name}: \\$\\{\\{ github\\.ref == 'refs/heads/main' && '' \\|\\| `));
+    }
   });
 
   it("valida el artefacto exacto y mantiene todas las puertas antes de publicar", () => {

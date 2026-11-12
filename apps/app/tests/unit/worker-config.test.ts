@@ -51,7 +51,7 @@ describe("wrangler · worker aislado del refactor", () => {
     expect(wrangler.env.pruebas.name).toBeUndefined();
     expect(wrangler.env.pruebas.workers_dev).toBe(true);
     expect(wrangler.env.pruebas.preview_urls).toBe(true);
-    expect(wrangler.env.production.routes).toBeUndefined();
+    expect(wrangler.env.production.routes).toEqual([{ pattern: "3bstays.com", custom_domain: true }]);
     expect(wrangler.env.production.name).toBeUndefined();
     expect(wrangler.env.production.workers_dev).toBe(false);
     expect(wrangler.env.production.preview_urls).toBe(false);

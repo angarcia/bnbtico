@@ -186,11 +186,11 @@ describe("wrangler.jsonc · preparado para el corte", () => {
     expect(wrangler.assets.run_worker_first).toContain("/");
   });
 
-  it("producción: solo portada (LAUNCHED=false), todo pasa por el worker y sin rutas activas todavía", () => {
+  it("producción: solo portada (LAUNCHED=false), todo pasa por el worker y solo en 3bstays.com", () => {
     const p = wrangler.env.production;
     expect(p.vars).toMatchObject({ ENVIRONMENT: "production", LAUNCHED: "false" });
     expect(p.assets).toMatchObject({ binding: "ASSETS", run_worker_first: true });
-    expect(p.routes ?? []).toEqual([]);
+    expect(p.routes).toEqual([{ pattern: "3bstays.com", custom_domain: true }]);
     expect(p.workers_dev).toBe(false);
   });
 
