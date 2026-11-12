@@ -24,7 +24,7 @@ import { CounterRow } from "../../shared/counter-row";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
-import { listingsQuery, provincesQuery, zonesQuery } from "../queries";
+import { featuresWithListingsQuery, listingsQuery, provincesQuery, zonesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
@@ -62,6 +62,10 @@ function FiltrosForm({
   const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
+  const catalogFeatures = useQuery(featuresWithListingsQuery);
+  const featureChoices = FEATURE_CHOICE_ORDER.filter(
+    (key) => f.features.includes(key) || catalogFeatures.data?.includes(key),
+  );
   const symbol = currency === "USD" ? "$" : "₡";
   const mineRows = [
     // Una sola fila de zona que dice lo mismo que la búsqueda: «Todas las provincias» sin zona, «Todo Limón» con un ?prov= viejo (A7, ticket 06).
@@ -187,10 +191,15 @@ function FiltrosForm({
             /> : null}
           </div>
         </section>
-        <section className="stack">
+        {(!catalogFeatures.data || featureChoices.length > 0) && <section className="stack">
           <span className="eyebrow">Qué necesitan</span>
+          {!catalogFeatures.data && (catalogFeatures.isError || catalogFeatures.isPaused ? (
+            <p className="xs muted" role="status">No pudimos cargar las características disponibles.</p>
+          ) : (
+            <p className="xs muted" role="status">Cargando características…</p>
+          ))}
           <div className="feature-choices">
-            {FEATURE_CHOICE_ORDER.map((key) => (
+            {featureChoices.map((key) => (
               <button
                 key={key}
                 type="button"
@@ -205,7 +214,7 @@ function FiltrosForm({
               </button>
             ))}
           </div>
-        </section>
+        </section>}
         <section className="stack">
           <span className="eyebrow">Precio</span>
           <div className="grid-2">

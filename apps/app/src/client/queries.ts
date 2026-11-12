@@ -29,6 +29,12 @@ export const provincesQuery = queryOptions({
   staleTime: 10 * 60_000,
 });
 
+export const featuresWithListingsQuery = queryOptions({
+  queryKey: ["features-with-listings"] as const,
+  queryFn: async () => (await api()).featuresWithListings(),
+  staleTime: 60_000,
+});
+
 /** Zonas con casas para «¿Dónde?» (zones_with_listings). */
 export const zonesQuery = queryOptions({
   queryKey: ["zones-with-listings"] as const,

@@ -85,6 +85,12 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
       return PROVINCES.filter((p) => found.has(p));
     },
 
+    async featuresWithListings() {
+      const { data, error } = await db.from("features_with_listings").select("feature");
+      if (error) throw toDomainError(error);
+      return data.flatMap(({ feature }) => feature === null ? [] : [feature]);
+    },
+
     async countActive() {
       const { count, error } = await db.from("listings_public").select("id", { count: "exact", head: true });
       if (error) throw toDomainError(error);

@@ -308,6 +308,19 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
     });
 
     describe("anuncio pausado (ticket 20)", () => {
+      it("solo ofrece características de casas visibles en Explorar y sin duplicados", async () => {
+        h = await makeHarness();
+        await h.reset();
+        expect(await h.anon.featuresWithListings()).toEqual([]);
+        await h.seed({ status: "draft", draft: { features: ["ev"] } });
+        await h.seed({ status: "active", draft: { features: ["wifi", "pool"] } });
+        const paused = await h.seed({ status: "active", draft: { features: ["wifi", "pets"] } });
+        await h.owner("owner").setAvailable(paused.id, false);
+        expect((await h.anon.featuresWithListings()).sort()).toEqual(["pool", "wifi"]);
+        await h.owner("owner").setAvailable(paused.id, true);
+        expect((await h.anon.featuresWithListings()).sort()).toEqual(["pets", "pool", "wifi"]);
+      }, 60_000);
+
       it("no aparece en Explorar, pero su ficha y Favoritos la siguen trayendo como no disponible", async () => {
         h = await makeHarness();
         await h.reset();

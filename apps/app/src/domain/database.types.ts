@@ -662,7 +662,15 @@ isOneToOne: true
                 }
           }
           Views: {
-            "listings_public": {
+            "features_with_listings": {
+                  Row: {
+                    "feature": Database["public"]['Enums']["feature"] | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"listings_public": {
                   Row: {
                     "accepts_monthly": boolean | null,"accepts_nightly": boolean | null,"available": boolean | null,"bathroom_shared": boolean | null,"bathrooms": number | null,"bedrooms": number | null,"canton": string | null,"capacity": number | null,"created_at": string | null,"description": string | null,"features": (Database["public"]['Enums']["feature"])[] | null,"id": string | null,"kind": Database["public"]['Enums']["listing_kind"] | null,"lat": number | null,"lng": number | null,"min_months": number | null,"min_nights": number | null,"monthly_mode": string | null,"monthly_price_crc": number | null,"nightly_price_crc": number | null,"owner_name": string | null,"owner_whatsapp_verified": boolean | null,"parking_paid": boolean | null,"photos": Json | null,"province": string | null,"public_id": string | null,"reopen_at": string | null,"title": string | null,"updated_at": string | null,"zone": string | null
                   }

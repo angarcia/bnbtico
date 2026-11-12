@@ -133,6 +133,10 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       return PROVINCES.filter((p) => found.has(p));
     },
 
+    async featuresWithListings() {
+      return [...new Set(active().filter((l) => l.available).flatMap((l) => l.features))];
+    },
+
     async countActive() {
       return active().length;
     },

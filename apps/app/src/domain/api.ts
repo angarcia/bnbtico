@@ -7,7 +7,7 @@ import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { FxRate } from "./fx";
 import type { VariantSize } from "./image";
-import type { LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SearchListing, SitemapEntry, Step } from "./listing";
+import type { Feature, LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SearchListing, SitemapEntry, Step } from "./listing";
 import type { InquiryDraft, OwnerInquiry } from "./inquiry";
 import type { AdminHouses } from "./admin-houses";
 import type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./review";
@@ -40,6 +40,8 @@ export interface PublicListingsApi {
   linkState(publicId: string): Promise<LinkState>;
   /** Provincias con al menos una casa activa. */
   provincesWithListings(): Promise<string[]>;
+  /** Características de todas las casas visibles en Explorar, sin duplicados. */
+  featuresWithListings(): Promise<Feature[]>;
   /** Casas activas para el sitemap, la más reciente primero. */
   sitemap(): Promise<SitemapEntry[]>;
   /** Cuántas casas hay activas (plazas ocupadas de la oferta de lanzamiento). */

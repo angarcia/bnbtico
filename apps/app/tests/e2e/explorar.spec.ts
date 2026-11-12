@@ -249,6 +249,20 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await expect(results(page)).toHaveText("10 casas");
 });
 
+test("Filtros: ofrece características del catálogo y permite quitar una que viene en un enlace antiguo", async ({ page }) => {
+  await page.goto("/explorar/filtros?ppl=6&ev=1");
+  // Piscina sigue disponible como opción aunque ninguna casa admita seis personas.
+  await expect(page.getByRole("button", { name: "Piscina", exact: true })).toBeVisible();
+  const ev = page.getByRole("button", { name: "Cargador eléctrico", exact: true });
+  await expect(ev).toHaveAttribute("aria-pressed", "true");
+  await ev.click();
+  await expect(ev).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Menos personas" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Ver 0 casas" })).toBeVisible();
+  await page.getByRole("button", { name: "Ver 0 casas" }).click();
+  await expect(page).toHaveURL(/\/explorar\?ppl=6$/);
+});
+
 test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contador (ticket 06)", async ({ page }) => {
   await page.goto("/explorar/filtros");
   const tipo = page.getByRole("group", { name: "Tipo de alojamiento" });

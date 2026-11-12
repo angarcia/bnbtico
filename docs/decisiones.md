@@ -1,3 +1,7 @@
+## 2026-11-12 · Características disponibles en Filtros
+
+«Qué necesitan» ofrece las características que tenga al menos una casa visible en Explorar. Se usa el catálogo completo para que las opciones sean estables al cambiar zona, fechas, personas, tipo o precio. Si un enlace trae una característica que ya no se ofrece, esta sigue visible y seleccionada hasta que la persona la quite.
+
 ## 2026-11-12 · Tarjetas compactas de Explorar y Favoritos
 
 Ana aprueba el botón cuadrado de WhatsApp abajo a la derecha. En la lista queda junto al precio, con menos espacio debajo; los iconos de características van encima. En el mapa, el tipo queda alineado a la izquierda en su propia línea encima de la zona para evitar que se junten cuando el nombre de la zona sea largo. Las características quedan debajo del precio para separar las dos filas de iconos.
