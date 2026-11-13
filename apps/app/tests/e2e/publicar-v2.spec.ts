@@ -129,7 +129,7 @@ async function stepsTwoToSix(page: Page) {
   await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
   const map = (await page.locator(".map-box").boundingBox())!;
   await page.mouse.click(map.x + map.width / 2 - 10, map.y + map.height / 2);
-  await expect(page.getByRole("combobox", { name: "Zona" }).locator("option:checked")).toHaveAttribute("value", /^list:701-/);
+  await expect(page.locator('input[name="zoneId"]')).toHaveValue(/^701-/);
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/4$/);
   await page.getByRole("button", { name: "Más personas" }).click();

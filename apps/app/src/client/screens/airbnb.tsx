@@ -1,3 +1,4 @@
+import { randomUuid } from "../../shared/random-uuid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -34,7 +35,7 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
   const [confirmDisconnect, setConfirmDisconnect] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
-  const refreshRequest = useRef(crypto.randomUUID());
+  const refreshRequest = useRef(randomUuid());
   const active = useRef(true);
   const inFlight = useRef(false);
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
@@ -98,7 +99,7 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
       {summary.connected ? <>
         <button className="btn btn-primary btn-lg" type="button" disabled={busy || !online || suspended} onClick={() => void update()}>{operation === "refresh" || summary.state === "running" ? "Actualizando…" : summary.errorCode ? "Intentar de nuevo" : "Actualizar ahora"}</button>
         <button className="btn btn-ghost btn-lg" type="button" disabled={busy || !online || suspended} onClick={() => setConnecting("replace")}>Sustituir enlace</button>
-        <button className="btn-text sub-stop" type="button" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(crypto.randomUUID()); }}>Desconectar Airbnb</button>
+        <button className="btn-text sub-stop" type="button" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>Desconectar Airbnb</button>
       </> : null}
     </section> : null}
     {l && summary ? <IcalExportCard key={`${uid}:${id}`} id={id} userId={uid} /> : null}
@@ -130,7 +131,7 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
 function ConnectSheet({ replacing, onClose, onConnect }: { replacing: boolean; onClose(): void; onConnect(url: string, requestId: string): Promise<boolean> }) {
   const { sheet, onKeyDown } = usePrivateSheet({ onClose, focusable: 'button:not([disabled]), input:not([disabled])', returnFocus: opener => opener?.focus() });
   const [url, setUrl] = useState("");
-  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const [requestId, setRequestId] = useState(() => randomUuid());
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const online = useCalendarOnline();
@@ -146,7 +147,7 @@ function ConnectSheet({ replacing, onClose, onConnect }: { replacing: boolean; o
       const problem = toDomainError(error);
       setProblem(problem.message);
       // Reintento de un fallo confirmado = intento nuevo; una respuesta de red desconocida reutiliza el mismo ID.
-      if (problem.kind === "validation") setRequestId(crypto.randomUUID());
+      if (problem.kind === "validation") setRequestId(randomUuid());
     }
     finally { setSaving(false); }
   }
@@ -158,7 +159,7 @@ function ConnectSheet({ replacing, onClose, onConnect }: { replacing: boolean; o
       <p>En Airbnb, abra el calendario de este alojamiento y copie su enlace de exportación. Péguelo aquí.</p>
       {replacing ? <p className="hint">El enlace actual seguirá conectado hasta que podamos leer el nuevo.</p> : null}
       <form onSubmit={submit} noValidate aria-busy={saving}>
-        <label>Enlace de calendario de Airbnb<input type="url" value={url} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="none" inputMode="url" maxLength={2048} disabled={saving} aria-invalid={!!problem} aria-describedby="airbnb-connect-hint airbnb-connect-error" onChange={e => { setUrl(e.target.value); setRequestId(crypto.randomUUID()); setProblem(null); }} /></label>
+        <label>Enlace de calendario de Airbnb<input type="url" value={url} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="none" inputMode="url" maxLength={2048} disabled={saving} aria-invalid={!!problem} aria-describedby="airbnb-connect-hint airbnb-connect-error" onChange={e => { setUrl(e.target.value); setRequestId(randomUuid()); setProblem(null); }} /></label>
         <p className="hint" id="airbnb-connect-hint">Solo importamos noches bloqueadas. No copiamos precios ni datos de huéspedes. Compruebe que el enlace corresponde a esta casa.</p>
         <p id="airbnb-connect-error" className="field-error" role={problem ? "alert" : undefined}>{problem}</p>
         <button className="btn btn-primary btn-lg" type="submit" disabled={saving || !online || !url.trim()}>{saving ? replacing ? "Sustituyendo…" : "Conectando…" : replacing ? "Sustituir enlace" : "Conectar"}</button>

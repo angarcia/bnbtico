@@ -84,14 +84,14 @@ test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarj
   // Como mucho un botón relleno (verde o, si es dinero, ocre) por tarjeta.
   for (const article of await page.getByRole("article").all()) expect(await article.locator(".btn-primary, .btn-sun").count()).toBeLessThanOrEqual(1);
   // La primera foto se pide enseguida; las demás, al acercarse. Foto 3:2 a todo el ancho de su tarjeta;
-  // desde el 2026-11-06, tarjetas y barra de estados comparten 16 px de margen a cada lado de la pantalla.
+  // En móvil, las tarjetas llegan a ambos bordes de la pantalla.
   const photos = page.locator("article .house-photo");
   await expect(photos.first().locator("img")).toHaveAttribute("loading", "eager");
   await expect(page.locator("article .house-photo img").nth(1)).toHaveAttribute("loading", "lazy");
   const box = (await photos.first().boundingBox())!;
   expect(Math.abs(box.width / box.height - 3 / 2)).toBeLessThan(0.02);
-  expect(Math.abs(box.x - 16)).toBeLessThanOrEqual(1);
-  expect(Math.abs(box.width - (page.viewportSize()!.width - 32))).toBeLessThanOrEqual(1);
+  expect(Math.abs(box.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box.x + box.width - page.viewportSize()!.width)).toBeLessThanOrEqual(1);
 
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());
@@ -226,7 +226,10 @@ test("detalle: «Ver ficha» es una tarjeta flotante clara abajo con el aspecto 
   expect(Math.abs(icon.y + icon.height / 2 - (box.y + box.height / 2))).toBeLessThan(1);
   // Abajo y centrado.
   const vp = page.viewportSize()!;
-  expect(Math.abs(box.x + box.width / 2 - vp.width / 2)).toBeLessThan(2);
+  await expect.poll(() => ver.evaluate((el) => {
+    const { left, right } = el.getBoundingClientRect();
+    return Math.abs((left + right - document.documentElement.clientWidth) / 2);
+  })).toBeLessThan(2);
   expect(vp.height - (box.y + box.height)).toBe(12);
   // Al final de la pantalla lo último queda por encima del botón, con aire.
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -431,7 +434,8 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
     const house = (await aCard.boundingBox())!;
     expect(summary.x).toBeCloseTo(house.x, 0);
     expect(summary.x + summary.width).toBeCloseTo(house.x + house.width, 0);
-    expect(house.x).toBe(16);
+    expect(house.x).toBeCloseTo(0, 0);
+    expect(house.x + house.width).toBeCloseTo(viewport.width, 0);
     const calendarDrawing = await aCard.getByRole("link", { name: "Calendario", exact: true }).locator("svg").boundingBox();
     const inquiriesDrawing = await aInquiries.locator("svg").boundingBox();
     expect(Math.min(calendarDrawing!.width, calendarDrawing!.height, inquiriesDrawing!.width, inquiriesDrawing!.height)).toBeGreaterThanOrEqual(28);

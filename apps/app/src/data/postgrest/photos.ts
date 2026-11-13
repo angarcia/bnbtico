@@ -1,6 +1,7 @@
 // Adaptador de fotos: los objetos van del navegador a Storage con la sesión del dueño (la política de storage.objects
 // exige casa propia en borrador o con cambios, nombres conocidos y como mucho 45 objetos por carpeta de casa); las filas
 // las escriben las RPCs add/remove/reorder, que calculan la posición y ponen el tope de 15 fotos.
+import { randomUuid } from "../../shared/random-uuid";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { UPLOAD_FAILED_MESSAGE, type PhotosApi } from "../../domain/api";
 import { createLimiter } from "../../domain/concurrency";
@@ -20,7 +21,7 @@ export function createPostgrestPhotos(db: SupabaseClient<Database>, opts: { supa
 
   return {
     async upload(listingId, variants, onUploaded) {
-      const folder = photoFolder(listingId, crypto.randomUUID());
+      const folder = photoFolder(listingId, randomUuid());
       const done: string[] = [];
       const results = await Promise.allSettled(
         VARIANT_SIZES.map((size) =>

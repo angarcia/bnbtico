@@ -8,6 +8,11 @@
 /* Paso 2: la búsqueda flota arriba del mapa como una tarjeta (como la píldora de Explorar); su lista se abre debajo, sobre el
    mapa. El mapa llena el alto que queda. */
 .loc-map{position:relative;flex:1;min-height:200px;display:flex}
+@media (max-width:899px){
+  .loc-map-full-width{margin-inline:calc(-1 * var(--gutter));min-height:224px}
+  .loc-map-full-width .map-box{border-radius:0}
+  .loc-map-full-width ~ .place-line:empty{min-height:0;margin-block-start:-12px}
+}
 .loc-map > .place-search{position:absolute;top:10px;left:10px;right:10px;z-index:1000}
 .loc-map > .place-search input:not([type=checkbox]):not([type=file]):not([type=radio]){min-height:52px;border-radius:var(--float-r);border-color:var(--float-edge);box-shadow:var(--float-shadow)}
 .location-hint{margin:0;line-height:1.3}

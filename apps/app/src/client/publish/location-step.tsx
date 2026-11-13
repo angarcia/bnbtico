@@ -40,7 +40,7 @@ function PlaceLine({ state, onRetry }: { state: LookupState; onRetry(): void }) 
 }
 
 /** `readOnly` (una edición en revisión): el mapa solo muestra el pin y no sale la indicación de tocarlo. */
-export function LocationStep({ listing: _listing, draft, readOnly = false }: { listing: Listing; draft: ListingDraft; readOnly?: boolean }) {
+export function LocationStep({ listing: _listing, draft, readOnly = false, fullWidth = false }: { listing: Listing; draft: ListingDraft; readOnly?: boolean; fullWidth?: boolean }) {
   const start = draft.lat !== null && draft.lng !== null ? { lat: draft.lat, lng: draft.lng } : null;
   const [pin, setPin] = useState<LatLng | null>(start);
   const [state, setState] = useState<LookupState>(start ? { status: "loading", point: start } : { status: "idle" });
@@ -89,7 +89,7 @@ export function LocationStep({ listing: _listing, draft, readOnly = false }: { l
   return (
     <>
       {/* La búsqueda flota sobre el mapa, como en Explorar (Ana, 2026-11-04): el mapa gana su alto. */}
-      <div className="loc-map">
+      <div className={fullWidth ? "loc-map loc-map-full-width" : "loc-map"}>
         <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} readOnly={readOnly} />
         <PlaceSearch
           label="Busque un pueblo, playa o barrio"

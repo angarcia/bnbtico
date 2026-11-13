@@ -80,7 +80,9 @@ test("con resultados: la nota al final de la rejilla; sin zona (todo el país) e
   // Después de la rejilla y de la tarjeta para publicar (revisión UX 2026-10-29, A8; llega en su trozo), al final de todo.
   await expect(page.getByTestId("publish-promo")).toBeVisible();
   expect(await note.evaluate((el) => (el.previousElementSibling as HTMLElement | null)?.dataset.testid)).toBe("publish-promo");
-  expect(await page.getByTestId("publish-promo").evaluate((el) => !!el.parentElement?.querySelector(".listing-grid"))).toBe(true);
+  const grid = (await page.locator(".listing-grid").boundingBox())!;
+  const promo = (await page.getByTestId("publish-promo").boundingBox())!;
+  expect(promo.y).toBeGreaterThanOrEqual(grid.y + grid.height);
   await note.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/resultados-412.png` });
   await page.setViewportSize({ width: 360, height: 800 });

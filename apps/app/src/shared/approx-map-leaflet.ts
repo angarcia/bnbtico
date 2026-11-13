@@ -9,6 +9,6 @@ const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">Op
 export function drawApproxMap(el: HTMLElement, lat: number, lng: number): () => void {
   const map = L.map(el, { zoomControl: false, dragging: false, scrollWheelZoom: false, touchZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false }).setView([lat, lng], 14);
   L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
-  L.circle([lat, lng], { radius: APPROX_MAX_METERS, color: "#D65C3C", weight: 2, fillColor: "#D65C3C", fillOpacity: 0.18 }).addTo(map);
+  L.circle([lat, lng], { radius: APPROX_MAX_METERS, color: "var(--brand)", weight: 2, fillColor: "var(--brand)", fillOpacity: 0.18 }).addTo(map);
   return () => map.remove();
 }

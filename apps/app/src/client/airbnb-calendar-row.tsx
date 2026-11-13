@@ -1,3 +1,4 @@
+import { randomUuid } from "../shared/random-uuid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type { Listing } from "../domain/listing";
@@ -56,7 +57,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   const [problem, setProblem] = useState<string | null>(null);
   const active = useRef(true);
   const inFlight = useRef(false);
-  const request = useRef(crypto.randomUUID());
+  const request = useRef(randomUuid());
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   const current = () => active.current && sessionState().session?.userId === userId;
   const running = updating || info.data?.state === "running";

@@ -28,20 +28,22 @@ function AboutContent() {
 
   return (
     <div className="about-3bstays">
-      <header role="banner" className="about-brand">
-        <Link to="/explorar" replace aria-label="3bstays, inicio">
-          <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
-        </Link>
-      </header>
-      <section className="about-guest" aria-labelledby="about-guest-title">
-        <h1 id="about-guest-title">¿Busca alojamiento en Costa Rica?</h1>
-        <p className="about-guest-line">
-          Encuentre <Link to="/explorar" replace aria-label="Aquí, explorar alojamientos">aquí</Link> su alojamiento{" "}
-          <img src="/logo-horizontal.png" alt="3bstays" width={66} height={23} />
-        </p>
-        <p className="about-slogan">Bueno, bonito y bien tico.</p>
-        <p className="about-intro">Reserve directo con el anfitrión por WhatsApp, sin comisiones de plataforma.</p>
-      </section>
+      <div className="about-top">
+        <header role="banner" className="about-brand">
+          <Link to="/explorar" replace aria-label="3bstays, inicio">
+            <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
+          </Link>
+        </header>
+        <section className="about-guest" aria-labelledby="about-guest-title">
+          <h1 id="about-guest-title">¿Busca alojamiento en Costa Rica?</h1>
+          <p className="about-guest-line">
+            Encuentre <Link to="/explorar" replace aria-label="Aquí, explorar alojamientos">aquí</Link> su alojamiento{" "}
+            <img src="/logo-horizontal.png" alt="3bstays" width={66} height={23} />
+          </p>
+          <p className="about-slogan">Bueno, bonito y bien tico.</p>
+          <p className="about-intro">Reserve directo con el anfitrión por WhatsApp, sin comisiones de plataforma.</p>
+        </section>
+      </div>
       <section className="about-owner stack" aria-labelledby="about-owner-title">
         <h2 id="about-owner-title">¿Tiene una casa en Costa Rica?</h2>
         <p>Publique su casa{months ? " gratis" : ""} y reciba consultas por WhatsApp, sin comisiones ni cargos por reserva.</p>
@@ -54,11 +56,9 @@ function AboutContent() {
         <p>Una reserva de fin de semana lo paga.</p>
         <p className="about-terms">Sin comisiones ni permanencia.</p>
       </section>
-      {months && (
-        <Link to="/publicar" className="about-offer-link">
-          Publique ahora y obtenga {months} meses gratis
-        </Link>
-      )}
+      <Link to="/publicar" className="about-offer-link">
+        {months ? `Publique ahora y obtenga ${months} meses gratis` : "Publique su casa ahora"}
+      </Link>
     </div>
   );
 }

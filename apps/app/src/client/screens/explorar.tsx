@@ -196,12 +196,16 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
             ))}
           </div>
           <MapLabel target={mapBox} hidden={mapOpen} onOpen={() => openMap(null)} />
-          {owner ? null : (
-            <Suspense fallback={null}>
-              <PublishPromoCard />
-            </Suspense>
-          )}
-          <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} />
+          {!owner || SUPPORT_NUMBERS.guest ? (
+            <div className="explore-footer-cards">
+              {owner ? null : (
+                <Suspense fallback={null}>
+                  <PublishPromoCard />
+                </Suspense>
+              )}
+              <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} />
+            </div>
+          ) : null}
         </>
       )}
       {mapOpen && listings ? (

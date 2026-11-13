@@ -70,7 +70,9 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(pill).toHaveAttribute("href", `/propietario/casas/${id}/editar/fotos`);
   const photoControl = (await pill.boundingBox())!;
   expect(Math.min(photoControl.width, photoControl.height)).toBeGreaterThanOrEqual(44);
-  expect((await page.locator(".detail-photo").boundingBox())!.x).toBe(12);
+  const photo = (await page.locator(".detail-photo").boundingBox())!;
+  expect(photo.x).toBe(0);
+  expect(photo.width).toBeCloseTo(page.viewportSize()!.width, 0);
   await expect(page.locator(".detail-photo .state")).toHaveText("Activa");
   const share = page.getByRole("button", { name: "Compartir ficha" });
   await expect(share).toHaveClass(/btn-primary/); // mismo acabado de Compartir que en Mis casas

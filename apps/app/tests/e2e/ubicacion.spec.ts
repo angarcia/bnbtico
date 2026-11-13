@@ -41,9 +41,14 @@ async function expectNoScroll(page: Page, what: string) {
 }
 
 const line = (page: Page) => page.locator(".place-line");
-const zone = (page: Page) => page.getByRole("combobox", { name: "Zona", exact: true });
+const zone = (page: Page) => page.getByTestId("zone-picker-trigger");
 const search = (page: Page) => page.getByRole("combobox", { name: "Busque un pueblo, playa o barrio" });
-const chosen = (page: Page) => zone(page).locator("option:checked");
+const chosen = (page: Page) => zone(page).locator(".picker-name");
+const zoneSheet = (page: Page) => page.getByRole("dialog", { name: "Elegir zona" });
+async function chooseZone(page: Page, name: string) {
+  await zone(page).click();
+  await zoneSheet(page).getByRole("option", { name, exact: true }).click();
+}
 const continuar = (page: Page) => page.getByRole("button", { name: "Continuar" });
 
 /** Centro del mapa (al abrir con pin, el pin está ahí, a zoom 13). */
@@ -101,7 +106,9 @@ test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ 
   expect(Math.abs(pin.lat - COCLES.lat)).toBeLessThan(0.001);
   expect(Math.abs(pin.lng - COCLES.lng)).toBeLessThan(0.001);
   // Las zonas a 5 km o menos, la más cercana primero; luego el distrito; al final «Otra…».
-  const names = await zone(page).locator("option").allTextContents();
+  await zone(page).click();
+  const names = await zoneSheet(page).getByRole("option").allTextContents();
+  await zoneSheet(page).getByRole("button", { name: "Cerrar" }).click();
   expect(names[0]).toBe("Cocles");
   expect(names).toContain("Puerto Viejo");
   expect(names).not.toContain("Manzanillo");
@@ -115,7 +122,7 @@ test("busca Cocles, toca el mapa: Talamanca, Limón y Cocles elegida", async ({ 
   await expectNoScroll(page, "paso 2");
 
   // Otra zona de la lista también vale; se guarda con su id y su origen, y el cantón que da el pin.
-  await zone(page).selectOption({ label: "Puerto Viejo" });
+  await chooseZone(page, "Puerto Viejo");
   await continuar(page).click();
   await expect(page).toHaveURL(/\/4$/);
   await expect.poll(async () => (await h.owner("owner").getOwn(id))?.zoneId).toBe("704-puerto-viejo");
@@ -203,7 +210,7 @@ test("Otra… con un nombre inventado y Usar", async ({ page }) => {
   const photon = photonCalls(page);
   await page.goto(`/propietario/publicar/${id}/2`);
   await expect(line(page)).toHaveText("Talamanca, Limón");
-  await zone(page).selectOption({ label: "Otra…" });
+  await chooseZone(page, "Otra…");
   const other = page.getByRole("combobox", { name: "Otra zona" });
   await expect(other).toBeFocused();
   await other.fill("Rancho Escondido");
@@ -262,7 +269,7 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
       }, { message: what })
       .toBe(true);
   }
-  await zone(page).selectOption({ label: "Otra…" });
+  await chooseZone(page, "Otra…");
   await expect(other).toBeFocused();
   await expect(chosen(page)).toHaveText("Otra…");
   await expect(continuar(page)).toBeEnabled(); // «Continuar» ya no espera a la zona: se avisa al revisar y enviar
@@ -286,20 +293,21 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await expect(other).toHaveCount(0);
   await expect(chosen(page)).toHaveText("Cerca del río");
   await expect(continuar(page)).toBeEnabled();
-  expect(await zone(page).evaluate((el: HTMLSelectElement) => el.selectedOptions[0]?.text)).toBe("Cerca del río");
   await expect(page.locator('input[name="zoneSource"]')).toHaveValue("other");
   // «Otra…» sigue para cambiarla.
-  await expect(zone(page).locator("option").last()).toHaveText("Otra…");
-  await zone(page).selectOption({ label: "Otra…" });
+  await zone(page).click();
+  await expect(zoneSheet(page).getByRole("option").last()).toHaveText("Otra…");
+  await zoneSheet(page).getByRole("button", { name: "Cerrar" }).click();
+  await chooseZone(page, "Otra…");
   await expect(chosen(page)).toHaveText("Otra…");
   // Abrir «Otra…» por error: volver a elegir «Cerca del río» la cierra y deja seguir.
-  await zone(page).selectOption({ label: "Cerca del río" });
+  await chooseZone(page, "Cerca del río");
   await expect(other).toHaveCount(0);
   await expect(chosen(page)).toHaveText("Cerca del río");
   await expect(continuar(page)).toBeEnabled();
   await expect(page.locator('input[name="zone"]')).toHaveValue("Cerca del río");
   // Escape en el campo de «Otra…» también la cierra y deja la zona de antes.
-  await zone(page).selectOption({ label: "Otra…" });
+  await chooseZone(page, "Otra…");
   await expect(other).toBeFocused();
   await other.fill("Algo");
   await other.press("Escape"); // primero cierra la lista de sugerencias
@@ -307,8 +315,8 @@ test("Otra… en 375×667: el campo sube por encima de la barra (y del teclado),
   await expect(other).toHaveCount(0);
   await expect(chosen(page)).toHaveText("Cerca del río");
   await expect(continuar(page)).toBeEnabled();
-  await zone(page).selectOption({ label: "Otra…" });
-  await zone(page).selectOption({ label: "Cocles" });
+  await chooseZone(page, "Otra…");
+  await chooseZone(page, "Cocles");
   await expect(other).toHaveCount(0);
   await expect(chosen(page)).toHaveText("Cocles");
 });
@@ -317,8 +325,8 @@ test("Otra… con el nombre de una zona de la lista elige esa zona; Enter sin ma
   const id = await draftAt(COCLES);
   await page.goto(`/propietario/publicar/${id}/2`);
   await expect(line(page)).toHaveText("Talamanca, Limón");
-  await zone(page).selectOption({ label: "Puerto Viejo" });
-  await zone(page).selectOption({ label: "Otra…" });
+  await chooseZone(page, "Puerto Viejo");
+  await chooseZone(page, "Otra…");
   const other = page.getByRole("combobox", { name: "Otra zona" });
   await other.fill("cocles");
   await expect(page.getByRole("listbox", { name: "Otra zona" }).getByRole("option").last()).toHaveText('Usar "cocles"');
@@ -342,7 +350,7 @@ test("Otra…: las sugerencias de Photon que llegan después no cambian lo marca
   });
   await page.goto(`/propietario/publicar/${id}/2`);
   await expect(line(page)).toHaveText("Talamanca, Limón");
-  await zone(page).selectOption({ label: "Otra…" });
+  await chooseZone(page, "Otra…");
   const other = page.getByRole("combobox", { name: "Otra zona" });
   await other.fill("Playa Ch");
   const list = page.getByRole("listbox", { name: "Otra zona" });

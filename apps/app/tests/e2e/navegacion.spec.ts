@@ -447,7 +447,7 @@ test("densidad: márgenes de 16 px y la barra de abajo plana, pegada al borde, c
   const active = page.locator('.tabbar .nav[aria-current="page"]');
   await expect(active).toHaveCount(1);
   const on = await active.evaluate((el) => ({ color: getComputedStyle(el).color, icon: getComputedStyle(el.querySelector("svg")!).color }));
-  expect(on).toEqual({ color: "rgb(180, 76, 48)", icon: "rgb(214, 92, 60)" });
+  expect(on).toEqual({ color: "rgb(180, 76, 48)", icon: "rgb(180, 76, 48)" });
   // Escondida (html.chrome-away, al bajar; el desplazamiento lo prueban calendario.spec y explorar.spec) sale entera por abajo y
   // no responde; al quitarse, vuelve a su sitio.
   await page.evaluate(() => document.documentElement.classList.add("chrome-away"));

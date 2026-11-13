@@ -1,4 +1,5 @@
 // Preparación de la hoja de reservas. No abre otra vía de importación ni programa trabajos.
+import { randomUuid } from "../shared/random-uuid";
 import type { QueryClient } from "@tanstack/react-query";
 import type { AirbnbSummary } from "../domain/airbnb";
 import { DomainError, toDomainError } from "../domain/errors";
@@ -46,7 +47,7 @@ export async function prepareReservationCalendar(client: QueryClient, userId: st
     const age = summary.lastSuccessAt ? Date.now() - Date.parse(summary.lastSuccessAt) : Infinity;
     if (summary.connected && !wasRunning && (summary.errorCode || age < 0 || age >= RECENT_MS)) {
       try {
-        summary = await api.refresh(listingId, crypto.randomUUID());
+        summary = await api.refresh(listingId, randomUuid());
         current();
         client.setQueryData(overviewOptions.queryKey, summary);
       } catch (error) {

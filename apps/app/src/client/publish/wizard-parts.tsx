@@ -67,7 +67,7 @@ export function ChoiceCards({
 /** «¿Qué es?»: Alojamiento completo o Habitación (paso 1), en un campo `kind`. */
 export function KindChoice({ kind }: { kind: Kind | null }) {
   return (
-    <section className="stack">
+    <section className="stack publish-kind">
       <h2>¿Qué es?</h2>
       <ChoiceCards
         name="kind"

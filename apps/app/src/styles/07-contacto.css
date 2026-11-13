@@ -11,6 +11,10 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
   display:flex;flex-direction:column;gap:14px;padding:10px 20px calc(26px + env(safe-area-inset-bottom));border-radius:var(--r-sheet) var(--r-sheet) 0 0;background:var(--bg);
   box-shadow:0 -12px 30px -16px rgba(28,43,42,.45);animation:sheet-in 280ms var(--ease-drawer) backwards}
 .sheet:focus{outline:none}
+@media (max-width:899px){
+  .sheet[aria-labelledby="contact-title"]{padding-inline:12px}
+  .sheet[aria-labelledby="contact-title"] .sheet-head .icon-btn{margin-inline-end:0}
+}
 /* `.kb`: sitio extra mientras un campo con teclado tiene el foco (iPhone no encoge la vista): el campo sube por encima. */
 .sheet.kb{padding-bottom:calc(26px + 320px + env(safe-area-inset-bottom))}
 .sheet textarea,.sheet input{scroll-margin-top:16px}

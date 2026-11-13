@@ -1,3 +1,4 @@
+import { randomUuid } from "../shared/random-uuid";
 import { onlineManager, queryOptions, type QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { authApi } from "./session";
@@ -41,13 +42,13 @@ export async function updateAirbnbCalendar(
     client.setQueryData(airbnbQuery(userId, listingId).queryKey, data);
     if (data.state === "running") return;
     if (!data.connected || data.errorCode) throw new DomainError("No pudimos completar la actualización. Revise el estado.", "validation");
-    request.current = crypto.randomUUID();
+    request.current = randomUuid();
     await refreshAirbnbCalendar(client, userId, listingId, publicId);
     if (current()) toast("Calendario actualizado");
   } catch (error) {
     if (!current()) return;
     const problem = toDomainError(error);
-    if (problem.kind === "validation") request.current = crypto.randomUUID();
+    if (problem.kind === "validation") request.current = randomUuid();
     onError(problem.message);
     try {
       const data = await (await airbnbApi()).overview(listingId);

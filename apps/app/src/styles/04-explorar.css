@@ -39,7 +39,7 @@
 @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-btn,.map-label,.map-count{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}}
 /* «Ver ficha» (ronda de Ana 2 nov, ticket 05): fijo abajo, en una pantalla sin barra de pestañas (--chrome-bottom: a 12 px del
    borde). La pantalla deja debajo el botón y 16 px de aire para que lo último se lea por encima. */
-.float-btn{position:fixed;bottom:var(--chrome-bottom);z-index:5;text-decoration:none}
+.float-btn{position:fixed;bottom:var(--chrome-bottom);left:50%;right:auto;margin:0;translate:-50% 0;z-index:5;text-decoration:none}
 .view:has(> .float-btn){padding-bottom:calc(var(--float-bottom) + 44px + 16px)}
 /* «Mapa», a 12 px sobre la barra de pestañas; baja con ella (`html.chrome-away`) hasta 12 px del borde, con su misma transición. */
 .map-label{position:fixed;bottom:calc(var(--float-bottom) + var(--nav-h));z-index:5;transition:transform 240ms var(--ease-out);animation:fade-in 160ms var(--ease-out)}
@@ -146,3 +146,7 @@ html.map-open{overflow:hidden}
 
 .map-card-text > .card-capacity{white-space:normal;overflow:visible}
 .map-card-text > .card-zone{white-space:normal;overflow-wrap:anywhere}
+.explore-footer-cards{display:grid;gap:14px}
+@media (max-width:899px){
+  .explore-footer-cards{margin-inline:calc(3px - var(--gutter))}
+}

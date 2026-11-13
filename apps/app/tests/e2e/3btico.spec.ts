@@ -30,7 +30,10 @@ test("3Btico se abre sin sesión y conserva la navegación a 320 px", async ({ p
 
   await page.getByRole("link", { name: "Aquí, explorar alojamientos" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
-  await info.click();
+  // Al bajar para comprobar el enlace de la oferta, la barra puede quedar oculta.
+  // El foco de teclado vuelve a mostrarla y permite cambiar de pestaña.
+  await info.press("Enter");
+  await expect(info).toHaveAttribute("aria-current", "page");
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page).toHaveURL(/\/favoritos$/);
   await info.click();

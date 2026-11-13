@@ -3,6 +3,7 @@
 .strong{font-weight:var(--w-medium)}
 .label-plain{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
 .choice{cursor:pointer}
+.publish-kind .choice[aria-pressed="false"]{border:1px solid var(--line);padding:15px}
 .counters{padding:0;border-radius:var(--r-tile)}
 /* Publicar: título y cierre arriba; progreso y cuenta en sus propias filas. */
 .wizard-heading{display:flex;flex-direction:column;gap:8px;flex:none}
@@ -83,3 +84,11 @@
 
 /* Aviso de versión nueva (service worker): se apoya en la barra de abajo (--chrome-bottom) o, sin ella, a 12 px del borde. */
 .update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:7}
+@media (max-width:899px){
+  .publish-flow{--gutter:12px}
+  .publish-flow .header-flow{margin-inline:0}
+  .publish-flow .flow{padding-inline:0}
+  .edit-photos-flow{--gutter:12px}
+  .edit-photos-flow .header-flow{margin-inline:0}
+  .edit-photos-flow .photos-scroll{margin-inline:calc(-1 * var(--gutter));padding-inline:0}
+}

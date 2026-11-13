@@ -112,7 +112,7 @@ export function CasasScreen() {
         <>
           <NoticeCard notice={notice} billing={billing} />
           {/* «Nueva casa» junto a las cifras, sin fondo verde: recuadro con la línea fina (revisión UX 2026-10-29, T2). */}
-          <div className="tiles-row">
+          <div className="tiles-row my-houses-summary">
             {tiles.length ? (
               <div className="grid-3">
                 {tiles.map((t) =>

@@ -7,7 +7,8 @@
 // Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
+import { useFormKeyboard } from "../publish/form-keyboard";
 import { isBlocked, isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
 import { planEdit } from "../../domain/edit-plan";
@@ -78,6 +79,8 @@ export function EditarCampoScreen() {
 }
 
 function EditFieldForm({ listing, field, userId }: { listing: Listing; field: FormField; userId: string }) {
+  const form = useRef<HTMLFormElement>(null);
+  const keyboard = useFormKeyboard(form);
   const toFicha = useBackToFicha(listing.id);
   const live = useUpdateLive(userId, listing);
   const edit = useSaveEdit(userId, listing);
@@ -117,7 +120,7 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   }
 
   return (
-    <form key={frozen ?? version} onSubmit={onSubmit} onInputCapture={touch} onClickCapture={touch} className="publish-form" noValidate>
+    <form ref={form} key={frozen ?? version} onSubmit={onSubmit} onInputCapture={touch} onClickCapture={touch} {...keyboard} className="publish-form" noValidate>
       {/* De qué casa es el cambio, bajo el título. */}
       <p className="small muted edit-house">{listing.title}</p>
       {error ? (
@@ -204,7 +207,7 @@ function KindInputs({ draft }: { draft: ListingDraft }) {
   // Un tipo de antes (casa, apartamento) cuenta como Alojamiento completo, como en el paso 1 del asistente (KindChoice).
   const [kind, setKind] = useState<Kind | null>(draft.kind === "habitacion" ? "habitacion" : draft.kind && "completo");
   return (
-    <>
+    <div className="stack publish-kind">
       <ChoiceCards
         name="kind"
         type="radio"
@@ -216,7 +219,7 @@ function KindInputs({ draft }: { draft: ListingDraft }) {
         ]}
       />
       {kind === "habitacion" ? <BathroomChoice shared={draft.bathroomShared} /> : null}
-    </>
+    </div>
   );
 }
 
@@ -230,7 +233,7 @@ function FieldInputs({ field, draft, listing }: { field: FormField; draft: Listi
     case "tipo":
       return <KindInputs draft={draft} />;
     case "ubicacion":
-      return <LocationStep listing={listing} draft={draft} />;
+      return <LocationStep listing={listing} draft={draft} fullWidth />;
     case "capacidad":
       return <CapacityCounters draft={draft} />;
     case "caracteristicas":

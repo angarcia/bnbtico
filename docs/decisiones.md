@@ -1,6 +1,14 @@
+## 2026-11-12 · Terracota de la interfaz web
+
+Ana fija el terracota de la interfaz web en `#B44C30` para el tema claro. El tema oscuro conserva sus variantes de contraste.
+
 ## 2026-11-12 · 3Btico en la barra de visitantes (Ana)
 
 3Btico es la entrada sin sesión y la primera pestaña para visitantes y viajeros con cuenta. Al ingresar o abrir la app con sesión, la entrada habitual es Explorar. Las cuentas con al menos una casa, incluido un borrador, usan la barra de anfitrión sin 3Btico y su enlace directo lleva a Explorar. Al cerrar sesión desde Cuenta se vuelve a 3Btico. Una sesión confirmada mientras 3Btico está abierto lleva a Explorar. Se mantienen los destinos explícitos de los flujos de ingreso y la bienvenida de una cuenta nueva. La pantalla destaca el contacto directo por WhatsApp, la publicación de casas y la oferta vigente.
+
+## 2026-11-12 · Tipo de alojamiento debajo del título
+
+En las tarjetas de Explorar y Favoritos, «Alojamiento completo» o «Habitación» vuelve a ir en su propia línea, alineado a la izquierda debajo del nombre y encima de la zona.
 
 ## 2026-11-12 · Consultas deja de guardar el texto del mensaje (Ana)
 

@@ -9,26 +9,28 @@ export interface HouseOption {
 }
 
 /** Selector común de Consultas y Calendario. La pantalla conserva sus reglas de casas elegibles y su navegación. */
-export function HousePicker({ houses, currentId, onPick, allowAll = false, currentName }: {
+export function HousePicker({ houses, currentId, onPick, allowAll = false, currentName, zone = false }: {
   houses: readonly HouseOption[];
   currentId: string | null;
   onPick(id: string | null): void;
   allowAll?: boolean;
   /** Una casa de la URL aún fuera de la caché de casas, pero presente en las consultas. */
   currentName?: string;
+  zone?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
+  const title = zone ? "Elegir zona" : allowAll ? "Filtrar por casa" : "Elegir casa";
   const name = houses.find((h) => h.id === currentId)?.name ?? currentName ?? (currentId === null && allowAll ? "Todas las casas" : "Casa seleccionada");
   return (
     <div className="house-picker">
-      <button type="button" className="picker-pill" data-testid="house-picker-trigger" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} title={name}
+      <button type="button" className="picker-pill" data-testid={zone ? "zone-picker-trigger" : "house-picker-trigger"} aria-label={zone ? `Zona, ${name}` : undefined} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} title={name}
         onClick={() => setOpen(true)} onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); } }}>
-        <I.house size={20} />
+        {zone ? <I.pin size={20} /> : <I.house size={20} />}
         <span className="picker-name">{name}</span>
         <span className="picker-arrow"><I.chevronDown size={18} /></span>
       </button>
-      {open ? <HousePickerSheet id={id} houses={houses} currentId={currentId} allowAll={allowAll} onClose={() => setOpen(false)} onPick={(next) => {
+      {open ? <HousePickerSheet id={id} title={title} houses={houses} currentId={currentId} allowAll={allowAll} onClose={() => setOpen(false)} onPick={(next) => {
         setOpen(false);
         if (next !== currentId) onPick(next);
       }} /> : null}
@@ -36,8 +38,9 @@ export function HousePicker({ houses, currentId, onPick, allowAll = false, curre
   );
 }
 
-function HousePickerSheet({ id, houses, currentId, allowAll, onPick, onClose }: {
+function HousePickerSheet({ id, title, houses, currentId, allowAll, onPick, onClose }: {
   id: string;
+  title: string;
   houses: readonly HouseOption[];
   currentId: string | null;
   allowAll: boolean;
@@ -50,7 +53,9 @@ function HousePickerSheet({ id, houses, currentId, allowAll, onPick, onClose }: 
     onClose,
     focusable: 'button:not([disabled]):not([tabindex="-1"])',
     trapEmpty: true,
-    returnFocus(opener) { if (opener?.isConnected) opener.focus({ preventScroll: true }); },
+    returnFocus(opener) {
+      if (opener?.isConnected && document.activeElement === document.body) opener.focus({ preventScroll: true });
+    },
   });
   useEffect(() => {
     sheet.current?.querySelector('[role="option"][aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
@@ -73,10 +78,10 @@ function HousePickerSheet({ id, houses, currentId, allowAll, onPick, onClose }: 
       <section id={id} ref={sheet} className="sheet house-picker-sheet" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} tabIndex={-1} onKeyDown={onKeyDown}>
         <span className="grabber" aria-hidden="true" />
         <div className="sheet-head">
-          <h2 id={`${id}-title`}>{allowAll ? "Filtrar por casa" : "Elegir casa"}</h2>
+          <h2 id={`${id}-title`}>{title}</h2>
           <button type="button" className="icon-btn" aria-label="Cerrar" title="Cerrar" onClick={onClose}><I.x size={22} /></button>
         </div>
-        <div className="house-picker-list" role="listbox" aria-label="Elegir casa" onKeyDown={move}>
+        <div className="house-picker-list" role="listbox" aria-label={title === "Elegir zona" ? title : "Elegir casa"} onKeyDown={move}>
           {options.map((h) => (
             <button key={h.id ?? "all"} type="button" role="option" aria-selected={h.id === currentId} tabIndex={h.id === focused ? 0 : -1}
               onFocus={() => setFocused(h.id)} onClick={() => onPick(h.id)}>

@@ -428,7 +428,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
       return (
         <>
           <h2>¿Dónde está su casa?</h2>
-          <LocationStep listing={listing} draft={draft} />
+          <LocationStep listing={listing} draft={draft} fullWidth />
         </>
       );
     case 4:

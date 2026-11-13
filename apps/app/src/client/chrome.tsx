@@ -43,6 +43,10 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   useHidingChrome();
   const bare = BARE_PATHS.has(pathname);
   const { status } = useSession();
+  const signInTab = pathname === "/cuenta" && status === "signed-out";
+  const narrowGutter = pathname === "/cuenta" && !signInTab;
+  const ownerInquiries = pathname === "/propietario/actividad";
+  const ownerCalendar = pathname === "/propietario/calendario";
   const { count } = useListingsCount();
   const tabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count });
   const pending = useReviewCount(tabs.some((t) => t.badge === "review"));
@@ -52,7 +56,7 @@ export function TabsFrame({ children }: { children: ReactNode }) {
   return (
     <div className="app">
       <UnderTopBar.Provider value={bare}>
-        <main className={bare ? "view is-bare" : "view"}>{children}</main>
+        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}`}>{children}</main>
       </UnderTopBar.Provider>
       <nav className={`tabbar chrome-hide${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
         {tabs.map(({ to, label, icon, exact, badge }) => {
@@ -71,7 +75,12 @@ export function TabsFrame({ children }: { children: ReactNode }) {
               aria-label={badge === "inquiries" && n > 0 ? `${label}, ${n} ${n === 1 ? "nueva" : "nuevas"}` : undefined}
             >
               <Icon size={26} />
-              <span>{label}</span>
+              {to === "/que-es-3bstays" ? (
+                <>
+                  <img className="nav-wordmark" src="/logo-horizontal.png" alt="" />
+                  <span className="sr-only">{label}</span>
+                </>
+              ) : <span>{label}</span>}
               {n > 0 ? (
                 <b className="nav-count num" data-testid={badge === "inquiries" ? "inquiries-badge" : undefined}>
                   {n}
@@ -91,9 +100,18 @@ const UnderTopBar = createContext(false);
 
 
 export function FlowFrame({ children }: { children: ReactNode }) {
+  const verifyingCode = useLocation({ select: ({ pathname }) => pathname === "/cuenta/codigo" });
+  const publishing = useLocation({ select: ({ pathname }) => /^(?:\/propietario)?\/publicar(?:\/|$)/.test(pathname) });
+  const ownerHouseDetail = useLocation({ select: ({ pathname }) => /^\/propietario\/casas\/[^/]+\/?$/.test(pathname) });
+  const editingPhotos = useLocation({ select: ({ pathname }) =>
+    /^\/propietario\/casas\/[^/]+\/editar\/fotos\/?$/.test(pathname)
+  });
+  const editingField = useLocation({ select: ({ pathname }) =>
+    /^\/propietario\/casas\/[^/]+\/editar\/[^/]+\/?$/.test(pathname)
+  });
   return (
-    <div className="app">
-      <main className="view no-nav">{children}</main>
+    <div className={editingPhotos ? "app edit-photos-flow" : publishing || editingField ? "app publish-flow" : "app"}>
+      <main className={`view no-nav${ownerHouseDetail ? " owner-house-detail" : verifyingCode ? " code-flow" : ""}`}>{children}</main>
     </div>
   );
 }

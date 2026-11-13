@@ -2,6 +2,7 @@
 // del borrador nuevo, lo deja en la caché con todo vacío y entra al paso 1 al instante. La fila se crea por detrás como el
 // primer guardado de esa casa en la cola (save-queue.ts): los guardados del paso 1 y siguientes esperan a que exista.
 // Si la base no la crea (sin red, el límite de borradores), se vuelve a la entrada con el mensaje y «Empezar».
+import { randomUuid } from "../../shared/random-uuid";
 import type { QueryClient } from "@tanstack/react-query";
 import { DomainError } from "../../domain/errors";
 import { emptyDraft, type Listing } from "../../domain/listing";
@@ -44,7 +45,7 @@ function provisional(id: string, ownerId: string): Listing {
 
 /** Empieza un borrador nuevo y devuelve su id ya (sin esperar a la base). `onLost`: la base no lo creó. */
 export function startDraft(client: QueryClient, userId: string, onLost: (id: string, message: string) => void): string {
-  const id = crypto.randomUUID();
+  const id = randomUuid();
   client.setQueryData(ownListingKey(userId, id), provisional(id, userId));
   const created = enqueueSave(id, async () => (await api()).createDraft(id));
   created.then(

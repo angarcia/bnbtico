@@ -13,6 +13,14 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .totp-qr{display:block;width:184px;height:184px;background:#fff;border-radius:8px;padding:8px}
 .totp-secret{font-size:17px;letter-spacing:.06em;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
 .account-card{gap:14px}
+@media (max-width:899px){
+  .view:is(.sign-in-tab,.code-flow){padding-inline:12px}
+  :is(.sign-in-tab,.code-flow) > .flow{padding-inline:0}
+  :is(.code-flow,.owner-house-detail) > .header-flow{margin-inline:0}
+  .view:is(.view-narrow-gutter,.owner-house-detail){padding-inline:3px}
+  .view.owner-inquiries{padding-inline:12px}
+  .owner-house-detail .detail-photo{margin-inline:-3px}
+}
 .account-name{font-size:21px}
 .verified{gap:6px;font-weight:var(--w-medium);flex-wrap:wrap}
 .account-skeleton{min-height:84px;display:flex;align-items:center}
@@ -68,7 +76,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
    tarjetas. Actividad comparte la cabeza de la tarjeta y no cambia. */
 .house-list{gap:16px}
 .house-list .house-card{padding:0 0 14px;overflow:hidden}
-.house-list>.house-card{margin-inline:0}
 .house-list .house-photo{border-radius:0}
 .house-list .house-card > :not(.house-photo){margin-inline:14px}
 /* Revisión de Ana 2026-11-06: tarjeta compacta y divisor neutro, conservando las casillas de estados de arriba. */
@@ -159,7 +166,9 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .sub-row-detail{flex-basis:100%}
 
 /* Detalle editable móvil: portada enmarcada, fotos accesibles y cifras compactas. */
-.view:has(>.editable-ficha){padding-inline:12px}
+@media (min-width:900px){
+  .view:has(>.editable-ficha){padding-inline:12px}
+}
 .editable-ficha{min-width:0}
 .editable-ficha .photo-pill{display:inline-flex;align-items:center;gap:8px;min-width:44px;min-height:44px;max-width:calc(100% - 24px);padding:8px 12px;background:var(--bg);color:var(--primary);border-radius:8px;white-space:normal;line-height:1.3}
 .editable-ficha .photo-pill>svg{flex:none}

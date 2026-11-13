@@ -10,6 +10,21 @@
   font-size: 14px;
 }
 
+@media (max-width: 899px) {
+  .view:has(> .about-3bstays) {
+    padding-inline: 12px;
+  }
+}
+
+.about-top {
+  display: grid;
+  gap: 4px;
+}
+
+.about-brand {
+  display: flex;
+}
+
 .about-brand a {
   display: inline-flex;
   align-items: center;
@@ -18,7 +33,7 @@
 
 .about-brand img {
   width: auto;
-  height: 38px;
+  height: 42px;
 }
 
 .about-guest {
@@ -96,7 +111,7 @@
 @media (max-height: 700px) {
   .about-3bstays { gap: 8px; }
   .about-guest, .about-price { padding: 10px 12px; }
-  .about-brand img { height: 32px; }
+  .about-brand img { height: 36px; }
   .about-guest h1, .about-owner h2 { font-size: 21px; }
   .about-price h2 { font-size: 18px; }
   .about-guest-line { margin-top: 5px; }

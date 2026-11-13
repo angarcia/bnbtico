@@ -126,16 +126,14 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
     if (status.kind !== "sending") setStatus({ kind: "idle" });
   };
 
-  function changeDates({ arrival, departure }: RangeState) {
+  function changeDates(range: RangeState) {
     setRejected(false);
-    change({ type: "fields", patch: { arrival, departure } });
+    change({ type: "fields", patch: range });
     // La ficha comparte las fechas de la pestaña. Una llegada sola espera aquí su salida.
-    if (arrival && departure) {
-      stayDates.write({ arrival, departure });
-      setPicking(false);
-    } else {
-      stayDates.write(null);
-    }
+    const { arrival, departure } = range;
+    const complete = arrival && departure ? { arrival, departure } : null;
+    stayDates.write(complete);
+    if (complete) setPicking(false);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLElement>) {

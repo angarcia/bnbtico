@@ -90,8 +90,8 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.locator('input[name="lat"]')).not.toHaveValue("");
   await expect(page.locator(".place-line")).toHaveText("Limón, Limón");
   // La zona más cercana del pin, de la lista (zones), ya elegida.
-  const chosenZone = page.getByRole("combobox", { name: "Zona" }).locator("option:checked");
-  await expect(chosenZone).toHaveAttribute("value", /^list:701-/);
+  const chosenZone = page.getByTestId("zone-picker-trigger").locator(".picker-name");
+  await expect(page.locator('input[name="zoneId"]')).toHaveValue(/^701-/);
   const zoneName = (await chosenZone.textContent())!;
   await expectNoScroll(page, "paso 2 con el pin");
   await continuar(page);

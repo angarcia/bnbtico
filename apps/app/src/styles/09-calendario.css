@@ -5,6 +5,10 @@
 .month-grid{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
 .month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .month-grid,.month-head{margin-inline:calc(14px - var(--gutter))}
+@media (max-width:899px){
+  .owner-calendar{--gutter:12px}
+  .owner-calendar :is(.month-grid,.month-head){margin-inline:0}
+}
 .month-head{font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-align:center}
 .month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;height:92px;padding:14px 0 0;border:2px solid transparent;border-radius:12px;background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
 .month-grid .day b{font-size:14px;font-weight:500;line-height:1.2;color:color-mix(in srgb,currentColor 70%,transparent)}
