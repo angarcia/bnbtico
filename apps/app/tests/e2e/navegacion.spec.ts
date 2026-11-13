@@ -102,7 +102,7 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   await expect(page.getByTestId("activity-figures")).toHaveCount(0);
   await expect(page.locator("article.activity-card")).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 2, name: "Últimas consultas" })).toHaveCount(0);
-  const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
+  const inquiry = page.getByRole("article", { name: TEST_NAMES.other, exact: true });
   await expect(inquiry.getByRole("heading", { name: TEST_NAMES.other })).toBeVisible();
   await expect(inquiry).toContainText("AP");
   await expect(inquiry).toContainText("sin fechas · 2 personas");
@@ -130,7 +130,7 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   await page.waitForTimeout(1500); // la caché se guarda en IndexedDB con un pequeño retraso
   await page.route("**/rest/v1/**", (route) => route.abort());
   await page.reload();
-  await expect(page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" })).toBeVisible();
+  await expect(inquiry).toBeVisible();
   await page.unroute("**/rest/v1/**");
 
   // Las cifras de 30 días, en el detalle de la casa, bajo la portada.
@@ -144,7 +144,7 @@ test("7a · si las cifras no cargan, Consultas no se entera", async ({ page }) =
     route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ code: "PGRST202", message: "Could not find the function public.owner_activity" }) }),
   );
   await page.goto("/propietario/actividad");
-  const inquiry = page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" });
+  const inquiry = page.getByRole("article", { name: TEST_NAMES.other, exact: true });
   await expect(inquiry.getByRole("button", { name: "Abrir WhatsApp" })).toBeVisible();
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
@@ -152,7 +152,7 @@ test("7a · si las cifras no cargan, Consultas no se entera", async ({ page }) =
 test("7b · con dos casas: ninguna tarjeta de casa en Consultas; la que no está activa no aparece", async ({ page }) => {
   await h.seed({ status: "review", draft: { title: "Casa en revisión" } });
   await page.goto("/propietario/actividad");
-  await expect(page.getByRole("article").filter({ hasText: "Hola, ¿está libre?" })).toBeVisible();
+  await expect(page.getByRole("article", { name: TEST_NAMES.other, exact: true })).toBeVisible();
   await expect(page.locator(".activity-card")).toHaveCount(0);
   await expect(page.getByText("Casa en revisión")).toHaveCount(0);
   await page.screenshot({ path: "test-results/consultas-dos-casas.png", fullPage: true });
