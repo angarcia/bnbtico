@@ -18,10 +18,10 @@ async function me(db: SupabaseClient<Database>): Promise<string> {
 
 export function createPostgrestInquiries(db: SupabaseClient<Database>): InquiriesApi {
   return {
-    async create(publicId, draft) {
+    async create(publicId, details) {
       await me(db);
       // Los tipos generados no marcan los argumentos de la RPC como opcionales; la base acepta null en fechas y personas.
-      const args = { p_public_id: publicId, p_arrival: draft.arrival, p_departure: draft.departure, p_people: draft.people, p_message: draft.message };
+      const args = { p_public_id: publicId, p_arrival: details.arrival, p_departure: details.departure, p_people: details.people };
       const { data, error } = await db.rpc("create_inquiry", args as Database["public"]["Functions"]["create_inquiry"]["Args"]).single();
       if (error) throw toDomainError(error);
       return { inquiryId: data.inquiry_id, whatsappPhone: data.whatsapp_phone };
@@ -29,7 +29,7 @@ export function createPostgrestInquiries(db: SupabaseClient<Database>): Inquirie
 
     async listForOwner() {
       await me(db);
-      const { data, error } = await db.rpc("owner_inquiries");
+      const { data, error } = await db.rpc("owner_inquiry_details");
       if (error) throw toDomainError(error);
       return data.map((r) => ({
         id: r.id,
@@ -41,7 +41,6 @@ export function createPostgrestInquiries(db: SupabaseClient<Database>): Inquirie
         arrival: r.arrival ?? null,
         departure: r.departure ?? null,
         people: r.people ?? null,
-        message: r.message,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         openedAt: r.owner_opened_at ?? null,

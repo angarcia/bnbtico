@@ -182,7 +182,7 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   expect((await stats.boundingBox())!.height).toBeLessThanOrEqual(150);
   await h.recordViews(active.publicId, 4);
   await h.recordViews(active.publicId, 2, 45);
-  await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });
+  await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null });
   await page.goto("/robots.txt");
   await page.evaluate(() => new Promise<void>((resolve) => {
     const req = indexedDB.deleteDatabase("3bstays");
@@ -410,8 +410,8 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
   await h.reset();
   const a = await h.seed({ status: "active", draft: { title: "Casa del Caribe" } });
   const b = await h.seed({ status: "active", draft: { title: "Cabina del bosque" } });
-  await h.inquiries("other").create(a.publicId, { arrival: null, departure: null, people: 2, message: "Consulta de la casa del Caribe" });
-  const read = await h.inquiries("other").create(b.publicId, { arrival: null, departure: null, people: 2, message: "Consulta ya abierta del bosque" });
+  const unread = await h.inquiries("other").create(a.publicId, { arrival: null, departure: null, people: 2 });
+  const read = await h.inquiries("other").create(b.publicId, { arrival: null, departure: null, people: 2 });
   await h.inquiries("owner").markOpened(read.inquiryId);
   await page.goto("/propietario/casas");
   const aCard = card(page, "Casa del Caribe");
@@ -440,7 +440,7 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
   await aInquiries.click();
   await expect(page).toHaveURL("/propietario/actividad?casa=" + a.id);
   await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("article")).toContainText("Consulta de la casa del Caribe");
+  await expect(page.getByRole("article")).toHaveAttribute("aria-labelledby", `inquiry-${unread.inquiryId}`);
   // Ver la tarjeta desde el acceso de Mis casas baja el contador sin abrir WhatsApp.
   await expect.poll(async () => (await h.inquiries("owner").listForOwner()).find((i) => i.publicId === a.publicId)?.openedAt ?? null).not.toBeNull();
   await page.goto("/propietario/casas");

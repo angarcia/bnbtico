@@ -98,6 +98,7 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 
 **Comprobación de #7 (2026-11-10):** Ana vinculó el proyecto de pruebas `bpxiggdzgzolcazaaboj`, revisó un dry-run con únicamente `20261108220000_gestionar_calendarios.sql` y `20261109181419_proteger_reserva_calendario.sql` y aportó la aplicación correcta de ambas mediante `supabase db push --linked`. La conexión/exportación de #5/#6 ya estaban integradas en la rama base; esta comprobación corresponde a la gestión y protección de reservas. No acredita un nuevo despliegue de código ni la demora de sincronización de Airbnb real.
 
+- Para el cambio de Consultas del 2026-11-12, aplique la migración `20261112224100_consultas_sin_texto.sql` antes de desplegar la app. La migración elimina los textos históricos de `inquiries` y conserva las filas. Las pestañas abiertas siguen operando con las funciones de compatibilidad.
 - Los cambios de esquema van en **migraciones nuevas** (`pnpm exec supabase migration new <nombre>`), nunca editando `0001_init.sql`.
 - Los datos de prueba se borran antes del lanzamiento (`docs/plan-implementacion.md`, fase 7).
 - El proyecto de producción se crea en la fase 7 repitiendo estos pasos con `3bstays-prod`, variables en GitHub y Cloudflare (sección 10) y Twilio en modo producción o la API de Meta.

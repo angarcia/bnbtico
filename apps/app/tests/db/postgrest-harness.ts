@@ -171,7 +171,7 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       const created = await service.from("listings").insert(Array.from({ length: n }, (_, k) => ({ ...base, title: `Contactada ${k}` }))).select("id");
       fail("sembrar casas contactadas", created.error);
       const at = new Date(Date.now() - 3_600_000).toISOString();
-      const rows = created.data!.map((l) => ({ listing_id: l.id, client_id: ids[who], owner_id: ids[other], message: "Hola", whatsapp_phone: TEST_PHONES[other], created_at: at, updated_at: at }));
+      const rows = created.data!.map((l) => ({ listing_id: l.id, client_id: ids[who], owner_id: ids[other], whatsapp_phone: TEST_PHONES[other], created_at: at, updated_at: at }));
       fail("sembrar consultas", (await service.from("inquiries").insert(rows)).error);
     },
     anon: createPostgrestListings(anon, { supabaseUrl: localSupabase().url }),

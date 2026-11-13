@@ -90,11 +90,11 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   const text = (await messagePreview(s).textContent())!;
 
   // La RPC tarda: se ve «Abriendo WhatsApp…» y un doble toque no hace dos llamadas.
-  const rpc: string[] = [];
+  const rpc: unknown[] = [];
   let release!: () => void;
   const held = new Promise<void>((r) => (release = r));
   await page.route("**/rest/v1/rpc/create_inquiry", async (route) => {
-    rpc.push(route.request().url());
+    rpc.push(route.request().postDataJSON());
     await held;
     await route.continue();
   });
@@ -115,8 +115,8 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   release();
 
   await expect.poll(() => wa).toEqual([waExpected(TEST_PHONES.owner, text, casa.publicId, baseURL)]);
-  expect(rpc).toHaveLength(1);
-  expect(inquiries(casa.publicId, "i.arrival, i.departure, i.people, i.message")).toBe(`${a}|${b}|3|${text}`);
+  expect(rpc).toEqual([{ p_public_id: casa.publicId, p_arrival: a, p_departure: b, p_people: 3 }]);
+  expect(inquiries(casa.publicId, "i.arrival, i.departure, i.people")).toBe(`${a}|${b}|3`);
   await expect
     .poll(() => sql(`select count(*) from public.events where created_at >= '${since}' and name = 'inquiry_created' and listing_public_id = '${casa.publicId}'`))
     .toBe("1");
@@ -138,7 +138,7 @@ test("cliente con sesión: «Abriendo…» al instante, un solo vuelo, wa.me exa
   await openButton(page).click();
   await expect.poll(() => wa.length).toBe(2);
   expect(wa[1]).toBe(waExpected(TEST_PHONES.owner, fresh, casa.publicId, baseURL));
-  expect(inquiries(casa.publicId, "count(*), max(i.arrival::text), max(i.message)")).toBe(`1|${a}|${fresh}`);
+  expect(inquiries(casa.publicId, "count(*), max(i.arrival::text), max(i.departure::text)")).toBe(`1|${a}|${b}`);
 });
 
 test("una casa con un WhatsApp distinto del perfil: wa.me va al número de la casa (también desde la ficha de la SPA)", async ({ page, baseURL }) => {

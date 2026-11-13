@@ -93,7 +93,6 @@ export interface FakeInquiry {
   arrival: string | null;
   departure: string | null;
   people: number | null;
-  message: string;
   /** El WhatsApp de la casa entregado al cliente (copia; nunca se lee por REST). */
   whatsappPhone: string;
   createdAt: string;

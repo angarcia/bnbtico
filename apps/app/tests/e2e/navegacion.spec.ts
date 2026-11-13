@@ -97,7 +97,7 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
   await h.recordViews(casa.publicId, 4);
   await h.recordTaps(casa.publicId, 2);
-  await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: 2, message: "Hola, ¿está libre?" });
+  await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: 2 });
   await page.goto("/propietario/actividad");
   await expect(page.getByTestId("activity-figures")).toHaveCount(0);
   await expect(page.locator("article.activity-card")).toHaveCount(0);
@@ -171,7 +171,7 @@ test("7c · sin consultas: un único mensaje", async ({ page }) => {
 });
 
 test("el contador se va con la sesión y la consulta privada sale de la caché del dispositivo", async ({ page }) => {
-  await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: null, message: "Otra pregunta" });
+  await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: null });
   await page.goto("/propietario/casas");
   await expect(nav(page).getByTestId("inquiries-badge")).toHaveText("1");
   // Cuenta es la pestaña de la derecha (C4): la barra sigue a la vista.

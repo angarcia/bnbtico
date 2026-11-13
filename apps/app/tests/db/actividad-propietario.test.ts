@@ -44,7 +44,7 @@ describe("migración owner_activity", () => {
     expect((await service.from("events").insert(events)).error).toBeNull();
 
     for (const client of [other, admin]) {
-      const created = await client.rpc("create_inquiry", { p_public_id: active.public_id, p_arrival: null, p_departure: null, p_people: null, p_message: "Hola" } as never);
+      const created = await client.rpc("create_inquiry", { p_public_id: active.public_id, p_arrival: null, p_departure: null, p_people: null } as never);
       expect(created.error).toBeNull();
     }
     const adminId = (await admin.auth.getUser()).data.user!.id;

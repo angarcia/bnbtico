@@ -85,7 +85,7 @@ describe("admin · pausar, bloquear y eliminar · en la base", () => {
   it("una casa eliminada no la lee nadie por REST pero sus datos, fotos, consultas y suscripción siguen en la base", async () => {
     const s = await h.seed({ status: "active", draft: { title: "Casa a borrar" } });
     await h.favorites("other").add(s.publicId);
-    await h.inquiries("other").create(s.publicId, { arrival: null, departure: null, people: null, message: "Hola" });
+    await h.inquiries("other").create(s.publicId, { arrival: null, departure: null, people: null });
     expect((await admin.rpc("admin_delete_listing", { p_listing: s.id, p_reason: "Duplicada", p_confirm: s.publicId })).error).toBeNull();
 
     for (const db of [owner, admin, other]) {

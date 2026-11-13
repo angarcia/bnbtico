@@ -14,7 +14,6 @@ const inquiry = (id: string, openedAt: string | null = null): OwnerInquiry => ({
   arrival: null,
   departure: null,
   people: null,
-  message: "Hola",
   createdAt: "2026-10-23T12:00:00Z",
   updatedAt: "2026-10-23T12:00:00Z",
   openedAt,

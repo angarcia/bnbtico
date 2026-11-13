@@ -91,7 +91,7 @@ export function icalExportContract(name: string, make: () => Promise<{ h: Subscr
       const l = await h.seed({ status: "active" });
       const token = await generate(l.id);
       await h.calendar("owner").save(l.id, { days: [day(20)], priceCrc: 75000 });
-      await h.inquiries("other").create(l.publicId, { arrival: day(20), departure: day(22), people: 1, message: "Consulta de prueba" });
+      await h.inquiries("other").create(l.publicId, { arrival: day(20), departure: day(22), people: 1 });
       expect((await service.read(token))?.nights).toEqual([]);
       expect((await service.owner(await h.jwt("owner"), l.id, false)).nights).toBe(0);
     });

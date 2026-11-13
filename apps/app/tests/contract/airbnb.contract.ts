@@ -42,8 +42,8 @@ export function airbnbContract(name: string, make: () => Promise<{ h: Subscripti
       expect(busy.arrival).toBe(day(10));
       const found = await h.anon.searchPublic(busy);
       expect(found.some(r => r.id === l.id)).toBe(false);
-      await expect(h.inquiries("other").create(l.publicId, { arrival: day(10), departure: day(13), people: 1, message: "Consulta de prueba" })).rejects.toThrow("Hay noches ocupadas");
-      await expect(h.inquiries("other").create(l.publicId, { arrival: day(9), departure: day(10), people: 1, message: "Consulta de prueba" })).resolves.toHaveProperty("inquiryId");
+      await expect(h.inquiries("other").create(l.publicId, { arrival: day(10), departure: day(13), people: 1 })).rejects.toThrow("Hay noches ocupadas");
+      await expect(h.inquiries("other").create(l.publicId, { arrival: day(9), departure: day(10), people: 1 })).resolves.toHaveProperty("inquiryId");
       expect((await s.overview(await h.jwt("owner"), l.id)).nights).toBe(3);
     });
 

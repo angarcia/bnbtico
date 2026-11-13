@@ -46,7 +46,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .inquiry-body{gap:2px;min-width:0}
 .inquiry-head{min-height:24px}
 .inquiry-name{margin:0;font-family:var(--display);font-weight:var(--w-medium);font-size:19px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
-.inquiry-message{margin:4px 0 0;font-size:16px;overflow-wrap:anywhere}
 .badge-new{background:var(--sun-soft);color:var(--sun-ink);padding:2px 8px;font-size:13px}
 .nowrap{white-space:nowrap;flex-shrink:0}
 .inquiry-wa{display:inline-flex;align-items:center;justify-content:center;align-self:flex-end;gap:8px;min-height:44px;max-width:100%;padding:0 4px;background:transparent;color:var(--primary);font-family:inherit;font-weight:var(--w-medium);font-size:16px;text-decoration:none;white-space:normal}

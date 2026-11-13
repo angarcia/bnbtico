@@ -93,7 +93,7 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
       for (let k = 0; k < n; k++) {
         const l = db.insertListing(owners[other], { ...COMPLETE, status: "active", reviewedAt: db.now(), firstPublishedAt: db.now(), title: `Contactada ${k}` });
         const at = new Date(Date.now() - 3_600_000).toISOString();
-        db.inquiries.push({ id: db.newId(), listingId: l.id, clientId: owners[who], ownerId: owners[other], arrival: null, departure: null, people: null, message: "Hola", whatsappPhone: l.whatsappPhone, createdAt: at, updatedAt: at, ownerOpenedAt: null, source: "listing" });
+        db.inquiries.push({ id: db.newId(), listingId: l.id, clientId: owners[who], ownerId: owners[other], arrival: null, departure: null, people: null, whatsappPhone: l.whatsappPhone, createdAt: at, updatedAt: at, ownerOpenedAt: null, source: "listing" });
       }
     },
     anon: createFakeListings(db, { supabaseUrl: FAKE_SUPABASE_URL }),

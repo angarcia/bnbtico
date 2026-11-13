@@ -211,14 +211,14 @@ isOneToOne: true
                   ]
                 },"inquiries": {
                   Row: {
-                    "arrival": string | null,"client_id": string,"consent_share_phone": boolean,"created_at": string,"departure": string | null,"id": string,"listing_id": string,"message": string,"owner_id": string,"owner_opened_at": string | null,"people": number | null,"source": string,"updated_at": string,"whatsapp_phone": string
+                    "arrival": string | null,"client_id": string,"consent_share_phone": boolean,"created_at": string,"departure": string | null,"id": string,"listing_id": string,"owner_id": string,"owner_opened_at": string | null,"people": number | null,"source": string,"updated_at": string,"whatsapp_phone": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "arrival"?: string | null,"client_id": string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id": string,"message"?: string,"owner_id": string,"owner_opened_at"?: string | null,"people"?: number | null,"source"?: string,"updated_at"?: string,"whatsapp_phone": string
+                    "arrival"?: string | null,"client_id": string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id": string,"owner_id": string,"owner_opened_at"?: string | null,"people"?: number | null,"source"?: string,"updated_at"?: string,"whatsapp_phone": string
                   }
                   Update: {
-                    "arrival"?: string | null,"client_id"?: string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id"?: string,"message"?: string,"owner_id"?: string,"owner_opened_at"?: string | null,"people"?: number | null,"source"?: string,"updated_at"?: string,"whatsapp_phone"?: string
+                    "arrival"?: string | null,"client_id"?: string,"consent_share_phone"?: boolean,"created_at"?: string,"departure"?: string | null,"id"?: string,"listing_id"?: string,"owner_id"?: string,"owner_opened_at"?: string | null,"people"?: number | null,"source"?: string,"updated_at"?: string,"whatsapp_phone"?: string
                   }
                   Relationships: [
                     {
@@ -851,6 +851,10 @@ isOneToOne: true
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "create_inquiry":
+{ Args: { "p_arrival": string,"p_departure": string,"p_people": number,"p_public_id": string }; Returns: {
+              "inquiry_id": string,"whatsapp_phone": string
+            }[]
+                           } |
 { Args: { "p_arrival": string,"p_departure": string,"p_message": string,"p_people": number,"p_public_id": string }; Returns: {
               "inquiry_id": string,"whatsapp_phone": string
             }[]
@@ -1067,6 +1071,11 @@ isOneToOne: true
 "owner_inquiries":
 { Args: Record<PropertyKey, never>; Returns: {
               "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"message": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
+            }[]
+                           },
+"owner_inquiry_details":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "arrival": string,"client_name": string,"client_phone": string,"created_at": string,"departure": string,"id": string,"listing_id": string,"listing_title": string,"owner_opened_at": string,"people": number,"public_id": string,"source": string,"updated_at": string
             }[]
                            },
 "owner_listing_stats":

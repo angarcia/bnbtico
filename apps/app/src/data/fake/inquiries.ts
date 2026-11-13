@@ -1,9 +1,9 @@
 // Fake en memoria de las consultas y los favoritos: mismas reglas, orden de comprobaciones y mensajes que las RPCs
-// create_inquiry, mark_inquiry_opened y owner_inquiries y que las políticas de favorites (migración fase3_consultas).
+// create_inquiry, mark_inquiry_opened y owner_inquiry_details y que las políticas de favorites (migración fase3_consultas).
 // El reloj se inyecta (por defecto, el real) para la deduplicación de 7 días, el límite de 24 h y «hoy» en Costa Rica.
 import type { FavoritesApi, InquiriesApi } from "../../domain/api";
 import { DomainError } from "../../domain/errors";
-import { INQUIRY_MESSAGES as M, costaRicaToday, validateInquiryDraft } from "../../domain/inquiry";
+import { INQUIRY_MESSAGES as M, costaRicaToday, validateInquiryDetails } from "../../domain/inquiry";
 import { isPublicListing, type FakeDb, type FakeListing } from "./db";
 import { AIRBNB_BUSY_MESSAGE, fakeBusyNights } from "./airbnb";
 
@@ -42,7 +42,7 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
   const tick = clock(db, opts.now ?? (() => db.clock()));
 
   return {
-    async create(publicId, draft) {
+    async create(publicId, details) {
       const uid = session(opts);
       const profile = db.profiles.get(uid);
       if (!profile || !profile.isActive) throw new DomainError(M.inactiveAccount, "validation");
@@ -52,9 +52,9 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
       if (l.ownerId === uid) throw new DomainError(M.ownHouse, "validation");
       if (!l.available) throw new DomainError(M.unavailable, "validation");
       const now = tick();
-      const problem = validateInquiryDraft(draft, costaRicaToday(now));
+      const problem = validateInquiryDetails(details, costaRicaToday(now));
       if (problem) throw new DomainError(problem.message, "validation");
-      if (draft.arrival && draft.departure && fakeBusyNights(db, l.id, draft.arrival, draft.departure)) throw new DomainError(AIRBNB_BUSY_MESSAGE, "validation");
+      if (details.arrival && details.departure && fakeBusyNights(db, l.id, details.arrival, details.departure)) throw new DomainError(AIRBNB_BUSY_MESSAGE, "validation");
 
       const others = new Set(
         db.inquiries.filter((i) => i.clientId === uid && Date.parse(i.updatedAt) > now - RATE_WINDOW_MS && i.listingId !== l.id).map((i) => i.listingId),
@@ -62,7 +62,7 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
       if (others.size >= RATE_LIMIT) throw new DomainError(M.rateLimit, "validation");
 
       const at = new Date(now).toISOString();
-      const fields = { arrival: draft.arrival, departure: draft.departure, people: draft.people, message: draft.message.trim(), whatsappPhone: l.whatsappPhone };
+      const fields = { arrival: details.arrival, departure: details.departure, people: details.people, whatsappPhone: l.whatsappPhone };
       const recent = db.inquiries
         .filter((i) => i.clientId === uid && i.listingId === l.id && Date.parse(i.createdAt) > now - DEDUP_MS)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
@@ -94,7 +94,6 @@ export function createFakeInquiries(db: FakeDb, opts: Opts): InquiriesApi {
             arrival: i.arrival,
             departure: i.departure,
             people: i.people,
-            message: i.message,
             createdAt: i.createdAt,
             updatedAt: i.updatedAt,
             openedAt: i.ownerOpenedAt,

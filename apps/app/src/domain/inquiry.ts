@@ -30,10 +30,13 @@ export const INQUIRY_MESSAGES = {
 } as const;
 
 /** Lo que el cliente escribe en la hoja. Fechas `YYYY-MM-DD`. */
-export interface InquiryDraft {
+export interface InquiryDetails {
   arrival: string | null;
   departure: string | null;
   people: number | null;
+}
+
+export interface InquiryDraft extends InquiryDetails {
   message: string;
 }
 
@@ -43,7 +46,7 @@ export interface InquiryFields {
   people?: number | null;
 }
 
-/** Una consulta vista por el propietario (RPC owner_inquiries): con el nombre y el WhatsApp del cliente. */
+/** Una consulta vista por el propietario (RPC owner_inquiry_details): con el nombre y el WhatsApp del cliente. */
 export interface OwnerInquiry {
   id: string;
   listingId: string;
@@ -54,7 +57,6 @@ export interface OwnerInquiry {
   arrival: string | null;
   departure: string | null;
   people: number | null;
-  message: string;
   createdAt: string;
   updatedAt: string;
   /** Cuándo tocó el propietario «Abrir WhatsApp»; null = «Nueva». */
@@ -98,8 +100,9 @@ export function composeInquiryMessage(title: string, f: InquiryFields): string {
 
 export type InquiryField = "arrival" | "departure" | "people" | "message";
 
-/** El primer problema del borrador (en el orden de la RPC), o null si se puede enviar. */
-export function validateInquiryDraft(d: InquiryDraft, today: string): { field: InquiryField; message: string } | null {
+type InquiryProblem = { field: InquiryField; message: string };
+
+export function validateInquiryDetails(d: InquiryDetails, today: string): InquiryProblem | null {
   if (d.arrival && !d.departure) return { field: "departure", message: INQUIRY_MESSAGES.bothDates };
   if (!d.arrival && d.departure) return { field: "arrival", message: INQUIRY_MESSAGES.bothDates };
   if (d.arrival && d.departure) {
@@ -109,6 +112,12 @@ export function validateInquiryDraft(d: InquiryDraft, today: string): { field: I
     if (d.arrival < today) return { field: "arrival", message: INQUIRY_MESSAGES.arrivalPast };
   }
   if (d.people !== null && (!Number.isInteger(d.people) || d.people < 1 || d.people > INQUIRY_MAX_PEOPLE)) return { field: "people", message: INQUIRY_MESSAGES.people };
+  return null;
+}
+
+export function validateInquiryDraft(d: InquiryDraft, today: string): InquiryProblem | null {
+  const problem = validateInquiryDetails(d, today);
+  if (problem) return problem;
   const text = d.message.trim();
   if (!text) return { field: "message", message: INQUIRY_MESSAGES.messageEmpty };
   if (text.length > INQUIRY_MAX_MESSAGE) return { field: "message", message: INQUIRY_MESSAGES.messageLong };

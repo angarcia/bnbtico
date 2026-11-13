@@ -8,7 +8,7 @@ import type { Filters } from "./filters";
 import type { FxRate } from "./fx";
 import type { VariantSize } from "./image";
 import type { Feature, LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SearchListing, SitemapEntry, Step } from "./listing";
-import type { InquiryDraft, OwnerInquiry } from "./inquiry";
+import type { InquiryDetails, OwnerInquiry } from "./inquiry";
 import type { AdminHouses } from "./admin-houses";
 import type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./review";
 import type { NearZone, Place, Zone, ZoneWithListings } from "./zones";
@@ -312,7 +312,7 @@ export interface ListingsApi extends PublicListingsApi, OwnerListingsApi {
 // ---------- Consultas y favoritos (fase 3) ----------
 
 /**
- * Consultas por WhatsApp. Las reglas las pone la base (RPCs create_inquiry, mark_inquiry_opened y owner_inquiries; la
+ * Consultas por WhatsApp. Las reglas las pone la base (RPCs create_inquiry, mark_inquiry_opened y owner_inquiry_details; la
  * tabla no se escribe por REST); el fake las repite con los mismos mensajes (INQUIRY_MESSAGES). Sin sesión, todas fallan
  * con «Su sesión venció. Ingrese de nuevo.» (kind `session`) antes de llegar a la red.
  */
@@ -320,9 +320,9 @@ export interface InquiriesApi {
   /**
    * Registra (o renueva, si el mismo cliente escribió a esa casa en los últimos 7 días) la consulta y devuelve el WhatsApp
    * de la casa: es el único camino por el que un cliente obtiene ese número. Valida en la base (casa publicada y
-   * disponible, no propia, fechas, personas, mensaje, 20 casas distintas por día).
+   * disponible, no propia, fechas, personas y 20 casas distintas por día).
    */
-  create(publicId: string, draft: InquiryDraft): Promise<{ inquiryId: string; whatsappPhone: string }>;
+  create(publicId: string, details: InquiryDetails): Promise<{ inquiryId: string; whatsappPhone: string }>;
   /** Las consultas (Actividad): las de las casas del propietario de la sesión, con nombre y WhatsApp del cliente; la más reciente primero. */
   listForOwner(): Promise<OwnerInquiry[]>;
   /** El propietario abrió el chat: la consulta deja de ser «Nueva». Solo el dueño; si no, «No encontramos esa consulta.». */

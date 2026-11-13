@@ -1,3 +1,7 @@
+## 2026-11-12 · Consultas deja de guardar el texto del mensaje (Ana)
+
+El mensaje se prepara en el teléfono y se abre en WhatsApp desde la ficha. La consulta registra los datos de la estancia y del contacto. Se elimina la columna `inquiries.message` y su contenido histórico porque el borrador puede diferir de lo que el cliente termina enviando. Aplique la migración antes de desplegar la app. Las pestañas abiertas pueden seguir usando las funciones anteriores durante el cambio: la escritura descarta el texto y la lectura devuelve una cadena vacía.
+
 ## 2026-11-12 · Características disponibles en Filtros
 
 «Qué necesitan» ofrece las características que tenga al menos una casa visible en Explorar. Se usa el catálogo completo para que las opciones sean estables al cambiar zona, fechas, personas, tipo o precio. Si un enlace trae una característica que ya no se ofrece, esta sigue visible y seleccionada hasta que la persona la quite.

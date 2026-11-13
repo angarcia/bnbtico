@@ -8,7 +8,6 @@ import { useCallback, useEffect, useRef } from "react";
 import { toDomainError } from "../../domain/errors";
 import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../../domain/inquiry";
 import { filterInquiries, inquiryHouseOptions } from "../../domain/inquiry-filter";
-import { inquiryNote } from "../../domain/inquiry-note";
 import type { Listing } from "../../domain/listing";
 import { I } from "../../shared/icons";
 import { RootHeader } from "../chrome";
@@ -97,12 +96,11 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen }: { i
   const opening = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const isNew = !i.openedAt;
-  const note = inquiryNote(i);
   const nameId = `inquiry-${i.id}`;
   useEffect(() => {
     const el = heading.current;
     if (!el || i.openedAt || typeof IntersectionObserver === "undefined") return;
-    // Basta con ver el nombre completo, incluso en una tarjeta con una nota larga. No cuenta el área de la barra fija.
+    // Basta con ver el nombre completo. No cuenta el área de la barra fija.
     const bottom = document.querySelector(".tabbar")?.getBoundingClientRect().height ?? 0;
     let visible = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -154,7 +152,6 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen }: { i
           </div>
           <span className="small muted">{inquirySummary(i)}</span>
           {i.source === "support" ? <span className="badge badge-tight">Creada por 3bstays</span> : null}
-          {note ? <p className="inquiry-message">“{note}”</p> : null}
         </div>
       </div>
       <button type="button" className="btn-link inquiry-wa" onClick={open}>

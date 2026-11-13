@@ -7,7 +7,7 @@
 //   guarda en ningún sitio: ni caché, ni pestaña, ni balizas. Si la base dice que no, su mensaje en la hoja y nada se abre;
 //   si pide ingresar (sesión vencida o revocada), a Ingresar como sin sesión.
 import { signInToContact } from "../domain/contact-return";
-import { INQUIRY_MESSAGES, type InquiryDraft } from "../domain/inquiry";
+import { INQUIRY_MESSAGES, type InquiryDetails, type InquiryDraft } from "../domain/inquiry";
 import { publicUrl } from "../domain/share";
 import { waUrl } from "../domain/whatsapp";
 import { hasStoredSession } from "../data/storage";
@@ -27,14 +27,14 @@ export interface ContactContext {
   /** ¿Hay sesión guardada? Sin ella se sabe sin descargar supabase-js. Inyectable en pruebas, como lo que sigue. */
   hasSession?: () => boolean;
   /** Registra la consulta y devuelve el WhatsApp de la casa. Por defecto, `InquiriesApi` de supabase-js (trozo diferido). */
-  create?: (publicId: string, draft: InquiryDraft) => Promise<{ whatsappPhone: string }>;
+  create?: (publicId: string, details: InquiryDetails) => Promise<{ whatsappPhone: string }>;
   /** Abre WhatsApp. Por defecto, `location.assign`. */
   open?: (url: string) => void;
   /** Consulta registrada: baliza `inquiry_created`, solo con la casa. */
   created?: (publicId: string) => void;
 }
 
-const createInquiry = async (publicId: string, draft: InquiryDraft) => (await import("../client/supabase-data")).inquiriesApi().create(publicId, draft);
+const createInquiry = async (publicId: string, details: InquiryDetails) => (await import("../client/supabase-data")).inquiriesApi().create(publicId, details);
 
 export async function proceedToWhatsApp(ctx: ContactContext): Promise<ContactOutcome> {
   const { publicId, draft } = ctx;
@@ -44,7 +44,8 @@ export async function proceedToWhatsApp(ctx: ContactContext): Promise<ContactOut
   }
   let phone: string;
   try {
-    phone = (await (ctx.create ?? createInquiry)(publicId, draft)).whatsappPhone;
+    const { arrival, departure, people } = draft;
+    phone = (await (ctx.create ?? createInquiry)(publicId, { arrival, departure, people })).whatsappPhone;
   } catch (e) {
     // Los errores del adaptador son DomainError (`kind`); cualquier otro es no haber podido bajar el trozo o llegar a la base.
     const kind = e instanceof Error && "kind" in e ? e.kind : null;

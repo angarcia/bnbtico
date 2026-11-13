@@ -366,11 +366,12 @@ test.describe("Actividad por casa", () => {
   });
 
   /** Una consulta nueva del cliente «other»; la base junta las de 7 días a la misma casa, así que se atrasa cada una. */
-  async function inquiry(publicId: string, message: string, days: number) {
-    const { inquiryId } = await h.inquiries("other").create(publicId, { people: 2, message, arrival: null, departure: null });
+  async function inquiry(publicId: string, days: number) {
+    const { inquiryId } = await h.inquiries("other").create(publicId, { people: 2, arrival: null, departure: null });
     await h.backdateInquiry(inquiryId, days);
+    return inquiryId;
   }
-  const inquiryCards = (page: Page) => page.getByRole("article").filter({ hasText: /Hola (Cocles|Cabina)/ });
+  const inquiryCards = (page: Page) => page.locator("article.inquiry-card");
   const picker = (page: Page) => page.getByTestId("house-picker-trigger");
   const options = (page: Page) => page.getByRole("listbox", { name: "Elegir casa" });
   async function choose(page: Page, name: string) {
@@ -384,8 +385,8 @@ test.describe("Actividad por casa", () => {
     const cabina = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Punta Uva" } });
     const cocles = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
     // La de Cabina es la más vieja: con 21 de Cocles más recientes, quedaría fuera de las 20 últimas si se filtrara después.
-    await inquiry(cabina.publicId, "Hola Cabina 0", 400);
-    for (let n = 0; n < 21; n++) await inquiry(cocles.publicId, `Hola Cocles ${n}`, 8 * (21 - n));
+    await inquiry(cabina.publicId, 400);
+    for (let n = 0; n < 21; n++) await inquiry(cocles.publicId, 8 * (21 - n));
     await owner(page);
     await page.goto("/propietario/actividad");
 
@@ -395,7 +396,7 @@ test.describe("Actividad por casa", () => {
       await expect(tag.locator("img")).toHaveCount(0);
       await expect(tag).toHaveText("Casa Cocles");
     }
-    const first = inquiryCards(page).filter({ hasText: "Hola Cocles 20" });
+    const first = inquiryCards(page).first();
     await expect(first).toContainText("sin fechas · 2 personas");
     await expect(first).not.toContainText("Casa Cocles ·");
 
@@ -413,7 +414,7 @@ test.describe("Actividad por casa", () => {
     await options(page).getByRole("option", { name: "Cabina Punta Uva", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/propietario/actividad\\?casa=${cabina.id}$`));
     await expect(inquiryCards(page)).toHaveCount(1);
-    await expect(inquiryCards(page)).toContainText("Hola Cabina 0");
+    await expect(inquiryCards(page)).toContainText("sin fechas · 2 personas");
     await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveCount(0);
     await expect(figures).toHaveCount(0);
     await page.reload();
@@ -440,33 +441,36 @@ test.describe("Actividad por casa", () => {
     await page.setViewportSize({ width: 375, height: 667 });
     const cocles = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
     const cabina = await h.seed({ status: "active", draft: { title: "Cabina Punta Uva" } });
-    await inquiry(cabina.publicId, "Hola Cabina 0", 0);
-    for (let n = 0; n < 8; n++) await inquiry(cocles.publicId, `Hola Cocles ${n}`, 8 * (7 - n));
-    const seen = async (message: string) => (await h.inquiries("owner").listForOwner()).find((i) => i.message === message)?.openedAt ?? null;
+    const otherId = await inquiry(cabina.publicId, 0);
+    const ids: string[] = [];
+    for (let n = 0; n < 8; n++) ids.push(await inquiry(cocles.publicId, 8 * (7 - n)));
+    const firstId = ids[7]!;
+    const lastId = ids[0]!;
+    const seen = async (id: string) => (await h.inquiries("owner").listForOwner()).find((i) => i.id === id)?.openedAt ?? null;
 
     await owner(page);
     await page.goto(`/propietario/actividad?casa=${cocles.id}`);
     const cards = inquiryCards(page);
-    const first = cards.filter({ hasText: "Hola Cocles 7" });
-    const last = cards.filter({ hasText: "Hola Cocles 0" });
+    const first = cards.filter({ has: page.locator(`[id="inquiry-${firstId}"]`) });
+    const last = cards.filter({ has: page.locator(`[id="inquiry-${lastId}"]`) });
     await expect(first).toBeInViewport();
     await expect(last).not.toBeInViewport();
-    await expect.poll(() => seen("Hola Cocles 7")).not.toBeNull();
+    await expect.poll(() => seen(firstId)).not.toBeNull();
     await expect(first.getByText("Nueva", { exact: true })).toHaveCount(0);
-    await expect(cards.first()).toContainText("Hola Cocles 7");
-    expect(await seen("Hola Cocles 0")).toBeNull();
-    expect(await seen("Hola Cabina 0")).toBeNull();
+    await expect(cards.first()).toHaveAttribute("aria-labelledby", `inquiry-${firstId}`);
+    expect(await seen(lastId)).toBeNull();
+    expect(await seen(otherId)).toBeNull();
 
     await last.scrollIntoViewIfNeeded();
-    await expect.poll(() => seen("Hola Cocles 0")).not.toBeNull();
+    await expect.poll(() => seen(lastId)).not.toBeNull();
     await expect(last.getByText("Nueva", { exact: true })).toHaveCount(0);
-    expect(await seen("Hola Cabina 0")).toBeNull();
+    expect(await seen(otherId)).toBeNull();
   });
 
   test("sin red, con ?casa= de una casa que no está en la caché: conserva casa y enseña sus consultas", async ({ page }) => {
     const cabina = await h.seed({ status: "active", photos: 5, draft: { title: "Cabina Punta Uva" } });
     await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
-    await inquiry(cabina.publicId, "Hola Cabina 0", 1);
+    await inquiry(cabina.publicId, 1);
     await owner(page);
     await page.goto("/propietario/actividad");
     await picker(page).click();
@@ -474,7 +478,7 @@ test.describe("Actividad por casa", () => {
     await page.getByRole("dialog", { name: "Filtrar por casa" }).getByRole("button", { name: "Cerrar", exact: true }).click();
     await page.waitForTimeout(1500); // la caché se guarda en IndexedDB sin la casa nueva
     const nueva = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Nueva" } });
-    await inquiry(nueva.publicId, "Hola Cocles nueva", 0);
+    await inquiry(nueva.publicId, 0);
     let hits = 0;
     await page.route("**/rest/v1/listings?**", (route) => {
       hits++;
@@ -485,12 +489,12 @@ test.describe("Actividad por casa", () => {
     await page.waitForTimeout(500);
     await expect(page).toHaveURL(new RegExp(`\\?casa=${nueva.id}$`));
     await expect(inquiryCards(page)).toHaveCount(1);
-    await expect(inquiryCards(page)).toContainText("Hola Cocles nueva");
+    await expect(inquiryCards(page)).toContainText("sin fechas · 2 personas");
   });
 
   test("con una sola casa: sin selector ni nombre de casa duplicado", async ({ page }) => {
     const cocles = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
-    await inquiry(cocles.publicId, "Hola Cocles 0", 0);
+    await inquiry(cocles.publicId, 0);
     await owner(page);
     await page.goto("/propietario/actividad");
     await expect(inquiryCards(page).getByTestId("inquiry-house")).toHaveCount(0);

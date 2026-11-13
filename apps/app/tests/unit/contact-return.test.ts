@@ -49,14 +49,14 @@ describe("«Abrir WhatsApp» con un borrador válido", () => {
     expect(navigate).toHaveBeenCalledOnce();
   });
 
-  it("con sesión: guarda el texto de la consulta y abre wa.me con el enlace de la ficha en la primera línea", async () => {
+  it("con sesión: registra solo los datos de la estancia y abre wa.me con el enlace de la ficha en la primera línea", async () => {
     const navigate = vi.fn();
     const open = vi.fn();
     const created = vi.fn();
     const create = vi.fn(async () => ({ inquiryId: "i1", whatsappPhone: "+506 6000-1234" }));
     const outcome = await proceedToWhatsApp({ ...contact, origin: "https://3bstays.com", navigate, hasSession: signedIn, create, open, created });
     expect(outcome).toEqual({ kind: "sent" });
-    expect(create).toHaveBeenCalledExactlyOnceWith("CT-1042", draft);
+    expect(create).toHaveBeenCalledExactlyOnceWith("CT-1042", { arrival: draft.arrival, departure: draft.departure, people: draft.people });
     expect(open).toHaveBeenCalledExactlyOnceWith(`https://wa.me/50660001234?text=${encodeURIComponent(`https://3bstays.com/casa/CT-1042\n\n${draft.message}`)}`);
     expect(created).toHaveBeenCalledExactlyOnceWith("CT-1042");
     expect(navigate).not.toHaveBeenCalled();

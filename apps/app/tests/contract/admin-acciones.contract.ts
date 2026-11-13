@@ -129,7 +129,7 @@ export function adminAccionesContract(name: string, makeHarness: () => Promise<S
         expect(await h.anon.blockedReason(s.publicId)).toBe("other");
         expect(await h.anon.getPublicDays(s.publicId)).toEqual([]);
         expect(await h.favorites("other").list()).toEqual([]);
-        expect((await rejection(h.inquiries("other").create(s.publicId, { arrival: null, departure: null, people: null, message: "Hola" }))).message).toBe(INQUIRY_MESSAGES.notPublished);
+        expect((await rejection(h.inquiries("other").create(s.publicId, { arrival: null, departure: null, people: null }))).message).toBe(INQUIRY_MESSAGES.notPublished);
 
         const mine = await ownerHouse(s.id);
         expect(mine).toMatchObject({ status: "active", adminHold: { kind: "paused", reason: REASON } });
@@ -300,7 +300,7 @@ export function adminAccionesContract(name: string, makeHarness: () => Promise<S
       it("desaparece para todos: propietario, contadores, calendario, consultas, favoritos, Explorar y sitemap", async () => {
         const s = await liked("Casa Eliminable");
         const keep = await h.seed({ status: "active", draft: { title: "Se queda" } });
-        await h.inquiries("other").create(s.publicId, { arrival: null, departure: null, people: null, message: "Hola, ¿está libre?" });
+        await h.inquiries("other").create(s.publicId, { arrival: null, departure: null, people: null });
         await h.favorites("other").add(keep.publicId);
         expect(await h.inquiries("owner").listForOwner()).toHaveLength(1);
 
