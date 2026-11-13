@@ -39,7 +39,7 @@
   --float-away:transform 240ms var(--ease-out),opacity 200ms var(--ease-out);
   --chrome-bottom:var(--float-bottom);
   --cal-free:color-mix(in srgb,var(--primary) 12%,var(--bg));/* El calendario mezcla el terracota con el fondo y usa --brand-ink para el texto. */
-  --cal-busy:color-mix(in srgb,var(--brand) 9%,var(--bg));--cal-busy-ink:var(--brand-ink);--when-pick:color-mix(in srgb,var(--brand) 50%,var(--bg));--when-pick-ink:#1C2B2A;--when-band:color-mix(in srgb,var(--brand) 9%,var(--bg));
+  --cal-busy:color-mix(in srgb,var(--brand) 5%,var(--bg));--cal-busy-ink:var(--brand-ink);--when-pick:color-mix(in srgb,var(--brand) 50%,var(--bg));--when-pick-ink:#1C2B2A;--when-band:color-mix(in srgb,var(--brand) 9%,var(--bg));
   /* La banda del rango elegido en el calendario de la ficha: la de «¿Cuándo?», translúcida para que el verde de los libres siga debajo (ronda de Ana 2 nov, ticket 08). */
   --stay-band:color-mix(in srgb,var(--brand) 14%,transparent);--stay-band-solid:color-mix(in srgb,var(--brand) 14%,color-mix(in srgb,var(--primary) 6%,var(--bg)));
   --ease-out:cubic-bezier(0.23,1,0.32,1);--ease-drawer:cubic-bezier(0.32,0.72,0,1);
