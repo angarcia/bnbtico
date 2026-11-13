@@ -92,6 +92,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   await expectNoCookies(page);
 
   await signOut(page);
+  await nav.getByRole("link", { name: "Ingresar" }).click();
   await expect(entryHeading(page)).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("3bstays-auth"))).toBeNull();
 
@@ -113,6 +114,7 @@ test("registro, código, Cuenta, editar, cerrar sesión y volver a entrar, sin u
   // Volver a entrar con un número que ya tiene cuenta no ofrece «¡Listo!» (solo sale al crear una cuenta).
   await page.goto("/cuenta");
   await signOut(page);
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" }).click();
   await page.getByLabel("Número de WhatsApp").fill("8888 9999");
   await page.waitForTimeout(1100);
   await page.getByRole("button", { name: "Recibir código por WhatsApp" }).click();
@@ -164,6 +166,7 @@ test("crear cuenta con un WhatsApp de otro país y volver a entrar con «Otro pa
   await expect(page.getByText("WhatsApp verificado", { exact: true })).toBeVisible();
 
   await signOut(page);
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" }).click();
   await page.getByLabel("País de su WhatsApp").selectOption("other");
   // El selector sigue a la vista (para volver a otro país) y dice «Otro».
   await expect(page.locator(".input-prefix .prefix-value")).toHaveText("Otro");
@@ -223,12 +226,13 @@ test("el canal de ayuda sigue a las casas: sin casas, el de clientes; con una, e
   await page.getByRole("link", { name: /Ayuda por WhatsApp/ }).click();
   await expect(page.getByText("atención a anfitriones")).toBeVisible();
 
-  // Cerrar sesión deja la app sin sesión para la siguiente persona: tres pestañas con «Ingresar» y la zona del propietario pide ingresar.
+  // Cerrar sesión deja la app sin sesión para la siguiente persona: cuatro pestañas con «Ingresar» y la zona del propietario pide ingresar.
   await page.goto("/cuenta");
   await signOut(page);
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" }).click();
   await expect(entryHeading(page)).toBeVisible();
   await page.goto("/explorar");
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Ingresar"]);
   await page.goto("/propietario");
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
   await expectNoCookies(page);

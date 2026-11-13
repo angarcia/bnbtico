@@ -13,7 +13,7 @@ function watchConsole(page: import("@playwright/test").Page) {
 
 test("el shell muestra la barra inferior y cambia de pestaña sin recargar", async ({ page }) => {
   const problems = watchConsole(page);
-  await page.goto("/");
+  await page.goto("/explorar");
   await expect(page).toHaveURL(/\/explorar$/);
   const nav = page.getByRole("navigation", { name: "Navegación principal" });
   await expect(nav.getByRole("link", { name: "Explorar" })).toHaveAttribute("aria-current", "page");
@@ -23,7 +23,7 @@ test("el shell muestra la barra inferior y cambia de pestaña sin recargar", asy
   await nav.getByRole("link", { name: "Favoritos" }).click();
   await expect(page).toHaveURL(/\/favoritos$/);
   await expect(page.getByRole("heading", { level: 1, name: "Favoritos" })).toBeVisible();
-  await expect(nav.getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
+  await expect(nav.getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Ingresar"]);
   // Revisión UX 2026-10-29 (C4): sin sesión, «Ingresar» es la pestaña de la derecha y abre Ingresar con la barra a la vista.
   await nav.getByRole("link", { name: "Ingresar" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Ingresar" })).toBeAttached();

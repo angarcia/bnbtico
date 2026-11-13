@@ -6,6 +6,12 @@ const S = (p: P, d = 20) => ({ ...base, width: p.size ?? d, height: p.size ?? d 
 
 // Iconos de línea del diseño v1 (design/pantallas): trazo 2, 24×24, color del texto.
 export const I = {
+  // Símbolo B de design/logo/3bstays-2026-11-10/icono.svg, con el margen ajustado a la barra.
+  brand: (p: P) => (
+    <svg {...S(p)} viewBox="30 23 196 196">
+      <path strokeWidth={17} d="M 82 54 C 103 49 135 51 153 58 C 166 63 167 70 157 80 L 111 126 C 148 123 176 142 176 165 C 176 191 145 205 111 202 C 99 201 89 198 82 193 L 82 102" />
+    </svg>
+  ),
   search: (p: P) => <svg {...S(p)}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>,
   heart: (p: P) => <svg {...S(p)}><path d="M12 21s-7-4.6-9.3-9A5.3 5.3 0 0 1 12 6.4 5.3 5.3 0 0 1 21.3 12C19 16.4 12 21 12 21z" /></svg>,
   user: (p: P) => <svg {...S(p)}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>,

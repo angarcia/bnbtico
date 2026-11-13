@@ -1,6 +1,7 @@
 // Reglas puras de la barra inferior y de la zona del propietario (parte de domain/navigation.ts, que las reexporta). En
 // un módulo propio porque van en el JS inicial: sin dependencias.
 export type TabPath =
+  | "/que-es-3bstays"
   | "/explorar"
   | "/favoritos"
   | "/propietario/casas"
@@ -10,7 +11,7 @@ export type TabPath =
   | "/admin/casas"
   | "/admin/usuarios"
   | "/cuenta";
-export type TabIcon = "search" | "heart" | "house" | "calendar" | "chat" | "inbox" | "pin" | "users" | "user";
+export type TabIcon = "brand" | "search" | "heart" | "house" | "calendar" | "chat" | "inbox" | "pin" | "users" | "user";
 export interface Tab {
   to: TabPath;
   label: string;
@@ -26,6 +27,7 @@ export const MAX_TABS = 5;
 // propietario deja Favoritos dentro de Cuenta para no pasar de cinco. Actividad se llama «Consultas» (C1; misma ruta).
 const ACCOUNT_TAB = { to: "/cuenta", label: "Cuenta", icon: "user", exact: false } as const satisfies Tab;
 const SIGN_IN_TAB = { ...ACCOUNT_TAB, label: "Ingresar" } as const satisfies Tab;
+const ABOUT_TAB = { to: "/que-es-3bstays", label: "3Btico", icon: "brand", exact: true } as const satisfies Tab;
 
 const CLIENT_TABS = [
   { to: "/explorar", label: "Explorar", icon: "search", exact: false },
@@ -51,10 +53,11 @@ const ADMIN_TABS = [
  *  casas → propietario («Mi casa» con una). */
 export function tabsFor(input: { session: boolean; isAdmin: boolean; listingsCount: number | undefined }): Tab[] {
   if (input.isAdmin) return [...ADMIN_TABS];
-  if (!input.session) return [...CLIENT_TABS, SIGN_IN_TAB];
+  if (!input.session) return [ABOUT_TAB, ...CLIENT_TABS, SIGN_IN_TAB];
   // Con una sola casa la pestaña dice «Mi casa»; con dos o más, «Mis casas» (misma ruta).
   if (input.listingsCount === 1) return OWNER_TABS.map((t) => (t.to === "/propietario/casas" ? { ...t, label: "Mi casa" } : t));
   if (input.listingsCount !== undefined && input.listingsCount > 1) return [...OWNER_TABS];
+  if (input.listingsCount === 0) return [ABOUT_TAB, ...CLIENT_TABS, ACCOUNT_TAB];
   return [...CLIENT_TABS, ACCOUNT_TAB];
 }
 

@@ -63,7 +63,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       setLogoutError(err.kind === "unknown" ? "No pudimos cerrar la sesión. Intente de nuevo." : err.message);
       return setLeaving(false);
     }
-    await navigate({ to: "/cuenta", replace: true });
+    await navigate({ to: "/que-es-3bstays", replace: true });
   }
 
   // La flecha vuelve adonde estaba; abierta directamente, a Mis casas con casas o a Explorar.

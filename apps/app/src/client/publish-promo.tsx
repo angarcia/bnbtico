@@ -8,12 +8,16 @@ import { MONTHLY_FEE_CRC, launchOffer } from "../domain/offer";
 import { I } from "../shared/icons";
 import { offerTakenQuery } from "./offer-query";
 
-function useOffer() {
+export function useOffer() {
   const taken = useQuery(offerTakenQuery);
   return taken.data === undefined ? undefined : launchOffer(taken.data);
 }
 
 const FEE = formatCRC(MONTHLY_FEE_CRC);
+
+export function PublishPromoButton({ label }: { label: string }) {
+  return <Link to="/publicar" className="btn btn-sun btn-block">{label}</Link>;
+}
 
 /** Al final de Explorar: estilo de la oferta (marrón dorado) y el botón en ocre. */
 export function PublishPromoCard() {
@@ -35,9 +39,7 @@ export function PublishPromoCard() {
       <span className="xs">
         {offer ? `Después, ${FEE} al mes por casa. ` : null}Sin comisiones; los clientes le escriben por WhatsApp.
       </span>
-      <Link to="/publicar" className="btn btn-sun btn-block">
-        {offer === null ? "Publicar mi casa" : "Publicar mi casa gratis"}
-      </Link>
+      <PublishPromoButton label={offer === null ? "Publicar mi casa" : "Publicar mi casa gratis"} />
     </section>
   );
 }

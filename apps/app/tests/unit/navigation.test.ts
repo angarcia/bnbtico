@@ -35,10 +35,10 @@ describe("byPendingAction (revisión UX 2026-10-29, A3)", () => {
 
 describe("tabsFor", () => {
   // Revisión UX 2026-10-29 (C4): la cuenta pasa a la barra de abajo; el propietario deja Favoritos dentro de Cuenta.
-  it("sin sesión: Explorar, Favoritos e Ingresar", () =>
-    expect(labels(tabsFor({ session: false, isAdmin: false, listingsCount: undefined }))).toEqual(["Explorar", "Favoritos", "Ingresar"]));
+  it("sin sesión: 3Btico, Explorar, Favoritos e Ingresar", () =>
+    expect(labels(tabsFor({ session: false, isAdmin: false, listingsCount: undefined }))).toEqual(["3Btico", "Explorar", "Favoritos", "Ingresar"]));
   it("cliente (cero casas) y lista aún sin leer: Explorar, Favoritos y Cuenta", () => {
-    expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: 0 }))).toEqual(["Explorar", "Favoritos", "Cuenta"]);
+    expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: 0 }))).toEqual(["3Btico", "Explorar", "Favoritos", "Cuenta"]);
     expect(labels(tabsFor({ session: true, isAdmin: false, listingsCount: undefined }))).toEqual(["Explorar", "Favoritos", "Cuenta"]);
   });
   it("propietario con un borrador: cinco, sin Favoritos, Consultas con el contador y Cuenta al final", () => {

@@ -53,14 +53,12 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
     try {
       const account = await (await authApi()).verify(code);
       queryClient.setQueryData(accountQuery(account.id).queryKey, account);
-      // La lista de casas antes de navegar: la barra se pinta ya con sus pestañas (no salta de dos a cinco) y se llega a
-      // Mis casas con casas o a Explorar sin ellas. Si la lectura falla o tarda más de 5 s, Explorar (la barra crece cuando
-      // llegue la lista, que sigue leyéndose).
-      const list = await withTimeout(queryClient.fetchQuery(ownListingsQuery(account.id)), LIST_WAIT_MS, []).catch(() => []);
+      // La lista de casas permite pintar la barra correcta al llegar a Explorar. Si tarda, sigue leyéndose allí.
+      await withTimeout(queryClient.fetchQuery(ownListingsQuery(account.id)), LIST_WAIT_MS, []).catch(() => []);
       // Una cuenta nueva pasa por «¡Listo!», que pregunta si tiene una casa para alquilar (§E), salvo si se venía a
       // escribirle a un propietario (revisión UX C2) o a guardar la casa que se publica: ahí se sigue sin interponerse.
       if (mode === "register" && !contact && !publish) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
-      else await goTo(next ?? (list.length ? "/propietario/casas" : "/explorar"));
+      else await goTo(next ?? "/explorar");
     } catch (err) {
       setError(message(err));
       setBusy(false);

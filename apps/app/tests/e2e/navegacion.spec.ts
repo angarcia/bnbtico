@@ -181,7 +181,7 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
   await expect.poll(() => persistedCache(page)).toContain('"inquiries"');
   await signOut(page);
   await expect(page.getByRole("button", { name: "Cerrar sesión" })).toHaveCount(0);
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Ingresar"]);
   await expect
     .poll(
       async () => {
@@ -244,10 +244,10 @@ test("la casa abierta desde la lista se queda aunque se descarte la otra", async
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
 });
 
-test("1 · sin sesión: tres pestañas, «Ingresar» a la derecha", async ({ page }) => {
+test("1 · sin sesión: cuatro pestañas, «Ingresar» a la derecha", async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
   await page.goto("/explorar");
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Ingresar"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Ingresar"]);
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" })).toBeVisible();
   await page.goto("/favoritos");
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Ingresar" })).toBeVisible();
@@ -255,11 +255,11 @@ test("1 · sin sesión: tres pestañas, «Ingresar» a la derecha", async ({ pag
   await expect(page).toHaveURL(/\/cuenta\?next=%2Fpropietario%2Fcasas$/);
 });
 
-test("2 · sin casas: tres pestañas; «¿Quiere publicar su casa gratis?» crea un borrador, cinco pestañas y Mis casas muestra el borrador", async ({ page }) => {
+test("2 · sin casas: cuatro pestañas; «¿Quiere publicar su casa gratis?» crea un borrador, cinco pestañas y Mis casas muestra el borrador", async ({ page }) => {
   await h.reset(); // ninguna casa de «other»
   await signInByUi(page, "8888 1234");
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Cuenta"]);
   // Sin casas, la zona del propietario lleva a Explorar.
   await page.goto("/propietario/casas");
   await expect(page).toHaveURL(/\/explorar$/);
@@ -291,13 +291,17 @@ test("el propietario entra y la barra no salta; al volver a abrir, cinco desde e
   await h.seed({ status: "active", draft: { title: "Casa Cahuita" } });
   await recordTabCounts(page);
   await signInByUi(page, "8777 0001");
-  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await expect(page).toHaveURL(/\/explorar$/);
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
-  expect(await tabCountsAt(page, "/propietario/casas")).toEqual([5]);
+  expect(await tabCountsAt(page, "/explorar")).toEqual([5]);
   await page.reload();
+  await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
+  expect(await tabCountsAt(page, "/")).toEqual([5]);
+  await nav(page).getByRole("link", { name: "Mi casa" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Casa Cahuita" })).toBeVisible();
-  expect(await tabCountsAt(page, "/")).toEqual([5]);
+  await page.goto("/que-es-3bstays");
+  await expect(page).toHaveURL(/\/explorar$/);
 });
 
 test("si la lista de casas tarda al ingresar, a los 5 s entra a Explorar y la barra crece cuando llega", async ({ page }) => {
@@ -332,7 +336,7 @@ test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", asyn
   await page.getByRole("article").getByRole("button", { name: "Descartar" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(nav(page).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
+  await expect(nav(page).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Cuenta"]);
 });
 
 test("Cuenta es la pestaña de la derecha; lo que se abre desde ella vuelve a Cuenta", async ({ page }) => {

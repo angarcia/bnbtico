@@ -1,3 +1,7 @@
+## 2026-11-12 · 3Btico en la barra de visitantes (Ana)
+
+3Btico es la entrada sin sesión y la primera pestaña para visitantes y viajeros con cuenta. Al ingresar o abrir la app con sesión, la entrada habitual es Explorar. Las cuentas con al menos una casa, incluido un borrador, usan la barra de anfitrión sin 3Btico y su enlace directo lleva a Explorar. Al cerrar sesión desde Cuenta se vuelve a 3Btico. Una sesión confirmada mientras 3Btico está abierto lleva a Explorar. Se mantienen los destinos explícitos de los flujos de ingreso y la bienvenida de una cuenta nueva. La pantalla destaca el contacto directo por WhatsApp, la publicación de casas y la oferta vigente.
+
 ## 2026-11-12 · Consultas deja de guardar el texto del mensaje (Ana)
 
 El mensaje se prepara en el teléfono y se abre en WhatsApp desde la ficha. La consulta registra los datos de la estancia y del contacto. Se elimina la columna `inquiries.message` y su contenido histórico porque el borrador puede diferir de lo que el cliente termina enviando. Aplique la migración antes de desplegar la app. Las pestañas abiertas pueden seguir usando las funciones anteriores durante el cambio: la escritura descarta el texto y la lectura devuelve una cadena vacía.

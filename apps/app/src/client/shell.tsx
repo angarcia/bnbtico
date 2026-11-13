@@ -207,11 +207,23 @@ const casaSearch = (params: Record<string, unknown>): { contacto?: "1"; escribir
   params.contacto === "1" ? { contacto: "1" } : params.escribir === "1" ? { escribir: "1" } : {};
 
 const routeTree = rootRoute.addChildren([
-  createRoute({ getParentRoute: () => rootRoute, path: "/", beforeLoad: () => { throw redirect({ to: "/explorar", replace: true }); } }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/",
+    beforeLoad: async () => {
+      const session = await currentSession();
+      throw redirect({ to: session ? "/explorar" : "/que-es-3bstays", replace: true });
+    },
+  }),
   // Inicio pasó a Mis casas y Mis consultas a Actividad: los enlaces ya enviados siguen funcionando.
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario", beforeLoad: () => { throw redirect({ to: "/propietario/casas", replace: true }); } }),
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario/consultas", beforeLoad: () => { throw redirect({ to: "/propietario/actividad", replace: true }); } }),
   tabs.addChildren([
+    createRoute({
+      getParentRoute: () => tabs,
+      path: "/que-es-3bstays",
+      component: lazyRouteComponent(() => import("./screens/que-es-3bstays"), "QueEs3bstaysScreen"),
+    }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: exploreSearch, component: ExplorarScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: FiltrosScreen }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),

@@ -58,7 +58,7 @@ test("sin casas no hay Calendario: lleva a Explorar, con las pestañas del clien
   await injectSession(page, "other");
   await page.goto("/propietario/calendario");
   await expect(page).toHaveURL(/\/explorar$/);
-  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["Explorar", "Favoritos", "Cuenta"]);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Cuenta"]);
 });
 
 // Revisión UX A5: el calendario nunca abre un borrador; con una sola casa no hay selector.

@@ -354,7 +354,7 @@ test.describe("Cuenta", () => {
     await expect(page.getByRole("heading", { name: h.ownerName("owner") })).toBeVisible();
 
     await signOut(page);
-    await expect(page.getByRole("heading", { name: "Entre con su WhatsApp" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "¿Busca alojamiento en Costa Rica?" })).toBeVisible();
     expect(await page.evaluate(() => localStorage.getItem("3bstays-auth"))).toBeNull();
   });
 });

@@ -34,10 +34,10 @@ test("`/?pronto=1` muestra la portada sin JavaScript, con su imagen, su CSP y su
   expect((await request.get("/og.jpg")).headers()["content-type"]).toBe("image/jpeg");
 });
 
-test("`/` sigue llevando a Explorar fuera de producción", async ({ page }) => {
+test("`/` abre 3Btico sin sesión fuera de producción", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL(/\/explorar$/);
-  await expect(page.getByRole("heading", { name: "Explorar casas" })).toBeVisible();
+  await expect(page).toHaveURL(/\/que-es-3bstays$/);
+  await expect(page.getByRole("heading", { name: "¿Busca alojamiento en Costa Rica?" })).toBeVisible();
 });
 
 test("HEAD / responde 200, también con ?pronto=1", async ({ request }) => {

@@ -35,7 +35,7 @@ Se prueba **desde el teléfono**, en `https://pruebas.3bstays.com`. Marque cada 
 - **App:** `https://pruebas.3bstays.com` (rama `develop`, worker `3bstays-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Está protegida con Cloudflare Access: la primera vez pide el correo y un PIN de un solo uso. Sin Access quedan `/casa/*`, `/_purge/*`, `/assets/*`, `/fonts/*`, `/icons/*`, `/webhooks/*` y `/_pruebas/*`, así que una ficha se puede abrir sin PIN.
 - **Desde la red corporativa (VPN):** `https://3bstays-pruebas.ana-garcia-saiz.workers.dev`. Es el mismo worker y la misma base, sin Access. Única diferencia: la purga de la ficha apunta a `pruebas.3bstays.com`, así que en `workers.dev` una ficha puede salir vieja unos minutos después de un cambio.
 - **No se usa** `pruebas.bnbtico.com`: era la app vieja de Vercel y se apaga (decisión 2026-11-11).
-- **Portada:** `/?pronto=1`. En pruebas, `/` lleva a Explorar.
+- **Portada:** `/?pronto=1`. En pruebas, `/` lleva a 3Btico sin sesión y a Explorar con sesión.
 - **App instalada:** después de cada despliegue, ciérrela y vuelva a abrirla para tomar la versión nueva.
 
 ### 1.2 Cuentas
@@ -168,9 +168,16 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 ### 2.4 Barra de abajo y botón «Mapa»
 
-- [ ] **C13** Baje con el dedo por Explorar → la barra de abajo «Explorar · Favoritos · Ingresar» (plana, pegada al borde y a todo el ancho, con la línea fina arriba) sale por abajo; suba un poco → vuelve; arriba del todo siempre está a la vista; repita en Favoritos (con alguna casa; la tarjeta de arriba con el logo y «₡ | $» también sale y vuelve) e Ingresar → se comporta igual y un movimiento muy corto no la hace parpadear.
+- [ ] **C13** Baje con el dedo por Explorar → la barra de abajo «3Btico · Explorar · Favoritos · Ingresar» (plana, pegada al borde y a todo el ancho, con la línea fina arriba) sale por abajo; suba un poco → vuelve; arriba del todo siempre está a la vista; repita en Favoritos (con alguna casa; la tarjeta de arriba con el logo y «₡ | $» también sale y vuelve) e Ingresar → se comporta igual y un movimiento muy corto no la hace parpadear.
 - [ ] **C14** Con el mapa ya fuera de la pantalla, siga bajando por la lista → aparece el botón flotante «Mapa» (tarjeta clara, texto e icono oscuros, como las demás tarjetas) a 12 px sobre la barra y baja junto con ella hasta cerca del borde cuando la barra se esconde; arriba del todo (con el mapa a la vista) no hay botón «Mapa».
 - [ ] **C15** Siga bajando hasta el final de la lista → el botón «Mapa» desaparece antes de llegar a «Publicar mi casa gratis» y no tapa ese botón ni la nota «¿No encuentra lo que busca?»; suba otra vez → «Mapa» vuelve a salir.
+
+#### 3Btico
+
+- [ ] **3B1** En una ventana privada de 320 px, abra la raíz de la app → entra a 3Btico. La barra muestra «3Btico · Explorar · Favoritos · Ingresar». La B tiene el mismo espacio que los demás iconos. Toque 3Btico → aparece el logotipo completo en la cabecera y puede leer el contenido hasta el final sin que la barra lo tape.
+- [ ] **3B2** Recorra la barra con Tab y un lector de pantalla → cada enlace tiene un nombre distinto, el foco se ve y solo el enlace actual se anuncia como página actual. Abra 3Btico con Enter. Pruebe Explorar, Favoritos e Ingresar desde su barra. «Aquí» lleva a Explorar. «Publicar mi casa» y el enlace dorado de la oferta, cuando aparece, abren el asistente existente.
+- [ ] **3B3** Compruebe que los meses gratis coinciden con la oferta disponible en la app. Si ya no hay plazas, se ve el precio mensual y desaparece el enlace de los meses gratis.
+- [ ] **3B4** Ingrese con una cuenta sin casas → entra a Explorar y conserva 3Btico. Abra 3Btico desde la barra. Repita con una cuenta con al menos una casa, incluido un borrador → entra a Explorar, la pestaña desaparece y su enlace directo vuelve a Explorar. Cierre sesión desde Cuenta → llega a 3Btico. Con 3Btico abierto sin sesión, ingrese desde otra pestaña → la primera pasa a Explorar. Compruebe que el viajero conserve 3Btico.
 
 ### 2.5 Mapa de Explorar
 

@@ -1,0 +1,105 @@
+.about-3bstays {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(8px, 1.7dvh, 16px);
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  font-size: 14px;
+}
+
+.about-brand a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.about-brand img {
+  width: auto;
+  height: 38px;
+}
+
+.about-guest {
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: var(--r);
+}
+
+.about-guest h1 {
+  font-size: 25px;
+  line-height: 1.12;
+}
+
+.about-guest-line {
+  margin-top: 9px;
+  font-weight: var(--w-strong);
+}
+
+.about-guest-line a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+.about-guest-line img {
+  display: inline-block;
+  width: 66px;
+  height: auto;
+  vertical-align: middle;
+}
+
+.about-slogan {
+  margin-top: 4px;
+  color: var(--brand-ink);
+  font-size: 16px;
+  font-weight: var(--w-strong);
+}
+
+.about-intro { margin-top: 6px; }
+.about-owner {
+  padding-block: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.about-owner h2 { font-size: 22px; }
+.about-price {
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.about-price h2 { font-size: 20px; }
+.about-rate { margin-block: 7px 4px; }
+
+.about-offer-label,
+.about-rate strong,
+.about-terms,
+.about-offer-link {
+  color: var(--sun-ink);
+  font-weight: var(--w-strong);
+}
+
+.about-offer-label {
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.about-offer-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  text-align: center;
+  text-underline-offset: 3px;
+}
+
+@media (max-height: 700px) {
+  .about-3bstays { gap: 8px; }
+  .about-guest, .about-price { padding: 10px 12px; }
+  .about-brand img { height: 32px; }
+  .about-guest h1, .about-owner h2 { font-size: 21px; }
+  .about-price h2 { font-size: 18px; }
+  .about-guest-line { margin-top: 5px; }
+  .about-owner { gap: 6px; padding-top: 8px; }
+  .about-rate { margin-block: 4px 2px; }
+}
