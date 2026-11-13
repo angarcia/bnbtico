@@ -191,6 +191,7 @@ test("cambiar el precio: al momento, en la ficha pública y en Explorar", async 
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/editar/precio$`));
   await expect(page.getByRole("heading", { level: 1, name: "Precio" })).toBeVisible();
   await expect(page.getByLabel("Precio por noche")).toHaveValue("42000");
+  await expect(save(page)).toBeDisabled();
   await page.getByLabel("Precio por noche").fill("55 000");
   await save(page).click();
   await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha.");
@@ -268,7 +269,7 @@ test("cambiar el nombre: «Enviar a revisión» con el aviso; la ficha pública 
   // Lo inmediato se sigue cambiando con «Guardar».
   await page.goto(`/propietario/casas/${id}/editar/precio`);
   await expect(page.getByTestId("review-notice")).toHaveCount(0);
-  await expect(save(page)).toBeEnabled();
+  await expect(save(page)).toBeDisabled();
 });
 
 test("si la base rechaza el precio, la pantalla lo dice y nada cambia", async ({ page }) => {
@@ -323,7 +324,8 @@ test("un tipo de antes (casa) abre con «Alojamiento completo» marcado y, sin t
   sqlKind(id, "casa");
   await page.goto(`/propietario/casas/${id}/editar/tipo`);
   await expect(page.locator("label.choice", { hasText: "Alojamiento completo" }).locator("input")).toBeChecked();
-  await send(page).click();
+  await expect(send(page)).toBeDisabled();
+  await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   expect((await h.owner("owner").getOwn(id))!).toMatchObject({ kind: "casa", edit: null });
 });
@@ -364,6 +366,9 @@ test("una descripción corta se guarda con un aviso en ocre y no estorba al reno
 test("vaciar la capacidad que tenía valor no se guarda; una casa sin baños avisa en ocre y cambia el precio", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/capacidad`);
+  await expect(save(page)).toBeDisabled();
+  await page.getByRole("button", { name: "Más personas" }).click();
+  await expect(save(page)).toBeEnabled();
   // Los contadores no bajan de su mínimo: el campo oculto se vacía justo al enviar, como un valor perdido.
   await page.locator("form.publish-form").evaluate((form) => form.addEventListener("submit", () => ((form.querySelector('input[name="capacity"]') as HTMLInputElement).value = ""), { capture: true }));
   await save(page).click();
@@ -412,7 +417,8 @@ test("un nombre de antes de más de 32 caracteres, sin tocarlo, no se envía ni 
   await h.setLegacyTitle(id, "Casa grande con vista al mar en Cahuita");
   await page.goto(`/propietario/casas/${id}/editar/nombre`);
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Casa grande con vista al mar en Cahuita");
-  await send(page).click();
+  await expect(send(page)).toBeDisabled();
+  await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
   expect(await h.owner("owner").getOwn(id)).toMatchObject({ title: "Casa grande con vista al mar en Cahuita", edit: null });
 });

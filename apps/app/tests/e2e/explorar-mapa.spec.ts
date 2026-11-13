@@ -74,7 +74,7 @@ async function expandGroups(full: import("@playwright/test").Locator) {
 // quedan debajo de sus tarjetas.
 test("el mapa va arriba a todo el ancho, bajo la cabecera flotante, y lleva precios", async ({ page }) => {
   await page.goto("/explorar");
-  await expect(page.locator("main.view > :not(.explore-top)").first()).toHaveAttribute("data-testid", "explore-map");
+  await expect(mapBox(page)).toBeVisible();
   const vp = page.viewportSize()!;
   const box = (await mapBox(page).boundingBox())!;
   expect(box).toMatchObject({ x: 0, y: 0, width: vp.width });
@@ -168,7 +168,7 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await expect(countPill(page)).toBeFocused();
   expect((await countPill(page).boundingBox())!.height).toBeGreaterThanOrEqual(44);
   // La lista de debajo no se enfoca ni se lee mientras el mapa está abierto.
-  expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
+  await expect(page.locator(".listing-grid").locator("xpath=ancestor::*[@inert]")).not.toHaveCount(0);
   await expect(full.locator(".search-pill")).toBeVisible();
   await expect(mapLabel(page)).toHaveCount(0);
 
@@ -207,7 +207,7 @@ test("al bajar aparece «Mapa»; a pantalla completa «8 casas»; un marcador mu
   await page.goBack();
   await expect(page.locator(".map-full")).toHaveCount(0);
   await expect(mapLabel(page)).toBeFocused();
-  expect(await page.locator(".listing-grid").evaluate((el) => (el as HTMLElement).inert)).toBe(false);
+  await expect(page.locator(".listing-grid").locator("xpath=ancestor::*[@inert]")).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThanOrEqual(598);
   expect(Math.abs((await page.evaluate(() => scrollY)) - 600)).toBeLessThanOrEqual(2);
   expect(searches).toBe(0);

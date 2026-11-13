@@ -114,7 +114,7 @@ function InquiryList({ casa, onPick, inDialog = false }: {
               onPick={onPick} />
           ) : null}
           {!entries.length ? <p>{EMPTY}</p> : latest.length > 0 ? (
-            latest.map((i) => <InquiryCard key={i.id} inquiry={i} userId={userId} house={houses.get(i.listingId)} showHouse={choices !== null && filterId === null} rememberSeen={rememberSeen} />)
+            latest.map((i) => <InquiryCard key={i.id} inquiry={i} userId={userId} house={houses.get(i.listingId)} showHouse={choices !== null && filterId === null} rememberSeen={rememberSeen} inDialog={inDialog} />)
           ) : (
             <p className="small muted">Todavía no hay consultas de esta casa.</p>
           )}
@@ -125,12 +125,13 @@ function InquiryList({ casa, onPick, inDialog = false }: {
   );
 }
 
-function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen }: { inquiry: OwnerInquiry; userId: string; house: Listing | undefined; showHouse: boolean; rememberSeen: (i: OwnerInquiry) => void }) {
+function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen, inDialog }: { inquiry: OwnerInquiry; userId: string; house: Listing | undefined; showHouse: boolean; rememberSeen: (i: OwnerInquiry) => void; inDialog: boolean }) {
   const client = useQueryClient();
   const opening = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const isNew = !i.openedAt;
-  const nameId = useId();
+  const dialogId = useId();
+  const nameId = inDialog ? dialogId : `inquiry-${i.id}`;
   useEffect(() => {
     const el = heading.current;
     if (!el || i.openedAt || typeof IntersectionObserver === "undefined") return;

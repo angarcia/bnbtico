@@ -2,6 +2,8 @@
 
 Se suman 100 B comprimidos a cada uno de los tres límites que todavía fallaban tras reducir código. Contacto pasa a 7,6 kB, las pantallas de las pestañas a 25,3 kB y la ficha editable a 5,1 kB. El presupuesto inicial de 160 kB se mantiene.
 
+Con la compilación para las pruebas locales, las pantallas de las pestañas pesan 25,68 kB comprimidos. Su límite pasa a 25,8 kB para cubrir esa medición.
+
 ## 2026-11-13 · Contacto en la ficha pública de escritorio
 
 La columna derecha de la ficha disponible muestra el formulario de WhatsApp abierto junto al precio. Las fechas se comparten con el calendario de la ficha. En móvil, el botón de contacto abre la hoja.

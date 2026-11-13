@@ -192,12 +192,12 @@ test("una casa con precio al mes lo muestra en la casilla «Alquiler mensual», 
   await expect(page.getByTestId("monthly-line")).toHaveCount(0);
   await expect(page.getByTestId("monthly-usd")).toHaveCount(0);
   const tile = page.locator(".feature-tiles > div").first();
-  await expect(tile).toHaveText("Alquiler mensual₡2 500 000 / mes");
-  await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes");
+  await expect(tile.getByText("Alquiler mensual", { exact: true })).toBeVisible();
+  await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes", { useInnerText: true });
   const [wide, grid] = await Promise.all([tile.boundingBox(), page.locator(".feature-tiles").boundingBox()]);
   expect(wide!.width, "ocupa dos de las tres columnas").toBeGreaterThan(grid!.width / 2);
   await chooseCurrency(page, "USD");
-  await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes");
+  await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes", { useInnerText: true });
 });
 
 // Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.

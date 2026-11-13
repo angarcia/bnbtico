@@ -215,9 +215,7 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await expect(page.getByRole("group", { name: "Zona", exact: true })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Zona Todas las provincias" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
-  await page.getByRole("button", { name: "Piscina", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
-  await page.getByRole("button", { name: "Piscina", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveCount(0);
   // El número de personas también se recupera de un enlace directo.
   await page.goto("/explorar/filtros?prov=Todas&ppl=4");
   await expect(page.getByRole("button", { name: "Ver 1 casa" })).toBeVisible();
@@ -253,18 +251,13 @@ test("Filtros cuenta en vivo, no deja un mínimo mayor que el máximo, y «Ver N
   await expect(results(page)).toHaveText("10 casas");
 });
 
-test("Filtros: ofrece características del catálogo y permite quitar una que viene en un enlace antiguo", async ({ page }) => {
+test("Filtros: sin lugar oculta las características y Limpiar elimina los filtros de un enlace antiguo", async ({ page }) => {
   await page.goto("/explorar/filtros?ppl=6&ev=1");
-  // Piscina sigue disponible como opción aunque ninguna casa admita seis personas.
-  await expect(page.getByRole("button", { name: "Piscina", exact: true })).toBeVisible();
-  const ev = page.getByRole("button", { name: "Cargador eléctrico", exact: true });
-  await expect(ev).toHaveAttribute("aria-pressed", "true");
-  await ev.click();
-  await expect(ev).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Menos personas" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Ver 0 casas" })).toBeVisible();
-  await page.getByRole("button", { name: "Ver 0 casas" }).click();
-  await expect(page).toHaveURL(/\/explorar\?ppl=6$/);
+  await expect(page.getByText("Qué necesitan", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Limpiar", exact: true }).click();
+  await page.getByRole("button", { name: "Ver 10 casas", exact: true }).click();
+  await expect(page).toHaveURL(/\/explorar$/);
 });
 
 test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contador (ticket 06)", async ({ page }) => {
@@ -353,12 +346,15 @@ test("cabecera sin el chip mensual: los filtros y ₡ | $ en una fila; el rango 
   await expect(page.getByLabel("Precio máximo por noche")).toHaveValue("90000");
   await expect(page.getByText(/mensual/i)).toHaveCount(0);
 
-  // Las características van en Filtros, con el contador.
+  // El filtro de un enlace antiguo sigue contando y se puede limpiar aunque no haya un lugar elegido.
   await page.goto("/explorar?prov=Guanacaste&pool=1");
   await expect(results(page)).toHaveText("1 casa en Guanacaste");
   await expect(page.getByRole("link", { name: "Filtros (1 activo)" })).toContainText("1");
   await page.getByRole("link", { name: /^Filtros/ }).click();
-  await expect(page.getByRole("button", { name: "Piscina", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Qué necesitan", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Limpiar", exact: true }).click();
+  await page.getByRole("button", { name: "Ver 10 casas", exact: true }).click();
+  await expect(page).toHaveURL(/\/explorar$/);
 });
 
 test("enlaces viejos del modo mensual (?mensual=1, ?modo=monthly, ?desde=) abren Explorar normal, sin error", async ({ page }) => {
@@ -408,19 +404,17 @@ test("con llegada y salida, cada tarjeta dice el total orientativo de esas noche
   await h.putDay(ultima.id, { day: day(21), available: true, specialPriceCrc: null });
 });
 
-// Revisión UX N5: en un ordenador, la rejilla de Explorar usa el ancho (3 columnas desde 900 px, 4 desde 1200 px); en el
-// móvil, una casa por fila.
-test("Explorar en escritorio: 3 y 4 columnas; en el móvil, 1", async ({ page }) => {
+test("Explorar en escritorio: dos casas por fila junto al mapa; en el móvil, una", async ({ page }) => {
   const grid = page.locator(".listing-grid:not(.skeleton)");
   const columns = () => grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/explorar");
   await expect(grid.locator(".listing-card").first()).toBeVisible();
-  expect(await columns()).toBe(4);
-  await page.setViewportSize({ width: 1000, height: 800 });
-  expect(await columns()).toBe(3);
+  await expect.poll(columns).toBe(2);
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await expect.poll(columns).toBe(2);
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(await columns()).toBe(1);
+  await expect.poll(columns).toBe(1);
 });
 
 test("la moneda cambia al instante en Explorar y la ficha muestra las dos", async ({ page }) => {

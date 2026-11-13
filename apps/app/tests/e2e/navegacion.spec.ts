@@ -456,8 +456,9 @@ test("densidad: márgenes de 16 px y la barra de abajo plana, pegada al borde, c
   await page.evaluate(() => document.documentElement.classList.remove("chrome-away"));
   await expect.poll(async () => (await nav(page).boundingBox())!.y).toBe(vp.height - 84);
   // El icono del filtro queda fuera del nombre accesible y el botón anuncia su estado.
-  await page.goto("/explorar/filtros");
+  await page.goto("/explorar/filtros?zona=704-cahuita");
   const pool = page.getByRole("button", { name: "Piscina", exact: true });
+  await expect(pool).toBeVisible();
   await pool.press("Space");
   await expect(pool).toHaveAttribute("aria-pressed", "true");
   await expect(pool.locator("svg").first()).toHaveAttribute("aria-hidden", "true");

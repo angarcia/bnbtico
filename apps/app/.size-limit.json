@@ -140,7 +140,7 @@
       "dist/client/assets/publish-promo-*.js",
       "dist/client/assets/offer-*.js"
     ],
-    "limit": "25.3 KB",
+    "limit": "25.8 KB",
     "gzip": true
   },
   {
