@@ -2,8 +2,9 @@
 // el resto de la página inerte.
 import { useEffect } from "react";
 
-export function useModal() {
+export function useModal(enabled = true) {
   useEffect(() => {
+    if (!enabled) return;
     const root = document.getElementById("root");
     document.documentElement.classList.add("sheet-open");
     if (root) root.inert = true;
@@ -11,5 +12,5 @@ export function useModal() {
       document.documentElement.classList.remove("sheet-open");
       if (root) root.inert = false;
     };
-  }, []);
+  }, [enabled]);
 }

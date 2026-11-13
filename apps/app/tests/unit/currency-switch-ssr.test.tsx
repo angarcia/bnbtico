@@ -64,7 +64,10 @@ describe("barra de la ficha en el servidor", () => {
     // precio al mes, en la casilla «Alquiler mensual» (ronda de Ana 2 nov, ticket 08).
     expect(html).not.toContain("Mensual:");
     expect(html).not.toContain('data-testid="monthly-usd"');
-    expect(html).toContain(`<span>Alquiler mensual</span><small>${formatCRC(650000)} / mes</small>`);
+    const monthly = html.replaceAll("<!-- -->", "").match(/<small class="listing-monthly" data-currency="CRC">([\s\S]*?)<\/small>/)?.[1];
+    expect(html).toContain("<span>Alquiler mensual</span>");
+    expect(monthly).toContain(`<span class="listing-monthly-crc">${formatCRC(650000)} / mes</span>`);
+    expect(monthly).toContain(`<span class="listing-monthly-usd">≈ ${formatUSD(650000, FX_INITIAL.crcPerUsd)} / mes</span>`);
     expect(html).toContain("Precios orientativos: el precio final lo acuerda con el anfitrión.");
     expect(html).not.toContain("currency-switch");
     expect(html).not.toContain("orientativo</span>");

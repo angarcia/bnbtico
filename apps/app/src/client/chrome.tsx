@@ -4,13 +4,18 @@
 // (logo · ₡ | $ · cuenta), salvo Explorar (que trae su propia cabecera) y la zona del admin.
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
-import { createContext, useContext, type MouseEvent, type ReactNode } from "react";
+import { createContext, lazy, Suspense, useContext, useState, type MouseEvent, type ReactNode } from "react";
 import { tabsFor } from "../domain/tabs";
 import { I } from "../shared/icons";
+import { CurrencySwitch } from "../shared/currency-switch";
+import { useDesktop } from "./desktop";
 import { useHidingChrome } from "./hiding-chrome";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
+
+const WhatsAppDialog = lazy(() => import("./whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
+const InquiriesDialog = lazy(() => import("./screens/actividad").then((m) => ({ default: m.InquiriesDialog })));
 
 /** Contador terracota de Anuncios: lo que ya hay en la caché de la cola (no la pide; la pide la pantalla). `skipToken` en vez
  *  de `enabled: false` sin `queryFn`, que TanStack anotaba como error en cada pantalla (revisión UX 2026-10-29, N8). */
@@ -37,30 +42,48 @@ const BARE_PATHS = new Set(["/favoritos", "/propietario/casas", "/propietario/ca
 /** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
 const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
 
-export function TabsFrame({ children }: { children: ReactNode }) {
+export function TabsFrame({ children, ownerHouseDetail = false, publishing = false }: { children: ReactNode; ownerHouseDetail?: boolean; publishing?: boolean }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
   const pathname = useLocation({ select: (l) => l.pathname });
   useHidingChrome();
   const bare = BARE_PATHS.has(pathname);
   const { status } = useSession();
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [inquiriesOpen, setInquiriesOpen] = useState(false);
   const signInTab = pathname === "/cuenta" && status === "signed-out";
   const narrowGutter = pathname === "/cuenta" && !signInTab;
   const ownerInquiries = pathname === "/propietario/actividad";
   const ownerCalendar = pathname === "/propietario/calendario";
   const { count } = useListingsCount();
-  const tabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count });
+  const desktop = useDesktop() && !adminZone;
+  const desktopSignIn = desktop && status === "signed-out";
+  const defaultTabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count, desktop });
+  const tabs = desktop ? defaultTabs.filter(({ to }) => to !== "/que-es-3bstays") : defaultTabs;
+  const brandOpensAbout = status === "signed-out";
   const pending = useReviewCount(tabs.some((t) => t.badge === "review"));
   const fresh = useNewInquiries(tabs.some((t) => t.badge === "inquiries"));
+  const desktopInquiries = desktop && tabs.some((t) => t.badge === "inquiries");
+  const inquiriesLabel = fresh ? `Consultas, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : "Consultas";
   // «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta).
   const next = status === "signed-out" ? nextFor(pathname) : undefined;
-  return (
-    <div className="app">
-      <UnderTopBar.Provider value={bare}>
-        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}`}>{children}</main>
-      </UnderTopBar.Provider>
-      <nav className={`tabbar chrome-hide${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
+  const navigation = (
+      <nav className={`tabbar ${desktop ? "desktop-nav" : "chrome-hide"}${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
+        {desktop && (
+          <Link
+            className="desktop-brand"
+            to={brandOpensAbout ? "/que-es-3bstays" : "/explorar"}
+            aria-label={brandOpensAbout ? "Qué es 3bstays" : "3bstays, inicio"}
+            activeOptions={{ exact: true, includeSearch: false }}
+            activeProps={brandOpensAbout ? { "aria-current": "page" } : {}}
+            replace
+          >
+            <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
+          </Link>
+        )}
         {tabs.map(({ to, label, icon, exact, badge }) => {
           const Icon = I[icon];
+          if (desktopSignIn && to === "/cuenta") return null;
+          if (desktopInquiries && badge === "inquiries") return null;
           const n = badge === "review" ? pending : badge === "inquiries" ? fresh : 0;
           return (
             <Link
@@ -89,7 +112,46 @@ export function TabsFrame({ children }: { children: ReactNode }) {
             </Link>
           );
         })}
+        {desktop && (
+          <>
+            <CurrencySwitch className="desktop-currency" />
+            {desktopSignIn ? (
+              <button type="button" className="btn btn-primary desktop-sign-in" aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
+                <I.user size={22} /> Ingresar
+              </button>
+            ) : null}
+            {desktopInquiries && (
+              <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title="Consultas"
+                aria-haspopup="dialog" aria-expanded={inquiriesOpen} onClick={() => setInquiriesOpen(true)}>
+                <I.chat size={26} />
+                {fresh > 0 && <b className="nav-count num" data-testid="inquiries-badge" aria-hidden="true">{fresh}</b>}
+              </button>
+            )}
+            <Link to="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" activeProps={{ "aria-current": "page" }}>
+              <I.wa size={24} />
+              <span>Ayuda por WhatsApp</span>
+            </Link>
+          </>
+        )}
       </nav>
+  );
+  return (
+    <div className={`app${desktop ? " desktop-app" : ""}${publishing ? " publish-flow" : ""}`}>
+      {desktop && navigation}
+      <UnderTopBar.Provider value={bare}>
+        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}${ownerHouseDetail ? " owner-house-detail" : ""}`}>{children}</main>
+      </UnderTopBar.Provider>
+      {!desktop && navigation}
+      {desktopInquiries && inquiriesOpen && (
+        <Suspense fallback={null}>
+          <InquiriesDialog onClose={() => setInquiriesOpen(false)} />
+        </Suspense>
+      )}
+      {desktop && signInOpen ? (
+        <Suspense fallback={null}>
+          <WhatsAppDialog mode="account" next={next} onClose={() => setSignInOpen(false)} />
+        </Suspense>
+      ) : null}
     </div>
   );
 }
@@ -100,6 +162,8 @@ const UnderTopBar = createContext(false);
 
 
 export function FlowFrame({ children }: { children: ReactNode }) {
+  const desktop = useDesktop();
+  const help = useLocation({ select: ({ pathname }) => pathname === "/ayuda" });
   const verifyingCode = useLocation({ select: ({ pathname }) => pathname === "/cuenta/codigo" });
   const publishing = useLocation({ select: ({ pathname }) => /^(?:\/propietario)?\/publicar(?:\/|$)/.test(pathname) });
   const ownerHouseDetail = useLocation({ select: ({ pathname }) => /^\/propietario\/casas\/[^/]+\/?$/.test(pathname) });
@@ -109,6 +173,9 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   const editingField = useLocation({ select: ({ pathname }) =>
     /^\/propietario\/casas\/[^/]+\/editar\/[^/]+\/?$/.test(pathname)
   });
+  if (desktop && (ownerHouseDetail || editingField)) return <TabsFrame ownerHouseDetail>{children}</TabsFrame>;
+  if (desktop && help) return <TabsFrame>{children}</TabsFrame>;
+  if (desktop && publishing) return <TabsFrame publishing>{children}</TabsFrame>;
   return (
     <div className={editingPhotos ? "app edit-photos-flow" : publishing || editingField ? "app publish-flow" : "app"}>
       <main className={`view no-nav${ownerHouseDetail ? " owner-house-detail" : verifyingCode ? " code-flow" : ""}`}>{children}</main>

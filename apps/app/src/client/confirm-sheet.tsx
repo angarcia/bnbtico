@@ -11,6 +11,8 @@ export function ConfirmSheet({
   confirmLabel,
   confirmClassName,
   cancelClassName,
+  cancelLabel = "Cancelar",
+  cancelFirst = false,
   onConfirm,
   onClose,
   returnFocus,
@@ -22,6 +24,8 @@ export function ConfirmSheet({
   confirmLabel: string;
   confirmClassName: string;
   cancelClassName: string;
+  cancelLabel?: string;
+  cancelFirst?: boolean;
   onConfirm(): void;
   onClose(): void;
   returnFocus?: RefObject<HTMLElement | null>;
@@ -43,6 +47,11 @@ export function ConfirmSheet({
       to?.focus({ preventScroll: true });
     },
   });
+  const cancel = (
+    <button type="button" className={`${cancelClassName}${cancelFirst ? "" : " popup-cancel"}`} disabled={pending} onClick={onClose}>
+      {cancelLabel}
+    </button>
+  );
   return createPortal(
     <>
       <div className="sheet-backdrop" onClick={() => { if (!pending) onClose(); }} />
@@ -51,6 +60,7 @@ export function ConfirmSheet({
         <h2 id={`${id}-title`}>{title}</h2>
         <p id={`${id}-text`}>{body}</p>
         {error ? <p className="field-error" role="alert">{error}</p> : null}
+        {cancelFirst && cancel}
         <button
           type="button"
           className={confirmClassName}
@@ -62,9 +72,7 @@ export function ConfirmSheet({
         >
           {confirmLabel}
         </button>
-        <button type="button" className={cancelClassName} disabled={pending} onClick={onClose}>
-          Cancelar
-        </button>
+        {!cancelFirst && cancel}
       </section>
     </>,
     document.body,

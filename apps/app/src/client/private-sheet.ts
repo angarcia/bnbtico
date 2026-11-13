@@ -6,22 +6,26 @@ export function usePrivateSheet({
   focusable,
   returnFocus,
   trapEmpty = false,
+  enabled = true,
 }: {
   onClose(): void;
   focusable: string;
   returnFocus?(opener: HTMLElement | null): void;
   trapEmpty?: boolean;
+  enabled?: boolean;
 }) {
   const sheet = useRef<HTMLElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
+    if (!enabled) return;
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  }, []);
-  useModal();
+  }, [enabled]);
+  useModal(enabled);
   useEffect(() => {
+    if (!enabled) return;
     sheet.current?.focus();
     return () => returnFocus?.(opener.current);
-  }, []);
+  }, [enabled]);
 
   function onKeyDown(e: KeyboardEvent<HTMLElement>) {
     if (e.key === "Escape") {

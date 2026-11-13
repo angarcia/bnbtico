@@ -10,6 +10,7 @@ import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
 import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./query-policy";
 import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
+import { isDesktop } from "./desktop";
 import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { whenIdle } from "../shared/idle";
@@ -19,11 +20,10 @@ import { suscripcionScreen } from "./lazy-screens";
 import { useListingsCount } from "./own-listings-query";
 import { CasaScreen } from "./screens/casa";
 import { ExplorarScreen } from "./screens/explorar";
-import { FiltrosScreen } from "./screens/filtros";
 import { currentSession, onSignedOut, useSession } from "./session";
 import { UpdateBanner } from "./update-banner";
 
-// En el JS inicial solo van Explorar, Filtros y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
+// En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
 const ownerScreens = () => import("./screens/propietario");
 const cuentaScreens = () => import("./screens/cuenta");
@@ -212,7 +212,7 @@ const routeTree = rootRoute.addChildren([
     path: "/",
     beforeLoad: async () => {
       const session = await currentSession();
-      throw redirect({ to: session ? "/explorar" : "/que-es-3bstays", replace: true });
+      throw redirect({ to: session || isDesktop() ? "/explorar" : "/que-es-3bstays", replace: true });
     },
   }),
   // Inicio pasó a Mis casas y Mis consultas a Actividad: los enlaces ya enviados siguen funcionando.
@@ -225,7 +225,7 @@ const routeTree = rootRoute.addChildren([
       component: lazyRouteComponent(() => import("./screens/que-es-3bstays"), "QueEs3bstaysScreen"),
     }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: exploreSearch, component: ExplorarScreen }),
-    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: FiltrosScreen }),
+    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: lazyRouteComponent(() => import("./screens/filtros"), "FiltrosScreen") }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
       ownerRoutes.addChildren([
@@ -254,6 +254,7 @@ const routeTree = rootRoute.addChildren([
       path: "/publicar",
       beforeLoad: async () => {
         if (await currentSession()) throw redirect({ to: "/propietario/publicar", replace: true });
+        if (isDesktop()) throw redirect({ to: "/publicar/$id/$paso", params: { id: "nueva", paso: "1" }, replace: true });
       },
       component: lazyRouteComponent(publicarEntrada, "PublicarEntradaScreen"),
     }),
@@ -265,7 +266,7 @@ const routeTree = rootRoute.addChildren([
       beforeLoad: async ({ params }) => {
         if (await currentSession()) throw redirect({ to: "/publicar/continuar", replace: true });
         const step = Number(params.paso);
-        if (params.id !== "nueva" || !Number.isInteger(step) || step <= 1) throw redirect({ to: "/publicar", replace: true });
+        if (params.id !== "nueva" || !Number.isInteger(step) || step < 1 || (step === 1 && !isDesktop())) throw redirect({ to: "/publicar", replace: true });
         if (step >= PHOTOS_STEP) throw redirect({ to: "/publicar/verificar", replace: true });
       },
       ...publicarLocalPending,
@@ -282,7 +283,7 @@ const routeTree = rootRoute.addChildren([
     // La búsqueda de Explorar, a pantalla completa y en su propio trozo (se precarga al tocar la píldora).
     createRoute({ getParentRoute: () => flow, path: "/explorar/buscar", validateSearch: buscarSearch, component: lazyRouteComponent(() => import("./screens/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", component: ownerScreen("CasaPropietarioScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", validateSearch: (p: Record<string, unknown>): { panel?: "suscripcion" } => p.panel === "suscripcion" ? { panel: "suscripcion" } : {}, component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("./screens/airbnb"), "AirbnbScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/correo", component: lazyRouteComponent(publicarEntrada, "CorreoScreen") }),

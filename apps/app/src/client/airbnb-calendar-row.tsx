@@ -4,10 +4,13 @@ import { useNavigate } from "@tanstack/react-router";
 import type { Listing } from "../domain/listing";
 import { I } from "../shared/icons";
 import { airbnbQuery, updateAirbnbCalendar, useCalendarOnline } from "./airbnb";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { useDesktop } from "./desktop";
 import { sessionState } from "./session";
 import { setAvailability, type Selection, type CalendarDay } from "../domain/calendar";
 import { MonthLegend } from "../shared/month-grid";
+
+const AirbnbConnectPopup = lazy(() => import("./screens/airbnb").then((module) => ({ default: module.AirbnbConnectPopup })));
 
 // Lucide refresh-cw (ISC; shared/icons-lucide.LICENSE). Solo este módulo necesita el icono.
 function RefreshIcon() {
@@ -51,9 +54,11 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   const navigate = useNavigate();
   const client = useQueryClient();
   const online = useCalendarOnline();
+  const desktop = useDesktop();
   const info = useQuery({ ...airbnbQuery(userId, listing.id), enabled: !!userId });
   const connected = info.data?.connected;
   const [updating, setUpdating] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const active = useRef(true);
   const inFlight = useRef(false);
@@ -62,6 +67,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   const current = () => active.current && sessionState().session?.userId === userId;
   const running = updating || info.data?.state === "running";
   const suspended = info.data?.state === "suspended" || listing.adminHold?.kind === "blocked" || listing.status === "rejected";
+  const opensPopup = desktop && connected === false && !suspended;
   async function update() {
     if (inFlight.current || running || disabled || !online || suspended || !info.data?.connected) return;
     inFlight.current = true; setUpdating(true); setProblem(null);
@@ -72,7 +78,12 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   return <div className={connected ? "cal-airbnb" : "card cal-airbnb"}>
     <div className="cal-airbnb-line">
     {info.data?.connected ? <button type="button" className="cal-airbnb-update" aria-label={running ? "Actualizando importación de Airbnb" : info.data.state === "error" ? "Reintentar importación de Airbnb" : "Actualizar importación de Airbnb"} aria-busy={running || undefined} disabled={disabled || !online || running || suspended} onClick={() => void update()}><RefreshIcon /></button> : null}
-    <button type="button" className="cal-action" disabled={disabled} aria-describedby={disabled ? "airbnb-selection-hint" : undefined} onClick={() => void navigate({ to: "/propietario/casas/$id/airbnb", params: { id: listing.id }, search: month ? { mes: month } : {} })}>
+    <button type="button" className="cal-action" disabled={disabled || (desktop && info.isPending)}
+      aria-haspopup={opensPopup ? "dialog" : undefined} aria-describedby={disabled ? "airbnb-selection-hint" : undefined}
+      onClick={() => {
+        if (opensPopup) setConnectOpen(true);
+        else void navigate({ to: "/propietario/casas/$id/airbnb", params: { id: listing.id }, search: month ? { mes: month } : {} });
+      }}>
       {!info.data?.connected ? <span className="cal-action-icon"><I.calendar size={20} /></span> : null}
       <span className="body"><b>{connected ? "Sincronización con Airbnb" : "Conectar con Airbnb"}</b>
         {running ? <span className="small muted" role="status">Actualizando…</span> : !online && info.data?.connected ? <span className="small muted">Sin conexión</span> : info.data?.state === "error" ? <span className="small muted">No se pudo actualizar</span> : null}
@@ -82,5 +93,10 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
     </div>
     {problem ? <p className="note" role="alert">{problem}</p> : null}
     {disabled ? <p className="hint" id="airbnb-selection-hint">Guarde o cancele los días seleccionados antes de abrir la conexión.</p> : null}
+    {desktop && connectOpen && (
+      <Suspense fallback={null}>
+        <AirbnbConnectPopup listing={listing} userId={userId} onClose={() => setConnectOpen(false)} />
+      </Suspense>
+    )}
   </div>;
 }

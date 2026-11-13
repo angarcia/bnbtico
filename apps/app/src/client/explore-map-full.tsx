@@ -77,7 +77,7 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
 /** La casa del marcador tocado: versión compacta de la tarjeta de Explorar (2026-11-04). Foto a la izquierda con el corazón
  *  en su esquina; nombre, zona, capacidad y precio; abajo a la derecha, el mismo botón de WhatsApp. Sin
  *  fotos deslizables: en una foto tan pequeña se confunde con arrastrar el mapa. Corazón y botón, fuera del enlace. */
-function MapCard({ listing: l, nights }: { listing: SearchListing; nights: number }) {
+export function MapCard({ listing: l, nights, onClose }: { listing: SearchListing; nights: number; onClose?: () => void }) {
   const cover = l.photos[0];
   const price = cardPrice(l, nights);
   return (
@@ -97,6 +97,11 @@ function MapCard({ listing: l, nights }: { listing: SearchListing; nights: numbe
           ) : null}
         </div>
       </Link>
+      {onClose && (
+        <button type="button" className="icon-btn map-card-close" aria-label="Cerrar tarjeta" onClick={onClose}>
+          <I.x size={20} />
+        </button>
+      )}
       <FavoriteButton publicId={l.publicId} className="heart-card" size={24} />
       {l.available ? <CardWhatsApp listing={l} /> : null}
     </div>

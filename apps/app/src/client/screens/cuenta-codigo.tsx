@@ -27,7 +27,7 @@ export function CodigoScreen() {
   return <CodeForm phone={pending.phone} mode={pending.mode} sentAt={pending.sentAt} next={next} />;
 }
 
-function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "register" | "login"; sentAt: number; next?: string }) {
+function CodeForm({ phone, mode, sentAt, next, inDialog = false }: { phone: string; mode: "register" | "login"; sentAt: number; next?: string; inDialog?: boolean }) {
   const navigate = useNavigate();
   const goTo = useGoTo();
   const queryClient = useQueryClient();
@@ -85,7 +85,7 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
   const mmss = `${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}`;
   return (
     <>
-      <FlowHeader title={header} back="/cuenta" search={next ? { next } : {}} />
+      {inDialog ? null : <FlowHeader title={header} back="/cuenta" search={next ? { next } : {}} />}
       <div className="stack flow">
         {contact ? <ContactCard next={next} /> : null}
         <div className="stack gap-8">
@@ -141,12 +141,19 @@ function CodeForm({ phone, mode, sentAt, next }: { phone: string; mode: "registe
           <a className="link" href="https://wa.me/" target="_blank" rel="noopener">
             Abrir WhatsApp para buscar el mensaje
           </a>
-          <button type="button" className="btn-link" onClick={changeNumber}>
-            Cambiar número
-          </button>
+          {inDialog ? null : <button type="button" className="btn-link" onClick={changeNumber}>Cambiar número</button>}
         </div>
-        {contact ? null : publish ? <p className="note small">Después seguimos con su casa</p> : <ReturnCard next={next} />}
+        {contact || inDialog ? null : publish ? <p className="note small">Después seguimos con su casa</p> : <ReturnCard next={next} />}
       </div>
     </>
+  );
+}
+
+export function DialogCodeForm({ next }: { next?: string }) {
+  const pending = pendingOtp();
+  return pending ? <CodeForm {...pending} next={next} inDialog /> : (
+    <div className="stack flow">
+      <p role="status">Solicite un código nuevo para continuar.</p>
+    </div>
   );
 }

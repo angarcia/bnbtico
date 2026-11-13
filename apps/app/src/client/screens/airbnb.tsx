@@ -1,10 +1,11 @@
 import { randomUuid } from "../../shared/random-uuid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { IcalError, validateAirbnbUrl } from "../../domain/ical";
 import { DomainError, toDomainError } from "../../domain/errors";
+import type { Listing } from "../../domain/listing";
 import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
 import { airbnbApi, airbnbQuery, refreshAirbnbCalendar, updateAirbnbCalendar, useCalendarOnline } from "../airbnb";
@@ -25,12 +26,17 @@ export function AirbnbScreen() {
   return <AirbnbManagementScreen key={`${uid}:${id}`} id={id} uid={uid} mes={mes} />;
 }
 
-function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes?: string }) {
+export function AirbnbConnectPopup({ listing, userId, onClose }: { listing: Listing; userId: string; onClose(): void }) {
+  return <AirbnbManagementScreen id={listing.id} uid={userId} popup={{ listing, onClose }} />;
+}
+
+function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: string; mes?: string; popup?: { listing: Listing; onClose(): void } }) {
   const client = useQueryClient();
   const online = useCalendarOnline();
-  const house = useQuery({ ...ownListingQuery(uid, id, client), enabled: !!uid });
-  const info = useQuery({ ...airbnbQuery(uid, id), enabled: !!uid && !!house.data });
-  const [connecting, setConnecting] = useState<"connect" | "replace" | null>(null);
+  const house = useQuery({ ...ownListingQuery(uid, id, client), enabled: !!uid && !popup });
+  const l = popup?.listing ?? house.data;
+  const info = useQuery({ ...airbnbQuery(uid, id), enabled: !!uid && !!l });
+  const [connecting, setConnecting] = useState<"connect" | "replace" | null>(popup ? "connect" : null);
   const [operation, setOperation] = useState<"refresh" | "disconnect" | null>(null);
   const [confirmDisconnect, setConfirmDisconnect] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -41,7 +47,6 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   const current = () => active.current && sessionState().session?.userId === uid;
   const summary = info.data;
-  const l = house.data;
   const suspended = summary?.state === "suspended" || l?.adminHold?.kind === "blocked" || l?.status === "rejected";
   const busy = summary?.state === "running" || !!operation;
   async function reconcile() {
@@ -79,6 +84,28 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
       } else setDisconnectError("No pudimos completar el cambio. Cancele y consulte el estado antes de intentar de nuevo.");
     } finally { inFlight.current = false; if (current()) setOperation(null); }
   }
+  const connectForm = connecting && l ? <ConnectSheet houseName={popup?.listing.title}
+    exportCard={popup ? <IcalExportCard id={id} userId={uid} inlineConfirmation /> : undefined}
+    connected={!!popup && !!summary?.connected}
+    replacing={connecting === "replace"} onClose={popup?.onClose ?? (() => setConnecting(null))} onConnect={async (url, requestId) => {
+    const api = await airbnbApi();
+    const data = await (connecting === "replace" ? api.replace(id, url, requestId) : api.connect(id, url, requestId)).catch(async error => {
+      if (current()) await reconcile().catch(() => {});
+      throw error;
+    });
+    if (!current()) return false;
+    client.setQueryData(airbnbQuery(uid, id).queryKey, data);
+    if (!data.connected || data.state === "running") {
+      await client.invalidateQueries({ queryKey: airbnbQuery(uid, id).queryKey });
+      throw new DomainError(data.state === "running" ? "La conexión sigue en curso. Vuelva a consultar el estado en un momento." : "No pudimos completar la conexión. Intente de nuevo.", data.state === "running" ? "conflict" : "validation");
+    }
+    await refreshAirbnbCalendar(client, uid, id, l.publicId);
+    if (!current()) return false;
+    if (!popup) setConnecting(null);
+    toast(connecting === "replace" ? "Enlace de Airbnb sustituido" : "Airbnb conectado");
+    return true;
+  }} /> : null;
+  if (popup) return connectForm;
   return <>
     <FlowHeader title="Calendarios de Airbnb" back="/propietario/calendario" search={{ casa: id, ...(mes ? { mes } : {}) }} historyBack />
     {l ? <p className="cal-house">{l.title}</p> : null}
@@ -107,32 +134,16 @@ function AirbnbManagementScreen({ id, uid, mes }: { id: string; uid: string; mes
     {confirmDisconnect ? <ConfirmSheet title="¿Desconectar Airbnb?" body="Se retirarán las noches importadas de Airbnb y dejarán de actualizarse. Sus bloqueos manuales y precios se conservan."
       confirmLabel={operation === "disconnect" ? "Desconectando…" : "Desconectar Airbnb"} confirmClassName="btn btn-danger btn-lg" cancelClassName="btn btn-ghost btn-lg"
       pending={operation === "disconnect"} error={disconnectError} onClose={() => setConfirmDisconnect(null)} onConfirm={() => void disconnect()} /> : null}
-    {connecting && l ? <ConnectSheet replacing={connecting === "replace"} onClose={() => setConnecting(null)} onConnect={async (url, requestId) => {
-      const api = await airbnbApi();
-      const data = await (connecting === "replace" ? api.replace(id, url, requestId) : api.connect(id, url, requestId)).catch(async error => {
-        if (current()) await reconcile().catch(() => {});
-        throw error;
-      });
-      if (!current()) return false;
-      client.setQueryData(airbnbQuery(uid, id).queryKey, data);
-      if (!data.connected || data.state === "running") {
-        await client.invalidateQueries({ queryKey: airbnbQuery(uid, id).queryKey });
-        throw new DomainError(data.state === "running" ? "La conexión sigue en curso. Vuelva a consultar el estado en un momento." : "No pudimos completar la conexión. Intente de nuevo.", data.state === "running" ? "conflict" : "validation");
-      }
-      await refreshAirbnbCalendar(client, uid, id, l.publicId);
-      if (!current()) return false;
-      setConnecting(null);
-      toast(connecting === "replace" ? "Enlace de Airbnb sustituido" : "Airbnb conectado");
-      return true;
-    }} /> : null}
+    {connectForm}
   </>;
 }
 
-function ConnectSheet({ replacing, onClose, onConnect }: { replacing: boolean; onClose(): void; onConnect(url: string, requestId: string): Promise<boolean> }) {
-  const { sheet, onKeyDown } = usePrivateSheet({ onClose, focusable: 'button:not([disabled]), input:not([disabled])', returnFocus: opener => opener?.focus() });
+function ConnectSheet({ houseName, exportCard, connected = false, replacing, onClose, onConnect }: { houseName?: string; exportCard?: ReactNode; connected?: boolean; replacing: boolean; onClose(): void; onConnect(url: string, requestId: string): Promise<boolean> }) {
   const [url, setUrl] = useState("");
   const [requestId, setRequestId] = useState(() => randomUuid());
   const [saving, setSaving] = useState(false);
+  const close = () => { if (!saving) onClose(); };
+  const { sheet, onKeyDown } = usePrivateSheet({ onClose: close, focusable: 'button:not([disabled]), input:not([disabled]), textarea', trapEmpty: true, returnFocus: opener => opener?.focus({ preventScroll: true }) });
   const [problem, setProblem] = useState<string | null>(null);
   const online = useCalendarOnline();
   async function submit(event: FormEvent) {
@@ -152,10 +163,15 @@ function ConnectSheet({ replacing, onClose, onConnect }: { replacing: boolean; o
     finally { setSaving(false); }
   }
   return createPortal(<>
-    <div className="sheet-backdrop" onClick={onClose} />
-    <section ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-labelledby="airbnb-connect-title" tabIndex={-1} onKeyDown={onKeyDown}>
+    <div className="sheet-backdrop" onClick={close} />
+    <section ref={sheet} className={exportCard ? "sheet airbnb-calendar-popup" : "sheet"} role="dialog" aria-modal="true" aria-labelledby="airbnb-connect-title" tabIndex={-1} onKeyDown={onKeyDown}>
       <span className="grabber" aria-hidden="true" />
-      <div className="row between"><h2 id="airbnb-connect-title">{replacing ? "Sustituir enlace" : "Conectar Airbnb"}</h2><button className="icon-btn" type="button" aria-label="Cerrar" onClick={onClose}><I.x /></button></div>
+      <div className="row between"><h2 id="airbnb-connect-title">{exportCard ? "Calendarios de Airbnb" : replacing ? "Sustituir enlace" : "Conectar Airbnb"}</h2><button className="icon-btn" type="button" aria-label="Cerrar" disabled={saving} onClick={close}><I.x /></button></div>
+      {houseName ? <p className="small muted">{houseName}</p> : null}
+      <div className={exportCard ? "airbnb-calendar-directions" : "stack gap-14"}>
+      <div className={exportCard ? "card stack gap-14" : "stack gap-14"}>
+      {exportCard ? <h2>Importar desde Airbnb</h2> : null}
+      {connected ? <p role="status">Airbnb conectado.</p> : <>
       <p>En Airbnb, abra el calendario de este alojamiento y copie su enlace de exportación. Péguelo aquí.</p>
       {replacing ? <p className="hint">El enlace actual seguirá conectado hasta que podamos leer el nuevo.</p> : null}
       <form onSubmit={submit} noValidate aria-busy={saving}>
@@ -163,8 +179,12 @@ function ConnectSheet({ replacing, onClose, onConnect }: { replacing: boolean; o
         <p className="hint" id="airbnb-connect-hint">Solo importamos noches bloqueadas. No copiamos precios ni datos de huéspedes. Compruebe que el enlace corresponde a esta casa.</p>
         <p id="airbnb-connect-error" className="field-error" role={problem ? "alert" : undefined}>{problem}</p>
         <button className="btn btn-primary btn-lg" type="submit" disabled={saving || !online || !url.trim()}>{saving ? replacing ? "Sustituyendo…" : "Conectando…" : replacing ? "Sustituir enlace" : "Conectar"}</button>
-        <button className="btn btn-ghost btn-lg" type="button" onClick={onClose}>Cancelar</button>
+        {!exportCard && <button className="btn btn-ghost btn-lg popup-cancel" type="button" disabled={saving} onClick={close}>Cancelar</button>}
       </form>
+      </>}
+      </div>
+      {exportCard}
+      </div>
     </section>
   </>, document.body);
 }

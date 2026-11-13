@@ -80,11 +80,11 @@ input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)
    hasta la pasada de escritorio (docs/plan-implementacion.md). */
 @media (min-width:900px){
   .app:has(.listing-grid){max-width:1120px}
-  .app:has(.listing-grid) .tabbar{max-width:1120px}
+  .app:has(.listing-grid) .tabbar:not(.desktop-nav){max-width:1120px}
   .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
 }
 @media (min-width:1200px){
-  .listing-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .listing-grid:not(.explore-results){grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 @media (min-width:1024px){
   .app:has(.listing-view){max-width:1120px}

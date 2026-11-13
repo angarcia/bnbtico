@@ -62,6 +62,7 @@
 .cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
 .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cta-prices .price{line-height:1.1}
+.listing-monthly-usd{display:none}
 /* Con fechas (ronda de Ana 2 nov, ticket 08) la cifra es el total, «≈ ₡285 000 / 3 noches»: 20 px en un renglón, dentro de la
    línea de 24 px (un span interno baja la letra), que no cambia: la barra mide lo mismo que sin fechas. */
 .cta-bar .price.is-stay,.price-usd.is-stay{white-space:nowrap}

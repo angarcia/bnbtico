@@ -40,6 +40,13 @@ export const I = {
   calendar: (p: P) => <svg {...S(p)}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>,
   chat: (p: P) => <svg {...S(p)}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12z" /></svg>,
   edit: (p: P) => <svg {...S(p)}><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" /><path d="m13.5 6.5 4 4" /></svg>,
+  // Lucide square-pen (ISC; licencia en icons-lucide.LICENSE).
+  squarePen: (p: P) => (
+    <svg {...S(p)}>
+      <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M16 3.8a2.3 2.3 0 0 1 3.3 3.3l-8 8-4.3 1.1 1.1-4.3z" />
+    </svg>
+  ),
   phone: (p: P) => <svg {...S(p)}><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>,
   plus: (p: P) => <svg {...S(p)}><path d="M12 5v14M5 12h14" /></svg>,
   x: (p: P) => <svg {...S(p)}><path d="M6 6l12 12M18 6 6 18" /></svg>,

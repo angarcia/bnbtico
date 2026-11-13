@@ -1,3 +1,71 @@
+## 2026-11-13 · Presupuestos de los módulos diferidos de escritorio
+
+Se suman 100 B comprimidos a cada uno de los tres límites que todavía fallaban tras reducir código. Contacto pasa a 7,6 kB, las pantallas de las pestañas a 25,3 kB y la ficha editable a 5,1 kB. El presupuesto inicial de 160 kB se mantiene.
+
+## 2026-11-13 · Contacto en la ficha pública de escritorio
+
+La columna derecha de la ficha disponible muestra el formulario de WhatsApp abierto junto al precio. Las fechas se comparten con el calendario de la ficha. En móvil, el botón de contacto abre la hoja.
+
+## 2026-11-13 · Cancelar en ventanas de escritorio
+
+«Cancelar» se muestra en terracota, con fondo transparente y sin sombra en las ventanas emergentes de escritorio. Al confirmar si se para la suscripción, «Mantener suscripción» aparece arriba como botón verde y «Parar suscripción» debajo como texto terracota.
+
+## 2026-11-13 · Conectar con Airbnb desde Calendario
+
+En escritorio, «Conectar con Airbnb» abre una ventana centrada sobre Calendario. A la izquierda se conecta la importación y a la derecha se genera o copia el enlace de exportación. Se conserva la casa y el mes en pantalla. La gestión de una conexión existente sigue accesible desde «Sincronización con Airbnb».
+
+## 2026-11-13 · Selectores y ventanas en escritorio
+
+Calendario y Consultas comparten un desplegable anclado al selector de casa, con la opción elegida en dorado y un check. Las confirmaciones y los avisos modales se muestran en ventanas centradas. Lugar conserva su diseño y en móvil se mantienen las hojas inferiores.
+
+## 2026-11-13 · Modo de edición de la ficha del anfitrión
+
+En escritorio, cada campo de la ficha tiene «Editar» como texto. Abre el editor en su propia fila y oculta la navegación superior. Arriba del campo aparecen «Guardar» o «Enviar a revisión», según corresponda, y una X para cerrar y descartar lo que se escribió. Al guardar o enviar correctamente se vuelve a la lectura.
+
+## 2026-11-13 · Edición de fotos en escritorio
+
+El botón de fotos de la ficha del anfitrión abre el editor en una ventana amplia sobre la ficha para aprovechar el ancho de escritorio y conservar el contexto. En móvil sigue abriendo su pantalla.
+
+## 2026-11-13 · Consultas en la barra superior de escritorio
+
+El icono de Consultas queda después del selector de moneda y antes de Ayuda por WhatsApp, con el contador de nuevas. Abre una ventana sobre la pantalla actual para consultar y responder por WhatsApp sin perder el contexto. En móvil, Consultas conserva su pestaña inferior.
+
+## 2026-11-13 · Primeros pasos de Añadir casa en escritorio
+
+En escritorio, «Ingresar» en la barra superior abre la misma ventana de número y código de WhatsApp que el asistente de publicación, con el texto de ingreso.
+
+La verificación de WhatsApp al publicar reúne el número y el código en la misma ventana. Desde el código se puede volver a introducir el número o pedir otro código al terminar la espera.
+
+La barra superior de pestañas permanece visible durante el asistente de escritorio. La X queda a la izquierda de «Publicar casa» y las acciones para avanzar, retroceder y enviar a revisión quedan a la derecha en la misma fila.
+
+Después de los datos iniciales, el asistente de escritorio muestra Precio en una columna más estrecha a la izquierda y Fotos a la derecha. Luego vienen «Nombre y descripción» y «Revisar y enviar».
+
+La primera pantalla del asistente de escritorio reúne tipo, capacidad, características y ubicación, también al publicar sin sesión o abrir un enlace antiguo. A la izquierda van «¿Qué es?», «¿Cuántos caben?» y «Características» y a la derecha, el mapa. Sin sesión, «Continuar» guarda los datos y abre una ventana para iniciar la verificación de WhatsApp antes de Precio y Fotos. Las correcciones desde «Revisar y enviar» abren la pantalla de escritorio que contiene el dato y vuelven al resumen al continuar. El asistente móvil conserva sus pasos individuales.
+
+## 2026-11-13 · Ayuda por WhatsApp en escritorio
+
+«Ayuda por WhatsApp» queda en el extremo derecho de la barra superior de escritorio, con y sin sesión. Abre la pantalla de ayuda con el canal correspondiente y conserva la navegación superior. En móvil, el acceso sigue en Cuenta.
+
+## 2026-11-12 · Cuenta del propietario en escritorio
+
+La pestaña Cuenta se divide en dos columnas del mismo ancho. A la izquierda quedan los datos de perfil y las acciones de cuenta, visibles al desplazarse por las suscripciones. «Mi perfil» abre en modo de lectura y «Editar» activa el formulario en la misma tarjeta. A la derecha se muestra el detalle completo de las suscripciones por casa, junto con la oferta y el método de pago.
+
+## 2026-11-12 · Calendario del propietario en escritorio
+
+El selector de casa encabeza el menú de la columna izquierda, junto con las acciones del calendario. El menú permanece visible debajo de la barra superior para poder cambiar de casa al recorrer los meses de la columna derecha. Al seleccionar noches, el editor de disponibilidad y precio aparece debajo de las acciones del menú izquierdo para dejar libre la cuadrícula. La moneda se cambia en la barra superior común y las casillas con precio muestran el símbolo de la moneda elegida.
+
+## 2026-11-12 · Barra superior para propietarios en escritorio
+
+Los propietarios usan la barra superior en Explorar y en sus pantallas principales de gestión. Favoritos va después de Explorar, junto con los accesos a casas, Calendario, Consultas y Cuenta. En móvil, el acceso a Favoritos sigue dentro de Cuenta.
+
+## 2026-11-12 · Moneda en la barra de escritorio
+
+El selector «₡ | $» se comparte en la barra superior del catálogo de escritorio. Los precios de alojamiento se muestran en la moneda elegida, incluida la ficha de escritorio, para mantener la misma referencia al pasar del mapa o las tarjetas a una casa. Se conservan los importes en colones y la presentación móvil.
+
+## 2026-11-12 · Marco compartido de escritorio
+
+Desde 1024 px, el catálogo y el panel del propietario usan barra superior. El marco compartido permite adaptar los recorridos de escritorio sobre la navegación y los componentes de la app. Explorar es la entrada y el destino al cerrar sesión. El logotipo de la barra es el acceso a «Qué es 3bstays» sin sesión; si se confirma una sesión en su URL, vuelve a Explorar. El contenido, la promoción y los componentes se comparten con 3Btico móvil.
+
 ## 2026-11-12 · Terracota de la interfaz web
 
 Ana fija el terracota de la interfaz web en `#B44C30` para el tema claro. El tema oscuro conserva sus variantes de contraste.

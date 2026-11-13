@@ -11,7 +11,7 @@ import { STATUS_LABELS, type Listing, type ListingStatus } from "../../domain/li
 import { formatCRC } from "../../domain/money";
 import { PAYMENT_MESSAGES } from "../../domain/payments";
 import { orderSubscriptions, subscriptionNeedsAttention, subscriptionSummary } from "../../domain/subscription-presentation";
-import { scopeBilling, scopeFix } from "../../domain/subscription-scope";
+import { scopeBilling, scopeFix, type SuscripcionSearch } from "../../domain/subscription-scope";
 import {
   MONTHLY_FEE_CRC,
   launchOffer,
@@ -32,6 +32,7 @@ import { I } from "../../shared/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
 import { FlowHeader } from "../chrome";
 import { ConfirmSheet } from "../confirm-sheet";
+import { useDesktop } from "../desktop";
 import { activityQuery, offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
 import { useSession } from "../session";
 
@@ -145,6 +146,7 @@ function PayNotice({ hb, today }: { hb: HouseBilling; today: string }) {
 }
 
 function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: HouseBilling; today: string; userId: string; hasMethod: boolean; target: boolean; onAction(): void }) {
+  const desktop = useDesktop();
   const { house, sub } = hb;
   const [confirming, setConfirming] = useState(false);
   const change = useStopResume(userId, house, hasMethod);
@@ -215,8 +217,10 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           title="Parar suscripción"
           body={`¿Parar la suscripción de ${house.title || "esta casa"}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.`}
           confirmLabel="Parar suscripción"
-          confirmClassName="btn btn-outline-bad btn-lg"
-          cancelClassName="btn btn-ghost btn-lg"
+          confirmClassName={desktop ? "btn btn-lg popup-cancel" : "btn btn-outline-bad btn-lg"}
+          cancelClassName={desktop ? "btn btn-primary btn-lg" : "btn btn-ghost btn-lg"}
+          cancelLabel={desktop ? "Mantener suscripción" : "Cancelar"}
+          cancelFirst={desktop}
           returnFocus={ref}
           onClose={() => setConfirming(false)}
           onConfirm={() => {
@@ -286,8 +290,19 @@ const SAVING_TEXT: Record<Exclude<Saving, null>, string> = {
 };
 
 export function SuscripcionScreen() {
+  return <SubscriptionContent search={route.useSearch()} />;
+}
+
+export function HouseSubscriptionPanel({ listing }: { listing: Listing }) {
+  return <SubscriptionContent search={{ casa: listing.publicId }} panelBack={`/propietario/casas/${listing.id}`} />;
+}
+
+export function AccountSubscriptionDetails() {
+  return <SubscriptionContent search={{}} inAccount />;
+}
+
+function SubscriptionContent({ search, panelBack, inAccount = false }: { search: SuscripcionSearch; panelBack?: string; inAccount?: boolean }) {
   const userId = useSession().session?.userId ?? "";
-  const search = route.useSearch();
   // Con `?casa=` se vuelve a leer siempre al abrir: una casa aprobada hace un momento aún no está en la caché.
   const billing = useQuery({ ...billingQuery(userId), enabled: !!userId, refetchOnMount: search.casa ? "always" : true });
   const restoring = useIsRestoring();
@@ -302,13 +317,13 @@ export function SuscripcionScreen() {
   // Una sola corrección de la URL: fuera `pago=ok` siempre y `casa` si no es suya (con los datos ya leídos); el hash se queda.
   useEffect(() => {
     const fix = scopeFix(search, { unknown: !!scope?.unknown, settled });
-    if (fix) void navigate({ to: "/propietario/suscripcion", search: fix, hash, replace: true });
-  }, [search, scope?.unknown, settled]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (fix && !panelBack) void navigate({ to: "/propietario/suscripcion", search: fix, hash, replace: true });
+  }, [search, scope?.unknown, settled, panelBack]); // eslint-disable-line react-hooks/exhaustive-deps
   const today = indexed?.today ?? "";
   const method = indexed?.method ?? null;
   const scoped = scope?.scoped ?? null;
   // Con casa: «Suscripción» desde el primer pintado (y mientras se confirma una casa que aún no está en la caché).
-  const single = !!search.casa && (scoped !== null || (indexed ? !settled : billing.isPending));
+  const single = !!panelBack || (!!search.casa && (scoped !== null || (indexed ? !settled : billing.isPending)));
   const due = scoped ? payButtonDue(scoped.sub, today) : (indexed?.all.some((x) => payButtonDue(x.sub, today)) ?? false);
   const card = (hb: HouseBilling) => (
     <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} onAction={dismissSaving} />
@@ -361,7 +376,9 @@ export function SuscripcionScreen() {
 
   return (
     <>
-      <FlowHeader title={single ? "Suscripción" : "Promoción y suscripción"} back="/cuenta" historyBack />
+      {inAccount ? <h2>Promoción y suscripción</h2> : (
+        <FlowHeader title={single ? "Suscripción" : "Promoción y suscripción"} back={panelBack ?? "/cuenta"} historyBack={!panelBack} />
+      )}
       {scoped ? (
         <p className="small muted sub-scope" data-testid="sub-scope">
           {scoped.house.title || "Casa sin título"}
@@ -379,10 +396,12 @@ export function SuscripcionScreen() {
       {indexed && (!single || scoped) ? (
         // Con claves, React mueve las tarjetas en vez de montarlas otra vez: al parar una casa el foco sigue en ella.
         (needs ? [houses, methodCard, howItWorks] : [methodCard, howItWorks, houses]).map((el) => <Fragment key={el === houses ? "houses" : el === methodCard ? "method" : "how"}>{el}</Fragment>)
-      ) : single && billing.isError && !billing.isFetching ? (
+      ) : (single || inAccount) && billing.isError && !billing.isFetching ? (
         <p className="note" role="alert">
           {message(billing.error)}
         </p>
+      ) : panelBack && settled ? (
+        <p className="note">La suscripción de esta casa no está disponible.</p>
       ) : userId && (billing.isPending || single) ? (
         <section className="card skeleton sub-skeleton" aria-busy="true" aria-label="Cargando su suscripción">
           <span className="sk sk-line" />
@@ -390,7 +409,7 @@ export function SuscripcionScreen() {
       ) : (
         howItWorks
       )}
-      {scoped && indexed && indexed.all.length >= 2 ? (
+      {!panelBack && scoped && indexed && indexed.all.length >= 2 ? (
         <Link to="/propietario/suscripcion" className="link small center">
           Ver todas sus casas
         </Link>

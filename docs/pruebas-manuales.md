@@ -35,7 +35,7 @@ Se prueba **desde el teléfono**, en `https://pruebas.3bstays.com`. Marque cada 
 - **App:** `https://pruebas.3bstays.com` (rama `develop`, worker `3bstays-pruebas` en Cloudflare, Supabase `bnbtico-pruebas`). Está protegida con Cloudflare Access: la primera vez pide el correo y un PIN de un solo uso. Sin Access quedan `/casa/*`, `/_purge/*`, `/assets/*`, `/fonts/*`, `/icons/*`, `/webhooks/*` y `/_pruebas/*`, así que una ficha se puede abrir sin PIN.
 - **Desde la red corporativa (VPN):** `https://3bstays-pruebas.ana-garcia-saiz.workers.dev`. Es el mismo worker y la misma base, sin Access. Única diferencia: la purga de la ficha apunta a `pruebas.3bstays.com`, así que en `workers.dev` una ficha puede salir vieja unos minutos después de un cambio.
 - **No se usa** `pruebas.bnbtico.com`: era la app vieja de Vercel y se apaga (decisión 2026-11-11).
-- **Portada:** `/?pronto=1`. En pruebas, `/` lleva a 3Btico sin sesión y a Explorar con sesión.
+- **Portada:** `/?pronto=1`. En pruebas, `/` lleva a Explorar desde 1024 px. En móvil lleva a 3Btico sin sesión y a Explorar con sesión.
 - **App instalada:** después de cada despliegue, ciérrela y vuelva a abrirla para tomar la versión nueva.
 
 ### 1.2 Cuentas
@@ -163,7 +163,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 ### 2.3 Moneda ₡ | $ y tipo de cambio
 
 - [ ] **C10** En la fila de chips toque «$» → los precios pasan a dólares («$118 / noche»), aparece la nota «Dólares solo para orientarle: ≈ ₡… por US$1 (tipo de referencia del … ). Los anfitriones fijan sus precios en colones.»; recargue → sigue en dólares; toque «₡» → vuelven los colones y la nota se va.
-- [ ] **C11** Con «$» elegido abra una ficha → la barra de abajo muestra las dos monedas a la vez (colones a la izquierda, «≈ $… / noche» a la derecha) y no hay selector ₡ | $ en la ficha; en Favoritos (con una casa guardada) el selector está arriba, al extremo derecho de la fila del contador, y los precios siguen la moneda elegida.
+- [ ] **C11** En móvil, con «$» elegido abra una ficha → la barra de abajo muestra las dos monedas a la vez (colones a la izquierda, «≈ $… / noche» a la derecha) y no hay selector ₡ | $ en la ficha; en Favoritos (con una casa guardada) el selector está arriba, al extremo derecho de la fila del contador, y los precios siguen la moneda elegida.
 - [ ] **C12** Si la nota de dólares termina con una atribución (p. ej. «· Rates By Exchange Rate API»), toque el enlace → abre la web de la fuente en otra pestaña; si no hay atribución, la nota no tiene ningún enlace.
 
 ### 2.4 Barra de abajo y botón «Mapa»
@@ -182,6 +182,38 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **3B3** Compruebe que los meses gratis coinciden con la oferta disponible en la app. Si ya no hay plazas, se ve el precio mensual y desaparece el enlace de los meses gratis.
 - [ ] **3B4** Ingrese con una cuenta sin casas → entra a Explorar y conserva 3Btico. Abra 3Btico desde la barra. Repita con una cuenta con al menos una casa, incluido un borrador → entra a Explorar, la pestaña desaparece y su enlace directo vuelve a Explorar. Cierre sesión desde Cuenta → llega a 3Btico. Con 3Btico abierto sin sesión, ingrese desde otra pestaña → la primera pasa a Explorar. Compruebe que el viajero conserve 3Btico.
 
+#### Marco de escritorio
+
+- [ ] Abra Calendario a 1024 y 1280 px. Marcar una reserva, Pausar la casa, Conectar con Airbnb, la ayuda y la leyenda quedan a la izquierda. El calendario ocupa la columna más ancha, a la derecha. El selector de moneda está solo arriba a la derecha en la barra compartida. Cambie de moneda y compruebe que Calendario y Explorar muestran la misma selección. Desplácese por los meses y compruebe que los días de la semana y el título del mes quedan debajo de la barra superior.
+
+- [ ] A 1024 y 1280 px, compare los márgenes exteriores de Explorar, Favoritos, Mis casas, Cuenta, Calendario y una ficha pública. El marco usa los mismos márgenes a ambos lados. Compruebe también que el mapa ampliado respeta esos márgenes y que los formularios centrados se leen con comodidad.
+
+- [ ] Abra Nombre, Precio, Ubicación y Suscripción desde el detalle de una casa en escritorio. Cada vista se abre a la derecha. Al desplazarse, la barra superior sigue fija y el resumen de la casa permanece visible a la izquierda. Use Volver para recuperar la lista de datos. Guarde un cambio y compruebe que vuelve al detalle con el dato actualizado.
+
+- [ ] Abra el detalle de una casa activa desde Mis casas a 1024 y 1280 px. La barra superior permanece visible. La foto, las estadísticas, Compartir y WhatsApp de esta casa quedan a la izquierda. Los datos editables y Suscripción quedan a la derecha. Repita con un borrador y compruebe que «Seguir publicando» queda a la derecha. En móvil, el contenido sigue en una columna.
+
+- [ ] Abra Mis casas con cuatro o más casas a 1024 y 1280 px. Compruebe que aparecen tres tarjetas por fila y que la segunda fila empieza a la izquierda.
+
+- [ ] En escritorio, compruebe que el botón Filtros aparece al elegir Lugar. Ábralo desde Explorar. El cuadro aparece sobre el mapa y las casas. Cierre con Escape y compruebe que el foco vuelve al botón. Abra otra vez, cambie el tipo de alojamiento y pulse «Ver casas». El cuadro se cierra y Explorar muestra los resultados filtrados.
+
+- [ ] Use los botones cuadrados del mapa para acercar y alejar. Amplíe el mapa y vuelva a reducirlo. La búsqueda permanece visible y el mapa conserva su posición y zoom. Abra la tarjeta de una casa con Enter desde un marcador de precio.
+
+- [ ] En Explorar, compruebe que los filtros rápidos «Qué necesitan» aparecen después de elegir Lugar y aprovechan todo el ancho del mapa debajo de la búsqueda. Si hace falta, continúan en otra fila sin desbordarse. Deben mostrar solo las características de las casas de esa zona. Cambie de lugar y compruebe que se actualizan sin mostrar las opciones del anterior. Active y desactive una con teclado y compruebe los resultados. Quite el lugar y compruebe que los filtros rápidos desaparecen.
+
+- [ ] En escritorio, cambie de «₡» a «$» en la barra superior. Compruebe que cambian los precios de las tarjetas y del mapa. Abra Favoritos, una ficha con precio mensual y el contacto. Compruebe que usan la misma moneda y que la preferencia se conserva al recargar. Vuelva a colones desde la barra.
+
+- [ ] En una ventana de 1440 px de ancho o más, alterne entre Explorar con resultados y Favoritos. Compruebe que la línea inferior de la barra superior empieza y termina en los mismos puntos y que el logo y el selector de moneda mantienen su posición.
+
+- [ ] En Explorar, a 1024 y 1280 px, la barra superior llega a ambos bordes. Lugar, Fechas y Personas quedan en una sola fila sobre el mapa, con el selector de moneda en la barra superior. El botón Filtros queda justo a la izquierda de Lugar. Recorra los controles con Tab y abra Lugar y Fechas con Enter. Ajuste Personas con los botones − y + en la propia barra y compruebe que los resultados cambian de inmediato. El panel aparece debajo de la fila sin cambiar de página. Fechas muestra dos meses lado a lado. Al aplicar, compruebe que se actualizan los valores y los resultados. Escape cierra el panel y devuelve el foco al campo. Hacer clic fuera cierra el panel. Compruebe que en escritorio el mapa se puede desplazar y ampliar dentro de su caja, y que al pulsar un precio se resalta el marcador y aparece la tarjeta pequeña de la casa. Pulse otro precio para cambiar de tarjeta, el fondo del mapa para cerrarla y la tarjeta para abrir la ficha.
+
+- [ ] En Explorar, con cuatro o más resultados a 1280 × 800, compruebe que se muestran dos casas por fila a la derecha. Desplácese por los resultados y compruebe que el mapa y sus controles permanecen fijos a la izquierda. El mapa ocupa todo el alto entre la barra superior y el borde inferior de la ventana. Ensanche y estreche la ventana sin bajar de 1024 px. La barra, el mapa y las tarjetas deben aprovechar el ancho disponible sin desplazamiento horizontal. Durante la carga, los espacios de las tarjetas siguen la misma cuadrícula.
+- [ ] En Explorar de escritorio, abra una tarjeta desde un precio del mapa y pulse la X de la esquina superior derecha. Compruebe que la tarjeta se cierra, el mapa conserva su posición y el foco vuelve al marcador.
+- [ ] Compare tarjetas de resultados con títulos de distinta longitud y con distintas capacidades. Compruebe que tienen la misma altura y que el botón de WhatsApp queda dentro de cada tarjeta, alineado con el precio.
+
+- [ ] **E1** Abra `/` sin sesión a 1280 × 800. Explorar abre primero y la barra superior muestra el logotipo, Explorar, Favoritos e Ingresar. Recorra los enlaces con Tab y Mayús+Tab. Active el logotipo con Enter para abrir «Qué es 3bstays» y compruebe el foco, el estado activo, el texto y el botón dorado. El logotipo de la barra no se repite encima de la tarjeta. Compruebe Favoritos e Ingresar desde la misma barra y repita a 1024 px.
+- [ ] **E2** Con sesión, abra `/que-es-3bstays` directamente. Debe llegar a Explorar y el logotipo debe llevar a Explorar. Cierre sesión desde Cuenta y compruebe que el logotipo vuelve a abrir la pantalla informativa. Abra la pantalla sin sesión e ingrese en otra pestaña del mismo navegador. La pantalla informativa debe pasar a Explorar.
+- [ ] **E3** Con una cuenta con casas, abra Mi casa o Mis casas desde la barra superior de Explorar. Compruebe la barra y recorra Mis casas, Calendario, Consultas, Cuenta y Explorar con teclado. Al volver a Explorar, la barra sigue arriba y el mapa y los resultados caben debajo. Reduzca la ventana por debajo de 1024 px y compruebe que reaparece la barra móvil. En Admin, compruebe su navegación habitual.
+
 ### 2.5 Mapa de Explorar
 
 - [ ] **C16** Mire el mapa de arriba (antes de «N casas en Limón») → burbujas de **precio** (p. ej. «₡42 000»), ninguna escondida debajo de la búsqueda ni de los filtros, el crédito «Leaflet | © OpenStreetMap» abajo a la derecha, sin botones de zoom, y arrastrar con el dedo desplaza la página, no el mapa; si dos casas están muy juntas van en una sola burbuja «N casas».
@@ -196,7 +228,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C22** Busque llegada y salida a 4 noches (p. ej. «23–27 nov») → cada tarjeta dice «**≈ ₡180 000** por 4 noches» (la cifra en negrita) en vez de «/ noche»: la suma de las 4 noches, con el precio especial del calendario en las noches que lo tengan (CT-1047 a); la noche de la salida no cuenta; en ninguna parte dice «total a pagar». Con «$» el total sale en dólares redondeados («≈ $350 por 4 noches»). Quite las fechas → vuelven los «₡45 000 / noche».
 - [ ] **C23** Busque una estancia de 35 noches → la casa con precio al mes (CT-1048 b, ₡900 000) dice «≈ ₡1 050 000 por 35 noches» (mes × 35 / 30); la de mensual a negociar (CT-1049 c) y las que no aceptan mensual, la suma de sus 35 noches. Abra un enlace viejo `/explorar?mensual=1` (o `?modo=monthly`, `?desde=…`) → Explorar normal, sin error ni chip mensual.
 - [ ] **C24** Abra Filtros → el orden de «Su búsqueda» es Zona, Fechas, Personas, Tipo de alojamiento y Dormitorios. Zona y Fechas tienen el valor a la derecha. Las tres opciones del tipo caben en una fila a 320 px, con icono sobre el texto y check en la seleccionada. Dormitorios no aparece por defecto. Seleccione Completo, marque 2+ dormitorios y después Habitación → el contador se oculta y se descarta el mínimo. Toque Cualquiera → sigue oculto; vuelva a Completo → aparece sin mínimo. Personas permanece visible. Limpiar vuelve a Cualquiera y oculta Dormitorios. Un enlace con `beds=3` sin `tipo=completo` ignora ese mínimo.
-- [ ] **C25** Abra Filtros con Wifi presente en alguna casa visible y sin ninguna con Cargador EV. «Qué necesitan» muestra Wifi y oculta Cargador EV en la rejilla de dos columnas. Cambie la zona, las fechas o las personas y compruebe que las opciones del catálogo sigan disponibles. Abra `/explorar/filtros?ppl=2&ev=1`: Cargador EV aparece seleccionado y desaparece al quitarlo, manteniendo las dos personas. A 320 px, revise que las etiquetas quepan y que al seleccionar una opción disponible aparezca el check sin mover los botones.
+- [ ] **C25** En móvil, abra Filtros sin zona y compruebe que «Qué necesitan» no aparece. Elija una zona con Wifi y sin Cargador EV, vuelva a Filtros y compruebe que aparece Wifi y no Cargador EV. Cambie a una zona con características distintas y compruebe que la lista se actualiza. Repita en el cuadro de escritorio.
 - [ ] **C26** Marque «Piscina» y «Frente al mar» → el botón se actualiza solo («Ver 1 casa»); tóquelo → Explorar muestra solo esa casa y el botón de filtros trae la insignia «2» (nombre accesible «Filtros (2 activos)»). Reabra Filtros y ponga zona, fechas, personas, dormitorios y precios. Toque «Limpiar» → se borran esas selecciones, vuelve a «Todas las provincias» y «Cualquiera» en el tipo, y se actualiza «Ver N casas», manteniendo abierta la pantalla. Toque «Ver N casas» → vuelve a Explorar con el resultado limpio.
 - [ ] **C27** En Filtros use «+» y «−» en Personas y Dormitorios. «Personas» muestra la cantidad elegida y «Dormitorios» llega hasta «4+». Con «2+», «Ver N casas» cuenta las casas con dos o más dormitorios. Al bajar a «–» se quita ese filtro y se desactiva «−». Aplique y vuelva a abrir Filtros → se conservan las dos cantidades.
 - [ ] **C28** Escriba un mínimo mayor que el máximo (p. ej. 50.000 y 44000) → aparece «El precio mínimo no puede ser mayor que el máximo.» y «Ver N casas» se desactiva; corríjalo → el aviso se va y el botón se activa.
@@ -277,6 +309,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C80** Escriba `000000` y toque «Verificar y continuar» → «Ese código no es correcto o caducó.»; recargue la página → el número pendiente sigue en pantalla.
 - [ ] **C81** Cuando la cuenta regresiva llegue a 0:00 toque «Pedir otro código» → aparece «Le enviamos otro código por WhatsApp.» y la cuenta vuelve a empezar; «Cambiar número» vuelve al primer paso.
 - [ ] En móvil, la pantalla «Introduzca el código» alinea la cabecera y el formulario a 12 px del borde, igual que Ingresar y 3bstays. Compruebe a 320 px que caben las seis casillas.
+- [ ] En escritorio, revise «Introduzca el código» a 1024 y 1280 px. El formulario queda centrado y aprovecha más ancho. Las seis casillas y «Verificar y continuar» se ven completos y el foco es visible.
 - [ ] **C82** Escriba `123456` → llega a «¡Listo! Su cuenta está creada» con «¿Tiene una casa para alquilar?», «Sí, quiero publicarla», «No, busco casa» y «Añadir un correo de recuperación».
 - [ ] **C83** Toque «No, busco casa» → llega a Explorar y la barra de abajo ahora dice «Explorar · Favoritos · Cuenta» (ya no «Ingresar»).
 - [ ] **C84** Cierre la sesión y entre otra vez con `8888 9999` → no pide el nombre, `123456` entra directo a Explorar y no vuelve a salir «¡Listo! Su cuenta está creada».
@@ -293,6 +326,10 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C92** Con sesión, elija fechas y 3 personas y toque «Abrir WhatsApp» → el botón pasa un instante a «Abriendo WhatsApp…» y se abre `wa.me` con el número de la casa y el enlace público de esa ficha (`/casa/CT-####`, sin parámetros) en la primera línea. Tras una línea en blanco aparece «Hola, vi <casa> en 3bstays y me interesa. ¿Está disponible del … para 3 personas? Gracias.»; sin red aparece «Sin conexión. Revise su internet e intente de nuevo.» y no se abre nada; con una casa que se cerró mientras tanto, «Esta casa no está disponible para consultas.».
 
 ### 2.15 Cuenta del cliente
+
+- [ ] En el popup de escritorio, introduzca un número de prueba sin cuenta. En el paso del nombre, use la flecha de arriba a la izquierda para volver al número dentro de la misma ventana. Compruebe que la X de arriba a la derecha cierra el popup.
+
+- [ ] En escritorio y sin sesión, pulse «Ingresar» entre el selector de moneda y «Ayuda por WhatsApp» en Explorar y Favoritos. Compruebe que se abre la ventana de WhatsApp sobre la pantalla actual. Pida el código y compruebe que aparece en la misma ventana con la flecha de regreso y la X. Al verificar desde Favoritos, debe regresar a Favoritos.
 
 - [ ] **C93** Con sesión de `8888 1234` toque la pestaña «Cuenta» → sin flecha ni título visible; tarjeta con iniciales, nombre, el número en su propia línea («+506 8888 1234»), «WhatsApp verificado» y debajo «Pronto podrá verificar también su identidad (opcional).»; no hay nada más sobre identidad.
 - [ ] En móvil, el título y el formulario de Ingresar empiezan a 12 px del borde, igual que la cabecera y las tarjetas de 3bstays. Cuenta tiene 3 px de margen lateral con sesión. Revise que el formulario de ingreso y la tarjeta de perfil quepan a 320 px.
@@ -317,6 +354,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C104** Abra `/no-existe` → «No encontramos esta página» con la barra de abajo visible y el botón «Ir a Explorar», que lleva a Explorar.
 - [ ] **C105** En un teléfono de 320–360 px de ancho o con la letra grande, abra una ficha y su hoja de contacto → la barra de precios cabe entera, no tapa el final de la ficha y la hoja se desplaza hasta «Abrir WhatsApp» sin que nada se corte.
 - [ ] En móvil, compruebe que la hoja de contacto por WhatsApp deja 12 px a cada lado al abrirla desde una tarjeta o desde la ficha.
+- [ ] En una ficha pública disponible a 1024 y 1280 px, compruebe que el formulario «Escríbale a…» aparece abierto en la columna derecha. Cambie fechas y personas, revise el mensaje y compruebe que el calendario de la ficha y el formulario comparten las fechas. Sin sesión, verifique que «Continuar» conserva el borrador al verificar WhatsApp. En móvil, el formulario se abre desde el botón de contacto.
 
 ## 3. Anfitrión
 
@@ -335,6 +373,8 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 ### 3.2 Verificar el WhatsApp y entrar al asistente
 
+- [ ] En escritorio, complete el primer paso sin sesión y pulse «Continuar». La ventana «Para subir las fotos, verifique su WhatsApp» se abre sobre el formulario. Ciérrela con Escape o la X, compruebe que se conservan los datos y vuelva a abrirla. Pida el código y compruebe que el campo de seis dígitos recibe el foco en la misma ventana. Pruebe «Volver al número» y el reenvío cuando termine la espera. Complete la verificación para llegar a Precio y Fotos.
+
 - [ ] **A6** En la pantalla de verificación revise → «Lo que ya escribió se guarda. Le enviamos un código por WhatsApp: así nadie más puede publicar en su nombre.», selector «+506» con «Costa Rica (+506)» elegido y «Otro país» al final, «¿Su número no es de Costa Rica? Toque +506 para elegir su país.», «No tengo acceso a mi WhatsApp» y «Al continuar acepta los Términos. 3bstays nunca le pedirá pagos.».
 - [ ] **A7** Toque «Recibir código por WhatsApp» sin escribir número → «Escriba su número de WhatsApp.».
 - [ ] **A8** Escriba `123` y pida el código → «Ese número no parece válido para el país elegido.».
@@ -346,6 +386,22 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 - [ ] **A14** Cierre sesión (3.18) y repita con `8777 0001`, que ya existe → no pide nombre; tras el código sigue en el asistente (o, si ya tiene un borrador, ver A61).
 
 ### 3.3 Asistente: ubicación (pantalla 2)
+
+- [ ] En escritorio, abra «Publicar» sin sesión y compruebe que los datos iniciales aparecen juntos antes de verificar el WhatsApp. Con sesión, retome un borrador desde un enlace antiguo de ubicación, capacidad, características o precio. Desde «Revisar y enviar», pulse una fila de ubicación o precio y compruebe que abre el grupo correspondiente y que «Continuar» vuelve al resumen.
+
+- [ ] En el primer paso de escritorio, elija Habitación. Compruebe que Personas y «Baño de la habitación» ocupan columnas iguales y que «Personas» queda a la izquierda de su contador en la misma fila. El título del baño lleva su icono y las opciones Privado y Compartido se reparten el ancho en dos partes iguales.
+
+- [ ] En escritorio, el campo «Zona» queda cerca del mapa desde que se abre el formulario. Al marcar un punto, compruebe que aparece la ubicación y que «Zona» sigue accesible.
+
+- [ ] En escritorio, compruebe que «¿Qué es?» muestra opciones compactas con el botón de interrogación dentro del borde derecho de cada opción. Abra y cierre cada explicación con clic o teclado. Compruebe que consultar la ayuda no cambia el tipo seleccionado.
+
+- [ ] En escritorio, desde Mis casas abra «Añadir casa». Compruebe que la barra superior de pestañas sigue visible. En la cabecera del asistente, la X queda a la izquierda de «Publicar casa» y «Atrás», «Continuar» y, al final, «Enviar a revisión» aparecen a la derecha en la misma fila. Recorra varios pasos con teclado y compruebe que puede volver a Mis casas desde la barra superior.
+
+- [ ] En escritorio, recorra «Añadir casa» y compruebe que se muestran los títulos de cada pantalla, incluido «Revisar y enviar», sin barra de progreso ni contador de etapas. En móvil, compruebe que se mantienen ambos indicadores.
+
+- [ ] En el primer paso de escritorio, compruebe que Personas, Dormitorios y Baños quedan en tres columnas si hay espacio y se reparten en dos cuando se estrecha la ventana. Cada etiqueta queda arriba y su icono aparece junto al número en la fila de los botones − y +. Los botones conservan el foco visible y un área de 44 × 44 px.
+
+- [ ] En escritorio (1280 × 800), entre con sesión y abra «Añadir casa». La columna izquierda muestra «¿Qué es?», «¿Cuántos caben?» y «Características», en ese orden. El mapa aparece a la derecha. Alterne Habitación y Alojamiento completo para comprobar que cambian los controles de capacidad. Complete ambas columnas y pulse «Continuar» para abrir Precio y Fotos. Use «Atrás» y compruebe que se conservaron los datos, incluidas las características. En móvil, compruebe que los pasos aparecen por separado.
 
 - [ ] **A15** En «¿Dónde está su casa?» revise → mapa alto con el campo «Busque un pueblo, playa o barrio» flotando arriba, «+»/«−» abajo a la izquierda, botón «Usar mi ubicación» abajo a la derecha, debajo una sola línea «Los clientes solo ven la zona, no su dirección.» y la lista «Zona» con «Marque el punto en el mapa» y «Otra…»; en un teléfono pequeño, sin scroll.
 - [ ] En móvil, el mapa del segundo paso llega a ambos bordes y mide al menos 224 px de alto. Compruebe que puede marcar un punto y llegar al selector «Zona» a 375 × 667. Antes de marcar un punto, el mapa aprovecha el espacio de la línea de cantón y provincia. Al marcarlo, esa línea vuelve a ocupar su sitio.
@@ -375,6 +431,8 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 - [ ] **A31** Deje el nombre en «Casa» (corto) y toque «Continuar» → avanza igual a «Fotos» (no bloquea; se avisa en el último paso).
 
 ### 3.6 Asistente: fotos (pantalla 7)
+
+- [ ] En escritorio, con sesión, compruebe que después de los datos iniciales aparecen Precio a la izquierda y Fotos a la derecha. Suba una foto, escriba el precio y continúe a «Nombre y descripción» y después a «Revisar y enviar». Vuelva dos veces con «Atrás» y compruebe que se conservaron la foto y el precio.
 
 - [ ] **A32** Sin fotos revise → «Fotos» con «0 de 15», «Necesita al menos una foto para enviarla a revisión.», botón «Añadir» y «Horizontales, sin teléfonos ni marcas de agua.».
 - [ ] **A33** Toque «Añadir» y elija 4 fotos de la galería → cada una pasa por «Preparando…», «Subiendo…» y «Guardando…»; el contador queda en «4 de 15» y la primera lleva «Portada».
@@ -446,11 +504,16 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 ### 3.12 Detalle de una casa y compartir la ficha
 
 - [ ] **A77** Abra una casa activa → margen exterior12 px, portada enmarcada con estado y acceso crema de cámara/recuento (44 px, lector «Editar fotos: N fotos»), estadísticas centradas y compactas en dorado suave, sin iconos, y nota «Toque un dato para editarlo. Su ficha seguirá visible durante la revisión.» Ver ficha conserva su posición flotante y no tapa el final.
+- [ ] En escritorio, abra el detalle de una casa activa como anfitrión. Compruebe que el panel derecho comienza con los datos editables y que puede abrir cada campo. A 1280 × 800, revise que la tarjeta «Últimos 30 días» sea compacta y que se lean las tres cifras con sus etiquetas.
 - [ ] **A78** Abajo y centrado flota el botón «Ver ficha» con un ojo a la izquierda, con el mismo aspecto que «Mapa» de Explorar (tarjeta clara translúcida con texto e icono oscuros, esquinas de 12 px, no redondo), a 12 px del borde y sin chocar con la barra de inicio del iPhone; baje hasta el final: la fila «Suscripción» se lee entera por encima del botón. Tóquelo → abre `/casa/CT-####` con la ficha pública de la casa.
 - [ ] **A79** Baje en el detalle → «Compartir» con el enlace `pruebas.3bstays.com/casa/CT-####` debajo, la fila «WhatsApp de esta casa» con «+506 8777 0001 · verificado» y el bloque «Suscripción» con «Oferta de lanzamiento» y «Al día».
-- [ ] **A80** Toque «Compartir» → se abre la hoja de compartir del teléfono con el enlace y el texto de la casa; elija WhatsApp y el enlace llega; sin hoja de compartir, el botón dice «Enlace copiado».
+- [ ] **A80** Toque «Compartir» → se abre la hoja de compartir del teléfono con el enlace y el texto de la casa; elija WhatsApp y el enlace llega; sin hoja de compartir, el botón dice «Enlace copiado». En escritorio, compruebe que el botón funciona y que la URL no aparece debajo.
 
 ### 3.13 Editar una casa publicada
+
+- [ ] En escritorio, edite Precio y compruebe que «Guardar» y la X aparecen arriba del campo. Guarde y verifique que el precio se actualiza y que el editor se cierra. En Nombre, compruebe que la acción dice «Enviar a revisión». Si hay un error, el editor sigue abierto con lo escrito. Cambie otro campo y pulse la X. Compruebe que descarta lo escrito, vuelve «Editar» y reaparece la barra superior.
+- [ ] «Guardar» y «Enviar a revisión» están deshabilitados al abrir un campo. Cambie un precio, un nombre, un contador y una característica, y compruebe que la acción se habilita. Reponga cada valor inicial y compruebe que se deshabilita de nuevo. En Ubicación, espere a que se cargue la zona y compruebe que la acción se activa al cambiar el pin o la zona.
+- [ ] A 1280 × 800, abra Fotos desde la portada de una casa. Compruebe que la galería se abre en una ventana amplia sobre la ficha y que puede desplazarse dentro de ella, añadir, quitar y ordenar fotos. Cierre con Listo, la X y Escape, y compruebe que el foco vuelve al botón de Fotos y que se conservan los cambios guardados. En móvil, compruebe que Fotos abre su pantalla habitual.
 
 - [ ] **A81** En el detalle de una casa activa revise las filas → «Nombre», «Tipo», «Personas, dormitorios y baños», «Características», «Descripción», «Precio» y «Ubicación»; «Nombre», «Tipo», «Descripción» y «Ubicación» llevan la etiqueta «Revisión» y las otras no.
 - [ ] En móvil, la foto del detalle de una casa desde Mis casas llega a ambos bordes. El resto del contenido tiene 3 px de margen a cada lado. Revise a 320 px que los datos y las acciones queden dentro de la pantalla.
@@ -462,6 +525,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 - [ ] **A83** Toque «Nombre», cámbielo y fíjese en el aviso → «Este cambio lo revisamos antes de publicarlo, normalmente en menos de 24 horas. Mientras tanto los clientes ven «Casa Coco».» y el botón dice «Enviar a revisión».
 - [ ] **A84** Toque «Enviar a revisión» → aviso «Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos.», la etiqueta sobre la foto pasa a «Cambios en revisión» y la fila «Nombre» muestra «En revisión», el nombre nuevo, «Los clientes ven lo de antes hasta que lo aprobemos.» y «Descartar».
 - [ ] **A85** Abra la ficha pública en otra pestaña → sigue con el nombre anterior.
+- [ ] En escritorio, compruebe que la fila «Nombre» muestra arriba el nombre publicado. Debajo aparece «En revisión» junto a «Los clientes ven lo de antes hasta que lo aprobemos.», con el nombre propuesto en la línea siguiente. Si se pidieron cambios, compruebe que se ve la nota de revisión. Pulse «Descartar» y compruebe que queda solo el nombre publicado.
 - [ ] **A86** Editar sigue las reglas de crear (ticket 12): con un nombre de 3 letras toque «Enviar a revisión» → «El nombre de la casa debe tener entre 5 y 32 caracteres.»; con el nombre vacío → «Póngale un nombre a la casa.». En cambio, una descripción de 30 letras **sí se envía** (aviso «Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos. La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.») y en el detalle la fila «Descripción» lleva ese mismo aviso en ocre debajo; sin descripción, la fila dice «Sin descripción» en ocre. Cambiar el nombre de una casa con la descripción corta funciona sin tocar la descripción. Un nombre de antes de más de 32 letras: abra «Nombre» y toque «Enviar a revisión» sin tocarlo → vuelve al detalle sin enviar nada (ni se recorta).
 - [ ] **A86b** En «Personas, dormitorios y baños» (o «Precio») de una casa que ya tenía el dato, no se puede dejar vacío: «Indique cuántas personas pueden alojarse (mínimo 1).», «Indique el número de baños (mínimo 1).», «Indique el precio por noche en colones.». En una casa a la que le faltaba un dato (p. ej. sin baños), la fila lleva el aviso en ocre («Indique el número de baños (mínimo 1).») y cambiar otro dato (el precio, las personas) se guarda igual: cada dato se valida solo.
 - [ ] **A86c** En «Precio», con «¿Acepta alquiler por meses?» en «Sí», escriba `350 mil` en «Precio al mes (opcional)» → la ayuda de debajo pasa a ocre: «Indique el precio al mes en colones o déjelo vacío.»; si la casa no tenía precio al mes, «Guardar» lo deja «a negociar» y el aviso lo repite; si ya tenía uno, no se guarda y sale ese mensaje arriba. Lo mismo en el paso «Precio» del asistente de publicar (ahí «Continuar» sigue y se guarda vacío).
@@ -478,9 +542,16 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 ### 3.14 Calendario
 
+- [ ] En escritorio, compruebe que las casillas con precio muestran «₡45 000» con colones elegidos y «$» al cambiar a dólares desde la barra superior.
+
+- [ ] En escritorio (1280 × 800), seleccione una o varias noches. Debajo de las acciones del menú izquierdo deben aparecer la disponibilidad, el precio, Cancelar y Guardar cambios. Compruebe que puede editar, guardar y volver a seleccionar noches sin que el editor tape la cuadrícula. En móvil, compruebe que el editor sigue al pie de la pantalla.
+
+- [ ] En escritorio (1280 × 800), abra Calendario con dos casas elegibles. Compruebe que el selector de casa encabeza el menú izquierdo, que permanece visible debajo de la barra superior al desplazarse por los meses de la derecha, y que «₡ | $» permanece arriba a la derecha. Cambie de casa desde el menú y confirme que se actualizan los días. Con una sola casa, compruebe que aparece su nombre en el mismo sitio.
+
 - [ ] **A94** Abra Calendario → selector de casa vigente y filas compactas Marcar una reserva y Pausar la casa con iconos sin recuadro y flecha, sin explicaciones debajo. Sin conexión iCal, «Conectar con Airbnb» queda unido a esas filas en la misma tarjeta blanca. Tras conectar, «Sincronización con Airbnb» aparece sobre el fondo crema, con el botón independiente de actualizar a la izquierda, verde claro y gris al deshabilitarse. Las explicaciones de reserva/pausa aparecen en sus hojas antes de confirmar. Rejilla, meses, precios, moneda, leyenda y panel mantienen su funcionamiento.
 - [ ] En móvil, Calendario deja 12 px de margen lateral en el contenido y la cuadrícula. Compruebe que los encabezados se alinean con las siete columnas.
 - [ ] **A95** Con dos o más casas elegibles, toque el selector de casa → hoja inferior «Elegir casa», X para cerrar, nombres completos y selección dorada con check; no ofrece «Todas las casas». Incluye las activas, las de primera revisión y las que tienen cambios; no salen borradores ni rechazadas. Con una sola se oculta el selector; cambiar de casa no mezcla los días. El selector cerrado tiene el mismo fondo y acabado que en Consultas.
+- [ ] En escritorio, abra el selector de casa en Calendario y dentro de la ventana Consultas. Compruebe que la lista se abre junto al selector con el mismo estilo, permite usar flechas y se cierra al elegir, pulsar Escape o hacer clic fuera. Con Escape, el foco vuelve al selector. Abra «Cerrar sesión» en Cuenta y compruebe que la confirmación aparece centrada. En móvil, compruebe que ambos patrones siguen abriendo sus hojas inferiores.
 - [ ] **A96** Toque tres noches del mes siguiente (10, 11 y 12) → marco terracota en cada una, panel pegado abajo con «3 noches · 10–12 nov», botones «Disponible» (marcado) y «Ocupado», campo «Precio por noche», «Cancelar» y «Guardar cambios» en gris; la barra de pestañas se esconde.
 - [ ] **A97** Toque «Ocupado» y «Guardar cambios» → las tres noches quedan en terracota con rayas y solo el número, al instante; recargue y siguen así.
 - [ ] **A98** Seleccione una noche y escriba `110000` en «Precio por noche» → guarde y esa noche muestra solo la cifra distinta; con el panel abierto aparece «Usar el precio base (₡99 000)» que la restaura.
@@ -493,6 +564,8 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 - [ ] **A101e** Fuerce un fallo de lectura de Airbnb antes de abrir la hoja: se conservan las noches válidas y no aparece el calendario seleccionable hasta tocar «Continuar con el último calendario». Cancelar no guarda nada; Intentar de nuevo repite la comprobación. Un error de permisos al leer los días no permite continuar con un supuesto calendario vacío. Sin red, solo puede ofrecer una disponibilidad previamente guardada y tras aviso/confirmación; nunca sin datos conocidos.
 - [ ] **A101d** Abra la hoja y ciérrela con «Cancelar», tocando el fondo o con Escape (teclado) → no cambia nada; al volver a abrirla empieza sin fechas. Con un día tocado (panel abajo), marcar una reserva cierra el panel.
 - [ ] **A102** Toque «Pausar la casa» → hoja «Pausar la casa» con «Volver a publicarla el (opcional)», «No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar.», «Pausar la casa» y «Cancelar».
+- [ ] En escritorio, compruebe en «Pausar la casa», «Marcar una reserva» y «Cerrar sesión» que «Cancelar» se ve en terracota, con fondo transparente y sin sombra. Pulse Tab para comprobar el foco visible y active «Cancelar» con el teclado.
+- [ ] En escritorio, abra la confirmación de «Parar suscripción». Compruebe que «Mantener suscripción» es el botón verde superior y que pulsarlo cierra la ventana y conserva la suscripción. Debajo, «Parar suscripción» aparece como texto terracota. Pruebe esa acción con una casa de prueba y compruebe que la suscripción se detiene.
 - [ ] **A103** Elija una fecha para volver a publicarla de ayer o de dentro de más de un año → «La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.».
 - [ ] **A104** Elija una fecha de vuelta de dentro de una semana y toque «Pausar la casa» → la tarjeta pasa a «Pausada hasta el <fecha>» («No aparece en Explorar ni recibe consultas.») con «Volver a publicarla» a lo ancho, sin «Marcar una reserva»; los días se ven atenuados y la casa no sale en Explorar ni recibe consultas (compruébelo sin sesión en otra pestaña).
 - [ ] **A105** Con la casa pausada toque una noche → no se selecciona (solo lectura).
@@ -514,6 +587,7 @@ AIRBNB_MANUAL_HOUSE=CT-xxxx AIRBNB_MANUAL_SCENARIO=inicial pnpm --filter app exe
 El resultado imprime llegada, salida excluida y fecha de solapamiento manual, todas inventadas: hoy de Costa Rica +10 a +13 (tres noches); el solapamiento es hoy +11. Ejecute la secuencia en el mismo día de Costa Rica. Para las siguientes lecturas, repita el comando cambiando solo el escenario: `repetir`, `cambiar`, `fallo`, `cancelar`, en ese orden. Se usa el mismo motor que en la primera conexión; este arnés opt-in no crea una interfaz de actualización ni un endpoint de pruebas en producción.
 
 - [ ] **IC01 · Primera conexión por pantalla.** En otra casa desechable sin conexión, abra Calendario → «Conectar con Airbnb» → «Conectar Airbnb». Compruebe título, nombre de la casa y campo etiquetado. Con un enlace real de Airbnb que usted controle: «Conectando…» impide doble envío; después aparece la fecha de última importación y el número de noches. No se puede deducir el nombre de Airbnb desde el archivo: confirme que el enlace pertenece a la casa elegida. No pegue enlaces reales en capturas, documentación ni informes compartidos.
+- [ ] En escritorio, «Conectar con Airbnb» abre una ventana centrada sobre Calendario con «Importar desde Airbnb» y «Exportar hacia Airbnb» para la casa seleccionada. Compruebe que puede generar y copiar el enlace sin conectar primero la importación. Con un enlace de importación inválido, el mensaje aparece dentro de la ventana y permite corregirlo. Escape devuelve el foco al botón y conserva la casa, el mes y el desplazamiento.
 - [ ] **IC02 · Error de primera lectura.** En una casa sin conexión, introduzca una URL incorrecta → error junto al campo sin cambiar el calendario. Un enlace con formato válido que ya no exista da error de lectura, conserva el campo y permite reintentar; nunca dice «Airbnb conectado». Escape/X/Cancelar cierran y devuelven foco al disparador. Cerrar durante la petición no garantiza cancelar la operación: al volver, consultar el estado real.
 - [ ] **IC03 · Datos reproducibles.** En la casa «Prueba Airbnb» destinada al arnés, ejecute `inicial`. Abra o recargue su Calendario y la gestión → tres noches importadas, fecha real de la lectura y el origen Airbnb; la fecha de salida impresa por el arnés sigue libre. Cada noche importada muestra el icono de enlace bajo el precio y la leyenda «Bloqueado por Airbnb» explica su origen sin tocar el día. Un bloqueo solo manual no lleva icono. Compruebe que número, precio e icono no se solapan en 375×667 y 390×844, y que el lector anuncia Airbnb (o manual y Airbnb). En la ficha pública no aparece el proveedor. No hace falta cuenta ni enlace real de Airbnb para este caso.
 - [ ] **IC04 · Repetición/idempotencia.** Ejecute `repetir` y recargue → las mismas tres noches, sin duplicados. La suite de contrato comprueba además reintentar el mismo requestId: no repite la descarga ni cambia la fecha del éxito anterior.
@@ -631,9 +705,17 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 
 ### 3.18 Cuenta del propietario
 
-- [ ] **A140** Abra la pestaña «Cuenta» → sin título ni flecha; avatar con iniciales, nombre, número en su línea (`+506 8777 0001`), «WhatsApp verificado» debajo y «Pronto podrá verificar también su identidad (opcional).»; enlace «Editar».
-- [ ] **A141** Toque «Editar» → «Mi perfil» con «Nombre», «Descripción (opcional)» y «Correo de recuperación (opcional)» («Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.»); «Guardar cambios» solo se activa al cambiar algo y, al guardar, dice «Guardado»; toque «Listo» para salir.
-- [ ] **A142** Revise las filas → «Favoritos» («Ninguna casa guardada» o «N casas guardadas») y «Ayuda por WhatsApp» («Línea de 3bstays para anfitriones»); con casas no sale «¿Quiere publicar su casa gratis?» y no hay verificación de identidad.
+- [ ] En escritorio, abra «Ayuda por WhatsApp» desde la barra superior con una sesión de anfitrión y después sin sesión. Compruebe que la barra sigue visible en Ayuda y que aparece el canal correspondiente. A 1024 px, el icono conserva el nombre accesible «Ayuda por WhatsApp».
+
+- [ ] Con suficientes suscripciones para desplazar la página, baje por la columna derecha y compruebe que el perfil y las acciones de cuenta permanecen debajo de la barra superior. En una ventana baja, compruebe que puede recorrer la columna izquierda para llegar a «Cerrar sesión».
+
+- [ ] En escritorio (1280 × 800), abra Cuenta con una sesión de propietario. Compruebe que las columnas tienen el mismo ancho. A la izquierda aparecen el perfil y las acciones de cuenta. A la derecha se ven directamente las suscripciones de cada casa con su estado, precio mensual, acciones disponibles y método de pago. Abra «¿Cómo funciona el cobro?» desde la misma pantalla. En móvil, compruebe que se conserva el acceso desde la tarjeta de suscripción.
+
+- [ ] **A140** Abra la pestaña «Cuenta» → avatar con iniciales, nombre, número en su línea (`+506 8777 0001`), «WhatsApp verificado» debajo y «Pronto podrá verificar también su identidad (opcional).». En móvil, el enlace «Editar» abre «Mi perfil».
+- [ ] **A141** En escritorio, «Mi perfil» muestra el nombre, la descripción y el correo de recuperación como texto en la columna izquierda. Active «Editar» con el teclado y compruebe que aparecen los campos en la misma tarjeta. Cambie un dato, guárdelo, pulse «Listo» y recargue para comprobar que se conserva. La columna de suscripciones sigue visible. En móvil, haga la misma edición desde «Editar» y toque «Listo» para salir.
+- [ ] **A142** En móvil, revise las filas → «Favoritos» («Ninguna casa guardada» o «N casas guardadas») y «Ayuda por WhatsApp» («Línea de 3bstays para anfitriones»); con casas no sale «¿Quiere publicar su casa gratis?» y no hay verificación de identidad.
+- [ ] En escritorio, a 1024 y 1280 px, abra «Favoritos» desde la barra superior de anfitrión, justo después de «Explorar». Compruebe que se marca como página actual, que siguen visibles las demás opciones y el selector de moneda, y que no hay una fila duplicada en Cuenta.
+- [ ] En escritorio, como anfitrión, abra «Consultas» desde el icono situado antes de «Ayuda por WhatsApp», que queda al extremo derecho. Compruebe que se abre un cuadro sobre la pantalla actual, que puede elegir una casa y abrir WhatsApp y que Escape o la X cierran el cuadro y devuelven el foco al icono. En móvil, abra Consultas desde su pestaña inferior.
 - [ ] **A143** Toque «Ayuda por WhatsApp» → «3bstays · atención a anfitriones», «Para cualquier duda o problema con su cuenta, sus casas o una consulta recibida, escríbanos por WhatsApp. Es el único canal de atención de 3bstays.», el número de anfitriones «· canal separado del de clientes.» y «Abrir WhatsApp» abre `wa.me` con «Hola, soy anfitrión en 3bstays y necesito ayuda con: ».
 - [ ] **A144** Toque «Cerrar sesión» → hoja «¿Cerrar sesión?» con «Tendrá que recibir un código nuevo para volver a entrar.»; confirme → la barra queda en «Explorar», «Favoritos» e «Ingresar».
 

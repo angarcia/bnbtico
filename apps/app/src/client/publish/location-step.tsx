@@ -13,7 +13,7 @@ import { places } from "../owner";
 import { LocationPicker, type PickerHandle } from "./location-picker";
 import { createPlaceLookup, type LookupState, type PlaceLookup } from "./place-lookup";
 import { PlaceSearch, type PlaceItem } from "./place-search";
-import { useStepReady } from "./step-form";
+import { useStepReady } from "./step-ready";
 import { ZoneSelect } from "./zone-select";
 
 const NOT_LAND = "Ponga el punto sobre tierra, dentro de Costa Rica";

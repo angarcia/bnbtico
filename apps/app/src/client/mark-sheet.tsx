@@ -75,7 +75,7 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
           <button type="submit" className="btn btn-primary btn-lg" disabled={!ready || days.length === 0 || occupied}>
             Marcar como ocupado
           </button>
-          <button type="button" className="btn btn-ghost btn-lg" onClick={onClose}>
+          <button type="button" className="btn btn-ghost btn-lg popup-cancel" onClick={onClose}>
             Cancelar
           </button>
         </form>

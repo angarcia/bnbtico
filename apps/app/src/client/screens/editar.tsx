@@ -7,7 +7,8 @@
 // Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useFormKeyboard } from "../publish/form-keyboard";
 import { isBlocked, isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
@@ -15,6 +16,7 @@ import { planEdit } from "../../domain/edit-plan";
 import { toDomainError } from "../../domain/errors";
 import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
+import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
 import { FlowHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
@@ -26,6 +28,8 @@ import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
 import { useOwnListing } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { useDesktop } from "../desktop";
+import { OwnerHouseDetail } from "./propietario";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */
@@ -42,6 +46,7 @@ function useBackToFicha(id: string) {
 export function EditarCampoScreen() {
   const { id, campo } = useParams({ strict: false }) as { id: string; campo: string };
   const port = useEditor();
+  const desktop = useDesktop();
   const field = editFieldFromParam(campo);
   const { userId, query } = useOwnListing(id);
   const l = query.data;
@@ -69,19 +74,67 @@ export function EditarCampoScreen() {
         )}
       </>
     );
-  if (field === "fotos") return <EditPhotos listing={l} userId={userId} />;
-  return (
+  const editor = field === "fotos" ? <EditPhotos listing={l} userId={userId} /> : (
     <>
       {header}
       <EditFieldForm listing={l} field={field} userId={userId} />
     </>
   );
+  return desktop && !port.admin ? <OwnerHouseDetail id={id} rightPanel={editor} /> : editor;
 }
 
-function EditFieldForm({ listing, field, userId }: { listing: Listing; field: FormField; userId: string }) {
+type InlineFieldActions = {
+  renderRow: (actions: ReactNode) => ReactNode;
+  onClose: () => void;
+};
+
+export function InlineHouseEditor({ listing, field, userId, renderRow, onClose }: { listing: Listing; field: FormField; userId: string } & InlineFieldActions) {
+  return <EditFieldForm listing={listing} field={field} userId={userId} inline={{ renderRow, onClose }} />;
+}
+
+export function EditPhotosDialog({ listing, userId, onClose }: { listing: Listing; userId: string; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const element = dialog.current;
+    element?.showModal();
+    return () => element?.close();
+  }, []);
+  function close() {
+    dialog.current?.close();
+    onClose();
+  }
+  return createPortal(
+    <dialog ref={dialog} className="whatsapp-dialog edit-photos-dialog" aria-labelledby={titleId} onCancel={(event) => {
+      event.preventDefault();
+      close();
+    }}>
+      <div className="row between">
+        <h2 id={titleId}>Fotos</h2>
+        <button type="button" className="icon-btn" aria-label="Cerrar" onClick={close}><I.x size={20} /></button>
+      </div>
+      <EditPhotos listing={listing} userId={userId} onDone={close} />
+    </dialog>,
+    document.body,
+  );
+}
+
+function editFieldValue(form: HTMLFormElement, field: FormField) {
+  const data = new FormData(form);
+  if (field === "ubicacion") {
+    // Estos datos llegan al cargar el mapa y la base los vuelve a calcular al aprobar.
+    for (const name of ["province", "canton", "district"]) data.delete(name);
+  }
+  const patch = parseField(field, formInput(data));
+  return JSON.stringify(patch, (_key, value: unknown) => typeof value === "number" && Number.isNaN(value) ? "NaN" : value);
+}
+
+function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; field: FormField; userId: string; inline?: InlineFieldActions }) {
   const form = useRef<HTMLFormElement>(null);
+  const formId = useId();
   const keyboard = useFormKeyboard(form);
-  const toFicha = useBackToFicha(listing.id);
+  const back = useBackToFicha(listing.id);
+  const finish = inline?.onClose ?? back;
   const live = useUpdateLive(userId, listing);
   const edit = useSaveEdit(userId, listing);
   // El admin guarda al momento, sin revisión: parte de lo publicado (lo pendiente del anfitrión de ese dato se descarta).
@@ -94,35 +147,71 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
   const draft = useMemo(() => mergeEdit(listing, reviewed ? listing.edit : null), [listing, reviewed]);
   const version = JSON.stringify(draft);
   const [frozen, setFrozen] = useState<string | null>(null);
-  const touch = () => setFrozen((f) => f ?? version);
+  const formVersion = frozen ?? version;
+  const initialValue = useRef("");
+  const interacted = useRef(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const touch = () => {
+    interacted.current = true;
+    setFrozen((f) => f ?? version);
+  };
   const [error, setError] = useState<string | null>(null);
   const saving = live.isPending || edit.isPending;
   const failed = (e: unknown) => setError(toDomainError(e).message);
+
+  useLayoutEffect(() => {
+    const element = form.current;
+    if (!element) return;
+    initialValue.current = editFieldValue(element, field);
+    setHasChanges(false);
+    const compare = () => {
+      const value = editFieldValue(element, field);
+      if (!interacted.current) initialValue.current = value;
+      setHasChanges(value !== initialValue.current);
+    };
+    let frame = 0;
+    const afterInput = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(compare);
+    };
+    // Los contadores y el mapa actualizan campos ocultos sin emitir input.
+    const observer = new MutationObserver(compare);
+    observer.observe(element, { subtree: true, attributes: true, attributeFilter: ["value"], childList: true });
+    element.addEventListener("input", afterInput);
+    element.addEventListener("change", afterInput);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      element.removeEventListener("input", afterInput);
+      element.removeEventListener("change", afterInput);
+    };
+  }, [field, formVersion]);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     touch();
     // «Enviar a revisión» no espera a la pantalla (p. ej. al cantón del pin), como «Continuar» al crear: lo obligatorio
     // que falte lo dice planEdit con su mensaje.
-    if (saving) return;
+    if (saving || !hasChanges || editFieldValue(e.currentTarget, field) === initialValue.current) return;
     const plan = planEdit(listing, field, parseField(field, formInput(new FormData(e.currentTarget)), draft));
     if ("error" in plan) return setError(plan.error);
     setError(null);
     // Lo no obligatorio se guarda y se avisa al guardar (y en ocre bajo el dato, en la ficha).
     const done = (text: string) => () => {
       toast(plan.warning ? `${text} ${plan.warning}` : text);
-      toFicha();
+      finish();
     };
     const changes = "immediate" in plan ? plan.immediate : plan.reviewed;
-    if (Object.keys(changes).length === 0) return toFicha();
+    if (Object.keys(changes).length === 0) return finish();
     if ("immediate" in plan) return live.mutate(plan.immediate, { onSuccess: done(EDIT_COPY.savedLive), onError: failed });
     edit.mutate(plan.reviewed, { onSuccess: done(admin ? EDIT_COPY.savedLive : EDIT_COPY.sentToReview), onError: failed });
   }
 
-  return (
-    <form ref={form} key={frozen ?? version} onSubmit={onSubmit} onInputCapture={touch} onClickCapture={touch} {...keyboard} className="publish-form" noValidate>
+  const action = reviewed ? "Enviar a revisión" : "Guardar";
+  const editor = (
+    <form id={formId} ref={form} key={formVersion} onSubmit={onSubmit} onInputCapture={touch} onChangeCapture={touch} onPointerDownCapture={touch} onClickCapture={touch} {...(inline ? {} : keyboard)} className="publish-form" noValidate>
       {/* De qué casa es el cambio, bajo el título. */}
-      <p className="small muted edit-house">{listing.title}</p>
+      {!inline ? <p className="small muted edit-house">{listing.title}</p> : null}
       {error ? (
         <div className="note" role="alert">
           {error}
@@ -134,19 +223,33 @@ function EditFieldForm({ listing, field, userId }: { listing: Listing; field: Fo
           {reviewNotice(field as ReviewedField, listing)}
         </p>
       ) : null}
-      <div className="sticky-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
-          {reviewed ? "Enviar a revisión" : "Guardar"}
+      {!inline && <div className="sticky-actions">
+        <button className="btn btn-primary btn-block" type="submit" disabled={saving || !hasChanges}>
+          {action}
         </button>
-      </div>
+      </div>}
     </form>
+  );
+  if (!inline) return editor;
+  return (
+    <>
+      {inline.renderRow(
+        <div className="row gap-8 house-field-actions">
+          <button type="submit" form={formId} className="btn-link account-profile-toggle" disabled={saving || !hasChanges}>{action}</button>
+          <button type="button" className="icon-btn" aria-label="Descartar cambios" title="Descartar cambios" disabled={saving} onClick={inline.onClose}>
+            <I.x size={20} />
+          </button>
+        </div>,
+      )}
+      <div className="owner-detail-panel house-inline-editor">{editor}</div>
+    </>
   );
 }
 
 /** Las fotos de una casa publicada (maqueta 08d): la rejilla del paso 7. Ordenar y quitar las aprobadas va al momento;
  * las nuevas van a revisión al subirlas, cada una por su cuenta, y salen detrás con «En revisión» (o «Cambios pedidos»);
  * quitar una nueva la descarta. El contador cuenta aprobadas y nuevas. */
-function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
+function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: string; onDone?: () => void }) {
   const client = useQueryClient();
   const toFicha = useBackToFicha(listing.id);
   // El admin sube directo a la ficha; las fotos nuevas del anfitrión siguen en su revisión (cuentan para el tope).
@@ -177,14 +280,14 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
   };
   return (
     <>
-      <FlowHeader title={FIELD_TITLES.fotos} back={ficha.replace("$id", listing.id)} historyBack action={<PhotoCounter counter={source.counter} />} />
+      {onDone ? <PhotoCounter counter={source.counter} /> : <FlowHeader title={FIELD_TITLES.fotos} back={ficha.replace("$id", listing.id)} historyBack action={<PhotoCounter counter={source.counter} />} />}
       <div className="publish-form">
         {/* Como el paso 7: la ayuda de la primera foto se va con ella. */}
         {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
         <p className="note small">{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</p>
         <div className="sticky-actions">
-          <Link
+          {onDone ? <button type="button" className="btn btn-primary btn-block" onClick={onDone}>Listo</button> : <Link
             className="btn btn-primary btn-block"
             to={ficha}
             params={{ id: listing.id }}
@@ -195,7 +298,7 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
             }}
           >
             Listo
-          </Link>
+          </Link>}
         </div>
       </div>
     </>

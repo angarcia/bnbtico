@@ -24,6 +24,7 @@
    abajo redondeadas (tarjetas flotantes, tanda 1). Alto con svh: no cambia al esconderse la barra del navegador. */
 .explore-map{height:min(400px,56svh);margin:calc(-12px - env(safe-area-inset-top)) calc(-1 * var(--gutter)) 0;border-radius:0 0 var(--r-sheet) var(--r-sheet);background:var(--surface-2);cursor:pointer}
 .explore-map[data-still]{cursor:default}
+.explore-layout,.explore-map-pane,.explore-list-pane{display:contents}
 .explore-map .leaflet-control-attribution{margin:0 10px 8px 0;border-radius:6px;font-size:11px}
 .explore-map.leaflet-container,.map-full-box.leaflet-container{background:var(--surface-2)}
 .explore-map:focus-visible{outline:3px solid var(--primary);outline-offset:2px}

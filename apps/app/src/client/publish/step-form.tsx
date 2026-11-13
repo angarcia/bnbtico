@@ -17,10 +17,12 @@
 //   (sin `action`), y cada pantalla monta su propio <form> (key) para que los valores iniciales sean los de ese paso.
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { PUBLISH_NEXT } from "../../domain/contact-return";
+import { track } from "../../shared/beacon";
 import { DomainError } from "../../domain/errors";
 import { I } from "../../shared/icons";
-import { LAST_STEP, nextStep, normalize, previousStep, type Listing, type ListingDraft, type Step } from "../../domain/listing";
+import { LAST_STEP, STEPS, nextStep, normalize, previousStep, stepPosition, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { useFormKeyboard } from "./form-keyboard";
 import { planStep, validateAll } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
@@ -28,12 +30,15 @@ import { formInput, parseStep } from "../../domain/step-forms";
 import { accountQuery } from "../account";
 import { authApi } from "../session";
 import { useEditor, type EditorPort } from "../editor-port";
+import { useDesktop } from "../desktop";
 import { patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { isLostDraft } from "./lost-drafts";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
+import { StepReadyContext } from "./step-ready";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
+const WhatsAppDialog = lazy(() => import("../whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const messageOf = (e: unknown) => (e instanceof DomainError ? e.message : GENERIC);
 const detailKey = (userId: string, id: string) => ["own-listing", userId, id] as const;
 
@@ -191,17 +196,6 @@ function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
 // ---------- «Continuar» listo o no ----------
 
 const noReady = () => undefined;
-const ReadyContext = createContext<(ready: boolean) => void>(() => undefined);
-
-/** «Continuar» deshabilitado mientras `ready` sea false (dentro de un StepForm). Antes de pintar: si no, se vería un
- *  fotograma con «Continuar» habilitado al abrir la pantalla. */
-export function useStepReady(ready: boolean): void {
-  const set = useContext(ReadyContext);
-  useLayoutEffect(() => {
-    set(ready);
-    return () => set(true);
-  }, [set, ready]);
-}
 
 // ---------- El formulario ----------
 
@@ -209,16 +203,26 @@ export function StepForm({
   userId,
   listing,
   step,
+  lastInGroup,
+  next,
+  back,
+  verifyBeforePhotos = false,
   enter,
   volver,
+  renderHeader,
   children,
 }: {
   userId: string;
   listing: Listing;
   step: Step;
+  lastInGroup?: Step;
+  next?: Step;
+  back?: Step;
+  verifyBeforePhotos?: boolean;
   enter?: "forward" | "back";
   /** Abierta desde «Revisar y enviar»: «Continuar» y «Atrás» vuelven a él. */
   volver?: Volver;
+  renderHeader?: (actions?: ReactNode) => ReactNode;
   children: (values: ListingDraft) => ReactNode;
 }) {
   // La dirección de entrada se fija al montar esta pantalla: los repintados posteriores no cortan la animación.
@@ -230,17 +234,20 @@ export function StepForm({
   const failed = useFailure(listing.id, step);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [ready, setReady] = useState(true);
   const ref = useRef<HTMLFormElement>(null);
   useEnterKeyHints(ref);
   const keyboard = useFormKeyboard(ref);
+  const desktop = useDesktop() && !port.admin && !!renderHeader;
+  const formId = useId();
 
   // Lo que se ve al montar: el borrador (optimista) y, si el guardado de esta pantalla falló, lo que se había escrito.
   const values: ListingDraft = failed ? { ...listing, ...failed.patch, photoCount: listing.photoCount } : listing;
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!ready) return; // p. ej. Enter en un campo mientras «Continuar» espera
+    if (!ready || sending) return;
     if (step === LAST_STEP) {
       setSending(true);
       setError(null);
@@ -250,7 +257,10 @@ export function StepForm({
         .finally(() => setSending(false));
       return;
     }
-    const patch = parseStep(step, formInput(new FormData(e.currentTarget)));
+    const input = formInput(new FormData(e.currentTarget));
+    const patch = lastInGroup
+      ? Object.assign({}, ...STEPS.slice(stepPosition(step) - 1, stepPosition(lastInGroup)).map((part) => parseStep(part, input)))
+      : parseStep(step, input);
     const plan = planStep(listing, step, patch);
     if ("error" in plan) return setError(plan.error);
     setError(null);
@@ -258,7 +268,16 @@ export function StepForm({
     const request = startSave(port, listing.id, step, patch, listing);
     request.catch(() => undefined); // el error lo recoge la mutación
     save.mutate({ step, patch, seq: ++saveSeq, volver, request });
-    void toStep(router, port.step, listing.id, volver ? LAST_STEP : (nextStep(step) ?? LAST_STEP));
+    if (verifyBeforePhotos) {
+      setSending(true);
+      void request.then(() => {
+        setSending(false);
+        setVerifying(true);
+        track("publish_verify");
+      }, () => setSending(false));
+    } else {
+      void toStep(router, port.step, listing.id, volver ? LAST_STEP : (next ?? nextStep(lastInGroup ?? step) ?? LAST_STEP));
+    }
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
@@ -272,27 +291,19 @@ export function StepForm({
   }
 
   const shown = error ?? failed?.message ?? null;
-  return (
-    <form ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} {...keyboard} className={`publish-form${step === LAST_STEP ? " publish-review" : ""}`} data-enter={entering} noValidate>
-      {shown ? (
-        <div className="note" role="alert">
-          {shown}
-        </div>
-      ) : null}
-      {/* «Continuar» nunca espera a una pantalla (2026-10-30): solo «Enviar a revisión», cuando falta algo obligatorio. */}
-      <ReadyContext.Provider value={step === LAST_STEP ? setReady : noReady}>{children(values)}</ReadyContext.Provider>
-      <div className="sticky-actions">
+  const actions = (
+      <div className={desktop ? "publish-top-actions" : "sticky-actions"}>
         {/* «Atrás» como botón cuadrado con la flecha y «Continuar ›»; en el último paso, la acción sin flecha (A9). */}
         {step === 1 && !volver ? (
           <span className="btn btn-ghost btn-back is-disabled" aria-disabled="true" aria-label="Atrás">
             <I.back size={22} />
           </span>
         ) : (
-          <Link to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
+          <Link to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (back ?? previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
             <I.back size={22} />
           </Link>
         )}
-        <button className="btn btn-primary grow" type="submit" disabled={sending || !ready}>
+        <button className="btn btn-primary grow" type="submit" form={desktop ? formId : undefined} disabled={sending || !ready}>
           {step < LAST_STEP ? (
             <>
               Continuar <I.chevron size={20} />
@@ -304,6 +315,16 @@ export function StepForm({
           )}
         </button>
       </div>
+  );
+  return (
+    <>
+    {renderHeader?.(desktop ? actions : undefined)}
+    <form id={formId} ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} {...keyboard} className={`publish-form${step === LAST_STEP ? " publish-review" : ""}`} data-enter={entering} noValidate>
+      {shown ? <div className="note" role="alert">{shown}</div> : null}
+      <StepReadyContext.Provider value={step === LAST_STEP ? setReady : noReady}>{children(values)}</StepReadyContext.Provider>
+      {desktop ? null : actions}
     </form>
+    {verifying ? <Suspense fallback={null}><WhatsAppDialog mode="publish" next={PUBLISH_NEXT} onClose={() => setVerifying(false)} /></Suspense> : null}
+    </>
   );
 }

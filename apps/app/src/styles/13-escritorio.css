@@ -1,0 +1,591 @@
+/* El mismo corte que desktop.ts. */
+@media (min-width: 1024px) {
+  .listing-view > .cta-bar {
+    max-height: calc(100dvh - 32px);
+    overflow: auto;
+  }
+  .listing-contact-inline.sheet {
+    position: static;
+    transform: none;
+    max-height: none;
+    overflow: visible;
+    padding: 12px 0 4px;
+    border-top: 1px solid var(--line-soft);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    animation: none;
+  }
+  [aria-modal="true"] .popup-cancel,
+  dialog .popup-cancel {
+    background: transparent;
+    color: var(--brand-ink);
+    box-shadow: none;
+  }
+  .popup-cancel:disabled { opacity: .55; }
+  .desktop-dropdown {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 6px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--line);
+    border-radius: var(--r-input);
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: var(--shadow-float);
+  }
+  .desktop-dropdown .house-picker-list { max-height: none; overflow: visible; }
+  .desktop-dropdown .house-picker-list [role="option"] { min-height: 44px; padding: 8px 12px; }
+  .desktop-dropdown [role="option"]:hover:not([aria-selected="true"]) { background: var(--surface-2); }
+
+  .sheet[aria-modal="true"]:not(.house-picker-sheet) {
+    inset: 0;
+    margin: auto;
+    transform: none;
+    width: min(520px, calc(100% - 32px));
+    height: max-content;
+    max-height: calc(100dvh - 32px);
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+    box-shadow: var(--shadow-float);
+    animation-name: fade-in;
+  }
+  .sheet[aria-modal="true"]:not(.house-picker-sheet) > .grabber { display: none; }
+  .sheet.airbnb-calendar-popup[aria-modal="true"] {
+    width: min(920px, calc(100% - 48px));
+    max-width: none;
+  }
+  .airbnb-calendar-directions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+  }
+  .airbnb-calendar-directions .card { min-width: 0; }
+
+  .whatsapp-dialog {
+    width: min(520px, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 16px 24px 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+    background: var(--bg);
+    color: var(--fg);
+    overscroll-behavior: contain;
+  }
+  .whatsapp-dialog::backdrop { background: rgb(0 0 0 / 32%); }
+  .whatsapp-dialog > .row > :last-child { margin-inline-start: auto; }
+  .edit-photos-dialog {
+    width: min(960px, calc(100% - 48px));
+    max-height: calc(100dvh - 48px);
+  }
+  .edit-photos-dialog .publish-form::after { content: none; }
+  .edit-photos-dialog .sticky-actions {
+    position: sticky;
+    inset: auto 0 0;
+    transform: none;
+    max-width: none;
+    padding: 12px 0 0;
+    justify-content: flex-end;
+  }
+  .edit-photos-dialog .sticky-actions .btn { width: auto; }
+
+  .publish-flow .wizard-heading > :is(.progress, .stage-label:not(.stage-summary)),
+  .publish-flow .wizard-heading > .stage-summary > span {
+    display: none;
+  }
+
+  .app:has(> .view) {
+    --desktop-edge: clamp(16px, 2vw, 32px);
+    width: calc(100% - 2 * var(--desktop-edge));
+    max-width: none;
+  }
+
+  .app > .view {
+    padding-inline: var(--gutter);
+  }
+
+  .app > .code-flow > * {
+    width: min(100%, 840px);
+    margin-inline: auto;
+  }
+
+  .app.desktop-app {
+    --desktop-nav-height: 72px;
+  }
+
+  .app.desktop-app:has(.explore-top) {
+    --explore-map-start: calc(var(--desktop-edge) + var(--gutter));
+    --explore-map-end: calc(50% + 10px);
+  }
+
+  .desktop-app > .view {
+    min-width: 0;
+    padding-bottom: 24px;
+  }
+
+  .desktop-app .house-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+  }
+
+  .desktop-app.publish-flow:has(.publish-form) {
+    height: auto;
+  }
+  .desktop-app.publish-flow > .desktop-nav { display: flex; }
+  .desktop-app.publish-flow > .view { padding-top: 4px; }
+  .desktop-app.publish-flow .publish-header .header-close { order: -1; }
+  .desktop-app.publish-flow .publish-header .publish-top-actions {
+    margin-inline-start: auto;
+    align-self: center;
+    flex: none;
+  }
+  .desktop-app.publish-flow .publish-form::after { content: none; }
+  .desktop-app.publish-flow .publish-top-actions,
+  .desktop-app.publish-flow .publish-form > .sticky-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-self: end;
+    gap: 10px;
+    width: auto;
+  }
+  .desktop-app.publish-flow .publish-top-actions .btn { min-height: 44px; }
+  .desktop-app.publish-flow .publish-form > .sticky-actions {
+    order: -1;
+    position: static;
+    transform: none;
+    padding: 0;
+    border: 0;
+  }
+  .publish-step-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 24px;
+  }
+  .publish-step-columns > div { min-width: 0; }
+  .publish-kind .compact-kind-option .choice {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    justify-content: center;
+    padding: 6px 10px;
+    padding-inline-end: 48px;
+  }
+  .compact-kind-option > .row { position: relative; }
+  .compact-kind-option .choice b { font-size: 16px; }
+  .compact-kind-option .icon-btn {
+    position: absolute;
+    inset-inline-end: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .compact-kind-option p { margin-block-start: 4px; }
+  .publish-step-columns.publish-price-photos {
+    grid-template-columns: clamp(250px, 28%, 360px) minmax(0, 1fr);
+  }
+  .publish-step-columns .counters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(148px, calc((100% - 16px) / 3)), 1fr));
+    gap: 8px;
+  }
+  .publish-step-columns .counters .counter {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
+    padding-block: 2px;
+    border-bottom: 0;
+  }
+  .publish-step-columns .counter-value-icon {
+    display: flex;
+    color: var(--muted);
+  }
+  .publish-room-capacity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+  .publish-step-columns .publish-room-capacity .counters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .publish-step-columns .publish-room-capacity .counter {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .publish-room-capacity .counter-label { font-size: 14px; }
+  .publish-room-capacity .bathroom-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .publish-room-capacity .bathroom-options .chip {
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .publish-step-columns .loc-map { min-height: clamp(260px, 48vh, 440px); }
+  .publish-step-columns .place-line:empty { display: none; }
+  .publish-step-columns .place-line { min-height: 0; }
+
+  .desktop-app .owner-account-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+  }
+  .desktop-app .owner-account-layout > div {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .desktop-app .owner-account-layout > div:first-child {
+    position: sticky;
+    top: calc(var(--desktop-nav-height) + 12px);
+    max-height: calc(100dvh - var(--desktop-nav-height) - 24px);
+    overflow: auto;
+  }
+  .desktop-app .owner-account-layout > div:first-child > * { flex-shrink: 0; }
+  .account-profile-toggle { min-height: 44px; }
+  .account-profile-values { margin: 0; overflow-wrap: anywhere; }
+  .account-profile-values dd { margin: 0; white-space: pre-wrap; }
+
+  .desktop-app .owner-calendar-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 20px;
+  }
+  .desktop-app :is(.owner-calendar-options, .owner-calendar-days) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 14px;
+  }
+  .desktop-app .owner-calendar-days { grid-column: 2; }
+  .desktop-app .owner-calendar-options {
+    position: sticky;
+    top: calc(var(--desktop-nav-height) + 12px);
+    max-height: calc(100dvh - var(--desktop-nav-height) - 24px);
+    overflow: auto;
+  }
+  .desktop-app .owner-calendar-options > * { flex-shrink: 0; }
+  .desktop-app .owner-calendar:has(.cal-panel) { padding-bottom: 24px; }
+  .desktop-app .owner-calendar-options .cal-panel {
+    position: static;
+    max-width: none;
+    transform: none;
+    padding: 14px;
+    border: 1px solid var(--line-nav);
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  .desktop-app .cal-panel .cal-day-fields { flex-wrap: wrap; }
+  .desktop-app .owner-calendar-options .calendar-local-currency { display: none; }
+  .desktop-app .owner-calendar-days .cal-weekdays { top: var(--desktop-nav-height); }
+  .desktop-app .owner-calendar-days .cal-month-title { top: calc(var(--desktop-nav-height) + 26px); }
+  .desktop-app .owner-calendar-days .cal-month-block { scroll-margin-top: calc(var(--desktop-nav-height) + 26px); }
+
+  .desktop-app .owner-house-detail :is(.editable-ficha, .owner-detail-draft) {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    gap: 20px;
+  }
+  .desktop-app .owner-house-detail .editable-ficha > :not(.owner-detail-summary, .owner-detail-fields) {
+    grid-column: 1 / -1;
+  }
+  .desktop-app .owner-house-detail :is(.owner-detail-summary, .owner-detail-fields) {
+    display: grid;
+    min-width: 0;
+    gap: 14px;
+  }
+  .desktop-app .owner-house-detail .owner-detail-summary {
+    position: sticky;
+    top: calc(var(--desktop-nav-height) + 12px);
+    max-height: calc(100dvh - var(--desktop-nav-height) - 24px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    align-content: start;
+  }
+  .desktop-app .owner-house-detail .listing-stats.stack {
+    min-height: 88px;
+    gap: 6px;
+    padding-block: 8px;
+  }
+  .desktop-app .owner-house-detail .listing-stats .activity-figures p { gap: 2px; }
+  .desktop-app:has(.owner-detail-panel) { height: auto; }
+  .desktop-app:has(.owner-detail-panel) > .desktop-nav { display: flex; top: 0; }
+  .owner-detail-panel { min-width: 0; }
+  .house-field + .house-field { border-top: 1px solid var(--line-soft); }
+  .house-pending-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 14px;
+    overflow-wrap: anywhere;
+  }
+  .house-pending-status { flex-wrap: wrap; }
+  .house-pending-name .pending-foot { padding: 0; }
+  .house-pending-value { flex: 1; min-width: 0; }
+  .house-pending-name .pending-foot .btn-text { color: var(--brand-ink); }
+  .house-inline-editor { padding: 12px 16px 16px; }
+  .house-field-actions { flex: none; }
+  .house-field-actions .btn-link:disabled { color: var(--muted); opacity: .65; }
+  .house-field .account-profile-toggle { flex: none; }
+  .app.desktop-app:has(.house-details-editing) { --desktop-nav-height: 0px; }
+  .desktop-app:has(.house-details-editing) > .desktop-nav { display: none; }
+  .owner-detail-panel .header-flow { margin-inline: 0; }
+  .owner-detail-panel .sticky-actions {
+    position: sticky;
+    inset: auto 0 0;
+    transform: none;
+    max-width: none;
+    padding-inline: 0;
+  }
+  .owner-detail-panel .publish-form::after { content: none; }
+
+  .desktop-app > .desktop-nav {
+    position: sticky;
+    inset: 0 auto auto;
+    flex: none;
+    justify-content: flex-start;
+    gap: 8px;
+    height: var(--desktop-nav-height);
+    max-width: none;
+    padding: 0 var(--gutter);
+    border: 0;
+    border-bottom: 1px solid var(--line-nav);
+  }
+
+  .desktop-app > .desktop-nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    box-shadow: 0 0 0 100vmax var(--bg);
+    clip-path: inset(0 -100vmax);
+    pointer-events: none;
+  }
+
+  .desktop-nav .desktop-brand {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    min-height: 44px;
+    margin-right: 16px;
+  }
+
+  .desktop-nav .desktop-brand img { object-fit: contain; }
+
+  .desktop-nav .nav {
+    flex: none;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: var(--r-input);
+  }
+
+  .desktop-nav .nav > span:not(.sr-only) {
+    font: var(--w-medium) 16px/1.25 var(--body);
+  }
+
+  .desktop-nav .nav[aria-current="page"] { background: var(--surface-2); }
+  .desktop-nav a:focus-visible { outline-color: var(--primary); }
+  .desktop-nav .desktop-currency { margin-inline-start: auto; }
+  .desktop-nav .desktop-sign-in { flex: none; min-height: 44px; }
+  .desktop-nav .desktop-inquiries {
+    min-width: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .desktop-inquiries .nav-count { right: 0; }
+  .inquiries-dialog > .row { margin-bottom: 12px; }
+  .desktop-nav .desktop-help span { white-space: nowrap; }
+  .desktop-app .account-actions:empty { display: none; }
+  @media (max-width: 1279px) {
+    .desktop-nav .desktop-help span { display: none; }
+  }
+
+  .desktop-app .explore-top {
+    position: fixed;
+    inset: calc(var(--desktop-nav-height) + 10px) calc(var(--explore-map-end) + 10px) auto calc(var(--explore-map-start) + 10px);
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .desktop-app .explore-search { grid-column: 1 / -1; min-width: 0; }
+  .desktop-app .explore-search .filters-btn { flex: none; height: 52px; pointer-events: auto; }
+  .desktop-filters-dialog {
+    width: min(640px, calc(100% - 32px));
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+    background: var(--bg);
+    color: var(--fg);
+    pointer-events: auto;
+    overscroll-behavior: contain;
+  }
+  .desktop-filters-dialog::backdrop { background: rgb(0 0 0 / 32%); }
+  .desktop-filters-content { padding: 20px; }
+  .desktop-filters-content .header-flow { margin: 0 0 16px; }
+  .desktop-filters-actions { position: sticky; bottom: 0; padding: 8px 0; background: var(--bg); }
+  .desktop-filters-actions .btn { width: 100%; }
+  .desktop-app .explore-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+  }
+  .desktop-app .explore-layout > :not(.explore-map-pane) { grid-column: 2; min-width: 0; }
+  .desktop-app .explore-map-pane {
+    display: block;
+    position: fixed;
+    inset: var(--desktop-nav-height) var(--explore-map-end) 0 var(--explore-map-start);
+    z-index: 1;
+  }
+  .desktop-app .explore-map {
+    height: 100%;
+    margin: 0;
+    border-radius: var(--r-sheet);
+    isolation: isolate;
+  }
+  .desktop-app .explore-map-pane .map-card { bottom: var(--float-gap); }
+  .map-card-close { position: absolute; inset: 4px 4px auto auto; }
+  .map-card:has(> .map-card-close) h2 { padding-inline-end: 40px; }
+  .desktop-app:has(.explore-map-pane[data-expanded]) {
+    --explore-map-end: calc(var(--desktop-edge) + var(--gutter));
+  }
+  .desktop-map-controls {
+    position: absolute;
+    inset-inline-end: var(--float-gap);
+    bottom: calc(var(--float-gap) + 24px);
+    z-index: 2;
+    display: grid;
+    gap: 8px;
+  }
+  .desktop-map-controls .icon-btn { border-radius: var(--float-r); font-size: 24px; }
+  .explore-map-pane:has(.desktop-map-controls) .map-card { inset-inline-end: calc(var(--float-gap) + 52px); }
+  .desktop-app .explore-list-pane {
+    display: grid;
+    grid-area: 1 / 2;
+    min-width: 0;
+    gap: 14px;
+  }
+  .desktop-app .explore-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 16px;
+  }
+  .desktop-app .explore-results > .listing-cell {
+    display: flex;
+    flex-direction: column;
+  }
+  .desktop-app .explore-results .listing-cell > .listing-card,
+  .desktop-app .explore-results .listing-card-text {
+    flex: 1;
+  }
+  .desktop-app .explore-results .listing-card .photo { flex-shrink: 0; }
+  .desktop-app .explore-results .listing-card-text > .listing-card-footer {
+    margin-top: auto;
+    padding-top: 4px;
+  }
+  .desktop-app .desktop-feature-filters {
+    grid-area: 2 / 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-self: start;
+    gap: 6px;
+  }
+
+  .cta-prices[data-currency]:has(.cta-usd) { grid-template-columns: 1fr; }
+  .cta-prices[data-currency="CRC"] .cta-usd,
+  .cta-prices[data-currency="USD"]:has(.cta-usd) > :first-child { display: none; }
+  .listing-monthly[data-currency="USD"] .listing-monthly-crc { display: none; }
+  .listing-monthly[data-currency="USD"] .listing-monthly-usd { display: inline; }
+  .desktop-feature-filters .chip {
+    min-width: 0;
+    min-height: 36px;
+    padding-inline: 8px;
+    font-size: 14px;
+    pointer-events: auto;
+  }
+  .desktop-feature-filters .feature-check { position: static; transform: none; }
+  .desktop-feature-filters .chip[aria-pressed="true"] { background: var(--chosen); }
+  .desktop-search-fields {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(112px, 12vw, 176px)) max-content;
+    gap: 8px;
+  }
+  .desktop-search-field .search-pill {
+    width: 100%;
+    min-width: 0;
+    pointer-events: auto;
+  }
+
+  .desktop-search-field .search-pill[aria-expanded="true"] { background: var(--surface); }
+
+  .desktop-search-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    z-index: 2;
+    display: grid;
+    gap: 12px;
+    width: min(100%, 400px);
+    max-height: calc(100dvh - 160px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+    background: var(--surface);
+    box-shadow: var(--shadow-float);
+    pointer-events: auto;
+  }
+
+  .desktop-search-panel-donde { left: 0; }
+  .desktop-search-people {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 52px;
+    padding-inline: 10px 4px;
+    border-radius: var(--float-r);
+    pointer-events: auto;
+  }
+  .desktop-search-people .people-stepper { gap: 0; }
+  .desktop-search-people > svg { flex: none; color: var(--primary); }
+  .desktop-search-people .people-stepper b { font: var(--w-strong) 16px var(--body); }
+  .desktop-search-panel-cuando { inset-inline: 0; width: auto; }
+  .desktop-search-calendar { max-height: min(52dvh, 420px); overflow: auto; overscroll-behavior: contain; }
+  .desktop-search-calendar .range-calendar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .desktop-search-calendar .range-weekdays { position: static; }
+  .desktop-app .map-full-top { max-width: 760px; }
+  .desktop-app .map-full { inset: var(--desktop-nav-height) 0 0; }
+  .desktop-app .map-label { bottom: var(--float-bottom); }
+  html.chrome-away .desktop-app .map-label { transform: none; }
+  html:has(.desktop-app > .desktop-nav) { --chrome-bottom: var(--float-bottom); }
+
+  .desktop-app:has(.cal-panel) > .desktop-nav {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

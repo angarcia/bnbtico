@@ -1,6 +1,7 @@
 import { Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { formatCRC } from "../../domain/money";
+import { useDesktop } from "../desktop";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { useListingsCount } from "../own-listings-query";
 import { PublishPromoButton, useOffer } from "../publish-promo";
@@ -9,16 +10,17 @@ import "./que-es-3bstays.css";
 
 export function QueEs3bstaysScreen() {
   const { status } = useSession();
+  const desktop = useDesktop();
   const { count, fetching } = useListingsCount();
   const [openedWithoutSession] = useState(status === "signed-out");
-  if (status === "signed-in" && (openedWithoutSession || (count ?? 0) > 0 || (count === undefined && !fetching))) {
+  if (status === "signed-in" && (desktop || openedWithoutSession || (count ?? 0) > 0 || (count === undefined && !fetching))) {
     return <Navigate to="/explorar" replace />;
   }
   if (status === "loading" || (status === "signed-in" && count === undefined)) return <p role="status">Cargando…</p>;
-  return <AboutContent />;
+  return <AboutContent desktop={desktop} />;
 }
 
-function AboutContent() {
+function AboutContent({ desktop }: { desktop: boolean }) {
   const offer = useOffer();
   const months = offer?.months;
   useEffect(() => {
@@ -29,11 +31,13 @@ function AboutContent() {
   return (
     <div className="about-3bstays">
       <div className="about-top">
-        <header role="banner" className="about-brand">
-          <Link to="/explorar" replace aria-label="3bstays, inicio">
-            <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
-          </Link>
-        </header>
+        {!desktop && (
+          <header role="banner" className="about-brand">
+            <Link to="/explorar" replace aria-label="3bstays, inicio">
+              <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
+            </Link>
+          </header>
+        )}
         <section className="about-guest" aria-labelledby="about-guest-title">
           <h1 id="about-guest-title">¿Busca alojamiento en Costa Rica?</h1>
           <p className="about-guest-line">

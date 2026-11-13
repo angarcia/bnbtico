@@ -36,6 +36,9 @@ export function exploreHeaderInsets(box: HTMLElement): { top: number; bottom: nu
   const header = document.querySelector<HTMLElement>(".explore-top");
   if (!header) return { top: 0, bottom: 0 };
   const boxTop = box.getBoundingClientRect().top + scrollY;
+  if (header.closest(".desktop-app")) {
+    return { top: Math.max(0, header.getBoundingClientRect().bottom - box.getBoundingClientRect().top), bottom: 0 };
+  }
   return { top: Math.max(0, parseFloat(getComputedStyle(header).top) + header.offsetHeight - boxTop), bottom: 0 };
 }
 
@@ -89,12 +92,20 @@ const PricePreview = lazy(() => import("./map-preview").then((m) => ({ default: 
 
 /** Arriba de Explorar, a todo el ancho y bajo la cabecera flotante: tocarlo (o Intro/Espacio) abre el mapa grande; un marcador,
  *  con su casa. Sin `onOpen` (mientras busca o sin casas) es solo el mapa de la zona. */
-export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: SearchListing[]; zone: LatLng | null; nights: number; onOpen: ((publicId: string | null) => void) | null; ref?: RefObject<HTMLDivElement | null> }) {
+export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected = null, expanded, onExpand, ref }: { listings: SearchListing[]; zone: LatLng | null; nights: number; onOpen: ((publicId: string | null) => void) | null; onSelect?: (publicId: string | null) => void; selected?: string | null; expanded?: boolean; onExpand?: () => void; ref?: RefObject<HTMLDivElement | null> }) {
   const own = useRef<HTMLDivElement>(null);
   const box = ref ?? own;
   const markers = useMapMarkers(listings, nights);
   const insets = () => (box.current ? exploreHeaderInsets(box.current) : { top: 0, bottom: 0 });
-  const { ready } = useExploreMap(box, { interactive: false, onMarker: (id) => onOpen?.(id), onMap: () => undefined, insets }, markers, zone);
+  const { handle, ready } = useExploreMap(box, {
+    interactive: !!onSelect,
+    onMarker: onSelect ?? ((id) => onOpen?.(id)),
+    onMap: () => onSelect?.(null),
+    insets,
+  }, markers, zone);
+  useEffect(() => {
+    if (onSelect) handle.current?.select(selected);
+  }, [handle, ready, markers, onSelect, selected]);
   const [size, setSize] = useState({ width: 0, height: 0, top: 0 });
   useLayoutEffect(() => {
     const el = box.current;
@@ -116,10 +127,10 @@ export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: 
           onOpen(null);
         },
       }
-    : { "aria-hidden": true };
+    : onSelect ? { role: "region", "aria-label": "Mapa de las casas" } : { "aria-hidden": true };
   return (
-    // La clase no cambia nunca: Leaflet añade las suyas (`leaflet-container`…) a esta caja y React, al reescribir `className`,
-    // las borraría (las teselas se quedaban a 0 px: sin fondo, solo los precios). Quieta o no, va en un atributo.
+    <>
+    {/* La clase permanece fija para conservar las clases que añade Leaflet. El estado va en un atributo. */}
     <div ref={box} className="map-box explore-map" data-still={onOpen ? undefined : ""} data-testid="explore-map" {...open}>
       {ready ? null : (
         <Suspense fallback={null}>
@@ -127,6 +138,18 @@ export function ExploreMap({ listings, zone, nights, onOpen, ref }: { listings: 
         </Suspense>
       )}
     </div>
+    {onExpand && (
+      <div className="desktop-map-controls" role="group" aria-label="Controles del mapa">
+        <button type="button" className="icon-btn float-card" aria-label={expanded ? "Reducir mapa" : "Ampliar mapa"} aria-pressed={expanded} onClick={onExpand}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={expanded ? "m5 19 6-6m-6 0h6v6m8-14-6 6m0-6v6h6" : "m5 19 6-6m-6 0v6h6m8-14-6 6m0-6h6v6"} />
+          </svg>
+        </button>
+        <button type="button" className="icon-btn float-card" aria-label="Acercar mapa" disabled={!ready} onClick={() => handle.current?.zoomBy(1)}><I.plus size={20} /></button>
+        <button type="button" className="icon-btn float-card" aria-label="Alejar mapa" disabled={!ready} onClick={() => handle.current?.zoomBy(-1)}>−</button>
+      </div>
+    )}
+    </>
   );
 }
 

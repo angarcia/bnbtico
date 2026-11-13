@@ -29,6 +29,7 @@ import { inquiriesQuery } from "../inquiries";
 import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
 import { knownNoDraft } from "../own-listings-query";
 import { ConfirmSheet } from "../confirm-sheet";
+import { useDesktop } from "../desktop";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -222,9 +223,16 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
 const EditableFicha = lazy(() => import("./casa-editable").then((m) => ({ default: m.EditableFicha })));
 
 const detailRoute = getRouteApi("/_flow/_privateFlow/propietario/casas/$id");
+const HouseSubscription = lazy(() => import("./suscripcion").then((m) => ({ default: m.HouseSubscriptionPanel })));
 
 export function CasaPropietarioScreen() {
   const { id } = detailRoute.useParams();
+  const { panel } = detailRoute.useSearch();
+  const desktop = useDesktop();
+  return <OwnerHouseDetail id={id} showSubscription={desktop && panel === "suscripcion"} />;
+}
+
+export function OwnerHouseDetail({ id, rightPanel, showSubscription }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean }) {
   const { userId, query } = useOwnListing(id);
   // Suscripción, actividad y el JS de la ficha editable no dependen de la casa: salen a la vez que ella, no después
   // (auditoría de viajes 2026-11-05: los avisos y las cifras llegaban ~0,6 s más tarde).
@@ -244,7 +252,7 @@ export function CasaPropietarioScreen() {
       />
       {l && isPublished(l) ? (
         <Suspense fallback={<SkeletonCard />}>
-          <EditableFicha listing={l} userId={userId} />
+          <EditableFicha key={l.id} listing={l} userId={userId} rightPanel={showSubscription ? <HouseSubscription listing={l} /> : rightPanel} />
         </Suspense>
       ) : null}
       {l && !isPublished(l) ? <Detail listing={l} userId={userId} /> : null}
@@ -273,67 +281,71 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
   const error = discard.error;
   return (
-    <>
-      <div className="photo detail-photo">
-        {cover ? (
-          <img src={variantUrl(cover, 800)} alt="" width={800} height={340} />
-        ) : (
-          // Sin fotos: el hueco lleva directo al paso de las fotos (Ana, 2026-11-04).
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "7" }} className="photo-empty">
-            <I.camera size={28} />
-            Añadir fotos
-          </Link>
-        )}
-        <span className={`state ${label.cls}`}>{label.text}</span>
-        {price ? (
-          <span className="pill pill-bl">
-            {formatCRC(price.amount)} <span>/ {price.unit}</span>
-          </span>
-        ) : null}
-      </div>
-      {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
-
-      {/* Borrador: «Seguir publicando» como acción principal, con lo que falta (revisión UX 2026-10-29, A4). */}
-      {l.status === "draft" ? (
-        <div className="stack gap-8">
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} className="btn btn-primary btn-lg btn-block">
-            Seguir publicando
-          </Link>
-          {missingLine(missingParts(l)) ? (
-            <span className="small muted center" data-testid="draft-missing">
-              {missingLine(missingParts(l))}
+    <div className="owner-detail-draft">
+      <div className="owner-detail-summary">
+        <div className="photo detail-photo">
+          {cover ? (
+            <img src={variantUrl(cover, 800)} alt="" width={800} height={340} />
+          ) : (
+            // Sin fotos: el hueco lleva directo al paso de las fotos (Ana, 2026-11-04).
+            <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "7" }} className="photo-empty">
+              <I.camera size={28} />
+              Añadir fotos
+            </Link>
+          )}
+          <span className={`state ${label.cls}`}>{label.text}</span>
+          {price ? (
+            <span className="pill pill-bl">
+              {formatCRC(price.amount)} <span>/ {price.unit}</span>
             </span>
           ) : null}
         </div>
-      ) : null}
-      {l.status === "review" ? <div className="note note-review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
-      {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
-        <section className="card-arena stack gap-10">
-          <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
-          <span className="small ink">{l.reviewNote}</span>
-          {l.status === "changes" ? (
-            <button type="button" className="btn btn-primary btn-block" onClick={() => void toWizard()}>
-              Corregir y reenviar
-            </button>
-          ) : null}
+        {monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
+      </div>
+
+      <div className="owner-detail-fields">
+        {/* Borrador: «Seguir publicando» como acción principal, con lo que falta (revisión UX 2026-10-29, A4). */}
+        {l.status === "draft" ? (
+          <div className="stack gap-8">
+            <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} className="btn btn-primary btn-lg btn-block">
+              Seguir publicando
+            </Link>
+            {missingLine(missingParts(l)) ? (
+              <span className="small muted center" data-testid="draft-missing">
+                {missingLine(missingParts(l))}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+        {l.status === "review" ? <div className="note note-review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
+        {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
+          <section className="card-arena stack gap-10">
+            <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
+            <span className="small ink">{l.reviewNote}</span>
+            {l.status === "changes" ? (
+              <button type="button" className="btn btn-primary btn-block" onClick={() => void toWizard()}>
+                Corregir y reenviar
+              </button>
+            ) : null}
+          </section>
+        ) : null}
+
+        <section className="list">
+          {/* «Compartir ficha» solo con la casa activa: desactivado parecía roto (A4). */}
+          {can(l, "share") ? <ShareListItem listing={l} /> : null}
+          <WhatsAppItem listing={l} />
         </section>
-      ) : null}
 
-      <section className="list">
-        {/* «Compartir ficha» solo con la casa activa: desactivado parecía roto (A4). */}
-        {can(l, "share") ? <ShareListItem listing={l} /> : null}
-        <WhatsAppItem listing={l} />
-      </section>
+        {error ? <p className="note" role="alert">{message(error)}</p> : null}
 
-      {error ? <p className="note" role="alert">{message(error)}</p> : null}
-
-      {can(l, "discard") ? (
-        <button type="button" className="btn btn-outline-bad" onClick={ask} disabled={discard.isPending}>
-          Descartar borrador
-        </button>
-      ) : null}
+        {can(l, "discard") ? (
+          <button type="button" className="btn btn-outline-bad" onClick={ask} disabled={discard.isPending}>
+            Descartar borrador
+          </button>
+        ) : null}
+      </div>
       {sheet}
-    </>
+    </div>
   );
 }
 

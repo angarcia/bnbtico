@@ -82,6 +82,7 @@
 /* Propietario: los meses uno debajo de otro. La fila L K M J V S D queda fija arriba (sin barra superior) y el título de
    cada mes, debajo de ella. */
 .cal-hint-row{align-items:center;margin-top:-4px}
+.owner-calendar-layout,.owner-calendar-options,.owner-calendar-days{display:contents}
 .cal-weekdays{position:sticky;top:env(safe-area-inset-top);z-index:3;background:var(--bg);padding:4px 0;margin-bottom:-14px}
 /* 26 px justos: el título del mes cuenta con ese alto (calc de abajo), también con la letra más grande. */
 .cal-weekdays{height:26px;line-height:18px;box-sizing:border-box}

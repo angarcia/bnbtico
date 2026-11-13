@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { listingInNext } from "../domain/contact-return";
 import { toDomainError } from "../domain/errors";
 import { firstName } from "../domain/person";
@@ -72,7 +72,12 @@ export function ReturnCard({ next }: { next?: string }) {
  * Cuerpo de Ingresar, sin cabecera, en un único flujo (ticket 18): primero el WhatsApp. Si el número tiene cuenta se envía
  * el código; si no, se pide el nombre y entonces se envía (un solo código por número; ver AuthApi.start).
  */
-export function SignInForm({ next, mode }: { next?: string; mode: "account" | "contact" | "publish" }) {
+export function SignInForm({ next, mode, onCodeSent, nameStep }: {
+  next?: string;
+  mode: "account" | "contact" | "publish";
+  onCodeSent?: () => void;
+  nameStep?: { phone: string | null; setPhone: (phone: string | null) => void };
+}) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   // Error de un campo (revisión UX A6): debajo de ese campo y con el foco en él.
@@ -80,7 +85,13 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
   const [busy, setBusy] = useState(false);
   const [country, setCountry] = useState(DEFAULT_COUNTRY);
   // Número sin cuenta: se pide el nombre para crearla.
-  const [newPhone, setNewPhone] = useState<string | null>(null);
+  const [localPhone, setLocalPhone] = useState<string | null>(null);
+  const newPhone = nameStep ? nameStep.phone : localPhone;
+  const setNewPhone = nameStep?.setPhone ?? setLocalPhone;
+  useEffect(() => {
+    setError(null);
+    setFieldError(null);
+  }, [newPhone]);
   const captcha = useTurnstile();
   const other = country === OTHER_COUNTRY;
   const contact = mode === "contact";
@@ -113,7 +124,12 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
         setBusy(false);
         return;
       }
-      await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
+      if (onCodeSent) {
+        setBusy(false);
+        onCodeSent();
+      } else {
+        await navigate({ to: "/cuenta/codigo", search: next ? { next } : {} });
+      }
     } catch (err) {
       // Lo que la base dice de un campo (nombre corto, número que no vale) va junto a ese campo.
       const e = toDomainError(err);
@@ -232,7 +248,7 @@ export function SignInForm({ next, mode }: { next?: string; mode: "account" | "c
         </button>
       </form>
       <div className="stack small">
-        {newPhone ? (
+        {newPhone && !nameStep ? (
           <button type="button" className="btn-link" onClick={changeNumber}>
             Cambiar número
           </button>

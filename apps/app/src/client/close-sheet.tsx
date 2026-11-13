@@ -57,7 +57,7 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
           <button type="submit" className="btn btn-primary btn-lg">
             Pausar la casa
           </button>
-          <button type="button" className="btn btn-ghost btn-lg" onClick={onClose}>
+          <button type="button" className="btn btn-ghost btn-lg popup-cancel" onClick={onClose}>
             Cancelar
           </button>
         </form>

@@ -9,10 +9,13 @@ const subscribeOnline = (listener: () => void) => onlineManager.subscribe(listen
 const onlineSnapshot = () => onlineManager.isOnline();
 export const useCalendarOnline = () => useSyncExternalStore(subscribeOnline, onlineSnapshot);
 
-export async function airbnbApi() {
+async function calendarData() {
   await authApi();
-  return (await import("./supabase-data")).airbnbApi();
+  return import("./supabase-data");
 }
+
+export const airbnbApi = async () => (await calendarData()).airbnbApi();
+export const icalExportApi = async () => (await calendarData()).icalExportApi();
 
 export const airbnbQuery = (userId: string, listingId: string) => queryOptions({
   queryKey: ["airbnb", userId, listingId] as const,

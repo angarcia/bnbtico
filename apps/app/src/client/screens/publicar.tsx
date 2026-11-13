@@ -3,7 +3,7 @@
 // no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useNavigate, useParams, useRouter, useSearch } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
 import { LAST_STEP, stepFromParam, type Step } from "../../domain/listing";
@@ -13,6 +13,7 @@ import { localPort } from "../publish/local-port";
 import type { Volver } from "../publish/step-form";
 import { requiredProblems, resumeStep } from "../../domain/publish-rules";
 import { FlowHeader } from "../chrome";
+import { useDesktop } from "../desktop";
 import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
@@ -27,6 +28,7 @@ import { knownNoDraft } from "../own-listings-query";
 import { clearCreateFailure, createFailure, startDraft } from "../publish/new-draft";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
+const DESKTOP_STEPS: readonly Step[] = [1, 7, 6, LAST_STEP];
 
 // ---------- Entrada ----------
 
@@ -168,10 +170,10 @@ function CloseWizard({ id }: { id?: string }) {
   );
 }
 
-function StepHeader({ id, step, missingSteps }: { id?: string; step: Step | null; missingSteps?: readonly Step[] }) {
+function StepHeader({ id, step, lastInGroup, missingSteps, actions }: { id?: string; step: Step | null; lastInGroup?: Step; missingSteps?: readonly Step[]; actions?: ReactNode }) {
   const { admin } = useEditor();
   return (
-    <WizardHeader title={admin ? "Asistir casa" : "Publicar casa"} step={step} close={<CloseWizard id={id} />} missingSteps={missingSteps} />
+    <WizardHeader title={admin ? "Asistir casa" : "Publicar casa"} step={step} lastInGroup={lastInGroup} close={<CloseWizard id={id} />} missingSteps={missingSteps} actions={actions} />
   );
 }
 
@@ -179,18 +181,27 @@ function StepHeader({ id, step, missingSteps }: { id?: string; step: Step | null
 export function PasoScreen() {
   const { id, paso } = useParams({ strict: false }) as { id: string; paso: string };
   const port = useEditor();
+  const desktop = useDesktop();
   const parsed = stepFromParam(paso);
-  const step = parsed && "step" in parsed ? parsed.step : null;
+  const routeStep = parsed && "step" in parsed ? parsed.step : null;
   // Abierta desde «Revisar y enviar»: «Continuar» y «Atrás» vuelven a él (en el propio resumen no significa nada).
   const search = useSearch({ strict: false }) as { volver?: Volver };
-  const volver = step === LAST_STEP ? undefined : search.volver;
+  const volver = routeStep === LAST_STEP ? undefined : search.volver;
+  const groupSteps = desktop && !port.admin;
+  const step = groupSteps && routeStep !== null && (routeStep === 2 || routeStep === 4 || routeStep === 5 || port.local) ? 1
+    : groupSteps && routeStep === 8 ? 7 : routeStep;
+  const lastInGroup = groupSteps ? (step === 1 ? 5 : step === 7 ? 8 : undefined) : undefined;
   const { userId, query } = useOwnListing(id);
   const client = useQueryClient();
   const l = query.data;
   // Dirección del cambio de pantalla: la nueva entra desde la derecha al avanzar y desde la izquierda al volver. Al corregir
   // desde «Revisar y enviar», el resumen queda detrás: abrir el paso avanza y volver a él retrocede.
   const previous = useRef<{ step: Step | null; volver: boolean }>({ step: null, volver: false });
-  const enter = stepEnter(previous.current.step, step, !!volver || previous.current.volver);
+  const previousStep = previous.current.step;
+  const returningFromReview = !!volver || previous.current.volver;
+  const enter = groupSteps && step !== null && previousStep !== null && step !== previousStep && !returningFromReview
+    ? (DESKTOP_STEPS.indexOf(step) > DESKTOP_STEPS.indexOf(previousStep) ? "forward" : "back")
+    : stepEnter(previousStep, step, returningFromReview);
   useEffect(() => {
     previous.current = { step, volver: !!volver };
   }, [step, volver]);
@@ -209,12 +220,13 @@ export function PasoScreen() {
   }, [step, client, userId, id]);
 
   // Un id de pantalla retirado (el 3, el mapa de antes) lleva a la que lo sustituye: los enlaces viejos siguen sirviendo.
+  if (port.local && routeStep === 1 && !desktop) return <Navigate to="/publicar" replace />;
   if (parsed && "redirect" in parsed) return <Navigate to={port.step} params={{ id, paso: String(parsed.redirect) }} replace />;
-  const header = <StepHeader id={id} step={step} missingSteps={step === LAST_STEP && l ? requiredProblems(l).map((p) => p.step) : undefined} />;
+  const renderHeader = (actions?: ReactNode) => <StepHeader id={id} step={step} lastInGroup={lastInGroup} missingSteps={step === LAST_STEP && l ? requiredProblems(l).map((p) => p.step) : undefined} actions={actions} />;
   if (!step || l === null) {
     return (
       <>
-        {header}
+        {renderHeader()}
         <NotFoundCard />
       </>
     );
@@ -222,7 +234,7 @@ export function PasoScreen() {
   if (l === undefined) {
     return (
       <>
-        {header}
+        {renderHeader()}
         {query.isError ? (
           <p className="note" role="alert">
             {message(query.error)}
@@ -236,12 +248,41 @@ export function PasoScreen() {
   // Solo un borrador o una casa con cambios pedidos se editan; lo demás se ve en su detalle. El admin edita así cualquier
   // casa sin publicar (también en revisión o rechazada); una publicada, en su ficha editable.
   if (port.admin ? isPublished(l) : l.status !== "draft" && l.status !== "changes") return <Navigate to={port.ficha} params={{ id }} replace />;
+  const desktopStepIndex = DESKTOP_STEPS.indexOf(step);
 
   return (
     <>
-      {header}
-      <StepForm key={step} userId={userId} listing={l} step={step} enter={enter} volver={volver}>
-        {(values) => <StepFields step={step} draft={values} listing={l} userId={userId} />}
+      <StepForm
+        key={`${step}-${lastInGroup ?? ""}`}
+        userId={userId}
+        listing={l}
+        step={step}
+        lastInGroup={lastInGroup}
+        next={groupSteps ? DESKTOP_STEPS[desktopStepIndex + 1] : undefined}
+        back={groupSteps ? DESKTOP_STEPS[desktopStepIndex - 1] : undefined}
+        verifyBeforePhotos={groupSteps && port.local}
+        enter={enter}
+        volver={volver}
+        renderHeader={renderHeader}
+      >
+        {(values) => lastInGroup ? (
+          <div className={`publish-step-columns${step === 7 ? " publish-price-photos" : ""}`}>
+            {step === 1 ? (
+              <>
+                <div className="stack">
+                  <StepFields step={1} draft={values} listing={l} userId={userId} withCapacity />
+                  <StepFields step={5} draft={values} listing={l} userId={userId} />
+                </div>
+                <div className="stack"><StepFields step={2} draft={values} listing={l} userId={userId} /></div>
+              </>
+            ) : (
+              <>
+                <div className="stack"><StepFields step={8} draft={values} listing={l} userId={userId} /></div>
+                <div className="stack"><StepFields step={7} draft={values} listing={l} userId={userId} /></div>
+              </>
+            )}
+          </div>
+        ) : <StepFields step={step} draft={values} listing={l} userId={userId} />}
       </StepForm>
     </>
   );

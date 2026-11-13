@@ -97,7 +97,7 @@ function Fold({ title, value, open, onToggle, children }: { title: string; value
   );
 }
 
-function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPick(id: string): void; onClear(): void; focusOnce?: { current: boolean } }) {
+export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | null; onPick(id: string): void; onClear(): void; focusOnce?: { current: boolean } }) {
   const input = useRef<HTMLInputElement>(null);
   const listbox = useRef<HTMLUListElement>(null);
   // Al abrir la búsqueda en «¿Dónde?», el foco va al campo (abre el teclado), sin el anillo del título (N6).

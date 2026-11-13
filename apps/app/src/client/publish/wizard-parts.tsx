@@ -1,15 +1,17 @@
 // Piezas del paso 1 que comparten el asistente de publicar, la entrada sin cuenta (/publicar) y la edición de una casa
 // publicada: las tarjetas de elección, «¿Qué es?», qué tener a mano y la etapa de la cabecera. Trozo propio y pequeño
 // (wizard-parts-*), medido en «Entrada de publicar»: /publicar no descarga los campos del asistente.
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
+import { I } from "../../shared/icons";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
-export function WizardHeader({ title = "Publicar casa", step, close, missingSteps = [] }: { title?: string; step: Step | null; close: ReactNode; missingSteps?: readonly Step[] }) {
+export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: ReactNode; actions?: ReactNode; missingSteps?: readonly Step[] }) {
   return (
     <div className="wizard-heading">
       <header className="header-flow publish-header">
         <h1>{title}</h1>
+        {actions}
         {close}
       </header>
       {step ? (
@@ -17,10 +19,12 @@ export function WizardHeader({ title = "Publicar casa", step, close, missingStep
           <div className="progress" aria-hidden="true">
             {/* En el resumen, lo obligatorio que falta conserva su tramo vacío. */}
             {STEPS.map((s) => (
-              <span key={s} className={`${stepPosition(s) <= stepPosition(step) && !(step === LAST_STEP && missingSteps.includes(s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
+              <span key={s} className={`${stepPosition(s) <= stepPosition(lastInGroup ?? step) && !(step === LAST_STEP && missingSteps.includes(s)) ? "on" : ""}${s > 1 && wizardStage(s).first === s ? " stage-start" : ""}`.trim() || undefined} />
             ))}
           </div>
-          <StageLabel step={step} />
+          {lastInGroup ? (
+            <span className="right stage-label">Pasos {stepPosition(step)} a {stepPosition(lastInGroup)} de {STEP_COUNT}</span>
+          ) : <StageLabel step={step} />}
         </>
       ) : null}
     </div>
@@ -34,6 +38,7 @@ export function ChoiceCards({
   options,
   selected,
   onChange,
+  compact = false,
 }: {
   name: string;
   type: "checkbox" | "radio";
@@ -41,8 +46,11 @@ export function ChoiceCards({
   selected: string[];
   /** Lo elegido tras cada toque (p. ej. el tipo de una casa publicada, que muestra el baño con «Habitación»). */
   onChange?: (current: string[]) => void;
+  compact?: boolean;
 }) {
   const [current, setCurrent] = useState<string[]>(selected);
+  const [openHint, setOpenHint] = useState<string | null>(null);
+  const hintId = useId();
   const toggle = (v: string) => {
     const next = type === "radio" ? [v] : current.includes(v) ? current.filter((x) => x !== v) : [...current, v];
     setCurrent(next);
@@ -52,12 +60,26 @@ export function ChoiceCards({
     <div className="grid-2">
       {options.map((o) => {
         const on = current.includes(o.value);
-        return (
+        const choice = (
           <label key={o.value} className="choice" aria-pressed={on}>
             <input type={type} name={name} value={o.value} checked={on} onChange={() => toggle(o.value)} className="sr-input" />
             <b>{o.label}</b>
-            <span>{o.hint}</span>
+            {!compact ? <span>{o.hint}</span> : null}
           </label>
+        );
+        if (!compact) return choice;
+        const expanded = openHint === o.value;
+        const id = `${hintId}-${o.value}`;
+        return (
+          <div key={o.value} className="compact-kind-option">
+            <div className="row">
+              {choice}
+              <button type="button" className="icon-btn" aria-label={`Qué significa ${o.label}`} aria-expanded={expanded} aria-controls={id} onClick={() => setOpenHint(expanded ? null : o.value)}>
+                <I.help size={20} />
+              </button>
+            </div>
+            <p id={id} className="small muted" hidden={!expanded}>{o.hint}</p>
+          </div>
         );
       })}
     </div>
@@ -65,14 +87,16 @@ export function ChoiceCards({
 }
 
 /** «¿Qué es?»: Alojamiento completo o Habitación (paso 1), en un campo `kind`. */
-export function KindChoice({ kind }: { kind: Kind | null }) {
+export function KindChoice({ kind, onChange, compact }: { kind: Kind | null; onChange?: (kind: "completo" | "habitacion") => void; compact?: boolean }) {
   return (
     <section className="stack publish-kind">
       <h2>¿Qué es?</h2>
       <ChoiceCards
         name="kind"
         type="radio"
+        compact={compact}
         selected={kind === "habitacion" ? ["habitacion"] : kind ? ["completo"] : []}
+        onChange={onChange ? ([value]) => onChange(value === "habitacion" ? "habitacion" : "completo") : undefined}
         options={[
           { value: "completo", label: KIND_LABELS.completo, hint: KIND_HINTS.completo },
           { value: "habitacion", label: KIND_LABELS.habitacion, hint: KIND_HINTS.habitacion },

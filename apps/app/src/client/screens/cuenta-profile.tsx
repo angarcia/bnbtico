@@ -11,6 +11,7 @@ import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
 import { FlowHeader } from "../chrome";
+import { isDesktop, useDesktop } from "../desktop";
 import { PublishPromoRow } from "../publish-promo";
 import { useFavorites } from "../../shared/favorites-store";
 import { ConfirmSheet } from "../confirm-sheet";
@@ -25,6 +26,7 @@ const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
 // (precargado con las pantallas del propietario). Mientras llega, o si owner_billing falla, la tarjeta de siempre.
 const CuentaSubscriptionCard = lazy(() => suscripcionScreen().then((m) => ({ default: m.CuentaSubscriptionCard })));
 const CuentaPaymentRow = lazy(() => suscripcionScreen().then((m) => ({ default: m.CuentaPaymentRow })));
+const AccountSubscriptionDetails = lazy(() => suscripcionScreen().then((m) => ({ default: m.AccountSubscriptionDetails })));
 const SUBSCRIPTION_PLACEHOLDER = (
   <section className="card stack">
     <div className="row between">
@@ -45,6 +47,8 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
   const { session } = useSession();
   const { count } = useListingsCount();
   const owner = (count ?? 0) > 0;
+  const desktop = useDesktop();
+  const splitAccount = tab && owner && desktop;
   const navigate = useNavigate();
   const router = useRouter();
   const canGoBack = useCanGoBack();
@@ -63,14 +67,24 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       setLogoutError(err.kind === "unknown" ? "No pudimos cerrar la sesión. Intente de nuevo." : err.message);
       return setLeaving(false);
     }
-    await navigate({ to: "/que-es-3bstays", replace: true });
+    await navigate({ to: isDesktop() ? "/explorar" : "/que-es-3bstays", replace: true });
   }
 
   // La flecha vuelve adonde estaba; abierta directamente, a Mis casas con casas o a Explorar.
   const back = () => (canGoBack ? router.history.back() : void navigate({ to: count ? "/propietario/casas" : "/explorar" }));
 
   const a = account.data;
-  return (
+  const subscription = owner && !splitAccount ? (
+    <Suspense fallback={SUBSCRIPTION_PLACEHOLDER}>
+      <CuentaSubscriptionCard fallback={SUBSCRIPTION_PLACEHOLDER} />
+    </Suspense>
+  ) : null;
+  const payment = owner && !splitAccount ? (
+    <Suspense fallback={null}>
+      <CuentaPaymentRow />
+    </Suspense>
+  ) : null;
+  const accountContent = (
     <>
       {/* Como pestaña (C4), sin flecha ni título visible; al editar o desde un flujo, con su cabecera. */}
       {tab ? <h1 className="sr-only">Cuenta</h1> : <FlowHeader title="Cuenta" back="/explorar" onBack={back} />}
@@ -91,7 +105,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
             </span>
           </div>
           {/* Editar y Listo sustituyen la entrada del historial: la flecha de Cuenta sigue volviendo adonde se estaba. */}
-          {editing ? (
+          {splitAccount ? null : editing ? (
             <Link to="/cuenta" replace className="link small account-edit">
               Listo
             </Link>
@@ -107,27 +121,19 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
         </section>
       )}
 
-      {a && editing ? (
+      {a && splitAccount ? <DesktopProfile key={a.id} account={a} /> : a && editing ? (
         <section className="card stack">
           <h3>Mi perfil</h3>
-          <ProfileForm account={a} />
+          <ProfileForm key={a.id} account={a} />
         </section>
       ) : null}
 
-      {owner ? (
-        <Suspense fallback={SUBSCRIPTION_PLACEHOLDER}>
-          <CuentaSubscriptionCard fallback={SUBSCRIPTION_PLACEHOLDER} />
-        </Suspense>
-      ) : null}
+      {subscription}
 
-      <section className="list">
-        {owner ? (
-          <Suspense fallback={null}>
-            <CuentaPaymentRow />
-          </Suspense>
-        ) : null}
-        {/* Favoritos sale de la barra del propietario y pasa aquí (C4). */}
-        {owner ? <FavoritesRow /> : null}
+      <section className="list account-actions">
+        {payment}
+        {/* En móvil, Favoritos está dentro de Cuenta para respetar el límite de cinco pestañas. */}
+        {owner && !desktop ? <FavoritesRow /> : null}
         {count === 0 ? <PublishPromoRow /> : null}
         {a?.isAdmin ? (
           <Link to="/admin" replace className="list-item">
@@ -140,7 +146,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
             </span>
           </Link>
         ) : null}
-        <Link to="/ayuda" className="list-item">
+        {!tab || !desktop ? <Link to="/ayuda" className="list-item">
           <I.help />
           <span className="body">
             Ayuda por WhatsApp<small>{owner ? "Línea de 3bstays para anfitriones" : "Línea de 3bstays para clientes"}</small>
@@ -148,7 +154,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           <span className="chev">
             <I.chevron />
           </span>
-        </Link>
+        </Link> : null}
       </section>
 
       {/* Lo último de la pantalla, pequeño y con confirmación: cerrar la sesión obliga a pedir un código nuevo. */}
@@ -183,6 +189,16 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       ) : null}
     </>
   );
+  return splitAccount ? (
+    <div className="owner-account-layout">
+      <div>{accountContent}</div>
+      <div>
+        <Suspense fallback={SUBSCRIPTION_PLACEHOLDER}>
+          <AccountSubscriptionDetails />
+        </Suspense>
+      </div>
+    </div>
+  ) : accountContent;
 }
 
 /** Favoritos dentro de Cuenta para el propietario (su barra ya tiene cinco pestañas). */
@@ -203,6 +219,29 @@ function FavoritesRow() {
 
 type ProfileValues = { name: string; description: string; email: string };
 const profileValues = (a: Pick<Account, "name" | "description" | "email">): ProfileValues => ({ name: a.name, description: a.description ?? "", email: a.email ?? "" });
+
+function DesktopProfile({ account }: { account: Account }) {
+  const [editing, setEditing] = useState(false);
+  const { name, description, email } = profileValues(account);
+  return (
+    <section className="card stack">
+      <div className="row between">
+        <h3>Mi perfil</h3>
+        <button type="button" className="btn-link account-profile-toggle" aria-expanded={editing} onClick={() => setEditing(!editing)}>
+          {editing ? "Listo" : "Editar"}
+        </button>
+      </div>
+      {editing ? <ProfileForm account={account} /> : (
+        <dl className="stack gap-14 account-profile-values">
+          <div><dt className="small muted">Nombre</dt><dd>{name}</dd></div>
+          <div><dt className="small muted">Descripción (opcional)</dt><dd>{description || "Sin descripción"}</dd></div>
+          <div><dt className="small muted">Correo de recuperación (opcional)</dt><dd>{email || "Sin correo de recuperación"}</dd></div>
+        </dl>
+      )}
+    </section>
+  );
+}
+
 const formValues = (form: HTMLFormElement): ProfileValues => {
   const fd = new FormData(form);
   return { name: field(fd, "name").trim(), description: field(fd, "description").trim(), email: field(fd, "email").trim() };

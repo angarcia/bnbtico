@@ -318,7 +318,7 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
             <button type="submit" className={mode === "delete" ? "btn btn-danger btn-block" : "btn btn-primary btn-block"} disabled={pending || (mode === "delete" && !deleteConfirmMatches(h.publicId, confirm))}>
               {copy.confirm}
             </button>
-            <button type="button" className="btn btn-ghost btn-block" disabled={pending} onClick={() => go("detail")}>
+            <button type="button" className="btn btn-ghost btn-block popup-cancel" disabled={pending} onClick={() => go("detail")}>
               Cancelar
             </button>
           </form>

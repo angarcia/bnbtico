@@ -35,7 +35,7 @@ const CLIENT_TABS = [
 ] as const satisfies readonly Tab[];
 
 const OWNER_TABS = [
-  { to: "/explorar", label: "Explorar", icon: "search", exact: false },
+  CLIENT_TABS[0],
   { to: "/propietario/casas", label: "Mis casas", icon: "house", exact: false },
   { to: "/propietario/calendario", label: "Calendario", icon: "calendar", exact: false },
   { to: "/propietario/actividad", label: "Consultas", icon: "chat", exact: false, badge: "inquiries" },
@@ -51,12 +51,17 @@ const ADMIN_TABS = [
 
 /** Admin → su barra; sin sesión → cliente con «Ingresar»; sin casas (o sin leer aún la lista) → cliente con «Cuenta»; con
  *  casas → propietario («Mi casa» con una). */
-export function tabsFor(input: { session: boolean; isAdmin: boolean; listingsCount: number | undefined }): Tab[] {
+export function tabsFor(input: { session: boolean; isAdmin: boolean; listingsCount: number | undefined; desktop?: boolean }): Tab[] {
   if (input.isAdmin) return [...ADMIN_TABS];
   if (!input.session) return [ABOUT_TAB, ...CLIENT_TABS, SIGN_IN_TAB];
   // Con una sola casa la pestaña dice «Mi casa»; con dos o más, «Mis casas» (misma ruta).
-  if (input.listingsCount === 1) return OWNER_TABS.map((t) => (t.to === "/propietario/casas" ? { ...t, label: "Mi casa" } : t));
-  if (input.listingsCount !== undefined && input.listingsCount > 1) return [...OWNER_TABS];
+  if (input.listingsCount && input.listingsCount >= 1) {
+    const tabs: Tab[] = OWNER_TABS.map((t) =>
+      input.listingsCount === 1 && t.to === "/propietario/casas" ? { ...t, label: "Mi casa" } : t,
+    );
+    if (input.desktop) tabs.splice(1, 0, CLIENT_TABS[1]);
+    return tabs;
+  }
   if (input.listingsCount === 0) return [ABOUT_TAB, ...CLIENT_TABS, ACCOUNT_TAB];
   return [...CLIENT_TABS, ACCOUNT_TAB];
 }

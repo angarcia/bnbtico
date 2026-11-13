@@ -14,7 +14,7 @@ const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
 const FREE: BusyDay = () => false;
 
 /** `busy`: los días ocupados de la casa (la hoja de contacto); sin él, la búsqueda de Explorar, donde todos valen. */
-export function RangeCalendar({ today, value, onChange, busy = FREE, onReject }: { today: string; value: RangeState; onChange(v: RangeState): void; busy?: BusyDay; onReject?(): void }) {
+export function RangeCalendar({ today, value, onChange, busy = FREE, onReject, weekdaysPerMonth = false }: { today: string; value: RangeState; onChange(v: RangeState): void; busy?: BusyDay; onReject?(): void; weekdaysPerMonth?: boolean }) {
   const lastDay = addDays(today, STAY_MAX_DAYS);
   const { arrival: start, departure: end } = value;
   // Hoy + 365 solo vale como salida: sin una llegada pendiente antes, no se puede elegir.
@@ -24,18 +24,22 @@ export function RangeCalendar({ today, value, onChange, busy = FREE, onReject }:
     if (r.rejected) onReject?.();
     else onChange(r.state);
   };
-  return (
-    <div className="range-calendar">
+  const weekdays = (
       <div className="range-weekdays" aria-hidden="true">
         {WEEKDAYS.map((d) => (
           <span key={d}>{d}</span>
         ))}
       </div>
+  );
+  return (
+    <div className="range-calendar">
+      {!weekdaysPerMonth && weekdays}
       {calendarMonths(today).map((month) => {
         const grid = monthGrid(month, today);
         return (
           <section key={month} className="range-month">
             <h3 className="range-title">{grid.title}</h3>
+            {weekdaysPerMonth && weekdays}
             <div className="range-grid">
               {grid.weeks.flat().map((g, i) => {
                 if (!g) return <span key={`b${i}`} aria-hidden="true" />;

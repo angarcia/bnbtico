@@ -29,6 +29,7 @@ import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
+import { useDesktop } from "../client/desktop";
 
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
@@ -65,6 +66,7 @@ const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactShe
 /** `days`: los de la casa para la hoja (undefined mientras se leen, null si no se pudieron leer). */
 function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { listing: PublicListing; days: CalendarDay[] | null | undefined; hydrated: boolean; navigate: Navigate; openOnMount?: OpenSheet }) {
   const [open, setOpen] = useState(!!openOnMount);
+  const desktop = useDesktop();
   // Solo la hoja que reabre al volver de verificar sigue sola hacia WhatsApp; si se cierra, la siguiente espera el toque.
   const [autoSend, setAutoSend] = useState(openOnMount === "return");
   const button = useRef<HTMLButtonElement>(null);
@@ -95,6 +97,14 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
       <span className="btn btn-wa is-pending" aria-hidden="true">
         <I.wa size={22} /> Contactar por WhatsApp
       </span>
+    );
+  }
+  if (desktop) {
+    return (
+      <Suspense fallback={<p className="small muted" role="status">Cargando contacto…</p>}>
+        <ContactSheet listing={listing} days={days} navigate={navigate} autoSend={autoSend} inline
+          onClose={() => { setAutoSend(false); setOpen(false); }} />
+      </Suspense>
     );
   }
   return (
@@ -177,9 +187,8 @@ function Availability({ listing, missing, currency, fx, onStay }: { listing: Pub
 
 /** La barra fija de la ficha: colones a la izquierda, dólares a la derecha. Sin fechas, el precio por noche; con fechas, el
  *  total orientativo («≈ ₡285 000 / 3 noches») en la misma línea, y con 30 noches o más, debajo, el mensual (ronda de Ana
- *  2 nov, ticket 08). No depende de la moneda elegida (densidad y tarjetas, 2026-10-29): lo mismo en el servidor y al
- *  hidratar, donde aún no hay fechas. */
-function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate; stay: BarStay | null }) {
+ *  2 nov, ticket 08). El CSS muestra ambas monedas en móvil y solo la elegida en escritorio. */
+function PriceColumns({ main, monthly, fx, stay, currency }: { main: Price | null; monthly: MonthlyPrice | null; fx: FxRate; stay: BarStay | null; currency: Currency }) {
   if (!main && !monthly) return null;
   const showMonthly = !!monthly && (!main || !!stay?.monthly);
   const monthlyAmount = showMonthly && monthly && !isNegotiable(monthly) ? monthly.amount : null;
@@ -188,7 +197,7 @@ function PriceColumns({ main, monthly, fx, stay }: { main: Price | null; monthly
   const price = main && (stay ? { amount: stay.totalCrc, unit: nightsLabel(stay.nights) } : main);
   const is = stay ? " is-stay" : "";
   return (
-    <div className="cta-prices">
+    <div className="cta-prices" data-currency={currency}>
       <div>
         {price ? (
           <span className={`price${is}`} data-testid="main-price">
@@ -324,7 +333,12 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                 <div className="tile-wide">
                   <I.calendar size={26} />
                   <span>{MONTHLY_LABEL}</span>
-                  <small>{isNegotiable(d.monthly) ? "A negociar" : `${formatCRC(d.monthly.amount)} / mes`}</small>
+                  {isNegotiable(d.monthly) ? <small>A negociar</small> : (
+                    <small className="listing-monthly" data-currency={currency}>
+                      <span className="listing-monthly-crc">{formatCRC(d.monthly.amount)} / mes</span>
+                      <span className="listing-monthly-usd">≈ {formatUSD(d.monthly.amount, fx.crcPerUsd)} / mes</span>
+                    </small>
+                  )}
                 </div>
               ) : null}
               {l.features.map((f) => {
@@ -356,7 +370,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
         <div className="cta-spacer" aria-hidden="true" ref={spacer} />
         <div className="cta-bar" ref={bar}>
-          <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} />
+          <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} currency={currency} />
           {preview ? (
             <span className="btn btn-wa is-pending" aria-disabled="true">
               <I.wa size={22} /> Contactar por WhatsApp

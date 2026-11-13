@@ -2,7 +2,7 @@
 // Sin pastillas de provincia desde el ticket 06 (2026-11-06): sin zona es todo el país, con el Caribe primero.
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ALL_PROVINCES,
   BEDS_OPTIONS,
@@ -24,7 +24,7 @@ import { CounterRow } from "../../shared/counter-row";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
-import { featuresWithListingsQuery, listingsQuery, provincesQuery, zonesQuery } from "../queries";
+import { listingsQuery, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
@@ -33,10 +33,12 @@ function FiltrosForm({
   provinces,
   initial,
   fx,
+  onClose,
 }: {
   provinces: string[];
   initial: ExploreSearch;
   fx: FxRate;
+  onClose?: () => void;
 }) {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<ExploreSearch>(initial);
@@ -62,10 +64,9 @@ function FiltrosForm({
   const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data } = useQuery(listingsQuery(f));
   const count = data?.length;
-  const catalogFeatures = useQuery(featuresWithListingsQuery);
-  const featureChoices = FEATURE_CHOICE_ORDER.filter(
-    (key) => f.features.includes(key) || catalogFeatures.data?.includes(key),
-  );
+  const zoneListings = useQuery(zoneListingsQuery(f.zone));
+  const availableFeatures = new Set(zoneListings.data?.flatMap((listing) => listing.features));
+  const featureChoices = FEATURE_CHOICE_ORDER.filter((key) => availableFeatures.has(key));
   const symbol = currency === "USD" ? "$" : "₡";
   const mineRows = [
     // Una sola fila de zona que dice lo mismo que la búsqueda: «Todas las provincias» sin zona, «Todo Limón» con un ?prov= viejo (A7, ticket 06).
@@ -84,30 +85,34 @@ function FiltrosForm({
   ] as const;
   const setCount = (key: "ppl" | "beds", n: number) => set(key, n ? String(n) : undefined);
   const maxBeds = BEDS_OPTIONS[BEDS_OPTIONS.length - 1]!;
-  const apply = () =>
-    navigate({
+  const apply = async () => {
+    await navigate({
       to: "/explorar",
       search: searchFor(f),
       replace: true,
     });
+    onClose?.();
+  };
   return (
     <>
       <header className="header-flow">
-        <Link
+        {onClose ? (
+          <button type="button" className="icon-btn" aria-label="Cerrar filtros" onClick={onClose}><I.x /></button>
+        ) : <Link
           to="/explorar"
           search={initial}
           aria-label="Volver"
           className="icon-btn"
         >
           <I.back />
-        </Link>
+        </Link>}
         <h1>Filtros</h1>
         <div className="right">
           <button
             type="button"
             className="btn btn-sm filters-clear"
             onClick={() => {
-              setDraft({});
+              setDraft(onClose ? { zona: initial.zona } : {});
               setPrices({ min: "", max: "" });
             }}
           >
@@ -127,7 +132,7 @@ function FiltrosForm({
             Su búsqueda
           </span>
           <div className="filters-search filter-counters">
-            {mineRows.map((r) => (
+            {!onClose && mineRows.map((r) => (
               <Link
                 key={r.abrir}
                 to="/explorar/buscar"
@@ -191,9 +196,9 @@ function FiltrosForm({
             /> : null}
           </div>
         </section>
-        {(!catalogFeatures.data || featureChoices.length > 0) && <section className="stack">
+        {f.zone && (!zoneListings.data || featureChoices.length > 0) && <section className="stack">
           <span className="eyebrow">Qué necesitan</span>
-          {!catalogFeatures.data && (catalogFeatures.isError || catalogFeatures.isPaused ? (
+          {!zoneListings.data && (zoneListings.isError || zoneListings.isPaused ? (
             <p className="xs muted" role="status">No pudimos cargar las características disponibles.</p>
           ) : (
             <p className="xs muted" role="status">Cargando características…</p>
@@ -252,8 +257,8 @@ function FiltrosForm({
             </p>
           ) : null}
         </section>
-        <div className="sticky-spacer" aria-hidden="true" />
-        <div className="sticky-actions">
+        {!onClose && <div className="sticky-spacer" aria-hidden="true" />}
+        <div className={onClose ? "desktop-filters-actions" : "sticky-actions"}>
           <button
             className="btn btn-primary grow"
             type="submit"
@@ -271,16 +276,42 @@ function FiltrosForm({
 
 export function FiltrosScreen() {
   const search = route.useSearch();
+  return <FiltrosContent search={search} />;
+}
+
+function FiltrosContent({ search, onClose }: { search: ExploreSearch; onClose?: () => void }) {
   const { data: provinces } = useQuery(provincesQuery);
   // En dólares, los campos se rellenan con el tipo vigente: se espera a tenerlo (si falla la lectura, el inicial).
   const usd = useCurrency() === "USD";
   const fx = useQuery({ ...fxQuery, enabled: usd });
-  if (!provinces || (usd && fx.isPending)) return null;
+  if (!provinces || (usd && fx.isPending)) return onClose ? <p role="status">Cargando filtros…</p> : null;
   return (
     <FiltrosForm
       provinces={provinces}
       initial={search}
       fx={fx.data ?? FX_INITIAL}
+      onClose={onClose}
     />
+  );
+}
+
+export function DesktopFilters({ search, onClose }: { search: ExploreSearch; onClose(): void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    dialog.current?.showModal();
+  }, []);
+
+  return (
+    <dialog
+      ref={dialog}
+      className="desktop-filters-dialog"
+      aria-label="Filtros"
+      onClose={onClose}
+      onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}
+    >
+      <div className="desktop-filters-content">
+        <FiltrosContent search={search} onClose={() => dialog.current?.close()} />
+      </div>
+    </dialog>
   );
 }

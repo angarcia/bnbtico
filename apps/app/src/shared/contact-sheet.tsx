@@ -11,7 +11,7 @@
 //   (ronda de Ana 2 nov, ticket 08).
 // - Diálogo modal: el resto de la página queda `inert`, el foco no sale de la hoja, Escape / fondo / «Cerrar» la cierran y el
 //   foco vuelve al botón. Sin scroll de fondo.
-import { useEffect, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import {
   contactDraftKey,
@@ -37,14 +37,15 @@ import { shortDate } from "../domain/dates";
 import { RANGE_BUSY_MESSAGE, type RangeState } from "../domain/range";
 import { hasBusyNight, listingStay, stayLine } from "../domain/stay-price";
 import { proceedToWhatsApp } from "./contact-flow";
+import { track } from "./beacon";
 import { useCurrency } from "./currency";
 import { useFx } from "./fx";
 import { I } from "./icons";
-import { useModal } from "./modal";
+import { usePrivateSheet } from "../client/private-sheet";
 import { RangeCalendar } from "./range-calendar";
 import { stayDates } from "./stay-dates";
 
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'button:not(:disabled), input:not(:disabled)';
 /** Campos que sacan el teclado (las fechas abren el calendario de la hoja). */
 const withKeyboard = (el: EventTarget | null) => el instanceof HTMLInputElement && el.type === "number";
 
@@ -61,7 +62,7 @@ function filteredPeople(max: number): number | null {
 /** `autoSend`: la hoja reabre al volver de verificar el WhatsApp y sigue sola hacia WhatsApp (revisión UX C2), solo si lo
  *  escrito sigue guardado: con el borrador caducado se queda abierta con el mensaje por defecto y espera el toque.
  *  `days`: los días de la casa (la caché de la ficha); undefined mientras se leen, null si no se pudieron leer. */
-export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { listing: PublicListing; days: readonly CalendarDay[] | null | undefined; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean }) {
+export function ContactSheet({ listing, days, onClose, navigate, autoSend, inline = false }: { listing: PublicListing; days: readonly CalendarDay[] | null | undefined; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean; inline?: boolean }) {
   const title = listing.title;
   const store = useRef(webStore("session")).current;
   const key = contactDraftKey(listing.publicId);
@@ -81,6 +82,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
   const [picking, setPicking] = useState(false);
+  const toggleCalendar = () => setPicking(!picking);
   const [rejected, setRejected] = useState(false);
   const currency = useCurrency();
   const fx = useFx().crcPerUsd;
@@ -104,27 +106,35 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
   }, [picking]);
   // Sin sesión guardada, «Abrir WhatsApp» lleva primero a verificar el número (y vuelve aquí con lo escrito).
   const [signedOut] = useState(() => !hasStoredSession());
-  const sheet = useRef<HTMLElement>(null);
   const name = firstName(listing.ownerName);
   const today = costaRicaToday(Date.now());
-  useModal();
+  useEffect(() => {
+    store.setItem(key, storeContactDraft(draft, !inline || autoSend === true, Date.now()));
+  }, [draft, key, store, inline, autoSend]);
 
+  const writingDates = useRef(false);
   useEffect(() => {
-    sheet.current?.focus();
-  }, []);
-  useEffect(() => {
-    store.setItem(key, storeContactDraft(draft, true, Date.now()));
-  }, [draft, key, store]);
+    if (!inline) return;
+    return stayDates.subscribe(() => {
+      if (writingDates.current) return;
+      const dates = stayDates.read();
+      dispatch({ type: "fields", patch: dates ?? { arrival: null, departure: null } });
+      setRejected(false);
+    });
+  }, [inline]);
 
   const close = () => {
     store.setItem(key, storeContactDraft(draft, false, Date.now()));
     onClose();
   };
+  const { sheet, onKeyDown } = usePrivateSheet({ onClose: close, focusable: FOCUSABLE, enabled: !inline });
 
   const change = (action: ContactDraftAction) => {
     dispatch(action);
     if (status.kind !== "sending") setStatus({ kind: "idle" });
   };
+  const changePeople = (people: number | null) => change({ type: "fields", patch: { people } });
+  const people = draft.people ?? 0;
 
   function changeDates(range: RangeState) {
     setRejected(false);
@@ -132,28 +142,10 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
     // La ficha comparte las fechas de la pestaña. Una llegada sola espera aquí su salida.
     const { arrival, departure } = range;
     const complete = arrival && departure ? { arrival, departure } : null;
+    writingDates.current = true;
     stayDates.write(complete);
+    writingDates.current = false;
     if (complete) setPicking(false);
-  }
-
-  function onKeyDown(e: KeyboardEvent<HTMLElement>) {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      close();
-      return;
-    }
-    if (e.key !== "Tab" || !sheet.current) return;
-    const items = sheet.current.querySelectorAll<HTMLElement>(FOCUSABLE);
-    const first = items[0];
-    const last = items[items.length - 1];
-    if (!first || !last) return;
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet.current)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
   }
 
   // Al salir del campo, el sitio extra se quita un poco después: si se quitara al instante, la hoja encogería entre el
@@ -177,7 +169,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
   const inFlight = useRef(false);
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    void send();
+    void send(inline);
   }
   // Vuelta de la verificación con lo escrito intacto y ya con sesión: se envía sin pedir otro toque (una vez, cuando ya se
   // saben los días si hay fechas).
@@ -190,8 +182,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
     // Al montar la hoja o cuando llegan los días.
   }, [waitingDays]);
 
-  async function send() {
+  async function send(trackTap = false) {
     if (inFlight.current || blocked) return;
+    if (trackTap) track("whatsapp_tap", listing.publicId);
     // Siempre el mensaje redactado (un borrador guardado antes de N2 podía traer uno editado a mano).
     const fields = { arrival: draft.arrival, departure: draft.departure, people: draft.people, message: draft.composed };
     const problem = validateInquiryDraft(fields, today);
@@ -207,27 +200,24 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
       // Consulta registrada y WhatsApp abriéndose: lo escrito ya no hace falta y, al volver (atrás o desde la app de
       // WhatsApp), la ficha se ve con la hoja cerrada.
       store.removeItem(key);
+      if (inline) setStatus({ kind: "idle" });
       onClose();
     }
   }
 
-  const invalid = (f: InquiryField) => (status.kind === "error" && status.field === f ? true : undefined);
+  const error = status.kind === "error" ? status : null;
 
-  return createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={close} data-testid="sheet-backdrop" />
+  const content = (
       <section
-        ref={sheet}
-        className={`sheet${kb ? " kb" : ""}`}
-        role="dialog"
-        aria-modal="true"
+        ref={inline ? undefined : sheet}
+        className={`sheet${inline ? " listing-contact-inline" : kb ? " kb" : ""}`}
+        role={inline ? undefined : "dialog"}
+        aria-modal={inline ? undefined : true}
         aria-labelledby="contact-title"
-        tabIndex={-1}
-        onKeyDown={onKeyDown}
-        onFocus={onFocus}
-        onBlur={onBlur}
+        tabIndex={inline ? undefined : -1}
+        {...(inline ? {} : { onKeyDown, onFocus, onBlur })}
       >
-        <span className="grabber" aria-hidden="true" />
+        {!inline && <span className="grabber" aria-hidden="true" />}
         <div className="sheet-head">
           <div>
             <h2 id="contact-title">Escríbale a {name}</h2>
@@ -236,15 +226,16 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
               {listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
             </span>
           </div>
-          <button type="button" className="icon-btn" aria-label="Cerrar" onClick={close}>
+          {!inline && <button type="button" className="icon-btn" aria-label="Cerrar" onClick={close}>
             <I.x size={22} />
-          </button>
+          </button>}
         </div>
         <form onSubmit={onSubmit} noValidate>
           {/* Fechas con el calendario de «¿Cuándo?»: dos casillas que lo abren. */}
           <div className="dates">
-            <DateBox label="Llegada" value={draft.arrival} open={picking} invalid={invalid("arrival")} onToggle={() => setPicking(!picking)} />
-            <DateBox label="Salida" value={draft.departure} open={picking} invalid={invalid("departure")} onToggle={() => setPicking(!picking)} />
+            {(["arrival", "departure"] as const).map((field) => (
+              <DateBox key={field} label={field === "arrival" ? "Llegada" : "Salida"} value={draft[field]} open={picking} invalid={error?.field === field || undefined} onToggle={toggleCalendar} />
+            ))}
           </div>
           {picking ? (
             <div className="contact-calendar">
@@ -284,7 +275,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
           <div className="people-field">
             <label htmlFor="contact-people">Personas (opcional)</label>
             <div className="people-stepper">
-              <button type="button" className="minus" aria-label="Una persona menos" disabled={!draft.people || draft.people <= 1} onClick={() => change({ type: "fields", patch: { people: draft.people && draft.people > 1 ? draft.people - 1 : null } })}>
+              <button type="button" className="minus" aria-label="Una persona menos" disabled={people <= 1} onClick={() => changePeople(people - 1)}>
                 −
               </button>
               <input
@@ -298,10 +289,10 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
                 step={1}
                 placeholder="–"
                 value={draft.people ?? ""}
-                aria-invalid={invalid("people")}
-                onChange={(e) => change({ type: "fields", patch: { people: parsePeople(e.target.value) } })}
+                aria-invalid={error?.field === "people" || undefined}
+                onChange={(e) => changePeople(parsePeople(e.target.value))}
               />
-              <button type="button" className="plus" aria-label="Una persona más" disabled={(draft.people ?? 0) >= maxPeople} onClick={() => change({ type: "fields", patch: { people: Math.min(maxPeople, (draft.people ?? 0) + 1) } })}>
+              <button type="button" className="plus" aria-label="Una persona más" disabled={people >= maxPeople} onClick={() => changePeople(people + 1)}>
                 +
               </button>
             </div>
@@ -324,9 +315,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
             </p>
             <span className="hint">Podrá añadir lo que quiera en WhatsApp antes de enviarlo.</span>
           </div>
-          {status.kind === "error" ? (
+          {error ? (
             <p className="note" role="alert">
-              {status.message}
+              {error.message}
             </p>
           ) : null}
           <button
@@ -344,6 +335,11 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend }: { l
           <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.</span>
         </form>
       </section>
+  );
+  return inline ? content : createPortal(
+    <>
+      <div className="sheet-backdrop" onClick={close} data-testid="sheet-backdrop" />
+      {content}
     </>,
     document.body,
   );

@@ -1,5 +1,5 @@
 // Rejilla de un mes (pantalla 17 del diseño v1; formato de la revisión UX 2026-10-29, C4 y N4): lunes primero, casillas altas
-// con el número arriba y el precio completo debajo («38 000», sin «₡» ni redondeo), fondo verde tonal; ocupados en terracota
+// con el número arriba y el precio completo debajo, fondo verde tonal; ocupados en terracota
 // con rayas y solo el número; días pasados tachados y más claros; el precio especial sin marca (solo se ve la cifra
 // distinta). La misma en el calendario del propietario (botones, `onSelect`) y en la ficha (botones con `range`: se eligen
 // llegada y salida, ronda de Ana 2 nov, ticket 08; las reglas del toque son de domain/range.ts y las pone la ficha). La fila
@@ -23,6 +23,7 @@ export interface MonthGridProps {
   /** Precio por noche de la casa; null = solo mensual (sin cifras). */
   base: number | null;
   currency?: Currency;
+  showCurrencySymbol?: boolean;
   /** Colones por dólar (tipo vigente); solo cuenta en dólares. */
   fx?: number;
   selected?: readonly string[];
@@ -54,7 +55,7 @@ export function WeekdayRow({ className }: { className?: string }) {
   );
 }
 
-export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, importedIcon, label }: MonthGridProps) {
+export function MonthGrid({ month, today, days, base, currency = "CRC", showCurrencySymbol, fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, importedIcon, label }: MonthGridProps) {
   const { weeks } = monthGrid(month, today);
   const start = range?.arrival ?? null;
   const end = range?.departure ?? null;
@@ -69,7 +70,8 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", fx = FX_
             const off = g.past || g.beyond;
             // Ocupado: solo número, salvo importados privados con precio y marca de origen.
             const imported = !!importedIcon && !range && !off && s.imported;
-            const price = (s.available || imported) && s.priceCrc !== null ? dayPrice(s.priceCrc, currency, fx) : "";
+            const formatPrice = showCurrencySymbol ? formatMoney : dayPrice;
+            const price = (s.available || imported) && s.priceCrc !== null ? formatPrice(s.priceCrc, currency, fx) : "";
             const isEnd = !off && (g.day === start || g.day === end);
             const inside = !off && !!start && !!end && g.day > start && g.day < end;
             const band = isEnd && start && end ? (g.day === start ? " is-start" : " is-last") : "";

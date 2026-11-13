@@ -16,15 +16,18 @@ import { DESCRIPTION_EMPTY_WARNING } from "../../domain/publish-rules";
 import { cardLabel } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
-import { useState } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useBilling } from "../billing";
 import { ConfirmSheet } from "../confirm-sheet";
+import { useDesktop } from "../desktop";
 import { useDiscardEditField } from "../edit";
 import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
 import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "../owner-ui";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const InlineHouseEditor = lazy(() => import("./editar").then((m) => ({ default: m.InlineHouseEditor })));
+const EditPhotosDialog = lazy(() => import("./editar").then((m) => ({ default: m.EditPhotosDialog })));
 
 /** El valor de un dato tal como lo verá el cliente (lo pendiente de la edición encima de lo aprobado). La capacidad sigue el
  *  tipo aprobado (`approvedKind`), como su pantalla: un cambio de tipo en revisión aún no quita habitaciones ni baños. */
@@ -56,10 +59,12 @@ function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["ki
 }
 
 const isReviewed = (field: FormField) => REVIEWED_FIELDS.includes(field);
+const pendingVisibility = "Los clientes ven lo de antes hasta que lo aprobemos.";
 
 /** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si está en revisión). Un dato pendiente
  *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar». */
-function FieldRow({ listing: l, field, userId }: { listing: Listing; field: FormField; userId: string }) {
+function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing: Listing; field: FormField; userId: string; onEdit?: () => void; editActions?: ReactNode }) {
+  const expanded = editActions !== undefined;
   const { admin, field: to } = useEditor();
   const e = l.edit;
   // El admin edita también una casa bloqueada; ve lo publicado y, aparte, lo que el anfitrión tiene en revisión.
@@ -67,7 +72,8 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
   const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
   const pendingValue = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field, l.kind);
-  const value = admin ? fieldValue(mergeEdit(l, null), field, l.kind) : pendingValue;
+  const showBothNames = !!onEdit && field === "nombre" && !!state && !readOnly;
+  const value = admin || showBothNames ? fieldValue(mergeEdit(l, null), field, l.kind) : pendingValue;
   // Lo no obligatorio sin decir o mal escrito, en ocre bajo el dato: el mismo aviso que «Revisar y enviar» al crear (ticket
   // 12); no bloquea nada. Sin descripción, el valor («Sin descripción») ya lo dice: va en ocre, sin repetirlo.
   const warning = readOnly ? null : fieldWarning(field, mergeEdit(l, isReviewed(field) && !admin ? e : null));
@@ -83,10 +89,10 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
       <span className="body">
         <span className="field-title">
           {fieldTitle(field, l.kind)}
-          {tag}
+          {showBothNames ? null : tag}
         </span>
-        <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}${empty ? " sun-ink" : ""}`}>{value}</span>
-        {warning && !empty ? (
+        {(!expanded || state) && <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}${empty ? " sun-ink" : ""}`}>{value}</span>}
+        {warning && !empty && !expanded ? (
           <span className="block small sun-ink" data-testid={`warn-${field}`}>
             {warning}
           </span>
@@ -97,7 +103,11 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
           </span>
         ) : null}
       </span>
-      {readOnly ? null : (
+      {readOnly ? null : expanded ? editActions : onEdit ? (
+        <button type="button" className="btn-link account-profile-toggle" aria-label={`Editar: ${fieldTitle(field, l.kind)}`} aria-expanded={false} onClick={onEdit}>
+          Editar
+        </button>
+      ) : (
         <span className="chev">
           <I.chevron />
         </span>
@@ -105,8 +115,8 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
     </>
   );
   // Bloqueada por 3bstays: se lee, no se toca.
-  const row = readOnly ? (
-    <div className="list-item" aria-disabled="true">
+  const row = readOnly || onEdit ? (
+    <div className="list-item" aria-disabled={readOnly || undefined}>
       {content}
     </div>
   ) : (
@@ -115,21 +125,33 @@ function FieldRow({ listing: l, field, userId }: { listing: Listing; field: Form
     </Link>
   );
   if (!state || admin) return row;
+  const reviewNote = state.status === "changes" ? state.reviewNote : null;
+  const pending = <PendingFoot listing={l} field={field as ReviewedField} note={reviewNote} userId={userId}
+    proposedName={showBothNames ? pendingValue : undefined} showVisibility={!showBothNames} />;
   return (
     <div className="field-pending" data-testid={`pending-${field}`}>
       {row}
-      <PendingFoot listing={l} field={field as ReviewedField} note={state.status === "changes" ? state.reviewNote : null} userId={userId} />
+      {showBothNames ? (
+        <div className="house-pending-name">
+          <div className="row house-pending-status">
+            {tag}
+            {!reviewNote && <span className="xs muted">{pendingVisibility}</span>}
+          </div>
+          {pending}
+        </div>
+      ) : pending}
     </div>
   );
 }
 
 /** Debajo de un dato pendiente: la nota del admin (si pidió cambios) y «Descartar», que deja la ficha como está. */
-function PendingFoot({ listing: l, field, note, userId }: { listing: Listing; field: ReviewedField; note: string | null; userId: string }) {
+function PendingFoot({ listing: l, field, note, userId, showVisibility, proposedName }: { listing: Listing; field: ReviewedField; note: string | null; userId: string; showVisibility: boolean; proposedName?: string }) {
   const discard = useDiscardEditField(userId, l);
   const [asking, setAsking] = useState(false);
   return (
     <div className="pending-foot">
-      {note ? <p className="small note-review">Le pedimos cambios: {note}</p> : <span className="xs muted">Los clientes ven lo de antes hasta que lo aprobemos.</span>}
+      {proposedName !== undefined ? <span className="strong house-pending-value">{proposedName}</span> : null}
+      {note ? <p className="small note-review">Le pedimos cambios: {note}</p> : showVisibility ? <span className="xs muted">{pendingVisibility}</span> : null}
       <button
         type="button"
         className="btn-text"
@@ -193,17 +215,14 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
 }
 
 /** La suscripción al día, al final (maqueta 08a): el plan, «Al día» y su línea; lleva a «Promoción y suscripción». */
-function SubscriptionCard({ listing: l, sub, today }: { listing: Listing; sub: HouseSubscription; today: string }) {
+function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listing; sub: HouseSubscription; today: string; inPanel: boolean }) {
   const line = subscriptionLine(sub, today);
   if (!line) return null;
   // Bloqueada: la suscripción está parada y no se cobra.
   const stopped = sub.hold === "blocked";
   const promo = !stopped && sub.plan === "promo" && !!sub.promoEndsOn && (today <= sub.promoEndsOn || !sub.hasMethod);
-  return (
-    <section className="stack gap-8" data-testid="subscription-card">
-      <h2 className="display offer-title">Suscripción</h2>
-      <section className="list">
-        <SubscriptionLink publicId={l.publicId} className="list-item">
+  const content = (
+    <>
           <span className="body">
             <span className="row gap-8">
               <b>{promo ? "Oferta de lanzamiento" : "Suscripción mensual"}</b>
@@ -217,7 +236,17 @@ function SubscriptionCard({ listing: l, sub, today }: { listing: Listing; sub: H
           <span className="chev">
             <I.chevron />
           </span>
-        </SubscriptionLink>
+    </>
+  );
+  return (
+    <section className="stack gap-8" data-testid="subscription-card">
+      <h2 className="display offer-title">Suscripción</h2>
+      <section className="list">
+        {inPanel ? (
+          <Link to="/propietario/casas/$id" params={{ id: l.id }} search={{ panel: "suscripcion" }} resetScroll={false} className="list-item">
+            {content}
+          </Link>
+        ) : <SubscriptionLink publicId={l.publicId} className="list-item">{content}</SubscriptionLink>}
       </section>
     </section>
   );
@@ -235,7 +264,10 @@ function StoppedNotice({ listing: l }: { listing: Listing }) {
   );
 }
 
-export function EditableFicha({ listing: l, userId }: { listing: Listing; userId: string }) {
+export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Listing; userId: string; rightPanel?: ReactNode }) {
+  const desktop = useDesktop();
+  const [editingField, setEditingField] = useState<FormField | null>(null);
+  const [photosOpen, setPhotosOpen] = useState(false);
   const { admin, field } = useEditor();
   // La suscripción y las cifras son de la cuenta de quien mira: en las rutas del admin no son las del anfitrión.
   const billing = useBilling(admin ? "" : userId);
@@ -245,58 +277,93 @@ export function EditableFicha({ listing: l, userId }: { listing: Listing; userId
   const cover = l.photos[0];
   const label = cardLabel(l, l.edit);
   const shareUrl = shareOf(l).url.replace(/^https?:\/\//, "");
-  const photosLabel = photoPill(l.photos.length, l.edit?.photos.length ?? 0).replace(/ · Editar$/, "");
+  const photoAction = photoPill(l.photos.length, l.edit?.photos.length ?? 0);
+  const photosLabel = photoAction.replace(/ · Editar$/, "");
+  const photoEditLabel = `Editar fotos: ${photosLabel}`;
+  const photoContent = <><I.camera size={20} /><span>{photosLabel}</span></>;
+  const actionsOnLeft = desktop && !admin;
+  const canEditDetails = actionsOnLeft && !blocked && !rightPanel;
+  const editingDetails = canEditDetails && editingField !== null;
+  const subscription = !onTop && hb && billing ? <SubscriptionCard listing={l} sub={hb.sub} today={billing.today} inPanel={actionsOnLeft} /> : null;
+  const actions = (
+    <>
+      {can(l, "share") ? (
+        <div className="stack gap-8">
+          <ShareButtonInline listing={l} className="btn-block" />
+          {!actionsOnLeft ? (
+            <small className="num primary share-url center" data-testid="share-url">
+              {shareUrl}
+            </small>
+          ) : null}
+        </div>
+      ) : null}
+
+      <section className="list"><WhatsAppItem listing={l} /></section>
+    </>
+  );
   return (
-    <div className={`${admin ? "editable-ficha-admin" : "editable-ficha"} stack gap-14`}>
+    <div className={`${admin ? "editable-ficha-admin" : "editable-ficha"} stack gap-14${editingDetails ? " house-details-editing" : ""}`}>
       <HoldNotice listing={l} />
       {onTop && l.status === "payment_due" ? hb && billing ? <PayNotice hb={hb} today={billing.today} /> : <PaymentDueNote listing={l} /> : null}
       {onTop && l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
 
-      <div className="photo detail-photo">
-        {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
-        <span className={`state ${label.cls}`}>{label.text}</span>
-        {blocked ? (
-          <span className="pill photo-pill num"><I.camera size={20} /><span>{photosLabel}</span></span>
-        ) : (
-          <Link to={field} params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num" aria-label={admin ? photoPill(l.photos.length, l.edit?.photos.length ?? 0) : `Editar fotos: ${photosLabel}`} title="Editar fotos">
-            {admin ? photoPill(l.photos.length, l.edit?.photos.length ?? 0) : <><I.camera size={20} /><span>{photosLabel}</span></>}
-          </Link>
-        )}
+      <div className="owner-detail-summary">
+        <div className="photo detail-photo">
+          {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
+          <span className={`state ${label.cls}`}>{label.text}</span>
+          {blocked ? (
+            <span className="pill photo-pill num">{photoContent}</span>
+          ) : actionsOnLeft && !rightPanel ? (
+            <button type="button" className="pill photo-pill num" aria-label={photoEditLabel} aria-haspopup="dialog" onClick={() => setPhotosOpen(true)}>
+              {photoContent}
+            </button>
+          ) : (
+            <Link to={field} params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num" aria-label={admin ? photoAction : photoEditLabel} title="Editar fotos">
+              {admin ? photoAction : photoContent}
+            </Link>
+          )}
+        </div>
+
+        {l.status === "active" && !admin ? <StatsCard listing={l} userId={userId} /> : null}
+        {actionsOnLeft && actions}
       </div>
 
-      {l.status === "active" && !admin ? <StatsCard listing={l} userId={userId} /> : null}
+      <div className="owner-detail-fields">
+        {rightPanel ? <div className="owner-detail-panel stack">{rightPanel}</div> : <>
+        {blocked || actionsOnLeft ? null : (
+          <p className="note note-arena">{admin
+            ? "Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión."
+            : "Toque un dato para editarlo. Su ficha seguirá visible durante la revisión."}</p>
+        )}
 
-      {blocked ? null : (
-        <p className="note note-arena">
-          {admin ? (
-            <span>Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión.</span>
-          ) : (
-            <span>
-              Toque un dato para editarlo. Su ficha seguirá visible durante la revisión.
-            </span>
-          )}
-        </p>
+        <section className="list" data-testid="field-rows">
+          {FIELD_ORDER.map((field) => {
+            const closeField = () => setEditingField((current) => current === field ? null : current);
+            const renderRow = (editActions?: ReactNode) => (
+              <FieldRow listing={l} field={field} userId={userId}
+                onEdit={canEditDetails ? () => setEditingField(field) : undefined} editActions={editActions} />
+            );
+            return (
+              <div key={field} className={actionsOnLeft ? "house-field" : "house-field-flat"}>
+                {editingDetails && editingField === field ? (
+                  <Suspense fallback={renderRow(<button type="button" className="btn-link" onClick={closeField}>Cancelar</button>)}>
+                    <InlineHouseEditor listing={l} field={field} userId={userId} renderRow={renderRow} onClose={closeField} />
+                  </Suspense>
+                ) : renderRow()}
+              </div>
+            );
+          })}
+        </section>
+
+        {!actionsOnLeft && actions}
+        {subscription}
+        </>}
+      </div>
+      {actionsOnLeft && !blocked && !rightPanel && photosOpen && (
+        <Suspense fallback={null}>
+          <EditPhotosDialog key={l.id} listing={l} userId={userId} onClose={() => setPhotosOpen(false)} />
+        </Suspense>
       )}
-
-      <section className="list" data-testid="field-rows">
-        {FIELD_ORDER.map((field) => (
-          <FieldRow key={field} listing={l} field={field} userId={userId} />
-        ))}
-      </section>
-
-      {can(l, "share") ? (
-        <div className="stack gap-8">
-          <ShareButtonInline listing={l} className="btn-block" />
-          <small className="num primary share-url center" data-testid="share-url">
-            {shareUrl}
-          </small>
-        </div>
-      ) : null}
-
-      <section className="list">
-        <WhatsAppItem listing={l} />
-      </section>
-      {!onTop && hb && billing ? <SubscriptionCard listing={l} sub={hb.sub} today={billing.today} /> : null}
     </div>
   );
 }

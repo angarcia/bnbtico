@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
 import { RootHeader } from "../chrome";
+import { useDesktop } from "../desktop";
 import { CurrencySwitch } from "../../shared/currency-switch";
 import { ListingCard } from "../listing-card";
 import { useSession } from "../session";
@@ -38,6 +39,7 @@ function SkeletonCards({ n }: { n: number }) {
 }
 
 export function FavoritosScreen() {
+  const desktop = useDesktop();
   const favs = useFavorites();
   const status = useSession().status;
   const ids = useMemo(() => favs.map((f) => f.publicId).sort(), [favs]);
@@ -66,7 +68,7 @@ export function FavoritosScreen() {
               <span className="small muted" data-testid="favorites-count">
                 {countLine(loading ? favs.length : shown.length, status === "signed-in")}
               </span>
-              <CurrencySwitch />
+              {!desktop && <CurrencySwitch />}
             </div>
           ) : null
         }

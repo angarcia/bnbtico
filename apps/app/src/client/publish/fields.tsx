@@ -24,7 +24,7 @@ import { useEditor } from "../editor-port";
 import { offerTakenQuery } from "../owner";
 import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
-import { useStepReady } from "./step-form";
+import { useStepReady } from "./step-ready";
 import { KindChoice, ReadyList } from "./wizard-parts";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
@@ -80,7 +80,7 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
 }
 
 /** Contador −/+ con el valor en un campo oculto. */
-function Counter({ name, label, value, min, max = 30, icon }: { name: string; label: string; value: number | null; min: number; max?: number; icon?: ReactNode }) {
+function Counter({ name, label, value, min, max = 30, icon, iconByValue }: { name: string; label: string; value: number | null; min: number; max?: number; icon?: ReactNode; iconByValue?: boolean }) {
   const [n, setN] = useState<number | null>(value);
   const current = n ?? min;
   return (
@@ -89,6 +89,7 @@ function Counter({ name, label, value, min, max = 30, icon }: { name: string; la
       <CounterRow
         label={label}
         icon={icon}
+        iconByValue={iconByValue}
         value={n ?? "–"}
         decrease={current > min ? () => setN(current - 1) : undefined}
         increase={() => setN(n === null ? Math.max(min, 1) : Math.min(max, current + 1))}
@@ -127,12 +128,12 @@ export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; p
 }
 
 /** Baño privado o compartido (solo habitaciones). */
-export function BathroomChoice({ shared }: { shared: boolean | null }) {
+export function BathroomChoice({ shared, showIcon = false }: { shared: boolean | null; showIcon?: boolean }) {
   const [v, setV] = useState<string>(shared === null ? "" : shared ? "shared" : "private");
   return (
     <div className="stack gap-8">
-      <span className="label-plain">Baño de la habitación</span>
-      <div className="row gap-8">
+      <span className="row label-plain">{showIcon ? <I.bath size={22} /> : null}Baño de la habitación</span>
+      <div className="row gap-8 bathroom-options">
         {(
           [
             ["private", "Privado"],
@@ -207,14 +208,14 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
 
 /** Personas, habitaciones y baños: la pantalla 4 y la capacidad de una casa publicada. Una Habitación solo pregunta
  *  personas: es 1 habitación y 1 baño (`normalize`); el baño privado o compartido va aparte (`BathroomChoice`). */
-export function CapacityCounters({ draft, icons = false }: { draft: ListingDraft; icons?: boolean }) {
+export function CapacityCounters({ draft, icons = false, iconByValue }: { draft: ListingDraft; icons?: boolean; iconByValue?: boolean }) {
   return (
     <div className="card counters">
-      <Counter name="capacity" label="Personas" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} />
+      <Counter name="capacity" label="Personas" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
       {draft.kind === "habitacion" ? null : (
         <>
-          <Counter name="bedrooms" label="Dormitorios" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} />
-          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} />
+          <Counter name="bedrooms" label="Dormitorios" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
         </>
       )}
     </div>
@@ -408,20 +409,39 @@ function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing
   );
 }
 
+function CapacityFields({ draft, iconByValue }: { draft: ListingDraft; iconByValue?: boolean }) {
+  const controls = (
+    <>
+      <CapacityCounters draft={draft} icons iconByValue={iconByValue} />
+      {draft.kind === "habitacion" ? <BathroomChoice shared={draft.bathroomShared} showIcon={iconByValue} /> : null}
+    </>
+  );
+  return (
+    <>
+      <h2>¿Cuántos caben?</h2>
+      {iconByValue ? (
+        <div className={draft.kind === "habitacion" ? "publish-room-capacity" : undefined}>{controls}</div>
+      ) : controls}
+    </>
+  );
+}
+
 /** Campos de cada pantalla. `draft` trae los valores a mostrar; `listing`, lo que solo da el servidor (fotos, WhatsApp). */
-export function StepFields({ step, draft, listing, userId }: { step: Step; draft: ListingDraft; listing: Listing; userId: string }) {
+export function StepFields({ step, draft, listing, userId, withCapacity = false }: { step: Step; draft: ListingDraft; listing: Listing; userId: string; withCapacity?: boolean }) {
+  const [kind, setKind] = useState(draft.kind);
   switch (step) {
     case 1:
       return (
         <>
           {/* Arriba del primer paso de un borrador recién creado, qué tener a mano (revisión UX C4). */}
-          {isFreshDraft(listing) ? (
+          {!withCapacity && isFreshDraft(listing) ? (
             <section className="stack gap-4" aria-label="Qué tener a mano">
               <span className="small strong">Tenga a mano:</span>
               <ReadyList />
             </section>
           ) : null}
-          <KindChoice kind={draft.kind} />
+          <KindChoice kind={draft.kind} compact={withCapacity} onChange={withCapacity ? setKind : undefined} />
+          {withCapacity ? <CapacityFields draft={{ ...draft, kind }} iconByValue /> : null}
         </>
       );
     case 2:
@@ -432,13 +452,7 @@ export function StepFields({ step, draft, listing, userId }: { step: Step; draft
         </>
       );
     case 4:
-      return (
-        <>
-          <h2>¿Cuántos caben?</h2>
-          <CapacityCounters draft={draft} icons />
-          {draft.kind === "habitacion" ? <BathroomChoice shared={draft.bathroomShared} /> : null}
-        </>
-      );
+      return <CapacityFields draft={draft} />;
     case 5:
       return (
         <>

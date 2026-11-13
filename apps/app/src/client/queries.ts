@@ -1,6 +1,6 @@
 // Consultas de Explorar y Filtros. La ficha usa listingQuery (src/shared), sembrada con la fila de la tarjeta.
 import { keepPreviousData, queryOptions, type QueryClient } from "@tanstack/react-query";
-import type { Filters } from "../domain/filters";
+import { parseFilters, type Filters } from "../domain/filters";
 import type { PublicListing } from "../domain/listing";
 import { DomainError } from "../domain/errors";
 
@@ -29,10 +29,10 @@ export const provincesQuery = queryOptions({
   staleTime: 10 * 60_000,
 });
 
-export const featuresWithListingsQuery = queryOptions({
-  queryKey: ["features-with-listings"] as const,
-  queryFn: async () => (await api()).featuresWithListings(),
-  staleTime: 60_000,
+export const zoneListingsQuery = (zone: string | null) => ({
+  ...listingsQuery({ ...parseFilters({}, []), zone }),
+  enabled: !!zone,
+  placeholderData: undefined,
 });
 
 /** Zonas con casas para «¿Dónde?» (zones_with_listings). */

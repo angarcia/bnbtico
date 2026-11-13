@@ -48,6 +48,7 @@ import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { isChunkLoadError } from "../chunk-error";
 import { RootHeader } from "../chrome";
+import { useDesktop } from "../desktop";
 import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";
@@ -128,9 +129,6 @@ export function CalendarioScreen() {
         </p>
       ) : null}
       {!houses && !listings.isError ? <section className="card skeleton cal-skeleton" aria-busy="true" aria-label="Cargando su calendario" /> : null}
-      {/* Con una sola casa no hay nada que elegir: su nombre. */}
-      {current && houses && houses.length > 1 ? <HousePicker houses={houses.map((h) => ({ id: h.id, name: titleOf(h) }))} currentId={current.id} onPick={(id) => { if (id) go(id, search.mes); }} /> : null}
-      {current && houses && houses.length === 1 ? <p className="cal-house">{titleOf(current)}</p> : null}
       {houses && houses.length === 0 ? (
         <section className="card stack gap-12">
           <p>Su calendario se activa cuando envíe su casa a revisión.</p>
@@ -145,7 +143,21 @@ export function CalendarioScreen() {
           )}
         </section>
       ) : null}
-      {current ? <Calendar key={current.id} listing={current} userId={userId} month={search.mes} /> : null}
+      {current && houses ? (
+        <Calendar
+          key={current.id}
+          listing={current}
+          userId={userId}
+          month={search.mes}
+          houseControl={houses.length > 1 ? (
+            <HousePicker
+              houses={houses.map((h) => ({ id: h.id, name: titleOf(h) }))}
+              currentId={current.id}
+              onPick={(id) => { if (id) go(id, search.mes); }}
+            />
+          ) : <p className="cal-house">{titleOf(current)}</p>}
+        />
+      ) : null}
     </>
   );
 }
@@ -153,9 +165,15 @@ export function CalendarioScreen() {
 
 /** El calendario de una casa. Lo reutiliza el admin con su puerto (screens/asistir.tsx): edita también una casa bloqueada
  *  y no tiene «Marcar una reserva» ni «Pausar la casa» (son del anfitrión). */
-export function Calendar({ listing: l, userId, month }: { listing: Listing; userId: string; month: string | undefined }) {
+export function Calendar({ listing: l, userId, month, houseControl }: {
+  listing: Listing;
+  userId: string;
+  month: string | undefined;
+  houseControl?: ReactNode;
+}) {
   const client = useQueryClient();
   const port = useEditor();
+  const desktop = useDesktop();
   const today = costaRicaToday(Date.now());
   const months = useMemo(() => calendarMonths(today), [today]);
   // `?mes=` lleva a ese mes; sin él (o fuera de la ventana), arriba del todo con el mes actual entero (revisión UX A1).
@@ -235,64 +253,69 @@ export function Calendar({ listing: l, userId, month }: { listing: Listing; user
   [client, userId, l.id, l.publicId]);
   const { importedCount, manualCount } = countCalendarOrigins(days, sel.days);
   return (
-    <>
-      {canMark || canPause || !port.admin ? (
-        <section className="cal-actions" aria-label="Acciones del calendario">
-          {canMark || canPause ? <div className="card cal-action-group">
-            {canMark ? <MarkRow today={today} onMark={onMark} calendarDays={query.data} prepare={prepareMark} /> : null}
-            {canPause ? <PauseRow listing={l} userId={userId} /> : null}
-          </div> : null}
-          {!port.admin ? <AirbnbRow key={`${userId}:${l.id}`} listing={l} userId={userId} month={month} disabled={sel.days.length > 0} /> : null}
-        </section>
-      ) : null}
-      <div className="row between gap-8 cal-hint-row">
-        {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
-        <CurrencySwitch />
+    <div className="owner-calendar-layout">
+      <div className="owner-calendar-options">
+        {houseControl}
+        {canMark || canPause || !port.admin ? (
+          <section className="cal-actions" aria-label="Acciones del calendario">
+            {canMark || canPause ? <div className="card cal-action-group">
+              {canMark ? <MarkRow today={today} onMark={onMark} calendarDays={query.data} prepare={prepareMark} /> : null}
+              {canPause ? <PauseRow listing={l} userId={userId} /> : null}
+            </div> : null}
+            {!port.admin ? <AirbnbRow key={`${userId}:${l.id}`} listing={l} userId={userId} month={month} disabled={sel.days.length > 0} /> : null}
+          </section>
+        ) : null}
+        <div className="row between gap-8 cal-hint-row">
+          {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
+          <CurrencySwitch className="calendar-local-currency" />
+        </div>
+        <AirbnbLegend days={query.data} />
+        {editable && sel.days.length > 0 ? (
+          <Panel
+            sel={sel}
+            base={base}
+            hasSpecial={hasSpecial}
+            importedCount={importedCount}
+            manualCount={manualCount}
+            problem={problem}
+            canSave={change !== null}
+            onChange={(s) => (setSel(s), setProblem(null))}
+            onCancel={() => (setSel(clearSelection()), setProblem(null), showChrome())}
+            onSave={onSave}
+          />
+        ) : null}
       </div>
 
-      {query.isError && !query.data ? (
-        <p className="note" role="alert">
-          {toDomainError(query.error).message}
-        </p>
-      ) : null}
+      <div className="owner-calendar-days">
+        {query.isError && !query.data ? (
+          <p className="note" role="alert">
+            {toDomainError(query.error).message}
+          </p>
+        ) : null}
 
-      <AirbnbLegend days={query.data} />
-      <WeekdayRow className="cal-weekdays" />
-      <CalendarMonths
-        months={months}
-        target={target}
-        render={(m) => (
-          <MonthGrid
-            month={m}
-            today={today}
-            days={days}
-            base={base}
-            currency={currency}
-            fx={fx.crcPerUsd}
-            selected={sel.days}
-            onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
-            dimmed={closed}
-            importedIcon={<I.link size={16} />}
-            label={monthTitle(m)}
-          />
-        )}
-      />
-
-      {editable && sel.days.length > 0 ? (
-        <Panel
-          sel={sel}
-          base={base}
-          hasSpecial={hasSpecial}
-          importedCount={importedCount}
-          manualCount={manualCount}
-          problem={problem}
-          canSave={change !== null}
-          onChange={(s) => (setSel(s), setProblem(null))}
-          onCancel={() => (setSel(clearSelection()), setProblem(null), showChrome())}
-          onSave={onSave}
+        <WeekdayRow className="cal-weekdays" />
+        <CalendarMonths
+          months={months}
+          target={target}
+          render={(m) => (
+            <MonthGrid
+              month={m}
+              today={today}
+              days={days}
+              base={base}
+              currency={currency}
+              showCurrencySymbol={desktop && !port.admin}
+              fx={fx.crcPerUsd}
+              selected={sel.days}
+              onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
+              dimmed={closed}
+              importedIcon={<I.link size={16} />}
+              label={monthTitle(m)}
+            />
+          )}
         />
-      ) : null}
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -589,7 +612,7 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
       </div>
       {importedCount ? <AirbnbAvailability sel={sel} importedCount={importedCount} manualCount={manualCount} onChange={onChange}>{priceField}</AirbnbAvailability> : <>
       {manualCount ? <p className="small muted">Bloqueo manual</p> : null}
-      <div className="row gap-8">
+      <div className="row gap-8 cal-day-fields">
         <div className="seg" role="group" aria-label="Disponibilidad">
           <button type="button" aria-pressed={sel.available === true} onClick={() => onChange(setAvailability(sel, true))}>
             Disponible

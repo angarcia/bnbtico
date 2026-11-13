@@ -14,6 +14,7 @@ export interface MapMarker { publicId: string; lat: number; lng: number; label: 
 export interface ExploreMapHandle {
   show(markers: MapMarker[], zone: LatLng | null): void;
   select(publicId: string | null): void;
+  zoomBy(step: number): void;
   dispose(): void;
 }
 
@@ -35,6 +36,8 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
     map.fitBounds(L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number])), { paddingTopLeft: [padX, padY + top], paddingBottomRight: [padX, padY + bottom], maxZoom: EXPLORE_MAP.maxZoom });
   };
   map.on("click", () => opts.onMap());
+  const resize = new ResizeObserver(() => map.invalidateSize({ pan: false }));
+  resize.observe(el);
 
   const mark = () => {
     for (const [id, marker] of icons) {
@@ -119,6 +122,10 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
       }
       mark();
     },
-    dispose: () => map.remove(),
+    zoomBy: (step) => map.setZoom(map.getZoom() + step),
+    dispose: () => {
+      resize.disconnect();
+      map.remove();
+    },
   };
 }

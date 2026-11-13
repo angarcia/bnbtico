@@ -34,6 +34,11 @@
       "!dist/client/assets/close-sheet-*.js",
       "!dist/client/assets/mark-sheet-*.js",
       "!dist/client/assets/confirm-sheet-*.js",
+      "!dist/client/assets/filtros-*.js",
+      "!dist/client/assets/house-picker-*.js",
+      "!dist/client/assets/que-es-3bstays-*.js",
+      "!dist/client/assets/reservation-calendar-*.js",
+      "!dist/client/assets/whatsapp-dialog-*.js",
       "!dist/client/assets/buscar-*.js",
       "!dist/client/assets/explore-map-leaflet-*.js",
       "!dist/client/assets/explore-map-full-*.js",
@@ -117,7 +122,7 @@
       "dist/client/assets/stay-dates-*.js",
       "dist/client/assets/stay-price-*.js"
     ],
-    "limit": "7.5 KB",
+    "limit": "7.6 KB",
     "gzip": true
   },
   {
@@ -135,7 +140,7 @@
       "dist/client/assets/publish-promo-*.js",
       "dist/client/assets/offer-*.js"
     ],
-    "limit": "25.2 KB",
+    "limit": "25.3 KB",
     "gzip": true
   },
   {
@@ -144,7 +149,7 @@
       "dist/client/assets/casa-editable-*.js",
       "dist/client/assets/edit-messages-*.js"
     ],
-    "limit": "5 KB",
+    "limit": "5.1 KB",
     "gzip": true
   },
   {
