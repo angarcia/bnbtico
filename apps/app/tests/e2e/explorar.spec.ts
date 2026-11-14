@@ -417,6 +417,23 @@ test("Explorar en escritorio: dos casas por fila junto al mapa; en el móvil, un
   await expect.poll(columns).toBe(1);
 });
 
+// Revisión de escritorio 2026-11-13, tanda 2 (A6, A7): «Ingresar» es un botón con contorno, no una pestaña elegida; la
+// moneda elegida va en blanco sobre gris neutro.
+test("barra de escritorio: «Ingresar» con contorno y la moneda neutra", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/explorar");
+  const nav = page.getByRole("navigation", { name: "Navegación principal" });
+  const look = (el: Element) => {
+    const c = getComputedStyle(el);
+    return { bg: c.backgroundColor, border: c.borderTopWidth, shadow: c.boxShadow };
+  };
+  expect(await nav.getByRole("button", { name: "Ingresar" }).evaluate(look)).toMatchObject({ bg: "rgba(0, 0, 0, 0)", border: "1px", shadow: "none" });
+  const colones = nav.getByRole("button", { name: "Colones" });
+  await expect(colones).toHaveAttribute("aria-pressed", "true");
+  expect((await colones.evaluate(look)).bg).toBe("rgb(255, 255, 255)");
+  expect(await nav.getByRole("link", { name: "Explorar" }).getAttribute("aria-current")).toBe("page");
+});
+
 test("la moneda cambia al instante en Explorar y la ficha muestra las dos", async ({ page }) => {
   await page.goto("/explorar");
   await expect(page.getByRole("link", { name: /Casa Manzanillo/ })).toContainText("₡85 000");

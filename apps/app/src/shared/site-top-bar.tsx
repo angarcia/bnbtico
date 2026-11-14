@@ -50,13 +50,14 @@ function Bar({ navigate, next }: { navigate?: Navigate; next?: string }) {
       })}
       <CurrencySwitch className="desktop-currency" />
       {session ? null : (
-        <a href={signIn} className="btn btn-primary desktop-sign-in" onClick={go(signIn)}>
+        <a href={signIn} className="btn btn-ghost desktop-sign-in" onClick={go(signIn)}>
           <I.user size={22} /> Ingresar
         </a>
       )}
       {inquiries ? (
         <a href="/propietario/actividad" className="nav desktop-inquiries" aria-label="Consultas" title="Consultas" onClick={go("/propietario/actividad")}>
           <I.chat size={26} />
+          <span aria-hidden="true">Consultas</span>
         </a>
       ) : null}
       <a href="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" onClick={go("/ayuda")}>

@@ -413,7 +413,8 @@
   .desktop-nav .desktop-help span { white-space: nowrap; }
   .desktop-app .account-actions:empty { display: none; }
   @media (max-width: 1279px) {
-    .desktop-nav .desktop-help span { display: none; }
+    .desktop-nav .desktop-help span,
+    .desktop-nav .desktop-inquiries > span { display: none; }
   }
 
   .desktop-app .explore-top {
@@ -650,4 +651,42 @@
   .page-header-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .page-header-actions { display: flex; flex: none; align-items: center; gap: 10px; }
   .page-header-actions .btn { width: auto; min-height: 44px; padding-inline: 18px; }
+
+  /* Revisión de escritorio 2026-11-13, tanda 2 (A6, A7). El principal sigue tonal (decisión 2026-11-05); el secundario
+     lleva contorno y el desactivado es gris neutro también en oscuro, para que el principal no parezca apagado. */
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
+    box-shadow: none;
+    color: var(--primary-ink);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"],
+  .btn.is-disabled {
+    background: color-mix(in srgb, var(--muted) 14%, var(--bg));
+    color: var(--muted);
+  }
+
+  /* Barra: un solo estado activo (arena y terracota), la moneda neutra y «Ingresar» como botón, no como pestaña elegida. */
+  .desktop-nav .desktop-brand img { width: auto; height: 34px; }
+  .desktop-nav .desktop-brand { margin-right: 24px; }
+  .desktop-nav .nav { color: var(--fg-title); }
+  .desktop-nav .nav:hover { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+  .desktop-nav .nav[aria-current="page"] { background: var(--surface-2); color: var(--brand-ink); }
+  .desktop-nav .currency-switch { background: color-mix(in srgb, var(--muted) 12%, var(--bg)); }
+  .desktop-nav .currency-switch button { color: var(--muted); }
+  .desktop-nav .currency-switch button[aria-pressed="true"] {
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
+  }
+  .desktop-nav .desktop-inquiries { gap: 8px; padding: 0 12px; }
+  .desktop-nav .desktop-inquiries > span { font: var(--w-medium) 16px/1.25 var(--body); white-space: nowrap; }
+}
+
+/* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */
+@media (min-width: 1024px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .desktop-nav .currency-switch button[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--fg) 22%, var(--bg));
+  }
 }

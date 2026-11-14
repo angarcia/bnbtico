@@ -196,6 +196,8 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] En escritorio, abra `/explorar/buscar` y compruebe que lleva a Explorar con la misma búsqueda.
 
+- [ ] En escritorio, en claro y en oscuro: la pestaña actual de la barra va en arena con el texto terracota y es la única marcada. En «₡ | $», la moneda elegida va en un botón claro sobre gris neutro. «Ingresar» es un botón con contorno. Con casas, «Consultas» lleva el texto a 1280 px o más y el contador sigue visible. Los botones secundarios (por ejemplo «Seguir publicando» o «Empezar otro») llevan contorno, y un botón desactivado se ve gris, distinto del principal verde.
+
 - [ ] En escritorio, en el detalle de una casa activa, «Ver ficha» está en la cabecera, a la derecha del nombre, y ya no flota sobre las filas. Edite Ubicación a 1280 px y compruebe que nada la tapa. En el móvil, «Ver ficha» sigue flotando abajo.
 
 - [ ] Abra Nombre, Precio, Ubicación y Suscripción desde el detalle de una casa en escritorio. Cada vista se abre a la derecha. Al desplazarse, la barra superior sigue fija y el resumen de la casa permanece visible a la izquierda. Use Volver para recuperar la lista de datos. Guarde un cambio y compruebe que vuelve al detalle con el dato actualizado.

@@ -116,7 +116,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
           <>
             <CurrencySwitch className="desktop-currency" />
             {desktopSignIn ? (
-              <button type="button" className="btn btn-primary desktop-sign-in" aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
+              <button type="button" className="btn btn-ghost desktop-sign-in" aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
                 <I.user size={22} /> Ingresar
               </button>
             ) : null}
@@ -124,6 +124,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
               <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title="Consultas"
                 aria-haspopup="dialog" aria-expanded={inquiriesOpen} onClick={() => setInquiriesOpen(true)}>
                 <I.chat size={26} />
+                <span aria-hidden="true">Consultas</span>
                 {fresh > 0 && <b className="nav-count num" data-testid="inquiries-badge" aria-hidden="true">{fresh}</b>}
               </button>
             )}
