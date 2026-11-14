@@ -605,11 +605,13 @@
   }
   .view-measure > * { max-width: var(--measure); }
 
+  /* Fondo propio y por encima de la ficha: sin él, al bajar se veía la foto a través de la barra (Ana, 2026-11-13). */
   .site-top-bar {
     display: block;
     position: sticky;
     top: 0;
-    z-index: 6;
+    z-index: 10;
+    background: var(--bg);
     flex: none;
     height: var(--desktop-nav-height);
     border-bottom: 1px solid var(--line-nav);
@@ -638,6 +640,12 @@
     transform: none;
   }
   .status-header .top { display: none; }
+  /* Páginas de estado de la ficha: la flecha y el título en la misma fila, como las demás pantallas con flecha. */
+  .app > main.view:has(> .status-header) { display: grid; grid-template-columns: 44px minmax(0, var(--measure)); column-gap: 8px; align-content: start; padding-top: 24px; }
+  .status-header { display: contents; }
+  .status-header .status-back { display: inline-flex; margin-inline-start: -8px; }
+  .status-header ~ .card,
+  .desktop-app .placeholder-card { padding: 4px 0 0; border: 0; background: transparent; box-shadow: none; }
   .app:has(> .site-top-bar) > main.view:not(.listing-view) > .card,
   .desktop-app .placeholder-card { max-width: var(--measure); }
 
@@ -649,6 +657,11 @@
     padding-top: 12px;
   }
   .page-header-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  /* Un solo tamaño de título en escritorio: el de las pestañas y el de las pantallas con flecha (Ana, 2026-11-13). */
+  .desktop-app .header-root.page-header h1,
+  .desktop-app > main.view > .header-flow h1,
+  .app:has(> .site-top-bar) .status-header ~ .card .status-title { font-size: 30px; line-height: 1.15; }
+  .desktop-app > main.view > .header-flow { padding-top: 12px; }
   .page-header-actions { display: flex; flex: none; align-items: center; gap: 10px; }
   .page-header-actions .btn { width: auto; min-height: 44px; padding-inline: 18px; }
 
@@ -684,10 +697,9 @@
   .desktop-nav .desktop-inquiries > span { font: var(--w-medium) 16px/1.25 var(--body); white-space: nowrap; }
 
   /* Revisión de escritorio 2026-11-13, tanda 3 (A3, M1): la ficha alineada a la izquierda, las características como lista
-     sin cajas, el mensual junto al precio, la descripción a medida de lectura y los avisos del contacto en tinta. La barra
-     superior ya lleva a Explorar: la flecha de la foto sobra (se oculta sin mover compartir y el corazón). */
+     sin cajas, el mensual junto al precio, la descripción a medida de lectura y los avisos del contacto en tinta. La flecha
+     de volver de la foto se queda, como en el resto de pantallas que no son pestañas (Ana, 2026-11-13). */
   .app:has(> .site-top-bar) .listing-view > .cta-bar { top: calc(var(--desktop-nav-height) + 16px); }
-  .listing-view .hero .top > a[aria-label="Volver a Explorar"] { visibility: hidden; }
   .listing-view .listing-head { align-items: flex-start; text-align: left; }
   .listing-view .listing-capacity-icons { justify-content: flex-start; }
   .listing-view .listing-description { max-width: var(--measure); }

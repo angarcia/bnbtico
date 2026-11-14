@@ -423,11 +423,23 @@ test("en escritorio la ficha lleva la barra superior en su caja reservada; en el
   const [slot, hero] = await page.evaluate(() => [".site-top-bar", ".hero"].map((q) => document.querySelector(q)!.getBoundingClientRect().toJSON()));
   expect(slot.height).toBe(72);
   expect(hero.top, "la portada empieza bajo la barra").toBeGreaterThanOrEqual(slot.bottom);
+  // Como las demás pantallas que no son pestañas, la ficha lleva su flecha de volver (Ana, 2026-11-13).
+  await expect(page.getByRole("link", { name: "Volver a Explorar" })).toBeVisible();
+  // La barra tiene fondo propio y va por encima de la ficha: al bajar no se ve la foto a través.
+  expect(await page.locator(".site-top-bar").evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)");
+  await page.mouse.wheel(0, 600);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
+  expect((await page.locator(".site-top-bar").boundingBox())!.y).toBe(0);
   await nav.getByRole("link", { name: "Explorar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
 
   await page.goto("/casa/CT-99999");
   await expect(page.getByRole("heading", { name: "Este enlace no existe" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Volver a Explorar" })).toBeVisible();
+  await page.goto("/no-existe");
+  await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Volver" })).toBeVisible();
+  await page.goto("/casa/CT-99999");
   await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Explorar" })).toBeVisible();
 
   await page.setViewportSize({ width: 375, height: 667 });

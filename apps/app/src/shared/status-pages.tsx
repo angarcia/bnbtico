@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { blockedReason, type BlockedReason } from "../domain/blocked";
+import { I } from "./icons";
 import { SiteTopBar } from "./site-top-bar";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
@@ -10,6 +11,10 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
       <SiteTopBar />
       <main className="view no-nav">
         <header className="header-root status-header">
+          {/* En escritorio, la flecha de volver en vez del logo, que ya va en la barra (revisión 2026-11-13). */}
+          <a href="/explorar" className="icon-btn status-back" aria-label="Volver a Explorar">
+            <I.back />
+          </a>
           <div className="top">
             <a href="/explorar" aria-label="3bstays, inicio">
               <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />

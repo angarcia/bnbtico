@@ -13,6 +13,7 @@ import { variantUrl } from "../../domain/image";
 import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { I } from "../../shared/icons";
 import { FlowHeader, RootHeader } from "../chrome";
+import { useDesktop } from "../desktop";
 import { EditorContext, type EditorListings, type EditorPhotos, type EditorPort } from "../editor-port";
 import { authApi, useSession } from "../session";
 import { EditableFicha } from "./casa-editable";
@@ -182,12 +183,13 @@ const draftsQuery = (userId: string) =>
 
 export function BorradoresScreen() {
   const userId = useSession().session?.userId ?? "";
+  const desktop = useDesktop();
   const drafts = useQuery({ ...draftsQuery(userId), enabled: !!userId });
   if (drafts.error && toDomainError(drafts.error).kind === "forbidden") return <Navigate to="/admin/codigo" search={{ next: "/admin/borradores" }} replace />;
   const data = drafts.data;
   return (
     <>
-      <RootHeader title="Borradores" home="/admin/casas" />
+      {desktop ? <FlowHeader title="Borradores" back="/admin/casas" historyBack /> : <RootHeader title="Borradores" home="/admin/casas" />}
       <p className="small muted">Casas que su anfitrión empezó y aún no envió. Toque una para completarla con él.</p>
       {drafts.isError && !data ? (
         <p className="note" role="alert">

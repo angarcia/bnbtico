@@ -69,6 +69,7 @@ const rootRoute = createRootRoute({
     <TabsFrame>
       <Placeholder
         title="No encontramos esta página"
+        back="/explorar"
         text="Revise el enlace o vuelva a Explorar."
         action={
           <Link to="/explorar" replace className="btn btn-soft">

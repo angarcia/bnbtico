@@ -271,10 +271,12 @@ export function FlowHeader({
 }
 
 /** Pantalla que llega en otro ticket: cabecera raíz y una tarjeta con lo que vendrá. */
-export function Placeholder({ title, text, home, action }: { title: string; text: string; home?: string; action?: ReactNode }) {
+export function Placeholder({ title, text, home, action, back }: { title: string; text: string; home?: string; action?: ReactNode; back?: string }) {
+  const desktop = useDesktop();
   return (
     <>
-      <RootHeader title={title} home={home} />
+      {/* En escritorio, con `back`, la flecha de volver como las demás pantallas que no son pestañas. */}
+      {back && desktop ? <FlowHeader title={title} back={back} historyBack /> : <RootHeader title={title} home={home} />}
       <section className="card stack placeholder-card">
         <p>{text}</p>
         {action}

@@ -1,3 +1,7 @@
+## 2026-11-13 · Flecha de volver en la web de escritorio
+
+En escritorio, toda pantalla que no es una pestaña lleva la flecha de volver junto al título (en la ficha, sobre la foto, como en el móvil). Las pestañas de la barra superior van sin flecha, porque son el inicio de cada sección y la barra ya lleva a ellas. Todos los títulos de página tienen el mismo tamaño. Sustituye lo dicho en la tanda 3 de la revisión, que quitaba la flecha de la ficha en escritorio. Lo pide Ana, que prefiere ver la flecha.
+
 ## 2026-11-13 · Textos de la web de escritorio (tanda 6 de la revisión)
 
 Ana elige qué textos de la revisión cambian:

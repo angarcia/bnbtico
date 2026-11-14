@@ -6,6 +6,8 @@
 .header-root{display:flex;flex-direction:column;gap:14px}
 /* La barra superior de la ficha solo existe en escritorio (13-escritorio.css). */
 .site-top-bar{display:none}
+/* La flecha de las páginas de estado de la ficha solo en escritorio (13-escritorio.css): en el teléfono, el logo. */
+.status-back{display:none}
 .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
 .header-root .logo{height:38px;width:auto}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
