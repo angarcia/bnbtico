@@ -76,7 +76,7 @@ export function FavoritosScreen() {
 
       {favs.length === 0 ? (
         <section className="stack fav-empty">
-          <p className="muted">Toque el corazón de una casa para guardarla aquí.</p>
+          <p className="muted">{desktop ? "Pulse" : "Toque"} el corazón de una casa para guardarla aquí.</p>
           <Link to="/explorar" replace className="btn btn-soft btn-lg">
             Explorar casas
           </Link>

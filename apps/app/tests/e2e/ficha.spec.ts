@@ -223,6 +223,14 @@ test("en escritorio: mensual junto al precio, características sin cajas y «Esc
   await expect(panel.locator(".consent")).toHaveText(/necesita verificar su WhatsApp con un código/);
   expect(await panel.locator(".safety").evaluate((el) => getComputedStyle(el).color)).toBe(await page.locator("body").evaluate((el) => getComputedStyle(el).color));
 
+  // Tanda 6: con dólares, el mensual también sale bajo el precio, en dólares.
+  await chooseCurrency(page, "USD");
+  await expect(page.locator(".cta-usd .cta-monthly")).toBeVisible();
+  await expect(page.locator(".cta-usd .cta-monthly")).toContainText(/Alquiler mensual: ≈ \$[\d\s\u00a0]+ \/ mes/);
+  await chooseCurrency(page, "CRC");
+  // «WhatsApp verificado» explica al pasar el cursor qué se verificó.
+  await expect(page.getByTestId("host-line").getByText("Anfitrión · WhatsApp verificado")).toHaveAttribute("title", "Confirmamos que este número recibe mensajes de WhatsApp");
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByTestId("cta-monthly")).toBeHidden();
   await expect(page.locator(".feature-tiles > .tile-wide")).toBeVisible();

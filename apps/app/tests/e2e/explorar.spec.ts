@@ -432,6 +432,15 @@ test("barra de escritorio: «Ingresar» con contorno y la moneda neutra", async 
   await expect(colones).toHaveAttribute("aria-pressed", "true");
   expect((await colones.evaluate(look)).bg).toBe("rgb(255, 255, 255)");
   expect(await nav.getByRole("link", { name: "Explorar" }).getAttribute("aria-current")).toBe("page");
+  // Tanda 6 (A10): la ventana de Ingresar va sin la oferta para publicar, que competía con «Recibir código».
+  await nav.getByRole("button", { name: "Ingresar" }).click();
+  const dialog = page.getByRole("dialog", { name: "Ingresar" });
+  await expect(dialog.getByRole("button", { name: /Recibir código/ })).toBeVisible();
+  await expect(dialog.getByTestId("publish-promo-row")).toBeHidden();
+  // En escritorio se pulsa: «Pulse el corazón…» en Favoritos vacío.
+  await page.keyboard.press("Escape");
+  await page.goto("/favoritos");
+  await expect(page.getByText("Pulse el corazón de una casa para guardarla aquí.")).toBeVisible();
 });
 
 test("la moneda cambia al instante en Explorar y la ficha muestra las dos", async ({ page }) => {

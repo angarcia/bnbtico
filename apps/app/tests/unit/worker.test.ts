@@ -75,7 +75,7 @@ describe("worker · ficha /casa/CT-####", () => {
     expect(html).toContain("· orientativo");
     // Revisión UX A10: la persona que alquila, bajo el nombre (iniciales y nombre de pila), en vez de la etiqueta suelta.
     // Ronda de Ana 2026-11-02 (01): debajo del nombre, «Anfitrión · WhatsApp verificado».
-    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?<span class="muted">Anfitrión · WhatsApp verificado<\/span>/);
+    expect(html).toMatch(/data-testid="host-line"[\s\S]*?class="avatar[^"]*"[^>]*>[A-ZÁÉÍÓÚÑ]{1,2}<\/span>[\s\S]*?<span class="muted" title="Confirmamos que este número recibe mensajes de WhatsApp">Anfitrión · WhatsApp verificado<\/span>/);
     expect(html).not.toMatch(/class="badge badge-ok"[^>]*>[\s\S]{0,200}WhatsApp verificado/);
     // La zona va sola junto al pin; «Ubicación aproximada» queda bajo el mapa.
     expect(html).toMatch(/<span class="listing-zone" data-testid="listing-zone"><svg[^>]*>[\s\S]*?<\/svg>Playa Negra, Talamanca<\/span>/);

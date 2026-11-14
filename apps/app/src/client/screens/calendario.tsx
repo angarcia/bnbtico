@@ -266,7 +266,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
           </section>
         ) : null}
         <div className="row between gap-8 cal-hint-row">
-          {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">Toque los días para editarlos</p>}
+          {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">{desktop ? "Pulse" : "Toque"} los días para editarlos</p>}
           <CurrencySwitch className="calendar-local-currency" />
         </div>
         <AirbnbLegend days={query.data} />

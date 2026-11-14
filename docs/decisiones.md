@@ -1,3 +1,12 @@
+## 2026-11-13 · Textos de la web de escritorio (tanda 6 de la revisión)
+
+Ana elige qué textos de la revisión cambian:
+
+- En escritorio se dice «Pulse» en lugar de «Toque» (Favoritos vacío, Calendario) y la cifra del detalle de casa dice «clics en WhatsApp». En el móvil siguen «Toque» y «toques».
+- «Qué es 3bstays» deja de decir «Reserve directo»: 3bstays no gestiona reservas. Ahora dice «Escriba directo al anfitrión por WhatsApp, sin comisiones de plataforma.», también en el móvil.
+- «WhatsApp verificado» de la ficha explica al pasar el cursor «Confirmamos que este número recibe mensajes de WhatsApp»: se verifica el número, no la identidad.
+- La oferta para publicar sale de la ventana de Ingresar de escritorio, donde competía con «Recibir código». Se mantiene en la Cuenta del cliente, en Explorar y en «Qué es», sin cambios.
+
 ## 2026-11-13 · Presupuesto de la hoja de contacto
 
 El límite del trozo diferido de la hoja de contacto pasa de 7,6 a 7,7 kB comprimidos (aprobado por Ana). Lo pide la tanda 3 de la revisión de escritorio: en el panel de contacto de la ficha, el botón dice «Escribir a [anfitrión] por WhatsApp», «Personas» muestra «Opcional» y, sin sesión, queda un solo aviso de verificación. Tras compactar el cambio seguía sobrando 23 B. El JS inicial no cambia de límite.

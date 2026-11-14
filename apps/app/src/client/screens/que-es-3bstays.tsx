@@ -45,7 +45,7 @@ function AboutContent({ desktop }: { desktop: boolean }) {
             <img src="/logo-horizontal.png" alt="3bstays" width={66} height={23} />
           </p>
           <p className="about-slogan">Bueno, bonito y bien tico.</p>
-          <p className="about-intro">Reserve directo con el anfitrión por WhatsApp, sin comisiones de plataforma.</p>
+          <p className="about-intro">Escriba directo al anfitrión por WhatsApp, sin comisiones de plataforma.</p>
         </section>
       </div>
       <section className="about-owner stack" aria-labelledby="about-owner-title">

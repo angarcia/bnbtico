@@ -802,6 +802,14 @@
   .desktop-app form .review-actions .btn-outline-bad { background: transparent; box-shadow: none; }
   .desktop-app .photo-strip { margin-inline: 0; padding-inline: 0; }
   .desktop-app .photo-strip .photo { height: 180px; }
+
+  /* Revisión de escritorio 2026-11-13, tanda 6 (A10): sin la oferta «publique gratis» en la ventana de Ingresar, donde
+     competía con «Recibir código». Las cifras de Anuncios del admin, en pastillas como en Mis casas. */
+  .whatsapp-dialog .publish-promo-row { display: none; }
+  .desktop-app main.view > .grid-3:has(> .tile-review) > .tile { flex-direction: row; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; }
+  .desktop-app main.view > .grid-3:has(> .tile-review) { display: flex; flex-wrap: wrap; gap: 8px; }
+  .desktop-app main.view > .grid-3:has(> .tile-review) > .tile b { font: var(--w-strong) 16px/1.2 var(--body); }
+  .desktop-app main.view > .grid-3:has(> .tile-review) > .tile span { font-size: 15px; }
 }
 
 /* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */

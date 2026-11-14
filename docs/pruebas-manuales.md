@@ -206,6 +206,10 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] En escritorio, como admin (con el segundo factor): Anuncios, Casas, Usuarios, la revisión de un anuncio y la ficha de una casa ajena llevan la barra superior con Anuncios (y su contador detrás del texto), Casas, Usuarios y Cuenta, sin moneda ni Ayuda. No queda la barra de pestañas del móvil a media pantalla. En «Revisar anuncio», las fotos y los datos van a la izquierda y la decisión a la derecha, fija al bajar; el mensaje para el anfitrión se ve entero y «Rechazar» es texto terracota.
 
+- [ ] En escritorio, la ventana de Ingresar no lleva la franja «¿Quiere publicar su casa gratis?» (en el móvil y en la Cuenta del cliente sigue). Favoritos vacío dice «Pulse el corazón…» y Calendario «Pulse los días…»; en el móvil, «Toque». En el detalle de una casa, la cifra dice «clics en WhatsApp» (en el móvil, «toques»). En una ficha, pase el cursor por «WhatsApp verificado» y compruebe la ayuda «Confirmamos que este número recibe mensajes de WhatsApp». Con dólares elegidos, el mensual de una ficha sale bajo el precio en dólares. En Anuncios del admin, las cifras van en pastillas.
+
+- [ ] En «Qué es 3bstays», en móvil y escritorio, la entrada dice «Escriba directo al anfitrión por WhatsApp, sin comisiones de plataforma.» (ya no «Reserve directo…»).
+
 - [ ] En escritorio, en claro y en oscuro: la pestaña actual de la barra va en arena con el texto terracota y es la única marcada. En «₡ | $», la moneda elegida va en un botón claro sobre gris neutro. «Ingresar» es un botón con contorno. Con casas, «Consultas» lleva el texto a 1280 px o más y el contador sigue visible. Los botones secundarios (por ejemplo «Seguir publicando» o «Empezar otro») llevan contorno, y un botón desactivado se ve gris, distinto del principal verde.
 
 - [ ] En escritorio, en el detalle de una casa activa, «Ver ficha» está en la cabecera, a la derecha del nombre, y ya no flota sobre las filas. Edite Ubicación a 1280 px y compruebe que nada la tapa. En el móvil, «Ver ficha» sigue flotando abajo.

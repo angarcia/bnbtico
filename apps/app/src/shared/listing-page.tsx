@@ -225,6 +225,12 @@ function PriceColumns({ main, monthly, fx, stay, currency }: { main: Price | nul
               {`≈ ${formatUSD(price.amount, fx.crcPerUsd)}`} <small>/ {price.unit}</small>
             </span>
           ) : null}
+          {/* El mensual del panel de escritorio, también con dólares elegidos. */}
+          {monthly && !showMonthly ? (
+            <span className="cta-monthly">
+              {MONTHLY_LABEL}: {isNegotiable(monthly) ? "a negociar" : `≈ ${formatUSD(monthly.amount, fx.crcPerUsd)} / mes`}
+            </span>
+          ) : null}
           {monthlyAmount !== null ? (
             <span className="xs muted num" data-testid="monthly-usd" title={rate}>
               ≈ <b className="ink num">{formatUSD(monthlyAmount, fx.crcPerUsd)}</b> / mes
@@ -328,7 +334,10 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             </span>
             <span className="stack host-text">
               <b className="host-name">{firstName(l.ownerName)}</b>
-              <span className="muted">{l.ownerWhatsappVerified ? "Anfitrión · WhatsApp verificado" : "Anfitrión"}</span>
+              {/* Al pasar el cursor, qué se verificó: el número, no la identidad (revisión 2026-11-13, textos). */}
+              <span className="muted" title={l.ownerWhatsappVerified ? "Confirmamos que este número recibe mensajes de WhatsApp" : undefined}>
+                {l.ownerWhatsappVerified ? "Anfitrión · WhatsApp verificado" : "Anfitrión"}
+              </span>
             </span>
           </div>
           <hr className="divider" />
