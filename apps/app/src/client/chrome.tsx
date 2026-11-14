@@ -55,7 +55,8 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
   const ownerInquiries = pathname === "/propietario/actividad";
   const ownerCalendar = pathname === "/propietario/calendario";
   const { count } = useListingsCount();
-  const desktop = useDesktop() && !adminZone;
+  // El admin lleva también la barra superior en escritorio, con sus pestañas (revisión 2026-11-13, A5).
+  const desktop = useDesktop();
   const desktopSignIn = desktop && status === "signed-out";
   const defaultTabs = tabsFor({ session: status !== "signed-out", isAdmin: adminZone, listingsCount: count, desktop });
   const tabs = desktop ? defaultTabs.filter(({ to }) => to !== "/que-es-3bstays") : defaultTabs;
@@ -114,7 +115,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
         })}
         {desktop && (
           <>
-            <CurrencySwitch className="desktop-currency" />
+            {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch className="desktop-currency" />}
             {desktopSignIn ? (
               <button type="button" className="btn btn-ghost desktop-sign-in" aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
                 <I.user size={22} /> Ingresar
@@ -128,10 +129,10 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
                 {fresh > 0 && <b className="nav-count num" data-testid="inquiries-badge" aria-hidden="true">{fresh}</b>}
               </button>
             )}
-            <Link to="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" activeProps={{ "aria-current": "page" }}>
+            {adminZone ? null : <Link to="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" activeProps={{ "aria-current": "page" }}>
               <I.wa size={24} />
               <span>Ayuda por WhatsApp</span>
-            </Link>
+            </Link>}
           </>
         )}
       </nav>
@@ -165,6 +166,8 @@ const UnderTopBar = createContext(false);
 export function FlowFrame({ children }: { children: ReactNode }) {
   const desktop = useDesktop();
   const help = useLocation({ select: ({ pathname }) => pathname === "/ayuda" });
+  const admin = useLocation({ select: ({ pathname }) => pathname.startsWith("/admin") });
+  const adminHouse = useLocation({ select: ({ pathname }) => /^\/admin\/casas\/[^/]+(?:\/editar\/[^/]+)?\/?$/.test(pathname) });
   const accountFlow = useLocation({ select: ({ pathname }) => pathname.startsWith("/cuenta") });
   const subscription = useLocation({ select: ({ pathname }) => pathname === "/propietario/suscripcion" });
   const verifyingCode = useLocation({ select: ({ pathname }) => pathname === "/cuenta/codigo" });
@@ -180,6 +183,7 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   // En escritorio, la ayuda, Ingresar y el código desde un flujo y la suscripción llevan la barra superior; las de texto, con
   // líneas de lectura (revisión 2026-11-13, A4 y A9).
   if (desktop && (help || accountFlow)) return <TabsFrame measure>{children}</TabsFrame>;
+  if (desktop && admin) return <TabsFrame ownerHouseDetail={adminHouse}>{children}</TabsFrame>;
   if (desktop && subscription) return <TabsFrame measure>{children}</TabsFrame>;
   if (desktop && publishing) return <TabsFrame publishing>{children}</TabsFrame>;
   return (

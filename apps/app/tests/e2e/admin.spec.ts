@@ -118,6 +118,29 @@ test("la primera vez el admin vincula su app con el QR, ve la cola y aprueba: la
   await expect(page.getByRole("heading", { level: 1, name: "Cabina Punta Uva" })).toBeVisible();
 });
 
+// Revisión de escritorio 2026-11-13, tanda 5 (A5): en escritorio el admin lleva la barra superior con sus pestañas, y
+// Revisar va en dos columnas con la decisión fija a la derecha, sin tapar el mensaje.
+test("en escritorio: barra superior del admin y Revisar en dos columnas con la decisión a la derecha", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await injectSession(page, "admin");
+  await page.goto(`/admin/anuncios/${second.id}`);
+  await secondCode(page);
+  await expect(page.getByRole("heading", { level: 2, name: "Loft Cocles" })).toBeVisible();
+  const bar = nav(page);
+  await expect(bar.getByRole("link", { name: /Anuncios/ })).toBeVisible();
+  await expect(bar.getByRole("link", { name: "Casas" })).toBeVisible();
+  expect((await bar.boundingBox())!.y).toBe(0);
+  await expect(bar.getByRole("link", { name: "Ayuda por WhatsApp" })).toHaveCount(0);
+  const [photos, form, note] = await Promise.all([
+    page.locator(".photo-strip").boundingBox(),
+    page.locator("form:has(.review-actions)").boundingBox(),
+    page.getByRole("textbox").first().boundingBox(),
+  ]);
+  expect(form!.x, "la decisión a la derecha de las fotos").toBeGreaterThan(photos!.x + photos!.width);
+  const approve = (await page.getByRole("button", { name: /Aprobar y publicar/ }).boundingBox())!;
+  expect(approve.y, "los botones no tapan el mensaje").toBeGreaterThan(note!.y + note!.height);
+});
+
 test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje", async ({ page }) => {
   await injectSession(page, "admin");
   await page.goto(`/admin/anuncios/${second.id}`);

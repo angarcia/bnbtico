@@ -763,6 +763,45 @@
   .desktop-app .owner-account-layout h3:not(.account-name, .sub-house-title) { font-size: 20px; }
   .desktop-app .sub-price b { font-size: 18px; }
   .desktop-app .sub-stop { align-self: flex-start; padding-inline: 0; color: var(--brand-ink); text-decoration: none; }
+
+  /* Revisión de escritorio 2026-11-13, tanda 5 (A5): Revisar anuncio y Revisar edición en dos columnas, con la decisión
+     fija a la derecha bajo la barra; ya no tapa el mensaje para el anfitrión. «Rechazar» como texto terracota. */
+  .desktop-app > main.view:has(> form .review-actions) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    column-gap: 32px;
+    align-content: start;
+    align-items: start;
+  }
+  .desktop-app > main.view:has(> form .review-actions) > * { grid-column: 1; }
+  .desktop-app > main.view:has(> form .review-actions) > .header-flow { grid-column: 1 / -1; }
+  .desktop-app > main.view:has(> form .review-actions) > form {
+    grid-column: 2;
+    grid-row: 2 / span 40;
+    position: sticky;
+    top: calc(var(--desktop-nav-height) + 16px);
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sheet);
+    background: var(--surface);
+  }
+  .desktop-app:has(.review-actions) > .desktop-nav { display: flex; }
+  /* El contador de una pestaña con texto va detrás del texto, no encima (Anuncios del admin, Consultas). */
+  .desktop-nav .nav .nav-count { position: static; margin-inline-start: 2px; }
+  .desktop-app form .review-spacer { display: none; }
+  .desktop-app form .review-actions {
+    position: static;
+    inset: auto;
+    transform: none;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .desktop-app form .review-actions .btn-outline-bad { background: transparent; box-shadow: none; }
+  .desktop-app .photo-strip { margin-inline: 0; padding-inline: 0; }
+  .desktop-app .photo-strip .photo { height: 180px; }
 }
 
 /* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */
