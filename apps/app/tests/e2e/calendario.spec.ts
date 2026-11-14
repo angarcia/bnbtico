@@ -335,20 +335,20 @@ test("casillas de 47 × 92 px con el precio completo; ₡ | $ cambia los precios
   await expect(day(page, on(15))).toHaveText("1595\u00a0000");
 });
 
-// Revisión de escritorio 2026-11-13, tanda 4 (M2): en escritorio el mes cabe con casillas de 64 px, el precio solo sale en
-// los días que lo cambian y el base va junto a la leyenda.
-test("en escritorio: casillas de 64 px, el precio solo en los días que cambian y el base junto a la leyenda", async ({ page }) => {
+// Revisión de escritorio 2026-11-13, tanda 4 (M2): en escritorio el mes cabe con casillas de 64 px, y cada día lleva su
+// precio con el símbolo; el especial, en terracota (Ana: el precio en todos los días).
+test("en escritorio: casillas de 64 px con el precio y su símbolo en todos los días", async ({ page }) => {
   const casa = await seedHouse("Casa Escritorio");
   await h.putDay(casa.id, { day: on(20), available: true, specialPriceCrc: 150000 });
   await page.setViewportSize({ width: 1440, height: 900 });
   await open(page, casa.id, next());
   await expect(day(page, on(15))).toBeVisible();
   expect(Math.round((await day(page, on(15)).boundingBox())!.height)).toBe(64);
-  await expect(day(page, on(15)).locator(".day-sub")).toBeHidden();
-  await expect(day(page, on(15))).toHaveAccessibleName(/₡95\u00a0000/);
-  await expect(day(page, on(20)).locator(".day-sub")).toBeVisible();
-  await expect(day(page, on(20)).locator(".day-sub")).toContainText("150");
-  await expect(page.getByTestId("calendar-base-price")).toContainText("₡95\u00a0000");
+  await expect(day(page, on(15)).locator(".day-sub")).toHaveText("₡95\u00a0000");
+  await expect(day(page, on(20)).locator(".day-sub")).toHaveText("₡150\u00a0000");
+  expect(await day(page, on(20)).locator(".day-sub").evaluate((el) => getComputedStyle(el).color)).not.toBe(
+    await day(page, on(15)).locator(".day-sub").evaluate((el) => getComputedStyle(el).color),
+  );
 });
 
 test("la barra de pestañas sale al bajar y vuelve al subir", async ({ page }) => {

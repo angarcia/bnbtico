@@ -202,7 +202,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] En escritorio, Mis casas: bajo el título, el resumen va en pastillas («2 activas», «1 en revisión») y «Añadir casa» a la derecha. Las tarjetas miden lo mismo, con la foto 4:3 y las acciones al pie, y «Calendario» y «Consultas» llevan su nombre. En el detalle de una casa, «Editar» va en gris y se pone verde al pasar por la fila.
 
-- [ ] En escritorio, Calendario: un mes cabe en pantalla con casillas bajas. Los días pasados van sin fondo ni precio. Los días al precio base no muestran precio y los que lo cambian lo muestran en terracota. Bajo la leyenda, «Precio base: ₡… por noche» en la moneda elegida. Cambie el precio de un día y compruebe que aparece en su casilla. En el móvil, cada casilla sigue con su precio.
+- [ ] En escritorio, Calendario: un mes cabe en pantalla con casillas bajas. Cada día disponible lleva su precio con el símbolo («₡45 000» o «$88»); los de precio especial, en terracota. Los días pasados van sin fondo. En el móvil, cada casilla sigue con su precio sin símbolo.
 
 - [ ] En escritorio, Cuenta del anfitrión: «Mi perfil», «Promoción y suscripción», «Método de pago» y «Sus casas» tienen el mismo tamaño de título, la cuota («₡0 / mes») va al tamaño del texto y «Parar suscripción» es texto terracota alineado a la izquierda.
 

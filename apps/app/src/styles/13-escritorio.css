@@ -759,15 +759,12 @@
   .desktop-app .house-field:hover .account-profile-toggle,
   .desktop-app .house-field .account-profile-toggle:focus-visible { color: var(--primary); }
 
-  /* Calendario: casillas más bajas para ver el mes entero, los pasados sin precio ni fondo y el precio solo en los días
-     que lo cambian (el base va bajo la leyenda). */
+  /* Calendario: casillas más bajas para ver el mes entero, con el precio y su símbolo en cada día; los pasados sin fondo
+     y los de precio especial en terracota (Ana, 2026-11-13: el precio en todos los días). */
   .desktop-app .owner-calendar .month-grid .day { height: 64px; gap: 4px; padding-top: 0; justify-content: center; }
-  .desktop-app .owner-calendar .month-grid .day:not(.is-special) .day-sub,
-  .desktop-app .owner-calendar .month-grid .day.is-past .day-sub { display: none; }
   .desktop-app .owner-calendar .month-grid .day.is-special .day-sub { color: var(--brand-ink); font-weight: var(--w-medium); }
   .desktop-app .owner-calendar .month-grid .day.is-past { opacity: 1; background: transparent; color: var(--muted); }
   .desktop-app .owner-calendar .month-legend .swatch { width: 16px; height: 16px; }
-  .cal-base-line { margin: 0; }
 
   /* Cuenta: títulos al mismo nivel, la cuota al tamaño del texto y «Parar suscripción» en terracota a la izquierda. */
   .desktop-app .owner-account-layout :is(h2, .card-title) { font-size: 20px; }
