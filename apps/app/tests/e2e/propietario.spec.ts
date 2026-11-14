@@ -192,6 +192,17 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
 });
 
+// Revisión de escritorio 2026-11-13, A1: en escritorio «Ver ficha» va en la cabecera; flotando tapaba la fila que se edita.
+test("detalle en escritorio: «Ver ficha» en la cabecera de la casa, sin flotar", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/propietario/casas/${active.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver ficha", exact: true })).toHaveCount(1);
+  const ver = page.locator("header.header-flow").getByRole("link", { name: "Ver ficha", exact: true });
+  await expect(ver).toHaveAttribute("href", `/casa/${active.publicId}`);
+  expect(await ver.evaluate((el) => getComputedStyle(el).position)).not.toBe("fixed");
+});
+
 test("detalle: «Ver ficha» es una tarjeta flotante clara abajo con el aspecto de «Mapa», fuera de la cabecera y sin tapar el final", async ({ page }) => {
   await page.goto(`/propietario/casas/${active.id}`);
   await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();

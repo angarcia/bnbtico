@@ -588,4 +588,66 @@
     opacity: 1;
     pointer-events: auto;
   }
+
+  /* Revisión de escritorio 2026-11-13, tanda 1: ancho máximo del contenido alineado con la barra (A9), cabecera de página
+     (A9) y la barra superior en la ficha y sus páginas de estado (A4). Explorar con mapa sigue a todo el ancho. */
+  :root { --page-max: 1232px; --measure: 720px; }
+  .app:has(> .site-top-bar) { --desktop-nav-height: 72px; }
+  :is(.desktop-app, .site-top-bar) > .desktop-nav {
+    padding-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2));
+  }
+  .desktop-app:not(:has(.explore-top)) > main.view,
+  .app:has(> .site-top-bar) > main.view {
+    width: 100%;
+    max-width: calc(var(--page-max) + 2 * var(--gutter));
+    margin-inline: auto;
+  }
+  .view-measure > * { max-width: var(--measure); }
+
+  .site-top-bar {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    flex: none;
+    height: var(--desktop-nav-height);
+    border-bottom: 1px solid var(--line-nav);
+  }
+  .site-top-bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    box-shadow: 0 0 0 100vmax var(--bg);
+    clip-path: inset(0 -100vmax);
+    pointer-events: none;
+  }
+  /* Más específico que «.app:has(.cta-bar) .tabbar», que oculta la barra inferior del teléfono en la ficha. */
+  .app > .site-top-bar > .tabbar.desktop-nav {
+    display: flex;
+    position: relative;
+    inset: auto;
+    justify-content: flex-start;
+    gap: 8px;
+    height: 100%;
+    max-width: none;
+    padding-block: 0;
+    border: 0;
+    background: transparent;
+    transform: none;
+  }
+  .status-header .top { display: none; }
+  .app:has(> .site-top-bar) > main.view:not(.listing-view) > .card,
+  .desktop-app .placeholder-card { max-width: var(--measure); }
+
+  .header-root.page-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 12px;
+  }
+  .page-header-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .page-header-actions { display: flex; flex: none; align-items: center; gap: 10px; }
+  .page-header-actions .btn { width: auto; min-height: 44px; padding-inline: 18px; }
 }

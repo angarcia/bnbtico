@@ -25,6 +25,7 @@ import { FEATURE_ICON, I } from "./icons";
 import { whenIdle } from "./idle";
 import { listingDaysQuery, listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
+import { SiteTopBar } from "./site-top-bar";
 import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
@@ -264,6 +265,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
   const { bar, spacer } = useSpacerMatchingBar();
   return (
     <div className="app">
+      {preview ? null : <SiteTopBar navigate={navigate} next={`/casa/${l.publicId}`} />}
       <main className="view no-nav listing-view">
         <HeroGallery photos={l.photos} title={l.title}>
           {preview ? <span /> : (

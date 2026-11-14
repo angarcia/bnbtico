@@ -234,6 +234,7 @@ export function CasaPropietarioScreen() {
 
 export function OwnerHouseDetail({ id, rightPanel, showSubscription }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean }) {
   const { userId, query } = useOwnListing(id);
+  const desktop = useDesktop();
   // Suscripción, actividad y el JS de la ficha editable no dependen de la casa: salen a la vez que ella, no después
   // (auditoría de viajes 2026-11-05: los avisos y las cifras llegaban ~0,6 s más tarde).
   const client = useQueryClient();
@@ -244,11 +245,19 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription }: { id: str
     void import("./casa-editable").catch(() => undefined);
   }, [client, userId]);
   const l = query.data;
+  // En escritorio, «Ver ficha» va en la cabecera: flotando tapaba la fila que se edita (revisión 2026-11-13, A1).
+  const viewListing = l && can(l, "share") ? (
+    <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className={desktop ? "btn btn-ghost" : "float-btn"}>
+      <I.eye size={20} />
+      Ver ficha
+    </Link>
+  ) : null;
   return (
     <>
       <FlowHeader
         title={l ? titleOf(l) : "Mi casa"}
         back="/propietario/casas"
+        action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined}
       />
       {l && isPublished(l) ? (
         <Suspense fallback={<SkeletonCard />}>
@@ -259,12 +268,7 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription }: { id: str
       {l === null ? <NotFoundCard /> : null}
       {l === undefined && query.isError ? <p className="note" role="alert">{message(query.error)}</p> : null}
       {l === undefined && !query.isError ? <SkeletonCard /> : null}
-      {l && can(l, "share") ? (
-        <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="float-btn">
-          <I.eye size={20} />
-          Ver ficha
-        </Link>
-      ) : null}
+      {viewListing && !desktop ? viewListing : null}
     </>
   );
 }

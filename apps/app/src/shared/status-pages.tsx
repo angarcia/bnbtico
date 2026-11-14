@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 import { blockedReason, type BlockedReason } from "../domain/blocked";
+import { SiteTopBar } from "./site-top-bar";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
  *  quien llega por un enlace compartido ve otras casas o puede reintentar (revisión UX N4). */
 function StatusPage({ title, children, actions }: { title: string; children: ReactNode; actions: ReactNode }) {
   return (
     <div className="app">
+      <SiteTopBar />
       <main className="view no-nav">
-        <header className="header-root">
+        <header className="header-root status-header">
           <div className="top">
             <a href="/explorar" aria-label="3bstays, inicio">
               <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />

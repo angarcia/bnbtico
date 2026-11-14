@@ -281,7 +281,15 @@ const routeTree = rootRoute.addChildren([
       component: lazyRouteComponent(publicarEntrada, "VerificarScreen"),
     }),
     // La búsqueda de Explorar, a pantalla completa y en su propio trozo (se precarga al tocar la píldora).
-    createRoute({ getParentRoute: () => flow, path: "/explorar/buscar", validateSearch: buscarSearch, component: lazyRouteComponent(() => import("./screens/buscar"), "BuscarScreen") }),
+    createRoute({
+      getParentRoute: () => flow,
+      path: "/explorar/buscar",
+      validateSearch: buscarSearch,
+      // En escritorio la búsqueda vive en Explorar (Lugar, Fechas y Personas sobre el mapa): no hay pantalla aparte (revisión 2026-11-13, A4).
+      beforeLoad: ({ search: { abrir: _abrir, ...search } }) => {
+        if (isDesktop()) throw redirect({ to: "/explorar", search, replace: true });
+      },
+      component: lazyRouteComponent(() => import("./screens/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", validateSearch: (p: Record<string, unknown>): { panel?: "suscripcion" } => p.panel === "suscripcion" ? { panel: "suscripcion" } : {}, component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("./screens/airbnb"), "AirbnbScreen") }),

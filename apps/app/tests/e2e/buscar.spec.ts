@@ -292,3 +292,12 @@ test("lo mismo en WebKit (si está instalado; en CI solo hay Chromium)", async (
     await browser.close();
   }
 });
+
+// Revisión de escritorio 2026-11-13, A4: en escritorio la búsqueda está sobre el mapa de Explorar; un enlace a la pantalla
+// del teléfono lleva allí con la misma búsqueda.
+test("en escritorio, /explorar/buscar lleva a Explorar con la misma búsqueda", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/explorar/buscar?abrir=donde&ppl=4");
+  await expect(page).toHaveURL(/\/explorar\?ppl=4$/);
+  await expect(page.getByRole("navigation", { name: "Navegación principal" })).toBeVisible();
+});

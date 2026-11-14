@@ -374,6 +374,32 @@ test("en escritorio la ficha va a dos columnas con el contacto a la derecha; en 
   expect(await page.locator(".cta-bar").evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
 });
 
+// Revisión de escritorio 2026-11-13, A4: la ficha y sus páginas de estado llevan la barra superior de escritorio. Se monta
+// tras hidratar, en una caja que el HTML del servidor ya reserva: la portada no baja al hidratar.
+test("en escritorio la ficha lleva la barra superior en su caja reservada; en el móvil, no", async ({ page }) => {
+  const html = await (await page.request.get(`/casa/${casa.publicId}`)).text();
+  expect(html, "la caja de la barra viene del servidor").toContain('<div class="site-top-bar"></div>');
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  const nav = page.getByRole("navigation", { name: "Navegación principal" });
+  await expect(nav.getByRole("link", { name: "Favoritos" })).toBeVisible();
+  const [slot, hero] = await page.evaluate(() => [".site-top-bar", ".hero"].map((q) => document.querySelector(q)!.getBoundingClientRect().toJSON()));
+  expect(slot.height).toBe(72);
+  expect(hero.top, "la portada empieza bajo la barra").toBeGreaterThanOrEqual(slot.bottom);
+  await nav.getByRole("link", { name: "Explorar" }).click();
+  await expect(page).toHaveURL(/\/explorar$/);
+
+  await page.goto("/casa/CT-99999");
+  await expect(page.getByRole("heading", { name: "Este enlace no existe" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name: "Explorar" })).toBeVisible();
+
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.locator(".site-top-bar")).toBeHidden();
+});
+
 // «Enlace copiado» y el contador del hero se animan al cambiar, no al pintarse por primera vez.
 test("compartir no se anima al abrir la ficha, solo al cambiar; deslizar marca el puntito de la foto", async ({ page }) => {
   await page.addInitScript(() => {

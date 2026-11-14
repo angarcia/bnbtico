@@ -4,6 +4,8 @@
 .view{flex:1;padding:calc(12px + env(safe-area-inset-top)) var(--gutter) calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
 .view.no-nav{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .header-root{display:flex;flex-direction:column;gap:14px}
+/* La barra superior de la ficha solo existe en escritorio (13-escritorio.css). */
+.site-top-bar{display:none}
 .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
 .header-root .logo{height:38px;width:auto}
 .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}

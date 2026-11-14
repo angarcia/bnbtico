@@ -188,6 +188,16 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] A 1024 y 1280 px, compare los márgenes exteriores de Explorar, Favoritos, Mis casas, Cuenta, Calendario y una ficha pública. El marco usa los mismos márgenes a ambos lados. Compruebe también que el mapa ampliado respeta esos márgenes y que los formularios centrados se leen con comodidad.
 
+- [ ] A 1440 px, compruebe que el contenido de Favoritos, Mis casas, Cuenta, Calendario, Ayuda y una ficha no pasa de unos 1230 px y queda centrado. El logo de la barra superior empieza a la misma altura que el contenido. A 1280 px, márgenes iguales que antes. Explorar sigue a todo el ancho con el mapa.
+
+- [ ] En escritorio, Favoritos, Mis casas, Cuenta, Calendario y «No encontramos esta página» muestran su título arriba a la izquierda, sin repetir el logo debajo de la barra. En el móvil, esos títulos siguen ocultos como antes.
+
+- [ ] En escritorio, abra una ficha desde un enlace (pestaña nueva), una ficha inexistente (`/casa/CT-99999`), Ayuda, «Promoción y suscripción» e Ingresar desde un flujo (por ejemplo, Mis casas sin sesión). Todas llevan la barra superior. En la ficha, la barra aparece sin que la foto baje al terminar de cargar; con sesión muestra sus pestañas y sin sesión «Ingresar». Ayuda y la suscripción se leen en una columna de unos 720 px. En el móvil, la ficha sigue sin barra superior.
+
+- [ ] En escritorio, abra `/explorar/buscar` y compruebe que lleva a Explorar con la misma búsqueda.
+
+- [ ] En escritorio, en el detalle de una casa activa, «Ver ficha» está en la cabecera, a la derecha del nombre, y ya no flota sobre las filas. Edite Ubicación a 1280 px y compruebe que nada la tapa. En el móvil, «Ver ficha» sigue flotando abajo.
+
 - [ ] Abra Nombre, Precio, Ubicación y Suscripción desde el detalle de una casa en escritorio. Cada vista se abre a la derecha. Al desplazarse, la barra superior sigue fija y el resumen de la casa permanece visible a la izquierda. Use Volver para recuperar la lista de datos. Guarde un cambio y compruebe que vuelve al detalle con el dato actualizado.
 
 - [ ] Abra el detalle de una casa activa desde Mis casas a 1024 y 1280 px. La barra superior permanece visible. La foto, las estadísticas, Compartir y WhatsApp de esta casa quedan a la izquierda. Los datos editables y Suscripción quedan a la derecha. Repita con un borrador y compruebe que «Seguir publicando» queda a la derecha. En móvil, el contenido sigue en una columna.

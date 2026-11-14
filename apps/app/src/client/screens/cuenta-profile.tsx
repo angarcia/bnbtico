@@ -10,7 +10,7 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
-import { FlowHeader } from "../chrome";
+import { FlowHeader, RootHeader } from "../chrome";
 import { isDesktop, useDesktop } from "../desktop";
 import { PublishPromoRow } from "../publish-promo";
 import { useFavorites } from "../../shared/favorites-store";
@@ -87,7 +87,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
   const accountContent = (
     <>
       {/* Como pestaña (C4), sin flecha ni título visible; al editar o desde un flujo, con su cabecera. */}
-      {tab ? <h1 className="sr-only">Cuenta</h1> : <FlowHeader title="Cuenta" back="/explorar" onBack={back} />}
+      {tab ? (desktop ? null : <h1 className="sr-only">Cuenta</h1>) : <FlowHeader title="Cuenta" back="/explorar" onBack={back} />}
       {a ? (
         <section className="card row account-card">
           <span className="avatar" aria-hidden="true">
@@ -189,7 +189,11 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       ) : null}
     </>
   );
+  // En escritorio, la pestaña lleva cabecera de página con el título visible (revisión 2026-11-13, A9).
+  const pageHeader = tab && desktop ? <RootHeader title="Cuenta" /> : null;
   return splitAccount ? (
+    <>
+    {pageHeader}
     <div className="owner-account-layout">
       <div>{accountContent}</div>
       <div>
@@ -198,7 +202,13 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
         </Suspense>
       </div>
     </div>
-  ) : accountContent;
+    </>
+  ) : (
+    <>
+      {pageHeader}
+      {accountContent}
+    </>
+  );
 }
 
 /** Favoritos dentro de Cuenta para el propietario (su barra ya tiene cinco pestañas). */

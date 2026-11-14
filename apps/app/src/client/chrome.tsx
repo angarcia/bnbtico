@@ -42,7 +42,7 @@ const BARE_PATHS = new Set(["/favoritos", "/propietario/casas", "/propietario/ca
 /** «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta); desde las demás, a la pantalla de llegada. */
 const nextFor = (pathname: string) => (pathname === "/favoritos" ? "/favoritos" : undefined);
 
-export function TabsFrame({ children, ownerHouseDetail = false, publishing = false }: { children: ReactNode; ownerHouseDetail?: boolean; publishing?: boolean }) {
+export function TabsFrame({ children, ownerHouseDetail = false, publishing = false, measure = false }: { children: ReactNode; ownerHouseDetail?: boolean; publishing?: boolean; measure?: boolean }) {
   const adminZone = useLocation({ select: (l) => l.pathname.startsWith("/admin") });
   const pathname = useLocation({ select: (l) => l.pathname });
   useHidingChrome();
@@ -139,7 +139,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
     <div className={`app${desktop ? " desktop-app" : ""}${publishing ? " publish-flow" : ""}`}>
       {desktop && navigation}
       <UnderTopBar.Provider value={bare}>
-        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}${ownerHouseDetail ? " owner-house-detail" : ""}`}>{children}</main>
+        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}${ownerHouseDetail ? " owner-house-detail" : ""}${measure ? " view-measure" : ""}`}>{children}</main>
       </UnderTopBar.Provider>
       {!desktop && navigation}
       {desktopInquiries && inquiriesOpen && (
@@ -164,6 +164,8 @@ const UnderTopBar = createContext(false);
 export function FlowFrame({ children }: { children: ReactNode }) {
   const desktop = useDesktop();
   const help = useLocation({ select: ({ pathname }) => pathname === "/ayuda" });
+  const accountFlow = useLocation({ select: ({ pathname }) => pathname.startsWith("/cuenta") });
+  const subscription = useLocation({ select: ({ pathname }) => pathname === "/propietario/suscripcion" });
   const verifyingCode = useLocation({ select: ({ pathname }) => pathname === "/cuenta/codigo" });
   const publishing = useLocation({ select: ({ pathname }) => /^(?:\/propietario)?\/publicar(?:\/|$)/.test(pathname) });
   const ownerHouseDetail = useLocation({ select: ({ pathname }) => /^\/propietario\/casas\/[^/]+\/?$/.test(pathname) });
@@ -174,7 +176,10 @@ export function FlowFrame({ children }: { children: ReactNode }) {
     /^\/propietario\/casas\/[^/]+\/editar\/[^/]+\/?$/.test(pathname)
   });
   if (desktop && (ownerHouseDetail || editingField)) return <TabsFrame ownerHouseDetail>{children}</TabsFrame>;
-  if (desktop && help) return <TabsFrame>{children}</TabsFrame>;
+  // En escritorio, la ayuda, Ingresar y el código desde un flujo y la suscripción llevan la barra superior; las de texto, con
+  // líneas de lectura (revisión 2026-11-13, A4 y A9).
+  if (desktop && (help || accountFlow)) return <TabsFrame measure>{children}</TabsFrame>;
+  if (desktop && subscription) return <TabsFrame measure>{children}</TabsFrame>;
   if (desktop && publishing) return <TabsFrame publishing>{children}</TabsFrame>;
   return (
     <div className={editingPhotos ? "app edit-photos-flow" : publishing || editingField ? "app publish-flow" : "app"}>
@@ -183,10 +188,22 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Bajo la barra superior, solo el título (y `action` en su fila, si la hay); sin ella (/admin, «no encontrada»), también
+/** En escritorio, cabecera de página con el título y `action` a la derecha. En el teléfono, bajo la barra superior, solo el título (y `action` en su fila, si la hay); sin ella (/admin, «no encontrada»), también
  *  el logo tipográfico sin fondo, de 38 px de alto (que lleva a `home`), y `role="banner"`, la cabecera de la página. */
 export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
   const under = useContext(UnderTopBar);
+  const desktop = useDesktop();
+  // En escritorio, bajo la barra superior: cabecera de página con el título visible, sin repetir el logo (revisión 2026-11-13, A9).
+  if (desktop)
+    return (
+      <header className="header-root page-header">
+        <div className="page-header-text">
+          <h1>{title}</h1>
+          {aside}
+        </div>
+        {action ? <div className="page-header-actions">{action}</div> : null}
+      </header>
+    );
   return (
     <header className="header-root" role={under ? undefined : "banner"}>
       {under ? (
@@ -253,7 +270,7 @@ export function Placeholder({ title, text, home, action }: { title: string; text
   return (
     <>
       <RootHeader title={title} home={home} />
-      <section className="card stack">
+      <section className="card stack placeholder-card">
         <p>{text}</p>
         {action}
       </section>
