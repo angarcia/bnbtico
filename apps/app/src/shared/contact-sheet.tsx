@@ -287,7 +287,8 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
                 min={1}
                 max={maxPeople}
                 step={1}
-                placeholder="–"
+                // En escritorio, «Opcional» en vez del guion: «– − +» parecía un contador sin valor (revisión 2026-11-13, A2).
+                placeholder={inline ? "Opcional" : "–"}
                 value={draft.people ?? ""}
                 aria-invalid={error?.field === "people" || undefined}
                 onChange={(e) => changePeople(parsePeople(e.target.value))}
@@ -328,10 +329,12 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
             aria-busy={status.kind === "sending" || undefined}
           >
             {/* Sin sesión el botón todavía no abre WhatsApp: lleva a verificar el número (revisión UX C2). */}
-            <I.wa size={20} /> {status.kind === "sending" ? "Abriendo WhatsApp…" : signedOut ? "Continuar" : "Abrir WhatsApp"}
+            <I.wa size={20} /> {status.kind === "sending" ? "Abriendo WhatsApp…" : inline ? `Escribir a ${name} por WhatsApp` : signedOut ? "Continuar" : "Abrir WhatsApp"}
           </button>
+          {/* En escritorio, el botón dice a quién y por dónde, y dos avisos en lugar de tres: sin sesión, el del código; con ella,
+              qué verá el anfitrión (revisión 2026-11-13, A3). */}
           {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}
-          <span className="consent">{name} verá su nombre y su WhatsApp.</span>
+          {inline && signedOut ? null : <span className="consent">{name} verá su nombre y su WhatsApp.</span>}
           <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.</span>
         </form>
       </section>

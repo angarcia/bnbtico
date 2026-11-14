@@ -200,6 +200,34 @@ test("una casa con precio al mes lo muestra en la casilla «Alquiler mensual», 
   await expect(tile.locator("small")).toHaveText("₡2 500 000 / mes", { useInnerText: true });
 });
 
+// Revisión de escritorio 2026-11-13, tanda 3 (M1, A3): en escritorio el mensual va junto al precio y no entre las
+// características, que son una lista sin cajas; el contacto dice a quién y por dónde y lleva dos avisos.
+test("en escritorio: mensual junto al precio, características sin cajas y «Escribir a … por WhatsApp» con dos avisos", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/casa/${cara.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("cta-monthly")).toHaveText("Alquiler mensual: ₡2 500 000 / mes", { useInnerText: true });
+  await expect(page.locator(".feature-tiles > .tile-wide")).toBeHidden();
+  const plain = await page.locator(".feature-tiles > div:not(.tile-wide)").first().evaluate((el) => {
+    const c = getComputedStyle(el);
+    return { bg: c.backgroundColor, shadow: c.boxShadow };
+  });
+  expect(plain).toEqual({ bg: "rgba(0, 0, 0, 0)", shadow: "none" });
+  expect(await page.locator(".listing-head").evaluate((el) => getComputedStyle(el).textAlign)).toBe("left");
+
+  const panel = page.locator(".listing-contact-inline");
+  const host = (await page.locator(".host-name").textContent())!;
+  await expect(panel.getByRole("button", { name: `Escribir a ${host} por WhatsApp` })).toBeVisible();
+  await expect(panel.getByLabel("Personas (opcional)")).toHaveAttribute("placeholder", "Opcional");
+  await expect(panel.locator(".consent")).toHaveCount(1);
+  await expect(panel.locator(".consent")).toHaveText(/necesita verificar su WhatsApp con un código/);
+  expect(await panel.locator(".safety").evaluate((el) => getComputedStyle(el).color)).toBe(await page.locator("body").evaluate((el) => getComputedStyle(el).color));
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByTestId("cta-monthly")).toBeHidden();
+  await expect(page.locator(".feature-tiles > .tile-wide")).toBeVisible();
+});
+
 // Densidad y tarjetas (Daniel, 2026-10-29): la ficha no lleva «₡ | $»; la barra muestra las dos monedas, elija la que elija.
 test("la ficha muestra las dos monedas, sin selector", async ({ page }) => {
   const seen = watch(page);

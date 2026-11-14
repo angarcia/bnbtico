@@ -61,6 +61,8 @@
 /* Alto de partida (antes de medir la barra): el de una casa solo por noches, 140 px de barra menos 16 px de margen. */
 .cta-spacer{height:124px}
 /* Colones a la izquierda (noche y mensual), dólares a la derecha (≈ noche, ≈ mes): las dos monedas siempre, sin selector. */
+/* El mensual junto al precio solo en escritorio (13-escritorio.css). */
+.cta-monthly{display:none}
 .cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
 .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cta-prices .price{line-height:1.1}

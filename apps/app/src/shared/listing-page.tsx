@@ -210,6 +210,13 @@ function PriceColumns({ main, monthly, fx, stay, currency }: { main: Price | nul
           </span>
         ) : null}
         {showMonthly && monthly ? <MonthlyLine monthly={monthly} format={formatCRC} /> : null}
+        {/* En escritorio el mensual va junto al precio y no entre las características (revisión 2026-11-13, M1); en el
+            móvil sigue en su casilla. Solo lo muestra el CSS: el servidor y la hidratación pintan lo mismo. */}
+        {monthly && !showMonthly ? (
+          <span className="cta-monthly" data-testid="cta-monthly">
+            {MONTHLY_LABEL}: {isNegotiable(monthly) ? "a negociar" : `${formatCRC(monthly.amount)} / mes`}
+          </span>
+        ) : null}
       </div>
       {price || monthlyAmount !== null ? (
         <div className="cta-usd">

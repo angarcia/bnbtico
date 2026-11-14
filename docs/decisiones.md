@@ -1,3 +1,7 @@
+## 2026-11-13 · Presupuesto de la hoja de contacto
+
+El límite del trozo diferido de la hoja de contacto pasa de 7,6 a 7,7 kB comprimidos (aprobado por Ana). Lo pide la tanda 3 de la revisión de escritorio: en el panel de contacto de la ficha, el botón dice «Escribir a [anfitrión] por WhatsApp», «Personas» muestra «Opcional» y, sin sesión, queda un solo aviso de verificación. Tras compactar el cambio seguía sobrando 23 B. El JS inicial no cambia de límite.
+
 ## 2026-11-13 · Revisión de la web de escritorio: criterios para implementarla
 
 Tras la revisión de la web de escritorio (`.scratch/revision-web-portatil/index.html`), se fijan seis criterios antes de implementarla por tandas:

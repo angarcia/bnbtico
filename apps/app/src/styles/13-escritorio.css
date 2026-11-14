@@ -682,7 +682,33 @@
   }
   .desktop-nav .desktop-inquiries { gap: 8px; padding: 0 12px; }
   .desktop-nav .desktop-inquiries > span { font: var(--w-medium) 16px/1.25 var(--body); white-space: nowrap; }
+
+  /* Revisión de escritorio 2026-11-13, tanda 3 (A3, M1): la ficha alineada a la izquierda, las características como lista
+     sin cajas, el mensual junto al precio, la descripción a medida de lectura y los avisos del contacto en tinta. La barra
+     superior ya lleva a Explorar: la flecha de la foto sobra (se oculta sin mover compartir y el corazón). */
+  .app:has(> .site-top-bar) .listing-view > .cta-bar { top: calc(var(--desktop-nav-height) + 16px); }
+  .listing-view .hero .top > a[aria-label="Volver a Explorar"] { visibility: hidden; }
+  .listing-view .listing-head { align-items: flex-start; text-align: left; }
+  .listing-view .listing-capacity-icons { justify-content: flex-start; }
+  .listing-view .listing-description { max-width: var(--measure); }
+  .listing-view .feature-tiles { gap: 2px 24px; }
+  .listing-view .feature-tiles div {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 16px;
+    text-align: left;
+  }
+  .listing-view .feature-tiles .tile-wide { display: none; }
+  .listing-view .listing-calendar { max-width: 640px; }
+  .cta-monthly { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .listing-contact-inline.sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]) { width: 136px; }
+  .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular, 400); }
 }
+
 
 /* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */
 @media (min-width: 1024px) and (prefers-color-scheme: dark) {
