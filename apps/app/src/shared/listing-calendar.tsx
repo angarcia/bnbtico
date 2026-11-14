@@ -12,6 +12,7 @@ import type { Currency } from "../domain/currency";
 import type { PublicListing } from "../domain/listing";
 import { canTapDay, RANGE_BUSY_MESSAGE, tapRangeFree, type RangeState } from "../domain/range";
 import { hasBusyNight, listingStay, MONTHLY_ESTIMATE_NIGHTS, stayLine } from "../domain/stay-price";
+import { useDesktop } from "../client/desktop";
 import { I } from "./icons";
 import { listingDaysQuery } from "./listing-query";
 import { MonthGrid, MonthLegend, WeekdayRow } from "./month-grid";
@@ -36,6 +37,7 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
   const today = costaRicaToday(Date.now());
   const win = calendarWindow(today);
   const shared = useStayDates();
+  const desktop = useDesktop();
   const monthOf = (day: string) => {
     const m = day.slice(0, 7);
     return m < win.firstMonth ? win.firstMonth : m > win.lastMonth ? win.lastMonth : m;
@@ -103,6 +105,8 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
         days={days}
         base={base}
         currency={currency}
+        // En escritorio cabe el símbolo: «₡120 000» y no «120 000» (Ana, 2026-11-13); en el teléfono, sin él por espacio.
+        showCurrencySymbol={desktop}
         fx={fx}
         label={title}
         range={blocked ? NO_RANGE : value}

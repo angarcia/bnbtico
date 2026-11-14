@@ -570,7 +570,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 ### 3.14 Calendario
 
-- [ ] En escritorio, compruebe que las casillas con precio muestran «₡45 000» con colones elegidos y «$» al cambiar a dólares desde la barra superior.
+- [ ] En escritorio, compruebe que las casillas con precio muestran «₡45 000» con colones elegidos y «$» al cambiar a dólares desde la barra superior, en el Calendario del anfitrión, en el del admin y en el de la ficha pública. En el móvil van sin símbolo por espacio.
 
 - [ ] En escritorio (1280 × 800), seleccione una o varias noches. Debajo de las acciones del menú izquierdo deben aparecer la disponibilidad, el precio, Cancelar y Guardar cambios. Compruebe que puede editar, guardar y volver a seleccionar noches sin que el editor tape la cuadrícula. En móvil, compruebe que el editor sigue al pie de la pantalla.
 

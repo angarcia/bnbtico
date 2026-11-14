@@ -310,7 +310,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
               days={days}
               base={base}
               currency={currency}
-              showCurrencySymbol={desktop && !port.admin}
+              showCurrencySymbol={desktop}
               fx={fx.crcPerUsd}
               selected={sel.days}
               onSelect={editable ? (d) => (setSel(selectDay(sel, d, ctx)), setProblem(null)) : undefined}
