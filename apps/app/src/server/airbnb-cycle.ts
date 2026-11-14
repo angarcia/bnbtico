@@ -9,11 +9,13 @@ type CycleDeps = { fetch: typeof fetch; now(): number; log(line: string): void }
 
 export async function runAirbnbCycle(service: AirbnbCycleService | null, deps: CycleDeps, cron: string, scheduledTime: number): Promise<void> {
   if (cron !== AIRBNB_CRON) return;
-  const date = new Date(scheduledTime);
-  if (!Number.isFinite(date.getTime()) || date.getUTCHours() % 3 !== 0 || scheduledTime % 3_600_000 !== 17 * 60_000) return;
+  // Cloudflare no manda la hora programada exacta (medido: 06:17:54.627): el ciclo es su minuto, con segundos a cero.
+  const slot = Math.floor(scheduledTime / 60_000) * 60_000;
+  const date = new Date(slot);
+  if (!Number.isFinite(date.getTime()) || date.getUTCHours() % 3 !== 0 || date.getUTCMinutes() !== 17) return;
   const cycle = date.toISOString();
   const startedAt = deps.now();
-  const delayMs = startedAt - scheduledTime;
+  const delayMs = startedAt - slot;
   const log = (details: Record<string, unknown>) => deps.log(JSON.stringify({ event: "airbnb_cycle", cycle, delayMs, ...details }));
   if (!service || delayMs < 0 || delayMs >= MAX_DELAY_MS) {
     log({ skipped: service ? "outside_window" : "disabled_or_unconfigured" });

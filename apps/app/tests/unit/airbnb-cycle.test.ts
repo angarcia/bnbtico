@@ -31,6 +31,14 @@ describe("ciclo de Airbnb", () => {
     expect(JSON.stringify(deps.log.mock.calls)).not.toContain(TEST_AIRBNB_URL);
   });
 
+  it("acepta la hora programada con segundos de desfase, como la manda Cloudflare", async () => {
+    // Medido en 3bstays-pruebas el 2026-11-14: el cron de Airbnb llegó con scheduledTime 06:17:54.627.
+    const { service, deps } = fixture();
+    await runAirbnbCycle(service, { ...deps, now: () => slot + 56_000 }, AIRBNB_CRON, slot + 54_627);
+    expect(service.due).toHaveBeenCalledWith(new Date(slot).toISOString());
+    expect(service.claimCycle).toHaveBeenCalledWith("a", expect.any(String), new Date(slot).toISOString());
+  });
+
   it("omite cron ajeno, retraso de una hora y reservas rechazadas", async () => {
     const { service, deps } = fixture();
     await runAirbnbCycle(service, deps, "17 * * * *", slot);
