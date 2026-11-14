@@ -1,3 +1,14 @@
+## 2026-11-13 · Revisión de la web de escritorio: criterios para implementarla
+
+Tras la revisión de la web de escritorio (`.scratch/revision-web-portatil/index.html`), se fijan seis criterios antes de implementarla por tandas:
+
+- El botón principal sigue en verde tonal (decisión del 2026-11-05). En escritorio, el secundario lleva contorno y el desactivado pasa a gris claro, también en modo oscuro, para que el principal no parezca desactivado.
+- Admin entra en esta ronda: barra superior propia en escritorio y revisión de anuncio en dos columnas, con la decisión fija a la derecha. Hoy las pestañas móviles flotan a media pantalla y la barra de decisión tapa el mensaje para el anfitrión.
+- En escritorio, «Filtros» está siempre visible en la barra de búsqueda de Explorar. En móvil sigue apareciendo tras elegir Lugar. Sustituye, solo para escritorio, la regla de mostrar Filtros tras elegir Lugar.
+- Publicar en escritorio vuelve a indicar el progreso, como una línea de texto «Paso n de 4» sobre el título del paso, sin barra. Corrige la retirada del progreso de este mismo día: sin él no se sabía cuánto faltaba.
+- El contenido de escritorio tiene un ancho máximo de 1280 px con márgenes. Explorar con mapa sigue a ancho completo.
+- La retirada del lema de la web (commit `c2b529f` de main) no se trae a develop por separado: llega al juntar las ramas.
+
 ## 2026-11-13 · Presupuestos de los módulos diferidos de escritorio
 
 Se suman 100 B comprimidos a cada uno de los tres límites que todavía fallaban tras reducir código. Contacto pasa a 7,6 kB, las pantallas de las pestañas a 25,3 kB y la ficha editable a 5,1 kB. El presupuesto inicial de 160 kB se mantiene.
