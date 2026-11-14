@@ -37,7 +37,7 @@ import { reportError } from "../../shared/beacon";
 import { costaRicaToday } from "../../domain/inquiry";
 import { type Listing } from "../../domain/listing";
 import { resumeStep } from "../../domain/publish-rules";
-import { formatCRC } from "../../domain/money";
+import { formatCRC, formatMoney } from "../../domain/money";
 import { I } from "../../shared/icons";
 import { whenIdle } from "../../shared/idle";
 import { useCurrency } from "../../shared/currency";
@@ -270,6 +270,12 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
           <CurrencySwitch className="calendar-local-currency" />
         </div>
         <AirbnbLegend days={query.data} />
+        {/* En escritorio el día solo muestra su precio si difiere del base, que va aquí (revisión 2026-11-13, M2). */}
+        {desktop && base !== null ? (
+          <p className="small muted cal-base-line" data-testid="calendar-base-price">
+            Precio base: {formatMoney(base, currency, fx.crcPerUsd)} por noche. En los días solo aparece si cambia.
+          </p>
+        ) : null}
         {editable && sel.days.length > 0 ? (
           <Panel
             sel={sel}

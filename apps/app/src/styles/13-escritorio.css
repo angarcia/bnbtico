@@ -707,8 +707,63 @@
   .cta-monthly { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .listing-contact-inline.sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]) { width: 136px; }
   .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular, 400); }
-}
 
+  /* Revisión de escritorio 2026-11-13, tanda 4 (A8, M2, M7, M8). Solo CSS salvo el precio base del calendario: el trozo
+     de las pantallas de las pestañas está al límite. */
+  /* Mis casas: el resumen en una línea de pastillas con «Añadir casa» a la derecha; tarjetas de igual alto con la foto
+     4:3, las acciones al pie y «Calendario» y «Consultas» con texto. */
+  .desktop-app .my-houses-summary { align-items: center; }
+  .desktop-app .my-houses-summary .grid-3 { display: flex; flex-wrap: wrap; gap: 8px; }
+  .desktop-app .my-houses-summary .tile { flex-direction: row; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; }
+  .desktop-app .my-houses-summary .tile b { font: var(--w-strong) 16px/1.2 var(--body); }
+  .desktop-app .my-houses-summary .tile span { font-size: 15px; }
+  .desktop-app .my-houses-summary .new-house {
+    flex: none;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--r-input);
+    background: var(--state-soft);
+    box-shadow: 0 2px 5px color-mix(in srgb, var(--primary) 14%, transparent);
+    font-weight: var(--w-strong);
+    text-decoration: none;
+  }
+  .desktop-app .my-houses-summary .new-house::after { content: "Añadir casa"; }
+  .desktop-app .house-list { align-items: stretch; gap: 20px; }
+  .desktop-app .house-list .house-photo { aspect-ratio: 4 / 3; }
+  .desktop-app .house-list .house-card > :is(.house-actions, .row.gap-8):last-child { margin-top: auto; }
+  .desktop-app .house-list .house-card > .row.gap-8:last-child { margin-bottom: 14px; }
+  .desktop-app .house-actions { flex-wrap: nowrap; }
+  .desktop-app .house-actions .house-share { flex: none; width: auto; }
+  .desktop-app .house-tools { gap: 4px; }
+  .desktop-app .house-tool { flex: none; width: auto; gap: 6px; padding: 0 8px; }
+  .desktop-app .house-tool::after { font-size: 15px; font-weight: var(--w-medium); }
+  .desktop-app .house-tool[href*="calendario"]::after { content: "Calendario"; }
+  .desktop-app .house-tool[href*="actividad"]::after { content: "Consultas"; }
+
+  /* Detalle de casa: «Editar» deja de competir en verde en cada fila; se enciende al pasar por la fila. */
+  .desktop-app .house-field .account-profile-toggle { color: var(--muted); }
+  .desktop-app .house-field:hover .account-profile-toggle,
+  .desktop-app .house-field .account-profile-toggle:focus-visible { color: var(--primary); }
+
+  /* Calendario: casillas más bajas para ver el mes entero, los pasados sin precio ni fondo y el precio solo en los días
+     que lo cambian (el base va bajo la leyenda). */
+  .desktop-app .owner-calendar .month-grid .day { height: 64px; gap: 4px; padding-top: 0; justify-content: center; }
+  .desktop-app .owner-calendar .month-grid .day:not(.is-special) .day-sub,
+  .desktop-app .owner-calendar .month-grid .day.is-past .day-sub { display: none; }
+  .desktop-app .owner-calendar .month-grid .day.is-special .day-sub { color: var(--brand-ink); font-weight: var(--w-medium); }
+  .desktop-app .owner-calendar .month-grid .day.is-past { opacity: 1; background: transparent; color: var(--muted); }
+  .desktop-app .owner-calendar .month-legend .swatch { width: 16px; height: 16px; }
+  .cal-base-line { margin: 0; }
+
+  /* Cuenta: títulos al mismo nivel, la cuota al tamaño del texto y «Parar suscripción» en terracota a la izquierda. */
+  .desktop-app .owner-account-layout :is(h2, .card-title) { font-size: 20px; }
+  .desktop-app .owner-account-layout .account-profile h3,
+  .desktop-app .owner-account-layout h3:not(.account-name, .sub-house-title) { font-size: 20px; }
+  .desktop-app .sub-price b { font-size: 18px; }
+  .desktop-app .sub-stop { align-self: flex-start; padding-inline: 0; color: var(--brand-ink); text-decoration: none; }
+}
 
 /* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */
 @media (min-width: 1024px) and (prefers-color-scheme: dark) {

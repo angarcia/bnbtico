@@ -111,7 +111,9 @@ describe("MonthGrid", () => {
     expect(cell(out, 21)).toMatch(/class="day in-range"/);
     expect(cell(out, 22)).toMatch(/class="day in-range"/);
     expect(cell(out, 23)).toMatch(/class="day range-end is-last"/);
-    expect(cell(out, 24)).toMatch(/class="day"/);
+    // El 24 tiene precio especial: lleva `is-special`, con el que el calendario de escritorio solo enseña esos precios.
+    expect(cell(out, 24)).toMatch(/class="day is-special"/);
+    expect(cell(out, 25)).toMatch(/class="day"/);
     expect(cell(out, 20)).toContain('aria-pressed="true"');
     expect(cell(out, 23)).toContain('aria-pressed="true"');
     expect(cell(out, 21)).toContain('aria-pressed="false"');

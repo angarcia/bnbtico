@@ -75,7 +75,7 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", showCurr
             const isEnd = !off && (g.day === start || g.day === end);
             const inside = !off && !!start && !!end && g.day > start && g.day < end;
             const band = isEnd && start && end ? (g.day === start ? " is-start" : " is-last") : "";
-            const cls = `day${off ? " is-past" : s.available ? "" : " is-busy"}${isEnd ? " range-end" : ""}${inside ? " in-range" : ""}${band}`;
+            const cls = `day${off ? " is-past" : s.available ? "" : " is-busy"}${!off && s.special ? " is-special" : ""}${isEnd ? " range-end" : ""}${inside ? " in-range" : ""}${band}`;
             const name = [
               longDateWithYear(g.day),
               off ? null : s.available ? "disponible" : "ocupado",

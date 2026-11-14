@@ -192,6 +192,19 @@ test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la 
   await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
 });
 
+// Revisión de escritorio 2026-11-13, tanda 4 (A8): «Añadir casa», «Calendario» y «Consultas» con texto en escritorio.
+test("Mis casas en escritorio: «Añadir casa» con texto, las herramientas de la tarjeta con su nombre y la foto 4:3", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/propietario/casas");
+  const add = page.getByRole("link", { name: "Nueva casa" });
+  expect(await add.evaluate((el) => getComputedStyle(el, "::after").content)).toBe('"Añadir casa"');
+  const tool = page.locator(".house-tool").first();
+  await expect(tool).toBeVisible();
+  expect(await tool.evaluate((el) => getComputedStyle(el, "::after").content)).toBe('"Calendario"');
+  const photo = (await page.locator(".house-list .house-photo").first().boundingBox())!;
+  expect(Math.abs(photo.width / photo.height - 4 / 3)).toBeLessThan(0.02);
+});
+
 // Revisión de escritorio 2026-11-13, A1: en escritorio «Ver ficha» va en la cabecera; flotando tapaba la fila que se edita.
 test("detalle en escritorio: «Ver ficha» en la cabecera de la casa, sin flotar", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });

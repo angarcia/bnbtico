@@ -198,6 +198,12 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] En escritorio, abra una ficha con precio al mes. El título, el tipo, la zona y la capacidad van a la izquierda. Las características son una lista con icono y texto, sin cajas, y «Alquiler mensual» aparece bajo el precio del panel derecho, no entre ellas. La foto no lleva la flecha de volver (la barra superior lleva a Explorar). Sin sesión, el botón dice «Escribir a [anfitrión] por WhatsApp», debajo hay un aviso de verificación y otro de pagos en tinta, y «Personas» muestra «Opcional» hasta elegir un número. Al bajar, el panel queda fijo bajo la barra superior. En el móvil, la ficha y la hoja de contacto siguen como antes.
 
+- [ ] En escritorio, Mis casas: bajo el título, el resumen va en pastillas («2 activas», «1 en revisión») y «Añadir casa» a la derecha. Las tarjetas miden lo mismo, con la foto 4:3 y las acciones al pie, y «Calendario» y «Consultas» llevan su nombre. En el detalle de una casa, «Editar» va en gris y se pone verde al pasar por la fila.
+
+- [ ] En escritorio, Calendario: un mes cabe en pantalla con casillas bajas. Los días pasados van sin fondo ni precio. Los días al precio base no muestran precio y los que lo cambian lo muestran en terracota. Bajo la leyenda, «Precio base: ₡… por noche» en la moneda elegida. Cambie el precio de un día y compruebe que aparece en su casilla. En el móvil, cada casilla sigue con su precio.
+
+- [ ] En escritorio, Cuenta del anfitrión: «Mi perfil», «Promoción y suscripción», «Método de pago» y «Sus casas» tienen el mismo tamaño de título, la cuota («₡0 / mes») va al tamaño del texto y «Parar suscripción» es texto terracota alineado a la izquierda.
+
 - [ ] En escritorio, en claro y en oscuro: la pestaña actual de la barra va en arena con el texto terracota y es la única marcada. En «₡ | $», la moneda elegida va en un botón claro sobre gris neutro. «Ingresar» es un botón con contorno. Con casas, «Consultas» lleva el texto a 1280 px o más y el contador sigue visible. Los botones secundarios (por ejemplo «Seguir publicando» o «Empezar otro») llevan contorno, y un botón desactivado se ve gris, distinto del principal verde.
 
 - [ ] En escritorio, en el detalle de una casa activa, «Ver ficha» está en la cabecera, a la derecha del nombre, y ya no flota sobre las filas. Edite Ubicación a 1280 px y compruebe que nada la tapa. En el móvil, «Ver ficha» sigue flotando abajo.
