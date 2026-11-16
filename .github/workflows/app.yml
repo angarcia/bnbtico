@@ -1,20 +1,32 @@
 name: app
 
+# Lo que no es código no gasta minutos de Actions (2026-11-16): documentación, material de trabajo, copias, ajustes de
+# los agentes y las maquetas HTML. design/prototype y las fotos de design/pantallas sí cuentan (las leen las pruebas).
 on:
   push:
     branches: [develop, main, refactor/limpieza-segura]
     paths-ignore:
       - "docs/**"
       - "**/*.md"
+      - ".scratch/**"
+      - "backups/**"
+      - ".claude/**"
+      - ".agents/**"
+      - "design/pantallas/**/*.html"
+      - "design/logo/**"
+      - "design/tokens/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".scratch/**"
+      - "backups/**"
+      - ".claude/**"
+      - ".agents/**"
+      - "design/pantallas/**/*.html"
+      - "design/logo/**"
+      - "design/tokens/**"
   workflow_dispatch:
-    inputs:
-      shards:
-        description: Particiones E2E (solo verificación, sin publicar)
-        required: true
-        default: "2"
-        type: choice
-        options: ["2", "3"]
 
 concurrency:
   group: app-${{ github.ref == 'refs/heads/main' && github.ref || github.run_id }}
@@ -37,8 +49,6 @@ jobs:
     outputs:
       environment: ${{ steps.target.outputs.environment }}
       build: ${{ steps.target.outputs.build }}
-      matrix: ${{ steps.shards.outputs.matrix }}
-      total: ${{ steps.shards.outputs.total }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -58,15 +68,6 @@ jobs:
         id: target
         working-directory: apps/app
         run: node scripts/deploy-target.mjs select
-      - name: Matriz E2E
-        id: shards
-        working-directory: apps/app
-        env:
-          SHARD_COUNT: ${{ inputs.shards || '2' }}
-        run: |
-          matrix=$(node scripts/ci-e2e.mjs matrix "$SHARD_COUNT")
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo "total=$SHARD_COUNT" >> "$GITHUB_OUTPUT"
 
   quality:
     concurrency:
@@ -126,56 +127,19 @@ jobs:
         if: always()
         run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"
 
-  database:
+  # Base, e2e, tamaño y Lighthouse en un solo runner (2026-11-16, minutos de Actions): un solo arranque de Supabase, una
+  # sola instalación y un solo build contra la base local, en vez de cuatro. No corre en pull requests: allí basta quality
+  # y la batería completa se ejecuta una vez, en el push que despliega.
+  integration:
     concurrency:
-      group: app-verify-database-${{ github.ref }}
+      group: app-verify-integration-${{ github.ref }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
     needs: plan
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: apps/app
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /*
-            !/.scratch/
-            !/backups/
-            !/docs/
-            !/scripts/
-            !/.claude/
-            !/design/
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Supabase de contratos
-        working-directory: .
-        run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime
-      - name: Tipos de la base al día con las migraciones
-        run: |
-          pnpm db:types
-          git diff --exit-code -- src/domain/database.types.ts || { echo "::error::database.types.ts no coincide con las migraciones: ejecute pnpm --filter app db:types y confirme el resultado."; exit 1; }
-      - name: Pruebas de base (contrato contra PostgREST)
-        run: pnpm test:db
-
-  e2e:
-    concurrency:
-      group: app-verify-e2e-${{ github.ref }}-${{ matrix.shard }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
-    needs: plan
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
-      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-e2e-${{ matrix.shard }}-of-${{ matrix.total }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-integration
     defaults:
       run:
         working-directory: apps/app
@@ -208,6 +172,12 @@ jobs:
       - name: Supabase local (Docker del runner)
         working-directory: .
         run: /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'supabase\t%e\t%x' pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime >> "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
+      - name: Tipos de la base al día con las migraciones
+        run: |
+          pnpm db:types
+          git diff --exit-code -- src/domain/database.types.ts || { echo "::error::database.types.ts no coincide con las migraciones: ejecute pnpm --filter app db:types y confirme el resultado."; exit 1; }
+      - name: Pruebas de base (contrato contra PostgREST)
+        run: pnpm test:db
       - name: Variables locales para las pruebas de navegador
         run: /usr/bin/time -a -o "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv" -f 'variables-locales\t%e\t%x' pnpm dev:vars >> "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.log" 2>&1
       - name: Build local para las pruebas de navegador (contra Supabase local)
@@ -223,70 +193,28 @@ jobs:
         if: always() && steps.preparation.outputs.safe_to_upload == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-preparation-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}
+          name: e2e-preparation-1-of-1-attempt-${{ github.run_attempt }}
           path: ${{ steps.preparation.outputs.publish }}
           retention-days: 3
       - name: Ficha real, hidratación y shell (Pixel 7)
         id: e2e
-        run: node scripts/ci-artifacts.mjs e2e "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "${{ matrix.shard }}" "${{ matrix.total }}"
+        run: node scripts/ci-artifacts.mjs e2e "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "1" "1"
       - name: Diagnóstico de Playwright
         if: always() && steps.e2e.outputs.safe_to_upload == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}
+          name: playwright-1-of-1-attempt-${{ github.run_attempt }}
           path: ${{ steps.e2e.outputs.publish }}
           retention-days: 3
       - name: Puerta de tamaño (zona privada < 160 KB gz)
         run: pnpm size
-      - name: Borrar diagnósticos privados
-        if: always()
-        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.tsv" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"
-
-  lighthouse:
-    concurrency:
-      group: app-verify-lighthouse-${{ github.ref }}
-      cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
-    needs: plan
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      CI_ARTIFACT_NAME: pw-${{ github.run_id }}-${{ github.run_attempt }}-lighthouse
-    defaults:
-      run:
-        working-directory: apps/app
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /*
-            !/.scratch/
-            !/backups/
-            !/docs/
-            !/scripts/
-            !/.claude/
-            !/design/*
-            /design/pantallas/
-            !/design/pantallas/*
-            /design/pantallas/fotos/
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Supabase de Lighthouse
-        working-directory: .
-        run: pnpm exec supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor,realtime
-      - run: pnpm dev:vars
-      - run: pnpm build
       # Perfil móvil por defecto de Lighthouse (RTT 150 ms, 1,6 Mbit/s, CPU 4×) con throttling devtools, contra el mismo
       # build local y Supabase local; mediana de 3 ejecuciones. Ver tests/lighthouse/lighthouse.spec.ts.
       # Bloquea en todas las ramas: si falla, no se despliega. (2026-10-23: en develop dejó de bloquear unas horas porque
       # la ficha rozaba los 2,0 s en el runner; con la portada sin competencia mide 1,60 s en el Mac. Ticket 12.)
       - name: Puerta de Lighthouse (LCP ficha < 2,0 s, shell instalado < 2,5 s)
         id: lighthouse
-        run: CHROMIUM_PATH="$(command -v google-chrome)" node scripts/ci-artifacts.mjs lighthouse "$RUNNER_TEMP/$CI_ARTIFACT_NAME"
+        run: CHROMIUM_PATH="$(command -v google-chrome)" node scripts/ci-artifacts.mjs lighthouse "$RUNNER_TEMP/$CI_ARTIFACT_NAME-lighthouse"
       - name: Informes de Lighthouse
         if: always() && steps.lighthouse.outputs.safe_to_upload == 'true'
         uses: actions/upload-artifact@v7
@@ -294,27 +222,16 @@ jobs:
           name: lighthouse-attempt-${{ github.run_attempt }}
           path: ${{ steps.lighthouse.outputs.publish }}
           retention-days: 3
-      - name: Publicar Lighthouse en el pull request
-        if: always() && steps.lighthouse.outputs.safe_to_upload == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          GH_TOKEN: ${{ github.token }}
-          LIGHTHOUSE_SUMMARY: ${{ steps.lighthouse.outputs.publish }}/lighthouse/resumen.md
-        run: |
-          test -f "$LIGHTHOUSE_SUMMARY" || exit 0
-          marker='<!-- 3bstays:lighthouse -->'
-          body="$(printf '%s\n' "$marker"; cat "$LIGHTHOUSE_SUMMARY"; printf '\nCommit `%s` · resumen en el artefacto «lighthouse-attempt-%s».\n' "${{ github.sha }}" "${{ github.run_attempt }}")"
-          id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.number }}/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | tail -1)
-          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" > /dev/null; else gh pr comment ${{ github.event.number }} --body "$body"; fi
       - name: Borrar diagnósticos privados
         if: always()
-        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"
+        run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-lighthouse" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.tsv" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"
 
   report:
     concurrency:
       group: app-verify-report-${{ github.ref }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}
-    needs: [plan, quality, e2e]
-    if: always()
+    needs: [plan, quality, integration]
+    if: always() && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -350,7 +267,7 @@ jobs:
         id: summary
         if: always()
         env:
-          SHARD_COUNT: ${{ needs.plan.outputs.total }}
+          SHARD_COUNT: "1"
         run: node apps/app/scripts/ci-artifacts.mjs report "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "ci-artifacts/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json" ci-artifacts "$SHARD_COUNT"
       - name: Informe combinado
         if: always() && steps.summary.outputs.safe_to_upload == 'true'
@@ -367,12 +284,11 @@ jobs:
     concurrency:
       group: app-publish-${{ needs.plan.outputs.environment }}
       cancel-in-progress: false
-    needs: [plan, quality, database, e2e, lighthouse, report]
+    needs: [plan, quality, integration, report]
     if: >-
       ${{ always() && (github.event_name == 'push' || github.event_name == 'pull_request') &&
           needs.plan.result == 'success' && needs.quality.result == 'success' &&
-          needs.database.result == 'success' && needs.e2e.result == 'success' &&
-          needs.lighthouse.result == 'success' && needs.report.result == 'success' &&
+          needs.integration.result == 'success' && needs.report.result == 'success' &&
           needs.plan.outputs.build == 'true' &&
           (needs.plan.outputs.environment == 'production' ||
            needs.plan.outputs.environment == 'pruebas' ||

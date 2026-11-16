@@ -6,7 +6,7 @@ const workflow = readFileSync(new URL("../../../../.github/workflows/app.yml", i
 const jobs = Object.fromEntries([...workflow.matchAll(/^  ([\w-]+):\n([\s\S]*?)(?=^  [\w-]+:\n|$(?![\s\S]))/gm)]
   .filter((match) => match.index! > workflow.indexOf("jobs:\n"))
   .map((match) => [match[1]!, match[2]!]));
-const required = ["plan", "quality", "database", "e2e", "lighthouse", "report"];
+const required = ["plan", "quality", "integration", "report"];
 
 function concurrency(block: string, github: Record<string, string | number>, environment = "pruebas", shard = 1) {
   const evaluate = (value: string) => value.replace(/\$\{\{([\s\S]*?)\}\}/g, (_, expression: string) =>
@@ -57,24 +57,41 @@ describe("CI aislada", () => {
     }
   });
 
-  it("usa un runner y una base por shard sin cancelar los demás", () => {
-    expect(jobs.e2e).toContain("fail-fast: false");
-    expect(jobs.e2e).toContain("matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}");
-    expect(jobs.e2e).toContain('node scripts/ci-artifacts.mjs e2e "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "${{ matrix.shard }}" "${{ matrix.total }}"');
-    for (const name of ["database", "e2e", "lighthouse"]) {
-      expect(jobs[name]).toContain("runs-on: ubuntu-latest");
-      expect(jobs[name]).toContain("pnpm exec supabase start");
-      expect(jobs[name]).not.toContain("download-artifact");
-    }
-    expect(jobs.database).toContain("pnpm test:db");
-    expect(jobs.database).toContain("pnpm db:types");
-    expect(jobs.lighthouse).not.toContain("pnpm test:e2e");
-    expect(jobs.e2e).not.toContain("pnpm lighthouse");
+  it("base, e2e, tamaño y Lighthouse en un solo runner con un solo Supabase y un solo build", () => {
+    const integration = jobs.integration!;
+    expect(integration).toContain("runs-on: ubuntu-latest");
+    expect(integration).not.toContain("download-artifact");
+    expect(integration).not.toContain("matrix");
+    expect(workflow.match(/pnpm exec supabase start/g)).toHaveLength(1);
+    expect(integration.match(/pnpm build/g)).toHaveLength(1);
+    const order = ["supabase start", "pnpm db:types", "pnpm test:db", "pnpm build", "ci-artifacts.mjs e2e", "pnpm size", "ci-artifacts.mjs lighthouse"];
+    const at = order.map((text) => integration.indexOf(text));
+    expect(at.every((i) => i > 0)).toBe(true);
+    expect([...at].sort((a, b) => a - b)).toEqual(at);
+    expect(integration).toContain('node scripts/ci-artifacts.mjs e2e "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "1" "1"');
+    expect(integration).not.toContain("pnpm test:e2e");
     expect(jobs.quality).toContain("pnpm typecheck");
     expect(jobs.quality).toContain("pnpm test\n");
     expect(jobs.quality).toContain("pnpm test:prototype");
     expect(jobs.quality).toContain("node scripts/ci-artifacts.mjs inventory");
-    expect(jobs.e2e).toContain("pnpm size");
+  });
+
+  it("en pull requests solo corre quality: la batería completa va una vez, en el push que despliega", () => {
+    expect(jobs.integration).toContain("    if: github.event_name != 'pull_request'\n");
+    expect(jobs.report).toContain("    if: always() && github.event_name != 'pull_request'\n");
+    expect(jobs.quality).not.toMatch(/^    if:/m);
+    const results = Object.fromEntries(required.map((job) => [job, { result: "success" }]));
+    expect(deployAllows({ ...results, integration: { result: "skipped" }, report: { result: "skipped" } }, { build: "true", environment: "pruebas" }, "pull_request")).toBe(false);
+  });
+
+  it("lo que no es código no dispara la CI, ni en push ni en pull request", () => {
+    const triggers = workflow.split("\nconcurrency:")[0]!;
+    const lists = [...triggers.matchAll(/paths-ignore:\n((?:      - .+\n)+)/g)].map((m) => m[1]);
+    expect(lists).toHaveLength(2);
+    expect(lists[0]).toBe(lists[1]);
+    for (const path of ['"docs/**"', '"**/*.md"', '".scratch/**"', '"backups/**"', '"design/pantallas/**/*.html"']) expect(lists[0]).toContain(path);
+    // Lo que leen las pruebas sigue disparándola.
+    expect(lists[0]).not.toMatch(/design\/prototype|design\/pantallas\/fotos|"design\/\*\*"/);
   });
 
   it("reconstruye el deploy en checkout limpio sin artefactos ni base local", () => {
@@ -90,10 +107,11 @@ describe("CI aislada", () => {
     const uploads = [...workflow.matchAll(/uses: actions\/upload-artifact@v7\n([\s\S]*?)(?=\n      - |\n  [\w-]+:|$)/g)];
     expect(uploads.length).toBeGreaterThanOrEqual(5);
     for (const upload of uploads) expect(upload[1]).toContain("retention-days: 3");
-    expect(jobs.e2e).toContain("name: playwright-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}");
-    expect(jobs.e2e).toContain("name: e2e-preparation-${{ matrix.shard }}-of-${{ matrix.total }}-attempt-${{ github.run_attempt }}");
+    expect(jobs.integration).toContain("name: playwright-1-of-1-attempt-${{ github.run_attempt }}");
+    expect(jobs.integration).toContain("name: e2e-preparation-1-of-1-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("if: always()");
-    expect(jobs.report).toContain("needs: [plan, quality, e2e]");
+    expect(jobs.report).toContain("needs: [plan, quality, integration]");
+    expect(jobs.report).toContain('SHARD_COUNT: "1"');
     expect(jobs.report).toContain("ci-artifacts.mjs report");
     expect(workflow).not.toMatch(/continue-on-error|--retries/);
   });
@@ -106,12 +124,11 @@ describe("CI aislada", () => {
       expect(upload).toMatch(/path: \$\{\{ steps\.[\w-]+\.outputs\.publish \}\}/);
       expect(upload).not.toMatch(/path: \||include-hidden-files|apps\/app\/|runner\.temp/);
     }
-    for (const job of ["quality", "e2e", "lighthouse", "report"]) {
+    for (const job of ["quality", "integration", "report"]) {
       expect(jobs[job]).toContain(`CI_ARTIFACT_NAME: pw-\${{ github.run_id }}-\${{ github.run_attempt }}-${job}`);
       expect(jobs[job]).toContain('rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"');
       expect(jobs[job]).not.toContain("PW_ARTIFACT_ROOT:");
     }
-    expect(jobs.e2e).toContain("${{ matrix.shard }}-of-${{ matrix.total }}");
     expect(jobs.report).toContain("pattern: playwright-*-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}");
   });
@@ -120,10 +137,11 @@ describe("CI aislada", () => {
     const calls = workflow.match(/node (?:apps\/app\/)?scripts\/ci-artifacts\.mjs [^\n]+/g) ?? [];
     expect(calls).toHaveLength(5);
     for (const call of calls) expect(call).not.toMatch(/\.log\b/);
-    expect(jobs.e2e).toMatch(/run: rm -rf -- [^\n]*"\$\{RUNNER_TEMP:\?\}\/\$\{CI_ARTIFACT_NAME:\?\}-preparation\.log"/);
+    expect(jobs.integration).toMatch(/run: rm -rf -- [^\n]*"\$\{RUNNER_TEMP:\?\}\/\$\{CI_ARTIFACT_NAME:\?\}-preparation\.log"/);
+    expect(jobs.integration).toMatch(/run: rm -rf -- [^\n]*"\$\{RUNNER_TEMP:\?\}\/\$\{CI_ARTIFACT_NAME:\?\}-lighthouse"/);
   });
 
-  it.each(["quality", "e2e", "lighthouse", "report"])("no invoca limpieza de %s con variables vacías o ausentes", job => {
+  it.each(["quality", "integration", "report"])("no invoca limpieza de %s con variables vacías o ausentes", job => {
     const cleanup = jobs[job]!.match(/run: (rm -rf -- .+)/)?.[1];
     expect(cleanup).toBeDefined();
     const execute = (env: NodeJS.ProcessEnv) => spawnSync("bash", ["-c", `rm() { printf 'called\\n'; }; ${cleanup}`], {
@@ -155,12 +173,11 @@ describe("CI aislada", () => {
     expect(global).toContain("cancel-in-progress: false");
   });
 
-  it("cancela solo verificaciones obsoletas por job, ref y shard", () => {
+  it("cancela solo verificaciones obsoletas por job y ref", () => {
     for (const name of required) {
       expect(jobs[name]).toContain(`group: app-verify-${name}-\${{ github.ref }}`);
       expect(jobs[name]).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactor/limpieza-segura')) }}");
     }
-    expect(jobs.e2e).toContain("app-verify-e2e-${{ github.ref }}-${{ matrix.shard }}");
     expect(jobs.deploy).toContain("group: app-publish-${{ needs.plan.outputs.environment }}");
     expect(jobs.deploy).toContain("cancel-in-progress: false");
     expect(jobs.deploy).not.toContain("app-verify");
@@ -206,10 +223,10 @@ describe("CI aislada", () => {
     expect(second).toEqual(first);
   });
 
-  it("no cruza shards, refs ni destinos en los grupos de concurrencia", () => {
+  it("no cruza jobs, refs ni destinos en los grupos de concurrencia", () => {
     const github = { event_name: "push", ref: "refs/heads/develop", run_id: 1 };
-    expect(concurrency(jobs.e2e!, github, "pruebas", 1).group)
-      .not.toBe(concurrency(jobs.e2e!, github, "pruebas", 2).group);
+    expect(concurrency(jobs.integration!, github).group)
+      .not.toBe(concurrency(jobs.quality!, github).group);
     expect(concurrency(jobs.quality!, github).group)
       .not.toBe(concurrency(jobs.quality!, { ...github, ref: "refs/heads/refactor/limpieza-segura" }).group);
     expect(concurrency(jobs.deploy!, github, "pruebas").group)

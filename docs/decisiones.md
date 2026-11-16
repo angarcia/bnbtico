@@ -1,3 +1,14 @@
+## 2026-11-16 · CI dentro de los minutos gratuitos de Actions
+
+El plan gratuito de GitHub Actions (2000 minutos al mes con repositorio privado) se agotó a mitad de noviembre. Para pasar las builds había que poner el repositorio en público. Cada ejecución completa facturaba unos 33 minutos: siete trabajos, cada uno redondeado al minuto, y Supabase arrancaba cuatro veces. Hasta el día 16 hubo 76 ejecuciones por push y 19 por PR. Ana aprueba:
+
+- **Un solo trabajo de integración** con un solo Supabase, una sola instalación y un solo build. Hace las pruebas de base, todas las e2e en un trozo, la puerta de tamaño y Lighthouse. Las e2e de un trozo siguen pasando por el inventario y la puerta de resultados. Ninguna puerta se quita ni se debilita. Termina más tarde, pero se estima que factura unos 20–25 minutos por ejecución en lugar de 33; queda por medir en la primera ejecución real.
+- **Pull requests solo con `quality`** (tipos, unitarias, prototipo; unos 2 minutos). No hay batería completa ni vista previa en el PR. La batería completa corre una vez, en el push que despliega: así no se prueba dos veces lo mismo. Las e2e locales antes de subir siguen siendo la costumbre, pero no sustituyen a las de CI antes de desplegar, porque no garantizan que se probó exactamente el commit que se publica.
+- **Lo que no es código no dispara la CI:** `docs/`, `*.md`, `.scratch/`, `backups/`, `.claude/`, `.agents/`, las maquetas HTML, `design/logo/` y `design/tokens/`, igual en push y en PR.
+- **Lighthouse solo al desplegar,** dentro del trabajo de integración: deja de correr en los PR.
+- **Pushes agrupados:** juntar los cambios en menos pushes a `develop` (también evita el fallo por vigencia del deploy con pushes seguidos).
+- Se descarta poner el repositorio en público para cada build: mientras es público se ven el historial, `.scratch/`, `docs/` y los registros de Actions. Si aun así no alcanza, la alternativa es un runner propio en un Mac (no gasta minutos) o pagar los minutos extra.
+
 ## 2026-11-13 · Flecha de volver en la web de escritorio
 
 En escritorio, toda pantalla que no es una pestaña lleva la flecha de volver junto al título (en la ficha, sobre la foto, como en el móvil). Las pestañas de la barra superior van sin flecha, porque son el inicio de cada sección y la barra ya lleva a ellas. Todos los títulos de página tienen el mismo tamaño. Sustituye lo dicho en la tanda 3 de la revisión, que quitaba la flecha de la ficha en escritorio. Lo pide Ana, que prefiere ver la flecha.
