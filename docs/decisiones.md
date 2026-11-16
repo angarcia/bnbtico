@@ -1,3 +1,15 @@
+## 2026-11-16 · El anfitrión elimina una casa desde Mis casas
+
+Ana aprueba la propuesta de la historia 28 (`.scratch/eliminar-casa/propuesta-28.md`, maqueta `maqueta-movil.html`):
+
+- **«Eliminar casa»** es un texto terracota al final del detalle de una casa propia. Una hoja nombra la casa y su `CT-####`, explica qué pasa y recuerda «Pausar la casa» del Calendario para retirarla solo un tiempo. No pide motivo ni código; «Eliminar casa» y «Cancelar». Al eliminar vuelve a Mis casas con «Casa eliminada.»; si era la última, a Explorar con la vista de cliente. Sin conexión, la hoja sigue abierta con el aviso.
+- **Estados:** sí con cambios pedidos, borrador ya revisado, pendiente de pago, activa (también pausada por el anfitrión o por 3bstays) e inactiva. No en revisión: el anfitrión espera la decisión o escribe a 3bstays. Tampoco bloqueada, para no borrar evidencia. Un borrador nunca revisado sigue con «Descartar borrador».
+- **Efecto:** es el borrado lógico de siempre (`deleted_at`), por la RPC `delete_own_listing`, autorizada en la base solo para el dueño. Desaparece de Explorar, de favoritos y de su enlace; no admite consultas; se borran los avisos en cola; la suscripción no se renueva; se invalida la exportación iCal y Airbnb no se vuelve a leer. Sin restauración en la app, solo por SQL.
+- **Suscripción:** sin reembolso del período pagado y sin devolver la plaza de la oferta. En la v1 no hay cobro real; cancelar en la pasarela será otra historia cuando lo haya.
+- **Registro:** columna nueva `listings.deleted_by` con el anfitrión y `deleted_reason = 'Eliminada por el anfitrión.'`. `admin_actions` sigue siendo solo del admin. Una casa eliminada no la lee nadie por REST, tampoco el admin: el registro se consulta por SQL.
+- Repetir la eliminación (doble toque, otro teléfono) da «No encontramos ese anuncio.» y la app la da por hecha, sin efectos nuevos.
+- **Presupuesto:** la acción y su hoja van en un trozo diferido propio, `delete-house-*`, con límite de 1,6 kB comprimido (pesa 1,52 kB). Así no suben ni el JS inicial (160 kB) ni el de las pestañas (25,8 kB). Ningún límite existente cambia.
+
 ## 2026-11-16 · Revisión de anuncios nuevos sin «Rechazar»; los rechazos salen de Mis casas
 
 Ana aprueba (historias 27 y 29):

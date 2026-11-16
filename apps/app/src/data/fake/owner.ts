@@ -5,6 +5,7 @@ import type { OwnerListingsApi } from "../../domain/api";
 import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
 import { discardRefusal, shownToOwner } from "../../domain/can";
+import { OWNER_DELETE_MESSAGES, deleteRefusal } from "../../domain/owner-delete";
 import { DomainError } from "../../domain/errors";
 import {
   DESCRIPTION_MAX,
@@ -25,7 +26,9 @@ import {
   planStep,
 } from "../../domain/publish-rules";
 import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
+import { invalidateFakeAirbnb } from "./airbnb";
 import { oneRoom, type FakeDb, type FakeListing } from "./db";
+import { invalidateFakeIcalExport } from "./ical-export";
 import { editStore, locationOf, type Located } from "./edits";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -195,6 +198,18 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
       db.listings.delete(id);
       db.photos = db.photos.filter((p) => p.listingId !== id);
       db.days.delete(id);
+    },
+
+    // Como delete_own_listing: el mismo borrado lógico que el del admin, sin su registro en admin_actions.
+    async deleteOwn(id) {
+      const l = own(id);
+      if (!l || !shownToOwner(l)) throw new DomainError(OWNER_DELETE_MESSAGES.notFound, "not_found");
+      const refusal = deleteRefusal(l);
+      if (refusal) throw new DomainError(refusal, "validation");
+      Object.assign(l, { deletedAt: db.now(), deletedReason: "Eliminada por el anfitrión." });
+      invalidateFakeAirbnb(db, l.id, true);
+      invalidateFakeIcalExport(db, l.id);
+      db.reminders = db.reminders.filter((r) => !(r.listingId === l.id && r.status === "queued"));
     },
   };
 }

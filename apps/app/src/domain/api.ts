@@ -122,6 +122,12 @@ export interface OwnerListingsApi {
   /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
   /**
+   * «Eliminar casa» (RPC delete_own_listing, historia 28): borrado lógico de una casa propia, sin vuelta desde la app. La casa
+   * desaparece para todos, se borran sus avisos en cola y se invalidan sus calendarios externos. Una casa ya eliminada (o
+   * ajena, o inexistente) da «No encontramos ese anuncio.» (`not_found`); las demás negativas, OWNER_DELETE_MESSAGES.
+   */
+  deleteOwn(id: string): Promise<void>;
+  /**
    * Visitas a la ficha (`listing_view`) y consultas de los últimos 30 días (RPC owner_listing_stats, revisión UX A2). Solo
    * el dueño (o el admin); si no, «No encontramos ese anuncio.».
    */

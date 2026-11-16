@@ -19,6 +19,7 @@ import { formatCRC } from "../../domain/money";
 import { byPendingAction, cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/subscription";
 import { I } from "../../shared/icons";
+import { DeleteHouse } from "../delete-house";
 import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
@@ -344,7 +345,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
           <button type="button" className="btn btn-outline-bad" onClick={ask} disabled={discard.isPending}>
             Descartar borrador
           </button>
-        ) : null}
+        ) : <DeleteHouse listing={l} userId={userId} />}
       </div>
       {sheet}
     </div>

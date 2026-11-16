@@ -175,5 +175,14 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       const l = await getOwn(id);
       throw new DomainError(discardRefusal(l) ?? NOT_FOUND, l ? "validation" : "not_found");
     },
+
+    async deleteOwn(id) {
+      if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
+      const { error } = await db.rpc("delete_own_listing", { p_listing: id });
+      if (!error) return;
+      const e = toDomainError(error);
+      // Ajena, inexistente o ya eliminada (otro teléfono, doble toque): la base no lo distingue y la app la da por hecha.
+      throw e.message === NOT_FOUND ? new DomainError(NOT_FOUND, "not_found") : e;
+    },
   };
 }

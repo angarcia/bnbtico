@@ -1,6 +1,6 @@
 # Historia 28 · Eliminar una casa desde Mis casas: propuesta para aprobar
 
-Fecha: 2026-11-16 · Estado: **pendiente de aprobación de Ana**. No hay código. Preparación: Por definir. Diseño: Pendiente (maqueta v0.1 en `maqueta-movil.html`).
+Fecha: 2026-11-16 · Estado: **aprobada por Ana el 2026-11-16 e implementada** (ver `docs/decisiones.md`). Diseño: maqueta v0.1 en `maqueta-movil.html`; capturas de la app en `capturas/`.
 
 ## Lo que ya existe y se reutiliza
 
@@ -32,7 +32,7 @@ Fecha: 2026-11-16 · Estado: **pendiente de aprobación de Ana**. No hay código
 5. **Registro del actor.**
    - `admin_actions.admin_id` es del admin, así que no sirve para el anfitrión.
    - Propongo una columna nueva, `deleted_by uuid`, junto a las que ya existen: `deleted_at` y `deleted_reason = 'Eliminada por el anfitrión.'`, que el `check` de coherencia exige.
-   - Admin vería «Eliminada por el anfitrión» frente al motivo del admin.
+   - Una casa eliminada no la lee nadie por REST, tampoco el admin: «Eliminada por el anfitrión» frente al motivo del admin se distingue por SQL.
 
 ## Recorrido propuesto (móvil primero)
 

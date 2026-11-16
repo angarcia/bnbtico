@@ -180,3 +180,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 
 /* Perfil: un único acceso junto a los datos, con objetivo táctil suficiente. */
 .account-card>.account-edit{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;flex-shrink:0}
+
+/* «Eliminar casa» (historia 28): texto terracota centrado al final del detalle; la hoja pone sus líneas una debajo de otra. */
+.btn-link.delete-house{color:var(--bad);font-weight:var(--w-strong);align-self:center;justify-content:center;width:100%}
+.sheet-line{display:block}
+.sheet-line + .sheet-line{margin-top:10px}

@@ -411,17 +411,23 @@ isOneToOne: true
                   ]
                 },"listings": {
                   Row: {
-                    "accepts_monthly": boolean,"accepts_nightly": boolean,"address_private": string | null,"admin_hold": string | null,"admin_hold_at": string | null,"admin_hold_reason": string | null,"available": boolean,"bathroom_shared": boolean | null,"bathrooms": number | null,"bedrooms": number | null,"canton": string,"capacity": number | null,"created_at": string,"deleted_at": string | null,"deleted_reason": string | null,"description": string,"direct_contact": boolean,"district": string | null,"features": (Database["public"]['Enums']["feature"])[],"first_published_at": string | null,"id": string,"kind": Database["public"]['Enums']["listing_kind"] | null,"lat": number | null,"lng": number | null,"min_months": number | null,"min_nights": number | null,"monthly_mode": string | null,"monthly_price_crc": number | null,"nightly_price_crc": number | null,"owner_id": string,"parking_paid": boolean | null,"province": string,"public_id": string,"reopen_at": string | null,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": Database["public"]['Enums']["listing_status"],"title": string,"updated_at": string,"whatsapp_phone": string,"zone": string | null,"zone_id": string | null,"zone_source": string | null,"listing_is_public": boolean | null
+                    "accepts_monthly": boolean,"accepts_nightly": boolean,"address_private": string | null,"admin_hold": string | null,"admin_hold_at": string | null,"admin_hold_reason": string | null,"available": boolean,"bathroom_shared": boolean | null,"bathrooms": number | null,"bedrooms": number | null,"canton": string,"capacity": number | null,"created_at": string,"deleted_at": string | null,"deleted_by": string | null,"deleted_reason": string | null,"description": string,"direct_contact": boolean,"district": string | null,"features": (Database["public"]['Enums']["feature"])[],"first_published_at": string | null,"id": string,"kind": Database["public"]['Enums']["listing_kind"] | null,"lat": number | null,"lng": number | null,"min_months": number | null,"min_nights": number | null,"monthly_mode": string | null,"monthly_price_crc": number | null,"nightly_price_crc": number | null,"owner_id": string,"parking_paid": boolean | null,"province": string,"public_id": string,"reopen_at": string | null,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"status": Database["public"]['Enums']["listing_status"],"title": string,"updated_at": string,"whatsapp_phone": string,"zone": string | null,"zone_id": string | null,"zone_source": string | null,"listing_is_public": boolean | null
                   }
                   ComputedFields: "listing_is_public"
                   Insert: {
-                    "accepts_monthly"?: boolean,"accepts_nightly"?: boolean,"address_private"?: string | null,"admin_hold"?: string | null,"admin_hold_at"?: string | null,"admin_hold_reason"?: string | null,"available"?: boolean,"bathroom_shared"?: boolean | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"canton"?: string,"capacity"?: number | null,"created_at"?: string,"deleted_at"?: string | null,"deleted_reason"?: string | null,"description"?: string,"direct_contact"?: boolean,"district"?: string | null,"features"?: (Database["public"]['Enums']["feature"])[],"first_published_at"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"lng"?: number | null,"min_months"?: number | null,"min_nights"?: number | null,"monthly_mode"?: string | null,"monthly_price_crc"?: number | null,"nightly_price_crc"?: number | null,"owner_id": string,"parking_paid"?: boolean | null,"province": string,"public_id"?: string,"reopen_at"?: string | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"title": string,"updated_at"?: string,"whatsapp_phone": string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
+                    "accepts_monthly"?: boolean,"accepts_nightly"?: boolean,"address_private"?: string | null,"admin_hold"?: string | null,"admin_hold_at"?: string | null,"admin_hold_reason"?: string | null,"available"?: boolean,"bathroom_shared"?: boolean | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"canton"?: string,"capacity"?: number | null,"created_at"?: string,"deleted_at"?: string | null,"deleted_by"?: string | null,"deleted_reason"?: string | null,"description"?: string,"direct_contact"?: boolean,"district"?: string | null,"features"?: (Database["public"]['Enums']["feature"])[],"first_published_at"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"lng"?: number | null,"min_months"?: number | null,"min_nights"?: number | null,"monthly_mode"?: string | null,"monthly_price_crc"?: number | null,"nightly_price_crc"?: number | null,"owner_id": string,"parking_paid"?: boolean | null,"province": string,"public_id"?: string,"reopen_at"?: string | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"title": string,"updated_at"?: string,"whatsapp_phone": string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
                   }
                   Update: {
-                    "accepts_monthly"?: boolean,"accepts_nightly"?: boolean,"address_private"?: string | null,"admin_hold"?: string | null,"admin_hold_at"?: string | null,"admin_hold_reason"?: string | null,"available"?: boolean,"bathroom_shared"?: boolean | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"canton"?: string,"capacity"?: number | null,"created_at"?: string,"deleted_at"?: string | null,"deleted_reason"?: string | null,"description"?: string,"direct_contact"?: boolean,"district"?: string | null,"features"?: (Database["public"]['Enums']["feature"])[],"first_published_at"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"lng"?: number | null,"min_months"?: number | null,"min_nights"?: number | null,"monthly_mode"?: string | null,"monthly_price_crc"?: number | null,"nightly_price_crc"?: number | null,"owner_id"?: string,"parking_paid"?: boolean | null,"province"?: string,"public_id"?: string,"reopen_at"?: string | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"title"?: string,"updated_at"?: string,"whatsapp_phone"?: string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
+                    "accepts_monthly"?: boolean,"accepts_nightly"?: boolean,"address_private"?: string | null,"admin_hold"?: string | null,"admin_hold_at"?: string | null,"admin_hold_reason"?: string | null,"available"?: boolean,"bathroom_shared"?: boolean | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"canton"?: string,"capacity"?: number | null,"created_at"?: string,"deleted_at"?: string | null,"deleted_by"?: string | null,"deleted_reason"?: string | null,"description"?: string,"direct_contact"?: boolean,"district"?: string | null,"features"?: (Database["public"]['Enums']["feature"])[],"first_published_at"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"] | null,"lat"?: number | null,"lng"?: number | null,"min_months"?: number | null,"min_nights"?: number | null,"monthly_mode"?: string | null,"monthly_price_crc"?: number | null,"nightly_price_crc"?: number | null,"owner_id"?: string,"parking_paid"?: boolean | null,"province"?: string,"public_id"?: string,"reopen_at"?: string | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"title"?: string,"updated_at"?: string,"whatsapp_phone"?: string,"zone"?: string | null,"zone_id"?: string | null,"zone_source"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "listings_deleted_by_fkey"
+      columns: ["deleted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "listings_owner_id_fkey"
       columns: ["owner_id"]
 isOneToOne: false
@@ -742,6 +748,7 @@ isOneToOne: true
 "capacity": number | null,
 "created_at": string,
 "deleted_at": string | null,
+"deleted_by": string | null,
 "deleted_reason": string | null,
 "description": string,
 "direct_contact": boolean,
@@ -858,6 +865,9 @@ isOneToOne: true
 { Args: { "p_arrival": string,"p_departure": string,"p_message": string,"p_people": number,"p_public_id": string }; Returns: {
               "inquiry_id": string,"whatsapp_phone": string
             }[]
+                           },
+"delete_own_listing":
+{ Args: { "p_listing": string }; Returns: undefined
                            },
 "discard_edit":
 { Args: { "p_listing": string }; Returns: (string)[]
@@ -1012,6 +1022,7 @@ isOneToOne: true
 "capacity": number | null,
 "created_at": string,
 "deleted_at": string | null,
+"deleted_by": string | null,
 "deleted_reason": string | null,
 "description": string,
 "direct_contact": boolean,
