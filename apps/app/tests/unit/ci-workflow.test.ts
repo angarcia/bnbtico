@@ -129,7 +129,8 @@ describe("CI aislada", () => {
       expect(jobs[job]).toContain('rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}"');
       expect(jobs[job]).not.toContain("PW_ARTIFACT_ROOT:");
     }
-    expect(jobs.report).toContain("pattern: playwright-*-attempt-${{ github.run_attempt }}");
+    expect(jobs.report).toContain("name: playwright-1-of-1-attempt-${{ github.run_attempt }}");
+    expect(jobs.report).toContain("path: ci-artifacts/playwright-1-of-1-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}");
   });
 
