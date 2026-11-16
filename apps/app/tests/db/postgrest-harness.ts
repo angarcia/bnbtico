@@ -69,13 +69,22 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       fail("enviar", (await db.rpc("submit_listing", { p_listing: id })).error);
       if (placeholder) fail("quitar la foto provisional", (await service.from("listing_photos").delete().eq("id", placeholder.data!.id)).error);
     }
-    const decision = { active: "approve", reopened: "approve", changes: "changes", rejected: "reject" } as const;
+    const decision = { active: "approve", reopened: "approve", changes: "changes" } as const;
     if (spec.status in decision) {
       const d = decision[spec.status as keyof typeof decision];
       fail("revisar", (await admin.rpc("review_listing", { p_listing: id, p_decision: d, p_note: d === "approve" ? "" : "Faltan fotos del baño." })).error);
     }
     // Estado heredado (una casa activa vuelta a borrador): desde la migración editar_casa_publicada ningún propietario
     // llega a él, así que se siembra como el servicio.
+    // Rechazada: review_listing ya no rechaza (historia 27); se siembra como quedaron las de antes, con su línea en admin_actions.
+    if (spec.status === "rejected") {
+      sql(`begin; select set_config('app.allow_status','on',true);
+        update public.listings set status = 'rejected', review_note = 'Faltan fotos del baño.', reviewed_at = now(),
+          reviewed_by = (select id from public.profiles where phone = '${TEST_PHONES.admin}') where id = '${id}';
+        insert into public.admin_actions (admin_id, action, target_listing_id, reason)
+          select id, 'listing.reject', '${id}', 'Faltan fotos del baño.' from public.profiles where phone = '${TEST_PHONES.admin}';
+        commit;`);
+    }
     if (spec.status === "reopened") sql(`begin; select set_config('app.allow_status','on',true); update public.listings set status = 'draft' where id = '${id}'; commit;`);
     return { id, publicId, exact: { lat: draft.lat!, lng: draft.lng! }, photoPaths };
   }

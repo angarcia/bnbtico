@@ -149,7 +149,7 @@ Cálida y local, con la claridad de un marketplace. Marca **3bstays**, rana sonr
 - **Cuenta** y **Suscripción** (desglose por casa, total, próximo cobro, anual, pausar).
 
 ### Admin
-- **Anuncios:** cola → Revisar anuncio completo → Aprobar / Pedir cambios / Rechazar. Identidad de solo lectura; incidencias del proveedor pendientes, sin sello ni revisión de autorización para alquilar.
+- **Anuncios:** cola → Revisar anuncio completo → Aprobar / Pedir cambios (sin «Rechazar» desde el 2026-11-16). Identidad de solo lectura; incidencias del proveedor pendientes, sin sello ni revisión de autorización para alquilar.
 - **Casas** (tabla de ejemplo con estado, vistas, contactos, MRR) y **Usuarios** (búsqueda de propietarios/clientes, ficha, desactivar/reactivar, historial y WhatsApp de soporte simulado).
 
 ### Landing

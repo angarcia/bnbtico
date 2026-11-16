@@ -4,7 +4,7 @@
 import type { OwnerListingsApi } from "../../domain/api";
 import { availabilityUpdate, CALENDAR_MESSAGES } from "../../domain/calendar";
 import { ADMIN_HOLD_MESSAGES } from "../../domain/admin-actions";
-import { discardRefusal } from "../../domain/can";
+import { discardRefusal, shownToOwner } from "../../domain/can";
 import { DomainError } from "../../domain/errors";
 import {
   DESCRIPTION_MAX,
@@ -82,14 +82,14 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
     async listOwn() {
       const owner = me();
       return [...db.listings.values()]
-        .filter((l) => l.ownerId === owner && l.deletedAt === null)
+        .filter((l) => l.ownerId === owner && l.deletedAt === null && shownToOwner(l))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map(toListing);
     },
 
     async getOwn(id) {
       const l = own(id);
-      return l ? toListing(l) : null;
+      return l && shownToOwner(l) ? toListing(l) : null;
     },
 
     async findResumable() {

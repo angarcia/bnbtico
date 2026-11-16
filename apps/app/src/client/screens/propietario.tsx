@@ -168,7 +168,7 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
     <article className={`card house-card${shareable || tools ? " house-card-compact" : ""}`}>
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
-      {l.reviewNote && (l.status === "changes" || l.status === "rejected") ? <p className="note note-arena small">Nota de 3bstays: {l.reviewNote}</p> : null}
+      {l.reviewNote && l.status === "changes" ? <p className="note note-arena small">Nota de 3bstays: {l.reviewNote}</p> : null}
       <HoldNotice listing={l} card />
       {shareable || tools ? (
         <div className="house-actions">
@@ -322,15 +322,13 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
           </div>
         ) : null}
         {l.status === "review" ? <div className="note note-review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
-        {l.reviewNote && (l.status === "rejected" || l.status === "changes") ? (
+        {l.reviewNote && l.status === "changes" ? (
           <section className="card-arena stack gap-10">
-            <b className="display offer-title">{l.status === "changes" ? "Le pedimos cambios" : "Anuncio rechazado"}</b>
+            <b className="display offer-title">Le pedimos cambios</b>
             <span className="small ink">{l.reviewNote}</span>
-            {l.status === "changes" ? (
-              <button type="button" className="btn btn-primary btn-block" onClick={() => void toWizard()}>
-                Corregir y reenviar
-              </button>
-            ) : null}
+            <button type="button" className="btn btn-primary btn-block" onClick={() => void toWizard()}>
+              Corregir y reenviar
+            </button>
           </section>
         ) : null}
 

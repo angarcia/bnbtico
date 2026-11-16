@@ -9,7 +9,7 @@ import type { AdminListingsApi } from "../../domain/api";
 import type { Database } from "../../domain/database.types";
 import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError, toDomainError } from "../../domain/errors";
-import { REVIEW_MESSAGES as M, REJECTED_SHOWN, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
+import { REVIEW_MESSAGES as M, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { costaRicaToday } from "../../domain/inquiry";
 import { EDIT_SELECT, fromListingRow, fromPhotoRows, storagePhotoUrl, type EditRow, type ListingRow, type PhotoRow } from "../../domain/rows";
 import { FIELD_COLUMN } from "../../domain/edit-summary";
@@ -62,16 +62,16 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
 
   return {
     async queue() {
-      const [who, pending, rejected, active] = await Promise.all([
+      // Las rechazadas van enteras: ya no se crean (historia 27) y Admin recupera aquí el motivo de cualquiera.
+      const [who, pending, active] = await Promise.all([
         access(),
-        db.from("listings").select(ADMIN_COLUMNS).in("status", ["review", "changes"]).order("updated_at", { ascending: true }).returns<AdminRow[]>(),
-        db.from("listings").select(ADMIN_COLUMNS).eq("status", "rejected").order("reviewed_at", { ascending: false }).limit(REJECTED_SHOWN).returns<AdminRow[]>(),
+        db.from("listings").select(ADMIN_COLUMNS).in("status", ["review", "changes", "rejected"]).order("updated_at", { ascending: true }).returns<AdminRow[]>(),
         db.from("listings").select("id", { count: "exact", head: true }).eq("status", "active"),
       ]);
       if (who === "none") return emptyQueue();
       if (who === "mfa") throw mfa();
-      for (const r of [pending, rejected, active]) if (r.error) throw toDomainError(r.error);
-      return splitQueue([...(pending.data ?? []), ...(rejected.data ?? [])].map(toItem), active.count ?? 0);
+      for (const r of [pending, active]) if (r.error) throw toDomainError(r.error);
+      return splitQueue((pending.data ?? []).map(toItem), active.count ?? 0);
     },
 
     async get(id) {

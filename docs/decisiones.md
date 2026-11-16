@@ -1,3 +1,12 @@
+## 2026-11-16 · Revisión de anuncios nuevos sin «Rechazar»; los rechazos salen de Mis casas
+
+Ana aprueba (historias 27 y 29):
+
+- **Revisar anuncio** solo ofrece «Aprobar y publicar» y «Pedir cambios», en móvil y escritorio. El rechazo era un callejón sin salida: la casa quedaba en Mis casas para siempre, arriba del todo y sin ninguna acción. Lo que deba corregirse se pide como cambios y el anfitrión reenvía el mismo anuncio. Un anuncio que no debe publicarse nunca (duplicado, fraude) se cierra con «Admin → Casas → Eliminar casa», que ya pide motivo y código CT; el aviso por WhatsApp lo da el equipo a mano. `review_listing` rechaza la decisión `reject` de un cliente desactualizado: la casa sigue en revisión y no se registra nada.
+- **Los rechazos anteriores** no se borran ni se reabren. Conservan estado, motivo y su línea `listing.reject` en `admin_actions`. El anfitrión ya no los ve: Mis casas y su enlace guardado los filtran, aunque los permisos (RLS) no cambian. Si era su única casa, vuelve a la vista de cliente. Admin los ve todos con su motivo en el chip «Rechazados», que pierde el tope de 50.
+- Diseño: «No necesario». Basta con quitar el botón en la app, en las maquetas 22 y 27 y en `docs/diseno-v1.md`; Ana lo revisa en capturas.
+- Queda abierto, y no se ejecuta: no hay plazo para borrar o caducar los rechazos antiguos. El trigger `listings_protect` todavía deja que el dueño devuelva un rechazo a borrador con un `update` directo por PostgREST; la app no lo ofrece. Cerrarlo es una decisión aparte.
+
 ## 2026-11-13 · Flecha de volver en la web de escritorio
 
 En escritorio, toda pantalla que no es una pestaña lleva la flecha de volver junto al título (en la ficha, sobre la foto, como en el móvil). Las pestañas de la barra superior van sin flecha, porque son el inicio de cada sección y la barra ya lleva a ellas. Todos los títulos de página tienen el mismo tamaño. Sustituye lo dicho en la tanda 3 de la revisión, que quitaba la flecha de la ficha en escritorio. Lo pide Ana, que prefiere ver la flecha.

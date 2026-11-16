@@ -38,14 +38,16 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
 
   async function getOwn(id: string) {
     if (!UUID.test(id)) return null;
-    const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("id", id).eq("owner_id", await me()).maybeSingle();
+    // Sin las rechazadas, como listOwn: un enlace guardado a una de ellas dice «No encontramos ese anuncio».
+    const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("id", id).eq("owner_id", await me()).neq("status", "rejected").maybeSingle();
     if (error) throw toDomainError(error);
     return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
   }
 
   return {
     async listOwn() {
-      const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("owner_id", await me()).order("created_at", { ascending: false });
+      // Mis casas no enseña las rechazadas (shownToOwner, historia 27).
+      const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("owner_id", await me()).neq("status", "rejected").order("created_at", { ascending: false });
       if (error) throw toDomainError(error);
       return data.map((row) => fromListingRow(row, row.listing_photos, url, row.listing_edits));
     },

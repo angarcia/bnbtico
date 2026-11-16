@@ -72,7 +72,7 @@
 .review-owner{padding:12px 14px;border-radius:8px}
 .review-spacer{height:124px}
 .review-actions{flex-direction:column;gap:8px}
-.review-actions .row .btn{min-height:44px;font-size:16px;font-family:var(--body)}
+.review-actions .btn-ghost{min-height:44px;font-size:16px;font-family:var(--body)}
 .diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .diff-col{display:flex;flex-direction:column;gap:2px;margin:0;overflow-wrap:anywhere}
 .diff-before span{color:var(--muted)}

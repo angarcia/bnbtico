@@ -137,8 +137,7 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   async function decide(decision: ReviewDecision) {
-    // La nota de las fotos va con «Pedir cambios»: para rechazar, el admin escribe su propio motivo.
-    const refusal = reviewNoteRefusal(decision, decision === "reject" && note.trim() === NO_PHOTOS_NOTE ? "" : note);
+    const refusal = reviewNoteRefusal(decision, note);
     if (refusal) return setError(refusal);
     setError(null);
     review.mutate({ item, decision, note });
@@ -152,21 +151,17 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
   return (
     <form className="stack gap-14" onSubmit={onSubmit} noValidate>
       <Checklist />
-      <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios o rechaza)" error={error} />
+      <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
       {noPhotos ? <p className="note note-arena small">Sin fotos: solo puede pedir cambios.</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
         <button className="btn btn-primary btn-block" type="submit" disabled={noPhotos || review.isPending}>
           <I.check size={18} /> Aprobar y publicar
         </button>
-        <div className="row gap-8">
-          <button className="btn btn-ghost grow" type="button" disabled={review.isPending} onClick={() => void decide("changes")}>
-            Pedir cambios
-          </button>
-          <button className="btn btn-outline-bad grow" type="button" disabled={review.isPending} onClick={() => void decide("reject")}>
-            Rechazar
-          </button>
-        </div>
+        {/* Sin «Rechazar» (historia 27): un anuncio que no debe publicarse se elimina desde Admin → Casas. */}
+        <button className="btn btn-ghost btn-block" type="button" disabled={review.isPending} onClick={() => void decide("changes")}>
+          Pedir cambios
+        </button>
       </div>
     </form>
   );

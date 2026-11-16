@@ -112,9 +112,9 @@ Sembradas el 2026-10-30 en `bnbtico-pruebas` por los mismos caminos que la app (
 | CT-1056 (j) | Casa Jaguar Puerto Viejo | Yorleny | Activa con oferta de lanzamiento (12 meses) | Puerto Viejo (Limón) | 5 | Para el reloj de pruebas (A124–A139, X6): cambiar sus días de oferta; no tocarla en otras pruebas |
 | CT-1057 (k) | Cabina Hone Creek | Yorleny | Borrador incompleto | Hone Creek (Limón) | 0 | Sin fotos ni precio: «Falta: fotos y precio», «Seguir publicando» (A57–A65, A42–A49) |
 | CT-1058 (l) | Cabaña Hone Creek con jardín | Yorleny | En revisión | Hone Creek (Limón) | 5 | Aprobar casa nueva (D28–D44, X1) |
-| CT-1059 (m) | Casa Playa Bite con hamaca | Yorleny | En revisión | Playa Bite (Limón) | 3 | Pedir cambios y rechazar (D28–D44, X2) |
+| CT-1059 (m) | Casa Playa Bite con hamaca | Yorleny | En revisión | Playa Bite (Limón) | 3 | Pedir cambios (D28–D44, X2) |
 | CT-1060 (n) | Cabina Playa Grande Cahuita | Yorleny | Cambios pedidos | Playa Grande (Limón) | 4 | Nota «Necesitamos una foto del baño.»; «Corregir y reenviar» (A66–A76, X2) |
-| CT-1061 (o) | Casa Siquirres vista al río | Yorleny | Rechazada | Siquirres (Limón) | 3 | Nota «Las fotos no corresponden a la casa.»; sin reenviar (A66–A76) |
+| CT-1061 (o) | Casa Siquirres vista al río | Yorleny | Rechazada | Siquirres (Limón) | 3 | Rechazada antes de la historia 27: no sale en Mis casas; Admin la ve en «Rechazados» con su nota (A71, D36–D38) |
 | CT-1062 (p) | Casa Playa Chiquita jardín | Yorleny | Pendiente de pago | Playa Chiquita (Limón) | 4 | Oferta terminada (reloj en -1): «Añadir método de pago» con Stripe de prueba (A113–A139, X6); su enlace público no funciona (C64–C68) |
 | CT-1063 (q) | Cabaña Pocora junto al río | Yorleny | Inactiva | Pocora (Limón) | 3 | Suscripción parada por la propietaria; «Activar suscripción» (A113–A123); enlace parado (C64–C68) |
 | CT-1064 (r) | Casa Cocles con terraza | Marco | Activa, pausada por el admin | Cocles (Limón) | 4 | Pausa «Confirme que las fotos son de esta casa.»; el dueño la sigue editando (D58–D78, A66–A76); no sale al público |
@@ -516,13 +516,13 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 - [ ] **A66** Con una sola casa la pestaña dice «Mi casa»; con dos o más, «Mis casas»; el título de la pantalla es «Mis casas» en los dos casos.
 - [ ] **A67** Revise las casillas → «activa»/«activas», «por pagar», «en revisión», «borrador»/«borradores»; las que están en cero no salen; tocar «borrador» abre ese borrador.
-- [ ] **A68** Con casas en varios estados, compruebe el orden → primero cambios pedidos y rechazadas, luego pendiente de pago e inactivas, luego borradores, luego activas y al final en revisión.
+- [ ] **A68** Con casas en varios estados, compruebe el orden → primero cambios pedidos, luego pendiente de pago e inactivas, luego borradores, luego activas y al final en revisión.
 - [ ] **A69** Tarjeta «Activa» → foto con la etiqueta «Activa», nombre, zona y Compartir con icono y texto verde sobre la superficie de la tarjeta, sin relleno; una línea neutra separa las acciones, sin banda verde; sin precio ni «Añadir método de pago». Con varias casas, a la derecha están los iconos Calendario y Consultas de esa casa; con una sola casa no aparecen (se usan las pestañas). Tocar la foto o el nombre abre el detalle; arrastrar para desplazar no lo abre.
 - [ ] **A69a** En 390 × 844 y 375 × 667, los accesos Calendario y Consultas tienen dibujos de 28 px dentro de objetivos de 44 × 44 px y al menos 16 px entre ellos. Abren la casa correspondiente, sin que el enlace estirado de la tarjeta intercepte el toque. Consultas muestra solo las nuevas de esa casa; cero no muestra contador. Filtrar una casa no marca consultas como abiertas. Al abrir WhatsApp desde una consulta (recorrido 3.14), su contador se actualiza también en Mis casas. No hay desbordamientos; en un móvil más estrecho las acciones pueden pasar a otra fila.
 - [ ] **A69b** En una casa Inactiva, también si es la única, Activar suscripción conserva el dorado y cabe completo dentro de los márgenes laterales de la tarjeta (375 × 667 y 390 × 844). Una bloqueada no ofrece activación ni compartir. Los borradores conservan su tarjeta y sus acciones; «Aún sin fotos» sigue indicando la ausencia de fotos.
 - [ ] **A69c** La barra de estados mantiene sus casillas, cantidades, colores y accesos (también el enlace al borrador); en móvil, la barra y las tarjetas llegan a los bordes y el botón «Nueva casa» conserva 4 px a la derecha. Las tarjetas con acciones tienen nombre y zona más juntos y un divisor neutro antes de Compartir/Calendario/Consultas. Con nombres largos y en 320 px no se solapan ni recortan los controles. Copiar el enlace muestra «Enlace copiado» sin cambiar el tamaño del botón.
 - [ ] **A70** (tras D-pedir cambios) Casa con la etiqueta «Cambios pedidos» → «Nota de 3bstays: <nota>» y «Corregir y reenviar», que abre el asistente con todo relleno; al terminar y enviar vuelve a «En revisión».
-- [ ] **A71** (tras D-rechazar) Casa con la etiqueta «Rechazada» → «Nota de 3bstays: <nota>» y sin botones; su detalle dice «Anuncio rechazado».
+- [ ] **A71** (CT-1061, rechazada antes de la historia 27) Mis casas no la muestra, ni cuenta en las casillas; si era la única casa, la propietaria ve la vista de cliente. Su enlace guardado `/propietario/casa/<id>` dice «No encontramos ese anuncio.». Cierre la app y vuelva a abrirla, y recargue: no reaparece.
 - [ ] **A72** Casa «En revisión» → sin botones; su detalle dice «La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.».
 - [ ] **A73** Casa con la oferta vencida sin método (ver 3.17) → etiqueta «Pendiente de pago», botón ocre «Añadir método de pago» y sin «Compartir» ni «Calendario».
 - [ ] **A74** Casa con la suscripción parada → etiqueta «Inactiva» y botón ocre «Activar suscripción».
@@ -796,21 +796,21 @@ Para esta parte hace falta una cuenta admin (Daniel `+1 778 347 9837` o Ana `+1 
 - [ ] **D24** Revise la tarjeta «Descripción» → el texto completo de la casa y, debajo, insignias con las características marcadas (Wifi, Piscina…; «Parqueo de pago» o «Parqueo gratuito» si aplica) o «Sin características marcadas».
 - [ ] **D25** Si la zona la escribió el propietario en vez de elegirla de la lista → junto al nombre sale la insignia «Zona propuesta por el anfitrión».
 - [ ] **D26** Mire el bloque «Antes de decidir» → tres casillas: «Las fotos son de la casa y sin teléfonos ni logos», «La descripción no tiene enlaces ni publicidad», «Zona y precio coherentes»; marcarlas o no **no** bloquea ningún botón.
-- [ ] **D27** Mire abajo → el campo «Mensaje para el anfitrión (obligatorio si pide cambios o rechaza)» y la barra fija con «Aprobar y publicar», «Pedir cambios» y «Rechazar».
+- [ ] **D27** Mire abajo → el campo «Mensaje para el anfitrión (obligatorio si pide cambios)» y la barra fija con «Aprobar y publicar» y «Pedir cambios». No hay «Rechazar» (historia 27), ni en el móvil ni en escritorio.
 
 ### 4.5 Decidir una casa nueva
 
-- [ ] **D28** Sin escribir nada, toque «Pedir cambios» → aviso rojo «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.» y se queda en la misma casa.
-- [ ] **D29** Con el campo vacío, toque «Rechazar» → el mismo aviso; no se rechaza nada.
+- [ ] **D28** Sin escribir nada, toque «Pedir cambios» → aviso rojo «Escriba un motivo de hasta 2000 caracteres para pedir cambios.» y se queda en la misma casa.
+- [ ] **D29** Escriba solo espacios y toque «Pedir cambios» → el mismo aviso; la casa sigue en «Por revisar» y no se registra ninguna decisión.
 - [ ] **D30** (no aplica desde el 2026-10-30: ya no se puede enviar una casa sin fotos; sáltela salvo que quede una de antes) (casa sin fotos) Abra la tarjeta de «Casa sin fotos» → «Aprobar y publicar» está desactivado, el mensaje viene escrito con «Para publicarla necesitamos al menos una foto de la casa.» y sale el aviso «Sin fotos: solo puede pedir cambios.».
-- [ ] **D31** (no aplica, como D30) (casa sin fotos) Toque «Rechazar» sin cambiar el mensaje → «Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.» (el texto de las fotos no sirve de motivo para rechazar).
+- [ ] **D31** (no aplica desde el 2026-11-16: ya no hay «Rechazar»).
 - [ ] **D32** (casa nueva) Escriba «Necesitamos una foto de la cocina.» y toque «Pedir cambios» → vuelve a «Anuncios» con la nota ««<nombre>»: Cambios pedidos. El anfitrión verá su mensaje.»; la casa sale de «Por revisar» y las cifras bajan una y suben «con cambios».
 - [ ] **D33** En ese aviso toque «Avisar a Yorleny por WhatsApp» → abre WhatsApp con el número de la propietaria y el texto «Hola, Yorleny. Le escribimos de 3bstays: revisamos su casa «<nombre>» y necesitamos un cambio antes de publicarla: Necesitamos una foto de la cocina. Puede corregirla desde Mis casas → «Corregir y reenviar».»; vuelva a la app sin enviarlo.
 - [ ] **D34** Toque el chip «Cambios pedidos» → la casa está con la insignia «Cambios pedidos»; al abrirla se ve el recuadro «Cambios pedidos» con el texto «Necesitamos una foto de la cocina.» y ya no hay «Aprobar y publicar».
 - [ ] **D35** Cambie a la cuenta de la propietaria y abra **Mis casas** → la casa dice «Cambios pedidos», con «Nota de 3bstays: Necesitamos una foto de la cocina.» y el botón «Corregir y reenviar». (No llega ningún WhatsApp automático con la decisión: en v1 el admin avisa a mano si hace falta.)
-- [ ] **D36** (CT-1059 «Casa Playa Bite con hamaca») Con la cuenta admin, escriba «Las fotos no son de esta casa.» y toque «Rechazar» → ««Casa Playa Bite con hamaca»: Rechazada. El anfitrión verá el motivo.»; en el chip «Rechazados» aparece con «Rechazada».
-- [ ] **D37** Toque «Avisar a <nombre> por WhatsApp» en ese aviso → el texto es «Hola, <nombre>. Le escribimos de 3bstays: revisamos su casa «Casa Playa Bite con hamaca» y no podemos publicarla: Las fotos no son de esta casa. Si tiene dudas, respóndanos a este mensaje.».
-- [ ] **D38** (casa rechazada) Con la propietaria, abra Mis casas → «Rechazada» y «Nota de 3bstays: Las fotos no son de esta casa.»; al abrir el detalle: «Anuncio rechazado» con el motivo y sin botón de corregir.
+- [ ] **D36** (CT-1061, rechazada antes de la historia 27) Con la cuenta admin, toque el chip «Rechazados» → aparece con «Rechazada»; ahí están todas las rechazadas, no solo las 50 últimas. Al abrirla se lee el motivo con que se rechazó, para avisar a mano por WhatsApp si hace falta.
+- [ ] **D37** Un anuncio nuevo que no deba publicarse (duplicado, fraude) se cierra con «Admin → Casas → Eliminar casa»: avise antes a la propietaria por WhatsApp con el motivo, escriba el motivo y el código `CT-####` y confirme → desaparece de Mis casas de la propietaria y el motivo queda en el registro de Admin. Con un código equivocado, o al cancelar, la casa no cambia (D76–D77).
+- [ ] **D38** (no aplica desde el 2026-11-16: ya no se rechazan anuncios; ver A71 para los antiguos).
 - [ ] **D39** (casa nueva, tras corregirla en 5.2) Con el admin, toque «Por revisar» → la tarjeta vuelve con la insignia «Corregida» (no «Nueva»).
 - [ ] **D40** Abra la casa corregida, deje el campo vacío y toque «Aprobar y publicar» (con la propietaria aún sin método de pago y en oferta de lanzamiento) → vuelve a «Anuncios» con ««<nombre>»: Aprobada y publicada. El enlace ya funciona.»; la cifra «activas» sube una y la casa sale de la lista al instante.
 - [ ] **D41** Toque «Avisar a Yorleny por WhatsApp» → el texto es «Hola, Yorleny. Le escribimos de 3bstays: su casa «<nombre>» ya está aprobada y publicada. Este es su enlace para compartir con sus clientes: https://pruebas.3bstays.com/casa/CT-####. Gracias por publicar con nosotros.»; envíelo y compruebe en el teléfono de la propietaria que el enlace abre la ficha.
@@ -948,11 +948,10 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
   3. Admin: Casas → chip «Inactivas» con «Parada por el anfitrión el …».
   4. Propietaria: «Activar suscripción» → la casa vuelve a «Activa»; Cliente: la ficha vuelve a abrir.
 
-- [ ] **X8** Rechazar una casa → el enlace nunca funciona.
-  1. Propietaria: publica una casa «Casa X8» y la envía a revisión; anote su `CT-####`.
-  2. Cliente: `/casa/CT-####` → «Este enlace ya no está activo» y «Este anuncio no está disponible en este momento.»; no sale en Explorar.
-  3. Admin: abre la casa, escribe «Las fotos no son de esta casa.» y toca «Rechazar» → ««Casa X8»: Rechazada. El anfitrión verá el motivo.».
-  4. Propietaria: Mis casas → «Rechazada» con «Nota de 3bstays: Las fotos no son de esta casa.»; Cliente: el enlace sigue sin funcionar; Admin: chip «Rechazados» la lista.
+- [ ] **X8** Un anuncio rechazado antes de la historia 27 → el enlace nunca funciona y la propietaria no lo ve.
+  1. Cliente: `/casa/CT-1061` → «Este enlace ya no está activo» y «Este anuncio no está disponible en este momento.»; no sale en Explorar.
+  2. Propietaria (anfitriona de CT-1061): Mis casas no la muestra, tampoco tras cerrar y abrir la app.
+  3. Admin: el chip «Rechazados» la lista con su motivo.
 
 ---
 

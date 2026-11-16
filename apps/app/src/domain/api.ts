@@ -174,7 +174,7 @@ export interface AdminListingsApi {
   queue(): Promise<AdminQueue>;
   /** Una casa en cualquier estado, con su propietario; null si no existe. */
   get(id: string): Promise<QueueItem | null>;
-  /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
+  /** RPC review_listing. Solo aprobar o pedir cambios (historia 27); motivo obligatorio para pedir cambios, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
   /** Casas con algún dato o foto en revisión, la que más espera primero; cada una con su edición (listing.edit). Sin ser admin, []. */
   editQueue(): Promise<QueueItem[]>;
