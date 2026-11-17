@@ -4,13 +4,25 @@ import { appendFileSync, existsSync, readFileSync, readdirSync, statSync, writeF
 import { join, relative } from "node:path";
 import ts from "typescript";
 import { build, defineConfig, loadEnv, type Plugin } from "vite";
+import { FLAG_NAMES, parseFlags } from "./src/domain/flags";
 import { withOwnerCta } from "./src/domain/portada";
 import { launchedFor, supportNumbersCheck } from "./src/domain/support";
 import { staticHeadersBlock } from "./src/shared/security";
 import { precacheList } from "./src/sw/routes";
 
-const buildId = process.env.GITHUB_SHA?.slice(0, 12) ?? Date.now().toString(36);
 const root = import.meta.dirname;
+
+/** Feature flags (historia #58): FLAG_* del entorno del build (en CI, de las variables de GitHub del destino; en local,
+ *  de .env.local o vacías = valores iniciales). Navegador y worker salen de este mismo build, así que la ficha se
+ *  renderiza en el worker con las mismas flags que hidrata el navegador. Un valor inválido para el build. */
+const parsedFlags = parseFlags({ ...loadEnv("", root, "FLAG_"), ...process.env });
+if (!parsedFlags.ok) throw new Error(`${parsedFlags.errors.join(", ")} no es válida: use «true», «false» o déjela vacía.`);
+const flags = parsedFlags.flags;
+
+/** Las flags van en el identificador del build: con «Re-run» del despliegue (mismo commit, otra flag) también se
+ *  descarta la caché persistida de Query, que si no conservaría respuestas calculadas con las flags anteriores. */
+const flagsKey = FLAG_NAMES.map((name) => (flags[name] ? "1" : "0")).join("");
+const buildId = `${process.env.GITHUB_SHA?.slice(0, 12) ?? Date.now().toString(36)}-${flagsKey}`;
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -118,7 +130,7 @@ function supportNumbers(): Plugin {
 
 export default defineConfig({
   plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers(), portadaOwnerCta()],
-  define: { __BUILD_ID__: JSON.stringify(buildId) },
+  define: { __BUILD_ID__: JSON.stringify(buildId), __FLAGS__: JSON.stringify(flags) },
   // zod/mini en su propio trozo (zod-*): ya no va en el JS inicial (filters.ts se lee a mano) y lo comparten el asistente
   // de publicar y la edición; sin el grupo se pegaría a step-forms-* y las reglas de los formularios medirían 5 KB más.
   environments: {

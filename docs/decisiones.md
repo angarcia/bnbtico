@@ -1,3 +1,23 @@
+## 2026-11-17 · Cómo se configuran las feature flags
+
+Historia #58. Las cinco flags se fijan por entorno con variables de GitHub (`FLAG_*_PRUEBAS`, `FLAG_*_PRODUCCION`: «true», «false» o vacía = valor inicial) y cambian al desplegar («Re-run» del trabajo `deploy`), como los límites de Airbnb.
+- **Navegador y worker:** el build las incrusta (`__FLAGS__`); salen del mismo build, así que la ficha se renderiza y se hidrata con las mismas.
+- **Base:** el despliegue las escribe en `feature_flags` (una fila, solo `service_role`); las RPCs las leen por dentro con `public.feature_flags()`. Así ninguna escritura depende de un valor que envíe el navegador.
+- **Caché:** las flags entran en el identificador del build, de modo que un «Re-run» del mismo commit con otra flag también descarta la caché persistida y el precache.
+- **Descartado:** leerlas de la base en tiempo de ejecución desde el navegador (una petición más en cada arranque y riesgo de que el SSR y la hidratación vean valores distintos).
+- Contrato y consumidores: `docs/feature-flags.md`.
+
+## 2026-11-17 · Feature flags: qué pasa con los datos al apagar cada una
+
+Épica #57 (flags por entorno, con configuración y despliegue). Se aprueban las reglas pendientes de #59 y el comportamiento de iCal que necesita #63, preguntadas una a una en la sesión de Product Owner:
+- **Precios por fecha apagada:** las tarifas especiales ya guardadas se conservan en la base, ocultas: ni se muestran ni se suman a los totales, que usan solo el precio por noche. Al encender, reaparecen tal cual. La importación de Airbnb no trae precios, solo disponibilidad, así que no le afecta.
+- **Precio mensual:** ninguna flag lo toca. Se sigue preguntando al publicar y se ve en la ficha. Con «número de noches» de 30 o más, el total orientativo es mes × noches / 30, igual que con fechas.
+- **Número de noches:** el selector de Explorar va de 1 a 90 noches. No hay mínimos por casa en este lote: las columnas antiguas `min_nights`/`min_months` siguen sin usarse. El filtro de precio mínimo/máximo sigue comparando el precio por noche, aunque las tarjetas enseñen el total.
+- **Habitaciones apagada:** se lanza sin habitaciones y se añadirán si resultan útiles. Publicar una habitación se impide también en la base, no solo en la pantalla. Se borran todas las casas de tipo Habitación, en cualquier estado (publicadas, borradores, en revisión o con cambios pedidos), también en `bnbtico-pruebas`, con una migración y copia previa. Los datos de prueba (`pnpm datos:prueba`) tendrán un set sin habitaciones para cuando la flag esté apagada.
+- **iCal apagada:** la conexión de Airbnb se conserva, pero las noches importadas dejan de bloquear mientras esté apagada, y se paran las lecturas. También se quita la exportación del calendario (`/ical/*`). Al encender, las noches vuelven a bloquear, se reanuda la lectura con el mismo enlace y vuelve la exportación. Riesgo aceptado: mientras está apagada, una noche reservada en Airbnb puede salir libre en 3bstays.
+- **#59 se parte en dos:** #59 queda como tarea de diseño (todas las pantallas y reglas) y una historia nueva implementa el selector de noches. Así #60–#62 se desbloquean al aprobarse el diseño, sin esperar a esa implementación.
+- **Prioridad:** la flag de iCal (#63) es deseable, no necesaria para el lanzamiento: queda con prioridad baja. Mientras no se construya, iCal sigue siempre encendido, que es su valor inicial.
+
 ## 2026-11-17 · El calendario se lee entero, en una sola respuesta
 
 Issue #13 (épica DBA #9). Las tres lecturas del calendario (`public_listing_days` para la ficha, su SSR y la hoja de contacto; `owner_calendar_days` para el anfitrión; `admin_calendar_days` para el admin) devolvían una fila por día, y PostgREST corta en «Max rows» = 200. La ventana admite 366 días excepcionales, así que una noche ocupada o un precio especial después de la fila 200 llegaban como libres o al precio base.

@@ -183,6 +183,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"feature_flags": {
+                  Row: {
+                    "date_prices": boolean,"explore_dates": boolean,"explore_nights": boolean,"external_calendars": boolean,"id": boolean,"rooms": boolean,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "date_prices"?: boolean,"explore_dates"?: boolean,"explore_nights"?: boolean,"external_calendars"?: boolean,"id"?: boolean,"rooms"?: boolean,"updated_at"?: string
+                  }
+                  Update: {
+                    "date_prices"?: boolean,"explore_dates"?: boolean,"explore_nights"?: boolean,"external_calendars"?: boolean,"id"?: boolean,"rooms"?: boolean,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"fx_rates": {
                   Row: {
                     "crc_per_usd": number,"day": string,"fetched_at": string,"source": string
@@ -922,6 +936,22 @@ isOneToOne: true
               "available": boolean,"day": string,"imported": boolean,"manual_available": boolean,"special_price_crc": number
             }[]
                            },
+"feature_flags":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "date_prices": boolean,
+"explore_dates": boolean,
+"explore_nights": boolean,
+"external_calendars": boolean,
+"id": boolean,
+"rooms": boolean,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "feature_flags"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "finish_airbnb_import":
 { Args: { "p_blocks": Json,"p_error"?: string,"p_listing": string,"p_request": string }; Returns: undefined
                            },
@@ -1227,6 +1257,9 @@ isOneToOne: true
                            },
 "set_airbnb_manual_limits":
 { Args: { "p_per_day": number,"p_wait_minutes": number }; Returns: undefined
+                           },
+"set_feature_flags":
+{ Args: { "p_date_prices": boolean,"p_explore_dates": boolean,"p_explore_nights": boolean,"p_external_calendars": boolean,"p_rooms": boolean }; Returns: undefined
                            },
 "set_listing_available":
 { Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined
