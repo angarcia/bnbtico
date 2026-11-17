@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#59 · Laptop · Explorar con número de noches</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  /* Solo de la maqueta: en la app la cabecera flota sobre el mapa; aquí va en su sitio. */
+  .explore-top{position:static!important;transform:none!important;margin-bottom:12px}
+  .explore-top .chiprow{position:static!important}
+  .photo img{width:100%;height:100%;object-fit:cover;display:block}
+  /* Solo de la maqueta: el panel de noches reutiliza .desktop-search-panel; la fila de atajos, como en móvil. */
+  .nights-quick{display:flex;flex-wrap:wrap;gap:8px}
+  .demo-panel{position:absolute;top:56px;left:0;width:360px;display:flex;flex-direction:column;gap:14px;padding:16px}
+  .desktop-search-field{position:relative}
+</style>
+</head>
+<body>
+<!-- Maqueta #59 v1 (2026-11-17). Marcado de DesktopSearch (client/screens/explorar.tsx): el campo «Fechas» pasa a
+     «Noches»; abre el mismo tipo de panel con el contador y los atajos y «Aplicar». Personas no cambia. -->
+<main class="view">
+<header class="explore-top">
+  <h1 class="sr-only">Explorar casas</h1>
+  <div class="explore-search">
+    <div class="desktop-search-fields">
+      <div class="desktop-search-field">
+        <button type="button" class="search-pill float-card" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span class="search-pill-text">Lugar</span>
+        </button>
+      </div>
+      <div class="desktop-search-field">
+        <button type="button" class="search-pill float-card" aria-expanded="true" aria-label="Noches: 4 noches">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+          <span class="search-pill-text">4 noches</span>
+        </button>
+        <section aria-label="Noches" class="desktop-search-panel demo-panel">
+          <div class="row between">
+            <span class="stack gap-0"><b>Noches</b><span class="small muted">De 1 a 90</span></span>
+            <div class="people-stepper">
+              <button type="button" aria-label="Una noche menos">−</button>
+              <b class="num" aria-live="polite">4</b>
+              <button type="button" aria-label="Una noche más">+</button>
+            </div>
+          </div>
+          <div class="nights-quick" role="group" aria-label="Atajos de noches">
+            <button type="button" class="chip" aria-pressed="false">Fin de semana</button>
+            <button type="button" class="chip" aria-pressed="false">1 semana</button>
+            <button type="button" class="chip" aria-pressed="false">2 semanas</button>
+            <button type="button" class="chip" aria-pressed="false">1 mes</button>
+          </div>
+          <div class="row between">
+            <button type="button" class="btn-text">Quitar noches</button>
+            <button type="button" class="btn btn-primary">Aplicar noches</button>
+          </div>
+        </section>
+      </div>
+      <div class="desktop-search-people float-card" role="group" aria-label="Personas">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <div class="people-stepper"><button type="button" aria-label="Una persona menos">−</button><b class="num">2</b><button type="button" aria-label="Una persona más">+</button></div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="explore-list-pane" style="margin-top:24px">
+  <div class="stack gap-4">
+    <span class="small muted"><b class="ink num">8 casas</b> · 4 noches</span>
+    <span class="xs muted">Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.</span>
+  </div>
+  <div class="listing-grid explore-results" style="grid-template-columns:repeat(3,1fr)">
+    <div class="listing-cell"><a class="listing-card" href="#"><div class="photo"><img src="fotos/beach.jpg" alt=""></div><div class="listing-card-text">
+      <div class="listing-card-heading"><h2>Casa Almendro</h2><span class="accommodation-type">Alojamiento completo</span></div>
+      <span class="muted card-zone">Cocles, Talamanca</span><span class="muted card-capacity">4 personas · 2 dormitorios · 1 baño</span>
+      <div class="listing-card-footer"><span class="card-price num"><b>≈ ₡180 000</b> <span class="muted">por 4 noches</span></span></div></div></a></div>
+    <div class="listing-cell"><a class="listing-card" href="#"><div class="photo"><img src="fotos/aerial.jpg" alt=""></div><div class="listing-card-text">
+      <div class="listing-card-heading"><h2>Cabinas Punta Uva</h2><span class="accommodation-type">Alojamiento completo</span></div>
+      <span class="muted card-zone">Punta Uva, Talamanca</span><span class="muted card-capacity">2 personas · Estudio · 1 baño</span>
+      <div class="listing-card-footer"><span class="card-price num"><b>≈ ₡132 000</b> <span class="muted">por 4 noches</span></span></div></div></a></div>
+    <div class="listing-cell"><a class="listing-card" href="#"><div class="photo"><img src="fotos/beach.jpg" alt=""></div><div class="listing-card-text">
+      <div class="listing-card-heading"><h2>Villa Manzanillo</h2><span class="accommodation-type">Alojamiento completo</span></div>
+      <span class="muted card-zone">Manzanillo, Talamanca</span><span class="muted card-capacity">8 personas · 4 dormitorios · 3 baños</span>
+      <div class="listing-card-footer"><span class="card-price num"><b>≈ ₡560 000</b> <span class="muted">por 4 noches</span></span></div></div></a></div>
+  </div>
+</div>
+</main>
+</body>
+</html>

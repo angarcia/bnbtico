@@ -1,3 +1,13 @@
+## 2026-11-17 · Diseño del número de noches y de los estados de las flags
+
+Historia #59. Ana aprueba la v1 de `.scratch/feature-flags/diseno/` (maquetas con el CSS de la app y capturas en móvil y laptop):
+- **Selector:** «¿Cuándo?» pasa a «¿Cuántas noches?» cuando manda el modo noches: el contador de «¿Quiénes?», de 1 a 90, y los atajos «Fin de semana» (2), «1 semana» (7), «2 semanas» (14) y «1 mes» (30). En laptop, el campo «Noches» abre un panel con lo mismo, «Quitar noches» y «Aplicar noches».
+- **Resultados:** la píldora y la línea de resultados dicen las noches; tarjetas y mapa, «≈ ₡180 000 por 4 noches», con la nota «Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.».
+- **Conservar:** las noches van en la URL (`?noches=4`); recargar, volver desde la ficha o compartir el enlace las conserva. Un valor fuera de 1–90 se ignora sin aviso.
+- **WhatsApp:** sin fechas elegidas en la ficha, el mensaje dice «para 4 noches» y las personas; si elige fechas, mandan las fechas.
+- **Precios por fecha apagada:** sin aviso al anfitrión; sus precios especiales se ocultan y reaparecen al encender la flag.
+- **Estados de #60–#62:** quitan o recuperan elementos existentes, sin maqueta nueva (lista en el README del diseño).
+
 ## 2026-11-17 · Cómo se configuran las feature flags
 
 Historia #58. Las cinco flags se fijan por entorno con variables de GitHub (`FLAG_*_PRUEBAS`, `FLAG_*_PRODUCCION`: «true», «false» o vacía = valor inicial) y cambian al desplegar («Re-run» del trabajo `deploy`), como los límites de Airbnb.

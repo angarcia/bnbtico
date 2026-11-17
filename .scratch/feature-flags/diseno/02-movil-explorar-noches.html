@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#59 · Móvil · Explorar con número de noches</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  /* Solo de la maqueta: en la app la cabecera flota sobre el mapa; aquí va en su sitio. */
+  .explore-top{position:static!important;transform:none!important;margin-bottom:12px}
+  .explore-top .chiprow{position:static!important}.photo img{width:100%;height:100%;object-fit:cover;display:block}</style>
+</head>
+<body>
+<!-- Maqueta #59 v1 (2026-11-17). Marcado de client/screens/explorar.tsx y client/listing-card.tsx. Con 4 noches y 2
+     personas: la píldora resume la búsqueda, la línea de resultados dice las noches y cada tarjeta enseña el total
+     orientativo (precio por noche × 4) con la etiqueta que ya usa el modo fechas. Sin fechas: no se excluye ninguna casa. -->
+<main class="view">
+<header class="explore-top">
+  <h1 class="sr-only">Explorar casas</h1>
+  <div class="explore-search">
+    <a class="search-pill float-card" href="01-movil-buscar-noches.html">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span class="search-pill-text">4 noches · 2 personas</span>
+    </a>
+  </div>
+  <div class="chiprow fit">
+    <a class="chip filters-btn float-card" aria-label="Filtros">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      Filtros
+    </a>
+  </div>
+</header>
+<div class="explore-list-pane">
+  <div class="stack gap-4">
+    <span class="small muted"><b class="ink num">8 casas</b> · 4 noches</span>
+    <span class="xs muted">Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.</span>
+  </div>
+  <div class="listing-grid explore-results">
+    <div class="listing-cell">
+      <a class="listing-card" href="#">
+        <div class="photo"><img src="fotos/beach.jpg" alt=""></div>
+        <div class="listing-card-text">
+          <div class="listing-card-heading"><h2>Casa Almendro</h2><span class="accommodation-type">Alojamiento completo</span></div>
+          <span class="muted card-zone">Cocles, Talamanca</span>
+          <span class="muted card-capacity">4 personas · 2 dormitorios · 1 baño</span>
+          <div class="listing-card-footer"><span class="card-price num"><b>≈ ₡180 000</b> <span class="muted">por 4 noches</span></span></div>
+        </div>
+      </a>
+    </div>
+    <div class="listing-cell">
+      <a class="listing-card" href="#">
+        <div class="photo"><img src="fotos/aerial.jpg" alt=""></div>
+        <div class="listing-card-text">
+          <div class="listing-card-heading"><h2>Cabinas Punta Uva</h2><span class="accommodation-type">Alojamiento completo</span></div>
+          <span class="muted card-zone">Punta Uva, Talamanca</span>
+          <span class="muted card-capacity">2 personas · Estudio · 1 baño</span>
+          <div class="listing-card-footer"><span class="card-price num"><b>≈ ₡132 000</b> <span class="muted">por 4 noches</span></span></div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+</main>
+</body>
+</html>
