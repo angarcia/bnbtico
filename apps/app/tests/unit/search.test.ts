@@ -1,7 +1,7 @@
 // Explorar al estilo Airbnb: resumen de la búsqueda, rango de llegada y salida, y sugerencias de zona.
 import { describe, expect, it } from "vitest";
 import { parseFilters } from "../../src/domain/filters";
-import { nightsBetween, nightsLabel, peopleLabel, resultsText, searchSummary, stayLabel, tapRange, zonePlace, zoneSuggestions } from "../../src/domain/search";
+import { housesCount, nightsBetween, nightsLabel, peopleLabel, resultsText, searchSummary, stayLabel, tapRange, zonePlace, zoneSuggestions } from "../../src/domain/search";
 import type { ZoneWithListings } from "../../src/domain/zones";
 import { cardFacts, cardPrice, mapPriceLabel } from "../../src/domain/describe";
 import type { PublicListing, SearchListing } from "../../src/domain/listing";
@@ -36,6 +36,13 @@ describe("resultsText", () => {
     expect(resultsText(4, n, "Cocles")).toEqual({ count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" });
     expect(resultsText(1, { ...base, arrival: "2026-11-23", departure: "2026-11-27" })).toEqual({ count: "1 casa", rest: " · 23–27 nov" });
     expect(resultsText(9, { ...base, prov: "Todas" })).toEqual({ count: "9 casas", rest: "" });
+  });
+
+  it("con más páginas por cargar («Ver más casas») no cuenta las que faltan: «Más de 60 casas»", () => {
+    expect(resultsText(60, base, null, true)).toEqual({ count: "Más de 60 casas", rest: "" });
+    expect(resultsText(120, { ...base, prov: "Limón" }, null, true)).toEqual({ count: "Más de 120 casas", rest: " en Limón" });
+    expect(housesCount(60, true)).toBe("Más de 60 casas");
+    expect(housesCount(1)).toBe("1 casa");
   });
 });
 

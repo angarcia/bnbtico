@@ -277,6 +277,21 @@ export interface SearchListing extends PublicListing {
   stayTotalCrc: number | null;
 }
 
+/** Dónde sigue la búsqueda: la clave de orden de search_listings (Caribe primero, más nuevas, id) de la última casa de una
+ *  página. Opaco para la pantalla: solo se devuelve a `searchPublic` para pedir la siguiente. */
+export interface SearchCursor {
+  caribe: boolean;
+  createdAt: string;
+  id: string;
+}
+
+/** Una página de Explorar: como mucho 60 casas y, si quedan más, el cursor para pedir las siguientes. */
+export interface SearchPage {
+  listings: SearchListing[];
+  next: SearchCursor | null;
+}
+
+
 export interface PublicPhoto {
   path: string;
   /** Variante de 800 px (o la foto anterior): hero y Open Graph. */

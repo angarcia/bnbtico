@@ -78,7 +78,7 @@ Un módulo TypeScript sin imports de framework: tipos generados de la base (`sup
 
 ## Rendimiento
 
-Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 160 KB gz (ampliación autorizada el 2026-11-04). Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
+Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 161 KB gz (160 KB el 2026-11-04; 161 KB el 2026-11-17 por «Ver más casas»). Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
 
 ## Costes y disparadores
 

@@ -13,7 +13,7 @@ const filters = (params: Record<string, string> = {}) => parseFilters(params, PR
 describe("search_listings · el Caribe primero y tipo de alojamiento", () => {
   let h: CalendarHarness;
   const house = {} as Record<"limonVieja" | "puntarenas" | "limonNueva" | "guanacaste" | "casaVieja" | "habitacion", { id: string; publicId: string }>;
-  const ids = async (params: Record<string, string> = {}) => (await h.anon.searchPublic(filters(params))).map((l) => l.publicId);
+  const ids = async (params: Record<string, string> = {}) => (await h.anon.searchPublic(filters(params))).listings.map((l) => l.publicId);
   const expected = () => [house.habitacion, house.casaVieja, house.limonNueva, house.limonVieja, house.guanacaste, house.puntarenas].map((x) => x.publicId);
 
   beforeAll(async () => {

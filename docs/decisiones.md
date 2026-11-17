@@ -1,3 +1,13 @@
+## 2026-11-17 · «Ver más casas» en Explorar
+
+Daniel decide paginar Explorar ahora, sin maqueta nueva: con el límite de 60 en la base (entrada de abajo), una búsqueda con más casas nunca enseñaba las demás.
+- **Pantalla:** tras la última tarjeta, el botón «Ver más casas» (contorno, a todo el ancho) trae las 60 siguientes; mientras llegan dice «Cargando casas…» desactivado y, si fallan, avisa encima «No pudimos cargar más casas. Revise su conexión e inténtelo de nuevo.» y el mismo botón reintenta. Botón y no carga al llegar al final: el cliente decide y no se gastan datos que nadie pidió. Ana revisa el aspecto con capturas.
+- **Mapa:** enseña todas las casas cargadas, como la lista.
+- **Contador:** mientras quedan páginas, «Más de 60 casas» (y en Filtros «Ver más de 60 casas»); contar todas obligaría a la búsqueda a recorrerlas, que es lo que el límite evita.
+- **Cómo:** `search_listings` recibe un cursor opcional (`p_after_caribe`, `p_after_created`, `p_after_id`: la clave de orden de la última casa devuelta) y devuelve `has_more` (elige 61, devuelve 60). Cursor y no `offset`: no recorre las páginas anteriores ni repite o salta casas si entra una nueva entre página y página. El total orientativo se sigue calculando solo para las devueltas. Migración `20261117140000_pagina_siguiente_busqueda`; `searchPublic(filtros, after)` devuelve `{ listings, next }` en el fake y en PostgREST, con la suite de contrato.
+- **Fuera de alcance:** sin evento de telemetría propio para el botón (pediría ampliar `events` en la base).
+- **Presupuesto de JS:** el JS inicial privado pasa de 160 KB a 161 KB (con el cambio, 160,02 KB): la consulta por páginas trae el observador de consultas infinitas de TanStack, unos 670 B. Lo aprueba Daniel; sustituye en este punto a «No cambia el JS inicial privado de 160 kB» de la entrada de margen de hoy. Los trozos diferidos se quedan con ese margen (pestañas, 27,95 kB).
+
 ## 2026-11-17 · La búsqueda limita siempre en la base
 
 Issue #10 (épica DBA #9): `search_listings` ya no confía en que el llamador pase el límite. Antes, con `p_limit` omitido o nulo, una llamada directa a la RPC recorría todas las casas elegibles y calculaba sus totales; el máximo de filas de PostgREST no evitaba ese trabajo.

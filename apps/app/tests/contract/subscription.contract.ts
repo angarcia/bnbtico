@@ -314,7 +314,7 @@ export function subscriptionContract(name: string, makeHarness: () => Promise<Su
         const draft = await h.seed({ status: "draft" });
         await expire(due.id);
         await h.billing("owner").stop(stopped.id);
-        const listed = (await h.anon.searchPublic(parseFilters({ prov: "Todas" }, PROVINCES))).map((x) => x.publicId);
+        const listed = (await h.anon.searchPublic(parseFilters({ prov: "Todas" }, PROVINCES))).listings.map((x) => x.publicId);
         expect(listed).toEqual([active.publicId]);
         expect((await h.anon.getManyPublic([active, due, stopped, reopened].map((x) => x.publicId))).map((x) => x.publicId)).toEqual([active.publicId]);
         expect(await h.anon.blockedReason(active.publicId)).toBeNull();

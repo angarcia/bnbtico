@@ -5,11 +5,12 @@ import { FX_INITIAL } from "../../domain/fx";
 import { DomainError } from "../../domain/errors";
 import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
 import { distanceMeters } from "../../domain/geo";
-import { PROVINCES, type LinkState, type PublicListing, type SearchListing } from "../../domain/listing";
+import { PROVINCES, type LinkState, type PublicListing, type SearchCursor, type SearchListing, type SearchPage } from "../../domain/listing";
 import { addDays } from "../../domain/dates";
 import { stayEstimate, stayNights } from "../../domain/stay-price";
 import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
-import { CARIBE_PROVINCE, ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
+import { cursorAfter } from "../../domain/search-cursor";
+import { ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
 import { offerTaken } from "./billing";
 import { approxPoint, isPublicListing, type FakeDb, type FakeListing } from "./db";
 import { FAKE_ZONES, fakeCantonOf } from "./places";
@@ -80,13 +81,13 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
   const lte = (v: number | null, max: number) => v !== null && v <= max;
 
   return {
-    async searchPublic(q: Filters) {
+    async searchPublic(q: Filters, after: SearchCursor | null = null): Promise<SearchPage> {
       const r = stayRange(q);
       const today = db.today();
       if (r && (r.to <= r.from || r.from < today || r.to > addDays(today, 366))) throw new DomainError("Revise las fechas.", "validation");
       const zone = q.zone ? FAKE_ZONES.find((z) => z.id === q.zone) : null;
-      if (q.zone && !zone) return [];
-      return active()
+      if (q.zone && !zone) return { listings: [], next: null };
+      const found = active()
         .filter((l) => l.available)
         .filter((l) => !zone || nearZone(l, zone))
         .filter((l) => !r || !busy(l, r.from, r.to))
@@ -98,10 +99,16 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         .filter((l) => !q.min || gte(l.nightlyPriceCrc, q.min))
         .filter((l) => !q.max || lte(l.nightlyPriceCrc, q.max))
         // Como search_listings: el Caribe (Limón) primero y, dentro de cada grupo, las más nuevas; después, el límite.
-        .sort((a, b) => Number(b.province === CARIBE_PROVINCE) - Number(a.province === CARIBE_PROVINCE) || b.createdAt.localeCompare(a.createdAt))
-        .slice(0, SEARCH_LIMIT)
+        .sort((a, b) => -compareCursor(cursorAfter(a), cursorAfter(b)))
+        // Página siguiente: las que van detrás del cursor, en ese mismo orden.
+        .filter((l) => !after || compareCursor(cursorAfter(l), after) < 0);
+      const page = found.slice(0, SEARCH_LIMIT);
+      const last = page.at(-1);
+      return {
         // Como search_listings: el total, solo de las casas que se devuelven.
-        .map((l): SearchListing => ({ ...toPublic(l), stayTotalCrc: r ? stayTotal(l, r.from, r.to) : null }));
+        listings: page.map((l): SearchListing => ({ ...toPublic(l), stayTotalCrc: r ? stayTotal(l, r.from, r.to) : null })),
+        next: found.length > SEARCH_LIMIT && last ? cursorAfter(last) : null,
+      };
     },
 
     async zonesWithListings() {
@@ -172,4 +179,9 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
         .map((l) => ({ publicId: l.publicId, updatedAt: l.updatedAt }));
     },
   };
+}
+
+/** Orden de search_listings como comparación de tuplas (Caribe, created_at, id); mayor = antes en la lista. */
+function compareCursor(a: SearchCursor, b: SearchCursor): number {
+  return Number(a.caribe) - Number(b.caribe) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
 }

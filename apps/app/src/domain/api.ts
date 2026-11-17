@@ -7,7 +7,7 @@ import type { FavoriteEntry } from "./favorites";
 import type { Filters } from "./filters";
 import type { FxRate } from "./fx";
 import type { VariantSize } from "./image";
-import type { Feature, LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SearchListing, SitemapEntry, Step } from "./listing";
+import type { Feature, LinkState, Listing, ListingDraft, ListingStatus, Photo, PublicListing, SearchCursor, SearchPage, SitemapEntry, Step } from "./listing";
 import type { InquiryDetails, OwnerInquiry } from "./inquiry";
 import type { AdminHouses } from "./admin-houses";
 import type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./review";
@@ -28,9 +28,10 @@ export type { AdminQueue, EditDecision, QueueItem, ReviewDecision } from "./revi
 
 export interface PublicListingsApi {
   /** Catálogo con filtros, todos dentro de la RPC search_listings: zona a 5 km, noches libres, provincia (solo sin zona),
-   *  personas, habitaciones, características y precio por noche; más recientes primero, como mucho 60. Con llegada y salida,
+   *  personas, habitaciones, características y precio por noche; el Caribe primero y luego las más nuevas, como mucho 60 por
+   *  página. `after` (el `next` de la página anterior) pide las siguientes; `next` es null si no quedan. Con llegada y salida,
    *  cada casa trae su total orientativo (`stayTotalCrc`, domain/stay-price.ts). Rango inválido: «Revise las fechas.» */
-  searchPublic(filters: Filters): Promise<SearchListing[]>;
+  searchPublic(filters: Filters, after?: SearchCursor | null): Promise<SearchPage>;
   /** Zonas activas con alguna casa activa y abierta a 5 km o menos (o con esa zona), Caribe primero y por nombre. */
   zonesWithListings(): Promise<ZoneWithListings[]>;
   /** Ficha pública por `CT-####`; null si no está activa. */

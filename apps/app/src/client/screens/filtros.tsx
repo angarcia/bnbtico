@@ -1,6 +1,6 @@
 // Filtros (pantalla 02): Zona y Fechas abren la búsqueda; Personas, Habitaciones y Tipo se ajustan aquí. «Ver N casas» cuenta en vivo.
 // Sin pastillas de provincia desde el ticket 06 (2026-11-06): sin zona es todo el país, con el Caribe primero.
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -17,14 +17,14 @@ import {
   type SearchKey,
 } from "../../domain/filters";
 import { costaRicaToday } from "../../domain/dates";
-import { stayLabel } from "../../domain/search";
+import { housesCount, stayLabel } from "../../domain/search";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
 import { CounterRow } from "../../shared/counter-row";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
 import { I } from "../../shared/icons";
-import { listingsQuery, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
+import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
@@ -62,10 +62,10 @@ function FiltrosForm({
   });
   const zoneName = zones.data?.find((z) => z.id === f.zone)?.name ?? null;
   const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
-  const { data } = useQuery(listingsQuery(f));
-  const count = data?.length;
-  const zoneListings = useQuery(zoneListingsQuery(f.zone));
-  const availableFeatures = new Set(zoneListings.data?.flatMap((listing) => listing.features));
+  const { data, hasNextPage } = useInfiniteQuery(listingsQuery(f));
+  const count = loadedListings(data)?.length;
+  const zoneListings = useInfiniteQuery(zoneListingsQuery(f.zone));
+  const availableFeatures = new Set(loadedListings(zoneListings.data)?.flatMap((listing) => listing.features));
   const featureChoices = FEATURE_CHOICE_ORDER.filter((key) => availableFeatures.has(key));
   const symbol = currency === "USD" ? "$" : "₡";
   const mineRows = [
@@ -266,7 +266,7 @@ function FiltrosForm({
           >
             {count === undefined
               ? "Ver casas"
-              : `Ver ${count} ${count === 1 ? "casa" : "casas"}`}
+              : `Ver ${hasNextPage ? "más de " : ""}${housesCount(count)}`}
           </button>
         </div>
       </form>

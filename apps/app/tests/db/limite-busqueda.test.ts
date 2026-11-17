@@ -1,6 +1,7 @@
-// Migración limite_busqueda (issue #10, épica DBA #9): search_listings limita siempre dentro de SQL. Omitido o NULL → 60;
+// Migraciones limite_busqueda y pagina_siguiente_busqueda (issue #10, épica DBA #9): search_listings limita siempre dentro de SQL. Omitido o NULL → 60;
 // más de 60 → 60; cero o negativo → error de validación. El límite va antes de calcular los totales orientativos: se
-// comprueba contando las llamadas a search_stay_total en la misma transacción, no por la longitud del JSON.
+// comprueba contando las llamadas a search_stay_total en la misma transacción, no por la longitud del JSON. La página
+// siguiente sigue el orden por cursor (Caribe, created_at, id de la última casa devuelta) y has_more dice si queda alguna.
 import { beforeAll, describe, expect, it } from "vitest";
 import { addDays } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -22,7 +23,7 @@ function rowsAndCalls(args: string): { rows: number; calls: number } {
   return { rows: rows!, calls: calls! };
 }
 
-describe("migración limite_busqueda", () => {
+describe("search_listings: límite y página siguiente", () => {
   const T = costaRicaToday(Date.now());
   const from = addDays(T, 10);
   const to = addDays(T, 14);
@@ -102,8 +103,43 @@ describe("migración limite_busqueda", () => {
     expect(data).toEqual([{ public_id: guanacaste.publicId, stay_total_crc: 4 * 60000 }]);
   });
 
+  /** Cursor de la última fila de una página: lo que el cliente manda para pedir la siguiente. */
+  const cursorAfter = (rank: number, args = "") =>
+    sql(`select format('p_after_caribe => %L, p_after_created => %L, p_after_id => %L', province = 'Limón', created_at, id)
+      from public.search_listings(${args}) where sort_rank = ${rank}`);
+
+  it("has_more avisa cuando quedan casas, y la página siguiente sigue el orden sin repetir ni saltar ninguna", () => {
+    const all = sql(`select string_agg(public_id, ',' order by (province = 'Limón') desc, created_at desc, id desc)
+      from public.listings_public where available`).split(",");
+    const seen: string[] = [];
+    let args = "";
+    for (;;) {
+      const page = sql(`select coalesce(string_agg(public_id, ',' order by sort_rank), '') || '|' || coalesce(bool_and(has_more), false) || '|' || count(*)
+        from public.search_listings(${args})`).split("|");
+      seen.push(...page[0]!.split(",").filter(Boolean));
+      if (page[1] === "false") break;
+      args = cursorAfter(Number(page[2]), args);
+    }
+    expect(seen).toEqual(all);
+    expect(seen.at(-1)).toBe(guanacaste.publicId);
+  });
+
+  it("la página siguiente también limita antes de calcular los totales", () => {
+    const after = cursorAfter(60, dates);
+    expect(rowsAndCalls(`${dates}, ${after}`)).toEqual({ rows: 60, calls: 60 });
+    const last = cursorAfter(60, `${dates}, ${after}`);
+    const third = cursorAfter(60, `${dates}, ${last}`);
+    expect(rowsAndCalls(`${dates}, ${third}`)).toEqual({ rows: CLONES + 2 - 180, calls: CLONES + 2 - 180 });
+  });
+
+  it("un cursor a medias se rechaza de forma controlada", async () => {
+    const { error } = await anonClient().rpc("search_listings", { p_after_id: "00000000-0000-0000-0000-000000000000" });
+    expect(error?.code).toBe("22023");
+    expect(error?.message).toBe("Revise la página.");
+  });
+
   it("la autorización no cambia: anon y authenticated ejecutan search_listings; search_stay_total sigue cerrada", () => {
-    const fn = "public.search_listings(text,date,date,text,integer,integer,public.feature[],integer,integer,integer,public.listing_kind[])";
+    const fn = "public.search_listings(text,date,date,text,integer,integer,public.feature[],integer,integer,integer,public.listing_kind[],boolean,timestamp with time zone,uuid)";
     expect(sql(`select has_function_privilege('anon', '${fn}', 'execute') and has_function_privilege('authenticated', '${fn}', 'execute')`)).toBe("t");
     expect(sql(`select has_function_privilege('public', '${HELPER}', 'execute') or has_function_privilege('anon', '${HELPER}', 'execute')`)).toBe("f");
     expect(sql("select prosecdef from pg_proc where oid = 'public.search_listings'::regproc")).toBe("t");
