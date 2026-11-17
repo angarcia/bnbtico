@@ -60,6 +60,10 @@ Validación final local aportada por Ana: tipos, 2258 unitarias, 8 pruebas DB de
 
 Ampliación aprobada el 2026-11-09: «Marcar una reserva» usa los días efectivos y comprueba Airbnb antes de habilitar la selección, reutilizando un éxito de menos de un minuto o esperando una lectura en curso. Tras fallo, requiere confirmación explícita del último calendario válido; una lectura denegada no se interpreta como disponibilidad. `mark_listing_reservation` bloquea la casa y vuelve a comprobar ocupación manual/importada dentro de la transacción, reutilizando `listing_days_update` sin tocar precios. `save_listing_days` comparte el bloqueo para serializar la edición manual con esa operación. La marca `CalendarChange.requireFree` se envía exclusivamente por esa RPC; el editor general conserva su comportamiento. Consulta WhatsApp conserva su comprobación en la base, sin lectura externa por visita. Migración `20261109181419_proteger_reserva_calendario.sql`, confirmada por el script al día en Supabase local. Guía: A101a–A101e y GC09–GC10.
 
+### Feature flags por entorno (#58)
+
+Cinco flags públicas, fijadas por entorno con variables de GitHub y aplicadas al desplegar: el build las incrusta en navegador y worker (`__FLAGS__`, mismas en el SSR de la ficha y en la hidratación) y el despliegue las escribe en `feature_flags`, que solo leen las RPCs por dentro (`public.feature_flags()`). Contrato, consumidores y procedimiento: [feature-flags.md](feature-flags.md).
+
 ### Importación automática de Airbnb (#8)
 
 El trigger de Airbnb del Worker, `17 */3 * * *` por defecto y configurable con la variable de GitHub del entorno (`AIRBNB_SYNC_MINUTES_*`, 2026-11-17), usa la hora programada para seleccionar conexiones activas. Las RPC `airbnb_due_for_cycle` y `claim_airbnb_cycle` son exclusivas del rol de servicio. La segunda aplica el bloqueo por casa y registra el ciclo antes de llamar a `airbnb_reserve`. La descarga y la publicación usan `runAirbnbImport` y la finalización versionada de #5/#7. La [guía de operación](operacion-airbnb.md) describe los límites, la simulación local y las comprobaciones del trigger alojado.

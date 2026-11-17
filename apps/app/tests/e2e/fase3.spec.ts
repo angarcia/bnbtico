@@ -1,6 +1,7 @@
 import { devices, type Browser, type TestInfo } from "@playwright/test";
 import { messagePreview, pickDates } from "./helpers/contact-sheet";
 import { expect, test, type Page } from "./helpers/test";
+import { BUILD_FLAGS } from "./helpers/flags";
 import type { ListingsHarness } from "../contract/harness";
 import { totp } from "../contract/totp";
 import { serviceClient, TEST_PHONES, totpSecretOf } from "../db/local";
@@ -65,7 +66,8 @@ test("publicar → aprobar → favorito y contacto sin cuenta → WhatsApp → A
   await expect(owner).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   const id = /\/publicar\/([0-9a-f-]{36})\//.exec(owner.url())![1]!;
   const continuar = () => owner.getByRole("button", { name: "Continuar" }).click();
-  await owner.getByText("Alojamiento completo", { exact: true }).click();
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta.
+  if (BUILD_FLAGS.rooms) await owner.getByText("Alojamiento completo", { exact: true }).click();
   await continuar();
   await expect(owner).toHaveURL(/\/2$/);
   // ¿Dónde está su casa?: un toque en el mapa (abre en Limón) da el cantón y la zona más cercana.

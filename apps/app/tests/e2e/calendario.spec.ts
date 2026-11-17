@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { BUILD_FLAGS, onlyDatePrices } from "./helpers/flags";
 import type { CalendarHarness } from "../contract/harness";
 import { serviceClient } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -138,7 +139,9 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   await expect(day(page, on(11))).toHaveAttribute("aria-pressed", "true");
   await expect(panel(page).getByText(`3 noches · 10–12 ${shortMonth(next())}`)).toBeVisible();
   await expect(panel(page).getByRole("button", { name: "Disponible" })).toHaveAttribute("aria-pressed", "true");
-  await expect(panel(page).getByLabel("Precio por noche")).toHaveValue("95 000");
+  // Con los precios por fecha apagados (feature flags, #61) el panel no tiene precio.
+  if (BUILD_FLAGS.datePrices) await expect(panel(page).getByLabel("Precio por noche")).toHaveValue("95 000");
+  else await expect(panel(page).getByLabel("Precio por noche")).toHaveCount(0);
   await expect(saveBtn(page)).toBeDisabled();
   // Revisión UX 2026-10-29 (C4): selección con marco terracota, sin relleno; el panel va pegado abajo y la barra de pestañas
   // se va mientras hay días seleccionados; «Guardar cambios» de 44 px y en gris hasta que hay un cambio.
@@ -199,6 +202,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
 });
 
 test("precio distinto (solo la cifra, sin ★) y, con el precio base («Usar el precio base»), la fila se borra", async ({ page }) => {
+  onlyDatePrices();
   const casa = await seedHouse("Casa Navidad");
   await open(page, casa.id);
   await day(page, on(15)).click();
@@ -233,6 +237,7 @@ test("precio distinto (solo la cifra, sin ★) y, con el precio base («Usar el 
 });
 
 test("precios mezclados: el campo queda en «Varios precios» y cambiar solo la disponibilidad los conserva", async ({ page }) => {
+  onlyDatePrices();
   const casa = await seedHouse("Casa Mezcla");
   await h.putDay(casa.id, { day: on(20), available: true, specialPriceCrc: 150000 });
   await open(page, casa.id);

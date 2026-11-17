@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { BUILD_FLAGS, onlyRooms } from "./helpers/flags";
 import type { ListingsHarness } from "../contract/harness";
 import { serviceClient, sql, TEST_PHONES } from "../db/local";
 import { deleteAccount, FREE_PHONE, INTL_PHONE } from "../db/postgrest-auth-harness";
@@ -145,6 +146,7 @@ async function stepsTwoToSix(page: Page) {
 }
 
 test("desde la portada sin cuenta: pasos 1–6 en el teléfono, verificación al llegar a las Fotos y la casa con todo", async ({ page }) => {
+  onlyRooms();
   await deleteAccount(FREE_PHONE);
   try {
     const account: string[] = [];
@@ -198,7 +200,8 @@ test("desde la portada sin cuenta: pasos 1–6 en el teléfono, verificación al
 
 test("sin cuenta, cerrar a medias guarda lo escrito: al volver sigue ahí; las Fotos piden el código", async ({ page }) => {
   await page.goto("/publicar");
-  await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta.
+  if (BUILD_FLAGS.rooms) await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
   // La dirección cambia antes de que llegue el trozo del asistente: se espera a la pantalla, no al «Continuar» de antes.
@@ -243,7 +246,8 @@ test("con sesión, un paso del teléfono sigue a /publicar/continuar y crea la c
 test("con un borrador ya empezado, elige; «Empezar otra» usa lo guardado", async ({ page }) => {
   const seeded = await h.seed({ status: "draft" });
   await page.goto("/publicar");
-  await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta.
+  if (BUILD_FLAGS.rooms) await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
   await page.goto("/publicar/nueva/7");
@@ -282,7 +286,8 @@ test("un paso 1 caducado no se usa", async ({ page }) => {
 test("sin respuesta guardada, /publicar/verificar vuelve al paso 1; con sesión, sigue a /publicar/continuar", async ({ page }) => {
   await page.goto("/publicar/verificar");
   await expect(page).toHaveURL(/\/publicar$/);
-  await expect(page.getByRole("heading", { name: "¿Qué es?" })).toBeVisible();
+  // Con las habitaciones apagadas (feature flags, #62) el paso 1 no pregunta el tipo: solo «Tenga a mano».
+  await expect(BUILD_FLAGS.rooms ? page.getByRole("heading", { name: "¿Qué es?" }) : page.locator(".ready-list")).toBeVisible();
   await injectSession(page, "owner");
   await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ kind: "completo", savedAt: Date.now() })), STEP1_KEY);
   await page.goto("/publicar/verificar");

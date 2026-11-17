@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { onlyRooms, onlySearchMode } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { addDays } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -261,6 +262,7 @@ test("Filtros: sin lugar oculta las características y Limpiar elimina los filtr
 });
 
 test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contador (ticket 06)", async ({ page }) => {
+  onlyRooms();
   await page.goto("/explorar/filtros");
   const tipo = page.getByRole("group", { name: "Tipo de alojamiento" });
   await expect(tipo.getByRole("button")).toHaveText(["Cualquiera", "Completo", "Habitación"]);
@@ -372,6 +374,7 @@ test("enlaces viejos del modo mensual (?mensual=1, ?modo=monthly, ?desde=) abren
 });
 
 test("con llegada y salida, cada tarjeta dice el total orientativo de esas noches; con 30 o más y precio al mes, el mes prorrateado", async ({ page }) => {
+  onlySearchMode("dates");
   const h = await postgrestHarness();
   const today = costaRicaToday(Date.now());
   const day = (n: number) => addDays(today, n);

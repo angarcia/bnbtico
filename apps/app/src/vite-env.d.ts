@@ -12,3 +12,6 @@ interface ImportMetaEnv {
 
 /** Identificador del build (vite.config.ts): invalida la caché persistida de Query en cada despliegue. */
 declare const __BUILD_ID__: string;
+
+/** Feature flags del build (vite.config.ts, historia #58). Úsese a través de src/shared/flags.ts. */
+declare const __FLAGS__: import("./domain/flags").Flags;

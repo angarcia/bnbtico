@@ -19,6 +19,11 @@ import { toListingUpdate } from "../../src/domain/rows";
 import { COMPLETE, type SeedOwner, type SeedSpec, type Seeded, type StoredReminder, type SubscriptionHarness } from "../contract/harness";
 import { TEST_NAMES, TEST_PHONES, anonClient, localSupabase, serviceClient, signIn, signInAdmin, sql } from "./local";
 
+/** Feature flags de las pruebas de base: los valores iniciales con `rooms` y `date_prices` encendidas, para que las pruebas de
+ *  habitaciones y de precios por fecha existentes cubran la flag encendida (historias #62 y #61). Las de cada flag apagada
+ *  (habitaciones-flag.test.ts, precios-fecha-flag.test.ts) la apagan ellas mismas. */
+export const HARNESS_FLAGS = { p_explore_dates: false, p_explore_nights: true, p_date_prices: true, p_external_calendars: true, p_rooms: true };
+
 export async function postgrestHarness(): Promise<SubscriptionHarness> {
   const service = serviceClient();
   const owners: Record<SeedOwner, SupabaseClient<Database>> = { owner: await signIn("owner"), other: await signIn("other") };
@@ -40,6 +45,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
   const fail = (what: string, error: { message: string } | null) => {
     if (error) throw new Error(`${what}: ${error.message}`);
   };
+  // Flags de las pruebas (HARNESS_FLAGS): al crear el harness y en cada reset.
+  const flagsOn = async () => fail("flags de las pruebas", (await service.rpc("set_feature_flags", HARNESS_FLAGS)).error);
+  await flagsOn();
 
   async function seed(spec: SeedSpec): Promise<Seeded> {
     const db = owners[spec.as ?? "owner"];
@@ -189,6 +197,7 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     anon: createPostgrestListings(anon, { supabaseUrl: localSupabase().url }),
     owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url, quickWrite: quick[who] }),
     async reset() {
+      await flagsOn();
       fail("vaciar casas", (await service.from("listings").delete().not("id", "is", null)).error);
       // El método de pago es de la cuenta (no se borra con las casas) y cambia la regla de aprobar: fuera en cada caso.
       fail("vaciar métodos", (await service.from("payment_methods").delete().not("owner_id", "is", null)).error);

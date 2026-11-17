@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { chromium, devices, type Browser, type TestInfo } from "@playwright/test";
 import { expect, test, type Page } from "./helpers/test";
+import { onlyDatePrices } from "./helpers/flags";
 import type { CalendarHarness } from "../contract/harness";
 import { totp } from "../contract/totp";
 import { serviceClient, sql, TEST_PHONES, totpSecretOf } from "../db/local";
@@ -112,6 +113,7 @@ test.afterAll(async () => {
 });
 
 test("enviar → marcar noches y ★ en revisión → aprobar → el cliente lo ve → cambios frescos → cerrar con fecha → reapertura nocturna", async ({ browser }, info) => {
+  onlyDatePrices();
   test.skip(!reachable && !!process.env.CI, "La base local no llega al preview por host.docker.internal (Linux)");
   expect(reachable, "la base local debe llegar al preview por host.docker.internal").toBe(true);
   test.setTimeout(180_000);

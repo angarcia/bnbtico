@@ -6,6 +6,7 @@
 // No importa calendar.ts ni inquiry.ts (trozos diferidos): las fechas salen de dates.ts.
 import type { Currency } from "./currency";
 import { addDays, isoParts } from "./dates";
+import type { SearchMode } from "./flags";
 import { FEATURE_LABEL, parseColones, type Feature, type Kind } from "./listing";
 
 export const BEDS_OPTIONS = [0, 1, 2, 3, 4] as const;
@@ -18,6 +19,8 @@ export const ALL_PROVINCES = "Todas";
 export const FEATURE_KEYS = Object.keys(FEATURE_LABEL) as Feature[];
 /** Personas en la búsqueda: las mismas que admite una consulta (INQUIRY_MAX_PEOPLE). */
 export const SEARCH_MAX_PEOPLE = 50;
+/** Número de noches en Explorar (`?noches=`, modo noches de las feature flags): de 1 a 90 (decisión 2026-11-17). */
+export const NIGHTS_MAX = 90;
 /** La salida no puede pasar de hoy + 365. */
 export const STAY_MAX_DAYS = 365;
 /** Id de una zona: código del cantón y nombre (`704-cocles`). */
@@ -28,6 +31,7 @@ export interface Filters {
   zone: string | null; // id de zona (`704-cocles`); si está, manda sobre la provincia
   arrival: string | null; // llegada por noches, con su salida
   departure: string | null;
+  nights: number; // 0 = sin indicar, 1–90 (modo noches: sin fechas, estimación por duración)
   ppl: number; // 0 = sin indicar, 1–50
   beds: number;
   kind: KindFilter | null; // null = cualquiera
@@ -44,6 +48,11 @@ export type SearchParams = Record<string, unknown>;
 export interface ParseContext {
   today?: string;
   zoneIds?: readonly string[];
+  /** Modo de estancia de las feature flags (`SEARCH_MODE`): fechas, noches o ninguna. Sin él, fechas (como antes). Hace
+   *  falta aquí y no solo en `normalizeSearch`: el router mezcla en cada ruta los parámetros crudos de la raíz. */
+  mode?: SearchMode;
+  /** Feature flag de habitaciones (`FLAGS.rooms`); sin él, encendida (como antes). */
+  rooms?: boolean;
 }
 
 // Lectura escrita a mano, sin zod (como `parseFavorites` y el paso 1 de publicar): este módulo va en el JS inicial de
@@ -54,15 +63,18 @@ const first = (v: unknown): string => {
 };
 const option = (options: readonly number[], v: string) => (options.includes(Number(v)) ? Number(v) : 0);
 const date = (v: string) => (isoParts(v) ? v : "");
+const nightsOf = (v: string) => (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= NIGHTS_MAX ? Number(v) : 0);
 const people = (v: string) => (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= SEARCH_MAX_PEOPLE ? Number(v) : 0);
 const money = (v: string) => {
   const n = parseColones(v);
   return n === null || Number.isNaN(n) || n < 0 ? 0 : n;
 };
 
-type Parsed = { prov: string; zona: string; llegada: string; salida: string; ppl: number; beds: number; tipo: KindFilter | ""; min: number; max: number; mas: boolean; mapa: boolean } & Record<Feature, boolean>;
+type Parsed = { prov: string; zona: string; llegada: string; salida: string; noches: number; ppl: number; beds: number; tipo: KindFilter | ""; min: number; max: number; mas: boolean; mapa: boolean } & Record<Feature, boolean>;
 
-function parseSearch(params: SearchParams): Parsed {
+/** `rooms` (feature flag de habitaciones, historia #62): apagada, no hay tipo en Filtros (todo es alojamiento completo), así
+ *  que `?tipo=` se ignora y el mínimo de dormitorios vale sin `tipo=completo`. */
+function parseSearch(params: SearchParams, rooms = true): Parsed {
   const get = (key: string) => first(params[key]);
   const zona = get("zona");
   return {
@@ -70,9 +82,10 @@ function parseSearch(params: SearchParams): Parsed {
     zona: ZONE_ID.test(zona) ? zona : "",
     llegada: date(get("llegada")),
     salida: date(get("salida")),
+    noches: nightsOf(get("noches")),
     ppl: people(get("ppl")),
-    beds: get("tipo") === "completo" ? option(BEDS_OPTIONS, get("beds")) : 0,
-    tipo: (KIND_FILTERS as readonly string[]).includes(get("tipo")) ? (get("tipo") as KindFilter) : "",
+    beds: !rooms || get("tipo") === "completo" ? option(BEDS_OPTIONS, get("beds")) : 0,
+    tipo: rooms && (KIND_FILTERS as readonly string[]).includes(get("tipo")) ? (get("tipo") as KindFilter) : "",
     min: money(get("min")),
     max: money(get("max")),
     mas: get("mas") === "1",
@@ -89,7 +102,8 @@ function stayFrom(p: Parsed, today?: string): { arrival: string | null; departur
 }
 
 export function parseFilters(params: SearchParams, provinces: readonly string[], ctx: ParseContext = {}): Filters {
-  const p = parseSearch(params);
+  const p = parseSearch(params, ctx.rooms ?? true);
+  const mode = ctx.mode ?? "dates";
   // Un rango imposible (mínimo > máximo) en la URL se trata como sin rango: Filtros no deja aplicarlo (ticket 15).
   const invalid = priceRangeInvalid(p.min, p.max);
   const min = invalid ? 0 : p.min;
@@ -97,7 +111,8 @@ export function parseFilters(params: SearchParams, provinces: readonly string[],
   return {
     prov: provinces.includes(p.prov) ? p.prov : ALL_PROVINCES,
     zone: p.zona && (!ctx.zoneIds || ctx.zoneIds.includes(p.zona)) ? p.zona : null,
-    ...stayFrom(p, ctx.today),
+    ...(mode === "dates" ? stayFrom(p, ctx.today) : { arrival: null, departure: null }),
+    nights: mode === "nights" ? p.noches : 0,
     ppl: p.ppl,
     beds: p.beds,
     kind: p.tipo || null,
@@ -143,6 +158,7 @@ export function toSearchParams(f: Filters): URLSearchParams {
     p.set("llegada", f.arrival);
     p.set("salida", f.departure);
   }
+  if (f.nights) p.set("noches", String(f.nights));
   if (f.ppl) p.set("ppl", String(f.ppl));
   if (f.beds) p.set("beds", String(f.beds));
   if (f.kind) p.set("tipo", f.kind);
@@ -164,22 +180,25 @@ export function extrasCount(f: Filters): number {
 
 // ---------- Búsqueda en la URL (rutas tipadas de Explorar y Filtros) ----------
 
-export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "ppl" | "beds" | "tipo" | "min" | "max" | "mas" | "mapa" | Feature;
+export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "noches" | "ppl" | "beds" | "tipo" | "min" | "max" | "mas" | "mapa" | Feature;
 /** Parámetros de Explorar tal como viajan en la URL: texto, solo claves conocidas y solo si no son el valor por defecto. */
 export type ExploreSearch = Partial<Record<SearchKey, string>>;
 
 /** Valida con la misma lectura que `parseFilters`. La provincia y la zona quedan en texto: se contrastan con las
- *  provincias con casas y las zonas al pintar, porque esas listas llegan de la red. `today` aplica la ventana de fechas. */
-export function normalizeSearch(params: SearchParams, today?: string): ExploreSearch {
-  const p = parseSearch(params);
+ *  provincias con casas y las zonas al pintar, porque esas listas llegan de la red. `today` aplica la ventana de fechas.
+ *  `mode` (feature flags del build, `SEARCH_MODE`) decide qué estancia vale: en modo noches las fechas de un enlace viejo
+ *  se descartan (sin filtro oculto de disponibilidad); en modo fechas, las noches; sin estancia, las dos. */
+export function normalizeSearch(params: SearchParams, today?: string, mode: SearchMode = "dates", rooms = true): ExploreSearch {
+  const p = parseSearch(params, rooms);
   const out: ExploreSearch = {};
   const stay = stayFrom(p, today);
   if (p.prov) out.prov = p.prov;
   if (p.zona) out.zona = p.zona;
-  if (stay.arrival && stay.departure) {
+  if (mode === "dates" && stay.arrival && stay.departure) {
     out.llegada = stay.arrival;
     out.salida = stay.departure;
   }
+  if (mode === "nights" && p.noches) out.noches = String(p.noches);
   if (p.ppl) out.ppl = String(p.ppl);
   if (p.beds) out.beds = String(p.beds);
   if (p.tipo) out.tipo = p.tipo;

@@ -3,13 +3,31 @@
 // inicial: no importa calendar.ts ni inquiry.ts (trozos diferidos); las fechas salen de dates.ts.
 import { formatInquiryDates } from "./dates";
 import { ALL_PROVINCES, type Filters } from "./filters";
+import type { PublicListing } from "./listing";
+import { nightsLabel } from "./stay-label";
 import { caribeFirst, norm, type ZoneWithListings } from "./zones";
 
-type StayFilters = Pick<Filters, "arrival" | "departure">;
+/** Desde cuántas noches una casa con precio al mes se estima por meses (igual que MONTHLY_ESTIMATE_NIGHTS de stay-price.ts,
+ *  que no se importa aquí: arrastra el calendario, un trozo diferido). */
+const MONTHLY_ESTIMATE_NIGHTS = 30;
 
-/** «23–27 nov»; null sin llegada y salida. */
+type StayFilters = Pick<Filters, "arrival" | "departure"> & { nights?: number };
+
+/** «23–27 nov»; en modo noches, «4 noches»; null sin estancia. */
 export function stayLabel(f: StayFilters): string | null {
-  return f.arrival && f.departure ? formatInquiryDates(f.arrival, f.departure) : null;
+  if (f.arrival && f.departure) return formatInquiryDates(f.arrival, f.departure);
+  return f.nights ? nightsLabel(f.nights) : null;
+}
+
+/** El total orientativo por duración (modo noches, sin fechas): precio por noche × noches; con 30 noches o más y precio al
+ *  mes, mes × noches / 30 (la misma regla que domain/stay-price.ts, sin precios especiales: no hay fechas). null sin
+ *  noches o sin precio por noche. */
+export function durationTotal(l: Pick<PublicListing, "acceptsNightly" | "nightlyPriceCrc" | "acceptsMonthly" | "monthlyPriceCrc">, nights: number): number | null {
+  if (nights <= 0) return null;
+  if (nights >= MONTHLY_ESTIMATE_NIGHTS && l.acceptsMonthly && l.monthlyPriceCrc !== null && l.monthlyPriceCrc > 0) {
+    return Math.round((l.monthlyPriceCrc * nights) / MONTHLY_ESTIMATE_NIGHTS);
+  }
+  return l.acceptsNightly && l.nightlyPriceCrc !== null ? l.nightlyPriceCrc * nights : null;
 }
 
 /** «4 personas», «1 persona»; null sin indicar. */

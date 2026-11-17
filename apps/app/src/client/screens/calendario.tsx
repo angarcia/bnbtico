@@ -38,6 +38,7 @@ import { costaRicaToday } from "../../domain/inquiry";
 import { type Listing } from "../../domain/listing";
 import { resumeStep } from "../../domain/publish-rules";
 import { formatCRC } from "../../domain/money";
+import { FLAGS } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { whenIdle } from "../../shared/idle";
 import { useCurrency } from "../../shared/currency";
@@ -587,7 +588,8 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
     timer.current = setTimeout(() => setKb(false), KB_RELEASE_MS);
   }
   const price = sel.priceEdited ? sel.price : grouped(sel.price);
-  const priceField = base !== null ? (
+  // Precios por fecha apagados (feature flag, #61): solo disponibilidad; el precio de la noche es el de la casa.
+  const priceField = base !== null && FLAGS.datePrices ? (
     <label className="cal-price">
       <span aria-hidden="true">₡</span>
       <input
@@ -624,7 +626,7 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
         {priceField}
       </div>
       </>}
-      {base !== null && hasSpecial ? (
+      {base !== null && hasSpecial && FLAGS.datePrices ? (
         <button type="button" className="btn-link cal-base" onClick={() => onChange(setPrice(sel, grouped(String(base))))}>
           Usar el precio base ({formatCRC(base)})
         </button>

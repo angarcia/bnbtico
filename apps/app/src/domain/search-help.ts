@@ -14,7 +14,8 @@ export function searchHelpMessage(q: Filters, zoneName: string | null = null): s
     q.ppl ? `Personas: ${q.ppl}.` : null,
     q.features.length ? `Necesito: ${q.features.map((x) => FEATURE_LABEL[x]).join(", ")}.` : null,
     q.max ? `Precio por noche: hasta ${formatCRC(q.max)}.` : null,
-    stay ? `Fechas: ${stay}.` : "Fechas: ",
+    // Modo noches: «Noches: 7.» (sin fechas, no se pide escribirlas).
+    q.nights && !(q.arrival && q.departure) ? `Noches: ${q.nights}.` : stay ? `Fechas: ${stay}.` : "Fechas: ",
   ]
     .filter(Boolean)
     .join("\n");

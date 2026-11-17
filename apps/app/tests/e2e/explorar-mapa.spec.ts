@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { onlySearchMode } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { addDays } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -295,6 +296,7 @@ test("telemetría: se cuentan la apertura del mapa y el toque en un marcador", a
 });
 
 test("con llegada y salida, el marcador lleva la misma cifra que la tarjeta (el total, sin «por N noches») y la tarjeta del mapa, el total", async ({ page }) => {
+  onlySearchMode("dates");
   const today = costaRicaToday(Date.now());
   await page.goto(`/explorar?llegada=${addDays(today, 20)}&salida=${addDays(today, 24)}`);
   // Casa Coco: ₡42 000 la noche × 4.

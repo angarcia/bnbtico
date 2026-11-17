@@ -5,9 +5,9 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useId, useMemo, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
-import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
+import { DATES_FILTER_KEY, NIGHTS_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
-import { nightsBetween, peopleLabel, resultsText, searchSummary, stayLabel } from "../../domain/search";
+import { durationTotal, nightsBetween, peopleLabel, resultsText, searchSummary, stayLabel } from "../../domain/search";
 import { ALL_PROVINCES, SEARCH_MAX_PEOPLE, extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
@@ -15,7 +15,9 @@ import { CurrencySwitch } from "../../shared/currency-switch";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
+import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
+import { NightsPicker } from "../../shared/nights-picker";
 import { revealClass } from "../motion";
 import { useDesktop } from "../desktop";
 import { ListingCard } from "../listing-card";
@@ -52,10 +54,12 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
   const focusZone = useRef(true);
   const panelId = useId();
   const displayed = panel ? draft : filters;
-  const fields = [
+  const fields: { key: SearchField; label: string; value: string | null; icon: typeof I.pin }[] = [
     { key: "donde", label: "Lugar", value: filters.zone ? zoneName : filters.prov !== ALL_PROVINCES ? filters.prov : null, icon: I.pin },
-    { key: "cuando", label: "Fechas", value: stayLabel(displayed), icon: I.calendar },
-  ] as const;
+    // Feature flags (#58): «Fechas» con fechas, «Noches» con número de noches (diseño #59), ninguno sin estancia.
+    ...(SEARCH_MODE === "dates" ? [{ key: "cuando" as const, label: "Fechas", value: stayLabel(displayed), icon: I.calendar }] : []),
+    ...(SEARCH_MODE === "nights" ? [{ key: "cuando" as const, label: "Noches", value: stayLabel(displayed), icon: I.moon }] : []),
+  ];
 
   useEffect(() => {
     if (!panel) return;
@@ -98,11 +102,19 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
             <span className="search-pill-text">{value ?? label}</span>
           </button>
           {panel === key && (
-            <section id={panelId} aria-label={label} className={`desktop-search-panel desktop-search-panel-${key}`}>
+            <section id={panelId} aria-label={label} className={`desktop-search-panel desktop-search-panel-${key === "cuando" && SEARCH_MODE === "nights" ? "noches" : key}`}>
               {key === "donde" ? (
                 <Suspense fallback={<p role="status">Cargando zonas…</p>}>
                   <ZonePicker zone={draft.zone} onPick={(zone) => apply({ ...draft, zone })} onClear={() => apply({ ...draft, zone: null, prov: ALL_PROVINCES })} focusOnce={focusZone} />
                 </Suspense>
+              ) : SEARCH_MODE === "nights" ? (
+                <>
+                  <NightsPicker nights={draft.nights} onChange={(nights) => setDraft({ ...draft, nights })} />
+                  <div className="row between">
+                    <button type="button" className="btn-text" onClick={() => apply({ ...draft, nights: 0 })}>Quitar noches</button>
+                    <button type="button" className="btn btn-primary" disabled={!draft.nights} onClick={() => apply(draft)}>Aplicar noches</button>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="desktop-search-calendar">
@@ -286,7 +298,11 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const currency = useCurrency();
   const { data, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery(listingsQuery(f));
   // Todas las páginas ya cargadas («Ver más casas»): la lista y el mapa enseñan las mismas casas.
-  const listings = useMemo(() => loadedListings(data), [data]);
+  // Modo noches (#58/#59): sin fechas, la búsqueda no calcula total; aquí, precio por noche × noches (o la regla mensual).
+  const listings = useMemo(() => {
+    const loaded = loadedListings(data);
+    return loaded && f.nights > 0 ? loaded.map((l) => ({ ...l, stayTotalCrc: durationTotal(l, f.nights) })) : loaded;
+  }, [data, f.nights]);
   const selectedHouse = desktop ? listings?.find((listing) => listing.publicId === selected) : undefined;
   const reveal = useReveal(!listings, searchToString(searchFor(f)));
   // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
@@ -298,11 +314,14 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
     else store.removeItem(PEOPLE_FILTER_KEY);
     if (dates) store.setItem(DATES_FILTER_KEY, dates);
     else store.removeItem(DATES_FILTER_KEY);
-  }, [f.ppl, dates]);
+    if (f.nights > 0) store.setItem(NIGHTS_FILTER_KEY, String(f.nights));
+    else store.removeItem(NIGHTS_FILTER_KEY);
+  }, [f.ppl, dates, f.nights]);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next), replace: true });
   const extras = extrasCount(f);
-  // Con llegada y salida, las tarjetas y el mapa enseñan el total orientativo de esas noches (lo calcula la búsqueda).
-  const nights = stay ? nightsBetween(stay.from, stay.to) : 0;
+  // Con llegada y salida, las tarjetas y el mapa enseñan el total orientativo de esas noches (lo calcula la búsqueda); en
+  // modo noches, el de la duración elegida.
+  const nights = stay ? nightsBetween(stay.from, stay.to) : f.nights;
   const linkSearch = searchFor(f);
   // Abrir el mapa es una entrada del historial (Atrás lo cierra); la lista no se mueve debajo.
   const openMap = (publicId: string | null) => {
@@ -358,6 +377,9 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
               })()
             : "Buscando casas…"}
         </span>
+        {f.nights > 0 && listings?.length ? (
+          <span className="xs muted">Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.</span>
+        ) : null}
         {currency === "USD" ? <UsdNote /> : null}
       </div>
       {!listings ? (
@@ -433,7 +455,7 @@ function usePrefetchSearch(search: ExploreSearch, waiting: boolean) {
   const client = useQueryClient();
   const guess =
     waiting && !search.zona
-      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [search.prov] : [], { today: costaRicaToday(Date.now()) })
+      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [search.prov] : [], { today: costaRicaToday(Date.now()), mode: SEARCH_MODE, rooms: FLAGS.rooms })
       : null;
   const key = guess ? JSON.stringify(listingsQuery(guess).queryKey) : "";
   useEffect(() => {
@@ -446,7 +468,7 @@ export function ExplorarScreen() {
   const search = route.useSearch();
   const { data: provinces, isError } = useQuery(provincesQuery);
   const zones = useQuery({ ...zonesQuery, enabled: !!search.zona });
-  const f = parseFilters(search, provinces ?? [], { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id) });
+  const f = parseFilters(search, provinces ?? [], { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id), mode: SEARCH_MODE, rooms: FLAGS.rooms });
   const zoneRow = zones.data?.find((z) => z.id === f.zone);
   const zoneName = zoneRow?.name ?? null;
   const zone = zoneRow ? { lat: zoneRow.lat, lng: zoneRow.lng } : null;

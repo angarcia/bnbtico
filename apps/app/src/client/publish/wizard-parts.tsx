@@ -2,6 +2,7 @@
 // publicada: las tarjetas de elección, «¿Qué es?», qué tener a mano y la etapa de la cabecera. Trozo propio y pequeño
 // (wizard-parts-*), medido en «Entrada de publicar»: /publicar no descarga los campos del asistente.
 import { useId, useState, type ReactNode } from "react";
+import { FLAGS } from "../../shared/flags";
 import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
 import { I } from "../../shared/icons";
 
@@ -88,6 +89,9 @@ export function ChoiceCards({
 
 /** «¿Qué es?»: Alojamiento completo o Habitación (paso 1), en un campo `kind`. */
 export function KindChoice({ kind, onChange, compact }: { kind: Kind | null; onChange?: (kind: "completo" | "habitacion") => void; compact?: boolean }) {
+  // Habitaciones apagadas (feature flag, #62): no se pregunta; toda casa nueva es Alojamiento completo (la base rechaza
+  // una Habitación). El campo oculto mantiene el formulario del paso 1 igual.
+  if (!FLAGS.rooms) return <input type="hidden" name="kind" value="completo" />;
   return (
     <section className="stack publish-kind">
       <h2>¿Qué es?</h2>

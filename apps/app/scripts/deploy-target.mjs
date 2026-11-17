@@ -133,6 +133,53 @@ async function limits() {
   console.log(`Límites manuales de Airbnb guardados: ${summary}.`);
 }
 
+// Feature flags (historia #58, 2026-11-17). Igual que src/domain/flags.ts; tests/unit/flags.test.ts compara las dos.
+// Solo «true», «false» o vacío (= valor inicial). El build las lee del mismo entorno (vite.config.ts) y este paso las
+// escribe en la base (feature_flags), donde las consultan las RPCs que no pueden fiarse del navegador.
+const FLAGS = [
+  { name: "exploreDates", env: "FLAG_EXPLORAR_FECHAS", param: "p_explore_dates", fallback: false },
+  { name: "exploreNights", env: "FLAG_EXPLORAR_NOCHES", param: "p_explore_nights", fallback: true },
+  { name: "datePrices", env: "FLAG_PRECIOS_POR_FECHA", param: "p_date_prices", fallback: false },
+  { name: "externalCalendars", env: "FLAG_ICAL", param: "p_external_calendars", fallback: true },
+  { name: "rooms", env: "FLAG_HABITACIONES", param: "p_rooms", fallback: false },
+];
+const FLAG_SUFFIX = { pruebas: "PRUEBAS", production: "PRODUCCION", refactor: "REFACTOR" };
+
+function featureFlags(target) {
+  const bad = FLAGS.filter(({ env }) => !["", "true", "false"].includes((process.env[env] ?? "").trim()));
+  ensure(bad.length === 0, `${bad.map(({ env }) => `${env}_${FLAG_SUFFIX[target]}`).join(", ")} no es válida: use «true», «false» o déjela vacía.`);
+  return FLAGS.map((flag) => {
+    const value = (process.env[flag.env] ?? "").trim();
+    return { ...flag, value: value === "" ? flag.fallback : value === "true" };
+  });
+}
+
+/** Antes de publicar: valida las flags y, en pruebas, las escribe en la base. Producción aún no tiene base propia.
+ *  «flags-check» solo imprime los valores (prueba de equivalencia con el dominio). */
+async function flags(check) {
+  const target = process.env.DEPLOY_ENV;
+  ensure(targets.has(target), "Destino de despliegue no autorizado.");
+  const values = featureFlags(target);
+  if (check) {
+    console.log(JSON.stringify(Object.fromEntries(values.map(({ name, value }) => [name, value]))));
+    return;
+  }
+  const summary = values.map(({ env, value }) => `${env}=${value}`).join(", ");
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (target !== "pruebas" || !url || !key) {
+    const why = target === "production" ? "producción aún no tiene base" : target === "pruebas" ? "faltan SUPABASE_URL o la clave de servicio" : "el refactor no las escribe";
+    console.log(`Feature flags válidas (${summary}); no se escriben en la base: ${why}.`);
+    return;
+  }
+  const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/set_feature_flags`, {
+    method: "POST", headers: { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" },
+    body: JSON.stringify(Object.fromEntries(values.map(({ param, value }) => [param, value]))),
+  });
+  ensure(response.ok, `No se pudieron guardar las feature flags (HTTP ${response.status}).`);
+  console.log(`Feature flags guardadas en la base: ${summary}.`);
+}
+
 /** Tras el build: el cron de Airbnb y AIRBNB_SYNC_MINUTES del worker salen de la variable de GitHub del entorno. */
 function schedule(file) {
   const target = process.env.DEPLOY_ENV;
@@ -160,6 +207,8 @@ switch (command) {
   case "secrets": secrets(file); break;
   case "schedule": schedule(file); break;
   case "limits": await limits(); break;
+  case "flags": await flags(false); break;
+  case "flags-check": await flags(true); break;
   case "cron": console.log(airbnbCron(Number(file))); break;
   default: throw new Error("Comando de despliegue no reconocido.");
 }

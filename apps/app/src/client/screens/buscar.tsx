@@ -7,6 +7,8 @@ import { getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/rea
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { costaRicaToday, formatInquiryDates } from "../../domain/dates";
 import { SEARCH_MAX_PEOPLE, parseFilters, searchFor } from "../../domain/filters";
+import { FLAGS, SEARCH_MODE } from "../../shared/flags";
+import { NightsPicker } from "../../shared/nights-picker";
 import { nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
 import { trackSearch } from "../../shared/beacon";
 import { I } from "../../shared/icons";
@@ -21,10 +23,11 @@ interface SearchDraft {
   zone: string | null;
   arrival: string | null;
   departure: string | null;
+  nights: number;
   ppl: number;
 }
 
-const EMPTY: SearchDraft = { zone: null, arrival: null, departure: null, ppl: 0 };
+const EMPTY: SearchDraft = { zone: null, arrival: null, departure: null, nights: 0, ppl: 0 };
 
 const Minus = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -200,8 +203,8 @@ export function BuscarScreen() {
   const { abrir, ...rest } = search;
   const [today] = useState(() => costaRicaToday(Date.now()));
   const [draft, setDraft] = useState<SearchDraft>(() => {
-    const f = parseFilters(rest, []);
-    return { zone: f.zone, arrival: f.arrival, departure: f.departure, ppl: f.ppl };
+    const f = parseFilters(rest, [], { mode: SEARCH_MODE, rooms: FLAGS.rooms });
+    return { zone: f.zone, arrival: f.arrival, departure: f.departure, nights: f.nights, ppl: f.ppl };
   });
   const [open, setOpen] = useState<Card | null>(abrir ?? "donde");
   const focusZone = useRef(!abrir || abrir === "donde");
@@ -217,7 +220,7 @@ export function BuscarScreen() {
   const submit = async () => {
     trackSearch({ zona: !!draft.zone, fechas: hasDates, personas: draft.ppl > 0 });
     const provinces = await queryClient.ensureQueryData(provincesQuery).catch(() => [] as string[]);
-    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces), ...draft }), replace: true, resetScroll: true });
+    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces, { mode: SEARCH_MODE, rooms: FLAGS.rooms }), ...draft }), replace: true, resetScroll: true });
     window.scrollTo(0, 0);
   };
 
@@ -234,12 +237,27 @@ export function BuscarScreen() {
           zone={draft.zone}
           onPick={(zone) => {
             set({ zone });
-            setOpen("cuando");
+            setOpen(SEARCH_MODE === "none" ? "quienes" : "cuando");
           }}
           onClear={() => set({ zone: null })}
           focusOnce={focusZone}
         />
       </Fold>
+      {/* Feature flags (#58): con fechas, «¿Cuándo?»; con número de noches, «¿Cuántas noches?» (diseño #59); sin estancia, ninguna. */}
+      {SEARCH_MODE === "nights" ? (
+        <Fold title="¿Cuántas noches?" value={draft.nights ? nightsLabel(draft.nights) : "Añadir noches"} open={open === "cuando"} onToggle={toggle("cuando")}>
+          <NightsPicker nights={draft.nights} onChange={(nights) => set({ nights })} />
+          <div className="row between">
+            <span className="xs muted">Le mostramos un precio orientativo para esas noches. La disponibilidad se la confirma el anfitrión por WhatsApp.</span>
+            {draft.nights ? (
+              <button type="button" className="btn-text" onClick={() => set({ nights: 0 })}>
+                Quitar
+              </button>
+            ) : null}
+          </div>
+        </Fold>
+      ) : null}
+      {SEARCH_MODE === "dates" ? (
       <Fold title="¿Cuándo?" value={datesValue ?? "Añadir fechas"} open={open === "cuando"} onToggle={toggle("cuando")}>
         <FitAboveBar>
           <RangeCalendar today={today} value={{ arrival: draft.arrival, departure: draft.departure }} onChange={(r) => set(r)} />
@@ -268,6 +286,7 @@ export function BuscarScreen() {
           ) : null}
         </div>
       </Fold>
+      ) : null}
       <Fold title="¿Quiénes?" value={peopleLabel(draft.ppl) ?? "Añadir personas"} open={open === "quienes"} onToggle={toggle("quienes")}>
         <div className="row between">
           <span className="stack gap-0">
@@ -286,7 +305,7 @@ export function BuscarScreen() {
             </button>
           </span>
         </div>
-        <p className="note small">Las fechas y las personas van en el mensaje de WhatsApp que le preparamos para el anfitrión.</p>
+        <p className="note small">{SEARCH_MODE === "nights" ? "Las noches" : SEARCH_MODE === "dates" ? "Las fechas" : "Las personas"}{SEARCH_MODE === "none" ? " van" : " y las personas van"} en el mensaje de WhatsApp que le preparamos para el anfitrión.</p>
       </Fold>
       <div className="sticky-spacer" aria-hidden="true" />
       <div className="sticky-actions">

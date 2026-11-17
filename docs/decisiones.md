@@ -1,3 +1,65 @@
+## 2026-11-17 · Verificación de las feature flags
+
+Historia #64. La matriz de configuraciones (inicial, fechas, las dos búsquedas, ninguna, precios, habitaciones e iCal) queda en `docs/pruebas-manuales.md`, sección 5b, para recorrerla en pruebas.3bstays.com con las variables de GitHub y «Re-run». Lo verificado en local, con su entorno, está en `.scratch/feature-flags/verificacion.md`: A a E correctos; F (iCal) queda pendiente de #63, de prioridad baja. Se añade `explorar-sin-estancia.spec.ts` para el modo sin estancia, que solo corre con un build en ese modo (CI no lo tiene).
+
+## 2026-11-17 · La búsqueda por fechas se prueba con su propio build
+
+Historia #60. El modo fechas de Explorar es el comportamiento de siempre (llegada incluida, salida no, y fuera las casas con una noche ocupada) y no cambia de código; con las flags iniciales no se usa, así que sus pruebas de Playwright se saltaban. Para no perder esa cobertura, el job `integration` termina con un paso que vuelve a compilar con `FLAG_EXPLORAR_FECHAS=true` y pasa los cinco archivos que las tienen (`buscar`, `contacto`, `explorar-mapa`, `explorar` y `ficha-calendario`).
+- **Coste:** unos 2 minutos más por despliegue, y un segundo build en ese job (antes, uno solo por los minutos de Actions del 2026-11-16). Va después del tamaño y de Lighthouse, que miden el build de las flags iniciales.
+- **Sin cambio en la base:** `search_listings` sigue aceptando fechas. Con la flag apagada el navegador nunca las manda (`parseFilters` y `normalizeSearch` las descartan), y no es una escritura que haya que proteger.
+- **Sin estancia (fechas y noches apagadas):** ni «¿Cuándo?» ni «¿Cuántas noches?», tarjetas con precio por noche. No tiene build de pruebas propio: lo cubren las pruebas unitarias del modo y la guía manual.
+
+## 2026-11-17 · Precios por fecha detrás de su feature flag
+
+Historia #61, con las reglas aprobadas por Ana (tarifas guardadas ocultas y conservadas, sin aviso al anfitrión).
+- **Base:** con `date_prices` apagada, `effective_calendar_days` no devuelve el precio especial, así que la ficha, su SSR, la hoja de contacto, el calendario del anfitrión y el del admin ven el precio por noche. `search_stay_total` suma solo el precio por noche, y `listing_days_update`, el único camino que escribe un precio, lo rechaza con «Los precios por fecha no están disponibles por ahora.». Bloquear y desbloquear noches no cambia y conserva el precio guardado. Al encender la flag, todo vuelve tal cual (migraciones `20261117180000_precios_fecha_flag` y su arreglo de texto `20261117181000`).
+- **Pantalla:** el panel del calendario del anfitrión deja solo «Disponible / Ocupado», sin el campo de precio ni «Usar el precio base».
+- **Pruebas:** el harness de base enciende también `date_prices`, y `precios-fecha-flag.test.ts` prueba la flag apagada. En Playwright, las pruebas de precios del calendario y el recorrido de la fase 4 (que pone una ★) se saltan con el build sin precios por fecha (`onlyDatePrices`).
+
+## 2026-11-17 · Habitaciones fuera, detrás de su feature flag
+
+Historia #62, con las reglas aprobadas por Ana en «Feature flags: qué pasa con los datos al apagar cada una».
+- **Base:** con `rooms` apagada, los triggers `listings_rooms_flag` y `listing_edits_rooms_flag` rechazan, por cualquier camino, crear una Habitación, cambiar una casa a Habitación, enviar una a revisión o proponer el cambio en una casa publicada: «Por ahora 3bstays publica solo alojamientos completos.». Un borrador que ya era Habitación se conserva, pero no se envía.
+- **Borrado:** la migración `20261117170000_habitaciones_flag` elimina todas las Habitaciones, en cualquier estado, con el borrado lógico (`deleted_at`) de «Eliminar casa» y del admin, que las saca de toda la app y se puede deshacer por SQL. Es la opción menos destructiva que cumple «borrarlas del todo». También quita sus avisos en cola, purga sus fichas y descarta las propuestas de pasar a Habitación.
+- **Pantallas:** Publicar no pregunta el tipo (toda casa nueva es Alojamiento completo) y Editar no tiene fila «Tipo». En Filtros desaparece «Tipo de alojamiento», `?tipo=` se ignora y «Dormitorios» sale siempre: antes solo con «Completo» elegido. Los datos de prueba (`pnpm datos:prueba`) cambian «Habitación en Bribrí» por «Cabina en Bribrí», un alojamiento completo.
+- **Pruebas:** el harness de base enciende `rooms` (las pruebas de habitaciones existentes cubren la flag encendida) y `habitaciones-flag.test.ts` prueba la flag apagada. Por eso, tras `pnpm test:db`, la base local queda con `rooms` encendida hasta el siguiente despliegue o `set_feature_flags`. En Playwright, como con las fechas: las pruebas que tratan solo de habitaciones se saltan con el build sin ellas (`onlyRooms`), y los recorridos de Publicar, Filtros y Editar saltan solo el paso del tipo.
+
+## 2026-11-17 · Flujos de Playwright según el modo de Explorar
+
+Historia `flags-noches`. Los flujos de Playwright prueban el build con las flags que se despliegan: hoy, fechas apagadas y noches encendidas. Ana aprueba que las pruebas de la búsqueda por fechas se salten cuando el build no está en modo fechas (`tests/e2e/helpers/flags.ts`, `onlySearchMode`) y que se añadan las del modo noches (`explorar-noches.spec.ts`).
+- **Hecho en #60:** un segundo build de las pruebas con esa flag encendida recupera la cobertura de la búsqueda por fechas.
+- **Descartado:** encender las fechas en el build de las pruebas, que habría dejado sin probar el modo noches que se despliega.
+
+## 2026-11-17 · Diseño del número de noches y de los estados de las flags
+
+Historia #59. Ana aprueba la v1 de `.scratch/feature-flags/diseno/` (maquetas con el CSS de la app y capturas en móvil y laptop):
+- **Selector:** «¿Cuándo?» pasa a «¿Cuántas noches?» cuando manda el modo noches: el contador de «¿Quiénes?», de 1 a 90, y los atajos «Fin de semana» (2), «1 semana» (7), «2 semanas» (14) y «1 mes» (30). En laptop, el campo «Noches» abre un panel con lo mismo, «Quitar noches» y «Aplicar noches».
+- **Resultados:** la píldora y la línea de resultados dicen las noches; tarjetas y mapa, «≈ ₡180 000 por 4 noches», con la nota «Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.».
+- **Conservar:** las noches van en la URL (`?noches=4`); recargar, volver desde la ficha o compartir el enlace las conserva. Un valor fuera de 1–90 se ignora sin aviso.
+- **WhatsApp:** sin fechas elegidas en la ficha, el mensaje dice «para 4 noches» y las personas; si elige fechas, mandan las fechas.
+- **Precios por fecha apagada:** sin aviso al anfitrión; sus precios especiales se ocultan y reaparecen al encender la flag.
+- **Estados de #60–#62:** quitan o recuperan elementos existentes, sin maqueta nueva (lista en el README del diseño).
+
+## 2026-11-17 · Cómo se configuran las feature flags
+
+Historia #58. Las cinco flags se fijan por entorno con variables de GitHub (`FLAG_*_PRUEBAS`, `FLAG_*_PRODUCCION`: «true», «false» o vacía = valor inicial) y cambian al desplegar («Re-run» del trabajo `deploy`), como los límites de Airbnb.
+- **Navegador y worker:** el build las incrusta (`__FLAGS__`); salen del mismo build, así que la ficha se renderiza y se hidrata con las mismas.
+- **Base:** el despliegue las escribe en `feature_flags` (una fila, solo `service_role`); las RPCs las leen por dentro con `public.feature_flags()`. Así ninguna escritura depende de un valor que envíe el navegador.
+- **Caché:** las flags entran en el identificador del build, de modo que un «Re-run» del mismo commit con otra flag también descarta la caché persistida y el precache.
+- **Descartado:** leerlas de la base en tiempo de ejecución desde el navegador (una petición más en cada arranque y riesgo de que el SSR y la hidratación vean valores distintos).
+- Contrato y consumidores: `docs/feature-flags.md`.
+
+## 2026-11-17 · Feature flags: qué pasa con los datos al apagar cada una
+
+Épica #57 (flags por entorno, con configuración y despliegue). Se aprueban las reglas pendientes de #59 y el comportamiento de iCal que necesita #63, preguntadas una a una en la sesión de Product Owner:
+- **Precios por fecha apagada:** las tarifas especiales ya guardadas se conservan en la base, ocultas: ni se muestran ni se suman a los totales, que usan solo el precio por noche. Al encender, reaparecen tal cual. La importación de Airbnb no trae precios, solo disponibilidad, así que no le afecta.
+- **Precio mensual:** ninguna flag lo toca. Se sigue preguntando al publicar y se ve en la ficha. Con «número de noches» de 30 o más, el total orientativo es mes × noches / 30, igual que con fechas.
+- **Número de noches:** el selector de Explorar va de 1 a 90 noches. No hay mínimos por casa en este lote: las columnas antiguas `min_nights`/`min_months` siguen sin usarse. El filtro de precio mínimo/máximo sigue comparando el precio por noche, aunque las tarjetas enseñen el total.
+- **Habitaciones apagada:** se lanza sin habitaciones y se añadirán si resultan útiles. Publicar una habitación se impide también en la base, no solo en la pantalla. Se borran todas las casas de tipo Habitación, en cualquier estado (publicadas, borradores, en revisión o con cambios pedidos), también en `bnbtico-pruebas`, con una migración y copia previa. Los datos de prueba (`pnpm datos:prueba`) tendrán un set sin habitaciones para cuando la flag esté apagada.
+- **iCal apagada:** la conexión de Airbnb se conserva, pero las noches importadas dejan de bloquear mientras esté apagada, y se paran las lecturas. También se quita la exportación del calendario (`/ical/*`). Al encender, las noches vuelven a bloquear, se reanuda la lectura con el mismo enlace y vuelve la exportación. Riesgo aceptado: mientras está apagada, una noche reservada en Airbnb puede salir libre en 3bstays.
+- **#59 se parte en dos:** #59 queda como tarea de diseño (todas las pantallas y reglas) y una historia nueva implementa el selector de noches. Así #60–#62 se desbloquean al aprobarse el diseño, sin esperar a esa implementación.
+- **Prioridad:** la flag de iCal (#63) es deseable, no necesaria para el lanzamiento: queda con prioridad baja. Mientras no se construya, iCal sigue siempre encendido, que es su valor inicial.
+
 ## 2026-11-17 · El calendario se lee entero, en una sola respuesta
 
 Issue #13 (épica DBA #9). Las tres lecturas del calendario (`public_listing_days` para la ficha, su SSR y la hoja de contacto; `owner_calendar_days` para el anfitrión; `admin_calendar_days` para el admin) devolvían una fila por día, y PostgREST corta en «Max rows» = 200. La ventana admite 366 días excepcionales, así que una noche ocupada o un precio especial después de la fila 200 llegaban como libres o al precio base.

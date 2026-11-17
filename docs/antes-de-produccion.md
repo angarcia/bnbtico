@@ -80,3 +80,7 @@ El día del lanzamiento, comprobar que «Publicar mi casa» de la portada abre e
 
 El paso «Límites manuales de Airbnb» del despliegue solo valida `AIRBNB_MANUAL_WAIT_MINUTES_PRODUCCION` y `AIRBNB_MANUAL_PER_DAY_PRODUCCION` mientras producción no tenga base propia, porque desde `main` no se suben secretos. Al crear `3bstays-prod`, dar al paso la URL y la clave de servicio de esa base para que los escriba en su `airbnb_settings`. Hasta entonces, producción usaría 15 minutos y 10 al día.
 
+
+## Feature flags en producción (2026-11-17)
+
+El paso «Feature flags en la base» del despliegue solo valida las variables `FLAG_*_PRODUCCION` mientras producción no tenga base propia. Al crear `3bstays-prod`, darle la URL y la clave de servicio de esa base para que escriba `feature_flags`; hasta entonces, la base de producción tendría los valores iniciales aunque el build use otros (ver `docs/feature-flags.md`).

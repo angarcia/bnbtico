@@ -222,6 +222,16 @@ jobs:
           name: lighthouse-attempt-${{ github.run_attempt }}
           path: ${{ steps.lighthouse.outputs.publish }}
           retention-days: 3
+      # Feature flags (historias #58 y #60): el build de arriba lleva las flags iniciales (búsqueda por número de noches), así
+      # que las pruebas de la búsqueda por fechas se saltan allí (tests/e2e/helpers/flags.ts). Aquí se vuelve a compilar con
+      # las fechas encendidas y se pasan los archivos que las tienen. Va después de tamaño y Lighthouse, que miden el build
+      # de las flags iniciales. Unos 2 minutos más.
+      - name: Búsqueda por fechas (build con la flag encendida)
+        env:
+          FLAG_EXPLORAR_FECHAS: "true"
+        run: |
+          pnpm build > /dev/null
+          pnpm exec playwright test tests/e2e/buscar.spec.ts tests/e2e/contacto.spec.ts tests/e2e/explorar-mapa.spec.ts tests/e2e/explorar.spec.ts tests/e2e/ficha-calendario.spec.ts --reporter=line
       - name: Borrar diagnósticos privados
         if: always()
         run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-lighthouse" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.tsv" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"
@@ -343,6 +353,13 @@ jobs:
           VITE_WA_GUESTS: ${{ vars.WA_GUESTS || secrets.WA_GUESTS }}
           # Sitekey de Turnstile (pública); sin ella el código se pide sin token (y falla si Supabase Auth exige captcha).
           VITE_TURNSTILE_SITE_KEY: ${{ steps.target.outputs.environment != 'refactor' && (vars.TURNSTILE_SITE_KEY || secrets.TURNSTILE_SITE_KEY) || '' }}
+          # Feature flags (historia #58, docs/feature-flags.md): variable de GitHub del entorno, «true», «false» o vacía
+          # (= valor inicial). Navegador y worker salen de este build; un valor inválido lo para nombrando la variable.
+          FLAG_EXPLORAR_FECHAS: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_EXPLORAR_FECHAS_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_EXPLORAR_FECHAS_PRUEBAS || '' }}
+          FLAG_EXPLORAR_NOCHES: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_EXPLORAR_NOCHES_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_EXPLORAR_NOCHES_PRUEBAS || '' }}
+          FLAG_PRECIOS_POR_FECHA: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_PRECIOS_POR_FECHA_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_PRECIOS_POR_FECHA_PRUEBAS || '' }}
+          FLAG_ICAL: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_ICAL_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_ICAL_PRUEBAS || '' }}
+          FLAG_HABITACIONES: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_HABITACIONES_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_HABITACIONES_PRUEBAS || '' }}
         run: |
           test ! -e .dev.vars && test ! -e .env.local
           test -n "$VITE_SUPABASE_URL" -a -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Faltan SUPABASE_URL o SUPABASE_ANON_KEY en GitHub (variables o secretos)."; exit 1; }
@@ -386,6 +403,22 @@ jobs:
           SUPABASE_URL: ${{ github.ref != 'refs/heads/main' && (vars.SUPABASE_URL || secrets.SUPABASE_URL) || '' }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref != 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
         run: node scripts/deploy-target.mjs limits
+
+      # Feature flags en la base (historia #58): las mismas variables que el build. Las RPCs que no pueden fiarse del
+      # navegador (habitaciones, precios por fecha, iCal) las leen de feature_flags; producción solo las valida hasta
+      # tener base propia. Cambiar una flag: variable de GitHub y «Re-run» del trabajo deploy (docs/feature-flags.md).
+      - name: Feature flags en la base
+        if: (steps.target.outputs.environment == 'pruebas' || steps.target.outputs.environment == 'production') && steps.target.outputs.publish == 'deploy' && steps.freshness-publish.outcome == 'success'
+        env:
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          FLAG_EXPLORAR_FECHAS: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_EXPLORAR_FECHAS_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_EXPLORAR_FECHAS_PRUEBAS || '' }}
+          FLAG_EXPLORAR_NOCHES: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_EXPLORAR_NOCHES_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_EXPLORAR_NOCHES_PRUEBAS || '' }}
+          FLAG_PRECIOS_POR_FECHA: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_PRECIOS_POR_FECHA_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_PRECIOS_POR_FECHA_PRUEBAS || '' }}
+          FLAG_ICAL: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_ICAL_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_ICAL_PRUEBAS || '' }}
+          FLAG_HABITACIONES: ${{ steps.target.outputs.environment == 'production' && vars.FLAG_HABITACIONES_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.FLAG_HABITACIONES_PRUEBAS || '' }}
+          SUPABASE_URL: ${{ github.ref != 'refs/heads/main' && (vars.SUPABASE_URL || secrets.SUPABASE_URL) || '' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref != 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
+        run: node scripts/deploy-target.mjs flags
 
       - name: Secreto anon del refactor
         if: steps.target.outputs.environment == 'refactor' && steps.target.outputs.publish == 'deploy'

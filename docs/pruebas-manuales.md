@@ -281,6 +281,32 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C41** En «¿Cuándo?» elija una estancia larga (llegada y salida a 35 noches) → el pie dice las fechas y «35 noches» (no hay «Desde» ni «Elija desde cuándo»); «Buscar» deja fuera las casas con alguna noche ocupada en esas 35 y las tarjetas dicen «por 35 noches».
 - [ ] **C42** Desde Filtros toque la fila «Fechas» de «Su búsqueda» → abre la búsqueda con «¿Cuándo?» abierto; cambie la fecha, toque «Buscar» y vuelva a Filtros → la fila muestra las fechas nuevas.
 
+### 2.7b Número de noches (feature flags, valores iniciales: fechas apagadas, noches encendidas)
+
+Con los valores iniciales de las flags, C34, C35, C38, C41 y C42 no aplican (no hay «¿Cuándo?»); vuelven si se enciende `FLAG_EXPLORAR_FECHAS_PRUEBAS`, y entonces mandan las fechas y C43–C50 no aplican. Con fechas y noches apagadas, la búsqueda solo tiene «¿Dónde?» y «¿Quiénes?», las tarjetas dicen el precio por noche y Filtros no tiene fila de estancia. Diseño: `.scratch/feature-flags/diseno/`.
+
+- [ ] **C43** Abra la búsqueda → el segundo bloque es «¿Cuántas noches?» (no «¿Cuándo?»), plegado con «Añadir noches». Ábralo → «Noches · De 1 a 90», el contador con «–» y los atajos «Fin de semana», «1 semana», «2 semanas» y «1 mes». «Una noche menos» está desactivado en 1 y «Una noche más» en 90.
+- [ ] **C44** Toque «1 semana» → el atajo queda marcado y el contador dice 7; toque «Una noche más» → 8 y el atajo se desmarca; «Quitar» vuelve a «–».
+- [ ] **C45** Con 4 noches y 2 personas toque «Buscar» → la píldora dice «4 noches · 2 personas», la línea «N casas · 4 noches» y debajo «Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.»; cada tarjeta y el mapa dicen «≈ ₡X por 4 noches» (precio por noche × 4). Una casa con noches ocupadas sigue saliendo.
+- [ ] **C46** Toque «1 mes» y busque → una casa con precio al mes dice ese precio «por 30 noches»; una sin precio al mes, precio por noche × 30.
+- [ ] **C47** Recargue la página y abra una ficha y vuelva atrás → la búsqueda conserva «4 noches» (`?noches=4` en la dirección). Abra `…/explorar?noches=91` → Explorar sin noches y sin aviso.
+- [ ] **C48** Abra un enlace viejo con fechas (`…/explorar?llegada=…&salida=…`) → Explorar no dice las fechas ni deja fuera casas.
+- [ ] **C49** Desde Explorar con 4 noches y 2 personas abra una ficha y «Contactar por WhatsApp» → el mensaje dice «¿Está disponible para 4 noches y 2 personas?»; si elige fechas en la hoja, el mensaje pasa a las fechas.
+- [ ] **C50** En laptop, el campo «Noches» (icono de luna) abre un panel con el mismo contador y atajos, «Quitar noches» y «Aplicar noches» (desactivado sin noches). Filtros, fila «Noches» de «Su búsqueda».
+
+### 2.7c Habitaciones apagadas (feature flag, valor inicial)
+
+Con las habitaciones apagadas, C24, C30, A2, A5, A23 y las comprobaciones de escritorio con «Habitación» no aplican; las casas CT-1050 y CT-1051 ya no salen (eliminadas por la migración del 2026-11-17).
+
+- [ ] **C51** Abra Filtros → no hay sección «Tipo de alojamiento» y «Dormitorios» sale siempre; marque 2+ → «Ver N casas» cuenta solo las de 2 o más dormitorios y el botón de filtros trae la insignia «1». Un enlace `…/explorar?tipo=habitacion` enseña todas las casas, sin insignia.
+- [ ] **C52** Publicar sin cuenta (`/publicar`) → el paso 1 tiene «Tenga a mano:» y «Continuar», sin «¿Qué es?»; al continuar sigue en «¿Dónde está su casa?». En el resumen antes de enviar, «Alojamiento: Alojamiento completo».
+- [ ] **C53** En una casa publicada, «Editar» no tiene la fila «Tipo».
+
+### 2.7d Precios por fecha apagados (feature flag, valor inicial)
+
+- [ ] **C54** Como anfitrión, en «Calendario» elija uno o varios días → el panel tiene «Disponible / Ocupado» y «Guardar cambios», sin campo de precio ni «Usar el precio base»; marque Ocupado y guarde → se guarda como siempre.
+- [ ] **C55** En una casa con un precio especial guardado antes (★), la ficha y el calendario del anfitrión enseñan el precio por noche de la casa en ese día, sin ★, y el total de una estancia que lo incluye es precio por noche × noches.
+
 ### 2.8 Sin resultados y «¿No encuentra lo que busca?»
 
 - [ ] **C43** En Explorar con resultados baje hasta el final → después de la tarjeta de publicar hay la nota «¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.» con el botón «Escribir a 3bstays por WhatsApp».
@@ -969,6 +995,26 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
   3. Admin: el chip «Rechazados» la lista con su motivo.
 
 ---
+
+## 5b. Feature flags: matriz de configuraciones (historia #64)
+
+En pruebas.3bstays.com, desde el teléfono (móvil) y el portátil (laptop). Cada configuración se pone con las variables de GitHub del entorno `FLAG_*_PRUEBAS` y «Re-run» del trabajo `deploy` de la última ejecución de `develop` (`docs/feature-flags.md`, «Cambiar una flag»). Antes de cada fila, recargue la app y compruebe que la versión es la nueva (el aviso de versión nueva o una recarga en frío). Apunte en el registro (sección 7) la fila, el entorno, el dispositivo y el resultado.
+
+| Fila | Variables (las demás vacías) | Cuentas | Qué comprobar |
+| --- | --- | --- | --- |
+| A · inicial | ninguna | visitante; anfitrión `8888 1234` | C43–C55. Explorar con «¿Cuántas noches?», total = precio por noche × noches y casas con noches ocupadas incluidas; la ficha y el calendario del anfitrión siguen mostrando las noches ocupadas; Publicar sin «¿Qué es?»; calendario sin precio. |
+| B1 · fechas | `FLAG_EXPLORAR_FECHAS_PRUEBAS=true`, `FLAG_EXPLORAR_NOCHES_PRUEBAS=false` | visitante | C31–C42 como antes: «¿Cuándo?», una casa con una noche ocupada entre llegada y salida no sale; la salida puede caer en una ocupada. |
+| B2 · las dos | `FLAG_EXPLORAR_FECHAS_PRUEBAS=true` | visitante | Igual que B1 (mandan las fechas, no aparece «¿Cuántas noches?»). Abra `…/explorar?noches=4` → sin noches. |
+| C · ninguna | `FLAG_EXPLORAR_NOCHES_PRUEBAS=false` | visitante | Búsqueda con «¿Dónde?» y «¿Quiénes?», tarjetas «₡X / noche», Filtros sin fila de estancia; `…/explorar?llegada=…&salida=…&noches=4` no filtra. |
+| D · precios | `FLAG_PRECIOS_POR_FECHA_PRUEBAS=true`, después vacía | anfitrión | Con la flag: el panel del calendario tiene precio; ponga ₡150 000 a un día → ★ en el calendario y en la ficha. Vacíela y vuelva a desplegar → sin ★ y precio por noche en ficha y total; el día se puede ocupar y liberar. Enciéndala otra vez → la ★ y los ₡150 000 vuelven. |
+| E · habitaciones | `FLAG_HABITACIONES_PRUEBAS=true`, después vacía | anfitrión | Con la flag: Publicar pregunta «¿Qué es?» con «Habitación», Filtros tiene «Tipo de alojamiento»; cree una Habitación en borrador. Vacíela y despliegue → el borrador sigue, pero «Enviar a revisión» dice «Por ahora 3bstays publica solo alojamientos completos.»; Filtros sin tipo. |
+| F · iCal | `FLAG_ICAL_PRUEBAS=false` | anfitrión | **Pendiente de #63** (prioridad baja): hoy la flag no tiene efecto; la fila de Airbnb y la exportación siguen. |
+
+**Desde fuera de la app (contrato de la base):** con D y E apagadas, una llamada directa a `save_listing_days` con `p_price_crc` o un `update` de `listings` a `kind = 'habitacion'` con la sesión de un anfitrión responde con el mismo mensaje que la app. Lo cubren `tests/db/precios-fecha-flag.test.ts` y `tests/db/habitaciones-flag.test.ts`; en pruebas se comprueba con la API de administración si hace falta.
+
+**Valor inválido:** ponga `FLAG_ICAL_PRUEBAS=si` y «Re-run» → el build falla con «FLAG_ICAL no es válida…» y no se publica nada. Vacíela después.
+
+**App abierta durante un cambio:** con la app abierta en el teléfono, cambie una flag y despliegue; hasta que se recargue sigue con las flags anteriores, y una escritura que ya no se permite (p. ej. enviar una Habitación) la frena la base con su mensaje.
 
 ## 6. Si algo falla
 

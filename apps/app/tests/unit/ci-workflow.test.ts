@@ -63,7 +63,8 @@ describe("CI aislada", () => {
     expect(integration).not.toContain("download-artifact");
     expect(integration).not.toContain("matrix");
     expect(workflow.match(/pnpm exec supabase start/g)).toHaveLength(1);
-    expect(integration.match(/pnpm build/g)).toHaveLength(1);
+    // Dos builds: el de las flags iniciales y, al final, el de la búsqueda por fechas (historia #60).
+    expect(integration.match(/pnpm build/g)).toHaveLength(2);
     const order = ["supabase start", "pnpm db:types", "pnpm test:db", "pnpm build", "ci-artifacts.mjs e2e", "pnpm size", "ci-artifacts.mjs lighthouse"];
     const at = order.map((text) => integration.indexOf(text));
     expect(at.every((i) => i > 0)).toBe(true);
@@ -256,6 +257,33 @@ describe("CI aislada", () => {
     expect(deploy).toContain("run: node scripts/deploy-target.mjs limits");
   });
 
+  it("la búsqueda por fechas se prueba con su propio build, después de Lighthouse (historia #60)", () => {
+    const integration = jobs.integration!;
+    const at = integration.indexOf("name: Búsqueda por fechas (build con la flag encendida)");
+    expect(at).toBeGreaterThan(integration.indexOf("name: Puerta de Lighthouse"));
+    const step = integration.slice(at, integration.indexOf("- name:", at + 10));
+    expect(step).toContain('FLAG_EXPLORAR_FECHAS: "true"');
+    expect(step).toContain("pnpm build");
+    for (const spec of ["buscar", "contacto", "explorar-mapa", "explorar", "ficha-calendario"]) expect(step).toContain(`tests/e2e/${spec}.spec.ts`);
+    expect(step).not.toMatch(/if:|continue-on-error/);
+  });
+
+  it("las feature flags del entorno llegan al build y a la base antes de publicar (historia #58)", () => {
+    const deploy = jobs.deploy!;
+    const build = deploy.slice(deploy.indexOf("name: Build para desplegar"), deploy.indexOf("pnpm build"));
+    const at = deploy.indexOf("name: Feature flags en la base");
+    const step = deploy.slice(at, deploy.indexOf("run: node scripts/deploy-target.mjs flags", at));
+    for (const flag of ["FLAG_EXPLORAR_FECHAS", "FLAG_EXPLORAR_NOCHES", "FLAG_PRECIOS_POR_FECHA", "FLAG_ICAL", "FLAG_HABITACIONES"]) {
+      const line = `${flag}: \${{ steps.target.outputs.environment == 'production' && vars.${flag}_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.${flag}_PRUEBAS || '' }}`;
+      expect(build).toContain(line);
+      expect(step).toContain(line);
+    }
+    expect(at).toBeGreaterThan(deploy.indexOf("id: freshness-publish"));
+    expect(at).toBeLessThan(deploy.indexOf("name: Desplegar"));
+    expect(step).toContain("SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref != 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}");
+    expect(deploy).toContain("run: node scripts/deploy-target.mjs flags\n");
+  });
+
   it("comprueba SHA dentro del job exclusivo al entrar y antes de secretos/publicación", () => {
     const deploy = jobs.deploy!;
     expect(deploy.match(/run: node scripts\/deploy-freshness.mjs/g)).toHaveLength(2);
@@ -263,8 +291,9 @@ describe("CI aislada", () => {
     expect(deploy.indexOf("id: freshness-publish")).toBeGreaterThan(deploy.indexOf("run: pnpm size"));
     expect(deploy.indexOf("id: freshness-publish")).toBeLessThan(deploy.indexOf("name: Secreto anon"));
     expect(deploy.match(/GITHUB_TOKEN: \$\{\{ github.token \}\}/g)).toHaveLength(2);
-    // Publicar, la vista previa y escribir los límites de Airbnb en la base: todo lo que tiene efecto fuera.
-    expect(deploy.match(/steps.freshness-publish.outcome == 'success'/g)).toHaveLength(3);
+    // Publicar, la vista previa y escribir en la base los límites de Airbnb y las feature flags: todo lo que tiene
+    // efecto fuera.
+    expect(deploy.match(/steps.freshness-publish.outcome == 'success'/g)).toHaveLength(4);
     expect(deploy).not.toContain("${{ github.head_ref }}");
     expect(deploy).not.toContain("${{ github.event.pull_request.head.ref }}");
   });

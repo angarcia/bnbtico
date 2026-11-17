@@ -10,6 +10,16 @@ export const PEOPLE_FILTER_KEY = "3bstays-personas";
  *  2026-11-02, ya no se entiende: la hoja arranca sin fechas). */
 export const DATES_FILTER_KEY = "3bstays-fechas";
 
+/** Noches de la búsqueda por duración (modo noches), en la pestaña: el mensaje de la hoja de contacto las dice si no se
+ *  eligen fechas (diseño #59). */
+export const NIGHTS_FILTER_KEY = "3bstays-noches";
+
+/** Las noches guardadas por Explorar, de 1 a 90; si no, null. */
+export function readSearchNights(raw: string | null): number | null {
+  const n = raw && /^\d+$/.test(raw) ? Number(raw) : 0;
+  return n >= 1 && n <= 90 ? n : null;
+}
+
 export type SearchDates = { arrival: string; departure: string };
 
 /** Lo que Explorar guarda en `DATES_FILTER_KEY` para estas noches; null = quitar la clave (sin fechas). */

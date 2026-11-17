@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { can, isBlocked } from "../../domain/can";
 import { describe } from "../../domain/describe";
+import { FLAGS } from "../../shared/flags";
 import { EDIT_COPY, FIELD_ORDER, REVIEWED_FIELDS, fieldTitle, fieldWarning, mergeEdit, photoPill, type FormField, type ReviewedField } from "../../domain/edit";
 import { variantUrl } from "../../domain/image";
 import { FEATURE_LABEL, KIND_LABELS, locationLine, type Listing, type ListingDraft } from "../../domain/listing";
@@ -339,7 +340,8 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
         )}
 
         <section className="list" data-testid="field-rows">
-          {FIELD_ORDER.map((field) => {
+          {/* Habitaciones apagadas (feature flag, #62): sin la fila «Tipo», que solo podría decir «Alojamiento completo». */}
+          {FIELD_ORDER.filter((field) => FLAGS.rooms || field !== "tipo").map((field) => {
             const closeField = () => setEditingField((current) => current === field ? null : current);
             const renderRow = (editActions?: ReactNode) => (
               <FieldRow listing={l} field={field} userId={userId}
