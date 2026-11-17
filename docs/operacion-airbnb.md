@@ -6,6 +6,14 @@ Cada invocación atiende hasta 12 casas, empezando por las que llevan más tiemp
 
 La base reserva el ciclo bajo el mismo bloqueo por casa que la actualización manual. El último ciclo automático se registra al reservar. Repetir el ciclo u observar uno anterior no vuelve a importar esa casa. La finalización verifica la versión del intento, por lo que desconectar o sustituir un enlace invalida resultados antiguos. Una lectura fallida conserva los bloqueos y la última importación válida. La pausa del anfitrión permite actualizar. El bloqueo administrativo, rechazo, baja de cuenta y eliminación excluyen la casa.
 
+## Lecturas manuales
+
+Desde el 2026-11-17, para que Airbnb no nos bloquee, la base (`airbnb_manual_gate`) limita las lecturas que pide el anfitrión:
+- **Espera:** «Actualizar ahora» espera 15 minutos desde la última lectura de la casa, manual o automática.
+- **Tope:** cada casa tiene 10 lecturas manuales al día de Costa Rica. Conectar y cambiar el enlace no esperan, pero cuentan.
+- **Excepciones:** repetir la misma petición (mismo `request_id`) no choca con el límite. Las lecturas automáticas llevan `origin = 'auto'` y no cuentan en el tope.
+- **Resumen:** `airbnb_overview` devuelve `manualAvailableAt` y `manualLeftToday`, con los que la pantalla desactiva los botones y escribe el texto. «Marcar una reserva» no lee durante la espera y usa la última lectura.
+
 ## Cambiar el intervalo
 
 El intervalo forma parte del despliegue: el cron de Cloudflare es configuración del Worker. Para cambiarlo:

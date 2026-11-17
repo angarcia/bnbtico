@@ -26,6 +26,8 @@ async function connected() {
   await service.finish(l.id, request, [{ uid: "ocupación-anterior", start: day(10), end: day(12) }], null);
   const aged = await serviceClient().from("airbnb_connections").update({ last_success_at: new Date(Date.now() - 300_000).toISOString() }).eq("listing_id", l.id);
   if (aged.error) throw aged.error;
+  // Y la lectura de la conexión, para que el límite manual (15 minutos, 2026-11-17) deje actualizar antes de marcar.
+  await h.ageAirbnbReads(l.id, 16 * 60_000);
   return { l, service };
 }
 

@@ -23,6 +23,8 @@ export function airbnbManagementContract(name: string, make: () => Promise<{ h: 
       await s.begin(jwt, id, TEST_AIRBNB_URL, request);
       await s.context(id, request);
       await s.finish(id, request, [{ uid: "reserva-anterior", start: day(10), end: day(13) }], null);
+      // Conectar es una lectura: sin esto, «Actualizar ahora» esperaría 15 minutos (límite manual, airbnb-limite.contract).
+      await h.ageAirbnbReads(id, 16 * 60_000);
       return jwt;
     }
     async function currentUrl(id: string) {
@@ -88,6 +90,7 @@ export function airbnbManagementContract(name: string, make: () => Promise<{ h: 
       expect(typeof failed.lastErrorAt).toBe("string");
       expect(Date.parse(failed.lastErrorAt!)).toBeGreaterThanOrEqual(Date.parse(before.lastSuccessAt!));
       const retry = crypto.randomUUID();
+      await h.ageAirbnbReads(l.id, 16 * 60_000); // reintentar también espera los 15 minutos
       await s.update(jwt, l.id, retry);
       expect(await s.overview(jwt, l.id)).toMatchObject({ state: "running", lastErrorAt: failed.lastErrorAt, lastSuccessAt: before.lastSuccessAt });
       await s.context(l.id, retry);

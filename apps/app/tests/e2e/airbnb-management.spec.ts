@@ -27,6 +27,8 @@ async function seedConnection() {
   await service.begin(jwt, l.id, TEST_AIRBNB_URL, request);
   await service.context(l.id, request);
   await service.finish(l.id, request, [{ uid: "gestión-inicial", start: day(10), end: day(13) }], null);
+  // Conectar es una lectura: sin esto, «Actualizar ahora» esperaría 15 minutos (límite manual, 2026-11-17).
+  await h.ageAirbnbReads(l.id, 16 * 60_000);
   return { l, service, exports, jwt };
 }
 
@@ -124,6 +126,14 @@ test("actualizar muestra error posterior sin perder éxito y el reintento doble 
   await expect(section.getByText(/Se conservan las últimas noches importadas/)).toBeVisible();
   await expect(success).toHaveText(previous);
   await expect(section.getByText("3 noches bloqueadas por Airbnb", { exact: true })).toBeVisible();
+  // Reintentar también espera los 15 minutos desde la lectura fallida (límite manual): botón desactivado y la hora.
+  await expect(page.getByRole("button", { name: "Intentar de nuevo", exact: true })).toBeDisabled();
+  await expect(section.getByTestId("airbnb-limit")).toHaveText(/^Podrá actualizar de nuevo a las \d\d:\d\d\.$/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: "../../.scratch/airbnb-limite/capturas/1-espera.png", fullPage: true, mask: [page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true })] });
+  await h.ageAirbnbReads(l.id, 16 * 60_000);
+  await page.reload();
+  await expect(section.getByTestId("airbnb-limit")).toHaveCount(0);
   try {
     await page.getByRole("button", { name: "Intentar de nuevo", exact: true }).click({ clickCount: 2 });
     await expect(page.getByRole("button", { name: "Actualizando…", exact: true })).toBeDisabled();
@@ -133,6 +143,26 @@ test("actualizar muestra error posterior sin perder éxito y el reintento doble 
   await expect(section.getByText("No hay noches bloqueadas por Airbnb en este período.", { exact: true })).toBeVisible();
   await expect(section.getByText(/Se conservan las últimas noches importadas/)).toHaveCount(0);
   expect(reads).toBe(2);
+});
+
+test("con 10 lecturas manuales hoy, «Actualizar ahora» y «Sustituir enlace» esperan a mañana", async ({ page }) => {
+  const { l, service, jwt } = await seedConnection();
+  const replacement = "https://www.airbnb.com/calendar/ical/987654321.ics?t=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  for (let i = 1; i < 10; i++) {
+    const request = crypto.randomUUID();
+    await service.update(jwt, l.id, request, i % 2 ? replacement : TEST_AIRBNB_URL);
+    await service.context(l.id, request);
+    await service.finish(l.id, request, [], null);
+  }
+  await h.ageAirbnbReads(l.id, 16 * 60_000);
+  await injectSession(page, "owner");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/propietario/casas/${l.id}/airbnb`);
+  const section = page.getByRole("region", { name: "Importar desde Airbnb" });
+  await expect(section.getByTestId("airbnb-limit")).toHaveText("Hoy ya actualizó 10 veces. Podrá actualizar de nuevo mañana.");
+  await expect(page.getByRole("button", { name: "Actualizar ahora", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sustituir enlace", exact: true })).toBeDisabled();
+  await page.screenshot({ path: "../../.scratch/airbnb-limite/capturas/2-tope-del-dia.png", fullPage: true, mask: [page.getByLabel("Enlace de 3bstays para Airbnb", { exact: true })] });
 });
 
 test("sustituir conserva campo y conexión ante fallo; confirma solo la lectura válida", async ({ page }) => {

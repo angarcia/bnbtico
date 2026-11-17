@@ -8,7 +8,7 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import type { Listing } from "../../domain/listing";
 import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
-import { airbnbApi, airbnbQuery, refreshAirbnbCalendar, updateAirbnbCalendar, useCalendarOnline } from "../airbnb";
+import { airbnbApi, airbnbQuery, refreshAirbnbCalendar, updateAirbnbCalendar, useAirbnbManualHint, useCalendarOnline } from "../airbnb";
 import { FlowHeader } from "../chrome";
 import { ownListingQuery } from "../owner";
 import { usePrivateSheet } from "../private-sheet";
@@ -49,6 +49,9 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
   const summary = info.data;
   const suspended = summary?.state === "suspended" || l?.adminHold?.kind === "blocked" || l?.status === "rejected";
   const busy = summary?.state === "running" || !!operation;
+  // Límite manual (2026-11-17): «Actualizar ahora» espera 15 minutos desde la última lectura y hay 10 al día por casa.
+  const limitHint = useAirbnbManualHint(summary);
+  const dayFull = summary?.manualLeftToday === 0;
   async function reconcile() {
     const data = await (await airbnbApi()).overview(id);
     if (current()) client.setQueryData(airbnbQuery(uid, id).queryKey, data);
@@ -124,8 +127,9 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
       {summary.state === "running" ? <p role="status">{summary.connected ? "Actualizando…" : "Conectando…"}</p> : null}
       {!summary.connected && !suspended ? <button className="btn btn-primary btn-lg" type="button" disabled={busy || !online} onClick={() => setConnecting("connect")}>Conectar Airbnb</button> : null}
       {summary.connected ? <>
-        <button className="btn btn-primary btn-lg" type="button" disabled={busy || !online || suspended} onClick={() => void update()}>{operation === "refresh" || summary.state === "running" ? "Actualizando…" : summary.errorCode ? "Intentar de nuevo" : "Actualizar ahora"}</button>
-        <button className="btn btn-ghost btn-lg" type="button" disabled={busy || !online || suspended} onClick={() => setConnecting("replace")}>Sustituir enlace</button>
+        <button className="btn btn-primary btn-lg" type="button" disabled={busy || !online || suspended || !!limitHint} aria-describedby={limitHint && !busy ? "airbnb-limit" : undefined} onClick={() => void update()}>{operation === "refresh" || summary.state === "running" ? "Actualizando…" : summary.errorCode ? "Intentar de nuevo" : "Actualizar ahora"}</button>
+        {limitHint && !busy && !suspended ? <p id="airbnb-limit" className="small muted center" data-testid="airbnb-limit">{limitHint}</p> : null}
+        <button className="btn btn-ghost btn-lg" type="button" disabled={busy || !online || suspended || dayFull} onClick={() => setConnecting("replace")}>Sustituir enlace</button>
         <button className="btn-text sub-stop" type="button" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>Desconectar Airbnb</button>
       </> : null}
     </section> : null}

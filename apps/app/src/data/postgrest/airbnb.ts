@@ -1,4 +1,4 @@
-import { isRecord, readAirbnbSummary, type AirbnbCycleService, type AirbnbService, type OwnerAirbnbApi } from "../../domain/airbnb";
+import { isAirbnbLimitMessage, isRecord, readAirbnbSummary, type AirbnbCycleService, type AirbnbService, type OwnerAirbnbApi } from "../../domain/airbnb";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { IcalError } from "../../domain/ical";
 
@@ -18,7 +18,9 @@ export function airbnbRpc(cfg: Config, safeMessages: ReadonlySet<string> = SAFE_
     if (!response.ok) {
       // Solo mensajes de dominio controlados; no propagar SQL, payload, URL ni errores de gateways.
       if (response.status === 401) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
-      if (isRecord(raw) && raw.code === "P0001" && typeof raw.message === "string" && safeMessages.has(raw.message)) throw new DomainError(raw.message, "validation");
+      if (isRecord(raw) && raw.code === "P0001" && typeof raw.message === "string" && (safeMessages.has(raw.message) || isAirbnbLimitMessage(raw.message))) {
+        throw new DomainError(raw.message, "validation");
+      }
       throw toDomainError(isRecord(raw) ? { code: raw.code } : null);
     }
     return raw;
@@ -89,7 +91,9 @@ export function createOwnerAirbnb(cfg: Config & { token(): Promise<string | null
         if (response.status === 401) throw new DomainError("Su sesión venció. Ingrese de nuevo.", "session");
         const code = isRecord(raw) ? raw.code : null;
         if (code === "url" || code === "calendar" || code === "unsupported" || code === "download" || code === "timeout" || code === "size") throw new DomainError(new IcalError(code).message, "validation");
-        if (isRecord(raw) && typeof raw.error === "string" && SAFE_MESSAGES.has(raw.error)) throw new DomainError(raw.error, raw.error === "Ya estamos leyendo este calendario." ? "conflict" : "validation");
+        if (isRecord(raw) && typeof raw.error === "string" && (SAFE_MESSAGES.has(raw.error) || isAirbnbLimitMessage(raw.error))) {
+          throw new DomainError(raw.error, raw.error === "Ya estamos leyendo este calendario." ? "conflict" : "validation");
+        }
         throw new DomainError(action === "connect" ? "No pudimos conectar Airbnb. Intente de nuevo." : "No pudimos actualizar Airbnb. Intente de nuevo.", "unknown");
       }
       return readAirbnbSummary(raw);

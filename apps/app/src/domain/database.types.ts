@@ -91,14 +91,14 @@ isOneToOne: true
                   ]
                 },"airbnb_import_attempts": {
                   Row: {
-                    "candidate_url": string | null,"claimed": boolean,"error_code": string | null,"listing_id": string,"operation": string,"request_id": string,"started_at": string,"state": string,"version": number
+                    "candidate_url": string | null,"claimed": boolean,"error_code": string | null,"listing_id": string,"operation": string,"origin": string,"request_id": string,"started_at": string,"state": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"operation"?: string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
+                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"operation"?: string,"origin"?: string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
                   }
                   Update: {
-                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"operation"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
+                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"operation"?: string,"origin"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -821,6 +821,12 @@ isOneToOne: true
                            },
 "airbnb_import_context":
 { Args: { "p_listing": string,"p_request": string }; Returns: Json
+                           },
+"airbnb_manual_gate":
+{ Args: { "p_listing": string,"p_request": string,"p_wait": boolean }; Returns: undefined
+                           },
+"airbnb_manual_reads_today":
+{ Args: { "p_listing": string }; Returns: number
                            },
 "airbnb_overview":
 { Args: { "p_listing": string }; Returns: Json

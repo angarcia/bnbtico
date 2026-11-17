@@ -43,6 +43,9 @@ export function fakeHarness(db = new FakeDb()): SubscriptionHarness & { db: Fake
     async setAccountActive(who, active) {
       db.profiles.get(owners[who])!.isActive = active;
     },
+    async ageAirbnbReads(listingId, ms) {
+      for (const a of db.airbnbAttempts.values()) if (a.listingId === listingId) a.started -= ms;
+    },
     async reminders(listingId) {
       return db.reminders
         .filter((r) => r.listingId === listingId)

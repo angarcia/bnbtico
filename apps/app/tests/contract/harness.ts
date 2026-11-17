@@ -158,6 +158,8 @@ export interface SubscriptionHarness extends CalendarHarness {
   setDaysLeft(listingId: string, days: number): Promise<void>;
   /** profiles.is_active de esa cuenta (como el admin al desactivarla). */
   setAccountActive(who: SeedOwner, active: boolean): Promise<void>;
+  /** Hace más antiguas las lecturas de Airbnb de una casa (límite manual: espera de 15 min y tope del día). */
+  ageAirbnbReads(listingId: string, ms: number): Promise<void>;
   /** Avisos de una casa tal como están en la base, del umbral más alto al más bajo (como el servicio). */
   reminders(listingId: string): Promise<StoredReminder[]>;
   /** Los ids de la pasarela guardados para esa cuenta (como el servicio); null sin método. */

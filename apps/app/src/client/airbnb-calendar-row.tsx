@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type { Listing } from "../domain/listing";
 import { I } from "../shared/icons";
-import { airbnbQuery, updateAirbnbCalendar, useCalendarOnline } from "./airbnb";
+import { airbnbQuery, updateAirbnbCalendar, useAirbnbManualHint, useCalendarOnline } from "./airbnb";
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useDesktop } from "./desktop";
 import { sessionState } from "./session";
@@ -68,8 +68,9 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   const running = updating || info.data?.state === "running";
   const suspended = info.data?.state === "suspended" || listing.adminHold?.kind === "blocked" || listing.status === "rejected";
   const opensPopup = desktop && connected === false && !suspended;
+  const limitHint = useAirbnbManualHint(info.data);
   async function update() {
-    if (inFlight.current || running || disabled || !online || suspended || !info.data?.connected) return;
+    if (inFlight.current || running || disabled || !online || suspended || limitHint || !info.data?.connected) return;
     inFlight.current = true; setUpdating(true); setProblem(null);
     try {
       await updateAirbnbCalendar(client, userId, listing.id, listing.publicId, request, current, setProblem);
@@ -77,7 +78,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   }
   return <div className={connected ? "cal-airbnb" : "card cal-airbnb"}>
     <div className="cal-airbnb-line">
-    {info.data?.connected ? <button type="button" className="cal-airbnb-update" aria-label={running ? "Actualizando importación de Airbnb" : info.data.state === "error" ? "Reintentar importación de Airbnb" : "Actualizar importación de Airbnb"} aria-busy={running || undefined} disabled={disabled || !online || running || suspended} onClick={() => void update()}><RefreshIcon /></button> : null}
+    {info.data?.connected ? <button type="button" className="cal-airbnb-update" aria-label={running ? "Actualizando importación de Airbnb" : info.data.state === "error" ? "Reintentar importación de Airbnb" : "Actualizar importación de Airbnb"} aria-busy={running || undefined} title={limitHint ?? undefined} disabled={disabled || !online || running || suspended || !!limitHint} onClick={() => void update()}><RefreshIcon /></button> : null}
     <button type="button" className="cal-action" disabled={disabled || (desktop && info.isPending)}
       aria-haspopup={opensPopup ? "dialog" : undefined} aria-describedby={disabled ? "airbnb-selection-hint" : undefined}
       onClick={() => {
@@ -87,6 +88,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
       {!info.data?.connected ? <span className="cal-action-icon"><I.calendar size={20} /></span> : null}
       <span className="body"><b>{connected ? "Sincronización con Airbnb" : "Conectar con Airbnb"}</b>
         {running ? <span className="small muted" role="status">Actualizando…</span> : !online && info.data?.connected ? <span className="small muted">Sin conexión</span> : info.data?.state === "error" ? <span className="small muted">No se pudo actualizar</span> : null}
+        {limitHint && !running && info.data?.connected ? <span className="small muted" data-testid="airbnb-row-limit">{limitHint}</span> : null}
         {info.data?.lastSuccessAt ? <span className="small muted">Última importación: {new Intl.DateTimeFormat("es-CR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(info.data.lastSuccessAt))}</span> : info.data?.exportGenerated ? <span className="small muted">Enlace de exportación disponible</span> : null}
       </span><I.chevron />
     </button>

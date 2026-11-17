@@ -46,6 +46,7 @@ describe("Airbnb automático contra PostgREST local", () => {
     expect(await service.overview(jwt, l.id)).toMatchObject({ nights: 0, errorCode: null });
 
     const manual = crypto.randomUUID();
+    await h.ageAirbnbReads(l.id, 16 * 60_000); // «Actualizar ahora» espera 15 minutos desde la lectura automática
     await service.update(jwt, l.id, manual);
     expect(await service.claimCycle(l.id, crypto.randomUUID(), third)).toEqual({ run: false });
     await service.context(l.id, manual);

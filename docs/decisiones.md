@@ -1,3 +1,12 @@
+## 2026-11-17 · Límite de las lecturas manuales de Airbnb
+
+Ana aprueba limitar las lecturas de Airbnb que pide el anfitrión, para evitar abusos y que Airbnb nos bloquee:
+- **Espera:** «Actualizar ahora» espera 15 minutos desde la última lectura de la casa, también si la lectura fue automática.
+- **Tope:** cada casa tiene como mucho 10 lecturas manuales al día de Costa Rica. Conectar o cambiar el enlace no espera, pero cuenta en ese tope.
+- **Dónde se aplica:** en la base, bajo el bloqueo de la casa, para que no se salte llamando directamente a la API. El admin no lee calendarios ajenos, así que la regla «los mismos límites para el admin» se cumple sola.
+- **En pantalla:** el botón queda desactivado con «Podrá actualizar de nuevo a las HH:MM.» o «Hoy ya actualizó 10 veces. Podrá actualizar de nuevo mañana.», sin maqueta nueva. «Marcar una reserva» no lee durante la espera y usa la última lectura.
+- **Fuera de alcance:** no hay tope global por hora para todas las casas; se deja para después del lanzamiento.
+
 ## 2026-11-17 · Intervalo de Airbnb desde GitHub
 
 Ana aprueba que el ritmo de la lectura automática de Airbnb se fije con una variable de GitHub por entorno, para probar en pruebas con 5 minutos y pasar después a 3 o 6 horas:

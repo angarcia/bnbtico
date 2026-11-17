@@ -1,7 +1,7 @@
 // Preparación de la hoja de reservas. No abre otra vía de importación ni programa trabajos.
 import { randomUuid } from "../shared/random-uuid";
 import type { QueryClient } from "@tanstack/react-query";
-import type { AirbnbSummary } from "../domain/airbnb";
+import { airbnbManualHint, type AirbnbSummary } from "../domain/airbnb";
 import { DomainError, toDomainError } from "../domain/errors";
 import { airbnbApi, airbnbQuery } from "./airbnb";
 import { calendarApi, calendarQuery } from "./calendar-days";
@@ -45,7 +45,9 @@ export async function prepareReservationCalendar(client: QueryClient, userId: st
     imported = wasRunning && !summary.errorCode;
     if (summary.state === "suspended") throw new DomainError("Esta casa no permite actualizar el calendario.", "forbidden");
     const age = summary.lastSuccessAt ? Date.now() - Date.parse(summary.lastSuccessAt) : Infinity;
-    if (summary.connected && !wasRunning && (summary.errorCode || age < 0 || age >= RECENT_MS)) {
+    // Con el límite manual (2026-11-17) no se lee: vale la última lectura, de hace 15 minutos como mucho.
+    const limited = airbnbManualHint(summary, Date.now()) !== null;
+    if (summary.connected && !wasRunning && !limited && (summary.errorCode || age < 0 || age >= RECENT_MS)) {
       try {
         summary = await api.refresh(listingId, randomUuid());
         current();
