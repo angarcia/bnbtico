@@ -996,6 +996,26 @@ Cada recorrido cambia de rol: cierre sesión con Cuenta → «Cerrar sesión» y
 
 ---
 
+## 5b. Feature flags: matriz de configuraciones (historia #64)
+
+En pruebas.3bstays.com, desde el teléfono (móvil) y el portátil (laptop). Cada configuración se pone con las variables de GitHub del entorno `FLAG_*_PRUEBAS` y «Re-run» del trabajo `deploy` de la última ejecución de `develop` (`docs/feature-flags.md`, «Cambiar una flag»). Antes de cada fila, recargue la app y compruebe que la versión es la nueva (el aviso de versión nueva o una recarga en frío). Apunte en el registro (sección 7) la fila, el entorno, el dispositivo y el resultado.
+
+| Fila | Variables (las demás vacías) | Cuentas | Qué comprobar |
+| --- | --- | --- | --- |
+| A · inicial | ninguna | visitante; anfitrión `8888 1234` | C43–C55. Explorar con «¿Cuántas noches?», total = precio por noche × noches y casas con noches ocupadas incluidas; la ficha y el calendario del anfitrión siguen mostrando las noches ocupadas; Publicar sin «¿Qué es?»; calendario sin precio. |
+| B1 · fechas | `FLAG_EXPLORAR_FECHAS_PRUEBAS=true`, `FLAG_EXPLORAR_NOCHES_PRUEBAS=false` | visitante | C31–C42 como antes: «¿Cuándo?», una casa con una noche ocupada entre llegada y salida no sale; la salida puede caer en una ocupada. |
+| B2 · las dos | `FLAG_EXPLORAR_FECHAS_PRUEBAS=true` | visitante | Igual que B1 (mandan las fechas, no aparece «¿Cuántas noches?»). Abra `…/explorar?noches=4` → sin noches. |
+| C · ninguna | `FLAG_EXPLORAR_NOCHES_PRUEBAS=false` | visitante | Búsqueda con «¿Dónde?» y «¿Quiénes?», tarjetas «₡X / noche», Filtros sin fila de estancia; `…/explorar?llegada=…&salida=…&noches=4` no filtra. |
+| D · precios | `FLAG_PRECIOS_POR_FECHA_PRUEBAS=true`, después vacía | anfitrión | Con la flag: el panel del calendario tiene precio; ponga ₡150 000 a un día → ★ en el calendario y en la ficha. Vacíela y vuelva a desplegar → sin ★ y precio por noche en ficha y total; el día se puede ocupar y liberar. Enciéndala otra vez → la ★ y los ₡150 000 vuelven. |
+| E · habitaciones | `FLAG_HABITACIONES_PRUEBAS=true`, después vacía | anfitrión | Con la flag: Publicar pregunta «¿Qué es?» con «Habitación», Filtros tiene «Tipo de alojamiento»; cree una Habitación en borrador. Vacíela y despliegue → el borrador sigue, pero «Enviar a revisión» dice «Por ahora 3bstays publica solo alojamientos completos.»; Filtros sin tipo. |
+| F · iCal | `FLAG_ICAL_PRUEBAS=false` | anfitrión | **Pendiente de #63** (prioridad baja): hoy la flag no tiene efecto; la fila de Airbnb y la exportación siguen. |
+
+**Desde fuera de la app (contrato de la base):** con D y E apagadas, una llamada directa a `save_listing_days` con `p_price_crc` o un `update` de `listings` a `kind = 'habitacion'` con la sesión de un anfitrión responde con el mismo mensaje que la app. Lo cubren `tests/db/precios-fecha-flag.test.ts` y `tests/db/habitaciones-flag.test.ts`; en pruebas se comprueba con la API de administración si hace falta.
+
+**Valor inválido:** ponga `FLAG_ICAL_PRUEBAS=si` y «Re-run» → el build falla con «FLAG_ICAL no es válida…» y no se publica nada. Vacíela después.
+
+**App abierta durante un cambio:** con la app abierta en el teléfono, cambie una flag y despliegue; hasta que se recargue sigue con las flags anteriores, y una escritura que ya no se permite (p. ej. enviar una Habitación) la frena la base con su mensaje.
+
 ## 6. Si algo falla
 
 Por cada fallo, mande por WhatsApp o cree un issue en `.scratch/pruebas-<fecha>/issues/NN-<tema>.md` con:

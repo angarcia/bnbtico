@@ -1,3 +1,7 @@
+## 2026-11-17 · Verificación de las feature flags
+
+Historia #64. La matriz de configuraciones (inicial, fechas, las dos búsquedas, ninguna, precios, habitaciones e iCal) queda en `docs/pruebas-manuales.md`, sección 5b, para recorrerla en pruebas.3bstays.com con las variables de GitHub y «Re-run». Lo verificado en local, con su entorno, está en `.scratch/feature-flags/verificacion.md`: A a E correctos; F (iCal) queda pendiente de #63, de prioridad baja. Se añade `explorar-sin-estancia.spec.ts` para el modo sin estancia, que solo corre con un build en ese modo (CI no lo tiene).
+
 ## 2026-11-17 · La búsqueda por fechas se prueba con su propio build
 
 Historia #60. El modo fechas de Explorar es el comportamiento de siempre (llegada incluida, salida no, y fuera las casas con una noche ocupada) y no cambia de código; con las flags iniciales no se usa, así que sus pruebas de Playwright se saltaban. Para no perder esa cobertura, el job `integration` termina con un paso que vuelve a compilar con `FLAG_EXPLORAR_FECHAS=true` y pasa los cinco archivos que las tienen (`buscar`, `contacto`, `explorar-mapa`, `explorar` y `ficha-calendario`).
