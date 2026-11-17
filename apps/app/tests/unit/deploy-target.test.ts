@@ -75,23 +75,27 @@ describe("destino de despliegue", () => {
     expect(selection.publish).toBe("none");
   });
 
-  it.each(["2", "3"])("dispatch con %s shards solo verifica", (shards) => {
+  it.each([
+    ["refs/heads/refactor/limpieza-segura", {}],
+    ["refs/heads/develop", null],
+    ["refs/heads/ci-minutos-actions", {}],
+  ])("dispatch sin opciones en %s solo verifica, en cualquier rama", (ref, inputs) => {
     const dir = fixture();
     const event = join(dir, "event.json");
     const output = join(dir, "output");
-    writeFileSync(event, JSON.stringify({ inputs: { shards } }));
-    const result = run(["select"], { GITHUB_EVENT_NAME: "workflow_dispatch", GITHUB_REF: "refs/heads/refactor/limpieza-segura", GITHUB_EVENT_PATH: event, GITHUB_OUTPUT: output });
+    writeFileSync(event, JSON.stringify({ inputs }));
+    const result = run(["select"], { GITHUB_EVENT_NAME: "workflow_dispatch", GITHUB_REF: ref, GITHUB_EVENT_PATH: event, GITHUB_OUTPUT: output });
     expect(result.status, result.stderr).toBe(0);
     expect(readFileSync(output, "utf8")).toBe("environment=\nbuild=false\npublish=none\n");
   });
 
   it.each([
-    ["refs/heads/main", {}],
-    ["refs/heads/main", { shards: "1" }],
-    ["refs/heads/main", { shards: "4" }],
-    ["refs/heads/main", { shards: "2", publish: "deploy" }],
-    ["refs/heads/desconocida", { shards: "2" }],
-    ["refs/tags/main", { shards: "3" }],
+    ["refs/heads/main", { shards: "2" }],
+    ["refs/heads/main", { publish: "deploy" }],
+    ["refs/heads/desconocida", { environment: "production" }],
+    ["refs/heads/", {}],
+    ["refs/tags/main", {}],
+    ["refs/pull/5/merge", {}],
   ])("rechaza dispatch desconocido %s %j antes de emitir permisos", (ref, inputs) => {
     const dir = fixture();
     const event = join(dir, "event.json");

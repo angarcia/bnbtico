@@ -55,7 +55,7 @@ async function publish(root, code, gateCode = 0) {
 }
 
 async function e2e(root, current, total) {
-  ensure(["2", "3"].includes(total) && /^[1-3]$/.test(current) && Number(current) <= Number(total));
+  ensure(["1", "2", "3"].includes(total) && /^[1-3]$/.test(current) && Number(current) <= Number(total));
   const raw = join(root, "raw");
   const render = join(root, "render");
   const logs = logsOf(root);

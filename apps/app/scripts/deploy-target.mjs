@@ -19,9 +19,12 @@ function select() {
   const env = process.env;
   const result = { environment: "", build: "false", publish: "none" };
   if (env.GITHUB_EVENT_NAME === "workflow_dispatch") {
-    const inputs = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8")).inputs;
-    ensure(env.GITHUB_REF?.startsWith("refs/heads/") && branches.has(env.GITHUB_REF.slice("refs/heads/".length)), "Rama de verificación desconocida.");
-    ensure(inputs && Object.keys(inputs).length === 1 && ["2", "3"].includes(inputs.shards), "La verificación requiere dos o tres shards, sin opciones de publicación.");
+    // Lanzado a mano solo verifica (deploy exige push o pull request; los trabajos de verificación no llevan secretos), así
+    // que vale en cualquier rama: sirve para probar un cambio de CI antes de juntarlo (2026-11-16). Sin opciones: desde
+    // que las e2e van en un solo trozo ya no hay particiones que elegir.
+    const inputs = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8")).inputs ?? {};
+    ensure(env.GITHUB_REF?.startsWith("refs/heads/") && env.GITHUB_REF.length > "refs/heads/".length, "Rama de verificación desconocida.");
+    ensure(typeof inputs === "object" && Object.keys(inputs).length === 0, "La verificación manual no admite opciones.");
   } else if (env.GITHUB_EVENT_NAME === "push" && env.GITHUB_REF?.startsWith("refs/heads/")) {
     const target = branches.get(env.GITHUB_REF.slice("refs/heads/".length));
     if (target) Object.assign(result, { environment: target, build: "true", publish: "deploy" });
