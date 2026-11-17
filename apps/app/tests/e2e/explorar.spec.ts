@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
-import { onlySearchMode } from "./helpers/flags";
+import { onlyRooms, onlySearchMode } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { addDays } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -262,6 +262,7 @@ test("Filtros: sin lugar oculta las características y Limpiar elimina los filtr
 });
 
 test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contador (ticket 06)", async ({ page }) => {
+  onlyRooms();
   await page.goto("/explorar/filtros");
   const tipo = page.getByRole("group", { name: "Tipo de alojamiento" });
   await expect(tipo.getByRole("button")).toHaveText(["Cualquiera", "Completo", "Habitación"]);

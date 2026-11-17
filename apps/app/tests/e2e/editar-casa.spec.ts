@@ -1,4 +1,5 @@
 import { expect, test as base, type Page } from "./helpers/test";
+import { BUILD_FLAGS, onlyRooms } from "./helpers/flags";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { sql } from "../db/local";
@@ -53,7 +54,8 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Casa Coco" })).toBeVisible();
   await expect(rows(page).locator(".field-title")).toHaveText([
     /^Nombre/,
-    /^Tipo/,
+    // Sin la fila «Tipo» con las habitaciones apagadas (feature flags, #62).
+    ...(BUILD_FLAGS.rooms ? [/^Tipo/] : []),
     /^Personas, dormitorios y baños/,
     /^Características/,
     /^Descripción/,
@@ -294,6 +296,7 @@ test("si la base rechaza el precio, la pantalla lo dice y nada cambia", async ({
 });
 
 test("tipo habitación ofrece el baño; sin elegirlo se envía (como al crear) y la fila Tipo avisa en ocre", async ({ page }) => {
+  onlyRooms();
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/tipo`);
   await expect(page.getByRole("heading", { level: 1, name: "Tipo" })).toBeVisible();
@@ -320,6 +323,7 @@ test("tipo habitación ofrece el baño; sin elegirlo se envía (como al crear) y
 });
 
 test("un tipo de antes (casa) abre con «Alojamiento completo» marcado y, sin tocarlo, no cambia", async ({ page }) => {
+  onlyRooms();
   const { id } = await h.seed({ status: "active" });
   sqlKind(id, "casa");
   await page.goto(`/propietario/casas/${id}/editar/tipo`);
@@ -424,6 +428,7 @@ test("un nombre de antes de más de 32 caracteres, sin tocarlo, no se envía ni 
 });
 
 test("una Habitación publicada: «Personas», solo con el contador de personas (el baño va con el tipo), y se queda en 1 habitación y 1 baño", async ({ page }) => {
+  onlyRooms();
   const { id, publicId } = await h.seed({ status: "active", draft: { kind: "habitacion", bathroomShared: true } });
   await page.goto(`/propietario/casas/${id}`);
   await expect(rows(page).locator(".field-title").nth(2)).toHaveText(/^Personas$/);

@@ -83,10 +83,11 @@ const CASAS = [
   {
     anfitrion: "yendry", estado: "active", fotos: ["fachada-habitacion-bribri", "comun-dormitorio"],
     casa: {
-      title: "Habitación en Bribrí", kind: "habitacion", bathroom_shared: true, ...lista(9.626, -82.84, "704-bribri"),
+      // Sin habitaciones desde el 2026-11-17 (feature flag `rooms` apagada, historia #62): era «Habitación en Bribrí».
+      title: "Cabina en Bribrí", kind: "completo", ...lista(9.626, -82.84, "704-bribri"),
       capacity: 2, bedrooms: 1, bathrooms: 1, features: ["wifi"],
       nightly_price_crc: 18000, accepts_monthly: true, monthly_price_crc: 280000,
-      description: "Habitación con entrada propia en una casa de madera en medio del bosque, con baño compartido. Desayuno casero bajo pedido. Acepta alquiler mensual.",
+      description: "Cabina de madera con entrada propia en medio del bosque, con su baño. Desayuno casero bajo pedido. Acepta alquiler mensual.",
     },
   },
   {

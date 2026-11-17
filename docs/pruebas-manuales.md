@@ -294,6 +294,14 @@ Con los valores iniciales de las flags, C34, C35, C38, C41 y C42 no aplican (no 
 - [ ] **C49** Desde Explorar con 4 noches y 2 personas abra una ficha y «Contactar por WhatsApp» → el mensaje dice «¿Está disponible para 4 noches y 2 personas?»; si elige fechas en la hoja, el mensaje pasa a las fechas.
 - [ ] **C50** En laptop, el campo «Noches» (icono de luna) abre un panel con el mismo contador y atajos, «Quitar noches» y «Aplicar noches» (desactivado sin noches). Filtros, fila «Noches» de «Su búsqueda».
 
+### 2.7c Habitaciones apagadas (feature flag, valor inicial)
+
+Con las habitaciones apagadas, C24, C30, A2, A5, A23 y las comprobaciones de escritorio con «Habitación» no aplican; las casas CT-1050 y CT-1051 ya no salen (eliminadas por la migración del 2026-11-17).
+
+- [ ] **C51** Abra Filtros → no hay sección «Tipo de alojamiento» y «Dormitorios» sale siempre; marque 2+ → «Ver N casas» cuenta solo las de 2 o más dormitorios y el botón de filtros trae la insignia «1». Un enlace `…/explorar?tipo=habitacion` enseña todas las casas, sin insignia.
+- [ ] **C52** Publicar sin cuenta (`/publicar`) → el paso 1 tiene «Tenga a mano:» y «Continuar», sin «¿Qué es?»; al continuar sigue en «¿Dónde está su casa?». En el resumen antes de enviar, «Alojamiento: Alojamiento completo».
+- [ ] **C53** En una casa publicada, «Editar» no tiene la fila «Tipo».
+
 ### 2.8 Sin resultados y «¿No encuentra lo que busca?»
 
 - [ ] **C43** En Explorar con resultados baje hasta el final → después de la tarjeta de publicar hay la nota «¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.» con el botón «Escribir a 3bstays por WhatsApp».

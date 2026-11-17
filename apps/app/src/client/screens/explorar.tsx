@@ -15,7 +15,7 @@ import { CurrencySwitch } from "../../shared/currency-switch";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
-import { SEARCH_MODE } from "../../shared/flags";
+import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { NightsPicker } from "../../shared/nights-picker";
 import { revealClass } from "../motion";
@@ -455,7 +455,7 @@ function usePrefetchSearch(search: ExploreSearch, waiting: boolean) {
   const client = useQueryClient();
   const guess =
     waiting && !search.zona
-      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [search.prov] : [], { today: costaRicaToday(Date.now()), mode: SEARCH_MODE })
+      ? parseFilters(search, search.prov && search.prov !== ALL_PROVINCES ? [search.prov] : [], { today: costaRicaToday(Date.now()), mode: SEARCH_MODE, rooms: FLAGS.rooms })
       : null;
   const key = guess ? JSON.stringify(listingsQuery(guess).queryKey) : "";
   useEffect(() => {
@@ -468,7 +468,7 @@ export function ExplorarScreen() {
   const search = route.useSearch();
   const { data: provinces, isError } = useQuery(provincesQuery);
   const zones = useQuery({ ...zonesQuery, enabled: !!search.zona });
-  const f = parseFilters(search, provinces ?? [], { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id), mode: SEARCH_MODE });
+  const f = parseFilters(search, provinces ?? [], { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id), mode: SEARCH_MODE, rooms: FLAGS.rooms });
   const zoneRow = zones.data?.find((z) => z.id === f.zone);
   const zoneName = zoneRow?.name ?? null;
   const zone = zoneRow ? { lat: zoneRow.lat, lng: zoneRow.lng } : null;

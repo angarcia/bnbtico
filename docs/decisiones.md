@@ -1,3 +1,11 @@
+## 2026-11-17 · Habitaciones fuera, detrás de su feature flag
+
+Historia #62, con las reglas aprobadas por Ana en «Feature flags: qué pasa con los datos al apagar cada una».
+- **Base:** con `rooms` apagada, los triggers `listings_rooms_flag` y `listing_edits_rooms_flag` rechazan, por cualquier camino, crear una Habitación, cambiar una casa a Habitación, enviar una a revisión o proponer el cambio en una casa publicada: «Por ahora 3bstays publica solo alojamientos completos.». Un borrador que ya era Habitación se conserva, pero no se envía.
+- **Borrado:** la migración `20261117170000_habitaciones_flag` elimina todas las Habitaciones, en cualquier estado, con el borrado lógico (`deleted_at`) de «Eliminar casa» y del admin, que las saca de toda la app y se puede deshacer por SQL. Es la opción menos destructiva que cumple «borrarlas del todo». También quita sus avisos en cola, purga sus fichas y descarta las propuestas de pasar a Habitación.
+- **Pantallas:** Publicar no pregunta el tipo (toda casa nueva es Alojamiento completo) y Editar no tiene fila «Tipo». En Filtros desaparece «Tipo de alojamiento», `?tipo=` se ignora y «Dormitorios» sale siempre: antes solo con «Completo» elegido. Los datos de prueba (`pnpm datos:prueba`) cambian «Habitación en Bribrí» por «Cabina en Bribrí», un alojamiento completo.
+- **Pruebas:** el harness de base enciende `rooms` (las pruebas de habitaciones existentes cubren la flag encendida) y `habitaciones-flag.test.ts` prueba la flag apagada. Por eso, tras `pnpm test:db`, la base local queda con `rooms` encendida hasta el siguiente despliegue o `set_feature_flags`. En Playwright, como con las fechas: las pruebas que tratan solo de habitaciones se saltan con el build sin ellas (`onlyRooms`), y los recorridos de Publicar, Filtros y Editar saltan solo el paso del tipo.
+
 ## 2026-11-17 · Flujos de Playwright según el modo de Explorar
 
 Historia `flags-noches`. Los flujos de Playwright prueban el build con las flags que se despliegan: hoy, fechas apagadas y noches encendidas. Ana aprueba que las pruebas de la búsqueda por fechas se salten cuando el build no está en modo fechas (`tests/e2e/helpers/flags.ts`, `onlySearchMode`) y que se añadan las del modo noches (`explorar-noches.spec.ts`).

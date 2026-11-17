@@ -23,7 +23,7 @@ import { useCurrency } from "../../shared/currency";
 import { CounterRow } from "../../shared/counter-row";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
-import { SEARCH_MODE } from "../../shared/flags";
+import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
 
@@ -59,6 +59,7 @@ function FiltrosForm({
   const zones = useQuery({ ...zonesQuery, enabled: !!draft.zona });
   const f = parseFilters(draft, provinces, {
     mode: SEARCH_MODE,
+    rooms: FLAGS.rooms,
     today: costaRicaToday(Date.now()),
     zoneIds: zones.data?.map((z) => z.id),
   });
@@ -156,7 +157,9 @@ function FiltrosForm({
               decrease={f.ppl > 0 ? () => setCount("ppl", f.ppl - 1) : undefined}
               increase={f.ppl < SEARCH_MAX_PEOPLE ? () => setCount("ppl", f.ppl + 1) : undefined}
             />
-            {/* Tipo de alojamiento (ticket 06): una sola opción; «Alojamiento completo» incluye las casas y apartamentos viejos. */}
+            {/* Tipo de alojamiento (ticket 06): una sola opción; «Alojamiento completo» incluye las casas y apartamentos viejos.
+                Con las habitaciones apagadas (feature flag, #62) todo es alojamiento completo: no hay sección. */}
+            {FLAGS.rooms ? (
             <section className="stack kind-section" role="group" aria-labelledby="f-tipo">
               <span className="eyebrow" id="f-tipo">
                 Tipo de alojamiento
@@ -184,7 +187,8 @@ function FiltrosForm({
                 ))}
               </div>
             </section>
-            {f.kind === "completo" ? <CounterRow
+            ) : null}
+            {f.kind === "completo" || !FLAGS.rooms ? <CounterRow
               label="Dormitorios"
               icon={<I.bed size={22} />}
               value={

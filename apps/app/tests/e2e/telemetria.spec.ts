@@ -1,4 +1,5 @@
 import { expect, test } from "./helpers/test";
+import { BUILD_FLAGS } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -75,7 +76,8 @@ test("el asistente manda «wizard_step» con la casa y la ruta sin el id del bor
 // Sin cuenta, los pasos 2–6 (en el teléfono, 2026-11-04) también se cuentan, sin casa.
 test("sin cuenta, el asistente manda «wizard_step» sin casa", async ({ page }) => {
   await page.goto("/publicar");
-  await page.locator("label.choice", { hasText: "Habitación" }).click();
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta.
+  if (BUILD_FLAGS.rooms) await page.locator("label.choice", { hasText: "Habitación" }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
   await expect
@@ -86,7 +88,8 @@ test("sin cuenta, el asistente manda «wizard_step» sin casa", async ({ page })
 // Publicar v2 (§E): cuántos llegan a la verificación, sin casa (desde el 2026-11-04, al llegar a las Fotos).
 test("la verificación de publicar manda «publish_verify», una vez y sin casa", async ({ page }) => {
   await page.goto("/publicar");
-  await page.locator("label.choice", { hasText: "Habitación" }).click();
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta.
+  if (BUILD_FLAGS.rooms) await page.locator("label.choice", { hasText: "Habitación" }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
   await page.goto("/publicar/nueva/7");

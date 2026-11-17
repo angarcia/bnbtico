@@ -7,7 +7,7 @@ import { getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/rea
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { costaRicaToday, formatInquiryDates } from "../../domain/dates";
 import { SEARCH_MAX_PEOPLE, parseFilters, searchFor } from "../../domain/filters";
-import { SEARCH_MODE } from "../../shared/flags";
+import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { NightsPicker } from "../../shared/nights-picker";
 import { nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
 import { trackSearch } from "../../shared/beacon";
@@ -203,7 +203,7 @@ export function BuscarScreen() {
   const { abrir, ...rest } = search;
   const [today] = useState(() => costaRicaToday(Date.now()));
   const [draft, setDraft] = useState<SearchDraft>(() => {
-    const f = parseFilters(rest, [], { mode: SEARCH_MODE });
+    const f = parseFilters(rest, [], { mode: SEARCH_MODE, rooms: FLAGS.rooms });
     return { zone: f.zone, arrival: f.arrival, departure: f.departure, nights: f.nights, ppl: f.ppl };
   });
   const [open, setOpen] = useState<Card | null>(abrir ?? "donde");
@@ -220,7 +220,7 @@ export function BuscarScreen() {
   const submit = async () => {
     trackSearch({ zona: !!draft.zone, fechas: hasDates, personas: draft.ppl > 0 });
     const provinces = await queryClient.ensureQueryData(provincesQuery).catch(() => [] as string[]);
-    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces, { mode: SEARCH_MODE }), ...draft }), replace: true, resetScroll: true });
+    await navigate({ to: "/explorar", search: searchFor({ ...parseFilters(rest, provinces, { mode: SEARCH_MODE, rooms: FLAGS.rooms }), ...draft }), replace: true, resetScroll: true });
     window.scrollTo(0, 0);
   };
 

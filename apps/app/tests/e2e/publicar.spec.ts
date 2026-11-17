@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { BUILD_FLAGS, onlyRooms } from "./helpers/flags";
 import type { ListingsHarness } from "../contract/harness";
 import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -70,10 +71,13 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   // 1 Alojamiento: solo el tipo, explícito y sin preselección (la modalidad ya no se pregunta: toda casa es por noches).
   await expect(page.getByRole("heading", { name: "¿Cómo alquila?" })).toHaveCount(0);
   await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
-  await continuar(page);
-  await expect(alert(page)).toHaveText("Elija Alojamiento completo o Habitación.");
-  await page.getByText("Alojamiento completo", { exact: true }).click();
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta: el paso 1 sigue sin elegir nada.
+  if (BUILD_FLAGS.rooms) {
+    await continuar(page);
+    await expect(alert(page)).toHaveText("Elija Alojamiento completo o Habitación.");
+    await page.getByText("Alojamiento completo", { exact: true }).click();
+    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
+  }
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
   await expect(page.locator(".stage-label")).toHaveText("2 de 4");
@@ -268,7 +272,7 @@ test("sin fotos no se envía; sin descripción sí (aviso en ocre)", async ({ pa
     await page.goto("/propietario/publicar");
     await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
     const id = idFrom(page);
-    await page.getByText("Alojamiento completo", { exact: true }).click();
+    if (BUILD_FLAGS.rooms) await page.getByText("Alojamiento completo", { exact: true }).click();
     await continuar(page);
     await expect(page).toHaveURL(/\/2$/);
     await expect(page.locator(".map-box.leaflet-container")).toBeVisible();
@@ -507,7 +511,7 @@ async function tapNewHouse(page: Page, slow: { created: boolean }, instant: bool
   if (!instant) await expect(page.locator(".owner-skeleton")).toBeVisible();
   await expect(page.locator(".stage-label")).toHaveText("1 de 4");
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/1$/);
-  await expect(page.locator("label.choice", { hasText: "Alojamiento completo" })).toBeVisible();
+  await expect(BUILD_FLAGS.rooms ? page.locator("label.choice", { hasText: "Alojamiento completo" }) : page.locator('input[name="kind"][value="completo"]')).toBeAttached();
   if (instant) expect(slow.created).toBe(false);
   const id = idFrom(page);
   expect(await entryCardsSeen(page)).toEqual([]);
@@ -530,7 +534,8 @@ test("«Nueva casa»: lo que se elige en el paso 1 mientras se crea el borrador 
   const slow = await slowCreate(page);
   await page.goto("/propietario/casas");
   await page.getByRole("link", { name: "Nueva casa" }).click();
-  await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
+  // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta.
+  if (BUILD_FLAGS.rooms) await page.locator("label.choice", { hasText: "Alojamiento completo" }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]{36}\/2$/);
   expect(slow.created).toBe(false);
@@ -610,6 +615,7 @@ test("«Volver» de Publicar casa: atrás si se abrió desde la app; abierta dir
 });
 
 test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar» abre el asistente con todo relleno", async ({ page }) => {
+  onlyRooms();
   const pending = await h.seed({ status: "draft", draft: { title: "Borrador del otro teléfono", kind: "habitacion", bathroomShared: true } });
   const changes = await h.seed({ status: "changes", draft: { title: "Cabina con cambios" } });
   await page.goto("/propietario/publicar");
@@ -730,6 +736,7 @@ test("corregir desde «Revisar y enviar»: «Continuar» guarda y vuelve al resu
 });
 
 test("Habitación no pregunta habitaciones ni baños (son 1); Alojamiento completo sí, y cambiar de tipo lo respeta", async ({ page }) => {
+  onlyRooms();
   const room = await h.seed({ status: "draft", photos: 1, draft: { kind: "habitacion", bathroomShared: true, bedrooms: null, bathrooms: null, capacity: null } });
   await page.goto(`/propietario/publicar/${room.id}/4`);
   await expect(page.getByRole("heading", { name: "¿Cuántos caben?" })).toBeVisible();

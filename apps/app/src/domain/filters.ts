@@ -51,6 +51,8 @@ export interface ParseContext {
   /** Modo de estancia de las feature flags (`SEARCH_MODE`): fechas, noches o ninguna. Sin él, fechas (como antes). Hace
    *  falta aquí y no solo en `normalizeSearch`: el router mezcla en cada ruta los parámetros crudos de la raíz. */
   mode?: SearchMode;
+  /** Feature flag de habitaciones (`FLAGS.rooms`); sin él, encendida (como antes). */
+  rooms?: boolean;
 }
 
 // Lectura escrita a mano, sin zod (como `parseFavorites` y el paso 1 de publicar): este módulo va en el JS inicial de
@@ -70,7 +72,9 @@ const money = (v: string) => {
 
 type Parsed = { prov: string; zona: string; llegada: string; salida: string; noches: number; ppl: number; beds: number; tipo: KindFilter | ""; min: number; max: number; mas: boolean; mapa: boolean } & Record<Feature, boolean>;
 
-function parseSearch(params: SearchParams): Parsed {
+/** `rooms` (feature flag de habitaciones, historia #62): apagada, no hay tipo en Filtros (todo es alojamiento completo), así
+ *  que `?tipo=` se ignora y el mínimo de dormitorios vale sin `tipo=completo`. */
+function parseSearch(params: SearchParams, rooms = true): Parsed {
   const get = (key: string) => first(params[key]);
   const zona = get("zona");
   return {
@@ -80,8 +84,8 @@ function parseSearch(params: SearchParams): Parsed {
     salida: date(get("salida")),
     noches: nightsOf(get("noches")),
     ppl: people(get("ppl")),
-    beds: get("tipo") === "completo" ? option(BEDS_OPTIONS, get("beds")) : 0,
-    tipo: (KIND_FILTERS as readonly string[]).includes(get("tipo")) ? (get("tipo") as KindFilter) : "",
+    beds: !rooms || get("tipo") === "completo" ? option(BEDS_OPTIONS, get("beds")) : 0,
+    tipo: rooms && (KIND_FILTERS as readonly string[]).includes(get("tipo")) ? (get("tipo") as KindFilter) : "",
     min: money(get("min")),
     max: money(get("max")),
     mas: get("mas") === "1",
@@ -98,7 +102,7 @@ function stayFrom(p: Parsed, today?: string): { arrival: string | null; departur
 }
 
 export function parseFilters(params: SearchParams, provinces: readonly string[], ctx: ParseContext = {}): Filters {
-  const p = parseSearch(params);
+  const p = parseSearch(params, ctx.rooms ?? true);
   const mode = ctx.mode ?? "dates";
   // Un rango imposible (mínimo > máximo) en la URL se trata como sin rango: Filtros no deja aplicarlo (ticket 15).
   const invalid = priceRangeInvalid(p.min, p.max);
@@ -184,8 +188,8 @@ export type ExploreSearch = Partial<Record<SearchKey, string>>;
  *  provincias con casas y las zonas al pintar, porque esas listas llegan de la red. `today` aplica la ventana de fechas.
  *  `mode` (feature flags del build, `SEARCH_MODE`) decide qué estancia vale: en modo noches las fechas de un enlace viejo
  *  se descartan (sin filtro oculto de disponibilidad); en modo fechas, las noches; sin estancia, las dos. */
-export function normalizeSearch(params: SearchParams, today?: string, mode: SearchMode = "dates"): ExploreSearch {
-  const p = parseSearch(params);
+export function normalizeSearch(params: SearchParams, today?: string, mode: SearchMode = "dates", rooms = true): ExploreSearch {
+  const p = parseSearch(params, rooms);
   const out: ExploreSearch = {};
   const stay = stayFrom(p, today);
   if (p.prov) out.prov = p.prov;
