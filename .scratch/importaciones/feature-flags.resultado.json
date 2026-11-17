@@ -1,0 +1,50 @@
+{
+  "repository": "angarcia/bnbtico",
+  "project": {
+    "owner": "angarcia",
+    "number": 1
+  },
+  "issues": {
+    "flags-epica": {
+      "number": 57,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/57",
+      "node_id": "I_kwDOVLoG8M8AAAABgIRSTg"
+    },
+    "flags-base": {
+      "number": 58,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/58",
+      "node_id": "I_kwDOVLoG8M8AAAABgIRbig"
+    },
+    "flags-diseno": {
+      "number": 59,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/59",
+      "node_id": "I_kwDOVLoG8M8AAAABgIRlNw"
+    },
+    "flags-busqueda": {
+      "number": 60,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/60",
+      "node_id": "I_kwDOVLoG8M8AAAABgIRuLQ"
+    },
+    "flags-precios": {
+      "number": 61,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/61",
+      "node_id": "I_kwDOVLoG8M8AAAABgIR5rA"
+    },
+    "flags-habitaciones": {
+      "number": 62,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/62",
+      "node_id": "I_kwDOVLoG8M8AAAABgISFeA"
+    },
+    "flags-ical": {
+      "number": 63,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/63",
+      "node_id": "I_kwDOVLoG8M8AAAABgISRbQ"
+    },
+    "flags-validacion": {
+      "number": 64,
+      "html_url": "https://github.com/angarcia/bnbtico/issues/64",
+      "node_id": "I_kwDOVLoG8M8AAAABgISbXA"
+    }
+  },
+  "verified_project_membership_and_fields": true
+}
