@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DomainError, GENERIC_MESSAGE, toDomainError } from "../../src/domain/errors";
-import { fromBillingJson, fromListingRow, fromPublicRow, fromSetupContextJson, storagePhotoUrl, toListingUpdate, type ListingRow, type PublicRow } from "../../src/domain/rows";
+import { fromBillingJson, fromListingRow, fromPublicRow, fromSetupContextJson, readPublicDays, storagePhotoUrl, toListingUpdate, type ListingRow, type PublicRow } from "../../src/domain/rows";
 import { houseSubscription } from "../../src/domain/subscription";
 
 describe("toDomainError", () => {
@@ -138,5 +138,23 @@ describe("fromBillingJson y fromSetupContextJson (fase 5)", () => {
     expect(fromBillingJson({ houses: [], method: null, today: "2026-10-27" })).toEqual({ houses: [], method: null, today: "2026-10-27" });
     expect(fromBillingJson(null)).toEqual({ houses: [], method: null, today: "" });
     expect(fromSetupContextJson({ owner_id: "u", full_name: "Yorleny", phone: "+50687770001", customer_ref: null })).toEqual({ ownerId: "u", fullName: "Yorleny", phone: "+50687770001", customerRef: null });
+  });
+});
+
+describe("readPublicDays (issue #13)", () => {
+  it("lee la lista entera de public_listing_days, hasta 366 días", () => {
+    const rows = Array.from({ length: 366 }, (_, i) => ({ day: `2027-01-01`.slice(0, 8) + String((i % 28) + 1).padStart(2, "0"), available: i !== 365, special_price_crc: i === 365 ? 70000 : null }));
+    const days = readPublicDays(rows);
+    expect(days).toHaveLength(366);
+    expect(days[365]).toEqual({ day: rows[365]!.day, available: false, specialPriceCrc: 70000 });
+    expect(readPublicDays([])).toEqual([]);
+  });
+
+  it("una respuesta que no es una lista válida es un error, no un calendario libre", () => {
+    for (const bad of [null, {}, "[]", Array.from({ length: 367 }, () => ({ day: "2027-01-01", available: true, special_price_crc: null })),
+      [{ day: "2027-01-01", available: "no", special_price_crc: null }], [{ day: "1/1/2027", available: true, special_price_crc: null }],
+      [{ day: "2027-01-01", available: true, special_price_crc: 1.5 }]]) {
+      expect(() => readPublicDays(bad)).toThrow();
+    }
   });
 });

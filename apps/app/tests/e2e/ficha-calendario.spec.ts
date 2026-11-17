@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { CalendarHarness, Seeded } from "../contract/harness";
+import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { addDays, addMonths, monthTitle, openingMonth } from "../../src/domain/calendar";
 import { formatInquiryDates, longDate, longDateWithYear } from "../../src/domain/dates";
@@ -499,4 +500,39 @@ test("la hoja no envía mientras se leen los días (ficha de la SPA con fechas):
   release();
   await expect(sheet.getByRole("button", { name: "Continuar" })).toBeEnabled();
   await expect(sheet.getByTestId("stay-total")).toHaveText(line(3, 285_000, on(13), on(16)));
+});
+
+// Issue #13: PostgREST corta en 200 filas; con 366 días excepcionales, una noche ocupada después de la fila 200 sigue
+// ocupada en el HTML del worker, en la ficha, en la hoja de contacto y en Explorar.
+test("366 días excepcionales: la noche ocupada después de la fila 200 se respeta en el HTML, la ficha, la hoja y Explorar", async ({ page }) => {
+  const casa = await h.seed({ status: "active", draft: { title: "Casa Año Completo", nightlyPriceCrc: 95000 } });
+  // Toda la ventana con precio especial; las noches 250 y 251 (filas 251 y 252), ocupadas.
+  sql(`insert into public.listing_days (listing_id, day, available, special_price_crc)
+    select '${casa.id}', public.costa_rica_today() + i, i not in (250, 251), 120000 from generate_series(0, 365) i`);
+  const a = addDays(today(), 249);
+  const b = addDays(today(), 252);
+
+  const html = await (await page.request.get(`/casa/${casa.publicId}`)).text();
+  const ssr = JSON.parse(html.match(/<script type="application\/json" id="ssr-data">([\s\S]*?)<\/script>/)![1]!) as { days: { day: string; available: boolean; specialPriceCrc: number | null }[] };
+  expect(ssr.days).toHaveLength(366);
+  expect(ssr.days[250]).toEqual({ day: addDays(today(), 250), available: false, specialPriceCrc: 120000 });
+  expect(ssr.days[365]).toEqual({ day: addDays(today(), 365), available: true, specialPriceCrc: 120000 });
+
+  await withDates(page, a, b);
+  const seen = watch(page);
+  await page.goto(`/casa/${casa.publicId}`);
+  await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
+  await expect(total(page)).toHaveText("Hay noches ocupadas entre esas fechas.");
+  await contact(page).click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByTestId("stay-total")).toHaveText("Hay noches ocupadas entre esas fechas.");
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  expect(seen.problems, seen.problems.join("\n")).toEqual([]);
+
+  const card = page.getByRole("link", { name: /Casa Año Completo/ });
+  await page.goto(`/explorar?llegada=${a}&salida=${b}`);
+  await expect(page.getByTestId("results-count")).toHaveText(/^\d+ casas? · /); // resultados ya cargados
+  await expect(card).toHaveCount(0);
+  await page.goto(`/explorar?llegada=${addDays(today(), 300)}&salida=${addDays(today(), 303)}`);
+  await expect(card.first()).toBeVisible();
 });

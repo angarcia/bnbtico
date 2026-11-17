@@ -736,9 +736,7 @@ isOneToOne: true
 { Args: { "p_listing": string,"p_reason": string }; Returns: undefined
                            },
 "admin_calendar_days":
-{ Args: { "p_listing": string }; Returns: {
-              "available": boolean,"day": string,"imported": boolean,"manual_available": boolean,"special_price_crc": number
-            }[]
+{ Args: { "p_listing": string }; Returns: Json
                            },
 "admin_delete_listing":
 { Args: { "p_confirm": string,"p_listing": string,"p_reason": string }; Returns: undefined
@@ -1102,9 +1100,7 @@ isOneToOne: true
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "owner_calendar_days":
-{ Args: { "p_listing": string }; Returns: {
-              "available": boolean,"day": string,"imported": boolean,"manual_available": boolean,"special_price_crc": number
-            }[]
+{ Args: { "p_listing": string }; Returns: Json
                            },
 "owner_has_payment_method":
 { Args: { "p_owner": string }; Returns: boolean
@@ -1139,9 +1135,7 @@ isOneToOne: true
             }[]
                            },
 "public_listing_days":
-{ Args: { "p_public_id": string }; Returns: {
-              "available": boolean,"day": string,"special_price_crc": number
-            }[]
+{ Args: { "p_public_id": string }; Returns: Json
                            },
 "purge_listing_page":
 { Args: { "p_public_id": string }; Returns: undefined

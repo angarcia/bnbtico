@@ -48,7 +48,8 @@ export interface PublicListingsApi {
   /** Cuántas casas hay activas (plazas ocupadas de la oferta de lanzamiento). */
   countActive(): Promise<number>;
   /** Días que difieren del habitual (ocupados o con ★) de una casa activa, de hoy (Costa Rica) a hoy + 365, en orden.
-   *  `[]` si la casa no está publicada. RPC public_listing_days. */
+   *  `[]` si la casa no está publicada. RPC public_listing_days: un solo jsonb, completo o error (nunca truncado a
+   *  max_rows). */
   getPublicDays(publicId: string): Promise<CalendarDay[]>;
   /** Tipo de cambio vigente (el del día más reciente de fx_rates; el inicial si no hay otro). Ticket 21. */
   fxRate(): Promise<FxRate>;

@@ -1,3 +1,10 @@
+## 2026-11-17 · El calendario se lee entero, en una sola respuesta
+
+Issue #13 (épica DBA #9). Las tres lecturas del calendario (`public_listing_days` para la ficha, su SSR y la hoja de contacto; `owner_calendar_days` para el anfitrión; `admin_calendar_days` para el admin) devolvían una fila por día, y PostgREST corta en «Max rows» = 200. La ventana admite 366 días excepcionales, así que una noche ocupada o un precio especial después de la fila 200 llegaban como libres o al precio base.
+- **Cómo:** cada RPC devuelve ahora un único `jsonb` con todos los días en orden (migración `20261117150000_calendario_completo`). Una respuesta, completa o fallida: no hay páginas que puedan faltar ni noches sin leer que pasen por libres. El cuerpo HTTP tiene la misma forma que antes, así que la app desplegada sigue funcionando mientras se despliega. El adaptador valida la lista (`readPublicDays`; `readCalendarDays` para anfitrión y admin) y trata cualquier otra cosa como error.
+- **Descartado:** subir «Max rows» para todo (lo pide el issue) y paginar dentro del adaptador (varias peticiones por calendario y respuestas parciales que gestionar, cuando el tamaño ya está acotado a 366 días).
+- **No cambia:** la ventana (hoy … hoy + 365), los permisos de las tres funciones, la búsqueda y las comprobaciones de las RPCs de escritura (se calculan en SQL y nunca pasaron por PostgREST).
+
 ## 2026-11-17 · «Ver más casas» en Explorar
 
 Daniel decide paginar Explorar ahora, sin maqueta nueva: con el límite de 60 en la base (entrada de abajo), una búsqueda con más casas nunca enseñaba las demás.
