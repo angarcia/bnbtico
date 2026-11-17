@@ -111,4 +111,4 @@ El trigger `17 * * * *` de `wrangler.jsonc` ejecuta las tareas diarias a las 09:
 
 ## `db-max-rows`
 
-PostgREST devuelve como mucho 200 filas por petición. Local: `[api] max_rows = 200` en `supabase/config.toml`. Alojado: panel del proyecto → **Project Settings → Data API → Max rows** = 200 (paso manual de Daniel; ver `docs/configuracion-supabase.md`, paso 9). Explorar pide 60 como mucho y la cola del admin 50 rechazadas; el sitemap pide hasta 1000 (`SITEMAP_LIMIT`) pero PostgREST lo corta en 200: hay que paginarlo antes de pasar de 200 casas activas.
+PostgREST devuelve como mucho 200 filas por petición. Local: `[api] max_rows = 200` en `supabase/config.toml`. Alojado: panel del proyecto → **Project Settings → Data API → Max rows** = 200 (paso manual de Daniel; ver `docs/configuracion-supabase.md`, paso 9). Explorar pide 60 como mucho y la cola del admin 50 rechazadas; el sitemap pide hasta 1000 (`SITEMAP_LIMIT`) pero PostgREST lo corta en 200: hay que paginarlo antes de pasar de 200 casas activas. Las lecturas del calendario devuelven un único `jsonb` (hasta 366 días), al que el límite no afecta (issue #13).

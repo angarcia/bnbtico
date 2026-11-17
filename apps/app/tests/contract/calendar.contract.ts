@@ -167,6 +167,28 @@ export function calendarContract(name: string, makeHarness: () => Promise<Subscr
       expect(await h.anon.getPublicDays(l.publicId)).toEqual([occupied(day(2)), special(day(3), 77_000)]);
     });
 
+    // Issue #13: PostgREST corta en 200 filas (max_rows); la ventana admite 366 días excepcionales. Las tres lecturas
+    // (anfitrión, admin y ficha pública) devuelven todos, con los precios especiales y lo ocupado después de la fila 200.
+    for (const n of [0, 200, 201, 366]) {
+      it(`con ${n} días excepcionales, el anfitrión, el admin y la ficha los reciben todos`, async () => {
+        const l = await house();
+        const neighbour = await house();
+        const me = h.calendar("owner");
+        // Los días de otra casa no se mezclan.
+        await me.save(neighbour.id, { days: [day(0), day(300)], available: false });
+        const days = Array.from({ length: n }, (_, i) => day(i));
+        // Todas con precio especial y la última, además, ocupada.
+        const expected = days.map((d, i) => (i === n - 1 ? occupied(d, 60_000) : special(d, 60_000)));
+        if (n > 0) {
+          await me.save(l.id, { days, priceCrc: 60_000 });
+          await me.save(l.id, { days: [days[n - 1]!], available: false });
+        }
+        expect(await me.days(l.id)).toEqual(expected);
+        expect(await h.anon.getPublicDays(l.publicId)).toEqual(expected);
+        expect(await h.adminEdit("aal2").days(l.id)).toEqual(expected);
+      }, 60_000);
+    }
+
     it("«Marcar una reserva»: de llegada a salida − 1 noches ocupadas; los precios especiales y lo ya ocupado se conservan", async () => {
       const l = await house();
       const me = h.calendar("owner");

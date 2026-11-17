@@ -7,7 +7,7 @@ import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
 import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
 import { PROVINCES, type LinkState, type PublicListing, type SearchCursor, type SearchListing, type SearchPage } from "../../domain/listing";
-import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
+import { fromPublicRow, readPublicDays, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 import { caribeFirst, type ZoneWithListings } from "../../domain/zones";
 import { cursorAfter } from "../../domain/search-cursor";
 
@@ -106,7 +106,7 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
     async getPublicDays(publicId) {
       const { data, error } = await db.rpc("public_listing_days", { p_public_id: publicId });
       if (error) throw toDomainError(error);
-      return data.map(fromDayRow);
+      return readPublicDays(data);
     },
 
     async fxRate() {

@@ -216,12 +216,18 @@ export function fromPublicRow(row: PublicRow, url: PhotoUrl): PublicListing {
 }
 
 
-/** Una fila de listing_days (o de public_listing_days). */
-export const fromDayRow = (r: { day: string; available: boolean; special_price_crc: number | null }): CalendarDay => ({
-  day: r.day,
-  available: r.available,
-  specialPriceCrc: r.special_price_crc,
-});
+/** El jsonb de public_listing_days: todos los días de la ventana en una sola respuesta (issue #13). Lo que no sea una
+ *  lista válida de como mucho 366 días es un error, nunca un calendario más corto con noches libres por defecto. */
+export function readPublicDays(value: unknown): CalendarDay[] {
+  if (!Array.isArray(value) || value.length > 366) throw new Error("Días de calendario no válidos.");
+  return value.map((row: unknown): CalendarDay => {
+    const r = obj(row);
+    const price = r.special_price_crc;
+    if (typeof r.day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.day) || typeof r.available !== "boolean" ||
+      !(price === null || (typeof price === "number" && Number.isInteger(price) && price > 0))) throw new Error("Día de calendario no válido.");
+    return { day: r.day, available: r.available, specialPriceCrc: price };
+  });
+}
 
 // ---------- Suscripción (fase 5): el JSON de owner_billing y payment_setup_context ----------
 
