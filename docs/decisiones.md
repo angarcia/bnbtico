@@ -1,3 +1,8 @@
+## 2026-11-17 · La búsqueda limita siempre en la base
+
+Issue #10 (épica DBA #9): `search_listings` ya no confía en que el llamador pase el límite. Antes, con `p_limit` omitido o nulo, una llamada directa a la RPC recorría todas las casas elegibles y calculaba sus totales; el máximo de filas de PostgREST no evitaba ese trabajo.
+- **Regla:** omitido o nulo, 60; más de 60, 60; cero o negativo, error `22023` «Revise el límite.». La app ya pedía 60, así que Explorar no cambia.
+- **Orden del trabajo:** filtros, orden y límite, y solo después el total orientativo de las casas devueltas (migración `20261117130000_limite_busqueda`; lo comprueba `tests/db/limite-busqueda.test.ts` contando las llamadas a `search_stay_total`). Permisos y columnas, iguales.
 ## 2026-11-17 · Margen en los presupuestos de los trozos diferidos
 
 El despliegue del PR #54 falló en la puerta de tamaño: el trozo de Airbnb pesaba 9,97 kB con un límite de 9,5 kB, por el código del límite manual. Ana aprueba subirlo y, de paso, dar margen al resto para que un cambio pequeño no vuelva a parar el despliegue:
