@@ -1246,7 +1246,7 @@ isOneToOne: true
                            }
           }
           Enums: {
-            "feature": "pool"|"pets"|"wifi"|"ac"|"parking"|"ev"|"kids_free"|"beachfront"|"bbq","listing_kind": "casa"|"apartamento"|"habitacion"|"completo","listing_status": "draft"|"review"|"changes"|"rejected"|"payment_due"|"active"|"inactive","plan": "promo"|"paid","request_status": "open"|"closed"|"expired","tariff": "base"|"high"|"low"|"special"
+            "feature": "pool"|"pets"|"wifi"|"ac"|"parking"|"ev"|"beachfront"|"bbq","listing_kind": "casa"|"apartamento"|"habitacion"|"completo","listing_status": "draft"|"review"|"changes"|"rejected"|"payment_due"|"active"|"inactive","plan": "promo"|"paid","request_status": "open"|"closed"|"expired","tariff": "base"|"high"|"low"|"special"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1362,7 +1362,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "feature": ["pool", "pets", "wifi", "ac", "parking", "ev", "kids_free", "beachfront", "bbq"],"listing_kind": ["casa", "apartamento", "habitacion", "completo"],"listing_status": ["draft", "review", "changes", "rejected", "payment_due", "active", "inactive"],"plan": ["promo", "paid"],"request_status": ["open", "closed", "expired"],"tariff": ["base", "high", "low", "special"]
+            "feature": ["pool", "pets", "wifi", "ac", "parking", "ev", "beachfront", "bbq"],"listing_kind": ["casa", "apartamento", "habitacion", "completo"],"listing_status": ["draft", "review", "changes", "rejected", "payment_due", "active", "inactive"],"plan": ["promo", "paid"],"request_status": ["open", "closed", "expired"],"tariff": ["base", "high", "low", "special"]
           }
         }
 } as const

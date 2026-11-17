@@ -31,7 +31,6 @@ export const I = {
   ac: (p: P) => <svg {...S(p)}><rect x="3" y="6" width="18" height="8" rx="2" /><path d="M7 18l-1 2M12 18v3M17 18l1 2" /></svg>,
   parking: (p: P) => <svg {...S(p)}><path d="M5 16l1.5-5h11L19 16" /><rect x="3" y="16" width="18" height="4" /><circle cx="7.5" cy="20" r="1.5" /><circle cx="16.5" cy="20" r="1.5" /></svg>,
   ev: (p: P) => <svg {...S(p)}><path d="M13 2 5 13h6l-1 9 8-12h-6z" /></svg>,
-  kids: (p: P) => <svg {...S(p)}><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5M15 12h.01M9 12h.01" /><path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1" /></svg>,
   beach: (p: P) => <svg {...S(p)}><circle cx="17" cy="7" r="3" /><path d="M2 19c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M3 14c3-3 6-3 9 0" /></svg>,
   bbq: (p: P) => <svg {...S(p)}><path d="M4 10h16a8 8 0 0 1-16 0z" /><path d="M8 18l-2 4M16 18l2 4M9 3c0 1.5 1 1.5 1 3M13 3c0 1.5 1 1.5 1 3" /></svg>,
   // Casa con tejado y puerta (ronda de Ana 2026-10-30: «Mis casas» llevaba el mismo dibujo que el pin del mapa).
@@ -74,7 +73,6 @@ export const FEATURE_ICON: Record<Feature, IconName> = {
   ac: "ac",
   parking: "parking",
   ev: "ev",
-  kids_free: "kids",
   beachfront: "beach",
   bbq: "bbq",
 };

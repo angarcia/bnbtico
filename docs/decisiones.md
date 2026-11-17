@@ -1,3 +1,7 @@
+## 2026-11-17 · Fuera «Niños pequeños gratis»
+
+Ana decide quitar la característica «Niños pequeños gratis» por completo, no solo esconderla: sale del tipo `feature` de la base (se crea de nuevo sin ese valor, con sus vistas y `search_listings`), de Publicar y Editar, de Filtros, de la ficha, de los datos de prueba y del prototipo. La lista de características queda en ocho: Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Frente al mar y Rancho/BBQ. Los datos son de prueba: el valor se quita de las casas y de las peticiones sin avisar, y un enlace antiguo con ese filtro simplemente lo ignora.
+
 ## 2026-11-16 · CI dentro de los minutos gratuitos de Actions
 
 El plan gratuito de GitHub Actions (2000 minutos al mes con repositorio privado) se agotó a mitad de noviembre. Para pasar las builds había que poner el repositorio en público. Cada ejecución completa facturaba unos 33 minutos: siete trabajos, cada uno redondeado al minuto, y Supabase arrancaba cuatro veces. Hasta el día 16 hubo 76 ejecuciones por push y 19 por PR. Ana aprueba:

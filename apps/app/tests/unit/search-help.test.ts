@@ -62,7 +62,7 @@ describe("searchHelpMessage", () => {
   });
 
   it("nunca «undefined», «null» ni dobles espacios", () => {
-    const cases: Partial<Filters>[] = [{}, { prov: "Limón" }, { ppl: 2, max: 1 }, { features: ["wifi", "ac", "kids_free"] }, { prov: "Guanacaste", ppl: 12, beds: 3, min: 10, max: 99999 }];
+    const cases: Partial<Filters>[] = [{}, { prov: "Limón" }, { ppl: 2, max: 1 }, { features: ["wifi", "ac", "pets"] }, { prov: "Guanacaste", ppl: 12, beds: 3, min: 10, max: 99999 }];
     for (const c of cases) {
       const text = searchHelpMessage({ ...none, ...c });
       expect(text).not.toMatch(/undefined|null|NaN/);
