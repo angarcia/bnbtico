@@ -1,3 +1,12 @@
+## 2026-11-17 · Intervalo de Airbnb desde GitHub
+
+Ana aprueba que el ritmo de la lectura automática de Airbnb se fije con una variable de GitHub por entorno, para probar en pruebas con 5 minutos y pasar después a 3 o 6 horas:
+
+- `AIRBNB_SYNC_MINUTES_PRUEBAS` y `AIRBNB_SYNC_MINUTES_PRODUCCION`, en minutos de una lista cerrada (5, 10, 15, 30, 60, 120, 180, 240, 360, 720, 1440). Vacías: 180, como hasta ahora. El despliegue las traduce al cron del Worker.
+- Rango por entorno: pruebas de 5 a 1440 minutos; producción de 60 a 1440. Un valor fuera de la lista o del rango hace fallar el despliegue con un mensaje, en vez de corregirlo sin avisar.
+- La base deja de exigir «cada 3 horas en el minuto 17». Acepta cualquier ciclo en minuto exacto (múltiplo de 5, o el 17) y nunca lee una casa dos veces en menos de 5 minutos.
+- Cambiar el valor pide desplegar: el cron de Cloudflare es configuración del Worker. Se hace con «Re-run» del trabajo `deploy` de la última ejecución, unos 2 minutos, sin abrir otra vía de despliegue. Se descartó guardar el intervalo en la base, que se habría podido cambiar sin desplegar, porque Ana prefiere manejarlo desde GitHub.
+
 ## 2026-11-17 · Fuera «Niños pequeños gratis»
 
 Ana decide quitar la característica «Niños pequeños gratis» por completo, no solo esconderla: sale del tipo `feature` de la base (se crea de nuevo sin ese valor, con sus vistas y `search_listings`), de Publicar y Editar, de Filtros, de la ficha, de los datos de prueba y del prototipo. La lista de características queda en ocho: Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Frente al mar y Rancho/BBQ. Los datos son de prueba: el valor se quita de las casas y de las peticiones sin avisar, y un enlace antiguo con ese filtro simplemente lo ignora.

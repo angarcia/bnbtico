@@ -247,3 +247,62 @@ describe("workflow · aislamiento y puertas", () => {
     }
   });
 });
+
+describe("intervalo de Airbnb al desplegar (2026-11-17)", () => {
+  const base = {
+    pruebas: { name: "3bstays-pruebas", targetEnvironment: "pruebas", routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }], workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *", "17 */3 * * *"] }, vars: { ENVIRONMENT: "pruebas" } },
+    production: { name: "3bstays-production", targetEnvironment: "production", routes: [{ pattern: "3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *", "17 */3 * * *"] }, vars: { ENVIRONMENT: "production", LAUNCHED: "false" } },
+    refactor: { name: "3bstays-refactor", targetEnvironment: "refactor", routes: [{ pattern: "refactor.3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: [] }, vars: { ENVIRONMENT: "pruebas", SUPABASE_URL: "https://bpxiggdzgzolcazaaboj.supabase.co", LISTING_CACHE: "no-store" } },
+  };
+  function schedule(target: keyof typeof base, minutes?: string) {
+    const file = join(fixture(), "wrangler.json");
+    writeFileSync(file, JSON.stringify(base[target]));
+    const result = run(["schedule", file], { DEPLOY_ENV: target, ...(minutes === undefined ? {} : { AIRBNB_SYNC_MINUTES: minutes }) });
+    const config = JSON.parse(readFileSync(file, "utf8"));
+    const check = run(["validate", file], { DEPLOY_ENV: target, VITE_SUPABASE_URL: "https://bpxiggdzgzolcazaaboj.supabase.co" });
+    return { result, config, check };
+  }
+
+  it.each([
+    ["pruebas", undefined, ["17 * * * *", "17 */3 * * *"], "180"],
+    ["pruebas", "", ["17 * * * *", "17 */3 * * *"], "180"],
+    ["pruebas", "5", ["17 * * * *", "*/5 * * * *"], "5"],
+    ["pruebas", "1440", ["17 * * * *", "17 0 * * *"], "1440"],
+    ["production", "60", ["17 * * * *"], "60"],
+    ["production", "360", ["17 * * * *", "17 */6 * * *"], "360"],
+  ] as const)("%s con %s minutos → %j", (target, minutes, crons, value) => {
+    const { result, config, check } = schedule(target, minutes);
+    expect(result.status, result.stderr).toBe(0);
+    expect(config.triggers).toEqual({ crons });
+    expect(config.vars.AIRBNB_SYNC_MINUTES).toBe(value);
+    expect(check.status, check.stderr).toBe(0);
+  });
+
+  it.each([
+    ["production", "5", "AIRBNB_SYNC_MINUTES_PRODUCCION"],
+    ["production", "30", "AIRBNB_SYNC_MINUTES_PRODUCCION"],
+    ["pruebas", "7", "AIRBNB_SYNC_MINUTES_PRUEBAS"],
+    ["pruebas", "abc", "AIRBNB_SYNC_MINUTES_PRUEBAS"],
+    ["pruebas", "2880", "AIRBNB_SYNC_MINUTES_PRUEBAS"],
+  ] as const)("%s rechaza %s minutos con un mensaje y no toca la configuración", (target, minutes, variable) => {
+    const { result, config } = schedule(target, minutes);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(variable);
+    expect(config).toEqual(base[target]);
+  });
+
+  it("el refactor no tiene crons y no cambia", () => {
+    const { result, config, check } = schedule("refactor", "5");
+    expect(result.status, result.stderr).toBe(0);
+    expect(config).toEqual(base.refactor);
+    expect(check.status, check.stderr).toBe(0);
+  });
+
+  it("la validación rechaza un cron que no corresponde a los minutos", () => {
+    const file = join(fixture(), "wrangler.json");
+    writeFileSync(file, JSON.stringify({ ...base.pruebas, vars: { ENVIRONMENT: "pruebas", AIRBNB_SYNC_MINUTES: "5" } }));
+    const check = run(["validate", file], { DEPLOY_ENV: "pruebas" });
+    expect(check.status).not.toBe(0);
+    expect(check.stderr).toContain("triggers");
+  });
+});

@@ -236,6 +236,16 @@ describe("CI aislada", () => {
       .toBe(concurrency(jobs.deploy!, { ...github, event_name: "pull_request", ref: "refs/pull/5/merge" }, "pruebas").group);
   });
 
+  it("fija el intervalo de Airbnb tras el build y antes de validar el destino, con la variable de cada entorno", () => {
+    const deploy = jobs.deploy!;
+    const at = deploy.indexOf("name: Intervalo de Airbnb");
+    expect(at).toBeGreaterThan(deploy.indexOf("pnpm build"));
+    expect(at).toBeLessThan(deploy.indexOf("id: target-check"));
+    expect(deploy).toContain("vars.AIRBNB_SYNC_MINUTES_PRODUCCION");
+    expect(deploy).toContain("vars.AIRBNB_SYNC_MINUTES_PRUEBAS");
+    expect(deploy).toContain("run: node scripts/deploy-target.mjs schedule dist/3bstays/wrangler.json");
+  });
+
   it("comprueba SHA dentro del job exclusivo al entrar y antes de secretos/publicación", () => {
     const deploy = jobs.deploy!;
     expect(deploy.match(/run: node scripts\/deploy-freshness.mjs/g)).toHaveLength(2);

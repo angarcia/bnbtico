@@ -39,6 +39,25 @@ describe("ciclo de Airbnb", () => {
     expect(service.claimCycle).toHaveBeenCalledWith("a", expect.any(String), new Date(slot).toISOString());
   });
 
+  it("con 5 minutos lee en cada múltiplo de 5, no en otro minuto, y no espera más que el intervalo", async () => {
+    const five = Date.parse("2026-11-12T09:05:00Z");
+    const { service, deps } = fixture();
+    await runAirbnbCycle(service, { ...deps, now: () => five + 1000 }, "*/5 * * * *", five, 5);
+    expect(service.due).toHaveBeenCalledWith(new Date(five).toISOString());
+    service.due.mockClear();
+    await runAirbnbCycle(service, { ...deps, now: () => five + 1000 }, AIRBNB_CRON, five, 5); // cron de otro intervalo
+    await runAirbnbCycle(service, { ...deps, now: () => slot + 1000 }, "*/5 * * * *", slot, 5); // 09:17 no es múltiplo de 5
+    await runAirbnbCycle(service, { ...deps, now: () => five + 5 * 60_000 }, "*/5 * * * *", five, 5); // llega con el siguiente
+    expect(service.due).not.toHaveBeenCalled();
+  });
+
+  it("con 60 minutos usa el cron horario y vale cualquier hora en el minuto 17", async () => {
+    const tenSeventeen = Date.parse("2026-11-12T10:17:00Z");
+    const { service, deps } = fixture();
+    await runAirbnbCycle(service, { ...deps, now: () => tenSeventeen + 1000 }, "17 * * * *", tenSeventeen, 60);
+    expect(service.due).toHaveBeenCalledWith(new Date(tenSeventeen).toISOString());
+  });
+
   it("omite cron ajeno, retraso de una hora y reservas rechazadas", async () => {
     const { service, deps } = fixture();
     await runAirbnbCycle(service, deps, "17 * * * *", slot);

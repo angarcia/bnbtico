@@ -2,8 +2,8 @@ import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 
 const targets = new Map([
-  ["production", { name: "3bstays-production", routes: [{ pattern: "3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *", "17 */3 * * *"] } }],
-  ["pruebas", { name: "3bstays-pruebas", routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }], workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *", "17 */3 * * *"] } }],
+  ["production", { name: "3bstays-production", routes: [{ pattern: "3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false }], // triggers: los fija «schedule» (Airbnb)
+  ["pruebas", { name: "3bstays-pruebas", routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }], workers_dev: true, preview_urls: true }], // triggers: los fija «schedule» (Airbnb)
   ["refactor", { name: "3bstays-refactor", routes: [{ pattern: "refactor.3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: [] } }],
 ]);
 const branches = new Map([
@@ -14,6 +14,32 @@ const branches = new Map([
 const ensure = (condition, message) => {
   if (!condition) throw new Error(message);
 };
+
+// Cada cuánto se leen los calendarios de Airbnb (2026-11-17). Igual que src/domain/airbnb-schedule.ts; la prueba
+// tests/unit/airbnb-schedule.test.ts compara las dos traducciones con el comando «cron» de abajo.
+const SYNC_MINUTES = [5, 10, 15, 30, 60, 120, 180, 240, 360, 720, 1440];
+const DEFAULT_SYNC_MINUTES = 180;
+const SYNC_RANGE = { pruebas: [5, 1440], production: [60, 1440] };
+const SYNC_VARIABLE = { pruebas: "AIRBNB_SYNC_MINUTES_PRUEBAS", production: "AIRBNB_SYNC_MINUTES_PRODUCCION" };
+const HOURLY_CRON = "17 * * * *";
+function airbnbCron(minutes) {
+  if (minutes < 60) return `*/${minutes} * * * *`;
+  if (minutes === 1440) return "17 0 * * *";
+  const hours = minutes / 60;
+  return hours === 1 ? HOURLY_CRON : `17 */${hours} * * *`;
+}
+const cronsFor = (minutes) => [...new Set([HOURLY_CRON, airbnbCron(minutes)])];
+
+/** Los minutos de la variable del entorno: vacía, los de siempre; fuera de la lista o del rango, el despliegue falla. */
+function syncMinutes(target, raw) {
+  const value = (raw ?? "").trim();
+  if (value === "") return DEFAULT_SYNC_MINUTES;
+  const [min, max] = SYNC_RANGE[target];
+  const minutes = /^\d+$/.test(value) ? Number(value) : NaN;
+  ensure(SYNC_MINUTES.includes(minutes) && minutes >= min && minutes <= max,
+    `${SYNC_VARIABLE[target]} no es válida: use uno de ${SYNC_MINUTES.filter((m) => m >= min && m <= max).join(", ")} minutos.`);
+  return minutes;
+}
 
 function select() {
   const env = process.env;
@@ -52,6 +78,11 @@ function validate(file) {
     ensure(isDeepStrictEqual(config[key], value), `Configuración de destino incorrecta: ${key}.`);
   }
   ensure(config.vars?.ENVIRONMENT === (target === "production" ? "production" : "pruebas"), "ENVIRONMENT incorrecto.");
+  if (SYNC_RANGE[target]) {
+    // Lo escribió «schedule»: el cron de Airbnb tiene que ser el de esos minutos.
+    const minutes = syncMinutes(target, config.vars.AIRBNB_SYNC_MINUTES);
+    ensure(isDeepStrictEqual(config.triggers, { crons: cronsFor(minutes) }), "Configuración de destino incorrecta: triggers.");
+  }
   if (target === "refactor") {
     ensure(isDeepStrictEqual(config.vars, {
       ENVIRONMENT: "pruebas",
@@ -62,6 +93,19 @@ function validate(file) {
   } else {
     ensure(config.vars.LISTING_CACHE === undefined, "El entorno habitual debe conservar su caché.");
   }
+}
+
+/** Tras el build: el cron de Airbnb y AIRBNB_SYNC_MINUTES del worker salen de la variable de GitHub del entorno. */
+function schedule(file) {
+  const target = process.env.DEPLOY_ENV;
+  ensure(targets.has(target), "Destino de despliegue no autorizado.");
+  if (!SYNC_RANGE[target]) return; // el refactor no tiene crons
+  const minutes = syncMinutes(target, process.env.AIRBNB_SYNC_MINUTES);
+  const config = JSON.parse(readFileSync(file, "utf8"));
+  config.triggers = { crons: cronsFor(minutes) };
+  config.vars = { ...config.vars, AIRBNB_SYNC_MINUTES: String(minutes) };
+  writeFileSync(file, `${JSON.stringify(config, null, 2)}\n`);
+  console.log(`Airbnb cada ${minutes} minutos: ${airbnbCron(minutes)}.`);
 }
 
 function secrets(file) {
@@ -76,5 +120,7 @@ switch (command) {
   case "select": select(); break;
   case "validate": validate(file); break;
   case "secrets": secrets(file); break;
+  case "schedule": schedule(file); break;
+  case "cron": console.log(airbnbCron(Number(file))); break;
   default: throw new Error("Comando de despliegue no reconocido.");
 }

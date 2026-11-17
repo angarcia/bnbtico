@@ -25,6 +25,8 @@ export type Env = ReminderEnv & {
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   AIRBNB_AUTO_SYNC?: string;
+  /** Minutos entre lecturas automáticas de Airbnb (variable de GitHub del entorno; sin ella, 180). */
+  AIRBNB_SYNC_MINUTES?: string;
   PURGE_SECRET?: string;
   CF_ZONE_ID?: string;
   CF_PURGE_TOKEN?: string;

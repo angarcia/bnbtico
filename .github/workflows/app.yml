@@ -347,6 +347,15 @@ jobs:
           test ! -e .dev.vars && test ! -e .env.local
           test -n "$VITE_SUPABASE_URL" -a -n "$VITE_SUPABASE_ANON_KEY" || { echo "::error::Faltan SUPABASE_URL o SUPABASE_ANON_KEY en GitHub (variables o secretos)."; exit 1; }
           pnpm build
+      # Cada cuánto se leen los calendarios de Airbnb: variable de GitHub del entorno, en minutos (vacía = 180). Fuera de
+      # la lista o del rango del entorno, falla aquí y no se publica nada. Cambiarla pide desplegar otra vez: «Re-run»
+      # del trabajo deploy en la última ejecución de develop (docs/configuracion-supabase.md, sección 10).
+      - name: Intervalo de Airbnb
+        if: steps.target.outputs.build == 'true'
+        env:
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          AIRBNB_SYNC_MINUTES: ${{ steps.target.outputs.environment == 'production' && vars.AIRBNB_SYNC_MINUTES_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.AIRBNB_SYNC_MINUTES_PRUEBAS || '' }}
+        run: node scripts/deploy-target.mjs schedule dist/3bstays/wrangler.json
       - name: Validar destino generado
         id: target-check
         if: steps.target.outputs.build == 'true'
