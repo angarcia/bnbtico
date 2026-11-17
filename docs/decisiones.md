@@ -1,3 +1,10 @@
+## 2026-11-17 · Margen en los presupuestos de los trozos diferidos
+
+El despliegue del PR #54 falló en la puerta de tamaño: el trozo de Airbnb pesaba 9,97 kB con un límite de 9,5 kB, por el código del límite manual. Ana aprueba subirlo y, de paso, dar margen al resto para que un cambio pequeño no vuelva a parar el despliegue:
+- **Regla:** cada trozo diferido o compartido tiene ahora al menos un 10 % de margen sobre su tamaño del 2026-11-17, redondeado a 0,05 kB. Ninguno baja.
+- **Los que suben:** Airbnb, de 9,5 a 11 kB; Leaflet, de 44 a 47 kB; hoja de contacto, de 7,7 a 8,4 kB; pestañas, de 25,8 a 27,95 kB; ficha editable, de 5,1 a 5,6 kB; rejilla de fotos, de 4,75 a 5 kB; admin, de 14 a 15,1 kB; «Marcar una reserva», de 1,65 a 1,8 kB; Promoción y suscripción, de 7 a 7,6 kB; «Eliminar casa», de 1,6 a 1,7 kB.
+- **No cambia el JS inicial privado de 160 kB**, que es un presupuesto de producto (CLAUDE.md). Hoy mide 159,33 kB: queda menos de 1 kB de margen y conviene vigilarlo.
+
 ## 2026-11-17 · Límites manuales de Airbnb ajustables desde GitHub
 
 A petición de Ana, la espera de «Actualizar ahora» y el tope de lecturas manuales al día dejan de ser fijos.

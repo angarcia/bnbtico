@@ -102,7 +102,7 @@
     "path": [
       "dist/client/assets/leaflet-*.js"
     ],
-    "limit": "44 KB",
+    "limit": "47 kB",
     "gzip": true
   },
   {
@@ -123,7 +123,7 @@
       "dist/client/assets/stay-dates-*.js",
       "dist/client/assets/stay-price-*.js"
     ],
-    "limit": "7.7 KB",
+    "limit": "8.4 kB",
     "gzip": true
   },
   {
@@ -141,7 +141,7 @@
       "dist/client/assets/publish-promo-*.js",
       "dist/client/assets/offer-*.js"
     ],
-    "limit": "25.8 KB",
+    "limit": "27.95 kB",
     "gzip": true
   },
   {
@@ -150,7 +150,7 @@
       "dist/client/assets/casa-editable-*.js",
       "dist/client/assets/edit-messages-*.js"
     ],
-    "limit": "5.1 KB",
+    "limit": "5.6 kB",
     "gzip": true
   },
   {
@@ -234,7 +234,7 @@
     "path": [
       "dist/client/assets/photo-grid-*.js"
     ],
-    "limit": "4.75 kB",
+    "limit": "5 kB",
     "gzip": true
   },
   {
@@ -253,7 +253,7 @@
       "dist/client/assets/admin-*.js",
       "dist/client/assets/review-*.js"
     ],
-    "limit": "14 KB",
+    "limit": "15.1 kB",
     "gzip": true
   },
   {
@@ -301,7 +301,7 @@
   {
     "name": "Airbnb · importación, exportación y gestión de conexiones por casa (módulos diferidos; sin parser ni descarga externa en el navegador)",
     "path": ["dist/client/assets/airbnb-*.js"],
-    "limit": "9.5 kB",
+    "limit": "11 kB",
     "gzip": true
   },
   {
@@ -317,7 +317,7 @@
     "path": [
       "dist/client/assets/mark-sheet-*.js"
     ],
-    "limit": "1.65 KB",
+    "limit": "1.8 kB",
     "gzip": true
   },
   {
@@ -325,7 +325,7 @@
     "path": [
       "dist/client/assets/suscripcion-*.js"
     ],
-    "limit": "7 KB",
+    "limit": "7.6 kB",
     "gzip": true
   },
   {
@@ -341,7 +341,7 @@
     "path": [
       "dist/client/assets/delete-house-*.js"
     ],
-    "limit": "1.6 KB",
+    "limit": "1.7 kB",
     "gzip": true
   },
   {
