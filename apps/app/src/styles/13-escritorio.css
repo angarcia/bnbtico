@@ -575,6 +575,7 @@
   .desktop-search-people > svg { flex: none; color: var(--primary); }
   .desktop-search-people .people-stepper b { font: var(--w-strong) 16px var(--body); }
   .desktop-search-panel-cuando { inset-inline: 0; width: auto; }
+  .desktop-search-panel-noches { width: 360px; }
   .desktop-search-calendar { max-height: min(52dvh, 420px); overflow: auto; overscroll-behavior: contain; }
   .desktop-search-calendar .range-calendar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .desktop-search-calendar .range-weekdays { position: static; }

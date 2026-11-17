@@ -281,6 +281,19 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C41** En «¿Cuándo?» elija una estancia larga (llegada y salida a 35 noches) → el pie dice las fechas y «35 noches» (no hay «Desde» ni «Elija desde cuándo»); «Buscar» deja fuera las casas con alguna noche ocupada en esas 35 y las tarjetas dicen «por 35 noches».
 - [ ] **C42** Desde Filtros toque la fila «Fechas» de «Su búsqueda» → abre la búsqueda con «¿Cuándo?» abierto; cambie la fecha, toque «Buscar» y vuelva a Filtros → la fila muestra las fechas nuevas.
 
+### 2.7b Número de noches (feature flags, valores iniciales: fechas apagadas, noches encendidas)
+
+Con los valores iniciales de las flags, C34, C35, C38, C41 y C42 no aplican (no hay «¿Cuándo?»); vuelven cuando se encienda «Búsqueda por fechas» (#60). Diseño: `.scratch/feature-flags/diseno/`.
+
+- [ ] **C43** Abra la búsqueda → el segundo bloque es «¿Cuántas noches?» (no «¿Cuándo?»), plegado con «Añadir noches». Ábralo → «Noches · De 1 a 90», el contador con «–» y los atajos «Fin de semana», «1 semana», «2 semanas» y «1 mes». «Una noche menos» está desactivado en 1 y «Una noche más» en 90.
+- [ ] **C44** Toque «1 semana» → el atajo queda marcado y el contador dice 7; toque «Una noche más» → 8 y el atajo se desmarca; «Quitar» vuelve a «–».
+- [ ] **C45** Con 4 noches y 2 personas toque «Buscar» → la píldora dice «4 noches · 2 personas», la línea «N casas · 4 noches» y debajo «Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.»; cada tarjeta y el mapa dicen «≈ ₡X por 4 noches» (precio por noche × 4). Una casa con noches ocupadas sigue saliendo.
+- [ ] **C46** Toque «1 mes» y busque → una casa con precio al mes dice ese precio «por 30 noches»; una sin precio al mes, precio por noche × 30.
+- [ ] **C47** Recargue la página y abra una ficha y vuelva atrás → la búsqueda conserva «4 noches» (`?noches=4` en la dirección). Abra `…/explorar?noches=91` → Explorar sin noches y sin aviso.
+- [ ] **C48** Abra un enlace viejo con fechas (`…/explorar?llegada=…&salida=…`) → Explorar no dice las fechas ni deja fuera casas.
+- [ ] **C49** Desde Explorar con 4 noches y 2 personas abra una ficha y «Contactar por WhatsApp» → el mensaje dice «¿Está disponible para 4 noches y 2 personas?»; si elige fechas en la hoja, el mensaje pasa a las fechas.
+- [ ] **C50** En laptop, el campo «Noches» (icono de luna) abre un panel con el mismo contador y atajos, «Quitar noches» y «Aplicar noches» (desactivado sin noches). Filtros, fila «Noches» de «Su búsqueda».
+
 ### 2.8 Sin resultados y «¿No encuentra lo que busca?»
 
 - [ ] **C43** En Explorar con resultados baje hasta el final → después de la tarjeta de publicar hay la nota «¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.» con el botón «Escribir a 3bstays por WhatsApp».

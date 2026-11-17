@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { onlySearchMode } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { addDays } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -372,6 +373,7 @@ test("enlaces viejos del modo mensual (?mensual=1, ?modo=monthly, ?desde=) abren
 });
 
 test("con llegada y salida, cada tarjeta dice el total orientativo de esas noches; con 30 o más y precio al mes, el mes prorrateado", async ({ page }) => {
+  onlySearchMode("dates");
   const h = await postgrestHarness();
   const today = costaRicaToday(Date.now());
   const day = (n: number) => addDays(today, n);

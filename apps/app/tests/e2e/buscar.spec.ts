@@ -1,5 +1,6 @@
 import { webkit } from "@playwright/test";
 import { expect, test, type Page } from "./helpers/test";
+import { onlySearchMode } from "./helpers/flags";
 import { addDays, costaRicaToday, formatInquiryDates, longDateWithYear } from "../../src/domain/dates";
 import { COCLES } from "../contract/points";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -35,6 +36,7 @@ const results = (page: Page) => page.getByTestId("results-count");
 const house = (page: Page, title: string) => page.getByRole("link", { name: new RegExp(`^${title}`) });
 
 test("buscar «coc» → Cocles, fechas y 4 personas", async ({ page }) => {
+  onlySearchMode("dates");
   await page.goto("/explorar");
   await page.getByRole("link", { name: "Empiece su búsqueda" }).click();
   await expect(page).toHaveURL(/\/explorar\/buscar$/);
@@ -61,6 +63,7 @@ test("buscar «coc» → Cocles, fechas y 4 personas", async ({ page }) => {
 });
 
 test("una estancia larga se pide con llegada y salida (sin «Desde»), también desde un enlace viejo del mensual", async ({ page }) => {
+  onlySearchMode("dates");
   await page.goto("/explorar?mensual=1&zona=704-cocles");
   await page.locator(".search-pill").click();
   await expect(page).toHaveURL(/\/explorar\/buscar/);
@@ -80,6 +83,7 @@ test("una estancia larga se pide con llegada y salida (sin «Desde»), también 
 });
 
 test("Borrar todo quita zona, fechas y personas y conserva una característica", async ({ page }) => {
+  onlySearchMode("dates");
   await page.goto(`/explorar?zona=704-cocles&llegada=${day(20)}&salida=${day(24)}&ppl=4&pool=1`);
   await page.locator(".search-pill").click();
   await expect(page).toHaveURL(/\/explorar\/buscar/);
@@ -122,6 +126,7 @@ test("?abrir=quienes abre «¿Quiénes?»", async ({ page }) => {
 });
 
 test("con el teclado: Enter abre una tarjeta sin perder el foco, y elegir una zona con Enter lo lleva a «¿Cuándo?»", async ({ page }) => {
+  onlySearchMode("dates");
   await page.goto("/explorar/buscar");
   const focusedCard = () => page.evaluate(() => document.activeElement?.closest("section")?.querySelector("h2")?.textContent ?? null);
   await page.getByRole("button", { name: "¿Cuándo? Añadir fechas" }).focus();
@@ -139,6 +144,7 @@ test("con el teclado: Enter abre una tarjeta sin perder el foco, y elegir una zo
 });
 
 test("límites: hoy + 365 solo como salida (también con un enlace viejo del mensual) y 50 personas", async ({ page }) => {
+  onlySearchMode("dates");
   await page.goto("/explorar/buscar?abrir=cuando");
   const dayButton = (n: number) => page.getByRole("button", { name: longDateWithYear(day(n))!, exact: true });
   await expect(dayButton(365)).toBeDisabled();
@@ -156,6 +162,7 @@ test("límites: hoy + 365 solo como salida (también con un enlace viejo del men
 });
 
 test("Filtros: Zona y Fechas abren su sección; con una sola provincia no sale el bloque de provincias", async ({ page }) => {
+  onlySearchMode("dates");
   await page.goto("/explorar/filtros?zona=704-cocles&ppl=4");
   const mine = page.getByRole("group", { name: "Su búsqueda" });
   await expect(mine.getByRole("link")).toHaveText([/^Zona\s*Cocles$/, /^Fechas\s*Sin fechas$/]);
@@ -233,6 +240,7 @@ test("una zona que ya no está en la lista se muestra como «Añadir zona»", as
 });
 
 test("si la base rechaza las fechas, Explorar lo dice y ofrece quitarlas", async ({ page }) => {
+  onlySearchMode("dates");
   await page.route("**/rest/v1/rpc/search_listings*", (route) =>
     new URL(route.request().url()).searchParams.has("p_from") || route.request().postDataJSON()?.p_from
       ? route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Revise las fechas.", details: null, hint: null }) })
@@ -264,6 +272,7 @@ async function expectNextAboveBar(page: Page) {
 }
 
 test("«Siguiente» de «¿Cuándo?» no queda bajo la barra de abajo (iPhone 13 y SE en Safari)", async ({ page }) => {
+  onlySearchMode("dates");
   for (const size of SAFARI_SIZES) {
     await page.setViewportSize(size);
     await page.goto("/explorar/buscar?abrir=cuando");
@@ -272,6 +281,7 @@ test("«Siguiente» de «¿Cuándo?» no queda bajo la barra de abajo (iPhone 13
 });
 
 test("lo mismo en WebKit (si está instalado; en CI solo hay Chromium)", async ({ baseURL }) => {
+  onlySearchMode("dates");
   let browser;
   try {
     // La ruta de Chrome de la configuración (CHROMIUM_PATH) se aplicaría también aquí: WebKit con la suya.

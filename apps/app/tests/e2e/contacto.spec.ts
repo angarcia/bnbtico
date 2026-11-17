@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { onlySearchMode } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { sql, TEST_PHONES } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -162,6 +163,7 @@ test("personas: arranca con el filtro de Explorar, − / + cambian el mensaje y 
 
 // Explorar al estilo Airbnb: las fechas de la búsqueda viajan a la hoja por la pestaña (`3bstays-fechas`).
 test("fechas: la hoja arranca con las de la búsqueda, también las de una estancia larga; un enlace viejo del mensual no deja «Desde»", async ({ page }) => {
+  onlySearchMode("dates");
   const [A, S] = [day(20), day(24)];
   await page.goto(`/explorar?prov=Todas&llegada=${A}&salida=${S}&ppl=2`);
   await page.getByRole("link", { name: new RegExp(TITLE) }).first().click();

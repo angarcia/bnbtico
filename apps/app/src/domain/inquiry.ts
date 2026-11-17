@@ -44,6 +44,8 @@ export interface InquiryFields {
   arrival?: string | null;
   departure?: string | null;
   people?: number | null;
+  /** Noches de la búsqueda por duración (modo noches); solo cuentan sin fechas. */
+  nights?: number | null;
 }
 
 /** Una consulta vista por el propietario (RPC owner_inquiry_details): con el nombre y el WhatsApp del cliente. */
@@ -87,9 +89,10 @@ function messageDates(f: InquiryFields): string {
 export function composeInquiryMessage(title: string, f: InquiryFields): string {
   const dates = messageDates(f);
   const n = f.people && f.people > 0 ? Math.floor(f.people) : 0;
-  const datesText = dates ? ` ${dates}` : "";
-  const peopleText = n > 0 ? ` para ${n} persona${n === 1 ? "" : "s"}` : "";
-  return `Hola, vi ${title} en 3bstays y me interesa. ¿Está disponible${datesText}${peopleText}? Gracias.`;
+  const nights = !dates && f.nights && f.nights > 0 ? Math.floor(f.nights) : 0;
+  const stayText = dates ? ` ${dates}` : nights > 0 ? ` para ${nights} noche${nights === 1 ? "" : "s"}` : "";
+  const peopleText = n > 0 ? `${nights > 0 ? " y" : " para"} ${n} persona${n === 1 ? "" : "s"}` : "";
+  return `Hola, vi ${title} en 3bstays y me interesa. ¿Está disponible${stayText}${peopleText}? Gracias.`;
 }
 
 export type InquiryField = "arrival" | "departure" | "people" | "message";
@@ -124,6 +127,7 @@ export interface ContactDraftState {
   arrival: string | null;
   departure: string | null;
   people: number | null;
+  nights: number | null;
   message: string;
   /** El último texto redactado: mientras `message` sea igual, el mensaje sigue a fechas y personas. */
   composed: string;
@@ -138,6 +142,7 @@ export function startDraft(title: string, fields: InquiryFields = {}): ContactDr
     arrival: fields.arrival ?? null,
     departure: fields.departure ?? null,
     people: fields.people ?? null,
+    nights: fields.nights ?? null,
     message: composed,
     composed,
     edited: false,

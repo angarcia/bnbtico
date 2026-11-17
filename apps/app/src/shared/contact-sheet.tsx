@@ -32,7 +32,7 @@ import {
 import type { PublicListing } from "../domain/listing";
 import { hasStoredSession, webStore } from "../data/storage";
 import { effectiveDay, type CalendarDay } from "../domain/calendar";
-import { PEOPLE_FILTER_KEY } from "../domain/contact-return";
+import { NIGHTS_FILTER_KEY, PEOPLE_FILTER_KEY, readSearchNights } from "../domain/contact-return";
 import { shortDate } from "../domain/dates";
 import { RANGE_BUSY_MESSAGE, type RangeState } from "../domain/range";
 import { hasBusyNight, listingStay, stayLine } from "../domain/stay-price";
@@ -74,7 +74,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
     null,
     // Sin borrador, las personas del filtro de Explorar si caben en la casa (revisión UX A3); las fechas, las de la pestaña.
     () => {
-      const start = restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople) });
+      const start = restored?.state ?? startDraft(title, { people: filteredPeople(maxPeople), nights: readSearchNights(webStore("session").getItem(NIGHTS_FILTER_KEY)) });
       const dates = stayDates.read();
       return dates ? redraft(start, { type: "fields", patch: dates }, title) : start;
     },

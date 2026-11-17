@@ -1,3 +1,9 @@
+## 2026-11-17 · Flujos de Playwright según el modo de Explorar
+
+Historia `flags-noches`. Los flujos de Playwright prueban el build con las flags que se despliegan: hoy, fechas apagadas y noches encendidas. Ana aprueba que las pruebas de la búsqueda por fechas se salten cuando el build no está en modo fechas (`tests/e2e/helpers/flags.ts`, `onlySearchMode`) y que se añadan las del modo noches (`explorar-noches.spec.ts`).
+- **Pendiente:** #60 recupera la cobertura de la búsqueda por fechas con un segundo build de las pruebas con esa flag encendida.
+- **Descartado:** encender las fechas en el build de las pruebas, que habría dejado sin probar el modo noches que se despliega.
+
 ## 2026-11-17 · Diseño del número de noches y de los estados de las flags
 
 Historia #59. Ana aprueba la v1 de `.scratch/feature-flags/diseno/` (maquetas con el CSS de la app y capturas en móvil y laptop):

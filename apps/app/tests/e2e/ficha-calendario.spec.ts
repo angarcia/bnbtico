@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./helpers/test";
+import { BUILD_SEARCH_MODE, onlySearchMode } from "./helpers/flags";
 import type { CalendarHarness, Seeded } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -482,6 +483,7 @@ test("ficha y hoja comparten fechas y total: lo elegido en una está en la otra;
 });
 
 test("la hoja no envía mientras se leen los días (ficha de la SPA con fechas): «Continuar» bloqueado hasta que llegan", async ({ page }) => {
+  onlySearchMode("dates");
   const casa = await seedWithDays("Casa Dias Cargando");
   let release!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve));
@@ -529,6 +531,8 @@ test("366 días excepcionales: la noche ocupada después de la fila 200 se respe
   await expect(sheet.getByRole("button", { name: "Continuar" })).toBeDisabled();
   expect(seen.problems, seen.problems.join("\n")).toEqual([]);
 
+  // Explorar filtra por esas fechas solo con la búsqueda por fechas encendida (feature flags).
+  if (BUILD_SEARCH_MODE !== "dates") return;
   const card = page.getByRole("link", { name: /Casa Año Completo/ });
   await page.goto(`/explorar?llegada=${a}&salida=${b}`);
   await expect(page.getByTestId("results-count")).toHaveText(/^\d+ casas? · /); // resultados ya cargados

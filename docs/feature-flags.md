@@ -21,7 +21,7 @@ Cinco flags por entorno que se cambian con configuración y despliegue. Reglas d
 
 | Regla | Dónde se aplica | Historia |
 | --- | --- | --- |
-| Modo de búsqueda, controles, copy | Navegador (`SEARCH_MODE`, `FLAGS`) | #60 y la del selector de noches |
+| Modo de búsqueda, controles, copy | Navegador (`SEARCH_MODE`, `FLAGS`; `parseFilters` y `normalizeSearch` con `mode`) | #60 y `flags-noches` (hecho) |
 | Fechas en la URL o enlaces viejos con la flag apagada | Navegador: se ignoran, sin filtro oculto | #60 |
 | No publicar ni aprobar habitaciones | Base (`submit_listing`, `review_listing`, `listings_protect`) y navegador | #62 |
 | Tarifas especiales ocultas (se conservan) | Base (totales, `public_listing_days`, guardar precios) y navegador | #61 |
@@ -46,6 +46,11 @@ Una regla de escritura nunca depende de un valor que envíe el navegador: la RPC
 ## Local
 
 Sin variables, los valores iniciales en el build y en la base (fila que crea la migración). Para probar otra combinación: `FLAG_*=true|false` en `apps/app/.env.local` y, si la regla vive en la base, el mismo valor con `set_feature_flags` desde las pruebas (`serviceClient()`). La base local no se sincroniza sola con `.env.local`.
+
+## Pruebas
+
+- Vitest usa los valores iniciales (`src/shared/flags.ts` sin `__FLAGS__`); la lógica de cada modo se prueba pasando `mode` a `parseFilters` / `normalizeSearch`.
+- Playwright prueba el build con las flags de su entorno: `tests/e2e/helpers/flags.ts` (`onlySearchMode`) salta las pruebas de otro modo. Hoy, modo noches: las de la búsqueda por fechas se saltan hasta que #60 añada un build con fechas.
 
 ## Seguridad
 

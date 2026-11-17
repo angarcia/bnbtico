@@ -22,6 +22,7 @@ import { CasaScreen } from "./screens/casa";
 import { ExplorarScreen } from "./screens/explorar";
 import { currentSession, onSignedOut, useSession } from "./session";
 import { UpdateBanner } from "./update-banner";
+import { SEARCH_MODE } from "../shared/flags";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
@@ -35,8 +36,9 @@ const casaEditable = () => import("./screens/casa-editable");
 const publicarEntrada = () => import("./screens/publicar-entrada");
 type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
-/** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica. */
-const exploreSearch = (p: SearchParams) => normalizeSearch(p, costaRicaToday(Date.now()));
+/** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica y la estancia del modo de este build
+ *  (feature flags: fechas, número de noches o sin estancia). */
+const exploreSearch = (p: SearchParams) => normalizeSearch(p, costaRicaToday(Date.now()), SEARCH_MODE);
 /** La búsqueda (`/explorar/buscar`): la de Explorar y `abrir`, la tarjeta abierta al llegar (no pasa a Explorar). */
 type BuscarSearch = ExploreSearch & { abrir?: "donde" | "cuando" | "quienes" };
 const buscarSearch = (p: SearchParams): BuscarSearch => ({

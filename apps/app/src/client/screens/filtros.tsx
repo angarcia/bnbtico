@@ -23,6 +23,7 @@ import { useCurrency } from "../../shared/currency";
 import { CounterRow } from "../../shared/counter-row";
 import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
+import { SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
 
@@ -57,6 +58,7 @@ function FiltrosForm({
   };
   const zones = useQuery({ ...zonesQuery, enabled: !!draft.zona });
   const f = parseFilters(draft, provinces, {
+    mode: SEARCH_MODE,
     today: costaRicaToday(Date.now()),
     zoneIds: zones.data?.map((z) => z.id),
   });
@@ -76,13 +78,13 @@ function FiltrosForm({
       icon: I.pin,
       value: f.zone ? (zoneName ?? "") : f.prov === ALL_PROVINCES ? "Todas las provincias" : `Todo ${f.prov}`,
     },
-    {
-      abrir: "cuando",
-      label: "Fechas",
-      icon: I.calendar,
-      value: stayLabel(f)?.replace(/^desde/, "Desde") ?? "Sin fechas",
-    },
-  ] as const;
+    // Feature flags (#58): la fila de la estancia dice fechas o noches según el modo; sin estancia, no hay fila.
+    ...(SEARCH_MODE === "dates"
+      ? [{ abrir: "cuando", label: "Fechas", icon: I.calendar, value: stayLabel(f)?.replace(/^desde/, "Desde") ?? "Sin fechas" } as const]
+      : SEARCH_MODE === "nights"
+        ? [{ abrir: "cuando", label: "Noches", icon: I.moon, value: stayLabel(f) ?? "Sin noches" } as const]
+        : []),
+  ];
   const setCount = (key: "ppl" | "beds", n: number) => set(key, n ? String(n) : undefined);
   const maxBeds = BEDS_OPTIONS[BEDS_OPTIONS.length - 1]!;
   const apply = async () => {
