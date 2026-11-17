@@ -1,23 +1,27 @@
 import type { AirbnbCycleService } from "../domain/airbnb";
+import { DEFAULT_AIRBNB_SYNC_MINUTES, airbnbCron, isAirbnbSlot, type AirbnbSyncMinutes } from "../domain/airbnb-schedule";
 import { runAirbnbImport } from "./airbnb";
 
-export const AIRBNB_CRON = "17 */3 * * *";
+/** El cron de Airbnb sin variable (cada 3 horas); el desplegado sale de AIRBNB_SYNC_MINUTES. */
+export const AIRBNB_CRON = airbnbCron(DEFAULT_AIRBNB_SYNC_MINUTES);
 const MAX_DELAY_MS = 60 * 60_000;
 const BATCH_SIZE = 12;
 
 type CycleDeps = { fetch: typeof fetch; now(): number; log(line: string): void };
 
-export async function runAirbnbCycle(service: AirbnbCycleService | null, deps: CycleDeps, cron: string, scheduledTime: number): Promise<void> {
-  if (cron !== AIRBNB_CRON) return;
+export async function runAirbnbCycle(service: AirbnbCycleService | null, deps: CycleDeps, cron: string, scheduledTime: number,
+  minutes: AirbnbSyncMinutes = DEFAULT_AIRBNB_SYNC_MINUTES): Promise<void> {
+  if (cron !== airbnbCron(minutes)) return;
   // Cloudflare no manda la hora programada exacta (medido: 06:17:54.627): el ciclo es su minuto, con segundos a cero.
   const slot = Math.floor(scheduledTime / 60_000) * 60_000;
   const date = new Date(slot);
-  if (!Number.isFinite(date.getTime()) || date.getUTCHours() % 3 !== 0 || date.getUTCMinutes() !== 17) return;
+  if (!Number.isFinite(date.getTime()) || !isAirbnbSlot(minutes, date)) return;
   const cycle = date.toISOString();
   const startedAt = deps.now();
   const delayMs = startedAt - slot;
   const log = (details: Record<string, unknown>) => deps.log(JSON.stringify({ event: "airbnb_cycle", cycle, delayMs, ...details }));
-  if (!service || delayMs < 0 || delayMs >= MAX_DELAY_MS) {
+  // Con intervalos cortos, un ciclo que llega tarde no puede pisar al siguiente.
+  if (!service || delayMs < 0 || delayMs >= Math.min(MAX_DELAY_MS, minutes * 60_000)) {
     log({ skipped: service ? "outside_window" : "disabled_or_unconfigured" });
     return;
   }

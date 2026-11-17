@@ -247,3 +247,110 @@ describe("workflow · aislamiento y puertas", () => {
     }
   });
 });
+
+describe("intervalo de Airbnb al desplegar (2026-11-17)", () => {
+  const base = {
+    pruebas: { name: "3bstays-pruebas", targetEnvironment: "pruebas", routes: [{ pattern: "pruebas.3bstays.com", custom_domain: true }], workers_dev: true, preview_urls: true, triggers: { crons: ["17 * * * *", "17 */3 * * *"] }, vars: { ENVIRONMENT: "pruebas" } },
+    production: { name: "3bstays-production", targetEnvironment: "production", routes: [{ pattern: "3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: ["17 * * * *", "17 */3 * * *"] }, vars: { ENVIRONMENT: "production", LAUNCHED: "false" } },
+    refactor: { name: "3bstays-refactor", targetEnvironment: "refactor", routes: [{ pattern: "refactor.3bstays.com", custom_domain: true }], workers_dev: false, preview_urls: false, triggers: { crons: [] }, vars: { ENVIRONMENT: "pruebas", SUPABASE_URL: "https://bpxiggdzgzolcazaaboj.supabase.co", LISTING_CACHE: "no-store" } },
+  };
+  function schedule(target: keyof typeof base, minutes?: string) {
+    const file = join(fixture(), "wrangler.json");
+    writeFileSync(file, JSON.stringify(base[target]));
+    const result = run(["schedule", file], { DEPLOY_ENV: target, ...(minutes === undefined ? {} : { AIRBNB_SYNC_MINUTES: minutes }) });
+    const config = JSON.parse(readFileSync(file, "utf8"));
+    const check = run(["validate", file], { DEPLOY_ENV: target, VITE_SUPABASE_URL: "https://bpxiggdzgzolcazaaboj.supabase.co" });
+    return { result, config, check };
+  }
+
+  it.each([
+    ["pruebas", undefined, ["17 * * * *", "17 */3 * * *"], "180"],
+    ["pruebas", "", ["17 * * * *", "17 */3 * * *"], "180"],
+    ["pruebas", "5", ["17 * * * *", "*/5 * * * *"], "5"],
+    ["pruebas", "1440", ["17 * * * *", "17 0 * * *"], "1440"],
+    ["production", "60", ["17 * * * *"], "60"],
+    ["production", "360", ["17 * * * *", "17 */6 * * *"], "360"],
+  ] as const)("%s con %s minutos → %j", (target, minutes, crons, value) => {
+    const { result, config, check } = schedule(target, minutes);
+    expect(result.status, result.stderr).toBe(0);
+    expect(config.triggers).toEqual({ crons });
+    expect(config.vars.AIRBNB_SYNC_MINUTES).toBe(value);
+    expect(check.status, check.stderr).toBe(0);
+  });
+
+  it.each([
+    ["production", "5", "AIRBNB_SYNC_MINUTES_PRODUCCION"],
+    ["production", "30", "AIRBNB_SYNC_MINUTES_PRODUCCION"],
+    ["pruebas", "7", "AIRBNB_SYNC_MINUTES_PRUEBAS"],
+    ["pruebas", "abc", "AIRBNB_SYNC_MINUTES_PRUEBAS"],
+    ["pruebas", "2880", "AIRBNB_SYNC_MINUTES_PRUEBAS"],
+  ] as const)("%s rechaza %s minutos con un mensaje y no toca la configuración", (target, minutes, variable) => {
+    const { result, config } = schedule(target, minutes);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(variable);
+    expect(config).toEqual(base[target]);
+  });
+
+  it("el refactor no tiene crons y no cambia", () => {
+    const { result, config, check } = schedule("refactor", "5");
+    expect(result.status, result.stderr).toBe(0);
+    expect(config).toEqual(base.refactor);
+    expect(check.status, check.stderr).toBe(0);
+  });
+
+  it("la validación rechaza un cron que no corresponde a los minutos", () => {
+    const file = join(fixture(), "wrangler.json");
+    writeFileSync(file, JSON.stringify({ ...base.pruebas, vars: { ENVIRONMENT: "pruebas", AIRBNB_SYNC_MINUTES: "5" } }));
+    const check = run(["validate", file], { DEPLOY_ENV: "pruebas" });
+    expect(check.status).not.toBe(0);
+    expect(check.stderr).toContain("triggers");
+  });
+});
+
+describe("límites manuales de Airbnb al desplegar (2026-11-17)", () => {
+  const limits = (env: Record<string, string>) => run(["limits"], env);
+
+  it.each([
+    ["pruebas", {}, "espera 15 min, 10 al día"],
+    ["pruebas", { AIRBNB_MANUAL_WAIT_MINUTES: "5", AIRBNB_MANUAL_PER_DAY: "50" }, "espera 5 min, 50 al día"],
+    ["production", { AIRBNB_MANUAL_WAIT_MINUTES: "60", AIRBNB_MANUAL_PER_DAY: "1" }, "espera 60 min, 1 al día"],
+  ] as const)("%s acepta %j", (target, env, text) => {
+    const result = limits({ DEPLOY_ENV: target, ...env });
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain(text);
+  });
+
+  it.each([
+    ["pruebas", { AIRBNB_MANUAL_WAIT_MINUTES: "0" }, "AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS"],
+    ["pruebas", { AIRBNB_MANUAL_WAIT_MINUTES: "61" }, "AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS"],
+    ["production", { AIRBNB_MANUAL_PER_DAY: "51" }, "AIRBNB_MANUAL_PER_DAY_PRODUCCION"],
+    ["production", { AIRBNB_MANUAL_PER_DAY: "diez" }, "AIRBNB_MANUAL_PER_DAY_PRODUCCION"],
+  ] as const)("%s rechaza %j nombrando la variable", (target, env, variable) => {
+    const result = limits({ DEPLOY_ENV: target, ...env });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(variable);
+  });
+
+  it("en pruebas los escribe con la clave de servicio; en producción solo valida", async () => {
+    const { createServer } = await import("node:http");
+    const { spawn } = await import("node:child_process");
+    const seen: { url?: string; auth?: string; body: string }[] = [];
+    const server = createServer((req, res) => {
+      let body = "";
+      req.on("data", (c) => (body += c));
+      req.on("end", () => { seen.push({ url: req.url, auth: req.headers.authorization, body }); res.writeHead(204).end(); });
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 0;
+    const exec = (env: Record<string, string>) => new Promise<number>((resolve) => {
+      spawn(process.execPath, [script, "limits"], { env: { ...env, SUPABASE_URL: `http://127.0.0.1:${port}`, SUPABASE_SERVICE_ROLE_KEY: "clave-de-prueba" }, stdio: "ignore" })
+        .on("exit", (code) => resolve(code ?? 1));
+    });
+    try {
+      expect(await exec({ DEPLOY_ENV: "pruebas", AIRBNB_MANUAL_WAIT_MINUTES: "5", AIRBNB_MANUAL_PER_DAY: "3" })).toBe(0);
+      expect(await exec({ DEPLOY_ENV: "production", AIRBNB_MANUAL_WAIT_MINUTES: "20" })).toBe(0);
+    } finally { server.close(); }
+    expect(seen).toEqual([{ url: "/rest/v1/rpc/set_airbnb_manual_limits", auth: "Bearer clave-de-prueba", body: JSON.stringify({ p_wait_minutes: 5, p_per_day: 3 }) }]);
+  });
+});

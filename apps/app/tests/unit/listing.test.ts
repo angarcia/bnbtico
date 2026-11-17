@@ -80,8 +80,8 @@ function validDraft(): ListingDraft {
 
 describe("constantes", () => {
   it("las 9 características en el orden del prototipo", () => {
-    expect(FEATURES.map(([k]) => k)).toEqual(["pool", "pets", "wifi", "ac", "parking", "ev", "kids_free", "beachfront", "bbq"]);
-    expect(FEATURES.map(([, l]) => l)).toEqual(["Piscina", "Mascotas", "Wifi", "Aire acondicionado", "Parqueo", "Cargador eléctrico", "Niños pequeños gratis", "Frente al mar", "Rancho/BBQ"]);
+    expect(FEATURES.map(([k]) => k)).toEqual(["pool", "pets", "wifi", "ac", "parking", "ev", "beachfront", "bbq"]);
+    expect(FEATURES.map(([, l]) => l)).toEqual(["Piscina", "Mascotas", "Wifi", "Aire acondicionado", "Parqueo", "Cargador eléctrico", "Frente al mar", "Rancho/BBQ"]);
   });
   it("tipos del diseño v1; los antiguos conservan etiqueta", () => {
     expect(KINDS).toEqual(["completo", "habitacion"]);

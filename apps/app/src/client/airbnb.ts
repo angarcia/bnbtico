@@ -1,6 +1,7 @@
 import { randomUuid } from "../shared/random-uuid";
 import { onlineManager, queryOptions, type QueryClient } from "@tanstack/react-query";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { airbnbManualHint, type AirbnbSummary } from "../domain/airbnb";
 import { authApi } from "./session";
 import { DomainError, toDomainError } from "../domain/errors";
 import { toast } from "../shared/toast";
@@ -58,4 +59,20 @@ export async function updateAirbnbCalendar(
       if (current()) client.setQueryData(airbnbQuery(userId, listingId).queryKey, data);
     } catch { /* El aviso anterior permanece si tampoco se puede reconciliar. */ }
   }
+}
+
+/**
+ * El texto del límite manual (2026-11-17) mientras «Actualizar ahora» espera, o null si se puede. Cuando llega la hora,
+ * un temporizador vuelve a pintar quien lo usa y el botón se reactiva solo.
+ */
+export function useAirbnbManualHint(summary: AirbnbSummary | undefined): string | null {
+  const [, setTick] = useState(0);
+  const availableAt = summary?.manualAvailableAt ? Date.parse(summary.manualAvailableAt) : NaN;
+  useEffect(() => {
+    const wait = availableAt - Date.now();
+    if (!Number.isFinite(wait) || wait <= 0) return;
+    const timer = setTimeout(() => setTick((n) => n + 1), wait + 500);
+    return () => clearTimeout(timer);
+  }, [availableAt]);
+  return summary ? airbnbManualHint(summary, Date.now()) : null;
 }

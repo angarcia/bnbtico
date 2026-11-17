@@ -66,6 +66,11 @@ export function costaRicaToday(nowMs: number): string {
   return new Date(nowMs - CR_OFFSET_MS).toISOString().slice(0, 10);
 }
 
+/** La hora en Costa Rica, `HH:MM` (24 h; Costa Rica no cambia de hora). */
+export function costaRicaClock(nowMs: number): string {
+  return new Date(nowMs - CR_OFFSET_MS).toISOString().slice(11, 16);
+}
+
 /** «20–27 dic», «28 dic – 2 ene», «sin fechas». */
 export function formatInquiryDates(arrival: string | null, departure: string | null): string {
   const a = arrival && departure && departure > arrival ? isoParts(arrival) : null;

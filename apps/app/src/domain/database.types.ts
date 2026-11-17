@@ -91,14 +91,14 @@ isOneToOne: true
                   ]
                 },"airbnb_import_attempts": {
                   Row: {
-                    "candidate_url": string | null,"claimed": boolean,"error_code": string | null,"listing_id": string,"operation": string,"request_id": string,"started_at": string,"state": string,"version": number
+                    "candidate_url": string | null,"claimed": boolean,"error_code": string | null,"listing_id": string,"operation": string,"origin": string,"request_id": string,"started_at": string,"state": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"operation"?: string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
+                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id": string,"operation"?: string,"origin"?: string,"request_id": string,"started_at"?: string,"state"?: string,"version": number
                   }
                   Update: {
-                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"operation"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
+                    "candidate_url"?: string | null,"claimed"?: boolean,"error_code"?: string | null,"listing_id"?: string,"operation"?: string,"origin"?: string,"request_id"?: string,"started_at"?: string,"state"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -108,6 +108,20 @@ isOneToOne: false
       referencedRelation: "airbnb_connections"
       referencedColumns: ["listing_id"]
     }
+                  ]
+                },"airbnb_settings": {
+                  Row: {
+                    "id": boolean,"manual_per_day": number,"manual_wait_minutes": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: boolean,"manual_per_day"?: number,"manual_wait_minutes"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "id"?: boolean,"manual_per_day"?: number,"manual_wait_minutes"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"client_errors": {
                   Row: {
@@ -822,6 +836,25 @@ isOneToOne: true
 "airbnb_import_context":
 { Args: { "p_listing": string,"p_request": string }; Returns: Json
                            },
+"airbnb_manual_gate":
+{ Args: { "p_listing": string,"p_request": string,"p_wait": boolean }; Returns: undefined
+                           },
+"airbnb_manual_limits":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": boolean,
+"manual_per_day": number,
+"manual_wait_minutes": number,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "airbnb_settings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"airbnb_manual_reads_today":
+{ Args: { "p_listing": string }; Returns: number
+                           },
 "airbnb_overview":
 { Args: { "p_listing": string }; Returns: Json
                            },
@@ -1198,6 +1231,9 @@ isOneToOne: true
 "seed_admin":
 { Args: { "p_phone": string }; Returns: undefined
                            },
+"set_airbnb_manual_limits":
+{ Args: { "p_per_day": number,"p_wait_minutes": number }; Returns: undefined
+                           },
 "set_listing_available":
 { Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined
                            },
@@ -1246,7 +1282,7 @@ isOneToOne: true
                            }
           }
           Enums: {
-            "feature": "pool"|"pets"|"wifi"|"ac"|"parking"|"ev"|"kids_free"|"beachfront"|"bbq","listing_kind": "casa"|"apartamento"|"habitacion"|"completo","listing_status": "draft"|"review"|"changes"|"rejected"|"payment_due"|"active"|"inactive","plan": "promo"|"paid","request_status": "open"|"closed"|"expired","tariff": "base"|"high"|"low"|"special"
+            "feature": "pool"|"pets"|"wifi"|"ac"|"parking"|"ev"|"beachfront"|"bbq","listing_kind": "casa"|"apartamento"|"habitacion"|"completo","listing_status": "draft"|"review"|"changes"|"rejected"|"payment_due"|"active"|"inactive","plan": "promo"|"paid","request_status": "open"|"closed"|"expired","tariff": "base"|"high"|"low"|"special"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1362,7 +1398,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "feature": ["pool", "pets", "wifi", "ac", "parking", "ev", "kids_free", "beachfront", "bbq"],"listing_kind": ["casa", "apartamento", "habitacion", "completo"],"listing_status": ["draft", "review", "changes", "rejected", "payment_due", "active", "inactive"],"plan": ["promo", "paid"],"request_status": ["open", "closed", "expired"],"tariff": ["base", "high", "low", "special"]
+            "feature": ["pool", "pets", "wifi", "ac", "parking", "ev", "beachfront", "bbq"],"listing_kind": ["casa", "apartamento", "habitacion", "completo"],"listing_status": ["draft", "review", "changes", "rejected", "payment_due", "active", "inactive"],"plan": ["promo", "paid"],"request_status": ["open", "closed", "expired"],"tariff": ["base", "high", "low", "special"]
           }
         }
 } as const

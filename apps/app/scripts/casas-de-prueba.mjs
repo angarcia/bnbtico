@@ -57,7 +57,7 @@ const CASAS = [
     anfitrion: "keilor", estado: "active", fotos: ["fachada-playa-negra", "comun-cocina", "comun-dormitorio"],
     casa: {
       title: "Casa blanca en Playa Negra", kind: "completo", ...lista(9.66, -82.77, "704-playa-negra"),
-      capacity: 4, bedrooms: 2, bathrooms: 1, features: ["wifi", "beachfront", "kids_free"],
+      capacity: 4, bedrooms: 2, bathrooms: 1, features: ["wifi", "beachfront"],
       nightly_price_crc: 65000, accepts_monthly: true, monthly_price_crc: null,
       description: "Casa de madera pintada de blanco entre cocoteros, a pocos pasos de la arena negra. Cocina equipada y porche con hamacas. Niños pequeños gratis.",
     },

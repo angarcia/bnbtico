@@ -132,6 +132,9 @@ Trabajos de `app.yml` (desde el 2026-11-16, para caber en los minutos gratuitos 
 |---|---|---|
 | `CLOUDFLARE_API_TOKEN` | secreto | `wrangler deploy` y versiones de vista previa. Permisos: Workers Scripts edit, Account Settings read, Workers Routes edit, DNS edit, Cache Purge (guía del ticket 01). |
 | `CLOUDFLARE_ACCOUNT_ID` | secreto | Cuenta de Cloudflare del despliegue. |
+| `AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS`, `AIRBNB_MANUAL_WAIT_MINUTES_PRODUCCION` | variables | Minutos que espera «Actualizar ahora» de Airbnb desde la última lectura de la casa: de 1 a 60; vacías, 15. El despliegue las escribe en la base de pruebas (`airbnb_settings`). |
+| `AIRBNB_MANUAL_PER_DAY_PRUEBAS`, `AIRBNB_MANUAL_PER_DAY_PRODUCCION` | variables | Lecturas manuales de Airbnb al día por casa: de 1 a 50; vacías, 10. Igual que la anterior. |
+| `AIRBNB_SYNC_MINUTES_PRUEBAS`, `AIRBNB_SYNC_MINUTES_PRODUCCION` | variables | Minutos entre lecturas automáticas de Airbnb en cada entorno: 5, 10, 15, 30, 60, 120, 180, 240, 360, 720 o 1440. Pruebas, de 5 a 1440; producción, de 60 a 1440. Vacías: 180. Cambiarlas pide desplegar otra vez («Re-run» del trabajo `deploy`, ver `docs/operacion-airbnb.md`). |
 | `SUPABASE_URL` | variable o secreto | `VITE_SUPABASE_URL` del build (navegador y CSP). El worker de pruebas lleva la suya en `wrangler.jsonc` (`env.pruebas.vars`). |
 | `SUPABASE_ANON_KEY` | variable o secreto | `VITE_SUPABASE_ANON_KEY` del build y secreto `SUPABASE_ANON_KEY` del worker (ficha, sitemap, cron). |
 | `SUPABASE_SERVICE_ROLE_KEY` | secreto | Solo el worker: escritura de la telemetría y recorte en el cron. Nunca llega al navegador. |

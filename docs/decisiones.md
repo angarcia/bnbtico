@@ -1,3 +1,33 @@
+## 2026-11-17 · Límites manuales de Airbnb ajustables desde GitHub
+
+A petición de Ana, la espera de «Actualizar ahora» y el tope de lecturas manuales al día dejan de ser fijos.
+- **Variables:** se fijan con variables de GitHub por entorno, como el intervalo. `AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS` / `_PRODUCCION` van de 1 a 60 minutos; vacías, 15. `AIRBNB_MANUAL_PER_DAY_PRUEBAS` / `_PRODUCCION` van de 1 a 50; vacías, 10. Los mismos rangos en los dos entornos.
+- **Cómo llegan a la base:** el límite lo aplica la base, así que el despliegue valida las variables y las escribe en `airbnb_settings` con la clave de servicio, antes de publicar y con la misma comprobación de vigencia. Un valor fuera de rango hace fallar el despliegue con un mensaje que nombra la variable.
+- **Cambiarlas:** pide «Re-run» del trabajo `deploy`, como el intervalo.
+- **Producción:** solo las valida hasta tener base propia (`3bstays-prod`), porque desde `main` no se suben secretos. Al preparar el lanzamiento hay que dar ese paso con su propia base (`docs/antes-de-produccion.md`).
+
+## 2026-11-17 · Límite de las lecturas manuales de Airbnb
+
+Ana aprueba limitar las lecturas de Airbnb que pide el anfitrión, para evitar abusos y que Airbnb nos bloquee:
+- **Espera:** «Actualizar ahora» espera 15 minutos desde la última lectura de la casa, también si la lectura fue automática.
+- **Tope:** cada casa tiene como mucho 10 lecturas manuales al día de Costa Rica. Conectar o cambiar el enlace no espera, pero cuenta en ese tope.
+- **Dónde se aplica:** en la base, bajo el bloqueo de la casa, para que no se salte llamando directamente a la API. El admin no lee calendarios ajenos, así que la regla «los mismos límites para el admin» se cumple sola.
+- **En pantalla:** el botón queda desactivado con «Podrá actualizar de nuevo a las HH:MM.» o «Hoy ya actualizó 10 veces. Podrá actualizar de nuevo mañana.», sin maqueta nueva. «Marcar una reserva» no lee durante la espera y usa la última lectura.
+- **Fuera de alcance:** no hay tope global por hora para todas las casas; se deja para después del lanzamiento.
+
+## 2026-11-17 · Intervalo de Airbnb desde GitHub
+
+Ana aprueba que el ritmo de la lectura automática de Airbnb se fije con una variable de GitHub por entorno, para probar en pruebas con 5 minutos y pasar después a 3 o 6 horas:
+
+- `AIRBNB_SYNC_MINUTES_PRUEBAS` y `AIRBNB_SYNC_MINUTES_PRODUCCION`, en minutos de una lista cerrada (5, 10, 15, 30, 60, 120, 180, 240, 360, 720, 1440). Vacías: 180, como hasta ahora. El despliegue las traduce al cron del Worker.
+- Rango por entorno: pruebas de 5 a 1440 minutos; producción de 60 a 1440. Un valor fuera de la lista o del rango hace fallar el despliegue con un mensaje, en vez de corregirlo sin avisar.
+- La base deja de exigir «cada 3 horas en el minuto 17». Acepta cualquier ciclo en minuto exacto (múltiplo de 5, o el 17) y nunca lee una casa dos veces en menos de 5 minutos.
+- Cambiar el valor pide desplegar: el cron de Cloudflare es configuración del Worker. Se hace con «Re-run» del trabajo `deploy` de la última ejecución, unos 2 minutos, sin abrir otra vía de despliegue. Se descartó guardar el intervalo en la base, que se habría podido cambiar sin desplegar, porque Ana prefiere manejarlo desde GitHub.
+
+## 2026-11-17 · Fuera «Niños pequeños gratis»
+
+Ana decide quitar la característica «Niños pequeños gratis» por completo, no solo esconderla: sale del tipo `feature` de la base (se crea de nuevo sin ese valor, con sus vistas y `search_listings`), de Publicar y Editar, de Filtros, de la ficha, de los datos de prueba y del prototipo. La lista de características queda en ocho: Piscina, Mascotas, Wifi, Aire acondicionado, Parqueo, Cargador eléctrico, Frente al mar y Rancho/BBQ. Los datos son de prueba: el valor se quita de las casas y de las peticiones sin avisar, y un enlace antiguo con ese filtro simplemente lo ignora.
+
 ## 2026-11-16 · CI dentro de los minutos gratuitos de Actions
 
 El plan gratuito de GitHub Actions (2000 minutos al mes con repositorio privado) se agotó a mitad de noviembre. Para pasar las builds había que poner el repositorio en público. Cada ejecución completa facturaba unos 33 minutos: siete trabajos, cada uno redondeado al minuto, y Supabase arrancaba cuatro veces. Hasta el día 16 hubo 76 ejecuciones por push y 19 por PR. Ana aprueba:

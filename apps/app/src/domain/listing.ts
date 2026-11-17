@@ -13,7 +13,7 @@ import type { ListingEdit } from "./edit";
 import type { AdminHold } from "./admin-hold";
 
 export type Kind = "completo" | "habitacion" | "casa" | "apartamento"; // casa/apartamento: filas anteriores al diseño v1
-export type Feature = "pool" | "pets" | "wifi" | "ac" | "parking" | "ev" | "kids_free" | "beachfront" | "bbq";
+export type Feature = "pool" | "pets" | "wifi" | "ac" | "parking" | "ev" | "beachfront" | "bbq";
 export type MonthlyMode = "amount" | "contact";
 export type ListingStatus = "draft" | "review" | "changes" | "rejected" | "payment_due" | "active" | "inactive";
 /** Ids de pantalla estables; el 3 (mapa) se retiró el 2026-10-27. */
@@ -47,13 +47,12 @@ export const FEATURES: readonly [Feature, string][] = [
   ["ac", "Aire acondicionado"],
   ["parking", "Parqueo"],
   ["ev", "Cargador eléctrico"],
-  ["kids_free", "Niños pequeños gratis"],
   ["beachfront", "Frente al mar"],
   ["bbq", "Rancho/BBQ"],
 ];
 export const FEATURE_LABEL: Record<Feature, string> = Object.fromEntries(FEATURES) as Record<Feature, string>;
 /** Etiqueta corta para la rejilla de la ficha y la línea de la tarjeta. */
-export const FEATURE_SHORT: Record<Feature, string> = { ...FEATURE_LABEL, ac: "Aire acond.", kids_free: "Niños gratis", ev: "Cargador eléctrico" };
+export const FEATURE_SHORT: Record<Feature, string> = { ...FEATURE_LABEL, ac: "Aire acond.", ev: "Cargador eléctrico" };
 
 export const PROVINCES: readonly string[] = ["Guanacaste", "Puntarenas", "Limón", "Alajuela", "San José", "Heredia", "Cartago"];
 export const DEFAULT_PROVINCE = "Limón";

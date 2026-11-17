@@ -116,6 +116,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     async setAccountActive(who, active) {
       fail("cuenta", (await service.from("profiles").update({ is_active: active }).eq("id", ids[who])).error);
     },
+    async ageAirbnbReads(listingId, ms) {
+      sql(`update public.airbnb_import_attempts set started_at = started_at - interval '${Math.round(ms)} milliseconds' where listing_id = '${listingId}';`);
+    },
     async reminders(listingId) {
       const { data, error } = await service
         .from("subscription_reminders")

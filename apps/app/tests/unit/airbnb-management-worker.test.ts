@@ -17,6 +17,8 @@ async function connected(download: typeof fetch) {
   await service.begin(jwt, l.id, TEST_AIRBNB_URL, initial);
   await service.context(l.id, initial);
   await service.finish(l.id, initial, [{ uid: "primera-lectura", start, end: addDays(start, 2) }], null);
+  // Conectar es una lectura: sin esto, «Actualizar ahora» esperaría 15 minutos (límite manual, 2026-11-17).
+  await h.ageAirbnbReads(l.id, 16 * 60_000);
   const previous = await service.overview(jwt, l.id);
   let reads = 0;
   const app = createApp({ listings: () => h.anon, cache: () => null,

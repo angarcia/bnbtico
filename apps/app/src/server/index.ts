@@ -6,7 +6,8 @@ import { createFxWriter } from "../data/postgrest/fx";
 import { createTelemetryWriter } from "../data/postgrest/telemetry";
 import { parseAllowlist } from "../domain/whatsapp-sender";
 import { landingOnly } from "../domain/seo";
-import { AIRBNB_CRON, runAirbnbCycle } from "./airbnb-cycle";
+import { cronTasks, syncMinutesOf } from "../domain/airbnb-schedule";
+import { runAirbnbCycle } from "./airbnb-cycle";
 import { createApp, type CacheLike, type Env } from "./app";
 import { runHourly } from "./cron";
 import { reminderBase, sendReminders, senderFromEnv, type ReminderRuntime } from "./reminders";
@@ -61,12 +62,24 @@ export default {
   fetch: app.fetch,
   // Se espera (sin waitUntil): si el keep-alive falla, la ejecución queda como fallida en el panel de Cloudflare.
   async scheduled(controller: { cron: string; scheduledTime: number }, env: Env) {
-    if (controller.cron === AIRBNB_CRON) {
+    // Cada cuánto, de la variable de GitHub del entorno (AIRBNB_SYNC_MINUTES, que pone el despliegue). Con 60 minutos
+    // Airbnb comparte el cron horario: ese aviso hace las dos cosas.
+    // Un fallo de Airbnb no deja sin hacer la tarea horaria: se lanza al final.
+    const minutes = syncMinutesOf(env.AIRBNB_SYNC_MINUTES);
+    const tasks = cronTasks(controller.cron, minutes);
+    let airbnbError: unknown = null;
+    if (tasks.airbnb) {
       const service = landingOnly(env) || env.AIRBNB_AUTO_SYNC === "off" ? null : airbnb.service(env);
-      return runAirbnbCycle(service, { fetch: airbnb.fetch, now: Date.now, log }, controller.cron, controller.scheduledTime);
+      await runAirbnbCycle(service, { fetch: airbnb.fetch, now: Date.now, log }, controller.cron, controller.scheduledTime, minutes)
+        .catch((e: unknown) => { airbnbError = e; });
+    }
+    if (!tasks.hourly) {
+      if (airbnbError) throw airbnbError;
+      return;
     }
     const rt = reminders(env);
     const send = rt ? () => sendReminders(rt, { base: reminderBase(env, null), log }) : null;
     await runHourly(env, { fetch: (i, init) => fetch(i, init), log, now: () => Date.now(), telemetry: telemetry(env), fx: fxWriter(env), reminders: send }, controller.cron, controller.scheduledTime);
+    if (airbnbError) throw airbnbError;
   },
 };

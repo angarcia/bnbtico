@@ -1,12 +1,12 @@
 import type { AirbnbService, AirbnbSummary } from "../../domain/airbnb";
-import { AIRBNB_BUSY_MESSAGE } from "../../domain/airbnb";
+import { AIRBNB_BUSY_MESSAGE, airbnbManualRefusal, airbnbManualState, type AirbnbRead } from "../../domain/airbnb";
 import { addDays, calendarWindow, type CalendarDay } from "../../domain/calendar";
 import { DomainError } from "../../domain/errors";
 import { validateAirbnbUrl, type IcalErrorCode, type ImportedBlock } from "../../domain/ical";
 import type { FakeDb, FakeListing } from "./db";
 
 export interface FakeAirbnbConnection { url: string; connected: boolean; version: number; lastSuccessAt: string | null; errorCode: IcalErrorCode | null; lastErrorAt: string | null; blocks: ImportedBlock[] }
-export interface FakeAirbnbAttempt { listingId: string; version: number; claimed: boolean; state: "running" | "success" | "error" | "obsolete"; started: number; operation: "connect" | "refresh" | "replace" | "disconnect"; candidateUrl: string | null }
+export interface FakeAirbnbAttempt { listingId: string; version: number; claimed: boolean; state: "running" | "success" | "error" | "obsolete"; started: number; operation: "connect" | "refresh" | "replace" | "disconnect"; candidateUrl: string | null; manual?: boolean }
 
 export function fakeEffectiveDays(db: FakeDb, listingId: string, privateOrigin = false): CalendarDay[] {
   const manual = new Map((db.days.get(listingId) ?? []).map(d => [d.day, d]));
@@ -60,7 +60,11 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
     if (!p?.isActive || !p.phoneVerified) throw new DomainError("Verifique su cuenta para conectar el calendario.", "validation");
   }
   const empty = (): FakeAirbnbConnection => ({ url: "", connected: false, version: 0, lastSuccessAt: null, errorCode: null, lastErrorAt: null, blocks: [] });
-  function reserve(id: string, requestId: string, url: string | null, initial: boolean) {
+  /** Lecturas de la casa para el límite manual (como airbnb_manual_gate: todas salvo desconectar). */
+  const reads = (id: string): AirbnbRead[] => [...db.airbnbAttempts.values()]
+    .filter((a) => a.listingId === id && a.operation !== "disconnect").map((a) => ({ startedMs: a.started, manual: a.manual !== false }));
+  /** `gate`: «Actualizar ahora» espera y cuenta; conectar o cambiar el enlace solo cuenta; el servicio no tiene límite. */
+  function reserve(id: string, requestId: string, url: string | null, initial: boolean, gate: "wait" | "count" | "none") {
     const l = db.listings.get(id);
     if (!allowed(l)) throw new DomainError("Esta casa no permite conectar calendarios.", "validation");
     const profile = db.profiles.get(l!.ownerId);
@@ -70,6 +74,10 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
     if (prior) {
       if (prior.listingId !== id || prior.operation !== operation) throw new DomainError("No encontramos ese intento.", "validation");
       return { run: false };
+    }
+    if (gate !== "none") {
+      const refusal = airbnbManualRefusal(reads(id), db.clock(), gate === "wait", db.airbnbLimits);
+      if (refusal) throw new DomainError(refusal, "validation");
     }
     const c = db.airbnbConnections.get(id) ?? empty();
     const attempts = [...db.airbnbAttempts.values()].filter(a => a.listingId === id && a.state === "running");
@@ -91,8 +99,8 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
     return a && c && a.listingId === id && a.version === c.version && a.state === "running" && db.clock() - a.started < 30000 && allowed(l) && profile?.isActive && profile.phoneVerified ? { a, c } : null;
   }
   return {
-    async begin(jwt, id, url, requestId) { own(jwt, id); return reserve(id, requestId, url, true); },
-    async update(jwt, id, requestId, url) { managed(jwt, id); return reserve(id, requestId, url ?? null, false); },
+    async begin(jwt, id, url, requestId) { own(jwt, id); return reserve(id, requestId, url, true, "count"); },
+    async update(jwt, id, requestId, url) { managed(jwt, id); return reserve(id, requestId, url ?? null, false, url ? "count" : "wait"); },
     async disconnect(jwt, id, requestId) {
       managed(jwt, id);
       const prior = db.airbnbAttempts.get(requestId);
@@ -107,7 +115,7 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
       db.airbnbConnections.set(id, c);
       db.airbnbAttempts.set(requestId, { listingId: id, version: c.version, state: "success", claimed: false, started: db.clock(), operation: "disconnect", candidateUrl: null });
     },
-    async claim(id, requestId) { return reserve(id, requestId, null, false); },
+    async claim(id, requestId) { return reserve(id, requestId, null, false, "none"); },
     async context(id, requestId) {
       const active = live(id, requestId);
       if (!active || active.a.claimed) return null;
@@ -135,7 +143,7 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
       return { connected: c?.connected ?? false, exportGenerated: !!db.icalExports.get(id)?.token,
         state: l.status === "rejected" || l.adminHold?.kind === "blocked" ? "suspended" : running ? "running" : c?.errorCode ? "error" : c?.connected ? "connected" : "none",
         lastSuccessAt: c?.lastSuccessAt ?? null, errorCode: c?.errorCode ?? null, lastErrorAt: c?.lastErrorAt ?? null,
-        nights: fakeEffectiveDays(db, id, true).filter(d => d.imported).length };
+        nights: fakeEffectiveDays(db, id, true).filter(d => d.imported).length, ...airbnbManualState(reads(id), db.clock(), db.airbnbLimits) };
     },
   };
 }

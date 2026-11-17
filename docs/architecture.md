@@ -62,7 +62,7 @@ Ampliación aprobada el 2026-11-09: «Marcar una reserva» usa los días efectiv
 
 ### Importación automática de Airbnb (#8)
 
-El trigger `17 */3 * * *` del Worker usa la hora programada para seleccionar conexiones activas. Las RPC `airbnb_due_for_cycle` y `claim_airbnb_cycle` son exclusivas del rol de servicio. La segunda aplica el bloqueo por casa y registra el ciclo antes de llamar a `airbnb_reserve`. La descarga y la publicación usan `runAirbnbImport` y la finalización versionada de #5/#7. La [guía de operación](operacion-airbnb.md) describe los límites, la simulación local y las comprobaciones del trigger alojado.
+El trigger de Airbnb del Worker, `17 */3 * * *` por defecto y configurable con la variable de GitHub del entorno (`AIRBNB_SYNC_MINUTES_*`, 2026-11-17), usa la hora programada para seleccionar conexiones activas. Las RPC `airbnb_due_for_cycle` y `claim_airbnb_cycle` son exclusivas del rol de servicio. La segunda aplica el bloqueo por casa y registra el ciclo antes de llamar a `airbnb_reserve`. La descarga y la publicación usan `runAirbnbImport` y la finalización versionada de #5/#7. La [guía de operación](operacion-airbnb.md) describe los límites, la simulación local y las comprobaciones del trigger alojado.
 
 ### Sesión de la aplicación
 
