@@ -42,10 +42,10 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         theirs = await h.seed({ status: "active", as: "other", draft: { title: "Casa de Ana" } });
       }, 90_000);
 
-      it("listOwn trae mis casas en cualquier estado, la más reciente primero, y ninguna ajena", async () => {
+      it("listOwn trae mis casas en cualquier estado salvo rechazada, la más reciente primero, y ninguna ajena", async () => {
         const list = await me.listOwn();
-        expect(list.map((l) => l.title)).toEqual(["Casa reopened", "Casa active", "Casa rejected", "Casa changes", "Casa review", "Casa draft"]);
-        expect(list.map((l) => l.status)).toEqual(["draft", "active", "rejected", "changes", "review", "draft"]);
+        expect(list.map((l) => l.title)).toEqual(["Casa reopened", "Casa active", "Casa changes", "Casa review", "Casa draft"]);
+        expect(list.map((l) => l.status)).toEqual(["draft", "active", "changes", "review", "draft"]);
         expect((await other.listOwn()).map((l) => l.publicId)).toEqual([theirs.publicId]);
       });
 
@@ -54,7 +54,6 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         const by = (title: string) => list.find((l) => l.title === title)!;
         expect(by("Casa changes")).toMatchObject({ status: "changes", reviewNote: "Faltan fotos del baño.", available: true, whatsappPhone: "+50687770001" });
         expect(by("Casa changes").reviewedAt).not.toBeNull();
-        expect(by("Casa rejected").reviewNote).toBe("Faltan fotos del baño.");
         expect(by("Casa active")).toMatchObject({ reviewNote: null, publicId: mine.active.publicId, photoCount: 6 });
         expect(by("Casa active").photos.map((p) => p.path)).toEqual(mine.active.photoPaths);
         expect(by("Casa draft")).toMatchObject({ reviewedAt: null, photoCount: 0, photos: [] });
@@ -62,7 +61,14 @@ export function ownerListingsContract(name: string, makeHarness: () => Promise<L
         // Revisión UX A5: «estuvo publicada alguna vez» = primera aprobación; pedir cambios o rechazar no cuenta.
         expect(by("Casa active").firstPublishedAt).not.toBeNull();
         expect(by("Casa reopened").firstPublishedAt).not.toBeNull();
-        for (const t of ["Casa changes", "Casa rejected", "Casa review", "Casa draft"]) expect(by(t).firstPublishedAt, t).toBeNull();
+        for (const t of ["Casa changes", "Casa review", "Casa draft"]) expect(by(t).firstPublishedAt, t).toBeNull();
+      });
+
+      it("una casa rechazada antes de la historia 27 no sale en Mis casas ni por enlace; Admin conserva su motivo", async () => {
+        expect(await me.getOwn(mine.rejected.id)).toBeNull();
+        const item = await h.admin("aal2").get(mine.rejected.id);
+        expect(item?.listing).toMatchObject({ status: "rejected", reviewNote: "Faltan fotos del baño." });
+        expect((await h.admin("aal2").queue()).rejected.map((i) => i.listing.id)).toEqual([mine.rejected.id]);
       });
 
       it("getOwn devuelve mi casa con todo y null para una ajena, inexistente o con id raro", async () => {

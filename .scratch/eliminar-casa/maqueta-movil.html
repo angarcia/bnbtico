@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historia 28 · Eliminar casa (maqueta v0.1, sin aprobar)</title>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#F3ECDD;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;color:#1C2B2A}
+.wrap{display:flex;gap:32px;justify-content:center;flex-wrap:wrap;padding:24px}
+.cap{width:390px;font-size:13px;color:#5C6B69;margin:0 0 8px}
+.phone{position:relative;width:390px;height:844px;box-sizing:border-box;overflow:hidden;background:#FFFBF2;font-size:15px;line-height:1.4;border-radius:28px;box-shadow:0 2px 12px rgba(28,43,42,.12)}
+.top{display:flex;align-items:center;gap:8px;padding:52px 12px 0 12px}
+.top h1{margin:0;font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.02em}
+.photo{margin:12px 20px 0;height:200px;border-radius:24px;background:#DCE8DF url(../../design/pantallas/fotos/garden.jpg) center/cover;position:relative}
+.tag{position:absolute;left:12px;top:12px;padding:5px 10px;border-radius:999px;background:#E3EFE6;color:#2F5D45;font-size:12px;font-weight:700}
+.list{margin:16px 20px 0;border-radius:20px;background:#FFFFFF;border:1px solid #EADFC8}
+.item{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px;border-top:1px solid #EADFC8}
+.item:first-child{border-top:0}
+.item small{display:block;color:#5C6B69;font-size:13px}
+.danger-link{display:flex;width:calc(100% - 40px);justify-content:center;align-items:center;min-height:44px;margin:20px 20px 0;color:#BF4D2E;font-weight:700;font-size:15px;background:none;border:0;font-family:inherit}
+.scrim{position:absolute;inset:0;background:rgba(28,43,42,.42)}
+.sheet{position:absolute;left:0;right:0;bottom:0;padding:20px 20px 28px;background:#FFFBF2;border-radius:28px 28px 0 0;display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;letter-spacing:-0.02em}
+.meta{font-size:14px;color:#5C6B69;font-variant-numeric:tabular-nums}
+.btn{min-height:52px;border-radius:999px;font:inherit;font-weight:700;font-size:16px}
+.btn-bad{border:1.5px solid #BF4D2E;background:transparent;color:#BF4D2E}
+.btn-ghost{border:0;background:transparent;color:#2F5D45}
+.hint{background:#F6EEDC;border-radius:16px;padding:10px 12px;font-size:14px}
+</style>
+<div class="wrap">
+  <div>
+    <p class="cap">1 · Final del detalle de una casa propia (aquí, activa). «Eliminar casa» es texto terracota, centrado, al final, separado de «Pausar la casa», que sigue en el Calendario.</p>
+    <div class="phone">
+      <div class="top">
+        <span aria-hidden="true" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></span>
+        <h1>Casa Cahuita</h1>
+      </div>
+      <div class="photo"><span class="tag">Activa</span></div>
+      <div class="list">
+        <div class="item"><span>Compartir ficha<small>3bstays.com/casa/CT-1052</small></span></div>
+        <div class="item"><span>WhatsApp de la casa<small>8777 0001</small></span></div>
+        <div class="item"><span>Suscripción<small>Oferta de lanzamiento hasta el 16 nov 2027</small></span></div>
+      </div>
+      <button type="button" class="danger-link">Eliminar casa</button>
+    </div>
+  </div>
+  <div>
+    <p class="cap">2 · Hoja de confirmación. Sin motivo ni código (propuesta). Mientras envía: «Eliminando…» desactivado. Con error: la hoja sigue abierta con el aviso.</p>
+    <div class="phone">
+      <div class="top"><h1>Casa Cahuita</h1></div>
+      <div class="photo"></div>
+      <div class="scrim"></div>
+      <div class="sheet" role="dialog" aria-labelledby="t">
+        <h2 id="t">¿Eliminar «Casa Cahuita»?</h2>
+        <span class="meta">CT-1052 · Cahuita</span>
+        <p style="margin:0">La casa deja de verse en 3bstays, su enlace deja de funcionar y no recibirá más consultas. Su suscripción termina sin reembolso del período ya pagado. Guardamos sus datos por seguridad, pero no podrá recuperarla desde la app.</p>
+        <p class="hint" style="margin:0">Si solo quiere dejar de recibir clientes un tiempo, use «Pausar la casa» en el Calendario.</p>
+        <button type="button" class="btn btn-bad">Eliminar casa</button>
+        <button type="button" class="btn btn-ghost">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

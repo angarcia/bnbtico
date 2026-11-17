@@ -24,7 +24,7 @@ export function adminContract(name: string, makeHarness: () => Promise<ListingsH
       await h.reset();
     });
 
-    it("la cola separa por revisar (la que más espera primero), cambios pedidos, rechazadas y cuenta las activas", async () => {
+    it("la cola separa por revisar (la que más espera primero), cambios pedidos, rechazadas antiguas y cuenta las activas", async () => {
       const first = await h.seed({ status: "review", draft: { title: "Primera" } });
       await h.seed({ status: "draft", draft: { title: "Borrador" } });
       const changes = await h.seed({ status: "changes", draft: { title: "Con cambios" } });
@@ -82,25 +82,38 @@ export function adminContract(name: string, makeHarness: () => Promise<ListingsH
       expect(own?.reviewedAt).not.toBeNull();
     });
 
-    it("pedir cambios y rechazar guardan el motivo, que el propietario ve", async () => {
+    it("pedir cambios guarda el motivo, que el propietario ve; al reenviar, el mismo anuncio vuelve a la cola", async () => {
       const a = await h.seed({ status: "review" });
-      const b = await h.seed({ status: "review" });
       await h.admin("aal2").review(a.id, "changes", "  Falta una foto de la cocina.  ");
-      await h.admin("aal2").review(b.id, "reject", "No es un alojamiento.");
       const q = await h.admin("aal2").queue();
       expect(q.review).toEqual([]);
       expect(q.changes.map((i) => [i.listing.id, i.listing.reviewNote])).toEqual([[a.id, "Falta una foto de la cocina."]]);
-      expect(q.rejected.map((i) => [i.listing.id, i.listing.reviewNote])).toEqual([[b.id, "No es un alojamiento."]]);
-      expect((await h.owner("owner").getOwn(a.id))?.reviewNote).toBe("Falta una foto de la cocina.");
+      const own = await h.owner("owner").listOwn();
+      expect(own.map((l) => [l.id, l.status, l.reviewNote])).toEqual([[a.id, "changes", "Falta una foto de la cocina."]]);
       expect(await h.anon.getPublic(a.publicId)).toBeNull();
+
+      await h.owner("owner").submit(a.id);
+      const again = await h.admin("aal2").queue();
+      expect(again.review.map((i) => [i.listing.id, i.listing.publicId])).toEqual([[a.id, a.publicId]]);
+      expect((await h.owner("owner").listOwn()).map((l) => l.id)).toEqual([a.id]);
     });
+
+    it("las rechazadas de antes salen todas en «Rechazados» con su motivo, más de 50", async () => {
+      const old = [];
+      for (let i = 0; i < 52; i++) old.push(await h.seed({ status: "rejected", photos: 1 }));
+      const q = await h.admin("aal2").queue();
+      expect(q.rejected).toHaveLength(52);
+      expect(new Set(q.rejected.map((i) => i.listing.id))).toEqual(new Set(old.map((o) => o.id)));
+      expect(q.rejected.every((i) => i.listing.reviewNote === "Faltan fotos del baño.")).toBe(true);
+    }, 120_000);
 
     it("validación: motivo obligatorio, como mucho 2000 caracteres, ya decidida, menos de 5 fotos, inexistente", async () => {
       const s = await h.seed({ status: "review" });
       const admin = h.admin("aal2");
       expect((await rejection(admin.review(s.id, "changes", "   "))).message).toBe(REVIEW_MESSAGES.noteRequired);
-      expect((await rejection(admin.review(s.id, "reject", ""))).message).toBe(REVIEW_MESSAGES.noteRequired);
-      expect((await rejection(admin.review(s.id, "reject", "x".repeat(2001)))).message).toBe(REVIEW_MESSAGES.noteTooLong);
+      expect((await rejection(admin.review(s.id, "changes", ""))).message).toBe(REVIEW_MESSAGES.noteRequired);
+      expect((await admin.get(s.id))?.listing.status).toBe("review");
+      expect((await rejection(admin.review(s.id, "changes", "x".repeat(2001)))).message).toBe(REVIEW_MESSAGES.noteTooLong);
       await admin.review(s.id, "changes", "x".repeat(2000));
       expect((await admin.get(s.id))?.listing.reviewNote).toHaveLength(2000);
       expect((await rejection(admin.review(s.id, "approve", ""))).message).toBe(REVIEW_MESSAGES.decided);

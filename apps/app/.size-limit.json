@@ -34,6 +34,7 @@
       "!dist/client/assets/close-sheet-*.js",
       "!dist/client/assets/mark-sheet-*.js",
       "!dist/client/assets/confirm-sheet-*.js",
+      "!dist/client/assets/delete-house-*.js",
       "!dist/client/assets/filtros-*.js",
       "!dist/client/assets/house-picker-*.js",
       "!dist/client/assets/que-es-3bstays-*.js",
@@ -333,6 +334,14 @@
       "dist/client/assets/confirm-sheet-*.js"
     ],
     "limit": "1 KB",
+    "gzip": true
+  },
+  {
+    "name": "«Eliminar casa» · trozo diferido (la acción y su hoja al final del detalle de una casa propia, historia 28; la hoja de confirmación va aparte, en confirm-sheet-*)",
+    "path": [
+      "dist/client/assets/delete-house-*.js"
+    ],
+    "limit": "1.6 KB",
     "gzip": true
   },
   {

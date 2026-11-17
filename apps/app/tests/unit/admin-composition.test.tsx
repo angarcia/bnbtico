@@ -153,7 +153,8 @@ describe("Admin: composición pública antes de separar pantallas", () => {
     expect(html).toContain("5 fotos");
     expect(html).toContain("Aprobar y publicar");
     expect(html).toContain("Pedir cambios");
-    expect(html).toContain("Rechazar");
+    expect(html).not.toContain("Rechazar"); // historia 27: solo aprobar o pedir cambios
+    expect(html).toContain("(obligatorio si pide cambios)");
     expect(html).toContain('href="/admin/casas/l-activa"');
     data.listing = { ...data.listing, photos: [] };
     const empty = renderToString(<screens.RevisarScreen />);

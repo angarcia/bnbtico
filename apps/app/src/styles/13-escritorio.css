@@ -808,7 +808,6 @@
     background: transparent;
     box-shadow: none;
   }
-  .desktop-app form .review-actions .btn-outline-bad { background: transparent; box-shadow: none; }
   .desktop-app .photo-strip { margin-inline: 0; padding-inline: 0; }
   .desktop-app .photo-strip .photo { height: 180px; }
 

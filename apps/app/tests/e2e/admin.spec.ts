@@ -84,7 +84,7 @@ test("la primera vez el admin vincula su app con el QR, ve la cola y aprueba: la
   await expect(page.getByRole("checkbox")).toHaveCount(3);
 
   await page.getByRole("button", { name: "Pedir cambios" }).click();
-  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.");
+  await expect(page.locator('.field-error[role="alert"]')).toHaveText("Escriba un motivo de hasta 2000 caracteres para pedir cambios.");
   await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${first.id}$`));
 
   // La respuesta de la base se retiene: la cola ya no la muestra antes de que llegue.
@@ -151,8 +151,8 @@ test("si la base rechaza la decisión, la casa vuelve a la cola con su mensaje",
   await page.route("**/rest/v1/rpc/review_listing", (route) =>
     route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "Este anuncio ya tiene una decisión.", details: null, hint: null }) }),
   );
-  await page.getByLabel(/Mensaje para el anfitrión/).fill("No es un alojamiento.");
-  await page.getByRole("button", { name: "Rechazar" }).click();
+  await page.getByLabel(/Mensaje para el anfitrión/).fill("Falta la foto del baño.");
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("alert")).toHaveText("No se guardó la decisión sobre «Loft Cocles»: Este anuncio ya tiene una decisión.");
   await expect(page.locator(".queue-card")).toHaveCount(1);
@@ -211,20 +211,19 @@ test("quien no es admin no entra: no se le pide código ni se le inscribe ningú
   await expect(page.getByRole("link", { name: /Revisión de anuncios/ })).toHaveCount(0);
 });
 
-test("sin fotos, «Rechazar» no manda la nota de las fotos sin que el admin la cambie", async ({ page }) => {
-  const bare = await h.seed({ status: "review", as: "other", draft: { title: "Casa sin fotos", zone: "Cocles", zoneSource: "other", zoneId: null, description: "" }, photos: 0 });
+test("solo «Aprobar y publicar» y «Pedir cambios»; sin motivo no se registra la decisión (historia 27)", async ({ page }) => {
+  const s = await h.seed({ status: "review", as: "other", draft: { title: "Casa por revisar" } });
   await injectSession(page, "admin");
-  await page.goto(`/admin/anuncios/${bare.id}`);
+  await page.goto(`/admin/anuncios/${s.id}`);
   await secondCode(page);
-  await expect(page.locator("#admin-review-note")).toHaveValue(NO_PHOTOS_NOTE);
-  await page.getByRole("button", { name: "Rechazar" }).click();
-  await expect(page.getByText("Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.")).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${bare.id}$`));
-  await page.locator("#admin-review-note").fill("Las fotos no son de esta casa.");
-  await page.getByRole("button", { name: "Rechazar" }).click();
-  await expect(page).toHaveURL(/\/admin$/);
-  await expect.poll(async () => (await h.owner("other").getOwn(bare.id))?.status).toBe("rejected");
-  expect((await h.owner("other").getOwn(bare.id))?.reviewNote).toBe("Las fotos no son de esta casa.");
+  await expect(page.getByRole("heading", { level: 2, name: "Casa por revisar" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Rechazar" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Aprobar y publicar/ })).toBeVisible();
+  await page.locator("#admin-review-note").fill("   ");
+  await page.getByRole("button", { name: "Pedir cambios" }).click();
+  await expect(page.getByText("Escriba un motivo de hasta 2000 caracteres para pedir cambios.")).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/admin/anuncios/${s.id}$`));
+  expect((await h.owner("other").getOwn(s.id))?.status).toBe("review");
 });
 
 test("el admin no aprueba sin fotos y pide una con el mensaje", async ({ page }) => {

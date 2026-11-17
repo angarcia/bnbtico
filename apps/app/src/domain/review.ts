@@ -3,10 +3,11 @@
 import { EDIT_MESSAGES } from "./edit-messages";
 import type { Listing } from "./listing";
 
-export type ReviewDecision = "approve" | "changes" | "reject";
+/** Sin «Rechazar» desde el 2026-11-16 (historia 27): un anuncio que no debe publicarse se elimina desde Admin → Casas. */
+export type ReviewDecision = "approve" | "changes";
 
 /** Estado en que deja la casa cada decisión. */
-export const DECISION_STATUS = { approve: "active", changes: "changes", reject: "rejected" } as const satisfies Record<ReviewDecision, Listing["status"]>;
+export const DECISION_STATUS = { approve: "active", changes: "changes" } as const satisfies Record<ReviewDecision, Listing["status"]>;
 export const REVIEW_NOTE_MAX = 2000;
 
 /** Mensajes de review_listing y de la guarda de admin (iguales en la base, el adaptador y el fake). */
@@ -15,7 +16,9 @@ export const REVIEW_MESSAGES = {
   adminOnly: "Solo 3bstays puede revisar anuncios.",
   notFound: "No encontramos ese anuncio.",
   decided: "Este anuncio ya tiene una decisión.",
-  noteRequired: "Escriba un motivo de hasta 2000 caracteres para pedir cambios o rechazar.",
+  noteRequired: "Escriba un motivo de hasta 2000 caracteres para pedir cambios.",
+  /** Un cliente desactualizado que aún envía «reject»: la casa sigue en revisión. */
+  rejectRetired: "Ya no se rechazan anuncios: pida cambios o elimine la casa desde Casas.",
   noteTooLong: `El motivo puede tener como mucho ${REVIEW_NOTE_MAX} caracteres.`,
   fewPhotos: "Para aprobarla hace falta al menos una foto.",
 } as const;
@@ -60,13 +63,11 @@ export interface AdminQueue {
   review: QueueItem[];
   /** Cambios pedidos, la decisión más reciente primero. */
   changes: QueueItem[];
-  /** Rechazadas, la decisión más reciente primero (las 50 últimas). */
+  /** Rechazadas antes del 2026-11-16, la decisión más reciente primero, todas: es donde Admin recupera su motivo. */
   rejected: QueueItem[];
   /** Casas activas en todo el catálogo. */
   active: number;
 }
-
-export const REJECTED_SHOWN = 50;
 
 export const emptyQueue = (): AdminQueue => ({ review: [], changes: [], rejected: [], active: 0 });
 
@@ -79,7 +80,7 @@ export function splitQueue(items: QueueItem[], active: number): AdminQueue {
   return {
     review: of("review").sort(byAsc("updatedAt")),
     changes: of("changes").sort(byDesc("reviewedAt")),
-    rejected: of("rejected").sort(byDesc("reviewedAt")).slice(0, REJECTED_SHOWN),
+    rejected: of("rejected").sort(byDesc("reviewedAt")),
     active,
   };
 }
@@ -92,7 +93,7 @@ export function applyDecision(queue: AdminQueue, id: string, decision: ReviewDec
   const decided: QueueItem = { ...item, listing: { ...item.listing, status, reviewNote: note.trim() || null, reviewedAt: at } };
   const rest = { ...queue, review: queue.review.filter((i) => i.listing.id !== id) };
   if (status === "active") return { ...rest, active: queue.active + 1 };
-  return status === "changes" ? { ...rest, changes: [decided, ...queue.changes] } : { ...rest, rejected: [decided, ...queue.rejected].slice(0, REJECTED_SHOWN) };
+  return { ...rest, changes: [decided, ...queue.changes] };
 }
 
 /** La cola de ediciones: la que más espera (enviada antes) primero. */

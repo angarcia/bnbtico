@@ -68,7 +68,6 @@ export function useReviewOutcome(): ReviewOutcome {
 const SAVED: Record<ReviewDecision, string> = {
   approve: "Aprobada y publicada. El enlace ya funciona.",
   changes: "Cambios pedidos. El anfitrión verá su mensaje.",
-  reject: "Rechazada. El anfitrión verá el motivo.",
 };
 
 export interface ReviewInput {

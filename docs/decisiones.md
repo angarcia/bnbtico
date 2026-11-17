@@ -9,6 +9,27 @@ El plan gratuito de GitHub Actions (2000 minutos al mes con repositorio privado)
 - **Pushes agrupados:** juntar los cambios en menos pushes a `develop` (también evita el fallo por vigencia del deploy con pushes seguidos).
 - Se descarta poner el repositorio en público para cada build: mientras es público se ven el historial, `.scratch/`, `docs/` y los registros de Actions. Si aun así no alcanza, la alternativa es un runner propio en un Mac (no gasta minutos) o pagar los minutos extra.
 
+## 2026-11-16 · El anfitrión elimina una casa desde Mis casas
+
+Ana aprueba la propuesta de la historia 28 (`.scratch/eliminar-casa/propuesta-28.md`, maqueta `maqueta-movil.html`):
+
+- **«Eliminar casa»** es un texto terracota al final del detalle de una casa propia. Una hoja nombra la casa y su `CT-####`, explica qué pasa y recuerda «Pausar la casa» del Calendario para retirarla solo un tiempo. No pide motivo ni código; «Eliminar casa» y «Cancelar». Al eliminar vuelve a Mis casas con «Casa eliminada.»; si era la última, a Explorar con la vista de cliente. Sin conexión, la hoja sigue abierta con el aviso.
+- **Estados:** sí con cambios pedidos, borrador ya revisado, pendiente de pago, activa (también pausada por el anfitrión o por 3bstays) e inactiva. No en revisión: el anfitrión espera la decisión o escribe a 3bstays. Tampoco bloqueada, para no borrar evidencia. Un borrador nunca revisado sigue con «Descartar borrador».
+- **Efecto:** es el borrado lógico de siempre (`deleted_at`), por la RPC `delete_own_listing`, autorizada en la base solo para el dueño. Desaparece de Explorar, de favoritos y de su enlace; no admite consultas; se borran los avisos en cola; la suscripción no se renueva; se invalida la exportación iCal y Airbnb no se vuelve a leer. Sin restauración en la app, solo por SQL.
+- **Suscripción:** sin reembolso del período pagado y sin devolver la plaza de la oferta. En la v1 no hay cobro real; cancelar en la pasarela será otra historia cuando lo haya.
+- **Registro:** columna nueva `listings.deleted_by` con el anfitrión y `deleted_reason = 'Eliminada por el anfitrión.'`. `admin_actions` sigue siendo solo del admin. Una casa eliminada no la lee nadie por REST, tampoco el admin: el registro se consulta por SQL.
+- Repetir la eliminación (doble toque, otro teléfono) da «No encontramos ese anuncio.» y la app la da por hecha, sin efectos nuevos.
+- **Presupuesto:** la acción y su hoja van en un trozo diferido propio, `delete-house-*`, con límite de 1,6 kB comprimido (pesa 1,52 kB). Así no suben ni el JS inicial (160 kB) ni el de las pestañas (25,8 kB). Ningún límite existente cambia.
+
+## 2026-11-16 · Revisión de anuncios nuevos sin «Rechazar»; los rechazos salen de Mis casas
+
+Ana aprueba (historias 27 y 29):
+
+- **Revisar anuncio** solo ofrece «Aprobar y publicar» y «Pedir cambios», en móvil y escritorio. El rechazo era un callejón sin salida: la casa quedaba en Mis casas para siempre, arriba del todo y sin ninguna acción. Lo que deba corregirse se pide como cambios y el anfitrión reenvía el mismo anuncio. Un anuncio que no debe publicarse nunca (duplicado, fraude) se cierra con «Admin → Casas → Eliminar casa», que ya pide motivo y código CT; el aviso por WhatsApp lo da el equipo a mano. `review_listing` rechaza la decisión `reject` de un cliente desactualizado: la casa sigue en revisión y no se registra nada.
+- **Los rechazos anteriores** no se borran ni se reabren. Conservan estado, motivo y su línea `listing.reject` en `admin_actions`. El anfitrión ya no los ve: Mis casas y su enlace guardado los filtran, aunque los permisos (RLS) no cambian. Si era su única casa, vuelve a la vista de cliente. Admin los ve todos con su motivo en el chip «Rechazados», que pierde el tope de 50.
+- Diseño: «No necesario». Basta con quitar el botón en la app, en las maquetas 22 y 27 y en `docs/diseno-v1.md`; Ana lo revisa en capturas.
+- Queda abierto, y no se ejecuta: no hay plazo para borrar o caducar los rechazos antiguos. El trigger `listings_protect` todavía deja que el dueño devuelva un rechazo a borrador con un `update` directo por PostgREST; la app no lo ofrece. Cerrarlo es una decisión aparte.
+
 ## 2026-11-13 · Flecha de volver en la web de escritorio
 
 En escritorio, toda pantalla que no es una pestaña lleva la flecha de volver junto al título (en la ficha, sobre la foto, como en el móvil). Las pestañas de la barra superior van sin flecha, porque son el inicio de cada sección y la barra ya lleva a ellas. Todos los títulos de página tienen el mismo tamaño. Sustituye lo dicho en la tanda 3 de la revisión, que quitaba la flecha de la ficha en escritorio. Lo pide Ana, que prefiere ver la flecha.

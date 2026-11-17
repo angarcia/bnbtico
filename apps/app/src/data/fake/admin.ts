@@ -246,7 +246,6 @@ export function createFakeAdmin(db: FakeDb, opts: { supabaseUrl: string; session
       // Aprobar toma la plaza de la oferta la primera vez y decide entre activa y pendiente de pago (fase 5).
       const status = decision === "approve" ? approveSubscription(db, l) : DECISION_STATUS[decision];
       Object.assign(l, { status, reviewNote: text || null, reviewedAt: at, updatedAt: at });
-      if (status === "rejected") invalidateFakeAirbnb(db, l.id);
       if (decision === "approve") l.firstPublishedAt ??= at;
       if (decision === "approve") {
         const owner = db.profiles.get(l.ownerId);

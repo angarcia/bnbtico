@@ -16,6 +16,7 @@ import { DESCRIPTION_EMPTY_WARNING } from "../../domain/publish-rules";
 import { cardLabel } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
+import { DeleteHouse } from "../delete-house";
 import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useBilling } from "../billing";
 import { ConfirmSheet } from "../confirm-sheet";
@@ -358,6 +359,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
 
         {!actionsOnLeft && actions}
         {subscription}
+        {admin ? null : <DeleteHouse listing={l} userId={userId} />}
         </>}
       </div>
       {actionsOnLeft && !blocked && !rightPanel && photosOpen && (

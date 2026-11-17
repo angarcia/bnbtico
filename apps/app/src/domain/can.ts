@@ -24,6 +24,10 @@ export function can(l: Pick<Listing, "status" | "reviewedAt"> & { adminHold?: Li
   }
 }
 
+/** Mis casas no enseña las rechazadas (historia 27, 2026-11-16): ya no tienen acción para el propietario y Admin conserva
+ *  su motivo en Anuncios → Rechazados. Sus datos no se borran. */
+export const shownToOwner = (l: Pick<Listing, "status">) => l.status !== "rejected";
+
 /** Una casa bloqueada por el admin es de solo lectura para su propietario. */
 export const isBlocked = (l: { adminHold: Listing["adminHold"] }) => l.adminHold?.kind === "blocked";
 

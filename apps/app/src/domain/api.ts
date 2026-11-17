@@ -122,6 +122,12 @@ export interface OwnerListingsApi {
   /** Solo un borrador que nunca se revisó; si no, el error dice por qué. */
   deleteDraft(id: string): Promise<void>;
   /**
+   * «Eliminar casa» (RPC delete_own_listing, historia 28): borrado lógico de una casa propia, sin vuelta desde la app. La casa
+   * desaparece para todos, se borran sus avisos en cola y se invalidan sus calendarios externos. Una casa ya eliminada (o
+   * ajena, o inexistente) da «No encontramos ese anuncio.» (`not_found`); las demás negativas, OWNER_DELETE_MESSAGES.
+   */
+  deleteOwn(id: string): Promise<void>;
+  /**
    * Visitas a la ficha (`listing_view`) y consultas de los últimos 30 días (RPC owner_listing_stats, revisión UX A2). Solo
    * el dueño (o el admin); si no, «No encontramos ese anuncio.».
    */
@@ -174,7 +180,7 @@ export interface AdminListingsApi {
   queue(): Promise<AdminQueue>;
   /** Una casa en cualquier estado, con su propietario; null si no existe. */
   get(id: string): Promise<QueueItem | null>;
-  /** RPC review_listing. Motivo obligatorio para pedir cambios o rechazar, hasta 2000 caracteres. */
+  /** RPC review_listing. Solo aprobar o pedir cambios (historia 27); motivo obligatorio para pedir cambios, hasta 2000 caracteres. */
   review(id: string, decision: ReviewDecision, note: string): Promise<void>;
   /** Casas con algún dato o foto en revisión, la que más espera primero; cada una con su edición (listing.edit). Sin ser admin, []. */
   editQueue(): Promise<QueueItem[]>;

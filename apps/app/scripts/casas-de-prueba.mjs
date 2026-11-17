@@ -221,6 +221,17 @@ select public.review_listing('${listingId}', '${decision}', '${nota.replace(/'/g
 commit;`);
 }
 
+// Rechazada: review_listing ya no rechaza (historia 27). Se siembra como quedaron los rechazos de antes: estado, motivo y
+// su línea 'listing.reject' en admin_actions (el propietario no la ve en Mis casas; Admin sí, en «Rechazados»).
+function rechazarComoAntes(adminId, listingId, nota) {
+  const n = nota.replace(/'/g, "''");
+  sql(`begin;
+select set_config('app.allow_status', 'on', true);
+update public.listings set status = 'rejected', review_note = '${n}', reviewed_at = now(), reviewed_by = '${adminId}' where id = '${listingId}';
+insert into public.admin_actions (admin_id, action, target_listing_id, reason) values ('${adminId}', 'listing.reject', '${listingId}', '${n}');
+commit;`);
+}
+
 async function main() {
   console.log(`Supabase local: ${sb.url}`);
   const borradas = await limpiar();
@@ -258,7 +269,8 @@ async function main() {
 
       if (def.estado !== "draft") {
         check(`enviar «${def.casa.title}»`, await client.rpc("submit_listing", { p_listing: id }));
-        if (def.estado === "changes" || def.estado === "rejected") decidir(admin.id, id, def.estado === "changes" ? "changes" : "reject", def.nota);
+        if (def.estado === "changes") decidir(admin.id, id, "changes", def.nota);
+        if (def.estado === "rejected") rechazarComoAntes(admin.id, id, def.nota);
         if (def.estado === "active" || def.estado === "inactive") decidir(admin.id, id, "approve");
         if (def.estado === "inactive") check(`parar la suscripción de «${def.casa.title}»`, await client.rpc("stop_subscription", { p_listing: id }));
       }
