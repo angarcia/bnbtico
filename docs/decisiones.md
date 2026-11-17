@@ -1,3 +1,10 @@
+## 2026-11-17 · La búsqueda por fechas se prueba con su propio build
+
+Historia #60. El modo fechas de Explorar es el comportamiento de siempre (llegada incluida, salida no, y fuera las casas con una noche ocupada) y no cambia de código; con las flags iniciales no se usa, así que sus pruebas de Playwright se saltaban. Para no perder esa cobertura, el job `integration` termina con un paso que vuelve a compilar con `FLAG_EXPLORAR_FECHAS=true` y pasa los cinco archivos que las tienen (`buscar`, `contacto`, `explorar-mapa`, `explorar` y `ficha-calendario`).
+- **Coste:** unos 2 minutos más por despliegue, y un segundo build en ese job (antes, uno solo por los minutos de Actions del 2026-11-16). Va después del tamaño y de Lighthouse, que miden el build de las flags iniciales.
+- **Sin cambio en la base:** `search_listings` sigue aceptando fechas. Con la flag apagada el navegador nunca las manda (`parseFilters` y `normalizeSearch` las descartan), y no es una escritura que haya que proteger.
+- **Sin estancia (fechas y noches apagadas):** ni «¿Cuándo?» ni «¿Cuántas noches?», tarjetas con precio por noche. No tiene build de pruebas propio: lo cubren las pruebas unitarias del modo y la guía manual.
+
 ## 2026-11-17 · Precios por fecha detrás de su feature flag
 
 Historia #61, con las reglas aprobadas por Ana (tarifas guardadas ocultas y conservadas, sin aviso al anfitrión).
@@ -16,7 +23,7 @@ Historia #62, con las reglas aprobadas por Ana en «Feature flags: qué pasa con
 ## 2026-11-17 · Flujos de Playwright según el modo de Explorar
 
 Historia `flags-noches`. Los flujos de Playwright prueban el build con las flags que se despliegan: hoy, fechas apagadas y noches encendidas. Ana aprueba que las pruebas de la búsqueda por fechas se salten cuando el build no está en modo fechas (`tests/e2e/helpers/flags.ts`, `onlySearchMode`) y que se añadan las del modo noches (`explorar-noches.spec.ts`).
-- **Pendiente:** #60 recupera la cobertura de la búsqueda por fechas con un segundo build de las pruebas con esa flag encendida.
+- **Hecho en #60:** un segundo build de las pruebas con esa flag encendida recupera la cobertura de la búsqueda por fechas.
 - **Descartado:** encender las fechas en el build de las pruebas, que habría dejado sin probar el modo noches que se despliega.
 
 ## 2026-11-17 · Diseño del número de noches y de los estados de las flags

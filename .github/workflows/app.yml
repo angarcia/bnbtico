@@ -222,6 +222,16 @@ jobs:
           name: lighthouse-attempt-${{ github.run_attempt }}
           path: ${{ steps.lighthouse.outputs.publish }}
           retention-days: 3
+      # Feature flags (historias #58 y #60): el build de arriba lleva las flags iniciales (búsqueda por número de noches), así
+      # que las pruebas de la búsqueda por fechas se saltan allí (tests/e2e/helpers/flags.ts). Aquí se vuelve a compilar con
+      # las fechas encendidas y se pasan los archivos que las tienen. Va después de tamaño y Lighthouse, que miden el build
+      # de las flags iniciales. Unos 2 minutos más.
+      - name: Búsqueda por fechas (build con la flag encendida)
+        env:
+          FLAG_EXPLORAR_FECHAS: "true"
+        run: |
+          pnpm build > /dev/null
+          pnpm exec playwright test tests/e2e/buscar.spec.ts tests/e2e/contacto.spec.ts tests/e2e/explorar-mapa.spec.ts tests/e2e/explorar.spec.ts tests/e2e/ficha-calendario.spec.ts --reporter=line
       - name: Borrar diagnósticos privados
         if: always()
         run: rm -rf -- "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-lighthouse" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.tsv" "${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"

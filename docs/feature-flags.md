@@ -21,7 +21,7 @@ Cinco flags por entorno que se cambian con configuración y despliegue. Reglas d
 
 | Regla | Dónde se aplica | Historia |
 | --- | --- | --- |
-| Modo de búsqueda, controles, copy | Navegador (`SEARCH_MODE`, `FLAGS`; `parseFilters` y `normalizeSearch` con `mode`) | #60 y `flags-noches` (hecho) |
+| Modo de búsqueda, controles, copy | Navegador (`SEARCH_MODE`, `FLAGS`; `parseFilters` y `normalizeSearch` con `mode`) | #60 y `flags-noches` (hechos) |
 | Fechas en la URL o enlaces viejos con la flag apagada | Navegador: se ignoran, sin filtro oculto | #60 |
 | No publicar ni aprobar habitaciones | Base (triggers `listings_rooms_flag` y `listing_edits_rooms_flag`) y navegador (`KindChoice`, Filtros, Editar; `parseFilters` y `normalizeSearch` con `rooms`) | #62 (hecho) |
 | Tarifas especiales ocultas (se conservan) | Base (`effective_calendar_days`, `search_stay_total`, `listing_days_update`) y navegador (panel del calendario) | #61 (hecho) |
@@ -50,7 +50,7 @@ Sin variables, los valores iniciales en el build y en la base (fila que crea la 
 ## Pruebas
 
 - Vitest usa los valores iniciales (`src/shared/flags.ts` sin `__FLAGS__`); la lógica de cada modo se prueba pasando `mode` a `parseFilters` / `normalizeSearch`.
-- Playwright prueba el build con las flags de su entorno: `tests/e2e/helpers/flags.ts` (`onlySearchMode`) salta las pruebas de otro modo. Hoy, modo noches: las de la búsqueda por fechas se saltan hasta que #60 añada un build con fechas.
+- Playwright prueba el build con las flags de su entorno: `tests/e2e/helpers/flags.ts` (`onlySearchMode`) salta las pruebas de otro modo. Hoy, modo noches: las de la búsqueda por fechas se saltan en el build principal y las pasa un segundo build con `FLAG_EXPLORAR_FECHAS=true` al final del job `integration` (#60). Las de habitaciones y precios por fecha encendidos no tienen build propio: los cubren las pruebas de base con esas flags encendidas.
 
 ## Seguridad
 

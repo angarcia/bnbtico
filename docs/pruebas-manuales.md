@@ -283,7 +283,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 ### 2.7b Número de noches (feature flags, valores iniciales: fechas apagadas, noches encendidas)
 
-Con los valores iniciales de las flags, C34, C35, C38, C41 y C42 no aplican (no hay «¿Cuándo?»); vuelven cuando se encienda «Búsqueda por fechas» (#60). Diseño: `.scratch/feature-flags/diseno/`.
+Con los valores iniciales de las flags, C34, C35, C38, C41 y C42 no aplican (no hay «¿Cuándo?»); vuelven si se enciende `FLAG_EXPLORAR_FECHAS_PRUEBAS`, y entonces mandan las fechas y C43–C50 no aplican. Con fechas y noches apagadas, la búsqueda solo tiene «¿Dónde?» y «¿Quiénes?», las tarjetas dicen el precio por noche y Filtros no tiene fila de estancia. Diseño: `.scratch/feature-flags/diseno/`.
 
 - [ ] **C43** Abra la búsqueda → el segundo bloque es «¿Cuántas noches?» (no «¿Cuándo?»), plegado con «Añadir noches». Ábralo → «Noches · De 1 a 90», el contador con «–» y los atajos «Fin de semana», «1 semana», «2 semanas» y «1 mes». «Una noche menos» está desactivado en 1 y «Una noche más» en 90.
 - [ ] **C44** Toque «1 semana» → el atajo queda marcado y el contador dice 7; toque «Una noche más» → 8 y el atajo se desmarca; «Quitar» vuelve a «–».

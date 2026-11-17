@@ -63,7 +63,8 @@ describe("CI aislada", () => {
     expect(integration).not.toContain("download-artifact");
     expect(integration).not.toContain("matrix");
     expect(workflow.match(/pnpm exec supabase start/g)).toHaveLength(1);
-    expect(integration.match(/pnpm build/g)).toHaveLength(1);
+    // Dos builds: el de las flags iniciales y, al final, el de la búsqueda por fechas (historia #60).
+    expect(integration.match(/pnpm build/g)).toHaveLength(2);
     const order = ["supabase start", "pnpm db:types", "pnpm test:db", "pnpm build", "ci-artifacts.mjs e2e", "pnpm size", "ci-artifacts.mjs lighthouse"];
     const at = order.map((text) => integration.indexOf(text));
     expect(at.every((i) => i > 0)).toBe(true);
@@ -254,6 +255,17 @@ describe("CI aislada", () => {
     for (const v of ["AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS", "AIRBNB_MANUAL_WAIT_MINUTES_PRODUCCION", "AIRBNB_MANUAL_PER_DAY_PRUEBAS", "AIRBNB_MANUAL_PER_DAY_PRODUCCION"]) expect(deploy).toContain(`vars.${v}`);
     expect(deploy).toContain("SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref != 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}");
     expect(deploy).toContain("run: node scripts/deploy-target.mjs limits");
+  });
+
+  it("la búsqueda por fechas se prueba con su propio build, después de Lighthouse (historia #60)", () => {
+    const integration = jobs.integration!;
+    const at = integration.indexOf("name: Búsqueda por fechas (build con la flag encendida)");
+    expect(at).toBeGreaterThan(integration.indexOf("name: Puerta de Lighthouse"));
+    const step = integration.slice(at, integration.indexOf("- name:", at + 10));
+    expect(step).toContain('FLAG_EXPLORAR_FECHAS: "true"');
+    expect(step).toContain("pnpm build");
+    for (const spec of ["buscar", "contacto", "explorar-mapa", "explorar", "ficha-calendario"]) expect(step).toContain(`tests/e2e/${spec}.spec.ts`);
+    expect(step).not.toMatch(/if:|continue-on-error/);
   });
 
   it("las feature flags del entorno llegan al build y a la base antes de publicar (historia #58)", () => {
