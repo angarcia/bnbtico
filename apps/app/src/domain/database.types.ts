@@ -109,6 +109,20 @@ isOneToOne: false
       referencedColumns: ["listing_id"]
     }
                   ]
+                },"airbnb_settings": {
+                  Row: {
+                    "id": boolean,"manual_per_day": number,"manual_wait_minutes": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: boolean,"manual_per_day"?: number,"manual_wait_minutes"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "id"?: boolean,"manual_per_day"?: number,"manual_wait_minutes"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"client_errors": {
                   Row: {
                     "build": string,"col": number | null,"country": string | null,"created_at": string,"id": number,"kind": string,"line": number | null,"message": string,"page": string,"path": string,"source": string | null,"stack": string | null,"user_agent": string | null
@@ -825,6 +839,19 @@ isOneToOne: true
 "airbnb_manual_gate":
 { Args: { "p_listing": string,"p_request": string,"p_wait": boolean }; Returns: undefined
                            },
+"airbnb_manual_limits":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": boolean,
+"manual_per_day": number,
+"manual_wait_minutes": number,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "airbnb_settings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "airbnb_manual_reads_today":
 { Args: { "p_listing": string }; Returns: number
                            },
@@ -1203,6 +1230,9 @@ isOneToOne: true
                            },
 "seed_admin":
 { Args: { "p_phone": string }; Returns: undefined
+                           },
+"set_airbnb_manual_limits":
+{ Args: { "p_per_day": number,"p_wait_minutes": number }; Returns: undefined
                            },
 "set_listing_available":
 { Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined

@@ -246,6 +246,16 @@ describe("CI aislada", () => {
     expect(deploy).toContain("run: node scripts/deploy-target.mjs schedule dist/3bstays/wrangler.json");
   });
 
+  it("guarda los límites manuales de Airbnb antes de publicar, nunca con secretos desde main", () => {
+    const deploy = jobs.deploy!;
+    const at = deploy.indexOf("name: Límites manuales de Airbnb");
+    expect(at).toBeGreaterThan(deploy.indexOf("id: freshness-publish"));
+    expect(at).toBeLessThan(deploy.indexOf("name: Desplegar"));
+    for (const v of ["AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS", "AIRBNB_MANUAL_WAIT_MINUTES_PRODUCCION", "AIRBNB_MANUAL_PER_DAY_PRUEBAS", "AIRBNB_MANUAL_PER_DAY_PRODUCCION"]) expect(deploy).toContain(`vars.${v}`);
+    expect(deploy).toContain("SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref != 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}");
+    expect(deploy).toContain("run: node scripts/deploy-target.mjs limits");
+  });
+
   it("comprueba SHA dentro del job exclusivo al entrar y antes de secretos/publicación", () => {
     const deploy = jobs.deploy!;
     expect(deploy.match(/run: node scripts\/deploy-freshness.mjs/g)).toHaveLength(2);
@@ -253,7 +263,8 @@ describe("CI aislada", () => {
     expect(deploy.indexOf("id: freshness-publish")).toBeGreaterThan(deploy.indexOf("run: pnpm size"));
     expect(deploy.indexOf("id: freshness-publish")).toBeLessThan(deploy.indexOf("name: Secreto anon"));
     expect(deploy.match(/GITHUB_TOKEN: \$\{\{ github.token \}\}/g)).toHaveLength(2);
-    expect(deploy.match(/steps.freshness-publish.outcome == 'success'/g)).toHaveLength(2);
+    // Publicar, la vista previa y escribir los límites de Airbnb en la base: todo lo que tiene efecto fuera.
+    expect(deploy.match(/steps.freshness-publish.outcome == 'success'/g)).toHaveLength(3);
     expect(deploy).not.toContain("${{ github.head_ref }}");
     expect(deploy).not.toContain("${{ github.event.pull_request.head.ref }}");
   });

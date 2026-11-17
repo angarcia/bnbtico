@@ -306,3 +306,51 @@ describe("intervalo de Airbnb al desplegar (2026-11-17)", () => {
     expect(check.stderr).toContain("triggers");
   });
 });
+
+describe("límites manuales de Airbnb al desplegar (2026-11-17)", () => {
+  const limits = (env: Record<string, string>) => run(["limits"], env);
+
+  it.each([
+    ["pruebas", {}, "espera 15 min, 10 al día"],
+    ["pruebas", { AIRBNB_MANUAL_WAIT_MINUTES: "5", AIRBNB_MANUAL_PER_DAY: "50" }, "espera 5 min, 50 al día"],
+    ["production", { AIRBNB_MANUAL_WAIT_MINUTES: "60", AIRBNB_MANUAL_PER_DAY: "1" }, "espera 60 min, 1 al día"],
+  ] as const)("%s acepta %j", (target, env, text) => {
+    const result = limits({ DEPLOY_ENV: target, ...env });
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain(text);
+  });
+
+  it.each([
+    ["pruebas", { AIRBNB_MANUAL_WAIT_MINUTES: "0" }, "AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS"],
+    ["pruebas", { AIRBNB_MANUAL_WAIT_MINUTES: "61" }, "AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS"],
+    ["production", { AIRBNB_MANUAL_PER_DAY: "51" }, "AIRBNB_MANUAL_PER_DAY_PRODUCCION"],
+    ["production", { AIRBNB_MANUAL_PER_DAY: "diez" }, "AIRBNB_MANUAL_PER_DAY_PRODUCCION"],
+  ] as const)("%s rechaza %j nombrando la variable", (target, env, variable) => {
+    const result = limits({ DEPLOY_ENV: target, ...env });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(variable);
+  });
+
+  it("en pruebas los escribe con la clave de servicio; en producción solo valida", async () => {
+    const { createServer } = await import("node:http");
+    const { spawn } = await import("node:child_process");
+    const seen: { url?: string; auth?: string; body: string }[] = [];
+    const server = createServer((req, res) => {
+      let body = "";
+      req.on("data", (c) => (body += c));
+      req.on("end", () => { seen.push({ url: req.url, auth: req.headers.authorization, body }); res.writeHead(204).end(); });
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 0;
+    const exec = (env: Record<string, string>) => new Promise<number>((resolve) => {
+      spawn(process.execPath, [script, "limits"], { env: { ...env, SUPABASE_URL: `http://127.0.0.1:${port}`, SUPABASE_SERVICE_ROLE_KEY: "clave-de-prueba" }, stdio: "ignore" })
+        .on("exit", (code) => resolve(code ?? 1));
+    });
+    try {
+      expect(await exec({ DEPLOY_ENV: "pruebas", AIRBNB_MANUAL_WAIT_MINUTES: "5", AIRBNB_MANUAL_PER_DAY: "3" })).toBe(0);
+      expect(await exec({ DEPLOY_ENV: "production", AIRBNB_MANUAL_WAIT_MINUTES: "20" })).toBe(0);
+    } finally { server.close(); }
+    expect(seen).toEqual([{ url: "/rest/v1/rpc/set_airbnb_manual_limits", auth: "Bearer clave-de-prueba", body: JSON.stringify({ p_wait_minutes: 5, p_per_day: 3 }) }]);
+  });
+});

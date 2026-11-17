@@ -1,3 +1,11 @@
+## 2026-11-17 · Límites manuales de Airbnb ajustables desde GitHub
+
+A petición de Ana, la espera de «Actualizar ahora» y el tope de lecturas manuales al día dejan de ser fijos.
+- **Variables:** se fijan con variables de GitHub por entorno, como el intervalo. `AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS` / `_PRODUCCION` van de 1 a 60 minutos; vacías, 15. `AIRBNB_MANUAL_PER_DAY_PRUEBAS` / `_PRODUCCION` van de 1 a 50; vacías, 10. Los mismos rangos en los dos entornos.
+- **Cómo llegan a la base:** el límite lo aplica la base, así que el despliegue valida las variables y las escribe en `airbnb_settings` con la clave de servicio, antes de publicar y con la misma comprobación de vigencia. Un valor fuera de rango hace fallar el despliegue con un mensaje que nombra la variable.
+- **Cambiarlas:** pide «Re-run» del trabajo `deploy`, como el intervalo.
+- **Producción:** solo las valida hasta tener base propia (`3bstays-prod`), porque desde `main` no se suben secretos. Al preparar el lanzamiento hay que dar ese paso con su propia base (`docs/antes-de-produccion.md`).
+
 ## 2026-11-17 · Límite de las lecturas manuales de Airbnb
 
 Ana aprueba limitar las lecturas de Airbnb que pide el anfitrión, para evitar abusos y que Airbnb nos bloquee:

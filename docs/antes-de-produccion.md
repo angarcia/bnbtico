@@ -75,3 +75,8 @@ Desde la fase de Explorar al estilo Airbnb el mapa con precios es el primer elem
 ## Portada → asistente de publicar (2026-10-29)
 
 El día del lanzamiento, comprobar que «Publicar mi casa» de la portada abre el asistente (`/publicar`). Antes del lanzamiento la portada de producción conserva el botón de WhatsApp de propietarios (`landingOnly`).
+
+## Límites manuales de Airbnb en producción (2026-11-17)
+
+El paso «Límites manuales de Airbnb» del despliegue solo valida `AIRBNB_MANUAL_WAIT_MINUTES_PRODUCCION` y `AIRBNB_MANUAL_PER_DAY_PRODUCCION` mientras producción no tenga base propia, porque desde `main` no se suben secretos. Al crear `3bstays-prod`, dar al paso la URL y la clave de servicio de esa base para que los escriba en su `airbnb_settings`. Hasta entonces, producción usaría 15 minutos y 10 al día.
+

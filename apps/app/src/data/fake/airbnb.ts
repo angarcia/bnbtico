@@ -76,7 +76,7 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
       return { run: false };
     }
     if (gate !== "none") {
-      const refusal = airbnbManualRefusal(reads(id), db.clock(), gate === "wait");
+      const refusal = airbnbManualRefusal(reads(id), db.clock(), gate === "wait", db.airbnbLimits);
       if (refusal) throw new DomainError(refusal, "validation");
     }
     const c = db.airbnbConnections.get(id) ?? empty();
@@ -143,7 +143,7 @@ export function createFakeAirbnbService(db: FakeDb): AirbnbService {
       return { connected: c?.connected ?? false, exportGenerated: !!db.icalExports.get(id)?.token,
         state: l.status === "rejected" || l.adminHold?.kind === "blocked" ? "suspended" : running ? "running" : c?.errorCode ? "error" : c?.connected ? "connected" : "none",
         lastSuccessAt: c?.lastSuccessAt ?? null, errorCode: c?.errorCode ?? null, lastErrorAt: c?.lastErrorAt ?? null,
-        nights: fakeEffectiveDays(db, id, true).filter(d => d.imported).length, ...airbnbManualState(reads(id), db.clock()) };
+        nights: fakeEffectiveDays(db, id, true).filter(d => d.imported).length, ...airbnbManualState(reads(id), db.clock(), db.airbnbLimits) };
     },
   };
 }

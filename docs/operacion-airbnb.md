@@ -12,7 +12,10 @@ Desde el 2026-11-17, para que Airbnb no nos bloquee, la base (`airbnb_manual_gat
 - **Espera:** «Actualizar ahora» espera 15 minutos desde la última lectura de la casa, manual o automática.
 - **Tope:** cada casa tiene 10 lecturas manuales al día de Costa Rica. Conectar y cambiar el enlace no esperan, pero cuentan.
 - **Excepciones:** repetir la misma petición (mismo `request_id`) no choca con el límite. Las lecturas automáticas llevan `origin = 'auto'` y no cuentan en el tope.
-- **Resumen:** `airbnb_overview` devuelve `manualAvailableAt` y `manualLeftToday`, con los que la pantalla desactiva los botones y escribe el texto. «Marcar una reserva» no lee durante la espera y usa la última lectura.
+- **Ajuste:** la espera y el tope se cambian con las variables de GitHub `AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS` / `_PRODUCCION` (de 1 a 60 minutos; vacía, 15) y `AIRBNB_MANUAL_PER_DAY_PRUEBAS` / `_PRODUCCION` (de 1 a 50; vacía, 10).
+  - El paso «Límites manuales de Airbnb» del despliegue las valida y, en pruebas, las escribe en `airbnb_settings` con `set_airbnb_manual_limits`. Producción solo las valida hasta tener base propia.
+  - Para aplicarlas, haga como con el intervalo: «Re-run» del trabajo `deploy` en la última ejecución de `develop`. En el registro sale «Límites manuales de Airbnb guardados: espera N min, M al día.».
+- **Resumen:** `airbnb_overview` devuelve `manualAvailableAt`, `manualLeftToday` y `manualPerDay`, con los que la pantalla desactiva los botones y escribe el texto. «Marcar una reserva» no lee durante la espera y usa la última lectura.
 
 ## Cambiar el intervalo
 

@@ -2,7 +2,9 @@
 // desde la última lectura de la casa y cada casa tiene 10 lecturas manuales al día (día de Costa Rica). Conectar o
 // cambiar el enlace no espera, pero cuenta. Mismas reglas y mensajes en el fake y en la base (airbnb_manual_gate).
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { AIRBNB_LIMIT_MESSAGES, AIRBNB_MANUAL_PER_DAY, type AirbnbService } from "../../src/domain/airbnb";
+import { AIRBNB_LIMIT_MESSAGES, DEFAULT_AIRBNB_MANUAL_LIMITS, type AirbnbService } from "../../src/domain/airbnb";
+
+const AIRBNB_MANUAL_PER_DAY = DEFAULT_AIRBNB_MANUAL_LIMITS.perDay;
 import { addDays } from "../../src/domain/calendar";
 import { costaRicaClock } from "../../src/domain/dates";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -81,7 +83,7 @@ export function airbnbLimiteContract(name: string, make: () => Promise<{ h: Subs
       await read(l.id, "connect");
       for (let i = 1; i < AIRBNB_MANUAL_PER_DAY; i++) await read(l.id, "replace");
       const jwt = await h.jwt("owner");
-      expect((await rejection(s.update(jwt, l.id, crypto.randomUUID(), REPLACEMENT_URL))).message).toBe(AIRBNB_LIMIT_MESSAGES.day);
+      expect((await rejection(s.update(jwt, l.id, crypto.randomUUID(), REPLACEMENT_URL))).message).toBe(AIRBNB_LIMIT_MESSAGES.day(AIRBNB_MANUAL_PER_DAY));
       expect((await s.overview(jwt, l.id)).manualLeftToday).toBe(0);
       // Otra casa no se ve afectada, y desconectar no tiene límite.
       const other = await h.seed({ status: "active" });

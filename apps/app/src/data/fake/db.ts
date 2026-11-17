@@ -2,6 +2,7 @@
 // listings_public y la función listing_link_state. Sirve a las pruebas unitarias, a la prueba HTTP del worker y a
 // la suite de contrato (que lo compara con PostgREST).
 import type { AdminHold } from "../../domain/admin-hold";
+import { DEFAULT_AIRBNB_MANUAL_LIMITS, type AirbnbManualLimits } from "../../domain/airbnb";
 import type { FakeAirbnbAttempt, FakeAirbnbConnection } from "./airbnb";
 import type { FakeIcalExport } from "./ical-export";
 import { reopenIfDue, type CalendarDay } from "../../domain/calendar";
@@ -172,6 +173,8 @@ export class FakeDb {
   readonly days = new Map<string, CalendarDay[]>();
   readonly airbnbConnections = new Map<string, FakeAirbnbConnection>();
   readonly airbnbAttempts = new Map<string, FakeAirbnbAttempt>();
+  /** Como airbnb_settings: los límites manuales que escribe el despliegue (variables de GitHub). */
+  airbnbLimits: AirbnbManualLimits = { ...DEFAULT_AIRBNB_MANUAL_LIMITS };
   readonly icalExports = new Map<string, FakeIcalExport>();
   /** Reloj de las reglas con fecha (consultas, calendario, reapertura); «hoy» es el de Costa Rica con este reloj. */
   clock: () => number = () => Date.now();

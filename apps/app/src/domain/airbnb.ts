@@ -16,6 +16,8 @@ export interface AirbnbSummary {
   manualAvailableAt?: string | null;
   /** Lecturas manuales que quedan hoy (día de Costa Rica). Ausente antes de la migración del límite. */
   manualLeftToday?: number;
+  /** El tope del día vigente (variable AIRBNB_MANUAL_PER_DAY_* del entorno). */
+  manualPerDay?: number;
 }
 
 /** Puerto del worker. Contexto/finalización/repetición son exclusivamente de servicio. */
@@ -44,46 +46,55 @@ export interface AirbnbCycleService extends Pick<AirbnbService, "context" | "fin
 
 export const AIRBNB_BUSY_MESSAGE = "Hay noches ocupadas entre esas fechas.";
 
-/** Límite de las lecturas manuales (2026-11-17), igual en la base (airbnb_manual_gate), el fake y la pantalla. */
-export const AIRBNB_MANUAL_WAIT_MS = 15 * 60_000;
-export const AIRBNB_MANUAL_PER_DAY = 10;
+/**
+ * Límite de las lecturas manuales (2026-11-17), igual en la base (airbnb_manual_gate), el fake y la pantalla. Los valores
+ * se ajustan con las variables de GitHub AIRBNB_MANUAL_WAIT_MINUTES_* y AIRBNB_MANUAL_PER_DAY_* (el despliegue los
+ * escribe en airbnb_settings); sin ellas, 15 minutos y 10 al día.
+ */
+export interface AirbnbManualLimits { waitMinutes: number; perDay: number }
+export const DEFAULT_AIRBNB_MANUAL_LIMITS: AirbnbManualLimits = { waitMinutes: 15, perDay: 10 };
+export const AIRBNB_MANUAL_LIMIT_RANGE = { waitMinutes: [1, 60], perDay: [1, 50] } as const;
 export const AIRBNB_LIMIT_MESSAGES = {
   wait: (clock: string) => `Podrá actualizar de nuevo a las ${clock}.`,
-  day: `Hoy ya actualizó ${AIRBNB_MANUAL_PER_DAY} veces. Podrá actualizar de nuevo mañana.`,
+  day: (perDay: number) => `Hoy ya actualizó ${perDay} ${perDay === 1 ? "vez" : "veces"}. Podrá actualizar de nuevo mañana.`,
 } as const;
 
-/** Si un mensaje de la base es uno de los del límite (el de espera lleva la hora). */
+/** Si un mensaje de la base es uno de los del límite (llevan la hora o la cifra). */
 export const isAirbnbLimitMessage = (message: string): boolean =>
-  message === AIRBNB_LIMIT_MESSAGES.day || /^Podrá actualizar de nuevo a las \d\d:\d\d\.$/.test(message);
+  /^Podrá actualizar de nuevo a las \d\d:\d\d\.$/.test(message) || /^Hoy ya actualizó \d{1,2} (?:vez|veces)\. Podrá actualizar de nuevo mañana\.$/.test(message);
 
 export interface AirbnbRead { startedMs: number; manual: boolean }
 
-/**
- * Si una lectura manual puede empezar ahora. `wait`: «Actualizar ahora» espera 15 minutos desde la última lectura de la
- * casa, manual o automática. Conectar o cambiar el enlace no espera. Todas las manuales cuentan en el tope del día.
- */
-export function airbnbManualRefusal(reads: readonly AirbnbRead[], nowMs: number, wait: boolean): string | null {
-  const last = Math.max(-Infinity, ...reads.map((r) => r.startedMs));
-  if (wait && nowMs - last < AIRBNB_MANUAL_WAIT_MS) return AIRBNB_LIMIT_MESSAGES.wait(costaRicaClock(last + AIRBNB_MANUAL_WAIT_MS));
+const lastRead = (reads: readonly AirbnbRead[]) => Math.max(-Infinity, ...reads.map((r) => r.startedMs));
+const usedToday = (reads: readonly AirbnbRead[], nowMs: number) => {
   const today = costaRicaToday(nowMs);
-  if (reads.filter((r) => r.manual && costaRicaToday(r.startedMs) === today).length >= AIRBNB_MANUAL_PER_DAY) return AIRBNB_LIMIT_MESSAGES.day;
+  return reads.filter((r) => r.manual && costaRicaToday(r.startedMs) === today).length;
+};
+
+/**
+ * Si una lectura manual puede empezar ahora. `wait`: «Actualizar ahora» espera desde la última lectura de la casa, manual
+ * o automática. Conectar o cambiar el enlace no espera. Todas las manuales cuentan en el tope del día.
+ */
+export function airbnbManualRefusal(reads: readonly AirbnbRead[], nowMs: number, wait: boolean, limits = DEFAULT_AIRBNB_MANUAL_LIMITS): string | null {
+  const availableAt = lastRead(reads) + limits.waitMinutes * 60_000;
+  if (wait && nowMs < availableAt) return AIRBNB_LIMIT_MESSAGES.wait(costaRicaClock(availableAt));
+  if (usedToday(reads, nowMs) >= limits.perDay) return AIRBNB_LIMIT_MESSAGES.day(limits.perDay);
   return null;
 }
 
-/** Lo que dice el resumen sobre el límite (manualAvailableAt y manualLeftToday). */
-export function airbnbManualState(reads: readonly AirbnbRead[], nowMs: number): { manualAvailableAt: string | null; manualLeftToday: number } {
-  const last = Math.max(-Infinity, ...reads.map((r) => r.startedMs));
-  const today = costaRicaToday(nowMs);
-  const used = reads.filter((r) => r.manual && costaRicaToday(r.startedMs) === today).length;
+/** Lo que dice el resumen sobre el límite (manualAvailableAt, manualLeftToday y manualPerDay). */
+export function airbnbManualState(reads: readonly AirbnbRead[], nowMs: number, limits = DEFAULT_AIRBNB_MANUAL_LIMITS) {
+  const availableAt = lastRead(reads) + limits.waitMinutes * 60_000;
   return {
-    manualAvailableAt: nowMs - last < AIRBNB_MANUAL_WAIT_MS ? new Date(last + AIRBNB_MANUAL_WAIT_MS).toISOString() : null,
-    manualLeftToday: Math.max(0, AIRBNB_MANUAL_PER_DAY - used),
+    manualAvailableAt: nowMs < availableAt ? new Date(availableAt).toISOString() : null,
+    manualLeftToday: Math.max(0, limits.perDay - usedToday(reads, nowMs)),
+    manualPerDay: limits.perDay,
   };
 }
 
 /** El texto bajo «Actualizar ahora» cuando está desactivado por el límite, o null si se puede. */
-export function airbnbManualHint(summary: Pick<AirbnbSummary, "manualAvailableAt" | "manualLeftToday">, nowMs: number): string | null {
-  if (summary.manualLeftToday === 0) return AIRBNB_LIMIT_MESSAGES.day;
+export function airbnbManualHint(summary: Pick<AirbnbSummary, "manualAvailableAt" | "manualLeftToday" | "manualPerDay">, nowMs: number): string | null {
+  if (summary.manualLeftToday === 0) return AIRBNB_LIMIT_MESSAGES.day(summary.manualPerDay ?? DEFAULT_AIRBNB_MANUAL_LIMITS.perDay);
   const at = summary.manualAvailableAt ? Date.parse(summary.manualAvailableAt) : NaN;
   return Number.isFinite(at) && at > nowMs ? AIRBNB_LIMIT_MESSAGES.wait(costaRicaClock(at)) : null;
 }
@@ -100,7 +111,8 @@ export function readAirbnbSummary(value: unknown): AirbnbSummary {
     !(value.exportGenerated === undefined || typeof value.exportGenerated === "boolean") ||
     !(value.lastErrorAt === undefined || value.lastErrorAt === null || typeof value.lastErrorAt === "string" && Number.isFinite(Date.parse(value.lastErrorAt))) ||
     !(value.manualAvailableAt === undefined || value.manualAvailableAt === null || typeof value.manualAvailableAt === "string" && Number.isFinite(Date.parse(value.manualAvailableAt))) ||
-    !(value.manualLeftToday === undefined || typeof value.manualLeftToday === "number" && Number.isInteger(value.manualLeftToday) && value.manualLeftToday >= 0 && value.manualLeftToday <= AIRBNB_MANUAL_PER_DAY)) throw new Error("Respuesta de calendario no válida.");
+    !(value.manualLeftToday === undefined || typeof value.manualLeftToday === "number" && Number.isInteger(value.manualLeftToday) && value.manualLeftToday >= 0 && value.manualLeftToday <= AIRBNB_MANUAL_LIMIT_RANGE.perDay[1]) ||
+    !(value.manualPerDay === undefined || typeof value.manualPerDay === "number" && Number.isInteger(value.manualPerDay) && value.manualPerDay >= AIRBNB_MANUAL_LIMIT_RANGE.perDay[0] && value.manualPerDay <= AIRBNB_MANUAL_LIMIT_RANGE.perDay[1])) throw new Error("Respuesta de calendario no válida.");
   // Los predicados de valores discriminados se comprueban de nuevo para estrechar sin casts.
   const state = value.state;
   const error = value.errorCode;
@@ -110,7 +122,8 @@ export function readAirbnbSummary(value: unknown): AirbnbSummary {
     ...(typeof value.exportGenerated === "boolean" ? { exportGenerated: value.exportGenerated } : {}),
     ...(value.lastErrorAt === null || typeof value.lastErrorAt === "string" ? { lastErrorAt: value.lastErrorAt } : {}),
     ...(value.manualAvailableAt === null || typeof value.manualAvailableAt === "string" ? { manualAvailableAt: value.manualAvailableAt } : {}),
-    ...(typeof value.manualLeftToday === "number" ? { manualLeftToday: value.manualLeftToday } : {}) };
+    ...(typeof value.manualLeftToday === "number" ? { manualLeftToday: value.manualLeftToday } : {}),
+    ...(typeof value.manualPerDay === "number" ? { manualPerDay: value.manualPerDay } : {}) };
 }
 
 export function readCalendarDays(value: unknown): CalendarDay[] {

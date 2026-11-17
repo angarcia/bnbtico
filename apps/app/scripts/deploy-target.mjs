@@ -95,6 +95,44 @@ function validate(file) {
   }
 }
 
+// Límites de las lecturas manuales de Airbnb (2026-11-17): los aplica la base (airbnb_settings), así que este paso los
+// valida y los escribe allí con la clave de servicio. Igual que AIRBNB_MANUAL_LIMIT_RANGE en src/domain/airbnb.ts.
+const LIMITS = [
+  { key: "p_wait_minutes", env: "AIRBNB_MANUAL_WAIT_MINUTES", fallback: 15, min: 1, max: 60, unit: "minutos" },
+  { key: "p_per_day", env: "AIRBNB_MANUAL_PER_DAY", fallback: 10, min: 1, max: 50, unit: "lecturas al día" },
+];
+const LIMIT_SUFFIX = { pruebas: "PRUEBAS", production: "PRODUCCION" };
+
+function manualLimits(target) {
+  return Object.fromEntries(LIMITS.map(({ key, env, fallback, min, max, unit }) => {
+    const value = (process.env[env] ?? "").trim();
+    if (value === "") return [key, fallback];
+    const n = /^\d+$/.test(value) ? Number(value) : NaN;
+    ensure(n >= min && n <= max, `${env}_${LIMIT_SUFFIX[target]} no es válida: use de ${min} a ${max} ${unit}.`);
+    return [key, n];
+  }));
+}
+
+/** Antes de publicar: valida los límites y, en pruebas, los escribe en la base. Producción aún no tiene base propia. */
+async function limits() {
+  const target = process.env.DEPLOY_ENV;
+  ensure(targets.has(target), "Destino de despliegue no autorizado.");
+  if (!LIMIT_SUFFIX[target]) return;
+  const values = manualLimits(target);
+  const summary = `espera ${values.p_wait_minutes} min, ${values.p_per_day} al día`;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (target === "production" || !url || !key) {
+    console.log(`Límites manuales de Airbnb válidos (${summary}); no se escriben: ${target === "production" ? "producción aún no tiene base" : "faltan SUPABASE_URL o la clave de servicio"}.`);
+    return;
+  }
+  const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/set_airbnb_manual_limits`, {
+    method: "POST", headers: { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" }, body: JSON.stringify(values),
+  });
+  ensure(response.ok, `No se pudieron guardar los límites manuales de Airbnb (HTTP ${response.status}).`);
+  console.log(`Límites manuales de Airbnb guardados: ${summary}.`);
+}
+
 /** Tras el build: el cron de Airbnb y AIRBNB_SYNC_MINUTES del worker salen de la variable de GitHub del entorno. */
 function schedule(file) {
   const target = process.env.DEPLOY_ENV;
@@ -121,6 +159,7 @@ switch (command) {
   case "validate": validate(file); break;
   case "secrets": secrets(file); break;
   case "schedule": schedule(file); break;
+  case "limits": await limits(); break;
   case "cron": console.log(airbnbCron(Number(file))); break;
   default: throw new Error("Comando de despliegue no reconocido.");
 }

@@ -375,6 +375,18 @@ jobs:
           PUBLISH_MODE: ${{ steps.target.outputs.publish }}
         run: node scripts/deploy-freshness.mjs
 
+      # Límites de «Actualizar ahora» de Airbnb (espera y tope del día): variables de GitHub del entorno, vacías = 15 y
+      # 10. Los aplica la base, así que se escriben allí (pruebas); producción solo los valida hasta tener base propia.
+      - name: Límites manuales de Airbnb
+        if: (steps.target.outputs.environment == 'pruebas' || steps.target.outputs.environment == 'production') && steps.target.outputs.publish == 'deploy' && steps.freshness-publish.outcome == 'success'
+        env:
+          DEPLOY_ENV: ${{ steps.target.outputs.environment }}
+          AIRBNB_MANUAL_WAIT_MINUTES: ${{ steps.target.outputs.environment == 'production' && vars.AIRBNB_MANUAL_WAIT_MINUTES_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.AIRBNB_MANUAL_WAIT_MINUTES_PRUEBAS || '' }}
+          AIRBNB_MANUAL_PER_DAY: ${{ steps.target.outputs.environment == 'production' && vars.AIRBNB_MANUAL_PER_DAY_PRODUCCION || steps.target.outputs.environment == 'pruebas' && vars.AIRBNB_MANUAL_PER_DAY_PRUEBAS || '' }}
+          SUPABASE_URL: ${{ github.ref != 'refs/heads/main' && (vars.SUPABASE_URL || secrets.SUPABASE_URL) || '' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref != 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
+        run: node scripts/deploy-target.mjs limits
+
       - name: Secreto anon del refactor
         if: steps.target.outputs.environment == 'refactor' && steps.target.outputs.publish == 'deploy'
         env:
