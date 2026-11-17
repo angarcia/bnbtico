@@ -1,16 +1,16 @@
 // Migración habitaciones_flag (historia #62, decisiones del 2026-11-17): con la flag `rooms` apagada en la base ninguna casa
 // pasa a ser Habitación, ninguna Habitación se envía a revisión y no se guarda una propuesta de edición a Habitación, por
 // cualquier camino y sin que el navegador pueda saltárselo. Encendida, todo vuelve a funcionar (lo cubren el resto de las
-// pruebas de habitaciones, con el harness en `rooms` encendida).
+// pruebas de habitaciones, con el harness en `rooms` encendida (HARNESS_FLAGS)).
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Database } from "../../src/domain/database.types";
 import { TEST_PHONES, serviceClient, signIn, sql } from "./local";
-import { ROOMS_ON, postgrestHarness } from "./postgrest-harness";
+import { HARNESS_FLAGS, postgrestHarness } from "./postgrest-harness";
 
-const ROOMS_OFF = { ...ROOMS_ON, p_rooms: false };
+const ROOMS_OFF = { ...HARNESS_FLAGS, p_rooms: false };
 const MESSAGE = "Por ahora 3bstays publica solo alojamientos completos.";
-const rooms = async (on: boolean) => expect((await serviceClient().rpc("set_feature_flags", on ? ROOMS_ON : ROOMS_OFF)).error).toBeNull();
+const rooms = async (on: boolean) => expect((await serviceClient().rpc("set_feature_flags", on ? HARNESS_FLAGS : ROOMS_OFF)).error).toBeNull();
 const kindOf = (id: string) => sql(`select kind || '/' || status from public.listings where id = '${id}';`);
 
 describe("habitaciones con la flag apagada", () => {

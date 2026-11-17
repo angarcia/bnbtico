@@ -1,3 +1,10 @@
+## 2026-11-17 · Precios por fecha detrás de su feature flag
+
+Historia #61, con las reglas aprobadas por Ana (tarifas guardadas ocultas y conservadas, sin aviso al anfitrión).
+- **Base:** con `date_prices` apagada, `effective_calendar_days` no devuelve el precio especial, así que la ficha, su SSR, la hoja de contacto, el calendario del anfitrión y el del admin ven el precio por noche. `search_stay_total` suma solo el precio por noche, y `listing_days_update`, el único camino que escribe un precio, lo rechaza con «Los precios por fecha no están disponibles por ahora.». Bloquear y desbloquear noches no cambia y conserva el precio guardado. Al encender la flag, todo vuelve tal cual (migraciones `20261117180000_precios_fecha_flag` y su arreglo de texto `20261117181000`).
+- **Pantalla:** el panel del calendario del anfitrión deja solo «Disponible / Ocupado», sin el campo de precio ni «Usar el precio base».
+- **Pruebas:** el harness de base enciende también `date_prices`, y `precios-fecha-flag.test.ts` prueba la flag apagada. En Playwright, las pruebas de precios del calendario y el recorrido de la fase 4 (que pone una ★) se saltan con el build sin precios por fecha (`onlyDatePrices`).
+
 ## 2026-11-17 · Habitaciones fuera, detrás de su feature flag
 
 Historia #62, con las reglas aprobadas por Ana en «Feature flags: qué pasa con los datos al apagar cada una».

@@ -24,7 +24,7 @@ Cinco flags por entorno que se cambian con configuración y despliegue. Reglas d
 | Modo de búsqueda, controles, copy | Navegador (`SEARCH_MODE`, `FLAGS`; `parseFilters` y `normalizeSearch` con `mode`) | #60 y `flags-noches` (hecho) |
 | Fechas en la URL o enlaces viejos con la flag apagada | Navegador: se ignoran, sin filtro oculto | #60 |
 | No publicar ni aprobar habitaciones | Base (triggers `listings_rooms_flag` y `listing_edits_rooms_flag`) y navegador (`KindChoice`, Filtros, Editar; `parseFilters` y `normalizeSearch` con `rooms`) | #62 (hecho) |
-| Tarifas especiales ocultas (se conservan) | Base (totales, `public_listing_days`, guardar precios) y navegador | #61 |
+| Tarifas especiales ocultas (se conservan) | Base (`effective_calendar_days`, `search_stay_total`, `listing_days_update`) y navegador (panel del calendario) | #61 (hecho) |
 | Noches importadas dejan de bloquear, lecturas paradas, sin exportación | Base (`effective_calendar_days`, ciclo de Airbnb) y worker (`/ical/*`) | #63, prioridad baja |
 
 Una regla de escritura nunca depende de un valor que envíe el navegador: la RPC consulta `public.feature_flags()`.

@@ -302,6 +302,11 @@ Con las habitaciones apagadas, C24, C30, A2, A5, A23 y las comprobaciones de esc
 - [ ] **C52** Publicar sin cuenta (`/publicar`) → el paso 1 tiene «Tenga a mano:» y «Continuar», sin «¿Qué es?»; al continuar sigue en «¿Dónde está su casa?». En el resumen antes de enviar, «Alojamiento: Alojamiento completo».
 - [ ] **C53** En una casa publicada, «Editar» no tiene la fila «Tipo».
 
+### 2.7d Precios por fecha apagados (feature flag, valor inicial)
+
+- [ ] **C54** Como anfitrión, en «Calendario» elija uno o varios días → el panel tiene «Disponible / Ocupado» y «Guardar cambios», sin campo de precio ni «Usar el precio base»; marque Ocupado y guarde → se guarda como siempre.
+- [ ] **C55** En una casa con un precio especial guardado antes (★), la ficha y el calendario del anfitrión enseñan el precio por noche de la casa en ese día, sin ★, y el total de una estancia que lo incluye es precio por noche × noches.
+
 ### 2.8 Sin resultados y «¿No encuentra lo que busca?»
 
 - [ ] **C43** En Explorar con resultados baje hasta el final → después de la tarjeta de publicar hay la nota «¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.» con el botón «Escribir a 3bstays por WhatsApp».

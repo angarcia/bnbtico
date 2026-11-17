@@ -19,3 +19,8 @@ export function onlySearchMode(mode: SearchMode): void {
 export function onlyRooms(): void {
   test.skip(!BUILD_FLAGS.rooms, "El build tiene las habitaciones apagadas; esta prueba es de habitaciones (feature flags).");
 }
+
+/** Dentro de una prueba: la salta si el build no tiene los precios por fecha encendidos (historia #61). */
+export function onlyDatePrices(): void {
+  test.skip(!BUILD_FLAGS.datePrices, "El build tiene los precios por fecha apagados; esta prueba es de precios por fecha (feature flags).");
+}
