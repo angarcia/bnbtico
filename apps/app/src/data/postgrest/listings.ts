@@ -6,9 +6,10 @@ import type { Database } from "../../domain/database.types";
 import { toDomainError } from "../../domain/errors";
 import { FX_INITIAL, fromFxRow } from "../../domain/fx";
 import { ALL_PROVINCES, KINDS_OF_FILTER, stayRange, type Filters } from "../../domain/filters";
-import { PROVINCES, type LinkState, type PublicListing, type SearchListing } from "../../domain/listing";
+import { PROVINCES, type LinkState, type PublicListing, type SearchCursor, type SearchListing, type SearchPage } from "../../domain/listing";
 import { fromDayRow, fromPublicRow, storagePhotoUrl, type PublicRow } from "../../domain/rows";
 import { caribeFirst, type ZoneWithListings } from "../../domain/zones";
+import { cursorAfter } from "../../domain/search-cursor";
 
 const PUBLIC_COLUMNS =
   "id, public_id, kind, title, description, province, canton, zone, lat, lng, capacity, bedrooms, bathrooms, bathroom_shared, features, parking_paid, accepts_nightly, nightly_price_crc, min_nights, accepts_monthly, monthly_mode, monthly_price_crc, min_months, available, reopen_at, created_at, updated_at, owner_name, owner_whatsapp_verified, photos";
@@ -21,12 +22,12 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
   const toPublic = (row: PublicRow): PublicListing => fromPublicRow(row, url);
 
   return {
-    async searchPublic(f: Filters) {
+    async searchPublic(f: Filters, after: SearchCursor | null = null): Promise<SearchPage> {
       const r = stayRange(f);
       // Todo lo decide search_listings: zona (5 km con el punto real), noches libres, casas cerradas fuera («Cerrar la casa
       // hasta…» del Calendario, ticket 20; su ficha sí se abre), provincia (solo sin zona), personas, habitaciones, tipo,
       // características y precio por noche; ordena (`sort_rank`: el Caribe primero y luego las más nuevas), limita y solo
-      // entonces calcula `stay_total_crc`.
+      // entonces calcula `stay_total_crc`. La página siguiente va por cursor (`p_after_*`) y `has_more` dice si queda otra.
       const { data, error } = await db
         .rpc("search_listings", {
           p_zone: f.zone ?? undefined,
@@ -40,13 +41,18 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
           p_min: f.min || undefined,
           p_max: f.max || undefined,
           p_limit: SEARCH_LIMIT,
+          p_after_caribe: after?.caribe,
+          p_after_created: after?.createdAt,
+          p_after_id: after?.id,
         })
         // PostgREST solo ordena una función `returns table` por una columna que también se pide: sort_rank va en el select.
-        .select(`${PUBLIC_COLUMNS}, stay_total_crc, sort_rank`)
+        .select(`${PUBLIC_COLUMNS}, stay_total_crc, sort_rank, has_more`)
         .order("sort_rank");
       if (error) throw toDomainError(error);
       // Los tipos generados dan las columnas de `returns table` como no nulas; el total sí puede ser null.
-      return data.map((row): SearchListing => ({ ...toPublic(row), stayTotalCrc: (row.stay_total_crc as number | null) ?? null }));
+      const listings = data.map((row): SearchListing => ({ ...toPublic(row), stayTotalCrc: (row.stay_total_crc as number | null) ?? null }));
+      const last = listings.at(-1);
+      return { listings, next: data[0]?.has_more && last ? cursorAfter(last) : null };
     },
 
     async zonesWithListings() {

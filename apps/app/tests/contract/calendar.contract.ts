@@ -252,7 +252,7 @@ export function calendarContract(name: string, makeHarness: () => Promise<Subscr
       await h.putDay(lastOfThirty.id, occupied(day(10 + 29))); // la última de las 30 noches desde el día 10
       await h.putDay(afterThirty.id, occupied(day(10 + 30))); // el día de salida
       const search = async (params: Record<string, string>) =>
-        (await h.anon.searchPublic(parseFilters({ prov: "Todas", ...params }, PROVINCES, { today: day(0) }))).map((l) => l.publicId);
+        (await h.anon.searchPublic(parseFilters({ prov: "Todas", ...params }, PROVINCES, { today: day(0) }))).listings.map((l) => l.publicId);
       const nightly = await search({ llegada: A, salida: S });
       expect(nightly).toEqual(expect.arrayContaining([free.publicId, busyOnS.publicId, lastOfThirty.publicId, afterThirty.publicId]));
       expect(nightly).not.toContain(busyInside.publicId);

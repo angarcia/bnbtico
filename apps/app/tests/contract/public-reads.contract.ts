@@ -15,7 +15,7 @@ const filters = (params: Record<string, string> = {}): Filters => parseFilters({
 export function publicReadsContract(name: string, makeHarness: () => Promise<CalendarHarness>) {
   describe(`lecturas públicas · ${name}`, () => {
     let h: CalendarHarness;
-    const ids = async (f: Filters) => (await h.anon.searchPublic(f)).map((l) => l.publicId);
+    const ids = async (f: Filters) => (await h.anon.searchPublic(f)).listings.map((l) => l.publicId);
 
     describe("visibilidad y forma", () => {
       let active: Seeded;
@@ -41,7 +41,7 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
       });
 
       it("la casa pública trae nombre del dueño, fotos en orden y el punto desplazado, nunca el exacto", async () => {
-        const [l] = await h.anon.searchPublic(filters());
+        const [l] = (await h.anon.searchPublic(filters())).listings;
         expect(l).toMatchObject({ publicId: active.publicId, title: "Casa Punta Uva", zone: "Punta Uva", province: "Limón", ownerName: h.ownerName("owner"), ownerWhatsappVerified: true });
         expect(l!.photos.map((p) => p.path)).toEqual(active.photoPaths);
         expect(l!.photos[0]!.url).toMatch(new RegExp(`/storage/v1/object/public/listings/${active.photoPaths[0]}$`));
@@ -192,7 +192,7 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
       const houses: Record<"especiales" | "mesNegociable" | "conMes" | "redondeo" | "salidaEspecial", House> = {} as never;
       /** Los totales de las casas devueltas para [llegada, salida), por id público. */
       const totals = async (from: number, to: number) => {
-        const list = await h.anon.searchPublic(parseFilters({ prov: "Todas", llegada: day(from), salida: day(to) }, PROVINCES, { today }));
+        const list = (await h.anon.searchPublic(parseFilters({ prov: "Todas", llegada: day(from), salida: day(to) }, PROVINCES, { today }))).listings;
         return Object.fromEntries(list.map((l) => [l.publicId, l.stayTotalCrc]));
       };
       /** Lo que dice la regla del dominio (stay-price.ts) para cada casa: fake y PostgREST tienen que dar esto mismo. */
@@ -219,7 +219,7 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
       }, 120_000);
 
       it("sin llegada ni salida no hay total", async () => {
-        const list = await h.anon.searchPublic(filters());
+        const list = (await h.anon.searchPublic(filters())).listings;
         expect(list).toHaveLength(5);
         for (const l of list) expect(l.stayTotalCrc).toBeNull();
       });
@@ -256,20 +256,47 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
       });
     });
 
-    describe("límite de 60 (ronda 2 nov, ticket 07: ahora lo pone search_listings)", () => {
-      it("62 casas: salen las 60 más nuevas, cada una con su total; sin fechas, sin total", async () => {
+    describe("límite de 60 y página siguiente (ronda 2 nov, ticket 07; paginación de Explorar, issue #10)", () => {
+      it("62 casas: salen las 60 más nuevas, cada una con su total; la página siguiente trae las 2 que faltan", async () => {
         h = await makeHarness();
         await h.reset();
         const made: Seeded[] = [];
         for (let i = 0; i < 62; i++) made.push(await h.seed({ status: "active", photos: 1, draft: { nightlyPriceCrc: 40000 + i } }));
         const today = costaRicaToday(Date.now());
-        const list = await h.anon.searchPublic(parseFilters({ prov: "Todas", llegada: addDays(today, 10), salida: addDays(today, 13) }, PROVINCES, { today }));
-        expect(list.map((l) => l.publicId)).toEqual(made.slice(2).reverse().map((m) => m.publicId));
-        for (const l of list) expect(l.stayTotalCrc).toBe(3 * l.nightlyPriceCrc!);
+        const withDates = parseFilters({ prov: "Todas", llegada: addDays(today, 10), salida: addDays(today, 13) }, PROVINCES, { today });
+        const first = await h.anon.searchPublic(withDates);
+        expect(first.listings.map((l) => l.publicId)).toEqual(made.slice(2).reverse().map((m) => m.publicId));
+        for (const l of first.listings) expect(l.stayTotalCrc).toBe(3 * l.nightlyPriceCrc!);
+        expect(first.next).not.toBeNull();
+        const second = await h.anon.searchPublic(withDates, first.next);
+        expect(second.listings.map((l) => l.publicId)).toEqual([made[1]!.publicId, made[0]!.publicId]);
+        for (const l of second.listings) expect(l.stayTotalCrc).toBe(3 * l.nightlyPriceCrc!);
+        expect(second.next).toBeNull();
         const plain = await h.anon.searchPublic(filters());
-        expect(plain.map((l) => l.publicId)).toEqual(list.map((l) => l.publicId));
-        for (const l of plain) expect(l.stayTotalCrc).toBeNull();
+        expect(plain.listings.map((l) => l.publicId)).toEqual(first.listings.map((l) => l.publicId));
+        for (const l of plain.listings) expect(l.stayTotalCrc).toBeNull();
+        expect((await h.anon.searchPublic(filters(), plain.next)).listings.map((l) => l.publicId)).toEqual([made[1]!.publicId, made[0]!.publicId]);
       }, 240_000);
+
+      it("una casa nueva entre página y página no repite ni salta casas", async () => {
+        h = await makeHarness();
+        await h.reset();
+        const made: Seeded[] = [];
+        for (let i = 0; i < 61; i++) made.push(await h.seed({ status: "active", photos: 1 }));
+        const first = await h.anon.searchPublic(filters());
+        const late = await h.seed({ status: "active", photos: 1 });
+        const second = await h.anon.searchPublic(filters(), first.next);
+        expect(second.listings.map((l) => l.publicId)).toEqual([made[0]!.publicId]);
+        expect(second.next).toBeNull();
+        expect(first.listings.map((l) => l.publicId)).not.toContain(late.publicId);
+      }, 240_000);
+
+      it("con 60 casas o menos no hay página siguiente", async () => {
+        h = await makeHarness();
+        await h.reset();
+        await h.seed({ status: "active", photos: 1 });
+        expect((await h.anon.searchPublic(filters())).next).toBeNull();
+      });
     });
 
     describe("zona (5 km)", () => {

@@ -40,7 +40,7 @@ export function airbnbContract(name: string, make: () => Promise<{ h: Subscripti
       const busy = parseFilters({ llegada: day(10), salida: day(13) }, PROVINCES);
       // Fijar también las claves vigentes mediante la ruta de filtros: si cambian, el caso no puede pasar sin fechas.
       expect(busy.arrival).toBe(day(10));
-      const found = await h.anon.searchPublic(busy);
+      const found = (await h.anon.searchPublic(busy)).listings;
       expect(found.some(r => r.id === l.id)).toBe(false);
       await expect(h.inquiries("other").create(l.publicId, { arrival: day(10), departure: day(13), people: 1 })).rejects.toThrow("Hay noches ocupadas");
       await expect(h.inquiries("other").create(l.publicId, { arrival: day(9), departure: day(10), people: 1 })).resolves.toHaveProperty("inquiryId");

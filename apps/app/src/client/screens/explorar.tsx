@@ -1,9 +1,9 @@
 // Explorar (pantalla 01, maqueta v2; tarjetas flotantes, tanda 1): el mapa arriba a todo el ancho y, flotando encima como
 // tarjetas, la píldora de búsqueda, los filtros y «₡ | $», que se esconden al bajar y vuelven al subir. Todo el país con el Caribe primero,
 // filtros en la URL, una casa por fila; con llegada y salida, cada tarjeta y su marcador dicen el total orientativo de esas noches.
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useId, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useId, useMemo, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
@@ -22,7 +22,7 @@ import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { useListingsCount } from "../own-listings-query";
 import { SUPPORT_NUMBERS } from "../support-numbers";
-import { isDatesError, listingsQuery, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
+import { isDatesError, listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
@@ -161,8 +161,8 @@ function FiltersLink({ filters: f, search }: { filters: Filters; search: Explore
  *  debajo, los filtros y «₡ | $». Se esconde al bajar con la barra de abajo (`.chrome-hide`). */
 function DesktopFeatureFilters({ filters }: { filters: Filters }) {
   const navigate = useNavigate();
-  const { data } = useQuery(zoneListingsQuery(filters.zone));
-  const available = new Set(data?.flatMap((listing) => listing.features));
+  const { data } = useInfiniteQuery(zoneListingsQuery(filters.zone));
+  const available = new Set(loadedListings(data)?.flatMap((listing) => listing.features));
   const choices = FEATURE_CHOICE_ORDER.filter((feature) => available.has(feature));
   if (!choices.length) return null;
 
@@ -235,6 +235,23 @@ function SkeletonGrid() {
   );
 }
 
+/** «Ver más casas» al final de la lista: trae las 60 siguientes (issue #10). Mientras llegan, el botón espera desactivado;
+ *  si fallan, se dice encima y el mismo botón reintenta. */
+function MoreListings({ loading, failed, onMore }: { loading: boolean; failed: boolean; onMore: () => void }) {
+  return (
+    <div className="stack gap-8">
+      {failed && !loading ? (
+        <div className="note note-arena" role="alert">
+          No pudimos cargar más casas. Revise su conexión e inténtelo de nuevo.
+        </div>
+      ) : null}
+      <button type="button" className="btn btn-outline btn-block" disabled={loading} aria-busy={loading} onClick={onMore}>
+        {loading ? "Cargando casas…" : "Ver más casas"}
+      </button>
+    </div>
+  );
+}
+
 function useReveal(loading: boolean, filtersKey: string): string {
   const [firstKey] = useState(filtersKey);
   const waited = useRef(false);
@@ -267,7 +284,9 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
     wasOpen.current = mapOpen;
   }, [mapOpen]);
   const currency = useCurrency();
-  const { data: listings, isError, error } = useQuery(listingsQuery(f));
+  const { data, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery(listingsQuery(f));
+  // Todas las páginas ya cargadas («Ver más casas»): la lista y el mapa enseñan las mismas casas.
+  const listings = useMemo(() => loadedListings(data), [data]);
   const selectedHouse = desktop ? listings?.find((listing) => listing.publicId === selected) : undefined;
   const reveal = useReveal(!listings, searchToString(searchFor(f)));
   // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
@@ -329,7 +348,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         <span className="small muted" data-testid="results-count">
           {listings
             ? (() => {
-                const r = resultsText(listings.length, f, zoneName);
+                const r = resultsText(listings.length, f, zoneName, hasNextPage);
                 return (
                   <>
                     <b className="ink num">{r.count}</b>
@@ -363,6 +382,13 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
               <ListingCard key={l.publicId} listing={l} nights={nights} priority={i === 0} />
             ))}
           </div>
+          {hasNextPage ? (
+            <MoreListings
+              loading={isFetchingNextPage}
+              failed={isFetchNextPageError}
+              onMore={() => void fetchNextPage()}
+            />
+          ) : null}
           {!desktop && <MapLabel target={mapBox} hidden={mapOpen} onOpen={() => openMap(null)} />}
           {!owner || SUPPORT_NUMBERS.guest ? (
             <div className="explore-footer-cards">
@@ -411,7 +437,7 @@ function usePrefetchSearch(search: ExploreSearch, waiting: boolean) {
       : null;
   const key = guess ? JSON.stringify(listingsQuery(guess).queryKey) : "";
   useEffect(() => {
-    if (guess) void client.prefetchQuery(listingsQuery(guess));
+    if (guess) void client.prefetchInfiniteQuery(listingsQuery(guess));
     // `guess` es un objeto nuevo en cada render: basta con su clave.
   }, [key]);
 }

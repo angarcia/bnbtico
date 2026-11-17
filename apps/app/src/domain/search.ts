@@ -23,14 +23,15 @@ export function searchSummary(f: Filters, zoneName: string | null): string | nul
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : null;
 }
 
-/** «8 casas», «1 casa»: la cifra de los resultados y la píldora del mapa a pantalla completa. */
-export const housesCount = (n: number): string => `${n} ${n === 1 ? "casa" : "casas"}`;
+/** «8 casas», «1 casa»: la cifra de los resultados y la píldora del mapa a pantalla completa. Con más páginas por cargar
+ *  («Ver más casas»), «Más de 60 casas»: contar todas obligaría a la búsqueda a recorrerlas (issue #10). */
+export const housesCount = (n: number, more = false): string => `${more ? "Más de " : ""}${n} ${n === 1 ? "casa" : "casas"}`;
 
 /** Línea de resultados: { count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" }. */
-export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "zone">, zoneName: string | null = null): { count: string; rest: string } {
+export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "zone">, zoneName: string | null = null, more = false): { count: string; rest: string } {
   const place = f.zone && zoneName ? ` en ${zoneName} y alrededores` : f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
   const stay = stayLabel(f);
-  return { count: housesCount(n), rest: place + (stay ? ` · ${stay}` : "") };
+  return { count: housesCount(n, more), rest: place + (stay ? ` · ${stay}` : "") };
 }
 
 export { tapRange, type RangeState } from "./range";

@@ -26,7 +26,7 @@ export function ownerDeleteContract(name: string, makeHarness: () => Promise<Sub
   describe(`anfitrión · eliminar casa · ${name}`, () => {
     let h: SubscriptionHarness;
     const me = () => h.owner("owner");
-    const publicIds = async () => (await h.anon.searchPublic(ALL)).map((l) => l.publicId);
+    const publicIds = async () => (await h.anon.searchPublic(ALL)).listings.map((l) => l.publicId);
 
     beforeAll(async () => {
       h = await makeHarness();

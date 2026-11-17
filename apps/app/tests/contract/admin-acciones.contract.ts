@@ -31,7 +31,7 @@ export function adminAccionesContract(name: string, makeHarness: () => Promise<S
   describe(`admin · pausar, bloquear y eliminar · ${name}`, () => {
     let h: SubscriptionHarness;
     const admin = () => h.admin("aal2");
-    const publicIds = async () => (await h.anon.searchPublic(ALL)).map((l) => l.publicId);
+    const publicIds = async () => (await h.anon.searchPublic(ALL)).listings.map((l) => l.publicId);
     const ownerHouse = async (id: string, who: SeedOwner = "owner") => (await h.owner(who).listOwn()).find((l) => l.id === id);
     const adminHouse = async (id: string) => (await admin().houses()).houses.find((x) => x.listingId === id);
     const addCard = (who: SeedOwner) =>

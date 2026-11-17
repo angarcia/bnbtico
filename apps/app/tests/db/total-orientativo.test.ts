@@ -41,14 +41,14 @@ describe("migración total_orientativo_en_busqueda", () => {
     await h.putDay(house.busy.id, { day: addDays(T, 11), available: false, specialPriceCrc: null });
   }, 120_000);
 
-  it("devuelve las columnas de listings_public, en su orden y con sus tipos, más stay_total_crc y sort_rank", () => {
+  it("devuelve las columnas de listings_public, en su orden y con sus tipos, más stay_total_crc, sort_rank y has_more", () => {
     const view = sql(`select string_agg(column_name || ' ' || format_type(atttypid, atttypmod), ', ' order by ordinal_position)
       from information_schema.columns c join pg_attribute a on a.attrelid = 'public.listings_public'::regclass and a.attname = c.column_name
       where c.table_schema = 'public' and c.table_name = 'listings_public'`);
     const fn = sql(`select string_agg(n || ' ' || format_type(t, null), ', ' order by o)
       from pg_proc p, unnest(p.proargnames, p.proallargtypes::oid[], p.proargmodes::text[]) with ordinality as x(n, t, m, o)
       where p.oid = 'public.search_listings'::regproc and x.m = 't'`);
-    expect(fn).toBe(`${view}, stay_total_crc bigint, sort_rank integer`);
+    expect(fn).toBe(`${view}, stay_total_crc bigint, sort_rank integer, has_more boolean`);
   });
 
   it("solo hay una search_listings (la vieja de 3 argumentos se borró) y anon puede llamarla; search_stay_total, no", async () => {
