@@ -56,13 +56,13 @@ describe("inventario de particiones", () => {
     expect(check(report(["a", "a"]), [report(["a"]), report(["a"])]).status).not.toBe(0);
   });
 
-  it("genera únicamente matrices de dos o tres shards", () => {
-    for (const total of [2, 3]) {
+  it("genera únicamente matrices de uno, dos o tres shards", () => {
+    for (const total of [1, 2, 3]) {
       const result = run("matrix", String(total));
       expect(result.status, result.stderr).toBe(0);
       expect(JSON.parse(result.stdout)).toEqual({ include: Array.from({ length: total }, (_, i) => ({ shard: i + 1, total })) });
     }
-    for (const total of ["1", "4", "", "2;echo secreto"]) expect(run("matrix", total).status).not.toBe(0);
+    for (const total of ["0", "4", "", "2;echo secreto"]) expect(run("matrix", total).status).not.toBe(0);
   });
 
   it("escribe diagnóstico y falla si falta el inventario o los informes", () => {
@@ -116,7 +116,7 @@ console.log(JSON.stringify(input[key]));
     expect(manifest.tests).toHaveLength(total);
     expect(new Set(manifest.tests.map((test: { id: string }) => test.id)).size).toBe(total);
     expect(manifest.tests[0]).toMatchObject({ id: "id-0", file: "cuenta.spec.ts", title: ["cuenta.spec.ts", "caso id-0"] });
-    expect(manifest.configurations.map((config: { total: number }) => config.total)).toEqual([2, 3]);
+    expect(manifest.configurations.map((config: { total: number }) => config.total)).toEqual([1, 2, 3]);
     for (const config of manifest.configurations) {
       expect(config.parts).toHaveLength(config.total);
       const tests = config.parts.flatMap((part: { tests: { id: string }[] }) => part.tests);

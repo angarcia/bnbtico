@@ -123,6 +123,11 @@ Si el código por WhatsApp no llega a números ticos, se pasa a SMS (desactivar 
 
 El workflow `.github/workflows/app.yml` construye, prueba y despliega `apps/app` (rama `develop` → entorno `pruebas`, worker `3bstays-pruebas`; `main` → entorno `production`, worker `3bstays-production`). `.github/workflows/backup.yml` hace la copia diaria. Nombres exactos en GitHub → Settings → Secrets and variables → Actions. Donde dice «variable o secreto», el workflow lee `vars.X || secrets.X`: vale cualquiera de las dos pestañas.
 
+Trabajos de `app.yml` (desde el 2026-11-16, para caber en los minutos gratuitos de Actions con el repositorio privado): `plan` elige el destino; `quality` pasa los tipos, las pruebas unitarias y las del prototipo; `integration` arranca Supabase una sola vez y ejecuta en el mismo runner las pruebas de base, el build local, todas las e2e en un solo trozo, la puerta de tamaño y Lighthouse; `report` combina los diagnósticos y `deploy` publica.
+- En los pull requests solo corren `plan` y `quality`, así que no hay vista previa en Cloudflare. La batería completa corre una vez, en el push a `develop` o `main` que despliega.
+- «Run workflow» (lanzarlo a mano) vale en cualquier rama y sin opciones: corre todo salvo `deploy`. Sirve para probar un cambio de CI antes de juntarlo.
+- No disparan la CI los cambios que solo tocan `docs/`, `*.md`, `.scratch/`, `backups/`, `.claude/`, `.agents/`, las maquetas HTML de `design/pantallas/`, `design/logo/` o `design/tokens/`. `design/prototype/` y las fotos de `design/pantallas/fotos/` sí la disparan, porque las leen las pruebas.
+
 | Nombre | Dónde | Para qué |
 |---|---|---|
 | `CLOUDFLARE_API_TOKEN` | secreto | `wrangler deploy` y versiones de vista previa. Permisos: Workers Scripts edit, Account Settings read, Workers Routes edit, DNS edit, Cache Purge (guía del ticket 01). |

@@ -8,7 +8,9 @@ const ensure = (condition, message) => {
 };
 const read = (file) => JSON.parse(readFileSync(file, "utf8"));
 const count = (value) => {
-  ensure(["2", "3"].includes(value), "Solo se permiten dos o tres shards.");
+  // Uno: todas las e2e en el mismo runner que la base y Lighthouse (2026-11-16, minutos de Actions); dos o tres siguen
+  // valiendo para comparar repartos.
+  ensure(["1", "2", "3"].includes(value), "Solo se permiten uno, dos o tres shards.");
   return Number(value);
 };
 const write = (file, value) => writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
@@ -60,8 +62,9 @@ function inventory(directory) {
   const full = list();
   const tests = cases(full);
   ensure(tests.length > 0, "Inventario vacío.");
-  const configurations = [2, 3].map((total) => partition(tests,
-    Array.from({ length: total }, (_, i) => cases(list(`${i + 1}/${total}`)))));
+  // Con un shard el reparto es el inventario completo: no hace falta listarlo otra vez.
+  const configurations = [partition(tests, [tests]), ...[2, 3].map((total) => partition(tests,
+    Array.from({ length: total }, (_, i) => cases(list(`${i + 1}/${total}`)))))];
   mkdirSync(directory, { recursive: true });
   write(join(directory, "inventory.json"), { commit: process.env.GITHUB_SHA ?? "local", total: tests.length, tests, configurations });
   for (const config of configurations) {
@@ -98,7 +101,7 @@ function normalize(input, manifestFile, output) {
   const expected = cases(manifest);
   ensure(expected.length > 0, "Inventario vacío.");
   const shard = manifest.config?.shard;
-  ensure([2, 3].includes(shard?.total) && Number.isInteger(shard.current) && shard.current >= 1 && shard.current <= shard.total, "Shard de inventario inválido.");
+  ensure([1, 2, 3].includes(shard?.total) && Number.isInteger(shard.current) && shard.current >= 1 && shard.current <= shard.total, "Shard de inventario inválido.");
   for (const data of [manifest, report]) {
     ensure(data.config?.metadata?.commit === (process.env.GITHUB_SHA ?? "local"), "SHA de diagnóstico incorrecto.");
     ensure(isDeepStrictEqual(data.config.metadata.shard, shard), "Metadatos de shard incorrectos.");

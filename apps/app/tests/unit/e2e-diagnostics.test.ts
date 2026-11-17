@@ -74,7 +74,7 @@ describe("diagnóstico E2E", () => {
     expect(sanitize).toContain('node scripts/ci-artifacts.mjs preparation "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation" "$RUNNER_TEMP/${CI_ARTIFACT_NAME}-preparation.tsv"');
     expect(sanitize.trimEnd().endsWith('-preparation.tsv"')).toBe(true);
     expect(sanitize.split("\n").filter(line => line.includes("run:")).join("\n")).not.toContain("preparation.log");
-    const e2eJob = workflow.split("\n  e2e:\n")[1]!.split("\n  lighthouse:\n")[0]!;
+    const e2eJob = workflow.split("\n  integration:\n")[1]!.split("\n  report:\n")[0]!;
     expect(e2eJob).toContain('"${RUNNER_TEMP:?}/${CI_ARTIFACT_NAME:?}-preparation.log"');
     const upload = step("Tiempos de preparación E2E");
     expect(upload).toContain("if: always() && steps.preparation.outputs.safe_to_upload == 'true'");
