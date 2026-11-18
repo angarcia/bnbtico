@@ -1,4 +1,5 @@
 import { expect, test } from "./helpers/test";
+import { BUILD_FLAGS } from "./helpers/flags";
 import { injectSession } from "./helpers/session";
 import { icalExportHarness } from "../db/ical-export-harness";
 import { localSupabase } from "../db/local";
@@ -53,7 +54,8 @@ test("conectar Airbnb muestra carga, importa por casa y conserva el contexto al 
   const occupied = page.getByRole("button", { name: new RegExp(`^${longDateWithYear(day(11))},`) });
   await expect(page.getByText("Bloqueado por Airbnb", { exact: true })).toBeVisible();
   await expect(occupied.locator(".day-imported svg")).toBeVisible();
-  await expect(occupied.locator(".day-sub")).toContainText("75");
+  // Sin precios por fecha (feature flag), la casilla no lleva precio; con ellos, el importado de Airbnb.
+  await expect(occupied.locator(".day-sub")).toHaveText(BUILD_FLAGS.datePrices ? /75/ : "");
   await occupied.click();
   const panel = page.getByRole("region", { name: "Días seleccionados" });
   await expect(panel.getByText("Bloqueo manual y Airbnb", { exact: true })).toBeVisible();

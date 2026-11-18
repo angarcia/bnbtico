@@ -11,8 +11,10 @@ import { addMonths, calendarWindow, effectiveDay, monthTitle, openingMonth } fro
 import type { Currency } from "../domain/currency";
 import type { PublicListing } from "../domain/listing";
 import { canTapDay, RANGE_BUSY_MESSAGE, tapRangeFree, type RangeState } from "../domain/range";
+import { formatMoney } from "../domain/money";
 import { hasBusyNight, listingStay, MONTHLY_ESTIMATE_NIGHTS, stayLine } from "../domain/stay-price";
 import { useDesktop } from "../client/desktop";
+import { FLAGS } from "./flags";
 import { I } from "./icons";
 import { listingDaysQuery } from "./listing-query";
 import { MonthGrid, MonthLegend, WeekdayRow } from "./month-grid";
@@ -104,6 +106,8 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
         today={today}
         days={days}
         base={base}
+        // Precios por fecha apagados (feature flag): el precio base va en la leyenda, no en cada noche.
+        prices={FLAGS.datePrices}
         currency={currency}
         // En escritorio cabe el símbolo: «₡120 000» y no «120 000» (Ana, 2026-11-13); en el teléfono, sin él por espacio.
         showCurrencySymbol={desktop}
@@ -115,7 +119,7 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
       />
       {/* Leyenda con «Quitar fechas» y la línea del total (o del aviso): las dos guardan su sitio con o sin fechas. */}
       <div className="cal-legend-row">
-        <MonthLegend />
+        <MonthLegend price={!FLAGS.datePrices && base !== null ? formatMoney(base, currency, fx) : undefined} />
         {value.arrival ? (
           <button type="button" className="btn-text" onClick={clear}>
             Quitar fechas

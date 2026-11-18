@@ -22,6 +22,8 @@ export interface MonthGridProps {
   days: CalendarDays;
   /** Precio por noche de la casa; null = solo mensual (sin cifras). */
   base: number | null;
+  /** false: sin precio en las casillas ni en su nombre (precios por fecha apagados: el precio base va en la leyenda). */
+  prices?: boolean;
   currency?: Currency;
   showCurrencySymbol?: boolean;
   /** Colones por dólar (tipo vigente); solo cuenta en dólares. */
@@ -55,7 +57,7 @@ export function WeekdayRow({ className }: { className?: string }) {
   );
 }
 
-export function MonthGrid({ month, today, days, base, currency = "CRC", showCurrencySymbol, fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, importedIcon, label }: MonthGridProps) {
+export function MonthGrid({ month, today, days, base, prices = true, currency = "CRC", showCurrencySymbol, fx = FX_INITIAL.crcPerUsd, selected = [], range, canTap, onSelect, dimmed, importedIcon, label }: MonthGridProps) {
   const { weeks } = monthGrid(month, today);
   const start = range?.arrival ?? null;
   const end = range?.departure ?? null;
@@ -71,7 +73,7 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", showCurr
             // Ocupado: solo número, salvo importados privados con precio y marca de origen.
             const imported = !!importedIcon && !range && !off && s.imported;
             const formatPrice = showCurrencySymbol ? formatMoney : dayPrice;
-            const price = (s.available || imported) && s.priceCrc !== null ? formatPrice(s.priceCrc, currency, fx) : "";
+            const price = prices && (s.available || imported) && s.priceCrc !== null ? formatPrice(s.priceCrc, currency, fx) : "";
             const isEnd = !off && (g.day === start || g.day === end);
             const inside = !off && !!start && !!end && g.day > start && g.day < end;
             const band = isEnd && start && end ? (g.day === start ? " is-start" : " is-last") : "";
@@ -81,8 +83,8 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", showCurr
               off ? null : s.available ? "disponible" : "ocupado",
               !off && (interactive || importedIcon) && !range && s.imported ? s.manualAvailable === false ? "bloqueo manual y Airbnb" : "ocupado por Airbnb" : null,
               // Un día ocupado de la ficha no dice su precio, que no enseña; en el calendario del propietario, sí.
-              !off && ((interactive && !range) || s.available || imported) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
-              !off && s.special ? "precio distinto" : null,
+              prices && !off && ((interactive && !range) || s.available || imported) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
+              prices && !off && s.special ? "precio distinto" : null,
             ]
               .filter(Boolean)
               .join(", ");
@@ -109,7 +111,8 @@ export function MonthGrid({ month, today, days, base, currency = "CRC", showCurr
   );
 }
 
-export function MonthLegend({ extra }: { extra?: ReactNode }) {
+/** `price`: el precio base ya formateado, cuando las casillas no lo llevan (precios por fecha apagados). */
+export function MonthLegend({ extra, price }: { extra?: ReactNode; price?: string }) {
   return (
     <div className="month-legend">
       <span>
@@ -121,6 +124,7 @@ export function MonthLegend({ extra }: { extra?: ReactNode }) {
         Ocupado
       </span>
       {extra}
+      {price ? <span className="legend-price">{`${price} / noche`}</span> : null}
     </div>
   );
 }

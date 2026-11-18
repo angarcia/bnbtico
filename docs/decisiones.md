@@ -1,3 +1,9 @@
+## 2026-11-17 · Sin precios por fecha, el precio base va en la leyenda del calendario
+
+Ana, tras probar las feature flags en pruebas. Con `datePrices` apagada, las casillas del calendario repetían el mismo precio en cada noche: ahora llevan solo el número del día (también en su nombre accesible) y el precio por noche de la casa va una vez, en la leyenda («Disponible · Ocupado · ₡45 000 / noche», en la moneda elegida). En la ficha la leyenda queda debajo de la rejilla y en el calendario del anfitrión, arriba, donde ya estaban. Se eligió la leyenda frente a una línea propia bajo «Disponibilidad» o junto al título del mes, que en 320 px choca con las flechas. Con la flag encendida, las casillas vuelven a llevar cada precio y la leyenda no lo repite. Las casas solo mensuales siguen sin cifra.
+
+En el mismo lote, los atajos de «¿Cuántas noches?» pasan a la rejilla de dos columnas de «Qué necesitan», con el check en un hueco fijo: antes el «✓» se añadía delante y los atajos cambiaban de sitio al marcarlos.
+
 ## 2026-11-17 · El contador de noches, en un trozo diferido
 
 El primer despliegue de las feature flags (#75) se paró en la puerta de tamaño: el JS inicial privado midió 161,13 kB en CI con un límite de 161 kB (en local, 160,96 kB). El contador de «¿Cuántas noches?» del panel de escritorio pasa a cargarse en diferido, como el selector de zona, en el trozo `nights-picker-*`, que comparte con la búsqueda del teléfono y tiene su propia entrada en `.size-limit.json` (1 kB; mide 0,67 kB). El JS inicial baja unos 0,24 kB. El presupuesto de 161 kB no cambia.

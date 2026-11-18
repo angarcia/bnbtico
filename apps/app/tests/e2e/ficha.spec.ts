@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "./helpers/test";
+import { BUILD_FLAGS } from "./helpers/flags";
 import type { Seeded } from "../contract/harness";
 import { serviceClient, sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
@@ -214,9 +215,11 @@ test("en escritorio: mensual junto al precio, características sin cajas y «Esc
   });
   expect(plain).toEqual({ bg: "rgba(0, 0, 0, 0)", shadow: "none" });
   expect(await page.locator(".listing-head").evaluate((el) => getComputedStyle(el).textAlign)).toBe("left");
-  // En escritorio el calendario lleva el símbolo de la moneda en cada noche («₡1 250 000», no «1 250 000»).
+  // En escritorio el calendario lleva el símbolo de la moneda en cada noche («₡1 250 000», no «1 250 000»); sin precios por
+  // fecha (feature flag), el precio base va con su símbolo en la leyenda.
   await page.locator(".listing-calendar").scrollIntoViewIfNeeded();
-  await expect(page.locator(".listing-calendar .day:not(.is-past):not(.is-busy) .day-sub").first()).toHaveText(/^₡/);
+  if (BUILD_FLAGS.datePrices) await expect(page.locator(".listing-calendar .day:not(.is-past):not(.is-busy) .day-sub").first()).toHaveText(/^₡/);
+  else await expect(page.locator(".listing-calendar .legend-price")).toHaveText(/^₡[\d\s]+ \/ noche$/);
 
   const panel = page.locator(".listing-contact-inline");
   const host = (await page.locator(".host-name").textContent())!;

@@ -34,6 +34,13 @@ const open = (page: Page, id: string, month = next()) => page.goto(`/propietario
 /** Los meses van uno debajo de otro: se lleva el que se quiere a la vista. */
 const showMonth = (page: Page, month: string) => page.locator(`[data-month="${month}"]`).scrollIntoViewIfNeeded();
 
+/** Un día libre con el precio base: con precios por fecha, su cifra en la casilla; sin ellos, solo «disponible» (el precio
+ *  base va en la leyenda). */
+async function expectFree(page: Page, iso: string) {
+  if (BUILD_FLAGS.datePrices) await expect(day(page, iso)).toContainText("95\u00a0000");
+  else await expect(day(page, iso)).toHaveAccessibleName(/, disponible$/);
+}
+
 async function seedHouse(title: string, draft: Record<string, unknown> = {}) {
   return h.seed({ status: "active", draft: { title, nightlyPriceCrc: 95000, ...draft } });
 }
@@ -133,7 +140,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   await expect(page.getByText(monthTitle(next()), { exact: true })).toBeVisible();
   await expect(page.getByText("Toque los días para editarlos")).toBeVisible();
   await expect(panel(page)).toHaveCount(0);
-  await expect(day(page, on(10))).toContainText("95\u00a0000");
+  await expectFree(page, on(10));
 
   for (const d of [10, 11, 12]) await day(page, on(d)).click();
   await expect(day(page, on(11))).toHaveAttribute("aria-pressed", "true");
@@ -197,7 +204,7 @@ test("tres días → Ocupado → se guarda al instante (< 50 ms), sigue al recar
   await expect(panel(page).getByRole("button", { name: "Ocupado" })).toHaveAttribute("aria-pressed", "true");
   await panel(page).getByRole("button", { name: "Disponible" }).click();
   await saveBtn(page).click();
-  await expect(day(page, on(10))).toContainText("95\u00a0000");
+  await expectFree(page, on(10));
   await expect.poll(async () => (await h.calendar("owner").days(casa.id)).map((d) => d.day)).toEqual([on(11), on(12)]);
 });
 
@@ -326,7 +333,13 @@ test("casillas de 47 × 92 px con el precio completo; ₡ | $ cambia los precios
   const box = (await day(page, on(15)).boundingBox())!;
   expect(Math.round(box.height)).toBe(92);
   expect(Math.abs(box.width - 47)).toBeLessThanOrEqual(1);
-  await expect(day(page, on(15))).toHaveText("1595\u00a0000");
+  // Precios por fecha apagados: la casilla solo con el número y el precio base en la leyenda, que también cambia de moneda.
+  const legend = page.locator(".month-legend");
+  if (BUILD_FLAGS.datePrices) await expect(day(page, on(15))).toHaveText("1595\u00a0000");
+  else {
+    await expect(day(page, on(15))).toHaveText("15");
+    await expect(legend).toContainText("₡95\u00a0000 / noche");
+  }
   // La fila L K M J V S D en la misma rejilla: cada letra centrada sobre su columna.
   const letter = (await page.locator(".cal-weekdays .wd").nth(4).boundingBox())!;
   const friday = (await page.locator(`[data-month="${next()}"] .month-week`).nth(1).locator(".day").nth(4).boundingBox())!;
@@ -334,15 +347,22 @@ test("casillas de 47 × 92 px con el precio completo; ₡ | $ cambia los precios
   await page.screenshot({ path: "test-results/calendario-vertical.png" });
 
   await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Dólares" }).click();
-  await expect(day(page, on(15))).toContainText(/^15\$\d+$/);
-  await expect(day(page, on(15))).toHaveAccessibleName(/, \$\d+$/);
+  if (BUILD_FLAGS.datePrices) {
+    await expect(day(page, on(15))).toContainText(/^15\$\d+$/);
+    await expect(day(page, on(15))).toHaveAccessibleName(/, \$\d+$/);
+  } else {
+    await expect(legend).toContainText(/\$\d+ \/ noche/);
+    await expect(day(page, on(15))).toHaveText("15");
+  }
   await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Colones" }).click();
-  await expect(day(page, on(15))).toHaveText("1595\u00a0000");
+  if (BUILD_FLAGS.datePrices) await expect(day(page, on(15))).toHaveText("1595\u00a0000");
+  else await expect(legend).toContainText("₡95\u00a0000 / noche");
 });
 
 // Revisión de escritorio 2026-11-13, tanda 4 (M2): en escritorio el mes cabe con casillas de 64 px, y cada día lleva su
 // precio con el símbolo; el especial, en terracota (Ana: el precio en todos los días).
 test("en escritorio: casillas de 64 px con el precio y su símbolo en todos los días", async ({ page }) => {
+  onlyDatePrices();
   const casa = await seedHouse("Casa Escritorio");
   await h.putDay(casa.id, { day: on(20), available: true, specialPriceCrc: 150000 });
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -442,7 +462,7 @@ test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última el
   await list.getByRole("option", { name: "Casa Beta" }).click();
   await expect(page.getByRole("button", { name: /Casa Beta/ })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`casa=${b.id}`));
-  await expect(day(page, on(5))).toContainText("95\u00a0000");
+  await expectFree(page, on(5));
   await expect(panel(page)).toHaveCount(0);
   await expect(grid(page).first()).toBeVisible();
 
@@ -453,13 +473,13 @@ test("cambiar de casa no mezcla días; la rechazada no se ofrece y la última el
 test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo de la base muestra su mensaje", async ({ page, context }) => {
   const casa = await seedHouse("Casa Sin Red");
   await open(page, casa.id);
-  await expect(day(page, on(8))).toContainText("95\u00a0000");
+  await expectFree(page, on(8));
   await day(page, on(8)).click();
   await panel(page).getByRole("button", { name: "Ocupado" }).click();
   await context.setOffline(true);
   await saveBtn(page).click();
   await expect(page.locator(".toast")).toHaveText(OFFLINE);
-  await expect(day(page, on(8))).toContainText("95\u00a0000");
+  await expectFree(page, on(8));
   await context.setOffline(false);
 
   await page.route("**/rest/v1/rpc/save_listing_days", (route) =>
@@ -469,7 +489,7 @@ test("sin red: el cambio vuelve atrás y avisa «Sin conexión…»; un rechazo 
   await panel(page).getByRole("button", { name: "Ocupado" }).click();
   await saveBtn(page).click();
   await expect(page.locator(".toast").last()).toHaveText("La casa está pausada. Vuelva a publicarla para cambiar el calendario.");
-  await expect(day(page, on(9))).toContainText("95\u00a0000");
+  await expectFree(page, on(9));
   expect(await h.calendar("owner").days(casa.id)).toEqual([]);
 });
 

@@ -305,7 +305,8 @@ Con las habitaciones apagadas, C24, C30, A2, A5, A23 y las comprobaciones de esc
 ### 2.7d Precios por fecha apagados (feature flag, valor inicial)
 
 - [ ] **C54** Como anfitrión, en «Calendario» elija uno o varios días → el panel tiene «Disponible / Ocupado» y «Guardar cambios», sin campo de precio ni «Usar el precio base»; marque Ocupado y guarde → se guarda como siempre.
-- [ ] **C55** En una casa con un precio especial guardado antes (★), la ficha y el calendario del anfitrión enseñan el precio por noche de la casa en ese día, sin ★, y el total de una estancia que lo incluye es precio por noche × noches.
+- [ ] **C55** En una casa con un precio especial guardado antes (★), la ficha y el calendario del anfitrión no enseñan precio en ese día (ni en ninguno), sin ★, y el total de una estancia que lo incluye es precio por noche × noches.
+- [ ] **C56** En la ficha y en el calendario del anfitrión, las casillas llevan solo el número del día y la leyenda dice «Disponible · Ocupado · ₡45 000 / noche» con el precio por noche de la casa: en la ficha, debajo del calendario; en el del anfitrión, arriba. Con «$» elegido, la leyenda sale en dólares. Una casa solo mensual no lleva precio en la leyenda. Con `FLAG_PRECIOS_POR_FECHA_PRUEBAS` encendida, cada casilla vuelve a llevar su precio y la leyenda no lo dice.
 
 ### 2.8 Sin resultados y «¿No encuentra lo que busca?»
 

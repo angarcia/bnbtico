@@ -37,7 +37,7 @@ import { reportError } from "../../shared/beacon";
 import { costaRicaToday } from "../../domain/inquiry";
 import { type Listing } from "../../domain/listing";
 import { resumeStep } from "../../domain/publish-rules";
-import { formatCRC } from "../../domain/money";
+import { formatCRC, formatMoney } from "../../domain/money";
 import { FLAGS } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { whenIdle } from "../../shared/idle";
@@ -270,7 +270,8 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
           {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">{desktop ? "Pulse" : "Toque"} los días para editarlos</p>}
           <CurrencySwitch className="calendar-local-currency" />
         </div>
-        <AirbnbLegend days={query.data} />
+        {/* Precios por fecha apagados (feature flag): el precio base en la leyenda y las casillas sin precio. */}
+        <AirbnbLegend days={query.data} price={!FLAGS.datePrices && base !== null ? formatMoney(base, currency, fx.crcPerUsd) : undefined} />
         {editable && sel.days.length > 0 ? (
           <Panel
             sel={sel}
@@ -304,6 +305,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
               today={today}
               days={days}
               base={base}
+              prices={FLAGS.datePrices}
               currency={currency}
               showCurrencySymbol={desktop}
               fx={fx.crcPerUsd}

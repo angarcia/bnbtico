@@ -153,5 +153,22 @@ describe("MonthGrid", () => {
     const out = renderToString(<MonthLegend />);
     expect(out).toMatch(/Disponible.*Ocupado/);
     expect(out).not.toContain("★");
+    expect(out).not.toContain("noche");
+  });
+
+  // Precios por fecha apagados (feature flag): las casillas solo con el número y el precio base en la leyenda.
+  it("sin precios por día: casillas solo con el número, sin precio en el nombre accesible, y la leyenda con el precio base", () => {
+    const imported = days([...DAYS.values(), { day: "2026-12-13", available: false, specialPriceCrc: 75000, imported: true, manualAvailable: false }]);
+    for (const props of [{}, { range: { arrival: null, departure: null } }, { onSelect: undefined }, { days: imported, importedIcon: <I.link size={16} /> }]) {
+      const out = html({ ...props, prices: false });
+      for (const n of [15, 24, 13]) {
+        expect(sub(cell(out, n))).toBe("");
+        expect(cell(out, n)).not.toMatch(/₡|precio distinto/);
+      }
+    }
+    expect(sub(cell(html(), 15))).toBe("95 000");
+    const legend = renderToString(<MonthLegend price="₡95 000" />).replace(/<[^>]+>/g, "");
+    expect(legend).toBe("DisponibleOcupado₡95 000 / noche");
+    expect(renderToString(<AirbnbLegend days={[]} price="₡95 000" />)).toContain("₡95 000 / noche");
   });
 });

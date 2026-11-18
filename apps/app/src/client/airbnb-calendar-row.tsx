@@ -28,8 +28,8 @@ export function countCalendarOrigins(days: ReadonlyMap<string, CalendarDay>, sel
   return { importedCount, manualCount };
 }
 
-export function AirbnbLegend({ days }: { days: readonly CalendarDay[] | undefined }) {
-  return <MonthLegend extra={days?.some(day => day.imported) ? <span><I.link size={16} />Bloqueado por Airbnb</span> : null} />;
+export function AirbnbLegend({ days, price }: { days: readonly CalendarDay[] | undefined; price?: string }) {
+  return <MonthLegend price={price} extra={days?.some(day => day.imported) ? <span><I.link size={16} />Bloqueado por Airbnb</span> : null} />;
 }
 
 /** Se carga al editar noches importadas; solo modifica la capa manual. */
