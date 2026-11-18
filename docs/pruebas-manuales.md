@@ -387,7 +387,7 @@ Con las habitaciones apagadas, C24, C30, A2, A5, A23 y las comprobaciones de esc
 
 - [ ] En el popup de escritorio, introduzca un número de prueba sin cuenta. En el paso del nombre, use la flecha de arriba a la izquierda para volver al número dentro de la misma ventana. Compruebe que la X de arriba a la derecha cierra el popup.
 
-- [ ] En escritorio y sin sesión, pulse «Ingresar» entre el selector de moneda y «Ayuda por WhatsApp» en Explorar y Favoritos. Compruebe que se abre la ventana de WhatsApp sobre la pantalla actual. Pida el código y compruebe que aparece en la misma ventana con la flecha de regreso y la X. Al verificar desde Favoritos, debe regresar a Favoritos.
+- [ ] En escritorio y sin sesión, pulse «Ingresar» entre el selector de moneda y «Ayuda por WhatsApp» en Explorar y Favoritos. Compruebe que se abre la ventana de WhatsApp sobre la pantalla actual. Pida el código y compruebe que aparece en la misma ventana con la flecha de regreso y la X. Al verificar desde Favoritos, debe regresar a Favoritos. Con el código correcto, la ventana se cierra sola con la sesión iniciada (la barra ya no dice «Ingresar»); nunca se queda abierta con «Solicite un código nuevo para continuar.».
 
 - [ ] **C93** Con sesión de `8888 1234` toque la pestaña «Cuenta» → sin flecha ni título visible; tarjeta con iniciales, nombre, el número en su propia línea («+506 8888 1234»), «WhatsApp verificado» y debajo «Pronto podrá verificar también su identidad (opcional).»; no hay nada más sobre identidad.
 - [ ] En móvil, el título y el formulario de Ingresar empiezan a 12 px del borde, igual que la cabecera y las tarjetas de 3bstays. Cuenta tiene 3 px de margen lateral con sesión. Revise que el formulario de ingreso y la tarjeta de perfil quepan a 320 px.

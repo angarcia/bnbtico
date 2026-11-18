@@ -27,7 +27,7 @@ export function CodigoScreen() {
   return <CodeForm phone={pending.phone} mode={pending.mode} sentAt={pending.sentAt} next={next} />;
 }
 
-function CodeForm({ phone, mode, sentAt, next, inDialog = false }: { phone: string; mode: "register" | "login"; sentAt: number; next?: string; inDialog?: boolean }) {
+function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { phone: string; mode: "register" | "login"; sentAt: number; next?: string; inDialog?: boolean; onDone?: () => void }) {
   const navigate = useNavigate();
   const goTo = useGoTo();
   const queryClient = useQueryClient();
@@ -59,6 +59,8 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false }: { phone: stri
       // escribirle a un propietario (revisión UX C2) o a guardar la casa que se publica: ahí se sigue sin interponerse.
       if (mode === "register" && !contact && !publish) await navigate({ to: "/cuenta/lista", search: next ? { next } : {}, replace: true });
       else await goTo(next ?? "/explorar");
+      // En la ventana de escritorio, ya con sesión y en su sitio: se cierra.
+      onDone?.();
     } catch (err) {
       setError(message(err));
       setBusy(false);
@@ -149,9 +151,12 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false }: { phone: stri
   );
 }
 
-export function DialogCodeForm({ next }: { next?: string }) {
-  const pending = pendingOtp();
-  return pending ? <CodeForm {...pending} next={next} inDialog /> : (
+/** Ventana de Ingresar en escritorio. El número pendiente se lee al abrir: al verificar se borra, y releerlo enseñaría
+ *  «Solicite un código nuevo» con la sesión ya iniciada mientras se lee la lista de casas y se navega. Al terminar, `onDone`
+ *  cierra la ventana. */
+export function DialogCodeForm({ next, onDone }: { next?: string; onDone: () => void }) {
+  const [pending] = useState(pendingOtp);
+  return pending ? <CodeForm {...pending} next={next} inDialog onDone={onDone} /> : (
     <div className="stack flow">
       <p role="status">Solicite un código nuevo para continuar.</p>
     </div>

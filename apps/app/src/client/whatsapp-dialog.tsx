@@ -32,7 +32,7 @@ export function WhatsAppDialog({ mode, next, onClose }: { mode: "account" | "pub
       </div>
       <Suspense fallback={<p role="status">Cargando…</p>}>
         {codeSent ? (
-          <DialogCodeForm next={next} />
+          <DialogCodeForm next={next} onDone={onClose} />
         ) : (
           <SignInForm next={next} mode={mode} nameStep={{ phone: namePhone, setPhone: setNamePhone }} onCodeSent={() => setCodeSent(true)} />
         )}
