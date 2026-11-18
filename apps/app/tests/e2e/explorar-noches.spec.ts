@@ -78,3 +78,15 @@ test("la hoja de contacto redacta el mensaje con las noches de la búsqueda", as
   await page.getByRole("button", { name: "Contactar por WhatsApp" }).first().click();
   await expect(page.getByTestId("contact-message")).toHaveText("Hola, vi Casa Almendro en 3bstays y me interesa. ¿Está disponible para 4 noches y 2 personas? Gracias.");
 });
+
+test("en escritorio, el campo «Noches» abre su panel (diferido) y aplica las noches", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Noches", exact: true }).click();
+  const panel = page.getByRole("region", { name: "Noches" });
+  await expect(panel.getByRole("button", { name: "Aplicar noches" })).toBeDisabled();
+  await panel.getByRole("button", { name: "1 semana" }).click();
+  await panel.getByRole("button", { name: "Aplicar noches" }).click();
+  await expect(page).toHaveURL(/noches=7/);
+  await expect(price(page, "Casa Almendro")).toHaveText("≈ ₡315 000 por 7 noches");
+});

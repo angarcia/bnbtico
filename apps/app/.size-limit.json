@@ -41,6 +41,7 @@
       "!dist/client/assets/reservation-calendar-*.js",
       "!dist/client/assets/whatsapp-dialog-*.js",
       "!dist/client/assets/buscar-*.js",
+      "!dist/client/assets/nights-picker-*.js",
       "!dist/client/assets/explore-map-leaflet-*.js",
       "!dist/client/assets/explore-map-full-*.js",
       "!dist/client/assets/casa-editable-*.js",
@@ -68,6 +69,12 @@
       "!dist/client/assets/editor-port-*.js"
     ],
     "limit": "161 KB",
+    "gzip": true
+  },
+  {
+    "name": "Número de noches · trozo diferido (el contador y los atajos de «¿Cuántas noches?»: lo comparten la búsqueda del teléfono y el panel «Noches» de escritorio)",
+    "path": "dist/client/assets/nights-picker-*.js",
+    "limit": "1 KB",
     "gzip": true
   },
   {

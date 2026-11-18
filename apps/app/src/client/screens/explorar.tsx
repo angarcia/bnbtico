@@ -17,7 +17,6 @@ import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
-import { NightsPicker } from "../../shared/nights-picker";
 import { revealClass } from "../motion";
 import { useDesktop } from "../desktop";
 import { ListingCard } from "../listing-card";
@@ -36,6 +35,9 @@ const PublishPromoCard = lazy(() => import("../publish-promo").then((m) => ({ de
 const MapScreen = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapScreen })));
 const MapCard = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapCard })));
 const ZonePicker = lazy(() => import("./buscar").then((m) => ({ default: m.Donde })));
+// El contador de noches del panel de escritorio (modo noches): diferido, como la zona; trozo nights-picker-*, que comparte
+// con la búsqueda del teléfono y mide su propia entrada de .size-limit.json.
+const NightsPicker = lazy(() => import("../../shared/nights-picker").then((m) => ({ default: m.NightsPicker })));
 const DesktopFilters = lazy(() => import("./filtros").then((m) => ({ default: m.DesktopFilters })));
 
 const route = getRouteApi("/_tabs/explorar");
@@ -109,7 +111,9 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
                 </Suspense>
               ) : SEARCH_MODE === "nights" ? (
                 <>
-                  <NightsPicker nights={draft.nights} onChange={(nights) => setDraft({ ...draft, nights })} />
+                  <Suspense fallback={<p role="status">Cargando…</p>}>
+                    <NightsPicker nights={draft.nights} onChange={(nights) => setDraft({ ...draft, nights })} />
+                  </Suspense>
                   <div className="row between">
                     <button type="button" className="btn-text" onClick={() => apply({ ...draft, nights: 0 })}>Quitar noches</button>
                     <button type="button" className="btn btn-primary" disabled={!draft.nights} onClick={() => apply(draft)}>Aplicar noches</button>

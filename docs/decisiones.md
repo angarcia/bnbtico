@@ -1,3 +1,7 @@
+## 2026-11-17 · El contador de noches, en un trozo diferido
+
+El primer despliegue de las feature flags (#75) se paró en la puerta de tamaño: el JS inicial privado midió 161,13 kB en CI con un límite de 161 kB (en local, 160,96 kB). El contador de «¿Cuántas noches?» del panel de escritorio pasa a cargarse en diferido, como el selector de zona, en el trozo `nights-picker-*`, que comparte con la búsqueda del teléfono y tiene su propia entrada en `.size-limit.json` (1 kB; mide 0,67 kB). El JS inicial baja unos 0,24 kB. El presupuesto de 161 kB no cambia.
+
 ## 2026-11-17 · Verificación de las feature flags
 
 Historia #64. La matriz de configuraciones (inicial, fechas, las dos búsquedas, ninguna, precios, habitaciones e iCal) queda en `docs/pruebas-manuales.md`, sección 5b, para recorrerla en pruebas.3bstays.com con las variables de GitHub y «Re-run». Lo verificado en local, con su entorno, está en `.scratch/feature-flags/verificacion.md`: A a E correctos; F (iCal) queda pendiente de #63, de prioridad baja. Se añade `explorar-sin-estancia.spec.ts` para el modo sin estancia, que solo corre con un build en ese modo (CI no lo tiene).
