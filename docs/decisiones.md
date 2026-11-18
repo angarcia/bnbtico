@@ -1,3 +1,7 @@
+## 2026-11-17 · Sin copia diaria mientras solo haya datos de prueba
+
+Ana: el workflow «copia» se queda como está, sin secretos y en verde con el aviso «Copia omitida», porque `bnbtico-pruebas` solo tiene datos de prueba. Se descartó, por ahora, hacerlo fallar en rojo cuando falte un secreto: mandaría un correo de fallo cada noche por algo que no se necesita. Activarla (secretos, primera copia a mano y el rojo ante un secreto que falte) queda en `docs/antes-de-produccion.md`. Coste previsto con el plan gratuito de R2: $0.
+
 ## 2026-11-17 · La hoja de contacto: fechas o número de noches
 
 Ana, tras probar las feature flags en pruebas: la hoja solo dejaba elegir fechas, y las noches de Explorar llegaban al mensaje sin poder cambiarlas. Entre dos opciones con capturas (`.scratch/feature-flags/diseno/contacto-noches/`), una línea de noches bajo las fechas o un selector, eligió el selector **«Fechas | Número de noches»** arriba de la hoja: una cosa u otra. Con «Número de noches», el contador y los atajos de Explorar sustituyen a Llegada y Salida y el mensaje dice «¿Está disponible para 7 noches y 2 personas?»; pasar a noches quita las fechas, también las de la ficha (son las mismas de la pestaña), y pasar a fechas quita las noches. La hoja abre en noches si llegan noches de la búsqueda y ninguna fecha. Las noches se guardan con el borrador, así que sobreviven a Ingresar. La consulta registrada no tiene columna de noches: van solo en el mensaje. El selector sale con la flag del número de noches encendida.

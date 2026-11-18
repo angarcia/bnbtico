@@ -84,3 +84,13 @@ El paso «Límites manuales de Airbnb» del despliegue solo valida `AIRBNB_MANUA
 ## Feature flags en producción (2026-11-17)
 
 El paso «Feature flags en la base» del despliegue solo valida las variables `FLAG_*_PRODUCCION` mientras producción no tenga base propia. Al crear `3bstays-prod`, darle la URL y la clave de servicio de esa base para que escriba `feature_flags`; hasta entonces, la base de producción tendría los valores iniciales aunque el build use otros (ver `docs/feature-flags.md`).
+
+## Copia diaria de la base (2026-11-17)
+
+El workflow «copia» (`.github/workflows/backup.yml`) está montado pero no copia nada: faltan sus secretos y, sin ellos, termina en verde con el aviso «Copia omitida». Se deja así a propósito mientras solo haya datos de prueba (Ana, 2026-11-17). Antes de abrir producción:
+1. En Cloudflare → R2, el bucket privado `bnbtico-copias` y un token de API de R2 «Object Read & Write» limitado a ese bucket (Access Key ID y Secret Access Key se ven una sola vez).
+2. En GitHub, los secretos `SUPABASE_DB_URL` (cadena del Session pooler de `3bstays-prod`), `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`, y la variable `BACKUP_PREFIX=3bstays-prod` (ver `docs/copias-de-seguridad.md`).
+3. Lanzar «copia» a mano una vez y comprobar en el resumen la copia con sus tablas.
+4. Entonces, que falte un secreto haga fallar el workflow en rojo (hoy solo avisa en verde y nadie se entera), con su prueba en `apps/app/tests/unit/`.
+
+Coste: con el plan gratuito de R2 (10 GB, sin cobro por descarga) y copias de pocos MB guardadas 30 días, $0.

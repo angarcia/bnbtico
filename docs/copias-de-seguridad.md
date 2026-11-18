@@ -12,7 +12,7 @@ Cloudflare R2 con GitHub Actions (`.github/workflows/backup.yml`, workflow «cop
   migraciones del repositorio reconstruyen esquema, RLS, grants y funciones.
 - Comprueba que la copia tiene más de 10 tablas con datos, la sube a `r2://<R2_BUCKET>/<BACKUP_PREFIX>/<prefijo>-AAAA-MM-DD.dump`,
   comprueba el tamaño en R2 y borra las copias de más de **30 días** de ese prefijo (por la fecha del nombre).
-- Sin los secretos, el job termina en verde con un aviso «Copia omitida: faltan secretos …» en el resumen.
+- Sin los secretos, el job termina en verde con un aviso «Copia omitida: faltan secretos …» en el resumen. Hoy es así a propósito: sin copias mientras solo haya datos de prueba; los pasos para activarla están en `docs/antes-de-produccion.md`.
 
 ## Secretos y variables de GitHub
 
