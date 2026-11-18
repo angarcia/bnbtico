@@ -291,7 +291,8 @@ Con los valores iniciales de las flags, C34, C35, C38, C41 y C42 no aplican (no 
 - [ ] **C46** Toque «1 mes» y busque → una casa con precio al mes dice ese precio «por 30 noches»; una sin precio al mes, precio por noche × 30.
 - [ ] **C47** Recargue la página y abra una ficha y vuelva atrás → la búsqueda conserva «4 noches» (`?noches=4` en la dirección). Abra `…/explorar?noches=91` → Explorar sin noches y sin aviso.
 - [ ] **C48** Abra un enlace viejo con fechas (`…/explorar?llegada=…&salida=…`) → Explorar no dice las fechas ni deja fuera casas.
-- [ ] **C49** Desde Explorar con 4 noches y 2 personas abra una ficha y «Contactar por WhatsApp» → el mensaje dice «¿Está disponible para 4 noches y 2 personas?»; si elige fechas en la hoja, el mensaje pasa a las fechas.
+- [ ] **C49** Desde Explorar con 4 noches y 2 personas abra una ficha y «Contactar por WhatsApp» → la hoja abre en «Número de noches» (selector «Fechas | Número de noches» arriba), sin Llegada ni Salida, con el contador en 4 y los atajos; el mensaje dice «¿Está disponible para 4 noches y 2 personas?». Toque «1 semana» → «para 7 noches». Toque «Fechas» → vuelven Llegada y Salida y el mensaje deja de decir noches; elija fechas → el mensaje dice las fechas. Vuelva a «Número de noches» → las fechas se quitan (también en el calendario de la ficha) y el contador queda en «–».
+- [ ] **C49b** Sin búsqueda por noches (entrando directo a la ficha) la hoja abre en «Fechas». Con noches elegidas y sin sesión, «Abrir WhatsApp» lleva a Ingresar; al volver, la hoja conserva las noches.
 - [ ] **C50** En laptop, el campo «Noches» (icono de luna) abre un panel con el mismo contador y atajos, «Quitar noches» y «Aplicar noches» (desactivado sin noches). Filtros, fila «Noches» de «Su búsqueda».
 
 ### 2.7c Habitaciones apagadas (feature flag, valor inicial)

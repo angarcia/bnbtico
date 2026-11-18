@@ -31,6 +31,7 @@ import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 import { useDesktop } from "../client/desktop";
+import { FLAGS } from "./flags";
 
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
@@ -103,7 +104,7 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
   if (desktop) {
     return (
       <Suspense fallback={<p className="small muted" role="status">Cargando contacto…</p>}>
-        <ContactSheet listing={listing} days={days} navigate={navigate} autoSend={autoSend} inline
+        <ContactSheet listing={listing} days={days} navigate={navigate} autoSend={autoSend} nightsChoice={FLAGS.exploreNights} inline
           onClose={() => { setAutoSend(false); setOpen(false); }} />
       </Suspense>
     );
@@ -131,6 +132,7 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
             days={days}
             navigate={navigate}
             autoSend={autoSend}
+            nightsChoice={FLAGS.exploreNights}
             onClose={() => {
               returnFocus.current = true;
               setAutoSend(false);

@@ -96,6 +96,31 @@ test("la hoja de contacto redacta el mensaje con las noches de la búsqueda", as
   await expect(page.getByTestId("contact-message")).toHaveText("Hola, vi Casa Almendro en 3bstays y me interesa. ¿Está disponible para 4 noches y 2 personas? Gracias.");
 });
 
+// Opción B de Ana (2026-11-17): «Fechas | Número de noches», una cosa u otra.
+test("en la hoja de contacto se elige entre fechas y número de noches; con noches, el mensaje las dice y no hay fechas", async ({ page }) => {
+  await page.goto("/explorar?noches=4&ppl=2");
+  await page.getByRole("link", { name: /^Casa Almendro/ }).click();
+  await page.getByRole("button", { name: "Contactar por WhatsApp" }).first().click();
+  const sheet = page.getByRole("dialog");
+  const stay = sheet.getByRole("group", { name: "Cómo indicar la estancia" });
+  const message = sheet.getByTestId("contact-message");
+  // Llegan noches de la búsqueda y ninguna fecha: abre en noches, sin las casillas de llegada y salida.
+  await expect(stay.getByRole("button", { name: "Número de noches" })).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet.getByRole("button", { name: /^Llegada/ })).toHaveCount(0);
+  await sheet.getByRole("group", { name: "Atajos de noches" }).getByRole("button", { name: "1 semana" }).click();
+  await expect(message).toHaveText("Hola, vi Casa Almendro en 3bstays y me interesa. ¿Está disponible para 7 noches y 2 personas? Gracias.");
+  await sheet.getByRole("button", { name: "Una noche más" }).click();
+  await expect(message).toContainText("para 8 noches y 2 personas");
+
+  // Con fechas, las noches se quitan y vuelven las casillas.
+  await stay.getByRole("button", { name: "Fechas" }).click();
+  await expect(stay.getByRole("button", { name: "Fechas" })).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet.getByRole("button", { name: /^Llegada/ })).toBeVisible();
+  await expect(message).toHaveText("Hola, vi Casa Almendro en 3bstays y me interesa. ¿Está disponible para 2 personas? Gracias.");
+  await stay.getByRole("button", { name: "Número de noches" }).click();
+  await expect(sheet.locator(".contact-nights .num")).toHaveText("–");
+});
+
 test("en escritorio, el campo «Noches» abre su panel (diferido) y aplica las noches", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/explorar");

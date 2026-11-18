@@ -42,6 +42,7 @@ import { useCurrency } from "./currency";
 import { useFx } from "./fx";
 import { I } from "./icons";
 import { usePrivateSheet } from "../client/private-sheet";
+import { NightsPicker } from "./nights-picker";
 import { RangeCalendar } from "./range-calendar";
 import { stayDates } from "./stay-dates";
 
@@ -61,8 +62,11 @@ function filteredPeople(max: number): number | null {
 
 /** `autoSend`: la hoja reabre al volver de verificar el WhatsApp y sigue sola hacia WhatsApp (revisión UX C2), solo si lo
  *  escrito sigue guardado: con el borrador caducado se queda abierta con el mensaje por defecto y espera el toque.
- *  `days`: los días de la casa (la caché de la ficha); undefined mientras se leen, null si no se pudieron leer. */
-export function ContactSheet({ listing, days, onClose, navigate, autoSend, inline = false }: { listing: PublicListing; days: readonly CalendarDay[] | null | undefined; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean; inline?: boolean }) {
+ *  `days`: los días de la casa (la caché de la ficha); undefined mientras se leen, null si no se pudieron leer.
+ *  `nightsChoice`: la flag del número de noches (`FLAGS.exploreNights`), que pasa quien abre la hoja: importar `shared/flags`
+ *  aquí junta ese módulo con las reglas del rango y el trozo `range-*` pasa a llamarse `flags-*`, que la puerta de tamaño
+ *  cuenta como JS inicial. Con ella, «Fechas | Número de noches». */
+export function ContactSheet({ listing, days, onClose, navigate, autoSend, inline = false, nightsChoice }: { listing: PublicListing; days: readonly CalendarDay[] | null | undefined; onClose: () => void; navigate: (href: string) => void; autoSend?: boolean; inline?: boolean; nightsChoice: boolean }) {
   const title = listing.title;
   const store = useRef(webStore("session")).current;
   const key = contactDraftKey(listing.publicId);
@@ -79,6 +83,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
       return dates ? redraft(start, { type: "fields", patch: dates }, title) : start;
     },
   );
+  // Fechas o número de noches, una cosa u otra (opción B de Ana, 2026-11-17), con el número de noches de Explorar encendido.
+  // Abre en noches si llegan noches de la búsqueda y ninguna fecha.
+  const [stayMode, setStayMode] = useState<"dates" | "nights">(() => (nightsChoice && !draft.arrival && draft.nights ? "nights" : "dates"));
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [kb, setKb] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -118,7 +125,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
     return stayDates.subscribe(() => {
       if (writingDates.current) return;
       const dates = stayDates.read();
-      dispatch({ type: "fields", patch: dates ?? { arrival: null, departure: null } });
+      // Fechas elegidas en el calendario de la ficha: la hoja pasa a fechas y deja las noches.
+      dispatch({ type: "fields", patch: dates ? { ...dates, nights: null } : { arrival: null, departure: null } });
+      if (dates) setStayMode("dates");
       setRejected(false);
     });
   }, [inline]);
@@ -146,6 +155,16 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
     stayDates.write(complete);
     writingDates.current = false;
     if (complete) setPicking(false);
+  }
+
+  function chooseStay(mode: "dates" | "nights") {
+    if (mode === stayMode) return;
+    setStayMode(mode);
+    // Una cosa u otra: con noches se quitan las fechas (también las de la ficha); con fechas, las noches.
+    if (mode === "nights") {
+      setPicking(false);
+      changeDates({ arrival: null, departure: null });
+    } else change({ type: "fields", patch: { nights: null } });
   }
 
   // Al salir del campo, el sitio extra se quita un poco después: si se quitara al instante, la hoja encogería entre el
@@ -231,6 +250,21 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           </button>}
         </div>
         <form onSubmit={onSubmit} noValidate>
+          {nightsChoice ? (
+            <div className="seg contact-stay" role="group" aria-label="Cómo indicar la estancia">
+              <button type="button" aria-pressed={stayMode === "dates"} onClick={() => chooseStay("dates")}>
+                Fechas
+              </button>
+              <button type="button" aria-pressed={stayMode === "nights"} onClick={() => chooseStay("nights")}>
+                Número de noches
+              </button>
+            </div>
+          ) : null}
+          {stayMode === "nights" ? (
+            <div className="stack gap-8 contact-nights">
+              <NightsPicker nights={draft.nights ?? 0} onChange={(nights) => change({ type: "fields", patch: { nights } })} />
+            </div>
+          ) : <>
           {/* Fechas con el calendario de «¿Cuándo?»: dos casillas que lo abren. */}
           <div className="dates">
             {(["arrival", "departure"] as const).map((field) => (
@@ -271,6 +305,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
               </div>
             </div>
           ) : null}
+          </>}
           {/* − / + como el paso 4 de publicar, con el campo editable en medio y tope en la capacidad (revisión UX A3). */}
           <div className="people-field">
             <label htmlFor="contact-people">Personas (opcional)</label>

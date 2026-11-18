@@ -6,6 +6,7 @@ import { firstName } from "../domain/person";
 import { track } from "../shared/beacon";
 import { I } from "../shared/icons";
 import { listingDaysQuery } from "../shared/listing-query";
+import { FLAGS } from "../shared/flags";
 
 // La hoja de contacto es la de la ficha, en su trozo: se pide al apuntar o tocar el botón, nunca en el JS inicial.
 const loadSheet = () => import("../shared/contact-sheet");
@@ -55,6 +56,7 @@ export function CardWhatsApp({ listing }: { listing: PublicListing }) {
             listing={listing}
             days={days.isError ? null : days.data}
             navigate={(href) => void router.navigate({ href })}
+            nightsChoice={FLAGS.exploreNights}
             onClose={() => {
               returnFocus.current = true;
               setOpen(false);

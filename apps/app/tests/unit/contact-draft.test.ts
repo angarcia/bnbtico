@@ -26,6 +26,7 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     const s = redraft(startDraft(TITLE), { type: "fields", patch: { arrival: "2026-12-20", departure: "2026-12-27", people: 4 } }, TITLE);
     expect(JSON.parse(storeContactDraft(s, true, NOW))).toEqual({
       people: 4,
+      nights: null,
       message: composeInquiryMessage(TITLE, { arrival: "2026-12-20", departure: "2026-12-27", people: 4 }),
       edited: false,
       open: true,
@@ -47,6 +48,18 @@ describe("borrador de la hoja guardado en la pestaña (30 min)", () => {
     expect(back.state).toEqual(s);
     const next = redraft(back.state, { type: "fields", patch: { people: 3 } }, TITLE);
     expect(next.message).toBe(composeInquiryMessage(TITLE, { people: 3 }));
+  });
+
+  // Hoja con «Número de noches» (opción B de Ana, 2026-11-17): las noches vuelven con el borrador, p. ej. tras Ingresar.
+  it("guarda las noches y vuelven con el mensaje que las dice; un borrador sin ellas vuelve sin noches", () => {
+    const s = redraft(startDraft(TITLE), { type: "fields", patch: { nights: 4, people: 2 } }, TITLE);
+    expect(s.message).toBe("Hola, vi Casa Manzanillo en 3bstays y me interesa. ¿Está disponible para 4 noches y 2 personas? Gracias.");
+    const back = restoreContactDraft(storeContactDraft(s, true, NOW), TITLE, NOW)!;
+    expect(back.state).toEqual(s);
+    const old = JSON.stringify({ people: 2, message: "x", edited: false, open: true, savedAt: NOW });
+    expect(restoreContactDraft(old, TITLE, NOW)!.state.nights).toBeNull();
+    const bad = JSON.stringify({ people: 2, nights: "4", message: "x", edited: false, open: true, savedAt: NOW });
+    expect(restoreContactDraft(bad, TITLE, NOW)!.state.nights).toBeNull();
   });
 
   it("el texto editado a mano se queda tras recargar, aunque luego cambien las fechas", () => {

@@ -177,6 +177,8 @@ export { contactDraftKey } from "./contact-return";
  *  ficha y la hoja (ronda de Ana 2 nov, ticket 08). Un borrador guardado antes con fechas vuelve sin ellas. */
 interface StoredContactDraft {
   people: number | null;
+  /** Las noches de «Número de noches» (sin fechas); los borradores de antes no las traen. */
+  nights?: number | null;
   message: string;
   edited: boolean;
   open: boolean;
@@ -184,7 +186,7 @@ interface StoredContactDraft {
 }
 
 export function storeContactDraft(s: ContactDraftState, open: boolean, now: number): string {
-  const stored: StoredContactDraft = { people: s.people, message: s.message, edited: s.edited, open, savedAt: now };
+  const stored: StoredContactDraft = { people: s.people, nights: s.nights, message: s.message, edited: s.edited, open, savedAt: now };
   return JSON.stringify(stored);
 }
 
@@ -201,7 +203,8 @@ export function restoreContactDraft(raw: string | null, title: string, now: numb
   if (typeof v.savedAt !== "number" || now - v.savedAt > CONTACT_DRAFT_TTL_MS) return null;
   if (!(v.people === null || typeof v.people === "number")) return null;
   if (typeof v.message !== "string" || typeof v.edited !== "boolean") return null;
-  const fresh = startDraft(title, { people: v.people as number | null });
+  const nights = typeof v.nights === "number" && Number.isInteger(v.nights) && v.nights > 0 ? v.nights : null;
+  const fresh = startDraft(title, { people: v.people as number | null, nights });
   const state = v.edited ? { ...fresh, message: v.message, edited: v.message !== fresh.composed } : fresh;
   return { state, open: v.open === true };
 }
