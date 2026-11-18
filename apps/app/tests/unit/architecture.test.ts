@@ -109,6 +109,24 @@ describe("arquitectura", () => {
     expect(offenders).toEqual([]);
   });
 
+  // La puerta de tamaño no cuenta listing-cache-* como JS inicial (.size-limit.json, 2026-11-17): solo lo piden las pantallas
+  // del propietario, el admin y publicar. Si el arranque lo importara de forma estática, la exclusión ocultaría ese peso.
+  it("el arranque del shell no importa la caché de las casas (listing-cache) de forma estática", () => {
+    const seen = new Set<string>();
+    const walk = (path: string) => {
+      if (seen.has(path)) return;
+      seen.add(path);
+      for (const spec of imports(path).filter((i) => i.startsWith("."))) {
+        const base = join(path, "..", spec);
+        const target = [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts"), join(base, "index.tsx")].find((p) => existsSync(p) && statSync(p).isFile());
+        if (target) walk(target);
+      }
+    };
+    walk(join(SRC, "client/start-shell.tsx"));
+    expect(seen.size).toBeGreaterThan(20);
+    expect([...seen].map((p) => relative(SRC, p)).filter((p) => p === "client/listing-cache.ts")).toEqual([]);
+  });
+
   it("el JS inicial de Explorar no arrastra trozos diferidos", () => {
     // Las importaciones dinámicas `import("…")` no las ve `imports()`: son las únicas permitidas hacia esos trozos.
     for (const path of ["domain/filters.ts", "domain/search.ts"].map((p) => join(SRC, p)).filter(existsSync)) {
