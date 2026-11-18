@@ -1,6 +1,13 @@
 import { expect, test } from "./helpers/test";
 import { TEST_PHONES } from "../db/local";
 import { enterCode, injectSession, signOut } from "./helpers/session";
+import { postgrestHarness } from "../db/postgrest-harness";
+
+// Con casas, la cuenta «other» tendría la barra del propietario, sin «3Btico». Otra ejecución (o un spec cortado a medias) puede
+// dejarle casas en la base local: se vacían antes, como en los demás specs, para no depender del estado previo.
+test.beforeAll(async () => {
+  await (await postgrestHarness()).reset();
+});
 
 test("3Btico se abre sin sesión y conserva la navegación a 320 px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
