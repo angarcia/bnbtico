@@ -33,10 +33,14 @@ export function NightsPicker({ nights, onChange }: { nights: number; onChange(ni
           </button>
         </span>
       </div>
-      <div className="nights-quick" role="group" aria-label="Atajos de noches">
+      {/* Como «Qué necesitan»: rejilla de dos columnas y el check en un hueco fijo, para que marcar no mueva nada. */}
+      <div className="feature-choices nights-quick" role="group" aria-label="Atajos de noches">
         {QUICK.map((q) => (
           <button key={q.nights} type="button" className="chip" aria-pressed={nights === q.nights} onClick={() => onChange(q.nights)}>
             {q.label}
+            <span className="feature-check" aria-hidden="true">
+              {nights === q.nights ? <I.check size={14} /> : null}
+            </span>
           </button>
         ))}
       </div>

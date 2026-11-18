@@ -118,8 +118,8 @@ html.map-open{overflow:hidden}
 .people-stepper{display:flex;align-items:center;gap:14px}
 .people-stepper button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
 .people-stepper button:disabled{border-color:var(--line);color:#A3ADA6;cursor:default}
-/* Atajos del número de noches (modo noches, diseño #59): chips con aria-pressed, en varias filas si no caben. */
-.nights-quick{display:flex;flex-wrap:wrap;gap:8px}
+/* Atajos del número de noches (modo noches, diseño #59): rejilla de «Qué necesitan» (.feature-choices), sin icono delante. */
+.nights-quick .chip{padding-inline-start:12px}
 .people-stepper b{min-width:24px;font-family:var(--display);font-size:24px;text-align:center}
 .people-stepper b.is-empty{color:var(--muted);font-family:var(--body);font-weight:400;font-size:18px}
 .explore-top .chiprow{align-items:center}

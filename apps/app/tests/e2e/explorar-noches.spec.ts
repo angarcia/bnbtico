@@ -53,6 +53,23 @@ test("elegir 4 noches: el total orientativo en las tarjetas, sin excluir casas o
   await expect(results(page)).toContainText("4 noches");
 });
 
+test("marcar un atajo no mueve los demás: rejilla de dos columnas con el check en su hueco, como «Qué necesitan»", async ({ page }) => {
+  await page.goto("/explorar/buscar?abrir=cuando");
+  const group = page.getByRole("group", { name: "Atajos de noches" });
+  const boxes = async () =>
+    Promise.all(["Fin de semana", "1 semana", "2 semanas", "1 mes"].map(async (name) => (await group.getByRole("button", { name }).boundingBox())!));
+  const before = await boxes();
+  const [weekend, week, twoWeeks] = before;
+  expect(week!.y).toBe(weekend!.y);
+  expect(twoWeeks!.y).toBeGreaterThan(weekend!.y);
+  expect(week!.width).toBe(weekend!.width);
+  for (const name of ["Fin de semana", "1 semana", "2 semanas", "1 mes"]) {
+    await group.getByRole("button", { name }).click();
+    await expect(group.getByRole("button", { name })).toHaveAttribute("aria-pressed", "true");
+    expect(await boxes()).toEqual(before);
+  }
+});
+
 test("los atajos y la regla mensual: «1 mes» son 30 noches y la casa con precio al mes se estima por meses", async ({ page }) => {
   await page.goto("/explorar/buscar?abrir=cuando");
   await page.getByRole("button", { name: "1 mes" }).click();
