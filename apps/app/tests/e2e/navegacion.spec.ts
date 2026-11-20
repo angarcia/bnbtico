@@ -96,7 +96,6 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
   await h.reset();
   casa = await h.seed({ status: "active", photos: 5, draft: { title: "Casa Cocles" } });
   await h.recordViews(casa.publicId, 4);
-  await h.recordTaps(casa.publicId, 2);
   await h.inquiries("other").create(casa.publicId, { arrival: null, departure: null, people: 2 });
   await page.goto("/propietario/actividad");
   await expect(page.getByTestId("activity-figures")).toHaveCount(0);
@@ -135,7 +134,7 @@ test("7 · con una casa activa: Consultas solo con las consultas; las cifras, en
 
   // Las cifras de 30 días, en el detalle de la casa, bajo la portada.
   await page.goto(`/propietario/casas/${casa.id}`);
-  await expect(page.getByTestId("listing-stats")).toHaveText(/Últimos 30 días.*4\s*visitas.*2\s*toques en WhatsApp.*1\s*consulta/s);
+  await expect(page.getByTestId("listing-stats")).toHaveText(/^Últimos 30 días\s*4\s*visitas\s*1\s*consulta$/);
 });
 
 test("7a · si las cifras no cargan, Consultas no se entera", async ({ page }) => {

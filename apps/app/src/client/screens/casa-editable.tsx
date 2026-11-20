@@ -190,14 +190,13 @@ function PaymentDueNote({ listing: l }: { listing: Listing }) {
   return <Notice as="div" tone="sun">{describe(l, { base: "" }).situation}</Notice>;
 }
 
-/** Las cifras de 30 días de la casa (visitas, toques en WhatsApp y consultas), bajo la portada: salieron de Consultas para
- *  quedarse aquí (revisión UX 2026-10-29, C1, Ana). Si el propietario no ve que su ficha funciona, en el mes 13 no paga. */
+/** Las cifras de 30 días de la casa (visitas y consultas), bajo la portada: salieron de Consultas para quedarse aquí
+ *  (revisión UX 2026-10-29, C1, Ana). Si el propietario no ve que su ficha funciona, en el mes 13 no paga. Una sola cifra de
+ *  contacto, las consultas registradas (2026-11-20): los toques en WhatsApp solo contaban la hoja abierta. */
 function StatsCard({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const desktop = useDesktop();
   const { data } = useQuery({ ...activityQuery(userId), enabled: !!userId });
   const a = data?.find((x) => x.listingId === l.id);
   const views = a?.views ?? 0;
-  const taps = a?.whatsappTaps ?? 0;
   const inquiries = a?.inquiries ?? 0;
   return (
     <Card layout="stack" placement="listing-stats" data-testid="listing-stats" aria-busy={!data || undefined}>
@@ -206,9 +205,6 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
         <div className="activity-figures">
           <p>
             <b className="num">{views}</b> <span>{views === 1 ? "visita" : "visitas"}</span>
-          </p>
-          <p>
-            <b className="num">{taps}</b> <span>{`${desktop ? "clic" : "toque"}${taps === 1 ? "" : "s"} en WhatsApp`}</span>
           </p>
           <p>
             <b className="num">{inquiries}</b> <span>{inquiries === 1 ? "consulta" : "consultas"}</span>

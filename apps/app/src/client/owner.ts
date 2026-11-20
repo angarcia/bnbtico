@@ -44,7 +44,7 @@ export async function fetchOwnListings(): Promise<Listing[]> {
   return list;
 }
 
-/** Visitas, toques en WhatsApp y consultas de 30 días de todas las casas propias (Actividad). */
+/** Visitas y consultas de 30 días de todas las casas propias (detalle de la casa y suscripción). */
 export const activityQuery = (userId: string) =>
   queryOptions({
     queryKey: ownActivityKey(userId),

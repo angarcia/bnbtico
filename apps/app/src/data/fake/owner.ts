@@ -186,7 +186,6 @@ export function createFakeOwnerListings(db: FakeDb, opts: { supabaseUrl: string;
           listingId: l.id,
           publicId: l.publicId,
           views: recent(db.views, l.publicId),
-          whatsappTaps: recent(db.taps, l.publicId),
           inquiries: db.inquiries.filter((i) => i.listingId === l.id && Date.parse(i.createdAt) > since).length,
         }));
     },

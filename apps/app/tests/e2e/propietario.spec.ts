@@ -171,25 +171,41 @@ test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha»,
   await expect(page).toHaveURL(/\/propietario\/casas$/);
 });
 
-test("visitas, toques y consultas de 30 días en el detalle de la casa, bajo la portada", async ({ page }) => {
+test("visitas y consultas de 30 días en el detalle de la casa, bajo la portada", async ({ page }) => {
   await page.goto(`/propietario/casas/${active.id}`);
-  // Revisión UX 2026-10-29 (C1): las tres cifras, en una tarjeta bajo la portada (salieron de Consultas).
+  // Revisión UX 2026-10-29 (C1): las cifras, en una tarjeta bajo la portada (salieron de Consultas). Desde el 2026-11-20
+  // (unificar estadísticas) son dos: visitas y consultas; los toques en WhatsApp ya no se enseñan.
   const stats = page.getByTestId("listing-stats");
-  await expect(stats).toHaveText(/Últimos 30 días\s*0\s*visitas\s*0\s*toques en WhatsApp\s*0\s*consultas/);
+  await expect(stats).toHaveText(/^Últimos 30 días\s*0\s*visitas\s*0\s*consultas$/);
   expect((await stats.boundingBox())!.y).toBeGreaterThan((await page.locator(".detail-photo").boundingBox())!.y);
   expect((await stats.boundingBox())!.y).toBeLessThan((await page.getByTestId("field-rows").boundingBox())!.y);
   expect((await stats.boundingBox())!.height).toBeGreaterThanOrEqual(130);
   expect((await stats.boundingBox())!.height).toBeLessThanOrEqual(150);
   await h.recordViews(active.publicId, 4);
   await h.recordViews(active.publicId, 2, 45);
+  const first = await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null });
+  // El mismo cliente antes de 7 días renueva la consulta: sigue siendo una.
+  await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: 2 });
+  const fresh = async () => {
+    await page.goto("/robots.txt");
+    await page.evaluate(() => new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase("3bstays");
+      req.onsuccess = req.onerror = req.onblocked = () => resolve();
+    }));
+    await page.goto(`/propietario/casas/${active.id}`);
+  };
+  await fresh();
+  await expect(page.getByTestId("listing-stats")).toHaveText(/^Últimos 30 días\s*4\s*visitas\s*1\s*consulta$/);
+  // Pasados 7 días, otra consulta: dos.
+  await h.backdateInquiry(first.inquiryId, 8);
   await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null });
-  await page.goto("/robots.txt");
-  await page.evaluate(() => new Promise<void>((resolve) => {
-    const req = indexedDB.deleteDatabase("3bstays");
-    req.onsuccess = req.onerror = req.onblocked = () => resolve();
-  }));
+  await fresh();
+  await expect(page.getByTestId("listing-stats")).toHaveText(/^Últimos 30 días\s*4\s*visitas\s*2\s*consultas$/);
+  // En escritorio, la misma tarjeta con las dos cifras.
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(`/propietario/casas/${active.id}`);
-  await expect(page.getByTestId("listing-stats")).toHaveText(/4\s*visitas\s*0\s*toques en WhatsApp\s*1\s*consulta/);
+  await expect(page.getByTestId("listing-stats")).toHaveText(/^Últimos 30 días\s*4\s*visitas\s*2\s*consultas$/);
+  await expect(page.getByTestId("listing-stats")).not.toContainText("WhatsApp");
 });
 
 // Revisión de escritorio 2026-11-13, tanda 4 (A8): «Añadir casa», «Calendario» y «Consultas» con texto en escritorio.

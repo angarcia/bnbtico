@@ -1123,7 +1123,7 @@ isOneToOne: true
       } },
 "owner_activity":
 { Args: Record<PropertyKey, never>; Returns: {
-              "inquiries": number,"listing_id": string,"public_id": string,"views": number,"whatsapp_taps": number
+              "inquiries": number,"listing_id": string,"public_id": string,"views": number
             }[]
                            },
 "owner_billing":

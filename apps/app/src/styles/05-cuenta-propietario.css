@@ -30,8 +30,8 @@
 
 /* ---------- Zona del propietario (pantallas 09, 10, 16 y 19, en el navegador) ---------- */
 .gap-10{gap:10px}.grow{flex:1}.block{display:block}.align-top{align-items:flex-start}
-/* Actividad: cifras de 30 días (tres columnas; en grande con una sola casa) y las últimas consultas */
-.activity-figures{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+/* Cifras de 30 días del detalle de la casa: visitas y consultas, en dos columnas (2026-11-20) */
+.activity-figures{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .activity-figures p{margin:0;display:flex;flex-direction:column;gap:2px;font-size:var(--fs-xs);color:var(--muted);line-height:1.25}
 .activity-figures b{font-family:var(--display);font-weight:var(--w-medium);font-size:22px;color:var(--fg);line-height:1.1}
 .activity-figures.lg{gap:12px}
@@ -166,7 +166,7 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 .editable-ficha .photo-pill{display:inline-flex;align-items:center;gap:8px;min-width:44px;min-height:44px;max-width:calc(100% - 24px);padding:8px 12px;background:var(--bg);color:var(--primary);border-radius:var(--r-control);white-space:normal;line-height:1.3}
 .editable-ficha .photo-pill>svg{flex:none}
 .editable-ficha .photo-pill>span{min-width:0;overflow-wrap:anywhere}
-.listing-stats.stack{gap:14px;min-height:138px;padding:14px;background:color-mix(in srgb,var(--sun) 14%,var(--bg));text-align:center}
+.listing-stats.stack{justify-content:center;gap:14px;min-height:138px;padding:14px;background:color-mix(in srgb,var(--sun) 14%,var(--bg));text-align:center}
 .listing-stats .activity-figures p{align-items:center;gap:6px}
 
 /* Perfil: un único acceso junto a los datos, con objetivo táctil suficiente. */

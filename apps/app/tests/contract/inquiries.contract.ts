@@ -152,6 +152,7 @@ export function inquiriesContract(name: string, makeHarness: () => Promise<Inqui
     });
 
     // Revisión UX A2: el propietario ve si su ficha funciona (visitas y consultas de 30 días), y nadie más.
+    // Unificar estadísticas (2026-11-20): una sola cifra de contacto, «Consultas» (filas de inquiries por created_at).
     it("estadísticas de 30 días de una casa: visitas y consultas, solo para su dueño", async () => {
       expect(await h.owner("owner").stats(house.id)).toEqual({ views: 0, inquiries: 0 });
       await h.recordViews(house.publicId, 3);
@@ -163,21 +164,43 @@ export function inquiriesContract(name: string, makeHarness: () => Promise<Inqui
       expect((await rejection(h.owner("other").stats(house.id))).message).toBe("No encontramos ese anuncio.");
     });
 
-    it("actividad de 30 días: una fila por casa propia, con visitas, toques y consultas; nada ajeno", async () => {
+    it("actividad de 30 días: una fila por casa propia, con visitas y consultas; nada ajeno", async () => {
       const newer = await h.seed({ status: "draft", draft: { title: "Borrador" } });
       const foreign = await h.seed({ status: "active", as: "other", draft: { title: "Ajena" } });
       await h.recordViews(house.publicId, 3);
       await h.recordViews(house.publicId, 2, 40);
-      await h.recordTaps(house.publicId, 2);
-      await h.recordTaps(house.publicId, 1, 31);
       await h.inquiries("other").create(house.publicId, draft());
       const rows = await h.owner("owner").ownerActivity();
       expect(rows).toHaveLength(2);
       expect(rows).toEqual(expect.arrayContaining([
-        { listingId: house.id, publicId: house.publicId, views: 3, whatsappTaps: 2, inquiries: 1 },
-        { listingId: newer.id, publicId: newer.publicId, views: 0, whatsappTaps: 0, inquiries: 0 },
+        { listingId: house.id, publicId: house.publicId, views: 3, inquiries: 1 },
+        { listingId: newer.id, publicId: newer.publicId, views: 0, inquiries: 0 },
       ]));
       expect((await h.owner("other").ownerActivity()).map((r) => r.publicId)).toEqual([foreign.publicId]);
+    });
+
+    it("consultas de 30 días: el mismo cliente en 7 días cuenta una; después, dos; sale a los 30 días", async () => {
+      const count = async () => ({
+        stats: (await h.owner("owner").stats(house.id)).inquiries,
+        activity: (await h.owner("owner").ownerActivity()).find((r) => r.listingId === house.id)!.inquiries,
+      });
+      const first = await h.inquiries("other").create(house.publicId, draft());
+      await h.inquiries("other").create(house.publicId, draft({ people: 2 }));
+      expect(await count()).toEqual({ stats: 1, activity: 1 });
+      await h.backdateInquiry(first.inquiryId, 8);
+      const second = await h.inquiries("other").create(house.publicId, draft());
+      expect(second.inquiryId).not.toBe(first.inquiryId);
+      expect(await count()).toEqual({ stats: 2, activity: 2 });
+      await h.backdateInquiry(first.inquiryId, 31);
+      expect(await count()).toEqual({ stats: 1, activity: 1 });
+    });
+
+    it("un intento de contacto que la base rechaza no cuenta como consulta", async () => {
+      expect((await rejection(h.inquiries("anon").create(house.publicId, draft()))).kind).toBe("session");
+      await rejection(h.inquiries("owner").create(house.publicId, draft()));
+      await rejection(h.inquiries("other").create(house.publicId, draft({ people: 0 })));
+      expect((await h.owner("owner").stats(house.id)).inquiries).toBe(0);
+      expect((await h.owner("owner").ownerActivity()).find((r) => r.listingId === house.id)!.inquiries).toBe(0);
     });
   });
 }

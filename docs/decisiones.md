@@ -1,3 +1,12 @@
+## 2026-11-20 · Una sola cifra de contacto en las estadísticas de la casa: «Consultas»
+
+Una captura de Ana mostraba en el detalle de una casa 22 visitas, 16 clics en WhatsApp y 1 consulta. El diagnóstico (`.scratch/unificar-estadisticas-contacto/diagnostico.md`) mostró que «clics/toques en WhatsApp» (`whatsapp_tap`) no mide un contacto: en el móvil se manda al **abrir la hoja** de contacto (también sin sesión y aunque se cierre sin enviar) y en la ficha de escritorio en **cada envío** del formulario, antes de validar; sin deduplicar ni límite. Solo la consulta registrada por `create_inquiry` acredita que el cliente verificó su WhatsApp y se le entregó el número. Ana decidió:
+
+- **Una sola métrica de contacto, «Consultas»:** filas de `inquiries` con `created_at` en los últimos 30 días, con la deduplicación de 7 días por cliente y casa que ya hace `create_inquiry` (volver a escribir antes de 7 días renueva la misma consulta; después, cuenta otra). Se mantiene «Visitas». Nada de sumar toques y consultas. Motivo: es la única cifra que significa «alguien quiso escribirle», no se puede inflar con balizas y ya está deduplicada.
+- **Las consultas creadas por 3bstays (`source = 'support'`) también cuentan,** como hasta ahora. Motivo: son contactos reales con el anfitrión.
+- **`whatsapp_tap` se sigue emitiendo, solo como telemetría interna del embudo** (`docs/telemetria.md`): en el móvil, «hoja abierta»; en la ficha de escritorio, «envío del formulario». Motivo: sirve para ver dónde se pierden los clientes entre abrir la hoja y registrar la consulta, pero no es una cifra para el propietario.
+- **Sin transición:** la columna `whatsapp_taps` sale ya de `owner_activity` (migración `20261120174045_estadisticas_sin_toques`); los clientes anteriores verán 0 hasta actualizarse, y se acepta. `owner_listing_stats` ya daba solo visitas y consultas. La tarjeta «Últimos 30 días» pasa a dos cifras en móvil y escritorio.
+
 ## 2026-11-20 · Editar una casa en ventanas de escritorio y editor de fotos amplio (historia 06)
 
 Ana aprobó la propuesta de la historia 06 de la revisión de la app del 2026-11-17 (`.scratch/revision-app-2026-11-17/06/`: `propuesta.md`, muestras y comparativas) con todas las recomendaciones:

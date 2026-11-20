@@ -164,7 +164,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       await me();
       const { data, error } = await db.rpc("owner_activity");
       if (error) throw toDomainError(error);
-      return data.map((r) => ({ listingId: r.listing_id, publicId: r.public_id, views: r.views, whatsappTaps: r.whatsapp_taps, inquiries: r.inquiries }));
+      return data.map((r) => ({ listingId: r.listing_id, publicId: r.public_id, views: r.views, inquiries: r.inquiries }));
     },
 
     async deleteDraft(id) {
