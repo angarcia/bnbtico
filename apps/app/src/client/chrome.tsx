@@ -13,7 +13,8 @@ import { useHidingChrome } from "./hiding-chrome";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
-import { Button } from "../shared/button";
+import { Button, IconButton } from "../shared/button";
+import { BrandLogo, EmptyState, NavBar, NavItemContent, type NavTab } from "../shared/structure";
 import { RouterIconLink } from "./router-buttons";
 
 const WhatsAppDialog = lazy(() => import("./whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
@@ -71,75 +72,60 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
   const inquiriesLabel = fresh ? `Consultas, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : "Consultas";
   // «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta).
   const next = status === "signed-out" ? nextFor(pathname) : undefined;
+  const shownTabs: (NavTab & { exact: boolean })[] = tabs.flatMap(({ to, label, icon, exact, badge }) => {
+    if ((desktopSignIn && to === "/cuenta") || (desktopInquiries && badge === "inquiries")) return [];
+    const n = badge === "review" ? pending : badge === "inquiries" ? fresh : 0;
+    return [{ to, label, icon, exact, count: n, countTestId: badge === "inquiries" ? "inquiries-badge" : undefined, ariaLabel: badge === "inquiries" && n > 0 ? `${label}, ${n} ${n === 1 ? "nueva" : "nuevas"}` : undefined, wordmark: to === "/que-es-3bstays" }];
+  });
   const navigation = (
-      <nav className={`tabbar ${desktop ? "desktop-nav" : "chrome-hide"}${tabs.length === 3 ? " three" : ""}`} aria-label="Navegación principal">
-        {desktop && (
-          <Link
-            className="desktop-brand"
-            to={brandOpensAbout ? "/que-es-3bstays" : "/explorar"}
-            aria-label={brandOpensAbout ? "Qué es 3bstays" : "3bstays, inicio"}
-            activeOptions={{ exact: true, includeSearch: false }}
-            activeProps={brandOpensAbout ? { "aria-current": "page" } : {}}
-            replace
-          >
-            <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
-          </Link>
-        )}
-        {tabs.map(({ to, label, icon, exact, badge }) => {
-          const Icon = I[icon];
-          if (desktopSignIn && to === "/cuenta") return null;
-          if (desktopInquiries && badge === "inquiries") return null;
-          const n = badge === "review" ? pending : badge === "inquiries" ? fresh : 0;
-          return (
-            <Link
-              key={to}
-              to={to}
-              search={to === "/cuenta" && next ? { next } : undefined}
-              // Cambiar de pestaña no deja rastro en el historial (2026-11-03): «Atrás» solo vuelve dentro de la pestaña.
-              replace
-              className="nav"
-              activeOptions={{ exact, includeSearch: false }}
-              activeProps={{ "aria-current": "page" }}
-              aria-label={badge === "inquiries" && n > 0 ? `${label}, ${n} ${n === 1 ? "nueva" : "nuevas"}` : undefined}
-            >
-              <Icon size={26} />
-              {to === "/que-es-3bstays" ? (
-                <>
-                  <img className="nav-wordmark" src="/logo-horizontal.png" alt="" />
-                  <span className="sr-only">{label}</span>
-                </>
-              ) : <span>{label}</span>}
-              {n > 0 ? (
-                <b className="nav-count num" data-testid={badge === "inquiries" ? "inquiries-badge" : undefined}>
-                  {n}
-                </b>
-              ) : null}
-            </Link>
-          );
-        })}
-        {desktop && (
-          <>
-            {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch placement="desktop-currency" />}
-            {desktopSignIn ? (
-              <Button variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
-                Ingresar
-              </Button>
-            ) : null}
-            {desktopInquiries && (
-              <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title="Consultas"
-                aria-haspopup="dialog" aria-expanded={inquiriesOpen} onClick={() => setInquiriesOpen(true)}>
-                <I.chat size={26} />
-                <span aria-hidden="true">Consultas</span>
-                {fresh > 0 && <b className="nav-count num" data-testid="inquiries-badge" aria-hidden="true">{fresh}</b>}
-              </button>
-            )}
-            {adminZone ? null : <Link to="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" activeProps={{ "aria-current": "page" }}>
-              <I.wa size={24} />
-              <span>Ayuda por WhatsApp</span>
-            </Link>}
-          </>
-        )}
-      </nav>
+    <NavBar
+      desktop={desktop}
+      three={tabs.length === 3}
+      tabs={shownTabs}
+      brand={desktop ? (
+        <Link
+          className="desktop-brand"
+          to={brandOpensAbout ? "/que-es-3bstays" : "/explorar"}
+          aria-label={brandOpensAbout ? "Qué es 3bstays" : "3bstays, inicio"}
+          activeOptions={{ exact: true, includeSearch: false }}
+          activeProps={brandOpensAbout ? { "aria-current": "page" } : {}}
+          replace
+        >
+          <BrandLogo />
+        </Link>
+      ) : undefined}
+      renderLink={(tab, props) => (
+        <Link
+          key={tab.to}
+          to={tab.to}
+          search={tab.to === "/cuenta" && next ? { next } : undefined}
+          // Cambiar de pestaña no deja rastro en el historial (2026-11-03): «Atrás» solo vuelve dentro de la pestaña.
+          replace
+          activeOptions={{ exact: tab.exact, includeSearch: false }}
+          activeProps={{ "aria-current": "page" }}
+          {...props}
+        />
+      )}
+      end={desktop ? (
+        <>
+          {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch placement="desktop-currency" />}
+          {desktopSignIn ? (
+            <Button variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
+              Ingresar
+            </Button>
+          ) : null}
+          {desktopInquiries && (
+            <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title="Consultas"
+              aria-haspopup="dialog" aria-expanded={inquiriesOpen} onClick={() => setInquiriesOpen(true)}>
+              <NavItemContent icon="chat" label="Consultas" labelHidden count={fresh} countTestId="inquiries-badge" countHidden />
+            </button>
+          )}
+          {adminZone ? null : <Link to="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" activeProps={{ "aria-current": "page" }}>
+            <NavItemContent icon="wa" label="Ayuda por WhatsApp" iconSize={24} />
+          </Link>}
+        </>
+      ) : undefined}
+    />
   );
   return (
     <div className={`app${desktop ? " desktop-app" : ""}${publishing ? " publish-flow" : ""}`}>
@@ -197,9 +183,101 @@ export function FlowFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** En escritorio, cabecera de página con el título y `action` a la derecha. En el teléfono, bajo la barra superior, solo el título (y `action` en su fila, si la hay); sin ella (/admin, «no encontrada»), también
- *  el logo tipográfico sin fondo, de 38 px de alto (que lleva a `home`), y `role="banner"`, la cabecera de la página. */
-export function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
+type HeaderBack = {
+  to: string;
+  search?: Record<string, string>;
+  /** «Volver» hace eso en vez de seguir el enlace (el enlace queda como dirección, p. ej. para abrirlo aparte). */
+  onBack?: () => void;
+  /** Vuelve atrás en el historial si se llegó desde la app, y si no, a `to` sin apilarla. Lo usan las pantallas que se abren
+   *  desde Cuenta: así la flecha de Cuenta, que también vuelve atrás, no rebota entre las dos. */
+  historyBack?: boolean;
+};
+export type HeaderClose =
+  | { to: string; search?: Record<string, string>; label: string; title?: string }
+  | { onClick: () => void; label: string; title?: string; disabled?: boolean; busy?: boolean };
+
+type ScreenHeaderProps =
+  | {
+      /** Pestaña o pantalla raíz: en escritorio, cabecera de página con el título y `action` a la derecha; en el teléfono,
+       *  bajo una pestaña sin barra, el título solo para lectores de pantalla (y `action` en su fila); sin ella (/admin,
+       *  «no encontrada»), el logo de 38 px que lleva a `home` y `role="banner"`. */
+      kind: "root";
+      title: ReactNode;
+      home?: string;
+      action?: ReactNode;
+      aside?: ReactNode;
+    }
+  | {
+      /** Pantalla de flujo: la flecha **o** la ✕ a la izquierda, el título de 24 px con elipsis y `action` al final. */
+      kind: "flow";
+      title: string;
+      titleId?: string;
+      back?: HeaderBack;
+      close?: HeaderClose;
+      action?: ReactNode;
+    }
+  | {
+      /** El asistente de publicar: título a la izquierda, `action` y la ✕ de 44 px a la derecha (diseño v1, 33); debajo, `below`
+       *  (el progreso). La misma cabecera mientras carga el trozo del asistente (shell.tsx). */
+      kind: "wizard";
+      title: string;
+      close: HeaderClose;
+      action?: ReactNode;
+      below?: ReactNode;
+    };
+
+/** La ✕: a la derecha en el asistente (`header-close`, 20 px); a la izquierda en una cabecera de flujo (Filtros en una
+ *  ventana), sin colocación propia. */
+function CloseButton({ close, left = false }: { close: HeaderClose; left?: boolean }) {
+  const placement = left ? undefined : "header-close";
+  const icon = <I.x size={left ? undefined : 20} />;
+  if ("to" in close)
+    return <RouterIconLink to={close.to} search={close.search} label={close.label} title={close.title} placement={placement}>{icon}</RouterIconLink>;
+  return <IconButton label={close.label} title={close.title} placement={placement} onClick={close.onClick} disabled={close.disabled} aria-busy={close.busy || undefined}>{icon}</IconButton>;
+}
+
+function BackLink({ back }: { back: HeaderBack }) {
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  const { to, search, onBack, historyBack } = back;
+  const goBack = onBack ?? (historyBack ? () => (canGoBack ? router.history.back() : void router.navigate({ to, search, replace: true })) : undefined);
+  const click = goBack
+    ? (e: MouseEvent) => {
+        e.preventDefault();
+        goBack();
+      }
+    : undefined;
+  return (
+    <RouterIconLink to={to} search={search} label="Volver" onClick={click}>
+      <I.back />
+    </RouterIconLink>
+  );
+}
+
+/** La cabecera de toda pantalla de la app (no la de la ficha SSR, que no tiene router). */
+export function ScreenHeader(props: ScreenHeaderProps) {
+  if (props.kind === "root") return <RootHeader {...props} />;
+  if (props.kind === "wizard")
+    return (
+      <div className="wizard-heading">
+        <header className="header-flow publish-header">
+          <h1>{props.title}</h1>
+          {props.action}
+          <CloseButton close={props.close} />
+        </header>
+        {props.below}
+      </div>
+    );
+  return (
+    <header className="header-flow">
+      {props.back ? <BackLink back={props.back} /> : props.close ? <CloseButton close={props.close} left /> : null}
+      <h1 id={props.titleId}>{props.title}</h1>
+      {props.action}
+    </header>
+  );
+}
+
+function RootHeader({ title, home = "/explorar", action, aside }: { title: ReactNode; home?: string; action?: ReactNode; aside?: ReactNode }) {
   const under = useContext(UnderTopBar);
   const desktop = useDesktop();
   // En escritorio, bajo la barra superior: cabecera de página con el título visible, sin repetir el logo (revisión 2026-11-13, A9).
@@ -234,57 +312,14 @@ export function RootHeader({ title, home = "/explorar", action, aside }: { title
   );
 }
 
-/**
- * `onBack`: «Volver» hace eso en vez de seguir el enlace (el enlace queda como dirección, p. ej. para abrirlo aparte).
- * `historyBack`: «Volver» vuelve atrás en el historial si se llegó desde la app, y si no, a `back` sin apilarla. Lo usan
- * las pantallas que se abren desde Cuenta: así la flecha de Cuenta, que también vuelve atrás, no rebota entre las dos.
- */
-export function FlowHeader({
-  title,
-  back,
-  search,
-  action,
-  onBack,
-  historyBack,
-}: {
-  title: string;
-  back: string;
-  search?: Record<string, string>;
-  action?: ReactNode;
-  onBack?: () => void;
-  historyBack?: boolean;
-}) {
-  const router = useRouter();
-  const canGoBack = useCanGoBack();
-  const goBack = onBack ?? (historyBack ? () => (canGoBack ? router.history.back() : void router.navigate({ to: back, search, replace: true })) : undefined);
-  const click = goBack
-    ? (e: MouseEvent) => {
-        e.preventDefault();
-        goBack();
-      }
-    : undefined;
-  return (
-    <header className="header-flow">
-      <RouterIconLink to={back} search={search} label="Volver" onClick={click}>
-        <I.back />
-      </RouterIconLink>
-      <h1>{title}</h1>
-      {action}
-    </header>
-  );
-}
-
 /** Pantalla que llega en otro ticket: cabecera raíz y una tarjeta con lo que vendrá. */
 export function Placeholder({ title, text, home, action, back }: { title: string; text: string; home?: string; action?: ReactNode; back?: string }) {
   const desktop = useDesktop();
   return (
     <>
       {/* En escritorio, con `back`, la flecha de volver como las demás pantallas que no son pestañas. */}
-      {back && desktop ? <FlowHeader title={title} back={back} historyBack /> : <RootHeader title={title} home={home} />}
-      <section className="card stack placeholder-card">
-        <p>{text}</p>
-        {action}
-      </section>
+      {back && desktop ? <ScreenHeader kind="flow" title={title} back={{ to: back, historyBack: true }} /> : <ScreenHeader kind="root" title={title} home={home} />}
+      <EmptyState placement="placeholder-card" text={<p>{text}</p>} action={action} />
     </>
   );
 }

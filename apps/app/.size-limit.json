@@ -72,7 +72,15 @@
       "!dist/client/assets/description-screen-*.js",
       "!dist/client/assets/field-*.js",
       "!dist/client/assets/combobox-*.js",
-      "!dist/client/assets/code-input-*.js"
+      "!dist/client/assets/code-input-*.js",
+      "!dist/client/assets/closed-field-*.js",
+      "!dist/client/assets/card-*.js",
+      "!dist/client/assets/router-rows-*.js",
+      "!dist/client/assets/admin-actions-*.js",
+      "!dist/client/assets/edit-label-*.js",
+      "!dist/client/assets/status-label-*.js",
+      "!dist/client/assets/explorar-escritorio-*.js",
+      "!dist/client/assets/panel-dias-*.js"
     ],
     "limit": "161 KB",
     "gzip": true
@@ -94,6 +102,40 @@
       "dist/client/assets/code-input-*.js"
     ],
     "limit": "2.1 KB",
+    "gzip": true
+  },
+  {
+    "name": "Estructura común · trozos diferidos (historia 07, paso 5: card-*, Card y las filas de lista; closed-field-*, el campo cerrado de la búsqueda, el selector de casa y las fechas de la hoja de contacto; router-rows-*, las tarjetas y filas sobre Link; los leen solo trozos diferidos. Las etiquetas, avisos, esqueletos y contadores van en el JS inicial: los usan Explorar, la barra y la ficha)",
+    "path": [
+      "dist/client/assets/closed-field-*.js",
+      "dist/client/assets/router-rows-*.js",
+      "dist/client/assets/card-*.js"
+    ],
+    "limit": "1.6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Explorar en escritorio · trozo diferido (explorar-escritorio-*: la búsqueda de escritorio con sus paneles Lugar, Fechas o Noches y Personas, y los chips de «Qué necesitan»; solo la pide el escritorio, historia 07 paso 5)",
+    "path": [
+      "dist/client/assets/explorar-escritorio-*.js"
+    ],
+    "limit": "2.6 KB",
+    "gzip": true
+  },
+  {
+    "name": "Panel de los días del Calendario · trozo diferido (panel-dias-*: disponibilidad y precio de los días elegidos; se pide en reposo al abrir el Calendario, historia 07 paso 5)",
+    "path": [
+      "dist/client/assets/panel-dias-*.js"
+    ],
+    "limit": "1.5 KB",
+    "gzip": true
+  },
+  {
+    "name": "Etiquetas de estado · trozo diferido (status-label-*: domain/status-label.ts, un texto y un tono por estado y contexto, con la retención y la edición; lo leen Mis casas, el detalle, la suscripción y el admin)",
+    "path": [
+      "dist/client/assets/status-label-*.js"
+    ],
+    "limit": "0.6 KB",
     "gzip": true
   },
   {
@@ -280,10 +322,12 @@
     "gzip": true
   },
   {
-    "name": "Zona del admin · trozo diferido (cola, revisar, casas y segundo código)",
+    "name": "Zona del admin · trozo diferido (cola, revisar, casas y segundo código; desde el paso 5 de la historia 07 el trozo compartido de la revisión sale como admin-actions-* o edit-label-* según el primer módulo que lo nombra: los dos se piden solo en diferido)",
     "path": [
       "dist/client/assets/admin-*.js",
-      "dist/client/assets/review-*.js"
+      "dist/client/assets/review-*.js",
+      "dist/client/assets/admin-actions-*.js",
+      "dist/client/assets/edit-label-*.js"
     ],
     "limit": "15.1 kB",
     "gzip": true

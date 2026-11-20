@@ -1,7 +1,7 @@
 // Cómo se cuenta una casa en cualquier pantalla: precio principal, unidad, situación, enlace y texto para compartir.
 // Sustituye a las seis copias que tenía la app anterior (tarjetas, ficha, detalle del propietario, admin, metadatos).
 import { relativeDate } from "./dates";
-import { KIND_LABELS, STATUS_LABELS, type Listing, type PublicListing } from "./listing";
+import { KIND_LABELS, type Listing, type PublicListing } from "./listing";
 import type { Currency } from "./currency";
 import { formatCRC, formatMoney } from "./money";
 import { publicUrl } from "./share";
@@ -21,7 +21,6 @@ export interface ListingDescription {
   mainPrice: Price | null;
   /** null si no acepta alquiler mensual; negociable si lo acepta sin precio (o con uno no positivo). */
   monthly: MonthlyPrice | null;
-  statusLabel: string;
   /** Línea de situación de Mis casas; null para una casa vista por el público. */
   situation: string | null;
   shareUrl: string;
@@ -114,11 +113,9 @@ function previewText(l: Listing | PublicListing, main: Price | null): string {
 export function describe(l: Listing | PublicListing, opts: { base: string; now?: number }): ListingDescription {
   const [mainPrice, monthly] = prices(l);
   const owner = isOwnerListing(l);
-  const status = owner ? l.status : "active";
   return {
     mainPrice,
     monthly,
-    statusLabel: status === "active" && !l.available ? "Pausado" : STATUS_LABELS[status].label,
     situation: owner ? situation(l, opts.now ?? Date.now()) : null,
     shareUrl: publicUrl(l.publicId, opts.base),
     previewText: previewText(l, mainPrice),

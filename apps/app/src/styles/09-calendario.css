@@ -6,12 +6,12 @@
 .month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .month-grid,.month-head{margin-inline:calc(14px - var(--gutter))}
 @media (max-width:899px){
-  .owner-calendar{--gutter:12px}
+  .owner-calendar{--gutter:var(--gutter-tight)}
   .owner-calendar :is(.month-grid,.month-head){margin-inline:0}
 }
-.month-head{font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-align:center}
-.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;height:92px;padding:14px 0 0;border:2px solid transparent;border-radius:12px;background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
-.month-grid .day b{font-size:14px;font-weight:500;line-height:1.2;color:color-mix(in srgb,currentColor 70%,transparent)}
+.month-head{font-size:var(--fs-eyebrow);font-weight:var(--w-medium);color:var(--muted);text-align:center}
+.month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;height:92px;padding:14px 0 0;border:2px solid transparent;border-radius:var(--r);background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
+.month-grid .day b{font-size:var(--fs-xs);font-weight:500;line-height:1.2;color:color-mix(in srgb,currentColor 70%,transparent)}
 .month-grid .day-sub{font-size:12px;font-weight:400;line-height:1.2;white-space:nowrap;color:color-mix(in srgb,var(--fg) 75%,transparent)}
 /* Seis cifras («120 000») en 11 px para que quepan en la casilla. */
 .month-grid .day-sub.is-long{font-size:11px;letter-spacing:-0.02em}
@@ -38,8 +38,8 @@
 .month-grid .day.range-end.is-last{border-radius:0 12px 12px 0;box-shadow:-3px 0 0 var(--stay-band-solid)}
 .month-week > .day.in-range:first-child{box-shadow:3px 0 0 var(--stay-band-solid)}
 .month-week > .day.in-range:last-child{box-shadow:-3px 0 0 var(--stay-band-solid)}
-.month-week > .day.range-end.is-start:last-child,.month-week > .day.range-end.is-last:first-child{border-radius:12px;box-shadow:none}
-.month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);padding-top:4px}
+.month-week > .day.range-end.is-start:last-child,.month-week > .day.range-end.is-last:first-child{border-radius:var(--r);box-shadow:none}
+.month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:var(--fs-xs);color:var(--muted);padding-top:4px}
 .month-legend span{display:inline-flex;align-items:center;gap:6px}
 .month-legend .swatch{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 6%,transparent)}
 .month-legend .swatch:not(.is-busy){background:color-mix(in srgb,var(--primary) 12%,transparent)}
@@ -52,8 +52,8 @@
    fechas: la caja no cambia de alto (ronda de Ana 2 nov, ticket 08). */
 .listing-calendar .cal-legend-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
 .listing-calendar .month-legend{padding-top:0}
-.listing-calendar .cal-legend-row .btn-text{padding-right:0;font-size:15px}
-.cal-stay{margin:0;min-height:22px;font-size:15px;font-weight:var(--w-medium);line-height:22px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listing-calendar .cal-legend-row .btn-text{padding-right:0;font-size:var(--fs-sm)}
+.cal-stay{margin:0;min-height:22px;font-size:var(--fs-sm);font-weight:var(--w-medium);line-height:22px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-stay.is-busy{color:var(--busy-ink)}
 .listing-calendar .cal-month{margin:-6px 0 0 -10px}
 /* La caja corta lo que sale: en la ficha, la rejilla va dentro del margen de la página. */
@@ -62,7 +62,7 @@
 .header-root:has(.house-picker) h1{font-size:28px}
 .house-picker{position:relative;min-width:0}
 /* El mismo selector cerrado y la misma hoja en Consultas y Calendario. */
-.picker-pill{display:grid;grid-template-columns:20px minmax(0,1fr) 18px;align-items:center;gap:10px;width:100%;height:52px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg);color:var(--fg);font-family:inherit;font-weight:400;font-size:17px;text-align:left}
+.picker-pill{display:grid;grid-template-columns:20px minmax(0,1fr) 18px;align-items:center;gap:10px;width:100%;height:52px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg);color:var(--fg);font-family:inherit;font-weight:400;font-size:var(--fs-base);text-align:left}
 .picker-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .picker-arrow{display:flex;transition:transform 140ms var(--ease-out);color:var(--primary)}
 .picker-pill[aria-expanded="true"] .picker-arrow{transform:rotate(180deg)}
@@ -71,7 +71,7 @@
 .sheet-picker .sheet-head h2{font-size:23px;line-height:1.2}
 .sheet-picker .sheet-head .icon-btn{flex:none;margin:0;color:var(--muted)}
 .house-picker-list{min-height:0;max-height:min(60dvh,560px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px}
-.house-picker-list [role=option]{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;min-height:52px;width:100%;padding:12px;border-radius:8px;background:transparent;color:var(--fg);font:inherit;line-height:1.35;text-align:left}
+.house-picker-list [role=option]{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;min-height:52px;width:100%;padding:12px;border-radius:var(--r-control);background:transparent;color:var(--fg);font:inherit;line-height:1.35;text-align:left}
 .house-picker-list [role=option][aria-selected=true]{background:var(--sun-soft);color:var(--sun-ink)}
 .picker-option-name{min-width:0;overflow-wrap:anywhere}
 .picker-check{display:flex;flex:0 0 20px;width:20px}
@@ -98,11 +98,11 @@
 .cal-action-group > * + *{border-top:1px solid var(--line-soft)}
 .cal-action-group > .note,.cal-action-group > .cal-action-error{margin:0 14px 10px;border-top:0}
 .cal-action{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;text-align:left;width:100%;background:none;border-radius:0}
-.cal-action-icon{flex-shrink:0;width:40px;height:40px;border-radius:8px;background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
+.cal-action-icon{flex-shrink:0;width:40px;height:40px;border-radius:var(--r-control);background:var(--surface-2);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}
 .cal-action-group .cal-action-icon{background:none}
 .cal-airbnb-line{display:flex;align-items:center}
 .cal-airbnb-line .cal-action{flex:1;min-width:0}
-.cal-airbnb-update{flex:0 0 44px;width:44px;height:44px;min-height:44px;margin-left:14px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--primary) 14%,var(--bg));color:var(--primary);border-radius:8px}
+.cal-airbnb-update{flex:0 0 44px;width:44px;height:44px;min-height:44px;margin-left:14px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--primary) 14%,var(--bg));color:var(--primary);border-radius:var(--r-control)}
 .cal-airbnb-update:disabled{background:var(--disabled-bg);color:var(--muted);opacity:1}
 .cal-airbnb > .note{margin:0 14px 10px}
 .cal-action .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}

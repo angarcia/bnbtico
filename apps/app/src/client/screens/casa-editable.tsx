@@ -15,6 +15,7 @@ import { FEATURE_LABEL, KIND_LABELS, locationLine, type Listing, type ListingDra
 import { formatCRC } from "../../domain/money";
 import { DESCRIPTION_EMPTY_WARNING } from "../../domain/publish-rules";
 import { cardLabel } from "../../domain/navigation";
+import { editStatusLabel } from "../../domain/status-label";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
 import { DeleteHouse } from "../delete-house";
@@ -27,6 +28,9 @@ import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
 import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "../owner-ui";
 import { TextButton } from "../../shared/button";
+import { Notice, StatusTag } from "../../shared/structure";
+import { Card, List, ListRow } from "../../shared/card";
+import { RouterListRow } from "../router-rows";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const InlineHouseEditor = lazy(() => import("./editar").then((m) => ({ default: m.InlineHouseEditor })));
@@ -85,7 +89,7 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
   // salía aunque no hubiera nada pendiente y parecía un estado (Ana, 2026-11-04): lo dicen la nota de arriba y, al editar,
   // el aviso y «Enviar a revisión».
   const tag = readOnly ? null : state ? (
-    <span className={`tag-rev${state.status === "review" ? " is-pending" : " is-changes"}`}>{state.status === "review" ? "En revisión" : "Cambios pedidos"}</span>
+    <StatusTag placement="field" label={editStatusLabel(state.status, "field")} />
   ) : null;
   const content = (
     <>
@@ -119,13 +123,13 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
   );
   // Bloqueada por 3bstays: se lee, no se toca.
   const row = readOnly || onEdit ? (
-    <div className="list-item" aria-disabled={readOnly || undefined}>
+    <ListRow aria-disabled={readOnly || undefined}>
       {content}
-    </div>
+    </ListRow>
   ) : (
-    <Link to={to} params={{ id: l.id, campo: field }} className="list-item">
+    <RouterListRow to={to} params={{ id: l.id, campo: field }}>
       {content}
-    </Link>
+    </RouterListRow>
   );
   if (!state || admin) return row;
   const reviewNote = state.status === "changes" ? state.reviewNote : null;
@@ -154,7 +158,7 @@ function PendingFoot({ listing: l, field, note, userId, showVisibility, proposed
   return (
     <div className="pending-foot">
       {proposedName !== undefined ? <span className="strong house-pending-value">{proposedName}</span> : null}
-      {note ? <p className="small note-review">Le pedimos cambios: {note}</p> : showVisibility ? <span className="xs muted">{pendingVisibility}</span> : null}
+      {note ? <Notice tone="review" small inline>Le pedimos cambios: {note}</Notice> : showVisibility ? <span className="xs muted">{pendingVisibility}</span> : null}
       <TextButton
         tone="quiet"
         aria-label={`Descartar el cambio de ${fieldTitle(field, l.kind).toLowerCase()}`}
@@ -182,7 +186,7 @@ function PendingFoot({ listing: l, field, note, userId, showVisibility, proposed
 
 /** Aviso de dinero cuando la casa está por pagar y aún no hay fila de cobro. */
 function PaymentDueNote({ listing: l }: { listing: Listing }) {
-  return <div className="note note-sun">{describe(l, { base: "" }).situation}</div>;
+  return <Notice as="div" tone="sun">{describe(l, { base: "" }).situation}</Notice>;
 }
 
 /** Las cifras de 30 días de la casa (visitas, toques en WhatsApp y consultas), bajo la portada: salieron de Consultas para
@@ -195,7 +199,7 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
   const taps = a?.whatsappTaps ?? 0;
   const inquiries = a?.inquiries ?? 0;
   return (
-    <section className="card stack listing-stats" data-testid="listing-stats" aria-busy={!data || undefined}>
+    <Card layout="stack" placement="listing-stats" data-testid="listing-stats" aria-busy={!data || undefined}>
       <span className="small muted">Últimos 30 días</span>
       {data ? (
         <div className="activity-figures">
@@ -212,7 +216,7 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
       ) : (
         <span className="sk sk-line" />
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -228,7 +232,7 @@ function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listin
           <span className="body">
             <span className="row gap-8">
               <b>{promo ? "Oferta de lanzamiento" : "Suscripción mensual"}</b>
-              {stopped ? <span className="badge badge-mute badge-tight xs">Parada</span> : <span className="badge badge-ok badge-tight xs">Al día</span>}
+              <StatusTag tight small label={stopped ? { text: "Parada", tone: "off" } : { text: "Al día", tone: "ok" }} />
             </span>
             <small>
               <span data-testid="subscription-row">{line}</span>
@@ -243,13 +247,13 @@ function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listin
   return (
     <section className="stack gap-8" data-testid="subscription-card">
       <h2 className="display offer-title">Suscripción</h2>
-      <section className="list">
+      <List>
         {inPanel ? (
-          <Link to="/propietario/casas/$id" params={{ id: l.id }} search={{ panel: "suscripcion" }} resetScroll={false} className="list-item">
+          <RouterListRow to="/propietario/casas/$id" params={{ id: l.id }} search={{ panel: "suscripcion" }} resetScroll={false}>
             {content}
-          </Link>
-        ) : <SubscriptionLink publicId={l.publicId} className="list-item">{content}</SubscriptionLink>}
-      </section>
+          </RouterListRow>
+        ) : <SubscriptionLink publicId={l.publicId}>{content}</SubscriptionLink>}
+      </List>
     </section>
   );
 }
@@ -257,12 +261,12 @@ function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listin
 /** Suscripción parada: ocre arriba, porque es dinero (la ficha no se ve ni su enlace funciona). */
 function StoppedNotice({ listing: l }: { listing: Listing }) {
   return (
-    <section className="card-sun stack gap-10" data-testid="stopped-notice">
+    <Card tone="sun" layout="stack" gap={10} data-testid="stopped-notice">
       <h2 className="display offer-title">Suscripción parada</h2>
       <span className="small ink">{l.title} no aparece en Explorar y el enlace de su ficha no funciona. Actívela para que vuelvan a escribirle.</span>
       <ActivateButton publicId={l.publicId} />
       <span className="small strong center num">{formatCRC(MONTHLY_FEE_CRC)} al mes, sin permanencia</span>
-    </section>
+    </Card>
   );
 }
 
@@ -300,7 +304,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
         </div>
       ) : null}
 
-      <section className="list"><WhatsAppItem listing={l} /></section>
+      <List><WhatsAppItem listing={l} /></List>
     </>
   );
   return (
@@ -312,7 +316,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
       <div className="owner-detail-summary">
         <div className="photo detail-photo">
           {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
-          <span className={`state ${label.cls}`}>{label.text}</span>
+          <StatusTag placement="photo" label={label} />
           {blocked ? (
             <span className="pill photo-pill num">{photoContent}</span>
           ) : actionsOnLeft && !rightPanel ? (
@@ -333,12 +337,12 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
       <div className="owner-detail-fields">
         {rightPanel ? <div className="owner-detail-panel stack">{rightPanel}</div> : <>
         {blocked || actionsOnLeft ? null : (
-          <p className="note note-arena">{admin
+          <Notice tone="solid">{admin
             ? "Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión."
-            : "Toque un dato para editarlo. Su ficha seguirá visible durante la revisión."}</p>
+            : "Toque un dato para editarlo. Su ficha seguirá visible durante la revisión."}</Notice>
         )}
 
-        <section className="list" data-testid="field-rows">
+        <List data-testid="field-rows">
           {/* Habitaciones apagadas (feature flag, #62): sin la fila «Tipo», que solo podría decir «Alojamiento completo». */}
           {FIELD_ORDER.filter((field) => FLAGS.rooms || field !== "tipo").map((field) => {
             const closeField = () => setEditingField((current) => current === field ? null : current);
@@ -356,7 +360,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
               </div>
             );
           })}
-        </section>
+        </List>
 
         {!actionsOnLeft && actions}
         {subscription}

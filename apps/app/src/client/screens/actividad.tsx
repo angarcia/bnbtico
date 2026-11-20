@@ -10,12 +10,14 @@ import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../..
 import { filterInquiries, inquiryHouseOptions } from "../../domain/inquiry-filter";
 import type { Listing } from "../../domain/listing";
 import { I } from "../../shared/icons";
-import { RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { countNew, inquiriesQuery, markInquirySeen, openInquiry } from "../inquiries";
 import { HousePicker } from "../house-picker";
 import { ownListingsQuery } from "../own-listings-query";
 import { useSession } from "../session";
 import { Dialog } from "../../shared/overlay";
+import { LoadError, Skeleton, StatusTag } from "../../shared/structure";
+import { Card } from "../../shared/card";
 
 const LATEST = 20;
 const SEEN_DELAY_MS = 800;
@@ -31,7 +33,7 @@ export function ActividadScreen() {
   }), [navigate]);
   return (
     <>
-      <RootHeader title="Consultas" />
+      <ScreenHeader kind="root" title="Consultas" />
       <InquiryList casa={search.casa} onPick={pickCasa} />
     </>
   );
@@ -85,9 +87,9 @@ function InquiryList({ casa, onPick, inDialog = false }: {
   return (
     <>
       {error ? (
-        <p className="note" role="alert">{toDomainError(error).message}</p>
+        <LoadError onRetry={() => { if (listings.isError) void listings.refetch(); if (inquiries.isError) void inquiries.refetch(); }}>{toDomainError(error).message}</LoadError>
       ) : waiting ? (
-        <SkeletonActivity />
+        <Skeleton shape="avatar" label="Cargando su actividad" />
       ) : (
         <section className="stack gap-12">
           <p className="small muted" data-testid="inquiries-new">
@@ -154,7 +156,7 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen, inDia
     void openInquiry(client, userId, i).finally(() => (opening.current = false));
   }
   return (
-    <article className={`card stack gap-10 inquiry-card${isNew ? " is-new" : ""}`} aria-labelledby={nameId}>
+    <Card as="article" layout="stack" gap={10} placement="inquiry-card" mark={isNew ? "new" : undefined} aria-labelledby={nameId}>
       {showHouse ? <span className="inquiry-house small muted" data-testid="inquiry-house">{house?.title || i.listingTitle || "Casa sin título"}</span> : null}
       <div className="row gap-12 align-top">
         <span className={`avatar inquiry-avatar${isNew ? "" : " is-read"}`} aria-hidden="true">
@@ -166,26 +168,19 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen, inDia
               {i.clientName}
             </h3>
             <span className="row baseline gap-6 nowrap">
-              {isNew ? <span className="badge badge-new">Nueva</span> : null}
+              {isNew ? <StatusTag label={{ text: "Nueva", tone: "new" }} /> : null}
               <span className="xs muted">{relativeTime(i.updatedAt, Date.now())}</span>
             </span>
           </div>
           <span className="small muted">{inquirySummary(i)}</span>
-          {i.source === "support" ? <span className="badge badge-tight">Creada por 3bstays</span> : null}
+          {i.source === "support" ? <StatusTag tight label={{ text: "Creada por 3bstays", tone: "neutral" }} /> : null}
         </div>
       </div>
       <button type="button" className="btn-link inquiry-wa" onClick={open}>
         <I.wa size={18} /> Abrir WhatsApp
       </button>
-    </article>
+    </Card>
   );
 }
 
-function SkeletonActivity() {
-  return (
-    <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando su actividad">
-      <span className="sk inquiry-avatar" />
-      <span className="sk sk-line" />
-    </section>
-  );
-}
+

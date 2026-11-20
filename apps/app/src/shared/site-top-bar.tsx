@@ -12,6 +12,7 @@ import { useHydrated } from "./hydration";
 import { I } from "./icons";
 import { ownListingsHint } from "./own-listings";
 import { ButtonLink } from "./button";
+import { BrandLogo, NavBar, NavItemContent } from "./structure";
 
 type Navigate = (href: string) => void;
 
@@ -36,35 +37,33 @@ function Bar({ navigate, next }: { navigate?: Navigate; next?: string }) {
       : undefined;
   const signIn = `/cuenta${next ? `?next=${encodeURIComponent(next)}` : ""}`;
   return (
-    <nav className="tabbar desktop-nav" aria-label="Navegación principal">
-      <a className="desktop-brand" href="/explorar" aria-label="3bstays, inicio" onClick={go("/explorar")}>
-        <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
-      </a>
-      {tabs.map(({ to, label, icon }) => {
-        const Icon = I[icon];
-        return (
-          <a key={to} href={to} className="nav" onClick={go(to)}>
-            <Icon size={26} />
-            <span>{label}</span>
-          </a>
-        );
-      })}
-      <CurrencySwitch placement="desktop-currency" />
-      {session ? null : (
-        <ButtonLink href={signIn} variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} onClick={go(signIn)}>
-          Ingresar
-        </ButtonLink>
-      )}
-      {inquiries ? (
-        <a href="/propietario/actividad" className="nav desktop-inquiries" aria-label="Consultas" title="Consultas" onClick={go("/propietario/actividad")}>
-          <I.chat size={26} />
-          <span aria-hidden="true">Consultas</span>
+    <NavBar
+      desktop
+      tabs={tabs.map(({ to, label, icon }) => ({ to, label, icon }))}
+      brand={
+        <a className="desktop-brand" href="/explorar" aria-label="3bstays, inicio" onClick={go("/explorar")}>
+          <BrandLogo />
         </a>
-      ) : null}
-      <a href="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" onClick={go("/ayuda")}>
-        <I.wa size={24} />
-        <span>Ayuda por WhatsApp</span>
-      </a>
-    </nav>
+      }
+      renderLink={(tab, props) => <a key={tab.to} href={tab.to} onClick={go(tab.to)} {...props} />}
+      end={
+        <>
+          <CurrencySwitch placement="desktop-currency" />
+          {session ? null : (
+            <ButtonLink href={signIn} variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} onClick={go(signIn)}>
+              Ingresar
+            </ButtonLink>
+          )}
+          {inquiries ? (
+            <a href="/propietario/actividad" className="nav desktop-inquiries" aria-label="Consultas" title="Consultas" onClick={go("/propietario/actividad")}>
+              <NavItemContent icon="chat" label="Consultas" labelHidden />
+            </a>
+          ) : null}
+          <a href="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" onClick={go("/ayuda")}>
+            <NavItemContent icon="wa" label="Ayuda por WhatsApp" iconSize={24} />
+          </a>
+        </>
+      }
+    />
   );
 }

@@ -3,18 +3,15 @@
 // filtros en la URL, una casa por fila; con llegada y salida, cada tarjeta y su marcador dicen el total orientativo de esas noches.
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, NIGHTS_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
-import { durationTotal, nightsBetween, peopleLabel, resultsText, searchSummary, stayLabel } from "../../domain/search";
-import { ALL_PROVINCES, SEARCH_MAX_PEOPLE, extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
+import { durationTotal, nightsBetween, resultsText, searchSummary } from "../../domain/search";
+import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { CurrencySwitch } from "../../shared/currency-switch";
-import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
-import { ChoiceChips } from "../../shared/choice";
-import { Stepper } from "../../shared/stepper";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
@@ -25,122 +22,27 @@ import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { useListingsCount } from "../own-listings-query";
 import { SUPPORT_NUMBERS } from "../support-numbers";
-import { isDatesError, listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
+import { isDatesError, listingsQuery, loadedListings, provincesQuery, zonesQuery } from "../queries";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
-import { RangeCalendar } from "../../shared/range-calendar";
-import { Button, TextButton } from "../../shared/button";
-import { useDismiss } from "../../shared/dismiss";
+import { Button } from "../../shared/button";
+import { CountBadge, EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
 const PublishPromoCard = lazy(() => import("../publish-promo").then((m) => ({ default: m.PublishPromoCard })));
 const MapScreen = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapScreen })));
 const MapCard = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapCard })));
-const ZonePicker = lazy(() => import("./buscar").then((m) => ({ default: m.Donde })));
-// El contador de noches del panel de escritorio (modo noches): diferido, como la zona; trozo nights-picker-*, que comparte
-// con la búsqueda del teléfono y mide su propia entrada de .size-limit.json.
-const NightsPicker = lazy(() => import("../../shared/nights-picker").then((m) => ({ default: m.NightsPicker })));
 const DesktopFilters = lazy(() => import("./filtros").then((m) => ({ default: m.DesktopFilters })));
+// La búsqueda de escritorio (Lugar, Fechas o Noches, Personas) y los chips de «Qué necesitan»: solo en escritorio, en su
+// trozo (explorar-escritorio-*), fuera del JS inicial del teléfono (historia 07, paso 5).
+const DesktopSearch = lazy(() => import("./explorar-escritorio").then((m) => ({ default: m.DesktopSearch })));
+const DesktopFeatureFilters = lazy(() => import("./explorar-escritorio").then((m) => ({ default: m.DesktopFeatureFilters })));
 
 const route = getRouteApi("/_tabs/explorar");
 
 const filtersLabel = (n: number) => (n ? `Filtros (${n} ${n === 1 ? "activo" : "activos"})` : "Filtros");
-
-type SearchField = "donde" | "cuando";
-
-function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: string | null }) {
-  const navigate = useNavigate();
-  const [panel, setPanel] = useState<SearchField | null>(null);
-  const [draft, setDraft] = useState(filters);
-  const [today] = useState(() => costaRicaToday(Date.now()));
-  const group = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const focusZone = useRef(true);
-  const panelId = useId();
-  const displayed = panel ? draft : filters;
-  const fields: { key: SearchField; label: string; value: string | null; icon: typeof I.pin }[] = [
-    { key: "donde", label: "Lugar", value: filters.zone ? zoneName : filters.prov !== ALL_PROVINCES ? filters.prov : null, icon: I.pin },
-    // Feature flags (#58): «Fechas» con fechas, «Noches» con número de noches (diseño #59), ninguno sin estancia.
-    ...(SEARCH_MODE === "dates" ? [{ key: "cuando" as const, label: "Fechas", value: stayLabel(displayed), icon: I.calendar }] : []),
-    ...(SEARCH_MODE === "nights" ? [{ key: "cuando" as const, label: "Noches", value: stayLabel(displayed), icon: I.moon }] : []),
-  ];
-
-  // Escape vuelve al disparador; tocar fuera solo cierra.
-  const dismiss = useDismiss({
-    open: !!panel,
-    inside: () => [group.current],
-    onDismiss(reason) {
-      setPanel(null);
-      if (reason === "escape") trigger.current?.focus();
-    },
-  });
-
-  function apply(next: Filters) {
-    setPanel(null);
-    trigger.current?.focus();
-    void navigate({ to: "/explorar", search: searchFor(next), resetScroll: false });
-  }
-
-  function changePeople(ppl: number) {
-    setPanel(null);
-    void navigate({ to: "/explorar", search: searchFor({ ...filters, ppl }), replace: true, resetScroll: false });
-  }
-
-  return (
-    <div ref={group} className="desktop-search-fields" onKeyDown={dismiss.onKeyDown}>
-      {fields.map(({ key, label, value, icon: Icon }) => (
-        <div className="desktop-search-field" key={key}>
-          <button type="button" className="search-pill float-card" aria-expanded={panel === key}
-            aria-controls={panel === key ? panelId : undefined} aria-label={value ? `${label}: ${value}` : label}
-            onClick={(event) => {
-              trigger.current = event.currentTarget;
-              focusZone.current = true;
-              setDraft(filters);
-              setPanel(panel === key ? null : key);
-            }}>
-            <Icon size={20} />
-            <span className="search-pill-text">{value ?? label}</span>
-          </button>
-          {panel === key && (
-            <section id={panelId} aria-label={label} className={`desktop-search-panel desktop-search-panel-${key === "cuando" && SEARCH_MODE === "nights" ? "noches" : key}`}>
-              {key === "donde" ? (
-                <Suspense fallback={<p role="status">Cargando zonas…</p>}>
-                  <ZonePicker zone={draft.zone} onPick={(zone) => apply({ ...draft, zone })} onClear={() => apply({ ...draft, zone: null, prov: ALL_PROVINCES })} focusOnce={focusZone} />
-                </Suspense>
-              ) : SEARCH_MODE === "nights" ? (
-                <>
-                  <Suspense fallback={<p role="status">Cargando…</p>}>
-                    <NightsPicker nights={draft.nights} onChange={(nights) => setDraft({ ...draft, nights })} />
-                  </Suspense>
-                  <div className="row between">
-                    <TextButton tone="quiet" onClick={() => apply({ ...draft, nights: 0 })}>Quitar noches</TextButton>
-                    <Button variant="primary" disabled={!draft.nights} onClick={() => apply(draft)}>Aplicar noches</Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="desktop-search-calendar">
-                    <RangeCalendar weekdaysPerMonth today={today} value={draft} onChange={(range) => setDraft({ ...draft, ...range })} />
-                  </div>
-                  <div className="row between">
-                    <TextButton tone="quiet" onClick={() => apply({ ...draft, arrival: null, departure: null })}>Quitar fechas</TextButton>
-                    <Button variant="primary" disabled={!draft.arrival || !draft.departure} onClick={() => apply(draft)}>Aplicar fechas</Button>
-                  </div>
-                </>
-              )}
-            </section>
-          )}
-        </div>
-      ))}
-      <div className="desktop-search-people float-card" role="group" aria-label="Personas">
-        <I.user size={20} />
-        <Stepper unit="Una persona" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? "Sin indicar"} onChange={changePeople} />
-      </div>
-    </div>
-  );
-}
 
 /** La píldora de búsqueda (abre la búsqueda); la comparten la cabecera y el mapa a pantalla completa. */
 function SearchPill({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
@@ -148,7 +50,12 @@ function SearchPill({ filters: f, zoneName, search }: { filters: Filters; zoneNa
   const desktop = useDesktop();
   // Las zonas de «¿Dónde?», pedidas al tocar la píldora; la ruta se precarga por `defaultPreload: "intent"`.
   const prefetchZones = () => void queryClient.prefetchQuery(zonesQuery);
-  if (desktop) return <DesktopSearch filters={f} zoneName={zoneName} />;
+  if (desktop)
+    return (
+      <Suspense fallback={<div className="desktop-search-fields" />}>
+        <DesktopSearch filters={f} zoneName={zoneName} />
+      </Suspense>
+    );
   return (
     <Link to="/explorar/buscar" search={search} className="search-pill float-card" onPointerDown={prefetchZones} onFocus={prefetchZones}>
       <I.search size={22} />
@@ -162,36 +69,13 @@ function FiltersLink({ filters: f, search }: { filters: Filters; search: Explore
   return (
     <Link to="/explorar/filtros" search={search} className="chip filters-btn float-card" aria-label={filtersLabel(extras)}>
       <I.sliders size={22} />
-      {extras ? <span className="badge badge-ok badge-count num">{extras}</span> : null}
+      <CountBadge n={extras} placement="filters" />
     </Link>
   );
 }
 
 /** Cabecera de Explorar, flotando sobre el mapa: la píldora (abre la búsqueda) a todo el ancho (la cuenta es una pestaña, C4);
  *  debajo, los filtros y «₡ | $». Se esconde al bajar con la barra de abajo (`.chrome-hide`). */
-function DesktopFeatureFilters({ filters }: { filters: Filters }) {
-  const navigate = useNavigate();
-  const { data } = useInfiniteQuery(zoneListingsQuery(filters.zone));
-  const available = new Set(loadedListings(data)?.flatMap((listing) => listing.features));
-  const choices = FEATURE_CHOICE_ORDER.filter((feature) => available.has(feature));
-  if (!choices.length) return null;
-
-  return (
-    <ChoiceChips
-      as="button"
-      float
-      placement="desktop-feature-filters"
-      label="Qué necesitan"
-      options={choices.map((feature) => ({ value: feature, name: FEATURE_CHOICE_NAME[feature], label: <FeatureChoiceLabel feature={feature} /> }))}
-      selected={filters.features}
-      onToggle={(feature) => {
-        const features = filters.features.includes(feature) ? filters.features.filter((key) => key !== feature) : [...filters.features, feature];
-        void navigate({ to: "/explorar", search: searchFor({ ...filters, features }), resetScroll: false });
-      }}
-    />
-  );
-}
-
 function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zoneName: string | null; search: ExploreSearch }) {
   const desktop = useDesktop();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -203,7 +87,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
         {desktop && f.zone && (
           <button type="button" className="chip filters-btn float-card" aria-label={filtersLabel(extras)} aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}>
             <I.sliders size={22} />
-            {extras > 0 && <span className="badge badge-ok badge-count num">{extras}</span>}
+            <CountBadge n={extras} placement="filters" />
           </button>
         )}
         <SearchPill filters={f} zoneName={zoneName} search={search} />
@@ -214,7 +98,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
           <CurrencySwitch placement="float" />
         </div>
       )}
-      {desktop && f.zone && <DesktopFeatureFilters filters={f} />}
+      {desktop && f.zone && <Suspense fallback={null}><DesktopFeatureFilters filters={f} /></Suspense>}
       {desktop && f.zone && filtersOpen && (
         <Suspense fallback={null}>
           <DesktopFilters search={search} onClose={() => setFiltersOpen(false)} />
@@ -231,28 +115,15 @@ function MapPlaceholder() {
 
 const NO_LISTINGS: SearchListing[] = [];
 
-function SkeletonGrid() {
-  return (
-    <div className="listing-grid explore-results skeleton" aria-hidden="true">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="listing-card">
-          <span className="sk photo" />
-          <span className="sk sk-line" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /** «Ver más casas» al final de la lista: trae las 60 siguientes (issue #10). Mientras llegan, el botón espera desactivado;
  *  si fallan, se dice encima y el mismo botón reintenta. */
 function MoreListings({ loading, failed, onMore }: { loading: boolean; failed: boolean; onMore: () => void }) {
   return (
     <div className="stack gap-8">
       {failed && !loading ? (
-        <div className="note note-arena" role="alert">
+        <Notice as="div" tone="error">
           No pudimos cargar más casas. Revise su conexión e inténtelo de nuevo.
-        </div>
+        </Notice>
       ) : null}
       <Button variant="primary" block pending={loading} onClick={onMore}>
         {loading ? "Cargando casas…" : "Ver más casas"}
@@ -293,7 +164,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
     wasOpen.current = mapOpen;
   }, [mapOpen]);
   const currency = useCurrency();
-  const { data, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery(listingsQuery(f));
+  const { data, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery(listingsQuery(f));
   // Todas las páginas ya cargadas («Ver más casas»): la lista y el mapa enseñan las mismas casas.
   // Modo noches (#58/#59): sin fechas, la búsqueda no calcula total; aquí, precio por noche × noches (o la regla mensual).
   const listings = useMemo(() => {
@@ -383,16 +254,16 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
       </div>
       {!listings ? (
         isDatesError(error) ? (
-          <div className="note note-plain note-col" role="alert">
+          <Notice as="div" tone="error" layout="column">
             <span>Revise las fechas de su búsqueda.</span>
             <Button variant="primary" block onClick={() => go({ ...f, arrival: null, departure: null })}>
               Quitar fechas
             </Button>
-          </div>
+          </Notice>
         ) : isError ? (
-          <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
+          <LoadError onRetry={() => void refetch()} />
         ) : (
-          <SkeletonGrid />
+          <Skeleton shape="grid" placement="explore-results" />
         )
       ) : listings.length === 0 ? (
         <SearchHelp filters={f} zoneName={zoneName} number={SUPPORT_NUMBERS.guest} onClear={extras ? () => go(parseFilters({ prov: f.prov }, provinces)) : null} />
@@ -465,7 +336,7 @@ function usePrefetchSearch(search: ExploreSearch, waiting: boolean) {
 
 export function ExplorarScreen() {
   const search = route.useSearch();
-  const { data: provinces, isError } = useQuery(provincesQuery);
+  const { data: provinces, isError, refetch } = useQuery(provincesQuery);
   const zones = useQuery({ ...zonesQuery, enabled: !!search.zona });
   const f = parseFilters(search, provinces ?? [], { today: costaRicaToday(Date.now()), zoneIds: zones.data?.map((z) => z.id), mode: SEARCH_MODE, rooms: FLAGS.rooms });
   const zoneRow = zones.data?.find((z) => z.id === f.zone);
@@ -480,21 +351,18 @@ export function ExplorarScreen() {
       {isError ? (
         <>
           <MapPlaceholder />
-          <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>
+          <LoadError onRetry={() => void refetch()} />
         </>
       ) : loading ? (
         <>
           <MapPlaceholder />
-          <SkeletonGrid />
+          <Skeleton shape="grid" placement="explore-results" />
         </>
       ) : provinces.length === 0 ? (
         <>
           {/* Sin ninguna casa publicada, el mapa de verdad (quieto, centrado en Limón), no solo su caja vacía. */}
           <div className="explore-map-pane"><ExploreMap listings={NO_LISTINGS} zone={null} nights={0} onOpen={null} /></div>
-          <section className="card stack">
-            <h3>Todavía no hay casas publicadas</h3>
-            <p className="small muted">Las primeras casas del Caribe sur están en camino.</p>
-          </section>
+          <EmptyState title="Todavía no hay casas publicadas" text={<p className="small muted">Las primeras casas del Caribe sur están en camino.</p>} />
         </>
       ) : (
         <Results filters={f} provinces={provinces} zoneName={zoneName} zone={zone} />

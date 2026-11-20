@@ -50,8 +50,8 @@ describe("motivo y confirmación", () => {
 
 describe("lo que ve el propietario", () => {
   it("la etiqueta sobre la foto manda sobre las demás", () => {
-    expect(cardLabel({ ...activeListing, adminHold: paused })).toEqual({ text: "Pausada por 3bstays", cls: "state-review" });
-    expect(cardLabel({ ...activeListing, adminHold: blocked })).toEqual({ text: "Bloqueada por 3bstays", cls: "state-bad" });
+    expect(cardLabel({ ...activeListing, adminHold: paused })).toEqual({ text: "Pausada por 3bstays", tone: "review" });
+    expect(cardLabel({ ...activeListing, adminHold: blocked })).toEqual({ text: "Bloqueada por 3bstays", tone: "bad" });
     expect(cardLabel({ ...activeListing, status: "payment_due", adminHold: blocked }).text).toBe("Bloqueada por 3bstays");
     expect(cardLabel(activeListing).text).toBe("Activa");
   });

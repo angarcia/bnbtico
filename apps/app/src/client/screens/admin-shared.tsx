@@ -5,6 +5,7 @@ import { accountQuery } from "../account";
 import { useSession } from "../session";
 import { ButtonLink, WaIcon } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
+import { EmptyState, StatusTag } from "../../shared/structure";
 
 export const message = (e: unknown) => toDomainError(e).message;
 export const titleOf = (l: Listing) => l.title || "Sin nombre";
@@ -13,7 +14,7 @@ export function useUserId(): string {
   return useSession().session?.userId ?? "";
 }
 
-export const AdminBadge = () => <span className="badge badge-admin">Admin</span>;
+export const AdminBadge = () => <StatusTag label={{ text: "Admin", tone: "admin" }} />;
 
 /** Solo el equipo de 3bstays: un usuario sin is_admin no ve la zona aunque tenga el segundo factor. */
 export function useIsAdmin(): boolean | null {
@@ -24,13 +25,11 @@ export function useIsAdmin(): boolean | null {
 
 export function NotAdmin() {
   return (
-    <section className="card stack">
-      <h3>Esta sección es solo para el equipo de 3bstays</h3>
-      <p className="small muted">Si busca una casa, vuelva a Explorar.</p>
-      <RouterButtonLink to="/explorar" replace variant="secondary" size="lg">
-        Ir a Explorar
-      </RouterButtonLink>
-    </section>
+    <EmptyState
+      title="Esta sección es solo para el equipo de 3bstays"
+      text={<p className="small muted">Si busca una casa, vuelva a Explorar.</p>}
+      action={<RouterButtonLink to="/explorar" replace variant="secondary" size="lg">Ir a Explorar</RouterButtonLink>}
+    />
   );
 }
 

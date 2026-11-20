@@ -163,7 +163,7 @@
     padding-inline-end: 48px;
   }
   .compact-kind-option > .row { position: relative; }
-  .compact-kind-option .choice b { font-size: 16px; }
+  .compact-kind-option .choice b { font-size: var(--fs-note); }
   .compact-kind-option .icon-btn {
     position: absolute;
     inset-inline-end: 2px;
@@ -204,7 +204,7 @@
     justify-content: space-between;
     gap: 4px;
   }
-  .publish-room-capacity .counter-label { font-size: 14px; }
+  .publish-room-capacity .counter-label { font-size: var(--fs-xs); }
   .publish-room-capacity .bathroom-options {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -269,7 +269,7 @@
     transform: none;
     padding: 14px;
     border: 1px solid var(--line-nav);
-    border-radius: 12px;
+    border-radius: var(--r);
     box-shadow: none;
   }
   .desktop-app .cal-panel .cal-day-fields { flex-wrap: wrap; }
@@ -391,7 +391,7 @@
     border: 0;
     background: transparent;
   }
-  .desktop-inquiries .nav-count { right: 0; }
+  .desktop-inquiries .count-badge { right: 0; }
   .dialog-inquiries .dialog-head { margin-bottom: 12px; }
   .desktop-nav .desktop-help span { white-space: nowrap; }
   .desktop-app .account-actions:empty { display: none; }
@@ -453,7 +453,7 @@
     display: grid;
     gap: 8px;
   }
-  .desktop-map-controls .icon-btn { border-radius: var(--float-r); font-size: 24px; }
+  .desktop-map-controls .icon-btn { border-radius: var(--float-r); font-size: var(--fs-h2); }
   .explore-map-pane:has(.desktop-map-controls) .map-card { inset-inline-end: calc(var(--float-gap) + 52px); }
   .desktop-app .explore-list-pane {
     display: grid;
@@ -496,7 +496,7 @@
     min-width: 0;
     min-height: 36px;
     padding-inline: 8px;
-    font-size: 14px;
+    font-size: var(--fs-xs);
     pointer-events: auto;
   }
   .desktop-feature-filters .feature-check { position: static; transform: none; }
@@ -635,7 +635,7 @@
   /* Un solo tamaño de título en escritorio: el de las pestañas y el de las pantallas con flecha (Ana, 2026-11-13). */
   .desktop-app .header-root.page-header h1,
   .desktop-app > main.view > .header-flow h1,
-  .app:has(> .site-top-bar) .status-header ~ .card .status-title { font-size: 30px; line-height: 1.15; }
+  .app:has(> .site-top-bar) .status-header ~ .card .status-title { font-size: var(--fs-h1-desktop); line-height: 1.15; }
   .desktop-app > main.view > .header-flow { padding-top: 12px; }
   .page-header-actions { display: flex; flex: none; align-items: center; gap: 10px; }
   .page-header-actions .btn { width: auto; }
@@ -672,12 +672,12 @@
     padding: 8px 0;
     background: transparent;
     box-shadow: none;
-    font-size: 16px;
+    font-size: var(--fs-note);
     text-align: left;
   }
   .listing-view .feature-tiles .tile-wide { display: none; }
   .listing-view .listing-calendar { max-width: 640px; }
-  .cta-monthly { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cta-monthly { display: block; margin-top: 4px; font-size: var(--fs-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
   .listing-contact-inline .stepper-input { width: 136px; }
   .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular); }
 
@@ -689,7 +689,7 @@
   .desktop-app .my-houses-summary .grid-3 { display: flex; flex-wrap: wrap; gap: 8px; }
   .desktop-app .my-houses-summary .tile { flex-direction: row; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; }
   .desktop-app .my-houses-summary .tile b { font: var(--w-strong) 16px/1.2 var(--body); }
-  .desktop-app .my-houses-summary .tile span { font-size: 15px; }
+  .desktop-app .my-houses-summary .tile span { font-size: var(--fs-sm); }
   .desktop-app .my-houses-summary .new-house {
     flex: none;
     gap: 8px;
@@ -698,11 +698,11 @@
     border: 0;
     border-radius: var(--r-input);
     background: var(--state-soft);
-    box-shadow: 0 2px 5px color-mix(in srgb, var(--primary) 14%, transparent);
+    box-shadow: var(--shadow-action);
     font-weight: var(--w-strong);
     text-decoration: none;
   }
-  .desktop-app .my-houses-summary .new-house::after { content: "Añadir casa"; }
+  .desktop-app .my-houses-summary .new-house .desktop-label { display: inline; }
   .desktop-app .house-list { align-items: stretch; gap: 20px; }
   .desktop-app .house-list .house-photo { aspect-ratio: 4 / 3; }
   .desktop-app .house-list .house-card > :is(.house-actions, .row.gap-8):last-child { margin-top: auto; }
@@ -711,9 +711,7 @@
   .desktop-app .house-actions .house-share { flex: none; width: auto; }
   .desktop-app .house-tools { gap: 4px; }
   .desktop-app .house-tool { flex: none; width: auto; gap: 6px; padding: 0 8px; }
-  .desktop-app .house-tool::after { font-size: 15px; font-weight: var(--w-medium); }
-  .desktop-app .house-tool[href*="calendario"]::after { content: "Calendario"; }
-  .desktop-app .house-tool[href*="actividad"]::after { content: "Consultas"; }
+  .desktop-app .house-tool .desktop-label { display: inline; font-size: var(--fs-sm); font-weight: var(--w-medium); }
 
   /* Detalle de casa: «Editar» deja de competir en verde en cada fila; se enciende al pasar por la fila. */
   .desktop-app .house-field .account-profile-toggle { color: var(--muted); }
@@ -728,10 +726,10 @@
   .desktop-app .owner-calendar .month-legend .swatch { width: 16px; height: 16px; }
 
   /* Cuenta: títulos al mismo nivel, la cuota al tamaño del texto y «Parar suscripción» en terracota a la izquierda. */
-  .desktop-app .owner-account-layout :is(h2, .card-title) { font-size: 20px; }
+  .desktop-app .owner-account-layout :is(h2, .card-title) { font-size: var(--fs-title); }
   .desktop-app .owner-account-layout .account-profile h3,
-  .desktop-app .owner-account-layout h3:not(.account-name, .sub-house-title) { font-size: 20px; }
-  .desktop-app .sub-price b { font-size: 18px; }
+  .desktop-app .owner-account-layout h3:not(.account-name, .sub-house-title) { font-size: var(--fs-title); }
+  .desktop-app .sub-price b { font-size: var(--fs-md); }
   .desktop-app .sub-stop { align-self: flex-start; padding-inline: 0; color: var(--brand-ink); text-decoration: none; }
 
   /* Revisión de escritorio 2026-11-13, tanda 5 (A5): Revisar anuncio y Revisar edición en dos columnas, con la decisión
@@ -757,7 +755,7 @@
   }
   .desktop-app:has(.review-actions) > .desktop-nav { display: flex; }
   /* El contador de una pestaña con texto va detrás del texto, no encima (Anuncios del admin, Consultas). */
-  .desktop-nav .nav .nav-count { position: static; margin-inline-start: 2px; }
+  .desktop-nav .nav .count-badge { position: static; margin-inline-start: 2px; }
   .desktop-app form .review-spacer { display: none; }
   .desktop-app form .review-actions {
     position: static;
@@ -778,7 +776,7 @@
   .desktop-app main.view > .grid-3:has(> .tile-review) > .tile { flex-direction: row; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; }
   .desktop-app main.view > .grid-3:has(> .tile-review) { display: flex; flex-wrap: wrap; gap: 8px; }
   .desktop-app main.view > .grid-3:has(> .tile-review) > .tile b { font: var(--w-strong) 16px/1.2 var(--body); }
-  .desktop-app main.view > .grid-3:has(> .tile-review) > .tile span { font-size: 15px; }
+  .desktop-app main.view > .grid-3:has(> .tile-review) > .tile span { font-size: var(--fs-sm); }
 }
 
 /* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */

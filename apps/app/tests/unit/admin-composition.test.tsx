@@ -37,9 +37,8 @@ vi.mock("@tanstack/react-router", () => ({
       <Comp href={to.replace(/\$(\w+)/g, (_, key: string) => params?.[key] ?? key)} data-search={JSON.stringify(search)} data-replace={replace} {...props} />,
 }));
 vi.mock("../../src/client/chrome", () => ({
-  RootHeader: ({ title, home, action }: { title: string; home: string; action?: ReactNode }) => <header data-home={home}>{title}{action}</header>,
-  FlowHeader: ({ title, back, action, historyBack }: { title: string; back: string; action?: ReactNode; historyBack?: boolean }) =>
-    <header data-back={back} data-history={historyBack}>{title}{action}</header>,
+  ScreenHeader: ({ kind, title, home, back, action }: { kind: "root" | "flow"; title: string; home?: string; back?: { to: string; historyBack?: boolean }; action?: ReactNode }) =>
+    kind === "root" ? <header data-home={home}>{title}{action}</header> : <header data-back={back?.to} data-history={back?.historyBack}>{title}{action}</header>,
 }));
 vi.mock("../../src/client/session", () => ({ useSession: () => ({ session: state.session }) }));
 vi.mock("../../src/client/account", () => ({ accountQuery: (id: string) => ({ queryKey: ["account", id] }) }));

@@ -30,6 +30,7 @@ import { LocationStep } from "./location-step";
 import { useStepReady } from "./step-ready";
 import { KindChoice, ReadyList } from "./wizard-parts";
 import { Button } from "../../shared/button";
+import { Card } from "../../shared/card";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
  * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Un solo componente para
@@ -216,7 +217,7 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
  *  personas: es 1 habitación y 1 baño (`normalize`); el baño privado o compartido va aparte (`BathroomChoice`). */
 export function CapacityCounters({ draft, icons = false, iconByValue }: { draft: ListingDraft; icons?: boolean; iconByValue?: boolean }) {
   return (
-    <div className="card counters">
+    <Card as="div" placement="counters">
       <Counter name="capacity" label="Personas" unit="Una persona" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
       {draft.kind === "habitacion" ? null : (
         <>
@@ -224,7 +225,7 @@ export function CapacityCounters({ draft, icons = false, iconByValue }: { draft:
           <Counter name="bathrooms" label="Baños" unit="Un baño" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
         </>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -331,7 +332,7 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   ];
   return (
     <>
-      <nav className="card review-list" aria-label="Lo que va a enviar">
+      <Card as="nav" placement="review-list" aria-label="Lo que va a enviar">
         {rows.map((r) => {
           const missing = required.some((p) => p.step === r.step);
           const warn = !missing && warned.some((w) => w.step === r.step);
@@ -353,21 +354,21 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
             </Link>
           );
         })}
-      </nav>
+      </Card>
       <Button variant="secondary" block onClick={() => setPreview(true)}>
         Ver cómo queda su ficha
       </Button>
       <span className="small muted">
         Los clientes le escriben al <b className="num ink">{formatPhone(listing.whatsappPhone)}</b> (verificado). No se muestra públicamente.
       </span>
-      <section className="card-arena row between baseline gap-8 offer-line">
+      <Card tone="solid" layout="row" gap={8} placement="offer-line">
         <span className="small">
           {offer === null
             ? `${fee} al mes desde que se apruebe, sin permanencia.`
             : `Si está entre las próximas ${offer?.remaining ?? offer?.size ?? 50} casas. Después, ${fee} al mes. Sin tarjeta.`}
         </span>
         <b className="num primary">{offer === null ? `${fee} al mes` : `₡0 · ${offer?.months ?? 12} meses`}</b>
-      </section>
+      </Card>
       {preview ? <FichaPreview listing={listing} draft={d} ownerName={account.data?.name ?? ""} onClose={() => setPreview(false)} /> : null}
     </>
   );

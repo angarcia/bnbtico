@@ -33,8 +33,8 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("../../src/client/chrome", () => ({
   FlowFrame: ({ children }: { children: ReactNode }) => <main data-frame="flow">{children}</main>,
   TabsFrame: ({ children }: { children: ReactNode }) => <main data-frame="tabs">{children}</main>,
-  FlowHeader: ({ title, back, search, historyBack }: { title: string; back: string; search?: unknown; historyBack?: boolean }) =>
-    <header data-back={back} data-search={JSON.stringify(search)} data-history={historyBack}>{title}</header>,
+  ScreenHeader: ({ title, back }: { title: string; back?: { to: string; search?: unknown; historyBack?: boolean } }) =>
+    <header data-back={back?.to} data-search={JSON.stringify(back?.search)} data-history={back?.historyBack}>{title}</header>,
 }));
 vi.mock("../../src/client/session", () => ({
   useSession: () => ({ status: state.status, session: state.status === "signed-out" ? null : { userId: "u1" } }),

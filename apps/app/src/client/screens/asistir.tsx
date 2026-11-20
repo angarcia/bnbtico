@@ -12,7 +12,7 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { I } from "../../shared/icons";
-import { FlowHeader, RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { useDesktop } from "../desktop";
 import { EditorContext, type EditorListings, type EditorPhotos, type EditorPort } from "../editor-port";
 import { authApi, useSession } from "../session";
@@ -21,8 +21,11 @@ import { Calendar } from "./calendario";
 import { calendarQuery } from "../calendar-days";
 import { EditarCampoScreen } from "./editar";
 import { useOwnListing } from "../editor-query";
-import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { NotFoundCard } from "../editor-status";
 import { PasoScreen } from "./publicar";
+import { EmptyState, LoadError, Skeleton } from "../../shared/structure";
+import { List } from "../../shared/card";
+import { RouterListRow } from "../router-rows";
 
 let edit: AdminEditApi | null = null;
 const adminEdit = async (): Promise<AdminEditApi> => {
@@ -86,26 +89,21 @@ function AdminCasa() {
   if (l && !isPublished(l)) return <Navigate to="/admin/casas/$id/publicar/$paso" params={{ id, paso: String(resumeStep(l)) }} replace />;
   return (
     <>
-      <FlowHeader
-        title="Editar casa"
-        back="/admin/casas"
-        historyBack
-        action={
+      <ScreenHeader kind="flow" title="Editar casa" back={{ to: "/admin/casas", historyBack: true }} action={
           l && l.status === "active" && !l.adminHold ? (
             <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="link header-action">
               Ver ficha
             </Link>
           ) : undefined
-        }
-      />
+        } />
       {l ? (
         <>
           <p className="small muted num" data-testid="admin-house-line">
             {l.publicId} · {l.title || "Sin nombre"}
           </p>
           <EditableFicha listing={l} userId={userId} />
-          <section className="list">
-            <Link to="/admin/casas/$id/calendario" params={{ id }} className="list-item">
+          <List>
+            <RouterListRow to="/admin/casas/$id/calendario" params={{ id }}>
               <span className="body">
                 <b>Calendario</b>
                 <small>Días ocupados y precios especiales</small>
@@ -113,13 +111,13 @@ function AdminCasa() {
               <span className="chev">
                 <I.chevron />
               </span>
-            </Link>
-          </section>
+            </RouterListRow>
+          </List>
         </>
       ) : null}
       {l === null ? <NotFoundCard /> : null}
-      {l === undefined && query.isError ? <p className="note" role="alert">{message(query.error)}</p> : null}
-      {l === undefined && !query.isError ? <SkeletonCard /> : null}
+      {l === undefined && query.isError ? <LoadError onRetry={() => void query.refetch()}>{message(query.error)}</LoadError> : null}
+      {l === undefined && !query.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
     </>
   );
 }
@@ -161,12 +159,12 @@ function AdminCalendar() {
   const l = query.data;
   return (
     <>
-      <FlowHeader title="Calendario" back={`/admin/casas/${id}`} historyBack />
+      <ScreenHeader kind="flow" title="Calendario" back={{ to: `/admin/casas/${id}`, historyBack: true }} />
       {l ? <p className="cal-house">{l.title || "Sin nombre"}</p> : null}
       {l ? <Calendar listing={l} userId={userId} month={undefined} /> : null}
       {l === null ? <NotFoundCard /> : null}
-      {l === undefined && query.isError ? <p className="note" role="alert">{message(query.error)}</p> : null}
-      {l === undefined && !query.isError ? <SkeletonCard /> : null}
+      {l === undefined && query.isError ? <LoadError onRetry={() => void query.refetch()}>{message(query.error)}</LoadError> : null}
+      {l === undefined && !query.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
     </>
   );
 }
@@ -189,30 +187,26 @@ export function BorradoresScreen() {
   const data = drafts.data;
   return (
     <>
-      {desktop ? <FlowHeader title="Borradores" back="/admin/casas" historyBack /> : <RootHeader title="Borradores" home="/admin/casas" />}
+      {desktop ? <ScreenHeader kind="flow" title="Borradores" back={{ to: "/admin/casas", historyBack: true }} /> : <ScreenHeader kind="root" title="Borradores" home="/admin/casas" />}
       <p className="small muted">Casas que su anfitrión empezó y aún no envió. Toque una para completarla con él.</p>
       {drafts.isError && !data ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void drafts.refetch()}>
           {message(drafts.error)}
-        </p>
+        </LoadError>
       ) : null}
       {!data && !drafts.isError ? (
-        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando los borradores">
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="line" label="Cargando los borradores" />
       ) : null}
       {data && data.length === 0 ? (
-        <section className="card">
-          <p className="muted">No hay borradores sin enviar.</p>
-        </section>
+        <EmptyState text={<p className="muted">No hay borradores sin enviar.</p>} />
       ) : null}
       {data && data.length > 0 ? (
-        <section className="list" aria-label="Borradores">
+        <List aria-label="Borradores">
           {data.map(({ listing: l, ownerName }) => {
             const cover = l.photos[0];
             const missing = missingLine(missingParts(l));
             return (
-              <Link key={l.id} to="/admin/casas/$id" params={{ id: l.id }} className="list-item house-row">
+              <RouterListRow placement="house-row" key={l.id} to="/admin/casas/$id" params={{ id: l.id }}>
                 {cover ? <img src={variantUrl(cover, 480)} alt="" className="thumb house-thumb" width={56} height={56} loading="lazy" decoding="async" /> : <span className="thumb house-thumb" />}
                 <span className="body stack house-body">
                   <b className="house-title">{l.title || "Sin nombre"}</b>
@@ -222,10 +216,10 @@ export function BorradoresScreen() {
                 <span className="chev">
                   <I.chevron />
                 </span>
-              </Link>
+              </RouterListRow>
             );
           })}
-        </section>
+        </List>
       ) : null}
     </>
   );

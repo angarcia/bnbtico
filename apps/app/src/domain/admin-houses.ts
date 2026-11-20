@@ -3,6 +3,7 @@
 import type { AdminHold } from "./admin-hold";
 import type { ListingStatus, Photo } from "./listing";
 import { formatCRC } from "./money";
+import { holdLabel, statusLabel, type StatusLabel } from "./status-label";
 import { cardDate, shortDate, type HouseSubscription } from "./subscription";
 
 export interface AdminHouse {
@@ -49,23 +50,10 @@ export function chipOf(h: Pick<AdminHouse, "status" | "hold">): Exclude<HouseChi
   return h.hold ? (h.hold.kind === "blocked" ? "bloqueadas" : "pausadas") : houseChip(h.status);
 }
 
-/** La insignia de una fila: la retención del admin manda sobre el estado. */
-export function houseBadge(h: Pick<AdminHouse, "status" | "hold">): { label: string; badge: string } {
-  if (!h.hold) return HOUSE_BADGES[h.status];
-  return h.hold.kind === "blocked" ? { label: "Bloqueada", badge: "badge-bad" } : { label: "Pausada", badge: "badge-review" };
+/** La etiqueta de una fila: la retención del admin manda sobre el estado; los textos del estado son los de toda la app. */
+export function houseLabel(h: Pick<AdminHouse, "status" | "hold">): StatusLabel {
+  return h.hold ? holdLabel(h.hold.kind, "row") : statusLabel(h.status);
 }
-
-/** Insignias del diseño 23: Activa salvia claro, Por pagar ocre, Inactiva arena. */
-export const HOUSE_BADGES: Record<ListingStatus, { label: string; badge: string }> = {
-  /** Publicada alguna vez y reabierta para editar (las nunca publicadas no salen en esta lista). */
-  draft: { label: "En edición", badge: "badge-review" },
-  review: { label: "En revisión", badge: "badge-review" },
-  changes: { label: "Cambios pedidos", badge: "badge-review" },
-  rejected: { label: "Rechazada", badge: "badge-bad" },
-  payment_due: { label: "Por pagar", badge: "badge-sun" },
-  active: { label: "Activa", badge: "badge-ok" },
-  inactive: { label: "Inactiva", badge: "badge-mute" },
-};
 
 export function countHouses(houses: readonly AdminHouse[]): Record<HouseChip, number> {
   const counts: Record<HouseChip, number> = { todas: houses.length, activas: 0, "por-pagar": 0, inactivas: 0, pausadas: 0, bloqueadas: 0 };

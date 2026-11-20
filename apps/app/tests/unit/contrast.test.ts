@@ -82,7 +82,7 @@ const STATE_LABELS: [string, string, string][] = [
   ["review-row.is-warn", "--sun-ink", "--sun-soft"],
 ];
 
-// Tema oscuro: el contador sobre --brand-ink lleva texto --bg (override de `.count-badge` en global.css).
+// Tema oscuro: las variables del bloque oscuro de global.css.
 function darkVars(source: string): Record<string, string> {
   const m = source.match(/@media \(prefers-color-scheme: dark\)\{:root:not\(\[data-theme="light"\]\)\{([^}]*)\}/);
   if (!m) throw new Error("no hay bloque oscuro en global.css");
@@ -172,11 +172,11 @@ describe("contraste del tema oscuro", () => {
     expect(darkContrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("texto --bg sobre el contador --brand-ink ≥ 4,5:1", () => {
-    expect(css).toMatch(/\.count-badge\{color:var\(--bg\)\}/);
-    const fg = dark["--bg"]!;
-    const bg = dark["--brand-ink"]!;
-    const [l1, l2] = [luminance(fg), luminance(bg)].sort((x, y) => y - x) as [number, number];
+  // Un solo contador (historia 07, paso 5): texto --bg sobre --brand, en los dos temas.
+  it("texto --bg sobre el contador --brand ≥ 4,5:1 (claro y oscuro)", () => {
+    expect(css).toMatch(/\.count-badge\{[^}]*background:var\(--brand\);color:var\(--bg\)/);
+    expect(darkContrast("--bg", "--brand")).toBeGreaterThanOrEqual(4.5);
+    const [l1, l2] = [luminance(hex("--bg", vars)), luminance(hex("--brand", vars))].sort((x, y) => y - x) as [number, number];
     expect((l1 + 0.05) / (l2 + 0.05)).toBeGreaterThanOrEqual(4.5);
   });
 });

@@ -9,11 +9,13 @@ import { KIND_LABELS, type Listing } from "../../domain/listing";
 import { REVIEW_NOTE_MAX, editNoteRefusal, type EditDecision, type QueueItem } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "../admin";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, bathText, factsLine } from "./admin-review-details";
 import { NotAdmin, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
 import { Field, TextArea } from "../../shared/field";
 import { Button } from "../../shared/button";
+import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure";
+import { Card, cardClass } from "../../shared/card";
 
 // ---------- Revisar edición (spec .scratch/editar-casa §4) ----------
 const revisarEdicionRoute = getRouteApi("/_flow/_adminFlow/admin/ediciones/$id");
@@ -28,7 +30,7 @@ export function RevisarEdicionScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <FlowHeader title="Revisar edición" back="/explorar" />
+        <ScreenHeader kind="flow" title="Revisar edición" back={{ to: "/explorar" }} />
         <NotAdmin />
       </>
     );
@@ -38,21 +40,17 @@ export function RevisarEdicionScreen() {
   const edit = data?.listing.edit;
   return (
     <>
-      <FlowHeader title="Revisar edición" back="/admin" />
+      <ScreenHeader kind="flow" title="Revisar edición" back={{ to: "/admin" }} />
       {item.isError && !data ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void item.refetch()}>
           {message(item.error)}
-        </p>
+        </LoadError>
       ) : null}
       {data === null ? (
-        <section className="card">
-          <p className="muted">No encontramos esa edición.</p>
-        </section>
+        <EmptyState text={<p className="muted">No encontramos esa edición.</p>} />
       ) : null}
       {data === undefined && !item.isError ? (
-        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando la edición">
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="line" label="Cargando la edición" />
       ) : null}
       {data && edit ? (
         <>
@@ -67,9 +65,9 @@ export function RevisarEdicionScreen() {
           {edit.status === "review" ? <Checklist /> : null}
           <EditDiff item={data} userId={userId} />
           {edit.status === "changes" ? (
-            <p className="note" role="status">
+            <Notice announce>
               Lo pendiente tiene cambios pedidos: espera al anfitrión.
-            </p>
+            </Notice>
           ) : null}
         </>
       ) : null}
@@ -79,10 +77,10 @@ export function RevisarEdicionScreen() {
 
 function DiffBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="card stack gap-8" aria-label={title}>
+    <Card layout="stack" gap={8} aria-label={title}>
       <b className="small muted">{title}</b>
       {children}
-    </section>
+    </Card>
   );
 }
 
@@ -156,7 +154,7 @@ function EditDiff({ item, userId }: { item: QueueItem; userId: string }) {
           </div>
         </DiffBlock>
       ) : null}
-      <details className="card stack gap-8 diff-fold">
+      <Card as="details" layout="stack" gap={8} placement="diff-fold">
         <summary className="small strong">Lo que no cambia</summary>
         {has("nombre") ? null : <b>{titleOf(l)}</b>}
         <span className="small muted">{factsLine(l, { kind: has("tipo"), location: has("ubicacion") })}</span>
@@ -165,7 +163,7 @@ function EditDiff({ item, userId }: { item: QueueItem; userId: string }) {
         <FeatureBadges l={l} />
         <span className="small muted">{l.photos.length === 1 ? "1 foto aprobada" : `${l.photos.length} fotos aprobadas`}</span>
         <OwnerCard l={l} ownerName={ownerName} />
-      </details>
+      </Card>
     </>
   );
 }
@@ -193,7 +191,7 @@ function TwoPointsMap({ before, beforeZone, after }: { before: MapPoint | null; 
   }, [before?.lat, before?.lng, before?.label, after.lat, after.lng, after.label]); // eslint-disable-line react-hooks/exhaustive-deps
   const label = `Mapa con la ubicación de antes (${beforeZone}) y la de ahora (${after.label})`;
   return failed || !before ? (
-    <div className="map-box map-box-listing card-arena small" role="img" aria-label={label}>
+    <div className={`map-box map-box-listing ${cardClass({ tone: "solid" })} small`} role="img" aria-label={label}>
       Antes: {beforeZone || "sin ubicación"} · Ahora: {after.label}
     </div>
   ) : (
@@ -213,9 +211,9 @@ function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget;
   if (!state) return null;
   if (state.status === "changes")
     return (
-      <p className="small note-review" role="status">
+      <Notice tone="review" small inline announce>
         Cambios pedidos: {state.reviewNote || "sin nota adicional."}
-      </p>
+      </Notice>
     );
   function decide(decision: EditDecision) {
     const refusal = editNoteRefusal(decision, note);

@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { HOLD_COPY } from "../domain/admin-actions";
 import { describe } from "../domain/describe";
@@ -13,6 +12,9 @@ import type { HouseBilling } from "./billing";
 import { SUPPORT_NUMBERS } from "./support-numbers";
 import { Button, ButtonLink, WaIcon } from "../shared/button";
 import { RouterButtonLink } from "./router-buttons";
+import { RouterListRow } from "./router-rows";
+import { Notice } from "../shared/structure";
+import { Card, ListRow } from "../shared/card";
 
 const base = () => window.location.origin;
 export const titleOf = (l: Listing) => l.title || "Borrador sin título";
@@ -28,15 +30,13 @@ const dayOf = (date: string, today: string) => (date.slice(0, 4) === today.slice
 
 /** Enlace a la suscripción: con casa, «Suscripción» de esa sola casa (`?casa=CT-####` y `#pago=CT-####`, que la resalta);
  *  sin ella, «Promoción y suscripción» con todas. */
-export function SubscriptionLink({ publicId, className, children }: { publicId?: string; className: string; children: ReactNode }) {
+export function SubscriptionLink({ publicId, children }: { publicId?: string; children: ReactNode }) {
   return publicId ? (
-    <Link to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} className={className}>
+    <RouterListRow to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`}>
       {children}
-    </Link>
+    </RouterListRow>
   ) : (
-    <Link to="/propietario/suscripcion" className={className}>
-      {children}
-    </Link>
+    <RouterListRow to="/propietario/suscripcion">{children}</RouterListRow>
   );
 }
 
@@ -70,12 +70,12 @@ export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: strin
       : reminderCard(reminderDaysLeft(sub, today) ?? -1);
   if (!card) return null;
   return (
-    <section className="card-sun stack gap-10" data-testid="pay-notice">
+    <Card tone="sun" layout="stack" gap={10} data-testid="pay-notice">
       {title ? <span className="xs strong">{title}</span> : null}
       <b className="display offer-title">{card.title}</b>
       <span className="small ink">{card.body}</span>
       <PayButton publicId={house.publicId} />
-    </section>
+    </Card>
   );
 }
 
@@ -104,23 +104,23 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
   if (card)
     return (
       <>
-        <p className="note note-arena small" data-testid="hold-note">
+        <Notice tone="solid" small data-testid="hold-note">
           <span>
             <b>{copy.title}.</b> Motivo: {hold.reason}
           </span>
-        </p>
+        </Notice>
         {write}
       </>
     );
   return (
-    <section className="card-arena stack gap-10" data-testid="hold-notice">
+    <Card tone="solid" layout="stack" gap={10} data-testid="hold-notice">
       <h2 className="display offer-title">{copy.title}</h2>
       <span className="small ink">{copy.body}</span>
       <span className="small ink">
         <b>Motivo:</b> <span data-testid="hold-reason">{hold.reason}</span>
       </span>
       {write}
-    </section>
+    </Card>
   );
 }
 
@@ -140,13 +140,13 @@ export function ShareButtonInline({ listing: l, placement = "grow", block = fals
 /** El WhatsApp de la casa, de solo lectura (se cambia desde Cuenta). */
 export function WhatsAppItem({ listing: l }: { listing: Listing }) {
   return (
-    <div className="list-item">
+    <ListRow>
       <span className="muted-icon">
         <I.phone />
       </span>
       <span className="body">
         WhatsApp de esta casa<small className="num">{formatPhone(l.whatsappPhone)} · verificado</small>
       </span>
-    </div>
+    </ListRow>
   );
 }

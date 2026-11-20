@@ -6,6 +6,7 @@ import { waUrl } from "../domain/whatsapp";
 import { track } from "../shared/beacon";
 import { I } from "../shared/icons";
 import { ButtonLink, TextButton } from "../shared/button";
+import { EmptyState, Notice } from "../shared/structure";
 
 /**
  * Sin resultados (`onClear`): tarjeta «No hay casas con esos filtros», la nota si hay número y «Quitar filtros» si hay
@@ -21,16 +22,13 @@ export function SearchHelp({ filters, zoneName = null, number, onClear }: { filt
       </ButtonLink>
     </>
   ) : null;
-  if (onClear === undefined) return help && <div className="note note-plain note-col">{help}</div>;
+  if (onClear === undefined) return help && <Notice as="div" layout="column">{help}</Notice>;
   return (
-    <section className="card stack gap-14">
-      <h3>No hay casas con esos filtros</h3>
-      {help}
-      {onClear ? (
-        <TextButton tone="link" onClick={onClear}>
-          Quitar filtros
-        </TextButton>
-      ) : null}
-    </section>
+    <EmptyState
+      gap={14}
+      title="No hay casas con esos filtros"
+      text={help}
+      action={onClear ? <TextButton tone="link" onClick={onClear}>Quitar filtros</TextButton> : null}
+    />
   );
 }

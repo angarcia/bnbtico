@@ -1,5 +1,19 @@
 # Guía de pruebas manuales de 3bstays
 
+## Estructura y contenido comunes · 2026-11-20 (historia 07, paso 5)
+
+En el teléfono (datos móviles) y en escritorio (1280 × 800), en claro y en oscuro. El aspecto no cambia salvo lo que se dice:
+
+- [ ] **Error de carga igual en todas partes:** sin red (modo avión tras abrir la app, o con la red cortada al cargar), Explorar, Explorar con una búsqueda y Favoritos con casas guardadas enseñan el mismo aviso **rojo**: «No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.» con «Reintentar» a la derecha. VoiceOver o TalkBack lo anuncian al salir. Con la red de vuelta, «Reintentar» trae las casas sin recargar la página. Antes, en Explorar y Favoritos salía en blanco y sin anunciarse.
+- [ ] **Con sesión, el mismo error con «Reintentar»:** sin red y sin haber abierto antes la pantalla, Mis casas, el detalle de una casa, Consultas, el Calendario, «Calendarios de Airbnb», «Promoción y suscripción», el asistente, «Editar un dato» y, como admin, Anuncios, Casas, Borradores y la revisión de un anuncio o de una edición enseñan el aviso rojo con su mensaje y «Reintentar»; con la red de vuelta, «Reintentar» carga la pantalla. Los errores al guardar, pagar o descartar siguen sin «Reintentar». «Ver más casas» tampoco lo lleva (el botón ya reintenta).
+- [ ] **Etiquetas de estado:** en Mis casas (sobre la foto), en el detalle, en «Promoción y suscripción», en la cola y en Casas del admin, las etiquetas son píldoras redondas con **el mismo texto en todas partes**: en Casas del admin, una casa sin pagar dice «Pendiente de pago» (ocre) y una reabierta «Borrador» (arena), ya no «Por pagar» ni «En edición». El chip de filtro «Por pagar» de Casas no cambia. Sobre la foto se sigue leyendo «Pausada por 3bstays» y en las filas «Pausada»; en la fila de un dato que se edita, «En revisión» en gris oscuro y «Cambios pedidos» en terracota.
+- [ ] **Escritorio, Explorar y Calendario:** la búsqueda de escritorio (Lugar, Fechas o Noches, Personas) y el panel de los días del Calendario llegan ahora en su propio trozo: al abrir Explorar en escritorio la barra de búsqueda aparece enseguida y no salta; en el Calendario, tocar un día abre el panel como antes, también con «Slow 4G».
+- [ ] **Contadores:** el número de Consultas (pestaña, barra de escritorio y botón «Consultas» de cada casa en Mis casas) y de Anuncios del admin es el mismo cuadrado terracota de 18 px con letra de 13 px (el de cada casa era de 12 px); el de Filtros sigue verde y redondo.
+- [ ] **Esqueletos:** al abrir Mis casas, Consultas, el Calendario, Cuenta, la suscripción y las pantallas del admin con la red lenta, sale el mismo bloque arena con brillo; con movimiento reducido no brilla.
+- [ ] **Cabecera del asistente mientras carga:** con «Slow 4G», toque «+» en Mis casas → mientras llega el asistente, «Publicar casa» a la izquierda y la ✕ de 44 px a la derecha, en el mismo sitio en que queda al cargar (antes salía «✕ Cerrar» a la izquierda). Sin cuenta (/publicar), la ✕ vuelve a Explorar.
+- [ ] **Escritorio, Mis casas con varias casas:** «Añadir casa», «Calendario» y «Consultas» se ven como antes; con VoiceOver, «Añadir casa» se lee «Nueva casa» y los otros con su nombre (ahora el texto está en la página, no lo pone el CSS).
+- [ ] **Sin cambios a la vista:** la ficha pública, sus páginas de estado («Este enlace no existe», «Este enlace ya no está activo», «No pudimos cargar esta casa»), Favoritos vacío, «No encontramos esta página», la cola del admin y los avisos ocres de pago se ven igual que antes.
+
 ## Campos y formularios comunes · 2026-11-20 (historia 07, paso 4)
 
 En el teléfono (datos móviles) y en escritorio (1280 × 800), en claro y en oscuro:
@@ -237,7 +251,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] En escritorio, abra una ficha con precio al mes. El título, el tipo, la zona y la capacidad van a la izquierda. Las características son una lista con icono y texto, sin cajas, y «Alquiler mensual» aparece bajo el precio del panel derecho, no entre ellas. La foto no lleva la flecha de volver (la barra superior lleva a Explorar). Sin sesión, el botón dice «Escribir a [anfitrión] por WhatsApp», debajo hay un aviso de verificación y otro de pagos en tinta, y «Personas» muestra «Opcional» hasta elegir un número. Al bajar, el panel queda fijo bajo la barra superior. En el móvil, la ficha y la hoja de contacto siguen como antes.
 
-- [ ] En escritorio, Mis casas: bajo el título, el resumen va en pastillas («2 activas», «1 en revisión») y «Añadir casa» a la derecha. Las tarjetas miden lo mismo, con la foto 4:3 y las acciones al pie, y «Calendario» y «Consultas» llevan su nombre. En el detalle de una casa, «Editar» va en gris y se pone verde al pasar por la fila.
+- [ ] En escritorio, Mis casas: bajo el título, el resumen va en pastillas («2 activas», «1 en revisión») y «Añadir casa» a la derecha (su nombre accesible es «Nueva casa»). Las tarjetas miden lo mismo, con la foto 4:3 y las acciones al pie, y «Calendario» y «Consultas» llevan su nombre visible. En el detalle de una casa, «Editar» va en gris y se pone verde al pasar por la fila.
 
 - [ ] En escritorio, Calendario: un mes cabe en pantalla con casillas bajas. Cada día disponible lleva su precio con el símbolo («₡45 000» o «$88»); los de precio especial, en terracota. Los días pasados van sin fondo. En el móvil, cada casilla sigue con su precio sin símbolo.
 

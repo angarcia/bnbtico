@@ -6,6 +6,7 @@ import type { Listing } from "../domain/listing";
 import type { ListingEdit } from "../domain/edit";
 import { cardLabel } from "../domain/navigation";
 import { I } from "../shared/icons";
+import { StatusTag } from "../shared/structure";
 
 export interface HouseCardTopProps {
   listing: Listing;
@@ -43,9 +44,7 @@ export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "
             Aún sin fotos
           </span>
         )}
-        <span className={`state ${label.cls}`} data-testid="card-label">
-          {label.text}
-        </span>
+        <StatusTag placement="photo" label={label} data-testid="card-label" />
       </div>
       <h2 className="house-card-title">
         {link ? (

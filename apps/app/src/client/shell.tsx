@@ -5,11 +5,11 @@ import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createR
 import { costaRicaToday } from "../domain/dates";
 import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, type SearchParams } from "../domain/filters";
 import { track } from "../shared/beacon";
-import { I } from "../shared/icons";
 import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
 import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./query-policy";
-import { FlowFrame, Placeholder, TabsFrame } from "./chrome";
+import { FlowFrame, Placeholder, ScreenHeader, TabsFrame } from "./chrome";
+import { Skeleton } from "../shared/structure";
 import { isDesktop } from "./desktop";
 import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
@@ -23,7 +23,7 @@ import { ExplorarScreen } from "./screens/explorar";
 import { currentSession, onSignedOut, useSession } from "./session";
 import { UpdateBanner } from "./update-banner";
 import { FLAGS, SEARCH_MODE } from "../shared/flags";
-import { RouterButtonLink, RouterTextLink } from "./router-buttons";
+import { RouterButtonLink } from "./router-buttons";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
@@ -152,46 +152,22 @@ const adminFlow = createRoute({ getParentRoute: () => flow, id: "_adminFlow", be
 /** Mientras llega el trozo del asistente con la red lenta (p. ej. al tocar «+» en Mis casas): su cabecera y el esqueleto,
  *  lo mismo que pinta el asistente mientras carga; sin esto, la pantalla de antes se quedaba ~1 s sin responder. Con el
  *  trozo ya en el teléfono no llega a verse. */
-const publicarPending = {
+/** `to`: adónde lleva la ✕ (la misma que la del asistente, `WizardHeader`); `label`, el del esqueleto. */
+const wizardPending = (to: string, close: string, label: string) => ({
   pendingMs: 150,
   pendingMinMs: 0,
   pendingComponent: () => (
     <>
-      <header className="header-flow">
-        <RouterTextLink to="/propietario/casas" tone="link" placement="header-close" aria-label="Cerrar y seguir después">
-          <I.x size={20} />
-          <span>Cerrar</span>
-        </RouterTextLink>
-        <h1>Publicar casa</h1>
-      </header>
-      <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando sus casas">
-        <span className="sk thumb" />
-        <span className="sk sk-line" />
-      </section>
+      <ScreenHeader kind="wizard" title="Publicar casa" close={{ to, label: close, title: close }} />
+      <Skeleton shape="row" label={label} />
     </>
   ),
-};
+});
+const publicarPending = wizardPending("/propietario/casas", "Cerrar y seguir después", "Cargando sus casas");
 
-/** El mismo esqueleto sin cuenta: «Cerrar» vuelve a Explorar (Mis casas pediría ingresar). */
+/** El mismo esqueleto sin cuenta: «Cerrar» vuelve a Explorar (Mis casas pediría ingresar), como la cabecera de la entrada. */
 const PHOTOS_STEP = 7;
-const publicarLocalPending = {
-  ...publicarPending,
-  pendingComponent: () => (
-    <>
-      <header className="header-flow">
-        <RouterTextLink to="/explorar" tone="link" placement="header-close" aria-label="Cerrar y seguir después">
-          <I.x size={20} />
-          <span>Cerrar</span>
-        </RouterTextLink>
-        <h1>Publicar casa</h1>
-      </header>
-      <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando">
-        <span className="sk thumb" />
-        <span className="sk sk-line" />
-      </section>
-    </>
-  ),
-};
+const publicarLocalPending = wizardPending("/explorar", "Cerrar", "Cargando");
 
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
 const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);

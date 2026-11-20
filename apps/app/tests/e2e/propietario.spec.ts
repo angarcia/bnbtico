@@ -65,7 +65,7 @@ test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarj
 
   const cambios = card(page, "Cabina con cambios");
   await expect(cambios.getByTestId("card-label")).toHaveText("Cambios pedidos");
-  await expect(cambios.getByText("Nota de 3bstays: Faltan fotos del baño.")).toHaveClass(/note-arena/);
+  await expect(cambios.getByText("Nota de 3bstays: Faltan fotos del baño.")).toHaveClass(/note-solid/);
   await expect(cambios.getByRole("link", { name: "Corregir y reenviar" })).toHaveClass(/btn-primary/);
   await expect(cambios.getByRole("link", { name: "Corregir y reenviar" })).toHaveAttribute("href", `/propietario/publicar/${changes.id}/1`);
 
@@ -197,10 +197,11 @@ test("Mis casas en escritorio: «Añadir casa» con texto, las herramientas de l
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/propietario/casas");
   const add = page.getByRole("link", { name: "Nueva casa" });
-  expect(await add.evaluate((el) => getComputedStyle(el, "::after").content)).toBe('"Añadir casa"');
+  // El texto está en el DOM (historia 07, paso 5: antes con `content:`), y el nombre accesible sigue siendo «Nueva casa».
+  await expect(add.getByText("Añadir casa", { exact: true })).toBeVisible();
   const tool = page.locator(".house-tool").first();
   await expect(tool).toBeVisible();
-  expect(await tool.evaluate((el) => getComputedStyle(el, "::after").content)).toBe('"Calendario"');
+  await expect(tool.getByText("Calendario", { exact: true })).toBeVisible();
   const photo = (await page.locator(".house-list .house-photo").first().boundingBox())!;
   expect(Math.abs(photo.width / photo.height - 4 / 3)).toBeLessThan(0.02);
 });

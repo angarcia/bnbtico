@@ -12,6 +12,7 @@ import { toDomainError } from "../domain/errors";
 import { RangeCalendar } from "../shared/range-calendar";
 import { Sheet } from "../shared/overlay";
 import { Button } from "../shared/button";
+import { Notice } from "../shared/structure";
 
 const EMPTY_DAYS: readonly CalendarDay[] = [];
 
@@ -56,7 +57,7 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
         </span>
         <form onSubmit={onSubmit} noValidate>
           {status === "loading" ? <p className="hint" role="status">Comprobando disponibilidad…</p> : null}
-          {message ? <p className="note" role="alert">{message}</p> : null}
+          {message ? <Notice tone="error">{message}</Notice> : null}
           {status === "warning" ? <Button variant="secondary" onClick={() => { setStatus("ready"); setProblem(null); }}>Continuar con el último calendario</Button> : null}
           {status === "warning" || status === "error" ? <Button variant="secondary" onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</Button> : null}
           {ready ? <div className="contact-calendar mark-calendar">

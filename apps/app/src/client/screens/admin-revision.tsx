@@ -3,16 +3,19 @@ import { Link, Navigate, getRouteApi, useNavigate } from "@tanstack/react-router
 import { useState, type FormEvent } from "react";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { MIN_PHOTOS_TO_APPROVE, STATUS_LABELS, isProposedZone, type Listing } from "../../domain/listing";
+import { MIN_PHOTOS_TO_APPROVE, isProposedZone, type Listing } from "../../domain/listing";
+import { statusLabel } from "../../domain/status-label";
 import { decidedNoticeKind, firstName, ownerNoticeUrl, type OwnerNoticeInput } from "../../domain/owner-notice";
 import { NO_PHOTOS_NOTE, REVIEW_NOTE_MAX, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { adminListingQuery, useReview } from "../admin";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, factsLine } from "./admin-review-details";
 import { NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
 import { Field, StickyActions, TextArea } from "../../shared/field";
 import { Button } from "../../shared/button";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { Card } from "../../shared/card";
 
 // ---------- 22 · Revisar anuncio ----------
 const revisarRoute = getRouteApi("/_flow/_adminFlow/admin/anuncios/$id");
@@ -27,7 +30,7 @@ export function RevisarScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <FlowHeader title="Revisar anuncio" back="/explorar" />
+        <ScreenHeader kind="flow" title="Revisar anuncio" back={{ to: "/explorar" }} />
         <NotAdmin />
       </>
     );
@@ -36,10 +39,7 @@ export function RevisarScreen() {
   const data = item.data;
   return (
     <>
-      <FlowHeader
-        title="Revisar anuncio"
-        back="/admin"
-        action={
+      <ScreenHeader kind="flow" title="Revisar anuncio" back={{ to: "/admin" }} action={
           data?.listing.status === "active" ? (
             <Link to="/casa/$publicId" params={{ publicId: data.listing.publicId }} className="link header-action">
               Ver como cliente
@@ -49,22 +49,17 @@ export function RevisarScreen() {
               Editar
             </Link>
           ) : undefined
-        }
-      />
+        } />
       {item.isError && !data ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void item.refetch()}>
           {message(item.error)}
-        </p>
+        </LoadError>
       ) : null}
       {data === null ? (
-        <section className="card">
-          <p className="muted">No encontramos ese anuncio.</p>
-        </section>
+        <EmptyState text={<p className="muted">No encontramos ese anuncio.</p>} />
       ) : null}
       {data === undefined && !item.isError ? (
-        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando el anuncio">
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="line" label="Cargando el anuncio" />
       ) : null}
       {data ? <ReviewDetail item={data} userId={userId} /> : null}
     </>
@@ -104,7 +99,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
           <span className="xs muted num">{l.publicId}</span>
         </div>
         <span className="small muted">{facts}</span>
-        {isProposedZone(l) ? <span className="badge badge-mute">Zona propuesta por el anfitrión</span> : null}
+        {isProposedZone(l) ? <StatusTag label={{ text: "Zona propuesta por el anfitrión", tone: "off" }} /> : null}
         <PriceLine l={l} />
       </div>
       <OwnerCard l={l} ownerName={ownerName} />
@@ -114,18 +109,18 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
           href={ownerNoticeUrl(l.whatsappPhone, noticeInput(l, ownerName, decidedNoticeKind(l.status)!))}
         />
       ) : null}
-      <section className="card stack gap-8 review-owner">
+      <Card layout="stack" gap={8} placement="review-owner">
         <b className="small muted">Descripción</b>
         {l.description.trim() ? <p className="small listing-description">{l.description}</p> : <p className="small muted">Sin descripción</p>}
         <FeatureBadges l={l} />
-      </section>
+      </Card>
       {l.status === "review" ? (
         <ReviewForm item={item} userId={userId} />
       ) : (
-        <div className="note stack gap-4" role="status">
-          <b>{STATUS_LABELS[l.status].label}</b>
+        <Notice as="div" layout="stack" announce>
+          <b>{statusLabel(l.status).text}</b>
           <span className="listing-description">{l.reviewNote || "Sin nota adicional."}</span>
-        </div>
+        </Notice>
       )}
     </>
   );
@@ -154,7 +149,7 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
     <form className="stack gap-14" onSubmit={onSubmit} noValidate>
       <Checklist />
       <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
-      {noPhotos ? <p className="note note-arena small">Sin fotos: solo puede pedir cambios.</p> : null}
+      {noPhotos ? <Notice tone="solid" small>Sin fotos: solo puede pedir cambios.</Notice> : null}
       <StickyActions spacer="review" layout="column">
         <Button variant="primary" size="lg" block type="submit" icon={<I.check size={18} />} disabled={noPhotos || review.isPending}>
           Aprobar y publicar

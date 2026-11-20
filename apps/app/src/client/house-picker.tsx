@@ -3,6 +3,7 @@ import { I } from "../shared/icons";
 import { Sheet } from "../shared/overlay";
 import { useDismiss } from "../shared/dismiss";
 import { useDesktop } from "./desktop";
+import { ClosedField } from "../shared/closed-field";
 
 export interface HouseOption {
   id: string;
@@ -27,12 +28,8 @@ export function HousePicker({ houses, currentId, onPick, allowAll = false, curre
   const name = houses.find((h) => h.id === currentId)?.name ?? currentName ?? (currentId === null && allowAll ? "Todas las casas" : "Casa seleccionada");
   return (
     <div className="house-picker">
-      <button ref={trigger} type="button" className="picker-pill" data-testid={zone ? "zone-picker-trigger" : "house-picker-trigger"} aria-label={zone ? `Zona, ${name}` : undefined} aria-haspopup={desktop ? "listbox" : "dialog"} aria-expanded={open} aria-controls={open ? id : undefined} title={name}
-        onClick={() => setOpen(desktop ? !open : true)} onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); } }}>
-        {zone ? <I.pin size={20} /> : <I.house size={20} />}
-        <span className="picker-name">{name}</span>
-        <span className="picker-arrow"><I.chevronDown size={18} /></span>
-      </button>
+      <ClosedField kind="picker" ref={trigger} icon={zone ? <I.pin size={20} /> : <I.house size={20} />} value={name} data-testid={zone ? "zone-picker-trigger" : "house-picker-trigger"} aria-label={zone ? `Zona, ${name}` : undefined} aria-haspopup={desktop ? "listbox" : "dialog"} aria-expanded={open} aria-controls={open ? id : undefined} title={name}
+        onClick={() => setOpen(desktop ? !open : true)} onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); } }} />
       {open ? <HousePickerPanel desktop={desktop} trigger={trigger.current} id={id} title={title} houses={houses} currentId={currentId} allowAll={allowAll} onClose={() => setOpen(false)} onPick={(next) => {
         setOpen(false);
         if (next !== currentId) onPick(next);

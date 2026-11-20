@@ -13,6 +13,8 @@ import { authApi } from "./session";
 import { useTurnstile } from "./turnstile";
 import { Button, TextButton } from "../shared/button";
 import { Field, TextInput } from "../shared/field";
+import { Notice } from "../shared/structure";
+import { Card } from "../shared/card";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -28,7 +30,7 @@ export function ContactCard({ next }: { next?: string }) {
   const l = useReturnListing(next);
   const photo = l?.photos[0];
   return (
-    <div className="card row gap-12 return-card contact-card" data-testid="return-card">
+    <Card as="div" layout="row" gap={12} placement="contact-card" data-testid="return-card">
       <span className="return-thumb">{photo ? <Picture photo={photo} alt="" sizes="56px" width={56} height={56} /> : null}</span>
       <span className="stack gap-0">
         <b className="ink">{l?.title ?? "La casa"}</b>
@@ -39,7 +41,7 @@ export function ContactCard({ next }: { next?: string }) {
           </span>
         ) : null}
       </span>
-    </div>
+    </Card>
   );
 }
 
@@ -50,23 +52,23 @@ export function ReturnCard({ next }: { next?: string }) {
   if (!next) return null;
   if (!publicId) {
     return (
-      <div className="card row gap-12">
+      <Card as="div" layout="row" gap={12}>
         <span className="avatar avatar-sm">
           <I.chevron size={18} />
         </span>
         <span className="small muted">Después de verificar vuelve adonde estaba.</span>
-      </div>
+      </Card>
     );
   }
   const l = listing.data;
   const photo = l?.photos[0];
   return (
-    <div className="card row gap-12 return-card" data-testid="return-card">
+    <Card as="div" layout="row" gap={12} placement="return-card" data-testid="return-card">
       <span className="return-thumb">{photo ? <Picture photo={photo} alt="" sizes="56px" width={56} height={56} /> : null}</span>
       <span className="small muted">
         Después de verificar vuelve a <b className="ink">{l?.title ?? "la casa"}</b> con su consulta tal como la dejó.
       </span>
-    </div>
+    </Card>
   );
 }
 
@@ -242,10 +244,10 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
       {/* Puerta para publicar sin cuenta (A8): solo en el Ingresar de la pestaña, no desde un flujo. */}
       {mode === "account" && !newPhone ? <PublishPromoRow /> : null}
       {publish ? null : (
-        <div className="note">
+        <Notice as="div">
           <I.shield size={22} />
           <span>Su número solo se comparte con el anfitrión cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
-        </div>
+        </Notice>
       )}
       {listingInNext(next) && mode === "account" ? <ReturnCard next={next} /> : null}
       <p className="xs muted center">Al continuar acepta los Términos. 3bstays nunca le pedirá pagos.</p>

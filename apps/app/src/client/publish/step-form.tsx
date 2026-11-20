@@ -40,6 +40,7 @@ import { StickyActions } from "../../shared/field";
 import { StepReadyContext } from "./step-ready";
 import { Button, ButtonPlaceholder } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
+import { Notice } from "../../shared/structure";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
 const WhatsAppDialog = lazy(() => import("../whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
@@ -297,7 +298,7 @@ export function StepForm({
     <>
     {renderHeader?.(desktop ? actions : undefined)}
     <form id={formId} ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={enterToNext} {...keyboard} className={`publish-form${step === LAST_STEP ? " publish-review" : ""}`} data-enter={entering} noValidate>
-      {shown && (!fieldProblem || orphan) ? <div className="note" role="alert">{shown}</div> : null}
+      {shown && (!fieldProblem || orphan) ? <Notice as="div" tone="error">{shown}</Notice> : null}
       <FieldErrorContext.Provider value={fieldProblem}>
         <StepReadyContext.Provider value={step === LAST_STEP ? setReady : noReady}>{children(values)}</StepReadyContext.Provider>
       </FieldErrorContext.Provider>

@@ -299,3 +299,195 @@ Los chips de escritorio de Explorar a 36 px y 14 px (solo con puntero), el panel
 size="sm"`), la fecha nativa de «Pausar la casa», el buscador flotante del mapa, las tarjetas del paso 1, la capacidad sin
 iconos al editar, el prefijo de país de Ingresar (es un `select`), el chevrón de `select` dibujado en una imagen (no admite
 variables) y las casillas de fecha de la hoja de contacto (`DateBox`).
+
+## Estructura y contenido
+
+Desde el paso 5 de la migración (2026-11-20). Código, sin estado, sin router y sin consultas (los usa también la ficha SSR):
+
+- `apps/app/src/shared/structure.tsx`: `StatusTag`, `CountBadge`, `Notice`, `LoadError`, `EmptyState`, `Skeleton`, `NavBar`
+  (`NavItemContent`, `BrandLogo`). Van en el JS inicial (Explorar, la barra y la ficha).
+- `apps/app/src/shared/card.tsx`: `Card`, `CardLink`, `cardClass`, `List`, `ListRow`, `ListRowButton`, `ListRowLink`; con el
+  router, `RouterCardLink` y `RouterListRow` en `client/router-rows.tsx`. Solo los piden trozos diferidos.
+- `apps/app/src/shared/closed-field.tsx`: `ClosedField`.
+- `apps/app/src/client/chrome.tsx`: `ScreenHeader` (usa `Link`: **no** entra en la ficha SSR, cuyas páginas de estado
+  conservan su cabecera con enlaces `<a>`).
+- `apps/app/src/domain/status-label.ts`: el texto y el tono de cada estado (sin clases CSS).
+
+**JS inicial (decisión del 2026-11-20: al menos 1 KB de margen, recortando).** Lo que no hace falta en la primera pantalla del
+teléfono va en su trozo: la búsqueda de escritorio de Explorar (`screens/explorar-escritorio.tsx`, `explorar-escritorio-*`) y el
+panel de los días del Calendario (`client/panel-dias.tsx`, `panel-dias-*`, pedido en reposo), además de las tarjetas, las filas,
+el campo cerrado y las etiquetas. Cada uno tiene su entrada en `.size-limit.json`.
+
+CSS en `styles/01-base.css`, bloque «Estructura». Lo vigilan `tests/unit/estructura.test.tsx` (textos por estado y contexto,
+marcado y semántica, y que ninguna pantalla de `src/client` o `src/shared` escriba a mano `card*`, `note*`, `list*`,
+`badge*`, `state*`, `tag-rev`, `skeleton`, los contadores, `search-fold`, `picker-pill`, `date-box`, `header-flow`,
+`header-root`, `placeholder-card` ni `fav-empty`; ni textos con `content:` en `13-escritorio.css`), `tests/unit/ocre.test.ts`
+(el tono ocre solo en dinero) y `tests/e2e/estructura.spec.ts`.
+
+### ScreenHeader
+
+| `kind` | Uso | Props |
+|---|---|---|
+| `"root"` | pestañas y raíz (Mis casas, Calendario, Consultas, Favoritos, Cuenta, admin, «no encontrada») | `title`, `home` (adonde lleva el logo), `action`, `aside` |
+| `"flow"` | pantallas de flujo: la flecha **o** la ✕ a la izquierda, título de 24 px con elipsis | `title`, `titleId`, `back: { to, search?, onBack?, historyBack? }` o `close`, `action` |
+| `"wizard"` | el asistente: título a la izquierda, `action` y la ✕ de 44 px a la derecha; `below`, el progreso | `title`, `close`, `action`, `below` |
+
+`close` es `{ to, search?, label, title? }` (enlace) o `{ onClick, label, title?, disabled?, busy? }` (botón). `historyBack`:
+vuelve atrás si se llegó desde la app y, si no, a `to` sin apilarla. El esqueleto de carga del asistente en `shell.tsx` usa
+`kind="wizard"` con la misma ✕ que `WizardHeader`, así que no salta al cargar.
+
+```tsx
+<ScreenHeader kind="root" title="Anuncios" home="/admin" action={<AdminBadge />} />
+<ScreenHeader kind="flow" title="Calendarios de Airbnb" back={{ to: "/propietario/calendario", search: { casa: id }, historyBack: true }} />
+<ScreenHeader kind="flow" title="Filtros" titleId={titleId} close={{ label: "Cerrar filtros", onClick: onClose }} action={<Limpiar />} />
+<ScreenHeader kind="wizard" title="Publicar casa" close={{ to: "/explorar", label: "Cerrar", title: "Cerrar" }} below={<Progreso />} />
+```
+
+### Card, List y ListRow
+
+`Card`: `tone` `"plain"` (blanco al 70 %, por defecto) · `"solid"` (blanco opaco; antes `card-arena`, D9) · `"soft"` (verde
+tonal) · `"sun"` (ocre: solo dinero); `layout` `"stack"` · `"row"`; `gap` 4 · 8 · 10 · 12 · 14 · 16; `as` `section` (por
+defecto) · `article` · `div` · `details` · `nav`; `mark` `"new"` (consulta nueva) · `"target"` (la casa de `#pago=`);
+`placement` (lista cerrada de las clases de sitio que ya había: `house-card`, `inquiry-card`, `queue-card`, `sub-house`,
+`return-card`, `offer-line`…). `ref`, `tabIndex`, `aria-*` y `data-*` pasan tal cual. `cardClass(look)` da la misma clase para
+una pieza que solo toma el fondo (la caja del mapa de una edición, la tarjeta de Airbnb del calendario).
+
+`List` (con `placement="account-actions"`) y sus filas de 56 px: `ListRow` (de solo lectura; `aria-disabled` la pone en gris),
+`ListRowButton`, `ListRowLink` y `RouterListRow`; `tone="sun"` es la fila ocre del método de pago y de «Publicar mi casa».
+
+```tsx
+<Card as="article" layout="stack" gap={10} placement="inquiry-card" mark={isNew ? "new" : undefined} aria-labelledby={nameId}>…</Card>
+<RouterCardLink to="/admin/anuncios/$id" params={{ id }} layout="row" gap={12} placement="queue-card">…</RouterCardLink>
+<List><RouterListRow to="/ayuda"><span className="body">Ayuda por WhatsApp</span></RouterListRow></List>
+```
+
+### StatusTag y domain/status-label.ts
+
+Etiqueta redonda (D5, `--r-tag`). El texto y el tono salen de una sola tabla de dominio, igual en toda la app (también en
+«Casas» del admin, decisión de Ana del 2026-11-20): `statusLabel(status)`, `holdLabel(kind, "photo" | "row")` (la
+retención del admin), `editStatusLabel(status, "card" | "field")` (la edición de una casa publicada) y `cardLabel(l, edit)`
+(`domain/navigation.ts`, la etiqueta de la tarjeta de Mis casas). Lo que no es un estado («Nueva», «Admin», «Creada por
+3bstays», una característica) va con `label={{ text, tone }}`. Tonos: `ok` · `pay` · `review` · `changes` · `draft` · `off` ·
+`bad` y, fuera de los estados, `neutral` · `new` · `admin`.
+
+| `placement` | Dónde | Aspecto |
+|---|---|---|
+| `"row"` (por defecto) | filas y textos | píldora de 14 px (el borrador en arena); `tight` (relleno 2/8) y `small` (14 px) |
+| `"photo"` | sobre la foto de una tarjeta | píldora de 15 px con sombra |
+| `"field"` | la fila de un dato que se edita | 13 px; `review` en gris oscuro, `changes` en terracota |
+
+```tsx
+<StatusTag label={statusLabel(sub.status)} />
+<StatusTag label={houseLabel(h)} tight />          // admin: los mismos textos; con retención, «Pausada» o «Bloqueada»
+<StatusTag placement="photo" label={cardLabel(l, l.edit)} data-testid="card-label" />
+```
+
+**Largo y corto (se mantienen, decisión del 2026-11-20):** la retención dice «Pausada por 3bstays» / «Bloqueada por 3bstays»
+sobre la foto y «Pausada» / «Bloqueada» en las filas del admin y de la suscripción; la edición, «Cambios en revisión» en la
+tarjeta y «En revisión» en la fila del dato.
+
+### Notice y LoadError
+
+`Notice`: `tone` `"info"` (por defecto) · `"solid"` (blanco opaco) · `"sun"` (ocre: dinero) · `"review"` · `"error"` (rojo y
+**siempre** `role="alert"`); `announce` pone `role="status"` (no vale con `error`); `as` `p` (por defecto) · `div` · `span`;
+`small`; `layout` `"column"` (título y texto) · `"stack"`; `inline` (sin caja, la línea de un dato en revisión); `action` (al
+final, a la derecha). `LoadError onRetry` es el error de carga de todas las pantallas: `Notice tone="error"` con «No pudimos
+cargar las casas. Revise su conexión e inténtelo de nuevo.» (o `children`, el mensaje del dominio) y «Reintentar» (muestra 5;
+decisión del 2026-11-20). Va en **toda pantalla donde falla una consulta** y reintentarla tiene sentido, con su `refetch`
+(Explorar, Favoritos, Mis casas, el detalle, Consultas, el Calendario, Airbnb, la suscripción, el asistente, «Editar un dato» y
+el admin); si son dos consultas, reintenta las que fallaron. No va en «Ver más casas» (el botón ya reintenta) ni en los errores
+de una acción (guardar, pagar, descartar), que siguen con `Notice tone="error"`.
+
+```tsx
+<Notice tone="error">{message(error)}</Notice>
+<Notice tone={saving === "late" ? "sun" : "info"} announce>{SAVING_TEXT[saving]}</Notice>
+{isError ? <LoadError onRetry={() => void refetch()} /> : <Skeleton shape="grid" />}
+{listings.isError && !list ? <LoadError onRetry={() => void listings.refetch()}>{message(listings.error)}</LoadError> : null}
+```
+
+### EmptyState, Skeleton y CountBadge
+
+- `EmptyState title? text action framed? gap? titleLevel? placement?`: «no hay nada aquí» o «no encontramos…». Con `framed`
+  (por defecto) en una tarjeta; sin él, en columna (Favoritos vacío, `placement="fav-empty"`). `titleLevel={1}` cuando el
+  título es el de la página (páginas de estado de la ficha).
+- `Skeleton shape label? count?`: `row` (miniatura y línea, una casa), `line`, `avatar` (una consulta), `account`,
+  `subscription`, `calendar` y `grid` (las tarjetas de Explorar y Favoritos; `placement="explore-results"`). Con `label`,
+  `aria-busy` y `aria-label`; la rejilla sin `label` queda oculta para lectores. Se para con movimiento reducido.
+- `CountBadge n placement?`: `tab` (pestaña), `house` («Consultas» de una casa), en terracota de 18 px y 13 px; `filters`, el
+  verde redondo con borde del botón Filtros. Con `n <= 0` no pinta nada.
+
+### ClosedField y NavBar
+
+- `ClosedField kind="search" | "picker" | "date"`: el campo cerrado que abre algo (la sección plegada de la búsqueda, el
+  selector de casa o de zona y las fechas de la hoja de contacto): `label`, `value`, `icon` (picker), `open` (search: el mismo
+  botón pasa a ser el título de la sección abierta y conserva el foco), `empty` (date). `aria-expanded` y demás pasan tal cual.
+- `NavBar desktop three tabs renderLink brand end`: la barra de pestañas de presentación. `TabsFrame` (con `Link`, la sesión y
+  los contadores) y `SiteTopBar` de la ficha (con `<a>`) deciden las pestañas; `NavItemContent` pinta icono, etiqueta y
+  contador también en «Consultas» y «Ayuda» de escritorio.
+
+### Tokens del paso 5
+
+Escala de letra `--fs-eyebrow` 13 · `--fs-xs` 14 · `--fs-sm` 15 · `--fs-note` 16 · `--fs-base` 17 · `--fs-md` 18 ·
+`--fs-title` 20 · `--fs-h2` 24 · `--fs-h1-desktop` 30 · `--fs-h1` 34; `--gutter-tight` 12; `--shadow-action`; `--r-pill` 6;
+`--on-overlay` (crema sobre capas oscuras en los dos temas). Puntos de corte en `tokens.json` (0.3.6): 900, 1024, 1200. Retiradas:
+`--ok`, `--warn`, `--cal-free`, `--selection-ink`, `--float-r-bar` y las clases `.soon*`, `.nav-count`, `.house-inquiries-count`,
+`.badge-count`, `.badge-warn`, `.badge-sel`, `.note-plain`, `.tile-arena`, `.activity-h2`, `.chip-strong`.
+
+**Excepciones que quedan con valores propios:** los tamaños de letra fuera de la escala (11, 12, 19, 21, 22, 23, 25, 26, 28,
+32 y 40 px: títulos de un solo uso y cifras), los blancos y sombras sobre las fotos (puntos, corazón, pastillas), la máscara de
+la descripción (`#000`), el QR (`#fff`), el fondo del mapa (`#E9EFE4`, Leaflet) y sus capas (500/600/1000), el aviso de girar
+el teléfono (z máximo), el chevrón del `select` en una imagen `data:` y las sombras de un solo uso (precios del mapa, etiqueta
+sobre la foto, hoja, panel del calendario, moneda de escritorio). La línea de las cifras de la ficha editable mientras cargan
+(`sk sk-line` dentro de la tarjeta) es un hueco del propio bloque, no un `Skeleton`.
+
+## Crear una pantalla nueva
+
+Una pantalla se compone con estas piezas y no lleva CSS propio. Ejemplo (una pantalla de flujo con un dato que se guarda):
+
+```tsx
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { ScreenHeader } from "../chrome";
+import { Button } from "../../shared/button";
+import { Card } from "../../shared/card";
+import { Field, StickyActions, TextInput } from "../../shared/field";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { RouterButtonLink } from "../router-buttons";
+import { statusLabel } from "../../domain/status-label";
+
+export function NotaDeCasaScreen({ id }: { id: string }) {
+  const { data, isError, refetch } = useQuery(casaQuery(id));
+  const [nota, setNota] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <>
+      <ScreenHeader kind="flow" title="Nota de la casa" back={{ to: "/propietario/casas", historyBack: true }} />
+      {isError ? <LoadError onRetry={() => void refetch()}>No pudimos cargar la casa. Revise su conexión e inténtelo de nuevo.</LoadError>
+        : data === undefined ? <Skeleton shape="row" label="Cargando su casa" />
+        : data === null ? (
+          <EmptyState title="No encontramos esta casa" text={<p className="small muted">Puede que la haya descartado.</p>}
+            action={<RouterButtonLink to="/propietario/casas" variant="primary">Ir a Mis casas</RouterButtonLink>} />
+        ) : (
+          <form className="stack" onSubmit={(e) => { e.preventDefault(); setError(nota.trim() ? null : "Escriba una nota."); }}>
+            <Card layout="stack" gap={12}>
+              <StatusTag label={statusLabel(data.status)} />
+              <Field id="nota" label="Nota para usted" error={error} hint="Solo la ve usted.">
+                {(control) => <TextInput {...control} value={nota} onChange={(e) => setNota(e.target.value)} />}
+              </Field>
+            </Card>
+            <Notice>Puede cambiarla cuando quiera.</Notice>
+            <StickyActions spacer="normal">
+              <RouterButtonLink to="/propietario/casas" variant="secondary" size="lg">Cancelar</RouterButtonLink>
+              <Button variant="primary" size="lg" type="submit">Guardar</Button>
+            </StickyActions>
+          </form>
+        )}
+    </>
+  );
+}
+```
+
+Reglas: la cabecera es siempre `ScreenHeader`; los errores de una consulta, `LoadError` (o `Notice tone="error"` con el mensaje
+del dominio); los textos de estado, de `domain/status-label.ts`; nada de `className` con las clases de estos componentes (lo
+para `tests/unit/estructura.test.tsx`), ni hex, tamaños de letra, radios o sombras sueltos: si falta un tono o una colocación,
+se añade al componente con su caso de uso.

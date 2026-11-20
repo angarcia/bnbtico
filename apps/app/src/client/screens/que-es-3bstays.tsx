@@ -7,6 +7,7 @@ import { useListingsCount } from "../own-listings-query";
 import { PublishPromoButton, useOffer } from "../publish-promo";
 import { authApi, useSession } from "../session";
 import "./que-es-3bstays.css";
+import { Card } from "../../shared/card";
 
 export function QueEs3bstaysScreen() {
   const { status } = useSession();
@@ -53,13 +54,13 @@ function AboutContent({ desktop }: { desktop: boolean }) {
         <p>Publique su casa{months ? " gratis" : ""} y reciba consultas por WhatsApp, sin comisiones ni cargos por reserva.</p>
         <PublishPromoButton label="Publicar mi casa" />
       </section>
-      <section className="card about-price" aria-labelledby="about-price-title">
+      <Card placement="about-price" aria-labelledby="about-price-title">
         {months && <p className="about-offer-label">Oferta de lanzamiento para nuevos anfitriones</p>}
         <h2 id="about-price-title">{months ? `Anuncie su casa gratis durante ${months} meses` : "Suscripción por casa activa"}</h2>
         <p className="about-rate">{months ? "Después, " : ""}<strong>{formatCRC(MONTHLY_FEE_CRC)}</strong> al mes por casa activa</p>
         <p>Una reserva de fin de semana lo paga.</p>
         <p className="about-terms">Sin comisiones ni permanencia.</p>
-      </section>
+      </Card>
       <Link to="/publicar" className="about-offer-link">
         {months ? `Publique ahora y obtenga ${months} meses gratis` : "Publique su casa ahora"}
       </Link>

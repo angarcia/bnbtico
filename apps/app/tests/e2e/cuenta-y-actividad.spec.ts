@@ -152,7 +152,10 @@ test.describe("Suscripción de una casa", () => {
     await expect(page).toHaveURL(new RegExp(`\\?casa=${b.publicId}$`));
     await expect(page.getByRole("heading", { level: 1, name: "Suscripción" })).toBeVisible();
     await expect(houses(page)).toHaveCount(0);
-    await expect(page.locator('.note[role="alert"]')).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
+    // El error de carga común (decisión de Ana del 2026-11-20): el mensaje y «Reintentar».
+    const alert = page.locator('.note[role="alert"]');
+    await expect(alert.locator("span").first()).toHaveText("Sin conexión. Revise su internet e intente de nuevo.");
+    await expect(alert.getByRole("button", { name: "Reintentar" })).toBeVisible();
   });
 
   test("caché fresca sin la casa, dentro de la app: vuelve a leer antes de quitar casa", async ({ page }) => {

@@ -3,11 +3,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { MfaFactor } from "../../domain/api";
 import { I } from "../../shared/icons";
 import { loadSecondFactor, verifySecondCode } from "../admin";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { useSession } from "../session";
 import { NotAdmin, message, useIsAdmin } from "./admin-shared";
 import { CodeInput } from "../code-input";
 import { Button } from "../../shared/button";
+import { Skeleton } from "../../shared/structure";
 
 // ---------- Segundo código ----------
 const codigoRoute = getRouteApi("/_flow/_privateFlow/admin/codigo");
@@ -20,12 +21,10 @@ export function SegundoCodigoScreen() {
   if (session?.aal === "aal2") return <Navigate to={target as "/admin"} replace />;
   return (
     <>
-      <FlowHeader title="Segundo código" back="/cuenta" historyBack />
+      <ScreenHeader kind="flow" title="Segundo código" back={{ to: "/cuenta", historyBack: true }} />
       {isAdmin === false ? <NotAdmin /> : null}
       {isAdmin === null ? (
-        <section className="card skeleton account-skeleton" aria-busy="true" aria-label="Cargando su cuenta">
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="account" label="Cargando su cuenta" />
       ) : null}
       {isAdmin && session ? <SecondCodeForm userId={session.userId} next={target} /> : null}
     </>

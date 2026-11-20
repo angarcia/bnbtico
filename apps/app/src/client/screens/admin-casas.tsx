@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { HOLD_COPY, HOLD_REASON_MAX, deleteConfirmMatches, holdReasonRefusal } from "../../domain/admin-actions";
-import { CHIP_LABELS, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, houseBadge, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
+import { CHIP_LABELS, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, houseLabel, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
 import { PUBLISHED_STATUSES } from "../../domain/can";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
@@ -10,12 +10,15 @@ import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
 import { firstName, ownerNoticeUrl } from "../../domain/owner-notice";
 import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
-import { RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { Sheet } from "../../shared/overlay";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";
 import { Field, SearchInput, TextArea, TextInput } from "../../shared/field";
 import { Button } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
+import { RouterListRow } from "../router-rows";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { List, ListRowButton } from "../../shared/card";
 
 // ---------- 23 · Casas ----------
 const casasRoute = getRouteApi("/_tabs/_admin/admin/casas");
@@ -32,7 +35,7 @@ export function CasasAdminScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <RootHeader title="Casas" home="/explorar" />
+        <ScreenHeader kind="root" title="Casas" home="/explorar" />
         <NotAdmin />
       </>
     );
@@ -44,7 +47,7 @@ export function CasasAdminScreen() {
   const shown = data ? filterHouses(data.houses, chip, query) : [];
   return (
     <>
-      <RootHeader title="Casas" home="/admin" action={<AdminBadge />} />
+      <ScreenHeader kind="root" title="Casas" home="/admin" action={<AdminBadge />} />
       <SearchInput
         variant="field"
         type="search"
@@ -64,26 +67,22 @@ export function CasasAdminScreen() {
         ))}
       </nav>
       {houses.isError && !data ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void houses.refetch()}>
           {message(houses.error)}
-        </p>
+        </LoadError>
       ) : null}
       {!data && !houses.isError ? (
-        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando las casas">
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="line" label="Cargando las casas" />
       ) : null}
       {data && shown.length === 0 ? (
-        <section className="card">
-          <p className="muted">{query.trim() ? "Ninguna casa coincide con la búsqueda." : chip === "todas" ? "Todavía no hay casas aprobadas." : "Nada por aquí."}</p>
-        </section>
+        <EmptyState text={<p className="muted">{query.trim() ? "Ninguna casa coincide con la búsqueda." : chip === "todas" ? "Todavía no hay casas aprobadas." : "Nada por aquí."}</p>} />
       ) : null}
       {data && shown.length > 0 ? (
-        <section className="list" aria-label="Casas">
+        <List aria-label="Casas">
           {shown.map((h) => (
             <HouseRow key={h.listingId} house={h} today={data.today} onOpen={() => setOpenId(h.listingId)} />
           ))}
-        </section>
+        </List>
       ) : null}
       <p className="xs muted queue-foot">Toque una casa para ver sus datos, editarla, pausarla, bloquearla o eliminarla.</p>
       <RouterButtonLink to="/admin/borradores" variant="secondary" block>
@@ -98,17 +97,17 @@ export function CasasAdminScreen() {
 }
 
 function HouseRow({ house: h, today, onOpen }: { house: AdminHouse; today: string; onOpen(): void }) {
-  const badge = houseBadge(h);
+  const badge = houseLabel(h);
   return (
-    <button type="button" className="list-item house-row" aria-haspopup="dialog" onClick={onOpen}>
+    <ListRowButton placement="house-row" aria-haspopup="dialog" onClick={onOpen}>
       {h.cover ? <img src={variantUrl(h.cover, 480)} alt="" className="thumb house-thumb" width={56} height={56} loading="lazy" decoding="async" /> : <span className="thumb house-thumb" />}
       <span className="body stack house-body">
         <b className="house-title">{h.title || "Sin nombre"}</b>
         <small className="num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</small>
         <small className="num">{adminHouseLine(h.subscription, today)}</small>
       </span>
-      <span className={`badge badge-tight ${badge.badge}`}>{badge.label}</span>
-    </button>
+      <StatusTag label={badge} tight />
+    </ListRowButton>
   );
 }
 
@@ -148,7 +147,7 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
   const [error, setError] = useState<string | null>(null);
   const reasonError = error && !reason.trim() ? error : null;
   const act = useHouseAction(userId);
-  const badge = houseBadge(h);
+  const badge = houseLabel(h);
   const published = PUBLISHED_STATUSES.includes(h.status);
   const visible = h.status === "active" && !h.hold;
 
@@ -192,14 +191,14 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
         {!copy ? (
           <>
             <div className="row gap-8">
-              <span className={`badge badge-tight ${badge.badge}`}>{badge.label}</span>
+              <StatusTag label={badge} tight />
               <span className="small num">{adminHouseLine(h.subscription, today)}</span>
             </div>
             {h.hold ? (
-              <p className="note note-arena small stack gap-4" data-testid="hold-note">
+              <Notice tone="solid" small layout="stack" data-testid="hold-note">
                 <b>{HOLD_COPY[h.hold.kind].title}</b>
                 <span>{h.hold.reason}</span>
-              </p>
+              </Notice>
             ) : null}
             {h.hold ? (
               <NoticeLink
@@ -207,39 +206,39 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
                 href={ownerNoticeUrl(h.ownerPhone, { kind: h.hold.kind, ownerName: h.ownerName, title: h.title, publicId: h.publicId, origin: window.location.origin, note: h.hold.reason })}
               />
             ) : null}
-            <section className="list">
+            <List>
               {visible ? (
-                <Link to="/casa/$publicId" params={{ publicId: h.publicId }} className="list-item" onClick={onClose}>
+                <RouterListRow to="/casa/$publicId" params={{ publicId: h.publicId }} onClick={onClose}>
                   <span className="body">Ver ficha pública</span>
                   <span className="chev">
                     <I.chevron />
                   </span>
-                </Link>
+                </RouterListRow>
               ) : null}
-              <Link to="/admin/anuncios/$id" params={{ id: h.listingId }} className="list-item" onClick={onClose}>
+              <RouterListRow to="/admin/anuncios/$id" params={{ id: h.listingId }} onClick={onClose}>
                 <span className="body">Ver datos del anuncio</span>
                 <span className="chev">
                   <I.chevron />
                 </span>
-              </Link>
+              </RouterListRow>
               {/* Editar (ticket 10 de la ronda de Ana): al momento, sin revisión, con las pantallas del anfitrión. */}
-              <Link to="/admin/casas/$id" params={{ id: h.listingId }} className="list-item" onClick={onClose}>
+              <RouterListRow to="/admin/casas/$id" params={{ id: h.listingId }} onClick={onClose}>
                 <span className="body">Editar casa</span>
                 <span className="chev">
                   <I.chevron />
                 </span>
-              </Link>
-              <Link to="/admin/casas/$id/calendario" params={{ id: h.listingId }} className="list-item" onClick={onClose}>
+              </RouterListRow>
+              <RouterListRow to="/admin/casas/$id/calendario" params={{ id: h.listingId }} onClick={onClose}>
                 <span className="body">Editar calendario</span>
                 <span className="chev">
                   <I.chevron />
                 </span>
-              </Link>
-            </section>
+              </RouterListRow>
+            </List>
             {error ? (
-              <p className="note" role="alert">
+              <Notice tone="error">
                 {error}
-              </p>
+              </Notice>
             ) : null}
             {published ? (
               <div className="stack gap-8">

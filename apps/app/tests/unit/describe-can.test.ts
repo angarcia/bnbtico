@@ -1,3 +1,4 @@
+import { cardLabel } from "../../src/domain/navigation";
 import { describe as group, expect, it } from "vitest";
 import { can, type ListingAction } from "../../src/domain/can";
 import { capacityLine, capacitySummary, cardPrice, accommodationLabel, describe } from "../../src/domain/describe";
@@ -91,7 +92,7 @@ group("describe · precios", () => {
 group("describe · situación y etiqueta por estado", () => {
   it.each<[string, Partial<Listing>, string, string]>([
     ["activa", { status: "active" }, "Activa", "Visible en Explorar y con su enlace"],
-    ["activa no disponible", { status: "active", available: false }, "Pausado", "Pausado: no aparece en Explorar"],
+    ["activa no disponible", { status: "active", available: false }, "Pausada", "Pausado: no aparece en Explorar"],
     ["en revisión desde ayer", { status: "review", updatedAt: "2026-10-21T10:00:00Z" }, "En revisión", "Enviada ayer. Le avisamos por WhatsApp."],
     ["en revisión desde hoy", { status: "review", updatedAt: "2026-10-22T09:00:00Z" }, "En revisión", "Enviada hoy. Le avisamos por WhatsApp."],
     ["cambios pedidos", { status: "changes" }, "Cambios pedidos", "Le pedimos cambios. Corríjalos y reenvíe."],
@@ -102,13 +103,13 @@ group("describe · situación y etiqueta por estado", () => {
     ["inactiva", { status: "inactive" }, "Inactiva", "Parada · no aparece en Explorar"],
   ])("%s", (_, over, label, situation) => {
     const d = describe(owned(over), { base: BASE, now: NOW });
-    expect(d.statusLabel).toBe(label);
+    // La etiqueta es la de la tarjeta (cardLabel, con los textos de domain/status-label.ts; historia 07, paso 5), no de describe.
+    expect(cardLabel(owned(over)).text).toBe(label);
     expect(d.situation).toBe(situation);
   });
 
   it("una casa vista por el público no tiene línea de situación", () => {
     expect(describe(publicOf(owned()), { base: BASE }).situation).toBeNull();
-    expect(describe(publicOf(owned({ available: false })), { base: BASE }).statusLabel).toBe("Pausado");
   });
 });
 

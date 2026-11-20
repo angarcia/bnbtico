@@ -1,5 +1,6 @@
+import { editStatusLabel } from "../../src/domain/status-label";
 import { describe, expect, it } from "vitest";
-import { editLabel, fieldTitle, fieldWarning, editOverview, editSummary, editedFields, editFieldFromParam, mergeEdit, parseField, photoPill, reviewNotice, type FormField, type ListingEdit } from "../../src/domain/edit";
+import { fieldTitle, fieldWarning, editOverview, editSummary, editedFields, editFieldFromParam, mergeEdit, parseField, photoPill, reviewNotice, type FormField, type ListingEdit } from "../../src/domain/edit";
 import { planEdit } from "../../src/domain/edit-plan";
 import { isPublished, can } from "../../src/domain/can";
 import type { Listing, ListingDraft } from "../../src/domain/listing";
@@ -35,10 +36,9 @@ describe("editar una casa publicada · dominio", () => {
     expect(can({ status: "changes", reviewedAt: "x" }, "reopen")).toBe(true);
     expect(can({ status: "rejected", reviewedAt: "x" }, "reopen")).toBe(true);
   });
-  it("editLabel (revisión por dato, A5): «Cambios en revisión» o «Cambios pedidos»", () => {
-    expect(editLabel(null)).toBeNull();
-    expect(editLabel(edit({ status: "review" }))).toEqual({ label: "Cambios en revisión", badge: "state-review" });
-    expect(editLabel(edit({ status: "changes" }))).toEqual({ label: "Cambios pedidos", badge: "state-review" });
+  it("editStatusLabel (revisión por dato, A5): «Cambios en revisión» o «Cambios pedidos»", () => {
+    expect(editStatusLabel(edit({ status: "review" }).status, "card")).toEqual({ text: "Cambios en revisión", tone: "review" });
+    expect(editStatusLabel(edit({ status: "changes" }).status, "card")).toEqual({ text: "Cambios pedidos", tone: "review" });
   });
   it("editOverview: «review» con algo esperando al admin y su envío más antiguo; si no, «changes»", () => {
     const at = (status: "review" | "changes", submittedAt: string) => ({ status, reviewNote: null, submittedAt });

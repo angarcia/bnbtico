@@ -1,3 +1,12 @@
+## 2026-11-20 · Etiquetas, error de carga y margen del JS inicial (historia 07, paso 5)
+
+Ana revisó el paso 5 de la historia 07 (estructura y contenido comunes) y decidió:
+
+- **Un solo texto por estado, también en «Casas» del admin:** «Borrador» en vez de «En edición» y «Pendiente de pago» en vez de «Por pagar», con el tono del propietario (el borrador en arena, también en una fila). `domain/status-label.ts` queda con una sola tabla, sin contexto de admin. El chip de filtro «Por pagar» de «Casas» no es una etiqueta de estado y no cambia.
+- **Se mantienen la versión larga y la corta** donde el sitio lo pide: «Pausada por 3bstays» / «Bloqueada por 3bstays» sobre la foto frente a «Pausada» / «Bloqueada» en las filas, y «Cambios en revisión» en la tarjeta frente a «En revisión» en la fila de cada dato.
+- **Error de carga rojo con «Reintentar» en toda la app:** donde falla una consulta y reintentar tiene sentido, `LoadError` (aviso rojo, `role="alert"` y «Reintentar», que vuelve a pedir la consulta). Excepción: «Ver más casas», cuyo propio botón ya reintenta. Motivo: hoy el mismo fallo salía con dos aspectos y dos semánticas.
+- **1 KB de margen en el JS privado inicial, recortando y no subiendo el límite** (161 KB): lo que no hace falta en la primera pantalla del teléfono va en trozos aparte. Motivo: el paso dejaba el inicial a 1 byte del límite, y cualquier cambio lo habría roto.
+
 ## 2026-11-19 · Componentes comunes y reglas visuales de la historia 07
 
 Ana aprobó el inventario y la propuesta de componentes de la historia 07 de la revisión de la app del 2026-11-17 (`.scratch/revision-app-2026-11-17/07/`: `propuesta.md` y muestras con capturas), y eligió entre opciones con capturas:

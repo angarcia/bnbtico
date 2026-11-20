@@ -6,17 +6,12 @@ import { FLAGS } from "../../shared/flags";
 import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
 import { I } from "../../shared/icons";
 import { IconButton } from "../../shared/button";
+import { ScreenHeader, type HeaderClose } from "../chrome";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
-export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: ReactNode; actions?: ReactNode; missingSteps?: readonly Step[] }) {
+export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: HeaderClose; actions?: ReactNode; missingSteps?: readonly Step[] }) {
   return (
-    <div className="wizard-heading">
-      <header className="header-flow publish-header">
-        <h1>{title}</h1>
-        {actions}
-        {close}
-      </header>
-      {step ? (
+    <ScreenHeader kind="wizard" title={title} action={actions} close={close} below={step ? (
         <>
           <div className="progress" aria-hidden="true">
             {/* En el resumen, lo obligatorio que falta conserva su tramo vacío. */}
@@ -28,8 +23,7 @@ export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close
             <span className="right stage-label">Pasos {stepPosition(step)} a {stepPosition(lastInGroup)} de {STEP_COUNT}</span>
           ) : <StageLabel step={step} />}
         </>
-      ) : null}
-    </div>
+      ) : null} />
   );
 }
 

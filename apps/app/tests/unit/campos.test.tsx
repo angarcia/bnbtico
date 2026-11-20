@@ -184,9 +184,13 @@ describe("Campos: estados y letra", () => {
   });
 
   it("ningún campo con letra de menos de 16 px (el iPhone ampliaría la página)", () => {
-    expect(decls(".decide textarea")).toContain("font-size:16px");
+    // La letra va en px o con la escala con nombre (`--fs-*`, historia 07 paso 5): se resuelve con el valor de :root.
+    const scale = Object.fromEntries([...css.matchAll(/(--fs-[\w-]+):(\d+)px/g)].map((m) => [m[1]!, m[2]!]));
+    expect(decls(".decide textarea")).toContain("font-size:var(--fs-note)");
+    expect(scale["--fs-note"]).toBe("16");
     for (const rule of css.matchAll(/([^{}]*(?:input|textarea|select)[^{}]*)\{([^}]*)\}/g)) {
-      const size = /font-size:(\d+)px/.exec(rule[2]!)?.[1];
+      const m = /font-size:(?:(\d+)px|var\((--fs-[\w-]+)\))/.exec(rule[2]!);
+      const size = m ? (m[1] ?? scale[m[2]!]) : undefined;
       if (size && !/::placeholder|\.code-input/.test(rule[1]!)) expect(Number(size), rule[1]!.trim()).toBeGreaterThanOrEqual(16);
     }
   });

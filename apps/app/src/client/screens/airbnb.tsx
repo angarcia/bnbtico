@@ -7,7 +7,7 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import type { Listing } from "../../domain/listing";
 import { toast } from "../../shared/toast";
 import { airbnbApi, airbnbQuery, refreshAirbnbCalendar, updateAirbnbCalendar, useAirbnbManualHint, useCalendarOnline } from "../airbnb";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { ownListingQuery } from "../owner";
 import { Sheet } from "../../shared/overlay";
 import { sessionState, useSession } from "../session";
@@ -15,6 +15,8 @@ import { IcalExportCard } from "./ical-export-card";
 import { ConfirmSheet } from "../confirm-sheet";
 import { Field, TextInput } from "../../shared/field";
 import { Button, TextButton } from "../../shared/button";
+import { LoadError, Notice, Skeleton } from "../../shared/structure";
+import { Card, cardClass } from "../../shared/card";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/airbnb");
 const time = (iso: string) => new Intl.DateTimeFormat("es-CR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(iso));
@@ -110,19 +112,19 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
   }} /> : null;
   if (popup) return connectForm;
   return <>
-    <FlowHeader title="Calendarios de Airbnb" back="/propietario/calendario" search={{ casa: id, ...(mes ? { mes } : {}) }} historyBack />
+    <ScreenHeader kind="flow" title="Calendarios de Airbnb" back={{ to: "/propietario/calendario", search: { casa: id, ...(mes ? { mes } : {}) }, historyBack: true }} />
     {l ? <p className="cal-house">{l.title}</p> : null}
-    {house.isPending || info.isPending && l ? <section className="card skeleton cal-skeleton" aria-busy="true" aria-label="Cargando conexión de Airbnb" /> : null}
-    {house.isError || info.isError ? <p className="note" role="alert">{toDomainError(house.error ?? info.error).message}</p> : null}
-    {house.data === null ? <p className="note" role="alert">No encontramos ese anuncio.</p> : null}
-    {l && summary ? <section className="card stack gap-16" aria-labelledby="airbnb-import-title" aria-busy={busy}>
+    {house.isPending || info.isPending && l ? <Skeleton shape="calendar" label="Cargando conexión de Airbnb" /> : null}
+    {house.isError || info.isError ? <LoadError onRetry={() => { if (house.isError) void house.refetch(); if (info.isError) void info.refetch(); }}>{toDomainError(house.error ?? info.error).message}</LoadError> : null}
+    {house.data === null ? <Notice tone="error">No encontramos ese anuncio.</Notice> : null}
+    {l && summary ? <Card layout="stack" gap={16} aria-labelledby="airbnb-import-title" aria-busy={busy}>
       <h2 id="airbnb-import-title">Importar desde Airbnb</h2>
       <p>Traiga a 3bstays las noches bloqueadas en Airbnb.</p>
-      {suspended ? <p className="note">La conexión está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</p> : null}
+      {suspended ? <Notice>La conexión está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</Notice> : null}
       {summary.lastSuccessAt ? <p className="small muted">Última importación correcta: {time(summary.lastSuccessAt)}</p> : null}
       {summary.connected ? <p>{summary.nights ? `${summary.nights} ${summary.nights === 1 ? "noche bloqueada" : "noches bloqueadas"} por Airbnb` : "No hay noches bloqueadas por Airbnb en este período."}</p> : null}
-      {!online ? <p className="note small">Sin conexión. Puede consultar el último estado guardado.</p> : null}
-      {summary.errorCode ? <p className="note" role="alert">{summary.connected ? <>No se pudo actualizar{summary.lastErrorAt ? ` · ${time(summary.lastErrorAt)}` : ""}. Se conservan las últimas noches importadas. </> : null}{new IcalError(summary.errorCode).message}</p> : null}
+      {!online ? <Notice small>Sin conexión. Puede consultar el último estado guardado.</Notice> : null}
+      {summary.errorCode ? <Notice tone="error">{summary.connected ? <>No se pudo actualizar{summary.lastErrorAt ? ` · ${time(summary.lastErrorAt)}` : ""}. Se conservan las últimas noches importadas. </> : null}{new IcalError(summary.errorCode).message}</Notice> : null}
       {problem ? <p className="field-error" role="alert">{problem}</p> : null}
       {summary.state === "running" ? <p role="status">{summary.connected ? "Actualizando…" : "Conectando…"}</p> : null}
       {!summary.connected && !suspended ? <Button variant="primary" size="lg" disabled={busy || !online} onClick={() => setConnecting("connect")}>Conectar Airbnb</Button> : null}
@@ -132,9 +134,9 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
         <Button variant="secondary" size="lg" disabled={busy || !online || suspended || dayFull} onClick={() => setConnecting("replace")}>Sustituir enlace</Button>
         <TextButton tone="quiet" placement="sub-stop" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>Desconectar Airbnb</TextButton>
       </> : null}
-    </section> : null}
+    </Card> : null}
     {l && summary ? <IcalExportCard key={`${uid}:${id}`} id={id} userId={uid} /> : null}
-    <p className="note small">Los calendarios se actualizan periódicamente. Los cambios pueden tardar en aparecer en la otra plataforma. Confirme la disponibilidad antes de acordar una estancia</p>
+    <Notice small>Los calendarios se actualizan periódicamente. Los cambios pueden tardar en aparecer en la otra plataforma. Confirme la disponibilidad antes de acordar una estancia</Notice>
     {confirmDisconnect ? <ConfirmSheet title="¿Desconectar Airbnb?" body="Se retirarán las noches importadas de Airbnb y dejarán de actualizarse. Sus bloqueos manuales y precios se conservan."
       confirmLabel={operation === "disconnect" ? "Desconectando…" : "Desconectar Airbnb"} tone="destructive"
       pending={operation === "disconnect"} error={disconnectError} onClose={() => setConfirmDisconnect(null)} onConfirm={() => void disconnect()} /> : null}
@@ -170,7 +172,7 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
     busy={saving} onClose={onClose} dismissible={exportCard ? { backdrop: false } : undefined} confirmDiscard={() => !connected && url.trim() !== ""}>
       {houseName ? <p className="small muted">{houseName}</p> : null}
       <div className={exportCard ? "airbnb-calendar-directions" : "stack gap-14"}>
-      <div className={exportCard ? "card stack gap-14" : "stack gap-14"}>
+      <div className={exportCard ? cardClass({ layout: "stack", gap: 14 }) : "stack gap-14"}>
       {exportCard ? <h2>Importar desde Airbnb</h2> : null}
       {connected ? <p role="status">Airbnb conectado.</p> : <>
       <p>En Airbnb, abra el calendario de este alojamiento y copie su enlace de exportación. Péguelo aquí.</p>

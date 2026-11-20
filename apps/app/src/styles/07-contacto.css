@@ -12,7 +12,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
   box-shadow:0 -12px 30px -16px rgba(28,43,42,.45);animation:sheet-in 280ms var(--ease-drawer) backwards}
 .sheet:focus{outline:none}
 @media (max-width:899px){
-  .sheet-contact{padding-inline:12px}
+  .sheet-contact{padding-inline:var(--gutter-tight)}
   .sheet-contact .sheet-head .icon-btn{margin-inline-end:0}
 }
 /* `.kb`: sitio extra mientras un campo con teclado tiene el foco (iPhone no encoge la vista): el campo sube por encima. */
@@ -26,8 +26,8 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet form{display:flex;flex-direction:column;gap:14px}
 /* Fechas de la hoja (revisión UX 2026-10-29, N2): casillas como un campo, que abren el calendario de «¿Cuándo?». */
 .sheet .date-box{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;min-height:56px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface);text-align:left}
-.sheet .date-box-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
-.sheet .date-box b{font-size:17px;font-weight:var(--w-medium)}
+.sheet .date-box-label{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
+.sheet .date-box b{font-size:var(--fs-base);font-weight:var(--w-medium)}
 .sheet .date-box.is-empty b{color:var(--muted)}
 .sheet .date-box[aria-expanded="true"]{border-color:var(--primary)}
 .sheet .contact-calendar{display:flex;flex-direction:column;gap:6px;margin-top:-6px}
@@ -35,19 +35,19 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 /* Todos los meses pintados: con su alto estimado (content-visibility), llevar el mes elegido arriba se quedaba corto. */
 .sheet .contact-calendar .range-month{content-visibility:visible}
 /* El mensaje, como vista previa: gris claro y sin caja de texto. */
-.sheet .field-label{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.sheet .field-label{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
 /* El total orientativo de las fechas, sobre la vista previa del mensaje (o el aviso de noches ocupadas). */
-.sheet .stay-line{margin:0;font-size:16px;font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
+.sheet .stay-line{margin:0;font-size:var(--fs-note);font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
 .sheet .stay-line.is-busy{color:var(--busy-ink)}
 .sheet .stay-line.is-pending{color:var(--muted)}
 /* «Marcar una reserva»: la fila de los días del color de la hoja; la sombra tapa el medio píxel de arriba, donde asomaban los números del mes anterior. */
 .sheet .mark-calendar .range-weekdays{background:var(--bg);box-shadow:0 -2px 0 var(--bg)}
 .sheet .message-preview + .hint{margin-top:0}
-.sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:16px;white-space:pre-line}
+.sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:var(--fs-note);white-space:pre-line}
 .sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.sheet .hint{font-size:14px;color:var(--muted);margin-top:-8px}
-.sheet .consent{text-align:center;font-size:14px;color:var(--muted);margin-top:-6px}
-.sheet .safety{text-align:center;font-size:14px;font-weight:var(--w-medium);color:var(--ochre)}
+.sheet .hint{font-size:var(--fs-xs);color:var(--muted);margin-top:-8px}
+.sheet .consent{text-align:center;font-size:var(--fs-xs);color:var(--muted);margin-top:-6px}
+.sheet .safety{text-align:center;font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--ochre)}
 .sheet .date-box[aria-invalid="true"]{border-color:var(--bad)}
 @media (prefers-reduced-motion:reduce){.sheet{animation-name:fade-in}}
 /* Ventana de escritorio (`Dialog`): normal (520) o ancha (hasta 960); cabecera y pie fijos, el cuerpo con su scroll. */

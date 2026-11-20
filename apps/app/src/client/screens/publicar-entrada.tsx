@@ -14,7 +14,7 @@ import { EMAIL_SKIPPED_KEY, type Step1Kind } from "../../domain/publish-return";
 import { track } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { addOwnCached, api, resumableQuery } from "../owner";
 import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } from "../publish/phone-draft";
 import { KindChoice, ReadyList, WizardHeader } from "../publish/wizard-parts";
@@ -23,7 +23,9 @@ import { SignInForm } from "../sign-in";
 import { Button, ButtonPlaceholder } from "../../shared/button";
 import { Field, StickyActions, TextInput } from "../../shared/field";
 import { EMAIL_INVALID_ERROR } from "../../domain/account";
-import { RouterButtonLink, RouterIconLink } from "../router-buttons";
+import { RouterButtonLink } from "../router-buttons";
+import { Notice, Skeleton } from "../../shared/structure";
+import { Card } from "../../shared/card";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
@@ -37,11 +39,7 @@ const clearStored = clearPhoneDraft;
 /** La cabecera del asistente sin borrador todavía (el paso 1, o las Fotos al pedir el código): «Cerrar» vuelve a Explorar. */
 function EntryHeader({ step = 1 }: { step?: 1 | 7 }) {
   return (
-    <WizardHeader step={step} close={
-      <RouterIconLink to="/explorar" label="Cerrar" placement="header-close" title="Cerrar">
-        <I.x size={20} />
-      </RouterIconLink>
-    } />
+    <WizardHeader step={step} close={{ to: "/explorar", label: "Cerrar", title: "Cerrar" }} />
   );
 }
 
@@ -166,19 +164,19 @@ export function ContinuarScreen() {
 
   return (
     <>
-      <FlowHeader title="Publicar casa" back="/propietario/casas" />
+      <ScreenHeader kind="flow" title="Publicar casa" back={{ to: "/propietario/casas" }} />
       {readFailed ? (
         <div className="stack gap-12">
-          <p className="note" role="alert">
+          <Notice tone="error">
             {message(resumable.error)}
-          </p>
+          </Notice>
           <Button variant="primary" size="lg" block disabled={resumable.isFetching} onClick={() => void resumable.refetch()}>
             Intentar de nuevo
           </Button>
         </div>
       ) : null}
       {choosing && draft ? (
-        <section className="card stack gap-12">
+        <Card layout="stack" gap={12}>
           <h3>Tiene un borrador sin enviar</h3>
           <p className="small muted">
             {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
@@ -198,18 +196,15 @@ export function ContinuarScreen() {
               {stored.title.trim() ? `Seguir con «${stored.title.trim()}»` : "Empezar otra"}
             </Button>
           )}
-        </section>
+        </Card>
       ) : !create.isError && !readFailed ? (
-        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Preparando su casa">
-          <span className="sk thumb" />
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="row" label="Preparando su casa" />
       ) : null}
       {create.isError ? (
         <div className="stack gap-12">
-          <p className="note" role="alert">
+          <Notice tone="error">
             {message(create.error)}
-          </p>
+          </Notice>
           <Button variant="primary" size="lg" block onClick={start}>
             Intentar de nuevo
           </Button>
@@ -254,18 +249,16 @@ export function CorreoScreen() {
   }
   return (
     <>
-      <header className="header-flow">
-        <h1>Publicar casa</h1>
-      </header>
+      <ScreenHeader kind="flow" title="Publicar casa" />
       <form onSubmit={(e) => void save(e)} className="stack flow" noValidate>
         <h2>¿Quiere añadir un correo?</h2>
         <Field id="pub-email" label="Correo" error={emailError} hint="Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.">
           {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" inputMode="email" />}
         </Field>
         {error && !error.field ? (
-          <p className="note" role="alert">
+          <Notice tone="error">
             {error.message}
-          </p>
+          </Notice>
         ) : null}
         <Button variant="primary" size="lg" block type="submit" disabled={busy}>
           Guardar correo

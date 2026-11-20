@@ -1,6 +1,7 @@
 // Casas del admin (fase 5, ticket 07, diseño 23): chip de cada estado, recuentos, buscador y línea de suscripción.
 import { describe, expect, it } from "vitest";
-import { HOUSE_BADGES, adminHouseLine, chipOf, countHouses, filterHouses, houseBadge, houseChip, type AdminHouse } from "../../src/domain/admin-houses";
+import { adminHouseLine, chipOf, countHouses, filterHouses, houseChip, houseLabel, type AdminHouse } from "../../src/domain/admin-houses";
+import { statusLabel } from "../../src/domain/status-label";
 import type { ListingStatus } from "../../src/domain/listing";
 import type { HouseSubscription } from "../../src/domain/subscription";
 
@@ -93,9 +94,9 @@ describe("chips", () => {
       pausadas: 2,
       bloqueadas: 1,
     });
-    expect(houseBadge(paused)).toEqual({ label: "Pausada", badge: "badge-review" });
-    expect(houseBadge(blocked)).toEqual({ label: "Bloqueada", badge: "badge-bad" });
-    expect(houseBadge(house("active"))).toEqual(HOUSE_BADGES.active);
+    expect(houseLabel(paused)).toEqual({ text: "Pausada", tone: "review" });
+    expect(houseLabel(blocked)).toEqual({ text: "Bloqueada", tone: "bad" });
+    expect(houseLabel(house("active"))).toEqual(statusLabel("active"));
     expect(filterHouses([paused, blocked, house("active")], "pausadas", "").map((x) => x.listingId)).toEqual([paused.listingId]);
     expect(filterHouses([paused, blocked, house("active")], "bloqueadas", "").map((x) => x.listingId)).toEqual([blocked.listingId]);
     expect(filterHouses([paused, blocked, house("active")], "activas", "")).toHaveLength(1);
@@ -106,11 +107,12 @@ describe("chips", () => {
     expect(adminHouseLine(sub({ hold: "paused" }), TODAY)).toBe("Gratis hasta 14 oct 2027");
   });
 
-  it("insignias del diseño: Activa salvia, Por pagar ocre, Inactiva arena", () => {
-    expect(HOUSE_BADGES.active).toEqual({ label: "Activa", badge: "badge-ok" });
-    expect(HOUSE_BADGES.payment_due).toEqual({ label: "Por pagar", badge: "badge-sun" });
-    expect(HOUSE_BADGES.inactive).toEqual({ label: "Inactiva", badge: "badge-mute" });
-    expect(HOUSE_BADGES.review.label).toBe("En revisión");
+  it("etiquetas de una fila: los textos de toda la app (Activa, Pendiente de pago en ocre, Inactiva, Borrador)", () => {
+    expect(houseLabel(house("active"))).toEqual({ text: "Activa", tone: "ok" });
+    expect(houseLabel(house("payment_due"))).toEqual({ text: "Pendiente de pago", tone: "pay" });
+    expect(houseLabel(house("inactive"))).toEqual({ text: "Inactiva", tone: "off" });
+    expect(houseLabel(house("draft"))).toEqual({ text: "Borrador", tone: "draft" });
+    expect(houseLabel(house("review")).text).toBe("En revisión");
   });
 });
 

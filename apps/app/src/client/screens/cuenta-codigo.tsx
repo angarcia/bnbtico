@@ -6,7 +6,7 @@ import { toDomainError } from "../../domain/errors";
 import { formatPhone } from "../../domain/phone";
 import { withTimeout } from "../../shared/timeout";
 import { accountQuery } from "../account";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { ownListingsQuery } from "../own-listings-query";
 import { authApi, pendingOtp } from "../session";
 import { ContactCard, ReturnCard } from "../sign-in";
@@ -14,6 +14,7 @@ import { useTurnstile } from "../turnstile";
 import { useContactMode, useGoTo } from "./cuenta-navigation";
 import { CodeInput } from "../code-input";
 import { Button, TextButton } from "../../shared/button";
+import { Notice } from "../../shared/structure";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -89,7 +90,7 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
   const mmss = `${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, "0")}`;
   return (
     <>
-      {inDialog ? null : <FlowHeader title={header} back="/cuenta" search={next ? { next } : {}} />}
+      {inDialog ? null : <ScreenHeader kind="flow" title={header} back={{ to: "/cuenta", search: next ? { next } : {} }} />}
       <div className="stack flow">
         {contact ? <ContactCard next={next} /> : null}
         <div className="stack gap-8">
@@ -125,7 +126,7 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
           </a>
           {inDialog ? null : <TextButton tone="link" onClick={changeNumber}>Cambiar número</TextButton>}
         </div>
-        {contact || inDialog ? null : publish ? <p className="note small">Después seguimos con su casa</p> : <ReturnCard next={next} />}
+        {contact || inDialog ? null : publish ? <Notice small>Después seguimos con su casa</Notice> : <ReturnCard next={next} />}
       </div>
     </>
   );

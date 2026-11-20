@@ -14,6 +14,7 @@ import { refresh, removeOwnCached } from "./listing-cache";
 import { ownListingsKey } from "./listing-keys";
 import { api, ownListingsQuery } from "./owner";
 import { TextButton } from "../shared/button";
+import { Notice } from "../shared/structure";
 
 // Aquí y no en owner.ts: así solo lo descarga quien abre el detalle de una casa (presupuesto de las pestañas).
 /** «Eliminar casa» (historia 28). Sin escritura optimista: no tiene vuelta, la tarjeta sale cuando la base lo confirma. Una
@@ -84,7 +85,7 @@ export function DeleteHouse({ listing: l, userId }: { listing: Listing; userId: 
             <>
               <span className="sheet-line num muted">{[l.publicId, l.zone].filter(Boolean).join(" · ")}</span>
               <span className="sheet-line">{DELETE_HOUSE_COPY.body}</span>
-              <span className="sheet-line note note-arena small">{DELETE_HOUSE_COPY.pauseHint}</span>
+              <Notice as="span" tone="solid" small placement="sheet-line">{DELETE_HOUSE_COPY.pauseHint}</Notice>
             </>
           }
           confirmLabel={del.isPending ? DELETE_HOUSE_COPY.pending : DELETE_HOUSE_COPY.action}

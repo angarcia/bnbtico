@@ -6,13 +6,16 @@ import { describe } from "../../domain/describe";
 import { editSummary } from "../../domain/edit-summary";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { STATUS_LABELS, type Listing } from "../../domain/listing";
+import { type Listing } from "../../domain/listing";
+import { statusLabel, type StatusLabel } from "../../domain/status-label";
 import { formatCRC } from "../../domain/money";
 import { queueBadge, type QueueItem } from "../../domain/review";
 import { I } from "../../shared/icons";
 import { adminEditsQuery, adminQueueQuery, clearReviewOutcome, useEditsWithPending, useQueueWithPending, useReviewOutcome } from "../admin";
-import { RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { AdminBadge, NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { RouterCardLink } from "../router-rows";
 
 function priceText(l: Listing): string | null {
   const p = describe(l, { base: "" }).mainPrice;
@@ -40,7 +43,7 @@ export function AnunciosScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <RootHeader title="Anuncios" home="/explorar" />
+        <ScreenHeader kind="root" title="Anuncios" home="/explorar" />
         <NotAdmin />
       </>
     );
@@ -55,7 +58,7 @@ export function AnunciosScreen() {
   ];
   return (
     <>
-      <RootHeader title="Anuncios" home="/admin" action={<AdminBadge />} />
+      <ScreenHeader kind="root" title="Anuncios" home="/admin" action={<AdminBadge />} />
       <div className="grid-3">
         <div className="tile tile-review">
           <b className="num ink">{q?.review.length ?? "–"}</b>
@@ -84,9 +87,9 @@ export function AnunciosScreen() {
         ))}
       </nav>
       {outcome ? (
-        <p className={outcome.kind === "failed" ? "note note-arena small" : "note small"} role={outcome.kind === "failed" ? "alert" : "status"}>
+        <Notice tone={outcome.kind === "failed" ? "error" : "info"} small announce={outcome.kind !== "failed"}>
           {outcome.kind === "failed" ? `No se guardó la decisión sobre «${outcome.title}»: ${outcome.text}` : `«${outcome.title}»: ${outcome.text}`}
-        </p>
+        </Notice>
       ) : null}
       {outcome?.notice ? <NoticeLink href={outcome.notice.href} name={outcome.notice.name} /> : null}
       {edits?.length ? (
@@ -100,25 +103,20 @@ export function AnunciosScreen() {
         </section>
       ) : null}
       {editsQuery.isError && !edits && toDomainError(editsQuery.error).kind !== "forbidden" ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void editsQuery.refetch()}>
           {message(editsQuery.error)}
-        </p>
+        </LoadError>
       ) : null}
       {queue.isError && !q ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void queue.refetch()}>
           {message(queue.error)}
-        </p>
+        </LoadError>
       ) : null}
       {!q && !queue.isError ? (
-        <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando la cola">
-          <span className="sk thumb" />
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="row" label="Cargando la cola" />
       ) : null}
       {q && shown.length === 0 ? (
-        <section className="card">
-          <p className="muted">{tab === "review" ? "No hay anuncios pendientes." : "Nada por aquí."}</p>
-        </section>
+        <EmptyState text={<p className="muted">{tab === "review" ? "No hay anuncios pendientes." : "Nada por aquí."}</p>} />
       ) : null}
       {shown.length > 0 ? (
         <div className="stack gap-12">
@@ -135,18 +133,17 @@ export function AnunciosScreen() {
 function QueueCard({ item: { listing: l, ownerName } }: { item: QueueItem }) {
   const cover = l.photos[0];
   const when = l.status === "review" ? l.updatedAt : (l.reviewedAt ?? l.updatedAt);
-  const badge = l.status === "review" ? queueBadge(l) : STATUS_LABELS[l.status].label;
-  const badgeClass = l.status === "review" ? (l.reviewedAt ? "badge-ok" : "badge-review") : STATUS_LABELS[l.status].badge;
+  const badge: StatusLabel = l.status === "review" ? { text: queueBadge(l), tone: l.reviewedAt ? "ok" : "review" } : statusLabel(l.status);
   const facts = [l.zone, l.capacity ? `${l.capacity} personas` : null, `${l.photos.length} fotos`, priceText(l)].filter(Boolean).join(" · ");
   return (
-    <Link to="/admin/anuncios/$id" params={{ id: l.id }} className="card row gap-12 queue-card">
+    <RouterCardLink to="/admin/anuncios/$id" params={{ id: l.id }} layout="row" gap={12} placement="queue-card">
       {cover ? <img src={variantUrl(cover, 480)} alt="" className="thumb" width={92} height={92} loading="lazy" decoding="async" /> : <span className="thumb" />}
       <span className="stack gap-4 grow-col">
         <span className="row between gap-8">
           <span className="xs muted num">
             {l.publicId} · {relativeDate(when, Date.now())}
           </span>
-          <span className={`badge badge-tight ${badgeClass}`}>{badge}</span>
+          <StatusTag label={badge} tight />
         </span>
         <b className="display queue-title">{titleOf(l)}</b>
         <span className="small muted">{ownerName} · WhatsApp verificado</span>
@@ -155,7 +152,7 @@ function QueueCard({ item: { listing: l, ownerName } }: { item: QueueItem }) {
       <span className="chev">
         <I.chevron />
       </span>
-    </Link>
+    </RouterCardLink>
   );
 }
 
@@ -164,7 +161,7 @@ function EditQueueCard({ item: { listing: l, ownerName } }: { item: QueueItem })
   const cover = l.photos[0];
   const e = l.edit!;
   return (
-    <Link to="/admin/ediciones/$id" params={{ id: l.id }} className="card row gap-12 queue-card">
+    <RouterCardLink to="/admin/ediciones/$id" params={{ id: l.id }} layout="row" gap={12} placement="queue-card">
       {cover ? <img src={variantUrl(cover, 480)} alt="" className="thumb" width={92} height={92} loading="lazy" decoding="async" /> : <span className="thumb" />}
       <span className="stack gap-4 grow-col">
         <span className="xs muted num">
@@ -178,6 +175,6 @@ function EditQueueCard({ item: { listing: l, ownerName } }: { item: QueueItem })
       <span className="chev">
         <I.chevron />
       </span>
-    </Link>
+    </RouterCardLink>
   );
 }

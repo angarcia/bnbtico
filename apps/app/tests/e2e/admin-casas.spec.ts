@@ -1,7 +1,8 @@
 import { expect, test, type Page } from "./helpers/test";
 import type { Seeded, SubscriptionHarness } from "../contract/harness";
 import { totp } from "../contract/totp";
-import { HOUSE_BADGES, adminHouseLine } from "../../src/domain/admin-houses";
+import { adminHouseLine } from "../../src/domain/admin-houses";
+import { statusLabel } from "../../src/domain/status-label";
 import { FIELD_TITLES } from "../../src/domain/edit";
 import { costaRicaToday } from "../../src/domain/inquiry";
 import type { ListingStatus } from "../../src/domain/listing";
@@ -136,11 +137,11 @@ test("el admin ve sus casas por estado con su línea de suscripción, filtra por
   await expect(row(active)).toContainText(`${active.publicId} · ${h.ownerName("owner")} · Cocles`);
   await expect(row(active)).toContainText(await expectedLine(active, "active"));
   await expect(row(active)).toContainText(/Gratis hasta \d{1,2} [a-z]{3} \d{4}/);
-  await expect(row(active).locator(".badge")).toHaveText(HOUSE_BADGES.active.label);
+  await expect(row(active).locator(".badge")).toHaveText(statusLabel("active").text);
   await expect(row(due)).toContainText(`${due.publicId} · ${otherName} · Manzanillo`);
   await expect(row(due)).toContainText(await expectedLine(due, "payment_due"));
   await expect(row(due)).toContainText(/Oferta vencida el \d{1,2} [a-z]{3}.* · sin método de pago/);
-  await expect(row(due).locator(".badge")).toHaveText("Por pagar");
+  await expect(row(due).locator(".badge")).toHaveText("Pendiente de pago");
   await expect(row(due).locator(".badge")).toHaveCSS("background-color", "rgb(251, 232, 194)");
   await expect(row(stopped)).toContainText(await expectedLine(stopped, "inactive"));
   await expect(row(stopped)).toContainText(/Parada por el anfitrión el \d{1,2} [a-z]{3}/);

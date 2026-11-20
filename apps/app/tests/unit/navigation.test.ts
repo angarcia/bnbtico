@@ -98,25 +98,25 @@ describe("noticeFor", () => {
 
 describe("cardLabel", () => {
   const l = (status: Listing["status"], available = true, reopenAt: string | null = null) => ({ status, available, reopenAt });
-  it("pendiente de pago", () => expect(cardLabel(l("payment_due"))).toEqual({ text: "Pendiente de pago", cls: "state-pay" }));
-  it("inactiva", () => expect(cardLabel(l("inactive"))).toEqual({ text: "Inactiva", cls: "state-off" }));
+  it("pendiente de pago", () => expect(cardLabel(l("payment_due"))).toEqual({ text: "Pendiente de pago", tone: "pay" }));
+  it("inactiva", () => expect(cardLabel(l("inactive"))).toEqual({ text: "Inactiva", tone: "off" }));
   // Revisión por dato (A5): sin «Edición sin enviar»; lo pendiente está en revisión o con cambios pedidos.
-  it("cambios en revisión", () => expect(cardLabel(l("active"), { status: "review" })).toEqual({ text: "Cambios en revisión", cls: "state-review" }));
-  it("cambios pedidos en una casa publicada", () => expect(cardLabel(l("active"), { status: "changes" })).toEqual({ text: "Cambios pedidos", cls: "state-review" }));
+  it("cambios en revisión", () => expect(cardLabel(l("active"), { status: "review" })).toEqual({ text: "Cambios en revisión", tone: "review" }));
+  it("cambios pedidos en una casa publicada", () => expect(cardLabel(l("active"), { status: "changes" })).toEqual({ text: "Cambios pedidos", tone: "review" }));
   // «Pausar la casa» del Calendario (ticket 04 de la ronda del 2 nov; antes «Cerrada hasta el …»).
-  it("pausada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Pausada hasta el 3 dic", cls: "state-off" }));
-  it("pausada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Pausada", cls: "state-off" }));
+  it("pausada con fecha", () => expect(cardLabel(l("active", false, "2026-12-03"))).toEqual({ text: "Pausada hasta el 3 dic", tone: "off" }));
+  it("pausada sin fecha", () => expect(cardLabel(l("active", false, null))).toEqual({ text: "Pausada", tone: "off" }));
   it("pausada por el anfitrión no se confunde con «Pausada por 3bstays» (texto y color)", () => {
     const mine = cardLabel(l("active", false, null));
     const admin = cardLabel({ ...l("active"), adminHold: { kind: "paused", reason: "" } });
     expect(admin.text).toBe("Pausada por 3bstays");
-    expect(admin.cls).not.toBe(mine.cls);
+    expect(admin.tone).not.toBe(mine.tone);
   });
-  it("activa", () => expect(cardLabel(l("active"))).toEqual({ text: "Activa", cls: "state-ok" }));
-  it("en revisión", () => expect(cardLabel(l("review"))).toEqual({ text: "En revisión", cls: "state-review" }));
-  it("borrador", () => expect(cardLabel(l("draft"))).toEqual({ text: "Borrador", cls: "state-draft" }));
-  it("cambios pedidos", () => expect(cardLabel(l("changes"))).toEqual({ text: "Cambios pedidos", cls: "state-review" }));
-  it("rechazada", () => expect(cardLabel(l("rejected"))).toEqual({ text: "Rechazada", cls: "state-bad" }));
+  it("activa", () => expect(cardLabel(l("active"))).toEqual({ text: "Activa", tone: "ok" }));
+  it("en revisión", () => expect(cardLabel(l("review"))).toEqual({ text: "En revisión", tone: "review" }));
+  it("borrador", () => expect(cardLabel(l("draft"))).toEqual({ text: "Borrador", tone: "draft" }));
+  it("cambios pedidos", () => expect(cardLabel(l("changes"))).toEqual({ text: "Cambios pedidos", tone: "review" }));
+  it("rechazada", () => expect(cardLabel(l("rejected"))).toEqual({ text: "Rechazada", tone: "bad" }));
   it("prioridad: pago > edición > cerrada > estado", () => {
     expect(cardLabel({ status: "payment_due", available: false, reopenAt: "2026-12-03" }, { status: "review" }).text).toBe("Pendiente de pago");
     expect(cardLabel({ status: "active", available: false, reopenAt: null }, { status: "review" }).text).toBe("Cambios en revisión");

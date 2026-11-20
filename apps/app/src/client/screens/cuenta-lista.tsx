@@ -3,7 +3,7 @@ import { Link, Navigate, getRouteApi, useRouter } from "@tanstack/react-router";
 import { isContactNext, isPublishNext } from "../../domain/contact-return";
 import { I } from "../../shared/icons";
 import { accountQuery } from "../account";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { useSession } from "../session";
 import { Replace } from "./cuenta-navigation";
 import { ButtonLink } from "../../shared/button";
@@ -24,7 +24,7 @@ export function ListaScreen() {
   const target = next ?? "/explorar";
   return (
     <>
-      <FlowHeader title="Ingresar" back="/explorar" />
+      <ScreenHeader kind="flow" title="Ingresar" back={{ to: "/explorar" }} />
       <div className="stack flow">
         <div className="stack gap-8">
           <span className="avatar avatar-ok">

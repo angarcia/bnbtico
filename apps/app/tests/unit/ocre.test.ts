@@ -6,10 +6,13 @@ import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SRC = new URL("../../src/", import.meta.url).pathname;
-const OCRE = /\b(?:btn|card|note|tile|badge|list-item)-sun\b|variant=(?:"pay"|\{[^}]*"pay")/g;
+// Historia 07, paso 5: también el tono ocre de las tarjetas, avisos, filas y etiquetas comunes (`tone="sun"`, `tone: "pay"`).
+const OCRE = /\b(?:btn|card|note|tile|badge|list-item)-sun\b|variant=(?:"pay"|\{[^}]*"pay")|tone=(?:"sun"|\{[^}]*"sun")|tone: "pay"/g;
 // archivo (relativo a src/) + "#" + la `function Nombre` más cercana declarada antes de la coincidencia; "#*" = todo el archivo.
 const ALLOW = new Set([
   "shared/button.tsx#*", // la variante «pay» del botón común
+  "shared/structure.tsx#*", // los tonos ocres de Notice y StatusTag
+  "shared/card.tsx#*", // los tonos ocres de Card y ListRow
   "client/owner-ui.tsx#PayButton",
   "client/owner-ui.tsx#PayNotice",
   "client/screens/casa-editable.tsx#PaymentDueNote",

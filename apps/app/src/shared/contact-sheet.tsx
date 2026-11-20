@@ -50,6 +50,8 @@ import { Button, TextButton } from "./button";
 import { Segmented } from "./choice";
 import { Field } from "./field";
 import { Stepper } from "./stepper";
+import { Notice } from "./structure";
+import { ClosedField } from "./closed-field";
 
 const STAY_OPTIONS = [
   { value: "dates", label: "Fechas" },
@@ -283,9 +285,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
                 />
               </div>
               {rejected ? (
-                <p className="note" role="alert">
+                <Notice tone="error">
                   {RANGE_BUSY_MESSAGE}
-                </p>
+                </Notice>
               ) : null}
               <div className="row between">
                 {draft.arrival ? (
@@ -335,9 +337,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
             <span className="hint">Podrá añadir lo que quiera en WhatsApp antes de enviarlo.</span>
           </div>
           {error && !fieldError ? (
-            <p className="note" role="alert">
+            <Notice tone="error">
               {error.message}
-            </p>
+            </Notice>
           ) : null}
           {/* «Abriendo WhatsApp…»: `aria-disabled` y no `disabled` (el foco se queda en el botón mientras se registra la consulta). */}
           <Button
@@ -383,9 +385,6 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
 /** Una casilla de fecha de la hoja: «Elegir fecha» o la elegida («8 nov»); abre y cierra el calendario. */
 function DateBox({ label, value, open, invalid, describedBy, onToggle }: { label: string; value: string | null; open: boolean; invalid?: true; describedBy?: string; onToggle: () => void }) {
   return (
-    <button type="button" className={`date-box${value ? "" : " is-empty"}`} aria-expanded={open} aria-invalid={invalid} aria-describedby={describedBy} onClick={onToggle}>
-      <span className="date-box-label">{label}</span>
-      <b className="num">{(value && shortDate(value)) || "Elegir fecha"}</b>
-    </button>
+    <ClosedField kind="date" label={label} value={(value && shortDate(value)) || "Elegir fecha"} empty={!value} aria-expanded={open} aria-invalid={invalid} aria-describedby={describedBy} onClick={onToggle} />
   );
 }

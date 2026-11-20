@@ -10,7 +10,7 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
-import { FlowHeader, RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { isDesktop, useDesktop } from "../desktop";
 import { PublishPromoRow } from "../publish-promo";
 import { useFavorites } from "../../shared/favorites-store";
@@ -20,6 +20,9 @@ import { authApi, useSession } from "../session";
 import { Button, TextButton } from "../../shared/button";
 import { Field, TextArea, TextInput } from "../../shared/field";
 import { EMAIL_INVALID_ERROR } from "../../domain/account";
+import { Notice, Skeleton } from "../../shared/structure";
+import { Card, List } from "../../shared/card";
+import { RouterListRow } from "../router-rows";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -31,7 +34,7 @@ const CuentaSubscriptionCard = lazy(() => suscripcionScreen().then((m) => ({ def
 const CuentaPaymentRow = lazy(() => suscripcionScreen().then((m) => ({ default: m.CuentaPaymentRow })));
 const AccountSubscriptionDetails = lazy(() => suscripcionScreen().then((m) => ({ default: m.AccountSubscriptionDetails })));
 const SUBSCRIPTION_PLACEHOLDER = (
-  <section className="card stack">
+  <Card layout="stack">
     <div className="row between">
       <b>Suscripción</b>
       <span className="xs muted">Oferta de lanzamiento</span>
@@ -43,7 +46,7 @@ const SUBSCRIPTION_PLACEHOLDER = (
       <b className="num">₡0 · sin método de pago</b>
     </div>
     <span className="xs muted">{formatCRC(MONTHLY_FEE_CRC)} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
-  </section>
+  </Card>
 );
 
 export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: boolean }) {
@@ -90,9 +93,9 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
   const accountContent = (
     <>
       {/* Como pestaña (C4), sin flecha ni título visible; al editar o desde un flujo, con su cabecera. */}
-      {tab ? (desktop ? null : <h1 className="sr-only">Cuenta</h1>) : <FlowHeader title="Cuenta" back="/explorar" onBack={back} />}
+      {tab ? (desktop ? null : <h1 className="sr-only">Cuenta</h1>) : <ScreenHeader kind="flow" title="Cuenta" back={{ to: "/explorar", onBack: back }} />}
       {a ? (
-        <section className="card row account-card">
+        <Card layout="row" placement="account-card">
           <span className="avatar" aria-hidden="true">
             {initials(a.name)}
           </span>
@@ -117,29 +120,27 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
               Editar
             </Link>
           )}
-        </section>
+        </Card>
       ) : (
-        <section className="card skeleton account-skeleton" aria-busy="true" aria-label="Cargando su cuenta">
-          <span className="sk sk-line" />
-        </section>
+        <Skeleton shape="account" label="Cargando su cuenta" />
       )}
 
       {a && splitAccount ? <DesktopProfile key={a.id} account={a} /> : a && editing ? (
-        <section className="card stack">
+        <Card layout="stack">
           <h3>Mi perfil</h3>
           <ProfileForm key={a.id} account={a} />
-        </section>
+        </Card>
       ) : null}
 
       {subscription}
 
-      <section className="list account-actions">
+      <List placement="account-actions">
         {payment}
         {/* En móvil, Favoritos está dentro de Cuenta para respetar el límite de cinco pestañas. */}
         {owner && !desktop ? <FavoritesRow /> : null}
         {count === 0 ? <PublishPromoRow /> : null}
         {a?.isAdmin ? (
-          <Link to="/admin" replace className="list-item">
+          <RouterListRow to="/admin" replace>
             <I.inbox />
             <span className="body">
               Revisión de anuncios · admin<small>Cola de casas por revisar (pide un segundo código)</small>
@@ -147,9 +148,9 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
             <span className="chev">
               <I.chevron />
             </span>
-          </Link>
+          </RouterListRow>
         ) : null}
-        {!tab || !desktop ? <Link to="/ayuda" className="list-item">
+        {!tab || !desktop ? <RouterListRow to="/ayuda">
           <I.help />
           <span className="body">
             Ayuda por WhatsApp<small>{owner ? "Línea de 3bstays para anfitriones" : "Línea de 3bstays para clientes"}</small>
@@ -157,8 +158,8 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           <span className="chev">
             <I.chevron />
           </span>
-        </Link> : null}
-      </section>
+        </RouterListRow> : null}
+      </List>
 
       {/* Lo último de la pantalla, pequeño y con confirmación: cerrar la sesión obliga a pedir un código nuevo. */}
       <div className="stack account-foot">
@@ -171,9 +172,9 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           Cerrar sesión
         </TextButton>
         {logoutError ? (
-          <p className="note small" role="alert">
+          <Notice tone="error" small>
             {logoutError}
-          </p>
+          </Notice>
         ) : null}
       </div>
       {asking ? (
@@ -191,7 +192,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
     </>
   );
   // En escritorio, la pestaña lleva cabecera de página con el título visible (revisión 2026-11-13, A9).
-  const pageHeader = tab && desktop ? <RootHeader title="Cuenta" /> : null;
+  const pageHeader = tab && desktop ? <ScreenHeader kind="root" title="Cuenta" /> : null;
   return splitAccount ? (
     <>
     {pageHeader}
@@ -216,7 +217,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
 function FavoritesRow() {
   const n = useFavorites().length;
   return (
-    <Link to="/favoritos" className="list-item" data-testid="favorites-row">
+    <RouterListRow to="/favoritos" data-testid="favorites-row">
       <I.heart />
       <span className="body">
         Favoritos<small className="num">{n === 0 ? "Ninguna casa guardada" : n === 1 ? "1 casa guardada" : `${n} casas guardadas`}</small>
@@ -224,7 +225,7 @@ function FavoritesRow() {
       <span className="chev">
         <I.chevron />
       </span>
-    </Link>
+    </RouterListRow>
   );
 }
 
@@ -235,7 +236,7 @@ function DesktopProfile({ account }: { account: Account }) {
   const [editing, setEditing] = useState(false);
   const { name, description, email } = profileValues(account);
   return (
-    <section className="card stack">
+    <Card layout="stack">
       <div className="row between">
         <h3>Mi perfil</h3>
         <TextButton tone="link" placement="account-profile-toggle" aria-expanded={editing} onClick={() => setEditing(!editing)}>
@@ -249,7 +250,7 @@ function DesktopProfile({ account }: { account: Account }) {
           <div><dt className="small muted">Correo de recuperación (opcional)</dt><dd>{email || "Sin correo de recuperación"}</dd></div>
         </dl>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -301,14 +302,14 @@ function ProfileForm({ account }: { account: Account }) {
         {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder="nombre@ejemplo.com" />}
       </Field>
       {state.error && !emailError ? (
-        <p className="note" role="alert">
+        <Notice tone="error">
           {state.error}
-        </p>
+        </Notice>
       ) : null}
       {state.ok ? (
-        <p className="note" role="status">
+        <Notice announce>
           <I.check size={18} /> Cambios guardados.
-        </p>
+        </Notice>
       ) : null}
       <Button variant="primary" size="lg" type="submit" disabled={!dirty} pending={state.busy}>
         {state.busy ? "Guardando…" : state.ok ? "Guardado" : "Guardar cambios"}

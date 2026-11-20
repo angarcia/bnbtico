@@ -2,12 +2,14 @@
 // Ingresar y de Cuenta. Las dos llevan a /publicar (el asistente sin cuenta, o el de siempre con sesión) y dicen las plazas
 // que quedan de la oferta; sin plazas, el precio.
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+
 import { formatCRC } from "../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../domain/offer";
 import { I } from "../shared/icons";
 import { offerTakenQuery } from "./offer-query";
 import { RouterButtonLink } from "./router-buttons";
+import { RouterListRow } from "./router-rows";
+import { Card } from "../shared/card";
 
 export function useOffer() {
   const taken = useQuery(offerTakenQuery);
@@ -24,7 +26,7 @@ export function PublishPromoButton({ label }: { label: string }) {
 export function PublishPromoCard() {
   const offer = useOffer();
   return (
-    <section className="card stack gap-8 offer-card publish-promo" data-testid="publish-promo">
+    <Card layout="stack" gap={8} placement="publish-promo" data-testid="publish-promo">
       <b className="display offer-title">¿Tiene una casa en el Caribe?</b>
       <span className="small ink">
         {offer ? (
@@ -41,7 +43,7 @@ export function PublishPromoCard() {
         {offer ? `Después, ${FEE} al mes por casa. ` : null}Sin comisiones; los clientes le escriben por WhatsApp.
       </span>
       <PublishPromoButton label={offer === null ? "Publicar mi casa" : "Publicar mi casa gratis"} />
-    </section>
+    </Card>
   );
 }
 
@@ -49,7 +51,7 @@ export function PublishPromoCard() {
 export function PublishPromoRow() {
   const offer = useOffer();
   return (
-    <Link to="/publicar" className="list-item list-item-sun publish-promo-row" data-testid="publish-promo-row">
+    <RouterListRow tone="sun" placement="publish-promo-row" to="/publicar" data-testid="publish-promo-row">
       <I.house />
       <span className="body">
         {offer === null ? "¿Quiere publicar su casa?" : "¿Quiere publicar su casa gratis?"}
@@ -58,6 +60,6 @@ export function PublishPromoRow() {
       <span className="chev">
         <I.chevron />
       </span>
-    </Link>
+    </RouterListRow>
   );
 }

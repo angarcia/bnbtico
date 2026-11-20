@@ -235,7 +235,7 @@ test("el admin no aprueba sin fotos y pide una con el mensaje", async ({ page })
   await expect(page.getByText("Sin descripción", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Aprobar y publicar" })).toBeDisabled();
   await expect(page.locator("#admin-review-note")).toHaveValue(NO_PHOTOS_NOTE);
-  await expect(page.locator(".note-arena", { hasText: "Sin fotos: solo puede pedir cambios." })).toBeVisible();
+  await expect(page.locator(".note-solid", { hasText: "Sin fotos: solo puede pedir cambios." })).toBeVisible();
   await page.getByRole("button", { name: "Pedir cambios" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect.poll(async () => (await h.owner("other").getOwn(bare.id))?.reviewNote).toBe(NO_PHOTOS_NOTE);

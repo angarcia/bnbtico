@@ -75,16 +75,6 @@ export const MAX_PHOTOS = 15;
 /** A published house keeps at least this many approved photos (removing the last is refused). */
 export const MIN_PHOTOS_PUBLISHED = 1;
 
-export const STATUS_LABELS: Record<ListingStatus, { label: string; badge: string }> = {
-  draft: { label: "Borrador", badge: "badge-mute" },
-  review: { label: "En revisión", badge: "badge-review" },
-  changes: { label: "Cambios pedidos", badge: "badge-review" },
-  rejected: { label: "Rechazada", badge: "badge-bad" },
-  payment_due: { label: "Pendiente de pago", badge: "badge-sun" },
-  active: { label: "Activa", badge: "badge-ok" },
-  inactive: { label: "Inactiva", badge: "badge-mute" },
-};
-
 export interface ListingDraft {
   kind: Kind | null;
   /** Siempre true: toda casa se alquila por noches (check en la base). */

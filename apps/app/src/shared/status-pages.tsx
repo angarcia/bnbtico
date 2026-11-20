@@ -3,6 +3,7 @@ import { blockedReason, type BlockedReason } from "../domain/blocked";
 import { I } from "./icons";
 import { SiteTopBar } from "./site-top-bar";
 import { ButtonLink, IconButtonLink } from "./button";
+import { EmptyState } from "./structure";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
  *  quien llega por un enlace compartido ve otras casas o puede reintentar (revisión UX N4). */
@@ -22,11 +23,7 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
             </a>
           </div>
         </header>
-        <section className="card stack">
-          <h1 className="status-title">{title}</h1>
-          {children}
-          {actions}
-        </section>
+        <EmptyState titleLevel={1} title={title} text={children} action={actions} />
       </main>
     </div>
   );

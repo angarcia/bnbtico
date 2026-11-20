@@ -10,7 +10,7 @@
 // «Cerrar la casa hasta…», set_listing_available) abre su hoja. Cada hoja, en su propio trozo diferido.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
-import { Component, Suspense, lazy, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { Component, Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   addMonths,
   applyChange,
@@ -21,9 +21,6 @@ import {
   emptySelection,
   monthTitle,
   selectDay,
-  selectionLabel,
-  setAvailability,
-  setPrice,
   validateChange,
   type CalendarChange,
   type CalendarDay,
@@ -37,7 +34,7 @@ import { reportError } from "../../shared/beacon";
 import { costaRicaToday } from "../../domain/inquiry";
 import { type Listing } from "../../domain/listing";
 import { resumeStep } from "../../domain/publish-rules";
-import { formatCRC, formatMoney } from "../../domain/money";
+import { formatMoney } from "../../domain/money";
 import { FLAGS } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { whenIdle } from "../../shared/idle";
@@ -48,32 +45,31 @@ import { MonthGrid, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { isChunkLoadError } from "../chunk-error";
-import { RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { useDesktop } from "../desktop";
 import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";
 import { HousePicker } from "../house-picker";
 
-import { AirbnbRow, AirbnbAvailability, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
-import { Button, TextButton } from "../../shared/button";
-import { Segmented } from "../../shared/choice";
-import { AffixInput } from "../../shared/field";
+import { AirbnbRow, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
+import { Button } from "../../shared/button";
 
-const AVAILABILITY = [
-  { value: "free", label: "Disponible" },
-  { value: "busy", label: "Ocupado" },
-] as const;
 import { RouterButtonLink } from "../router-buttons";
+import { LoadError, Notice, Skeleton } from "../../shared/structure";
+import { Card } from "../../shared/card";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "3bstays-calendario-casa";
-const KB_RELEASE_MS = 400;
 const loadCloseSheet = () => import("../close-sheet");
 const lazyCloseSheet = () => lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
 let CloseSheet = lazyCloseSheet();
 const loadMarkSheet = () => import("../mark-sheet");
 const lazyMarkSheet = () => lazy(() => loadMarkSheet().then((m) => ({ default: m.MarkSheet })));
+// El panel de los días elegidos, en su trozo (panel-dias-*): se pide en reposo al abrir el Calendario o al tocar un día
+// (historia 07, paso 5).
+const loadPanel = () => import("../panel-dias");
+const Panel = lazy(() => loadPanel().then((m) => ({ default: m.Panel })));
 let MarkSheet = lazyMarkSheet();
 
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
@@ -82,7 +78,6 @@ const titleOf = (l: Listing) => l.title || "Borrador sin título";
 const hasCalendar = (l: Listing) => l.status !== "rejected" && !(l.status === "draft" && l.firstPublishedAt === null);
 const baseOf = (l: Listing) => (l.acceptsNightly ? l.nightlyPriceCrc : null);
 /** «95 000» en el campo (se edita con espacios; parseColones los quita). */
-const grouped = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
 function readLast(): string | null {
   try {
@@ -132,15 +127,15 @@ export function CalendarioScreen() {
 
   return (
     <>
-      <RootHeader title="Calendario" />
+      <ScreenHeader kind="root" title="Calendario" />
       {listings.isError && !houses ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void listings.refetch()}>
           {toDomainError(listings.error).message}
-        </p>
+        </LoadError>
       ) : null}
-      {!houses && !listings.isError ? <section className="card skeleton cal-skeleton" aria-busy="true" aria-label="Cargando su calendario" /> : null}
+      {!houses && !listings.isError ? <Skeleton shape="calendar" label="Cargando su calendario" /> : null}
       {houses && houses.length === 0 ? (
-        <section className="card stack gap-12">
+        <Card layout="stack" gap={12}>
           <p>Su calendario se activa cuando envíe su casa a revisión.</p>
           {draft ? (
             <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} variant="primary" size="lg" block>
@@ -151,7 +146,7 @@ export function CalendarioScreen() {
               Publicar casa
             </RouterButtonLink>
           )}
-        </section>
+        </Card>
       ) : null}
       {current && houses ? (
         <Calendar
@@ -181,6 +176,9 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
   month: string | undefined;
   houseControl?: ReactNode;
 }) {
+  useEffect(() => {
+    whenIdle(() => void loadPanel().catch(() => {}));
+  }, []);
   const client = useQueryClient();
   const port = useEditor();
   const desktop = useDesktop();
@@ -268,10 +266,10 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
         {houseControl}
         {canMark || canPause || !port.admin ? (
           <section className="cal-actions" aria-label="Acciones del calendario">
-            {canMark || canPause ? <div className="card cal-action-group">
+            {canMark || canPause ? <Card as="div" placement="cal-action-group">
               {canMark ? <MarkRow today={today} onMark={onMark} calendarDays={query.data} prepare={prepareMark} /> : null}
               {canPause ? <PauseRow listing={l} userId={userId} /> : null}
-            </div> : null}
+            </Card> : null}
             {!port.admin ? <AirbnbRow key={`${userId}:${l.id}`} listing={l} userId={userId} month={month} disabled={sel.days.length > 0} /> : null}
           </section>
         ) : null}
@@ -282,7 +280,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
         {/* Precios por fecha apagados (feature flag): el precio base en la leyenda y las casillas sin precio. */}
         <AirbnbLegend days={query.data} price={!FLAGS.datePrices && base !== null ? formatMoney(base, currency, fx.crcPerUsd) : undefined} />
         {editable && sel.days.length > 0 ? (
-          <Panel
+          <Suspense fallback={null}><Panel
             sel={sel}
             base={base}
             hasSpecial={hasSpecial}
@@ -293,15 +291,15 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
             onChange={(s) => (setSel(s), setProblem(null))}
             onCancel={() => (setSel(clearSelection()), setProblem(null), showChrome())}
             onSave={onSave}
-          />
+          /></Suspense>
         ) : null}
       </div>
 
       <div className="owner-calendar-days">
         {query.isError && !query.data ? (
-          <p className="note" role="alert">
+          <LoadError onRetry={() => void query.refetch()}>
             {toDomainError(query.error).message}
-          </p>
+          </LoadError>
         ) : null}
 
         <WeekdayRow className="cal-weekdays" />
@@ -367,9 +365,9 @@ function MarkRow({ today, onMark, calendarDays, prepare }: {
         <I.chevron />
       </button>
       {problem ? (
-        <p className="note" role="alert">
+        <Notice tone="error">
           {problem}
-        </p>
+        </Notice>
       ) : null}
       {marking ? (
         <SheetBoundary name="Marcar una reserva" onRetry={() => (MarkSheet = lazyMarkSheet())}>
@@ -453,9 +451,9 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
         </div>
       )}
       {available.error ? (
-        <p className="note" role="alert">
+        <Notice tone="error">
           {toDomainError(available.error).message}
-        </p>
+        </Notice>
       ) : null}
       {closing ? (
         <SheetBoundary name="Pausar la casa" onRetry={() => (CloseSheet = lazyCloseSheet())}>
@@ -563,92 +561,5 @@ function CalendarMonths({ months, target, render }: { months: string[]; target: 
         </section>
       ))}
     </div>
-  );
-}
-
-interface PanelProps {
-  sel: Selection;
-  base: number | null;
-  hasSpecial: boolean;
-  importedCount: number;
-  manualCount: number;
-  problem: string | null;
-  canSave: boolean;
-  onChange: (s: Selection) => void;
-  onCancel: () => void;
-  onSave: () => void;
-}
-
-function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, canSave, onChange, onCancel, onSave }: PanelProps) {
-  // Teclado del iPhone (no encoge la vista): mientras el precio tiene el foco el panel gana sitio abajo y el campo sube por
-  // encima. Se quita un poco después de salir del campo para que «Guardar cambios» no se mueva bajo el dedo.
-  const [kb, setKb] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(timer.current), []);
-  const isPrice = (el: EventTarget | null) => el instanceof HTMLInputElement;
-  function onFocus(e: FocusEvent<HTMLElement>) {
-    if (!isPrice(e.target)) return;
-    clearTimeout(timer.current);
-    setKb(true);
-  }
-  function onBlur(e: FocusEvent<HTMLElement>) {
-    if (!isPrice(e.target)) return;
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setKb(false), KB_RELEASE_MS);
-  }
-  const price = sel.priceEdited ? sel.price : grouped(sel.price);
-  const problemId = useId();
-  // Precios por fecha apagados (feature flag, #61): solo disponibilidad; el precio de la noche es el de la casa.
-  const priceField = base !== null && FLAGS.datePrices ? (
-    <AffixInput
-      size="sm"
-      prefix="₡"
-      aria-label="Precio por noche"
-      inputMode="numeric"
-      enterKeyHint="done"
-      autoComplete="off"
-      placeholder={sel.mixedPrice ? "Varios precios" : undefined}
-      value={price}
-      aria-invalid={problem ? true : undefined}
-      aria-describedby={problem ? problemId : undefined}
-      onChange={(e) => onChange(setPrice(sel, e.target.value))}
-      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-    />
-  ) : null;
-  return (
-    <section className={`cal-panel${kb ? " kb" : ""}`} aria-label="Días seleccionados" onFocus={onFocus} onBlur={onBlur}>
-      <div className="row between baseline">
-        <b className="display">{selectionLabel(sel.days)}</b>
-        <TextButton tone="quiet" onClick={onCancel}>
-          Cancelar
-        </TextButton>
-      </div>
-      {importedCount ? <AirbnbAvailability sel={sel} importedCount={importedCount} manualCount={manualCount} onChange={onChange}>{priceField}</AirbnbAvailability> : <>
-      {manualCount ? <p className="small muted">Bloqueo manual</p> : null}
-      <div className="row gap-8 cal-day-fields">
-        <Segmented
-          fill
-          label="Disponibilidad"
-          options={AVAILABILITY}
-          value={sel.available === null ? null : sel.available ? "free" : "busy"}
-          onChange={(v) => onChange(setAvailability(sel, v === "free"))}
-        />
-        {priceField}
-      </div>
-      </>}
-      {base !== null && hasSpecial && FLAGS.datePrices ? (
-        <TextButton tone="link" placement="cal-base" onClick={() => onChange(setPrice(sel, grouped(String(base))))}>
-          Usar el precio base ({formatCRC(base)})
-        </TextButton>
-      ) : null}
-      {problem ? (
-        <p id={problemId} className="field-error" role="alert">
-          {problem}
-        </p>
-      ) : null}
-      <Button variant="primary" block disabled={!canSave} onClick={onSave}>
-        Guardar cambios
-      </Button>
-    </section>
   );
 }

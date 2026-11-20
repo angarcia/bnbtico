@@ -12,6 +12,6 @@
     padding:max(16px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
     background:var(--bg);color:var(--fg);text-align:center;touch-action:none}
   .rotate-notice img{width:150px;height:auto}
-  .rotate-notice p{margin:0;font-family:var(--display);font-size:20px;font-weight:var(--w-strong);color:var(--fg-title)}
+  .rotate-notice p{margin:0;font-family:var(--display);font-size:var(--fs-title);font-weight:var(--w-strong);color:var(--fg-title)}
   body>:not(.rotate-notice){visibility:hidden}
 }

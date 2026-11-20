@@ -4,12 +4,13 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
-import { RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { useDesktop } from "../desktop";
 import { CurrencySwitch } from "../../shared/currency-switch";
 import { ListingCard } from "../listing-card";
 import { useSession } from "../session";
 import { RouterButtonLink } from "../router-buttons";
+import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure";
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,
@@ -25,25 +26,12 @@ function countLine(n: number, signedIn: boolean): string {
   return `${casas} · ${n === 1 ? "guardada" : "guardadas"} en este teléfono`;
 }
 
-function SkeletonCards({ n }: { n: number }) {
-  return (
-    <div className="listing-grid skeleton" aria-hidden="true">
-      {Array.from({ length: Math.min(n, 4) }, (_, i) => (
-        <div key={i} className="listing-card">
-          <span className="sk photo" />
-          <span className="sk sk-line" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function FavoritosScreen() {
   const desktop = useDesktop();
   const favs = useFavorites();
   const status = useSession().status;
   const ids = useMemo(() => favs.map((f) => f.publicId).sort(), [favs]);
-  const { data, isPlaceholderData, isError } = useQuery(favoriteListingsQuery(ids));
+  const { data, isPlaceholderData, isError, refetch } = useQuery(favoriteListingsQuery(ids));
 
   // Las casas que ya no están publicadas no vuelven en la consulta: fuera del teléfono, sin avisar.
   useEffect(() => {
@@ -59,7 +47,7 @@ export function FavoritosScreen() {
 
   return (
     <>
-      <RootHeader
+      <ScreenHeader kind="root"
         title="Favoritos"
         aside={
           favs.length ? (
@@ -75,14 +63,14 @@ export function FavoritosScreen() {
       />
 
       {favs.length === 0 ? (
-        <section className="stack fav-empty">
-          <p className="muted">{desktop ? "Pulse" : "Toque"} el corazón de una casa para guardarla aquí.</p>
-          <RouterButtonLink to="/explorar" replace variant="primary" size="lg">
-            Explorar casas
-          </RouterButtonLink>
-        </section>
+        <EmptyState
+          framed={false}
+          placement="fav-empty"
+          text={<p className="muted">{desktop ? "Pulse" : "Toque"} el corazón de una casa para guardarla aquí.</p>}
+          action={<RouterButtonLink to="/explorar" replace variant="primary" size="lg">Explorar casas</RouterButtonLink>}
+        />
       ) : loading ? (
-        isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonCards n={favs.length} />
+        isError ? <LoadError onRetry={() => void refetch()} /> : <Skeleton shape="grid" count={Math.min(favs.length, 4)} />
       ) : (
         // La misma tarjeta que Explorar (2026-11-03): fotos deslizables con puntitos, corazón y botón de WhatsApp que abre la
         // hoja de contacto aquí mismo.
@@ -93,10 +81,10 @@ export function FavoritosScreen() {
         </div>
       )}
 
-      <div className="note note-col note-plain">
+      <Notice as="div" layout="column">
         <b>Compare y escriba directo</b>
         <span>Escriba directo desde aquí. Guardar casas no necesita cuenta; para escribir solo verifica su WhatsApp con un código.</span>
-      </div>
+      </Notice>
     </>
   );
 }

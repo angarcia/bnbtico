@@ -33,6 +33,7 @@ import type { BarStay } from "./listing-calendar";
 import { useDesktop } from "../client/desktop";
 import { FLAGS } from "./flags";
 import { Button, ButtonPlaceholder, IconButtonLink, IconButtonPlaceholder } from "./button";
+import { Notice, StatusTag } from "./structure";
 
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
@@ -183,10 +184,10 @@ function Availability({ listing, missing, currency, fx, onStay }: { listing: Pub
           ) : null}
         </div>
       ) : (
-        <div className="note note-arena note-col">
+        <Notice as="div" tone="solid" layout="column">
           <b>Calendario no disponible</b>
           {reopen ? <span className="small">{reopen}</span> : null}
-        </div>
+        </Notice>
       )}
     </div>
   );
@@ -314,7 +315,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
         <div className="stack listing-body">
           {!l.available ? (
             <div className="row wrap gap-8">
-              {!l.available ? <span className="badge badge-mute">No disponible por ahora</span> : null}
+              {!l.available ? <StatusTag label={{ text: "No disponible por ahora", tone: "off" }} /> : null}
             </div>
           ) : null}
           <div className="stack listing-head">

@@ -7,12 +7,12 @@
   width: 100%;
   max-width: 480px;
   margin-inline: auto;
-  font-size: 14px;
+  font-size: var(--fs-xs);
 }
 
 @media (max-width: 899px) {
   .view:has(> .about-3bstays) {
-    padding-inline: 12px;
+    padding-inline: var(--gutter-tight);
   }
 }
 
@@ -67,7 +67,7 @@
 .about-slogan {
   margin-top: 4px;
   color: var(--brand-ink);
-  font-size: 16px;
+  font-size: var(--fs-note);
   font-weight: var(--w-strong);
 }
 
@@ -82,7 +82,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
 }
-.about-price h2 { font-size: 20px; }
+.about-price h2 { font-size: var(--fs-title); }
 .about-rate { margin-block: 7px 4px; }
 
 .about-offer-label,
@@ -100,7 +100,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     max-width: 900px;
-    font-size: 16px;
+    font-size: var(--fs-note);
   }
 
   .desktop-app .about-top,
@@ -109,7 +109,7 @@
 
 .about-offer-label {
   margin-bottom: 5px;
-  font-size: 13px;
+  font-size: var(--fs-eyebrow);
 }
 
 .about-offer-link {
@@ -127,7 +127,7 @@
   .about-guest, .about-price { padding: 10px 12px; }
   .about-brand img { height: 36px; }
   .about-guest h1, .about-owner h2 { font-size: 21px; }
-  .about-price h2 { font-size: 18px; }
+  .about-price h2 { font-size: var(--fs-md); }
   .about-guest-line { margin-top: 5px; }
   .about-owner { gap: 6px; padding-top: 8px; }
   .about-rate { margin-block: 4px 2px; }

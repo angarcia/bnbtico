@@ -10,6 +10,8 @@ import { sessionState } from "./session";
 import { setAvailability, type Selection, type CalendarDay } from "../domain/calendar";
 import { MonthLegend } from "../shared/month-grid";
 import { Segmented } from "../shared/choice";
+import { Notice } from "../shared/structure";
+import { cardClass } from "../shared/card";
 
 const AirbnbConnectPopup = lazy(() => import("./screens/airbnb").then((module) => ({ default: module.AirbnbConnectPopup })));
 
@@ -80,7 +82,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
       await updateAirbnbCalendar(client, userId, listing.id, listing.publicId, request, current, setProblem);
     } finally { inFlight.current = false; if (current()) setUpdating(false); }
   }
-  return <div className={connected ? "cal-airbnb" : "card cal-airbnb"}>
+  return <div className={connected ? "cal-airbnb" : cardClass({ placement: "cal-airbnb" })}>
     <div className="cal-airbnb-line">
     {info.data?.connected ? <button type="button" className="cal-airbnb-update" aria-label={running ? "Actualizando importación de Airbnb" : info.data.state === "error" ? "Reintentar importación de Airbnb" : "Actualizar importación de Airbnb"} aria-busy={running || undefined} title={limitHint ?? undefined} disabled={disabled || !online || running || suspended || !!limitHint} onClick={() => void update()}><RefreshIcon /></button> : null}
     <button type="button" className="cal-action" disabled={disabled || (desktop && info.isPending)}
@@ -97,7 +99,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
       </span><I.chevron />
     </button>
     </div>
-    {problem ? <p className="note" role="alert">{problem}</p> : null}
+    {problem ? <Notice tone="error">{problem}</Notice> : null}
     {disabled ? <p className="hint" id="airbnb-selection-hint">Guarde o cancele los días seleccionados antes de abrir la conexión.</p> : null}
     {desktop && connectOpen && (
       <Suspense fallback={null}>

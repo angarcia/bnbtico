@@ -1,7 +1,7 @@
 // Filtros (pantalla 02): Zona y Fechas abren la búsqueda; Personas, Habitaciones y Tipo se ajustan aquí. «Ver N casas» cuenta en vivo.
 // Sin pastillas de provincia desde el ticket 06 (2026-11-06): sin zona es todo el país, con el Caribe primero.
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useId, useState } from "react";
 import { Dialog } from "../../shared/overlay";
 import {
@@ -29,8 +29,9 @@ import { fxQuery } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
-import { Button, IconButton } from "../../shared/button";
-import { RouterIconLink } from "../router-buttons";
+import { Button } from "../../shared/button";
+import { RouterListRow } from "../router-rows";
+import { ScreenHeader } from "../chrome";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
@@ -120,17 +121,7 @@ function FiltrosForm({
   );
   return (
     <>
-      <header className="header-flow">
-        {onClose ? (
-          <IconButton label="Cerrar filtros" onClick={onClose}><I.x /></IconButton>
-        ) : <RouterIconLink
-          to="/explorar"
-          search={initial}
-          label="Volver"
-        >
-          <I.back />
-        </RouterIconLink>}
-        <h1 id={titleId}>Filtros</h1>
+      <ScreenHeader kind="flow" title="Filtros" titleId={titleId} {...(onClose ? { close: { label: "Cerrar filtros", onClick: onClose } } : { back: { to: "/explorar", search: initial } })} action={
         <div className="right">
           <Button
             variant="secondary"
@@ -142,7 +133,7 @@ function FiltrosForm({
             Limpiar
           </Button>
         </div>
-      </header>
+      } />
       <form
         className="stack filters-form"
         onSubmit={(e) => {
@@ -156,19 +147,14 @@ function FiltrosForm({
           </span>
           <div className="filters-search filter-counters">
             {!onClose && mineRows.map((r) => (
-              <Link
-                key={r.abrir}
-                to="/explorar/buscar"
-                search={{ ...searchFor(f), abrir: r.abrir }}
-                className="list-item"
-              >
+              <RouterListRow key={r.abrir} to="/explorar/buscar" search={{ ...searchFor(f), abrir: r.abrir }}>
                 <r.icon size={22} />
                 <span>{r.label}</span>
                 <small className="filters-search-value">{r.value}</small>
                 <span className="chev">
                   <I.chevron />
                 </span>
-              </Link>
+              </RouterListRow>
             ))}
             <CounterRow
               label="Personas"

@@ -12,9 +12,8 @@ import { EditorContext, useEditor } from "../editor-port";
 import { localPort } from "../publish/local-port";
 import type { Volver } from "../publish/step-form";
 import { requiredProblems, resumeStep } from "../../domain/publish-rules";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader, type HeaderClose } from "../chrome";
 import { useDesktop } from "../desktop";
-import { I } from "../../shared/icons";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
 import { ownListingKey } from "../listing-keys";
@@ -23,11 +22,13 @@ import { StepFields } from "../publish/fields";
 import { ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { StepForm } from "../publish/step-form";
 import { useOwnListing, useUserId } from "../editor-query";
-import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { NotFoundCard } from "../editor-status";
 import { knownNoDraft } from "../own-listings-query";
 import { clearCreateFailure, createFailure, startDraft } from "../publish/new-draft";
-import { Button, IconButton } from "../../shared/button";
+import { Button } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
+import { LoadError, Notice, Skeleton } from "../../shared/structure";
+import { Card } from "../../shared/card";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 const DESKTOP_STEPS: readonly Step[] = [1, 7, 6, LAST_STEP];
@@ -104,9 +105,9 @@ export function PublicarScreen() {
   );
   const failed =
     failure !== null ? (
-      <p className="note" role="alert">
+      <Notice tone="error">
         {failure}
-      </p>
+      </Notice>
     ) : null;
 
   // Leyendo, creando o ya creado (camino del paso 1): lo mismo que verá el paso 1 mientras carga, para que no cambie nada
@@ -117,19 +118,19 @@ export function PublicarScreen() {
     return (
       <>
         <StepHeader step={1} />
-        <SkeletonCard />
+        <Skeleton shape="row" label="Cargando sus casas" />
       </>
     );
   return (
     <>
-      <FlowHeader title="Publicar casa" back="/cuenta" historyBack />
+      <ScreenHeader kind="flow" title="Publicar casa" back={{ to: "/cuenta", historyBack: true }} />
       {resumable.isError ? (
-        <p className="note" role="alert">
+        <LoadError onRetry={() => void resumable.refetch()}>
           {message(resumable.error)}
-        </p>
+        </LoadError>
       ) : null}
       {draft ? (
-        <section className="card stack gap-12">
+        <Card layout="stack" gap={12}>
           <h3>Tiene un borrador sin enviar</h3>
           <p className="small muted">
             {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
@@ -138,15 +139,15 @@ export function PublicarScreen() {
             Seguir con el borrador
           </RouterButtonLink>
           {start}
-        </section>
+        </Card>
       ) : draft === null ? (
-        <section className="card stack gap-12">
+        <Card layout="stack" gap={12}>
           <h3>Publique su casa en pocos pasos</h3>
           {/* Solo si no se pudo crear el borrador: lo que pide el asistente y «Empezar» para reintentar. */}
           <ReadyList />
           <p className="small muted">La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
           {start}
-        </section>
+        </Card>
       ) : null}
       {failed}
     </>
@@ -156,7 +157,7 @@ export function PublicarScreen() {
 // ---------- Una pantalla del asistente ----------
 
 /** «Cerrar» (B11f): espera a que salgan los guardados de esta casa y vuelve a Mis casas; el borrador se retoma después. */
-function CloseWizard({ id }: { id?: string }) {
+function useCloseWizard(id?: string): HeaderClose {
   const navigate = useNavigate();
   const { close: to } = useEditor();
   const [saving, setSaving] = useState(false);
@@ -165,17 +166,14 @@ function CloseWizard({ id }: { id?: string }) {
     if (id) await savesSettled(id);
     await navigate({ to });
   }
-  return (
-    <IconButton label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"} placement="header-close" onClick={close} disabled={saving} aria-busy={saving || undefined} title="Cerrar y seguir después">
-      <I.x size={20} />
-    </IconButton>
-  );
+  return { label: saving ? "Guardando el borrador…" : "Cerrar y seguir después", onClick: () => void close(), disabled: saving, busy: saving, title: "Cerrar y seguir después" };
 }
 
 function StepHeader({ id, step, lastInGroup, missingSteps, actions }: { id?: string; step: Step | null; lastInGroup?: Step; missingSteps?: readonly Step[]; actions?: ReactNode }) {
   const { admin } = useEditor();
+  const close = useCloseWizard(id);
   return (
-    <WizardHeader title={admin ? "Asistir casa" : "Publicar casa"} step={step} lastInGroup={lastInGroup} close={<CloseWizard id={id} />} missingSteps={missingSteps} actions={actions} />
+    <WizardHeader title={admin ? "Asistir casa" : "Publicar casa"} step={step} lastInGroup={lastInGroup} close={close} missingSteps={missingSteps} actions={actions} />
   );
 }
 
@@ -238,11 +236,11 @@ export function PasoScreen() {
       <>
         {renderHeader()}
         {query.isError ? (
-          <p className="note" role="alert">
+          <LoadError onRetry={() => void query.refetch()}>
             {message(query.error)}
-          </p>
+          </LoadError>
         ) : (
-          <SkeletonCard />
+          <Skeleton shape="row" label="Cargando sus casas" />
         )}
       </>
     );

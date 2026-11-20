@@ -1,7 +1,7 @@
 
 /* ---------- Asistente de publicar (ticket 07; decisión 2026-10-21) ---------- */
 .strong{font-weight:var(--w-medium)}
-.label-plain{font-size:14px;font-weight:var(--w-medium);color:var(--muted)}
+.label-plain{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
 .publish-kind .choice:not(:has(input:checked)){border:1px solid var(--line);padding:15px}
 .counters{padding:0;border-radius:var(--r-tile)}
 /* Publicar: título y cierre arriba; progreso y cuenta en sus propias filas. */
@@ -45,7 +45,7 @@
 .photos-grid .photo.is-lifted{z-index:2;transform-origin:50% 50%;box-shadow:var(--shadow-lift)}
 /* Botones «Mover foto N antes / después»: ocultos salvo con el foco del teclado, como una píldora al pie de la foto. */
 .sr-only,.photos-grid .sr-move{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:8px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:var(--w-medium)}
+.photos-grid .sr-move:focus-visible{left:6px;right:6px;bottom:6px;width:auto;height:auto;margin:0;padding:6px 10px;clip-path:none;white-space:normal;z-index:1;border-radius:var(--r-control);background:var(--overlay);color:var(--on-overlay);font-size:var(--fs-xs);font-weight:var(--w-medium)}
 .wa-card{gap:12px;padding:12px 14px;border-radius:var(--r-input)}
 
 /* Admin (ticket 09): cola de anuncios (21) y revisar (22) */
@@ -54,13 +54,13 @@
 .queue-title{font-size:19px;line-height:1.1}
 .queue-foot{padding:0 4px}
 .house-row{padding:12px 14px}
-.house-thumb{width:56px;height:56px;border-radius:10px}
+.house-thumb{width:56px;height:56px;border-radius:var(--r-thumb)}
 .house-body{gap:2px}
-.house-title{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.house-title{font-size:var(--fs-base);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .house-row .badge{align-self:center;flex-shrink:0}
 .review-photo{width:200px}
 .review-photo-sm{width:110px}
-.review-owner{padding:12px 14px;border-radius:8px}
+.review-owner{padding:12px 14px;border-radius:var(--r-control)}
 .review-spacer{height:124px}
 .review-actions{flex-direction:column;gap:8px}
 .diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -70,15 +70,14 @@
 .diff-photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .diff-photos img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:var(--r-input)}
 .tabbar .nav{position:relative}
-.nav-count{position:absolute;top:2px;right:16px;min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand);color:var(--bg);font-size:13px;font-weight:var(--w-medium);display:flex;align-items:center;justify-content:center}
 
 /* Aviso de versión nueva (service worker): se apoya en la barra de abajo (--chrome-bottom) o, sin ella, a 12 px del borde. */
-.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:var(--z-banner)}
+.update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:var(--fs-note);font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:var(--z-banner)}
 @media (max-width:899px){
-  .publish-flow{--gutter:12px}
+  .publish-flow{--gutter:var(--gutter-tight)}
   .publish-flow .header-flow{margin-inline:0}
   .publish-flow .flow{padding-inline:0}
-  .edit-photos-flow{--gutter:12px}
+  .edit-photos-flow{--gutter:var(--gutter-tight)}
   .edit-photos-flow .header-flow{margin-inline:0}
   .edit-photos-flow .photos-scroll{margin-inline:calc(-1 * var(--gutter));padding-inline:0}
 }

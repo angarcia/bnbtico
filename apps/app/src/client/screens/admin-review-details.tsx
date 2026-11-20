@@ -3,6 +3,8 @@ import { FEATURE_LABEL, KIND_LABELS, MONTHLY_LABEL, locationLine, type Listing }
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
 import { Checkbox } from "../../shared/field";
+import { StatusTag } from "../../shared/structure";
+import { Card } from "../../shared/card";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -46,9 +48,7 @@ export function FeatureBadges({ l }: { l: Listing }) {
   return (
     <div className="row wrap gap-6">
       {l.features.map((f) => (
-        <span key={f} className="badge">
-          {f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratuito"}` : FEATURE_LABEL[f]}
-        </span>
+        <StatusTag key={f} label={{ text: f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratuito"}` : FEATURE_LABEL[f], tone: "neutral" }} />
       ))}
       {l.features.length === 0 ? <span className="xs muted">Sin características marcadas</span> : null}
     </div>
@@ -57,7 +57,7 @@ export function FeatureBadges({ l }: { l: Listing }) {
 
 export function OwnerCard({ l, ownerName }: { l: Listing; ownerName: string }) {
   return (
-    <section className="card row gap-12 review-owner">
+    <Card layout="row" gap={12} placement="review-owner">
       <span className="avatar avatar-sm" aria-hidden="true">
         {initials(ownerName)}
       </span>
@@ -67,17 +67,17 @@ export function OwnerCard({ l, ownerName }: { l: Listing; ownerName: string }) {
           WhatsApp verificado · <span className="num">{formatPhone(l.whatsappPhone)}</span>
         </span>
       </span>
-    </section>
+    </Card>
   );
 }
 
 export function Checklist() {
   return (
-    <section className="card-soft stack gap-8">
+    <Card tone="soft" layout="stack" gap={8}>
       <b className="small">Antes de decidir</b>
       <Checkbox name="check-photos">Las fotos son de la casa y sin teléfonos ni logos</Checkbox>
       <Checkbox name="check-text">La descripción no tiene enlaces ni publicidad</Checkbox>
       <Checkbox name="check-price">Zona y precio coherentes</Checkbox>
-    </section>
+    </Card>
   );
 }

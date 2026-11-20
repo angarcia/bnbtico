@@ -18,6 +18,9 @@ import { Button, IconButton, TextButton } from "../../shared/button";
 import { useCombobox } from "../../shared/combobox";
 import { SearchInput, StickyActions } from "../../shared/field";
 import { Stepper } from "../../shared/stepper";
+import { Notice } from "../../shared/structure";
+import { Card } from "../../shared/card";
+import { ClosedField } from "../../shared/closed-field";
 
 const route = getRouteApi("/_flow/explorar/buscar");
 
@@ -83,10 +86,7 @@ function Fold({ title, value, open, onToggle, children }: { title: string; value
     <section ref={card} className={open ? "search-card" : "search-closed"}>
       <div className="search-card-head">
         <h2>
-          <button ref={title_} type="button" className={open ? "search-card-title" : "search-fold"} aria-expanded={open} aria-controls={open ? id : undefined} onClick={onToggle}>
-            <span>{title}</span>
-            {open ? null : <><b className="num">{value}</b><I.chevronDown size={18} /></>}
-          </button>
+          <ClosedField kind="search" ref={title_} open={open} label={title} value={value} aria-expanded={open} aria-controls={open ? id : undefined} onClick={onToggle} />
         </h2>
       </div>
       {open ? (
@@ -273,7 +273,7 @@ export function BuscarScreen() {
           </span>
           <Stepper unit="Una persona" value={draft.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!draft.ppl} onChange={(ppl) => set({ ppl })} />
         </div>
-        <p className="note small">{SEARCH_MODE === "nights" ? "Las noches" : SEARCH_MODE === "dates" ? "Las fechas" : "Las personas"}{SEARCH_MODE === "none" ? " van" : " y las personas van"} en el mensaje de WhatsApp que le preparamos para el anfitrión.</p>
+        <Notice small>{SEARCH_MODE === "nights" ? "Las noches" : SEARCH_MODE === "dates" ? "Las fechas" : "Las personas"}{SEARCH_MODE === "none" ? " van" : " y las personas van"} en el mensaje de WhatsApp que le preparamos para el anfitrión.</Notice>
       </Fold>
       <StickyActions>
         <TextButton tone="quiet" onClick={() => setDraft(EMPTY)}>

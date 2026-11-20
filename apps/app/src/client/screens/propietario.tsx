@@ -6,7 +6,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useOwnListing, useUserId } from "../editor-query";
-import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { NotFoundCard } from "../editor-status";
 import { ActivateButton, HoldNotice, PayButton, PayNotice, ShareButtonInline, WhatsAppItem, shareOf, titleOf } from "../owner-ui";
 import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { can, isPublished } from "../../domain/can";
@@ -16,7 +16,7 @@ import { variantUrl } from "../../domain/image";
 import { type Listing } from "../../domain/listing";
 import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { formatCRC } from "../../domain/money";
-import { byPendingAction, cardLabel, casasView, noticeFor, type Notice } from "../../domain/navigation";
+import { byPendingAction, cardLabel, casasView, noticeFor, type Notice as PendingNotice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/subscription";
 import { I } from "../../shared/icons";
 import { DeleteHouse } from "../delete-house";
@@ -24,7 +24,7 @@ import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
 import { useShare } from "../../shared/share-button";
 import { billingQuery, useBilling, type Billing } from "../billing";
-import { FlowHeader, RootHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { HouseCardTop } from "../house-card";
 import { inquiriesQuery } from "../inquiries";
 import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
@@ -33,6 +33,8 @@ import { ConfirmSheet } from "../confirm-sheet";
 import { useDesktop } from "../desktop";
 import { Button, TextButton } from "../../shared/button";
 import { RouterButtonLink, RouterTextLink } from "../router-buttons";
+import { CountBadge, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { Card, List, ListRowButton } from "../../shared/card";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -62,7 +64,7 @@ function useDiscardSheet(go: () => void): [() => void, ReactNode] {
 // ---------- Mis casas ----------
 
 /** El único aviso de arriba (domain/navigation.ts noticeFor): el pago, con el nombre de la casa. */
-function NoticeCard({ notice, billing }: { notice: Notice | null; billing: Billing | null }) {
+function NoticeCard({ notice, billing }: { notice: PendingNotice | null; billing: Billing | null }) {
   const hb = notice ? billing?.of(notice.listingId) : undefined;
   return hb && billing ? <PayNotice hb={hb} today={billing.today} title={hb.house.title} /> : null;
 }
@@ -95,6 +97,8 @@ function NewHouseLink({ userId }: { userId: string }) {
       }}
     >
       <I.plus size={22} />
+      {/* El texto que se ve en escritorio (antes con `content:` en el CSS); el nombre accesible sigue siendo «Nueva casa». */}
+      <span className="desktop-label">Añadir casa</span>
     </Link>
   );
 }
@@ -133,9 +137,9 @@ export function CasasScreen() {
   }
   return (
     <>
-      <RootHeader title="Mis casas" />
-      {listings.isError && !list ? <p className="note" role="alert">{message(listings.error)}</p> : null}
-      {!list && !listings.isError ? <SkeletonCard /> : null}
+      <ScreenHeader kind="root" title="Mis casas" />
+      {listings.isError && !list ? <LoadError onRetry={() => void listings.refetch()}>{message(listings.error)}</LoadError> : null}
+      {!list && !listings.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
       {view === "list" ? (
         <>
           <NoticeCard notice={notice} billing={billing} />
@@ -181,10 +185,10 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
   const tools = multiple && can(l, "available");
   const inquiriesLabel = newInquiries > 0 ? `Consultas, ${newInquiries} ${newInquiries === 1 ? "nueva" : "nuevas"}` : "Consultas";
   return (
-    <article className={`card house-card${shareable || tools ? " house-card-compact" : ""}`}>
+    <Card as="article" placement={shareable || tools ? "house-card-compact" : "house-card"}>
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
-      {l.reviewNote && l.status === "changes" ? <p className="note note-arena small">Nota de 3bstays: {l.reviewNote}</p> : null}
+      {l.reviewNote && l.status === "changes" ? <Notice tone="solid" small>Nota de 3bstays: {l.reviewNote}</Notice> : null}
       <HoldNotice listing={l} card />
       {shareable || tools ? (
         <div className="house-actions">
@@ -193,10 +197,12 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
             <div className="house-tools">
               <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label="Calendario" title="Calendario">
                 <I.calendar size={28} />
+                <span className="desktop-label">Calendario</span>
               </Link>
               <Link to="/propietario/actividad" search={{ casa: l.id }} replace className="house-tool" aria-label={inquiriesLabel} title={inquiriesLabel}>
                 <I.chat size={28} />
-                {newInquiries > 0 ? <span className="house-inquiries-count num" data-testid="house-inquiries-count" aria-hidden="true">{newInquiries}</span> : null}
+                <CountBadge n={newInquiries} placement="house" data-testid="house-inquiries-count" aria-hidden="true" />
+                <span className="desktop-label">Consultas</span>
               </Link>
             </div>
           ) : null}
@@ -221,9 +227,9 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
       ) : null}
       {billed && l.status === "payment_due" && l.adminHold?.kind !== "blocked" ? <PayButton publicId={l.publicId} /> : null}
       {billed && l.status === "inactive" && l.adminHold?.kind !== "blocked" ? <ActivateButton publicId={l.publicId} /> : null}
-      {discard.isError ? <p className="note" role="alert">{message(discard.error)}</p> : null}
+      {discard.isError ? <Notice tone="error">{message(discard.error)}</Notice> : null}
       {sheet}
-    </article>
+    </Card>
   );
 }
 
@@ -272,24 +278,20 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, n
   return (
     <>
       {newHouse ? (
-        <RootHeader title={l ? titleOf(l) : "Mi casa"} action={<>{desktop ? viewListing : null}{newHouse}</>} />
+        <ScreenHeader kind="root" title={l ? titleOf(l) : "Mi casa"} action={<>{desktop ? viewListing : null}{newHouse}</>} />
       ) : (
-        <FlowHeader
-          title={l ? titleOf(l) : "Mi casa"}
-          back="/propietario/casas"
-          action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined}
-        />
+        <ScreenHeader kind="flow" title={l ? titleOf(l) : "Mi casa"} back={{ to: "/propietario/casas" }} action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined} />
       )}
       {notice}
       {l && isPublished(l) ? (
-        <Suspense fallback={<SkeletonCard />}>
+        <Suspense fallback={<Skeleton shape="row" label="Cargando sus casas" />}>
           <EditableFicha key={l.id} listing={l} userId={userId} rightPanel={showSubscription ? <HouseSubscription listing={l} /> : rightPanel} />
         </Suspense>
       ) : null}
       {l && !isPublished(l) ? <Detail listing={l} userId={userId} /> : null}
       {l === null ? <NotFoundCard /> : null}
-      {l === undefined && query.isError ? <p className="note" role="alert">{message(query.error)}</p> : null}
-      {l === undefined && !query.isError ? <SkeletonCard /> : null}
+      {l === undefined && query.isError ? <LoadError onRetry={() => void query.refetch()}>{message(query.error)}</LoadError> : null}
+      {l === undefined && !query.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
       {viewListing && !desktop ? viewListing : null}
     </>
   );
@@ -319,7 +321,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
               Añadir fotos
             </Link>
           )}
-          <span className={`state ${label.cls}`}>{label.text}</span>
+          <StatusTag placement="photo" label={label} />
           {price ? (
             <span className="pill pill-bl">
               {formatCRC(price.amount)} <span>/ {price.unit}</span>
@@ -343,24 +345,24 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             ) : null}
           </div>
         ) : null}
-        {l.status === "review" ? <div className="note note-review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</div> : null}
+        {l.status === "review" ? <Notice as="div" tone="review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</Notice> : null}
         {l.reviewNote && l.status === "changes" ? (
-          <section className="card-arena stack gap-10">
+          <Card tone="solid" layout="stack" gap={10}>
             <b className="display offer-title">Le pedimos cambios</b>
             <span className="small ink">{l.reviewNote}</span>
             <Button variant="primary" block onClick={() => void toWizard()}>
               Corregir y reenviar
             </Button>
-          </section>
+          </Card>
         ) : null}
 
-        <section className="list">
+        <List>
           {/* «Compartir ficha» solo con la casa activa: desactivado parecía roto (A4). */}
           {can(l, "share") ? <ShareListItem listing={l} /> : null}
           <WhatsAppItem listing={l} />
-        </section>
+        </List>
 
-        {error ? <p className="note" role="alert">{message(error)}</p> : null}
+        {error ? <Notice tone="error">{message(error)}</Notice> : null}
 
         {can(l, "discard") ? (
           <Button variant="danger" onClick={ask} disabled={discard.isPending}>
@@ -378,7 +380,7 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
   const { share, copied, swap } = useShare(target);
   const enabled = can(l, "share");
   return (
-    <button type="button" className="list-item" onClick={share} disabled={!enabled} aria-disabled={!enabled || undefined} data-share-url={target.url}>
+    <ListRowButton onClick={share} disabled={!enabled} aria-disabled={!enabled || undefined} data-share-url={target.url}>
       <span className="muted-icon">
         <I.share />
       </span>
@@ -391,7 +393,7 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
       <span className="chev">
         <I.chevron />
       </span>
-    </button>
+    </ListRowButton>
   );
 }
 

@@ -1,8 +1,7 @@
 // Reglas puras de la navegación: qué pestañas se ven, qué vista de Mis casas toca y qué aviso se muestra.
-import { HOLD_LABELS } from "./admin-hold";
 import { shortDate } from "./dates";
 import type { ListingEdit } from "./edit";
-import { editLabel } from "./edit-label";
+import { editStatusLabel, holdLabel, statusLabel, type StatusLabel } from "./status-label";
 import type { Listing } from "./listing";
 import { payButtonDue, type HouseSubscription } from "./subscription";
 
@@ -43,31 +42,14 @@ export function noticeFor(
   return null;
 }
 
-export type CardLabelClass = "state-ok" | "state-review" | "state-draft" | "state-pay" | "state-off" | "state-bad";
-export interface CardLabel {
-  text: string;
-  cls: CardLabelClass;
-}
-
-const STATUS_CARD_LABELS: Record<Listing["status"], CardLabel> = {
-  payment_due: { text: "Pendiente de pago", cls: "state-pay" },
-  inactive: { text: "Inactiva", cls: "state-off" },
-  active: { text: "Activa", cls: "state-ok" },
-  review: { text: "En revisión", cls: "state-review" },
-  draft: { text: "Borrador", cls: "state-draft" },
-  changes: { text: "Cambios pedidos", cls: "state-review" },
-  rejected: { text: "Rechazada", cls: "state-bad" },
-};
-
 /** Una sola etiqueta sobre la foto. Prioridad: 3bstays (Pausada, Bloqueada) > pago (Pendiente de pago, Inactiva) > edición > Pausada (por el anfitrión, «Pausar la casa») > estado. */
-export function cardLabel(l: Pick<Listing, "status" | "available" | "reopenAt"> & { adminHold?: Listing["adminHold"] }, edit: Pick<ListingEdit, "status"> | null = null): CardLabel {
-  if (l.adminHold) return HOLD_LABELS[l.adminHold.kind];
-  if (l.status === "payment_due" || l.status === "inactive") return STATUS_CARD_LABELS[l.status];
-  const e = editLabel(edit);
-  if (e) return { text: e.label, cls: e.badge };
+export function cardLabel(l: Pick<Listing, "status" | "available" | "reopenAt"> & { adminHold?: Listing["adminHold"] }, edit: Pick<ListingEdit, "status"> | null = null): StatusLabel {
+  if (l.adminHold) return holdLabel(l.adminHold.kind, "photo");
+  if (l.status === "payment_due" || l.status === "inactive") return statusLabel(l.status);
+  if (edit) return editStatusLabel(edit.status, "card");
   if (l.status === "active" && !l.available) {
     const d = l.reopenAt ? shortDate(l.reopenAt) : null;
-    return { text: d ? `Pausada hasta el ${d}` : "Pausada", cls: "state-off" };
+    return { text: d ? `Pausada hasta el ${d}` : "Pausada", tone: "off" };
   }
-  return STATUS_CARD_LABELS[l.status];
+  return statusLabel(l.status);
 }

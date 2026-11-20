@@ -18,7 +18,7 @@ import type { EditStatus } from "./edit-label";
 import { editedFields, type ReviewedField } from "./edit-summary";
 
 export type { EditStatus } from "./edit-label";
-export { editLabel, editOverview, EDIT_LABELS } from "./edit-label";
+export { editOverview } from "./edit-label";
 export { EDIT_MESSAGES } from "./edit-messages";
 export { editSummary, editedFields, FIELD_COLUMN, COLUMN_FIELD, type EditFieldColumn, type ReviewedField } from "./edit-summary";
 

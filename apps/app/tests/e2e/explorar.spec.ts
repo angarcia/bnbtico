@@ -338,7 +338,7 @@ test("cabecera sin el chip mensual: los filtros y ₡ | $ en una fila; el rango 
   // Las diez casas cuestan entre ₡40 000 y ₡85 000 la noche: el rango cuenta en el contador y se ve en Filtros.
   await page.goto("/explorar?min=40000&max=90000");
   await expect(results(page)).toHaveText("10 casas");
-  await expect(page.getByRole("link", { name: /^Filtros/ }).locator(".badge")).toHaveText("2");
+  await expect(page.getByRole("link", { name: /^Filtros/ }).locator(".count-badge")).toHaveText("2");
   const pills = page.locator(".listing-card .card-price");
   await expect(pills).toHaveCount(10);
   for (const text of await pills.allTextContents()) expect(text).toMatch(/\/ noche$/);

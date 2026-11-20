@@ -1,3 +1,4 @@
+import { statusLabel } from "../../src/domain/status-label";
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PROVINCE,
@@ -6,7 +7,6 @@ import {
   KINDS,
   KIND_LABELS,
   PROVINCES,
-  STATUS_LABELS,
   STEP_COUNT,
   STEP_NAMES,
   STEPS,
@@ -117,13 +117,13 @@ describe("constantes", () => {
     expect(previousStep(2)).toBe(1);
     expect(previousStep(1)).toBeNull();
   });
-  it("etiquetas de estado con los colores del diseño", () => {
-    expect(STATUS_LABELS.review).toEqual({ label: "En revisión", badge: "badge-review" });
-    expect(STATUS_LABELS.active).toEqual({ label: "Activa", badge: "badge-ok" });
-    expect(STATUS_LABELS.changes).toEqual({ label: "Cambios pedidos", badge: "badge-review" });
-    expect(STATUS_LABELS.payment_due).toEqual({ label: "Pendiente de pago", badge: "badge-sun" });
-    expect(STATUS_LABELS.rejected).toEqual({ label: "Rechazada", badge: "badge-bad" });
-    expect(STATUS_LABELS.draft).toEqual({ label: "Borrador", badge: "badge-mute" });
+  it("etiquetas de estado con los tonos del diseño (domain/status-label.ts)", () => {
+    expect(statusLabel("review")).toEqual({ text: "En revisión", tone: "review" });
+    expect(statusLabel("active")).toEqual({ text: "Activa", tone: "ok" });
+    expect(statusLabel("changes")).toEqual({ text: "Cambios pedidos", tone: "review" });
+    expect(statusLabel("payment_due")).toEqual({ text: "Pendiente de pago", tone: "pay" });
+    expect(statusLabel("rejected")).toEqual({ text: "Rechazada", tone: "bad" });
+    expect(statusLabel("draft")).toEqual({ text: "Borrador", tone: "draft" });
   });
 });
 

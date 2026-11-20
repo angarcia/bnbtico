@@ -16,29 +16,29 @@
 .location-hint .xs{display:block}
 .zone-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;padding:6px;background:var(--surface);border-radius:var(--r-input);box-shadow:var(--shadow-float)}
 .zone-pop[hidden]{display:none}
-.zone-credit{margin:4px 12px 2px;font-size:13px;color:var(--muted)}
-.cal-house{font-size:18px;font-weight:var(--w-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zone-credit{margin:4px 12px 2px;font-size:var(--fs-eyebrow);color:var(--muted)}
+.cal-house{font-size:var(--fs-md);font-weight:var(--w-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Selector de país dentro de la caja del prefijo (revisión UX A6): el select va invisible encima de toda la caja. */
 .prefix-select{position:relative;gap:4px;cursor:pointer}
 .prefix-select svg{color:var(--muted);flex-shrink:0}
-.prefix-select select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:18px;cursor:pointer;-webkit-appearance:none;appearance:none}
+.prefix-select select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:var(--fs-md);cursor:pointer;-webkit-appearance:none;appearance:none}
 .prefix-select:focus-within{outline:2px solid var(--focus-ring);outline-offset:2px}
 /* Qué tener a mano antes de publicar (revisión UX C4). */
 .ready-list{margin:0;padding-left:20px;display:grid;gap:4px}
 /* Etapas del asistente (revisión UX C4): rótulo de la etapa en la cabecera, en dos líneas para que quepa a 360 px, y un
    hueco mayor entre los tramos de una etapa y la siguiente. */
-.stage-label{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:14px}
-.stage-label b{color:var(--fg);font-size:15px}
+.stage-label{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:var(--fs-xs)}
+.stage-label b{color:var(--fg);font-size:var(--fs-sm)}
 .progress span.stage-start{margin-left:8px}
 /* Paso 9 «Revisar y enviar» (revisión UX C4): filas compactas que llevan a su pantalla. */
 .review-list{padding:0;display:flex;flex-direction:column}
-.review-row{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:8px;min-height:44px;padding:6px 12px 6px 14px;border-bottom:1px solid var(--line-soft);color:inherit;text-decoration:none;font-size:16px}
+.review-row{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:8px;min-height:44px;padding:6px 12px 6px 14px;border-bottom:1px solid var(--line-soft);color:inherit;text-decoration:none;font-size:var(--fs-note)}
 .review-row:last-child{border-bottom:0}
 /* En pantallas bajas (iPhone SE, 667 px) las seis filas se aprietan 4 px cada una (y, con la letra más grande del 2026-10-29, la nota
    del WhatsApp y la de la oferta a 14 px y con menos relleno) para que el paso 9 quepa sin scroll
    también cuando la nota de la oferta ocupa tres líneas (render de fuentes de Linux). */
-@media (max-height:700px){.review-row{min-height:40px;padding-block:4px}.offer-line{padding-block:8px}.publish-form>.small,.offer-line .small{font-size:14px;line-height:1.35}}
-.review-label{color:var(--muted);font-size:14px;font-weight:var(--w-medium)}
+@media (max-height:700px){.review-row{min-height:40px;padding-block:4px}.offer-line{padding-block:8px}.publish-form>.small,.offer-line .small{font-size:var(--fs-xs);line-height:1.35}}
+.review-label{color:var(--muted);font-size:var(--fs-xs);font-weight:var(--w-medium)}
 .review-value{display:flex;flex-direction:column;min-width:0}
 .review-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .offer-line b{white-space:nowrap}
@@ -60,7 +60,7 @@
 .listing-zone > svg{display:inline-block;vertical-align:-.2em;margin-right:4px}
 .host-line{align-items:center;line-height:1.3}
 .host-text{gap:2px}
-.host-name{font-size:18px}
+.host-name{font-size:var(--fs-md)}
 
 /* ---------- Escritorio: Explorar y la ficha (revisión UX N5) ----------
    Solo CSS: lo que carga el móvil no cambia (presupuestos y Lighthouse). El resto de la app sigue en la columna de teléfono

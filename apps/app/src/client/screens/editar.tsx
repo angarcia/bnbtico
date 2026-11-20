@@ -20,7 +20,7 @@ import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type List
 import { formInput } from "../../domain/step-forms";
 import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
-import { FlowHeader } from "../chrome";
+import { ScreenHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
 import { useEditor } from "../editor-port";
 import { refresh } from "../owner";
@@ -29,15 +29,16 @@ import { ChoiceCards } from "../publish/wizard-parts";
 import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
 import { useOwnListing } from "../editor-query";
-import { NotFoundCard, SkeletonCard } from "../editor-status";
+import { NotFoundCard } from "../editor-status";
 import { useDesktop } from "../desktop";
 import { OwnerHouseDetail } from "./propietario";
 import { Button, IconButton, TextButton } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
 import { Dialog } from "../../shared/overlay";
+import { LoadError, Notice, Skeleton } from "../../shared/structure";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
- *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */
+ *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (ScreenHeader con `back.historyBack`). */
 function useBackToFicha(id: string) {
   const router = useRouter();
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ export function EditarCampoScreen() {
   const ficha = <Navigate to={port.ficha} params={{ id }} replace />;
   if (!field || (l && (!isPublished(l) || (isBlocked(l) && !port.admin)))) return ficha;
   // Una Habitación solo pregunta personas: «Personas» (con el tipo aprobado, el de sus contadores).
-  const header = <FlowHeader title={fieldTitle(field, l?.kind)} back={port.ficha.replace("$id", id)} historyBack />;
+  const header = <ScreenHeader kind="flow" title={fieldTitle(field, l?.kind)} back={{ to: port.ficha.replace("$id", id), historyBack: true }} />;
   if (l === null)
     return (
       <>
@@ -71,11 +72,11 @@ export function EditarCampoScreen() {
       <>
         {header}
         {query.isError ? (
-          <p className="note" role="alert">
+          <LoadError onRetry={() => void query.refetch()}>
             {toDomainError(query.error).message}
-          </p>
+          </LoadError>
         ) : (
-          <SkeletonCard />
+          <Skeleton shape="row" label="Cargando sus casas" />
         )}
       </>
     );
@@ -203,17 +204,17 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
       {/* De qué casa es el cambio, bajo el título. */}
       {!inline ? <p className="small muted edit-house">{listing.title}</p> : null}
       {error && !fieldProblem ? (
-        <div className="note" role="alert">
+        <Notice as="div" tone="error">
           {error}
-        </div>
+        </Notice>
       ) : null}
       <FieldErrorContext.Provider value={fieldProblem}>
         <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
       </FieldErrorContext.Provider>
       {reviewed ? (
-        <p className="note small" data-testid="review-notice">
+        <Notice small data-testid="review-notice">
           {reviewNotice(field as ReviewedField, listing)}
-        </p>
+        </Notice>
       ) : null}
       {!inline && <StickyActions spacer="none">
         <Button variant="primary" size="lg" block type="submit" disabled={saving || !hasChanges}>
@@ -272,12 +273,12 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
   };
   return (
     <>
-      {onDone ? <PhotoCounter counter={source.counter} /> : <FlowHeader title={FIELD_TITLES.fotos} back={ficha.replace("$id", listing.id)} historyBack action={<PhotoCounter counter={source.counter} />} />}
+      {onDone ? <PhotoCounter counter={source.counter} /> : <ScreenHeader kind="flow" title={FIELD_TITLES.fotos} back={{ to: ficha.replace("$id", listing.id), historyBack: true }} action={<PhotoCounter counter={source.counter} />} />}
       <div className="publish-form">
         {/* Como el paso 7: la ayuda de la primera foto se va con ella. */}
         {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
-        <p className="note small">{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</p>
+        <Notice small>{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</Notice>
         <StickyActions spacer="none">
           {onDone ? <Button variant="primary" size="lg" block onClick={onDone}>Listo</Button> : <RouterButtonLink
             variant="primary"
