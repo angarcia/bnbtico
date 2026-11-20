@@ -58,7 +58,9 @@
   /* «Mis casas», la misma forma (sin fotos deslizables ni WhatsApp): de borde a borde, foto 3:2 y esquinas redondeadas. */
   .house-list{gap:16px}
   .house-list > .house-card,.my-houses-summary{margin-inline:calc(-1 * var(--gutter))}
-  .my-houses-summary > .new-house{margin-inline-end:4px}
+  /* La fila de arriba (contadores y «+»), con el mismo aire a los dos lados: antes solo el «+» lo tenía a la derecha
+     (revisión de la app 2026-11-17, historia 04). */
+  .my-houses-summary{padding-inline:4px}
   .house-list .house-photo{aspect-ratio:3/2}
 }
 .listing-cell{position:relative;min-width:0}
