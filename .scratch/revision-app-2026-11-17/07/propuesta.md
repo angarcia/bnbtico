@@ -1,6 +1,6 @@
 # Historia 07 · Propuesta de componentes y estilos comunes (borrador para Ana, 2026-11-19)
 
-Estado: **propuesta, sin aprobar.** No se ha cambiado código de la app. La migración espera a que Ana apruebe esta propuesta y las muestras visuales (escenario 2 de la historia).
+Estado: **propuesta aprobada por Ana el 2026-11-19** (componentes, orden de migración y muestras 1–6); quedan D4–D9, con muestras propias en [muestras/decisiones.html](muestras/decisiones.html). No se ha cambiado código de la app. La migración espera a que Ana apruebe esta propuesta y las muestras visuales (escenario 2 de la historia).
 
 Sale de cuatro inventarios hechos leyendo el código (no abriendo la app; lo no medido va marcado allí):
 

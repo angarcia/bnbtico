@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historia 07 · Decisiones D4–D9</title>
+<link rel="stylesheet" href="../../../../apps/app/src/styles/global.css">
+<link rel="stylesheet" href="propuesta.css">
+<style>
+  .opt{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  .opt>h3{display:flex;gap:8px;align-items:baseline;text-transform:none;letter-spacing:0;font-size:17px;color:var(--fg);font-family:var(--display)}
+  .opt>h3 .k{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-family:var(--body)}
+  .opt.is-rec{border-color:color-mix(in srgb,var(--primary) 45%,transparent)}
+  .rec{font-size:13px;color:var(--primary);font-weight:var(--w-strong)}
+  .mock{background:var(--bg);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .mock h4{font-size:20px}
+  .eyebrow-s{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:var(--w-medium)}
+  .q{grid-column:1/-1;margin:0;max-width:75ch}
+  .r16 .ui-btn,.r16 .ui-input,.r16 .ui-chip,.r16 .ui-seg{border-radius:16px}
+  .r16 .ui-seg button{border-radius:13px}
+  .tags-round .ui-tag{border-radius:999px}
+  .salvia .ui-chip:has(input:checked){background:#7FA98A;color:#16331F}
+  .house-mini{display:flex;gap:12px;align-items:center}
+  .house-mini i{width:64px;height:48px;border-radius:var(--r-thumb);background:linear-gradient(135deg,var(--surface-2),var(--line));flex:none}
+  .house-mini b{display:block;font-family:var(--display);font-size:17px}
+  .flow{display:flex;flex-direction:column;gap:8px;font-size:15px}
+  .flow .step{display:flex;gap:10px;align-items:flex-start}
+  .flow .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--state-soft);color:var(--primary-ink);display:grid;place-items:center;font-size:13px;font-weight:var(--w-strong)}
+  .frame{border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:14px;color:var(--muted)}
+  @media (min-width:1024px){.pair{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="samples">
+  <header class="samples-head">
+    <h1>Decisiones D4–D9</h1>
+    <p class="muted">Cada pregunta trae dos opciones con el estilo ya aprobado. La marcada «propuesta» es la que se aplica si no dice otra cosa.</p>
+  </header>
+
+  <section class="pair" aria-labelledby="d4">
+    <h2 id="d4">D4 · ¿Dónde va el botón verde de WhatsApp?</h2>
+    <p class="q muted">Hoy el verde se usa para contactar al anfitrión, pero también en Ayuda («Abrir WhatsApp», «Escribir a 3bstays por WhatsApp») y en el aviso del admin («Avisar a Daniel por WhatsApp»). El token lo reserva para «Contactar por WhatsApp».</p>
+    <div class="opt is-rec">
+      <h3><span class="k">A</span> Verde solo para hablar con el anfitrión <span class="rec">propuesta</span></h3>
+      <div class="mock">
+        <span class="eyebrow-s">Ficha de la casa</span>
+        <button class="ui-btn" data-variant="whatsapp" data-size="xl"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>Contactar por WhatsApp</button>
+      </div>
+      <div class="mock">
+        <span class="eyebrow-s">Ayuda por WhatsApp</span>
+        <p class="small">Escríbanos si tiene dudas para publicar su casa.</p>
+        <button class="ui-btn" data-variant="secondary" data-size="lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--wa-icon)" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>Abrir WhatsApp</button>
+      </div>
+      <div class="mock">
+        <span class="eyebrow-s">Admin · aviso al anfitrión</span>
+        <button class="ui-btn" data-variant="secondary" data-size="lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="var(--wa-icon)" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>Avisar a Daniel por WhatsApp</button>
+      </div>
+      <p class="why">El verde lleno queda para la acción que más importa, contactar con el anfitrión; en Ayuda y en admin se ve como secundario con el icono verde.</p>
+    </div>
+    <div class="opt">
+      <h3><span class="k">B</span> Verde en todo lo que abre WhatsApp</h3>
+      <div class="mock">
+        <span class="eyebrow-s">Ficha de la casa</span>
+        <button class="ui-btn" data-variant="whatsapp" data-size="xl"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>Contactar por WhatsApp</button>
+      </div>
+      <div class="mock">
+        <span class="eyebrow-s">Ayuda por WhatsApp</span>
+        <p class="small">Escríbanos si tiene dudas para publicar su casa.</p>
+        <button class="ui-btn" data-variant="whatsapp" data-size="lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>Abrir WhatsApp</button>
+      </div>
+      <div class="mock">
+        <span class="eyebrow-s">Admin · aviso al anfitrión</span>
+        <button class="ui-btn" data-variant="whatsapp" data-size="lg"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>Avisar a Daniel por WhatsApp</button>
+      </div>
+      <p class="why">Como hoy. El verde significa «esto abre WhatsApp», en cualquier pantalla. Hay que cambiar el token.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="d5">
+    <h2 id="d5">D5 · Forma de las etiquetas de estado</h2>
+    <p class="q muted">La decisión del 29 de octubre pide 6 px de radio; hoy están redondas del todo (999 px).</p>
+    <div class="opt is-rec">
+      <h3><span class="k">A</span> Radio de 6 px <span class="rec">propuesta</span></h3>
+      <div class="mock">
+        <div class="house-mini"><i></i><div><b>Casa Cocles</b><span class="ui-tag" data-tone="ok">Activa</span></div></div>
+        <div class="house-mini"><i></i><div><b>Cabina Manzanillo</b><span class="ui-tag" data-tone="pay">Pendiente de pago</span></div></div>
+        <div class="house-mini"><i></i><div><b>Borrador del Caribe</b><span class="ui-tag" data-tone="review">En revisión</span></div></div>
+      </div>
+    </div>
+    <div class="opt tags-round">
+      <h3><span class="k">B</span> Redondas (999 px), como hoy</h3>
+      <div class="mock">
+        <div class="house-mini"><i></i><div><b>Casa Cocles</b><span class="ui-tag" data-tone="ok">Activa</span></div></div>
+        <div class="house-mini"><i></i><div><b>Cabina Manzanillo</b><span class="ui-tag" data-tone="pay">Pendiente de pago</span></div></div>
+        <div class="house-mini"><i></i><div><b>Borrador del Caribe</b><span class="ui-tag" data-tone="review">En revisión</span></div></div>
+      </div>
+      <p class="why">Si elige esta, se anota en decisiones que sustituye a la del 29 de octubre.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="d6">
+    <h2 id="d6">D6 · Color del chip elegido</h2>
+    <p class="q muted">El CSS usa verde al 26 % (decisión del 29 de octubre, «sin salvia»), pero <code>tokens.json</code> y la guía siguen diciendo salvia lleno. Solo hay que corregir uno de los dos.</p>
+    <div class="opt is-rec">
+      <h3><span class="k">A</span> Verde al 26 %, como hoy <span class="rec">propuesta</span></h3>
+      <div class="mock"><div class="row wrap"><label class="ui-chip"><input type="checkbox" checked><span>Piscina</span></label><label class="ui-chip"><input type="checkbox" checked><span>Wifi</span></label><label class="ui-chip"><input type="checkbox"><span>Mascotas</span></label><label class="ui-chip"><input type="checkbox"><span>Parqueo</span></label></div></div>
+      <p class="why">Se corrigen el token y la guía; la app no cambia.</p>
+    </div>
+    <div class="opt salvia">
+      <h3><span class="k">B</span> Salvia lleno (#7FA98A), como dice el token</h3>
+      <div class="mock"><div class="row wrap"><label class="ui-chip"><input type="checkbox" checked><span>Piscina</span></label><label class="ui-chip"><input type="checkbox" checked><span>Wifi</span></label><label class="ui-chip"><input type="checkbox"><span>Mascotas</span></label><label class="ui-chip"><input type="checkbox"><span>Parqueo</span></label></div></div>
+      <p class="why">Cambian todos los chips de publicar, filtros y Explorar: más color y más peso visual para lo elegido.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="d7">
+    <h2 id="d7">D7 · Radio de campos y botones</h2>
+    <p class="q muted">La guía dice a la vez «8 px» e «inputs 16 px». Hoy todo va a 8 px.</p>
+    <div class="opt is-rec">
+      <h3><span class="k">A</span> 8 px en campos, botones, chips y segmentos <span class="rec">propuesta</span></h3>
+      <div class="mock">
+        <div class="ui-field"><label for="r8">Nombre de la casa</label><input id="r8" class="ui-input" value="Casa Cocles"></div>
+        <div class="ui-seg" role="group" aria-label="Moneda"><button aria-pressed="true">₡</button><button aria-pressed="false">$</button></div>
+        <button class="ui-btn" data-variant="primary" data-size="lg">Siguiente</button>
+      </div>
+      <p class="why">Los 16 px de la guía se leen como tamaño mínimo de letra en los campos (si fuera menor, el iPhone amplía la página).</p>
+    </div>
+    <div class="opt r16">
+      <h3><span class="k">B</span> 16 px en todos los controles</h3>
+      <div class="mock">
+        <div class="ui-field"><label for="r16">Nombre de la casa</label><input id="r16" class="ui-input" value="Casa Cocles"></div>
+        <div class="ui-seg" role="group" aria-label="Moneda"><button aria-pressed="true">₡</button><button aria-pressed="false">$</button></div>
+        <button class="ui-btn" data-variant="primary" data-size="lg">Siguiente</button>
+      </div>
+      <p class="why">Más redondeado, el mismo radio que las hojas. Cambia el aspecto de toda la app.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="d8">
+    <h2 id="d8">D8 · Elegir entre dos: «No/Sí» y «Privado/Compartido»</h2>
+    <p class="q muted">Al publicar: «¿Acepta alquiler mensual?» y el baño de una habitación. Hoy van como chips.</p>
+    <div class="opt is-rec">
+      <h3><span class="k">A</span> Segmento <span class="rec">propuesta</span></h3>
+      <div class="mock">
+        <span class="small">¿Acepta alquiler mensual?</span>
+        <div class="ui-seg" role="group" aria-label="Acepta alquiler mensual"><button aria-pressed="false">No</button><button aria-pressed="true">Sí</button></div>
+        <span class="small">Baño</span>
+        <div class="ui-seg" role="group" aria-label="Baño"><button aria-pressed="true">Privado</button><button aria-pressed="false">Compartido</button></div>
+      </div>
+      <p class="why">Se lee como un interruptor de dos posiciones: siempre hay una elegida.</p>
+    </div>
+    <div class="opt">
+      <h3><span class="k">B</span> Chips de una sola opción, como hoy</h3>
+      <div class="mock">
+        <span class="small">¿Acepta alquiler mensual?</span>
+        <div class="row wrap"><label class="ui-chip"><input type="radio" name="m"><span>No</span></label><label class="ui-chip"><input type="radio" name="m" checked><span>Sí</span></label></div>
+        <span class="small">Baño</span>
+        <div class="row wrap"><label class="ui-chip"><input type="radio" name="b" checked><span>Privado</span></label><label class="ui-chip"><input type="radio" name="b"><span>Compartido</span></label></div>
+      </div>
+      <p class="why">El mismo aspecto que las características, con su ✓.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="d9">
+    <h2 id="d9">D9 · ¿El botón Atrás cierra lo que está abierto?</h2>
+    <p class="q muted">Hoy solo la Descripción y el mapa se cierran con Atrás; el resto de hojas y ventanas no.</p>
+    <div class="opt is-rec">
+      <h3><span class="k">A</span> En el móvil sí; en escritorio no <span class="rec">propuesta</span></h3>
+      <div class="flow">
+        <div class="frame">Teléfono · hoja «Contactar por WhatsApp» abierta</div>
+        <div class="step"><span class="n">1</span><span>Atrás del teléfono (o el gesto de volver) <b>cierra la hoja</b> y deja la ficha donde estaba.</span></div>
+        <div class="frame">Escritorio · ventana «Nombre de la casa» abierta</div>
+        <div class="step"><span class="n">2</span><span>Atrás del navegador <b>vuelve a la página anterior</b>, como en cualquier web. La ventana se cierra con Escape, la X o «Cancelar».</span></div>
+        <div class="step"><span class="n">3</span><span>Si hay cambios sin guardar, antes de salir pregunta «¿Descartar los cambios?».</span></div>
+      </div>
+      <p class="why">En el teléfono la hoja ocupa la pantalla y se siente como una página; en escritorio, el teclado y la X ya bastan.</p>
+    </div>
+    <div class="opt">
+      <h3><span class="k">B</span> Sí, en el móvil y en escritorio</h3>
+      <div class="flow">
+        <div class="frame">Teléfono · hoja «Contactar por WhatsApp» abierta</div>
+        <div class="step"><span class="n">1</span><span>Atrás <b>cierra la hoja</b>.</span></div>
+        <div class="frame">Escritorio · ventana «Nombre de la casa» abierta</div>
+        <div class="step"><span class="n">2</span><span>Atrás del navegador también <b>cierra la ventana</b> y deja la casa a la vista.</span></div>
+        <div class="step"><span class="n">3</span><span>Con cambios sin guardar, pregunta igual.</span></div>
+      </div>
+      <p class="why">Lo mismo en los dos tamaños. Cada ventana abierta añade un paso al historial del navegador.</p>
+    </div>
+  </section>
+</main>
+</body>
+</html>
