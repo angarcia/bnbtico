@@ -349,7 +349,9 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         zone={zone}
         nights={nights}
         onOpen={!desktop && listings?.length ? openMap : null}
-        onSelect={desktop && listings?.length ? (publicId) => {
+        // En escritorio, siempre interactivo: sin casas (o mientras busca) se puede seguir moviendo y acercando el mapa, y
+        // no se rehace Leaflet al cambiar de casas a ninguna (historia 05 de la revisión 2026-11-17).
+        onSelect={desktop ? (publicId) => {
           if (publicId) track("map_marker_tap", publicId);
           setSelected(publicId);
         } : undefined}

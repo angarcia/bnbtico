@@ -53,6 +53,10 @@ export function useExploreMap(
   const callbacks = useRef(opts);
   callbacks.current = opts;
   const [ready, setReady] = useState(false);
+  // Lo último que debe enseñar: un mapa rehecho (otro `interactive`) arranca ya con su vista, sin esperar a que cambie nada
+  // (historia 05 de la revisión 2026-11-17: en escritorio, al pasar de casas a ninguna, Leaflet quedaba sin vista ni teselas).
+  const latest = useRef({ markers, zone });
+  latest.current = { markers, zone };
   useEffect(() => {
     let cancelled = false;
     const load = () =>
@@ -65,6 +69,7 @@ export function useExploreMap(
             onMap: () => callbacks.current.onMap(),
             insets: () => callbacks.current.insets(),
           });
+          handle.current.show(latest.current.markers, latest.current.zone);
           setReady(true);
         })
         .catch(() => undefined);

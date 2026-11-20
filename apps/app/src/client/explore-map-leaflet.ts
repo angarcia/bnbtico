@@ -24,7 +24,12 @@ export interface ExploreMapHandle {
 export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; onMarker(publicId: string): void; onMap(): void; insets(): { top: number; bottom: number } }): ExploreMapHandle {
   const still = { dragging: false, scrollWheelZoom: false, touchZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false };
   const map = L.map(el, { zoomControl: false, ...(opts.interactive ? {} : still) });
-  L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
+  const tiles = L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
+  // Las teselas que fallaron sin red se vuelven a pedir al volver la conexión (sin red no es «sin casas»: la lista lo dice).
+  const online = () => tiles.redraw();
+  addEventListener("online", online);
+  // La zona del último encuadre: sin casas en la misma zona (los filtros las quitaron todas), el mapa se queda donde está.
+  let shown: string | null = null;
   const layer = L.layerGroup().addTo(map);
   const icons = new Map<string, L.Marker>();
   let markers: MapMarker[] = [];
@@ -106,10 +111,16 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
   return {
     show(next, zone) {
       markers = next;
+      const zoneKey = zone ? `${zone.lat},${zone.lng}` : "";
+      // Sin casas en la misma zona: mismo encuadre y zoom, solo se quitan los marcadores.
+      const keep = !next.length && shown === zoneKey;
+      shown = zoneKey;
       // Primero la vista: hasta tenerla, Leaflet no crea los elementos de los marcadores (getElement() sería undefined).
       const view = exploreMapView(next, zone);
-      if ("fit" in view) fit(view.fit);
-      else map.setView([view.center.lat, view.center.lng], view.zoom);
+      if (!keep) {
+        if ("fit" in view) fit(view.fit);
+        else map.setView([view.center.lat, view.center.lng], view.zoom);
+      }
       draw();
     },
     select(publicId) {
@@ -125,6 +136,7 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
     zoomBy: (step) => map.setZoom(map.getZoom() + step),
     dispose: () => {
       resize.disconnect();
+      removeEventListener("online", online);
       map.remove();
     },
   };

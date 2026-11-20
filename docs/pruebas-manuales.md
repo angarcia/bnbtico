@@ -252,6 +252,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C19** Toque una burbuja «N casas» del mapa grande → el mapa se acerca a esas casas sin abrir ninguna ficha.
 - [ ] **C20** Toque «Ver lista · N casas» o use Atrás del teléfono → cierra el mapa, conserva la posición de la lista y devuelve el foco a Mapa o a su caja. Abrirlo por URL directa y sin resultados también permite salir; filtros, grupos y atribuciones siguen funcionando.
 - [ ] **C21** Con «$» abra el mapa → las burbujas muestran dólares («$75»); con llegada y salida en la búsqueda, cada burbuja lleva la misma cifra que la tarjeta de su casa (el total, p. ej. «₡180 000», sin «por 4 noches») y la tarjeta compacta del mapa dice «≈ ₡180 000 por 4 noches».
+- [ ] **C21a** En el portátil, con una zona (p. ej. Cocles) y fechas, marque características hasta que no quede ninguna casa → el mapa sigue con su cartografía, en el mismo encuadre y zoom, sin precios, y debajo «No hay casas con esos filtros»; «+», «−» y ampliar siguen funcionando. Toque «Quitar filtros» → vuelven los precios sin recargar la página. Abra directamente una búsqueda sin casas → se ve el mapa de la zona con el aviso. Sin conexión, el mapa puede quedarse sin fondo pero las casas siguen en la lista (no sale «No hay casas»); al volver la conexión, el fondo vuelve.
 
 ### 2.6 Total de la estancia, Filtros y características
 
