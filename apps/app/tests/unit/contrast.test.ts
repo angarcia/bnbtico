@@ -190,3 +190,18 @@ describe("icono de WhatsApp de la tarjeta", () => {
     expect(ratio(hex("--wa-icon", dark), hex("--surface", dark))).toBeGreaterThanOrEqual(3);
   });
 });
+
+// Historia 07 (D1, 2026-11-19): un solo anillo de foco, visible (≥ 3:1, WCAG 1.4.11) sobre las superficies donde hay controles.
+describe("anillo de foco", () => {
+  it.each(["--bg", "--surface", "--surface-2"])("--focus-ring sobre %s ≥ 3:1 en claro y en oscuro", (bg) => {
+    expect(contrast("--focus-ring", bg)).toBeGreaterThanOrEqual(3);
+    const dark = { ...vars, ...darkVars(css) };
+    expect(ratio(hex("--focus-ring", dark), hex(bg, dark))).toBeGreaterThanOrEqual(3);
+  });
+
+  it("todos los anillos de foco usan --focus-ring", () => {
+    const rings = [...css.matchAll(/:focus(?:-visible|-within)?\)?[^{]*\{[^}]*outline(?:-color)?:\s*([^;}]+)/g)].map((m) => m[1]!.trim());
+    expect(rings.length).toBeGreaterThan(0);
+    for (const ring of rings) if (!/^(none|0)$/.test(ring)) expect(ring).toMatch(/var\(--focus-ring\)$/);
+  });
+});

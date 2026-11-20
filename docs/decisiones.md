@@ -2,7 +2,7 @@
 
 Ana aprobó el inventario y la propuesta de componentes de la historia 07 de la revisión de la app del 2026-11-17 (`.scratch/revision-app-2026-11-17/07/`: `propuesta.md` y muestras con capturas), y eligió entre opciones con capturas:
 
-- **Foco:** un solo anillo de teclado en toda la app, verde `--primary` (7,3:1 sobre la crema). El ocre `--sun` daba 1,8:1 y no llegaba al 3:1 de WCAG.
+- **Foco:** un solo anillo de teclado en toda la app, verde `--primary` (7,3:1 sobre la crema). El ocre `--sun` daba 1,8:1 y no llegaba al 3:1 de WCAG. Ana lo confirmó tras ver las capturas de antes y después, y tras probar a quedarse con el ocre.
 - **Destructivo:** un solo nivel, terracota (`--brand` tonal con texto `--brand-ink`), igual para propietario y admin. Se retira el rojo lleno de «Eliminar casa» del admin.
 - **Secundario** («Cancelar», «Ahora no»): contorno fino verde y fondo transparente en móvil y escritorio, con la misma altura que el primario a su lado. Extiende al móvil el secundario de escritorio del 2026-11-13. «Cancelar» deja de ser terracota en las ventanas de escritorio.
 - **WhatsApp verde lleno** solo para hablar con el anfitrión: «Contactar por WhatsApp» y responder desde Actividad. Ayuda y los avisos del admin pasan a secundario con el icono verde.

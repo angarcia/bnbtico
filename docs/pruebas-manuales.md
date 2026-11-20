@@ -140,7 +140,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 - [ ] **C0a** En Publicar casa y Filtros, Continuar y Ver N casas muestran fondo verde claro, texto verde, sombra suave y ningún borde permanente; texto e icono siguen centrados y el área táctil mide al menos 44 × 44 px.
 - [ ] **C0b** En un editor sin cambios efectivos, Guardar sigue desactivado de verdad: fondo `#F2F1ED`, texto `#898D88`, sin sombra ni borde. Hacer un cambio válido lo activa; deshacerlo vuelve a desactivarlo. No se guarda nada al tocar un desactivado.
 - [ ] **C0c** Las notas informativas tienen fondo neutro claro, texto normal y borde suave; los errores y avisos conservan su color funcional. Pagos y Activar suscripción siguen dorados; WhatsApp mantiene su identificación.
-- [ ] **C0d** Con teclado, el foco sigue siendo visible en acciones y enlaces. Revisar nombres largos y ambos tamaños móviles: no hay texto recortado, solapamientos ni cambios de tamaño al pulsar.
+- [ ] **C0d** Con teclado, el foco sigue siendo visible en acciones y enlaces: el mismo anillo verde de 2 px en toda la app, también en chips, mapa y barra de escritorio (historia 07). Los botones desactivados se ven en el mismo gris en el móvil y en escritorio. Revisar nombres largos y ambos tamaños móviles: no hay texto recortado, solapamientos ni cambios de tamaño al pulsar.
 
 ### 2.1 Portada
 

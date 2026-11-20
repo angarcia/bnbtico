@@ -399,7 +399,7 @@
   }
 
   .desktop-nav .nav[aria-current="page"] { background: var(--surface-2); }
-  .desktop-nav a:focus-visible { outline-color: var(--primary); }
+  .desktop-nav a:focus-visible { outline-color: var(--focus-ring); }
   .desktop-nav .desktop-currency { margin-inline-start: auto; }
   .desktop-nav .desktop-sign-in { flex: none; min-height: 44px; }
   .desktop-nav .desktop-inquiries {
@@ -672,18 +672,12 @@
   .page-header-actions .btn { width: auto; min-height: 44px; padding-inline: 18px; }
 
   /* Revisión de escritorio 2026-11-13, tanda 2 (A6, A7). El principal sigue tonal (decisión 2026-11-05); el secundario
-     lleva contorno y el desactivado es gris neutro también en oscuro, para que el principal no parezca apagado. */
+     lleva contorno. El desactivado gris neutro de entonces es ya el común (--disabled-bg, historia 07). */
   .btn-ghost {
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
     box-shadow: none;
     color: var(--primary-ink);
-  }
-  .btn:disabled,
-  .btn[aria-disabled="true"],
-  .btn.is-disabled {
-    background: color-mix(in srgb, var(--muted) 14%, var(--bg));
-    color: var(--muted);
   }
 
   /* Barra: un solo estado activo (arena y terracota), la moneda neutra y «Ingresar» como botón, no como pestaña elegida. */
@@ -724,7 +718,7 @@
   .listing-view .listing-calendar { max-width: 640px; }
   .cta-monthly { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .listing-contact-inline.sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]) { width: 136px; }
-  .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular, 400); }
+  .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular); }
 
   /* Revisión de escritorio 2026-11-13, tanda 4 (A8, M2, M7, M8). Solo CSS salvo el precio base del calendario: el trozo
      de las pantallas de las pestañas está al límite. */

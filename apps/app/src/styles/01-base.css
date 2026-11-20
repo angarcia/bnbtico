@@ -1,4 +1,4 @@
-/* 3bstays · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.3.3 */
+/* 3bstays · sistema visual «Sol y sal» · fuente: docs/diseno-v1.md y design/tokens/tokens.json 0.3.5 */
 /* Fuentes alojadas aquí (variables, subconjuntos latin y latin-ext): Figtree para todo; los títulos en 600, más sobrios que el
    Outfit 800 de antes (Daniel, 2026-10-29). Outfit sigue en /fonts solo para la portada. */
 @font-face{font-family:Figtree;font-style:normal;font-weight:300 900;font-display:swap;src:url(/fonts/figtree-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -24,6 +24,11 @@
   /* Esquinas menos redondeadas (Daniel, 2026-10-29): botones, campos y chips 8 px, etiquetas 6 px, tarjetas 12 px;
      todo cuadrado salvo los avatares de las personas y los puntos de estado (también los botones de icono, 2026-10-29). */
   --r:12px;--r-thumb:10px;--r-tile:12px;--r-input:8px;--r-cta:8px;--r-sheet:16px;
+  /* Historia 07 (2026-11-19): radio común de controles y etiquetas redondas (D5); área táctil mínima. */
+  --r-control:8px;--r-tag:999px;--hit:44px;
+  /* Un solo anillo de foco, verde (D1: el ocre daba 1,8:1 sobre la crema); un solo desactivado, sin bajar la opacidad. */
+  --focus-ring:var(--primary);--disabled-bg:color-mix(in srgb,var(--muted) 14%,var(--bg));--disabled-fg:var(--muted);
+  --w-regular:400;--shadow-lift:0 12px 28px rgba(28,43,42,.28);
   /* La barra de abajo, plana y pegada al borde (Daniel, 2026-11-04, tras probar la píldora de la tanda 1): 84 px sin el área
      segura; los dejan libres .view, «Mapa», el mapa a pantalla completa y lo que se apoya en la barra (--chrome-bottom). */
   --nav-h:84px;--gutter:16px;
@@ -61,7 +66,7 @@ h1{font-size:34px;font-weight:var(--w-strong);line-height:1.05}
 h2{font-size:24px;font-weight:var(--w-strong)}
 h3{font-size:19px;font-weight:var(--w-strong)}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 /* Sin líneas en reposo (Daniel, 2026-10-29): el campo con el cursor se marca con el borde verde. */
 input:not([type=checkbox]):not([type=file]):not([type=radio]):focus,select:focus,textarea:focus,.input-money:focus-within,.cal-price:focus-within{border-color:var(--primary)}
 input,select,textarea{font:inherit;color:inherit}
@@ -137,7 +142,7 @@ a{color:var(--primary)}
 .btn-xl{min-height:56px;font-size:18px;font-family:var(--display);border-radius:var(--r-cta)}
 .btn-sm{min-width:44px;min-height:44px;padding:0 14px;font-size:15px;border-radius:8px}
 .btn-block{width:100%}
-.btn:disabled,.btn[aria-disabled="true"],.btn.is-disabled{background:#f2f1ed;color:#898d88;border:0;box-shadow:none;opacity:1;cursor:not-allowed}
+.btn:disabled,.btn[aria-disabled="true"],.btn.is-disabled{background:var(--disabled-bg);color:var(--disabled-fg);border:0;box-shadow:none;opacity:1;cursor:not-allowed}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--fg)}
 /* Botones sobre las fotos: crema al 70 %, sin desenfoque (Daniel, 2026-10-29; --overlay-btn). */
 .icon-btn.overlay{background:var(--overlay-btn)}
@@ -200,7 +205,7 @@ select{font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;backg
 .feature-choices .chip svg{flex:none}
 .feature-choices .chip>svg{width:16px;height:16px}
 .feature-choices .chip[aria-pressed="true"]::before{content:none}
-.feature-choices .chip:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:2px}
+.feature-choices .chip:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
 .feature-check{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);display:flex;width:14px;height:14px}
 .feature-check svg{stroke-width:3}
 @media(max-width:360px){

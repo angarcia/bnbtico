@@ -27,7 +27,7 @@
 .explore-layout,.explore-map-pane,.explore-list-pane{display:contents}
 .explore-map .leaflet-control-attribution{margin:0 10px 8px 0;border-radius:6px;font-size:11px}
 .explore-map.leaflet-container,.map-full-box.leaflet-container{background:var(--surface-2)}
-.explore-map:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.explore-map:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
 .map-price{translate:-50% -50%;padding:6px 10px;border-radius:6px;background:var(--surface);color:var(--fg);font:600 13px/1.2 var(--body);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 0 var(--line),0 6px 14px -6px rgba(28,43,42,.5);cursor:pointer}
 /* Mientras llega Leaflet (C2): los precios sobre el fondo de la caja, en su sitio aproximado. */
 .map-preview{position:absolute;inset:0;pointer-events:none}
