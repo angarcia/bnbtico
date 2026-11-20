@@ -1,3 +1,13 @@
+## 2026-11-20 · Contrato de privacidad de coordenadas y fotos (historia #67) y fin de la enumeración del bucket de fotos
+
+La revisión de seguridad del 2026-11-17 (épica #66) encontró dos exposiciones, reproducidas en `apps/app/tests/db/privacidad-exposicion.test.ts`: el punto público de una casa se invierte hasta el punto exacto (a menos de 1 m) con solo el `CT-####`, porque `approx_point` saca el desplazamiento de `md5(public_id)`; y el bucket `listings` es público y se podía enumerar, así que cualquiera encontraba y descargaba las fotos de borradores y de ediciones pendientes. Ana aprobó el contrato de `.scratch/seguridad-2026-11-17/01-contrato-privacidad.md` con todas las recomendaciones:
+
+- **Coordenadas (#68):** punto público guardado (`public_lat`, `public_lng`) con un desplazamiento aleatorio de 150–499 m, recalculado solo cuando cambia la ubicación; mismas columnas para el navegador. Los puntos publicados hasta hoy se dan por quemados: la migración da a todas las casas un punto nuevo y purga las fichas.
+- **Fotos (#69):** dos buckets. Se sube a uno privado; al aprobar, el worker copia al público. Dueño y admin ven lo pendiente con URL firmada, sin guardarla en cachés. **D1:** tras copiar se borra del privado. **D2:** al parar o eliminar una casa sus fotos salen del público, y vuelven al reactivarla.
+- **D3:** el filtro «a 5 km de la zona» sigue con el punto exacto. Motivo: solo dice sí o no frente a centros de zona fijos, y cambiarlo movería casas del borde.
+- **D4, aplicada ya:** migración `20261120225022_fotos_sin_enumerar`. Quita la lectura pública de `storage.objects` y deja la del dueño y la del admin con aal2 (borrar exige también leer). Se acaba la enumeración. La descarga por URL sigue abierta hasta #69, porque Storage sirve un bucket público sin mirar políticas.
+- **D5:** `3bstays-prod` nace con el contrato aplicado; el traslado de objetos existentes solo corre en `bnbtico-pruebas`.
+
 ## 2026-11-20 · Límite de frecuencia de las balizas: vinculación de Workers, 120 por minuto por IP, descartar si falla (historia #71)
 
 La revisión de seguridad del 2026-11-17 (épica #66) vio que `/vitals`, `/errors` y `/events` aceptan peticiones anónimas sin límite y que `Origin` no autentica a un programa: cualquiera puede llenar las tablas de telemetría y gastar el plan gratuito de la base. Ana eligió:

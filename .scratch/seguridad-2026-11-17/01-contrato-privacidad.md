@@ -1,6 +1,7 @@
 # Contrato de privacidad de coordenadas y fotos (historia #67, segv1-contrato)
 
-Estado: **propuesta, pendiente de aprobación de Ana.** Hasta aprobarla no empiezan #68 (coordenadas) ni #69 (fotos).
+Estado: **aprobado por Ana el 2026-11-20, con las recomendaciones de D1–D5** (sección 3). Habilita #68 (coordenadas) y
+#69 (fotos). D4 ya aplicada: migración `20261120225022_fotos_sin_enumerar.sql`.
 Fecha: 2026-11-20. Versión del código revisada: `d2cf137` (develop) más `9b32828` y `7d61382` (locales, #71).
 Reproducción: `apps/app/tests/db/privacidad-exposicion.test.ts` (base local, datos desechables, lecturas con roles reales;
 la service role solo siembra). Las dos pruebas afirman la exposición **actual**: #68 y #69 las convertirán en regresiones.
@@ -94,7 +95,7 @@ la service role solo siembra). Las dos pruebas afirman la exposición **actual**
    lectura** (corta la enumeración pero una ruta conocida sigue abierta: no cumple «incluso con ruta conocida» de #69).
    Esta última sí vale como **mitigación inmediata** mientras se hace #69 (D4).
 
-## 3. Decisiones para Ana
+## 3. Decisiones (aprobadas el 2026-11-20 tal como se recomiendan)
 
 - **D1. ¿Borrar del privado la foto tras copiarla al público?** Recomiendo sí (no duplica el GB gratuito); si se rechaza
   luego una edición, la aprobada sigue en el público.

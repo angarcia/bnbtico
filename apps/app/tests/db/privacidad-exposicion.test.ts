@@ -1,5 +1,5 @@
 // Historia #67 (segv1-contrato): reproducción de los dos hallazgos de privacidad del 2026-11-17 con datos desechables.
-// Estas pruebas afirman la EXPOSICIÓN ACTUAL a propósito: cuando #68 y #69 la cierren, fallarán y se reescribirán como
+// Estas pruebas afirman la EXPOSICIÓN que queda a propósito: cuando #68 y #69 la cierren, fallarán y se reescribirán como
 // regresiones del contrato aprobado (.scratch/seguridad-2026-11-17/01-contrato-privacidad.md). No usan la service role
 // para leer: solo para sembrar.
 import { createHash } from "node:crypto";
@@ -83,7 +83,7 @@ describe("exposición actual de coordenadas y fotos (#67)", () => {
     expect([row?.lat, row?.lng]).toEqual([pub.data!.lat, pub.data!.lng]);
   });
 
-  it("fotos: el objeto de un borrador se descarga y se enumera sin permiso (matriz observada)", async () => {
+  it("fotos: tras D4 solo dueño y admin aal2 enumeran; la descarga del borrador (URL pública o API) sigue abierta a todos (#69)", async () => {
     const { data: draft } = await service.from("listings").insert(listing("draft", 9.65, -82.75)).select("id").single();
     const path = `${draft!.id}/foto/800.jpg`;
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
@@ -92,11 +92,13 @@ describe("exposición actual de coordenadas y fotos (#67)", () => {
     // La fila del borrador sí está protegida: anon no la ve.
     expect((await anonClient().from("listing_photos").select("id").eq("listing_id", draft!.id)).data).toEqual([]);
 
-    // El objeto no: su URL pública responde a cualquiera, sin sesión.
+    // El objeto no del todo: en un bucket público su URL responde a cualquiera, sin sesión. Lo cierra #69 (bucket privado).
     const res = await fetch(storagePhotoUrl(localSupabase().url)(path));
     expect(res.status).toBe(200);
 
-    // Y se enumera: la raíz del bucket da los uuid de todas las casas (también borradores) y cada carpeta, sus fotos.
+    // La enumeración (raíz: uuid de todas las casas; carpeta: sus fotos) pasa por las políticas de storage.objects: desde D4
+    // (migración fotos_sin_enumerar, 2026-11-20) solo el dueño y el admin con segundo factor. La descarga por la API, no:
+    // en un bucket público Storage la sirve igual que la URL pública.
     const who = { anon: anonClient(), otro: other, dueño: owner, "admin aal1": adminAal1, "admin aal2": adminAal2 } as const;
     const observed: Record<string, { raíz: boolean; carpeta: boolean; descarga: boolean }> = {};
     for (const [name, db] of Object.entries(who)) {
@@ -109,7 +111,8 @@ describe("exposición actual de coordenadas y fotos (#67)", () => {
         descarga: download.error === null,
       };
     }
-    const all = { raíz: true, carpeta: true, descarga: true };
-    expect(observed).toEqual({ anon: all, otro: all, dueño: all, "admin aal1": all, "admin aal2": all });
+    const yes = { raíz: true, carpeta: true, descarga: true };
+    const no = { raíz: false, carpeta: false, descarga: true };
+    expect(observed).toEqual({ anon: no, otro: no, dueño: yes, "admin aal1": no, "admin aal2": yes });
   });
 });
