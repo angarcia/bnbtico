@@ -12,7 +12,7 @@ import { publicPhoto, storagePhotoUrl } from "../../domain/rows";
 import { cursorAfter } from "../../domain/search-cursor";
 import { ZONE_RADIUS_M, caribeFirst, type Zone, type ZoneWithListings } from "../../domain/zones";
 import { offerTaken } from "./billing";
-import { approxPoint, isPublicListing, type FakeDb, type FakeListing } from "./db";
+import { isPublicListing, publicPoint, type FakeDb, type FakeListing } from "./db";
 import { FAKE_ZONES, fakeCantonOf } from "./places";
 import { fakeBusyNights, fakeEffectiveDays } from "./airbnb";
 
@@ -34,7 +34,7 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       province: l.province,
       canton: l.canton,
       zone: l.zone,
-      approx: l.lat !== null && l.lng !== null ? approxPoint(l.lat, l.lng, l.publicId) : null,
+      approx: l.lat !== null && l.lng !== null ? publicPoint(l.id, l.lat, l.lng) : null,
       capacity: l.capacity ?? 0,
       bedrooms: l.bedrooms ?? 0,
       bathrooms: l.bathrooms ?? 0,

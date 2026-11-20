@@ -2,6 +2,8 @@
 
 Estado: **aprobado por Ana el 2026-11-20, con las recomendaciones de D1–D5** (sección 3). Habilita #68 (coordenadas) y
 #69 (fotos). D4 ya aplicada: migración `20261120225022_fotos_sin_enumerar.sql`.
+#68 hecha el 2026-11-20: migración `20261120225837_punto_publico_guardado.sql`, regresión
+`apps/app/tests/db/coordenadas-publicas.test.ts`.
 Fecha: 2026-11-20. Versión del código revisada: `d2cf137` (develop) más `9b32828` y `7d61382` (locales, #71).
 Reproducción: `apps/app/tests/db/privacidad-exposicion.test.ts` (base local, datos desechables, lecturas con roles reales;
 la service role solo siembra). Las dos pruebas afirman la exposición **actual**: #68 y #69 las convertirán en regresiones.

@@ -322,11 +322,16 @@ export function oneRoom(l: Pick<FakeListing, "kind" | "bedrooms" | "bathrooms">)
   if (l.kind === "habitacion") Object.assign(l, { bedrooms: 1, bathrooms: 1 });
 }
 
-/** Como approx_point en SQL: desplazamiento determinista por casa entre 150 y 499 m (el hash no tiene que coincidir). */
-export function approxPoint(lat: number, lng: number, seed: string): LatLng {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 0x01000193) >>> 0;
-  const dist = APPROX_MIN_METERS + (h % (APPROX_MAX_METERS - APPROX_MIN_METERS + 1));
-  const ang = (((h >>> 9) % 360) * Math.PI) / 180;
-  return { lat: lat + (dist * Math.cos(ang)) / 111_320, lng: lng + (dist * Math.sin(ang)) / (111_320 * Math.cos((lat * Math.PI) / 180)) };
+/** Como el trigger listings_public_point en SQL (historia #68): un desplazamiento aleatorio de 150–499 m que se guarda por
+ *  casa y ubicación. Releer da el mismo punto; otra ubicación, uno nuevo. No se deriva del CT: no se puede invertir. */
+const publicPoints = new Map<string, LatLng>();
+export function publicPoint(listingId: string, lat: number, lng: number): LatLng {
+  const key = `${listingId}|${lat}|${lng}`;
+  const known = publicPoints.get(key);
+  if (known) return known;
+  const dist = APPROX_MIN_METERS + Math.random() * (APPROX_MAX_METERS - APPROX_MIN_METERS);
+  const ang = Math.random() * 2 * Math.PI;
+  const point = { lat: lat + (dist * Math.cos(ang)) / 111_320, lng: lng + (dist * Math.sin(ang)) / (111_320 * Math.cos((lat * Math.PI) / 180)) };
+  publicPoints.set(key, point);
+  return point;
 }
