@@ -77,7 +77,8 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
   useEffect(() => {
     if (hydrated && listing.available) whenIdle(() => void loadSheet());
   }, [hydrated, listing.available]);
-  // El foco vuelve al botón cuando la hoja ya se desmontó y la página dejó de estar inerte.
+  // La hoja devuelve el foco a quien la abrió (shared/overlay-stack.ts); al reabrirse sola al volver de Ingresar
+  // (`openOnMount`) no la abrió nadie: el foco vuelve al botón cuando la hoja ya se desmontó.
   useEffect(() => {
     if (open || !returnFocus.current) return;
     returnFocus.current = false;

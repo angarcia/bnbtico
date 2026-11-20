@@ -9,10 +9,10 @@
 //   y al revés. Los días de la casa llegan por props (`days`): no se llega en un ocupado, un rango con una noche ocupada no
 //   vale y, con fechas, la hoja dice el total orientativo. Con noches ocupadas, o mientras se leen los días, no se envía
 //   (ronda de Ana 2 nov, ticket 08).
-// - Diálogo modal: el resto de la página queda `inert`, el foco no sale de la hoja, Escape / fondo / «Cerrar» la cierran y el
-//   foco vuelve al botón. Sin scroll de fondo.
-import { useEffect, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type FormEvent } from "react";
-import { createPortal } from "react-dom";
+// - Diálogo modal (`Sheet`, shared/overlay.tsx): el resto de la página queda `inert`, el foco no sale de la hoja, Escape /
+//   fondo / «Cerrar» / Atrás en el teléfono la cierran y el foco vuelve al botón. Sin scroll de fondo. Lo escrito se guarda
+//   al cerrar: no pregunta «¿Descartar los cambios?».
+import { useEffect, useId, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type FormEvent } from "react";
 import {
   contactDraftKey,
   costaRicaToday,
@@ -41,13 +41,13 @@ import { track } from "./beacon";
 import { useCurrency } from "./currency";
 import { useFx } from "./fx";
 import { I } from "./icons";
-import { usePrivateSheet } from "../client/private-sheet";
+import { Sheet } from "./overlay";
+import { leavingPage } from "./overlay-stack";
 import { NightsPicker } from "./nights-picker";
 import { RangeCalendar } from "./range-calendar";
 import { stayDates } from "./stay-dates";
-import { Button, IconButton, TextButton } from "./button";
+import { Button, TextButton } from "./button";
 
-const FOCUSABLE = 'button:not(:disabled), input:not(:disabled)';
 /** Campos que sacan el teclado (las fechas abren el calendario de la hoja). */
 const withKeyboard = (el: EventTarget | null) => el instanceof HTMLInputElement && el.type === "number";
 
@@ -137,7 +137,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
     store.setItem(key, storeContactDraft(draft, false, Date.now()));
     onClose();
   };
-  const { sheet, onKeyDown } = usePrivateSheet({ onClose: close, focusable: FOCUSABLE, enabled: !inline });
+  const titleId = useId();
 
   const change = (action: ContactDraftAction) => {
     dispatch(action);
@@ -221,35 +221,17 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
       // WhatsApp), la ficha se ve con la hoja cerrada.
       store.removeItem(key);
       if (inline) setStatus({ kind: "idle" });
+      // La pestaña ya va a WhatsApp: la entrada de la hoja en el historial se queda (al volver, la ficha sin hoja).
+      leavingPage();
       onClose();
     }
   }
 
   const error = status.kind === "error" ? status : null;
 
-  const content = (
-      <section
-        ref={inline ? undefined : sheet}
-        className={`sheet${inline ? " listing-contact-inline" : kb ? " kb" : ""}`}
-        role={inline ? undefined : "dialog"}
-        aria-modal={inline ? undefined : true}
-        aria-labelledby="contact-title"
-        tabIndex={inline ? undefined : -1}
-        {...(inline ? {} : { onKeyDown, onFocus, onBlur })}
-      >
-        {!inline && <span className="grabber" aria-hidden="true" />}
-        <div className="sheet-head">
-          <div>
-            <h2 id="contact-title">Escríbale a {name}</h2>
-            <span className="small muted">
-              Anfitrión de {title}
-              {listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
-            </span>
-          </div>
-          {!inline && <IconButton label="Cerrar" onClick={close}>
-            <I.x size={22} />
-          </IconButton>}
-        </div>
+  const subtitle = <>Anfitrión de {title}{listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}</>;
+  const heading = `Escríbale a ${name}`;
+  const form = (
         <form onSubmit={onSubmit} noValidate>
           {nightsChoice ? (
             <div className="seg contact-stay" role="group" aria-label="Cómo indicar la estancia">
@@ -373,14 +355,24 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           {inline && signedOut ? null : <span className="consent">{name} verá su nombre y su WhatsApp.</span>}
           <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.</span>
         </form>
-      </section>
   );
-  return inline ? content : createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={close} data-testid="sheet-backdrop" />
-      {content}
-    </>,
-    document.body,
+  if (inline) {
+    return (
+      <section className="sheet listing-contact-inline" aria-labelledby={titleId}>
+        <div className="sheet-head">
+          <div>
+            <h2 id={titleId}>{heading}</h2>
+            <span className="small muted">{subtitle}</span>
+          </div>
+        </div>
+        {form}
+      </section>
+    );
+  }
+  return (
+    <Sheet layout="contact" keyboardRoom={kb} title={heading} subtitle={subtitle} onClose={close} onFocus={onFocus} onBlur={onBlur}>
+      {form}
+    </Sheet>
   );
 }
 

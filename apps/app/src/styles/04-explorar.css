@@ -4,7 +4,7 @@
 /* Cabecera de Explorar (tarjetas flotantes, tanda 1, decisión 4): flota sobre el mapa a 12 px de los bordes; la píldora a todo
    el ancho y, debajo, los filtros a la izquierda y «₡ | $» a la derecha, cada uno su tarjeta. Entre ellas el toque pasa al mapa.
    Por debajo del mapa a pantalla completa (z-index 5). */
-.explore-top{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:4;display:flex;flex-direction:column;gap:10px;pointer-events:none;--away:translateY(calc(-100% - var(--float-top) - 8px))}
+.explore-top{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:var(--z-explore);display:flex;flex-direction:column;gap:10px;pointer-events:none;--away:translateY(calc(-100% - var(--float-top) - 8px))}
 .explore-top .search-pill,.explore-top .chiprow > *{pointer-events:auto}
 .explore-top .search-pill{min-height:52px;padding:0 16px;border-radius:var(--float-r)}
 .explore-top .filters-btn{width:48px;height:48px;border-radius:var(--float-r)}
@@ -39,15 +39,15 @@
 @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.float-btn,.map-label,.map-count{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}}
 /* «Ver ficha» (ronda de Ana 2 nov, ticket 05): fijo abajo, en una pantalla sin barra de pestañas (--chrome-bottom: a 12 px del
    borde). La pantalla deja debajo el botón y 16 px de aire para que lo último se lea por encima. */
-.float-btn{position:fixed;bottom:var(--chrome-bottom);left:50%;right:auto;margin:0;translate:-50% 0;z-index:5;text-decoration:none}
+.float-btn{position:fixed;bottom:var(--chrome-bottom);left:50%;right:auto;margin:0;translate:-50% 0;z-index:var(--z-float);text-decoration:none}
 .view:has(> .float-btn){padding-bottom:calc(var(--float-bottom) + 44px + 16px)}
 /* «Mapa», a 12 px sobre la barra de pestañas; baja con ella (`html.chrome-away`) hasta 12 px del borde, con su misma transición. */
-.map-label{position:fixed;bottom:calc(var(--float-bottom) + var(--nav-h));z-index:5;transition:transform 240ms var(--ease-out);animation:fade-in 160ms var(--ease-out)}
+.map-label{position:fixed;bottom:calc(var(--float-bottom) + var(--nav-h));z-index:var(--z-float);transition:transform 240ms var(--ease-out);animation:fade-in 160ms var(--ease-out)}
 html.chrome-away .map-label{transform:translateY(var(--nav-h))}
 /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
 .map-label-end{display:block;height:0;margin-top:-14px}
 /* Hasta la barra de pestañas plana, que se queda a la vista (abrir el mapa la muestra y con él abierto no se esconde). */
-.map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:5;background:var(--surface-2)}
+.map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:var(--z-float);background:var(--surface-2)}
 html.map-open{overflow:hidden}
 .map-full-box{position:absolute;inset:0;isolation:isolate}
 /* Arriba, en una fila de tarjetas de 52 px: volver, la búsqueda y los filtros, como la cabecera de Explorar; la atribución del

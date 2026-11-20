@@ -67,9 +67,20 @@
       "!dist/client/assets/zod-*.js",
       "!dist/client/assets/asistir-*.js",
       "!dist/client/assets/editor-port-*.js",
-      "!dist/client/assets/listing-cache-*.js"
+      "!dist/client/assets/listing-cache-*.js",
+      "!dist/client/assets/overlay-*.js",
+      "!dist/client/assets/description-screen-*.js"
     ],
     "limit": "161 KB",
+    "gzip": true
+  },
+  {
+    "name": "Ventanas y hojas · trozo compartido (overlay-*: la pila de superficies, Sheet, Dialog y FullScreen, historia 07 paso 3; la leen solo trozos diferidos: las hojas, las ventanas de escritorio, la hoja de contacto y la descripción a pantalla completa de la ficha, description-screen-*, que se pide en reposo tras hidratar o al tocar «Ver más»)",
+    "path": [
+      "dist/client/assets/overlay-*.js",
+      "dist/client/assets/description-screen-*.js"
+    ],
+    "limit": "3.2 KB",
     "gzip": true
   },
   {

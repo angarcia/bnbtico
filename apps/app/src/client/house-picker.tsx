@@ -1,9 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { createPortal } from "react-dom";
 import { I } from "../shared/icons";
-import { usePrivateSheet } from "./private-sheet";
+import { Sheet } from "../shared/overlay";
+import { useDismiss } from "../shared/dismiss";
 import { useDesktop } from "./desktop";
-import { IconButton } from "../shared/button";
 
 export interface HouseOption {
   id: string;
@@ -85,36 +84,20 @@ function move(e: KeyboardEvent<HTMLDivElement>) {
   items[next]?.focus();
 }
 
+/** En el teléfono, hoja con la lista (el foco vuelve al disparador al cerrarla). */
 function HousePickerSheet({ id, title, onClose, children }: {
   id: string;
   title: string;
   onClose(): void;
   children: React.ReactNode;
 }) {
-  const { sheet, onKeyDown } = usePrivateSheet({
-    onClose,
-    focusable: 'button:not([disabled]):not([tabindex="-1"])',
-    trapEmpty: true,
-    returnFocus(opener) {
-      if (opener?.isConnected && document.activeElement === document.body) opener.focus({ preventScroll: true });
-    },
-  });
   useEffect(() => {
-    sheet.current?.querySelector('[role="option"][aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
-  }, [sheet]);
-
-  return createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={onClose} data-testid="sheet-backdrop" />
-      <section id={id} ref={sheet} className="sheet house-picker-sheet" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} tabIndex={-1} onKeyDown={onKeyDown}>
-        <span className="grabber" aria-hidden="true" />
-        <div className="sheet-head">
-          <h2 id={`${id}-title`}>{title}</h2>
-          <IconButton label="Cerrar" title="Cerrar" onClick={onClose}><I.x size={22} /></IconButton>
-        </div>
-        {children}
-      </section>
-    </>, document.body,
+    document.getElementById(id)?.querySelector('[role="option"][aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  }, [id]);
+  return (
+    <Sheet id={id} layout="picker" title={title} onClose={onClose}>
+      {children}
+    </Sheet>
   );
 }
 
@@ -152,25 +135,17 @@ function PickerPopover({ trigger, onClose, children }: {
       window.removeEventListener("scroll", position, true);
     };
   }, [trigger]);
-  useEffect(() => {
-    function outside(event: PointerEvent) {
-      const path = event.composedPath();
-      if (panel.current && !path.includes(panel.current) && (!trigger || !path.includes(trigger))) onClose();
-    }
-    document.addEventListener("pointerdown", outside, true);
-    return () => document.removeEventListener("pointerdown", outside, true);
-  }, [trigger, onClose]);
+  const dismiss = useDismiss({
+    inside: () => [panel.current, trigger],
+    blur: true,
+    onDismiss(reason) {
+      if (reason === "escape") trigger?.focus({ preventScroll: true });
+      onClose();
+    },
+  });
 
   return (
-    <div ref={panel} popover="manual" className="desktop-dropdown" onBlur={(event) => {
-      if (!event.currentTarget.contains(event.relatedTarget) && event.relatedTarget !== trigger) onClose();
-    }} onKeyDown={(event) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
-      trigger?.focus({ preventScroll: true });
-      onClose();
-    }}>
+    <div ref={panel} popover="manual" className="desktop-dropdown" onBlur={dismiss.onBlur} onKeyDown={dismiss.onKeyDown}>
       {children}
     </div>
   );

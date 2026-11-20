@@ -1,12 +1,11 @@
-// Hoja modal de confirmación compartida («Parar suscripción», «¿Cerrar sesión?»): portal a <body>, #root inerte mientras
-// está abierta, foco atrapado entre sus dos botones; Escape y el fondo la cierran y, al cerrarse, el foco vuelve a quien
-// la abrió. Tras confirmar (o si quien la abrió ya no está o está desactivado), a `returnFocus` o al título de la pantalla.
+// Hoja modal de confirmación compartida («Parar suscripción», «¿Cerrar sesión?»), sobre `Sheet` (shared/overlay.tsx): Escape,
+// el fondo y Atrás en el teléfono la cierran salvo mientras `pending`; el foco vuelve a quien la abrió. Tras confirmar (o si
+// quien la abrió ya no está o está desactivado), a `returnFocus` o al título de la pantalla.
 // Aspecto (historia 07): `tone` elige el botón que confirma (principal o destructivo); «Cancelar» es siempre secundario.
 // `keep` es la excepción de «Parar suscripción» en escritorio (Ana, 2026-11-19): quedarse es lo principal y parar es un
 // texto terracota, para no empujar a parar.
-import { useId, useRef, type ReactNode, type ReactPortal, type RefObject } from "react";
-import { createPortal } from "react-dom";
-import { usePrivateSheet } from "./private-sheet";
+import { useId, useRef, type ReactNode, type RefObject } from "react";
+import { Sheet } from "../shared/overlay";
 import { Button, TextButton } from "../shared/button";
 
 export function ConfirmSheet({
@@ -33,22 +32,9 @@ export function ConfirmSheet({
   returnFocus?: RefObject<HTMLElement | null>;
   pending?: boolean;
   error?: string | null;
-}): ReactPortal {
+}) {
   const confirmed = useRef(false);
-  const id = useId();
-  const { sheet, onKeyDown } = usePrivateSheet({
-    onClose: () => { if (!pending) onClose(); },
-    focusable: "button",
-    trapEmpty: true,
-    returnFocus(opener) {
-      let to = opener;
-      if (confirmed.current || !to?.isConnected || to.matches(":disabled")) {
-        to = returnFocus?.current ?? document.querySelector("main h1");
-        if (to && !returnFocus?.current) to.tabIndex = -1;
-      }
-      to?.focus({ preventScroll: true });
-    },
-  });
+  const textId = useId();
   const cancel = (
     <Button variant={tone === "keep" ? "primary" : "secondary"} size="lg" disabled={pending} onClick={onClose}>
       {cancelLabel}
@@ -58,27 +44,22 @@ export function ConfirmSheet({
     confirmed.current = true;
     onConfirm();
   };
-  return createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={() => { if (!pending) onClose(); }} />
-      <section ref={sheet} className="sheet stack" role="dialog" aria-modal="true" aria-busy={pending} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} tabIndex={-1} onKeyDown={onKeyDown}>
-        <span className="grabber" aria-hidden="true" />
-        <h2 id={`${id}-title`}>{title}</h2>
-        <p id={`${id}-text`}>{body}</p>
-        {error ? <p className="field-error" role="alert">{error}</p> : null}
-        {cancelFirst && cancel}
-        {tone === "keep" ? (
-          <TextButton tone="danger" disabled={pending} aria-busy={pending || undefined} onClick={confirm}>
-            {confirmLabel}
-          </TextButton>
-        ) : (
-          <Button variant={tone === "destructive" ? "danger" : "primary"} size="lg" pending={pending} onClick={confirm}>
-            {confirmLabel}
-          </Button>
-        )}
-        {!cancelFirst && cancel}
-      </section>
-    </>,
-    document.body,
+  return (
+    <Sheet title={title} closeButton={false} describedBy={textId} busy={pending} onClose={onClose}
+      returnFocus={(opener) => (confirmed.current ? returnFocus?.current ?? null : opener)}>
+      <p id={textId}>{body}</p>
+      {error ? <p className="field-error" role="alert">{error}</p> : null}
+      {cancelFirst && cancel}
+      {tone === "keep" ? (
+        <TextButton tone="danger" disabled={pending} aria-busy={pending || undefined} onClick={confirm}>
+          {confirmLabel}
+        </TextButton>
+      ) : (
+        <Button variant={tone === "destructive" ? "danger" : "primary"} size="lg" pending={pending} onClick={confirm}>
+          {confirmLabel}
+        </Button>
+      )}
+      {!cancelFirst && cancel}
+    </Sheet>
   );
 }

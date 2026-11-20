@@ -66,10 +66,10 @@
 .picker-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .picker-arrow{display:flex;transition:transform 140ms var(--ease-out);color:var(--primary)}
 .picker-pill[aria-expanded="true"] .picker-arrow{transform:rotate(180deg)}
-.house-picker-sheet{overflow:hidden;gap:12px}
-.house-picker-sheet .sheet-head{flex:none;align-items:center}
-.house-picker-sheet .sheet-head h2{font-size:23px;line-height:1.2}
-.house-picker-sheet .sheet-head .icon-btn{flex:none;margin:0;color:var(--muted)}
+.sheet-picker{overflow:hidden;gap:12px}
+.sheet-picker .sheet-head{flex:none;align-items:center}
+.sheet-picker .sheet-head h2{font-size:23px;line-height:1.2}
+.sheet-picker .sheet-head .icon-btn{flex:none;margin:0;color:var(--muted)}
 .house-picker-list{min-height:0;max-height:min(60dvh,560px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px}
 .house-picker-list [role=option]{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;min-height:52px;width:100%;padding:12px;border-radius:8px;background:transparent;color:var(--fg);font:inherit;line-height:1.35;text-align:left}
 .house-picker-list [role=option][aria-selected=true]{background:var(--sun-soft);color:var(--sun-ink)}
@@ -116,7 +116,7 @@
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
 /* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */
-.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:9;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
+.cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:var(--z-panel);display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
 /* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
 .cal-panel.kb{padding-bottom:calc(14px + 320px)}
 /* La barra de pestañas: fuera mientras hay días seleccionados (sale al bajar y vuelve al subir con el escondido común). */

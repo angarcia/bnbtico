@@ -2,20 +2,18 @@ import { randomUuid } from "../../shared/random-uuid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { IcalError, validateAirbnbUrl } from "../../domain/ical";
 import { DomainError, toDomainError } from "../../domain/errors";
 import type { Listing } from "../../domain/listing";
-import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
 import { airbnbApi, airbnbQuery, refreshAirbnbCalendar, updateAirbnbCalendar, useAirbnbManualHint, useCalendarOnline } from "../airbnb";
 import { FlowHeader } from "../chrome";
 import { ownListingQuery } from "../owner";
-import { usePrivateSheet } from "../private-sheet";
+import { Sheet } from "../../shared/overlay";
 import { sessionState, useSession } from "../session";
 import { IcalExportCard } from "./ical-export-card";
 import { ConfirmSheet } from "../confirm-sheet";
-import { Button, IconButton, TextButton } from "../../shared/button";
+import { Button, TextButton } from "../../shared/button";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/airbnb");
 const time = (iso: string) => new Intl.DateTimeFormat("es-CR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(iso));
@@ -148,7 +146,6 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
   const [requestId, setRequestId] = useState(() => randomUuid());
   const [saving, setSaving] = useState(false);
   const close = () => { if (!saving) onClose(); };
-  const { sheet, onKeyDown } = usePrivateSheet({ onClose: close, focusable: 'button:not([disabled]), input:not([disabled]), textarea', trapEmpty: true, returnFocus: opener => opener?.focus({ preventScroll: true }) });
   const [problem, setProblem] = useState<string | null>(null);
   const online = useCalendarOnline();
   async function submit(event: FormEvent) {
@@ -167,11 +164,9 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
     }
     finally { setSaving(false); }
   }
-  return createPortal(<>
-    <div className="sheet-backdrop" onClick={close} />
-    <section ref={sheet} className={exportCard ? "sheet airbnb-calendar-popup" : "sheet"} role="dialog" aria-modal="true" aria-labelledby="airbnb-connect-title" tabIndex={-1} onKeyDown={onKeyDown}>
-      <span className="grabber" aria-hidden="true" />
-      <div className="row between"><h2 id="airbnb-connect-title">{exportCard ? "Calendarios de Airbnb" : replacing ? "Sustituir enlace" : "Conectar Airbnb"}</h2><IconButton label="Cerrar" disabled={saving} onClick={close}><I.x /></IconButton></div>
+  // En escritorio, desde la fila del Calendario, es la ventana ancha «Calendarios de Airbnb» (nunca se cierra con el fondo).
+  return <Sheet layout={exportCard ? "airbnb" : undefined} title={exportCard ? "Calendarios de Airbnb" : replacing ? "Sustituir enlace" : "Conectar Airbnb"}
+    busy={saving} onClose={onClose} dismissible={exportCard ? { backdrop: false } : undefined} confirmDiscard={() => !connected && url.trim() !== ""}>
       {houseName ? <p className="small muted">{houseName}</p> : null}
       <div className={exportCard ? "airbnb-calendar-directions" : "stack gap-14"}>
       <div className={exportCard ? "card stack gap-14" : "stack gap-14"}>
@@ -190,6 +185,5 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
       </div>
       {exportCard}
       </div>
-    </section>
-  </>, document.body);
+  </Sheet>;
 }

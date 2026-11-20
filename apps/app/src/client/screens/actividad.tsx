@@ -15,7 +15,7 @@ import { countNew, inquiriesQuery, markInquirySeen, openInquiry } from "../inqui
 import { HousePicker } from "../house-picker";
 import { ownListingsQuery } from "../own-listings-query";
 import { useSession } from "../session";
-import { IconButton } from "../../shared/button";
+import { Dialog } from "../../shared/overlay";
 
 const LATEST = 20;
 const SEEN_DELAY_MS = 800;
@@ -38,28 +38,11 @@ export function ActividadScreen() {
 }
 
 export function InquiriesDialog({ onClose }: { onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
   const [casa, setCasa] = useState<string | null>(null);
-  function close() {
-    dialog.current?.close();
-    onClose();
-  }
-  useEffect(() => {
-    const element = dialog.current;
-    element?.showModal();
-    return () => element?.close();
-  }, []);
   return (
-    <dialog ref={dialog} className="whatsapp-dialog inquiries-dialog" aria-label="Consultas" onCancel={(event) => {
-      event.preventDefault();
-      close();
-    }}>
-      <div className="row between">
-        <h2>Consultas</h2>
-        <IconButton label="Cerrar" onClick={close}><I.x size={20} /></IconButton>
-      </div>
+    <Dialog layout="inquiries" title="Consultas" onClose={onClose}>
       <InquiryList casa={casa} onPick={setCasa} inDialog />
-    </dialog>
+    </Dialog>
   );
 }
 

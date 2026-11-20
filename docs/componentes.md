@@ -96,6 +96,80 @@ existiendo. `pending` pone el botón de confirmar en espera y desactiva «Cancel
   onClose={close} onConfirm={discard} />
 ```
 
+## Ventanas y hojas
+
+Desde el paso 3 de la migración (2026-11-19). Código en `apps/app/src/shared/overlay-stack.ts` (la pila, sin React),
+`apps/app/src/shared/overlay.tsx` (`useOverlay` y los contenedores) y `apps/app/src/shared/dismiss.ts` (`useDismiss`). CSS:
+`styles/07-contacto.css` (fondo, `.sheet`, `.dialog`) y `styles/13-escritorio.css` (la hoja como ventana en escritorio).
+Tokens en `01-base.css`: `--scrim`, `--dialog-w`, `--dialog-w-wide` y la escala `--z-*` (`--z-overlay` 30 < `--z-toast` 40:
+el aviso queda siempre encima). Trozo propio `overlay-*` (fuera del JS inicial; solo lo piden trozos diferidos). Lo vigilan
+`tests/unit/overlay.test.ts`, `tests/unit/private-sheets.test.ts` y `tests/e2e/superficies.spec.ts`.
+
+**Por qué `<section>` con portal y no `<dialog>`:** la pila propia ya da el bloqueo del scroll (`html.sheet-open`), el fondo
+animado, el retorno del foco después de quitar `inert` y las superficies apiladas; con `<dialog>` la capa superior del
+navegador taparía siempre el aviso (`toast`), que no es React y vive en `<body>`.
+
+### Reglas comunes (las pone la pila; las pantallas no las escriben)
+
+- Abierta alguna: `html.sheet-open` y `#root` inerte; las de debajo de la de arriba, también inertes. Todo se quita al vaciarse la pila.
+- Escape y la trampa de Tab, solo en la de arriba. Al abrir, el foco va al contenedor (o a `initialFocus`); al cerrar, a quien
+  la abrió (o a `returnFocus`), y si ya no está o está desactivado, a `main h1`. Si la pantalla ya enfocó otra cosa, se respeta.
+- `role="dialog"`, `aria-modal="true"`, `aria-labelledby` al título (con `useId`) o `label` / `labelledBy`, `aria-busy` con `busy`.
+- **Atrás (D9):** en el teléfono, `Sheet` y `FullScreen` añaden una entrada al historial y Atrás cierra la de arriba; en
+  escritorio, `Dialog` y la hoja hecha ventana no la añaden (Atrás navega). `FullScreen` la añade también en escritorio. Si la
+  pestaña se va a otra web (`location.assign` a WhatsApp), llame a `leavingPage()` antes de cerrar.
+- **Cambios sin guardar (D10):** con `confirmDiscard={() => hayCambios}`, Escape, el fondo, Atrás y la ✕ abren encima
+  «¿Descartar los cambios?» («Descartar» destructivo, «Seguir editando» secundario). «Cancelar» del pie cierra sin preguntar.
+- `busy`: ningún cierre (ni la ✕, que se desactiva).
+
+| Contenedor | Uso | Cierra con el fondo | Atrás |
+|---|---|---|---|
+| `Sheet` | hoja inferior; en escritorio, ventana normal (salvo `layout="picker"`) | sí | teléfono |
+| `Dialog size="normal"` | ventana de escritorio, 520 px | sí | no |
+| `Dialog size="wide"` | ventana ancha, hasta 960 px | **no** | no |
+| `FullScreen` | Descripción, Vista previa | — | siempre |
+
+Props comunes: `onClose(reason)` (`"escape" | "backdrop" | "button" | "back"`), `busy`, `dismissible` (`{ escape, backdrop,
+back }`, para salirse del valor de la variante), `confirmDiscard`, `initialFocus`, `returnFocus(opener)`, `title`,
+`subtitle`, `closeButton` (✕ en la cabecera; por defecto, con título), `headerStart`, `label`, `labelledBy`, `describedBy`,
+`id`, `footer` (pie fijo en `Dialog`). `layout` es una unión cerrada para las clases que ya existían (`Sheet`: `contact`,
+`picker`, `airbnb`; `Dialog`: `sign-in`, `inquiries`, `photos`, `filters`; `FullScreen`: `description`, `preview`); no
+cambia el comportamiento. `children` puede ser una función que recibe `{ titleId, close }` (`close` pide cerrar como la ✕).
+
+```tsx
+import { Dialog, Sheet } from "../shared/overlay";
+
+<Sheet title="Pausar la casa" closeButton={false} onClose={onClose} confirmDiscard={() => date !== ""}>
+  <form onSubmit={onSubmit}>…<Button variant="secondary" size="lg" onClick={onClose}>Cancelar</Button></form>
+</Sheet>
+
+<Dialog size="wide" layout="photos" title="Fotos" onClose={onClose}>
+  {({ close }) => <EditPhotos listing={listing} userId={userId} onDone={close} />}
+</Dialog>
+
+// Base para los editores de un dato de la historia 06:
+<Dialog title={fieldTitle} onClose={onClose} busy={saving} confirmDiscard={() => hasChanges}
+  footer={<><Button variant="secondary" onClick={onClose}>Cancelar</Button><Button variant="primary" type="submit" form={formId}>Guardar</Button></>}>
+  <EditFieldForm … />
+</Dialog>
+```
+
+`ConfirmSheet` (`client/confirm-sheet.tsx`) es una `Sheet` sin ✕, con la misma API pública de antes; `pending` es su `busy`.
+
+### useDismiss (desplegables no modales)
+
+Para el selector de casa en escritorio (`house-picker.tsx`) y los paneles Lugar, Fechas y Noches de Explorar. No bloquea la
+página ni atrapa el foco: Escape (no sigue hacia arriba), tocar fuera y, con `blur`, perder el foco.
+
+```tsx
+const dismiss = useDismiss({ open: !!panel, inside: () => [group.current], onDismiss: (reason) => { setPanel(null); if (reason === "escape") trigger.current?.focus(); } });
+<div ref={group} onKeyDown={dismiss.onKeyDown} onBlur={dismiss.onBlur}>…</div>
+```
+
+**Fuera del sistema:** el mapa a pantalla completa (estado en la URL `?mapa=1`; `role="region"`, Escape vuelve a la lista),
+`toast()` y `UpdateBanner` (sin React; solo usan la escala `--z-*`), y los combobox de zona (`buscar.tsx`, `place-search.tsx`:
+la lista de `buscar` está siempre a la vista y la de `place-search` se cierra al salir del campo, el patrón ARIA del combobox).
+
 ### Excepciones con su propio CSS
 
 No pasan por estos componentes: el corazón (`FavoriteButton`), el icono de WhatsApp de la tarjeta (`card-wa`), «Abrir

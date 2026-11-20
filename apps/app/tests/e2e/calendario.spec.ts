@@ -585,7 +585,13 @@ test("la hoja se cierra con Escape, el fondo o «Cancelar» sin guardar nada, y 
   await pick(page, on(8)).click();
   for (let i = 0; i < 6; i++) await page.keyboard.press("Shift+Tab");
   expect(await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
+  // Con fechas elegidas, Escape pregunta antes (D10, historia 07 paso 3); «Descartar» cierra sin guardar.
   await page.keyboard.press("Escape");
+  const discard = page.getByRole("dialog", { name: "¿Descartar los cambios?" });
+  await expect(discard).toBeVisible();
+  await expect(markSheet(page)).toBeVisible();
+  await discard.getByRole("button", { name: "Descartar" }).click();
+  await expect(discard).toHaveCount(0);
   await expect(markSheet(page)).toHaveCount(0);
   await expect(markRow(page)).toBeFocused();
   await markRow(page).click();

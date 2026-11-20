@@ -2,7 +2,8 @@
 // Sin pastillas de provincia desde el ticket 06 (2026-11-06): sin zona es todo el país, con el Caribe primero.
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useId, useState } from "react";
+import { Dialog } from "../../shared/overlay";
 import {
   ALL_PROVINCES,
   BEDS_OPTIONS,
@@ -37,11 +38,14 @@ function FiltrosForm({
   initial,
   fx,
   onClose,
+  titleId,
 }: {
   provinces: string[];
   initial: ExploreSearch;
   fx: FxRate;
   onClose?: () => void;
+  /** En la ventana de escritorio, el título la nombra (`aria-labelledby`). */
+  titleId?: string;
 }) {
   const navigate = useNavigate();
   const [draft, setDraft] = useState<ExploreSearch>(initial);
@@ -110,7 +114,7 @@ function FiltrosForm({
         >
           <I.back />
         </RouterIconLink>}
-        <h1>Filtros</h1>
+        <h1 id={titleId}>Filtros</h1>
         <div className="right">
           <Button
             variant="secondary"
@@ -288,7 +292,7 @@ export function FiltrosScreen() {
   return <FiltrosContent search={search} />;
 }
 
-function FiltrosContent({ search, onClose }: { search: ExploreSearch; onClose?: () => void }) {
+function FiltrosContent({ search, onClose, titleId }: { search: ExploreSearch; onClose?: () => void; titleId?: string }) {
   const { data: provinces } = useQuery(provincesQuery);
   // En dólares, los campos se rellenan con el tipo vigente: se espera a tenerlo (si falla la lectura, el inicial).
   const usd = useCurrency() === "USD";
@@ -300,27 +304,20 @@ function FiltrosContent({ search, onClose }: { search: ExploreSearch; onClose?: 
       initial={search}
       fx={fx.data ?? FX_INITIAL}
       onClose={onClose}
+      titleId={titleId}
     />
   );
 }
 
 export function DesktopFilters({ search, onClose }: { search: ExploreSearch; onClose(): void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    dialog.current?.showModal();
-  }, []);
-
+  const titleId = useId();
   return (
-    <dialog
-      ref={dialog}
-      className="desktop-filters-dialog"
-      aria-label="Filtros"
-      onClose={onClose}
-      onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}
-    >
-      <div className="desktop-filters-content">
-        <FiltrosContent search={search} onClose={() => dialog.current?.close()} />
-      </div>
-    </dialog>
+    <Dialog layout="filters" closeButton={false} labelledBy={titleId} onClose={onClose}>
+      {({ close }) => (
+        <div className="desktop-filters-content">
+          <FiltrosContent search={search} titleId={titleId} onClose={close} />
+        </div>
+      )}
+    </Dialog>
   );
 }

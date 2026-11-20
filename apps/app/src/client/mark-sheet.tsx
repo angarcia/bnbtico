@@ -2,19 +2,17 @@
 // calendario de rango de «¿Cuándo?» (el mismo de la búsqueda y la hoja de contacto) para elegir llegada y salida, el
 // resumen de las noches y «Marcar como ocupado», que deja ocupadas las noches de la llegada a la víspera de la salida.
 // Trozo diferido propio (se pide al tocar la fila o en reposo en el Calendario; el calendario de rango, range-calendar-*,
-// es otro trozo, compartido). Diálogo modal como «Pausar la casa»: la página queda `inert`, el foco no sale de la hoja y
-// Escape, el fondo o «Cancelar» la cierran (el foco vuelve a la fila desde quien la abre).
-import { useEffect, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
+// es otro trozo, compartido). Diálogo modal como «Pausar la casa» (`Sheet`): Escape, el fondo, Atrás en el teléfono o
+// «Cancelar» la cierran; con una llegada elegida, Escape, el fondo y Atrás preguntan antes «¿Descartar los cambios?» (D10).
+import { useEffect, useId, useState, type FormEvent } from "react";
 import { selectionLabel, type CalendarDay } from "../domain/calendar";
 import { reservationDays, reservationLabel } from "../domain/reservation";
 import { RANGE_BUSY_MESSAGE, type RangeState } from "../domain/range";
 import { toDomainError } from "../domain/errors";
 import { RangeCalendar } from "../shared/range-calendar";
-import { usePrivateSheet } from "./private-sheet";
+import { Sheet } from "../shared/overlay";
 import { Button } from "../shared/button";
 
-const FOCUSABLE = "button:not([disabled])";
 const EMPTY_DAYS: readonly CalendarDay[] = [];
 
 /** `onConfirm`: las noches a marcar y el aviso que lo dice («4 noches marcadas como ocupadas · 7–10 nov»). */
@@ -23,7 +21,7 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
   calendarDays?: readonly CalendarDay[];
   prepare?: (signal: AbortSignal) => Promise<{ warning: string | null }>;
 }) {
-  const { sheet, onKeyDown } = usePrivateSheet({ onClose, focusable: FOCUSABLE });
+  const hintId = useId();
   const [range, setRange] = useState<RangeState>({ arrival: null, departure: null });
   const days = reservationDays(range.arrival, range.departure);
   const [status, setStatus] = useState<"loading" | "warning" | "error" | "ready">(prepare ? "loading" : "ready");
@@ -51,13 +49,9 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
     if (ready && days.length > 0 && !occupied) onConfirm(days, reservationLabel(days));
   }
 
-  return createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={onClose} data-testid="sheet-backdrop" />
-      <section ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-labelledby="mark-title" aria-describedby="mark-hint" tabIndex={-1} onKeyDown={onKeyDown}>
-        <span className="grabber" aria-hidden="true" />
-        <h2 id="mark-title">Marcar una reserva</h2>
-        <span className="hint" id="mark-hint">
+  return (
+    <Sheet title="Marcar una reserva" closeButton={false} describedBy={hintId} onClose={onClose} confirmDiscard={() => range.arrival !== null}>
+        <span className="hint" id={hintId}>
           Marque de una vez las noches de una reserva larga como ocupadas. Elija la llegada y la salida. La noche de la salida queda libre.
         </span>
         <form onSubmit={onSubmit} noValidate>
@@ -80,8 +74,6 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
             Cancelar
           </Button>
         </form>
-      </section>
-    </>,
-    document.body,
+    </Sheet>
   );
 }

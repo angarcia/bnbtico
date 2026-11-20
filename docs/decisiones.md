@@ -13,6 +13,14 @@ Ana aprobó el inventario y la propuesta de componentes de la historia 07 de la 
 - **Atrás:** en el móvil cierra la hoja abierta; en escritorio vuelve a la página anterior y las ventanas se cierran con Escape, la X o «Cancelar».
 - **Cambios sin guardar:** al cerrar una hoja o ventana con algo cambiado (Escape, tocar fuera, Atrás o la X), se pregunta «¿Descartar los cambios?». Sin cambios, se cierra directamente. Sustituye, para los editores, a «Volver sin guardar no guarda nada».
 
+Aclaraciones de Ana al ver las capturas de la migración (mismo día):
+
+- **«Parar suscripción» en escritorio** conserva su énfasis: «Mantener suscripción» es el botón principal y «Parar» un texto terracota, para no empujar a parar (variante `keep` de `ConfirmSheet`). En el móvil sigue como los demás destructivos.
+- **«Cancelar» del pie** cierra sin preguntar aunque haya cambios: ya es decir que no se quiere guardar. Preguntan Escape, tocar fuera, Atrás y la ✕.
+- **Pantallas completas** (Descripción, Vista previa del asistente): Atrás las cierra también en escritorio, porque se sienten como una página. La regla de Atrás solo en el móvil es para hojas y ventanas.
+- **Tocar fuera** cierra las ventanas normales sin datos a medio escribir (Consultas, Filtros); no cierra las anchas (Fotos, «Calendarios de Airbnb») ni Ingresar.
+- **Filtros de escritorio** usa el ancho de la ventana normal (520 px; antes 640).
+
 Motivo: el inventario encontró el mismo papel con aspectos distintos («Cancelar» con 4 alturas, siete tratamientos de desactivado, destructivo en dos colores, foco casi invisible). Se migra por pasos a componentes tipados (`Button`, `Sheet`/`Dialog`, `Field`, `StatusTag`…) para que cada pantalla nueva herede estas reglas.
 
 ## 2026-11-19 · Con una sola casa, «Mi casa» abre su gestión

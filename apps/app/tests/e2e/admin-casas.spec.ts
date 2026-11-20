@@ -270,6 +270,9 @@ test("pausar: el enlace da 410 y sale de Explorar; el propietario ve «Pausada p
   await sheet.getByLabel("Motivo (lo verá el anfitrión)").fill(reason);
   await sheet.getByRole("button", { name: "Pausar casa" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Casa pausada" })).toBeVisible();
+  // El aviso se ve por encima de la hoja, que sigue abierta (historia 07, paso 3: `--z-toast`).
+  const toastBox = (await page.locator(".toast").boundingBox())!;
+  expect(await page.evaluate(({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".toast"), { x: toastBox.x + toastBox.width / 2, y: toastBox.y + toastBox.height / 2 })).toBe(true);
   // La hoja sigue abierta con el botón para avisar al propietario por WhatsApp (sin abrirlo: se comprueba el enlace).
   await expect(sheet.getByTestId("hold-note")).toContainText(reason);
   const notice = sheet.getByTestId("notice-link");

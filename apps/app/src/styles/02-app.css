@@ -14,7 +14,7 @@
 .header-flow h1{font-size:24px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:17px;font-weight:var(--w-medium);color:var(--fg);text-decoration:none}
 .header-flow .right{margin-left:auto;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.tabbar{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px;--away:translateY(100%);height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:6}
+.tabbar{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px;--away:translateY(100%);height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:var(--z-bar)}
 /* Barra de abajo plana, pegada al borde, a todo el ancho, con icono y etiqueta en cada pestaña (Daniel, 2026-11-04: vuelve
    la de antes de la píldora); sale por abajo al bajar y vuelve al subir con el escondido común (.chrome-hide). */
 .tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:13px;font-weight:var(--w-medium);color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}
@@ -29,7 +29,7 @@
 .tabbar .nav > span:not(.sr-only){font-family:"Coming Soon",var(--body);font-weight:400;line-height:20px}
 /* En pantallas de flujo con botones fijos (publicar, filtros, revisar, ficha) no hay barra de pestañas. */
 .app:has(.sticky-actions) .tabbar,.app:has(.cta-bar) .tabbar{display:none}
-.sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:6}
+.sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:var(--z-bar)}
 .sticky-actions .grow{flex:1}
 .sticky-spacer{height:76px}
 /* Formulario de publicar: cada pantalla cabe sin scroll; lo que crece (mapa, descripción, fotos) llena el hueco. */
@@ -55,7 +55,7 @@
 .place-line .place-off{color:var(--sun-ink);font-size:16px}
 .place-line .btn{flex-shrink:0}
 .photos-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:0 4px}
-.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:6}
+.cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:var(--z-bar)}
 .cta-bar .price{font-family:var(--display);font-weight:var(--w-strong);font-size:24px;letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
 .cta-bar .price small{font-family:var(--body);font-size:14px;font-weight:var(--w-medium);color:var(--muted);letter-spacing:0}
 /* Alto de partida (antes de medir la barra): el de una casa solo por noches, 140 px de barra menos 16 px de margen. */

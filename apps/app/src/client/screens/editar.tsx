@@ -7,8 +7,7 @@
 // Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
 import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useFormKeyboard } from "../publish/form-keyboard";
 import { isBlocked, isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
@@ -32,6 +31,7 @@ import { useDesktop } from "../desktop";
 import { OwnerHouseDetail } from "./propietario";
 import { Button, IconButton, TextButton } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
+import { Dialog } from "../../shared/overlay";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */
@@ -95,29 +95,10 @@ export function InlineHouseEditor({ listing, field, userId, renderRow, onClose }
 }
 
 export function EditPhotosDialog({ listing, userId, onClose }: { listing: Listing; userId: string; onClose: () => void }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  useEffect(() => {
-    const element = dialog.current;
-    element?.showModal();
-    return () => element?.close();
-  }, []);
-  function close() {
-    dialog.current?.close();
-    onClose();
-  }
-  return createPortal(
-    <dialog ref={dialog} className="whatsapp-dialog edit-photos-dialog" aria-labelledby={titleId} onCancel={(event) => {
-      event.preventDefault();
-      close();
-    }}>
-      <div className="row between">
-        <h2 id={titleId}>Fotos</h2>
-        <IconButton label="Cerrar" onClick={close}><I.x size={20} /></IconButton>
-      </div>
-      <EditPhotos listing={listing} userId={userId} onDone={close} />
-    </dialog>,
-    document.body,
+  return (
+    <Dialog size="wide" layout="photos" title="Fotos" onClose={onClose}>
+      {({ close }) => <EditPhotos listing={listing} userId={userId} onDone={close} />}
+    </Dialog>
   );
 }
 

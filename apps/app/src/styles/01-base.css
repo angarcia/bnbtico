@@ -27,6 +27,10 @@
   /* Historia 07 (2026-11-19): radio común de controles y etiquetas redondas (D5); área táctil mínima. */
   --r-control:8px;--r-tag:999px;--hit:44px;
   /* Un solo anillo de foco, verde (D1: el ocre daba 1,8:1 sobre la crema); un solo desactivado, sin bajar la opacidad. */
+  /* Superficies (historia 07, paso 3): un solo fondo atenuado, dos anchos de ventana y la escala de capas. El aviso (toast)
+     va por encima de las hojas y ventanas. Leaflet (500/600/1000) y el aviso de girar el teléfono quedan aparte. */
+  --scrim:rgba(28,43,42,.35);--dialog-w:520px;--dialog-w-wide:min(960px,100% - 48px);
+  --z-explore:4;--z-float:5;--z-bar:6;--z-banner:7;--z-panel:9;--z-topbar:10;--z-overlay:30;--z-toast:40;
   --focus-ring:var(--primary);--disabled-bg:color-mix(in srgb,var(--muted) 14%,var(--bg));--disabled-fg:var(--muted);
   --w-regular:400;--shadow-lift:0 12px 28px rgba(28,43,42,.28);
   /* La barra de abajo, plana y pegada al borde (Daniel, 2026-11-04, tras probar la píldora de la tanda 1): 84 px sin el área

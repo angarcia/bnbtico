@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import type { PublicListing } from "../domain/listing";
 import { firstName } from "../domain/person";
 import { track } from "../shared/beacon";
@@ -20,19 +20,10 @@ export function CardWhatsApp({ listing }: { listing: PublicListing }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
-  const button = useRef<HTMLButtonElement>(null);
-  const returnFocus = useRef(false);
   const days = useQuery({ ...listingDaysQuery(listing.publicId), enabled: open });
-  // El foco vuelve al botón cuando la hoja ya se desmontó y la página dejó de estar inerte.
-  useEffect(() => {
-    if (open || !returnFocus.current) return;
-    returnFocus.current = false;
-    button.current?.focus();
-  }, [open]);
   return (
     <>
       <button
-        ref={button}
         type="button"
         className="card-wa"
         aria-label={`Contactar por WhatsApp a ${firstName(listing.ownerName)}`}
@@ -57,10 +48,7 @@ export function CardWhatsApp({ listing }: { listing: PublicListing }) {
             days={days.isError ? null : days.data}
             navigate={(href) => void router.navigate({ href })}
             nightsChoice={FLAGS.exploreNights}
-            onClose={() => {
-              returnFocus.current = true;
-              setOpen(false);
-            }}
+            onClose={() => setOpen(false)}
           />
         </Suspense>
       ) : null}

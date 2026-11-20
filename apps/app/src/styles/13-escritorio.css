@@ -39,11 +39,13 @@
   .desktop-dropdown .house-picker-list [role="option"] { min-height: 44px; padding: 8px 12px; }
   .desktop-dropdown [role="option"]:hover:not([aria-selected="true"]) { background: var(--surface-2); }
 
-  .sheet[aria-modal="true"]:not(.house-picker-sheet) {
+  /* La hoja, en escritorio, es la ventana normal (shared/overlay.tsx): mismo ancho, sombra y entrada que `.dialog`. El
+     selector de zona del asistente sigue abajo (`.sheet-picker`). */
+  .sheet[aria-modal="true"]:not(.sheet-picker) {
     inset: 0;
     margin: auto;
     transform: none;
-    width: min(520px, calc(100% - 32px));
+    width: min(var(--dialog-w), calc(100% - 32px));
     height: max-content;
     max-height: calc(100dvh - 32px);
     padding: 24px;
@@ -52,9 +54,10 @@
     box-shadow: var(--shadow-float);
     animation-name: fade-in;
   }
-  .sheet[aria-modal="true"]:not(.house-picker-sheet) > .grabber { display: none; }
-  .sheet.airbnb-calendar-popup[aria-modal="true"] {
-    width: min(920px, calc(100% - 48px));
+  .sheet[aria-modal="true"]:not(.sheet-picker) > .grabber { display: none; }
+  /* «Calendarios de Airbnb» desde la fila del Calendario: la ventana ancha. */
+  .sheet.sheet-airbnb[aria-modal="true"] {
+    width: min(var(--dialog-w-wide), calc(100% - 48px));
     max-width: none;
   }
   .airbnb-calendar-directions {
@@ -65,25 +68,8 @@
   }
   .airbnb-calendar-directions .card { min-width: 0; }
 
-  .whatsapp-dialog {
-    width: min(520px, calc(100% - 32px));
-    max-height: calc(100dvh - 32px);
-    margin: auto;
-    padding: 16px 24px 24px;
-    border: 1px solid var(--line);
-    border-radius: var(--r-sheet);
-    background: var(--bg);
-    color: var(--fg);
-    overscroll-behavior: contain;
-  }
-  .whatsapp-dialog::backdrop { background: rgb(0 0 0 / 32%); }
-  .whatsapp-dialog > .row > :last-child { margin-inline-start: auto; }
-  .edit-photos-dialog {
-    width: min(960px, calc(100% - 48px));
-    max-height: calc(100dvh - 48px);
-  }
-  .edit-photos-dialog .publish-form::after { content: none; }
-  .edit-photos-dialog .sticky-actions {
+  .dialog-photos .publish-form::after { content: none; }
+  .dialog-photos .sticky-actions {
     position: sticky;
     inset: auto 0 0;
     transform: none;
@@ -91,7 +77,7 @@
     padding: 12px 0 0;
     justify-content: flex-end;
   }
-  .edit-photos-dialog .sticky-actions .btn { width: auto; }
+  .dialog-photos .sticky-actions .btn { width: auto; }
 
   .publish-flow .wizard-heading > :is(.progress, .stage-label:not(.stage-summary)),
   .publish-flow .wizard-heading > .stage-summary > span {
@@ -406,7 +392,7 @@
     background: transparent;
   }
   .desktop-inquiries .nav-count { right: 0; }
-  .inquiries-dialog > .row { margin-bottom: 12px; }
+  .dialog-inquiries .dialog-head { margin-bottom: 12px; }
   .desktop-nav .desktop-help span { white-space: nowrap; }
   .desktop-app .account-actions:empty { display: none; }
   @media (max-width: 1279px) {
@@ -431,19 +417,6 @@
 
   .desktop-app .explore-search { grid-column: 1 / -1; min-width: 0; }
   .desktop-app .explore-search .filters-btn { flex: none; height: 52px; pointer-events: auto; }
-  .desktop-filters-dialog {
-    width: min(640px, calc(100% - 32px));
-    max-height: calc(100dvh - 48px);
-    margin: auto;
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: var(--r-sheet);
-    background: var(--bg);
-    color: var(--fg);
-    pointer-events: auto;
-    overscroll-behavior: contain;
-  }
-  .desktop-filters-dialog::backdrop { background: rgb(0 0 0 / 32%); }
   .desktop-filters-content { padding: 20px; }
   .desktop-filters-content .header-flow { margin: 0 0 16px; }
   .desktop-filters-actions { position: sticky; bottom: 0; padding: 8px 0; background: var(--bg); }
@@ -612,7 +585,7 @@
     display: block;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: var(--z-topbar);
     background: var(--bg);
     flex: none;
     height: var(--desktop-nav-height);
@@ -801,7 +774,7 @@
 
   /* Revisión de escritorio 2026-11-13, tanda 6 (A10): sin la oferta «publique gratis» en la ventana de Ingresar, donde
      competía con «Recibir código». Las cifras de Anuncios del admin, en pastillas como en Mis casas. */
-  .whatsapp-dialog .publish-promo-row { display: none; }
+  .dialog-sign-in .publish-promo-row { display: none; }
   .desktop-app main.view > .grid-3:has(> .tile-review) > .tile { flex-direction: row; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; }
   .desktop-app main.view > .grid-3:has(> .tile-review) { display: flex; flex-wrap: wrap; gap: 8px; }
   .desktop-app main.view > .grid-3:has(> .tile-review) > .tile b { font: var(--w-strong) 16px/1.2 var(--body); }

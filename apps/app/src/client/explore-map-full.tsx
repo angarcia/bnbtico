@@ -61,7 +61,14 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
   }, []);
   const house = selected ? listings.find((l) => l.publicId === selected) : undefined;
   return (
-    <div ref={overlay} className="map-full">
+    // Fuera de la pila de superficies (shared/overlay-stack.ts): el estado está en la URL (`?mapa=1`) y la lista sigue montada
+    // debajo. Escape vuelve a la lista, como «Ver lista» (historia 07, paso 3).
+    <div ref={overlay} className="map-full" role="region" aria-label="Mapa de casas" onKeyDown={(event) => {
+      // Solo lo de dentro del mapa en el DOM: una hoja abierta desde él (portal) se cierra sola.
+      if (event.key !== "Escape" || event.defaultPrevented || !(event.target instanceof Node) || !overlay.current?.contains(event.target)) return;
+      event.preventDefault();
+      onClose();
+    }}>
       <div ref={box} className="map-full-box" />
       <div ref={top} className="map-full-top">
         {header}

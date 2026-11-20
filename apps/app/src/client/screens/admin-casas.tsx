@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
 import { HOLD_COPY, HOLD_REASON_MAX, deleteConfirmMatches, holdReasonRefusal } from "../../domain/admin-actions";
 import { CHIP_LABELS, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, houseBadge, type AdminHouse, type HouseChip } from "../../domain/admin-houses";
 import { PUBLISHED_STATUSES } from "../../domain/can";
@@ -12,9 +11,9 @@ import { toast } from "../../shared/toast";
 import { firstName, ownerNoticeUrl } from "../../domain/owner-notice";
 import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
 import { RootHeader } from "../chrome";
-import { usePrivateSheet } from "../private-sheet";
+import { Sheet } from "../../shared/overlay";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";
-import { Button, IconButton } from "../../shared/button";
+import { Button } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
 
 // ---------- 23 · Casas ----------
@@ -148,14 +147,6 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
   const [reason, setReason] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { sheet, onKeyDown } = usePrivateSheet({
-    onClose,
-    focusable: "button:not(:disabled), a[href], textarea, input",
-    trapEmpty: true,
-    returnFocus(opener) {
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
-    },
-  });
   const act = useHouseAction(userId);
   const badge = houseBadge(h);
   const published = PUBLISHED_STATUSES.includes(h.status);
@@ -193,20 +184,10 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
 
   const pending = act.isPending;
   const copy = mode === "detail" ? null : MODE_COPY[mode];
-  return createPortal(
-    <>
-      <div className="sheet-backdrop" onClick={onClose} />
-      <section ref={sheet} className="sheet" role="dialog" aria-modal="true" aria-label={h.title || "Casa"} tabIndex={-1} onKeyDown={onKeyDown} data-testid="house-sheet">
-        <span className="grabber" aria-hidden="true" />
-        <div className="sheet-head">
-          <div>
-            <h2>{h.title || "Sin nombre"}</h2>
-            <span className="small muted num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</span>
-          </div>
-          <IconButton label="Cerrar" onClick={onClose}>
-            <I.x size={20} />
-          </IconButton>
-        </div>
+  // Mientras una acción se guarda no se cierra; con un motivo o la confirmación escritos, pregunta antes (D10).
+  return (
+    <Sheet title={h.title || "Sin nombre"} subtitle={<span className="num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</span>}
+      busy={pending} onClose={onClose} confirmDiscard={() => mode !== "detail" && (reason.trim() !== "" || confirm.trim() !== "")}>
 
         {!copy ? (
           <>
@@ -325,8 +306,6 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
             </Button>
           </form>
         )}
-      </section>
-    </>,
-    document.body,
+    </Sheet>
   );
 }

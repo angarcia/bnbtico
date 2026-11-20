@@ -29,6 +29,7 @@ import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
 import { RangeCalendar } from "../../shared/range-calendar";
 import { Button, TextButton } from "../../shared/button";
+import { useDismiss } from "../../shared/dismiss";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
@@ -64,14 +65,15 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
     ...(SEARCH_MODE === "nights" ? [{ key: "cuando" as const, label: "Noches", value: stayLabel(displayed), icon: I.moon }] : []),
   ];
 
-  useEffect(() => {
-    if (!panel) return;
-    const dismiss = (event: PointerEvent) => {
-      if (event.target instanceof Node && !group.current?.contains(event.target)) setPanel(null);
-    };
-    document.addEventListener("pointerdown", dismiss);
-    return () => document.removeEventListener("pointerdown", dismiss);
-  }, [panel]);
+  // Escape vuelve al disparador; tocar fuera solo cierra.
+  const dismiss = useDismiss({
+    open: !!panel,
+    inside: () => [group.current],
+    onDismiss(reason) {
+      setPanel(null);
+      if (reason === "escape") trigger.current?.focus();
+    },
+  });
 
   function apply(next: Filters) {
     setPanel(null);
@@ -85,12 +87,7 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
   }
 
   return (
-    <div ref={group} className="desktop-search-fields" onKeyDown={(event) => {
-      if (event.key !== "Escape" || !panel) return;
-      event.stopPropagation();
-      setPanel(null);
-      trigger.current?.focus();
-    }}>
+    <div ref={group} className="desktop-search-fields" onKeyDown={dismiss.onKeyDown}>
       {fields.map(({ key, label, value, icon: Icon }) => (
         <div className="desktop-search-field" key={key}>
           <button type="button" className="search-pill float-card" aria-expanded={panel === key}

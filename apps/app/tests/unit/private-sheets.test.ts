@@ -114,13 +114,13 @@ describe("hojas privadas: contrato de interacción en Chromium", () => {
     });
   });
 
-  it("pausa y reserva: el componente no devuelve el foco por su cuenta", async () => {
+  // Historia 07, paso 3: el foco vuelve desde la pila común (shared/overlay-stack.ts), no desde cada pantalla.
+  it("pausa y reserva: al cerrar, el foco vuelve a quien la abrió", async () => {
     for (const kind of ["close", "mark"]) {
       await fixture(kind, async (page) => {
         await page.keyboard.press("Escape");
         await released(page);
-        await expect(page.getByRole("button", { name: "Abrir hoja" })).not.toBeFocused();
-        await expect(page.getByRole("heading", { level: 1 })).not.toBeFocused();
+        await expect(page.getByRole("button", { name: "Abrir hoja" })).toBeFocused();
       });
     }
   });

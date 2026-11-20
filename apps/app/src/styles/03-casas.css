@@ -87,7 +87,7 @@
    Las tarjetas y recuadros blancos fijos de la página van en `--surface-soft` (blanco al 70 %); los campos, las hojas
    y lo que flota sobre mapas o fotos siguen en blanco opaco. */
 .note-plain{background:var(--surface-soft);color:var(--fg)}
-.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:var(--chrome-bottom);z-index:20;max-width:420px;padding:12px 16px;border-radius:var(--float-r);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
+.toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:var(--chrome-bottom);z-index:var(--z-toast);max-width:420px;padding:12px 16px;border-radius:var(--float-r);background:var(--overlay);color:#FFFBF2;font-size:16px;font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
 /* La foto de la ficha es 5:4 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch);
    solo los botones se apartan del área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
 .hero{position:relative;aspect-ratio:5/4;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
@@ -154,7 +154,7 @@
 .listing-description.is-clamped{max-height:calc(8 * 1.45em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent)}
 .description-block{gap:14px}
 /* La descripción entera, a pantalla completa por encima de la ficha. */
-.description-screen{position:fixed;inset:0;z-index:31;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:screen-in 280ms var(--ease-drawer) backwards}
+.description-screen{position:fixed;inset:0;z-index:calc(var(--z-overlay) + 1);overflow-y:auto;overscroll-behavior:contain;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:screen-in 280ms var(--ease-drawer) backwards}
 .description-screen:focus{outline:none}
 .description-screen-head{margin-left:-10px}
 .description-screen h2{font-size:28px}

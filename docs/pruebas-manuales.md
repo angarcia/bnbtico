@@ -1,5 +1,17 @@
 # Guía de pruebas manuales de 3bstays
 
+## Hojas y ventanas comunes · 2026-11-19 (historia 07, paso 3)
+
+En el teléfono (datos móviles) y en escritorio (1280 × 800). Superficies: confirmaciones (Eliminar casa, Descartar borrador, Parar suscripción, Cerrar sesión, Desconectar Airbnb), «Pausar la casa», «Marcar una reserva», la hoja de contacto (desde la ficha y desde una tarjeta), el selector de casa, «Conectar Airbnb» y «Calendarios de Airbnb», la hoja de una casa del admin, Ingresar, Consultas, Fotos y Filtros de escritorio, la Descripción («Ver más») y la Vista previa del asistente.
+
+- [ ] **Cerrar:** Escape (con teclado), la ✕ o «Cancelar» cierran todas. Tocar fuera cierra las hojas del teléfono, Consultas y Filtros; **no** cierra Ingresar (se perdería el código a medias), Fotos ni «Calendarios de Airbnb» (ventanas anchas). Mientras algo se guarda (Eliminar, Conectar Airbnb, una acción del admin), no se cierra de ninguna forma.
+- [ ] **Foco:** al cerrar, el foco vuelve al botón que la abrió (también «Ingresar» de la barra de escritorio y «Vista previa» del asistente); tras confirmar una acción que quita el botón, al título de la pantalla. Con Tab no se sale de la hoja ni se llega a lo de debajo (también en la Vista previa).
+- [ ] **Atrás (teléfono):** con una hoja abierta, Atrás del teléfono la cierra y deja la pantalla donde estaba; un segundo Atrás sí sale de la pantalla. La Descripción y la Vista previa también se cierran con Atrás. **Escritorio:** Atrás del navegador navega como siempre y no cierra las ventanas.
+- [ ] **Cambios sin guardar:** en «Pausar la casa» con una fecha, «Marcar una reserva» con una llegada, «Conectar Airbnb» con un enlace escrito o la hoja del admin con un motivo, Escape, tocar fuera, Atrás o la ✕ preguntan «¿Descartar los cambios?» («Descartar» en terracota y «Seguir editando»). «Seguir editando» vuelve con lo escrito; «Descartar» cierra sin guardar. Sin cambios, se cierra directamente. «Cancelar» siempre cierra sin preguntar. La hoja de contacto no pregunta: guarda lo escrito.
+- [ ] **Apiladas:** con «¿Descartar los cambios?» abierta, Escape cierra solo la pregunta. El aviso de abajo (p. ej. «Casa pausada» en la hoja del admin) se ve **encima** de la hoja o la ventana.
+- [ ] **Aspecto:** en escritorio todas las ventanas llevan la misma sombra y el mismo fondo atenuado y entran con un fundido; Ingresar, Consultas y Filtros miden 520 px; Fotos y «Calendarios de Airbnb», hasta 960 px.
+- [ ] **Mapa a pantalla completa (teléfono con teclado):** Escape vuelve a la lista, como «Ver lista».
+
 ## Botones comunes · 2026-11-19 (historia 07, paso 2)
 
 En el teléfono y en escritorio (1280 × 800), en claro y en oscuro:

@@ -2,8 +2,8 @@
 // mapa se unió al paso 2, el 2026-10-27). Casillas y contadores llevan su valor en el formulario (campos ocultos o
 // casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
-import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { Component, lazy, Suspense, useRef, useState, type ReactNode } from "react";
+import { FullScreen } from "../../shared/overlay";
 import { Link } from "@tanstack/react-router";
 import { DESCRIPTION_MAX, DESCRIPTION_MIN, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { charCount, monthlyError } from "../../domain/listing-rules";
@@ -384,28 +384,24 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   );
 }
 
-/** La ficha tal como la verán los clientes, encima del asistente, con una banda «Vista previa» y «Cerrar». */
+/** La ficha tal como la verán los clientes, encima del asistente, con una banda «Vista previa» y «Cerrar». Pantalla
+ *  completa común: el asistente queda inerte, el foco no sale de ella, Escape y Atrás la cierran y el foco vuelve. */
 function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing; draft: ListingDraft; ownerName: string; onClose: () => void }) {
-  useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", esc);
-    document.documentElement.classList.add("sheet-open");
-    return () => {
-      document.removeEventListener("keydown", esc);
-      document.documentElement.classList.remove("sheet-open");
-    };
-  }, [onClose]);
-  return createPortal(
-    <div className="ficha-preview" role="dialog" aria-modal="true" aria-label="Vista previa de su ficha">
-      <div className="preview-bar">
-        <span className="small strong">Vista previa · así la verán los clientes</span>
-        <Button variant="primary" onClick={onClose} autoFocus>
-          Cerrar
-        </Button>
-      </div>
-      <ListingPage listing={previewListing({ ...listing, ...draft }, ownerName)} base="" preview />
-    </div>,
-    document.body,
+  const closeButton = useRef<HTMLButtonElement>(null);
+  return (
+    <FullScreen layout="preview" label="Vista previa de su ficha" initialFocus={closeButton} onClose={onClose}>
+      {({ close }) => (
+        <>
+          <div className="preview-bar">
+            <span className="small strong">Vista previa · así la verán los clientes</span>
+            <Button ref={closeButton} variant="primary" onClick={close}>
+              Cerrar
+            </Button>
+          </div>
+          <ListingPage listing={previewListing({ ...listing, ...draft }, ownerName)} base="" preview />
+        </>
+      )}
+    </FullScreen>
   );
 }
 
