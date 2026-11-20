@@ -12,6 +12,7 @@ import { escapeHtml, heroLinkHeader, renderDocument } from "./render";
 import { securityHeaders } from "../shared/security";
 import type { ReminderEnv, ReminderRuntime } from "./reminders";
 import { testClock } from "./test-clock";
+import { readCapped } from "./capped-body";
 import { registerBilling, type BillingDeps, type PaymentsEnv } from "./billing";
 import { registerAirbnb, type AirbnbDeps } from "./airbnb";
 import { ICAL_EXPORT_HEADERS, registerIcalExport, type IcalExportDeps } from "./ical-export";
@@ -136,7 +137,9 @@ export function createApp(deps: Deps) {
       const origin = c.req.header("origin");
       if (origin && origin !== new URL(c.req.url).origin) return c.body(null, 403);
       if (Number(c.req.header("content-length") ?? 0) > BEACON_MAX_BYTES) return c.body(null, 413);
-      const parsed = parseBeacon(kind, await c.req.text());
+      const body = await readCapped(c.req.raw, BEACON_MAX_BYTES);
+      if (body === null) return c.body(null, 413);
+      const parsed = parseBeacon(kind, body);
       if (!parsed.ok) return c.body(null, parsed.status);
       const writer = deps.telemetry?.(c.env) ?? null;
       if (!writer) {

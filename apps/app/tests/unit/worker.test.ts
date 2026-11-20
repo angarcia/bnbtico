@@ -622,7 +622,12 @@ describe("worker · balizas /vitals, /errors y /events", () => {
     });
     const post = (path: string, body: string, headers: Record<string, string> = {}) =>
       app.request(`${ORIGIN}${path}`, { method: "POST", body, headers: { "content-type": "text/plain", "cf-ipcountry": "CR", ...headers } }, t.env);
-    return { post, written };
+    const request = (path: string, body: ReadableStream<Uint8Array>, headers: Record<string, string> = {}) => {
+      // Un cuerpo en stream necesita `duplex` en Node; los tipos de RequestInit aún no lo traen.
+      const init: RequestInit & { duplex: "half" } = { method: "POST", body, duplex: "half", headers: { "content-type": "text/plain", ...headers } };
+      return app.request(`${ORIGIN}${path}`, init, t.env);
+    };
+    return { post, request, written };
   }
 
   const valid = {
@@ -655,6 +660,33 @@ describe("worker · balizas /vitals, /errors y /events", () => {
       expect((await b.post(path, big)).status).toBe(413);
       expect((await b.post(path, "{}", { "content-length": "999999" })).status).toBe(413);
       expect(b.written).toHaveLength(0);
+    });
+
+    // Historia #71: el tope se comprueba al leer, no solo con Content-Length, y la lectura se corta al pasarlo.
+    it(`${path}: un cuerpo por trozos sin Content-Length o con uno falso se corta al pasar 8192 bytes, sin escribir`, async () => {
+      const b = beacons();
+      const chunk = new TextEncoder().encode("x".repeat(1024));
+      const stream = (counter: { pulled: number }) =>
+        new ReadableStream<Uint8Array>({
+          pull(controller) {
+            if (counter.pulled >= 1024 * 1024) return controller.close();
+            counter.pulled += chunk.length;
+            controller.enqueue(chunk);
+          },
+        });
+      const variants: Record<string, string>[] = [{}, { "content-length": "100" }];
+      for (const headers of variants) {
+        const counter = { pulled: 0 };
+        const res = await b.request(path, stream(counter), headers);
+        expect(res.status).toBe(413);
+        expect(counter.pulled).toBeLessThanOrEqual(8192 + 2 * chunk.length);
+      }
+      // Justo en el tope sí se acepta (mismo cuerpo válido, rellenado hasta 8192 bytes exactos).
+      const base = JSON.stringify(valid[path]);
+      const exact = `${base.slice(0, -1)},"pad":"${"x".repeat(8192 - base.length - 9)}"}`;
+      expect(new TextEncoder().encode(exact).length).toBe(8192);
+      expect((await b.post(path, exact, { origin: ORIGIN })).status).toBe(204);
+      expect(b.written).toHaveLength(1);
     });
   }
 
