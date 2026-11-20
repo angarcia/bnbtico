@@ -62,3 +62,17 @@ describe("wrangler · worker aislado del refactor", () => {
     }
   });
 });
+
+describe("wrangler · límite de las balizas (historia #71)", () => {
+  // Las vinculaciones no se heredan: sin ella en un entorno, el worker descarta todas las balizas.
+  it("cada entorno declara BEACON_LIMITER con 120 por minuto y su propio namespace", () => {
+    const envs = { local: wrangler, ...wrangler.env } as Record<string, { ratelimits?: { name: string; namespace_id: string; simple: unknown }[] }>;
+    const ids = new Set<string>();
+    for (const [name, env] of Object.entries(envs)) {
+      const limiter = env.ratelimits?.find((r) => r.name === "BEACON_LIMITER");
+      expect(limiter?.simple, name).toEqual({ limit: 120, period: 60 });
+      ids.add(limiter!.namespace_id);
+    }
+    expect(ids.size).toBe(Object.keys(envs).length);
+  });
+});

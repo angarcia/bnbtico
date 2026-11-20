@@ -1,3 +1,13 @@
+## 2026-11-20 · Límite de frecuencia de las balizas: vinculación de Workers, 120 por minuto por IP, descartar si falla (historia #71)
+
+La revisión de seguridad del 2026-11-17 (épica #66) vio que `/vitals`, `/errors` y `/events` aceptan peticiones anónimas sin límite y que `Origin` no autentica a un programa: cualquiera puede llenar las tablas de telemetría y gastar el plan gratuito de la base. Ana eligió:
+
+- **Mecanismo: la vinculación `ratelimits` de Workers** (`BEACON_LIMITER` en `wrangler.jsonc`), no una regla WAF ni un Durable Object. Motivo: gratis, versionada en el repositorio y aplicada en todos los dominios del worker, también workers.dev (una regla WAF solo cubre el dominio propio y se configura a mano). Se acepta que cuenta **por ubicación de Cloudflare**, no de forma global; un Durable Object sería exacto pero añade infraestructura y un viaje por baliza.
+- **Umbral: 120 balizas por minuto por IP, las tres rutas juntas.** Una visita manda unas 3 métricas y algunos eventos; deja unas 20 personas activas detrás de una misma red compartida. Por encima, 429 sin escribir. Provisional: se revisa con tráfico real (`docs/antes-de-produccion.md`).
+- **Si el limitador falla o falta, se descarta** (204 sin escribir, registrado una vez). Motivo: perder telemetría un rato cuesta menos que escrituras sin límite.
+
+Además, la lectura del cuerpo se corta al pasar 8192 bytes aunque falte o mienta `Content-Length` (antes se leía entero). Detalle en `docs/telemetria.md`.
+
 ## 2026-11-20 · Una sola cifra de contacto en las estadísticas de la casa: «Consultas»
 
 Una captura de Ana mostraba en el detalle de una casa 22 visitas, 16 clics en WhatsApp y 1 consulta. El diagnóstico (`.scratch/unificar-estadisticas-contacto/diagnostico.md`) mostró que «clics/toques en WhatsApp» (`whatsapp_tap`) no mide un contacto: en el móvil se manda al **abrir la hoja** de contacto (también sin sesión y aunque se cierre sin enviar) y en la ficha de escritorio en **cada envío** del formulario, antes de validar; sin deduplicar ni límite. Solo la consulta registrada por `create_inquiry` acredita que el cliente verificó su WhatsApp y se le entregó el número. Ana decidió:

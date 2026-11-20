@@ -1,7 +1,7 @@
 // Costura HTTP del worker: peticiones en proceso a la app Hono, con el fake en lugar de PostgREST.
 import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createApp, type CacheLike, type Env } from "../../src/server/app";
+import { createApp, type CacheLike, type Env, type RateLimiter } from "../../src/server/app";
 import type { Seeded } from "../contract/harness";
 import { addDays } from "../../src/domain/calendar";
 import { costaRicaToday } from "../../src/domain/inquiry";
@@ -610,9 +610,23 @@ describe("worker · cabeceras de seguridad del HTML", () => {
 });
 
 describe("worker · balizas /vitals, /errors y /events", () => {
+  const allowAll: RateLimiter = { limit: async () => ({ success: true }) };
+  /** Como la vinculación de Workers: un contador por clave fuera del isolate, compartido por todas las instancias. */
+  function sharedLimiter(max: number) {
+    const counts = new Map<string, number>();
+    const keys: string[] = [];
+    const limiter: RateLimiter = {
+      async limit({ key }) {
+        keys.push(key);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+        return { success: counts.get(key)! <= max };
+      },
+    };
+    return { limiter, keys };
+  }
   type Written = { table: string; row: Record<string, unknown> };
-  function beacons(writer: "ok" | "none" = "ok") {
-    const t = setup();
+  function beacons(writer: "ok" | "none" = "ok", limiter: RateLimiter | null = allowAll) {
+    const t = setup(limiter ? { BEACON_LIMITER: limiter } : {});
     const written: Written[] = [];
     const app = createApp({
       listings: () => t.h.anon,
@@ -720,7 +734,7 @@ describe("worker · balizas /vitals, /errors y /events", () => {
   });
 
   it("/events: si la base rechaza la fila (p. ej. un nombre nuevo sin su migración) responde 204 igual y lo registra", async () => {
-    const t = setup();
+    const t = setup({ BEACON_LIMITER: allowAll });
     const errors: string[] = [];
     const spy = vi.spyOn(console, "error").mockImplementation((m: unknown) => void errors.push(String(m)));
     try {
@@ -755,6 +769,51 @@ describe("worker · balizas /vitals, /errors y /events", () => {
   it("sin clave de servicio responde 204 y descarta (el navegador no reintenta)", async () => {
     const b = beacons("none");
     expect((await b.post("/events", JSON.stringify(valid["/events"]))).status).toBe(204);
+  });
+
+  // Historia #71: límite de frecuencia por IP para las tres rutas juntas (120 por minuto en wrangler.jsonc).
+  it("por encima del límite responde 429 sin leer el cuerpo ni escribir, con Origin ausente o el propio", async () => {
+    const { limiter, keys } = sharedLimiter(2);
+    const b = beacons("ok", limiter);
+    const ip = { "cf-connecting-ip": "203.0.113.7" };
+    expect((await b.post("/vitals", JSON.stringify(valid["/vitals"]), ip)).status).toBe(204);
+    expect((await b.post("/events", JSON.stringify(valid["/events"]), { ...ip, origin: ORIGIN })).status).toBe(204);
+    expect((await b.post("/errors", JSON.stringify(valid["/errors"]), ip)).status).toBe(429);
+    expect((await b.post("/events", "{rota", ip)).status).toBe(429);
+    expect(b.written).toHaveLength(2);
+    expect(new Set(keys)).toEqual(new Set(["beacon:203.0.113.7"]));
+    // Otra IP tiene su propia cuenta; la IP no se guarda en la fila.
+    expect((await b.post("/events", JSON.stringify(valid["/events"]), { "cf-connecting-ip": "198.51.100.2" })).status).toBe(204);
+    expect(b.written).toHaveLength(3);
+    expect(JSON.stringify(b.written)).not.toMatch(/203\.0\.113|198\.51\.100/);
+  });
+
+  it("el límite no vive en el isolate: dos instancias del worker comparten la cuenta de la vinculación", async () => {
+    const { limiter } = sharedLimiter(3);
+    const one = beacons("ok", limiter);
+    const two = beacons("ok", limiter);
+    const ip = { "cf-connecting-ip": "203.0.113.9" };
+    const statuses = await Promise.all([one, two, one, two, one].map(async (b) => (await b.post("/events", JSON.stringify(valid["/events"]), ip)).status));
+    expect(statuses.filter((s) => s === 204)).toHaveLength(3);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(2);
+    expect(one.written.length + two.written.length).toBe(3);
+  });
+
+  it("si el limitador falla o no está, descarta sin escribir (204) y lo registra una vez", async () => {
+    const errors: string[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((m: unknown) => void errors.push(String(m)));
+    try {
+      const broken = beacons("ok", { limit: () => Promise.reject(new Error("rate limit unavailable")) });
+      expect((await broken.post("/events", JSON.stringify(valid["/events"]))).status).toBe(204);
+      expect((await broken.post("/vitals", JSON.stringify(valid["/vitals"]))).status).toBe(204);
+      expect(broken.written).toEqual([]);
+      expect(errors.filter((e) => e.includes("beacon_discarded") && e.includes("rate limit unavailable"))).toHaveLength(1);
+      const missing = beacons("ok", null);
+      expect((await missing.post("/events", JSON.stringify(valid["/events"]))).status).toBe(204);
+      expect(missing.written).toEqual([]);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
 });

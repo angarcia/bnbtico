@@ -32,6 +32,8 @@ export type Env = ReminderEnv & {
   CF_ZONE_ID?: string;
   CF_PURGE_TOKEN?: string;
   CF_VERSION_METADATA?: { id: string };
+  /** Límite de frecuencia de las balizas (vinculación `ratelimits` de wrangler.jsonc, historia #71). */
+  BEACON_LIMITER?: RateLimiter;
   ASSETS: { fetch(input: Request | URL | string): Promise<Response> };
 } & PaymentsEnv;
 
@@ -39,6 +41,11 @@ export interface CacheLike {
   match(key: string): Promise<Response | undefined>;
   put(key: string, response: Response): Promise<void>;
   delete(key: string): Promise<boolean>;
+}
+
+/** La vinculación de límite de frecuencia de Workers: cuenta por clave y por ubicación de Cloudflare, fuera del isolate. */
+export interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
 /** Escritura de las balizas con la service role (adaptador en src/data/postgrest/telemetry.ts). */
@@ -132,11 +139,28 @@ export function createApp(deps: Deps) {
   }
 
   let warnedNoWriter = false;
+  let warnedLimiter = false;
+  /** Las tres rutas juntas, por IP (`cf-connecting-ip` la pone Cloudflare; no se guarda). Sin limitador o si falla, se
+   *  descarta: perder telemetría un rato cuesta menos que escrituras sin límite. */
+  async function beaconAllowed(c: Context<{ Bindings: Env }>): Promise<"ok" | "limited" | "discard"> {
+    const limiter = c.env.BEACON_LIMITER;
+    try {
+      if (!limiter) throw new Error("sin BEACON_LIMITER");
+      return (await limiter.limit({ key: `beacon:${c.req.header("cf-connecting-ip") ?? "sin-ip"}` })).success ? "ok" : "limited";
+    } catch (error) {
+      if (!warnedLimiter) console.error(JSON.stringify({ event: "beacon_discarded", reason: "limitador", error: String(error) }));
+      warnedLimiter = true;
+      return "discard";
+    }
+  }
   for (const kind of ["vitals", "errors", "events"] as const satisfies readonly BeaconKind[]) {
     app.post(`/${kind}`, async (c) => {
       const origin = c.req.header("origin");
       if (origin && origin !== new URL(c.req.url).origin) return c.body(null, 403);
       if (Number(c.req.header("content-length") ?? 0) > BEACON_MAX_BYTES) return c.body(null, 413);
+      const allowed = await beaconAllowed(c);
+      if (allowed === "limited") return c.body(null, 429);
+      if (allowed === "discard") return c.body(null, 204);
       const body = await readCapped(c.req.raw, BEACON_MAX_BYTES);
       if (body === null) return c.body(null, 413);
       const parsed = parseBeacon(kind, body);
