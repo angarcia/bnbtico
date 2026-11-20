@@ -1,6 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { applyUpdate, onUpdateChange, updateWaiting } from "./sw-register";
+import { Button } from "../shared/button";
 
 /** Rutas donde nunca se recarga: el asistente de publicar (se perdería lo que se está escribiendo). */
 export const isWizardPath = (pathname: string) => pathname === "/propietario/publicar" || pathname.startsWith("/propietario/publicar/") || pathname.startsWith("/publicar/nueva/");
@@ -13,9 +14,9 @@ export function UpdateBanner() {
   return (
     <div className="update-banner" role="status">
       <span>Hay una versión nueva</span>
-      <button type="button" className="btn btn-primary btn-sm" onClick={applyUpdate}>
+      <Button variant="primary" onClick={applyUpdate}>
         Actualizar
-      </button>
+      </Button>
     </div>
   );
 }

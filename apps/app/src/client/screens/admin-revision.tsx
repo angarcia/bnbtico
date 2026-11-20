@@ -11,6 +11,7 @@ import { adminListingQuery, useReview } from "../admin";
 import { FlowHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, factsLine } from "./admin-review-details";
 import { NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
+import { Button } from "../../shared/button";
 
 // ---------- 22 · Revisar anuncio ----------
 const revisarRoute = getRouteApi("/_flow/_adminFlow/admin/anuncios/$id");
@@ -155,13 +156,13 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
       {noPhotos ? <p className="note note-arena small">Sin fotos: solo puede pedir cambios.</p> : null}
       <div className="sticky-spacer review-spacer" aria-hidden="true" />
       <div className="sticky-actions review-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={noPhotos || review.isPending}>
-          <I.check size={18} /> Aprobar y publicar
-        </button>
+        <Button variant="primary" size="lg" block type="submit" icon={<I.check size={18} />} disabled={noPhotos || review.isPending}>
+          Aprobar y publicar
+        </Button>
         {/* Sin «Rechazar» (historia 27): un anuncio que no debe publicarse se elimina desde Admin → Casas. */}
-        <button className="btn btn-ghost btn-block" type="button" disabled={review.isPending} onClick={() => void decide("changes")}>
+        <Button variant="secondary" size="lg" block disabled={review.isPending} onClick={() => void decide("changes")}>
           Pedir cambios
-        </button>
+        </Button>
       </div>
     </form>
   );

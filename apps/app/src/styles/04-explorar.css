@@ -1,7 +1,6 @@
 
 /* ---------- Explorar y Filtros (pantallas 01 y 02, en el navegador) ---------- */
 .gap-0{gap:0}
-.btn-header{min-height:44px;font-size:16px}
 /* Cabecera de Explorar (tarjetas flotantes, tanda 1, decisión 4): flota sobre el mapa a 12 px de los bordes; la píldora a todo
    el ancho y, debajo, los filtros a la izquierda y «₡ | $» a la derecha, cada uno su tarjeta. Entre ellas el toque pasa al mapa.
    Por debajo del mapa a pantalla completa (z-index 5). */
@@ -74,7 +73,6 @@ html.map-open{overflow:hidden}
 .map-card .heart-card{right:auto;left:64px;top:4px}
 .map-card .card-wa{right:8px;bottom:10px;border-radius:var(--r-cta)}
 /* Búsqueda a pantalla completa (/explorar/buscar): sección abierta sin fondo blanco y filas crema como el selector de casa. */
-.btn-text{min-height:44px;white-space:nowrap;padding:0 8px;color:var(--muted);font-weight:var(--w-medium);text-decoration:underline;text-underline-offset:3px}
 .badge-sel{background:var(--chosen);color:var(--primary-ink)}
 .search-screen{display:flex;flex-direction:column;gap:10px}
 .search-close{align-self:flex-start;background:transparent;color:var(--fg)}
@@ -136,7 +134,6 @@ html.map-open{overflow:hidden}
 .pill-bl{left:10px;bottom:10px}
 .sk-line{height:18px;width:70%}
 .filters-form{gap:22px}
-.filters-clear{border:1px solid var(--line);background:var(--bg);color:var(--primary-ink)}
 .kind-filter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
 .kind-filter .chip{position:relative;min-height:72px;padding:8px 4px;gap:4px;flex-direction:column;justify-content:center}
 .kind-filter .chip[aria-pressed="true"]::before{content:none}

@@ -31,6 +31,10 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ to, params, search, replace, activeOptions, children, ...props }: {
     to: string; params?: Record<string, string>; search?: unknown; replace?: boolean; activeOptions?: unknown; children?: ReactNode;
   }) => <a href={to.replace(/\$(\w+)/g, (_, key: string) => params?.[key] ?? key)} data-search={JSON.stringify(search)} data-replace={replace} {...props}>{children}</a>,
+  // Los botones de router (client/router-buttons.tsx): el mismo enlace falso, con el aspecto del botón común.
+  createLink: (Comp: (props: Record<string, unknown>) => ReactNode) =>
+    ({ to, params, search, replace, ...props }: { to: string; params?: Record<string, string>; search?: unknown; replace?: boolean }) =>
+      <Comp href={to.replace(/\$(\w+)/g, (_, key: string) => params?.[key] ?? key)} data-search={JSON.stringify(search)} data-replace={replace} {...props} />,
 }));
 vi.mock("../../src/client/chrome", () => ({
   RootHeader: ({ title, home, action }: { title: string; home: string; action?: ReactNode }) => <header data-home={home}>{title}{action}</header>,
@@ -159,7 +163,7 @@ describe("Admin: composición pública antes de separar pantallas", () => {
     data.listing = { ...data.listing, photos: [] };
     const empty = renderToString(<screens.RevisarScreen />);
     expect(empty).toContain("Sin fotos: solo puede pedir cambios.");
-    expect(empty).toContain('type="submit" disabled=""');
+    expect(empty).toMatch(/<button type="submit"[^>]* disabled="">/);
   });
 
   it.each([

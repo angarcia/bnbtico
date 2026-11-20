@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { toDomainError } from "../../domain/errors";
 import type { Listing } from "../../domain/listing";
 import { accountQuery } from "../account";
 import { useSession } from "../session";
+import { ButtonLink, WaIcon } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 export const message = (e: unknown) => toDomainError(e).message;
 export const titleOf = (l: Listing) => l.title || "Sin nombre";
@@ -26,9 +27,9 @@ export function NotAdmin() {
     <section className="card stack">
       <h3>Esta sección es solo para el equipo de 3bstays</h3>
       <p className="small muted">Si busca una casa, vuelva a Explorar.</p>
-      <Link to="/explorar" replace className="btn btn-ghost btn-lg">
+      <RouterButtonLink to="/explorar" replace variant="secondary" size="lg">
         Ir a Explorar
-      </Link>
+      </RouterButtonLink>
     </section>
   );
 }
@@ -36,8 +37,9 @@ export function NotAdmin() {
 /** «Avisar a <nombre> por WhatsApp»: abre wa.me con el aviso escrito; 3bstays no manda nada solo. */
 export function NoticeLink({ href, name }: { href: string; name: string }) {
   return (
-    <a className="btn btn-wa btn-block" href={href} target="_blank" rel="noopener" data-testid="notice-link">
+    // Lo manda 3bstays, no es hablar con el anfitrión desde la ficha: secundario con el icono de WhatsApp (D4).
+    <ButtonLink variant="secondary" size="xl" block icon={<WaIcon />} href={href} target="_blank" rel="noopener" data-testid="notice-link">
       Avisar a {name || "el anfitrión"} por WhatsApp
-    </a>
+    </ButtonLink>
   );
 }

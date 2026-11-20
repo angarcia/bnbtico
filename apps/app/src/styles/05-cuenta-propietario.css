@@ -27,7 +27,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .account-skeleton .sk-line{width:60%}
 .account-foot{align-items:center;gap:0;padding-top:8px}
 .logout-link{font-size:14px;text-align:center}
-.logout-cancel{align-self:center}
 .is-hidden{visibility:hidden}
 .account-card .grow-col{min-width:0}
 .note svg{flex-shrink:0}
@@ -36,7 +35,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 
 /* ---------- Zona del propietario (pantallas 09, 10, 16 y 19, en el navegador) ---------- */
 .gap-10{gap:10px}.grow{flex:1}.block{display:block}.align-top{align-items:flex-start}
-.btn-header svg{margin-left:-4px}
 /* Actividad: cifras de 30 días (tres columnas; en grande con una sola casa) y las últimas consultas */
 .activity-figures{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .activity-figures p{margin:0;display:flex;flex-direction:column;gap:2px;font-size:14px;color:var(--muted);line-height:1.25}
@@ -67,7 +65,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 /* Tarjeta de una casa (diseño v2, 07-mis-casas): foto cuadrada con la etiqueta de estado encima, nombre y zona. En Mis casas
    toda la tarjeta abre el detalle (el título es un enlace estirado); sus botones quedan por encima y se pueden tocar. */
 .house-card{position:relative;display:flex;flex-direction:column;gap:10px;padding:12px}
-.house-card .btn{position:relative;z-index:1}
+.house-card :is(.btn,.btn-link,.btn-text,.btn-text-danger){position:relative;z-index:1}
 .house-photo{aspect-ratio:1/1;border-radius:8px;width:100%}
 /* Hueco de la foto sin fotos (borradores): borde discontinuo como «Añadir fotos» del asistente, cámara y texto (2026-11-04). */
 .photo-empty{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface-soft);color:var(--primary);font-size:16px;font-weight:var(--w-medium);text-decoration:none}
@@ -102,7 +100,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .state-pay{background:var(--sun-soft);color:var(--sun-ink)}
 .state-off{background:var(--surface-2);color:var(--muted)}
 .state-bad{background:var(--busy);color:var(--busy-ink)}
-.btn-round{width:44px;padding:0;border-radius:var(--r-input)}
 /* Promoción y suscripción (fase 5): una casa por bloque; la del enlace #pago=CT-#### resaltada. */
 .card-title{font-size:20px;font-weight:var(--w-strong)}
 .sub-house{padding-top:12px;border-top:1px solid var(--line-soft);outline:none}
@@ -181,7 +178,8 @@ button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inhe
 /* Perfil: un único acceso junto a los datos, con objetivo táctil suficiente. */
 .account-card>.account-edit{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;flex-shrink:0}
 
-/* «Eliminar casa» (historia 28): texto terracota centrado al final del detalle; la hoja pone sus líneas una debajo de otra. */
-.btn-link.delete-house{color:var(--bad);font-weight:var(--w-strong);align-self:center;justify-content:center;width:100%}
+/* «Eliminar casa» (historia 28): texto terracota (TextButton tone="danger") centrado al final del detalle; la hoja pone sus
+   líneas una debajo de otra. */
+.delete-house{align-self:center;justify-content:center;width:100%}
 .sheet-line{display:block}
 .sheet-line + .sheet-line{margin-top:10px}

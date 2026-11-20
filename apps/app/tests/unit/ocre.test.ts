@@ -1,13 +1,15 @@
 // El ocre (`--sun`) es solo para dinero y avisos de pago (acuerdo final de botones, 2026-11-04). Esta prueba recorre
-// `src/client` y `src/shared` y falla si una clase `*-sun` aparece fuera de la lista de permitidos.
+// `src/client` y `src/shared` y falla si una clase `*-sun` o un botón `variant="pay"` (historia 07) aparece fuera de la lista
+// de permitidos.
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SRC = new URL("../../src/", import.meta.url).pathname;
-const OCRE = /\b(btn|card|note|tile|badge|list-item)-sun\b/g;
+const OCRE = /\b(?:btn|card|note|tile|badge|list-item)-sun\b|variant=(?:"pay"|\{[^}]*"pay")/g;
 // archivo (relativo a src/) + "#" + la `function Nombre` más cercana declarada antes de la coincidencia; "#*" = todo el archivo.
 const ALLOW = new Set([
+  "shared/button.tsx#*", // la variante «pay» del botón común
   "client/owner-ui.tsx#PayButton",
   "client/owner-ui.tsx#PayNotice",
   "client/screens/casa-editable.tsx#PaymentDueNote",
@@ -51,5 +53,10 @@ describe("ocre solo para dinero y avisos de pago", () => {
     const fixture = 'function Fila() {\n  return <Link className="list-item list-item-sun" />;\n}';
     expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Fila"]);
     expect(offending(scan(fixture, "client/screens/suscripcion.tsx"))).toEqual([]);
+  });
+
+  it("también el botón común en ocre (variant=\"pay\") fuera de la lista de permitidos", () => {
+    const fixture = 'function Pie() {\n  return <Button variant="pay">Pagar</Button>;\n}\nfunction Otro() {\n  return <Button variant={x ? "secondary" : "pay"} />;\n}';
+    expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Pie", "client/screens/cuenta.tsx#Otro"]);
   });
 });

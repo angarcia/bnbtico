@@ -11,6 +11,7 @@ import { CurrencySwitch } from "./currency-switch";
 import { useHydrated } from "./hydration";
 import { I } from "./icons";
 import { ownListingsHint } from "./own-listings";
+import { ButtonLink } from "./button";
 
 type Navigate = (href: string) => void;
 
@@ -50,9 +51,9 @@ function Bar({ navigate, next }: { navigate?: Navigate; next?: string }) {
       })}
       <CurrencySwitch className="desktop-currency" />
       {session ? null : (
-        <a href={signIn} className="btn btn-ghost desktop-sign-in" onClick={go(signIn)}>
-          <I.user size={22} /> Ingresar
-        </a>
+        <ButtonLink href={signIn} variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} onClick={go(signIn)}>
+          Ingresar
+        </ButtonLink>
       )}
       {inquiries ? (
         <a href="/propietario/actividad" className="nav desktop-inquiries" aria-label="Consultas" title="Consultas" onClick={go("/propietario/actividad")}>

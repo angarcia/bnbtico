@@ -58,7 +58,6 @@
 .listing-calendar .cal-month{margin:-6px 0 0 -10px}
 /* La caja corta lo que sale: en la ficha, la rejilla va dentro del margen de la página. */
 .listing-calendar .month-grid,.listing-calendar .month-head{margin-inline:0}
-.header-root > div:has(> .btn-round){align-items:center}
 .header-root > div:has(> .house-picker){align-items:center;flex-wrap:nowrap;gap:10px}
 .header-root:has(.house-picker) h1{font-size:28px}
 .house-picker{position:relative;min-width:0}
@@ -77,8 +76,7 @@
 .picker-option-name{min-width:0;overflow-wrap:anywhere}
 .picker-check{display:flex;flex:0 0 20px;width:20px}
 .cal-month{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 0 -10px}
-.cal-arrow{width:40px;height:40px;color:var(--muted)}
-.cal-arrow:disabled{opacity:.3;cursor:default}
+.cal-arrow{color:var(--muted)}
 .cal-title{font-weight:400;font-size:19px;white-space:nowrap}
 /* Propietario: los meses uno debajo de otro. La fila L K M J V S D queda fija arriba (sin barra superior) y el título de
    cada mes, debajo de ella. */
@@ -114,16 +112,13 @@
 .cal-airbnb > .hint{margin:0;padding:10px 14px;border-top:0}
 /* Pausada: «Pausada hasta el …» con su línea y, debajo, «Volver a publicarla» a lo ancho. */
 .cal-action.is-paused{flex-wrap:wrap;row-gap:10px;padding-bottom:14px}
-.cal-action.is-paused .btn{flex-basis:100%;min-height:44px}
+.cal-action.is-paused .btn{flex-basis:100%}
 .cal-skeleton{height:320px}
 .view:has(.cal-panel){padding-bottom:calc(240px + env(safe-area-inset-bottom))}
 /* Con días seleccionados, el panel va pegado abajo y la barra de pestañas se va (revisión UX C4). */
 .cal-panel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;z-index:9;display:flex;flex-direction:column;gap:10px;padding:14px var(--gutter) calc(14px + env(safe-area-inset-bottom));background:var(--surface);border-top:2px solid var(--line-nav);box-shadow:0 -10px 24px -18px rgba(28,43,42,.4);animation:fade-in 140ms var(--ease-out)}
 /* `.kb`: sitio extra mientras el precio tiene el foco (el teclado del iPhone no encoge la vista): el campo sube por encima. */
 .cal-panel.kb{padding-bottom:calc(14px + 320px)}
-/* «Guardar cambios» más bajo (44 px) y en gris mientras no hay cambios. */
-.cal-panel .cal-save{min-height:44px;font-size:16px}
-.cal-panel .cal-save:disabled{background:color-mix(in srgb,var(--fg) 8%,var(--surface));color:var(--muted);opacity:1}
 /* La barra de pestañas: fuera mientras hay días seleccionados (sale al bajar y vuelve al subir con el escondido común). */
 .app:has(.cal-panel) .tabbar{transform:var(--away);opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.map-label{transition:none}.app:has(.cal-panel) .tabbar{transform:none}}
@@ -132,7 +127,6 @@
 html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
 html.chrome-away{--chrome-bottom:var(--float-bottom)}
 html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
-.cal-cancel{font-size:15px;font-weight:var(--w-medium);color:var(--muted);min-height:32px}
 .seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
 .seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
 .seg button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
@@ -140,8 +134,7 @@ html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(s
 /* 16 px y no los 14 del diseño: con menos, el iPhone amplía la página al enfocar el campo. */
 .cal-price input:not([type=checkbox]):not([type=file]):not([type=radio]){width:104px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:18px;font-weight:var(--w-strong);font-variant-numeric:tabular-nums;color:var(--fg)}
 .cal-price input::placeholder{font-size:16px;font-weight:var(--w-medium);color:var(--muted)}
-.cal-base{min-height:32px;padding:0;font-size:15px;align-self:flex-start}
-.cal-panel .btn-lg{min-height:48px;font-size:17px}
+.cal-base{padding:0;align-self:flex-start}
 
 @media (prefers-reduced-motion:reduce){
   .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition-property:background-color,color,opacity}

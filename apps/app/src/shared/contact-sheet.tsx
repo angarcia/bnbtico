@@ -45,6 +45,7 @@ import { usePrivateSheet } from "../client/private-sheet";
 import { NightsPicker } from "./nights-picker";
 import { RangeCalendar } from "./range-calendar";
 import { stayDates } from "./stay-dates";
+import { Button, IconButton, TextButton } from "./button";
 
 const FOCUSABLE = 'button:not(:disabled), input:not(:disabled)';
 /** Campos que sacan el teclado (las fechas abren el calendario de la hoja). */
@@ -245,9 +246,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
               {listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
             </span>
           </div>
-          {!inline && <button type="button" className="icon-btn" aria-label="Cerrar" onClick={close}>
+          {!inline && <IconButton label="Cerrar" onClick={close}>
             <I.x size={22} />
-          </button>}
+          </IconButton>}
         </div>
         <form onSubmit={onSubmit} noValidate>
           {nightsChoice ? (
@@ -289,19 +290,15 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
               ) : null}
               <div className="row between">
                 {draft.arrival ? (
-                  <button
-                    type="button"
-                    className="btn-text"
-                    onClick={() => changeDates({ arrival: null, departure: null })}
-                  >
+                  <TextButton tone="quiet" onClick={() => changeDates({ arrival: null, departure: null })}>
                     Quitar fechas
-                  </button>
+                  </TextButton>
                 ) : (
                   <span />
                 )}
-                <button type="button" className="btn-text" onClick={() => setPicking(false)}>
+                <TextButton tone="quiet" onClick={() => setPicking(false)}>
                   Listo
-                </button>
+                </TextButton>
               </div>
             </div>
           ) : null}
@@ -356,16 +353,20 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
               {error.message}
             </p>
           ) : null}
-          <button
-            className={`btn btn-wa${status.kind === "sending" ? " is-sending" : ""}`}
+          {/* «Abriendo WhatsApp…»: `aria-disabled` y no `disabled` (el foco se queda en el botón mientras se registra la consulta). */}
+          <Button
+            variant="whatsapp"
+            size="xl"
+            block
             type="submit"
+            icon={<I.wa size={20} />}
             disabled={blocked}
             aria-disabled={status.kind === "sending" || undefined}
             aria-busy={status.kind === "sending" || undefined}
           >
             {/* Sin sesión el botón todavía no abre WhatsApp: lleva a verificar el número (revisión UX C2). */}
-            <I.wa size={20} /> {status.kind === "sending" ? "Abriendo WhatsApp…" : inline ? `Escribir a ${name} por WhatsApp` : signedOut ? "Continuar" : "Abrir WhatsApp"}
-          </button>
+            {status.kind === "sending" ? "Abriendo WhatsApp…" : inline ? `Escribir a ${name} por WhatsApp` : signedOut ? "Continuar" : "Abrir WhatsApp"}
+          </Button>
           {/* En escritorio, el botón dice a quién y por dónde, y dos avisos en lugar de tres: sin sesión, el del código; con ella,
               qué verá el anfitrión (revisión 2026-11-13, A3). */}
           {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}

@@ -26,6 +26,8 @@ import { fxQuery } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
+import { Button, IconButton } from "../../shared/button";
+import { RouterIconLink } from "../router-buttons";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
@@ -100,27 +102,25 @@ function FiltrosForm({
     <>
       <header className="header-flow">
         {onClose ? (
-          <button type="button" className="icon-btn" aria-label="Cerrar filtros" onClick={onClose}><I.x /></button>
-        ) : <Link
+          <IconButton label="Cerrar filtros" onClick={onClose}><I.x /></IconButton>
+        ) : <RouterIconLink
           to="/explorar"
           search={initial}
-          aria-label="Volver"
-          className="icon-btn"
+          label="Volver"
         >
           <I.back />
-        </Link>}
+        </RouterIconLink>}
         <h1>Filtros</h1>
         <div className="right">
-          <button
-            type="button"
-            className="btn btn-sm filters-clear"
+          <Button
+            variant="secondary"
             onClick={() => {
               setDraft(onClose ? { zona: initial.zona } : {});
               setPrices({ min: "", max: "" });
             }}
           >
             Limpiar
-          </button>
+          </Button>
         </div>
       </header>
       <form
@@ -265,15 +265,18 @@ function FiltrosForm({
         </section>
         {!onClose && <div className="sticky-spacer" aria-hidden="true" />}
         <div className={onClose ? "desktop-filters-actions" : "sticky-actions"}>
-          <button
-            className="btn btn-primary grow"
+          <Button
+            variant="primary"
+            size={onClose ? "md" : "lg"}
+            block={!!onClose}
+            placement={onClose ? undefined : "grow"}
             type="submit"
             disabled={badRange}
           >
             {count === undefined
               ? "Ver casas"
               : `Ver ${hasNextPage ? "más de " : ""}${housesCount(count)}`}
-          </button>
+          </Button>
         </div>
       </form>
     </>

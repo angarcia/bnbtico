@@ -11,6 +11,7 @@ import { Picture } from "../shared/picture";
 import { PublishPromoRow } from "./publish-promo";
 import { authApi } from "./session";
 import { useTurnstile } from "./turnstile";
+import { Button, TextButton } from "../shared/button";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -243,15 +244,15 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
         )}
         <div ref={captcha.container} className="captcha" />
         {error ? <p className="field-error" role="alert">{error}</p> : null}
-        <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
-          <I.wa size={20} /> {busy ? "Un momento…" : "Recibir código por WhatsApp"}
-        </button>
+        <Button variant="primary" size="xl" block type="submit" icon={<I.wa size={20} />} disabled={busy}>
+          {busy ? "Un momento…" : "Recibir código por WhatsApp"}
+        </Button>
       </form>
       <div className="stack small">
         {newPhone && !nameStep ? (
-          <button type="button" className="btn-link" onClick={changeNumber}>
+          <TextButton tone="link" onClick={changeNumber}>
             Cambiar número
-          </button>
+          </TextButton>
         ) : null}
         {contact ? null : (
           <Link to="/cuenta/recuperar" className="link muted">

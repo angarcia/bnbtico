@@ -17,6 +17,7 @@ import { useFavorites } from "../../shared/favorites-store";
 import { ConfirmSheet } from "../confirm-sheet";
 import { useListingsCount } from "../own-listings-query";
 import { authApi, useSession } from "../session";
+import { Button, TextButton } from "../../shared/button";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -164,9 +165,9 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
         <span className="xs muted">
           Límites administrativos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL).
         </span>
-        <button type="button" className="btn-link muted logout-link" onClick={() => setAsking(true)} disabled={leaving}>
+        <TextButton tone="quiet" placement="logout-link" onClick={() => setAsking(true)} disabled={leaving}>
           Cerrar sesión
-        </button>
+        </TextButton>
         {logoutError ? (
           <p className="note small" role="alert">
             {logoutError}
@@ -178,8 +179,6 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           title="¿Cerrar sesión?"
           body="Tendrá que recibir un código nuevo para volver a entrar."
           confirmLabel="Cerrar sesión"
-          confirmClassName="btn btn-ghost btn-lg"
-          cancelClassName="btn-link muted logout-cancel"
           onClose={() => setAsking(false)}
           onConfirm={() => {
             setAsking(false);
@@ -237,9 +236,9 @@ function DesktopProfile({ account }: { account: Account }) {
     <section className="card stack">
       <div className="row between">
         <h3>Mi perfil</h3>
-        <button type="button" className="btn-link account-profile-toggle" aria-expanded={editing} onClick={() => setEditing(!editing)}>
+        <TextButton tone="link" placement="account-profile-toggle" aria-expanded={editing} onClick={() => setEditing(!editing)}>
           {editing ? "Listo" : "Editar"}
-        </button>
+        </TextButton>
       </div>
       {editing ? <ProfileForm account={account} /> : (
         <dl className="stack gap-14 account-profile-values">
@@ -311,9 +310,9 @@ function ProfileForm({ account }: { account: Account }) {
           <I.check size={18} /> Cambios guardados.
         </p>
       ) : null}
-      <button className="btn btn-primary btn-lg" type="submit" disabled={!dirty || state.busy}>
+      <Button variant="primary" size="lg" type="submit" disabled={!dirty} pending={state.busy}>
         {state.busy ? "Guardando…" : state.ok ? "Guardado" : "Guardar cambios"}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -13,6 +13,8 @@ import { useHidingChrome } from "./hiding-chrome";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
+import { Button } from "../shared/button";
+import { RouterIconLink } from "./router-buttons";
 
 const WhatsAppDialog = lazy(() => import("./whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const InquiriesDialog = lazy(() => import("./screens/actividad").then((m) => ({ default: m.InquiriesDialog })));
@@ -119,9 +121,9 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
           <>
             {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch className="desktop-currency" />}
             {desktopSignIn ? (
-              <button type="button" className="btn btn-ghost desktop-sign-in" aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
-                <I.user size={22} /> Ingresar
-              </button>
+              <Button variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
+                Ingresar
+              </Button>
             ) : null}
             {desktopInquiries && (
               <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title="Consultas"
@@ -263,9 +265,9 @@ export function FlowHeader({
     : undefined;
   return (
     <header className="header-flow">
-      <Link to={back} search={search} aria-label="Volver" className="icon-btn" onClick={click}>
+      <RouterIconLink to={back} search={search} label="Volver" onClick={click}>
         <I.back />
-      </Link>
+      </RouterIconLink>
       <h1>{title}</h1>
       {action}
     </header>

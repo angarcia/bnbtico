@@ -12,6 +12,7 @@ import { RANGE_BUSY_MESSAGE, type RangeState } from "../domain/range";
 import { toDomainError } from "../domain/errors";
 import { RangeCalendar } from "../shared/range-calendar";
 import { usePrivateSheet } from "./private-sheet";
+import { Button } from "../shared/button";
 
 const FOCUSABLE = "button:not([disabled])";
 const EMPTY_DAYS: readonly CalendarDay[] = [];
@@ -62,8 +63,8 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
         <form onSubmit={onSubmit} noValidate>
           {status === "loading" ? <p className="hint" role="status">Comprobando disponibilidad…</p> : null}
           {message ? <p className="note" role="alert">{message}</p> : null}
-          {status === "warning" ? <button type="button" className="btn btn-secondary" onClick={() => { setStatus("ready"); setProblem(null); }}>Continuar con el último calendario</button> : null}
-          {status === "warning" || status === "error" ? <button type="button" className="btn btn-ghost" onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</button> : null}
+          {status === "warning" ? <Button variant="secondary" onClick={() => { setStatus("ready"); setProblem(null); }}>Continuar con el último calendario</Button> : null}
+          {status === "warning" || status === "error" ? <Button variant="secondary" onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</Button> : null}
           {ready ? <div className="contact-calendar mark-calendar">
             <div className="range-scroll">
               <RangeCalendar today={today} value={range} busy={busy} onChange={value => { setRange(value); setProblem(null); }} onReject={() => setProblem(RANGE_BUSY_MESSAGE)} />
@@ -72,12 +73,12 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
           <p className={`stay-line${days.length > 0 ? "" : " is-pending"}`} data-testid="mark-summary" aria-live="polite">
             {days.length > 0 ? selectionLabel(days) : range.arrival ? "Ahora elija la salida" : "Elija la llegada"}
           </p>
-          <button type="submit" className="btn btn-primary btn-lg" disabled={!ready || days.length === 0 || occupied}>
+          <Button variant="primary" size="lg" type="submit" disabled={!ready || days.length === 0 || occupied}>
             Marcar como ocupado
-          </button>
-          <button type="button" className="btn btn-ghost btn-lg popup-cancel" onClick={onClose}>
+          </Button>
+          <Button variant="secondary" size="lg" onClick={onClose}>
             Cancelar
-          </button>
+          </Button>
         </form>
       </section>
     </>,

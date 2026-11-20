@@ -95,7 +95,7 @@ describe("worker · ficha /casa/CT-####", () => {
 
   it("el botón de contacto llega como caja apagada sin interacción (se activa al hidratar) y nada de la hoja", async () => {
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
-    expect(html).toMatch(/<span class="btn btn-wa is-pending" aria-hidden="true">[\s\S]*?Contactar por WhatsApp<\/span>/);
+    expect(html).toMatch(/<span aria-hidden="true" class="btn btn-wa btn-xl btn-block">[\s\S]*?Contactar por WhatsApp<\/span>/);
     expect(html).not.toMatch(/<button[^>]*>(?:(?!<\/button>)[\s\S])*Contactar por WhatsApp/);
     expect(html).not.toContain("Escríbale a");
     expect(html).not.toContain("disponible pronto");
@@ -104,7 +104,7 @@ describe("worker · ficha /casa/CT-####", () => {
   it("una casa que no recibe consultas llega con el botón deshabilitado «No disponible por ahora»", async () => {
     await t.h.owner("owner").setAvailable(casa.id, false);
     const html = await (await t.request(`/casa/${casa.publicId}`)).text();
-    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">[\s\S]*?No disponible por ahora<\/button>/);
+    expect(html).toMatch(/<button type="button" class="btn btn-wa btn-xl btn-block" disabled="">[\s\S]*?No disponible por ahora<\/button>/);
     expect(html).not.toContain("Contactar por WhatsApp");
   });
 
@@ -396,7 +396,7 @@ describe("worker · enlaces que no se muestran", () => {
     const html = await res.text();
     expect(html).toContain("Este enlace no existe");
     expect(html).toContain('<meta name="robots" content="noindex" />');
-    expect(html).toMatch(/<a href="\/explorar" class="btn btn-soft">Ver otras casas en el Caribe<\/a>/);
+    expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
     expect(ssrData(html)).toEqual({ page: "missing" });
   });
 
@@ -423,7 +423,7 @@ describe("worker · enlaces que no se muestran", () => {
       expect(html).toContain("Este enlace ya no está activo");
       expect(ssrData(html)).toEqual({ page: "blocked", reason: "other" });
       expect(html).toContain("Este anuncio no está disponible en este momento.");
-      expect(html).toMatch(/<a href="\/explorar" class="btn btn-soft">Ver otras casas en el Caribe<\/a>/);
+      expect(html).toMatch(/<a href="\/explorar" class="btn btn-primary">Ver otras casas en el Caribe<\/a>/);
     }
   });
 
@@ -483,7 +483,7 @@ describe("worker · enlaces que no se muestran", () => {
     expect(html).toContain("No pudimos cargar esta casa");
     // Revisión UX N4: reintentar (enlace a la misma página) y, en contorno, ir a Explorar.
     expect(html).toMatch(/<a href="" class="btn btn-primary">Intentar de nuevo<\/a>/);
-    expect(html).toMatch(/<a href="\/explorar" class="btn btn-ghost">Ir a Explorar<\/a>/);
+    expect(html).toMatch(/<a href="\/explorar" class="btn btn-secondary">Ir a Explorar<\/a>/);
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(t.cache.store.size).toBe(0);
   });

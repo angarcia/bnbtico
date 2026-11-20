@@ -7,6 +7,7 @@ import { formatCRC } from "../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../domain/offer";
 import { I } from "../shared/icons";
 import { offerTakenQuery } from "./offer-query";
+import { RouterButtonLink } from "./router-buttons";
 
 export function useOffer() {
   const taken = useQuery(offerTakenQuery);
@@ -16,7 +17,7 @@ export function useOffer() {
 const FEE = formatCRC(MONTHLY_FEE_CRC);
 
 export function PublishPromoButton({ label }: { label: string }) {
-  return <Link to="/publicar" className="btn btn-sun btn-block">{label}</Link>;
+  return <RouterButtonLink to="/publicar" variant="pay" block>{label}</RouterButtonLink>;
 }
 
 /** Al final de Explorar: estilo de la oferta (marrón dorado) y el botón en ocre. */

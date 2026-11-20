@@ -13,6 +13,7 @@ import { ConfirmSheet } from "./confirm-sheet";
 import { refresh, removeOwnCached } from "./listing-cache";
 import { ownListingsKey } from "./listing-keys";
 import { api, ownListingsQuery } from "./owner";
+import { TextButton } from "../shared/button";
 
 // Aquí y no en owner.ts: así solo lo descarga quien abre el detalle de una casa (presupuesto de las pestañas).
 /** «Eliminar casa» (historia 28). Sin escritura optimista: no tiene vuelta, la tarjeta sale cuando la base lo confirma. Una
@@ -73,9 +74,9 @@ export function DeleteHouse({ listing: l, userId }: { listing: Listing; userId: 
     });
   return (
     <>
-      <button type="button" className="btn-link delete-house" onClick={() => setOpen(true)}>
+      <TextButton tone="danger" placement="delete-house" onClick={() => setOpen(true)}>
         {DELETE_HOUSE_COPY.action}
-      </button>
+      </TextButton>
       {open ? (
         <ConfirmSheet
           title={DELETE_HOUSE_COPY.title(name)}
@@ -87,8 +88,7 @@ export function DeleteHouse({ listing: l, userId }: { listing: Listing; userId: 
             </>
           }
           confirmLabel={del.isPending ? DELETE_HOUSE_COPY.pending : DELETE_HOUSE_COPY.action}
-          confirmClassName="btn btn-outline-bad btn-lg"
-          cancelClassName="btn btn-ghost btn-lg"
+          tone="destructive"
           pending={del.isPending}
           error={del.isError ? toDomainError(del.error).message : null}
           onClose={close}

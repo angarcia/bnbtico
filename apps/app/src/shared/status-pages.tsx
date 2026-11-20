@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { blockedReason, type BlockedReason } from "../domain/blocked";
 import { I } from "./icons";
 import { SiteTopBar } from "./site-top-bar";
+import { ButtonLink, IconButtonLink } from "./button";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
  *  quien llega por un enlace compartido ve otras casas o puede reintentar (revisión UX N4). */
@@ -12,9 +13,9 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
       <main className="view no-nav">
         <header className="header-root status-header">
           {/* En escritorio, la flecha de volver en vez del logo, que ya va en la barra (revisión 2026-11-13). */}
-          <a href="/explorar" className="icon-btn status-back" aria-label="Volver a Explorar">
+          <IconButtonLink href="/explorar" label="Volver a Explorar" placement="status-back">
             <I.back />
-          </a>
+          </IconButtonLink>
           <div className="top">
             <a href="/explorar" aria-label="3bstays, inicio">
               <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
@@ -33,7 +34,7 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
 
 export function MissingPage() {
   return (
-    <StatusPage title="Este enlace no existe" actions={<a href="/explorar" className="btn btn-soft">Ver otras casas en el Caribe</a>}>
+    <StatusPage title="Este enlace no existe" actions={<ButtonLink href="/explorar" variant="primary">Ver otras casas en el Caribe</ButtonLink>}>
       <p>Revise que el enlace esté completo. Si se lo pasaron por WhatsApp, pida que se lo envíen de nuevo.</p>
     </StatusPage>
   );
@@ -43,7 +44,7 @@ export function MissingPage() {
  *  el texto genérico. */
 export function BlockedPage({ reason }: { reason?: BlockedReason }) {
   return (
-    <StatusPage title="Este enlace ya no está activo" actions={<a href="/explorar" className="btn btn-soft">Ver otras casas en el Caribe</a>}>
+    <StatusPage title="Este enlace ya no está activo" actions={<ButtonLink href="/explorar" variant="primary">Ver otras casas en el Caribe</ButtonLink>}>
       <p>{blockedReason(reason ?? null)}</p>
       <p className="small muted">Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.</p>
     </StatusPage>
@@ -57,8 +58,8 @@ export function ErrorPage() {
       actions={
         <>
           {/* Enlace a la misma página: recarga sin JS. */}
-          <a href="" className="btn btn-primary">Intentar de nuevo</a>
-          <a href="/explorar" className="btn btn-ghost">Ir a Explorar</a>
+          <ButtonLink href="" variant="primary">Intentar de nuevo</ButtonLink>
+          <ButtonLink href="/explorar" variant="secondary">Ir a Explorar</ButtonLink>
         </>
       }
     >

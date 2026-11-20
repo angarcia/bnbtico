@@ -1,7 +1,7 @@
 // Shell de la zona en el navegador: router (rutas por código) y caché de Query persistida en IndexedDB.
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { Link, Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
+import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
 import { costaRicaToday } from "../domain/dates";
 import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, type SearchParams } from "../domain/filters";
 import { track } from "../shared/beacon";
@@ -23,6 +23,7 @@ import { ExplorarScreen } from "./screens/explorar";
 import { currentSession, onSignedOut, useSession } from "./session";
 import { UpdateBanner } from "./update-banner";
 import { FLAGS, SEARCH_MODE } from "../shared/flags";
+import { RouterButtonLink, RouterTextLink } from "./router-buttons";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
@@ -74,9 +75,9 @@ const rootRoute = createRootRoute({
         back="/explorar"
         text="Revise el enlace o vuelva a Explorar."
         action={
-          <Link to="/explorar" replace className="btn btn-soft">
+          <RouterButtonLink to="/explorar" replace variant="primary">
             Ir a Explorar
-          </Link>
+          </RouterButtonLink>
         }
       />
     </TabsFrame>
@@ -157,10 +158,10 @@ const publicarPending = {
   pendingComponent: () => (
     <>
       <header className="header-flow">
-        <Link to="/propietario/casas" className="btn-link header-close" aria-label="Cerrar y seguir después">
+        <RouterTextLink to="/propietario/casas" tone="link" placement="header-close" aria-label="Cerrar y seguir después">
           <I.x size={20} />
           <span>Cerrar</span>
-        </Link>
+        </RouterTextLink>
         <h1>Publicar casa</h1>
       </header>
       <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando sus casas">
@@ -178,10 +179,10 @@ const publicarLocalPending = {
   pendingComponent: () => (
     <>
       <header className="header-flow">
-        <Link to="/explorar" className="btn-link header-close" aria-label="Cerrar y seguir después">
+        <RouterTextLink to="/explorar" tone="link" placement="header-close" aria-label="Cerrar y seguir después">
           <I.x size={20} />
           <span>Cerrar</span>
-        </Link>
+        </RouterTextLink>
         <h1>Publicar casa</h1>
       </header>
       <section className="card skeleton owner-skeleton" aria-busy="true" aria-label="Cargando">

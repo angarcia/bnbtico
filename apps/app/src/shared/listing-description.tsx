@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { descriptionParagraphs, isLongDescription } from "../domain/description";
 import { I } from "./icons";
 import { useModal } from "./modal";
+import { Button, ButtonPlaceholder, IconButton } from "./button";
 
 const STATE_KEY = "3bstaysDescripcion";
 
@@ -35,13 +36,13 @@ export function ListingDescription({ text, hydrated }: { text: string; hydrated:
     <div className="stack description-block">
       <Paragraphs paragraphs={paragraphs} className={`listing-description${long ? " is-clamped" : ""}`} testId="listing-description" />
       {!long ? null : hydrated ? (
-        <button ref={button} type="button" className="btn btn-soft btn-more" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        <Button ref={button} variant="primary" block aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
           Ver más
-        </button>
+        </Button>
       ) : (
-        <span className="btn btn-soft btn-more is-pending" aria-hidden="true">
+        <ButtonPlaceholder variant="primary" block aria-hidden="true">
           Ver más
-        </span>
+        </ButtonPlaceholder>
       )}
       {open ? (
         <DescriptionScreen
@@ -86,9 +87,9 @@ function DescriptionScreen({ paragraphs, onClose }: { paragraphs: string[]; onCl
   return createPortal(
     <section ref={screen} className="description-screen" role="dialog" aria-modal="true" aria-labelledby="description-title" tabIndex={-1} onKeyDown={onKeyDown}>
       <div className="description-screen-head">
-        <button ref={closeBtn} type="button" className="icon-btn" aria-label="Cerrar" onClick={close}>
+        <IconButton ref={closeBtn} label="Cerrar" onClick={close}>
           <I.back />
-        </button>
+        </IconButton>
       </div>
       <h2 id="description-title">Descripción</h2>
       <Paragraphs paragraphs={paragraphs} className="listing-description" />

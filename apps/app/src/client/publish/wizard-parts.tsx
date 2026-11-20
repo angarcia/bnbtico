@@ -5,6 +5,7 @@ import { useId, useState, type ReactNode } from "react";
 import { FLAGS } from "../../shared/flags";
 import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
 import { I } from "../../shared/icons";
+import { IconButton } from "../../shared/button";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
 export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: ReactNode; actions?: ReactNode; missingSteps?: readonly Step[] }) {
@@ -75,9 +76,9 @@ export function ChoiceCards({
           <div key={o.value} className="compact-kind-option">
             <div className="row">
               {choice}
-              <button type="button" className="icon-btn" aria-label={`Qué significa ${o.label}`} aria-expanded={expanded} aria-controls={id} onClick={() => setOpenHint(expanded ? null : o.value)}>
+              <IconButton label={`Qué significa ${o.label}`} aria-expanded={expanded} aria-controls={id} onClick={() => setOpenHint(expanded ? null : o.value)}>
                 <I.help size={20} />
-              </button>
+              </IconButton>
             </div>
             <p id={id} className="small muted" hidden={!expanded}>{o.hint}</p>
           </div>

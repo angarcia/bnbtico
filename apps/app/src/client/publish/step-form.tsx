@@ -16,7 +16,7 @@
 // - React 19 vacía los campos no controlados de un <form action={fn}> al terminar la acción: aquí se envía desde onSubmit
 //   (sin `action`), y cada pantalla monta su propio <form> (key) para que los valores iniciales sean los de ese paso.
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { Link, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { track } from "../../shared/beacon";
@@ -36,6 +36,8 @@ import { enqueueSave, savesSettled } from "../save-queue";
 import { isLostDraft } from "./lost-drafts";
 import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
 import { StepReadyContext } from "./step-ready";
+import { Button, ButtonPlaceholder } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
 const WhatsAppDialog = lazy(() => import("../whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
@@ -295,15 +297,15 @@ export function StepForm({
       <div className={desktop ? "publish-top-actions" : "sticky-actions"}>
         {/* «Atrás» como botón cuadrado con la flecha y «Continuar ›»; en el último paso, la acción sin flecha (A9). */}
         {step === 1 && !volver ? (
-          <span className="btn btn-ghost btn-back is-disabled" aria-disabled="true" aria-label="Atrás">
+          <ButtonPlaceholder variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-disabled="true" aria-label="Atrás">
             <I.back size={22} />
-          </span>
+          </ButtonPlaceholder>
         ) : (
-          <Link to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (back ?? previousStep(step) ?? 1)) }} className="btn btn-ghost btn-back" aria-label="Atrás">
+          <RouterButtonLink to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (back ?? previousStep(step) ?? 1)) }} variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-label="Atrás">
             <I.back size={22} />
-          </Link>
+          </RouterButtonLink>
         )}
-        <button className="btn btn-primary grow" type="submit" form={desktop ? formId : undefined} disabled={sending || !ready}>
+        <Button variant="primary" size={desktop ? "md" : "lg"} placement="grow" type="submit" form={desktop ? formId : undefined} disabled={sending || !ready}>
           {step < LAST_STEP ? (
             <>
               Continuar <I.chevron size={20} />
@@ -313,7 +315,7 @@ export function StepForm({
           ) : (
             "Enviar a revisión"
           )}
-        </button>
+        </Button>
       </div>
   );
   return (

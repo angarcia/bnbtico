@@ -16,6 +16,7 @@ import { photosApi } from "../owner";
 import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type UploadQueue } from "./photo-queue";
 import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
 import { usePhotoDrag } from "./use-photo-drag";
+import { IconButton } from "../../shared/button";
 
 export interface PhotoSource {
   listingId: string;
@@ -167,9 +168,9 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
             >
               <img draggable={false} src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
               {i === 0 ? <span className="tag">Portada</span> : null}
-              <button type="button" className="remove" aria-label={`Quitar foto ${i + 1}`} disabled={busy || drag.dragging} onClick={() => remove(p, false)}>
+              <IconButton label={`Quitar foto ${i + 1}`} placement="remove" disabled={busy || drag.dragging} onClick={() => remove(p, false)}>
                 <I.x size={16} />
-              </button>
+              </IconButton>
               <button type="button" className="sr-move" data-move="before" aria-disabled={busy || uploads.length > 0 || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>
                 Mover foto {i + 1} antes
               </button>
@@ -185,9 +186,9 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
               <span className="tag tag-pending">{"status" in p && p.status === "changes" ? "Cambios pedidos" : "En revisión"}</span>
               {"reviewNote" in p && p.reviewNote ? <span className="photo-note xs">{String(p.reviewNote)}</span> : null}
               {source.canAdd ? (
-                <button type="button" className="remove" aria-label={`Quitar foto ${photos.length + j + 1}`} disabled={busy || drag.dragging} onClick={() => remove(p, true)}>
+                <IconButton label={`Quitar foto ${photos.length + j + 1}`} placement="remove" disabled={busy || drag.dragging} onClick={() => remove(p, true)}>
                   <I.x size={16} />
-                </button>
+                </IconButton>
               ) : null}
             </div>
           ))}

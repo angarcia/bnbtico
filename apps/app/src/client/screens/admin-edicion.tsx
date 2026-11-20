@@ -12,6 +12,7 @@ import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "..
 import { FlowHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, bathText, factsLine } from "./admin-review-details";
 import { NotAdmin, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
+import { Button } from "../../shared/button";
 
 // ---------- Revisar edición (spec .scratch/editar-casa §4) ----------
 const revisarEdicionRoute = getRouteApi("/_flow/_adminFlow/admin/ediciones/$id");
@@ -241,12 +242,12 @@ function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget;
         </p>
       ) : null}
       <div className="row gap-8">
-        <button type="button" className="btn btn-primary btn-sm" disabled={review.isPending} onClick={() => decide("approve")}>
-          <I.check size={16} /> Aprobar
-        </button>
-        <button type="button" className="btn btn-ghost btn-sm" disabled={review.isPending} onClick={() => decide("changes")}>
+        <Button variant="primary" icon={<I.check size={16} />} disabled={review.isPending} onClick={() => decide("approve")}>
+          Aprobar
+        </Button>
+        <Button variant="secondary" disabled={review.isPending} onClick={() => decide("changes")}>
           Pedir cambios
-        </button>
+        </Button>
       </div>
     </div>
   );

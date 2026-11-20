@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { RouterButtonLink } from "./router-buttons";
 
 export function SkeletonCard() {
   return (
@@ -14,9 +14,9 @@ export function NotFoundCard() {
     <section className="card stack gap-12">
       <h3>No encontramos esta casa</h3>
       <p className="small muted">Puede que la haya descartado o que el enlace no sea suyo.</p>
-      <Link to="/propietario/casas" className="btn btn-soft">
+      <RouterButtonLink to="/propietario/casas" variant="primary">
         Ir a Mis casas
-      </Link>
+      </RouterButtonLink>
     </section>
   );
 }

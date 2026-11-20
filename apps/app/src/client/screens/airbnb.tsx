@@ -15,6 +15,7 @@ import { usePrivateSheet } from "../private-sheet";
 import { sessionState, useSession } from "../session";
 import { IcalExportCard } from "./ical-export-card";
 import { ConfirmSheet } from "../confirm-sheet";
+import { Button, IconButton, TextButton } from "../../shared/button";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/airbnb");
 const time = (iso: string) => new Intl.DateTimeFormat("es-CR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(iso));
@@ -125,18 +126,18 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
       {summary.errorCode ? <p className="note" role="alert">{summary.connected ? <>No se pudo actualizar{summary.lastErrorAt ? ` · ${time(summary.lastErrorAt)}` : ""}. Se conservan las últimas noches importadas. </> : null}{new IcalError(summary.errorCode).message}</p> : null}
       {problem ? <p className="field-error" role="alert">{problem}</p> : null}
       {summary.state === "running" ? <p role="status">{summary.connected ? "Actualizando…" : "Conectando…"}</p> : null}
-      {!summary.connected && !suspended ? <button className="btn btn-primary btn-lg" type="button" disabled={busy || !online} onClick={() => setConnecting("connect")}>Conectar Airbnb</button> : null}
+      {!summary.connected && !suspended ? <Button variant="primary" size="lg" disabled={busy || !online} onClick={() => setConnecting("connect")}>Conectar Airbnb</Button> : null}
       {summary.connected ? <>
-        <button className="btn btn-primary btn-lg" type="button" disabled={busy || !online || suspended || !!limitHint} aria-describedby={limitHint && !busy ? "airbnb-limit" : undefined} onClick={() => void update()}>{operation === "refresh" || summary.state === "running" ? "Actualizando…" : summary.errorCode ? "Intentar de nuevo" : "Actualizar ahora"}</button>
+        <Button variant="primary" size="lg" disabled={busy || !online || suspended || !!limitHint} aria-describedby={limitHint && !busy ? "airbnb-limit" : undefined} onClick={() => void update()}>{operation === "refresh" || summary.state === "running" ? "Actualizando…" : summary.errorCode ? "Intentar de nuevo" : "Actualizar ahora"}</Button>
         {limitHint && !busy && !suspended ? <p id="airbnb-limit" className="small muted center" data-testid="airbnb-limit">{limitHint}</p> : null}
-        <button className="btn btn-ghost btn-lg" type="button" disabled={busy || !online || suspended || dayFull} onClick={() => setConnecting("replace")}>Sustituir enlace</button>
-        <button className="btn-text sub-stop" type="button" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>Desconectar Airbnb</button>
+        <Button variant="secondary" size="lg" disabled={busy || !online || suspended || dayFull} onClick={() => setConnecting("replace")}>Sustituir enlace</Button>
+        <TextButton tone="quiet" placement="sub-stop" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>Desconectar Airbnb</TextButton>
       </> : null}
     </section> : null}
     {l && summary ? <IcalExportCard key={`${uid}:${id}`} id={id} userId={uid} /> : null}
     <p className="note small">Los calendarios se actualizan periódicamente. Los cambios pueden tardar en aparecer en la otra plataforma. Confirme la disponibilidad antes de acordar una estancia</p>
     {confirmDisconnect ? <ConfirmSheet title="¿Desconectar Airbnb?" body="Se retirarán las noches importadas de Airbnb y dejarán de actualizarse. Sus bloqueos manuales y precios se conservan."
-      confirmLabel={operation === "disconnect" ? "Desconectando…" : "Desconectar Airbnb"} confirmClassName="btn btn-danger btn-lg" cancelClassName="btn btn-ghost btn-lg"
+      confirmLabel={operation === "disconnect" ? "Desconectando…" : "Desconectar Airbnb"} tone="destructive"
       pending={operation === "disconnect"} error={disconnectError} onClose={() => setConfirmDisconnect(null)} onConfirm={() => void disconnect()} /> : null}
     {connectForm}
   </>;
@@ -170,7 +171,7 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
     <div className="sheet-backdrop" onClick={close} />
     <section ref={sheet} className={exportCard ? "sheet airbnb-calendar-popup" : "sheet"} role="dialog" aria-modal="true" aria-labelledby="airbnb-connect-title" tabIndex={-1} onKeyDown={onKeyDown}>
       <span className="grabber" aria-hidden="true" />
-      <div className="row between"><h2 id="airbnb-connect-title">{exportCard ? "Calendarios de Airbnb" : replacing ? "Sustituir enlace" : "Conectar Airbnb"}</h2><button className="icon-btn" type="button" aria-label="Cerrar" disabled={saving} onClick={close}><I.x /></button></div>
+      <div className="row between"><h2 id="airbnb-connect-title">{exportCard ? "Calendarios de Airbnb" : replacing ? "Sustituir enlace" : "Conectar Airbnb"}</h2><IconButton label="Cerrar" disabled={saving} onClick={close}><I.x /></IconButton></div>
       {houseName ? <p className="small muted">{houseName}</p> : null}
       <div className={exportCard ? "airbnb-calendar-directions" : "stack gap-14"}>
       <div className={exportCard ? "card stack gap-14" : "stack gap-14"}>
@@ -182,8 +183,8 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
         <label>Enlace de calendario de Airbnb<input type="url" value={url} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="none" inputMode="url" maxLength={2048} disabled={saving} aria-invalid={!!problem} aria-describedby="airbnb-connect-hint airbnb-connect-error" onChange={e => { setUrl(e.target.value); setRequestId(randomUuid()); setProblem(null); }} /></label>
         <p className="hint" id="airbnb-connect-hint">Solo importamos noches bloqueadas. No copiamos precios ni datos de huéspedes. Compruebe que el enlace corresponde a esta casa.</p>
         <p id="airbnb-connect-error" className="field-error" role={problem ? "alert" : undefined}>{problem}</p>
-        <button className="btn btn-primary btn-lg" type="submit" disabled={saving || !online || !url.trim()}>{saving ? replacing ? "Sustituyendo…" : "Conectando…" : replacing ? "Sustituir enlace" : "Conectar"}</button>
-        {!exportCard && <button className="btn btn-ghost btn-lg popup-cancel" type="button" disabled={saving} onClick={close}>Cancelar</button>}
+        <Button variant="primary" size="lg" type="submit" disabled={saving || !online || !url.trim()}>{saving ? replacing ? "Sustituyendo…" : "Conectando…" : replacing ? "Sustituir enlace" : "Conectar"}</Button>
+        {!exportCard && <Button variant="secondary" size="lg" disabled={saving} onClick={close}>Cancelar</Button>}
       </form>
       </>}
       </div>

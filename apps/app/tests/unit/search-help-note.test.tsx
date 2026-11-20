@@ -9,10 +9,10 @@ const f: Filters = { prov: "Limón", zone: null, arrival: null, departure: null,
 const noop = () => undefined;
 
 describe("Explorar · ¿No encuentra lo que busca?", () => {
-  it("con número: la nota y el botón en contorno a wa.me con el mensaje", () => {
+  it("con número: la nota y el botón principal (no el verde de WhatsApp) a wa.me con el mensaje", () => {
     const html = renderToString(<SearchHelp filters={f} number="+506 6000 0000" />);
     expect(html).toContain("¿No encuentra lo que busca?");
-    expect(html).toContain("btn-outline");
+    expect(html).toContain('class="btn btn-primary btn-block"');
     expect(html).not.toContain("btn-wa");
     expect(html).toContain(`href="https://wa.me/50660000000?text=${encodeURIComponent("Hola, estoy buscando casa en 3bstays.\nZona: Limón.\nPersonas: 4.\nNecesito: Piscina.\nFechas: ")}"`);
     expect(html).toContain("Escribir a 3bstays por WhatsApp");

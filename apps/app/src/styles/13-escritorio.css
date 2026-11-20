@@ -16,13 +16,12 @@
     box-shadow: none;
     animation: none;
   }
-  [aria-modal="true"] .popup-cancel,
-  dialog .popup-cancel {
-    background: transparent;
-    color: var(--brand-ink);
-    box-shadow: none;
+  /* Botones (historia 07): respuesta al pasar el ratón, solo con ratón. */
+  @media (hover: hover) {
+    .btn-primary:hover:not(:disabled):not([aria-disabled="true"]) { background: color-mix(in srgb, var(--primary) 22%, var(--bg)); }
+    .btn-secondary:hover:not(:disabled):not([aria-disabled="true"]) { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+    .btn-danger:hover:not(:disabled):not([aria-disabled="true"]) { background: color-mix(in srgb, var(--brand) 18%, transparent); }
   }
-  .popup-cancel:disabled { opacity: .55; }
   .desktop-dropdown {
     position: fixed;
     inset: auto;
@@ -155,7 +154,6 @@
     gap: 10px;
     width: auto;
   }
-  .desktop-app.publish-flow .publish-top-actions .btn { min-height: 44px; }
   .desktop-app.publish-flow .publish-form > .sticky-actions {
     order: -1;
     position: static;
@@ -339,7 +337,6 @@
   .house-pending-name .pending-foot .btn-text { color: var(--brand-ink); }
   .house-inline-editor { padding: 12px 16px 16px; }
   .house-field-actions { flex: none; }
-  .house-field-actions .btn-link:disabled { color: var(--muted); opacity: .65; }
   .house-field .account-profile-toggle { flex: none; }
   .app.desktop-app:has(.house-details-editing) { --desktop-nav-height: 0px; }
   .desktop-app:has(.house-details-editing) > .desktop-nav { display: none; }
@@ -450,7 +447,6 @@
   .desktop-filters-content { padding: 20px; }
   .desktop-filters-content .header-flow { margin: 0 0 16px; }
   .desktop-filters-actions { position: sticky; bottom: 0; padding: 8px 0; background: var(--bg); }
-  .desktop-filters-actions .btn { width: 100%; }
   .desktop-app .explore-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -669,16 +665,8 @@
   .app:has(> .site-top-bar) .status-header ~ .card .status-title { font-size: 30px; line-height: 1.15; }
   .desktop-app > main.view > .header-flow { padding-top: 12px; }
   .page-header-actions { display: flex; flex: none; align-items: center; gap: 10px; }
-  .page-header-actions .btn { width: auto; min-height: 44px; padding-inline: 18px; }
+  .page-header-actions .btn { width: auto; }
 
-  /* Revisión de escritorio 2026-11-13, tanda 2 (A6, A7). El principal sigue tonal (decisión 2026-11-05); el secundario
-     lleva contorno. El desactivado gris neutro de entonces es ya el común (--disabled-bg, historia 07). */
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
-    box-shadow: none;
-    color: var(--primary-ink);
-  }
 
   /* Barra: un solo estado activo (arena y terracota), la moneda neutra y «Ingresar» como botón, no como pestaña elegida. */
   .desktop-nav .desktop-brand img { width: auto; height: 34px; }

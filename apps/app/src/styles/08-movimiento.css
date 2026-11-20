@@ -5,10 +5,10 @@ a,button{-webkit-tap-highlight-color:transparent}
 .btn,.chip,.icon-btn,.tabbar .nav,.choice,.photos-grid .add,.photos-grid .remove{-webkit-user-select:none;user-select:none}
 .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition:transform 160ms var(--ease-out)}
 .chip{transition:transform 160ms var(--ease-out),background-color 150ms ease,color 150ms ease}
-.btn:active:not(:disabled):not([aria-disabled="true"]):not(.is-disabled),.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.photos-grid .add:active,.photos-grid .remove:active{transform:scale(0.97)}
+.btn:active:not(:disabled):not([aria-disabled="true"]),.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.photos-grid .add:active,.photos-grid .remove:active{transform:scale(0.97)}
 a.list-item:active,button.list-item:active:not(:disabled),.listing-card:active{transform:scale(0.98)}
-.link,.btn-link{transition:opacity 120ms ease}
-.link:active,.btn-link:active{opacity:.6}
+.link,.btn-link,.btn-text,.btn-text-danger{transition:opacity 120ms ease}
+.link:active,.btn-link:active:not(:disabled),.btn-text:active:not(:disabled),.btn-text-danger:active:not(:disabled){opacity:.6}
 /* Las fotos aparecen con un fundido al cargar (solo las que monta el cliente: nunca la portada de la ficha, que es el LCP).
    Una foto que no carga se queda oculta y se ve el fondo de su caja; el texto alternativo no se pinta encima. */
 img[data-fade]{opacity:0;transition:opacity 240ms var(--ease-out)}

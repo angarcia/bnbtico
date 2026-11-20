@@ -325,7 +325,7 @@ test("ni hidratar ni cambiar de moneda cambian el alto de la barra", async ({ pa
   await expect(page.getByRole("button", { name: /Ver en/ })).toHaveCount(0);
   // El botón de contacto tampoco es un botón todavía: una caja apagada del mismo tamaño.
   await expect(page.getByRole("button", { name: "Contactar por WhatsApp", exact: true })).toHaveCount(0);
-  await expect(page.locator(".cta-bar .btn-wa.is-pending")).toBeVisible();
+  await expect(page.locator('.cta-bar span.btn-wa[aria-hidden="true"]')).toBeVisible();
   const before = await barHeight(page);
   const text = await page.locator(".cta-prices").innerText();
 
@@ -493,7 +493,7 @@ test("descripción larga: párrafos, «Ver más» a pantalla completa y atrás l
   const res = await page.goto(`/casa/${descrita.publicId}`);
   const source = await res!.text();
   expect(source).toContain('<div class="listing-description is-clamped" data-testid="listing-description"><p>Cabina de madera');
-  expect(source).toContain('<span class="btn btn-soft btn-more is-pending" aria-hidden="true">Ver más</span>');
+  expect(source).toContain('<span aria-hidden="true" class="btn btn-primary btn-block">Ver más</span>');
   await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
   const text = page.getByTestId("listing-description");
   await expect(text.locator("p")).toHaveCount(4);

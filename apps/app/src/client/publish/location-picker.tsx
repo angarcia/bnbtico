@@ -2,6 +2,7 @@ import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { PROVINCE_CENTERS, roundPoint, type LatLng } from "../../domain/geo";
 import { DEFAULT_PROVINCE } from "../../domain/listing";
 import type { PickerMap } from "./location-leaflet";
+import { IconButton } from "../../shared/button";
 
 const Locate = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -49,9 +50,9 @@ export function LocationPicker({ lat, lng, onPick, readOnly = false, ref }: { la
     <div className="map-wrap">
       <div ref={box} className="map-box" role="application" aria-label="Mapa para marcar la ubicación aproximada" />
       {readOnly ? null : (
-        <button type="button" className="icon-btn overlay map-locate" aria-label="Usar mi ubicación" onClick={locate}>
+        <IconButton label="Usar mi ubicación" tone="overlay" placement="map-locate" onClick={locate}>
           <Locate />
-        </button>
+        </IconButton>
       )}
     </div>
   );

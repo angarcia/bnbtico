@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { I } from "../shared/icons";
 import { usePrivateSheet } from "./private-sheet";
 import { useDesktop } from "./desktop";
+import { IconButton } from "../shared/button";
 
 export interface HouseOption {
   id: string;
@@ -109,7 +110,7 @@ function HousePickerSheet({ id, title, onClose, children }: {
         <span className="grabber" aria-hidden="true" />
         <div className="sheet-head">
           <h2 id={`${id}-title`}>{title}</h2>
-          <button type="button" className="icon-btn" aria-label="Cerrar" title="Cerrar" onClick={onClose}><I.x size={22} /></button>
+          <IconButton label="Cerrar" title="Cerrar" onClick={onClose}><I.x size={22} /></IconButton>
         </div>
         {children}
       </section>

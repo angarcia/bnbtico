@@ -2,7 +2,7 @@
 // cortas sin scroll (ids de URL 1, 2 y 4–9; el 3 viejo lleva al 2). Se carga bajo demanda al abrir /propietario/publicar:
 // no entra en el JS inicial.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, useNavigate, useParams, useRouter, useSearch } from "@tanstack/react-router";
+import { Navigate, useNavigate, useParams, useRouter, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DomainError } from "../../domain/errors";
 import { track } from "../../shared/beacon";
@@ -26,6 +26,8 @@ import { useOwnListing, useUserId } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
 import { knownNoDraft } from "../own-listings-query";
 import { clearCreateFailure, createFailure, startDraft } from "../publish/new-draft";
+import { Button, IconButton } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 const DESKTOP_STEPS: readonly Step[] = [1, 7, 6, LAST_STEP];
@@ -96,9 +98,9 @@ export function PublicarScreen() {
   }, [draft, resumable.isFetching, create]);
   const failure = create.isError ? message(create.error) : create.isIdle ? lost : null;
   const start = (
-    <button type="button" className={`btn btn-block ${draft ? "btn-ghost" : "btn-primary btn-lg"}`} disabled={create.isPending} onClick={() => create.mutate()}>
+    <Button variant={draft ? "secondary" : "primary"} size={draft ? "md" : "lg"} block disabled={create.isPending} onClick={() => create.mutate()}>
       {create.isPending ? "Un momento…" : draft ? "Empezar otro" : "Empezar"}
-    </button>
+    </Button>
   );
   const failed =
     failure !== null ? (
@@ -132,9 +134,9 @@ export function PublicarScreen() {
           <p className="small muted">
             {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
           </p>
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} className="btn btn-primary btn-lg btn-block">
+          <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} variant="primary" size="lg" block>
             Seguir con el borrador
-          </Link>
+          </RouterButtonLink>
           {start}
         </section>
       ) : draft === null ? (
@@ -164,9 +166,9 @@ function CloseWizard({ id }: { id?: string }) {
     await navigate({ to });
   }
   return (
-    <button type="button" className="btn-link header-close" onClick={close} disabled={saving} aria-busy={saving || undefined} aria-label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"} title="Cerrar y seguir después">
+    <IconButton label={saving ? "Guardando el borrador…" : "Cerrar y seguir después"} placement="header-close" onClick={close} disabled={saving} aria-busy={saving || undefined} title="Cerrar y seguir después">
       <I.x size={20} />
-    </button>
+    </IconButton>
   );
 }
 

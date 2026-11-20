@@ -2,7 +2,6 @@
 // Las tarjetas (las de Explorar) salen de listings_public en una sola consulta (caché pública); las que ya no vuelven se quitan
 // sin avisar.
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
 import { RootHeader } from "../chrome";
@@ -10,6 +9,7 @@ import { useDesktop } from "../desktop";
 import { CurrencySwitch } from "../../shared/currency-switch";
 import { ListingCard } from "../listing-card";
 import { useSession } from "../session";
+import { RouterButtonLink } from "../router-buttons";
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,
@@ -77,9 +77,9 @@ export function FavoritosScreen() {
       {favs.length === 0 ? (
         <section className="stack fav-empty">
           <p className="muted">{desktop ? "Pulse" : "Toque"} el corazón de una casa para guardarla aquí.</p>
-          <Link to="/explorar" replace className="btn btn-soft btn-lg">
+          <RouterButtonLink to="/explorar" replace variant="primary" size="lg">
             Explorar casas
-          </Link>
+          </RouterButtonLink>
         </section>
       ) : loading ? (
         isError ? <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div> : <SkeletonCards n={favs.length} />

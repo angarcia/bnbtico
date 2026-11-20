@@ -55,12 +55,12 @@ const bar = (l: PublicListing) => {
 describe("botón de contacto antes de hidratar", () => {
   it("disponible: caja apagada sin botón (no haría nada hasta hidratar)", () => {
     const html = bar(listing());
-    expect(html).toContain('<span class="btn btn-wa is-pending" aria-hidden="true">');
+    expect(html).toContain('<span aria-hidden="true" class="btn btn-wa btn-xl btn-block">');
     expect(html).not.toContain("<button");
   });
   it("no disponible, sin fecha: botón deshabilitado y sin nota", () => {
     const html = bar(listing({ available: false }));
-    expect(html).toMatch(/<button class="btn btn-wa" type="button" disabled="">.*No disponible por ahora<\/button>/);
+    expect(html).toMatch(/<button type="button" class="btn btn-wa btn-xl btn-block" disabled="">.*No disponible por ahora<\/button>/);
     expect(html).not.toContain("Vuelve a estar disponible");
   });
   it("no disponible con fecha de reapertura: la nota debajo", () => {

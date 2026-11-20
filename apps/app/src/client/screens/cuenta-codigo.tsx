@@ -12,6 +12,7 @@ import { authApi, pendingOtp } from "../session";
 import { ContactCard, ReturnCard } from "../sign-in";
 import { useTurnstile } from "../turnstile";
 import { useContactMode, useGoTo } from "./cuenta-navigation";
+import { Button, TextButton } from "../../shared/button";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -120,9 +121,9 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
             />
           </div>
           {error ? <p className="field-error" role="alert">{error}</p> : null}
-          <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy}>
+          <Button variant="primary" size="xl" block type="submit" disabled={busy}>
             {busy ? "Verificando…" : "Verificar y continuar"}
-          </button>
+          </Button>
         </form>
         <div className="stack small">
           {wait > 0 ? (
@@ -130,9 +131,9 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
               ¿No llegó? Puede pedir otro en <b className="ink num">{mmss}</b>.
             </span>
           ) : (
-            <button type="button" className="btn-link" onClick={resend}>
+            <TextButton tone="link" onClick={resend}>
               Pedir otro código
-            </button>
+            </TextButton>
           )}
           <div ref={captcha.container} className="captcha" />
           {resent ? (
@@ -143,7 +144,7 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
           <a className="link" href="https://wa.me/" target="_blank" rel="noopener">
             Abrir WhatsApp para buscar el mensaje
           </a>
-          {inDialog ? null : <button type="button" className="btn-link" onClick={changeNumber}>Cambiar número</button>}
+          {inDialog ? null : <TextButton tone="link" onClick={changeNumber}>Cambiar número</TextButton>}
         </div>
         {contact || inDialog ? null : publish ? <p className="note small">Después seguimos con su casa</p> : <ReturnCard next={next} />}
       </div>

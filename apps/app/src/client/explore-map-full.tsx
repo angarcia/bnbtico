@@ -16,6 +16,7 @@ import { useExploreMap, useMapMarkers } from "./explore-map";
 import { showChrome } from "./hiding-chrome";
 import { CardWhatsApp } from "./card-whatsapp";
 import { CardCapacity, CardFeatures, CardPriceText } from "./listing-card";
+import { IconButton } from "../shared/button";
 
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
@@ -98,9 +99,9 @@ export function MapCard({ listing: l, nights, onClose }: { listing: SearchListin
         </div>
       </Link>
       {onClose && (
-        <button type="button" className="icon-btn map-card-close" aria-label="Cerrar tarjeta" onClick={onClose}>
+        <IconButton label="Cerrar tarjeta" placement="map-card-close" onClick={onClose}>
           <I.x size={20} />
-        </button>
+        </IconButton>
       )}
       <FavoriteButton publicId={l.publicId} className="heart-card" size={24} />
       {l.available ? <CardWhatsApp listing={l} /> : null}

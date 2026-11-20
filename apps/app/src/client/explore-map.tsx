@@ -10,6 +10,7 @@ import { useCurrency } from "../shared/currency";
 import { useFx } from "../shared/fx";
 import { I } from "../shared/icons";
 import { afterPaint, whenIdle } from "../shared/idle";
+import { IconButton } from "../shared/button";
 
 // Los tipos del trozo de Leaflet sin importarlo (ni siquiera como tipo: la prueba de arquitectura lo vigila).
 type ExploreMapHandle = ReturnType<typeof import("./explore-map-leaflet")["drawExploreMap"]>;
@@ -145,13 +146,13 @@ export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected 
     </div>
     {onExpand && (
       <div className="desktop-map-controls" role="group" aria-label="Controles del mapa">
-        <button type="button" className="icon-btn float-card" aria-label={expanded ? "Reducir mapa" : "Ampliar mapa"} aria-pressed={expanded} onClick={onExpand}>
+        <IconButton label={expanded ? "Reducir mapa" : "Ampliar mapa"} tone="float" aria-pressed={expanded} onClick={onExpand}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d={expanded ? "m5 19 6-6m-6 0h6v6m8-14-6 6m0-6v6h6" : "m5 19 6-6m-6 0v6h6m8-14-6 6m0-6h6v6"} />
           </svg>
-        </button>
-        <button type="button" className="icon-btn float-card" aria-label="Acercar mapa" disabled={!ready} onClick={() => handle.current?.zoomBy(1)}><I.plus size={20} /></button>
-        <button type="button" className="icon-btn float-card" aria-label="Alejar mapa" disabled={!ready} onClick={() => handle.current?.zoomBy(-1)}>−</button>
+        </IconButton>
+        <IconButton label="Acercar mapa" tone="float" disabled={!ready} onClick={() => handle.current?.zoomBy(1)}><I.plus size={20} /></IconButton>
+        <IconButton label="Alejar mapa" tone="float" disabled={!ready} onClick={() => handle.current?.zoomBy(-1)}>−</IconButton>
       </div>
     )}
     </>

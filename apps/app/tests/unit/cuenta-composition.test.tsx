@@ -25,6 +25,10 @@ vi.mock("@tanstack/react-router", () => ({
   Navigate: (props: { to: string; search?: unknown; replace?: boolean }) => <output>{JSON.stringify(props)}</output>,
   Link: ({ to, search, replace, children, ...props }: { to: string; search?: unknown; replace?: boolean; children?: ReactNode }) =>
     <a href={to} data-search={JSON.stringify(search)} data-replace={replace} {...props}>{children}</a>,
+  // Los botones de router (client/router-buttons.tsx): el mismo enlace falso, con el aspecto del botón común.
+  createLink: (Comp: (props: Record<string, unknown>) => ReactNode) =>
+    ({ to, search, replace, ...props }: { to: string; search?: unknown; replace?: boolean }) =>
+      <Comp href={to} data-search={JSON.stringify(search)} data-replace={replace} {...props} />,
 }));
 vi.mock("../../src/client/chrome", () => ({
   FlowFrame: ({ children }: { children: ReactNode }) => <main data-frame="flow">{children}</main>,

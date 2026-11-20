@@ -14,6 +14,7 @@ import { trackSearch } from "../../shared/beacon";
 import { I } from "../../shared/icons";
 import { provincesQuery, zonesQuery } from "../queries";
 import { RangeCalendar } from "../../shared/range-calendar";
+import { Button, IconButton, TextButton } from "../../shared/button";
 
 const route = getRouteApi("/_flow/explorar/buscar");
 
@@ -168,9 +169,9 @@ export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | nul
           }}
         />
         {zone ? (
-          <button type="button" className="btn-text" onClick={onClear}>
+          <TextButton tone="quiet" onClick={onClear}>
             Quitar
-          </button>
+          </TextButton>
         ) : null}
       </div>
       <ul ref={listbox} className="zone-list" role="listbox" id={listId} aria-label="Zonas con casas">
@@ -187,7 +188,7 @@ export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | nul
         ))}
       </ul>
       {isPending ? <p className="small muted" role="status">Cargando zonas…</p> : isError && !zones.length ? (
-        <div className="row between gap-8"><p className="small" role="alert">No pudimos cargar las zonas.</p><button type="button" className="btn-text" onClick={() => void refetch()}>Reintentar</button></div>
+        <div className="row between gap-8"><p className="small" role="alert">No pudimos cargar las zonas.</p><TextButton tone="quiet" onClick={() => void refetch()}>Reintentar</TextButton></div>
       ) : !list.length ? <p className="small" role="status">{text ? "Todavía no hay casas en esa zona." : "Todavía no hay zonas con casas."}</p> : null}
       <p className="small muted">Le mostramos las casas de la zona y las que están a 5 km o menos.</p>
     </>
@@ -227,9 +228,9 @@ export function BuscarScreen() {
   return (
     <div className="search-screen">
       <h1 className="sr-only">Buscar casas</h1>
-      <button type="button" className="icon-btn search-close" aria-label="Cerrar la búsqueda" onClick={close}>
+      <IconButton label="Cerrar la búsqueda" placement="search-close" onClick={close}>
         <I.x size={22} />
-      </button>
+      </IconButton>
       <Fold title="¿Dónde?" value={zoneName ?? "Añadir zona"} open={open === "donde"} onToggle={toggle("donde")}>
         {/* Con otra zona (o sin ella, tras «Quitar» o «Borrar todo») el campo vuelve a empezar con su nombre. */}
         <Donde
@@ -250,9 +251,9 @@ export function BuscarScreen() {
           <div className="row between">
             <span className="xs muted">Le mostramos un precio orientativo para esas noches. La disponibilidad se la confirma el anfitrión por WhatsApp.</span>
             {draft.nights ? (
-              <button type="button" className="btn-text" onClick={() => set({ nights: 0 })}>
+              <TextButton tone="quiet" onClick={() => set({ nights: 0 })}>
                 Quitar
-              </button>
+              </TextButton>
             ) : null}
           </div>
         </Fold>
@@ -273,16 +274,16 @@ export function BuscarScreen() {
               <b>{draft.arrival ? "Elija la salida" : "Elija la llegada"}</b>
             )}
           </span>
-          <button type="button" className="btn btn-outline" onClick={() => setOpen("quienes")}>
+          <Button variant="primary" onClick={() => setOpen("quienes")}>
             Siguiente
-          </button>
+          </Button>
         </div>
         <div className="row between">
           <span className="xs muted">Le mostramos las casas libres esas noches.</span>
           {draft.arrival ? (
-            <button type="button" className="btn-text" onClick={() => set({ arrival: null, departure: null })}>
+            <TextButton tone="quiet" onClick={() => set({ arrival: null, departure: null })}>
               Quitar fechas
-            </button>
+            </TextButton>
           ) : null}
         </div>
       </Fold>
@@ -309,13 +310,12 @@ export function BuscarScreen() {
       </Fold>
       <div className="sticky-spacer" aria-hidden="true" />
       <div className="sticky-actions">
-        <button type="button" className="btn-text" onClick={() => setDraft(EMPTY)}>
+        <TextButton tone="quiet" onClick={() => setDraft(EMPTY)}>
           Borrar todo
-        </button>
-        <button type="button" className="btn btn-primary grow" onClick={() => void submit()}>
-          <I.search size={20} />
+        </TextButton>
+        <Button variant="primary" size="lg" placement="grow" icon={<I.search size={20} />} onClick={() => void submit()}>
           Buscar
-        </button>
+        </Button>
       </div>
     </div>
   );

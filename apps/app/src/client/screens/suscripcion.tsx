@@ -35,6 +35,7 @@ import { ConfirmSheet } from "../confirm-sheet";
 import { useDesktop } from "../desktop";
 import { activityQuery, offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
 import { useSession } from "../session";
+import { Button, TextButton } from "../../shared/button";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
 const message = (e: unknown) => toDomainError(e).message;
@@ -80,9 +81,9 @@ function PayButton({ publicId, label = "Añadir método de pago", ghost }: { pub
   const pay = usePaymentPage();
   return (
     <>
-      <button type="button" className={`btn ${ghost ? "btn-ghost btn-sm" : "btn-sun btn-block"}`} disabled={pay.isPending} onClick={() => pay.mutate(publicId)}>
+      <Button variant={ghost ? "secondary" : "pay"} block={!ghost} disabled={pay.isPending} onClick={() => pay.mutate(publicId)}>
         {pay.isPending ? "Abriendo la página de pago…" : label}
-      </button>
+      </Button>
       {pay.isError ? (
         <p className="note small" role="alert">
           {message(pay.error)}
@@ -184,12 +185,12 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
       {pay ? <PayButton publicId={house.publicId} /> : null}
       {sub.status === "inactive" && !blocked ? (
         <>
-          <button type="button" className="btn btn-sun btn-block" disabled={change.isPending} onClick={() => {
+          <Button variant="pay" block disabled={change.isPending} onClick={() => {
               onAction();
               change.mutate("resume");
             }}>
             Activar suscripción
-          </button>
+          </Button>
           {sub.plan === "promo" && sub.promoEndsOn && today <= sub.promoEndsOn ? (
             <span className="xs muted num">Mantiene su plaza de la oferta: gratis hasta el {shortDate(sub.promoEndsOn, today)}.</span>
           ) : null}
@@ -208,17 +209,16 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
       ) : null}
       {/* «Parar suscripción» como texto, centrado y al final; la confirmación sigue igual (A2). */}
       {!blocked && (sub.status === "active" || sub.status === "payment_due") ? (
-        <button type="button" className="btn-text sub-stop" disabled={change.isPending} onClick={() => setConfirming(true)}>
+        <TextButton tone="quiet" placement="sub-stop" disabled={change.isPending} onClick={() => setConfirming(true)}>
           Parar suscripción
-        </button>
+        </TextButton>
       ) : null}
       {confirming ? (
         <ConfirmSheet
           title="Parar suscripción"
           body={`¿Parar la suscripción de ${house.title || "esta casa"}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.`}
           confirmLabel="Parar suscripción"
-          confirmClassName={desktop ? "btn btn-lg popup-cancel" : "btn btn-outline-bad btn-lg"}
-          cancelClassName={desktop ? "btn btn-primary btn-lg" : "btn btn-ghost btn-lg"}
+          tone={desktop ? "keep" : "destructive"}
           cancelLabel={desktop ? "Mantener suscripción" : "Cancelar"}
           cancelFirst={desktop}
           returnFocus={ref}

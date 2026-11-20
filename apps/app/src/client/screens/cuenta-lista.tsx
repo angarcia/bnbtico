@@ -6,6 +6,8 @@ import { accountQuery } from "../account";
 import { FlowHeader } from "../chrome";
 import { useSession } from "../session";
 import { Replace } from "./cuenta-navigation";
+import { ButtonLink } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 // ---------- /cuenta/lista ----------
 const listaRoute = getRouteApi("/_flow/cuenta/lista");
@@ -31,19 +33,20 @@ export function ListaScreen() {
           <h2 className="flow-title">¡Listo! Su cuenta está creada</h2>
         </div>
         <h3>¿Tiene una casa para alquilar?</h3>
-        <Link to="/propietario/publicar" className="btn btn-primary btn-xl">
+        <RouterButtonLink to="/propietario/publicar" variant="primary" size="xl">
           Sí, quiero publicarla
-        </Link>
-        <a
+        </RouterButtonLink>
+        <ButtonLink
           href={target}
-          className="btn btn-ghost btn-lg"
+          variant="secondary"
+          size="lg"
           onClick={(e) => {
             e.preventDefault();
             void router.navigate({ href: target });
           }}
         >
           No, busco casa
-        </a>
+        </ButtonLink>
         {account.data && !account.data.email ? (
           <Link to="/cuenta" search={{ editar: "1" }} className="link small">
             Añadir un correo de recuperación

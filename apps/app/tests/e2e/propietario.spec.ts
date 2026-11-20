@@ -77,7 +77,7 @@ test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarj
   const borrador = card(page, "Borrador nuevo");
   await expect(borrador.getByTestId("card-label")).toHaveText("Borrador");
   const seguir = borrador.getByRole("link", { name: "Seguir publicando" });
-  await expect(seguir).toHaveClass(/btn-ghost/);
+  await expect(seguir).toHaveClass(/btn-secondary/);
   await expect(seguir).toHaveAttribute("href", `/propietario/publicar/${draft.id}/${resumeStep((await h.owner("owner").getOwn(draft.id))!)}`);
   await expect(borrador.getByRole("button", { name: "Descartar" })).toBeVisible();
 
@@ -371,7 +371,8 @@ test("descartar un borrador nunca enviado, desde Mis casas y desde el detalle: l
   await expect(sheet.getByRole("heading", { name: "¿Descartar este borrador?" })).toBeVisible();
   await expect(sheet).toContainText("No se puede deshacer.");
   await expect(sheet.getByRole("button")).toHaveText(["Descartar", "Cancelar"]);
-  await expect(sheet.getByRole("button", { name: "Descartar" })).toHaveClass(/btn-outline-bad/);
+  await expect(sheet.getByRole("button", { name: "Descartar" })).toHaveClass(/btn-danger/);
+  await expect(sheet.getByRole("button", { name: "Cancelar" })).toHaveClass(/btn-secondary/);
   await sheet.getByRole("button", { name: "Cancelar" }).click();
   await expect(sheet).toHaveCount(0);
   await expect(discardCard).toBeFocused();

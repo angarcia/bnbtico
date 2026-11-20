@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { I } from "./icons";
 import { useChanged } from "./use-changed";
+import { IconButton } from "./button";
 
 export interface ShareTarget {
   url: string;
@@ -36,10 +37,10 @@ export function useShare(target: ShareTarget) {
 export function ShareButton(target: ShareTarget) {
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className="icon-btn overlay" aria-label={copied ? "Enlace copiado" : "Compartir ficha"} onClick={share}>
+    <IconButton label={copied ? "Enlace copiado" : "Compartir ficha"} tone="overlay" onClick={share}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? <I.check /> : <I.share />}
       </span>
-    </button>
+    </IconButton>
   );
 }

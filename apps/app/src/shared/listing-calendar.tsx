@@ -19,6 +19,7 @@ import { I } from "./icons";
 import { listingDaysQuery } from "./listing-query";
 import { MonthGrid, MonthLegend, WeekdayRow } from "./month-grid";
 import { stayDates, useStayDates } from "./stay-dates";
+import { IconButton, TextButton } from "./button";
 
 /** Hoy en Costa Rica (UTC−6, sin horario de verano), igual que `costaRicaToday` de domain/inquiry: importarla desde allí
  *  ata este trozo al de la consulta y Rolldown vuelve a partir los de la hoja de contacto (medido: +0,07 KB en la zona
@@ -121,9 +122,9 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
       <div className="cal-legend-row">
         <MonthLegend price={!FLAGS.datePrices && base !== null ? formatMoney(base, currency, fx) : undefined} />
         {value.arrival ? (
-          <button type="button" className="btn-text" onClick={clear}>
+          <TextButton tone="quiet" onClick={clear}>
             Quitar fechas
-          </button>
+          </TextButton>
         ) : null}
       </div>
       <p className={`cal-stay${warn ? " is-busy" : ""}`} data-testid="stay-total" role={warn ? "alert" : undefined} aria-live={warn ? undefined : "polite"}>
@@ -137,13 +138,13 @@ function MonthHead({ month, setMonth, title, win }: { month: string; setMonth: (
   return (
     <div className="cal-month">
       <div className="row gap-4">
-        <button type="button" className="icon-btn cal-arrow" aria-label="Mes anterior" disabled={month <= win.firstMonth} onClick={() => setMonth(addMonths(month, -1))}>
+        <IconButton label="Mes anterior" placement="cal-arrow" disabled={month <= win.firstMonth} onClick={() => setMonth(addMonths(month, -1))}>
           <I.back size={20} />
-        </button>
+        </IconButton>
         <b className="display cal-title">{title}</b>
-        <button type="button" className="icon-btn cal-arrow" aria-label="Mes siguiente" disabled={month >= win.lastMonth} onClick={() => setMonth(addMonths(month, 1))}>
+        <IconButton label="Mes siguiente" placement="cal-arrow" disabled={month >= win.lastMonth} onClick={() => setMonth(addMonths(month, 1))}>
           <I.chevron size={20} />
-        </button>
+        </IconButton>
       </div>
     </div>
   );

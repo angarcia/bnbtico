@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { I } from "../shared/icons";
 import { authApi } from "./session";
 import { SignInForm } from "./sign-in";
+import { IconButton } from "../shared/button";
 
 const DialogCodeForm = lazy(() => import("./screens/cuenta-codigo").then((m) => ({ default: m.DialogCodeForm })));
 
@@ -22,13 +23,13 @@ export function WhatsAppDialog({ mode, next, onClose }: { mode: "account" | "pub
     }}>
       <div className="row">
         {codeSent || namePhone ? (
-          <button type="button" className="icon-btn" aria-label="Volver al número" onClick={async () => {
+          <IconButton label="Volver al número" onClick={async () => {
             if (codeSent) (await authApi()).cancel();
             setNamePhone(null);
             setCodeSent(false);
-          }}><I.back size={20} /></button>
+          }}><I.back size={20} /></IconButton>
         ) : null}
-        <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}><I.x size={20} /></button>
+        <IconButton label="Cerrar" onClick={onClose}><I.x size={20} /></IconButton>
       </div>
       <Suspense fallback={<p role="status">Cargando…</p>}>
         {codeSent ? (

@@ -50,7 +50,7 @@ test("sin resultados: «No hay casas con esos filtros», WhatsApp con la búsque
   await expect(empty).toContainText("¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.");
   await expect(page.getByText("Sin resultados con esos filtros.")).toHaveCount(0);
   // Un solo botón relleno por pantalla: este va en contorno, y no en verde WhatsApp.
-  await expect(helpButton(page)).toHaveClass(/btn-outline/);
+  await expect(helpButton(page)).toHaveClass(/btn-primary/);
   await expect(helpButton(page)).not.toHaveClass(/btn-wa/);
   await page.screenshot({ path: `${SHOTS}/vacio-412.png` });
   await page.setViewportSize({ width: 360, height: 800 });

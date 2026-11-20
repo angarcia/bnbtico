@@ -11,6 +11,8 @@ import { I } from "../shared/icons";
 import { useShare } from "../shared/share-button";
 import type { HouseBilling } from "./billing";
 import { SUPPORT_NUMBERS } from "./support-numbers";
+import { Button, ButtonLink, WaIcon } from "../shared/button";
+import { RouterButtonLink } from "./router-buttons";
 
 const base = () => window.location.origin;
 export const titleOf = (l: Listing) => l.title || "Borrador sin título";
@@ -40,18 +42,18 @@ export function SubscriptionLink({ publicId, className, children }: { publicId?:
 
 export function PayButton({ publicId }: { publicId: string }) {
   return (
-    <SubscriptionLink publicId={publicId} className="btn btn-sun btn-block">
+    <RouterButtonLink to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} variant="pay" block>
       Añadir método de pago
-    </SubscriptionLink>
+    </RouterButtonLink>
   );
 }
 
 /** Reactivar una casa parada: lleva a «Promoción y suscripción» con la casa resaltada. */
 export function ActivateButton({ publicId }: { publicId: string }) {
   return (
-    <SubscriptionLink publicId={publicId} className="btn btn-sun btn-block">
+    <RouterButtonLink to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} variant="pay" block>
       Activar suscripción
-    </SubscriptionLink>
+    </RouterButtonLink>
   );
 }
 
@@ -87,14 +89,17 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
   const copy = HOLD_COPY[hold.kind];
   const write =
     hold.kind === "blocked" ? (
-      <a
-        className={`btn btn-block ${card ? "btn-ghost" : "btn-wa"}`}
+      // Con 3bstays, no con el anfitrión: secundario con el icono de WhatsApp (D4), también en la tarjeta corta.
+      <ButtonLink
+        variant="secondary"
+        block
+        icon={<WaIcon />}
         href={waUrl(SUPPORT_NUMBERS.owner, `Hola, mi casa ${l.publicId} (${titleOf(l)}) está bloqueada y quisiera hablar con ustedes.`)}
         target="_blank"
         rel="noopener"
       >
         Escribir a 3bstays
-      </a>
+      </ButtonLink>
     ) : null;
   if (card)
     return (
@@ -120,16 +125,15 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
 }
 
 /** Compartir con el acabado verde común aprobado; nombre accesible y lógica de copia conservados. */
-export function ShareButtonInline({ listing: l, className = "grow" }: { listing: Listing; className?: string }) {
+export function ShareButtonInline({ listing: l, placement = "grow", block = false }: { listing: Listing; placement?: "grow" | "house-share"; block?: boolean }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <button type="button" className={`btn btn-primary ${className}`} onClick={share} aria-label={copied ? "Enlace copiado" : "Compartir ficha"} data-share-url={target.url}>
-      <I.share size={20} />
+    <Button variant="primary" block={block} placement={block ? undefined : placement} icon={<I.share size={20} />} onClick={share} aria-label={copied ? "Enlace copiado" : "Compartir ficha"} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? "Enlace copiado" : "Compartir"}
       </span>
-    </button>
+    </Button>
   );
 }
 

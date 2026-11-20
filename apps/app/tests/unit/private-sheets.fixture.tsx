@@ -34,7 +34,6 @@ function Fixture() {
       <output>{result}</output>
       {open && kind === "confirm" && (
         <ConfirmSheet title="¿Cerrar sesión?" body="Tendrá que volver a ingresar." confirmLabel="Cerrar sesión"
-          confirmClassName="btn btn-primary btn-lg" cancelClassName="btn btn-ghost btn-lg"
           onClose={close} onConfirm={() => confirm("Confirmado")}
           returnFocus={params.has("return") ? target : undefined} />
       )}

@@ -5,6 +5,7 @@ import { searchHelpMessage } from "../domain/search-help";
 import { waUrl } from "../domain/whatsapp";
 import { track } from "../shared/beacon";
 import { I } from "../shared/icons";
+import { ButtonLink, TextButton } from "../shared/button";
 
 /**
  * Sin resultados (`onClear`): tarjeta «No hay casas con esos filtros», la nota si hay número y «Quitar filtros» si hay
@@ -15,9 +16,9 @@ export function SearchHelp({ filters, zoneName = null, number, onClear }: { filt
     <>
       <p>¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.</p>
       {/* Se abre como «Abrir WhatsApp» de Ayuda; la baliza no lleva el mensaje ni los filtros (solo ruta, build y país). */}
-      <a className="btn btn-outline btn-block" href={waUrl(number, searchHelpMessage(filters, zoneName))} target="_blank" rel="noopener" onClick={() => track("search_help_tap")}>
-        <I.wa size={20} /> Escribir a 3bstays por WhatsApp
-      </a>
+      <ButtonLink variant="primary" block icon={<I.wa size={20} />} href={waUrl(number, searchHelpMessage(filters, zoneName))} target="_blank" rel="noopener" onClick={() => track("search_help_tap")}>
+        Escribir a 3bstays por WhatsApp
+      </ButtonLink>
     </>
   ) : null;
   if (onClear === undefined) return help && <div className="note note-plain note-col">{help}</div>;
@@ -26,9 +27,9 @@ export function SearchHelp({ filters, zoneName = null, number, onClear }: { filt
       <h3>No hay casas con esos filtros</h3>
       {help}
       {onClear ? (
-        <button type="button" className="btn-link" onClick={onClear}>
+        <TextButton tone="link" onClick={onClear}>
           Quitar filtros
-        </button>
+        </TextButton>
       ) : null}
     </section>
   );

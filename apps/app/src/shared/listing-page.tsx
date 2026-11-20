@@ -32,6 +32,7 @@ import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 import { useDesktop } from "../client/desktop";
 import { FLAGS } from "./flags";
+import { Button, ButtonPlaceholder, IconButtonLink, IconButtonPlaceholder } from "./button";
 
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */
@@ -87,18 +88,18 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
     const reopen = reopenLabel(listing.reopenAt);
     return (
       <>
-        <button className="btn btn-wa" type="button" disabled>
-          <I.wa size={22} /> No disponible por ahora
-        </button>
+        <Button variant="whatsapp" size="xl" block icon={<I.wa size={22} />} disabled>
+          No disponible por ahora
+        </Button>
         {reopen ? <span className="xs muted cta-note">{reopen}</span> : null}
       </>
     );
   }
   if (!hydrated) {
     return (
-      <span className="btn btn-wa is-pending" aria-hidden="true">
-        <I.wa size={22} /> Contactar por WhatsApp
-      </span>
+      <ButtonPlaceholder variant="whatsapp" size="xl" block icon={<I.wa size={22} />} aria-hidden="true">
+        Contactar por WhatsApp
+      </ButtonPlaceholder>
     );
   }
   if (desktop) {
@@ -111,10 +112,12 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
   }
   return (
     <>
-      <button
+      <Button
         ref={button}
-        className="btn btn-wa"
-        type="button"
+        variant="whatsapp"
+        size="xl"
+        block
+        icon={<I.wa size={22} />}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
@@ -122,8 +125,8 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
           setOpen(true);
         }}
       >
-        <I.wa size={22} /> Contactar por WhatsApp
-      </button>
+        Contactar por WhatsApp
+      </Button>
       {open ? (
         // Mientras llega el trozo de la hoja, la página ya se atenúa: el toque responde al instante.
         <Suspense fallback={<div className="sheet-backdrop" />}>
@@ -284,10 +287,10 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
       <main className="view no-nav listing-view">
         <HeroGallery photos={l.photos} title={l.title}>
           {preview ? <span /> : (
-          <a
+          <IconButtonLink
             href="/explorar"
-            aria-label="Volver a Explorar"
-            className="icon-btn overlay"
+            label="Volver a Explorar"
+            tone="overlay"
             onClick={
               onBack
                 ? (e) => {
@@ -298,12 +301,12 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             }
           >
             <I.back />
-          </a>
+          </IconButtonLink>
           )}
           {/* Compartir y el corazón dependen del navegador: antes de hidratar, solo sus cajas (mismo tamaño). */}
           <div className="row gap-8">
-            {hydrated && !preview ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <span className="icon-btn" aria-hidden="true" />}
-            {hydrated && !preview ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <span className="icon-btn" aria-hidden="true" />}
+            {hydrated && !preview ? <ShareButton url={d.shareUrl} title={l.title} text={d.previewText} /> : <IconButtonPlaceholder />}
+            {hydrated && !preview ? <FavoriteButton publicId={l.publicId} className="heart-hero" size={20} /> : <IconButtonPlaceholder />}
           </div>
         </HeroGallery>
 
@@ -392,9 +395,9 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
         <div className="cta-bar" ref={bar}>
           <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} currency={currency} />
           {preview ? (
-            <span className="btn btn-wa is-pending" aria-disabled="true">
-              <I.wa size={22} /> Contactar por WhatsApp
-            </span>
+            <ButtonPlaceholder variant="whatsapp" size="xl" block icon={<I.wa size={22} />} aria-disabled="true">
+              Contactar por WhatsApp
+            </ButtonPlaceholder>
           ) : (
             <ContactButton listing={l} days={days} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}

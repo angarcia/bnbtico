@@ -6,7 +6,7 @@
 // A5). Se pueden volver a cambiar mientras están en revisión: cuenta el último. Volver sin guardar no guarda nada.
 // Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
+import { Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useFormKeyboard } from "../publish/form-keyboard";
@@ -30,6 +30,8 @@ import { useOwnListing } from "../editor-query";
 import { NotFoundCard, SkeletonCard } from "../editor-status";
 import { useDesktop } from "../desktop";
 import { OwnerHouseDetail } from "./propietario";
+import { Button, IconButton, TextButton } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (FlowHeader historyBack). */
@@ -111,7 +113,7 @@ export function EditPhotosDialog({ listing, userId, onClose }: { listing: Listin
     }}>
       <div className="row between">
         <h2 id={titleId}>Fotos</h2>
-        <button type="button" className="icon-btn" aria-label="Cerrar" onClick={close}><I.x size={20} /></button>
+        <IconButton label="Cerrar" onClick={close}><I.x size={20} /></IconButton>
       </div>
       <EditPhotos listing={listing} userId={userId} onDone={close} />
     </dialog>,
@@ -224,9 +226,9 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
         </p>
       ) : null}
       {!inline && <div className="sticky-actions">
-        <button className="btn btn-primary btn-block" type="submit" disabled={saving || !hasChanges}>
+        <Button variant="primary" size="lg" block type="submit" disabled={saving || !hasChanges}>
           {action}
-        </button>
+        </Button>
       </div>}
     </form>
   );
@@ -235,10 +237,10 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
     <>
       {inline.renderRow(
         <div className="row gap-8 house-field-actions">
-          <button type="submit" form={formId} className="btn-link account-profile-toggle" disabled={saving || !hasChanges}>{action}</button>
-          <button type="button" className="icon-btn" aria-label="Descartar cambios" title="Descartar cambios" disabled={saving} onClick={inline.onClose}>
+          <TextButton tone="link" placement="account-profile-toggle" type="submit" form={formId} disabled={saving || !hasChanges}>{action}</TextButton>
+          <IconButton label="Descartar cambios" title="Descartar cambios" disabled={saving} onClick={inline.onClose}>
             <I.x size={20} />
-          </button>
+          </IconButton>
         </div>,
       )}
       <div className="owner-detail-panel house-inline-editor">{editor}</div>
@@ -287,8 +289,10 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
         <PhotoGrid source={source} userId={userId} />
         <p className="note small">{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</p>
         <div className="sticky-actions">
-          {onDone ? <button type="button" className="btn btn-primary btn-block" onClick={onDone}>Listo</button> : <Link
-            className="btn btn-primary btn-block"
+          {onDone ? <Button variant="primary" size="lg" block onClick={onDone}>Listo</Button> : <RouterButtonLink
+            variant="primary"
+            size="lg"
+            block
             to={ficha}
             params={{ id: listing.id }}
             replace
@@ -298,7 +302,7 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
             }}
           >
             Listo
-          </Link>}
+          </RouterButtonLink>}
         </div>
       </div>
     </>

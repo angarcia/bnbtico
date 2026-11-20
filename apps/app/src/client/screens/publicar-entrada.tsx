@@ -3,7 +3,7 @@
 // pide el WhatsApp al llegar a las Fotos y /publicar/continuar, ya con sesión, crea la casa con todo y sigue en las Fotos.
 // Trozo propio (publicar-entrada-*), medido en «Entrada de publicar»: no descarga el asistente ni sus campos.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Navigate, useNavigate, useParams } from "@tanstack/react-router";
+import { Navigate, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { DomainError } from "../../domain/errors";
@@ -20,6 +20,8 @@ import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } 
 import { KindChoice, ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { authApi, useSession } from "../session";
 import { SignInForm } from "../sign-in";
+import { Button, ButtonPlaceholder } from "../../shared/button";
+import { RouterButtonLink, RouterIconLink } from "../router-buttons";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
@@ -34,9 +36,9 @@ const clearStored = clearPhoneDraft;
 function EntryHeader({ step = 1 }: { step?: 1 | 7 }) {
   return (
     <WizardHeader step={step} close={
-      <Link to="/explorar" className="btn-link header-close" aria-label="Cerrar" title="Cerrar">
+      <RouterIconLink to="/explorar" label="Cerrar" placement="header-close" title="Cerrar">
         <I.x size={20} />
-      </Link>
+      </RouterIconLink>
     } />
   );
 }
@@ -73,12 +75,12 @@ export function PublicarEntradaScreen() {
           </p>
         ) : null}
         <div className="sticky-actions">
-          <span className="btn btn-ghost btn-back is-disabled" aria-disabled="true" aria-label="Atrás">
+          <ButtonPlaceholder variant="secondary" size="lg" placement="back" aria-disabled="true" aria-label="Atrás">
             <I.back size={22} />
-          </span>
-          <button type="submit" className="btn btn-primary grow">
+          </ButtonPlaceholder>
+          <Button variant="primary" size="lg" placement="grow" type="submit">
             Continuar <I.chevron size={20} />
-          </button>
+          </Button>
         </div>
       </form>
     </>
@@ -173,9 +175,9 @@ export function ContinuarScreen() {
           <p className="note" role="alert">
             {message(resumable.error)}
           </p>
-          <button type="button" className="btn btn-primary btn-lg btn-block" disabled={resumable.isFetching} onClick={() => void resumable.refetch()}>
+          <Button variant="primary" size="lg" block disabled={resumable.isFetching} onClick={() => void resumable.refetch()}>
             Intentar de nuevo
-          </button>
+          </Button>
         </div>
       ) : null}
       {choosing && draft ? (
@@ -184,18 +186,20 @@ export function ContinuarScreen() {
           <p className="small muted">
             {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
           </p>
-          <Link
+          <RouterButtonLink
             to="/propietario/publicar/$id/$paso"
             params={{ id: draft.id, paso: String(resumeStep(draft)) }}
-            className="btn btn-primary btn-lg btn-block"
+            variant="primary"
+            size="lg"
+            block
             onClick={clearStored}
           >
             Seguir con el borrador
-          </Link>
+          </RouterButtonLink>
           {create.isError ? null : (
-            <button type="button" className="btn btn-block btn-ghost" onClick={start}>
+            <Button variant="secondary" block onClick={start}>
               {stored.title.trim() ? `Seguir con «${stored.title.trim()}»` : "Empezar otra"}
-            </button>
+            </Button>
           )}
         </section>
       ) : !create.isError && !readFailed ? (
@@ -209,9 +213,9 @@ export function ContinuarScreen() {
           <p className="note" role="alert">
             {message(create.error)}
           </p>
-          <button type="button" className="btn btn-primary btn-lg btn-block" onClick={start}>
+          <Button variant="primary" size="lg" block onClick={start}>
             Intentar de nuevo
-          </button>
+          </Button>
         </div>
       ) : null}
     </>
@@ -275,12 +279,12 @@ export function CorreoScreen() {
             {error}
           </p>
         ) : null}
-        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
+        <Button variant="primary" size="lg" block type="submit" disabled={busy}>
           Guardar correo
-        </button>
-        <button type="button" className="btn btn-block btn-ghost" onClick={skip}>
+        </Button>
+        <Button variant="secondary" block onClick={skip}>
           Ahora no
-        </button>
+        </Button>
       </form>
     </>
   );

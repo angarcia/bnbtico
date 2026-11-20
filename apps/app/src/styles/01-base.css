@@ -81,8 +81,6 @@ a{color:var(--primary)}
 .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:var(--w-medium)}
 .ink{color:var(--fg)}.primary{color:var(--primary)}
 .link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none}
-.btn-link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none;padding:6px 0;text-align:left;min-height:44px;display:inline-flex;align-items:center}
-.btn-link.muted{color:var(--muted)}
 .field-error{color:var(--bad);font-size:15px;font-weight:var(--w-medium)}
 .counter-out{color:var(--bad);font-weight:var(--w-medium)}
 /* Turnstile: invisible salvo que Cloudflare pida interacción. */
@@ -126,24 +124,36 @@ a{color:var(--primary)}
 .sub-row-link{color:inherit;text-decoration:none}
 .divider{border:0;border-top:1px solid var(--line-soft);margin:0}
 
-/* ---------- Botones ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-input);font-weight:var(--w-medium);font-size:17px;text-decoration:none;white-space:nowrap}
-/* Verde B aprobado por Ana (2026-11-04): acciones con fondo tonal opaco, texto verde, sombra ligera y sin borde.
-   Los secundarios discretos conservan su menor peso; pagos y WhatsApp mantienen sus colores funcionales. */
-.btn-primary,.btn-soft,.btn-outline{background:var(--state-soft);color:var(--primary);border:0;box-shadow:0 2px 5px color-mix(in srgb,var(--primary) 14%,transparent)}
-.btn-ghost{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary-ink)}
-.btn-outline-bad{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
-/* Eliminar casa (admin): contorno rojo, sin relleno; confirmado, relleno rojo. */
-.btn-danger-outline{background:transparent;border:1.5px solid var(--bad);color:var(--bad)}
-.btn-danger{background:var(--bad);color:var(--bg)}
-.btn-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)}
-.btn-wa{background:var(--wa);color:var(--wa-ink);min-height:56px;border-radius:var(--r-cta);font-family:var(--display);font-weight:var(--w-medium);font-size:18px;width:100%}
+/* ---------- Botones (historia 07, paso 2) ----------
+   Una sola definición por variante; las pinta `shared/button.tsx` (Button, ButtonLink, TextButton, IconButton). Las pantallas
+   no redefinen su aspecto: solo las colocan (clases de colocación de button.tsx). */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--hit);padding:0 18px;border:1px solid transparent;border-radius:var(--r-control);background:none;font-weight:var(--w-medium);font-size:17px;text-decoration:none;white-space:nowrap;cursor:pointer}
+/* Principal: verde B aprobado por Ana (2026-11-04), fondo tonal opaco, texto verde, sombra ligera. */
+.btn-primary{background:var(--state-soft);color:var(--primary);box-shadow:0 2px 5px color-mix(in srgb,var(--primary) 14%,transparent);font-weight:var(--w-strong)}
+/* Secundario («Cancelar», «Ahora no»): contorno fino verde en móvil y escritorio (D3). */
+.btn-secondary{background:transparent;border-color:color-mix(in srgb,var(--primary) 45%,transparent);color:var(--primary-ink)}
+/* Pago, en ocre: solo dinero y avisos de pago (tests/unit/ocre.test.ts). */
+.btn-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg);font-weight:var(--w-strong)}
+/* WhatsApp lleno: solo para hablar con el anfitrión (D4). */
+.btn-wa{background:var(--wa);color:var(--wa-ink);font-weight:var(--w-strong)}
+/* Un solo destructivo, terracota tonal, igual para propietario y admin (D2). */
+.btn-danger{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
 .btn-lg{min-height:52px;font-size:18px;font-family:var(--display)}
 .btn-xl{min-height:56px;font-size:18px;font-family:var(--display);border-radius:var(--r-cta)}
-.btn-sm{min-width:44px;min-height:44px;padding:0 14px;font-size:15px;border-radius:8px}
 .btn-block{width:100%}
-.btn:disabled,.btn[aria-disabled="true"],.btn.is-disabled{background:var(--disabled-bg);color:var(--disabled-fg);border:0;box-shadow:none;opacity:1;cursor:not-allowed}
-.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--fg)}
+/* Un solo desactivado, sin bajar la opacidad. */
+.btn:disabled,.btn[aria-disabled="true"]{background:var(--disabled-bg);color:var(--disabled-fg);border-color:transparent;box-shadow:none;cursor:not-allowed}
+.btn[aria-busy="true"]{cursor:progress}
+.wa-tint{display:inline-flex;color:var(--wa-icon)}
+/* Botón de texto: siempre 44 px de alto. */
+.btn-link,.btn-text,.btn-text-danger{display:inline-flex;align-items:center;min-height:var(--hit);font-weight:var(--w-medium);text-decoration:none;text-align:left;text-underline-offset:3px}
+.btn-link{color:var(--primary);padding:6px 0}
+.btn-text{color:var(--muted);padding:0 8px;text-decoration:underline;white-space:nowrap}
+.btn-text-danger{color:var(--brand-ink);padding:6px 0}
+.btn-link:disabled,.btn-text:disabled,.btn-text-danger:disabled{color:var(--disabled-fg);cursor:not-allowed}
+/* Botón de icono: 44 × 44. */
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:var(--hit);height:var(--hit);border-radius:var(--r-control);color:var(--fg)}
+.icon-btn:disabled,.icon-btn[aria-disabled="true"]{background:var(--disabled-bg);color:var(--disabled-fg);cursor:not-allowed}
 /* Botones sobre las fotos: crema al 70 %, sin desenfoque (Daniel, 2026-10-29; --overlay-btn). */
 .icon-btn.overlay{background:var(--overlay-btn)}
 

@@ -6,6 +6,7 @@ import { toast } from "../../shared/toast";
 import { airbnbQuery, icalExportApi, useCalendarOnline } from "../airbnb";
 import { sessionState } from "../session";
 import { ConfirmSheet } from "../confirm-sheet";
+import { Button, TextButton } from "../../shared/button";
 
 /** El token solo vive en este componente, nunca en Query, almacenamiento o telemetría. */
 export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id: string; userId: string; inlineConfirmation?: boolean }) {
@@ -120,36 +121,36 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
     {!online ? <p className="note small">Sin conexión. Para consultar o generar el enlace, vuelva a conectarse.</p> : null}
     {problem ? <p className="field-error" role="alert">{problem}</p> : null}
     {revoked ? <p className="note small">Retire también el enlace anterior de Airbnb. Los bloqueos que ya leyó pueden seguir apareciendo allí.</p> : null}
-    {!data && !busy ? <button type="button" className="btn btn-ghost btn-lg" disabled={!online} onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</button> : null}
+    {!data && !busy ? <Button variant="secondary" size="lg" disabled={!online} onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</Button> : null}
     {data?.suspended ? <p className="note">La exportación está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</p> : null}
     {data && !data.generated && !data.suspended ? <>
       <p>Todavía no ha generado un enlace de exportación.</p>
-      <button type="button" className="btn btn-primary btn-lg" disabled={!!busy || !online} onClick={() => void generate()}>{busy === "generating" ? "Generando enlace…" : "Generar enlace"}</button>
+      <Button variant="primary" size="lg" disabled={!!busy || !online} onClick={() => void generate()}>{busy === "generating" ? "Generando enlace…" : "Generar enlace"}</Button>
     </> : null}
     {url ? <>
       <div>
         <label htmlFor="ical-export-url">Enlace de 3bstays para Airbnb</label>
         <textarea id="ical-export-url" ref={field} rows={3} readOnly value={url} autoComplete="off" spellCheck={false} aria-describedby="ical-export-help ical-export-copy-error" />
       </div>
-      <button type="button" className="btn btn-primary btn-lg" onClick={() => void copy()}>Copiar enlace</button>
+      <Button variant="primary" size="lg" onClick={() => void copy()}>Copiar enlace</Button>
       <p id="ical-export-copy-error" className="field-error" role={copyProblem ? "alert" : undefined}>{copyProblem ? "No pudimos copiarlo. Mantenga pulsado el enlace para copiarlo." : null}</p>
       <p id="ical-export-help" className="hint">Añada este enlace como calendario importado en Airbnb. Cualquier persona que lo tenga puede consultar sus noches bloqueadas; no puede modificarlas.</p>
       {data?.nights === 0 ? <p className="small muted">No hay noches bloqueadas manualmente en este período.</p> : null}
       <p className="small">En el calendario del alojamiento en Airbnb, abra Disponibilidad → Conectar calendarios → Conectar otro sitio web. Pegue el enlace y añada el calendario.</p>
       <p className="hint">Airbnb consulta los cambios según su propio ritmo. Copiar el enlace no confirma que Airbnb lo haya añadido ni actualizado.</p>
     </> : null}
-    {data?.generated && typeof data.generation === "number" && !(inlineConfirmation && confirmGeneration !== null) ? <button type="button" className="btn-text sub-stop" disabled={!!busy || !online} onClick={() => { setRevokeError(null); setConfirmGeneration(data.generation ?? null); }}>Revocar enlace</button> : null}
+    {data?.generated && typeof data.generation === "number" && !(inlineConfirmation && confirmGeneration !== null) ? <TextButton tone="quiet" placement="sub-stop" disabled={!!busy || !online} onClick={() => { setRevokeError(null); setConfirmGeneration(data.generation ?? null); }}>Revocar enlace</TextButton> : null}
     {confirmGeneration !== null && inlineConfirmation ? (
       <div className="stack gap-8">
         <p>¿Revocar este enlace? El enlace actual dejará de funcionar. Retírelo también de Airbnb.</p>
         {revokeError && <p className="field-error" role="alert">{revokeError}</p>}
-        <button type="button" className="btn btn-danger" disabled={busy === "revoking" || !online} onClick={() => void revoke()}>
+        <Button variant="danger" disabled={busy === "revoking" || !online} onClick={() => void revoke()}>
           {busy === "revoking" ? "Revocando…" : "Revocar enlace"}
-        </button>
-        <button type="button" className={`btn btn-ghost${inlineConfirmation ? " popup-cancel" : ""}`} disabled={busy === "revoking"} onClick={() => setConfirmGeneration(null)}>Cancelar</button>
+        </Button>
+        <Button variant="secondary" disabled={busy === "revoking"} onClick={() => setConfirmGeneration(null)}>Cancelar</Button>
       </div>
     ) : confirmGeneration !== null ? <ConfirmSheet title="¿Revocar este enlace?" body="El enlace actual dejará de funcionar. Retírelo también de Airbnb: los bloqueos que ya leyó pueden seguir apareciendo allí."
-      confirmLabel={busy === "revoking" ? "Revocando…" : "Revocar enlace"} confirmClassName="btn btn-danger btn-lg" cancelClassName="btn btn-ghost btn-lg"
+      confirmLabel={busy === "revoking" ? "Revocando…" : "Revocar enlace"} tone="destructive"
       pending={busy === "revoking"} error={revokeError} onClose={() => setConfirmGeneration(null)} onConfirm={() => void revoke()} /> : null}
   </section>;
 }

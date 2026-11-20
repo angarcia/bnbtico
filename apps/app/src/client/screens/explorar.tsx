@@ -28,6 +28,7 @@ import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
 import { RangeCalendar } from "../../shared/range-calendar";
+import { Button, TextButton } from "../../shared/button";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
@@ -115,8 +116,8 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
                     <NightsPicker nights={draft.nights} onChange={(nights) => setDraft({ ...draft, nights })} />
                   </Suspense>
                   <div className="row between">
-                    <button type="button" className="btn-text" onClick={() => apply({ ...draft, nights: 0 })}>Quitar noches</button>
-                    <button type="button" className="btn btn-primary" disabled={!draft.nights} onClick={() => apply(draft)}>Aplicar noches</button>
+                    <TextButton tone="quiet" onClick={() => apply({ ...draft, nights: 0 })}>Quitar noches</TextButton>
+                    <Button variant="primary" disabled={!draft.nights} onClick={() => apply(draft)}>Aplicar noches</Button>
                   </div>
                 </>
               ) : (
@@ -125,8 +126,8 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
                     <RangeCalendar weekdaysPerMonth today={today} value={draft} onChange={(range) => setDraft({ ...draft, ...range })} />
                   </div>
                   <div className="row between">
-                    <button type="button" className="btn-text" onClick={() => apply({ ...draft, arrival: null, departure: null })}>Quitar fechas</button>
-                    <button type="button" className="btn btn-primary" disabled={!draft.arrival || !draft.departure} onClick={() => apply(draft)}>Aplicar fechas</button>
+                    <TextButton tone="quiet" onClick={() => apply({ ...draft, arrival: null, departure: null })}>Quitar fechas</TextButton>
+                    <Button variant="primary" disabled={!draft.arrival || !draft.departure} onClick={() => apply(draft)}>Aplicar fechas</Button>
                   </div>
                 </>
               )}
@@ -261,9 +262,9 @@ function MoreListings({ loading, failed, onMore }: { loading: boolean; failed: b
           No pudimos cargar más casas. Revise su conexión e inténtelo de nuevo.
         </div>
       ) : null}
-      <button type="button" className="btn btn-outline btn-block" disabled={loading} aria-busy={loading} onClick={onMore}>
+      <Button variant="primary" block pending={loading} onClick={onMore}>
         {loading ? "Cargando casas…" : "Ver más casas"}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -392,9 +393,9 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         isDatesError(error) ? (
           <div className="note note-plain note-col" role="alert">
             <span>Revise las fechas de su búsqueda.</span>
-            <button type="button" className="btn btn-outline btn-block" onClick={() => go({ ...f, arrival: null, departure: null })}>
+            <Button variant="primary" block onClick={() => go({ ...f, arrival: null, departure: null })}>
               Quitar fechas
-            </button>
+            </Button>
           </div>
         ) : isError ? (
           <div className="note note-arena">No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo.</div>

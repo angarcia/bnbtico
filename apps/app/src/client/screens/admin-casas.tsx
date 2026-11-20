@@ -14,6 +14,8 @@ import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
 import { RootHeader } from "../chrome";
 import { usePrivateSheet } from "../private-sheet";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";
+import { Button, IconButton } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 // ---------- 23 · Casas ----------
 const casasRoute = getRouteApi("/_tabs/_admin/admin/casas");
@@ -86,9 +88,9 @@ export function CasasAdminScreen() {
         </section>
       ) : null}
       <p className="xs muted queue-foot">Toque una casa para ver sus datos, editarla, pausarla, bloquearla o eliminarla.</p>
-      <Link to="/admin/borradores" className="btn btn-ghost btn-block">
+      <RouterButtonLink to="/admin/borradores" variant="secondary" block>
         Borradores sin enviar
-      </Link>
+      </RouterButtonLink>
       {/* La hoja sigue a la lista: al terminar una acción la casa cambia (o desaparece, y la hoja se cierra). */}
       {data && openId && data.houses.some((h) => h.listingId === openId) ? (
         <HouseSheet house={data.houses.find((h) => h.listingId === openId)!} today={data.today} userId={userId} onClose={() => setOpenId(null)} />
@@ -201,9 +203,9 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
             <h2>{h.title || "Sin nombre"}</h2>
             <span className="small muted num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</span>
           </div>
-          <button type="button" className="icon-btn" aria-label="Cerrar" onClick={onClose}>
+          <IconButton label="Cerrar" onClick={onClose}>
             <I.x size={20} />
-          </button>
+          </IconButton>
         </div>
 
         {!copy ? (
@@ -261,32 +263,32 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
             {published ? (
               <div className="stack gap-8">
                 {h.hold?.kind === "paused" ? (
-                  <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={() => run({ kind: "resume", id: h.listingId, publicId: h.publicId })}>
+                  <Button variant="primary" block disabled={pending} onClick={() => run({ kind: "resume", id: h.listingId, publicId: h.publicId })}>
                     Reanudar
-                  </button>
+                  </Button>
                 ) : null}
                 {h.hold?.kind === "blocked" ? (
-                  <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={() => run({ kind: "unblock", id: h.listingId, publicId: h.publicId })}>
+                  <Button variant="primary" block disabled={pending} onClick={() => run({ kind: "unblock", id: h.listingId, publicId: h.publicId })}>
                     Desbloquear
-                  </button>
+                  </Button>
                 ) : null}
                 {!h.hold ? (
-                  <button type="button" className="btn btn-soft btn-block" onClick={() => go("pause")}>
+                  <Button variant="primary" block onClick={() => go("pause")}>
                     Pausar
-                  </button>
+                  </Button>
                 ) : null}
                 {h.hold?.kind !== "blocked" ? (
-                  <button type="button" className="btn btn-soft btn-block" onClick={() => go("block")}>
+                  <Button variant="primary" block onClick={() => go("block")}>
                     Bloquear
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             ) : (
               <p className="small muted">Solo se pausa o se bloquea una casa publicada.</p>
             )}
-            <button type="button" className="btn btn-danger-outline btn-block" onClick={() => go("delete")}>
+            <Button variant="danger" block onClick={() => go("delete")}>
               Eliminar casa
-            </button>
+            </Button>
           </>
         ) : (
           <form onSubmit={submit} noValidate>
@@ -315,12 +317,12 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
                 {error}
               </p>
             ) : null}
-            <button type="submit" className={mode === "delete" ? "btn btn-danger btn-block" : "btn btn-primary btn-block"} disabled={pending || (mode === "delete" && !deleteConfirmMatches(h.publicId, confirm))}>
+            <Button variant={mode === "delete" ? "danger" : "primary"} block type="submit" disabled={pending || (mode === "delete" && !deleteConfirmMatches(h.publicId, confirm))}>
               {copy.confirm}
-            </button>
-            <button type="button" className="btn btn-ghost btn-block popup-cancel" disabled={pending} onClick={() => go("detail")}>
+            </Button>
+            <Button variant="secondary" block disabled={pending} onClick={() => go("detail")}>
               Cancelar
-            </button>
+            </Button>
           </form>
         )}
       </section>

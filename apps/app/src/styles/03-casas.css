@@ -105,7 +105,10 @@
 .photos-grid .photo{min-height:108px;border-radius:var(--r-input)}
 .photos-grid .photo.cover{grid-column:span 2;grid-row:span 2;min-height:224px;border-radius:var(--r-tile)}
 .photos-grid .add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:108px;border:2px dashed var(--selection);border-radius:var(--r-input);background:var(--surface-soft);color:var(--primary);font-size:14px;font-weight:var(--w-medium);cursor:pointer}
-.photos-grid .remove{position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:8px;background:var(--overlay-btn);color:var(--fg);display:inline-flex;align-items:center;justify-content:center}
+/* Quitar foto: área táctil de 44 (IconButton) con el dibujo de 36 de siempre, crema al 70 %. */
+.photos-grid .remove{position:absolute;right:2px;top:2px;background:none}
+.photos-grid .remove::before{content:"";position:absolute;inset:4px;z-index:-1;border-radius:var(--r-control);background:var(--overlay-btn)}
+.photos-grid .remove:disabled::before{background:var(--disabled-bg)}
 .photos-grid .tag{position:absolute;left:10px;top:10px;padding:5px 10px;border-radius:6px;background:var(--overlay);color:#FFFBF2;font-size:14px;font-weight:var(--w-medium)}
 .photo-strip{display:flex;gap:8px;overflow-x:auto;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);scrollbar-width:none}
 .photo-strip::-webkit-scrollbar{display:none}
@@ -150,8 +153,6 @@
 .listing-description p+p{margin-top:1.45em}
 .listing-description.is-clamped{max-height:calc(8 * 1.45em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent)}
 .description-block{gap:14px}
-.btn-more{width:100%;min-height:48px}
-.btn-more.is-pending{pointer-events:none}
 /* La descripción entera, a pantalla completa por encima de la ficha. */
 .description-screen{position:fixed;inset:0;z-index:31;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:screen-in 280ms var(--ease-drawer) backwards}
 .description-screen:focus{outline:none}
@@ -161,7 +162,6 @@
 @keyframes screen-in{from{transform:translateY(100%)}}
 @media (prefers-reduced-motion:reduce){.description-screen{animation-name:fade-in}}
 .map-box-listing{height:180px}
-.btn-note{font-family:var(--body);font-weight:var(--w-medium);font-size:14px;opacity:.8}
 .status-title{font-size:24px}
 .map-box{isolation:isolate}
 

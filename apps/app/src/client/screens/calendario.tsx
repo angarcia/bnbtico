@@ -9,7 +9,7 @@
 // llegada a salida − 1 como ocupadas por el mismo camino que «Guardar cambios»; en una casa activa, «Pausar la casa» (antes
 // «Cerrar la casa hasta…», set_listing_available) abre su hoja. Cada hoja, en su propio trozo diferido.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
+import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
 import { Component, Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import {
   addMonths,
@@ -56,6 +56,8 @@ import { useSession } from "../session";
 import { HousePicker } from "../house-picker";
 
 import { AirbnbRow, AirbnbAvailability, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
+import { Button, TextButton } from "../../shared/button";
+import { RouterButtonLink } from "../router-buttons";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "3bstays-calendario-casa";
@@ -134,13 +136,13 @@ export function CalendarioScreen() {
         <section className="card stack gap-12">
           <p>Su calendario se activa cuando envíe su casa a revisión.</p>
           {draft ? (
-            <Link to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} className="btn btn-primary btn-lg btn-block">
+            <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} variant="primary" size="lg" block>
               Seguir publicando
-            </Link>
+            </RouterButtonLink>
           ) : (
-            <Link to="/propietario/publicar" className="btn btn-primary btn-lg btn-block">
+            <RouterButtonLink to="/propietario/publicar" variant="primary" size="lg" block>
               Publicar casa
-            </Link>
+            </RouterButtonLink>
           )}
         </section>
       ) : null}
@@ -429,10 +431,9 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
             <b>{l.reopenAt ? `Pausada hasta el ${shortDate(l.reopenAt)}` : "Pausada"}</b>
             <span className="small muted">No aparece en Explorar ni recibe consultas.</span>
           </span>
-          <button
+          <Button
             ref={button}
-            type="button"
-            className="btn btn-ghost btn-sm"
+            variant="secondary"
             aria-disabled={pending || undefined}
             onClick={() => {
               if (pending) return;
@@ -441,7 +442,7 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
             }}
           >
             Volver a publicarla
-          </button>
+          </Button>
         </div>
       )}
       {available.error ? (
@@ -495,16 +496,15 @@ class SheetBoundary extends Component<{ name: string; onRetry: () => void; child
         <p className="field-error" role="alert">
           No pudimos abrir «{this.props.name}». Revise su conexión e inténtelo de nuevo.
         </p>
-        <button
-          type="button"
-          className="btn btn-sm btn-ghost"
+        <Button
+          variant="secondary"
           onClick={() => {
             this.props.onRetry();
             this.setState({ failed: false });
           }}
         >
           Reintentar
-        </button>
+        </Button>
       </div>
     );
   }
@@ -610,9 +610,9 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
     <section className={`cal-panel${kb ? " kb" : ""}`} aria-label="Días seleccionados" onFocus={onFocus} onBlur={onBlur}>
       <div className="row between baseline">
         <b className="display">{selectionLabel(sel.days)}</b>
-        <button type="button" className="cal-cancel" onClick={onCancel}>
+        <TextButton tone="quiet" onClick={onCancel}>
           Cancelar
-        </button>
+        </TextButton>
       </div>
       {importedCount ? <AirbnbAvailability sel={sel} importedCount={importedCount} manualCount={manualCount} onChange={onChange}>{priceField}</AirbnbAvailability> : <>
       {manualCount ? <p className="small muted">Bloqueo manual</p> : null}
@@ -629,18 +629,18 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
       </div>
       </>}
       {base !== null && hasSpecial && FLAGS.datePrices ? (
-        <button type="button" className="btn-link cal-base" onClick={() => onChange(setPrice(sel, grouped(String(base))))}>
+        <TextButton tone="link" placement="cal-base" onClick={() => onChange(setPrice(sel, grouped(String(base))))}>
           Usar el precio base ({formatCRC(base)})
-        </button>
+        </TextButton>
       ) : null}
       {problem ? (
         <p className="field-error" role="alert">
           {problem}
         </p>
       ) : null}
-      <button type="button" className="btn btn-primary btn-block cal-save" disabled={!canSave} onClick={onSave}>
+      <Button variant="primary" block disabled={!canSave} onClick={onSave}>
         Guardar cambios
-      </button>
+      </Button>
     </section>
   );
 }

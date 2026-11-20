@@ -26,6 +26,7 @@ import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
 import { useStepReady } from "./step-ready";
 import { KindChoice, ReadyList } from "./wizard-parts";
+import { Button } from "../../shared/button";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
  * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Un solo componente para
@@ -59,16 +60,15 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
           <p className="field-error" role="alert">
             {failed === "chunk" ? "No pudimos cargar las fotos. Revise su conexión." : "Algo falló al mostrar las fotos. Inténtelo de nuevo."}
           </p>
-          <button
-            type="button"
-            className="btn btn-sm btn-ghost"
+          <Button
+            variant="secondary"
             onClick={() => {
               PhotoUploader = loadPhotos();
               this.setState({ failed: null });
             }}
           >
             Reintentar
-          </button>
+          </Button>
         </div>,
       );
     return (
@@ -365,9 +365,9 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
           );
         })}
       </nav>
-      <button type="button" className="btn btn-ghost btn-block" onClick={() => setPreview(true)}>
+      <Button variant="secondary" block onClick={() => setPreview(true)}>
         Ver cómo queda su ficha
-      </button>
+      </Button>
       <span className="small muted">
         Los clientes le escriben al <b className="num ink">{formatPhone(listing.whatsappPhone)}</b> (verificado). No se muestra públicamente.
       </span>
@@ -399,9 +399,9 @@ function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing
     <div className="ficha-preview" role="dialog" aria-modal="true" aria-label="Vista previa de su ficha">
       <div className="preview-bar">
         <span className="small strong">Vista previa · así la verán los clientes</span>
-        <button type="button" className="btn btn-sm btn-primary" onClick={onClose} autoFocus>
+        <Button variant="primary" onClick={onClose} autoFocus>
           Cerrar
-        </button>
+        </Button>
       </div>
       <ListingPage listing={previewListing({ ...listing, ...draft }, ownerName)} base="" preview />
     </div>,

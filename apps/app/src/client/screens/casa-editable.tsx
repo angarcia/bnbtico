@@ -26,6 +26,7 @@ import { useDiscardEditField } from "../edit";
 import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
 import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "../owner-ui";
+import { TextButton } from "../../shared/button";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const InlineHouseEditor = lazy(() => import("./editar").then((m) => ({ default: m.InlineHouseEditor })));
@@ -106,9 +107,9 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
         ) : null}
       </span>
       {readOnly ? null : expanded ? editActions : onEdit ? (
-        <button type="button" className="btn-link account-profile-toggle" aria-label={`Editar: ${fieldTitle(field, l.kind)}`} aria-expanded={false} onClick={onEdit}>
+        <TextButton tone="link" placement="account-profile-toggle" aria-label={`Editar: ${fieldTitle(field, l.kind)}`} aria-expanded={false} onClick={onEdit}>
           Editar
-        </button>
+        </TextButton>
       ) : (
         <span className="chev">
           <I.chevron />
@@ -154,22 +155,20 @@ function PendingFoot({ listing: l, field, note, userId, showVisibility, proposed
     <div className="pending-foot">
       {proposedName !== undefined ? <span className="strong house-pending-value">{proposedName}</span> : null}
       {note ? <p className="small note-review">Le pedimos cambios: {note}</p> : showVisibility ? <span className="xs muted">{pendingVisibility}</span> : null}
-      <button
-        type="button"
-        className="btn-text"
+      <TextButton
+        tone="quiet"
         aria-label={`Descartar el cambio de ${fieldTitle(field, l.kind).toLowerCase()}`}
         disabled={discard.isPending}
         onClick={() => setAsking(true)}
       >
         Descartar
-      </button>
+      </TextButton>
       {asking ? (
         <ConfirmSheet
           title={EDIT_COPY.discardTitle}
           body={EDIT_COPY.discardBody}
           confirmLabel="Descartar"
-          confirmClassName="btn btn-outline-bad btn-lg"
-          cancelClassName="btn btn-ghost btn-lg"
+          tone="destructive"
           onClose={() => setAsking(false)}
           onConfirm={() => {
             setAsking(false);
@@ -292,7 +291,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
     <>
       {can(l, "share") ? (
         <div className="stack gap-8">
-          <ShareButtonInline listing={l} className="btn-block" />
+          <ShareButtonInline listing={l} block />
           {!actionsOnLeft ? (
             <small className="num primary share-url center" data-testid="share-url">
               {shareUrl}
@@ -350,7 +349,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
             return (
               <div key={field} className={actionsOnLeft ? "house-field" : "house-field-flat"}>
                 {editingDetails && editingField === field ? (
-                  <Suspense fallback={renderRow(<button type="button" className="btn-link" onClick={closeField}>Cancelar</button>)}>
+                  <Suspense fallback={renderRow(<TextButton tone="link" onClick={closeField}>Cancelar</TextButton>)}>
                     <InlineHouseEditor listing={l} field={field} userId={userId} renderRow={renderRow} onClose={closeField} />
                   </Suspense>
                 ) : renderRow()}

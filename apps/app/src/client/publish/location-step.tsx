@@ -15,6 +15,7 @@ import { createPlaceLookup, type LookupState, type PlaceLookup } from "./place-l
 import { PlaceSearch, type PlaceItem } from "./place-search";
 import { useStepReady } from "./step-ready";
 import { ZoneSelect } from "./zone-select";
+import { Button } from "../../shared/button";
 
 const NOT_LAND = "Ponga el punto sobre tierra, dentro de Costa Rica";
 const same = (a: LatLng | null, b: LatLng | null) => a !== null && b !== null && a.lat === b.lat && a.lng === b.lng;
@@ -30,9 +31,9 @@ function PlaceLine({ state, onRetry }: { state: LookupState; onRetry(): void }) 
       {state.status === "error" ? (
         <>
           <span className="place-off">No pudimos ubicar el punto. Revise su conexión.</span>
-          <button type="button" className="btn btn-sm btn-ghost" onClick={onRetry}>
+          <Button variant="secondary" onClick={onRetry}>
             Reintentar
-          </button>
+          </Button>
         </>
       ) : null}
     </div>

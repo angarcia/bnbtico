@@ -31,6 +31,8 @@ import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDe
 import { knownNoDraft } from "../own-listings-query";
 import { ConfirmSheet } from "../confirm-sheet";
 import { useDesktop } from "../desktop";
+import { Button, TextButton } from "../../shared/button";
+import { RouterButtonLink, RouterTextLink } from "../router-buttons";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -46,8 +48,7 @@ function useDiscardSheet(go: () => void): [() => void, ReactNode] {
         title="¿Descartar este borrador?"
         body="No se puede deshacer."
         confirmLabel="Descartar"
-        confirmClassName="btn btn-outline-bad btn-lg"
-        cancelClassName="btn btn-ghost btn-lg"
+        tone="destructive"
         onClose={close}
         onConfirm={() => {
           close();
@@ -187,7 +188,7 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
       <HoldNotice listing={l} card />
       {shareable || tools ? (
         <div className="house-actions">
-          {shareable ? <ShareButtonInline listing={l} className="house-share" /> : null}
+          {shareable ? <ShareButtonInline listing={l} placement="house-share" /> : null}
           {tools ? (
             <div className="house-tools">
               <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label="Calendario" title="Calendario">
@@ -202,24 +203,19 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
         </div>
       ) : null}
       {l.status === "changes" ? (
-        <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} className="btn btn-primary btn-block">
+        <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} variant="primary" block>
           Corregir y reenviar
-        </Link>
+        </RouterButtonLink>
       ) : null}
       {l.status === "draft" ? (
         <div className="row gap-8">
-          <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} className="btn btn-ghost grow">
+          <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} variant="secondary" placement="grow">
             Seguir publicando
-          </Link>
+          </RouterButtonLink>
           {can(l, "discard") ? (
-            <button
-              type="button"
-              className="btn btn-link muted"
-              disabled={discard.isPending}
-              onClick={ask}
-            >
+            <TextButton tone="quiet" disabled={discard.isPending} onClick={ask}>
               Descartar
-            </button>
+            </TextButton>
           ) : null}
         </div>
       ) : null}
@@ -263,11 +259,15 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, n
   }, [client, userId]);
   const l = query.data;
   // En escritorio, «Ver ficha» va en la cabecera: flotando tapaba la fila que se edita (revisión 2026-11-13, A1).
-  const viewListing = l && can(l, "share") ? (
-    <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className={desktop ? "btn btn-ghost" : "float-btn"}>
+  const viewListing = l && can(l, "share") ? (desktop ? (
+    <RouterButtonLink to="/casa/$publicId" params={{ publicId: l.publicId }} variant="secondary" icon={<I.eye size={20} />}>
+      Ver ficha
+    </RouterButtonLink>
+  ) : (
+    <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="float-btn">
       <I.eye size={20} />
       Ver ficha
-    </Link>
+    </Link>)
   ) : null;
   return (
     <>
@@ -333,9 +333,9 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
         {/* Borrador: «Seguir publicando» como acción principal, con lo que falta (revisión UX 2026-10-29, A4). */}
         {l.status === "draft" ? (
           <div className="stack gap-8">
-            <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} className="btn btn-primary btn-lg btn-block">
+            <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} variant="primary" size="lg" block>
               Seguir publicando
-            </Link>
+            </RouterButtonLink>
             {missingLine(missingParts(l)) ? (
               <span className="small muted center" data-testid="draft-missing">
                 {missingLine(missingParts(l))}
@@ -348,9 +348,9 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
           <section className="card-arena stack gap-10">
             <b className="display offer-title">Le pedimos cambios</b>
             <span className="small ink">{l.reviewNote}</span>
-            <button type="button" className="btn btn-primary btn-block" onClick={() => void toWizard()}>
+            <Button variant="primary" block onClick={() => void toWizard()}>
               Corregir y reenviar
-            </button>
+            </Button>
           </section>
         ) : null}
 
@@ -363,9 +363,9 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
         {error ? <p className="note" role="alert">{message(error)}</p> : null}
 
         {can(l, "discard") ? (
-          <button type="button" className="btn btn-outline-bad" onClick={ask} disabled={discard.isPending}>
+          <Button variant="danger" onClick={ask} disabled={discard.isPending}>
             Descartar borrador
-          </button>
+          </Button>
         ) : <DeleteHouse listing={l} userId={userId} />}
       </div>
       {sheet}
@@ -447,12 +447,12 @@ export function EnviadaScreen() {
         </div>
       </div>
       <div className="stack gap-10 sent-actions">
-        <Link to="/propietario/calendario" search={{ casa: id }} className="btn btn-primary btn-lg">
+        <RouterButtonLink to="/propietario/calendario" search={{ casa: id }} variant="primary" size="lg">
           Marcar las noches ocupadas
-        </Link>
-        <Link to="/propietario/casas" className="btn-link sent-link">
+        </RouterButtonLink>
+        <RouterTextLink to="/propietario/casas" tone="link" placement="sent-link">
           Ir a Mis casas
-        </Link>
+        </RouterTextLink>
       </div>
     </div>
   );

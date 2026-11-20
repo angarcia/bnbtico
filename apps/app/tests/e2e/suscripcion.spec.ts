@@ -334,3 +334,21 @@ test("Cuenta resume sin límite y Ver suscripciones abre todas las casas", async
   await expect(page.locator("article.sub-house").first()).toContainText("Casa resumen 5");
   for (let n = 1; n <= 5; n++) await expect(house(page, `Casa resumen ${n}`)).toBeVisible();
 });
+
+test("escritorio: al parar, «Mantener suscripción» es lo principal y «Parar» un texto terracota", async ({ page }) => {
+  // Historia 07 (Ana, 2026-11-19): con los botones comunes se conserva el énfasis para no empujar a parar.
+  const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await owner(page);
+  await page.goto(SCREEN);
+  await house(page, "Casa Cocles").getByRole("button", { name: "Parar suscripción" }).click();
+  const dialog = page.getByRole("dialog");
+  const buttons = dialog.getByRole("button");
+  await expect(buttons).toHaveText(["Mantener suscripción", "Parar suscripción"]);
+  await expect(buttons.nth(0)).toHaveClass(/\bbtn-primary\b/);
+  await expect(buttons.nth(1)).toHaveClass(/\bbtn-text-danger\b/);
+  expect(await buttons.nth(1).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
+  await buttons.nth(0).click();
+  await expect(dialog).toHaveCount(0);
+  expect(await statusOf(casa.id)).toBe("active");
+});

@@ -6,6 +6,7 @@ import { loadSecondFactor, verifySecondCode } from "../admin";
 import { FlowHeader } from "../chrome";
 import { useSession } from "../session";
 import { NotAdmin, message, useIsAdmin } from "./admin-shared";
+import { Button } from "../../shared/button";
 
 // ---------- Segundo código ----------
 const codigoRoute = getRouteApi("/_flow/_privateFlow/admin/codigo");
@@ -118,9 +119,9 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
             {error}
           </p>
         ) : null}
-        <button className="btn btn-primary btn-xl btn-block" type="submit" disabled={busy || factor === null}>
+        <Button variant="primary" size="xl" block type="submit" disabled={busy || factor === null}>
           {busy ? "Verificando…" : factor === null && !error ? "Preparando…" : "Verificar y entrar"}
-        </button>
+        </Button>
       </form>
     </div>
   );

@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { addDays, CALENDAR_WINDOW_DAYS, validateReopenDate } from "../domain/calendar";
 import { costaRicaToday } from "../domain/inquiry";
 import { usePrivateSheet } from "./private-sheet";
+import { Button } from "../shared/button";
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled])';
 
@@ -54,12 +55,12 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
               {problem}
             </p>
           ) : null}
-          <button type="submit" className="btn btn-primary btn-lg">
+          <Button variant="primary" size="lg" type="submit">
             Pausar la casa
-          </button>
-          <button type="button" className="btn btn-ghost btn-lg popup-cancel" onClick={onClose}>
+          </Button>
+          <Button variant="secondary" size="lg" onClick={onClose}>
             Cancelar
-          </button>
+          </Button>
         </form>
       </section>
     </>,
