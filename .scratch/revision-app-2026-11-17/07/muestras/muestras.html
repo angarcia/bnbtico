@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historia 07 · Muestras: hoy y propuesta</title>
+<!-- «Hoy» usa el CSS real de la app; «Propuesta» usa propuesta.css, que solo añade clases ui-* sobre los mismos tokens. -->
+<link rel="stylesheet" href="../../../../apps/app/src/styles/global.css">
+<link rel="stylesheet" href="propuesta.css">
+</head>
+<body>
+<main class="samples">
+  <header class="samples-head">
+    <h1>Muestras de la historia 07</h1>
+    <p class="muted">Izquierda: cómo está hoy (CSS real de la app). Derecha: propuesta con las respuestas de Ana del 19 de noviembre (foco verde, un solo destructivo terracota, secundario con contorno fino, preguntar antes de descartar cambios). Borrador sin aprobar.</p>
+  </header>
+
+  <section class="pair" aria-labelledby="s-botones">
+    <h2 id="s-botones">1 · Botones</h2>
+    <div class="side">
+      <h3>Hoy</h3>
+      <div class="stack">
+        <button class="btn btn-primary btn-lg btn-block">Enviar a revisión</button>
+        <button class="btn btn-soft btn-lg btn-block">btn-soft (igual que el primario)</button>
+        <button class="btn btn-ghost btn-lg btn-block">Ahora no</button>
+        <button class="btn btn-sun btn-lg btn-block">Añadir método de pago</button>
+        <button class="btn btn-wa">Contactar por WhatsApp</button>
+        <button class="btn btn-outline-bad btn-lg btn-block">Eliminar casa (propietario)</button>
+        <button class="btn btn-danger btn-lg btn-block">Eliminar casa (admin)</button>
+        <button class="btn btn-primary btn-lg btn-block" disabled>Siguiente (desactivado)</button>
+        <button class="btn btn-primary btn-lg btn-block is-focus-today">Con foco de teclado</button>
+        <div class="row"><button class="btn btn-link">Enlace de acción</button><button class="btn-text">Quitar filtros</button></div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Propuesta</h3>
+      <div class="stack">
+        <button class="ui-btn" data-variant="primary" data-size="lg">Enviar a revisión</button>
+        <button class="ui-btn" data-variant="secondary" data-size="lg">Ahora no</button>
+        <button class="ui-btn" data-variant="pay" data-size="lg">Añadir método de pago</button>
+        <button class="ui-btn" data-variant="whatsapp" data-size="xl">Contactar por WhatsApp</button>
+        <button class="ui-btn" data-variant="danger" data-size="lg">Eliminar casa (propietario y admin)</button>
+        <button class="ui-btn" data-variant="primary" data-size="lg" disabled>Siguiente (desactivado)</button>
+        <button class="ui-btn is-focus" data-variant="primary" data-size="lg">Con foco de teclado</button>
+        <button class="ui-btn" data-variant="primary" data-size="lg" aria-busy="true" disabled><span class="ui-spin" aria-hidden="true"></span>Enviando…</button>
+        <div class="row"><button class="ui-text" data-tone="link">Enlace de acción</button><button class="ui-text" data-tone="quiet">Quitar filtros</button><button class="ui-text" data-tone="danger">Eliminar casa</button></div>
+      </div>
+      <p class="why">Tres clases idénticas pasan a una sola (<code>primary</code>). En escritorio se añade el cambio al pasar el ratón. El desactivado es uno solo, sin bajar la opacidad.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="s-confirmar">
+    <h2 id="s-confirmar">2 · Confirmación destructiva</h2>
+    <div class="side">
+      <h3>Hoy</h3>
+      <div class="sheet-demo">
+        <div class="sheet-card" role="dialog" aria-modal="true" aria-label="Hoy">
+          <span class="grabber"></span>
+          <h2>¿Eliminar Casa Cocles?</h2>
+          <p class="muted">Se borran sus fotos y su calendario. No se puede deshacer.</p>
+          <button class="btn btn-outline-bad btn-lg btn-block">Eliminar casa</button>
+          <button class="btn btn-ghost btn-lg btn-block popup-cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Propuesta</h3>
+      <div class="sheet-demo">
+        <div class="ui-sheet" role="dialog" aria-modal="true" aria-labelledby="c-t">
+          <span class="ui-grabber" aria-hidden="true"></span>
+          <h2 id="c-t">¿Eliminar Casa Cocles?</h2>
+          <p class="muted">Se borran sus fotos y su calendario. No se puede deshacer.</p>
+          <div class="ui-sheet-foot">
+            <button class="ui-btn" data-variant="danger" data-size="lg">Eliminar casa</button>
+            <button class="ui-btn" data-variant="secondary" data-size="lg">Cancelar</button>
+          </div>
+        </div>
+      </div>
+      <p class="why">«Cancelar» siempre es el secundario: ya no se vuelve terracota en escritorio ni cambia de altura según la hoja.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="s-campo">
+    <h2 id="s-campo">3 · Campo con error</h2>
+    <div class="side">
+      <h3>Hoy (publicar y editar)</h3>
+      <div class="stack">
+        <div class="field"><label for="h-t">Nombre de la casa</label><input id="h-t" value="Ca"></div>
+        <div class="field"><label for="h-p">Precio por noche</label><div class="input-money"><span class="cur">₡</span><input id="h-p" value=""></div></div>
+        <p class="note" role="alert">Revise los datos marcados.</p>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Propuesta</h3>
+      <div class="stack">
+        <div class="ui-field">
+          <label for="p-t">Nombre de la casa</label>
+          <input id="p-t" class="ui-input" value="Ca" aria-invalid="true" aria-describedby="p-t-e p-t-c">
+          <div class="ui-field-meta"><span id="p-t-e" class="ui-error">Escriba al menos 5 letras.</span><span id="p-t-c" class="ui-count">2/60</span></div>
+        </div>
+        <div class="ui-field">
+          <label for="p-p">Precio por noche</label>
+          <div class="ui-affix" data-invalid="true"><span>₡</span><input id="p-p" aria-invalid="true" aria-describedby="p-p-e"></div>
+          <span id="p-p-e" class="ui-error">Indique el precio por noche.</span>
+        </div>
+        <div class="ui-field">
+          <label for="p-d">Teléfono (solo lectura)</label>
+          <input id="p-d" class="ui-input" value="8777 0001" disabled>
+        </div>
+      </div>
+      <p class="why">El error va debajo del campo que falla y queda enlazado a él para los lectores de pantalla. Desactivado y solo lectura tienen su propio aspecto.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="s-eleccion">
+    <h2 id="s-eleccion">4 · Chips, segmentos y contador</h2>
+    <div class="side">
+      <h3>Hoy</h3>
+      <div class="stack">
+        <div class="row wrap"><span class="chip" aria-pressed="true">Piscina</span><span class="chip">Wifi</span><span class="chip chip-sm">Mascotas (36 px)</span></div>
+        <div class="row"><span class="currency-switch"><button aria-pressed="true">₡</button><button>$</button></span><span class="muted small">cambio de moneda, 36 px</span></div>
+        <div class="counter-demo">
+          <div class="counter"><span>Dormitorios</span><span class="ctl"><button class="minus">−</button><b>2</b><button class="plus">+</button></span></div>
+        </div>
+        <div class="people-stepper"><button>−</button><b>2</b><button>+</button><span class="muted small">otro contador (Buscar, contacto)</span></div>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Propuesta</h3>
+      <div class="stack">
+        <div class="row wrap"><label class="ui-chip"><input type="checkbox" checked><span>Piscina</span></label><label class="ui-chip"><input type="checkbox"><span>Wifi</span></label><label class="ui-chip is-focus"><input type="checkbox"><span>Mascotas (con foco)</span></label></div>
+        <div class="ui-seg" role="group" aria-label="Moneda"><button aria-pressed="true">₡</button><button aria-pressed="false">$</button></div>
+        <div class="ui-seg" role="group" aria-label="Baño"><button aria-pressed="true">Privado</button><button aria-pressed="false">Compartido</button></div>
+        <div class="ui-stepper-row"><span>Dormitorios</span><span class="ui-stepper"><button aria-label="Un dormitorio menos">−</button><b>2</b><button aria-label="Un dormitorio más">+</button></span></div>
+        <div class="ui-stepper-row"><span>Personas</span><span class="ui-stepper"><button aria-label="Una persona menos" disabled>−</button><b>1</b><button aria-label="Una persona más">+</button></span></div>
+      </div>
+      <p class="why">Todo a 44 px de alto como mínimo. Un solo contador para publicar, editar, Buscar y contacto. Los chips enseñan el foco de teclado.</p>
+    </div>
+  </section>
+
+  <section class="pair" aria-labelledby="s-estados">
+    <h2 id="s-estados">5 · Etiquetas de estado y avisos</h2>
+    <div class="side">
+      <h3>Hoy</h3>
+      <div class="stack">
+        <div class="row wrap"><span class="badge badge-ok">Activa</span><span class="badge badge-sun">Pendiente de pago</span><span class="badge badge-review">En revisión</span><span class="badge badge-bad">Rechazada</span></div>
+        <p class="note">Su casa está en revisión. Le avisaremos por WhatsApp.</p>
+        <p class="note note-sun">Su oferta termina en 7 días.</p>
+        <p class="note" role="alert">No se pudieron cargar sus casas.</p>
+        <p class="note">No se pudieron cargar sus casas. <span class="muted">(el mismo error, sin rojo, en otras 3 pantallas)</span></p>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Propuesta</h3>
+      <div class="stack">
+        <div class="row wrap"><span class="ui-tag" data-tone="ok">Activa</span><span class="ui-tag" data-tone="pay">Pendiente de pago</span><span class="ui-tag" data-tone="review">En revisión</span><span class="ui-tag" data-tone="bad">Rechazada</span></div>
+        <p class="ui-notice" data-tone="info">Su casa está en revisión. Le avisaremos por WhatsApp.</p>
+        <p class="ui-notice" data-tone="sun">Su oferta termina en 7 días.</p>
+        <div class="ui-notice" data-tone="error" role="alert"><span>No se pudieron cargar sus casas.</span><button class="ui-text" data-tone="link">Reintentar</button></div>
+      </div>
+      <p class="why">Etiquetas con radio de 6 px, como dice la decisión del 29 de octubre, y un solo texto por estado. El error de carga es el mismo en todas las pantallas.</p>
+    </div>
+  </section>
+
+  <section class="pair desktop-only" aria-labelledby="s-ventanas">
+    <h2 id="s-ventanas">6 · Ventanas de escritorio (base de la historia 06)</h2>
+    <div class="side wide">
+      <h3>Propuesta: ventana normal (520 px) con cambios sin guardar</h3>
+      <div class="dialog-demo">
+        <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="d1">
+          <div class="ui-dialog-head"><h2 id="d1">Nombre de la casa</h2><button class="ui-icon" aria-label="Cerrar">✕</button></div>
+          <div class="ui-dialog-body">
+            <div class="ui-field"><label for="d1i">Nombre</label><input id="d1i" class="ui-input" value="Casa Cocles junto al mar"></div>
+          </div>
+          <div class="ui-dialog-foot"><button class="ui-btn" data-variant="secondary" data-size="md">Cancelar</button><button class="ui-btn" data-variant="primary" data-size="md">Guardar</button></div>
+          <div class="ui-dialog-stacked" role="alertdialog" aria-labelledby="d1c">
+            <h2 id="d1c">¿Descartar los cambios?</h2>
+            <p class="muted">Lo que escribió en «Nombre» no se guardará.</p>
+            <div class="ui-dialog-foot"><button class="ui-btn" data-variant="secondary" data-size="md">Seguir editando</button><button class="ui-btn" data-variant="danger" data-size="md">Descartar</button></div>
+          </div>
+        </div>
+      </div>
+      <p class="why">Escape, tocar fuera o cerrar con la X preguntan solo si se cambió algo (respuesta de Ana). Sin cambios, se cierra directamente.</p>
+    </div>
+    <div class="side wide">
+      <h3>Propuesta: ventana ancha (hasta 960 px) para fotos</h3>
+      <div class="dialog-demo">
+        <div class="ui-dialog" data-size="wide" role="dialog" aria-modal="true" aria-labelledby="d2">
+          <div class="ui-dialog-head"><h2 id="d2">Fotos</h2><button class="ui-icon" aria-label="Cerrar">✕</button></div>
+          <div class="ui-dialog-body"><div class="photo-grid-demo"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="ui-dialog-foot"><button class="ui-btn" data-variant="secondary" data-size="md">Cancelar</button><button class="ui-btn" data-variant="primary" data-size="md">Enviar a revisión</button></div>
+        </div>
+      </div>
+      <p class="why">La misma cabecera, cuerpo con su propio scroll y pie fijo que la ventana normal; solo cambia el ancho. Nunca se cierra al tocar fuera mientras suben fotos.</p>
+    </div>
+  </section>
+</main>
+</body>
+</html>

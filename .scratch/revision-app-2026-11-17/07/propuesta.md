@@ -28,7 +28,9 @@ Las 40 rutas de `shell.tsx`, la ficha SSR, sus páginas de estado, la portada y 
   - Hay áreas táctiles de 32–38 px: `.cal-cancel`, `.cal-base`, `.seg`, `.currency-switch`, `.check`, `.chip-sm` y quitar foto.
 - **Tokens:** `tokens.json` va por la 0.3.4 y la guía y el CSS citan 0.3.3/0.2.2. Hay 26 hex y 26 rgba sueltos, 21 tamaños de letra (16 px es el segundo más usado y no está en la escala), 23 radios (`8px` a mano 27 veces), 23 sombras y 18 z-index sin escala. `--disabled-bg`, `--shadow-lift` y `--w-regular` se usan sin estar definidas.
 
-## 2. Decisiones que necesito de Ana antes de las muestras
+## 2. Decisiones para Ana
+
+Respondidas por Ana el 2026-11-19: **D1** verde, uno solo · **D2** un nivel, terracota · **D3** contorno fino en los dos · **D10** preguntar solo si hay cambios. D4–D9 siguen con la propuesta por defecto, pendientes de su visto bueno en las muestras.
 
 | # | Pregunta | Propuesta por defecto |
 |---|---|---|
@@ -94,6 +96,14 @@ Criterio: piezas pequeñas con tipos cerrados (`variant`, `size`, `tone` como un
 
 Cada paso: e2e completo, hidratación de la ficha, `size` (JS privado < 161 KB gz) y capturas móvil/escritorio de las pantallas tocadas. Las pruebas e2e que dependen de clases concretas se mantienen o se pasan a roles.
 
-## 4. Muestras visuales (siguiente paso)
+## 4. Muestras visuales
 
-Tras las respuestas de §2, una página local de muestras con «hoy» y «propuesto» lado a lado, en 375 px y 1280 px: botones (todas las variantes y estados, incluido desactivado y foco), «Cancelar» + destructivo en una confirmación, campo con error, chips y segmento, contador, etiquetas de estado, avisos, una hoja de móvil y una ventana normal y otra ancha de escritorio. Capturas en `.scratch/revision-app-2026-11-17/07/muestras/`.
+[muestras/muestras.html](muestras/muestras.html) pone «hoy» (con el CSS real de la app) junto a «propuesta» (con `muestras/propuesta.css`, clases `ui-*` sobre los mismos tokens). Las capturas son [movil-375.png](muestras/movil-375.png) y [escritorio-1280.png](muestras/escritorio-1280.png), y se rehacen con `muestras/capturar.mjs`. Contenido:
+1. botones con todos sus estados;
+2. confirmación destructiva;
+3. campo con error, con desactivado y con solo lectura;
+4. chips, segmentos y contador;
+5. etiquetas y avisos;
+6. ventanas de escritorio: la normal con «¿Descartar los cambios?» y la ancha de fotos.
+
+Pendiente: el visto bueno de Ana a las muestras y a D4–D9. Hasta entonces no se migra nada.
