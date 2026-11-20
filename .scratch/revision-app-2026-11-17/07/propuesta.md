@@ -30,7 +30,7 @@ Las 40 rutas de `shell.tsx`, la ficha SSR, sus páginas de estado, la portada y 
 
 ## 2. Decisiones para Ana
 
-Respondidas por Ana el 2026-11-19: **D1** verde, uno solo · **D2** un nivel, terracota · **D3** contorno fino en los dos · **D10** preguntar solo si hay cambios. D4–D9: Ana elige la propuesta por defecto en todas, tras ver `muestras/decisiones.html`. Anotado en `docs/decisiones.md` (2026-11-19).
+Respondidas por Ana el 2026-11-19: **D1** verde, uno solo · **D2** un nivel, terracota · **D3** contorno fino en los dos · **D10** preguntar solo si hay cambios. D4–D9: Ana elige la propuesta por defecto en todas salvo **D5: etiquetas redondas (999 px)**, tras ver `muestras/decisiones.html`. Anotado en `docs/decisiones.md` (2026-11-19).
 
 | # | Pregunta | Propuesta por defecto |
 |---|---|---|
@@ -51,7 +51,7 @@ Criterio: piezas pequeñas con tipos cerrados (`variant`, `size`, `tone` como un
 
 ### 3.1 Tokens (primero, sin cambiar aspecto salvo lo aprobado)
 
-- Radios: `--r-control: 8px`, `--r-tag: 6px` (si D5), y los que ya existen.
+- Radios: `--r-control: 8px`, `--r-tag: 999px` (D5: redondas), y los que ya existen.
 - Color: `--focus-ring`, `--disabled-bg`, `--disabled-fg`, `--scrim`; las variables que hoy no tienen token pasan a `tokens.json` (`--fg-title`, `--primary-ink`, `--wa-icon`, `--ochre`, `--surface-soft`, `--beige-soft`, `--chosen`).
 - Letra: escala con nombre (`--fs-xs` 14 · `--fs-sm` 15 · `--fs-note` 16 · `--fs-base` 17 · `--fs-md` 18 · `--fs-title` 20 · `--fs-h2` 24 · `--fs-h1` 34/30).
 - Capas: `--z-float`, `--z-bar`, `--z-banner`, `--z-topbar`, `--z-overlay`, `--z-toast` (por encima de las hojas). Leaflet queda como excepción.

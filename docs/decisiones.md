@@ -6,7 +6,7 @@ Ana aprobó el inventario y la propuesta de componentes de la historia 07 de la 
 - **Destructivo:** un solo nivel, terracota (`--brand` tonal con texto `--brand-ink`), igual para propietario y admin. Se retira el rojo lleno de «Eliminar casa» del admin.
 - **Secundario** («Cancelar», «Ahora no»): contorno fino verde y fondo transparente en móvil y escritorio, con la misma altura que el primario a su lado. Extiende al móvil el secundario de escritorio del 2026-11-13. «Cancelar» deja de ser terracota en las ventanas de escritorio.
 - **WhatsApp verde lleno** solo para hablar con el anfitrión: «Contactar por WhatsApp» y responder desde Actividad. Ayuda y los avisos del admin pasan a secundario con el icono verde.
-- **Etiquetas de estado** con radio de 6 px, como pedía la decisión del 2026-10-29. Hoy eran redondas.
+- **Etiquetas de estado redondas** (999 px), como están hoy. Tras ver las dos opciones, Ana las prefiere así: sustituye, para las etiquetas, a los 6 px de la decisión del 2026-10-29.
 - **Chip elegido:** verde al 26 % (`--chosen`), como ya pinta el CSS. Se corrige el token, que seguía en salvia.
 - **Radio de controles** (botones, campos, chips, segmentos): 8 px. Los «16 px» de los campos son el tamaño mínimo de letra (por debajo, el iPhone amplía la página).
 - **Dos opciones** («No/Sí», «Privado/Compartido»): segmento.
