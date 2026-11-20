@@ -9,7 +9,7 @@ import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-q
 import { useLayoutEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from "react";
 import { variantUrl } from "../../domain/image";
 import type { Photo } from "../../domain/listing";
-import { moveBy } from "../../domain/photo-order";
+import { moveBy, moveTo } from "../../domain/photo-order";
 import { I } from "../../shared/icons";
 import { fadeIn } from "../../shared/picture";
 import { photosApi } from "../owner";
@@ -17,6 +17,7 @@ import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type Uplo
 import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
 import { usePhotoDrag } from "./use-photo-drag";
 import { IconButton } from "../../shared/button";
+import { useDesktop } from "../desktop";
 
 export interface PhotoSource {
   listingId: string;
@@ -52,8 +53,10 @@ export const rereadOwnListing = (client: QueryClient, userId: string, listingId:
 };
 
 const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };
-const movedTo = (to: number) => (to === 0 ? "Foto movida a la posición 1, portada" : `Foto movida a la posición ${to + 1}`);
-type Dir = "before" | "after";
+/** La ayuda de ordenar con ratón (en escritorio no se «mantiene pulsada»). */
+export const PHOTOS_HELP_DESKTOP = "Arrastre una foto para cambiar el orden. La primera es la portada.";
+export const movedTo = (to: number) => (to === 0 ? "Foto movida a la posición 1, portada" : `Foto movida a la posición ${to + 1}`);
+export type Dir = "before" | "after";
 
 /** El contador del asistente y del editor (con role="status": lo anuncia el lector de pantalla). */
 export function PhotoCounter({ counter }: { counter: PhotoSource["counter"] }) {
@@ -64,26 +67,31 @@ export function PhotoCounter({ counter }: { counter: PhotoSource["counter"] }) {
   );
 }
 
-/** `header`: lo que va encima de la ayuda (en el asistente, el título con el contador; en el editor, nada: el contador va
- * en la cabecera de la pantalla). */
-export function PhotoGrid({ source, userId, header }: { source: PhotoSource; userId: string; header?: ReactNode }) {
+export type SavedChange = "order" | "removed";
+
+/** El estado y las acciones de la rejilla, sin su forma: los usan la rejilla de siempre (asistente, teléfono, admin) y el
+ *  editor de fotos de escritorio (photo-viewer.tsx, historia 06). `saved`: lo último que quedó guardado (para el estado
+ *  «Orden guardado» / «Foto quitada»); se borra al empezar otra cosa. */
+export function usePhotoGrid(source: PhotoSource, userId: string) {
   const client = useQueryClient();
   const queue = queueFor(source.listingId);
   const uploads = useSyncExternalStore(queue.subscribe, queue.items, queue.items);
   const notices = useSyncExternalStore(queue.subscribe, queue.notices, queue.notices);
   const [announce, setAnnounce] = useState("");
+  const [saved, setSaved] = useState<SavedChange | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const follow = useRef<{ id: string; dir: Dir } | null>(null);
-  const { photos, pending, reread } = source;
+  const { photos, reread } = source;
   const ids = photos.map((p) => p.id);
   const order = ids.join();
 
   // Quitar: la mutación sigue «en curso» hasta que llega la lista nueva del servidor.
-  const change = useMutation({ mutationFn: (run: () => Promise<void>) => run(), onSettled: reread });
+  const change = useMutation({ mutationFn: (run: () => Promise<void>) => run(), onSuccess: () => setSaved("removed"), onSettled: reread });
   const optimistic = photoReorderCallbacks(client, userId, source.listingId, reread);
   const reorder = useMutation({
     mutationFn: (next: string[]) => source.reorder(next),
     ...optimistic,
+    onSuccess: () => setSaved("order"),
     // El foco sigue a la foto hasta que el orden queda firme (también tras deshacerlo); luego no se vuelve a mover.
     onSettled: async () => {
       await optimistic.onSettled();
@@ -101,6 +109,7 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
     if (!files.length) return;
     change.reset();
     reorder.reset();
+    setSaved(null);
     follow.current = null;
     void queue.start(files, source.room - queue.inFlight(), {
       prepare: async (file) => (await import("./resize")).makeVariants(file),
@@ -112,6 +121,12 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
   }
 
   const busy = change.isPending || reorder.isPending;
+  const sendOrder = (next: string[], id: string) => {
+    setAnnounce(movedTo(next.indexOf(id)));
+    change.reset();
+    setSaved(null);
+    reorder.mutate(next);
+  };
   // Soltar en otro sitio: el orden nuevo se ve al instante y se guarda con una sola petición.
   const drag = usePhotoDrag({
     ids,
@@ -119,9 +134,7 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
     scroller,
     onDrop: (next, id) => {
       follow.current = null;
-      setAnnounce(movedTo(next.indexOf(id)));
-      change.reset();
-      reorder.mutate(next);
+      sendOrder(next, id);
     },
   });
 
@@ -135,27 +148,45 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
 
   const room = source.canAdd && uploads.length < source.room;
   const errors = [...notices, ...[change, reorder].flatMap((m) => (m.isError ? [photosErrorMessage(m.error)] : []))];
+  /** Mientras sube o guarda, mover no hace nada. */
+  const locked = busy || uploads.length > 0;
 
   function remove(photo: Photo, isPending: boolean) {
     follow.current = null;
     reorder.reset();
+    setSaved(null);
     change.mutate(() => source.remove(photo, isPending));
   }
 
   /** Botones ocultos: con aria-disabled (no disabled) para que el foco no se pierda al llegar a un extremo. */
   function move(id: string, from: number, dir: Dir) {
     const to = from + (dir === "before" ? -1 : 1);
-    if (busy || uploads.length > 0 || to < 0 || to >= ids.length) return;
+    if (locked || to < 0 || to >= ids.length) return;
     follow.current = { id, dir };
-    setAnnounce(movedTo(to));
-    change.reset();
-    reorder.mutate(moveBy(ids, id, dir === "before" ? -1 : 1));
+    sendOrder(moveBy(ids, id, dir === "before" ? -1 : 1), id);
   }
+
+  /** «Hacer portada» del visor de escritorio. */
+  function makeCover(id: string) {
+    if (locked || ids.indexOf(id) <= 0) return;
+    follow.current = null;
+    sendOrder(moveTo(ids, id, 0), id);
+  }
+
+  return { uploads, announce, saved, scroller, ids, drag, busy, locked, room, errors, pick, remove, move, makeCover };
+}
+
+/** `header`: lo que va encima de la ayuda (en el asistente, el título con el contador; en el editor, nada: el contador va
+ * en la cabecera de la pantalla). */
+export function PhotoGrid({ source, userId, header }: { source: PhotoSource; userId: string; header?: ReactNode }) {
+  const { uploads, announce, scroller, ids, drag, busy, room, errors, pick, remove, move } = usePhotoGrid(source, userId);
+  const { photos, pending } = source;
+  const desktop = useDesktop();
 
   return (
     <div className="stack grow-col gap-12">
       {header}
-      {photos.length >= 2 ? <p className="small muted photos-help">Mantenga pulsada una foto y arrástrela para cambiar el orden. La primera es la portada.</p> : null}
+      {photos.length >= 2 ? <p className="small muted photos-help">{desktop ? PHOTOS_HELP_DESKTOP : "Mantenga pulsada una foto y arrástrela para cambiar el orden. La primera es la portada."}</p> : null}
       <div className="photos-scroll" ref={scroller}>
         <div className={`photos-grid${drag.dragging ? " is-dragging" : ""}`} ref={drag.gridRef} aria-busy={busy || uploads.length > 0}>
           {photos.map((p, i) => (

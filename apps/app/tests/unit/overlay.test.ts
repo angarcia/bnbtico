@@ -192,3 +192,18 @@ describe("Atrás (D9)", () => {
     }, { viewport: DESKTOP, kind: "dialog" });
   });
 });
+
+describe("subtítulo", () => {
+  it("la ventana de escritorio pinta el subtítulo bajo el título, en su cabecera, igual que la hoja", async () => {
+    for (const [kind, viewport] of [["dialog", DESKTOP], ["sheet", PHONE]] as const) {
+      await bench(async (page) => {
+        const title = sheet(page).getByRole("heading", { name: "Hoja de prueba" });
+        const subtitle = sheet(page).getByText("Casa de prueba");
+        await expect(subtitle).toBeVisible();
+        const [t, s] = [await title.boundingBox(), await subtitle.boundingBox()];
+        expect(s!.y).toBeGreaterThanOrEqual(t!.y + t!.height - 1);
+      }, { kind, viewport });
+    }
+  }, 30_000);
+});
+

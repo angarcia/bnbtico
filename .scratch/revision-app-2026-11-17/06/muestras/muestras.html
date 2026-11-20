@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historia 06 · Apartados en ventanas y editor de fotos amplio (muestras)</title>
+<link rel="stylesheet" href="../../../../apps/app/src/styles/global.css">
+<link rel="stylesheet" href="propuesta.css">
+</head>
+<body>
+<div id="root"></div>
+<script>
+// Cada escena ocupa la ventana: ?s=<escena>. Sin ?s, el índice. Los formularios son el HTML real de la app (fragmentos/,
+// sacados de la build local) sin su barra de pie; la ventana es el marcado real de Dialog (shared/overlay.tsx).
+const X = '<svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 6l12 12M18 6 6 18"></path></svg>';
+const CHECK = '<svg fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="m5 12 5 5 9-10"></path></svg>';
+const PLUS = '<svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true" width="22" height="22"><path d="M12 5v14M5 12h14"></path></svg>';
+const params = new URLSearchParams(location.search);
+const scene = params.get("s");
+const root = document.getElementById("root");
+
+const frag = async (name) => {
+  const html = await (await fetch(`fragmentos/${name}.html`)).text();
+  const t = document.createElement("template");
+  t.innerHTML = html;
+  const form = t.content.firstElementChild;
+  form.querySelector(".sticky-actions")?.remove();
+  return form;
+};
+const bgFor = () => (innerWidth >= 1400 ? "../antes/1440-0-detalle.png" : "../antes/1280-0-detalle.png");
+
+function dialogShell({ size = "normal", cls = "", title, head = "", foot }) {
+  const s = document.createElement("div");
+  s.className = "p06-scene";
+  s.innerHTML = `<img class="p06-bg" src="${bgFor()}" alt=""><div class="sheet-backdrop"></div>
+  <section class="dialog dialog-${size} ${cls}" role="dialog" aria-modal="true" aria-labelledby="t">
+    <div class="row between dialog-head"><h2 id="t">${title}</h2>${head}<button type="button" aria-label="Cerrar" class="icon-btn">${X}</button></div>
+    <div class="dialog-body"></div>
+    <div class="dialog-foot">${foot}</div>
+  </section>`;
+  return s;
+}
+const fieldFoot = (action, enabled = true) =>
+  `<button type="button" class="btn btn-secondary">Cancelar</button><button type="submit" class="btn btn-primary"${enabled ? "" : " disabled"}>${action}</button>`;
+
+async function fieldScene(name, title, action, tweak, size = "normal") {
+  const s = dialogShell({ size, cls: "p06-field", title, foot: fieldFoot(action) });
+  const form = await frag(name);
+  tweak?.(form);
+  s.querySelector(".dialog-body").append(form);
+  root.append(s);
+  return s;
+}
+
+// Fotos: horizontal, vertical, horizontal, vertical, horizontal, horizontal y una nueva en revisión.
+const PHOTOS = [["h1", 1000 / 563], ["v1", 500 / 750], ["h2", 800 / 533], ["v2", 400 / 533], ["h3", 800 / 533], ["h4", 800 / 533]];
+const PENDING = [["h2", 800 / 533]];
+function photosScene({ selected = 1, crop = false } = {}) {
+  const total = PHOTOS.length + PENDING.length;
+  const [file, ar] = PHOTOS[selected];
+  const s = dialogShell({
+    size: "wide",
+    cls: "dialog-photos p06-photos",
+    title: "Fotos",
+    head: `<span class="small num photos-count primary" role="status">${total} de 15</span>`,
+    foot: `<p class="small muted">El orden y las fotos que quite se guardan al momento y ya se ven en su ficha. Las fotos nuevas las revisamos antes de publicarlas, normalmente en menos de 24 horas.</p>
+      <span class="p06-saved small primary" role="status">${CHECK}Orden guardado</span>
+      <button type="button" class="btn btn-primary">Listo</button>`,
+  });
+  const wide = ar > 832 / 480;
+  const cells = PHOTOS.map(([f], i) => `<button type="button" class="p06-cell" aria-label="Foto ${i + 1}${i === 0 ? ", portada" : ""}"${i === selected ? ' aria-current="true"' : ""}><img src="fotos/${f}.jpg" alt="">${i === 0 ? '<span class="tag">Portada</span>' : ""}</button>`).join("")
+    + PENDING.map(([f], j) => `<button type="button" class="p06-cell" aria-label="Foto ${PHOTOS.length + j + 1}, en revisión"><img src="fotos/${f}.jpg" alt=""><span class="tag tag-pending">En revisión</span></button>`).join("")
+    + `<label class="p06-cell add">${PLUS}Añadir</label>`;
+  s.querySelector(".dialog-body").innerHTML = `
+    <div class="p06-visor">
+      <div class="p06-stage"><div class="p06-pic" style="--ar:${ar}"><img src="fotos/${file}.jpg" alt="Foto ${selected + 1}">${selected === 0 ? '<span class="tag">Portada</span>' : ""}${crop ? `<span class="p06-crop${wide ? " is-wide" : ""}"><span>Lo que se ve en la ficha</span></span>` : ""}</div></div>
+      <div class="p06-toolbar">
+        <span class="small muted num p06-pos">Foto ${selected + 1} de ${PHOTOS.length}${selected === 0 ? " · portada" : ""}</span>
+        <button type="button" class="btn btn-secondary"${selected === 0 ? ' aria-disabled="true"' : ""}>← Mover antes</button>
+        <button type="button" class="btn btn-secondary"${selected === PHOTOS.length - 1 ? ' aria-disabled="true"' : ""}>Mover después →</button>
+        ${selected === 0 ? "" : '<button type="button" class="btn btn-secondary">Hacer portada</button>'}
+        <button type="button" class="btn-text-danger">Quitar foto</button>
+      </div>
+    </div>
+    <div class="p06-rail">
+      <p class="small muted photos-help">Arrastre una foto para cambiar el orden. La primera es la portada.</p>
+      <div class="p06-rail-grid">${cells}</div>
+    </div>`;
+  root.append(s);
+  return s;
+}
+
+const SCENES = {
+  "precio": ["Precio (al momento): ventana normal 520, pie Cancelar + Guardar", () => fieldScene("precio", "Precio", "Guardar")],
+  "nombre-error": ["Nombre (revisión) con el error bajo el campo", () => fieldScene("nombre", "Nombre", "Enviar a revisión", (f) => (f.querySelector("#pub-title").value = "Ca"))],
+  "descripcion-error": ["Descripción con el error de guardado arriba del cuerpo", () => fieldScene("descripcion", "Descripción", "Enviar a revisión", (f) => {
+    const n = document.createElement("div");
+    n.className = "note"; n.setAttribute("role", "alert");
+    n.textContent = "Sin conexión. Revise su internet e intente de nuevo.";
+    f.querySelector(".edit-house").after(n);
+    f.querySelector("textarea").value = "Casa de dos plantas a 200 m de la playa de Cocles, con jardín, rancho y wifi. Se llega por calle asfaltada. Tiene dos dormitorios con aire acondicionado y una terraza con hamacas.";
+  })],
+  "capacidad": ["Personas, dormitorios y baños (al momento)", () => fieldScene("capacidad", "Personas, dormitorios y baños", "Guardar")],
+  "caracteristicas": ["Características (al momento)", () => fieldScene("caracteristicas", "Características", "Guardar")],
+  "ubicacion": ["Ubicación (revisión): ventana ancha 960 con el mapa", () => fieldScene("ubicacion", "Ubicación", "Enviar a revisión", null, "wide")],
+  "descartar": ["¿Descartar los cambios? encima de Precio (componente de 07)", async () => {
+    const s = await fieldScene("precio", "Precio", "Guardar");
+    s.insertAdjacentHTML("beforeend", `<div class="sheet-backdrop is-stacked"></div><section class="dialog dialog-normal is-stacked" role="dialog" aria-modal="true" aria-labelledby="d"><div class="row between dialog-head"><h2 id="d">¿Descartar los cambios?</h2></div><div class="dialog-body"><p>Los cambios que hizo no se guardarán.</p></div><div class="dialog-foot"><button type="button" class="btn btn-secondary">Seguir editando</button><button type="button" class="btn btn-danger">Descartar</button></div></section>`);
+  }],
+  "fotos": ["Fotos: editor amplio, foto vertical elegida", () => photosScene({ selected: 1 })],
+  "fotos-horizontal": ["Fotos: foto horizontal (portada) elegida", () => photosScene({ selected: 0 })],
+  "fotos-recorte": ["Fotos: con el recorte de la ficha marcado (pregunta 2)", () => photosScene({ selected: 1, crop: true })],
+  "fotos-recorte-h": ["Fotos: recorte de la ficha sobre una horizontal 3:2", () => photosScene({ selected: 2, crop: true })],
+};
+
+if (scene && SCENES[scene]) {
+  SCENES[scene][1]();
+} else if (params.get("a")) {
+  root.innerHTML = `<div class="p06-compare"><figure><figcaption>${params.get("la") ?? "Antes"}</figcaption><img src="${params.get("a")}" alt=""></figure><figure><figcaption>${params.get("lb") ?? "Propuesta"}</figcaption><img src="${params.get("b")}" alt=""></figure></div>`;
+} else {
+  root.innerHTML = `<main class="p06-index"><h1>Historia 06 · muestras</h1><p class="muted">Abra cada escena con la ventana del tamaño que quiera comparar (1280 × 800, 1440 × 900, 1920 × 1080). Propuesta en <a href="../propuesta.md">propuesta.md</a>.</p><ul>${Object.entries(SCENES).map(([k, [t]]) => `<li><a href="?s=${k}">${t}</a></li>`).join("")}</ul></main>`;
+}
+</script>
+</body>
+</html>

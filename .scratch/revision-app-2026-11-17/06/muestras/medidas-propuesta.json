@@ -1,0 +1,304 @@
+{
+  "precio-1280": {
+    "dialog": [
+      520,
+      549
+    ],
+    "body": [
+      518,
+      403
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": null
+  },
+  "nombre-error-1280": {
+    "dialog": [
+      520,
+      405
+    ],
+    "body": [
+      518,
+      259
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": null
+  },
+  "descripcion-error-1280": {
+    "dialog": [
+      520,
+      670
+    ],
+    "body": [
+      518,
+      524
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": null
+  },
+  "capacidad-1280": {
+    "dialog": [
+      520,
+      420
+    ],
+    "body": [
+      518,
+      274
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": null
+  },
+  "caracteristicas-1280": {
+    "dialog": [
+      520,
+      414
+    ],
+    "body": [
+      518,
+      268
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": null
+  },
+  "ubicacion-1280": {
+    "dialog": [
+      960,
+      744
+    ],
+    "body": [
+      958,
+      598
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": [
+      910,
+      280
+    ]
+  },
+  "ubicacion-1440": {
+    "dialog": [
+      960,
+      844
+    ],
+    "body": [
+      958,
+      698
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": [
+      910,
+      380
+    ]
+  },
+  "descartar-1280": {
+    "dialog": [
+      520,
+      549
+    ],
+    "body": [
+      518,
+      403
+    ],
+    "stage": null,
+    "pic": null,
+    "cell": null,
+    "map": null
+  },
+  "fotos-1280": {
+    "dialog": [
+      1232,
+      752
+    ],
+    "body": [
+      1230,
+      597
+    ],
+    "stage": [
+      822,
+      533
+    ],
+    "pic": [
+      355,
+      533
+    ],
+    "cell": [
+      105,
+      105
+    ],
+    "map": null
+  },
+  "fotos-1440": {
+    "dialog": [
+      1392,
+      852
+    ],
+    "body": [
+      1390,
+      697
+    ],
+    "stage": [
+      958,
+      633
+    ],
+    "pic": [
+      422,
+      633
+    ],
+    "cell": [
+      113,
+      113
+    ],
+    "map": null
+  },
+  "fotos-1920": {
+    "dialog": [
+      1760,
+      1032
+    ],
+    "body": [
+      1758,
+      877
+    ],
+    "stage": [
+      1246,
+      813
+    ],
+    "pic": [
+      542,
+      813
+    ],
+    "cell": [
+      139,
+      139
+    ],
+    "map": null
+  },
+  "fotos-horizontal-1280": {
+    "dialog": [
+      1232,
+      752
+    ],
+    "body": [
+      1230,
+      597
+    ],
+    "stage": [
+      822,
+      533
+    ],
+    "pic": [
+      822,
+      463
+    ],
+    "cell": [
+      105,
+      105
+    ],
+    "map": null
+  },
+  "fotos-horizontal-1440": {
+    "dialog": [
+      1392,
+      852
+    ],
+    "body": [
+      1390,
+      697
+    ],
+    "stage": [
+      958,
+      633
+    ],
+    "pic": [
+      958,
+      539
+    ],
+    "cell": [
+      113,
+      113
+    ],
+    "map": null
+  },
+  "fotos-horizontal-1920": {
+    "dialog": [
+      1760,
+      1032
+    ],
+    "body": [
+      1758,
+      877
+    ],
+    "stage": [
+      1246,
+      813
+    ],
+    "pic": [
+      1246,
+      701
+    ],
+    "cell": [
+      139,
+      139
+    ],
+    "map": null
+  },
+  "fotos-recorte-1280": {
+    "dialog": [
+      1232,
+      752
+    ],
+    "body": [
+      1230,
+      597
+    ],
+    "stage": [
+      822,
+      533
+    ],
+    "pic": [
+      355,
+      533
+    ],
+    "cell": [
+      105,
+      105
+    ],
+    "map": null
+  },
+  "fotos-recorte-h-1440": {
+    "dialog": [
+      1392,
+      852
+    ],
+    "body": [
+      1390,
+      697
+    ],
+    "stage": [
+      958,
+      633
+    ],
+    "pic": [
+      950,
+      633
+    ],
+    "cell": [
+      113,
+      113
+    ],
+    "map": null
+  }
+}

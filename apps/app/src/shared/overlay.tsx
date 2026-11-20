@@ -91,7 +91,7 @@ type Content = ReactNode | ((overlay: { titleId: string; close: () => void }) =>
 interface Chrome extends OverlayOptions {
   /** Título visible de la cabecera (`aria-labelledby`). Sin él: `label` o `labelledBy`. */
   title?: ReactNode;
-  /** Línea pequeña bajo el título. */
+  /** Línea pequeña bajo el título (hoja y ventana). */
   subtitle?: ReactNode;
   /** X de la cabecera (por defecto, con título). */
   closeButton?: boolean;
@@ -108,7 +108,7 @@ interface Chrome extends OverlayOptions {
 }
 
 type SheetLayout = "contact" | "picker" | "airbnb";
-type DialogLayout = "sign-in" | "inquiries" | "photos" | "filters";
+type DialogLayout = "sign-in" | "inquiries" | "photos" | "filters" | "field";
 type FullScreenLayout = "description" | "preview";
 
 const SHEET_DEFAULTS = { escape: true, backdrop: true, back: true };
@@ -156,7 +156,7 @@ function Surface({ kind, cls, defaults, grabber = false, id, title, subtitle, cl
   const head = title || closeButton || headerStart ? (
     <div className={kind === "sheet" ? "sheet-head" : "row between dialog-head"}>
       {headerStart}
-      {kind === "sheet" && subtitle ? (
+      {kind !== "full" && subtitle ? (
         <div>
           <h2 id={titleId}>{title}</h2>
           <span className="small muted">{subtitle}</span>
@@ -210,8 +210,9 @@ function Surface({ kind, cls, defaults, grabber = false, id, title, subtitle, cl
   );
 }
 
-/** «¿Descartar los cambios?» (D10), apilada encima: «Seguir editando» la cierra; «Descartar» cierra las dos sin guardar. */
-function DiscardConfirm({ desktop, keep, discard }: { desktop: boolean; keep(): void; discard(): void }) {
+/** «¿Descartar los cambios?» (D10), apilada encima: «Seguir editando» la cierra; «Descartar» cierra las dos sin guardar.
+ *  Exportada para la salida de una ruta con cambios (Atrás sobre la ventana de un apartado, historia 06). */
+export function DiscardConfirm({ desktop, keep, discard }: { desktop: boolean; keep(): void; discard(): void }) {
   const size = desktop ? "md" : "lg";
   const keepButton = <Button variant="secondary" size={size} onClick={keep}>Seguir editando</Button>;
   const discardButton = <Button variant="danger" size={size} onClick={discard}>Descartar</Button>;

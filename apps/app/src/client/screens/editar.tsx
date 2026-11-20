@@ -5,9 +5,13 @@
 // (save_edit), cada uno por su cuenta, con un aviso que nombra lo que los clientes siguen viendo (revisión UX 2026-10-29,
 // A5). Se pueden volver a cambiar mientras están en revisión: cuenta el último. Volver sin guardar no guarda nada.
 // Editar sigue las reglas de crear (ticket 12): solo bloquea lo obligatorio del dato; lo demás se guarda y se avisa.
+// En escritorio (historia 06, Ana, 2026-11-20) la misma ruta pinta el detalle de la casa y, encima, el dato en una ventana:
+// normal (520) o ancha la Ubicación (960), con «Cancelar» y la acción en el pie; las fotos, en el editor amplio
+// (photo-viewer.tsx). Atrás cierra la ventana (vuelve al detalle) y, con cambios, pregunta antes (excepción a D9: la ventana
+// tiene su URL). El admin y el teléfono siguen con la pantalla del dato.
 import { useQueryClient } from "@tanstack/react-query";
-import { Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Navigate, useBlocker, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { enterToNext, useEnterKeyHints, useFormKeyboard } from "../publish/form-keyboard";
 import { FieldErrorContext, useFieldError } from "../publish/field-error";
 import { listingFieldError } from "../../domain/field-errors";
@@ -18,7 +22,6 @@ import { planEdit } from "../../domain/edit-plan";
 import { toDomainError } from "../../domain/errors";
 import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
-import { I } from "../../shared/icons";
 import { toast } from "../../shared/toast";
 import { ScreenHeader } from "../chrome";
 import { useSaveEdit, useUpdateLive } from "../edit";
@@ -32,9 +35,9 @@ import { useOwnListing } from "../editor-query";
 import { NotFoundCard } from "../editor-status";
 import { useDesktop } from "../desktop";
 import { OwnerHouseDetail } from "./propietario";
-import { Button, IconButton, TextButton } from "../../shared/button";
+import { Button } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
-import { Dialog } from "../../shared/overlay";
+import { Dialog, DiscardConfirm } from "../../shared/overlay";
 import { LoadError, Notice, Skeleton } from "../../shared/structure";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
@@ -58,6 +61,14 @@ export function EditarCampoScreen() {
   const l = query.data;
   const ficha = <Navigate to={port.ficha} params={{ id }} replace />;
   if (!field || (l && (!isPublished(l) || (isBlocked(l) && !port.admin)))) return ficha;
+  // Escritorio del anfitrión: el detalle (con su carga y sus errores) y, encima, la ventana del dato.
+  if (desktop && !port.admin)
+    return (
+      <>
+        <OwnerHouseDetail id={id} />
+        {l ? field === "fotos" ? <EditPhotosDialog listing={l} userId={userId} /> : <EditFieldForm key={field} listing={l} field={field} userId={userId} dialog /> : null}
+      </>
+    );
   // Una Habitación solo pregunta personas: «Personas» (con el tipo aprobado, el de sus contadores).
   const header = <ScreenHeader kind="flow" title={fieldTitle(field, l?.kind)} back={{ to: port.ficha.replace("$id", id), historyBack: true }} />;
   if (l === null)
@@ -80,31 +91,20 @@ export function EditarCampoScreen() {
         )}
       </>
     );
-  const editor = field === "fotos" ? <EditPhotos listing={l} userId={userId} /> : (
+  return field === "fotos" ? <EditPhotos listing={l} userId={userId} /> : (
     <>
       {header}
       <EditFieldForm listing={l} field={field} userId={userId} />
     </>
   );
-  return desktop && !port.admin ? <OwnerHouseDetail id={id} rightPanel={editor} /> : editor;
 }
 
-type InlineFieldActions = {
-  renderRow: (actions: ReactNode) => ReactNode;
-  onClose: () => void;
-};
+// El editor de fotos de escritorio, en su propio trozo (photo-viewer-*): solo lo pide el escritorio del anfitrión.
+const PhotoEditorDialog = lazy(() => import("../publish/photo-viewer").then((m) => ({ default: m.PhotoEditorDialog })));
 
-export function InlineHouseEditor({ listing, field, userId, renderRow, onClose }: { listing: Listing; field: FormField; userId: string } & InlineFieldActions) {
-  return <EditFieldForm listing={listing} field={field} userId={userId} inline={{ renderRow, onClose }} />;
-}
-
-export function EditPhotosDialog({ listing, userId, onClose }: { listing: Listing; userId: string; onClose: () => void }) {
-  return (
-    <Dialog size="wide" layout="photos" title="Fotos" onClose={onClose}>
-      {({ close }) => <EditPhotos listing={listing} userId={userId} onDone={close} />}
-    </Dialog>
-  );
-}
+/** Al cerrar la ventana de un dato, el foco vuelve a su «Editar» (el detalle se vuelve a pintar al cambiar de ruta, así que
+ *  quien la abrió ya no está). */
+const editTrigger = (field: string) => () => document.querySelector<HTMLElement>(`[data-edit-field="${field}"]`);
 
 function editFieldValue(form: HTMLFormElement, field: FormField) {
   const data = new FormData(form);
@@ -116,13 +116,18 @@ function editFieldValue(form: HTMLFormElement, field: FormField) {
   return JSON.stringify(patch, (_key, value: unknown) => typeof value === "number" && Number.isNaN(value) ? "NaN" : value);
 }
 
-function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; field: FormField; userId: string; inline?: InlineFieldActions }) {
+function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Listing; field: FormField; userId: string; dialog?: boolean }) {
   const form = useRef<HTMLFormElement>(null);
   const formId = useId();
   const keyboard = useFormKeyboard(form);
   useEnterKeyHints(form);
   const back = useBackToFicha(listing.id);
-  const finish = inline?.onClose ?? back;
+  // Salir a propósito (guardar, «Cancelar», cerrar tras «Descartar»): sin la pregunta de Atrás.
+  const leaving = useRef(false);
+  const finish = () => {
+    leaving.current = true;
+    back();
+  };
   const live = useUpdateLive(userId, listing);
   const edit = useSaveEdit(userId, listing);
   // El admin guarda al momento, sin revisión: parte de lo publicado (lo pendiente del anfitrión de ese dato se descarta).
@@ -145,6 +150,10 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
   };
   const [error, setError] = useState<string | null>(null);
   const saving = live.isPending || edit.isPending;
+  // ¿Hay cambios? Se mira el formulario en el momento (Escape justo después de escribir llega antes que `hasChanges`).
+  const dirty = () => !!form.current && editFieldValue(form.current, field) !== initialValue.current;
+  // Atrás del navegador (o cualquier salida de la ruta) con cambios en la ventana: «¿Descartar los cambios?».
+  const blocker = useBlocker({ shouldBlockFn: () => !leaving.current && dirty(), withResolver: true, enableBeforeUnload: false, disabled: !dialog });
   const failed = (e: unknown) => setError(toDomainError(e).message);
 
   useLayoutEffect(() => {
@@ -199,10 +208,14 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
   // El error de un campo va debajo de ese campo (aquí todos los datos de la pantalla están siempre a la vista); el resto,
   // en el aviso de arriba.
   const fieldProblem = listingFieldError(error);
+  // El error de guardado va arriba del cuerpo de la ventana: se sube hasta él para que se vea.
+  useEffect(() => {
+    if (dialog && error && !fieldProblem) form.current?.querySelector('[role="alert"]')?.scrollIntoView({ block: "nearest" });
+  }, [dialog, error, fieldProblem]);
   const editor = (
-    <form id={formId} ref={form} key={formVersion} onSubmit={onSubmit} onKeyDown={enterToNext} onInputCapture={touch} onChangeCapture={touch} onPointerDownCapture={touch} onClickCapture={touch} {...(inline ? {} : keyboard)} className="publish-form" noValidate>
-      {/* De qué casa es el cambio, bajo el título. */}
-      {!inline ? <p className="small muted edit-house">{listing.title}</p> : null}
+    <form id={formId} ref={form} key={formVersion} onSubmit={onSubmit} onKeyDown={enterToNext} onInputCapture={touch} onChangeCapture={touch} onPointerDownCapture={touch} onClickCapture={touch} {...(dialog ? {} : keyboard)} className="publish-form" noValidate>
+      {/* De qué casa es el cambio, bajo el título (en la ventana, en su cabecera). */}
+      {!dialog ? <p className="small muted edit-house">{listing.title}</p> : null}
       {error && !fieldProblem ? (
         <Notice as="div" tone="error">
           {error}
@@ -216,41 +229,54 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
           {reviewNotice(field as ReviewedField, listing)}
         </Notice>
       ) : null}
-      {!inline && <StickyActions spacer="none">
+      {!dialog && <StickyActions spacer="none">
         <Button variant="primary" size="lg" block type="submit" disabled={saving || !hasChanges}>
           {action}
         </Button>
       </StickyActions>}
     </form>
   );
-  if (!inline) return editor;
+  if (!dialog) return editor;
   return (
-    <>
-      {inline.renderRow(
-        <div className="row gap-8 house-field-actions">
-          <TextButton tone="link" placement="account-profile-toggle" type="submit" form={formId} disabled={saving || !hasChanges}>{action}</TextButton>
-          <IconButton label="Descartar cambios" title="Descartar cambios" disabled={saving} onClick={inline.onClose}>
-            <I.x size={20} />
-          </IconButton>
-        </div>,
-      )}
-      <div className="owner-detail-panel house-inline-editor">{editor}</div>
-    </>
+    <Dialog
+      size={field === "ubicacion" ? "wide" : "normal"}
+      layout="field"
+      title={fieldTitle(field, listing.kind)}
+      subtitle={listing.title}
+      busy={saving}
+      confirmDiscard={dirty}
+      onClose={finish}
+      returnFocus={editTrigger(field)}
+      footer={
+        <>
+          {/* «Cancelar» cierra sin preguntar (historia 07). */}
+          <Button variant="secondary" disabled={saving} onClick={finish}>Cancelar</Button>
+          <Button variant="primary" type="submit" form={formId} disabled={!hasChanges} pending={saving}>{action}</Button>
+        </>
+      }
+    >
+      {editor}
+      {blocker.status === "blocked" ? (
+        <DiscardConfirm desktop keep={blocker.reset} discard={() => {
+          leaving.current = true;
+          blocker.proceed();
+        }} />
+      ) : null}
+    </Dialog>
   );
 }
 
 /** Las fotos de una casa publicada (maqueta 08d): la rejilla del paso 7. Ordenar y quitar las aprobadas va al momento;
  * las nuevas van a revisión al subirlas, cada una por su cuenta, y salen detrás con «En revisión» (o «Cambios pedidos»);
  * quitar una nueva la descarta. El contador cuenta aprobadas y nuevas. */
-function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: string; onDone?: () => void }) {
+function usePhotoSource(listing: Listing, userId: string): PhotoSource {
   const client = useQueryClient();
-  const toFicha = useBackToFicha(listing.id);
   // El admin sube directo a la ficha; las fotos nuevas del anfitrión siguen en su revisión (cuentan para el tope).
-  const { admin, photos, ficha } = useEditor();
+  const { admin, photos } = useEditor();
   const theirs = listing.edit?.photos ?? [];
   const pending = admin ? [] : theirs;
   const total = listing.photos.length + theirs.length;
-  const source: PhotoSource = {
+  return {
     listingId: listing.id,
     photos: listing.photos,
     pending,
@@ -271,16 +297,40 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
       await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] }, { cancelRefetch: false });
     },
   };
+}
+
+/** Escritorio del anfitrión: el editor amplio sobre el detalle; «Listo», la ✕ y Escape vuelven al detalle. */
+function EditPhotosDialog({ listing, userId }: { listing: Listing; userId: string }) {
+  const source = usePhotoSource(listing, userId);
+  const back = useBackToFicha(listing.id);
+  return (
+    <Suspense fallback={null}>
+      <PhotoEditorDialog
+        source={source}
+        userId={userId}
+        notice={`El orden y las fotos que quite se guardan al momento y ya se ven en su ficha. ${EDIT_COPY.photosNotice}`}
+        onClose={back}
+        returnFocus={editTrigger("fotos")}
+      />
+    </Suspense>
+  );
+}
+
+function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
+  const toFicha = useBackToFicha(listing.id);
+  const { admin, ficha } = useEditor();
+  const source = usePhotoSource(listing, userId);
+  const total = listing.photos.length + (listing.edit?.photos.length ?? 0);
   return (
     <>
-      {onDone ? <PhotoCounter counter={source.counter} /> : <ScreenHeader kind="flow" title={FIELD_TITLES.fotos} back={{ to: ficha.replace("$id", listing.id), historyBack: true }} action={<PhotoCounter counter={source.counter} />} />}
+      <ScreenHeader kind="flow" title={FIELD_TITLES.fotos} back={{ to: ficha.replace("$id", listing.id), historyBack: true }} action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
         {/* Como el paso 7: la ayuda de la primera foto se va con ella. */}
         {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
         <Notice small>{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</Notice>
         <StickyActions spacer="none">
-          {onDone ? <Button variant="primary" size="lg" block onClick={onDone}>Listo</Button> : <RouterButtonLink
+          <RouterButtonLink
             variant="primary"
             size="lg"
             block
@@ -293,7 +343,7 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
             }}
           >
             Listo
-          </RouterButtonLink>}
+          </RouterButtonLink>
         </StickyActions>
       </div>
     </>

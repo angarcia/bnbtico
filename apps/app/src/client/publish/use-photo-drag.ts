@@ -1,6 +1,6 @@
 // Arrastrar fotos del paso 7 con Pointer Events (sin librería). Mantener pulsada una foto LONG_PRESS_MS la levanta; moverse
 // más de SLOP_PX antes, soltar o que el navegador se quede el gesto (pointercancel: el scroll con touch-action pan-y)
-// lo cancela. Tras levantar, un touchmove nativo no pasivo en la rejilla impide que el navegador haga scroll (el
+// lo cancela. Con el ratón, moverse más de SLOP_PX la levanta al momento (historia 06: «Arrastre una foto…»). Tras levantar, un touchmove nativo no pasivo en la rejilla impide que el navegador haga scroll (el
 // touch-action ya se fijó en el pointerdown; el onTouchMove de React es pasivo y no serviría).
 // Levantada, la foto sigue al dedo y las demás se apartan (transform, una vez por frame) hacia su sitio en el orden que
 // quedaría. Al soltar en otro sitio se llama a onDrop una vez y los transforms se quedan hasta que llega la lista nueva
@@ -89,8 +89,11 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
   }, []);
 
   function onPointerDown(e: ReactPointerEvent<HTMLElement>, id: string) {
-    if (!opts.current.enabled || e.button || !e.isPrimary || gesture.current || (e.target as Element).closest("button")) return;
     const tile = e.currentTarget;
+    // Un botón dentro de la foto (✕, «Mover…») no la levanta; la foto puede ser ella misma un botón (las miniaturas del
+    // editor de escritorio, que la eligen al pulsarlas).
+    const inner = (e.target as Element).closest("button");
+    if (!opts.current.enabled || e.button || !e.isPrimary || gesture.current || (inner && inner !== tile)) return;
     const { pointerId, clientX: x0, clientY: y0 } = e;
 
     let to = 0, frame = 0, box: DOMRect, top0 = 0, scale = "";
@@ -156,10 +159,20 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
         else if (g.lifted) {
           last = ev;
           frame ||= requestAnimationFrame(paint);
-        } else if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > SLOP_PX) stop();
+        } else if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > SLOP_PX) {
+          // Con el ratón no hay que mantener pulsado: arrastrar ya la levanta (en el dedo, moverse antes es hacer scroll).
+          if (ev.pointerType === "mouse") {
+            lift();
+            if (!g.lifted) return;
+            last = ev;
+            frame ||= requestAnimationFrame(paint);
+          } else stop();
+        }
       }
     };
-    const timer = setTimeout(() => {
+    const lift = () => {
+      clearTimeout(timer);
+      if (g.lifted) return;
       const scroller = opts.current.scroller.current;
       try {
         tile.setPointerCapture(pointerId);
@@ -181,7 +194,8 @@ export function usePhotoDrag(o: PhotoDragOptions): PhotoDrag {
       navigator.vibrate?.(10);
       scale = matchMedia("(prefers-reduced-motion: reduce)").matches ? "" : ` scale(${LIFT_SCALE})`;
       tile.style.transform = `translate(0,0)${scale}`;
-    }, LONG_PRESS_MS);
+    };
+    const timer = setTimeout(lift, LONG_PRESS_MS);
 
     gesture.current = g;
     for (const t of TYPES) addEventListener(t, on, true);

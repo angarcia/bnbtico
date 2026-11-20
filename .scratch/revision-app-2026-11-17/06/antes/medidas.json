@@ -1,0 +1,342 @@
+{
+  "1280-inline-mapa": {
+    "x": 548.3125,
+    "y": 499.953125,
+    "width": 674.078125,
+    "height": 200
+  },
+  "1280-fotos-dialogo": {
+    "x": 160,
+    "y": 24,
+    "width": 960,
+    "height": 752
+  },
+  "1280-fotos-celdas": [
+    [
+      604,
+      224
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ]
+  ],
+  "1440-inline-mapa": {
+    "x": 624.78125,
+    "y": 499.953125,
+    "width": 695.1875,
+    "height": 200
+  },
+  "1440-fotos-dialogo": {
+    "x": 240,
+    "y": 66.5625,
+    "width": 960,
+    "height": 766.875
+  },
+  "1440-fotos-celdas": [
+    [
+      604,
+      224
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ],
+    [
+      298,
+      108
+    ]
+  ],
+  "ficha-1280": [
+    {
+      "cls": "strip",
+      "w": 797,
+      "h": 480,
+      "x": 42,
+      "y": 80,
+      "src": "1fa6c16f-9f60-498b-8ed9-a2107cd312c7/foto-0.jpg",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        1000,
+        563
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 797,
+      "h": 480,
+      "x": 838,
+      "y": 80,
+      "src": "1fa6c16f-9f60-498b-8ed9-a2107cd312c7/foto-1.jpg",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        500,
+        750
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 797,
+      "h": 480,
+      "x": 1635,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 797,
+      "h": 480,
+      "x": 2432,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 797,
+      "h": 480,
+      "x": 3229,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 797,
+      "h": 480,
+      "x": 4026,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    }
+  ],
+  "ficha-1440": [
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 104,
+      "y": 80,
+      "src": "1fa6c16f-9f60-498b-8ed9-a2107cd312c7/foto-0.jpg",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        1000,
+        563
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 936,
+      "y": 80,
+      "src": "1fa6c16f-9f60-498b-8ed9-a2107cd312c7/foto-1.jpg",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        500,
+        750
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 1768,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 2600,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 3432,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 4264,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    }
+  ],
+  "ficha-1920": [
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 344,
+      "y": 80,
+      "src": "1fa6c16f-9f60-498b-8ed9-a2107cd312c7/foto-0.jpg",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        1000,
+        563
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 1176,
+      "y": 80,
+      "src": "1fa6c16f-9f60-498b-8ed9-a2107cd312c7/foto-1.jpg",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        500,
+        750
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 2008,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 2840,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 3672,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    },
+    {
+      "cls": "strip",
+      "w": 832,
+      "h": 480,
+      "x": 4504,
+      "y": 80,
+      "src": "",
+      "sizes": "",
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ]
+    }
+  ],
+  "1920-fotos-dialogo": {
+    "x": 480,
+    "y": 156.5625,
+    "width": 960,
+    "height": 766.875
+  }
+}

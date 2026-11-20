@@ -80,7 +80,8 @@
       "!dist/client/assets/edit-label-*.js",
       "!dist/client/assets/status-label-*.js",
       "!dist/client/assets/explorar-escritorio-*.js",
-      "!dist/client/assets/panel-dias-*.js"
+      "!dist/client/assets/panel-dias-*.js",
+      "!dist/client/assets/photo-viewer-*.js"
     ],
     "limit": "161 KB",
     "gzip": true
@@ -309,6 +310,14 @@
       "dist/client/assets/photo-grid-*.js"
     ],
     "limit": "5 kB",
+    "gzip": true
+  },
+  {
+    "name": "Editor de fotos de escritorio · trozo diferido (photo-viewer-*: el visor de la foto entera con la franja de la ficha y la columna de miniaturas, historia 06; solo lo pide el escritorio del anfitrión al abrir Fotos)",
+    "path": [
+      "dist/client/assets/photo-viewer-*.js"
+    ],
+    "limit": "3 KB",
     "gzip": true
   },
   {

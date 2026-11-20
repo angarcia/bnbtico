@@ -19,7 +19,7 @@ import { editStatusLabel } from "../../domain/status-label";
 import { MONTHLY_FEE_CRC, subscriptionLine, type HouseSubscription } from "../../domain/subscription";
 import { I } from "../../shared/icons";
 import { DeleteHouse } from "../delete-house";
-import { lazy, Suspense, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useBilling } from "../billing";
 import { ConfirmSheet } from "../confirm-sheet";
 import { useDesktop } from "../desktop";
@@ -28,13 +28,12 @@ import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
 import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "../owner-ui";
 import { TextButton } from "../../shared/button";
+import { RouterTextLink } from "../router-buttons";
 import { Notice, StatusTag } from "../../shared/structure";
 import { Card, List, ListRow } from "../../shared/card";
 import { RouterListRow } from "../router-rows";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-const InlineHouseEditor = lazy(() => import("./editar").then((m) => ({ default: m.InlineHouseEditor })));
-const EditPhotosDialog = lazy(() => import("./editar").then((m) => ({ default: m.EditPhotosDialog })));
 
 /** El valor de un dato tal como lo verá el cliente (lo pendiente de la edición encima de lo aprobado). La capacidad sigue el
  *  tipo aprobado (`approvedKind`), como su pantalla: un cambio de tipo en revisión aún no quita habitaciones ni baños. */
@@ -69,9 +68,10 @@ const isReviewed = (field: FormField) => REVIEWED_FIELDS.includes(field);
 const pendingVisibility = "Los clientes ven lo de antes hasta que lo aprobemos.";
 
 /** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si está en revisión). Un dato pendiente
- *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar». */
-function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing: Listing; field: FormField; userId: string; onEdit?: () => void; editActions?: ReactNode }) {
-  const expanded = editActions !== undefined;
+ *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar».
+ *  `editLink`: en el escritorio del anfitrión, la fila no es un enlace; lleva «Editar», que abre su ventana en la misma
+ *  ruta del dato (historia 06), sin subir la página. */
+function FieldRow({ listing: l, field, userId, editLink }: { listing: Listing; field: FormField; userId: string; editLink: boolean }) {
   const { admin, field: to } = useEditor();
   const e = l.edit;
   // El admin edita también una casa bloqueada; ve lo publicado y, aparte, lo que el anfitrión tiene en revisión.
@@ -79,7 +79,7 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
   const state = e?.fields[field as ReviewedField];
   // Con una ubicación pendiente, provincia, cantón y distrito los recalcula la base al aprobar: solo la zona nueva.
   const pendingValue = state && field === "ubicacion" && e?.location ? e.location.zone : fieldValue(mergeEdit(l, e), field, l.kind);
-  const showBothNames = !!onEdit && field === "nombre" && !!state && !readOnly;
+  const showBothNames = editLink && field === "nombre" && !!state && !readOnly;
   const value = admin || showBothNames ? fieldValue(mergeEdit(l, null), field, l.kind) : pendingValue;
   // Lo no obligatorio sin decir o mal escrito, en ocre bajo el dato: el mismo aviso que «Revisar y enviar» al crear (ticket
   // 12); no bloquea nada. Sin descripción, el valor («Sin descripción») ya lo dice: va en ocre, sin repetirlo.
@@ -98,8 +98,8 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
           {fieldTitle(field, l.kind)}
           {showBothNames ? null : tag}
         </span>
-        {(!expanded || state) && <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}${empty ? " sun-ink" : ""}`}>{value}</span>}
-        {warning && !empty && !expanded ? (
+        <span className={`block strong${field === "descripcion" ? " review-text" : ""}${field === "precio" ? " num" : ""}${empty ? " sun-ink" : ""}`}>{value}</span>
+        {warning && !empty ? (
           <span className="block small sun-ink" data-testid={`warn-${field}`}>
             {warning}
           </span>
@@ -110,10 +110,11 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
           </span>
         ) : null}
       </span>
-      {readOnly ? null : expanded ? editActions : onEdit ? (
-        <TextButton tone="link" placement="account-profile-toggle" aria-label={`Editar: ${fieldTitle(field, l.kind)}`} aria-expanded={false} onClick={onEdit}>
+      {readOnly ? null : editLink ? (
+        <RouterTextLink to={to} params={{ id: l.id, campo: field }} resetScroll={false} tone="link" placement="account-profile-toggle"
+          aria-label={`Editar: ${fieldTitle(field, l.kind)}`} aria-haspopup="dialog" data-edit-field={field}>
           Editar
-        </TextButton>
+        </RouterTextLink>
       ) : (
         <span className="chev">
           <I.chevron />
@@ -122,7 +123,7 @@ function FieldRow({ listing: l, field, userId, onEdit, editActions }: { listing:
     </>
   );
   // Bloqueada por 3bstays: se lee, no se toca.
-  const row = readOnly || onEdit ? (
+  const row = readOnly || editLink ? (
     <ListRow aria-disabled={readOnly || undefined}>
       {content}
     </ListRow>
@@ -272,8 +273,6 @@ function StoppedNotice({ listing: l }: { listing: Listing }) {
 
 export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Listing; userId: string; rightPanel?: ReactNode }) {
   const desktop = useDesktop();
-  const [editingField, setEditingField] = useState<FormField | null>(null);
-  const [photosOpen, setPhotosOpen] = useState(false);
   const { admin, field } = useEditor();
   // La suscripción y las cifras son de la cuenta de quien mira: en las rutas del admin no son las del anfitrión.
   const billing = useBilling(admin ? "" : userId);
@@ -288,8 +287,8 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
   const photoEditLabel = `Editar fotos: ${photosLabel}`;
   const photoContent = <><I.camera size={20} /><span>{photosLabel}</span></>;
   const actionsOnLeft = desktop && !admin;
-  const canEditDetails = actionsOnLeft && !blocked && !rightPanel;
-  const editingDetails = canEditDetails && editingField !== null;
+  // En el escritorio del anfitrión, «Editar» abre la ventana del dato sobre este detalle (historia 06).
+  const editLinks = actionsOnLeft && !blocked;
   const subscription = !onTop && hb && billing ? <SubscriptionCard listing={l} sub={hb.sub} today={billing.today} inPanel={actionsOnLeft} /> : null;
   const actions = (
     <>
@@ -308,7 +307,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
     </>
   );
   return (
-    <div className={`${admin ? "editable-ficha-admin" : "editable-ficha"} stack gap-14${editingDetails ? " house-details-editing" : ""}`}>
+    <div className={`${admin ? "editable-ficha-admin" : "editable-ficha"} stack gap-14`}>
       <HoldNotice listing={l} />
       {onTop && l.status === "payment_due" ? hb && billing ? <PayNotice hb={hb} today={billing.today} /> : <PaymentDueNote listing={l} /> : null}
       {onTop && l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
@@ -319,12 +318,9 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
           <StatusTag placement="photo" label={label} />
           {blocked ? (
             <span className="pill photo-pill num">{photoContent}</span>
-          ) : actionsOnLeft && !rightPanel ? (
-            <button type="button" className="pill photo-pill num" aria-label={photoEditLabel} aria-haspopup="dialog" onClick={() => setPhotosOpen(true)}>
-              {photoContent}
-            </button>
           ) : (
-            <Link to={field} params={{ id: l.id, campo: "fotos" }} className="pill photo-pill num" aria-label={admin ? photoAction : photoEditLabel} title="Editar fotos">
+            <Link to={field} params={{ id: l.id, campo: "fotos" }} resetScroll={editLinks ? false : undefined} className="pill photo-pill num"
+              aria-label={admin ? photoAction : photoEditLabel} aria-haspopup={editLinks ? "dialog" : undefined} data-edit-field="fotos" title="Editar fotos">
               {admin ? photoAction : photoContent}
             </Link>
           )}
@@ -344,22 +340,11 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
 
         <List data-testid="field-rows">
           {/* Habitaciones apagadas (feature flag, #62): sin la fila «Tipo», que solo podría decir «Alojamiento completo». */}
-          {FIELD_ORDER.filter((field) => FLAGS.rooms || field !== "tipo").map((field) => {
-            const closeField = () => setEditingField((current) => current === field ? null : current);
-            const renderRow = (editActions?: ReactNode) => (
-              <FieldRow listing={l} field={field} userId={userId}
-                onEdit={canEditDetails ? () => setEditingField(field) : undefined} editActions={editActions} />
-            );
-            return (
-              <div key={field} className={actionsOnLeft ? "house-field" : "house-field-flat"}>
-                {editingDetails && editingField === field ? (
-                  <Suspense fallback={renderRow(<TextButton tone="link" onClick={closeField}>Cancelar</TextButton>)}>
-                    <InlineHouseEditor listing={l} field={field} userId={userId} renderRow={renderRow} onClose={closeField} />
-                  </Suspense>
-                ) : renderRow()}
-              </div>
-            );
-          })}
+          {FIELD_ORDER.filter((field) => FLAGS.rooms || field !== "tipo").map((field) => (
+            <div key={field} className={actionsOnLeft ? "house-field" : "house-field-flat"}>
+              <FieldRow listing={l} field={field} userId={userId} editLink={editLinks} />
+            </div>
+          ))}
         </List>
 
         {!actionsOnLeft && actions}
@@ -367,11 +352,6 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
         {admin ? null : <DeleteHouse listing={l} userId={userId} />}
         </>}
       </div>
-      {actionsOnLeft && !blocked && !rightPanel && photosOpen && (
-        <Suspense fallback={null}>
-          <EditPhotosDialog key={l.id} listing={l} userId={userId} onClose={() => setPhotosOpen(false)} />
-        </Suspense>
-      )}
     </div>
   );
 }

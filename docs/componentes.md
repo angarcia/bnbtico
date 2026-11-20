@@ -64,18 +64,26 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 | Pieza | Cuándo | Cierra con el fondo | Atrás |
 |---|---|---|---|
 | `Sheet` | hoja inferior (en escritorio, ventana normal) | sí | teléfono |
-| `Dialog size="normal"` | ventana de escritorio, 520 px | sí | no |
-| `Dialog size="wide"` | ventana ancha (Fotos), hasta 960 px | no | no |
+| `Dialog size="normal"` | ventana de escritorio, 520 px (también cada dato de una casa, `layout="field"`) | sí | no |
+| `Dialog size="wide"` | ventana ancha (la Ubicación de una casa), hasta 960 px; con `layout="photos"`, el editor de fotos casi a pantalla completa (`--dialog-w-photos`, alto fijo) | no | no |
 | `FullScreen` | Descripción, Vista previa | — | siempre |
 
 La pila pone `role="dialog"`, `aria-modal`, el foco (dentro al abrir, de vuelta al cerrar), Escape y Tab solo en la de arriba,
 y el aviso (`toast`) siempre encima. Con `confirmDiscard={() => hayCambios}`, cerrar pregunta «¿Descartar los cambios?» (D10);
-`busy` impide cerrar. Si la pestaña se va a WhatsApp, llame a `leavingPage()` antes de cerrar. `useDismiss` es para
+`busy` impide cerrar. Si la pestaña se va a WhatsApp, llame a `leavingPage()` antes de cerrar. `subtitle` pone una línea
+pequeña bajo el título, en la hoja y en la ventana (el nombre de la casa en la ventana de un dato, el contador en Fotos).
+
+**Una ventana con su propia URL** (los datos de una casa en escritorio, historia 06): la ruta pinta la pantalla de debajo y la
+ventana encima; cerrar vuelve atrás en el historial. Atrás del navegador sale de la ruta, así que con cambios se para con
+`useBlocker` de TanStack Router y se pregunta con `DiscardConfirm` (el mismo «¿Descartar los cambios?» de `confirmDiscard`,
+exportado de `overlay.tsx`). Como la pantalla de debajo se vuelve a montar al cambiar de ruta, `returnFocus` busca el
+disparador por un atributo (`data-edit-field`). Ejemplo en `client/screens/editar.tsx` (`EditFieldForm` con `dialog`). `useDismiss` es para
 desplegables no modales (selector de casa en escritorio, paneles de Explorar): Escape, clic fuera y perder el foco.
 
 ```tsx
 <Sheet title="Pausar la casa" closeButton={false} onClose={onClose} confirmDiscard={() => date !== ""}>…</Sheet>
-<Dialog size="wide" layout="photos" title="Fotos" onClose={onClose}>{({ close }) => <EditPhotos onDone={close} />}</Dialog>
+<Dialog size="normal" layout="field" title="Precio" subtitle="Casa Coco" confirmDiscard={dirty} busy={saving} onClose={finish}
+  footer={<><Button variant="secondary" onClick={finish}>Cancelar</Button><Button variant="primary" type="submit" form={formId}>Guardar</Button></>}>…</Dialog>
 ```
 
 **No:** un `<dialog>` o una capa propia, ni clases `sheet` / `dialog*` en la pantalla. Excepción: el fondo atenuado
@@ -182,7 +190,7 @@ oscuro). Familias:
 - **Radios:** `--r-control` 8 · `--r-pill` 6 · `--r-thumb` 10 · `--r` / `--r-tile` 12 · `--r-sheet` 16 · `--r-tag` 999.
 - **Sombras:** `--shadow`, `--shadow-float`, `--float-shadow`, `--shadow-action`, `--shadow-lift`.
 - **Capas:** `--z-explore`, `--z-float`, `--z-bar`, `--z-banner`, `--z-panel`, `--z-topbar`, `--z-overlay`, `--z-toast`.
-- **Espacio y tamaño:** `--gutter` 16, `--gutter-tight` 12, `--hit` 44, `--dialog-w`, `--dialog-w-wide`, `--nav-h`.
+- **Espacio y tamaño:** `--gutter` 16, `--gutter-tight` 12, `--hit` 44, `--dialog-w`, `--dialog-w-wide`, `--dialog-w-photos` (el editor de fotos, historia 06), `--nav-h`.
 - **Puntos de corte** (`breakpoints` del JSON): 900 (lista y mapa en columnas), 1024 (marco de escritorio, `client/desktop.ts`),
   1200.
 

@@ -1,3 +1,13 @@
+## 2026-11-20 · Editar una casa en ventanas de escritorio y editor de fotos amplio (historia 06)
+
+Ana aprobó la propuesta de la historia 06 de la revisión de la app del 2026-11-17 (`.scratch/revision-app-2026-11-17/06/`: `propuesta.md`, muestras y comparativas) con todas las recomendaciones:
+
+- **Cada dato de una casa publicada se edita en una ventana sobre el detalle** en escritorio, en la misma dirección `/propietario/casas/<id>/editar/<dato>`: normal de 520 px, y ancha de 960 px la Ubicación (el mapa necesita anchura; no se cierra al pulsar fuera). **La Descripción va en la ventana normal**, con un área de 280 px que crece con el texto. Sustituye al editor que se desplegaba dentro de la fila y al panel derecho. El teléfono y el admin no cambian.
+- **Atrás del navegador cierra la ventana de un dato** (vuelve al detalle) y, si hay cambios, pregunta antes «¿Descartar los cambios?». Es una excepción a «Atrás no cierra las ventanas de escritorio» (2026-11-19): esta ventana tiene su propia dirección, así que Atrás deshace la dirección. Fotos también se cierra con Atrás, sin preguntar.
+- **Editor de fotos con visor:** casi a pantalla completa, la foto elegida entera a la izquierda (sin recorte, con su proporción, al menos al tamaño de la ficha, variante de 1600) con una **franja discontinua «Lo que se ve en la ficha»**, porque la ficha recorta cada foto a 832 × 480; a la derecha, la columna de miniaturas enteras. Motivo: con la rejilla recortada no se podía juzgar cómo se verá cada foto, sobre todo las verticales.
+- **Quitar una foto aprobada pide confirmación** («¿Quitar esta foto?» / «Deja de verse en su ficha ahora. Si la vuelve a subir, la revisamos otra vez.»): se guarda al momento, no se deshace y volver a subirla pasa por revisión. Las fotos nuevas en revisión se quitan sin preguntar, como hasta ahora. Solo en el editor de escritorio; en el teléfono la rejilla sigue igual.
+- **Con ratón, una foto se arrastra sin mantenerla pulsada**, en Editar fotos y en el paso de fotos del asistente de publicar, para que «Arrastre una foto…» sea cierto en escritorio. En el teléfono sigue el toque largo.
+
 ## 2026-11-20 · Etiquetas, error de carga y margen del JS inicial (historia 07, paso 5)
 
 Ana revisó el paso 5 de la historia 07 (estructura y contenido comunes) y decidió:

@@ -68,16 +68,52 @@
   }
   .airbnb-calendar-directions .card { min-width: 0; }
 
-  .dialog-photos .publish-form::after { content: none; }
-  .dialog-photos .sticky-actions {
-    position: sticky;
-    inset: auto 0 0;
-    transform: none;
-    max-width: none;
-    padding: 12px 0 0;
-    justify-content: flex-end;
+  /* La ventana de un dato de una casa publicada (historia 06): el formulario del teléfono dentro de `.dialog-body`, sin su
+     barra de pie (la acción va en `.dialog-foot`). La descripción, un área de 280 px que crece con el texto; el mapa de la
+     ubicación (ventana ancha) a lo ancho, con un alto que se adapta al de la pantalla. */
+  .dialog-field .publish-form { flex: none; gap: 16px; padding: 12px 0 4px; }
+  .dialog-field .publish-form::after { content: none; }
+  .dialog-field textarea { min-height: 280px; field-sizing: content; }
+  .dialog-field .loc-map { flex: none; min-height: 0; height: clamp(240px, 100dvh - 520px, 420px); }
+
+  /* El editor de fotos (photo-viewer.tsx): casi a pantalla completa y de alto fijo (el visor no salta al cambiar de foto). A
+     la izquierda la foto elegida entera, al menos al tamaño de la ficha; a la derecha las miniaturas, también enteras. */
+  .dialog.dialog-photos {
+    width: var(--dialog-w-photos);
+    height: calc(100dvh - 48px);
+    max-height: none;
+    --rail: 336px;
   }
-  .dialog-photos .sticky-actions .btn { width: auto; }
+  @media (min-width: 1400px) { .dialog.dialog-photos { --rail: 360px; } }
+  @media (min-width: 1700px) { .dialog.dialog-photos { --rail: 440px; } }
+  .dialog-photos .dialog-foot { align-items: center; justify-content: space-between; gap: 24px; margin-top: 12px; border-top: 1px solid var(--line-soft); }
+  .photo-editor-notice { margin: 0; max-width: 80ch; }
+  .photo-editor-saved { display: inline-flex; align-items: center; gap: 6px; min-width: 9em; margin-inline-start: auto; white-space: nowrap; }
+  .photo-editor { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail); gap: 24px; height: 100%; min-height: 0; padding-top: 8px; }
+  .dialog-photos .dialog-body { display: flex; flex-direction: column; overflow: hidden; }
+  .dialog-photos .photo-editor { flex: 1; }
+  .photo-view { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; min-height: 0; }
+  .photo-view-stage { container-type: size; display: grid; place-items: center; min-height: 0; border-radius: var(--r-tile); background: var(--surface-2); }
+  .photo-view-pic { position: relative; width: min(100cqw, 100cqh * var(--ar)); aspect-ratio: var(--ar); overflow: hidden; border-radius: var(--r-input); }
+  .photo-view-pic > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .photo-view-pic > .tag { position: absolute; left: 10px; top: 10px; padding: 5px 10px; border-radius: var(--r-pill); background: var(--overlay); color: var(--on-overlay); font-size: var(--fs-xs); font-weight: var(--w-medium); }
+  .photo-view-pic > .tag-pending { top: auto; bottom: 10px; background: var(--muted); color: var(--bg); }
+  /* La franja que se ve en la ficha (domain/photo-view.ts): lo de fuera, atenuado con el contorno de la propia franja. */
+  .photo-view-band { position: absolute; border: 2px dashed var(--on-overlay); outline: 100vmax solid var(--scrim); pointer-events: none; }
+  .photo-view-band > span { position: absolute; right: 8px; bottom: 8px; padding: 3px 8px; border-radius: var(--r-pill); background: var(--overlay); color: var(--on-overlay); }
+  .photo-view-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .photo-view-tools > :first-child { margin-inline-end: 8px; }
+  .photo-view-tools > .btn-text-danger { margin-inline-start: auto; }
+  .photo-rail { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .photo-rail-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 4px; }
+  .photos-grid.photo-rail-grid { align-content: start; }
+  .photo-rail-grid .photo { min-height: 0; aspect-ratio: 1; background: var(--surface-2); }
+  .photo-rail-grid .photo-thumb { padding: 0; border: 0; cursor: grab; font: inherit; }
+  .photo-rail-grid .photo-thumb > img { position: static; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+  .photo-rail-grid .photo-thumb[aria-current="true"] { outline: 3px solid var(--primary); outline-offset: 2px; }
+  .photo-rail-grid .tag { left: 4px; top: 4px; padding: 2px 6px; font-size: var(--fs-eyebrow); }
+  .photo-rail-grid .photo.is-pending .tag { top: auto; bottom: 4px; left: 4px; }
+  .photo-rail-grid .add { min-height: 0; aspect-ratio: 1; }
 
   .publish-flow .wizard-heading > :is(.progress, .stage-label:not(.stage-summary)),
   .publish-flow .wizard-heading > .stage-summary > span {
@@ -321,11 +357,7 @@
   .house-pending-name .pending-foot { padding: 0; }
   .house-pending-value { flex: 1; min-width: 0; }
   .house-pending-name .pending-foot .btn-text { color: var(--brand-ink); }
-  .house-inline-editor { padding: 12px 16px 16px; }
-  .house-field-actions { flex: none; }
   .house-field .account-profile-toggle { flex: none; }
-  .app.desktop-app:has(.house-details-editing) { --desktop-nav-height: 0px; }
-  .desktop-app:has(.house-details-editing) > .desktop-nav { display: none; }
   .owner-detail-panel .header-flow { margin-inline: 0; }
   .owner-detail-panel .sticky-actions {
     position: sticky;

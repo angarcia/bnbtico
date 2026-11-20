@@ -24,7 +24,7 @@ function Fixture() {
       <button onClick={() => setOpen(true)}>Abrir hoja</button>
       <output>{log.join(" ")}</output>
       {open ? (
-        <Container title="Hoja de prueba" busy={busy} onClose={close} confirmDiscard={() => text !== ""}>
+        <Container title="Hoja de prueba" subtitle="Casa de prueba" busy={busy} onClose={close} confirmDiscard={() => text !== ""}>
           <label>
             Nota
             <input value={text} onChange={(e) => setText(e.target.value)} />

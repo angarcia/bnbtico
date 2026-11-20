@@ -1,0 +1,70 @@
+/* Muestras de la historia 06 (borrador para Ana). Usa el CSS real de la app (global.css) y añade solo lo propuesto, con el
+   prefijo p06-. Nada de esto está en apps/app. */
+@font-face{font-family:Figtree;font-style:normal;font-weight:300 900;src:url(../../../../apps/app/public/fonts/figtree-latin.woff2) format("woff2")}
+html,body{margin:0}
+body{background:var(--bg)}
+
+/* ---------- Índice ---------- */
+.p06-index{max-width:860px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:16px}
+.p06-index li{margin:6px 0}
+
+/* ---------- Escena: el detalle de la casa detrás (captura real del estado actual) ---------- */
+.p06-scene{position:fixed;inset:0;overflow:hidden}
+.p06-scene>.p06-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:none;object-position:top center}
+.p06-scene .sheet-backdrop{position:absolute;inset:0}
+
+/* ---------- Ventana normal de un apartado ---------- */
+/* Lo que ya da Dialog: 520 px, cabecera y pie fijos, el cuerpo con su scroll, alto máximo 100dvh - 32px. */
+.p06-field .publish-form{gap:16px;padding-bottom:4px}
+.p06-field .publish-form::after{content:none}
+.p06-field .edit-house{margin-top:-6px}
+.p06-field textarea{min-height:280px}
+/* Ubicación: ventana ancha (960) con el mapa a lo ancho y una altura que se adapta al alto de la pantalla. */
+.p06-field .map-wrap{min-height:0;width:100%;height:clamp(240px,100dvh - 520px,420px);flex:none}
+.p06-field .map-wrap>.map-placeholder{flex:1 1 auto;width:100%}
+.map-placeholder{flex:1;border-radius:var(--r-tile);background:
+  linear-gradient(115deg,transparent 47%,color-mix(in srgb,var(--surface) 80%,transparent) 47.5% 49%,transparent 49.5%),
+  linear-gradient(20deg,transparent 60%,color-mix(in srgb,var(--surface) 70%,transparent) 60.5% 61.5%,transparent 62%),
+  color-mix(in srgb,var(--state-soft) 70%,var(--bg));position:relative}
+.map-placeholder::before{content:"";position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px;border-radius:50%;border:1.5px solid var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent)}
+.map-placeholder::after{content:"";position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-26px 0 0 -11px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--brand);border:2px solid var(--surface)}
+.p06-field .loc-map{position:relative}
+.p06-field .place-search{position:absolute;left:12px;right:12px;top:12px}
+.p06-field .zone-pop{display:none}
+
+/* ---------- Editor de fotos amplio ---------- */
+.dialog.p06-photos{width:min(1760px,100% - 48px);height:calc(100dvh - 48px);max-height:none;padding:16px 24px 20px;--rail:336px}
+@media (min-width:1400px){.dialog.p06-photos{--rail:360px}}
+@media (min-width:1700px){.dialog.p06-photos{--rail:440px}}
+.p06-photos .dialog-head{gap:12px;justify-content:flex-start}
+.p06-photos .dialog-head .photos-count{margin-top:4px}
+.p06-photos .dialog-body{display:grid;grid-template-columns:minmax(0,1fr) var(--rail);gap:24px;overflow:hidden;padding-top:8px}
+.p06-visor{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:12px;min-height:0}
+.p06-stage{container-type:size;display:grid;place-items:center;min-height:0;border-radius:var(--r-tile);background:var(--surface-2)}
+.p06-pic{position:relative;width:min(100cqw,100cqh * var(--ar));aspect-ratio:var(--ar);border-radius:var(--r-input);overflow:hidden}
+.p06-pic>img{display:block;width:100%;height:100%;object-fit:contain}
+.p06-pic>.tag{position:absolute;left:10px;top:10px;padding:5px 10px;border-radius:var(--r-pill);background:var(--overlay);color:var(--on-overlay);font-size:var(--fs-xs);font-weight:var(--w-medium)}
+/* El recorte de la ficha (832 × 480, 1,73:1, centrado): fuera de la franja, atenuado. */
+.p06-crop{position:absolute;left:0;right:0;top:50%;aspect-ratio:832/480;transform:translateY(-50%);border-block:2px dashed var(--on-overlay);box-shadow:0 0 0 100vmax rgba(28,43,42,.45)}
+.p06-crop>span{position:absolute;right:8px;bottom:8px;padding:3px 8px;border-radius:var(--r-pill);background:var(--overlay);color:var(--on-overlay);font-size:var(--fs-xs)}
+.p06-crop.is-wide{top:0;bottom:0;left:50%;right:auto;height:100%;transform:translateX(-50%);border-block:0;border-inline:2px dashed var(--on-overlay)}
+.p06-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.p06-toolbar .p06-pos{margin-inline-end:8px}
+.p06-toolbar .btn-text-danger{margin-inline-start:auto}
+.p06-rail{display:flex;flex-direction:column;gap:10px;min-height:0}
+.p06-rail-grid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:8px;padding:3px}
+.p06-cell{position:relative;aspect-ratio:1;border:0;padding:0;border-radius:var(--r-input);background:var(--surface-2);cursor:grab;display:grid;place-items:center}
+.p06-cell>img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.p06-cell[aria-current="true"]{outline:3px solid var(--primary);outline-offset:2px}
+.p06-cell>.tag{position:absolute;left:4px;top:4px;padding:2px 6px;border-radius:var(--r-pill);background:var(--overlay);color:var(--on-overlay);font-size:var(--fs-eyebrow);font-weight:var(--w-medium)}
+.p06-cell>.tag.tag-pending{top:auto;bottom:4px;background:var(--muted);color:var(--bg)}
+.p06-cell.add{display:flex;flex-direction:column;gap:4px;border:2px dashed var(--selection);background:var(--surface-soft);color:var(--primary);font-size:var(--fs-xs);font-weight:var(--w-medium)}
+.p06-photos .dialog-foot{align-items:center;justify-content:space-between;gap:24px;border-top:1px solid var(--line-soft);margin-top:12px}
+.p06-photos .dialog-foot p{margin:0;max-width:80ch}
+.p06-saved{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+
+/* ---------- Comparativa ---------- */
+.p06-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;background:var(--surface-2)}
+.p06-compare figure{margin:0;display:flex;flex-direction:column;gap:8px}
+.p06-compare figcaption{font:600 18px/1.2 var(--display);color:var(--fg-title)}
+.p06-compare img{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
