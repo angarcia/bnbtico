@@ -778,7 +778,7 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 
 ### 3.18 Cuenta del propietario
 
-- [ ] En escritorio, abra «Ayuda por WhatsApp» desde la barra superior con una sesión de anfitrión y después sin sesión. Compruebe que la barra sigue visible en Ayuda y que aparece el canal correspondiente. A 1024 px, el icono conserva el nombre accesible «Ayuda por WhatsApp».
+- [ ] En escritorio, abra «Ayuda por WhatsApp» desde la barra superior con una sesión de anfitrión y después sin sesión. Compruebe que la barra sigue visible en Ayuda y que aparece el canal correspondiente. Hasta 1365 px, Ayuda va solo con su icono, que conserva el nombre accesible y el texto emergente «Ayuda por WhatsApp»; desde 1366 px lleva texto. A 1280 px, con «Mis casas», la barra no se sale por la derecha.
 
 - [ ] Con suficientes suscripciones para desplazar la página, baje por la columna derecha y compruebe que el perfil y las acciones de cuenta permanecen debajo de la barra superior. En una ventana baja, compruebe que puede recorrer la columna izquierda para llegar a «Cerrar sesión».
 

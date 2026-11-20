@@ -416,6 +416,11 @@
     .desktop-nav .desktop-help span,
     .desktop-nav .desktop-inquiries > span { display: none; }
   }
+  /* A 1280 px, con «Mis casas» y el texto de Ayuda, la barra iba llena: sobraban 2 px en el Mac y en el Linux de CI, con la
+     letra algo más ancha, se salía unos 20 px (2026-11-19). Hasta 1365 px, Ayuda queda en su icono, con nombre y title. */
+  @media (max-width: 1365px) {
+    .desktop-nav .desktop-help span { display: none; }
+  }
 
   .desktop-app .explore-top {
     position: fixed;

@@ -51,6 +51,17 @@ for (const [name, viewport, right] of [
     for (const tile of await summary(page).locator(".tile").all()) {
       expect(await tile.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
+    if (viewport.width >= 1024) {
+      // La barra de arriba cabe con holgura: en el Linux de CI la letra sale ~20 px más ancha que en el Mac (2026-11-19).
+      const free = await page.locator(".desktop-nav").evaluate((nav) => {
+        const last = [...nav.children].reduce((r, el) => Math.max(r, el.getBoundingClientRect().right), 0);
+        const cuenta = [...nav.querySelectorAll("a.nav")].find((a) => a.textContent?.includes("Cuenta"))!.getBoundingClientRect();
+        const next = nav.querySelector(".desktop-currency")!.getBoundingClientRect();
+        return { gap: next.x - cuenta.right, fits: last <= nav.getBoundingClientRect().right };
+      });
+      expect(free.fits).toBe(true);
+      expect(free.gap).toBeGreaterThanOrEqual(48);
+    }
     const plus = (await page.getByRole("link", { name: "Nueva casa" }).boundingBox())!;
     expect(plus.width).toBeGreaterThanOrEqual(44);
     expect(plus.height).toBeGreaterThanOrEqual(44);
