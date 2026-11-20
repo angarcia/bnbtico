@@ -67,7 +67,8 @@ describe("tabsFor", () => {
 });
 
 describe("casasView", () =>
-  it("0 → none; una o más → list", () => expect([0, 1, 2, 7].map(casasView)).toEqual(["none", "list", "list", "list"])));
+  // Revisión de la app 2026-11-17, historia 01: con una sola casa, su gestión directamente; con dos o más, la lista.
+  it("0 → none; una → detail; dos o más → list", () => expect([0, 1, 2, 7].map(casasView)).toEqual(["none", "detail", "list", "list"])));
 
 describe("noticeFor", () => {
   it("pago antes que seguir publicando; la pendiente de pago antes que la de la ventana de 90 días", () => {

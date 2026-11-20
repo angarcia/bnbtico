@@ -249,10 +249,10 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   await expect(page.getByRole("heading", { name: "¡Listo! Su casa está en revisión" })).toBeVisible();
   expect(await h.owner("owner").getOwn(id)).toMatchObject({ status: "review", title: TITLE, nightlyPriceCrc: 85000, acceptsMonthly: false, monthlyPriceCrc: null, photoCount: 4 });
   await page.getByRole("link", { name: "Ir a Mis casas" }).click();
-  // Una sola casa: Mis casas es la lista con su tarjeta, «En revisión» sobre la foto.
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("article").getByRole("heading", { name: TITLE })).toBeVisible();
-  await expect(page.getByRole("article").getByTestId("card-label")).toHaveText("En revisión");
+  // Una sola casa: «Mi casa» abre su gestión (historia 01 de la revisión 2026-11-17), «En revisión» sobre la foto.
+  await expect(page).toHaveURL(/\/propietario\/casas$/);
+  await expect(page.getByRole("heading", { level: 1, name: TITLE })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText("En revisión");
 });
 
 test("nombre: se detiene en 32 y muestra 32 / 32", async ({ page }) => {
@@ -669,8 +669,8 @@ test("«Cerrar» en la cabecera espera al guardado en curso y vuelve a Mis casas
   await expect(page).toHaveURL(/\/7$/);
   release();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  // Mis casas: la tarjeta del borrador, ya con el nombre guardado.
-  await expect(page.getByRole("article").getByRole("heading", { name: "Cabina que se cierra" })).toBeVisible();
+  // «Mi casa» (una sola casa, historia 01 de la revisión 2026-11-17): la gestión del borrador, ya con el nombre guardado.
+  await expect(page.getByRole("heading", { level: 1, name: "Cabina que se cierra" })).toBeVisible();
   expect((await h.owner("owner").getOwn(draft.id))?.title).toBe("Cabina que se cierra");
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await page.goto("/propietario/publicar");

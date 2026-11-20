@@ -55,6 +55,8 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
   const ownerInquiries = pathname === "/propietario/actividad";
   const ownerCalendar = pathname === "/propietario/calendario";
   const { count } = useListingsCount();
+  // Con una sola casa, «Mi casa» es la gestión de esa casa (historia 01 de la revisión 2026-11-17): la misma maqueta que su detalle.
+  const singleHouse = pathname === "/propietario/casas" && count === 1;
   // El admin lleva también la barra superior en escritorio, con sus pestañas (revisión 2026-11-13, A5).
   const desktop = useDesktop();
   const desktopSignIn = desktop && status === "signed-out";
@@ -141,7 +143,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
     <div className={`app${desktop ? " desktop-app" : ""}${publishing ? " publish-flow" : ""}`}>
       {desktop && navigation}
       <UnderTopBar.Provider value={bare}>
-        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}${ownerHouseDetail ? " owner-house-detail" : ""}${measure ? " view-measure" : ""}`}>{children}</main>
+        <main className={`view${bare ? " is-bare" : ""}${signInTab ? " sign-in-tab" : narrowGutter ? " view-narrow-gutter" : ""}${ownerCalendar ? " owner-calendar" : ""}${ownerInquiries ? " owner-inquiries" : ""}${ownerHouseDetail || singleHouse ? " owner-house-detail" : ""}${measure ? " view-measure" : ""}`}>{children}</main>
       </UnderTopBar.Provider>
       {!desktop && navigation}
       {desktopInquiries && inquiriesOpen && (

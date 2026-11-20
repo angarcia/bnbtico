@@ -95,10 +95,10 @@ test("pausar con fecha → «Pausada hasta el …» → fuera de Explorar y fich
   await expect.poll(async () => (await h.anon.getPublic(casa.publicId))?.available).toBe(false);
   await page.screenshot({ path: "test-results/no-disponible-cerrada.png" });
 
-  // Mis casas (una sola casa: la lista con su tarjeta) lo dice en la etiqueta de la foto.
+  // «Mi casa» (una sola casa: su gestión, historia 01 de la revisión 2026-11-17) lo dice en la etiqueta de la foto.
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("article").getByRole("heading", { name: "Casa Reapertura" })).toBeVisible();
-  await expect(page.getByRole("article").getByTestId("card-label")).toHaveText(`Pausada hasta el ${shortDate(reopen)}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Reapertura" })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText(`Pausada hasta el ${shortDate(reopen)}`);
 
   // Pausada: no sale en Explorar (ticket 20), pero su ficha se abre y dice que no está disponible por ahora.
   await page.goto("/explorar?prov=Todas");

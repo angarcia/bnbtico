@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "./helpers/test";
+import { expect, test } from "./helpers/test";
 import type { Seeded } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
@@ -25,7 +25,6 @@ test.beforeEach(async ({ page }) => {
   await injectSession(page, "owner");
 });
 
-const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
 test("la hoja nombra la casa y explica qué pasa; cancelar o fallar no cambia nada; confirmar la quita de Mis casas y del público", async ({ page }) => {
   await page.goto(`/propietario/casas/${gone.id}`);
@@ -59,8 +58,9 @@ test("la hoja nombra la casa y explica qué pasa; cancelar o fallar no cambia na
   await expect(page).toHaveURL(/\/propietario\/casas$/);
   await expect(page.locator(".toast")).toHaveText("Casa eliminada.");
   await page.screenshot({ path: `${SHOTS}/4-mis-casas-tras-eliminar.png` });
-  await expect(card(page, "Casa Cocles")).toHaveCount(0);
-  await expect(card(page, "Casa que se queda")).toHaveCount(1);
+  // Queda una sola casa: la pestaña abre su gestión (historia 01 de la revisión 2026-11-17).
+  await expect(page.getByRole("heading", { level: 1, name: "Casa que se queda" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Casa Cocles" })).toHaveCount(0);
   expect(await h.anon.linkState(gone.publicId)).toBeNull();
   expect(await h.anon.getPublic(gone.publicId)).toBeNull();
 });

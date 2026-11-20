@@ -1,5 +1,5 @@
 // Zona del propietario (pantallas 10, 16 y 19 del diseño v1; 07-mis-casas del v2): Mis casas, detalle de una casa y
-// «enviada». Mis casas es siempre la lista, una casa por fila; arriba, como mucho el aviso del pago (navigation.ts noticeFor).
+// «enviada». Mis casas es la lista, una casa por fila (con una sola casa, la pestaña «Mi casa» abre su gestión); arriba, como mucho el aviso del pago (navigation.ts noticeFor).
 // El calendario (17) va en su propio trozo (screens/calendario.tsx).
 // Se pintan desde la caché (Mis casas persistida con la sesión) y se refrescan por detrás. Las reglas las pone la base;
 // `can` decide qué botones se muestran.
@@ -79,9 +79,27 @@ function usePreloadPublish() {
   }, []);
 }
 
+/** «+», «Nueva casa»: junto a las cifras de Mis casas o, con una sola casa, junto a su título. */
+function NewHouseLink({ userId }: { userId: string }) {
+  const client = useQueryClient();
+  return (
+    // Al apoyar el dedo empieza ya la lectura del borrador pendiente que el asistente necesita (siempre de la base), salvo
+    // que la lista ya diga que no hay ninguno: entonces el paso 1 sale sin esperarla.
+    <Link
+      to="/propietario/publicar"
+      className="new-house"
+      aria-label="Nueva casa"
+      onPointerDown={() => {
+        if (userId && !knownNoDraft(client, userId)) void client.prefetchQuery(resumableQuery(userId));
+      }}
+    >
+      <I.plus size={22} />
+    </Link>
+  );
+}
+
 export function CasasScreen() {
   const userId = useUserId();
-  const client = useQueryClient();
   usePreloadPublish();
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
@@ -105,6 +123,13 @@ export function CasasScreen() {
     { n: count("review"), label: "en revisión", cls: "tile-review" },
     { n: count("draft"), label: count("draft") === 1 ? "borrador" : "borradores", cls: "tile-draft", to: firstDraft?.id },
   ].filter((t) => t.n > 0);
+  // Una sola casa: su gestión en la propia pestaña, con la barra de abajo y sin flecha (no hay lista a la que volver).
+  // El aviso del pago de la lista (90/30/7 días) sigue arriba; la pendiente de pago y la parada ya los pone la ficha.
+  if (view === "detail") {
+    const only = list![0]!;
+    const ownNotice = only.status === "payment_due" || only.status === "inactive" ? null : <NoticeCard notice={notice} billing={billing} />;
+    return <OwnerHouseDetail id={only.id} newHouse={<NewHouseLink userId={userId} />} notice={ownNotice} />;
+  }
   return (
     <>
       <RootHeader title="Mis casas" />
@@ -132,18 +157,7 @@ export function CasasScreen() {
                 )}
               </div>
             ) : null}
-            {/* Al apoyar el dedo empieza ya la lectura del borrador pendiente que el asistente necesita (siempre de la base),
-                salvo que la lista ya diga que no hay ninguno: entonces el paso 1 sale sin esperarla. */}
-            <Link
-              to="/propietario/publicar"
-              className="new-house"
-              aria-label="Nueva casa"
-              onPointerDown={() => {
-                if (userId && !knownNoDraft(client, userId)) void client.prefetchQuery(resumableQuery(userId));
-              }}
-            >
-              <I.plus size={22} />
-            </Link>
+            <NewHouseLink userId={userId} />
           </div>
           <div className="stack house-list">
             {byPendingAction(list!).map((l, i) => (
@@ -233,7 +247,9 @@ export function CasaPropietarioScreen() {
   return <OwnerHouseDetail id={id} showSubscription={desktop && panel === "suscripcion"} />;
 }
 
-export function OwnerHouseDetail({ id, rightPanel, showSubscription }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean }) {
+/** `newHouse`: la gestión va en la pestaña «Mi casa» (una sola casa): cabecera de pestaña con el «+», sin flecha, y
+ *  `notice` (el aviso del pago de la lista) debajo. */
+export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, notice }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean; newHouse?: ReactNode; notice?: ReactNode }) {
   const { userId, query } = useOwnListing(id);
   const desktop = useDesktop();
   // Suscripción, actividad y el JS de la ficha editable no dependen de la casa: salen a la vez que ella, no después
@@ -255,11 +271,16 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription }: { id: str
   ) : null;
   return (
     <>
-      <FlowHeader
-        title={l ? titleOf(l) : "Mi casa"}
-        back="/propietario/casas"
-        action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined}
-      />
+      {newHouse ? (
+        <RootHeader title={l ? titleOf(l) : "Mi casa"} action={<>{desktop ? viewListing : null}{newHouse}</>} />
+      ) : (
+        <FlowHeader
+          title={l ? titleOf(l) : "Mi casa"}
+          back="/propietario/casas"
+          action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined}
+        />
+      )}
+      {notice}
       {l && isPublished(l) ? (
         <Suspense fallback={<SkeletonCard />}>
           <EditableFicha key={l.id} listing={l} userId={userId} rightPanel={showSubscription ? <HouseSubscription listing={l} /> : rightPanel} />

@@ -545,7 +545,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 ### 3.11 Mis casas: estados y tarjetas
 
-- [ ] **A66** Con una sola casa la pestaña dice «Mi casa»; con dos o más, «Mis casas»; el título de la pantalla es «Mis casas» en los dos casos.
+- [ ] **A66** Con una sola casa (también si es un borrador) la pestaña dice «Mi casa» y abre directamente la gestión de esa casa, sin lista: su nombre como título, el «+» redondo («Nueva casa») a la derecha y la barra de abajo a la vista, en el teléfono y en el portátil. Con dos o más, «Mis casas» abre la lista con el título «Mis casas». Desde la gestión, abra «Ver ficha» y vuelva con Atrás → regresa a la gestión y se queda ahí. Publique o descarte una segunda casa → la pestaña y su destino cambian a la vez.
 - [ ] **A67** Revise las casillas → «activa»/«activas», «por pagar», «en revisión», «borrador»/«borradores»; las que están en cero no salen; tocar «borrador» abre ese borrador.
 - [ ] **A68** Con casas en varios estados, compruebe el orden → primero cambios pedidos, luego pendiente de pago e inactivas, luego borradores, luego activas y al final en revisión.
 - [ ] **A69** Tarjeta «Activa» → foto con la etiqueta «Activa», nombre, zona y Compartir con icono y texto verde sobre la superficie de la tarjeta, sin relleno; una línea neutra separa las acciones, sin banda verde; sin precio ni «Añadir método de pago». Con varias casas, a la derecha están los iconos Calendario y Consultas de esa casa; con una sola casa no aparecen (se usan las pestañas). Tocar la foto o el nombre abre el detalle; arrastrar para desplazar no lo abre.

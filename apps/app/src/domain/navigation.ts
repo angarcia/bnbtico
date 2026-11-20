@@ -10,7 +10,6 @@ import { payButtonDue, type HouseSubscription } from "./subscription";
 // las reglas de la suscripción que necesita noticeFor.
 export * from "./tabs";
 
-/** Mis casas es siempre la lista, también con una sola casa. */
 /** Orden de Mis casas por lo que pide algo al propietario (revisión UX 2026-10-29, A3): primero cambios pedidos, rechazadas,
  *  pendientes de pago, paradas y borradores; luego las activas; al final las que están en revisión (no hay nada que hacer).
  *  Dentro de cada grupo, el orden de la lista (la más nueva primero). */
@@ -22,8 +21,10 @@ export function byPendingAction<T extends Pick<Listing, "status">>(listings: rea
     .map((x) => x.l);
 }
 
-export function casasView(listingsCount: number): "list" | "none" {
-  return listingsCount <= 0 ? "none" : "list";
+/** La pestaña de las casas: con una sola (borrador incluido), su gestión directamente; con dos o más, la lista (revisión de
+ *  la app 2026-11-17, historia 01; antes era siempre la lista). */
+export function casasView(listingsCount: number): "list" | "detail" | "none" {
+  return listingsCount <= 0 ? "none" : listingsCount === 1 ? "detail" : "list";
 }
 
 export type Notice = { kind: "payment"; listingId: string };

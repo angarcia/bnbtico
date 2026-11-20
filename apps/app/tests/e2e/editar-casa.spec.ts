@@ -46,7 +46,6 @@ const row = (page: Page, title: string) => rows(page).getByRole("link").filter({
 const discardButton = (page: Page, field: string) => page.getByRole("button", { name: `Descartar el cambio de ${field}` });
 /** Un tipo de antes de publicar v2 (casa, apartamento), como el servicio. */
 const sqlKind = (id: string, kind: string) => sql(`begin; select set_config('app.allow_status','on',true); update public.listings set kind = '${kind}' where id = '${id}'; commit;`);
-const card = (page: Page, title: string) => page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) });
 
 test("la ficha editable de una casa activa", async ({ page }) => {
   const { id, publicId } = await h.seed({ status: "active", draft: { title: "Casa Coco" } });
@@ -109,11 +108,11 @@ test("la ficha editable de una casa activa", async ({ page }) => {
   // Se puede volver a cambiar mientras está en revisión: la fila sigue siendo un enlace.
   await expect(row(page, "Nombre")).toHaveAttribute("href", `/propietario/casas/${id}/editar/nombre`);
 
+  // Con una sola casa, la pestaña abre su gestión (historia 01 de la revisión 2026-11-17), con la misma etiqueta.
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(card(page, "Casa Coco").getByTestId("card-label")).toHaveText("Cambios en revisión");
-  await card(page, "Casa Coco").getByRole("link", { name: "Casa Coco" }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Coco" })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cambios en revisión");
+  await page.goto(`/propietario/casas/${id}`);
 
   // «Descartar» pregunta con la hoja de la app (nunca el diálogo del navegador); al cancelar no pasa nada, al confirmar
   // el cambio desaparece.
@@ -211,8 +210,9 @@ test("cambiar el precio: al momento, en la ficha pública y en Explorar", async 
 test("historial: guardar un dato, volver de un dato o de las fotos regresa a la ficha sin apilarla", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   const ficha = new RegExp(`/propietario/casas/${id}$`);
+  // Con una sola casa la pestaña ya es su gestión (historia 01 de la revisión 2026-11-17): la ficha de flujo se abre encima.
   await page.goto("/propietario/casas");
-  await card(page, "Cabina Cahuita").getByRole("link").first().click();
+  await page.goto(`/propietario/casas/${id}`);
   await expect(page).toHaveURL(ficha);
   // Guardar: la ficha, y «atrás» del navegador sale de ella (a Mis casas), no al formulario.
   await row(page, "Precio").click();
@@ -223,7 +223,7 @@ test("historial: guardar un dato, volver de un dato o de las fotos regresa a la 
   await page.goBack();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
   // La flecha de la cabecera de un dato y «Listo» de las fotos, igual.
-  await card(page, "Cabina Cahuita").getByRole("link").first().click();
+  await page.goto(`/propietario/casas/${id}`);
   await row(page, "Nombre").click();
   await page.getByRole("link", { name: "Volver" }).click();
   await expect(page).toHaveURL(ficha);
@@ -258,7 +258,9 @@ test("cambiar el nombre: «Enviar a revisión» con el aviso; la ficha pública 
   await page.goto(`/casa/${publicId}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cabina Cahuita");
   await page.goto("/propietario/casas");
-  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Cambios en revisión");
+  // Una sola casa: «Mi casa» abre su gestión (historia 01 de la revisión 2026-11-17), con la misma etiqueta en la foto.
+  await expect(page.getByRole("heading", { level: 1, name: "Cabina Cahuita" })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cambios en revisión");
 
   // En revisión se puede volver a cambiar: cuenta el último valor enviado.
   await page.goto(`/propietario/casas/${id}/editar/nombre`);
@@ -642,7 +644,9 @@ test("el admin aprueba el nombre: la ficha lo muestra al momento y la casa sale 
   await expect(page.getByRole("heading", { level: 1, name: "Casa Coco frente al mar" })).toBeVisible();
   await expect(page.locator(".tag-rev", { hasText: /En revisión|Cambios pedidos/ })).toHaveCount(0);
   await page.goto("/propietario/casas");
-  await expect(card(page, "Casa Coco frente al mar").getByTestId("card-label")).toHaveText("Activa");
+  // Una sola casa: «Mi casa» abre su gestión (historia 01 de la revisión 2026-11-17), con la misma etiqueta en la foto.
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Coco frente al mar" })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText("Activa");
 });
 
 test("el admin pide cambios en el nombre: el propietario ve la nota, corrige y vuelve a revisión", async ({ page }) => {
@@ -664,7 +668,9 @@ test("el admin pide cambios en el nombre: el propietario ve la nota, corrige y v
   await expect(row(page, "Nombre").locator(".tag-rev")).toHaveText("Cambios pedidos");
   await expect(page.getByTestId("pending-nombre")).toContainText("Le pedimos cambios: Use un nombre sin mayúsculas sostenidas.");
   await page.goto("/propietario/casas");
-  await expect(card(page, "Cabina Cahuita").getByTestId("card-label")).toHaveText("Cambios pedidos");
+  // Una sola casa: «Mi casa» abre su gestión (historia 01 de la revisión 2026-11-17), con la misma etiqueta en la foto.
+  await expect(page.getByRole("heading", { level: 1, name: "Cabina Cahuita" })).toBeVisible();
+  await expect(page.locator(".detail-photo .state")).toHaveText("Cambios pedidos");
   await page.goto(`/propietario/casas/${id}`);
   await row(page, "Nombre").click();
   await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");

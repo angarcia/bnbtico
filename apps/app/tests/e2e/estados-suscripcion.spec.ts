@@ -98,19 +98,19 @@ test("Mis casas: arriba solo el pago (la pendiente antes que la ventana de 90 d�
   await expect(card(page, "Borrador del Caribe").getByRole("link", { name: "Seguir publicando" })).toBeVisible();
 });
 
-test("una sola casa: el aviso de pago arriba de su tarjeta y no dentro de ella; la ficha editable no lo repite", async ({ page }) => {
+// Con una sola casa, «Mi casa» abre su gestión (historia 01 de la revisión 2026-11-17): el aviso del pago sale una vez,
+// arriba, sobre la ficha, y el detalle abierto aparte no lo repite.
+test("una sola casa: el aviso de pago una vez, arriba de su gestión; la ficha editable no lo repite", async ({ page }) => {
   const casa = await h.seed({ status: "active", draft: { title: "Casa Cocles" } });
   await h.setDaysLeft(casa.id, 30);
   await owner(page);
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cocles" })).toBeVisible();
   await expect(page.getByTestId("pay-notice")).toHaveCount(1);
   await expect(page.getByTestId("pay-notice")).toContainText("Casa Cocles");
-  const only = card(page, "Casa Cocles");
-  await expect(only.getByTestId("pay-notice")).toHaveCount(0);
-  await expect(only.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
-  expect((await page.getByTestId("pay-notice").boundingBox())!.y).toBeLessThan((await only.boundingBox())!.y);
-  await expect(page.getByTestId("subscription-row")).toHaveCount(0); // la línea de la suscripción va en el detalle
+  await expect(page.getByTestId("pay-notice").getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(casa.publicId));
+  await expect(page.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(1);
+  expect((await page.getByTestId("pay-notice").boundingBox())!.y).toBeLessThan((await page.getByTestId("subscription-row").boundingBox())!.y);
   // Ficha editable (spec editar-casa §1): arriba solo la pendiente de pago o la parada; las demás, la fila «Suscripción».
   await page.goto(`/propietario/casas/${casa.id}`);
   await expect(page.getByTestId("subscription-row")).toBeVisible();
@@ -343,7 +343,9 @@ test("una casa inactiva conserva Activar suscripción dentro de los márgenes en
   await h.billing("owner").stop(house.id);
   await owner(page);
   await page.goto("/propietario/casas");
-  const only = card(page, "Casa parada");
+  // Con una sola casa, su gestión (historia 01 de la revisión 2026-11-17): el botón va en el aviso de la parada.
+  await expect(page.getByRole("heading", { level: 1, name: "Casa parada" })).toBeVisible();
+  const only = page.getByTestId("stopped-notice");
   const activate = only.getByRole("link", { name: "Activar suscripción", exact: true });
   await expect(activate).toHaveAttribute("href", payLink(house.publicId));
   await expect(activate).toHaveClass(/btn-sun/);

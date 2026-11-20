@@ -105,6 +105,8 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   await expect(page).toHaveURL(/\/8$/);
 
   // La ficha (al publicarse) y Mis casas usan las variantes: la portada nueva en Mis casas es la de 800 con la de 480 en srcset.
+  // Con una segunda casa, para que la pestaña sea la lista (con una sola abre su gestión, historia 01 de la revisión 2026-11-17).
+  await h.seed({ status: "active", draft: { title: "Otra casa" } });
   await page.goto("/propietario/casas");
   const cover = page.locator(`.house-photo img[src="${after.photos[0]!.url}"]`).first();
   await expect(cover).toBeVisible();

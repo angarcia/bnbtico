@@ -6,7 +6,7 @@ import { enterCode, injectSession, signOut } from "./helpers/session";
 import { backFromWhatsApp, catchWhatsApp } from "./helpers/whatsapp";
 
 // Navegación simple: una sola barra que crece con las casas (tres pestañas sin casas, cinco con al menos una) con la cuenta
-// a la derecha, Mis casas (siempre en lista, también con una sola casa), Consultas (solo las consultas; las cifras de 30 días
+// a la derecha, Mis casas (en lista con dos o más; con una sola, su gestión), Consultas (solo las consultas; las cifras de 30 días
 // están en el detalle de cada casa) y la vuelta de /propietario y /propietario/consultas. Revisión UX 2026-10-29 (C1, C4).
 // Contra Supabase local con las sesiones inyectadas (sin gastar SMS).
 test.describe.configure({ mode: "serial" });
@@ -194,27 +194,20 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
   await expect(page.getByTestId("inquiries-badge")).toHaveCount(0);
 });
 
-test("3 · una casa: la lista con una sola tarjeta; tocarla abre su detalle", async ({ page }) => {
+// Revisión de la app 2026-11-17, historia 01: con una sola casa, la pestaña abre su gestión, sin la lista de un elemento.
+test("3 · una casa: la pestaña abre su gestión, con «Nueva casa» y sin flecha; con dos, la lista", async ({ page }) => {
   h = await postgrestHarness(); // la prueba anterior cerró la sesión del propietario también en el servidor
   await h.reset();
   const casa = await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
   await page.goto("/propietario/casas");
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
-  await expect(page.getByRole("article")).toHaveCount(1);
-  const only = page.getByRole("article");
-  await expect(only.getByTestId("card-label")).toHaveText("Activa");
-  // Compartir conserva el verde; con una sola casa se usan las pestañas de Calendario y Consultas.
-  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveClass(/btn-primary/);
-  await expect(only.getByRole("link", { name: "Calendario" })).toHaveCount(0);
-  await expect(only.getByRole("link", { name: "Consultas" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Nueva" })).toHaveAttribute("href", "/propietario/publicar");
-  await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveCount(0);
-  await page.screenshot({ path: "test-results/mis-casas-una.png", fullPage: true });
-  await only.getByRole("link", { name: "Casa Puerto Viejo" }).click();
-  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${casa.id}$`));
   await expect(page.getByRole("heading", { level: 1, name: "Casa Puerto Viejo" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
+  await expect(page.getByRole("article")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Nueva casa" })).toHaveAttribute("href", "/propietario/publicar");
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveAttribute("href", `/casa/${casa.publicId}`);
+  await expect(nav(page).getByRole("link", { name: "Mi casa" })).toHaveAttribute("aria-current", "page");
+  await page.screenshot({ path: "test-results/mis-casas-una.png", fullPage: true });
 
   await h.seed({ status: "draft", draft: { title: "Casa Cocles" } });
   await page.goto("/propietario/casas");
@@ -238,9 +231,10 @@ test("la casa abierta desde la lista se queda aunque se descarte la otra", async
   await expect(page.getByRole("heading", { level: 1, name: "Casa Puerto Viejo" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Volver" })).toBeVisible();
   await page.getByRole("link", { name: "Volver" }).click();
+  // Ya solo queda una: la pestaña abre su gestión (historia 01), sin flecha y sin volver a redirigir.
   await expect(page).toHaveURL(/\/propietario\/casas$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Puerto Viejo" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
 });
 
@@ -271,11 +265,10 @@ test("2 · sin casas: cuatro pestañas; «¿Quiere publicar su casa gratis?» cr
   await expect(page).toHaveURL(/\/propietario\/publicar\/[0-9a-f-]+\/1$/);
   await page.goto("/propietario/casas");
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
-  // Una casa borrador: la lista con su tarjeta, que es el único sitio donde sale (sin aviso arriba).
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("article").getByRole("link", { name: "Seguir publicando" })).toHaveClass(/btn-ghost/);
-  await expect(page.getByRole("article").getByRole("button", { name: "Descartar" })).toBeVisible();
+  // Una casa borrador: «Mi casa» abre su gestión (historia 01 de la revisión 2026-11-17), sin aviso arriba.
+  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Seguir publicando" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descartar borrador" })).toBeVisible();
   await expect(page.getByTestId("resume-card")).toHaveCount(0);
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
   await page.goto("/cuenta");
@@ -298,8 +291,8 @@ test("el propietario entra y la barra no salta; al volver a abrir, cinco desde e
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
   expect(await tabCountsAt(page, "/")).toEqual([5]);
   await nav(page).getByRole("link", { name: "Mi casa" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Casa Cahuita" })).toBeVisible();
+  // Una sola casa: su gestión (historia 01 de la revisión 2026-11-17).
+  await expect(page.getByRole("heading", { level: 1, name: "Casa Cahuita" })).toBeVisible();
   await page.goto("/que-es-3bstays");
   await expect(page).toHaveURL(/\/explorar$/);
 });
@@ -330,10 +323,11 @@ test("4 · al descartar las dos casas vuelve a dos pestañas y a Explorar", asyn
   await expect(page.getByRole("article")).toHaveCount(2);
   await page.getByRole("article").filter({ hasText: "Borrador uno" }).getByRole("button", { name: "Descartar" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
-  await expect(page.getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("heading", { name: "Borrador dos" })).toBeVisible();
+  // Queda una: la pestaña pasa a «Mi casa» y, sin salir, a la gestión de esa casa (historia 01 de la revisión 2026-11-17).
+  await expect(page.getByRole("heading", { level: 1, name: "Borrador dos" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(0);
   await expect(nav(page).getByRole("link")).toHaveText(OWNER_TABS);
-  await page.getByRole("article").getByRole("button", { name: "Descartar" }).click();
+  await page.getByRole("button", { name: "Descartar borrador" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Descartar" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await expect(nav(page).getByRole("link")).toHaveText(["3Btico", "Explorar", "Favoritos", "Cuenta"]);
