@@ -1,3 +1,20 @@
+## 2026-11-19 · Componentes comunes y reglas visuales de la historia 07
+
+Ana aprobó el inventario y la propuesta de componentes de la historia 07 de la revisión de la app del 2026-11-17 (`.scratch/revision-app-2026-11-17/07/`: `propuesta.md` y muestras con capturas), y eligió entre opciones con capturas:
+
+- **Foco:** un solo anillo de teclado en toda la app, verde `--primary` (7,3:1 sobre la crema). El ocre `--sun` daba 1,8:1 y no llegaba al 3:1 de WCAG.
+- **Destructivo:** un solo nivel, terracota (`--brand` tonal con texto `--brand-ink`), igual para propietario y admin. Se retira el rojo lleno de «Eliminar casa» del admin.
+- **Secundario** («Cancelar», «Ahora no»): contorno fino verde y fondo transparente en móvil y escritorio, con la misma altura que el primario a su lado. Extiende al móvil el secundario de escritorio del 2026-11-13. «Cancelar» deja de ser terracota en las ventanas de escritorio.
+- **WhatsApp verde lleno** solo para hablar con el anfitrión: «Contactar por WhatsApp» y responder desde Actividad. Ayuda y los avisos del admin pasan a secundario con el icono verde.
+- **Etiquetas de estado** con radio de 6 px, como pedía la decisión del 2026-10-29. Hoy eran redondas.
+- **Chip elegido:** verde al 26 % (`--chosen`), como ya pinta el CSS. Se corrige el token, que seguía en salvia.
+- **Radio de controles** (botones, campos, chips, segmentos): 8 px. Los «16 px» de los campos son el tamaño mínimo de letra (por debajo, el iPhone amplía la página).
+- **Dos opciones** («No/Sí», «Privado/Compartido»): segmento.
+- **Atrás:** en el móvil cierra la hoja abierta; en escritorio vuelve a la página anterior y las ventanas se cierran con Escape, la X o «Cancelar».
+- **Cambios sin guardar:** al cerrar una hoja o ventana con algo cambiado (Escape, tocar fuera, Atrás o la X), se pregunta «¿Descartar los cambios?». Sin cambios, se cierra directamente. Sustituye, para los editores, a «Volver sin guardar no guarda nada».
+
+Motivo: el inventario encontró el mismo papel con aspectos distintos («Cancelar» con 4 alturas, siete tratamientos de desactivado, destructivo en dos colores, foco casi invisible). Se migra por pasos a componentes tipados (`Button`, `Sheet`/`Dialog`, `Field`, `StatusTag`…) para que cada pantalla nueva herede estas reglas.
+
 ## 2026-11-19 · Con una sola casa, «Mi casa» abre su gestión
 
 Ana (historia 01 de la revisión de la app del 2026-11-17): con una sola casa, la lista de un elemento era un paso de más. La pestaña «Mi casa» (`/propietario/casas`) pinta ahora la gestión de esa casa en su sitio, la misma de `/propietario/casas/$id`, con la barra de abajo, el nombre de la casa como título y el «+» de «Nueva casa» a su derecha; sin flecha, porque no hay lista a la que volver; el aviso del pago que salía sobre la lista (90/30/7 días) sigue arriba. Con dos o más casas (borradores incluidos, como la etiqueta) sigue la lista. Se descartó redirigir al detalle de flujo: quitaba la barra de abajo y su flecha volvía a la pestaña, que redirigía otra vez (bucle con Atrás). También se descartó mover «Nueva casa» a Cuenta. Una casa rechazada sigue sin contar.

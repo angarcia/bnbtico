@@ -30,7 +30,7 @@ Las 40 rutas de `shell.tsx`, la ficha SSR, sus páginas de estado, la portada y 
 
 ## 2. Decisiones para Ana
 
-Respondidas por Ana el 2026-11-19: **D1** verde, uno solo · **D2** un nivel, terracota · **D3** contorno fino en los dos · **D10** preguntar solo si hay cambios. D4–D9 siguen con la propuesta por defecto, pendientes de su visto bueno en las muestras.
+Respondidas por Ana el 2026-11-19: **D1** verde, uno solo · **D2** un nivel, terracota · **D3** contorno fino en los dos · **D10** preguntar solo si hay cambios. D4–D9: Ana elige la propuesta por defecto en todas, tras ver `muestras/decisiones.html`. Anotado en `docs/decisiones.md` (2026-11-19).
 
 | # | Pregunta | Propuesta por defecto |
 |---|---|---|
