@@ -200,8 +200,13 @@ describe("subtítulo", () => {
         const title = sheet(page).getByRole("heading", { name: "Hoja de prueba" });
         const subtitle = sheet(page).getByText("Casa de prueba");
         await expect(subtitle).toBeVisible();
-        const [t, s] = [await title.boundingBox(), await subtitle.boundingBox()];
-        expect(s!.y).toBeGreaterThanOrEqual(t!.y + t!.height - 1);
+        // Las dos cajas en el mismo instante: la hoja sube animada y dos medidas seguidas la pillan en sitios distintos.
+        const titleHandle = await title.elementHandle();
+        const [t, s] = await subtitle.evaluate((el, h) => {
+          const a = (h as Element).getBoundingClientRect(), b = el.getBoundingClientRect();
+          return [{ y: a.y, height: a.height }, { y: b.y }];
+        }, titleHandle);
+        expect(s.y).toBeGreaterThanOrEqual(t.y + t.height - 1);
       }, { kind, viewport });
     }
   }, 30_000);
