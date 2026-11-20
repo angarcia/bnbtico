@@ -3,7 +3,7 @@
 La revisión de seguridad del 2026-11-17 (épica #66) vio que `/vitals`, `/errors` y `/events` aceptan peticiones anónimas sin límite y que `Origin` no autentica a un programa: cualquiera puede llenar las tablas de telemetría y gastar el plan gratuito de la base. Ana eligió:
 
 - **Mecanismo: la vinculación `ratelimits` de Workers** (`BEACON_LIMITER` en `wrangler.jsonc`), no una regla WAF ni un Durable Object. Motivo: gratis, versionada en el repositorio y aplicada en todos los dominios del worker, también workers.dev (una regla WAF solo cubre el dominio propio y se configura a mano). Se acepta que cuenta **por ubicación de Cloudflare**, no de forma global; un Durable Object sería exacto pero añade infraestructura y un viaje por baliza.
-- **Umbral: 120 balizas por minuto por IP, las tres rutas juntas.** Una visita manda unas 3 métricas y algunos eventos; deja unas 20 personas activas detrás de una misma red compartida. Por encima, 429 sin escribir. Provisional: se revisa con tráfico real (`docs/antes-de-produccion.md`).
+- **Umbral: 120 balizas por minuto por IP, las tres rutas juntas.** Una visita manda unas 3 métricas y algunos eventos; deja unas 20 personas activas detrás de una misma red compartida. Por encima, 429 sin escribir. Provisional: se revisa con tráfico real (`docs/antes-de-produccion.md`). En local (`pnpm dev` y e2e, todo desde 127.0.0.1) el tope es 100 000 por minuto, para que la suite no reciba 429.
 - **Si el limitador falla o falta, se descarta** (204 sin escribir, registrado una vez). Motivo: perder telemetría un rato cuesta menos que escrituras sin límite.
 
 Además, la lectura del cuerpo se corta al pasar 8192 bytes aunque falte o mienta `Content-Length` (antes se leía entero). Detalle en `docs/telemetria.md`.

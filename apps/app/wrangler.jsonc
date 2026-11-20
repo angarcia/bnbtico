@@ -12,9 +12,10 @@
   },
   // Las vinculaciones no se heredan: cada entorno repite version_metadata.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
-  // Balizas (/vitals, /errors, /events): 120 por minuto por IP, las tres juntas (historia #71). Cuenta por ubicación de
-  // Cloudflare, no global. No se hereda: cada entorno la repite con su propio namespace_id.
-  "ratelimits": [{ "name": "BEACON_LIMITER", "namespace_id": "3001", "simple": { "limit": 120, "period": 60 } }],
+  // Balizas (/vitals, /errors, /events): 120 por minuto por IP, las tres juntas (historia #71), en los entornos desplegados.
+  // Cuenta por ubicación de Cloudflare, no global. No se hereda: cada entorno la repite con su propio namespace_id. Aquí
+  // (local: pnpm dev y e2e, todo desde 127.0.0.1) el tope es práctico-infinito: con 120 la suite e2e recibía 429.
+  "ratelimits": [{ "name": "BEACON_LIMITER", "namespace_id": "3001", "simple": { "limit": 100000, "period": 60 } }],
   // El feed usa una capacidad secreta en la URL. Conservar logs explícitos saneados, sin invocaciones que graben esa URL.
   "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": false } },
   // Cron horario: tareas diarias a las 09:17 UTC y avisos en horario de Costa Rica (src/server/cron.ts).
