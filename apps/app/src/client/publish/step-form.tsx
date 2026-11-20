@@ -17,13 +17,13 @@
 //   (sin `action`), y cada pantalla monta su propio <form> (key) para que los valores iniciales sean los de ese paso.
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { lazy, Suspense, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { track } from "../../shared/beacon";
 import { DomainError } from "../../domain/errors";
 import { I } from "../../shared/icons";
 import { LAST_STEP, STEPS, nextStep, normalize, previousStep, stepPosition, type Listing, type ListingDraft, type Step } from "../../domain/listing";
-import { useFormKeyboard } from "./form-keyboard";
+import { enterToNext, useEnterKeyHints, useFormKeyboard } from "./form-keyboard";
 import { planStep, validateAll } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
@@ -34,7 +34,9 @@ import { useDesktop } from "../desktop";
 import { patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { isLostDraft } from "./lost-drafts";
-import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
+import { listingFieldError } from "../../domain/field-errors";
+import { FieldErrorContext } from "./field-error";
+import { StickyActions } from "../../shared/field";
 import { StepReadyContext } from "./step-ready";
 import { Button, ButtonPlaceholder } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
@@ -170,31 +172,6 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   return null;
 }
 
-// ---------- Teclado ----------
-
-/** Campos que recorre «Siguiente»: entradas de texto, listas y áreas de texto, en el orden del documento. */
-const FIELDS = "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea";
-/** Sitio extra bajo el formulario mientras hay un campo de texto enfocado: más que el teclado más alto del iPhone. */
-const fieldsOf = (form: HTMLFormElement) => Array.from(form.querySelectorAll<HTMLElement>(FIELDS)).filter((el) => !el.hidden);
-
-/** enterKeyHint según la posición del campo; se recalcula si aparece uno (p. ej. «Tipo de parqueo»). */
-function useEnterKeyHints(ref: React.RefObject<HTMLFormElement | null>) {
-  useEffect(() => {
-    const form = ref.current;
-    if (!form) return;
-    const apply = () => {
-      const fields = fieldsOf(form);
-      fields.forEach((el, i) => {
-        if (el instanceof HTMLInputElement) el.enterKeyHint = enterKeyHintFor(fields.length, i);
-      });
-    };
-    apply();
-    const observer = new MutationObserver(apply);
-    observer.observe(form, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [ref]);
-}
-
 // ---------- «Continuar» listo o no ----------
 
 const noReady = () => undefined;
@@ -282,19 +259,16 @@ export function StepForm({
     }
   }
 
-  function onKeyDown(e: KeyboardEvent<HTMLFormElement>) {
-    const el = e.target;
-    if (e.key !== "Enter" || !(el instanceof HTMLInputElement)) return; // en la descripción, Enter es salto de línea
-    e.preventDefault();
-    const fields = fieldsOf(e.currentTarget);
-    const next = nextFieldIndex(fields.length, fields.indexOf(el));
-    if (next === null) e.currentTarget.requestSubmit();
-    else fields[next]?.focus();
-  }
-
   const shown = error ?? failed?.message ?? null;
-  const actions = (
-      <div className={desktop ? "publish-top-actions" : "sticky-actions"}>
+  // El error de un campo va debajo de ese campo; el resto (la ubicación, las fotos, la red), en el aviso de arriba.
+  const fieldProblem = listingFieldError(shown);
+  // Si ese campo no está en la pantalla (p. ej. el precio al mes con «No»), el mensaje vuelve al aviso de arriba.
+  const [orphan, setOrphan] = useState(false);
+  useLayoutEffect(() => {
+    setOrphan(!!fieldProblem && !ref.current?.querySelector(".field-error"));
+  }, [fieldProblem?.field, fieldProblem?.message, step, failed?.seq]);
+  const buttons = (
+    <>
         {/* «Atrás» como botón cuadrado con la flecha y «Continuar ›»; en el último paso, la acción sin flecha (A9). */}
         {step === 1 && !volver ? (
           <ButtonPlaceholder variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-disabled="true" aria-label="Atrás">
@@ -316,14 +290,17 @@ export function StepForm({
             "Enviar a revisión"
           )}
         </Button>
-      </div>
+    </>
   );
+  const actions = desktop ? <div className="publish-top-actions">{buttons}</div> : <StickyActions spacer="none">{buttons}</StickyActions>;
   return (
     <>
     {renderHeader?.(desktop ? actions : undefined)}
-    <form id={formId} ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={onKeyDown} {...keyboard} className={`publish-form${step === LAST_STEP ? " publish-review" : ""}`} data-enter={entering} noValidate>
-      {shown ? <div className="note" role="alert">{shown}</div> : null}
-      <StepReadyContext.Provider value={step === LAST_STEP ? setReady : noReady}>{children(values)}</StepReadyContext.Provider>
+    <form id={formId} ref={ref} key={`${step}-${failed?.seq ?? 0}`} onSubmit={onSubmit} onKeyDown={enterToNext} {...keyboard} className={`publish-form${step === LAST_STEP ? " publish-review" : ""}`} data-enter={entering} noValidate>
+      {shown && (!fieldProblem || orphan) ? <div className="note" role="alert">{shown}</div> : null}
+      <FieldErrorContext.Provider value={fieldProblem}>
+        <StepReadyContext.Provider value={step === LAST_STEP ? setReady : noReady}>{children(values)}</StepReadyContext.Provider>
+      </FieldErrorContext.Provider>
       {desktop ? null : actions}
     </form>
     {verifying ? <Suspense fallback={null}><WhatsAppDialog mode="publish" next={PUBLISH_NEXT} onClose={() => setVerifying(false)} /></Suspense> : null}

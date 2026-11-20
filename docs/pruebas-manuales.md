@@ -1,5 +1,18 @@
 # Guía de pruebas manuales de 3bstays
 
+## Campos y formularios comunes · 2026-11-20 (historia 07, paso 4)
+
+En el teléfono (datos móviles) y en escritorio (1280 × 800), en claro y en oscuro:
+
+- [ ] **Error bajo el campo:** al publicar (p. ej. el precio por noche que la base no acepta) y en «Editar un dato» (nombre vacío o de 4 letras, precio por noche vacío, precio al mes mal escrito con «Sí», capacidad vaciada), el mensaje sale en rojo **debajo del campo que falla** y el campo lleva el borde rojo; ya no sale arriba en la caja roja. Con VoiceOver o TalkBack, al tocar el campo se lee el mensaje. Lo que no es de un campo (sin red, la ubicación, las fotos) sigue arriba. Igual en Ingresar (número y nombre), el código de 6 dígitos (también el del admin), el correo de «¿Quiere añadir un correo?» y de Mi perfil, el precio mínimo y máximo de Filtros, el precio del panel del calendario, «Pausar la casa», «Conectar Airbnb», el mensaje para el anfitrión del admin y las personas de la hoja de contacto.
+- [ ] **Contador −/+ igual en todas partes:** en el paso 4 de publicar, en editar la capacidad, en Filtros (Personas y Dormitorios), en la búsqueda («¿Quiénes?» y «¿Cuántas noches?»), en la hoja de contacto y en Personas de Explorar en escritorio, los dos botones son cuadrados verdes claros de 44 × 44 con «−» y «+»; desactivados, en el gris común. VoiceOver los lee «Una persona menos / más», «Un dormitorio…», «Un baño…», «Una noche…».
+- [ ] **Segmentos (D8):** «¿Acepta alquiler por meses?» es un selector «No | Sí» (no dos chips) y el baño de una habitación «Privado | Compartido»; «Fechas | Número de noches» de la hoja de contacto, «Disponible | Ocupado» del calendario y «₡ | $» tienen el mismo aspecto y se tocan bien (44 px). Con teclado, Tab llega a cada opción y Espacio la elige.
+- [ ] **Chips y tarjetas con teclado:** en Características (publicar y editar) y en el tipo del paso 1 (con habitaciones), Tab enseña el anillo verde alrededor del chip o la tarjeta con el foco; Espacio la marca. Marcar un chip pone el ✓ a la derecha sin mover el texto.
+- [ ] **Precio con ₡:** en Filtros el «₡» (o «$» con dólares) va delante del número, como al publicar, y el campo mide lo mismo que los demás; en el panel del calendario, el campo compacto con «₡» tiene el borde fino de los campos.
+- [ ] **Desactivado y solo lectura:** el correo de «Recuperar mi cuenta» (desactivado) va en gris; el enlace de exportación de Airbnb (solo lectura) va en gris claro sin borde y se puede seleccionar y copiar. Ningún campo amplía la página del iPhone al tocarlo (también el mensaje del admin al revisar una edición).
+- [ ] **Teclado en «Editar un dato»:** en el precio con «Sí», el teclado del precio por noche dice «Siguiente» y salta al precio al mes; ahí dice «Listo» y guarda, como en el asistente.
+- [ ] **Buscadores:** «¿Dónde?» de la búsqueda, el buscador sobre el mapa del paso 2, «Otra…» y el buscador de Casas del admin llevan la misma lupa y el mismo borde; las sugerencias miden 52 px, la marcada con las flechas en gris claro y la zona elegida en ocre con ✓.
+
 ## Hojas y ventanas comunes · 2026-11-19 (historia 07, paso 3)
 
 En el teléfono (datos móviles) y en escritorio (1280 × 800). Superficies: confirmaciones (Eliminar casa, Descartar borrador, Parar suscripción, Cerrar sesión, Desconectar Airbnb), «Pausar la casa», «Marcar una reserva», la hoja de contacto (desde la ficha y desde una tarjeta), el selector de casa, «Conectar Airbnb» y «Calendarios de Airbnb», la hoja de una casa del admin, Ingresar, Consultas, Fotos y Filtros de escritorio, la Descripción («Ver más») y la Vista previa del asistente.
@@ -470,7 +483,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 - [ ] En escritorio, abra «Publicar» sin sesión y compruebe que los datos iniciales aparecen juntos antes de verificar el WhatsApp. Con sesión, retome un borrador desde un enlace antiguo de ubicación, capacidad, características o precio. Desde «Revisar y enviar», pulse una fila de ubicación o precio y compruebe que abre el grupo correspondiente y que «Continuar» vuelve al resumen.
 
-- [ ] En el primer paso de escritorio, elija Habitación. Compruebe que Personas y «Baño de la habitación» ocupan columnas iguales y que «Personas» queda a la izquierda de su contador en la misma fila. El título del baño lleva su icono y las opciones Privado y Compartido se reparten el ancho en dos partes iguales.
+- [ ] En el primer paso de escritorio, elija Habitación. Compruebe que Personas y «Baño de la habitación» ocupan columnas iguales y que «Personas» queda a la izquierda de su contador en la misma fila. El título del baño lleva su icono y el selector «Privado | Compartido» reparte el ancho en dos partes iguales.
 
 - [ ] En escritorio, el campo «Zona» queda cerca del mapa desde que se abre el formulario. Al marcar un punto, compruebe que aparece la ubicación y que «Zona» sigue accesible.
 
@@ -498,7 +511,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 - [ ] **A21** Toque «Continuar» en el paso 2 sin marcar nada → avanza igual (publicar avanza siempre) a «¿Cuántos caben?», progreso «3 de 4», sin el rótulo «Su casa».
 - [ ] **A22** Con el tipo «Alojamiento completo», en «¿Cuántos caben?» revise → «Personas», «Dormitorios» y «Baños» con «–» (sin indicar); toque «+» en cada uno → pasan a 1; «−» baja y se desactiva en el mínimo; toque «Continuar» sin indicar nada y avanza a «Características», progreso «4 de 4», sin el rótulo «Su casa».
 - [ ] **A22a** En 390 × 844 y 375 × 667, revise el primer paso sin cuenta y los pasos con borrador: título a la izquierda, X sin texto arriba a la derecha (44 × 44 px), ocho tramos debajo y contador bajo la barra, a la derecha. No se muestra «Su casa»; la descripción accesible conserva etapa y paso global. Capacidad presenta filas abiertas con iconos, separadores y −/+ de 44 × 44 px. Atrás conserva su recuadro inferior izquierdo; Continuar y su flecha quedan juntos y centrados a su derecha, también en la entrada sin cuenta. No hay solapamientos ni scroll sin teclado. Avance, vuelva y cierre: se conserva lo guardado. Fotos y texto, Precio y Revisar y enviar conservan sus rótulos; en el resumen los pasos obligatorios incompletos mantienen su tramo vacío. «Revisar y enviar» aparece una sola vez junto a «último paso»; las filas tienen al menos 44 px y la oferta se ve completa por encima de la barra inferior en un teléfono pequeño.
-- [ ] **A23** Con el tipo «Habitación», en esta pantalla sale solo el contador «Personas» (sin «Dormitorios» ni «Baños»: una Habitación es siempre 1 dormitorio y 1 baño) y debajo «Baño de la habitación» con «Privado» y «Compartido»; con «Alojamiento completo» salen «Dormitorios» y «Baños» y no sale el baño de la habitación. Vuelva al paso 1, cambie a «Alojamiento completo» y regrese al 4 → «Dormitorios» y «Baños» marcan 1 y se pueden cambiar.
+- [ ] **A23** Con el tipo «Habitación», en esta pantalla sale solo el contador «Personas» (sin «Dormitorios» ni «Baños»: una Habitación es siempre 1 dormitorio y 1 baño) y debajo «Baño de la habitación» con el selector «Privado | Compartido»; con «Alojamiento completo» salen «Dormitorios» y «Baños» y no sale el baño de la habitación. Vuelva al paso 1, cambie a «Alojamiento completo» y regrese al 4 → «Dormitorios» y «Baños» marcan 1 y se pueden cambiar.
 - [ ] **A24** En «Características» revise las dos columnas con iconos y etiquetas de una línea, igual que Filtros: Wifi, Aire acond., Parqueo, Cargador EV, Mascotas, Piscina, Frente al mar y Rancho/BBQ: ocho, sin «Niños gratis». Mascotas usa una huella. Al seleccionar, aparece el check a la derecha con margen, conservando el tamaño. «Parqueo» muestra el campo «Tipo de parqueo». Repita en la edición de las características de una casa publicada.
 - [ ] **A25** Marque «Parqueo» → aparece «Tipo de parqueo» con «Seleccione una opción», «Gratuito» y «De pago»; desmárquelo → el selector desaparece.
 - [ ] **A26** Marque «Parqueo» y «Frente al mar», elija «Gratuito» y toque «Continuar» → avanza a «Nombre y descripción».
@@ -525,7 +538,7 @@ Recorrido de quien publica y administra casas, desde el teléfono en `https://pr
 
 ### 3.7 Asistente: precio (pantalla 8)
 
-- [ ] **A39** Revise la pantalla → etapa «Precio», «Precio por noche» con «₡», «¿Acepta alquiler por meses?» con «No» marcado y «Sí», y «En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.».
+- [ ] **A39** Revise la pantalla → etapa «Precio», «Precio por noche» con «₡», «¿Acepta alquiler por meses?» como selector «No | Sí» con «No» elegido, y «En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.».
 - [ ] **A40** Toque «Sí» → aparece «Precio al mes (opcional)» y «Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».»; vuelva a «No» → el campo desaparece y se vacía.
 - [ ] **A41** Escriba `85000` por noche y `480000` al mes y toque «Continuar» → llega a «Revisar y enviar».
 

@@ -93,6 +93,7 @@ export function LocationStep({ listing: _listing, draft, readOnly = false, fullW
       <div className={fullWidth ? "loc-map loc-map-full-width" : "loc-map"}>
         <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} readOnly={readOnly} />
         <PlaceSearch
+          float
           label="Busque un pueblo, playa o barrio"
           placeholder="Busque un pueblo, playa o barrio…"
           local={zoneItems}

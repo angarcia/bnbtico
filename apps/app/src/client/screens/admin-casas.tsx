@@ -13,6 +13,7 @@ import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
 import { RootHeader } from "../chrome";
 import { Sheet } from "../../shared/overlay";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";
+import { Field, SearchInput, TextArea, TextInput } from "../../shared/field";
 import { Button } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";
 
@@ -44,19 +45,17 @@ export function CasasAdminScreen() {
   return (
     <>
       <RootHeader title="Casas" home="/admin" action={<AdminBadge />} />
-      <label className="search-field">
-        <I.search size={18} />
-        <input
-          type="search"
-          name="q"
-          aria-label="Buscar casas"
-          placeholder="Nombre, CT-#### o anfitrión"
-          autoComplete="off"
-          enterKeyHint="search"
-          value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
-        />
-      </label>
+      <SearchInput
+        variant="field"
+        type="search"
+        name="q"
+        aria-label="Buscar casas"
+        placeholder="Nombre, CT-#### o anfitrión"
+        autoComplete="off"
+        enterKeyHint="search"
+        value={query}
+        onChange={(e) => setQuery(e.currentTarget.value)}
+      />
       <nav className="chiprow" aria-label="Filtrar casas">
         {HOUSE_CHIPS.map((c) => (
           <Link key={c} to="/admin/casas" search={c === "todas" ? {} : { ver: c }} className="chip chip-sm" activeOptions={{ exact: true, includeSearch: true }}>
@@ -147,6 +146,7 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
   const [reason, setReason] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const reasonError = error && !reason.trim() ? error : null;
   const act = useHouseAction(userId);
   const badge = houseBadge(h);
   const published = PUBLISHED_STATUSES.includes(h.status);
@@ -275,25 +275,16 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
           <form onSubmit={submit} noValidate>
             <h3>{copy.title}</h3>
             <p className="small muted">{copy.body}</p>
-            <label htmlFor={copy.field}>
-              {copy.label}
-              <textarea
-                id={copy.field}
-                name="reason"
-                rows={3}
-                maxLength={HOLD_REASON_MAX}
-                value={reason}
-                onChange={(e) => setReason(e.currentTarget.value)}
-                aria-invalid={error && !reason.trim() ? true : undefined}
-              />
-            </label>
+            {/* Sin motivo, el error va bajo el motivo; los demás (la red, la base), al final. */}
+            <Field id={copy.field} label={copy.label} size="compact" error={reasonError}>
+              {(control) => <TextArea {...control} name="reason" rows={3} maxLength={HOLD_REASON_MAX} value={reason} onChange={(e) => setReason(e.currentTarget.value)} />}
+            </Field>
             {mode === "delete" ? (
-              <label htmlFor="delete-confirm">
-                Para confirmar, escriba <b className="num">{h.publicId}</b>
-                <input id="delete-confirm" name="confirm" autoComplete="off" autoCapitalize="characters" value={confirm} onChange={(e) => setConfirm(e.currentTarget.value)} />
-              </label>
+              <Field id="delete-confirm" label={<>Para confirmar, escriba <b className="num">{h.publicId}</b></>} size="compact">
+                {(control) => <TextInput {...control} name="confirm" autoComplete="off" autoCapitalize="characters" value={confirm} onChange={(e) => setConfirm(e.currentTarget.value)} />}
+              </Field>
             ) : null}
-            {error ? (
+            {error && !reasonError ? (
               <p className="field-error" role="alert">
                 {error}
               </p>

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { ListingEdit } from "../../domain/edit";
 import { editSummary, type ReviewedField } from "../../domain/edit-summary";
 import { toDomainError } from "../../domain/errors";
@@ -12,6 +12,7 @@ import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "..
 import { FlowHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, bathText, factsLine } from "./admin-review-details";
 import { NotAdmin, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
+import { Field, TextArea } from "../../shared/field";
 import { Button } from "../../shared/button";
 
 // ---------- Revisar edición (spec .scratch/editar-casa §4) ----------
@@ -205,6 +206,7 @@ function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget;
   const navigate = useNavigate();
   const review = useReviewEdit(userId);
   const [note, setNote] = useState("");
+  const noteId = useId();
   const [error, setError] = useState<string | null>(null);
   const e = item.listing.edit;
   const state = "field" in target ? e?.fields[target.field] : e?.photos.find((p) => p.id === target.photoId);
@@ -227,20 +229,19 @@ function Decide({ item, target, userId }: { item: QueueItem; target: EditTarget;
   }
   return (
     <div className="stack gap-8 decide">
-      <textarea
-        aria-label="Mensaje para el anfitrión (obligatorio si pide cambios)"
-        name="note"
-        rows={2}
-        maxLength={REVIEW_NOTE_MAX}
-        placeholder="Mensaje para el anfitrión si pide cambios"
-        value={note}
-        onChange={(ev) => setNote(ev.currentTarget.value)}
-      />
-      {error ? (
-        <p className="field-error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <Field id={noteId} label="Mensaje para el anfitrión (obligatorio si pide cambios)" labelHidden size="compact" error={error}>
+        {(control) => (
+          <TextArea
+            {...control}
+            name="note"
+            rows={2}
+            maxLength={REVIEW_NOTE_MAX}
+            placeholder="Mensaje para el anfitrión si pide cambios"
+            value={note}
+            onChange={(ev) => setNote(ev.currentTarget.value)}
+          />
+        )}
+      </Field>
       <div className="row gap-8">
         <Button variant="primary" icon={<I.check size={16} />} disabled={review.isPending} onClick={() => decide("approve")}>
           Aprobar

@@ -5,15 +5,13 @@ export const FEATURE_CHOICE_ORDER = ["wifi", "ac", "parking", "ev", "pets", "poo
 const FEATURE_CHOICE_LABEL = { ...FEATURE_SHORT, ev: "Cargador EV" };
 export const FEATURE_CHOICE_NAME = FEATURE_LABEL;
 
-export function FeatureChoiceContent({ feature, selected }: { feature: Feature; selected: boolean }) {
+/** Icono y nombre corto de una característica, dentro de un chip de `ChoiceChips` (el ✓ lo pone el chip). */
+export function FeatureChoiceLabel({ feature }: { feature: Feature }) {
   const Icon = I[FEATURE_ICON[feature]];
   return (
     <>
       <Icon size={18} />
       {FEATURE_CHOICE_LABEL[feature]}
-      <span className="feature-check" aria-hidden="true">
-        {selected ? <I.check size={14} /> : null}
-      </span>
     </>
   );
 }

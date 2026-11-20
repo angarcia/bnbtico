@@ -38,8 +38,10 @@ async function expectNoScroll(page: Page, what: string) {
 }
 
 const continuar = (page: Page) => page.getByRole("button", { name: "Continuar" }).click();
-async function count(page: Page, label: string, n: number) {
-  for (let i = 0; i < n; i++) await page.getByRole("button", { name: `Más ${label}` }).click();
+/** El nombre del «+» de cada contador (Stepper: «Una persona más», historia 07 paso 4). */
+const MORE = { personas: "Una persona más", dormitorios: "Un dormitorio más", baños: "Un baño más" } as const;
+async function count(page: Page, label: keyof typeof MORE, n: number) {
+  for (let i = 0; i < n; i++) await page.getByRole("button", { name: MORE[label] }).click();
 }
 const idFrom = (page: Page) => /\/publicar\/([0-9a-f-]{36})\//.exec(page.url())![1]!;
 
@@ -70,13 +72,13 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
 
   // 1 Alojamiento: solo el tipo, explícito y sin preselección (la modalidad ya no se pregunta: toda casa es por noches).
   await expect(page.getByRole("heading", { name: "¿Cómo alquila?" })).toHaveCount(0);
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('label.choice:has(input:checked)')).toHaveCount(0);
   // Con las habitaciones apagadas (feature flags, #62) el tipo no se pregunta: el paso 1 sigue sin elegir nada.
   if (BUILD_FLAGS.rooms) {
     await continuar(page);
-    await expect(alert(page)).toHaveText("Elija Alojamiento completo o Habitación.");
+    await expect(page.locator('.publish-kind .field-error[role="alert"]')).toHaveText("Elija Alojamiento completo o Habitación.");
     await page.getByText("Alojamiento completo", { exact: true }).click();
-    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
+    await expect(page.locator('label.choice:has(input:checked)')).toHaveCount(1);
   }
   await continuar(page);
   await expect(page).toHaveURL(/\/2$/);
@@ -139,7 +141,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   expect(await h.owner("owner").getOwn(id)).toMatchObject({ kind: "completo", acceptsNightly: true, acceptsMonthly: false, province: "Limón", district: "Limón", zone: zoneName, zoneSource: "list", capacity: 5, bedrooms: 2, bathrooms: 2, features: ["parking", "beachfront"], parkingPaid: false });
   await page.getByRole("link", { name: "Atrás" }).click();
   await expect(page).toHaveURL(/\/5$/);
-  await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveCount(2);
+  await expect(page.locator('label.chip:has(input:checked)')).toHaveCount(2);
 
   // «Nueva casa» (el «+» de Mis casas) con un borrador pendiente ofrece seguirlo; abrir esa pantalla no crea borradores.
   await page.goto("/propietario/casas");
@@ -189,7 +191,7 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   const nightly = page.getByLabel("Precio por noche");
   const monthly = page.getByLabel("Precio al mes (opcional)");
   const accepts = page.getByRole("group", { name: "¿Acepta alquiler por meses?" });
-  await expect(accepts.getByRole("radio", { name: "No" })).toBeChecked();
+  await expect(accepts.getByRole("button", { name: "No", pressed: true })).toBeVisible();
   await expect(monthly).toHaveCount(0);
   await expect(nightly).toHaveAttribute("enterkeyhint", "done");
   await nightly.fill("85.000");
@@ -625,16 +627,16 @@ test("retomar un borrador empezado en otro dispositivo, y «Corregir y reenviar�
   // El borrador sembrado no tiene fotos, que son obligatorias para enviar (2026-10-30): abre en la pantalla de las fotos.
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${pending.id}/7$`));
   await page.goto(`/propietario/publicar/${pending.id}/1`);
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText([/Habitación/]);
+  await expect(page.locator('label.choice:has(input:checked)')).toHaveText([/Habitación/]);
   await expect(page.locator(".ready-list")).toHaveCount(0); // con algo ya rellenado, no repite qué tener a mano
   await page.goto(`/propietario/publicar/${pending.id}/4`);
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
-  await expect(page.locator('label.chip[aria-pressed="true"]')).toHaveText("Compartido");
+  await expect(page.getByRole("group", { name: "Baño de la habitación" }).getByRole("button", { pressed: true })).toHaveText("Compartido");
 
   await page.goto(`/propietario/casas/${changes.id}`);
   await page.getByRole("button", { name: "Corregir y reenviar" }).click();
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${changes.id}/1$`));
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(1);
+  await expect(page.locator('label.choice:has(input:checked)')).toHaveCount(1);
   await page.goto(`/propietario/publicar/${changes.id}/6`);
   await expect(page.getByLabel("Nombre de la casa")).toHaveValue("Cabina con cambios");
   await page.goto(`/propietario/publicar/${changes.id}/9`);
@@ -743,9 +745,9 @@ test("Habitación no pregunta habitaciones ni baños (son 1); Alojamiento comple
   await expect(page.getByText("Personas", { exact: true })).toBeVisible();
   await expect(page.getByText("Baño de la habitación")).toBeVisible();
   await expect(page.getByText("Dormitorios", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
   await expect(page.getByText("Baños", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más baños" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un baño más" })).toHaveCount(0);
   await expectNoScroll(page, "paso 4 de una Habitación");
   await count(page, "personas", 2);
   await continuar(page);
@@ -808,7 +810,7 @@ test("la entrada de lado de cada paso no ensancha la página, y la barra «Atrá
         progressBelowClose: progress.top >= close.bottom,
         stageBelowProgress: stage.top >= progress.bottom,
         contentBelowStage: heading.top >= stage.bottom,
-        targets: [...document.querySelectorAll(".header-close,.counter .ctl button,.sticky-actions .btn")].map((el) => {
+        targets: [...document.querySelectorAll(".header-close,.counter .stepper button,.sticky-actions .btn")].map((el) => {
           const r = el.getBoundingClientRect();
           return Math.min(r.width, r.height);
         }),

@@ -3,7 +3,9 @@
 // (la petición anterior se cancela) y, si se pide, un último elemento fijo («Usar "…"»). Flechas, Enter y Escape; Enter
 // nunca envía el paso (sin nada marcado, elige el último elemento fijo; lo marcado se borra cuando llega Photon). Elegir
 // cierra la lista y el teclado. Si Photon no responde, lo local y el último elemento siguen.
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useCombobox } from "../../shared/combobox";
+import { SearchInput } from "../../shared/field";
 import type { LatLng } from "../../domain/geo";
 import { parsePhotonNear, photonNearUrl, sameName, ZONE_DEBOUNCE_MS } from "../../domain/place-search";
 
@@ -32,19 +34,19 @@ export interface PlaceSearchProps {
   /** Escape con la lista ya cerrada (p. ej. para cerrar el campo de «Otra…» sin elegir). */
   onCancel?(): void;
   autoFocus?: boolean;
+  /** Sobre el mapa (tarjeta flotante); si no, el buscador de «Otra…». */
+  float?: boolean;
 }
 
 export function PlaceSearch(props: PlaceSearchProps) {
   const [value, setValue] = useState("");
   const [found, setFound] = useState<PlaceItem[]>([]);
-  const [active, setActive] = useState(-1);
   const [open, setOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inFlight = useRef<AbortController | null>(null);
   const latest = useRef(props);
   latest.current = props;
-  const listId = useId();
 
   const stop = () => {
     clearTimeout(timer.current);
@@ -61,6 +63,9 @@ export function PlaceSearch(props: PlaceSearchProps) {
   const extra = props.extra?.(value) ?? null;
   const items = [...local, ...found.filter((f) => !local.some((l) => sameName(l.name, f.name))), ...(extra ? [extra] : [])];
   const shown = open && items.length > 0;
+  const listbox = useRef<HTMLUListElement>(null);
+  const combo = useCombobox({ count: items.length, open: shown, initial: -1, listbox });
+  const { active, setActive } = combo;
 
   function search(text: string) {
     stop();
@@ -112,8 +117,7 @@ export function PlaceSearch(props: PlaceSearchProps) {
     }
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      const step = e.key === "ArrowDown" ? 1 : -1;
-      setActive((i) => (i + step + items.length) % items.length);
+      combo.move(e.key === "ArrowDown" ? 1 : -1);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -121,17 +125,14 @@ export function PlaceSearch(props: PlaceSearchProps) {
 
   return (
     <div className="place-search">
-      <input
+      <SearchInput
+        variant={props.float ? "float" : "combobox"}
         ref={input}
+        {...combo.inputProps}
         value={value}
         autoComplete="off"
         placeholder={props.placeholder}
         aria-label={props.label}
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={shown}
-        aria-controls={listId}
-        aria-activedescendant={shown && active >= 0 ? `${listId}-${active}` : undefined}
         onChange={(e) => {
           setValue(e.currentTarget.value);
           setActive(-1);
@@ -144,11 +145,13 @@ export function PlaceSearch(props: PlaceSearchProps) {
       />
       {/* Tocar dentro (una sugerencia o el enlace de OpenStreetMap) no quita el foco al campo: la lista no se cierra bajo el dedo. */}
       <div className="zone-pop" hidden={!shown} onMouseDown={(e) => e.preventDefault()}>
-        <ul id={listId} role="listbox" aria-label={props.label} className="zone-options">
+        <ul ref={listbox} id={combo.listId} role="listbox" aria-label={props.label} className="suggestions">
           {items.map((item, i) => (
-            <li key={item.key} id={`${listId}-${i}`} role="option" aria-selected={i === active} onClick={() => choose(item)}>
-              <b>{item.label ?? item.name}</b>
-              {item.detail ? <span className="xs muted">{item.detail}</span> : null}
+            <li key={item.key} id={combo.optionId(i)} role="option" aria-selected={i === active} className={`suggestion${i === active ? " is-active" : ""}`} onClick={() => choose(item)}>
+              <span className="suggestion-text">
+                <b>{item.label ?? item.name}</b>
+                {item.detail ? <span className="xs muted">{item.detail}</span> : null}
+              </span>
             </li>
           ))}
         </ul>

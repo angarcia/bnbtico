@@ -69,7 +69,10 @@
       "!dist/client/assets/editor-port-*.js",
       "!dist/client/assets/listing-cache-*.js",
       "!dist/client/assets/overlay-*.js",
-      "!dist/client/assets/description-screen-*.js"
+      "!dist/client/assets/description-screen-*.js",
+      "!dist/client/assets/field-*.js",
+      "!dist/client/assets/combobox-*.js",
+      "!dist/client/assets/code-input-*.js"
     ],
     "limit": "161 KB",
     "gzip": true
@@ -81,6 +84,16 @@
       "dist/client/assets/description-screen-*.js"
     ],
     "limit": "3.2 KB",
+    "gzip": true
+  },
+  {
+    "name": "Campos comunes · trozo compartido (field-*: Field, TextInput, AffixInput, SearchInput, Checkbox y StickyActions; combobox-*: la lista de sugerencias de «¿Dónde?» y del buscador de lugares; code-input-*: el código de 6 dígitos; historia 07 paso 4; los leen solo trozos diferidos: publicar, editar, Filtros, buscar, cuenta, contacto, calendario, Airbnb y admin)",
+    "path": [
+      "dist/client/assets/field-*.js",
+      "dist/client/assets/combobox-*.js",
+      "dist/client/assets/code-input-*.js"
+    ],
+    "limit": "2.1 KB",
     "gzip": true
   },
   {

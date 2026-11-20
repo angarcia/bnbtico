@@ -12,7 +12,9 @@ import { ALL_PROVINCES, SEARCH_MAX_PEOPLE, extrasCount, parseFilters, searchFor,
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { CurrencySwitch } from "../../shared/currency-switch";
-import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
+import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
+import { ChoiceChips } from "../../shared/choice";
+import { Stepper } from "../../shared/stepper";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
@@ -134,13 +136,7 @@ function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneName: stri
       ))}
       <div className="desktop-search-people float-card" role="group" aria-label="Personas">
         <I.user size={20} />
-        <div className="people-stepper">
-          <button type="button" aria-label="Una persona menos" disabled={filters.ppl === 0}
-            onClick={() => changePeople(filters.ppl - 1)}>−</button>
-          <b className="num" aria-live="polite" aria-label={peopleLabel(filters.ppl) ?? "Sin indicar"}>{filters.ppl || "–"}</b>
-          <button type="button" aria-label="Una persona más" disabled={filters.ppl >= SEARCH_MAX_PEOPLE}
-            onClick={() => changePeople(filters.ppl + 1)}>+</button>
-        </div>
+        <Stepper unit="Una persona" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? "Sin indicar"} onChange={changePeople} />
       </div>
     </div>
   );
@@ -181,19 +177,18 @@ function DesktopFeatureFilters({ filters }: { filters: Filters }) {
   if (!choices.length) return null;
 
   return (
-    <div className="desktop-feature-filters feature-choices" role="group" aria-label="Qué necesitan">
-      {choices.map((feature) => {
-        const selected = filters.features.includes(feature);
-        const features = selected ? filters.features.filter((key) => key !== feature) : [...filters.features, feature];
-        return (
-          <button key={feature} type="button" className="chip float-card"
-            aria-label={FEATURE_CHOICE_NAME[feature]} aria-pressed={selected}
-            onClick={() => void navigate({ to: "/explorar", search: searchFor({ ...filters, features }), resetScroll: false })}>
-            <FeatureChoiceContent feature={feature} selected={selected} />
-          </button>
-        );
-      })}
-    </div>
+    <ChoiceChips
+      as="button"
+      float
+      placement="desktop-feature-filters"
+      label="Qué necesitan"
+      options={choices.map((feature) => ({ value: feature, name: FEATURE_CHOICE_NAME[feature], label: <FeatureChoiceLabel feature={feature} /> }))}
+      selected={filters.features}
+      onToggle={(feature) => {
+        const features = filters.features.includes(feature) ? filters.features.filter((key) => key !== feature) : [...filters.features, feature];
+        void navigate({ to: "/explorar", search: searchFor({ ...filters, features }), resetScroll: false });
+      }}
+    />
   );
 }
 
@@ -216,7 +211,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
       {!desktop && (
         <div className="chiprow fit">
           <FiltersLink filters={f} search={search} />
-          <CurrencySwitch className="float-card" />
+          <CurrencySwitch placement="float" />
         </div>
       )}
       {desktop && f.zone && <DesktopFeatureFilters filters={f} />}

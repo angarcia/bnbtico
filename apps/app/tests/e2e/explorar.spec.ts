@@ -267,20 +267,20 @@ test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contad
   const tipo = page.getByRole("group", { name: "Tipo de alojamiento" });
   await expect(tipo.getByRole("button")).toHaveText(["Cualquiera", "Completo", "Habitación"]);
   await expect(tipo.getByRole("button", { name: "Cualquiera" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
   await tipo.getByRole("button", { name: "Alojamiento completo" }).click();
   // Todas las casas sembradas son alojamientos completos.
-  await page.getByRole("button", { name: "Más dormitorios" }).click();
-  await page.getByRole("button", { name: "Más dormitorios" }).click();
+  await page.getByRole("button", { name: "Un dormitorio más" }).click();
+  await page.getByRole("button", { name: "Un dormitorio más" }).click();
   await tipo.getByRole("button", { name: "Habitación" }).click();
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más personas" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Una persona más" })).toBeVisible();
   await expect(tipo.getByRole("button", { name: "Habitación" })).toHaveAttribute("aria-pressed", "true");
   await expect(tipo.getByRole("button", { name: "Alojamiento completo" })).toHaveAttribute("aria-pressed", "false");
   await expect(tipo.getByRole("button", { name: "Cualquiera" })).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByRole("button", { name: "Ver 0 casas" })).toBeVisible();
   await tipo.getByRole("button", { name: "Alojamiento completo" }).click();
-  await expect(page.getByRole("button", { name: "Menos dormitorios" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Un dormitorio menos" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Ver 10 casas" })).toBeVisible();
   await page.getByRole("button", { name: "Ver 10 casas" }).click();
   await expect(page).toHaveURL(/\/explorar\?tipo=completo$/);
@@ -288,22 +288,24 @@ test("Filtros: tipo de alojamiento de una sola opción, en la URL y en el contad
   await page.getByRole("link", { name: /^Filtros/ }).click();
   await expect(tipo.getByRole("button", { name: "Alojamiento completo" })).toHaveAttribute("aria-pressed", "true");
   await tipo.getByRole("button", { name: "Cualquiera" }).click();
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
   await expect(tipo.locator('[aria-pressed="true"]')).toHaveCount(1);
   await page.getByRole("button", { name: "Ver 10 casas" }).click();
   await expect(page).toHaveURL(/\/explorar$/);
   await page.goto("/explorar/filtros?tipo=habitacion&beds=3");
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
   await page.getByRole("button", { name: "Limpiar", exact: true }).click();
   await expect(tipo.getByRole("button", { name: "Cualquiera" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
 });
 
 test("con dólares elegidos, los precios de Filtros se escriben en dólares y se buscan en colones", async ({ page }) => {
   await page.goto("/explorar");
   await page.getByRole("group", { name: "Moneda de los precios" }).getByRole("button", { name: "Dólares" }).click();
   await page.getByRole("link", { name: /^Filtros/ }).click();
-  await expect(page.getByLabel("Precio mínimo por noche")).toHaveAttribute("placeholder", "$ 0");
+  // El signo va delante del campo (AffixInput, historia 07 paso 4), no dentro del texto de ejemplo.
+  await expect(page.locator(".affix", { has: page.getByLabel("Precio mínimo por noche") }).locator(".affix-sign")).toHaveText("$");
+  await expect(page.getByLabel("Precio mínimo por noche")).toHaveAttribute("placeholder", "0");
   await expect(page.getByText(/tipo de referencia/)).toHaveCount(0);
   await page.getByLabel("Precio mínimo por noche").fill("86");
   await page.getByLabel("Precio máximo por noche").fill("98");

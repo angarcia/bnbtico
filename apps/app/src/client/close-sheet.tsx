@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { addDays, CALENDAR_WINDOW_DAYS, validateReopenDate } from "../domain/calendar";
 import { costaRicaToday } from "../domain/inquiry";
 import { Sheet } from "../shared/overlay";
+import { Field, TextInput } from "../shared/field";
 import { Button } from "../shared/button";
 
 export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: string | null) => void; onClose: () => void }) {
@@ -23,30 +24,28 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
   return (
     <Sheet title="Pausar la casa" closeButton={false} onClose={onClose} confirmDiscard={() => date !== ""}>
         <form onSubmit={onSubmit} noValidate>
-          <label>
-            Volver a publicarla el (opcional)
-            <input
-              type="date"
-              name="reopen"
-              min={addDays(today, 1)}
-              max={addDays(today, CALENDAR_WINDOW_DAYS)}
-              value={date}
-              aria-invalid={problem ? true : undefined}
-              aria-describedby="close-hint"
-              onChange={(e) => {
-                setDate(e.target.value);
-                setProblem(null);
-              }}
-            />
-          </label>
-          <span className="hint" id="close-hint">
-            No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar.
-          </span>
-          {problem ? (
-            <p className="note" role="alert">
-              {problem}
-            </p>
-          ) : null}
+          <Field
+            id="close-reopen"
+            label="Volver a publicarla el (opcional)"
+            size="compact"
+            error={problem}
+            hint="No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar."
+          >
+            {(control) => (
+              <TextInput
+                {...control}
+                type="date"
+                name="reopen"
+                min={addDays(today, 1)}
+                max={addDays(today, CALENDAR_WINDOW_DAYS)}
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setProblem(null);
+                }}
+              />
+            )}
+          </Field>
           <Button variant="primary" size="lg" type="submit">
             Pausar la casa
           </Button>

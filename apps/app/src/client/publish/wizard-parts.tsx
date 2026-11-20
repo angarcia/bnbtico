@@ -33,7 +33,8 @@ export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close
   );
 }
 
-/** Tarjetas de elección: casillas o radios con aspecto de tarjeta y aria-pressed. */
+/** Tarjetas de elección: casillas o radios nativos con aspecto de tarjeta; lo elegido y el foco salen del input
+ *  (`:has(input:checked)`, `:has(input:focus-visible)`). Con `error`, el mensaje va debajo y marca las opciones. */
 export function ChoiceCards({
   name,
   type,
@@ -41,6 +42,7 @@ export function ChoiceCards({
   selected,
   onChange,
   compact = false,
+  error = null,
 }: {
   name: string;
   type: "checkbox" | "radio";
@@ -49,22 +51,24 @@ export function ChoiceCards({
   /** Lo elegido tras cada toque (p. ej. el tipo de una casa publicada, que muestra el baño con «Habitación»). */
   onChange?: (current: string[]) => void;
   compact?: boolean;
+  error?: string | null;
 }) {
   const [current, setCurrent] = useState<string[]>(selected);
   const [openHint, setOpenHint] = useState<string | null>(null);
   const hintId = useId();
+  const errorId = `${hintId}-error`;
   const toggle = (v: string) => {
     const next = type === "radio" ? [v] : current.includes(v) ? current.filter((x) => x !== v) : [...current, v];
     setCurrent(next);
     onChange?.(next);
   };
-  return (
+  const cards = (
     <div className="grid-2">
       {options.map((o) => {
         const on = current.includes(o.value);
         const choice = (
-          <label key={o.value} className="choice" aria-pressed={on}>
-            <input type={type} name={name} value={o.value} checked={on} onChange={() => toggle(o.value)} className="sr-input" />
+          <label key={o.value} className="choice">
+            <input type={type} name={name} value={o.value} checked={on} onChange={() => toggle(o.value)} className="sr-input" aria-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined} />
             <b>{o.label}</b>
             {!compact ? <span>{o.hint}</span> : null}
           </label>
@@ -86,10 +90,19 @@ export function ChoiceCards({
       })}
     </div>
   );
+  if (!error) return cards;
+  return (
+    <>
+      {cards}
+      <p id={errorId} className="field-error" role="alert">
+        {error}
+      </p>
+    </>
+  );
 }
 
 /** «¿Qué es?»: Alojamiento completo o Habitación (paso 1), en un campo `kind`. */
-export function KindChoice({ kind, onChange, compact }: { kind: Kind | null; onChange?: (kind: "completo" | "habitacion") => void; compact?: boolean }) {
+export function KindChoice({ kind, onChange, compact, error }: { kind: Kind | null; onChange?: (kind: "completo" | "habitacion") => void; compact?: boolean; error?: string | null }) {
   // Habitaciones apagadas (feature flag, #62): no se pregunta; toda casa nueva es Alojamiento completo (la base rechaza
   // una Habitación). El campo oculto mantiene el formulario del paso 1 igual.
   if (!FLAGS.rooms) return <input type="hidden" name="kind" value="completo" />;
@@ -100,6 +113,7 @@ export function KindChoice({ kind, onChange, compact }: { kind: Kind | null; onC
         name="kind"
         type="radio"
         compact={compact}
+        error={error}
         selected={kind === "habitacion" ? ["habitacion"] : kind ? ["completo"] : []}
         onChange={onChange ? ([value]) => onChange(value === "habitacion" ? "habitacion" : "completo") : undefined}
         options={[

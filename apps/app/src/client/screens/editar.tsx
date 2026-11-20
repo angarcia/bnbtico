@@ -8,7 +8,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import { useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { useFormKeyboard } from "../publish/form-keyboard";
+import { enterToNext, useEnterKeyHints, useFormKeyboard } from "../publish/form-keyboard";
+import { FieldErrorContext, useFieldError } from "../publish/field-error";
+import { listingFieldError } from "../../domain/field-errors";
+import { StickyActions } from "../../shared/field";
 import { isBlocked, isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
 import { planEdit } from "../../domain/edit-plan";
@@ -116,6 +119,7 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
   const form = useRef<HTMLFormElement>(null);
   const formId = useId();
   const keyboard = useFormKeyboard(form);
+  useEnterKeyHints(form);
   const back = useBackToFicha(listing.id);
   const finish = inline?.onClose ?? back;
   const live = useUpdateLive(userId, listing);
@@ -191,26 +195,31 @@ function EditFieldForm({ listing, field, userId, inline }: { listing: Listing; f
   }
 
   const action = reviewed ? "Enviar a revisión" : "Guardar";
+  // El error de un campo va debajo de ese campo (aquí todos los datos de la pantalla están siempre a la vista); el resto,
+  // en el aviso de arriba.
+  const fieldProblem = listingFieldError(error);
   const editor = (
-    <form id={formId} ref={form} key={formVersion} onSubmit={onSubmit} onInputCapture={touch} onChangeCapture={touch} onPointerDownCapture={touch} onClickCapture={touch} {...(inline ? {} : keyboard)} className="publish-form" noValidate>
+    <form id={formId} ref={form} key={formVersion} onSubmit={onSubmit} onKeyDown={enterToNext} onInputCapture={touch} onChangeCapture={touch} onPointerDownCapture={touch} onClickCapture={touch} {...(inline ? {} : keyboard)} className="publish-form" noValidate>
       {/* De qué casa es el cambio, bajo el título. */}
       {!inline ? <p className="small muted edit-house">{listing.title}</p> : null}
-      {error ? (
+      {error && !fieldProblem ? (
         <div className="note" role="alert">
           {error}
         </div>
       ) : null}
-      <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
+      <FieldErrorContext.Provider value={fieldProblem}>
+        <FieldInputs field={field} draft={draft} listing={listing} userId={userId} />
+      </FieldErrorContext.Provider>
       {reviewed ? (
         <p className="note small" data-testid="review-notice">
           {reviewNotice(field as ReviewedField, listing)}
         </p>
       ) : null}
-      {!inline && <div className="sticky-actions">
+      {!inline && <StickyActions spacer="none">
         <Button variant="primary" size="lg" block type="submit" disabled={saving || !hasChanges}>
           {action}
         </Button>
-      </div>}
+      </StickyActions>}
     </form>
   );
   if (!inline) return editor;
@@ -269,7 +278,7 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
         {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
         <PhotoGrid source={source} userId={userId} />
         <p className="note small">{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</p>
-        <div className="sticky-actions">
+        <StickyActions spacer="none">
           {onDone ? <Button variant="primary" size="lg" block onClick={onDone}>Listo</Button> : <RouterButtonLink
             variant="primary"
             size="lg"
@@ -284,7 +293,7 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
           >
             Listo
           </RouterButtonLink>}
-        </div>
+        </StickyActions>
       </div>
     </>
   );
@@ -294,11 +303,13 @@ function EditPhotos({ listing, userId, onDone }: { listing: Listing; userId: str
 function KindInputs({ draft }: { draft: ListingDraft }) {
   // Un tipo de antes (casa, apartamento) cuenta como Alojamiento completo, como en el paso 1 del asistente (KindChoice).
   const [kind, setKind] = useState<Kind | null>(draft.kind === "habitacion" ? "habitacion" : draft.kind && "completo");
+  const error = useFieldError("kind");
   return (
     <div className="stack publish-kind">
       <ChoiceCards
         name="kind"
         type="radio"
+        error={error}
         selected={kind ? [kind] : []}
         onChange={(c) => setKind(c[0] === "habitacion" ? "habitacion" : "completo")}
         options={[

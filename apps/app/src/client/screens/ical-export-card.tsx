@@ -6,6 +6,7 @@ import { toast } from "../../shared/toast";
 import { airbnbQuery, icalExportApi, useCalendarOnline } from "../airbnb";
 import { sessionState } from "../session";
 import { ConfirmSheet } from "../confirm-sheet";
+import { Field, TextArea } from "../../shared/field";
 import { Button, TextButton } from "../../shared/button";
 
 /** El token solo vive en este componente, nunca en Query, almacenamiento o telemetría. */
@@ -128,10 +129,9 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
       <Button variant="primary" size="lg" disabled={!!busy || !online} onClick={() => void generate()}>{busy === "generating" ? "Generando enlace…" : "Generar enlace"}</Button>
     </> : null}
     {url ? <>
-      <div>
-        <label htmlFor="ical-export-url">Enlace de 3bstays para Airbnb</label>
-        <textarea id="ical-export-url" ref={field} rows={3} readOnly value={url} autoComplete="off" spellCheck={false} aria-describedby="ical-export-help ical-export-copy-error" />
-      </div>
+      <Field id="ical-export-url" label="Enlace de 3bstays para Airbnb" describedBy="ical-export-help ical-export-copy-error">
+        {(control) => <TextArea {...control} ref={field} rows={3} readOnly value={url} autoComplete="off" spellCheck={false} />}
+      </Field>
       <Button variant="primary" size="lg" onClick={() => void copy()}>Copiar enlace</Button>
       <p id="ical-export-copy-error" className="field-error" role={copyProblem ? "alert" : undefined}>{copyProblem ? "No pudimos copiarlo. Mantenga pulsado el enlace para copiarlo." : null}</p>
       <p id="ical-export-help" className="hint">Añada este enlace como calendario importado en Airbnb. Cualquier persona que lo tenga puede consultar sus noches bloqueadas; no puede modificarlas.</p>

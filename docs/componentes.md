@@ -173,6 +173,129 @@ la lista de `buscar` está siempre a la vista y la de `place-search` se cierra a
 ### Excepciones con su propio CSS
 
 No pasan por estos componentes: el corazón (`FavoriteButton`), el icono de WhatsApp de la tarjeta (`card-wa`), «Abrir
-WhatsApp» de Actividad (`inquiry-wa`), los flotantes del mapa (`float-btn`, `map-label`, `map-count`), los chips, los
-segmentos (`.seg`, `CurrencySwitch`), los contadores −/+ (paso 4 de la migración), `house-tool`, `new-house` y la portada
-estática (`public/portada.html`).
+WhatsApp» de Actividad (`inquiry-wa`), los flotantes del mapa (`float-btn`, `map-label`, `map-count`), los chips de
+navegación y el botón de Filtros (`chip`, `filters-btn`), `house-tool`, `new-house` y la portada estática
+(`public/portada.html`). Los chips de elección, los segmentos y los contadores −/+ son del paso 4 (abajo).
+
+## Campos y formularios
+
+Desde el paso 4 de la migración (2026-11-20). Código en `apps/app/src/shared/field.tsx` (`Field`, `TextInput`, `TextArea`,
+`Select`, `AffixInput`, `SearchInput`, `Checkbox`, `StickyActions`), `shared/choice.tsx` (`ChoiceChips`, `Segmented`),
+`shared/stepper.tsx` (`Stepper`, `CounterRow`), `shared/combobox.ts` (`useCombobox`), `client/code-input.tsx` (`CodeInput`)
+y `client/publish/wizard-parts.tsx` (`ChoiceCards`). Ninguno usa el router ni consultas. CSS en `styles/01-base.css`, bloque
+«Campos»: el campo base va con `:where()` (sin peso) y lo que lleva un campo dentro lo vacía con `.bare-input`, una sola vez.
+Trozos: `field-*`, `combobox-*` y `code-input-*` los leen solo trozos diferidos (presupuesto propio en `.size-limit.json`);
+`Segmented` va con `CurrencySwitch` en el JS inicial y `Stepper`/`ChoiceChips` en `stepper-*`, que pide el arranque (Explorar).
+Lo vigilan `tests/unit/campos.test.tsx` (marcado, enlaces ARIA, 44 px, foco, y que ninguna pantalla vuelva a escribir
+`people-stepper`, `seg`, `code-boxes`, `input-money`, `cal-price`, `zone-input`, `search-field` ni `aria-pressed` en un
+`<label>`) y `tests/e2e/campos.spec.ts`.
+
+Formularios sin controlar donde ya lo estaban (publicar, editar, perfil): los valores salen de `FormData`; `Segmented` con
+`name` pone el suyo en un campo oculto.
+
+### Field
+
+Envoltorio de un campo: pinta la etiqueta, el contador, el error y la ayuda, y da al control su `id`, `aria-describedby`
+(error, ayuda, contador y `describedBy`, en ese orden) y `aria-invalid`. **El error va debajo del campo que falla**, con
+`role="alert"` e `id` `<id>-error` (ayuda `<id>-hint`, contador `<id>-count`).
+
+| Prop | Valores | Notas |
+|---|---|---|
+| `label` | `ReactNode` | obligatoria; `labelHidden` la deja solo para lectores de pantalla |
+| `id` | `string` | si falta, `useId()` |
+| `error` | `string \| null` | el mensaje de la validación existente |
+| `hint` / `hintTone` | `ReactNode` / `"muted"` · `"warn"` | `warn`: en ocre y anunciado (precio al mes mal escrito) |
+| `count` | `{ text, tone?: "muted" \| "bad" \| "warn" }` | a la derecha de la etiqueta («12 / 32», «Faltan 20 caracteres») |
+| `size` | `"md"` (52 px) · `"compact"` (48 px y etiqueta de 14, para hojas) | |
+| `describedBy` | `string` | otros textos que describen el campo (un error que vale para dos campos) |
+| `grow` | `boolean` | llena el alto que queda (la descripción del asistente) |
+
+```tsx
+<Field id="pub-title" label="Nombre de la casa" error={useFieldError("title")} count={{ text: `${n} / 32 · mínimo 5` }}>
+  {(control) => <TextInput {...control} name="title" maxLength={32} defaultValue={value} />}
+</Field>
+```
+
+**Errores de una casa** (publicar y «Editar un dato»): `domain/field-errors.ts` (`listingFieldError`) dice de qué campo es
+un mensaje (los mismos mensajes en el navegador, el fake y la base, así que también los del servidor van a su campo);
+`step-form.tsx` y `editar.tsx` lo ponen en `FieldErrorContext` (`client/publish/field-error.ts`) y cada campo lo lee con
+`useFieldError(name)`. Lo que no es de un campo (ubicación, fotos, red) sigue en el aviso de arriba (`.note[role=alert]`);
+si el campo no está en la pantalla (el precio al mes con «No»), también.
+
+### TextInput, TextArea, Select
+
+El campo base: 52 px, borde `--line` de 1 px, radio `--r-control` (8 px, D7), letra de 18 px (nunca menos de 16: el iPhone
+ampliaría la página). Desactivado con `--disabled-bg`/`--disabled-fg`; solo lectura (`readOnly`), gris claro sin borde y
+seleccionable; con `aria-invalid`, borde `--bad` (también en `select`). Pasan los atributos tal cual, sin `className`.
+
+### AffixInput
+
+Campo con un signo delante, que no se lee (`aria-hidden`): `prefix="₡"` (o `"$"` en Filtros con dólares). `size`: `"lg"` (56 px,
+cifra de 24: publicar y editar), `"md"` (52: Filtros), `"sm"` (44 compacto: panel del calendario). Con `aria-invalid`, la
+caja va en rojo.
+
+```tsx
+<AffixInput {...control} size="lg" prefix="₡" name="nightlyPriceCrc" inputMode="numeric" defaultValue={price ?? ""} placeholder="95 000" />
+```
+
+### SearchInput y useCombobox
+
+Buscador con la lupa como icono. `variant`: `"field"` (buscar en una lista: Casas del admin), `"combobox"` (con sugerencias
+debajo: «¿Dónde?», «Otra…»), `"float"` (sobre el mapa del paso 2); `after` pone algo al final («Quitar»). `useCombobox({ count,
+open, initial: 0 | -1, listbox })` da los ids de la lista y de cada opción, la marcada con las flechas (en bucle) y los
+atributos ARIA del campo (`inputProps`); Enter, Escape y elegir los decide cada pantalla. La lista es `ul.suggestions` con
+`li.suggestion` (52 px; `.is-active` con el teclado, `.is-chosen` la elegida, en ocre con ✓).
+
+### ChoiceChips y ChoiceCards
+
+`ChoiceChips`: chips con el ✓ en un hueco fijo (marcar no mueve el texto), 44 px. Con `type="checkbox" | "radio"` y `name`
+(por defecto `as="input"`), casillas nativas dentro de un `<label>`: el estado lo da el input y el aspecto sale de
+`:has(input:checked)`, con el anillo de foco en `:has(input:focus-visible)`. Con `as="button"`, botones con `aria-pressed` para
+lo que guarda el estado en la URL (Filtros, Explorar, atajos de noches). `layout`: `"grid"` (dos columnas) o `"kind"` (tres,
+icono encima); `float` para los de Explorar sobre el mapa; `label` nombra el grupo. Cada opción: `{ value, label, name? }`
+(`name`: nombre accesible largo, «Cargador eléctrico»).
+
+```tsx
+<ChoiceChips type="checkbox" name="features" options={FEATURE_CHOICE_ORDER.map((key) => ({ value: key, name: FEATURE_CHOICE_NAME[key], label: <FeatureChoiceLabel feature={key} /> }))} selected={on} onToggle={toggle} />
+```
+
+`ChoiceCards` (paso 1 y editar el tipo) se conserva: radios nativos con aspecto de tarjeta, sin `aria-pressed` en el label,
+con foco visible y `error` debajo.
+
+### Segmented
+
+Una sola elección en una pista, botones de 44 px: «₡ | $» (`CurrencySwitch`), «Disponible | Ocupado», «Fechas | Número de
+noches», «No | Sí» y «Privado | Compartido» (D8). Props: `options` (`{ value, label, name? }`), `value` (o `null`, ninguna),
+`onChange`, `label` o `labelledBy`, `name` (campo oculto en un formulario sin controlar), `fill` (a todo el ancho), `float`,
+`currency`, `placement` (clases de sitio que ya existían). Botones nativos: Tab y Espacio.
+
+```tsx
+<Segmented name="acceptsMonthly" labelledBy="pub-acceptsMonthly" options={[{ value: "no", label: "No" }, { value: "yes", label: "Sí" }]} value={yes ? "yes" : "no"} onChange={(v) => setYes(v === "yes")} />
+```
+
+### Stepper y CounterRow
+
+Un solo contador −/+: botones de 44 × 44 en verde tonal, el desactivado común, y un nombre accesible único a partir de
+`unit` (`"Una persona" | "Un dormitorio" | "Un baño" | "Una noche"` → «Una persona menos», «Una persona más»). Props:
+`value`, `min`, `max`, `onChange`, `empty` («–» en gris), `display` y `valueLabel` (lo que se ve y se lee: «2+», «2 o
+más»), `describedBy` (su error), `input` (la cifra en un campo editable, en la hoja de contacto). `CounterRow` es la fila con
+`label` e `icon` (`iconByValue` lo pone junto a la cifra).
+
+```tsx
+<CounterRow label="Personas" icon={<I.users size={22} />} unit="Una persona" value={ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!ppl} onChange={setPpl} />
+```
+
+### CodeInput, Checkbox, StickyActions
+
+- `CodeInput id value onChange error`: las seis casillas del código (Ingresar y el segundo código del admin), con el campo real
+  encima, `one-time-code` y el error enlazado debajo.
+- `Checkbox`: casilla con su texto en una fila de 44 px (lista «Antes de decidir» del admin).
+- `StickyActions spacer="normal" | "review" | "none" layout="column"?`: la barra de pie fija y su espaciador (`none` cuando
+  el formulario ya deja el sitio, como el asistente). El panel del calendario (`.cal-panel`) sigue siendo un panel aparte.
+
+### Excepciones que se conservan
+
+Los chips de escritorio de Explorar a 36 px y 14 px (solo con puntero), el panel compacto del calendario (`AffixInput
+size="sm"`), la fecha nativa de «Pausar la casa», el buscador flotante del mapa, las tarjetas del paso 1, la capacidad sin
+iconos al editar, el prefijo de país de Ingresar (es un `select`), el chevrón de `select` dibujado en una imagen (no admite
+variables) y las casillas de fecha de la hoja de contacto (`DateBox`).

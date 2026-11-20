@@ -18,6 +18,8 @@ import { ConfirmSheet } from "../confirm-sheet";
 import { useListingsCount } from "../own-listings-query";
 import { authApi, useSession } from "../session";
 import { Button, TextButton } from "../../shared/button";
+import { Field, TextArea, TextInput } from "../../shared/field";
+import { EMAIL_INVALID_ERROR } from "../../domain/account";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -285,22 +287,20 @@ function ProfileForm({ account }: { account: Account }) {
     }
   }
 
+  // «Ese correo no parece válido» va bajo el correo; lo demás (la red), en el aviso.
+  const emailError = state.error === EMAIL_INVALID_ERROR ? state.error : null;
   return (
     <form onSubmit={save} onInput={onInput} className="stack gap-14" noValidate>
-      <div className="field">
-        <label htmlFor="account-name">Nombre</label>
-        <input id="account-name" name="name" defaultValue={account.name} maxLength={80} autoComplete="name" />
-      </div>
-      <div className="field">
-        <label htmlFor="account-description">Descripción (opcional)</label>
-        <textarea id="account-description" name="description" rows={3} maxLength={1000} defaultValue={account.description ?? ""} placeholder="Cuéntenos un poco sobre usted" />
-      </div>
-      <div className="field">
-        <label htmlFor="account-email">Correo de recuperación (opcional)</label>
-        <input id="account-email" name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder="nombre@ejemplo.com" />
-        <span className="xs muted">Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.</span>
-      </div>
-      {state.error ? (
+      <Field id="account-name" label="Nombre">
+        {(control) => <TextInput {...control} name="name" defaultValue={account.name} maxLength={80} autoComplete="name" />}
+      </Field>
+      <Field id="account-description" label="Descripción (opcional)">
+        {(control) => <TextArea {...control} name="description" rows={3} maxLength={1000} defaultValue={account.description ?? ""} placeholder="Cuéntenos un poco sobre usted" />}
+      </Field>
+      <Field id="account-email" label="Correo de recuperación (opcional)" error={emailError} hint="Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.">
+        {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder="nombre@ejemplo.com" />}
+      </Field>
+      {state.error && !emailError ? (
         <p className="note" role="alert">
           {state.error}
         </p>

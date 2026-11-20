@@ -12,6 +12,7 @@ import { authApi, pendingOtp } from "../session";
 import { ContactCard, ReturnCard } from "../sign-in";
 import { useTurnstile } from "../turnstile";
 import { useContactMode, useGoTo } from "./cuenta-navigation";
+import { CodeInput } from "../code-input";
 import { Button, TextButton } from "../../shared/button";
 
 const message = (e: unknown) => toDomainError(e).message;
@@ -98,29 +99,7 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
           </p>
         </div>
         <form onSubmit={verify} className="stack gap-18" noValidate>
-          <div className="field code-field">
-            <label htmlFor="account-code">Código de 6 dígitos</label>
-            <div className="code-boxes" aria-hidden="true">
-              {Array.from({ length: 6 }, (_, i) => (
-                <span key={i} className={i < code.length ? "filled" : i === code.length ? "active" : ""}>
-                  {code[i] ?? ""}
-                </span>
-              ))}
-            </div>
-            <input
-              id="account-code"
-              className="code-input"
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              pattern="[0-9]*"
-              autoFocus
-              value={code}
-              onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, "").slice(0, 6))}
-            />
-          </div>
-          {error ? <p className="field-error" role="alert">{error}</p> : null}
+          <CodeInput id="account-code" value={code} onChange={setCode} error={error} />
           <Button variant="primary" size="xl" block type="submit" disabled={busy}>
             {busy ? "Verificando…" : "Verificar y continuar"}
           </Button>

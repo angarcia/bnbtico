@@ -9,6 +9,7 @@ import { useDesktop } from "./desktop";
 import { sessionState } from "./session";
 import { setAvailability, type Selection, type CalendarDay } from "../domain/calendar";
 import { MonthLegend } from "../shared/month-grid";
+import { Segmented } from "../shared/choice";
 
 const AirbnbConnectPopup = lazy(() => import("./screens/airbnb").then((module) => ({ default: module.AirbnbConnectPopup })));
 
@@ -39,10 +40,13 @@ export function AirbnbAvailability({ sel, importedCount, manualCount, onChange, 
   return <>
     <p className="small muted">{importedCount === sel.days.length && manualCount === sel.days.length ? "Bloqueo manual y Airbnb" : importedCount === sel.days.length && manualCount === 0 ? "Ocupado por Airbnb · sin bloqueo manual" : `${manualCount} con bloqueo manual · ${importedCount} con bloqueo de Airbnb`}</p>
     <div className="stack gap-8">
-      <div className="seg" role="group" aria-label="Disponibilidad manual">
-        <button type="button" aria-pressed={sel.available === true} onClick={() => onChange(setAvailability(sel, true))}>{manualCount ? "Quitar bloqueo manual" : "Sin bloqueo manual"}</button>
-        <button type="button" aria-pressed={sel.available === false} onClick={() => onChange(setAvailability(sel, false))}>Ocupado</button>
-      </div>
+      <Segmented
+        fill
+        label="Disponibilidad manual"
+        options={[{ value: "free", label: manualCount ? "Quitar bloqueo manual" : "Sin bloqueo manual" }, { value: "busy", label: "Ocupado" }]}
+        value={sel.available === null ? null : sel.available ? "free" : "busy"}
+        onChange={(v) => onChange(setAvailability(sel, v === "free"))}
+      />
       {children}
     </div>
     <p className="hint" role="status">{importedCount === 1 ? "Esta noche sigue ocupada" : `${importedCount} noches siguen ocupadas`} por Airbnb. Para liberarla{importedCount === 1 ? "" : "s"}, cambie el calendario en Airbnb y actualice la importación. Sus precios se conservan.</p>

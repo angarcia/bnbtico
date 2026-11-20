@@ -2,7 +2,7 @@
 // mapa se unió al paso 2, el 2026-10-27). Casillas y contadores llevan su valor en el formulario (campos ocultos o
 // casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
-import { Component, lazy, Suspense, useRef, useState, type ReactNode } from "react";
+import { Component, lazy, Suspense, useId, useRef, useState, type ReactNode } from "react";
 import { FullScreen } from "../../shared/overlay";
 import { Link } from "@tanstack/react-router";
 import { DESCRIPTION_MAX, DESCRIPTION_MIN, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
@@ -16,8 +16,11 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { reportError } from "../../shared/beacon";
-import { CounterRow } from "../../shared/counter-row";
-import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
+import { CounterRow, type StepperUnit } from "../../shared/stepper";
+import { ChoiceChips, Segmented } from "../../shared/choice";
+import { AffixInput, Field, Select, TextArea, TextInput, type FieldCount } from "../../shared/field";
+import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
+import { useFieldError } from "./field-error";
 import { I } from "../../shared/icons";
 import { isChunkLoadError } from "../chunk-error";
 import { useEditor } from "../editor-port";
@@ -79,10 +82,11 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
   }
 }
 
-/** Contador −/+ con el valor en un campo oculto. */
-function Counter({ name, label, value, min, max = 30, icon, iconByValue }: { name: string; label: string; value: number | null; min: number; max?: number; icon?: ReactNode; iconByValue?: boolean }) {
+/** Contador −/+ con el valor en un campo oculto; su error (de la base, p. ej.) va debajo. */
+function Counter({ name, label, unit, value, min, max = 30, icon, iconByValue }: { name: "capacity" | "bedrooms" | "bathrooms"; label: string; unit: StepperUnit; value: number | null; min: number; max?: number; icon?: ReactNode; iconByValue?: boolean }) {
   const [n, setN] = useState<number | null>(value);
-  const current = n ?? min;
+  const error = useFieldError(name);
+  const errorId = useId();
   return (
     <>
       <input type="hidden" name={name} value={n === null ? "" : n} />
@@ -90,10 +94,20 @@ function Counter({ name, label, value, min, max = 30, icon, iconByValue }: { nam
         label={label}
         icon={icon}
         iconByValue={iconByValue}
-        value={n ?? "–"}
-        decrease={current > min ? () => setN(current - 1) : undefined}
-        increase={() => setN(n === null ? Math.max(min, 1) : Math.min(max, current + 1))}
+        unit={unit}
+        value={n ?? min}
+        min={min}
+        max={max}
+        empty={n === null}
+        describedBy={error ? errorId : undefined}
+        // Sin valor, «+» pone el primero que vale (1, o el mínimo).
+        onChange={(next) => setN(n === null ? Math.max(min, 1) : next)}
       />
+      {error ? (
+        <p id={errorId} className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </>
   );
 }
@@ -102,105 +116,97 @@ function Counter({ name, label, value, min, max = 30, icon, iconByValue }: { nam
 export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; parkingPaid: boolean | null }) {
   const [on, setOn] = useState<Feature[]>(selected);
   const toggle = (f: Feature) => setOn((c) => (c.includes(f) ? c.filter((x) => x !== f) : [...c, f]));
+  const parkingError = useFieldError("parkingPaid");
   return (
     <div className="stack gap-8">
-      <div className="feature-choices">
-        {FEATURE_CHOICE_ORDER.map((key) => (
-          <label key={key} className="chip" aria-pressed={on.includes(key)}>
-            <input type="checkbox" name="features" value={key} aria-label={FEATURE_CHOICE_NAME[key]} checked={on.includes(key)} onChange={() => toggle(key)} className="sr-input" />
-            <FeatureChoiceContent feature={key} selected={on.includes(key)} />
-          </label>
-        ))}
-      </div>
-      <span className="xs muted">Las mismas que usan los clientes para filtrar.</span>
+      <ChoiceChips
+        type="checkbox"
+        name="features"
+        options={FEATURE_CHOICE_ORDER.map((key) => ({ value: key, name: FEATURE_CHOICE_NAME[key], label: <FeatureChoiceLabel feature={key} /> }))}
+        selected={on}
+        onToggle={toggle}
+      />
+      <span className="field-hint">Las mismas que usan los clientes para filtrar.</span>
       {on.includes("parking") ? (
-        <div className="field">
-          <label htmlFor="pub-parkingPaid">Tipo de parqueo</label>
-          <select id="pub-parkingPaid" name="parkingPaid" defaultValue={parkingPaid === null ? "" : parkingPaid ? "paid" : "free"}>
-            <option value="">Seleccione una opción</option>
-            <option value="free">Gratuito</option>
-            <option value="paid">De pago</option>
-          </select>
-        </div>
+        <Field id="pub-parkingPaid" label="Tipo de parqueo" error={parkingError}>
+          {(control) => (
+            <Select {...control} name="parkingPaid" defaultValue={parkingPaid === null ? "" : parkingPaid ? "paid" : "free"}>
+              <option value="">Seleccione una opción</option>
+              <option value="free">Gratuito</option>
+              <option value="paid">De pago</option>
+            </Select>
+          )}
+        </Field>
       ) : null}
     </div>
   );
 }
 
-/** Baño privado o compartido (solo habitaciones). */
+const BATHROOM_OPTIONS = [
+  { value: "private", label: "Privado" },
+  { value: "shared", label: "Compartido" },
+] as const;
+
+/** Baño privado o compartido (solo habitaciones), como segmento (D8). */
 export function BathroomChoice({ shared, showIcon = false }: { shared: boolean | null; showIcon?: boolean }) {
-  const [v, setV] = useState<string>(shared === null ? "" : shared ? "shared" : "private");
+  const [v, setV] = useState<"private" | "shared" | null>(shared === null ? null : shared ? "shared" : "private");
+  const labelId = useId();
+  const error = useFieldError("bathroomShared");
   return (
     <div className="stack gap-8">
-      <span className="row label-plain">{showIcon ? <I.bath size={22} /> : null}Baño de la habitación</span>
-      <div className="row gap-8 bathroom-options">
-        {(
-          [
-            ["private", "Privado"],
-            ["shared", "Compartido"],
-          ] as const
-        ).map(([val, label]) => (
-          <label key={val} className="chip" aria-pressed={v === val}>
-            <input type="radio" name="bathroomShared" value={val} checked={v === val} onChange={() => setV(val)} className="sr-input" />
-            {label}
-          </label>
-        ))}
-      </div>
+      <span id={labelId} className="row label-plain">
+        {showIcon ? <I.bath size={22} /> : null}Baño de la habitación
+      </span>
+      <Segmented name="bathroomShared" labelledBy={labelId} options={BATHROOM_OPTIONS} value={v} onChange={(val) => setV(val)} placement="bathroom-options" />
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-/** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí; con Sí, «Precio al mes (opcional)». Volver a No
- *  vacía el campo. Un precio al mes mal escrito se guarda vacío («a negociar»): mientras se escribe, la ayuda lo avisa en
- *  ocre con el mensaje de la regla (ticket 12; al crear y al editar). */
+const MONTHLY_OPTIONS = [
+  { value: "no", label: "No" },
+  { value: "yes", label: "Sí" },
+] as const;
+
+/** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí, como segmento (D8); con Sí, «Precio al mes
+ *  (opcional)». Volver a No vacía el campo. Un precio al mes mal escrito se guarda vacío («a negociar»): mientras se
+ *  escribe, la ayuda lo avisa en ocre con el mensaje de la regla (ticket 12; al crear y al editar). */
 export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: number | null }) {
   const [yes, setYes] = useState(accepts);
   const [text, setText] = useState(price === null ? "" : String(price));
   const bad = monthlyError({ acceptsMonthly: true, monthlyPriceCrc: parseColones(text) });
+  const error = useFieldError("monthlyPriceCrc");
   return (
     <>
-      <div className="stack gap-8" role="group" aria-labelledby="pub-acceptsMonthly">
+      <div className="stack gap-8">
         <span id="pub-acceptsMonthly" className="label-plain">
           ¿Acepta alquiler por meses?
         </span>
-        <div className="row gap-8">
-          {(
-            [
-              ["no", "No"],
-              ["yes", "Sí"],
-            ] as const
-          ).map(([val, label]) => {
-            const on = (val === "yes") === yes;
-            return (
-              <label key={val} className="chip" aria-pressed={on}>
-                <input
-                  type="radio"
-                  name="acceptsMonthly"
-                  value={val}
-                  checked={on}
-                  onChange={() => {
-                    setYes(val === "yes");
-                    if (val === "no") setText("");
-                  }}
-                  className="sr-input"
-                />
-                {label}
-              </label>
-            );
-          })}
-        </div>
+        <Segmented
+          name="acceptsMonthly"
+          labelledBy="pub-acceptsMonthly"
+          options={MONTHLY_OPTIONS}
+          value={yes ? "yes" : "no"}
+          onChange={(val) => {
+            setYes(val === "yes");
+            if (val === "no") setText("");
+          }}
+        />
       </div>
       {yes ? (
-        <div className="field">
-          <label htmlFor="pub-monthlyPriceCrc">Precio al mes (opcional)</label>
-          <div className="input-money">
-            <span className="cur">₡</span>
-            <input id="pub-monthlyPriceCrc" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" value={text} onChange={(e) => setText(e.currentTarget.value)} placeholder="350 000" aria-describedby="pub-monthlyPriceCrc-help" />
-          </div>
-          <span id="pub-monthlyPriceCrc-help" className={`xs ${bad ? "sun-ink strong" : "muted"}`} aria-live="polite">
-            {bad ?? "Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión»."}
-          </span>
-        </div>
+        <Field
+          id="pub-monthlyPriceCrc"
+          label="Precio al mes (opcional)"
+          error={error}
+          hint={bad ?? "Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión»."}
+          hintTone={bad ? "warn" : "muted"}
+        >
+          {(control) => <AffixInput {...control} size="lg" prefix="₡" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" value={text} onChange={(e) => setText(e.currentTarget.value)} placeholder="350 000" />}
+        </Field>
       ) : null}
     </>
   );
@@ -211,11 +217,11 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
 export function CapacityCounters({ draft, icons = false, iconByValue }: { draft: ListingDraft; icons?: boolean; iconByValue?: boolean }) {
   return (
     <div className="card counters">
-      <Counter name="capacity" label="Personas" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
+      <Counter name="capacity" label="Personas" unit="Una persona" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
       {draft.kind === "habitacion" ? null : (
         <>
-          <Counter name="bedrooms" label="Dormitorios" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
-          <Counter name="bathrooms" label="Baños" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bedrooms" label="Dormitorios" unit="Un dormitorio" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bathrooms" label="Baños" unit="Un baño" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
         </>
       )}
     </div>
@@ -224,15 +230,12 @@ export function CapacityCounters({ draft, icons = false, iconByValue }: { draft:
 
 /** Precio por noche y alquiler mensual: la pantalla 8 y el precio de una casa publicada. */
 export function PriceFields({ draft }: { draft: ListingDraft }) {
+  const error = useFieldError("nightlyPriceCrc");
   return (
     <>
-      <div className="field">
-        <label htmlFor="pub-nightlyPriceCrc">Precio por noche</label>
-        <div className="input-money">
-          <span className="cur">₡</span>
-          <input id="pub-nightlyPriceCrc" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />
-        </div>
-      </div>
+      <Field id="pub-nightlyPriceCrc" label="Precio por noche" error={error}>
+        {(control) => <AffixInput {...control} size="lg" prefix="₡" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />}
+      </Field>
       <MonthlyQuestion accepts={draft.acceptsMonthly} price={draft.monthlyPriceCrc} />
       <span className="small muted">En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.</span>
     </>
@@ -240,27 +243,19 @@ export function PriceFields({ draft }: { draft: ListingDraft }) {
 }
 
 /** Contador «n / máx» (ticket 19): en caracteres, como la regla del dominio; en rojo suave fuera del rango. */
-function CharCount({ id, n, min, max, hint }: { id: string; n: number; min: number; max: number; hint?: string }) {
-  const out = n > 0 && (n < min || n > max);
-  return (
-    <span id={id} className={`xs num${out ? " counter-out" : " muted"}`} aria-live="polite">
-      {n} / {max}
-      {hint ? ` · ${hint}` : ""}
-    </span>
-  );
-}
+const charCountOf = (n: number, min: number, max: number, hint?: string): FieldCount => ({
+  text: `${n} / ${max}${hint ? ` · ${hint}` : ""}`,
+  tone: n > 0 && (n < min || n > max) ? "bad" : "muted",
+});
 
 /** Nombre de la casa (5 a 32 caracteres) con contador. */
 export function TitleField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
+  const error = useFieldError("title");
   return (
-    <div className="field">
-      <div className="row between baseline">
-        <label htmlFor="pub-title">Nombre de la casa</label>
-        <CharCount id="pub-title-count" n={n} min={TITLE_MIN} max={TITLE_MAX} hint={`mínimo ${TITLE_MIN}`} />
-      </div>
-      <input id="pub-title" name="title" maxLength={TITLE_MAX} defaultValue={value} autoComplete="off" placeholder="Casa Manzanillo, a pie de playa" aria-describedby="pub-title-count" onChange={(e) => setN(charCount(e.currentTarget.value))} />
-    </div>
+    <Field id="pub-title" label="Nombre de la casa" error={error} count={charCountOf(n, TITLE_MIN, TITLE_MAX, `mínimo ${TITLE_MIN}`)}>
+      {(control) => <TextInput {...control} name="title" maxLength={TITLE_MAX} defaultValue={value} autoComplete="off" placeholder="Casa Manzanillo, a pie de playa" onChange={(e) => setN(charCount(e.currentTarget.value))} />}
+    </Field>
   );
 }
 
@@ -269,37 +264,31 @@ export function DescriptionField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   const area = useRef<HTMLTextAreaElement>(null);
   useFillHeight(area);
+  const error = useFieldError("description");
+  // Vacía, que se puede añadir después; por debajo del mínimo, cuántos faltan en ocre (revisión UX N3); después, el
+  // contador normal.
+  const count: FieldCount =
+    n === 0
+      ? { text: "Puede añadirla después" }
+      : n < DESCRIPTION_MIN
+        ? { text: DESCRIPTION_MIN - n === 1 ? "Falta 1 carácter" : `Faltan ${DESCRIPTION_MIN - n} caracteres`, tone: "warn" }
+        : charCountOf(n, DESCRIPTION_MIN, DESCRIPTION_MAX);
   return (
-    <div className="field grow-col">
-      <div className="row between baseline">
-        <label htmlFor="pub-description">Descripción (opcional)</label>
-        {/* Vacía, que se puede añadir después; por debajo del mínimo, cuántos faltan en ocre (revisión UX N3); después, el
-            contador normal. */}
-        {n === 0 ? (
-          <span id="pub-description-count" className="xs muted" aria-live="polite">
-            Puede añadirla después
-          </span>
-        ) : n < DESCRIPTION_MIN ? (
-          <span id="pub-description-count" className="xs num description-short" aria-live="polite">
-            {DESCRIPTION_MIN - n === 1 ? "Falta 1 carácter" : `Faltan ${DESCRIPTION_MIN - n} caracteres`}
-          </span>
-        ) : (
-          <CharCount id="pub-description-count" n={n} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} />
-        )}
-      </div>
+    <Field id="pub-description" label="Descripción (opcional)" error={error} count={count} grow>
       {/* Tres preguntas guía que se van al escribir; sin texto de ejemplo, que acabaría copiado en todas las fichas. */}
-      <textarea
-        ref={area}
-        id="pub-description"
-        name="description"
-        rows={3}
-        maxLength={DESCRIPTION_MAX}
-        defaultValue={value}
-        placeholder="¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?"
-        aria-describedby="pub-description-count"
-        onChange={(e) => setN(charCount(e.currentTarget.value))}
-      />
-    </div>
+      {(control) => (
+        <TextArea
+          {...control}
+          ref={area}
+          name="description"
+          rows={3}
+          maxLength={DESCRIPTION_MAX}
+          defaultValue={value}
+          placeholder="¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?"
+          onChange={(e) => setN(charCount(e.currentTarget.value))}
+        />
+      )}
+    </Field>
   );
 }
 
@@ -425,6 +414,7 @@ function CapacityFields({ draft, iconByValue }: { draft: ListingDraft; iconByVal
 /** Campos de cada pantalla. `draft` trae los valores a mostrar; `listing`, lo que solo da el servidor (fotos, WhatsApp). */
 export function StepFields({ step, draft, listing, userId, withCapacity = false }: { step: Step; draft: ListingDraft; listing: Listing; userId: string; withCapacity?: boolean }) {
   const [kind, setKind] = useState(draft.kind);
+  const kindError = useFieldError("kind");
   switch (step) {
     case 1:
       return (
@@ -436,7 +426,7 @@ export function StepFields({ step, draft, listing, userId, withCapacity = false 
               <ReadyList />
             </section>
           ) : null}
-          <KindChoice kind={draft.kind} compact={withCapacity} onChange={withCapacity ? setKind : undefined} />
+          <KindChoice kind={draft.kind} compact={withCapacity} onChange={withCapacity ? setKind : undefined} error={kindError} />
           {withCapacity ? <CapacityFields draft={{ ...draft, kind }} iconByValue /> : null}
         </>
       );

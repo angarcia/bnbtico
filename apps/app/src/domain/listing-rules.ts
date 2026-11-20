@@ -22,6 +22,7 @@ export const isInt = (v: number | null, min: number) => v !== null && Number.isI
 
 export const TITLE_LENGTH_ERROR = `El nombre de la casa debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.`;
 export const TITLE_EMPTY_ERROR = "Póngale un nombre a la casa.";
+export const KIND_ERROR = "Elija Alojamiento completo o Habitación.";
 export const DESCRIPTION_LENGTH_ERROR = `La descripción debe tener entre ${DESCRIPTION_MIN} y ${DESCRIPTION_MAX} caracteres o quedar vacía.`;
 /** Caracteres (puntos de código) de un texto sin los espacios de los extremos. */
 export const charCount = (text: string) => [...text.trim()].length;
@@ -67,7 +68,7 @@ export const parkingError = (d: ListingDraft): string | null => (d.features.incl
 export function validateStep(step: Step, d: ListingDraft): string | null {
   switch (step) {
     case 1:
-      if (!d.kind) return "Elija Alojamiento completo o Habitación.";
+      if (!d.kind) return KIND_ERROR;
       return null;
     case 2:
       if (d.lat === null || d.lng === null) return LOCATION_MESSAGES.noPin;

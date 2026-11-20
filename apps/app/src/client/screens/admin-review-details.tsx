@@ -2,6 +2,7 @@ import { describe, isNegotiable } from "../../domain/describe";
 import { FEATURE_LABEL, KIND_LABELS, MONTHLY_LABEL, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
+import { Checkbox } from "../../shared/field";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -74,15 +75,9 @@ export function Checklist() {
   return (
     <section className="card-soft stack gap-8">
       <b className="small">Antes de decidir</b>
-      <label className="check">
-        <input type="checkbox" name="check-photos" /> Las fotos son de la casa y sin teléfonos ni logos
-      </label>
-      <label className="check">
-        <input type="checkbox" name="check-text" /> La descripción no tiene enlaces ni publicidad
-      </label>
-      <label className="check">
-        <input type="checkbox" name="check-price" /> Zona y precio coherentes
-      </label>
+      <Checkbox name="check-photos">Las fotos son de la casa y sin teléfonos ni logos</Checkbox>
+      <Checkbox name="check-text">La descripción no tiene enlaces ni publicidad</Checkbox>
+      <Checkbox name="check-price">Zona y precio coherentes</Checkbox>
     </section>
   );
 }

@@ -12,6 +12,7 @@ import { PublishPromoRow } from "./publish-promo";
 import { authApi } from "./session";
 import { useTurnstile } from "./turnstile";
 import { Button, TextButton } from "../shared/button";
+import { Field, TextInput } from "../shared/field";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -169,29 +170,17 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
       {/* Sin `key`: el contenedor de Turnstile tiene que seguir montado entre los dos pasos (un token por envío). */}
       <form onSubmit={submit} className="stack gap-14" noValidate>
         {newPhone ? (
-          <div className="field">
-            <label htmlFor="account-name">Nombre</label>
-            <input
-              id="account-name"
-              name="name"
-              autoComplete="name"
-              maxLength={80}
-              placeholder="Su nombre"
-              required
-              autoFocus
-              aria-invalid={errorOf("name") ? true : undefined}
-              aria-describedby={errorOf("name") ? "account-name-error" : undefined}
-            />
-            {errorOf("name") ? (
-              <p className="field-error" id="account-name-error" role="alert">
-                {errorOf("name")}
-              </p>
-            ) : null}
-          </div>
+          <Field id="account-name" label="Nombre" error={errorOf("name")}>
+            {(control) => <TextInput {...control} name="name" autoComplete="name" maxLength={80} placeholder="Su nombre" required autoFocus />}
+          </Field>
         ) : (
-          <>
-            <div className="field">
-              <label htmlFor="account-phone">Número de WhatsApp</label>
+          <Field
+            id="account-phone"
+            label="Número de WhatsApp"
+            error={errorOf("phone")}
+            hint={other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
+          >
+            {(control) => (
               <div className="input-prefix">
                 {/* Un solo control de país (revisión UX A6): la caja del prefijo es el selector; al abrirlo se ven los
                     países con su código. El select invisible ocupa toda la caja, así que tocar «+506 ▾» lo abre. */}
@@ -219,28 +208,18 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
                     <option value={OTHER_COUNTRY}>Otro país</option>
                   </select>
                 </span>
-                <input
-                  id="account-phone"
+                <TextInput
+                  {...control}
                   name="phone"
                   type="tel"
                   autoComplete={other ? "tel" : "tel-national"}
                   inputMode="tel"
                   placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
-                  aria-describedby={errorOf("phone") ? "account-phone-error account-phone-help" : "account-phone-help"}
-                  aria-invalid={errorOf("phone") ? true : undefined}
                   required
                 />
               </div>
-              {errorOf("phone") ? (
-                <p className="field-error" id="account-phone-error" role="alert">
-                  {errorOf("phone")}
-                </p>
-              ) : null}
-              <span id="account-phone-help" className="xs muted">
-                {other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
-              </span>
-            </div>
-          </>
+            )}
+          </Field>
         )}
         <div ref={captcha.container} className="captcha" />
         {error ? <p className="field-error" role="alert">{error}</p> : null}

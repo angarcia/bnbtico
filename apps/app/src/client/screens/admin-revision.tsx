@@ -11,6 +11,7 @@ import { adminListingQuery, useReview } from "../admin";
 import { FlowHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, factsLine } from "./admin-review-details";
 import { NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
+import { Field, StickyActions, TextArea } from "../../shared/field";
 import { Button } from "../../shared/button";
 
 // ---------- 22 · Revisar anuncio ----------
@@ -154,8 +155,7 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
       <Checklist />
       <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
       {noPhotos ? <p className="note note-arena small">Sin fotos: solo puede pedir cambios.</p> : null}
-      <div className="sticky-spacer review-spacer" aria-hidden="true" />
-      <div className="sticky-actions review-actions">
+      <StickyActions spacer="review" layout="column">
         <Button variant="primary" size="lg" block type="submit" icon={<I.check size={18} />} disabled={noPhotos || review.isPending}>
           Aprobar y publicar
         </Button>
@@ -163,7 +163,7 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
         <Button variant="secondary" size="lg" block disabled={review.isPending} onClick={() => void decide("changes")}>
           Pedir cambios
         </Button>
-      </div>
+      </StickyActions>
     </form>
   );
 }
@@ -171,25 +171,19 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
 function NoteField({ note, onChange, hint, error }: { note: string; onChange: (v: string) => void; hint: string; error: string | null }) {
   return (
     <>
-      <div className="field">
-        <label htmlFor="admin-review-note">
-          Mensaje para el anfitrión <span className="label-plain">{hint}</span>
-        </label>
-        <textarea
-          id="admin-review-note"
-          name="note"
-          rows={3}
-          maxLength={REVIEW_NOTE_MAX}
-          placeholder="Ej.: la foto 4 muestra un número de teléfono; súbala sin él."
-          value={note}
-          onChange={(e) => onChange(e.currentTarget.value)}
-        />
-      </div>
-      {error ? (
-        <p className="field-error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <Field id="admin-review-note" label={<>Mensaje para el anfitrión <span className="label-plain">{hint}</span></>} error={error}>
+        {(control) => (
+          <TextArea
+            {...control}
+            name="note"
+            rows={3}
+            maxLength={REVIEW_NOTE_MAX}
+            placeholder="Ej.: la foto 4 muestra un número de teléfono; súbala sin él."
+            value={note}
+            onChange={(e) => onChange(e.currentTarget.value)}
+          />
+        )}
+      </Field>
     </>
   );
 }

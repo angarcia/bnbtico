@@ -1,4 +1,5 @@
-import { useEffect, useRef, type FocusEvent, type MouseEvent, type PointerEvent, type RefObject } from "react";
+import { useEffect, useRef, type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type RefObject } from "react";
+import { enterKeyHintFor, nextFieldIndex } from "./enter-next";
 
 export const KEYBOARD_ROOM = "320px";
 /** Lo que tiene que encoger la vista para contar como teclado (un pellizco de zoom la encoge poco a poco). */
@@ -68,4 +69,39 @@ export function useFormKeyboard(ref: RefObject<HTMLFormElement | null>) {
   }
 
   return { onFocus, onBlur, onPointerDown, onClick };
+}
+
+/** Campos que recorre «Siguiente»: entradas de texto, listas y áreas de texto, en el orden del documento. */
+const FIELDS = "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea";
+export const fieldsOf = (form: HTMLFormElement) => Array.from(form.querySelectorAll<HTMLElement>(FIELDS)).filter((el) => !el.hidden);
+
+/** enterKeyHint «Siguiente» o «Listo» según la posición del campo; se recalcula si aparece uno (p. ej. «Tipo de parqueo»).
+ *  Lo usan el asistente (step-form.tsx) y «Editar un dato» (screens/editar.tsx). */
+export function useEnterKeyHints(ref: RefObject<HTMLFormElement | null>) {
+  useEffect(() => {
+    const form = ref.current;
+    if (!form) return;
+    const apply = () => {
+      const fields = fieldsOf(form);
+      fields.forEach((el, i) => {
+        if (el instanceof HTMLInputElement) el.enterKeyHint = enterKeyHintFor(fields.length, i);
+      });
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(form, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [ref]);
+}
+
+/** Enter en un campo de texto: al siguiente campo o, en el último, envía el formulario (en un área de texto, Enter es
+ *  salto de línea). */
+export function enterToNext(e: KeyboardEvent<HTMLFormElement>) {
+  const el = e.target;
+  if (e.key !== "Enter" || !(el instanceof HTMLInputElement)) return;
+  e.preventDefault();
+  const fields = fieldsOf(e.currentTarget);
+  const next = nextFieldIndex(fields.length, fields.indexOf(el));
+  if (next === null) e.currentTarget.requestSubmit();
+  else fields[next]?.focus();
 }

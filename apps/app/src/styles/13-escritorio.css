@@ -209,7 +209,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .publish-room-capacity .bathroom-options .chip {
+  .publish-room-capacity .bathroom-options button {
     min-width: 0;
     justify-content: center;
     padding-inline: 4px;
@@ -545,9 +545,9 @@
     border-radius: var(--float-r);
     pointer-events: auto;
   }
-  .desktop-search-people .people-stepper { gap: 0; }
+  .desktop-search-people .stepper { gap: 0; }
   .desktop-search-people > svg { flex: none; color: var(--primary); }
-  .desktop-search-people .people-stepper b { font: var(--w-strong) 16px var(--body); }
+  .desktop-search-people .stepper b { font: var(--w-strong) 16px var(--body); }
   .desktop-search-panel-cuando { inset-inline: 0; width: auto; }
   .desktop-search-panel-noches { width: 360px; }
   .desktop-search-calendar { max-height: min(52dvh, 420px); overflow: auto; overscroll-behavior: contain; }
@@ -678,7 +678,7 @@
   .listing-view .feature-tiles .tile-wide { display: none; }
   .listing-view .listing-calendar { max-width: 640px; }
   .cta-monthly { display: block; margin-top: 4px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .listing-contact-inline.sheet .people-stepper input.people:not([type=checkbox]):not([type=file]):not([type=radio]) { width: 136px; }
+  .listing-contact-inline .stepper-input { width: 136px; }
   .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular); }
 
   /* Revisión de escritorio 2026-11-13, tanda 4 (A8, M2, M7, M8). Solo CSS salvo el precio base del calendario: el trozo

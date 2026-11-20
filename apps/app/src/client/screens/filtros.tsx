@@ -21,8 +21,10 @@ import { costaRicaToday } from "../../domain/dates";
 import { housesCount, stayLabel } from "../../domain/search";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
-import { CounterRow } from "../../shared/counter-row";
-import { FeatureChoiceContent, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
+import { CounterRow } from "../../shared/stepper";
+import { ChoiceChips } from "../../shared/choice";
+import { AffixInput, Field, StickyActions } from "../../shared/field";
+import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
@@ -102,6 +104,20 @@ function FiltrosForm({
     });
     onClose?.();
   };
+  const submit = (
+    <Button
+      variant="primary"
+      size={onClose ? "md" : "lg"}
+      block={!!onClose}
+      placement={onClose ? undefined : "grow"}
+      type="submit"
+      disabled={badRange}
+    >
+      {count === undefined
+        ? "Ver casas"
+        : `Ver ${hasNextPage ? "más de " : ""}${housesCount(count)}`}
+    </Button>
+  );
   return (
     <>
       <header className="header-flow">
@@ -157,9 +173,12 @@ function FiltrosForm({
             <CounterRow
               label="Personas"
               icon={<I.users size={22} />}
-              value={f.ppl || <span className="muted">–</span>}
-              decrease={f.ppl > 0 ? () => setCount("ppl", f.ppl - 1) : undefined}
-              increase={f.ppl < SEARCH_MAX_PEOPLE ? () => setCount("ppl", f.ppl + 1) : undefined}
+              unit="Una persona"
+              value={f.ppl}
+              min={0}
+              max={SEARCH_MAX_PEOPLE}
+              empty={!f.ppl}
+              onChange={(n) => setCount("ppl", n)}
             />
             {/* Tipo de alojamiento (ticket 06): una sola opción; «Alojamiento completo» incluye las casas y apartamentos viejos.
                 Con las habitaciones apagadas (feature flag, #62) todo es alojamiento completo: no hay sección. */}
@@ -168,41 +187,38 @@ function FiltrosForm({
               <span className="eyebrow" id="f-tipo">
                 Tipo de alojamiento
               </span>
-              <div className="kind-filter">
-                {([null, ...KIND_FILTERS] as const).map((kind) => (
-                  <button
-                    key={kind ?? "cualquiera"}
-                    type="button"
-                    className="chip"
-                    aria-label={kind === null ? "Cualquiera" : KIND_FILTER_LABEL[kind]}
-                    aria-pressed={f.kind === kind}
-                    onClick={() => setDraft((d) => ({
-                      ...d,
-                      tipo: kind ?? undefined,
-                      beds: kind === "completo" ? d.beds : undefined,
-                    }))}
-                  >
-                    {kind === null ? <I.list size={24} /> : kind === "completo" ? <I.house size={24} /> : <I.bed size={24} />}
-                    <span>{kind === null ? "Cualquiera" : kind === "completo" ? "Completo" : KIND_FILTER_LABEL[kind]}</span>
-                    <span className="feature-check" aria-hidden="true">
-                      {f.kind === kind ? <I.check size={14} /> : null}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <ChoiceChips
+                as="button"
+                layout="kind"
+                options={([null, ...KIND_FILTERS] as const).map((kind) => ({
+                  value: kind ?? "cualquiera",
+                  name: kind === null ? "Cualquiera" : KIND_FILTER_LABEL[kind],
+                  label: (
+                    <>
+                      {kind === null ? <I.list size={24} /> : kind === "completo" ? <I.house size={24} /> : <I.bed size={24} />}
+                      <span>{kind === null ? "Cualquiera" : kind === "completo" ? "Completo" : KIND_FILTER_LABEL[kind]}</span>
+                    </>
+                  ),
+                }))}
+                selected={[f.kind ?? "cualquiera"]}
+                onToggle={(value) => {
+                  const kind = value === "cualquiera" ? null : value;
+                  setDraft((d) => ({ ...d, tipo: kind ?? undefined, beds: kind === "completo" ? d.beds : undefined }));
+                }}
+              />
             </section>
             ) : null}
             {f.kind === "completo" || !FLAGS.rooms ? <CounterRow
               label="Dormitorios"
               icon={<I.bed size={22} />}
-              value={
-                <>
-                  <span className="sr-only">{f.beds ? `${f.beds} o más` : "Cualquier cantidad"}</span>
-                  <span aria-hidden="true" className={f.beds ? undefined : "muted"}>{f.beds ? `${f.beds}+` : "–"}</span>
-                </>
-              }
-              decrease={f.beds > 0 ? () => setCount("beds", f.beds - 1) : undefined}
-              increase={f.beds < maxBeds ? () => setCount("beds", f.beds + 1) : undefined}
+              unit="Un dormitorio"
+              value={f.beds}
+              min={0}
+              max={maxBeds}
+              empty={!f.beds}
+              display={`${f.beds}+`}
+              valueLabel={f.beds ? `${f.beds} o más` : "Cualquier cantidad"}
+              onChange={(n) => setCount("beds", n)}
             /> : null}
           </div>
         </section>
@@ -213,75 +229,42 @@ function FiltrosForm({
           ) : (
             <p className="xs muted" role="status">Cargando características…</p>
           ))}
-          <div className="feature-choices">
-            {featureChoices.map((key) => (
-              <button
-                key={key}
-                type="button"
-                className="chip"
-                aria-label={FEATURE_CHOICE_NAME[key]}
-                aria-pressed={f.features.includes(key)}
-                onClick={() =>
-                  set(key, f.features.includes(key) ? undefined : "1")
-                }
-              >
-                <FeatureChoiceContent feature={key} selected={f.features.includes(key)} />
-              </button>
-            ))}
-          </div>
+          <ChoiceChips
+            as="button"
+            options={featureChoices.map((key) => ({ value: key, name: FEATURE_CHOICE_NAME[key], label: <FeatureChoiceLabel feature={key} /> }))}
+            selected={f.features}
+            onToggle={(key) => set(key, f.features.includes(key) ? undefined : "1")}
+          />
         </section>}
         <section className="stack">
           <span className="eyebrow">Precio</span>
           <div className="grid-2">
-            <div className="field">
-              <label htmlFor="f-min">Mínimo</label>
-              <input
-                id="f-min"
-                inputMode="decimal"
-                placeholder={`${symbol} 0`}
-                aria-label="Precio mínimo por noche"
-                aria-invalid={badRange || undefined}
-                aria-describedby={currency === "CRC" ? "f-price-help" : undefined}
-                value={prices.min}
-                onChange={(e) => setPrice("min", e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="f-max">Máximo</label>
-              <input
-                id="f-max"
-                inputMode="decimal"
-                placeholder={currency === "USD" ? "$ 300" : "₡ 150 000"}
-                aria-label="Precio máximo por noche"
-                aria-invalid={badRange || undefined}
-                aria-describedby={currency === "CRC" ? "f-price-help" : undefined}
-                value={prices.max}
-                onChange={(e) => setPrice("max", e.target.value)}
-              />
-            </div>
+            {(["min", "max"] as const).map((key) => (
+              <Field key={key} id={`f-${key}`} label={key === "min" ? "Mínimo" : "Máximo"} describedBy={badRange ? "f-price-error" : currency === "CRC" ? "f-price-help" : undefined}>
+                {(control) => (
+                  <AffixInput
+                    {...control}
+                    size="md"
+                    prefix={symbol}
+                    inputMode="decimal"
+                    placeholder={key === "min" ? "0" : currency === "USD" ? "300" : "150 000"}
+                    aria-label={key === "min" ? "Precio mínimo por noche" : "Precio máximo por noche"}
+                    aria-invalid={badRange || undefined}
+                    value={prices[key]}
+                    onChange={(e) => setPrice(key, e.target.value)}
+                  />
+                )}
+              </Field>
+            ))}
           </div>
-          {currency === "CRC" ? <span className="xs muted" id="f-price-help">En colones (₡). Puede verlos en dólares desde Explorar.</span> : null}
+          {currency === "CRC" ? <span className="field-hint" id="f-price-help">En colones (₡). Puede verlos en dólares desde Explorar.</span> : null}
           {badRange ? (
-            <p className="field-error" role="alert">
+            <p className="field-error" id="f-price-error" role="alert">
               El precio mínimo no puede ser mayor que el máximo.
             </p>
           ) : null}
         </section>
-        {!onClose && <div className="sticky-spacer" aria-hidden="true" />}
-        <div className={onClose ? "desktop-filters-actions" : "sticky-actions"}>
-          <Button
-            variant="primary"
-            size={onClose ? "md" : "lg"}
-            block={!!onClose}
-            placement={onClose ? undefined : "grow"}
-            type="submit"
-            disabled={badRange}
-          >
-            {count === undefined
-              ? "Ver casas"
-              : `Ver ${hasNextPage ? "más de " : ""}${housesCount(count)}`}
-          </Button>
-        </div>
+        {onClose ? <div className="desktop-filters-actions">{submit}</div> : <StickyActions>{submit}</StickyActions>}
       </form>
     </>
   );

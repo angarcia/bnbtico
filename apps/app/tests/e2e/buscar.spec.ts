@@ -116,8 +116,8 @@ test("?abrir=quienes abre «¿Quiénes?»", async ({ page }) => {
   await expect(page.getByRole("button", { name: "¿Quiénes?", exact: true })).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("button", { name: "¿Dónde? Añadir zona" })).toHaveAttribute("aria-expanded", "false");
   // Sin personas, «–» en gris, como la hoja de contacto y el asistente (Daniel, 2026-10-29; antes «Sin indicar»).
-  await expect(page.locator(".people-stepper b")).toHaveText("–");
-  await expect(page.locator(".people-stepper b")).toHaveClass(/is-empty/);
+  await expect(page.locator(".stepper b")).toHaveText("–");
+  await expect(page.locator(".stepper b")).toHaveClass(/is-empty/);
   await expect(page.getByRole("button", { name: "Una persona menos" })).toBeDisabled();
   // `abrir` no pasa a la URL de Explorar.
   await page.getByRole("button", { name: "Una persona más" }).click();
@@ -180,12 +180,12 @@ test("Filtros: Personas y el mínimo de Habitaciones se ajustan en la misma pant
   await page.goto("/explorar/filtros?ppl=3");
   // Con las habitaciones apagadas (feature flags, #62) no hay tipo: «Dormitorios» sale siempre.
   if (BUILD_FLAGS.rooms) {
-    await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
     await page.getByRole("button", { name: "Alojamiento completo" }).click();
   }
-  const morePeople = page.getByRole("button", { name: "Más personas" });
-  const moreRooms = page.getByRole("button", { name: "Más dormitorios" });
-  const fewerRooms = page.getByRole("button", { name: "Menos dormitorios" });
+  const morePeople = page.getByRole("button", { name: "Una persona más" });
+  const moreRooms = page.getByRole("button", { name: "Un dormitorio más" });
+  const fewerRooms = page.getByRole("button", { name: "Un dormitorio menos" });
   await expect(fewerRooms).toBeDisabled();
   await morePeople.click();
   await moreRooms.click();

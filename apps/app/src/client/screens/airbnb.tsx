@@ -13,6 +13,7 @@ import { Sheet } from "../../shared/overlay";
 import { sessionState, useSession } from "../session";
 import { IcalExportCard } from "./ical-export-card";
 import { ConfirmSheet } from "../confirm-sheet";
+import { Field, TextInput } from "../../shared/field";
 import { Button, TextButton } from "../../shared/button";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/airbnb");
@@ -175,9 +176,9 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
       <p>En Airbnb, abra el calendario de este alojamiento y copie su enlace de exportación. Péguelo aquí.</p>
       {replacing ? <p className="hint">El enlace actual seguirá conectado hasta que podamos leer el nuevo.</p> : null}
       <form onSubmit={submit} noValidate aria-busy={saving}>
-        <label>Enlace de calendario de Airbnb<input type="url" value={url} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="none" inputMode="url" maxLength={2048} disabled={saving} aria-invalid={!!problem} aria-describedby="airbnb-connect-hint airbnb-connect-error" onChange={e => { setUrl(e.target.value); setRequestId(randomUuid()); setProblem(null); }} /></label>
-        <p className="hint" id="airbnb-connect-hint">Solo importamos noches bloqueadas. No copiamos precios ni datos de huéspedes. Compruebe que el enlace corresponde a esta casa.</p>
-        <p id="airbnb-connect-error" className="field-error" role={problem ? "alert" : undefined}>{problem}</p>
+        <Field id="airbnb-connect" label="Enlace de calendario de Airbnb" size="compact" error={problem} hint="Solo importamos noches bloqueadas. No copiamos precios ni datos de huéspedes. Compruebe que el enlace corresponde a esta casa.">
+          {(control) => <TextInput {...control} type="url" value={url} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="none" inputMode="url" maxLength={2048} disabled={saving} onChange={e => { setUrl(e.target.value); setRequestId(randomUuid()); setProblem(null); }} />}
+        </Field>
         <Button variant="primary" size="lg" type="submit" disabled={saving || !online || !url.trim()}>{saving ? replacing ? "Sustituyendo…" : "Conectando…" : replacing ? "Sustituir enlace" : "Conectar"}</Button>
         {!exportCard && <Button variant="secondary" size="lg" disabled={saving} onClick={close}>Cancelar</Button>}
       </form>

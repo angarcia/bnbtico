@@ -102,13 +102,16 @@ test("ficha del servidor: la hoja redacta el mensaje con fechas y personas y val
   await s.getByRole("button", { name: "Listo" }).click();
   await expect(dateBox(s, "Salida")).toHaveText(boxText("Salida", null));
   await s.getByRole("button", { name: "Abrir WhatsApp" }).click();
-  await expect(s.locator('.note[role="alert"]')).toHaveText("Indique la llegada y la salida, o deje las dos vacías.");
+  // El error va debajo de las casillas de las fechas, enlazado a la que falla (historia 07, paso 4), y no en el aviso general.
+  await expect(s.locator('.field-error[role="alert"]')).toHaveText("Indique la llegada y la salida, o deje las dos vacías.");
+  await expect(s.locator('.note[role="alert"]')).toHaveCount(0);
   await expect(dateBox(s, "Salida")).toHaveAttribute("aria-invalid", "true");
+  await expect(dateBox(s, "Salida")).toHaveAccessibleDescription("Indique la llegada y la salida, o deje las dos vacías.");
   await page.screenshot({ path: "test-results/contacto-error.png" });
 
   // Al corregir, el aviso se va.
   await pickDates(s, b);
-  await expect(s.locator('.note[role="alert"]')).toHaveCount(0);
+  await expect(s.locator('[role="alert"]')).toHaveCount(0);
   await s.getByLabel("Personas (opcional)").fill("3");
 
   // Escape cierra y el foco vuelve al botón; al volver a abrir, lo elegido sigue.

@@ -127,13 +127,6 @@
 html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
 html.chrome-away{--chrome-bottom:var(--float-bottom)}
 html:has(.sticky-actions,.cta-bar,.cal-panel){--chrome-bottom:calc(100px + env(safe-area-inset-bottom))}
-.seg{display:flex;flex:1;padding:3px;border-radius:8px;background:var(--beige-soft)}
-.seg button{flex:1;min-height:38px;border-radius:6px;font-size:15px;font-weight:var(--w-medium);transition:background-color 120ms ease,color 120ms ease}
-.seg button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
-.cal-price{display:flex;align-items:center;gap:4px;min-height:44px;padding:0 12px;border:1.5px solid transparent;border-radius:8px;background:var(--surface);font-size:15px;color:var(--muted);font-weight:500}
-/* 16 px y no los 14 del diseño: con menos, el iPhone amplía la página al enfocar el campo. */
-.cal-price input:not([type=checkbox]):not([type=file]):not([type=radio]){width:104px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:18px;font-weight:var(--w-strong);font-variant-numeric:tabular-nums;color:var(--fg)}
-.cal-price input::placeholder{font-size:16px;font-weight:var(--w-medium);color:var(--muted)}
 .cal-base{padding:0;align-self:flex-start}
 
 @media (prefers-reduced-motion:reduce){

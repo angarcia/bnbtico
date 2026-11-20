@@ -119,7 +119,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
         })}
         {desktop && (
           <>
-            {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch className="desktop-currency" />}
+            {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch placement="desktop-currency" />}
             {desktopSignIn ? (
               <Button variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
                 Ingresar

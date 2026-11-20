@@ -20,6 +20,12 @@ Aclaraciones de Ana al ver las capturas de la migración (mismo día):
 - **Pantallas completas** (Descripción, Vista previa del asistente): Atrás las cierra también en escritorio, porque se sienten como una página. La regla de Atrás solo en el móvil es para hojas y ventanas.
 - **Tocar fuera** cierra las ventanas normales sin datos a medio escribir (Consultas, Filtros); no cierra las anchas (Fotos, «Calendarios de Airbnb») ni Ingresar.
 - **Filtros de escritorio** usa el ancho de la ventana normal (520 px; antes 640).
+- **Contadores −/+** comunes: cuadrados verdes tonales de 44 px con el desactivado gris, en publicar, editar, Filtros, Buscar, contacto y Explorar de escritorio. Sustituye al signo sin fondo de la decisión del 2026-10-29.
+- **Segmentos** (₡ | $, Disponible | Ocupado, No | Sí) con 44 px de alto en todas partes, también en la barra de escritorio.
+- **Precio en Filtros** con el símbolo delante del campo, como en publicar, y los dos campos en rojo ante un rango inválido.
+- **Buscadores** con un solo aspecto: fondo blanco y lupa gris, también «¿Dónde?».
+- **Errores** debajo del campo que falla, enlazados para los lectores de pantalla; lo que no es de un campo (ubicación, fotos, red) sigue en el aviso de arriba.
+- **Tamaño:** los campos comunes van en su trozo diferido (presupuesto «Campos comunes», 2,1 KB); el contador y los chips sí cuentan en el JS inicial (0,66 KB).
 
 Motivo: el inventario encontró el mismo papel con aspectos distintos («Cancelar» con 4 alturas, siete tratamientos de desactivado, destructivo en dos colores, foco casi invisible). Se migra por pasos a componentes tipados (`Button`, `Sheet`/`Dialog`, `Field`, `StatusTag`…) para que cada pantalla nueva herede estas reglas.
 

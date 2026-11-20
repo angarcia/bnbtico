@@ -15,6 +15,9 @@ import { I } from "../../shared/icons";
 import { provincesQuery, zonesQuery } from "../queries";
 import { RangeCalendar } from "../../shared/range-calendar";
 import { Button, IconButton, TextButton } from "../../shared/button";
+import { useCombobox } from "../../shared/combobox";
+import { SearchInput, StickyActions } from "../../shared/field";
+import { Stepper } from "../../shared/stepper";
 
 const route = getRouteApi("/_flow/explorar/buscar");
 
@@ -29,12 +32,6 @@ interface SearchDraft {
 }
 
 const EMPTY: SearchDraft = { zone: null, arrival: null, departure: null, nights: 0, ppl: 0 };
-
-const Minus = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-    <path d="M5 12h14" />
-  </svg>
-);
 
 /** Una tarjeta plegable: el mismo botón de título en los dos estados (no se desmonta: el foco sigue en él al abrirla con
  *  Enter); cerrada lleva también el valor. Si se abre desde otra tarjeta (elegir una zona), el foco pasa a su título. */
@@ -119,71 +116,51 @@ export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | nul
     if (!typed.current && name) setText(name);
   }, [name]);
   const list = zoneSuggestions(zones, text);
-  const [active, setActive] = useState(0);
-  const activeIndex = Math.min(active, list.length - 1);
-  const listId = useId();
-  const optionId = (i: number) => `${listId}-${i}`;
-  function move(step: number) {
-    if (!list.length) return;
-    const next = (activeIndex + step + list.length) % list.length;
-    setActive(next);
-    const box = listbox.current;
-    const row = box?.children[next];
-    if (!box || !row) return;
-    // Desplace solo las sugerencias, sin mover el campo ni las demás secciones.
-    const bounds = box.getBoundingClientRect();
-    const item = row.getBoundingClientRect();
-    if (item.top < bounds.top) box.scrollTop += item.top - bounds.top;
-    else if (item.bottom > bounds.bottom) box.scrollTop += item.bottom - bounds.bottom;
-  }
+  const combo = useCombobox({ count: list.length, open: list.length > 0, initial: 0, listbox });
   return (
     <>
-      <div className="zone-input">
-        <I.search size={20} />
-        <input
-          ref={input}
-          role="combobox"
-          aria-label="Busque una zona"
-          placeholder="Busque una zona"
-          aria-expanded={list.length > 0}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={list.length ? optionId(activeIndex) : undefined}
-          autoComplete="off"
-          enterKeyHint="search"
-          value={text}
-          onChange={(e) => {
-            typed.current = true;
-            setText(e.target.value);
-            setActive(0);
-            if (listbox.current) listbox.current.scrollTop = 0;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-              e.preventDefault();
-              move(e.key === "ArrowDown" ? 1 : -1);
-            } else if (e.key === "Enter" && list.length) {
-              e.preventDefault();
-              onPick(list[activeIndex]!.id);
-            }
-          }}
-        />
-        {zone ? (
-          <TextButton tone="quiet" onClick={onClear}>
-            Quitar
-          </TextButton>
-        ) : null}
-      </div>
-      <ul ref={listbox} className="zone-list" role="listbox" id={listId} aria-label="Zonas con casas">
+      <SearchInput
+        variant="combobox"
+        ref={input}
+        {...combo.inputProps}
+        aria-label="Busque una zona"
+        placeholder="Busque una zona"
+        autoComplete="off"
+        enterKeyHint="search"
+        value={text}
+        onChange={(e) => {
+          typed.current = true;
+          setText(e.target.value);
+          combo.setActive(0);
+          if (listbox.current) listbox.current.scrollTop = 0;
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            combo.move(e.key === "ArrowDown" ? 1 : -1);
+          } else if (e.key === "Enter" && list.length) {
+            e.preventDefault();
+            onPick(list[combo.active]!.id);
+          }
+        }}
+        after={
+          zone ? (
+            <TextButton tone="quiet" onClick={onClear}>
+              Quitar
+            </TextButton>
+          ) : null
+        }
+      />
+      <ul ref={listbox} className="suggestions" role="listbox" id={combo.listId} aria-label="Zonas con casas">
         {list.map((z, i) => (
-          <li key={z.id} id={optionId(i)} role="option" aria-selected={z.id === zone} className={`zone-option${i === activeIndex ? " is-active" : ""}`} onClick={() => onPick(z.id)}>
-            <span className="zone-icon" aria-hidden="true">
+          <li key={z.id} id={combo.optionId(i)} role="option" aria-selected={z.id === zone} className={`suggestion${i === combo.active ? " is-active" : ""}${z.id === zone ? " is-chosen" : ""}`} onClick={() => onPick(z.id)}>
+            <span className="suggestion-icon" aria-hidden="true">
               <I.pin size={20} />
             </span>
-            <span className="zone-text">
+            <span className="suggestion-text">
               <b>{z.name}</b> <span className="small muted">{zonePlace(z)}</span>
             </span>
-            <span className="zone-check" aria-hidden="true">{z.id === zone ? <I.check size={20} /> : null}</span>
+            <span className="suggestion-check" aria-hidden="true">{z.id === zone ? <I.check size={20} /> : null}</span>
           </li>
         ))}
       </ul>
@@ -294,29 +271,18 @@ export function BuscarScreen() {
             <b>Personas</b>
             <span className="small muted">Todas las que se van a quedar</span>
           </span>
-          <span className="people-stepper">
-            <button type="button" aria-label="Una persona menos" disabled={draft.ppl <= 0} onClick={() => set({ ppl: draft.ppl - 1 })}>
-              <Minus />
-            </button>
-            <b className={draft.ppl ? "num" : "num is-empty"} aria-live="polite">
-              {draft.ppl || "–"}
-            </b>
-            <button type="button" aria-label="Una persona más" disabled={draft.ppl >= SEARCH_MAX_PEOPLE} onClick={() => set({ ppl: draft.ppl + 1 })}>
-              <I.plus size={20} />
-            </button>
-          </span>
+          <Stepper unit="Una persona" value={draft.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!draft.ppl} onChange={(ppl) => set({ ppl })} />
         </div>
         <p className="note small">{SEARCH_MODE === "nights" ? "Las noches" : SEARCH_MODE === "dates" ? "Las fechas" : "Las personas"}{SEARCH_MODE === "none" ? " van" : " y las personas van"} en el mensaje de WhatsApp que le preparamos para el anfitrión.</p>
       </Fold>
-      <div className="sticky-spacer" aria-hidden="true" />
-      <div className="sticky-actions">
+      <StickyActions>
         <TextButton tone="quiet" onClick={() => setDraft(EMPTY)}>
           Borrar todo
         </TextButton>
         <Button variant="primary" size="lg" placement="grow" icon={<I.search size={20} />} onClick={() => void submit()}>
           Buscar
         </Button>
-      </div>
+      </StickyActions>
     </div>
   );
 }

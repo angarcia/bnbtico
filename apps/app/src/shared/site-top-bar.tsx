@@ -49,7 +49,7 @@ function Bar({ navigate, next }: { navigate?: Navigate; next?: string }) {
           </a>
         );
       })}
-      <CurrencySwitch className="desktop-currency" />
+      <CurrencySwitch placement="desktop-currency" />
       {session ? null : (
         <ButtonLink href={signIn} variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} onClick={go(signIn)}>
           Ingresar

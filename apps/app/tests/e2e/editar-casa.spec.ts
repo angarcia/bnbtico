@@ -6,6 +6,7 @@ import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { realPhotos } from "./helpers/real-photos";
 import { secondCode } from "./helpers/admin";
+import { expectErrorUnder } from "./helpers/field-error";
 import { injectSession } from "./helpers/session";
 import { ownerMemorySession } from "./helpers/memory-session";
 import { touch } from "./helpers/touch";
@@ -284,7 +285,7 @@ test("si la base rechaza el precio, la pantalla lo dice y nada cambia", async ({
   await page.goto(`/propietario/casas/${id}/editar/precio`);
   await page.getByLabel("Precio por noche").fill("55 000");
   await save(page).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique el precio por noche en colones.");
+  await expectErrorUnder(page, page.getByLabel("Precio por noche"), "Indique el precio por noche en colones.");
   await expect(page).toHaveURL(new RegExp(`/editar/precio$`));
   // Lo escrito se queda (la caché vuelve atrás, el campo no) y una relectura al volver a la app tampoco lo pisa.
   await expect(page.getByLabel("Precio por noche")).toHaveValue("55 000");
@@ -313,7 +314,7 @@ test("tipo habitación ofrece el baño; sin elegirlo se envía (como al crear) y
   await expect(page.getByTestId("warn-tipo")).toHaveText("Indique si el baño es privado o compartido.");
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ kind: "habitacion", bathroomShared: null });
   await row(page, "Tipo").click();
-  await page.locator("label.chip", { hasText: "Compartido" }).click();
+  await page.getByRole("group", { name: "Baño de la habitación" }).getByRole("button", { name: "Compartido" }).click();
   await send(page).click();
   await expect(toastText(page).last()).toHaveText(SENT); // el aviso anterior puede seguir a la vista
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
@@ -362,10 +363,10 @@ test("una descripción corta se guarda con un aviso en ocre y no estorba al reno
   await row(page, "Nombre").click();
   await page.getByLabel("Nombre de la casa").fill("Casa");
   await send(page).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("El nombre de la casa debe tener entre 5 y 32 caracteres.");
+  await expectErrorUnder(page, page.getByLabel("Nombre de la casa"), "El nombre de la casa debe tener entre 5 y 32 caracteres.");
   await page.getByLabel("Nombre de la casa").fill("");
   await send(page).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Póngale un nombre a la casa.");
+  await expectErrorUnder(page, page.getByLabel("Nombre de la casa"), "Póngale un nombre a la casa.");
   await expect(page).toHaveURL(new RegExp(`/editar/nombre$`));
 });
 
@@ -373,12 +374,12 @@ test("vaciar la capacidad que tenía valor no se guarda; una casa sin baños avi
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/capacidad`);
   await expect(save(page)).toBeDisabled();
-  await page.getByRole("button", { name: "Más personas" }).click();
+  await page.getByRole("button", { name: "Una persona más" }).click();
   await expect(save(page)).toBeEnabled();
   // Los contadores no bajan de su mínimo: el campo oculto se vacía justo al enviar, como un valor perdido.
   await page.locator("form.publish-form").evaluate((form) => form.addEventListener("submit", () => ((form.querySelector('input[name="capacity"]') as HTMLInputElement).value = ""), { capture: true }));
   await save(page).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique cuántas personas pueden alojarse (mínimo 1).");
+  await expectErrorUnder(page, page.getByRole("button", { name: "Una persona más" }), "Indique cuántas personas pueden alojarse (mínimo 1).", { invalid: false });
   expect((await h.owner("owner").getOwn(id))!.capacity).toBe(2);
 
   const nobath = await h.seed({ status: "active", draft: { bathrooms: null } });
@@ -395,12 +396,12 @@ test("vaciar la capacidad que tenía valor no se guarda; una casa sin baños avi
 test("un precio al mes mal escrito avisa en ocre al escribirlo: sin precio antes se guarda vacío; con precio antes no se guarda", async ({ page }) => {
   const { id } = await h.seed({ status: "active" });
   await page.goto(`/propietario/casas/${id}/editar/precio`);
-  await page.locator("label.chip", { hasText: "Sí" }).click();
-  const help = page.locator("#pub-monthlyPriceCrc-help");
+  await page.getByRole("group", { name: "¿Acepta alquiler por meses?" }).getByRole("button", { name: "Sí" }).click();
+  const help = page.locator("#pub-monthlyPriceCrc-hint");
   await expect(help).toHaveText("Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».");
   await page.getByLabel("Precio al mes (opcional)").fill("350 mil");
   await expect(help).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
-  await expect(help).toHaveClass(/sun-ink/);
+  await expect(help).toHaveClass(/is-warn/);
   await save(page).click();
   await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha. Indique el precio al mes en colones o déjelo vacío.");
   await expect(row(page, "Precio")).toContainText("Mensual: a negociar");
@@ -412,9 +413,9 @@ test("un precio al mes mal escrito avisa en ocre al escribirlo: sin precio antes
   // pantalla de un dato no se queda (fallo aparte, fuera de este ticket).
   await page.getByLabel("Precio al mes (opcional)").click();
   await page.getByLabel("Precio al mes (opcional)").fill("600 mil");
-  await expect(page.locator("#pub-monthlyPriceCrc-help")).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
+  await expect(page.locator("#pub-monthlyPriceCrc-hint")).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
   await save(page).click();
-  await expect(page.locator('.note[role="alert"]')).toHaveText("Indique el precio al mes en colones o déjelo vacío.");
+  await expectErrorUnder(page, page.getByLabel("Precio al mes (opcional)"), "Indique el precio al mes en colones o déjelo vacío.");
   expect((await h.owner("owner").getOwn(priced.id))!.monthlyPriceCrc).toBe(600000);
 });
 
@@ -439,13 +440,13 @@ test("una Habitación publicada: «Personas», solo con el contador de personas 
   await row(page, "Personas").click();
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}/editar/capacidad$`));
   await expect(page.getByRole("heading", { level: 1, name: "Personas" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Más personas" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Una persona más" })).toBeVisible();
   await expect(page.getByText("Baños", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Dormitorios", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Baño de la habitación")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más dormitorios" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Más baños" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Más personas" }).click();
+  await expect(page.getByRole("button", { name: "Un dormitorio más" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Un baño más" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Una persona más" }).click();
   await save(page).click();
   await expect(toastText(page)).toHaveText("Guardado. Ya se ve en su ficha.");
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));

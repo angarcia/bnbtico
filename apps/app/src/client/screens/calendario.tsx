@@ -10,7 +10,7 @@
 // «Cerrar la casa hasta…», set_listing_available) abre su hoja. Cada hoja, en su propio trozo diferido.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
-import { Component, Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { Component, Suspense, lazy, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import {
   addMonths,
   applyChange,
@@ -57,6 +57,13 @@ import { HousePicker } from "../house-picker";
 
 import { AirbnbRow, AirbnbAvailability, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
 import { Button, TextButton } from "../../shared/button";
+import { Segmented } from "../../shared/choice";
+import { AffixInput } from "../../shared/field";
+
+const AVAILABILITY = [
+  { value: "free", label: "Disponible" },
+  { value: "busy", label: "Ocupado" },
+] as const;
 import { RouterButtonLink } from "../router-buttons";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
@@ -270,7 +277,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
         ) : null}
         <div className="row between gap-8 cal-hint-row">
           {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">{desktop ? "Pulse" : "Toque"} los días para editarlos</p>}
-          <CurrencySwitch className="calendar-local-currency" />
+          <CurrencySwitch placement="calendar-local-currency" />
         </div>
         {/* Precios por fecha apagados (feature flag): el precio base en la leyenda y las casillas sin precio. */}
         <AirbnbLegend days={query.data} price={!FLAGS.datePrices && base !== null ? formatMoney(base, currency, fx.crcPerUsd) : undefined} />
@@ -590,21 +597,23 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
     timer.current = setTimeout(() => setKb(false), KB_RELEASE_MS);
   }
   const price = sel.priceEdited ? sel.price : grouped(sel.price);
+  const problemId = useId();
   // Precios por fecha apagados (feature flag, #61): solo disponibilidad; el precio de la noche es el de la casa.
   const priceField = base !== null && FLAGS.datePrices ? (
-    <label className="cal-price">
-      <span aria-hidden="true">₡</span>
-      <input
-        aria-label="Precio por noche"
-        inputMode="numeric"
-        enterKeyHint="done"
-        autoComplete="off"
-        placeholder={sel.mixedPrice ? "Varios precios" : undefined}
-        value={price}
-        onChange={(e) => onChange(setPrice(sel, e.target.value))}
-        onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      />
-    </label>
+    <AffixInput
+      size="sm"
+      prefix="₡"
+      aria-label="Precio por noche"
+      inputMode="numeric"
+      enterKeyHint="done"
+      autoComplete="off"
+      placeholder={sel.mixedPrice ? "Varios precios" : undefined}
+      value={price}
+      aria-invalid={problem ? true : undefined}
+      aria-describedby={problem ? problemId : undefined}
+      onChange={(e) => onChange(setPrice(sel, e.target.value))}
+      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+    />
   ) : null;
   return (
     <section className={`cal-panel${kb ? " kb" : ""}`} aria-label="Días seleccionados" onFocus={onFocus} onBlur={onBlur}>
@@ -617,14 +626,13 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
       {importedCount ? <AirbnbAvailability sel={sel} importedCount={importedCount} manualCount={manualCount} onChange={onChange}>{priceField}</AirbnbAvailability> : <>
       {manualCount ? <p className="small muted">Bloqueo manual</p> : null}
       <div className="row gap-8 cal-day-fields">
-        <div className="seg" role="group" aria-label="Disponibilidad">
-          <button type="button" aria-pressed={sel.available === true} onClick={() => onChange(setAvailability(sel, true))}>
-            Disponible
-          </button>
-          <button type="button" aria-pressed={sel.available === false} onClick={() => onChange(setAvailability(sel, false))}>
-            Ocupado
-          </button>
-        </div>
+        <Segmented
+          fill
+          label="Disponibilidad"
+          options={AVAILABILITY}
+          value={sel.available === null ? null : sel.available ? "free" : "busy"}
+          onChange={(v) => onChange(setAvailability(sel, v === "free"))}
+        />
         {priceField}
       </div>
       </>}
@@ -634,7 +642,7 @@ function Panel({ sel, base, hasSpecial, importedCount, manualCount, problem, can
         </TextButton>
       ) : null}
       {problem ? (
-        <p className="field-error" role="alert">
+        <p id={problemId} className="field-error" role="alert">
           {problem}
         </p>
       ) : null}

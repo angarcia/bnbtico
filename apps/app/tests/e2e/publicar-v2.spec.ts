@@ -133,8 +133,8 @@ async function stepsTwoToSix(page: Page) {
   await expect(page.locator('input[name="zoneId"]')).toHaveValue(/^701-/);
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/4$/);
-  await page.getByRole("button", { name: "Más personas" }).click();
-  await page.getByRole("button", { name: "Más personas" }).click();
+  await page.getByRole("button", { name: "Una persona más" }).click();
+  await page.getByRole("button", { name: "Una persona más" }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/5$/);
   await page.getByText("Wifi", { exact: true }).click();
@@ -158,14 +158,14 @@ test("desde la portada sin cuenta: pasos 1–6 en el teléfono, verificación al
     await expect(page.locator(".stage-label")).toHaveText("1 de 4");
     await expect(page.locator(".ready-list")).toBeVisible();
     await page.getByRole("button", { name: "Continuar" }).click();
-    await expect(page.locator('.note[role="alert"]')).toHaveText("Elija Alojamiento completo o Habitación.");
+    await expect(page.locator('.publish-kind .field-error[role="alert"]')).toHaveText("Elija Alojamiento completo o Habitación.");
     await page.locator("label.choice", { hasText: "Habitación" }).click();
     await continuar(page);
     // «Atrás» desde el paso 2 vuelve a la entrada con el tipo elegido.
     await expect(page).toHaveURL(/\/publicar\/nueva\/2$/);
     await page.getByRole("link", { name: "Atrás" }).click();
     await expect(page).toHaveURL(/\/publicar$/);
-    await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveText(/Habitación/);
+    await expect(page.locator('label.choice:has(input:checked)')).toHaveText(/Habitación/);
     await continuar(page);
     await stepsTwoToSix(page);
     expect(account, "sin cuenta no se toca la red de la cuenta").toEqual([]);
@@ -209,7 +209,7 @@ test("sin cuenta, cerrar a medias guarda lo escrito: al volver sigue ahí; las F
   await continuar(page); // sin pin también se sigue
   await expect(page).toHaveURL(/\/publicar\/nueva\/4$/);
   await expect(page.getByRole("heading", { name: "¿Cuántos caben?" })).toBeVisible();
-  await page.getByRole("button", { name: "Más personas" }).click();
+  await page.getByRole("button", { name: "Una persona más" }).click();
   await continuar(page);
   await expect(page).toHaveURL(/\/publicar\/nueva\/5$/);
   await page.getByRole("button", { name: /Cerrar/ }).click();
@@ -280,7 +280,7 @@ test("un paso 1 caducado no se usa", async ({ page }) => {
   await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ kind: "habitacion", savedAt: 0 })), STEP1_KEY);
   await page.goto("/publicar/continuar");
   await expect(page).toHaveURL(new RegExp(`/propietario/publicar/${UUID}/1$`));
-  await expect(page.locator('label.choice[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('label.choice:has(input:checked)')).toHaveCount(0);
 });
 
 test("sin respuesta guardada, /publicar/verificar vuelve al paso 1; con sesión, sigue a /publicar/continuar", async ({ page }) => {

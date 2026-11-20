@@ -64,7 +64,8 @@ test("de casas a ninguna por filtros: el mapa conserva teselas, encuadre y zoom,
   // Los controles siguen: acercar cambia el zoom de las teselas; ampliar agranda la caja.
   const zoom = Number((await zooms(page))[0]);
   await page.getByRole("button", { name: "Acercar mapa" }).click();
-  await expect.poll(() => zooms(page)).toEqual([String(zoom + 1)]);
+  // Leaflet puede tener aún las teselas del zoom anterior mientras anima: basta con que aparezcan las del siguiente.
+  await expect.poll(() => zooms(page)).toContain(String(zoom + 1));
   const width = (await mapBox(page).boundingBox())!.width;
   await page.getByRole("button", { name: "Ampliar mapa" }).click();
   await expect.poll(async () => (await mapBox(page).boundingBox())!.width).toBeGreaterThan(width);

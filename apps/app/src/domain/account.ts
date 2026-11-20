@@ -32,12 +32,16 @@ export function parsePending(raw: string | null, now: number): PendingOtp | null
   }
 }
 
+/** Mensajes de un campo de la cuenta (el formulario los pinta debajo de ese campo). */
+export const NAME_REQUIRED_ERROR = "Escriba su nombre.";
+export const EMAIL_INVALID_ERROR = "Ese correo no parece válido.";
+
 export function validateStart(input: StartInput): StartInput {
   const phone = normalizePhone(input.phone);
   if (!phone) throw new DomainError("Escriba un WhatsApp válido, con código de país si no es de Costa Rica.", "validation");
   if (input.name === undefined) return { phone };
   const name = input.name.trim();
-  if (name.length < 2) throw new DomainError("Escriba su nombre.", "validation");
+  if (name.length < 2) throw new DomainError(NAME_REQUIRED_ERROR, "validation");
   return { name, phone };
 }
 
@@ -53,7 +57,7 @@ export function validateProfilePatch(patch: ProfilePatch): ProfilePatch {
   if (name) out.name = name.slice(0, 80);
   if (patch.email !== undefined) {
     const email = patch.email?.trim() ?? "";
-    if (email && !EMAIL.test(email)) throw new DomainError("Ese correo no parece válido.", "validation");
+    if (email && !EMAIL.test(email)) throw new DomainError(EMAIL_INVALID_ERROR, "validation");
     out.email = email || null;
   }
   if (patch.description !== undefined) out.description = patch.description?.trim().slice(0, DESCRIPTION_MAX) || null;

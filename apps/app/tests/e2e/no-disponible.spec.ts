@@ -2,6 +2,7 @@ import { expect, test, type Page } from "./helpers/test";
 import type { CalendarHarness } from "../contract/harness";
 import { sql } from "../db/local";
 import { postgrestHarness } from "../db/postgrest-harness";
+import { expectErrorUnder } from "./helpers/field-error";
 import { injectSession } from "./helpers/session";
 import { addDays, addMonths } from "../../src/domain/calendar";
 import { longDate, shortDate } from "../../src/domain/dates";
@@ -78,7 +79,8 @@ test("pausar con fecha → «Pausada hasta el …» → fuera de Explorar y fich
   await closeRow(page).click();
   await date.fill(today());
   await sheet(page).getByRole("button", { name: "Pausar la casa" }).click();
-  await expect(sheet(page).locator('.note[role="alert"]')).toHaveText("La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.");
+  // El error va debajo del campo de la fecha y queda enlazado a él (historia 07, paso 4).
+  await expectErrorUnder(page, date, "La fecha para volver a publicarla debe ser a partir de mañana y dentro de un año.");
   // Tab no sale de la hoja.
   for (let i = 0; i < 5; i++) await page.keyboard.press("Tab");
   // Con el foco en un campo de la fecha (dentro del input) `:focus` no lo ve en Chrome: se mira el elemento activo.

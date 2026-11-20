@@ -21,6 +21,8 @@ import { KindChoice, ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { authApi, useSession } from "../session";
 import { SignInForm } from "../sign-in";
 import { Button, ButtonPlaceholder } from "../../shared/button";
+import { Field, StickyActions, TextInput } from "../../shared/field";
+import { EMAIL_INVALID_ERROR } from "../../domain/account";
 import { RouterButtonLink, RouterIconLink } from "../router-buttons";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
@@ -68,20 +70,15 @@ export function PublicarEntradaScreen() {
           <span className="small strong">Tenga a mano:</span>
           <ReadyList />
         </section>
-        <KindChoice kind={initial} />
-        {error ? (
-          <p className="note" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <div className="sticky-actions">
+        <KindChoice kind={initial} error={error} />
+        <StickyActions spacer="none">
           <ButtonPlaceholder variant="secondary" size="lg" placement="back" aria-disabled="true" aria-label="Atrás">
             <I.back size={22} />
           </ButtonPlaceholder>
           <Button variant="primary" size="lg" placement="grow" type="submit">
             Continuar <I.chevron size={20} />
           </Button>
-        </div>
+        </StickyActions>
       </form>
     </>
   );
@@ -229,14 +226,14 @@ export function CorreoScreen() {
   const { id = "" } = useParams({ strict: false });
   const client = useQueryClient();
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; field: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const done = () => navigate({ to: "/propietario/casas/$id/enviada", params: { id }, replace: true });
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (busy) return;
     const email = String(new FormData(e.currentTarget).get("email") ?? "").trim();
-    if (!email) return setError("Escriba su correo o toque «Ahora no».");
+    if (!email) return setError({ message: "Escriba su correo o toque «Ahora no».", field: true });
     setBusy(true);
     setError(null);
     try {
@@ -244,10 +241,13 @@ export function CorreoScreen() {
       client.setQueryData(accountQuery(updated.id).queryKey, updated);
       await done();
     } catch (err) {
-      setError(message(err));
+      const text = message(err);
+      setError({ message: text, field: text === EMAIL_INVALID_ERROR });
       setBusy(false);
     }
   }
+  // Lo del correo va bajo el campo; un fallo de red, en el aviso.
+  const emailError = error?.field ? error.message : null;
   function skip() {
     localStorage.setItem(EMAIL_SKIPPED_KEY, "1");
     void done();
@@ -259,24 +259,12 @@ export function CorreoScreen() {
       </header>
       <form onSubmit={(e) => void save(e)} className="stack flow" noValidate>
         <h2>¿Quiere añadir un correo?</h2>
-        <div className="field">
-          <label htmlFor="pub-email">Correo</label>
-          <input
-            id="pub-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? "pub-email-error pub-email-help" : "pub-email-help"}
-          />
-          <span id="pub-email-help" className="small muted">
-            Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.
-          </span>
-        </div>
-        {error ? (
-          <p id="pub-email-error" className="note" role="alert">
-            {error}
+        <Field id="pub-email" label="Correo" error={emailError} hint="Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.">
+          {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" inputMode="email" />}
+        </Field>
+        {error && !error.field ? (
+          <p className="note" role="alert">
+            {error.message}
           </p>
         ) : null}
         <Button variant="primary" size="lg" block type="submit" disabled={busy}>

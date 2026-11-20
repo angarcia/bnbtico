@@ -2,6 +2,7 @@ import { FlowHeader } from "../chrome";
 import { useListingsCount } from "../own-listings-query";
 import { SUPPORT, waLink } from "../support";
 import { Button, ButtonLink, WaIcon } from "../../shared/button";
+import { Field, TextInput } from "../../shared/field";
 import { RouterButtonLink } from "../router-buttons";
 
 // ---------- /cuenta/recuperar ----------
@@ -11,10 +12,9 @@ export function RecuperarScreen() {
       <FlowHeader title="Recuperar mi cuenta" back="/cuenta" historyBack />
       <section className="card stack gap-14">
         <p>Use el correo que añadió y confirmó en su perfil. Después podrá verificar su nuevo WhatsApp para recuperar el acceso.</p>
-        <div className="field">
-          <label htmlFor="recovery-email">Correo confirmado</label>
-          <input id="recovery-email" type="email" placeholder="nombre@ejemplo.com" disabled />
-        </div>
+        <Field id="recovery-email" label="Correo confirmado">
+          {(control) => <TextInput {...control} type="email" placeholder="nombre@ejemplo.com" disabled />}
+        </Field>
         <Button variant="primary" size="lg" disabled>
           Recuperar con mi correo
         </Button>

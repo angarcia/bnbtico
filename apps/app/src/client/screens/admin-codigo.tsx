@@ -6,6 +6,7 @@ import { loadSecondFactor, verifySecondCode } from "../admin";
 import { FlowHeader } from "../chrome";
 import { useSession } from "../session";
 import { NotAdmin, message, useIsAdmin } from "./admin-shared";
+import { CodeInput } from "../code-input";
 import { Button } from "../../shared/button";
 
 // ---------- Segundo código ----------
@@ -92,33 +93,7 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
         </div>
       ) : null}
       <form onSubmit={verify} className="stack gap-18" noValidate>
-        <div className="field code-field">
-          <label htmlFor="admin-code">Código de 6 dígitos</label>
-          <div className="code-boxes" aria-hidden="true">
-            {Array.from({ length: 6 }, (_, i) => (
-              <span key={i} className={i < code.length ? "filled" : i === code.length ? "active" : ""}>
-                {code[i] ?? ""}
-              </span>
-            ))}
-          </div>
-          <input
-            id="admin-code"
-            className="code-input"
-            name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            pattern="[0-9]*"
-            autoFocus
-            value={code}
-            onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, "").slice(0, 6))}
-          />
-        </div>
-        {error ? (
-          <p className="field-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <CodeInput id="admin-code" value={code} onChange={setCode} error={error} />
         <Button variant="primary" size="xl" block type="submit" disabled={busy || factor === null}>
           {busy ? "Verificando…" : factor === null && !error ? "Preparando…" : "Verificar y entrar"}
         </Button>

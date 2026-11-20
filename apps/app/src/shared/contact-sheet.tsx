@@ -47,6 +47,14 @@ import { NightsPicker } from "./nights-picker";
 import { RangeCalendar } from "./range-calendar";
 import { stayDates } from "./stay-dates";
 import { Button, TextButton } from "./button";
+import { Segmented } from "./choice";
+import { Field } from "./field";
+import { Stepper } from "./stepper";
+
+const STAY_OPTIONS = [
+  { value: "dates", label: "Fechas" },
+  { value: "nights", label: "Número de noches" },
+] as const;
 
 /** Campos que sacan el teclado (las fechas abren el calendario de la hoja). */
 const withKeyboard = (el: EventTarget | null) => el instanceof HTMLInputElement && el.type === "number";
@@ -228,20 +236,24 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
   }
 
   const error = status.kind === "error" ? status : null;
+  // El error de las fechas va bajo las casillas y el de las personas bajo su contador; el resto, en el aviso.
+  const dateError = error && (error.field === "arrival" || error.field === "departure") && stayMode !== "nights" ? error.message : null;
+  const fieldError = !!dateError || error?.field === "people";
+  const datesErrorId = `${titleId}-dates-error`;
 
   const subtitle = <>Anfitrión de {title}{listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}</>;
   const heading = `Escríbale a ${name}`;
   const form = (
         <form onSubmit={onSubmit} noValidate>
           {nightsChoice ? (
-            <div className="seg contact-stay" role="group" aria-label="Cómo indicar la estancia">
-              <button type="button" aria-pressed={stayMode === "dates"} onClick={() => chooseStay("dates")}>
-                Fechas
-              </button>
-              <button type="button" aria-pressed={stayMode === "nights"} onClick={() => chooseStay("nights")}>
-                Número de noches
-              </button>
-            </div>
+            <Segmented
+              fill
+              placement="contact-stay"
+              label="Cómo indicar la estancia"
+              options={STAY_OPTIONS}
+              value={stayMode}
+              onChange={chooseStay}
+            />
           ) : null}
           {stayMode === "nights" ? (
             <div className="stack gap-8 contact-nights">
@@ -251,9 +263,14 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           {/* Fechas con el calendario de «¿Cuándo?»: dos casillas que lo abren. */}
           <div className="dates">
             {(["arrival", "departure"] as const).map((field) => (
-              <DateBox key={field} label={field === "arrival" ? "Llegada" : "Salida"} value={draft[field]} open={picking} invalid={error?.field === field || undefined} onToggle={toggleCalendar} />
+              <DateBox key={field} label={field === "arrival" ? "Llegada" : "Salida"} value={draft[field]} open={picking} invalid={error?.field === field || undefined} describedBy={error?.field === field ? datesErrorId : undefined} onToggle={toggleCalendar} />
             ))}
           </div>
+          {dateError ? (
+            <p id={datesErrorId} className="field-error" role="alert">
+              {dateError}
+            </p>
+          ) : null}
           {picking ? (
             <div className="contact-calendar">
               <div className="range-scroll" ref={calendarBox}>
@@ -286,32 +303,19 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           ) : null}
           </>}
           {/* − / + como el paso 4 de publicar, con el campo editable en medio y tope en la capacidad (revisión UX A3). */}
-          <div className="people-field">
-            <label htmlFor="contact-people">Personas (opcional)</label>
-            <div className="people-stepper">
-              <button type="button" className="minus" aria-label="Una persona menos" disabled={people <= 1} onClick={() => changePeople(people - 1)}>
-                −
-              </button>
-              <input
-                id="contact-people"
-                className="people"
-                type="number"
-                name="people"
-                inputMode="numeric"
+          <Field id="contact-people" label="Personas (opcional)" size="compact" error={error?.field === "people" ? error.message : null}>
+            {(control) => (
+              <Stepper
+                unit="Una persona"
+                value={people}
                 min={1}
                 max={maxPeople}
-                step={1}
+                onChange={changePeople}
                 // En escritorio, «Opcional» en vez del guion: «– − +» parecía un contador sin valor (revisión 2026-11-13, A2).
-                placeholder={inline ? "Opcional" : "–"}
-                value={draft.people ?? ""}
-                aria-invalid={error?.field === "people" || undefined}
-                onChange={(e) => changePeople(parsePeople(e.target.value))}
+                input={{ ...control, name: "people", placeholder: inline ? "Opcional" : "–", value: draft.people, onInput: (text) => changePeople(parsePeople(text)) }}
               />
-              <button type="button" className="plus" aria-label="Una persona más" disabled={people >= maxPeople} onClick={() => changePeople(people + 1)}>
-                +
-              </button>
-            </div>
-          </div>
+            )}
+          </Field>
           {stay && dates ? (
             <p className="stay-line" data-testid="stay-total">
               {stayLine(stay, dates, currency, fx)}
@@ -330,7 +334,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
             </p>
             <span className="hint">Podrá añadir lo que quiera en WhatsApp antes de enviarlo.</span>
           </div>
-          {error ? (
+          {error && !fieldError ? (
             <p className="note" role="alert">
               {error.message}
             </p>
@@ -377,9 +381,9 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
 }
 
 /** Una casilla de fecha de la hoja: «Elegir fecha» o la elegida («8 nov»); abre y cierra el calendario. */
-function DateBox({ label, value, open, invalid, onToggle }: { label: string; value: string | null; open: boolean; invalid?: true; onToggle: () => void }) {
+function DateBox({ label, value, open, invalid, describedBy, onToggle }: { label: string; value: string | null; open: boolean; invalid?: true; describedBy?: string; onToggle: () => void }) {
   return (
-    <button type="button" className={`date-box${value ? "" : " is-empty"}`} aria-expanded={open} aria-invalid={invalid} onClick={onToggle}>
+    <button type="button" className={`date-box${value ? "" : " is-empty"}`} aria-expanded={open} aria-invalid={invalid} aria-describedby={describedBy} onClick={onToggle}>
       <span className="date-box-label">{label}</span>
       <b className="num">{(value && shortDate(value)) || "Elegir fecha"}</b>
     </button>

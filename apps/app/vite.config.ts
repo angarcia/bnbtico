@@ -140,6 +140,9 @@ export default defineConfig({
         : "assets/[name]-[hash].js",
       codeSplitting: { groups: [
       { name: "zod", test: /[\\/]node_modules[\\/]zod[\\/]/ },
+      // El calendario de rango en su trozo (lo comparten la búsqueda, la hoja de contacto y «Marcar una reserva»; cuenta en
+      // sus presupuestos): sin el grupo, se juntaba con el contador común (historia 07, paso 4).
+      { name: "range-calendar", test: /[\\/]src[\\/]shared[\\/]range-calendar\.tsx$/, includeDependenciesRecursively: false },
       // Calendario carga API/fila. La gestión diferida carga también su tarjeta de exportación.
       // Ambos grupos cuentan en airbnb-*.js del presupuesto existente.
       { name: "airbnb", test: /[\\/]src[\\/]client[\\/](?:airbnb\.ts|airbnb-calendar-row\.tsx)$/, includeDependenciesRecursively: false },

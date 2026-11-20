@@ -36,7 +36,7 @@ test("elegir 4 noches: el total orientativo en las tarjetas, sin excluir casas o
   await expect(page.getByRole("heading", { name: "¿Cuándo?" })).toHaveCount(0);
   const more = page.getByRole("button", { name: "Una noche más" });
   for (let i = 0; i < 4; i++) await more.click();
-  await expect(page.locator(".search-card .people-stepper b")).toHaveText("4");
+  await expect(page.locator(".search-card .stepper b")).toHaveText("4");
   await page.getByRole("button", { name: "Buscar", exact: true }).click();
 
   await expect(page).toHaveURL(/noches=4/);

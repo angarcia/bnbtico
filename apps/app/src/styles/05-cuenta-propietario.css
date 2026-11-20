@@ -3,10 +3,6 @@
 .gap-12{gap:12px}.gap-14{gap:14px}.gap-18{gap:18px}
 .flow{gap:22px;padding:8px 4px 0}
 .flow-title{font-size:32px;line-height:1.05}
-/* El campo real del código va encima de las seis casillas, casi invisible pero enfocable al tocarlas. */
-.code-field{position:relative}
-.code-input{position:absolute;left:0;right:0;top:24px;height:60px;opacity:.01;border:0;background:transparent;font-size:18px}
-input.code-input:not([type=checkbox]){min-height:0;border:0;background:transparent}
 .avatar-ok{background:var(--primary);color:var(--primary-on)}
 /* Alta de la app de autenticación del admin: el QR siempre sobre blanco (también en modo oscuro) y la clave copiable. */
 .totp-enrol{align-items:center;background:var(--surface-2);border-radius:var(--r);padding:16px;text-align:center}
@@ -30,7 +26,6 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .is-hidden{visibility:hidden}
 .account-card .grow-col{min-width:0}
 .note svg{flex-shrink:0}
-.code-input{color:transparent;caret-color:transparent}
 .card-arena .btn{align-self:flex-start}
 
 /* ---------- Zona del propietario (pantallas 09, 10, 16 y 19, en el navegador) ---------- */
@@ -128,7 +123,7 @@ input.code-input:not([type=checkbox]){min-height:0;border:0;background:transpare
 .photos-grid .photo-note{position:absolute;left:4px;right:4px;bottom:4px;padding:2px 6px;border-radius:6px;background:rgba(28,43,42,.82);color:#FFFBF2;line-height:1.3}
 .diff-photo img{width:110px;height:110px;flex:none;object-fit:cover;border-radius:var(--r-input)}
 .diff-photo .decide{flex:1;min-width:0}
-.decide textarea{min-height:0;padding:8px 10px;font-size:15px}
+.decide textarea{min-height:0;padding:8px 10px;font-size:16px}
 .field-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:var(--w-medium);color:var(--muted)}
 .pill-br{right:12px;bottom:12px}
 .detail-photo .pill-bl{left:12px;bottom:12px}
