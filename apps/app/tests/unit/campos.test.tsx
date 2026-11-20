@@ -220,8 +220,9 @@ describe("Ninguna pantalla vuelve a escribir las piezas de antes", () => {
   const OWN = new Set(["shared/field.tsx", "shared/choice.tsx", "shared/stepper.tsx", "client/code-input.tsx"]);
   const sources = [...files(join(SRC, "client")), ...files(join(SRC, "shared"))].filter((f) => !OWN.has(relative(SRC, f)));
 
-  it("sin contadores, segmentos, códigos, precios ni buscadores a mano, y sin aria-pressed en un label", () => {
-    const bad = /className="(?:people-stepper|seg\b|ctl|code-boxes|code-input|input-money|cal-price|zone-input|zone-list|zone-options|search-field|sticky-spacer)|<label[^>]*aria-pressed|className="chip"[^>]*aria-pressed/;
+  // Las clases de los campos, contadores, segmentos y chips escritas a mano las vigila tests/unit/consistencia.test.ts.
+  it("sin aria-pressed en un label ni en un chip con casilla, y sin las listas de zona de antes", () => {
+    const bad = /className="(?:zone-list|zone-options)|<label[^>]*aria-pressed|className="chip"[^>]*aria-pressed/;
     const found = sources.filter((f) => bad.test(readFileSync(f, "utf8"))).map((f) => relative(SRC, f));
     expect(found).toEqual([]);
   });

@@ -1,7 +1,7 @@
 // Botones comunes (historia 07, paso 2): cada variante sale de una sola regla de styles/01-base.css, `pending` avisa y
 // bloquea, el botón de icono siempre tiene nombre y ninguna pantalla escribe las clases de botón a mano.
 import { readFileSync, readdirSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Button, ButtonLink, ButtonPlaceholder, IconButton, TextButton, type ButtonVariant } from "../../src/shared/button";
@@ -106,29 +106,8 @@ describe("TextButton e IconButton", () => {
   });
 });
 
+// Que ninguna pantalla escriba las clases de botón a mano lo vigila tests/unit/consistencia.test.ts (historia 07, paso 6).
 describe("las pantallas usan los componentes", () => {
-  // Excepciones con su propio CSS (historia 07, propuesta §3.2): el texto de respuesta de Actividad.
-  const EXCEPTIONS = ['className="btn-link inquiry-wa"'];
-  // ClassName en mayúscula: los antiguos `confirmClassName`/`cancelClassName` de ConfirmSheet.
-  const OWN = new Set(["shared/button.tsx"]);
-  const files = (dir: string): string[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(join(dir, e.name)) : /\.tsx?$/.test(e.name) ? [join(dir, e.name)] : []));
-
-  it("ningún archivo de src/client ni src/shared escribe className con clases de botón", () => {
-    const offenders = ["client", "shared"].flatMap((root) =>
-      files(join(SRC, root))
-        .filter((f) => !OWN.has(relative(SRC, f)))
-        .flatMap((f) => {
-          const text = EXCEPTIONS.reduce((t, e) => t.replaceAll(e, ""), readFileSync(f, "utf8"));
-          // El valor de cada className (texto, plantilla o expresión) y, dentro, cada palabra que sea una clase de botón.
-          return [...text.matchAll(/(?:className|ClassName)=(?:"([^"]*)"|\{([^}]*)\})/g)]
-            .filter((m) => (m[1] ?? m[2] ?? "").split(/[\s"'`{}$?:()]+/).some((word) => /^(?:btn(?:-[\w-]+)?|icon-btn)$/.test(word)))
-            .map((m) => `${relative(SRC, f)}: ${m[0]}`);
-        }),
-    );
-    expect(offenders).toEqual([]);
-  });
-
   it("ninguna pantalla cambia la altura de un botón con su propio CSS", () => {
     const offenders = readdirSync(STYLES)
       .filter((f) => f !== "01-base.css" && f.endsWith(".css"))

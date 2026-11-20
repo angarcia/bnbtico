@@ -76,13 +76,21 @@ El trigger de Airbnb del Worker, `17 */3 * * *` por defecto y configurable con l
 - Ningún dato de tarjeta pasa por 3bstays (fase 5): la tarjeta se escribe en la página de la pasarela; la base guarda solo ids opacos (que el navegador no puede leer, por grants de columna), marca, últimos 4 y vencimiento; los logs del worker solo llevan id, tipo y resultado de cada evento.
 - El número de WhatsApp del propietario es público por diseño en una casa activa; la dirección exacta y las coordenadas exactas no salen de `listings` (la vista las desplaza 150–499 m).
 
+## Interfaz: componentes y tokens
+
+Las pantallas se componen con piezas comunes de props cerradas (historia 07, 2026-11-19/20; guía en `docs/componentes.md`): las
+que no usan el router ni consultas viven en `src/shared/` y las usa también la ficha SSR; `ScreenHeader` y las variantes sobre
+`Link` viven en `src/client/`. Los tokens salen de `design/tokens/tokens.json` y viven como variables en `:root` de
+`styles/01-base.css`. `tests/unit/consistencia.test.ts` falla si una pantalla escribe a mano la clase de un componente o usa un
+color, radio, capa, tamaño de letra o sombra suelto (con su lista de excepciones).
+
 ## Módulo de dominio
 
 Un módulo TypeScript sin imports de framework: tipos generados de la base (`supabase gen types`, versionados y comprobados en CI), esquemas zod y validación por paso (los filtros de la URL se leen a mano para que zod no entre en el JS inicial, 2026-11-03), mapeo tipado de filas, `describe(listing)` (precio principal, unidad, situación, enlace para compartir) y `can(listing, acción)` que refleja las reglas SQL. Dos interfaces, `ListingsApi` y `AuthApi`, con dos adaptadores cada una: PostgREST (el único archivo que importa supabase-js y conoce las columnas) y un fake en memoria que aplica propiedad y estados. **Una sola suite de contrato** corre contra los dos, así el fake no puede desviarse de la RLS. Invariantes en SQL; flujos en TypeScript; sin nuevo plpgsql de flujo.
 
 ## Rendimiento
 
-Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 161 KB gz (160 KB el 2026-11-04; 161 KB el 2026-11-17 por «Ver más casas»). Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
+Presupuestos como p75 de usuarios reales en Costa Rica: toque < 50 ms; pantalla visitada < 100 ms sin red; pantalla nueva con sesión < 300 ms; ficha LCP < 1,5 s; PWA instalada < 500 ms; JS inicial privado < 161 KB gz (160 KB el 2026-11-04; 161 KB el 2026-11-17 por «Ver más casas»), con al menos 1 KB de margen recortando y sin subir el límite (decisión del 2026-11-20): lo que no hace falta en la primera pantalla del teléfono va en trozos aparte (p. ej. la búsqueda de escritorio de Explorar y el panel de los días del Calendario). Puertas en CI: `size-limit`, prueba de hidratación, Lighthouse CI (móvil, CPU 4×, RTT 150 ms). Medición real con `web-vitals` → `web_vitals` (país del encabezado de Cloudflare). Las fotos se suben en tres variantes JPEG (480/800/1600) con caché de un año y `srcset` + `lazy`.
 
 ## Costes y disparadores
 
