@@ -25,7 +25,8 @@ enable_signup = true
 # Fase 1: códigos por WhatsApp con Twilio Verify (canal whatsapp). Variables en .env, nunca aquí.
 enable_signup = true
 enable_confirmations = true
-# Solo local: en el proyecto alojado se deja el valor por defecto (60 s entre códigos al mismo número).
+# Solo local: en el proyecto alojado, 60 s entre códigos al mismo número (sms_max_frequency; en pruebas estaba en 5 s
+# y se corrigió el 2026-11-20, historia #73).
 # La app ya impone 30 s y, si Supabase responde con su límite, muestra los segundos que faltan.
 max_frequency = "1s"
 

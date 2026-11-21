@@ -19,7 +19,7 @@ Estados: ✅ verificado · ❌ ausente o distinto de lo documentado · ❔ no ve
 | 3 | **Widget Turnstile en la app** | ❌ el build de pruebas no lleva sitekey (`VITE_TURNSTILE_SITE_KEY` vacía): la app no carga el widget y pide el código sin token | ❔ | log del job `deploy`; `src/client/turnstile.ts:4` |
 | 4 | Llamada directa a Auth sin pasar por la app | ❌ consecuencia de 2: `POST /auth/v1/otp` no exige token; solo frenan los límites 5–7 | ❔ | 2 (no se probó con una llamada real: no hacía falta y enviaría a Twilio) |
 | 5 | Tope de envíos del proyecto | ✅ `rate_limit_sms_sent: 30` por hora (lo que propone `antes-de-produccion.md`) | ❔ | GET `/config/auth` |
-| 6 | Intervalo mínimo entre códigos al mismo número | ❌ `sms_max_frequency: 5` s. `supabase/config.toml` dice que el alojado conserva 60 s; la app impone 30 s solo en el navegador | ❔ | GET `/config/auth`; `config.toml:28`; `RESEND_COOLDOWN_MS` |
+| 6 | Intervalo mínimo entre códigos al mismo número | ✅ corregido el 2026-11-20 (#73, paso 1): 60 s, leído después con GET `/config/auth`. Antes ❌ `sms_max_frequency: 5` s. `supabase/config.toml` dice que el alojado conserva 60 s; la app impone 30 s solo en el navegador | ❔ | GET `/config/auth`; `config.toml:28`; `RESEND_COOLDOWN_MS` |
 | 7 | Límites de pedir y verificar código por IP | ✅ `rate_limit_otp: 30`, `rate_limit_verify: 30` (valores por defecto) | ❔ | GET `/config/auth` |
 | 8 | Proveedor y canal | ✅ `sms_provider: twilio_verify`, con **marcadores** («pending») en Account SID y Verify Service SID, no credenciales reales (captura de Ana, 2026-11-20): un número que no sea de prueba recibe un error y no se envía nada; la app pide siempre `channel: whatsapp` | ❔ | GET `/config/auth`; `src/data/postgrest/auth.ts:43` |
 | 9 | Servicio de Verify solo con WhatsApp (sin SMS de respaldo) | — no aplica todavía: Twilio sin configurar (Ana, 2026-11-20) | ❔ | Twilio → Verify → Services |
@@ -55,7 +55,7 @@ Estados: ✅ verificado · ❌ ausente o distinto de lo documentado · ❔ no ve
 Pruebas primero; producción nace con el resultado (decisión D5 del contrato de privacidad). Ana hace los cambios en los
 paneles; los de Supabase Auth se pueden hacer con la API de administración si Ana lo autoriza.
 
-1. **Intervalo entre códigos a 60 s** (Auth → Rate limits / `sms_max_frequency: 60`). Comprobar: GET `/config/auth`.
+1. ✅ **Hecho el 2026-11-20 en pruebas.** **Intervalo entre códigos a 60 s** (Auth → Rate limits / `sms_max_frequency: 60`). Comprobar: GET `/config/auth`.
    Revertir: volver a 5. Sin efecto en las pruebas automáticas (corren en local, `config.toml` con 1 s).
 2. **Turnstile de punta a punta en pruebas.** (a) Widget en Cloudflare para `pruebas.3bstays.com` (y el dominio
    `workers.dev` si se sigue usando desde la red corporativa); (b) variable `TURNSTILE_SITE_KEY` del entorno de pruebas en
