@@ -72,4 +72,4 @@ paneles; los de Supabase Auth se pueden hacer con la API de administración si A
 - Twilio: capturas de Verify → Services (canales del servicio, caducidad e intentos), Verify → Settings → Geo permissions y
   Billing → Usage Triggers (9–12).
 - Cloudflare: si existe ya un widget de Turnstile y para qué dominios (3).
-- Decisión sobre los códigos fijos de los admins en pruebas: A o B (paso 4).
+- ~~Decisión sobre los códigos fijos de los admins en pruebas~~: **B**, decidido por Ana el 2026-11-20 (se mantienen en pruebas hasta tener Twilio de pago; en producción, ninguno).

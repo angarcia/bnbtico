@@ -1,3 +1,7 @@
+## 2026-11-20 · Los admins conservan su código fijo en pruebas hasta tener Twilio de pago (historia #72)
+
+La auditoría del acceso por código (`.scratch/seguridad-2026-11-17/06-auditoria-otp.md`) encontró en `bnbtico-pruebas` los teléfonos reales de los dos admins entre los números con código fijo (`123456`, válidos hasta el 2026-12-31): quien los conozca entra en esas cuentas a nivel aal1, sin los poderes de admin, que exigen TOTP. Ana decidió **mantenerlos en pruebas por ahora** (opción B). Motivo: quitarlos exige Twilio de pago con un servicio de Verify propio, que aún no existe; sin él los admins no podrían entrar. En producción (`3bstays-prod`) no habrá ningún número real con código fijo. Se revisa al pasar Twilio a pago (`docs/antes-de-produccion.md`, «Envío real de códigos», paso 4).
+
 ## 2026-11-20 · Fotos sin aprobar en un bucket privado: un bucket por foto y sincronización desde el worker (historia #69)
 
 Al implementar el contrato de privacidad de fotos (entrada siguiente), D1 («tras copiar al público se borra del privado») y D2 («al parar una casa sus fotos salen del público») juntas borraban para siempre las fotos de una casa parada. Ana eligió:
