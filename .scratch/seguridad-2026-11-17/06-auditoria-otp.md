@@ -57,13 +57,13 @@ paneles; los de Supabase Auth se pueden hacer con la API de administración si A
 
 1. ✅ **Hecho el 2026-11-20 en pruebas.** **Intervalo entre códigos a 60 s** (Auth → Rate limits / `sms_max_frequency: 60`). Comprobar: GET `/config/auth`.
    Revertir: volver a 5. Sin efecto en las pruebas automáticas (corren en local, `config.toml` con 1 s).
-2. **Turnstile de punta a punta en pruebas.** (a) Widget en Cloudflare para `pruebas.3bstays.com` (y el dominio
+2. ⏸ **Aplazado al rediseño del inicio de sesión** (Ana, 2026-11-20). Condición: antes de poner credenciales reales de Twilio. **Turnstile de punta a punta en pruebas.** (a) Widget en Cloudflare para `pruebas.3bstays.com` (y el dominio
    `workers.dev` si se sigue usando desde la red corporativa); (b) variable `TURNSTILE_SITE_KEY` del entorno de pruebas en
    GitHub y desplegar; comprobar en el log de `deploy` que la variable ya no va vacía; (c) **después**, en Supabase Auth:
    captcha activo, proveedor `turnstile`, la secret key. Orden importante: activar (c) antes de (b) deja a todos sin
    poder pedir código. Comprobar: GET `/config/auth` (`security_captcha_enabled: true`, `turnstile`) e Ingresar desde el
    teléfono. Revertir: apagar el captcha en Auth (inmediato); el widget sin captcha en Auth no estorba.
-3. **Twilio (Ana, panel):** servicio de Verify solo con WhatsApp; Geo permissions con la lista corta de países; Usage
+3. ⏸ **Aplazado con el paso 2** (Twilio aún sin configurar). **Twilio (Ana, panel):** servicio de Verify solo con WhatsApp; Geo permissions con la lista corta de países; Usage
    Trigger a 20 USD/mes. Comprobar con captura de cada pantalla (sin SIDs ni tokens). Revertir: reactivar en el mismo panel.
 4. **Códigos fijos de los admins:** opción A (recomendada para producción, obligatoria allí): sin números reales en
    `sms_test_otp`; los admins entran con su código real por WhatsApp más su TOTP. Requiere Twilio de pago con Verify

@@ -65,6 +65,8 @@ Desde el 2026-10-23 el WhatsApp de un usuario puede ser de cualquier país (sele
 
 Con 1, 2 y 4 el riesgo queda acotado; 3 lo cierra casi del todo; 5 es la red de seguridad.
 
+**Estado (2026-11-20, historias #72 y #73):** auditado en `bnbtico-pruebas` (`.scratch/seguridad-2026-11-17/06-auditoria-otp.md`). El tope de 30 envíos por hora (4) está; el intervalo entre códigos al mismo número quedó en 60 s. Turnstile (3) y lo de Twilio (1, 2, 5) se hacen con el rediseño del inicio de sesión, **antes de poner credenciales reales de Twilio** (hoy son marcadores y no se envía nada).
+
 ## Teselas de OpenStreetMap en Explorar (2026-10-29)
 
 Desde la fase de Explorar al estilo Airbnb el mapa con precios es el primer elemento de Explorar, así que casi todas las visitas cargan teselas de OpenStreetMap (antes solo la ficha y el asistente de publicar). Antes del lanzamiento:
