@@ -19,10 +19,10 @@ Estados: ✅ verificado · ❌ ausente o distinto de lo documentado · ❔ no ve
 | 6 | Intervalo mínimo entre códigos al mismo número | ❌ `sms_max_frequency: 5` s. `supabase/config.toml` dice que el alojado conserva 60 s; la app impone 30 s solo en el navegador | ❔ | GET `/config/auth`; `config.toml:28`; `RESEND_COOLDOWN_MS` |
 | 7 | Límites de pedir y verificar código por IP | ✅ `rate_limit_otp: 30`, `rate_limit_verify: 30` (valores por defecto) | ❔ | GET `/config/auth` |
 | 8 | Proveedor y canal | ✅ `sms_provider: twilio_verify` con credenciales definidas; la app pide siempre `channel: whatsapp` | ❔ | GET `/config/auth`; `src/data/postgrest/auth.ts:43` |
-| 9 | Servicio de Verify solo con WhatsApp (sin SMS de respaldo) | ❔ en Twilio | ❔ | Twilio → Verify → Services |
-| 10 | Países permitidos (Geo permissions) | ❔ en Twilio; el selector de la app admite todos a propósito en pruebas | ❔ | Twilio → Verify → Settings |
-| 11 | Caducidad e intentos del código | ❔ con `twilio_verify` los pone Twilio (por defecto 10 min y 5 intentos); `sms_otp_exp: 60` de Supabase no rige ese camino | ❔ | Twilio → Verify → Services → el servicio |
-| 12 | Alerta de gasto | ❔ en Twilio | ❔ | Twilio → Billing → Usage Triggers |
+| 9 | Servicio de Verify solo con WhatsApp (sin SMS de respaldo) | — no aplica todavía: Twilio sin configurar (Ana, 2026-11-20) | ❔ | Twilio → Verify → Services |
+| 10 | Países permitidos (Geo permissions) | — no aplica todavía (Twilio sin configurar); el selector de la app admite todos a propósito en pruebas | ❔ | Twilio → Verify → Settings |
+| 11 | Caducidad e intentos del código | — no aplica todavía; con `twilio_verify` los pone Twilio (por defecto 10 min y 5 intentos); `sms_otp_exp: 60` de Supabase no rige ese camino | ❔ | Twilio → Verify → Services → el servicio |
+| 12 | Alerta de gasto | — no aplica todavía (Twilio sin configurar) | ❔ | Twilio → Billing → Usage Triggers |
 | 13 | **Códigos fijos** | ❌ 7 números con código fijo hasta el 2026-12-31: 5 de prueba documentados (`8888 1234`, `8777 0001`, `8888 9999`, `8899 0001`, `8777 0002`) y **los 2 admins reales** (`+1 778 … 9837`, `+1 778 … 8492`) | ❔ (no debe tener ninguno real) | GET `/config/auth` (`sms_test_otp`, números enmascarados) |
 | 14 | Segundo factor del admin | ✅ TOTP activo; MFA por teléfono apagado (decisión 2026-10-23); `is_admin()` exige aal2 en SQL | ❔ | GET `/config/auth`; migraciones |
 | 15 | Hooks que desvíen el envío | ✅ `hook_send_sms_enabled: false` | ❔ | GET `/config/auth` |
@@ -69,7 +69,9 @@ paneles; los de Supabase Auth se pueden hacer con la API de administración si A
 
 ## Pendiente de Ana (para cerrar la matriz)
 
-- Twilio: capturas de Verify → Services (canales del servicio, caducidad e intentos), Verify → Settings → Geo permissions y
-  Billing → Usage Triggers (9–12).
+- Twilio aún no está configurado (Ana, 2026-11-20): 9–12 no aplican todavía y pasan a #73 como requisito al configurarlo.
+  Aun así, en Supabase (Authentication → Sign In / Providers → Phone) el proveedor es Twilio Verify con Account SID, Auth
+  Token y Verify Service SID **con valor**: confirmar qué son (restos, cuenta de prueba o marcadores). Hoy no se usan porque
+  todas las cuentas de pruebas son números de prueba; un número que no lo fuera intentaría enviar con ellas.
 - Cloudflare: si existe ya un widget de Turnstile y para qué dominios (3).
 - ~~Decisión sobre los códigos fijos de los admins en pruebas~~: **B**, decidido por Ana el 2026-11-20 (se mantienen en pruebas hasta tener Twilio de pago; en producción, ninguno).
