@@ -45,8 +45,9 @@ test("con más de 60 casas: «Más de 60 casas», «Ver más casas» añade las 
   const scrolled = await page.evaluate(() => window.scrollY);
   await more.click();
   await expect(cards).toHaveCount(TOTAL);
-  // Las nuevas van debajo: la lista no vuelve arriba.
-  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(scrolled - 1);
+  // Las nuevas van debajo: la lista no vuelve arriba. Se espera a que el desplazamiento se asiente (una lectura inmediata
+  // fallaba a veces en CI); si de verdad volviera arriba, no llegaría nunca.
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(scrolled - 1);
   await expect(more).toHaveCount(0);
   await expect(page.getByTestId("results-count")).toHaveText(`${TOTAL} casas`);
   await expect(group(TOTAL)).toHaveCount(1);

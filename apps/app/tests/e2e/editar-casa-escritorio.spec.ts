@@ -355,7 +355,9 @@ test("teclado: el foco se queda en la ventana, Escape la cierra y vuelve al disp
     await page.keyboard.press("Escape");
     await expect(d).toHaveCount(0);
     await expect(trigger).toBeFocused();
-    expect(await page.evaluate(() => window.scrollY)).toBe(y);
+    // Escape vuelve de /editar/$campo al detalle: el router restaura el desplazamiento tras pintar, así que se espera a que
+    // se asiente (una lectura inmediata pillaba a veces el 0 intermedio en CI). Si de verdad volviera arriba, seguiría en 0.
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(y);
   }
 });
 
