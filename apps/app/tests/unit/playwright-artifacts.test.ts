@@ -757,6 +757,18 @@ test("fragmentos", async () => {
     await inspectDirectory(join(root, "publish"), [first, second]);
   });
 
+  it("un token de URL que no se puede decodificar se redacta tal cual y no bloquea la subida", async () => {
+    // Desde la historia #69 las fotos privadas llevan URL firmada (`?token=…`); en las trazas aparecen recortadas o con
+    // escapes, y un `%` suelto hacía fallar el saneado entero («query-encoding»): CI no podía decir qué caso falló.
+    const raw = `SIGNED_${randomUUID()}%E0%A4%A`;
+    await writeFile(join(root, "raw", "trace.json"), JSON.stringify({
+      url: `http://127.0.0.1:54321/storage/v1/object/sign/listings-privadas/a/b/800.jpg?token=${raw}`,
+      errors: [`Imagen ${raw} no cargó`],
+    }));
+    await sanitizeRun({ root });
+    await inspectDirectory(join(root, "publish"), [raw]);
+  });
+
   it("no expone valores en los errores de CLI ni publica un conjunto incompleto", async () => {
     const canary = `PRIVATE_${randomUUID()}`;
     await writeFile(join(root, "raw", "a-good.json"), JSON.stringify({ status: "failed", access_token: canary }));
