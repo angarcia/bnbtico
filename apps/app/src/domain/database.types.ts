@@ -323,14 +323,14 @@ isOneToOne: false
                   ]
                 },"listing_edit_photos": {
                   Row: {
-                    "created_at": string,"id": string,"listing_id": string,"path": string,"position": number,"review_note": string | null,"status": string,"submitted_at": string
+                    "bucket": string,"created_at": string,"id": string,"listing_id": string,"path": string,"position": number,"review_note": string | null,"status": string,"submitted_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
+                    "bucket"?: string,"created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
+                    "bucket"?: string,"created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number,"review_note"?: string | null,"status"?: string,"submitted_at"?: string
                   }
                   Relationships: [
                     {
@@ -387,14 +387,14 @@ isOneToOne: false
                   ]
                 },"listing_photos": {
                   Row: {
-                    "created_at": string,"id": string,"listing_id": string,"path": string,"position": number
+                    "bucket": string,"created_at": string,"id": string,"listing_id": string,"path": string,"position": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number
+                    "bucket"?: string,"created_at"?: string,"id"?: string,"listing_id": string,"path": string,"position"?: number
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number
+                    "bucket"?: string,"created_at"?: string,"id"?: string,"listing_id"?: string,"path"?: string,"position"?: number
                   }
                   Relationships: [
                     {
@@ -1157,6 +1157,11 @@ isOneToOne: true
 "payment_setup_context":
 { Args: { "p_provider": string }; Returns: Json
                            },
+"photo_sync_pending":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "from_bucket": string,"id": string,"kind": string,"listing_id": string,"path": string,"to_bucket": string
+            }[]
+                           },
 "photo_unreferenced":
 { Args: { "p_name": string }; Returns: boolean
                            },
@@ -1264,6 +1269,9 @@ isOneToOne: true
                            },
 "set_listing_available":
 { Args: { "p_available": boolean,"p_listing": string,"p_reopen_at"?: string }; Returns: undefined
+                           },
+"set_photo_bucket":
+{ Args: { "p_bucket": string,"p_id": string,"p_kind": string }; Returns: undefined
                            },
 "start_edit":
 { Args: { "p_listing": string }; Returns: {

@@ -19,7 +19,9 @@ import { createClient } from "@supabase/supabase-js";
 
 const root = new URL("../../../", import.meta.url).pathname;
 const FOTOS = join(root, "supabase/datos-de-prueba/fotos");
-const BUCKET = "listings";
+// Historia #69: se sube al bucket privado; al final, lo aprobado de las casas visibles pasa al público, como hace el worker.
+const BUCKET = "listings-privadas";
+const PUBLIC_BUCKET = "listings";
 const SIZES = [480, 800, 1600];
 const CODE = "123456";
 
@@ -177,6 +179,23 @@ const check = (what, { error }) => {
   if (error) fail(`${what}: ${error.message}`);
 };
 
+/** Lo mismo que POST /api/fotos/sincronizar (src/server/photo-sync.ts) con la service role: copiar, anotar, borrar. */
+async function sincronizarFotos() {
+  const { data, error } = await service.rpc("photo_sync_pending");
+  check("fotos por mover", { error });
+  const buckets = { public: PUBLIC_BUCKET, private: BUCKET };
+  for (const p of data ?? []) {
+    const keys = SIZES.map((size) => `${p.path}/${size}.jpg`);
+    for (const key of keys) {
+      const { error: e } = await service.storage.from(buckets[p.from_bucket]).copy(key, key, { destinationBucket: buckets[p.to_bucket] });
+      if (e && !/already exists|duplicate/i.test(e.message)) check(`mover ${key}`, { error: e });
+    }
+    check(`anotar ${p.path}`, await service.rpc("set_photo_bucket", { p_kind: p.kind, p_id: p.id, p_bucket: p.to_bucket }));
+    await service.storage.from(buckets[p.from_bucket]).remove(keys);
+  }
+  console.log(`Fotos movidas de bucket: ${(data ?? []).length}.`);
+}
+
 /** Borra las casas (y sus fotos en Storage) de los anfitriones de prueba que dejó una ejecución anterior. */
 async function limpiar() {
   const phones = Object.values(ANFITRIONES).map((a) => a.phone);
@@ -184,8 +203,8 @@ async function limpiar() {
   const ids = (owners ?? []).map((o) => o.id);
   if (ids.length === 0) return 0;
   const { data: casas } = await service.from("listings").select("id").in("owner_id", ids);
-  const bucket = service.storage.from(BUCKET);
-  for (const { id } of casas ?? []) {
+  for (const { id } of casas ?? []) for (const b of [BUCKET, PUBLIC_BUCKET]) {
+    const bucket = service.storage.from(b);
     const names = [];
     const { data: carpetas } = await bucket.list(id, { limit: 1000 });
     for (const c of carpetas ?? []) {
@@ -282,6 +301,8 @@ async function main() {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+
+  await sincronizarFotos();
 
   // El cliente guarda dos casas activas en Favoritos.
   const activas = creadas.filter((c) => c.status === "active").slice(0, 2);

@@ -8,13 +8,15 @@ import { createLimiter } from "../../domain/concurrency";
 import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { PHOTO_CACHE_SECONDS, VARIANT_SIZES, photoFolder, photoObjectPaths, variantPath } from "../../domain/image";
-import { fromPhotoRows, storagePhotoUrl } from "../../domain/rows";
+import { fromPhotoRows } from "../../domain/rows";
+import { PRIVATE_PHOTO_BUCKET, createPhotoSigner, removeObjects } from "./photo-urls";
 
-const BUCKET = "listings";
+// Historia #69: se sube siempre al bucket privado; el worker pasa al público lo aprobado de una casa visible.
+const BUCKET = PRIVATE_PHOTO_BUCKET;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function createPostgrestPhotos(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): PhotosApi {
-  const url = storagePhotoUrl(opts.supabaseUrl);
+  const sign = createPhotoSigner(db, opts.supabaseUrl);
   const bucket = () => db.storage.from(BUCKET);
   // Una sola cola para todas las fotos de esta instancia: tres objetos a la vez, también si se eligen diez fotos juntas.
   const limit = createLimiter(3);
@@ -47,7 +49,7 @@ export function createPostgrestPhotos(db: SupabaseClient<Database>, opts: { supa
       if (!UUID.test(listingId)) throw new DomainError("No encontramos ese anuncio.", "not_found");
       const { data, error } = await db.rpc("add_listing_photo", { p_listing: listingId, p_path: folder }).single();
       if (error) throw toDomainError(error);
-      return fromPhotoRows([data], url)[0]!;
+      return fromPhotoRows([data], await sign([{ path: data.path }]))[0]!;
     },
 
     async discard(folder) {
@@ -59,7 +61,7 @@ export function createPostgrestPhotos(db: SupabaseClient<Database>, opts: { supa
       const { data: path, error } = await db.rpc("remove_listing_photo", { p_photo: photoId });
       if (error) throw toDomainError(error);
       // La fila ya no está: si borrar los objetos falla, quedan huérfanos en Storage pero nadie los enlaza.
-      await bucket().remove(photoObjectPaths(path));
+      await removeObjects(db, photoObjectPaths(path));
     },
 
     async reorder(listingId, photoIds) {
@@ -72,14 +74,14 @@ export function createPostgrestPhotos(db: SupabaseClient<Database>, opts: { supa
       if (!UUID.test(listingId)) throw new DomainError("No encontramos ese anuncio.", "not_found");
       const { data, error } = await db.rpc("add_edit_photo", { p_listing: listingId, p_path: folder }).single();
       if (error) throw toDomainError(error);
-      return fromPhotoRows([data], url)[0]!;
+      return fromPhotoRows([data], await sign([{ path: data.path }]))[0]!;
     },
 
     async removeEditPhoto(photoId) {
       if (!UUID.test(photoId)) throw new DomainError("No encontramos esa foto.", "not_found");
       const { data: path, error } = await db.rpc("remove_edit_photo", { p_photo: photoId });
       if (error) throw toDomainError(error);
-      await bucket().remove(photoObjectPaths(path));
+      await removeObjects(db, photoObjectPaths(path));
     },
 
     async reorderEditPhotos(listingId, photoIds) {

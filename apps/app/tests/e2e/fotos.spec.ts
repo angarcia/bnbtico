@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import type { ListingsHarness } from "../contract/harness";
 import { postgrestHarness } from "../db/postgrest-harness";
 import { injectSession } from "./helpers/session";
+import { variantUrl } from "../../src/domain/image";
 
 // Paso 7 con subida real contra Supabase local: el navegador genera 480/800/1600 y los sube directo a Storage con la
 // sesión del dueño; la base registra y ordena. iPhone SE (375×667): la página no hace scroll, la rejilla sí por dentro.
@@ -37,7 +38,7 @@ const sizeOf = (page: Page, url: string) =>
 test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", async ({ page }) => {
   const { id } = await h.seed({ status: "draft" });
   // Las subidas tardan un poco: así se ve el progreso por foto.
-  await page.route("**/storage/v1/object/listings/**", async (route) => {
+  await page.route("**/storage/v1/object/listings-privadas/**", async (route) => {
     if (route.request().method() === "POST") await new Promise((r) => setTimeout(r, 250));
     await route.continue();
   });
@@ -60,12 +61,14 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   const objects = await h.objects(id);
   expect(objects).toHaveLength(18);
   for (const o of objects) expect(o.cacheControl).toMatch(/max-age=31536000/);
-  const hero = l.photos[0]!.url.replace(/800\.jpg$/, "");
-  expect(await sizeOf(page, `${hero}480.jpg`)).toEqual([480, 360]);
-  expect(await sizeOf(page, `${hero}800.jpg`)).toEqual([800, 600]);
-  expect(await sizeOf(page, `${hero}1600.jpg`)).toEqual([1000, 750]); // el original es de 1000 px: no se agranda
-  await expect(page.locator(".photos-grid .photo.cover img")).toHaveAttribute("src", `${hero}800.jpg`);
-  await expect(page.locator(".photos-grid .photo:not(.cover) img").first()).toHaveAttribute("src", /\/480\.jpg$/);
+  // Sin aprobar, cada variante lleva su URL firmada del bucket privado (historia #69).
+  const hero = l.photos[0]!;
+  expect(hero.url).toMatch(/\/object\/sign\/listings-privadas\/.+\/800\.jpg\?token=/);
+  expect(await sizeOf(page, variantUrl(hero, 480))).toEqual([480, 360]);
+  expect(await sizeOf(page, variantUrl(hero, 800))).toEqual([800, 600]);
+  expect(await sizeOf(page, variantUrl(hero, 1600))).toEqual([1000, 750]); // el original es de 1000 px: no se agranda
+  await expect(page.locator(".photos-grid .photo.cover img")).toHaveAttribute("src", /\/800\.jpg\?token=/);
+  await expect(page.locator(".photos-grid .photo:not(.cover) img").first()).toHaveAttribute("src", /\/480\.jpg\?token=/);
 
   // La tercera a la portada con los botones ocultos (teclado): el orden se ve al instante y se guarda.
   const mover = (name: string) => page.getByRole("button", { name });
@@ -108,9 +111,12 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   // Con una segunda casa, para que la pestaña sea la lista (con una sola abre su gestión, historia 01 de la revisión 2026-11-17).
   await h.seed({ status: "active", draft: { title: "Otra casa" } });
   await page.goto("/propietario/casas");
-  const cover = page.locator(`.house-photo img[src="${after.photos[0]!.url}"]`).first();
+  // Cada lectura firma de nuevo (historia #69): se compara la ruta de cada variante, no el token.
+  const path = after.photos[0]!.path;
+  const cover = page.locator(`.house-photo img[src*="${path}/800.jpg"]`).first();
   await expect(cover).toBeVisible();
-  await expect(cover).toHaveAttribute("srcset", `${after.photos[0]!.url.replace(/800\.jpg$/, "480.jpg")} 480w, ${after.photos[0]!.url} 800w`);
+  const esc = path.replace(/[-/]/g, "\\$&");
+  await expect(cover).toHaveAttribute("srcset", new RegExp(`${esc}\\/480\\.jpg\\?token=[^ ]+ 480w, \\S+${esc}\\/800\\.jpg\\?token=[^ ]+ 800w$`));
 });
 
 test("no pasa de 15: sube solo las que caben y lo dice", async ({ page }) => {

@@ -11,12 +11,13 @@ import { EDIT_MESSAGES } from "../../domain/edit-messages";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { REVIEW_MESSAGES as M, editNoteRefusal, editQueueOrder, emptyQueue, reviewNoteRefusal, splitQueue, type QueueItem } from "../../domain/review";
 import { costaRicaToday } from "../../domain/inquiry";
-import { EDIT_SELECT, fromListingRow, fromPhotoRows, storagePhotoUrl, type EditRow, type ListingRow, type PhotoRow } from "../../domain/rows";
+import { EDIT_SELECT, fromListingRow, fromPhotoRows, type EditRow, type ListingRow, type PhotoRow } from "../../domain/rows";
 import { FIELD_COLUMN } from "../../domain/edit-summary";
 import { adminAccess } from "./admin-access";
+import { createPhotoSigner, photoSources, requestPhotoSync } from "./photo-urls";
 
 const EDIT_COLUMNS = EDIT_SELECT;
-const BASE_COLUMNS = "*, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name)";
+const BASE_COLUMNS = "*, listing_photos(id, path, position, bucket), owner:profiles!listings_owner_id_fkey(full_name)";
 const ADMIN_COLUMNS = `${BASE_COLUMNS}, listing_edits(${EDIT_COLUMNS})`;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -24,7 +25,7 @@ type AdminRow = ListingRow & { listing_photos: PhotoRow[]; owner: { full_name: s
 
 // Casas del admin: solo las que tienen suscripción (aprobadas alguna vez); la portada es la foto en la posición 0.
 const HOUSE_COLUMNS =
-  "id, public_id, title, status, zone, owner_id, first_published_at, whatsapp_phone, admin_hold, admin_hold_reason, listing_photos(id, path, position), owner:profiles!listings_owner_id_fkey(full_name), " +
+  "id, public_id, title, status, zone, owner_id, first_published_at, whatsapp_phone, admin_hold, admin_hold_reason, listing_photos(id, path, position, bucket), owner:profiles!listings_owner_id_fkey(full_name), " +
   "subscriptions!inner(plan, promo_ends_on, paid_since, stopped_at, monthly_price_crc)";
 type HouseRow = Pick<ListingRow, "id" | "public_id" | "title" | "status" | "zone" | "owner_id" | "admin_hold" | "admin_hold_reason" | "whatsapp_phone"> & {
   listing_photos: PhotoRow[];
@@ -33,8 +34,11 @@ type HouseRow = Pick<ListingRow, "id" | "public_id" | "title" | "status" | "zone
 };
 
 export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supabaseUrl: string }): AdminListingsApi {
-  const url = storagePhotoUrl(opts.supabaseUrl);
-  const toItem = (row: AdminRow): QueueItem => ({ listing: fromListingRow(row, row.listing_photos, url, row.listing_edits), ownerName: row.owner?.full_name ?? "" });
+  const sign = createPhotoSigner(db, opts.supabaseUrl);
+  const toItems = async (rows: AdminRow[]): Promise<QueueItem[]> => {
+    const url = await sign(rows.flatMap(photoSources));
+    return rows.map((row) => ({ listing: fromListingRow(row, row.listing_photos, url, row.listing_edits), ownerName: row.owner?.full_name ?? "" }));
+  };
   const mfa = () => new DomainError(M.mfaRequired, "forbidden");
 
   /** «admin» con aal2, «mfa» si es admin sin el segundo código, «none» si no es admin. Se pide junto con los datos. */
@@ -56,8 +60,10 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (refusal) throw new DomainError(refusal, "validation");
     }
     if (!UUID.test(id)) throw new DomainError(M.notFound, "validation");
-    if (fn === "admin_pause_listing" || fn === "admin_block_listing") return call(db.rpc(fn, { p_listing: id, p_reason: reason!.trim() }));
-    return call(db.rpc(fn as "admin_resume_listing" | "admin_unblock_listing", { p_listing: id }));
+    // Parar o reanudar cambia si la casa se ve: sus fotos cambian de bucket (historia #69).
+    if (fn === "admin_pause_listing" || fn === "admin_block_listing") await call(db.rpc(fn, { p_listing: id, p_reason: reason!.trim() }));
+    else await call(db.rpc(fn as "admin_resume_listing" | "admin_unblock_listing", { p_listing: id }));
+    requestPhotoSync();
   }
 
   return {
@@ -71,7 +77,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (who === "none") return emptyQueue();
       if (who === "mfa") throw mfa();
       for (const r of [pending, active]) if (r.error) throw toDomainError(r.error);
-      return splitQueue((pending.data ?? []).map(toItem), active.count ?? 0);
+      return splitQueue(await toItems(pending.data ?? []), active.count ?? 0);
     },
 
     async get(id) {
@@ -80,7 +86,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (who === "none") return null;
       if (who === "mfa") throw mfa();
       if (res.error) throw toDomainError(res.error);
-      return res.data ? toItem(res.data) : null;
+      return res.data ? (await toItems([res.data]))[0]! : null;
     },
 
     async editQueue() {
@@ -91,7 +97,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (who === "none") return [];
       if (who === "mfa") throw mfa();
       if (res.error) throw toDomainError(res.error);
-      return editQueueOrder((res.data ?? []).map(toItem));
+      return editQueueOrder(await toItems(res.data ?? []));
     },
 
     async getEdit(id) {
@@ -115,7 +121,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (refusal) throw new DomainError(refusal, "validation");
       if (!UUID.test(photoId)) throw new DomainError(EDIT_MESSAGES.photoNotFound, "validation");
       const { error } = await db.rpc("review_edit_photo", { p_photo: photoId, p_decision: decision, p_note: note.trim(), p_submitted_at: submittedAt as string });
-      if (!error) return;
+      if (!error) return requestPhotoSync();
       const e = toDomainError(error);
       throw e.message === M.mfaRequired ? mfa() : e;
     },
@@ -137,6 +143,7 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (who === "mfa") throw mfa();
       for (const r of [res, methods]) if (r.error) throw toDomainError(r.error);
       const withMethod = new Set((methods.data ?? []).map((m) => m.owner_id));
+      const url = await sign((res.data ?? []).flatMap((row) => row.listing_photos));
       const houses = (res.data ?? []).map((row): AdminHouse => {
         const s = row.subscriptions;
         const hold = holdFromRow(row.admin_hold, row.admin_hold_reason);
@@ -174,7 +181,8 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (refusal) throw new DomainError(refusal, "validation");
       if (!UUID.test(id)) throw new DomainError(M.notFound, "validation");
       if (confirm.trim() === "") throw new DomainError(H.confirmCode, "validation");
-      return call(db.rpc("admin_delete_listing", { p_listing: id, p_reason: reason.trim(), p_confirm: confirm.trim() }));
+      await call(db.rpc("admin_delete_listing", { p_listing: id, p_reason: reason.trim(), p_confirm: confirm.trim() }));
+      requestPhotoSync();
     },
 
     async review(id, decision, note) {
@@ -182,7 +190,8 @@ export function createPostgrestAdmin(db: SupabaseClient<Database>, opts: { supab
       if (refusal) throw new DomainError(refusal, "validation");
       if (!UUID.test(id)) throw new DomainError(M.notFound, "validation");
       const { error } = await db.rpc("review_listing", { p_listing: id, p_decision: decision, p_note: note.trim() });
-      if (!error) return;
+      // Aprobada, sus fotos van al bucket público (historia #69).
+      if (!error) return requestPhotoSync();
       const e = toDomainError(error);
       throw e.message === M.mfaRequired ? mfa() : e;
     },

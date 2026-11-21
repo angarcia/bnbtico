@@ -160,13 +160,13 @@ describe("editar una casa publicada · al momento y guardas", () => {
 
   it("Storage: subir a una casa activa sí, también con cambios en revisión (revisión por dato); a una ajena o en revisión, no", async () => {
     const { id } = await h.seed({ status: "active" });
-    const up = () => owner.storage.from("listings").upload(`${id}/${crypto.randomUUID()}/800.jpg`, JPEG, { contentType: "image/jpeg" });
+    const up = () => owner.storage.from("listings-privadas").upload(`${id}/${crypto.randomUUID()}/800.jpg`, JPEG, { contentType: "image/jpeg" });
     expect((await up()).error).toBeNull();
     sql(`insert into public.listing_edits (listing_id, status, title) values ('${id}', 'review', 'Casa Coco frente al mar')`);
     expect((await up()).error).toBeNull();
-    expect((await other.storage.from("listings").upload(`${id}/${crypto.randomUUID()}/800.jpg`, JPEG)).error).not.toBeNull();
+    expect((await other.storage.from("listings-privadas").upload(`${id}/${crypto.randomUUID()}/800.jpg`, JPEG)).error).not.toBeNull();
     const review = await h.seed({ status: "review" });
-    expect((await owner.storage.from("listings").upload(`${review.id}/${crypto.randomUUID()}/800.jpg`, JPEG)).error).not.toBeNull();
+    expect((await owner.storage.from("listings-privadas").upload(`${review.id}/${crypto.randomUUID()}/800.jpg`, JPEG)).error).not.toBeNull();
   });
 
   it("Storage: borrar un objeto referenciado se rechaza; uno sin referencia se borra", async () => {
@@ -174,13 +174,13 @@ describe("editar una casa publicada · al momento y guardas", () => {
     const used = `${id}/${crypto.randomUUID()}`;
     const pending = `${id}/${crypto.randomUUID()}`;
     const loose = `${id}/${crypto.randomUUID()}`;
-    for (const f of [used, pending, loose]) expect((await owner.storage.from("listings").upload(`${f}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
+    for (const f of [used, pending, loose]) expect((await owner.storage.from("listings-privadas").upload(`${f}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
     await serviceClient().from("listing_photos").insert({ listing_id: id, path: used, position: 9 });
     sql(`insert into public.listing_edits (listing_id, title) values ('${id}', 'Casa Coco frente al mar')`);
     sql(`insert into public.listing_edit_photos (listing_id, path) values ('${id}', '${pending}')`);
-    await other.storage.from("listings").remove([`${loose}/800.jpg`]);
+    await other.storage.from("listings-privadas").remove([`${loose}/800.jpg`]);
     expect((await h.objects(id)).map((o) => o.name)).toHaveLength(3);
-    await owner.storage.from("listings").remove([`${used}/800.jpg`, `${pending}/800.jpg`, `${loose}/800.jpg`]);
+    await owner.storage.from("listings-privadas").remove([`${used}/800.jpg`, `${pending}/800.jpg`, `${loose}/800.jpg`]);
     expect((await h.objects(id)).map((o) => o.name)).toEqual([`${used}/800.jpg`, `${pending}/800.jpg`].sort());
   });
 });

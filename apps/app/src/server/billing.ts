@@ -9,7 +9,8 @@ import { PAYMENT_MESSAGES as P, setupReturnUrls, type PaymentProvider } from "..
 import { parsePublicId } from "../domain/share";
 import { SUBSCRIPTION_MESSAGES as M, type PaymentProviderName } from "../domain/subscription";
 import { securityHeaders } from "../shared/security";
-import type { Env } from "./app";
+import type { Env, PhotoSync } from "./app";
+import { runPhotoSync } from "./photo-sync";
 import { createFakeProvider, decodeSession, FAKE_SIGNATURE_HEADER, fakeCheckoutPage, fakeSetupEvent } from "./fake-payments";
 import { createStripeProvider } from "./stripe";
 
@@ -55,7 +56,20 @@ export function paymentProvider(env: Env, deps: Pick<BillingDeps, "fetch" | "now
   return { provider: null, reason: "PAYMENTS sin valor" };
 }
 
-export function registerBilling(app: Hono<{ Bindings: Env }>, deps: BillingDeps, withSecurityHeaders: boolean) {
+export function registerBilling(app: Hono<{ Bindings: Env }>, deps: BillingDeps, withSecurityHeaders: boolean, photoSync?: (env: Env) => PhotoSync | null) {
+  /** Tras un webhook aceptado la casa puede pasar a verse: sus fotos van al bucket público (historia #69). */
+  async function syncPhotos(c: Context<{ Bindings: Env }>, res: Response): Promise<Response> {
+    const sync = res.ok ? (photoSync?.(c.env) ?? null) : null;
+    if (!sync) return res;
+    const work = runPhotoSync(sync, "webhook", deps.log);
+    try {
+      c.executionCtx.waitUntil(work);
+    } catch {
+      await work;
+    }
+    return res;
+  }
+
   const active = (env: Env) => paymentProvider(env, deps);
   const log = (fields: Record<string, unknown>) => deps.log(JSON.stringify(fields));
 
@@ -147,14 +161,14 @@ export function registerBilling(app: Hono<{ Bindings: Env }>, deps: BillingDeps,
     const provider = providerFor(c, "stripe");
     // 503 (y no 404): si falta configurar Stripe en el entorno, Stripe reintenta y el evento no se pierde.
     if (!provider) return c.json({ error: P.off }, 503);
-    return webhook(provider, c.req.raw, deps.service(c.env));
+    return syncPhotos(c, await webhook(provider, c.req.raw, deps.service(c.env)));
   });
 
   // La pasarela falsa solo existe donde está activa (ENVIRONMENT=local y PAYMENTS=fake): en otro sitio, 404.
   app.post("/webhooks/fake", async (c) => {
     const provider = providerFor(c, "fake");
     if (!provider) return c.notFound();
-    return webhook(provider, c.req.raw, deps.service(c.env));
+    return syncPhotos(c, await webhook(provider, c.req.raw, deps.service(c.env)));
   });
 
   const html = (c: Context<{ Bindings: Env }>, body: string, status: 200 | 404 | 502) =>
@@ -179,7 +193,7 @@ export function registerBilling(app: Hono<{ Bindings: Env }>, deps: BillingDeps,
     if (!found) return c.notFound();
     const { body, signature } = await fakeSetupEvent(c.env.FAKE_PAYMENTS_SECRET!, found.session, deps.now());
     const request = new Request(new URL("/webhooks/fake", c.req.url), { method: "POST", headers: { "content-type": "application/json", [FAKE_SIGNATURE_HEADER]: signature }, body });
-    const res = await webhook(found.provider, request, deps.service(c.env));
+    const res = await syncPhotos(c, await webhook(found.provider, request, deps.service(c.env)));
     if (!res.ok) return html(c, "<!doctype html><html lang=\"es\"><title>Pasarela de prueba</title><p>No pudimos guardar la tarjeta de prueba. Vuelva atrás e intente de nuevo.</p></html>", 502);
     return c.redirect(found.session.successUrl, 303);
   });

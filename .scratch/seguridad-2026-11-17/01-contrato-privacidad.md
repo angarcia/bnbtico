@@ -4,6 +4,10 @@ Estado: **aprobado por Ana el 2026-11-20, con las recomendaciones de D1–D5** (
 #69 (fotos). D4 ya aplicada: migración `20261120225022_fotos_sin_enumerar.sql`.
 #68 hecha el 2026-11-20: migración `20261120225837_punto_publico_guardado.sql`, regresión
 `apps/app/tests/db/coordenadas-publicas.test.ts`.
+#69 hecha el 2026-11-20 con dos ajustes de Ana: cada foto vive en un solo bucket (público si está aprobada y su casa se ve,
+privado si no; mover = copiar y luego borrar), que concilia D1 con D2; y la mueve un endpoint del worker sin entrada
+(`POST /api/fotos/sincronizar`) que llaman la app, el webhook de pago y el cron, en vez de `pg_net` (que no funciona en local
+ni en e2e). Las URL firmadas valen 24 h, lo que la caché persistida de Query. Migración `20261120232022_fotos_bucket_privado.sql`.
 Fecha: 2026-11-20. Versión del código revisada: `d2cf137` (develop) más `9b32828` y `7d61382` (locales, #71).
 Reproducción: `apps/app/tests/db/privacidad-exposicion.test.ts` (base local, datos desechables, lecturas con roles reales;
 la service role solo siembra). Las dos pruebas afirman la exposición **actual**: #68 y #69 las convertirán en regresiones.

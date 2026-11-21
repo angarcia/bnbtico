@@ -70,7 +70,16 @@ export function toListingUpdate(d: Partial<ListingDraft>): ListingUpdate {
 }
 
 export function fromPhotoRows(rows: readonly PhotoRow[], url: PhotoUrl): Photo[] {
-  return rows.map((p) => ({ id: p.id, path: p.path, position: p.position, url: url(variantPath(p.path, 800)) })).sort((a, b) => a.position - b.position);
+  return rows
+    .map((p) => ({
+      id: p.id,
+      path: p.path,
+      position: p.position,
+      url: url(variantPath(p.path, 800)),
+      // Cada variante con su propia URL: las firmadas (historia #69) no se derivan cambiando el tamaño en la de 800.
+      variants: { 480: url(variantPath(p.path, 480)), 800: url(variantPath(p.path, 800)), 1600: url(variantPath(p.path, 1600)) },
+    }))
+    .sort((a, b) => a.position - b.position);
 }
 
 const itemState = (r: { status: string; review_note: string | null; submitted_at: string }): EditItemState => ({

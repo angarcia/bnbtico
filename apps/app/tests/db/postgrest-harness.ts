@@ -11,6 +11,7 @@ import { createPostgrestListings } from "../../src/data/postgrest/listings";
 import { createPostgrestOwnerListings } from "../../src/data/postgrest/owner";
 import { createPostgrestPhotos } from "../../src/data/postgrest/photos";
 import { quickWriter } from "../../src/data/postgrest/session-client";
+import { createPhotoSync } from "../../src/server/photo-sync";
 import { SESSION_STORAGE_KEY, memoryStore } from "../../src/data/storage";
 import type { Database } from "../../src/domain/database.types";
 import { addDays } from "../../src/domain/calendar";
@@ -81,6 +82,9 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     if (spec.status in decision) {
       const d = decision[spec.status as keyof typeof decision];
       fail("revisar", (await admin.rpc("review_listing", { p_listing: id, p_decision: d, p_note: d === "approve" ? "" : "Faltan fotos del baño." })).error);
+      // Lo que haría la sincronización del worker (historia #69): las fotos de una casa aprobada pasan al bucket público.
+      // Aquí no hay objetos que mover: se anota y basta.
+      if (d === "approve") fail("publicar fotos", (await service.from("listing_photos").update({ bucket: "public" }).eq("listing_id", id)).error);
     }
     // Estado heredado (una casa activa vuelta a borrador): desde la migración editar_casa_publicada ningún propietario
     // llega a él, así que se siembra como el servicio.
@@ -189,7 +193,7 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
       const rows = created.data!.map((l) => ({ listing_id: l.id, client_id: ids[who], owner_id: ids[other], whatsapp_phone: TEST_PHONES[other], created_at: at, updated_at: at }));
       fail("sembrar consultas", (await service.from("inquiries").insert(rows)).error);
     },
-    anon: createPostgrestListings(anon, { supabaseUrl: localSupabase().url }),
+    anon: afterPhotoSync(createPostgrestListings(anon, { supabaseUrl: localSupabase().url }), service),
     owner: (who) => createPostgrestOwnerListings(owners[who], { supabaseUrl: localSupabase().url, quickWrite: quick[who] }),
     async reset() {
       await flagsOn();
@@ -223,24 +227,53 @@ export async function postgrestHarness(): Promise<SubscriptionHarness> {
     },
     async objects(listingId) {
       const found: { name: string; cacheControl: string | null }[] = [];
-      const walk = async (prefix: string) => {
-        const { data, error } = await service.storage.from("listings").list(prefix, { limit: 1000 });
+      // Los dos buckets (historia #69): una foto está en uno u otro según si ya se publicó.
+      const walk = async (bucket: string, prefix: string) => {
+        const { data, error } = await service.storage.from(bucket).list(prefix, { limit: 1000 });
         fail("listar Storage", error);
         for (const entry of data ?? []) {
           const name = `${prefix}/${entry.name}`;
-          if (entry.id === null) await walk(name);
+          if (entry.id === null) await walk(bucket, name);
           else found.push({ name, cacheControl: (entry.metadata?.cacheControl as string | undefined) ?? null });
         }
       };
-      await walk(listingId);
+      for (const bucket of ["listings", "listings-privadas"]) await walk(bucket, listingId);
       return found.sort((a, b) => (a.name < b.name ? -1 : 1));
     },
   };
 }
 
+/**
+ * En la app, tras aprobar o parar, el worker mueve las fotos de bucket (POST /api/fotos/sincronizar, historia #69). Aquí,
+ * antes de cada lectura pública: la sincronización de verdad (createPhotoSync) y, para las filas sembradas sin objeto en
+ * Storage, solo la anotación. Así el contrato ve lo mismo que el fake, que no tiene buckets.
+ */
+function afterPhotoSync<T extends object>(api: T, service: SupabaseClient<Database>): T {
+  const sync = createPhotoSync({ supabaseUrl: localSupabase().url, serviceKey: localSupabase().serviceKey, fetch });
+  const settle = async () => {
+    await sync.run();
+    const { data } = await service.rpc("photo_sync_pending");
+    for (const p of data ?? []) await service.rpc("set_photo_bucket", { p_kind: p.kind, p_id: p.id, p_bucket: p.to_bucket });
+  };
+  return new Proxy(api, {
+    get(target, key, receiver) {
+      const value: unknown = Reflect.get(target, key, receiver);
+      if (typeof value !== "function") return value;
+      return async (...args: unknown[]) => {
+        await settle();
+        return Reflect.apply(value, target, args);
+      };
+    },
+  });
+}
+
 /** Storage no se vacía con las filas: se recorre el bucket (casa → foto → variantes) y se borra todo. */
 async function emptyBucket(service: SupabaseClient<Database>) {
-  const bucket = service.storage.from("listings");
+  for (const id of ["listings", "listings-privadas"]) await emptyOne(service, id);
+}
+
+async function emptyOne(service: SupabaseClient<Database>, id: string) {
+  const bucket = service.storage.from(id);
   const names: string[] = [];
   const walk = async (prefix: string, depth: number) => {
     const { data } = await bucket.list(prefix, { limit: 1000 });

@@ -818,6 +818,54 @@ describe("worker · balizas /vitals, /errors y /events", () => {
 
 });
 
+describe("worker · sincronización de fotos (historia #69)", () => {
+  const allowAll: RateLimiter = { limit: async () => ({ success: true }) };
+  function photos(opts: { limiter?: RateLimiter | null; sync?: "ok" | "none" } = {}) {
+    const t = setup(opts.limiter === null ? {} : { BEACON_LIMITER: opts.limiter ?? allowAll });
+    const calls: string[] = [];
+    const keys: string[] = [];
+    const limiter = opts.limiter ?? allowAll;
+    const app = createApp({
+      listings: () => t.h.anon,
+      cache: () => null,
+      purgeFetch: fetch,
+      photoSync: () => (opts.sync === "none" ? null : { run: async () => (calls.push("run"), { moved: 1, failed: 0, errors: [] }) }),
+    });
+    const env = opts.limiter === null ? t.env : { ...t.env, BEACON_LIMITER: { limit: (o: { key: string }) => (keys.push(o.key), limiter.limit(o)) } };
+    const post = (headers: Record<string, string> = {}) => app.request(`${ORIGIN}/api/fotos/sincronizar`, { method: "POST", headers: { "cf-connecting-ip": "203.0.113.5", ...headers } }, env);
+    return { post, calls, keys };
+  }
+
+  it("lanza una pasada y responde 202, con su propia clave de límite", async () => {
+    const p = photos();
+    const res = await p.post({ origin: ORIGIN });
+    expect(res.status).toBe(202);
+    await vi.waitFor(() => expect(p.calls).toEqual(["run"]));
+    expect(p.keys).toEqual(["fotos:203.0.113.5"]);
+  });
+
+  it("por encima del límite, 429 sin pasada; sin limitador o sin clave de servicio, 204 sin pasada", async () => {
+    const limited = photos({ limiter: { limit: async () => ({ success: false }) } });
+    expect((await limited.post()).status).toBe(429);
+    const noLimiter = photos({ limiter: null });
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      expect((await noLimiter.post()).status).toBe(204);
+    } finally {
+      spy.mockRestore();
+    }
+    const noKey = photos({ sync: "none" });
+    expect((await noKey.post()).status).toBe(204);
+    expect([...limited.calls, ...noLimiter.calls, ...noKey.calls]).toEqual([]);
+  });
+
+  it("rechaza otro origen", async () => {
+    const p = photos();
+    expect((await p.post({ origin: "https://malo.example" })).status).toBe(403);
+    expect(p.calls).toEqual([]);
+  });
+});
+
 describe("worker · botón de propietarios de la portada", () => {
   const PORTADA = '<main><!--cta-propietarios--><p class="soon-later">Abrimos pronto en el Caribe sur.</p><!--/cta-propietarios--></main>';
   const PORTADA_WA = '<main><!--cta-propietarios--><a class="soon-cta" href="https://wa.me/50660000000" rel="noopener">Quiero publicar mi casa gratis</a><!--/cta-propietarios--></main>';

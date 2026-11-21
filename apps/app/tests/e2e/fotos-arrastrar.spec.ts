@@ -166,7 +166,7 @@ test("durante una subida, los botones «Mover…» quedan sin efecto", async ({ 
   const { id } = await h.seed({ status: "draft", photos: 6 });
   const before = (await own(id)).photos.map((p) => p.id);
   await page.unroute("**/storage/v1/object/public/**"); // subida real en esta prueba
-  await page.route("**/storage/v1/object/listings/**", async (r) => {
+  await page.route("**/storage/v1/object/listings-privadas/**", async (r) => {
     if (r.request().method() === "POST") await new Promise((s) => setTimeout(s, 1500));
     await r.continue();
   });
@@ -376,7 +376,7 @@ test("un segundo dedo: antes de levantar cancela; después se ignora y no quita 
 test("durante una subida no se levanta; al terminar, el orden incluye la foto nueva", async ({ page }) => {
   const { id } = await h.seed({ status: "draft", photos: 6 });
   await page.unroute("**/storage/v1/object/public/**"); // subida real en esta prueba
-  await page.route("**/storage/v1/object/listings/**", async (r) => {
+  await page.route("**/storage/v1/object/listings-privadas/**", async (r) => {
     if (r.request().method() === "POST") await new Promise((s) => setTimeout(s, 800));
     await r.continue();
   });

@@ -53,11 +53,14 @@ export function photosContract(name: string, makeHarness: () => Promise<Listings
       const folder = await photos().upload(id, variants());
       const photo = await photos().add(id, folder);
       expect(photo).toMatchObject({ path: folder, position: 2 });
-      expect(photo.url).toMatch(new RegExp(`/storage/v1/object/public/listings/${folder}/800\\.jpg$`));
-      expect(variantUrl(photo, 480)).toMatch(new RegExp(`${folder}/480\\.jpg$`));
+      // Sin aprobar está en el bucket privado: URL firmada por variante (historia #69). El fake no firma.
+      const pending = (key: string) => new RegExp(`/storage/v1/object/(public/listings|sign/listings-privadas)/${key}(\\?token=[^&]+)?$`);
+      expect(photo.url).toMatch(pending(`${folder}/800\\.jpg`));
+      expect(variantUrl(photo, 480)).toMatch(pending(`${folder}/480\\.jpg`));
       const l = await own(id);
       expect(l.photoCount).toBe(3);
-      expect(l.photos[2]).toEqual(photo);
+      // Cada lectura firma de nuevo: el token cambia, la foto no.
+      expect(l.photos[2]).toMatchObject({ id: photo.id, path: folder, position: 2 });
       expect(l.photos[0]!.url).toMatch(/\/foto-0\.jpg$/); // las anteriores siguen siendo un solo archivo
     });
 

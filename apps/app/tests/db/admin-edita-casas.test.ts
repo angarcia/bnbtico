@@ -86,13 +86,13 @@ describe("admin · editar casas · en la base", () => {
   it("Storage: el admin sube a la carpeta de una casa ajena y borra lo que ninguna foto enlaza; el anfitrión no sube a una ajena", async () => {
     const theirs = await h.seed({ status: "active", as: "other" });
     const folder = folderOf(theirs.id);
-    expect((await owner.storage.from("listings").upload(`${folder}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).not.toBeNull();
-    expect((await admin.storage.from("listings").upload(`${folder}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
+    expect((await owner.storage.from("listings-privadas").upload(`${folder}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).not.toBeNull();
+    expect((await admin.storage.from("listings-privadas").upload(`${folder}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
     // Registrada como foto, el objeto ya no se borra; sin registrar, sí.
     const registered = folderOf(theirs.id);
-    expect((await admin.storage.from("listings").upload(`${registered}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
+    expect((await admin.storage.from("listings-privadas").upload(`${registered}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
     expect((await admin.rpc("admin_add_listing_photo", { p_listing: theirs.id, p_path: registered })).error).toBeNull();
-    await admin.storage.from("listings").remove([`${folder}/800.jpg`, `${registered}/800.jpg`]);
+    await admin.storage.from("listings-privadas").remove([`${folder}/800.jpg`, `${registered}/800.jpg`]);
     const names = (await h.objects(theirs.id)).map((o) => o.name);
     expect(names).toContain(`${registered}/800.jpg`);
     expect(names).not.toContain(`${folder}/800.jpg`);

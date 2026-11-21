@@ -4,7 +4,8 @@
 import { fetchFxRate, type FxRate } from "../domain/fx";
 import { landingOnly } from "../domain/seo";
 import { inSendingHours } from "../domain/whatsapp-sender";
-import type { Env } from "./app";
+import type { Env, PhotoSync } from "./app";
+import { runPhotoSync } from "./photo-sync";
 
 export const TELEMETRY_RETENTION_DAYS = 90;
 
@@ -76,7 +77,10 @@ export const DAILY_UTC_HOUR = 9;
  * en la ejecución de las 09 UTC; los avisos por WhatsApp solo de 08:00 a 17:59 de Costa Rica; «solo portada» no hace
  * nada más que lo que ya hace runDaily. Un fallo de los avisos se registra (una línea JSON) y nunca tumba el keep-alive.
  */
-export async function runHourly(env: Env, deps: CronDeps & { reminders?: (() => Promise<unknown>) | null }, cron: string, scheduledTime: number): Promise<void> {
+export async function runHourly(env: Env, deps: CronDeps & { reminders?: (() => Promise<unknown>) | null; photoSync?: PhotoSync | null }, cron: string, scheduledTime: number): Promise<void> {
+  // Red de seguridad de la historia #69: lo que la app no avisó (p. ej. una casa que pg_cron paró al acabar la oferta) se
+  // mueve de bucket en menos de una hora.
+  if (!landingOnly(env) && deps.photoSync) await runPhotoSync(deps.photoSync, "cron", deps.log);
   if (!landingOnly(env) && deps.reminders && inSendingHours(scheduledTime)) {
     try {
       await deps.reminders();

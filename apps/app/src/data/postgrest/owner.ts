@@ -10,10 +10,11 @@ import type { Database } from "../../domain/database.types";
 import { DomainError, toDomainError } from "../../domain/errors";
 import { DEFAULT_PROVINCE } from "../../domain/listing";
 import { planStep } from "../../domain/publish-rules";
-import { EDIT_SELECT, fromEditRow, fromListingRow, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
+import { EDIT_SELECT, fromEditRow, fromListingRow, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
 import { FIELD_COLUMN } from "../../domain/edit-summary";
+import { createPhotoSigner, photoSources, requestPhotoSync } from "./photo-urls";
 
-const OWN_COLUMNS = `*, listing_photos(id, path, position), listing_edits(${EDIT_SELECT})`;
+const OWN_COLUMNS = `*, listing_photos(id, path, position, bucket), listing_edits(${EDIT_SELECT})`;
 const NOT_FOUND = "No encontramos ese anuncio.";
 /** El mensaje del trigger listings_protect; se adelanta aquí porque una pantalla sin cambios no llega a la base. */
 const FROZEN = "Este anuncio no se puede editar en su estado actual. Ábralo para editar y volverá a revisión.";
@@ -27,7 +28,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type QuickWrite = () => { db: SupabaseClient<Database>; accessToken: string; userId: string } | null;
 
 export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts: { supabaseUrl: string; quickWrite?: QuickWrite }): OwnerListingsApi {
-  const url = storagePhotoUrl(opts.supabaseUrl);
+  const sign = createPhotoSigner(db, opts.supabaseUrl);
 
   async function me(): Promise<string> {
     const { data } = await db.auth.getSession();
@@ -41,7 +42,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
     // Sin las rechazadas, como listOwn: un enlace guardado a una de ellas dice «No encontramos ese anuncio».
     const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("id", id).eq("owner_id", await me()).neq("status", "rejected").maybeSingle();
     if (error) throw toDomainError(error);
-    return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
+    return data ? fromListingRow(data, data.listing_photos, await sign(photoSources(data)), data.listing_edits) : null;
   }
 
   return {
@@ -49,6 +50,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       // Mis casas no enseña las rechazadas (shownToOwner, historia 27).
       const { data, error } = await db.from("listings").select(OWN_COLUMNS).eq("owner_id", await me()).neq("status", "rejected").order("created_at", { ascending: false });
       if (error) throw toDomainError(error);
+      const url = await sign(data.flatMap(photoSources));
       return data.map((row) => fromListingRow(row, row.listing_photos, url, row.listing_edits));
     },
 
@@ -65,7 +67,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
         .limit(1)
         .maybeSingle();
       if (error) throw toDomainError(error);
-      return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
+      return data ? fromListingRow(data, data.listing_photos, await sign(photoSources(data)), data.listing_edits) : null;
     },
 
     async createDraft(id) {
@@ -88,7 +90,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
         .select(OWN_COLUMNS)
         .single();
       if (error) throw toDomainError(error);
-      return { id: data.id, publicId: data.public_id, listing: fromListingRow(data, data.listing_photos, url, data.listing_edits) };
+      return { id: data.id, publicId: data.public_id, listing: fromListingRow(data, data.listing_photos, await sign(photoSources(data)), data.listing_edits) };
     },
 
     async saveStep(id, step, patch, known) {
@@ -108,7 +110,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       const { data, error } = await query.maybeSingle();
       if (error) throw toDomainError(error);
       if (!data) throw new DomainError(NOT_FOUND, "not_found");
-      return fromListingRow(data, data.listing_photos, url, data.listing_edits);
+      return fromListingRow(data, data.listing_photos, await sign(photoSources(data)), data.listing_edits);
     },
 
     async submit(id) {
@@ -143,7 +145,8 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
       // un solo viaje (auditoría de viajes, punto 8). null si la edición quedó vacía y se borró.
       const { data, error } = await db.rpc("save_edit_full", { p_listing: id, p_patch: toEditPatch(patch) });
       if (error) throw toDomainError(error);
-      return fromEditRow(data as EditRow | null, url);
+      const edit = data as EditRow | null;
+      return fromEditRow(edit, await sign((edit?.listing_edit_photos ?? []).map((p) => ({ path: p.path }))));
     },
 
     async discardEditField(id, field) {
@@ -179,7 +182,7 @@ export function createPostgrestOwnerListings(db: SupabaseClient<Database>, opts:
     async deleteOwn(id) {
       if (!UUID.test(id)) throw new DomainError(NOT_FOUND, "not_found");
       const { error } = await db.rpc("delete_own_listing", { p_listing: id });
-      if (!error) return;
+      if (!error) return requestPhotoSync();
       const e = toDomainError(error);
       // Ajena, inexistente o ya eliminada (otro teléfono, doble toque): la base no lo distingue y la app la da por hecha.
       throw e.message === NOT_FOUND ? new DomainError(NOT_FOUND, "not_found") : e;

@@ -10,18 +10,19 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import { costaRicaToday } from "../../domain/inquiry";
 import { planStep } from "../../domain/publish-rules";
 import { REVIEW_MESSAGES as M } from "../../domain/review";
-import { EDIT_SELECT, fromEditRow, fromListingRow, fromPhotoRows, storagePhotoUrl, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
+import { EDIT_SELECT, fromEditRow, fromListingRow, fromPhotoRows, toEditPatch, toListingUpdate, toLivePatch, type EditRow } from "../../domain/rows";
 import { readCalendarDays } from "../../domain/airbnb";
 import { photoObjectPaths } from "../../domain/image";
 import { adminAccess } from "./admin-access";
+import { createPhotoSigner, photoSources, removeObjects, requestPhotoSync } from "./photo-urls";
 
-const COLUMNS = `*, listing_photos(id, path, position), listing_edits(${EDIT_SELECT})`;
+const COLUMNS = `*, listing_photos(id, path, position, bucket), listing_edits(${EDIT_SELECT})`;
 const DRAFT_COLUMNS = `${COLUMNS}, owner:profiles!listings_owner_id_fkey(full_name)`;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FROZEN = "Esta casa está publicada: cambie sus datos desde su ficha.";
 
 export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { supabaseUrl: string; now?: () => number }): AdminEditApi {
-  const url = storagePhotoUrl(opts.supabaseUrl);
+  const sign = createPhotoSigner(db, opts.supabaseUrl);
   const now = opts.now ?? Date.now;
 
   /** Lo que piden todas las lecturas: sin ser admin, nada; sin el segundo código, que lo confirme. */
@@ -43,7 +44,7 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
   async function read(id: string) {
     const { data, error } = await db.from("listings").select(COLUMNS).eq("id", id).is("deleted_at", null).maybeSingle();
     if (error) throw toDomainError(error);
-    return data ? fromListingRow(data, data.listing_photos, url, data.listing_edits) : null;
+    return data ? fromListingRow(data, data.listing_photos, await sign(photoSources(data)), data.listing_edits) : null;
   }
   /** Una lectura a la vez que la comprobación de quién es (admin-access.ts); sin ser admin, se descarta lo leído. */
   async function asAdmin<T>(load: () => Promise<T>, none: T): Promise<T> {
@@ -55,7 +56,7 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
   async function readEdit(id: string) {
     const { data, error } = await db.from("listing_edits").select(EDIT_SELECT).eq("listing_id", id).maybeSingle<EditRow>();
     if (error) throw toDomainError(error);
-    return fromEditRow(data, url);
+    return fromEditRow(data, await sign((data?.listing_edit_photos ?? []).map((p) => ({ path: p.path }))));
   }
 
   return {
@@ -72,6 +73,7 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
           .order("created_at", { ascending: false })
           .returns<(Parameters<typeof fromListingRow>[0] & { listing_photos: Parameters<typeof fromPhotoRows>[0]; listing_edits: EditRow | null; owner: { full_name: string } | null })[]>();
         if (error) throw toDomainError(error);
+        const url = await sign(data.flatMap(photoSources));
         return data.map((row) => ({ listing: fromListingRow(row, row.listing_photos, url, row.listing_edits), ownerName: row.owner?.full_name ?? "" }));
       }, []);
     },
@@ -114,14 +116,16 @@ export function createPostgrestAdminEdit(db: SupabaseClient<Database>, opts: { s
       if (!UUID.test(listingId)) throw notFound();
       const data = await call(db.rpc("admin_add_listing_photo", { p_listing: listingId, p_path: folder }).single());
       if (!data) throw notFound();
-      return fromPhotoRows([data], url)[0]!;
+      // En una casa publicada va directo a la ficha: el worker la pasa al bucket público (historia #69).
+      requestPhotoSync();
+      return fromPhotoRows([data], await sign([{ path: data.path }]))[0]!;
     },
 
     async removePhoto(photoId) {
       if (!UUID.test(photoId)) throw new DomainError("No encontramos esa foto.", "not_found");
       const path = await call(db.rpc("admin_remove_listing_photo", { p_photo: photoId }));
       // La fila ya no está: si borrar los objetos falla, quedan huérfanos en Storage pero nadie los enlaza.
-      if (path) await db.storage.from("listings").remove(photoObjectPaths(path));
+      if (path) await removeObjects(db, photoObjectPaths(path));
     },
 
     async reorderPhotos(listingId, photoIds) {

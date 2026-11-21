@@ -41,8 +41,9 @@ export function photoSrcSet(path: string, url: (path: string) => string): string
 }
 
 /** Otra variante a partir de la URL de la foto (la de 800 en una foto nueva; el único archivo en una anterior). */
-export function variantUrl(photo: { path: string; url: string }, size: VariantSize): string {
-  return isLegacyPhotoPath(photo.path) ? photo.url : photo.url.replace(/\/\d+\.jpg$/, `/${size}.jpg`);
+export function variantUrl(photo: { path: string; url: string; variants?: Readonly<Record<VariantSize, string>> }, size: VariantSize): string {
+  if (isLegacyPhotoPath(photo.path)) return photo.url;
+  return photo.variants?.[size] ?? photo.url.replace(/\/\d+\.jpg$/, `/${size}.jpg`);
 }
 
 // ---------- Subida (ticket 08): tres JPEG por foto, generados en el navegador ----------

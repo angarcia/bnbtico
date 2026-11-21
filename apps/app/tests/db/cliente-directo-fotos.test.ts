@@ -147,7 +147,7 @@ describe("migración cliente_directo · fotos y topes", () => {
   });
 
   describe("Storage", () => {
-    const upload = (db: SupabaseClient<Database>, name: string) => db.storage.from("listings").upload(name, JPEG, { contentType: "image/jpeg" });
+    const upload = (db: SupabaseClient<Database>, name: string) => db.storage.from("listings-privadas").upload(name, JPEG, { contentType: "image/jpeg" });
 
     it("como mucho 45 objetos por carpeta de casa (15 fotos × 3 variantes)", async () => {
       const { id } = await h.seed({ status: "draft" });

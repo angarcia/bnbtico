@@ -13,6 +13,8 @@ import { securityHeaders } from "../shared/security";
 import type { ReminderEnv, ReminderRuntime } from "./reminders";
 import { testClock } from "./test-clock";
 import { readCapped } from "./capped-body";
+import { runPhotoSync } from "./photo-sync";
+import type { PhotoSyncResult } from "./photo-sync";
 import { registerBilling, type BillingDeps, type PaymentsEnv } from "./billing";
 import { registerAirbnb, type AirbnbDeps } from "./airbnb";
 import { ICAL_EXPORT_HEADERS, registerIcalExport, type IcalExportDeps } from "./ical-export";
@@ -67,6 +69,12 @@ export interface Deps {
   billing?: BillingDeps;
   airbnb?: AirbnbDeps;
   icalExport?: IcalExportDeps;
+  /** Mueve fotos entre el bucket público y el privado (src/server/photo-sync.ts, historia #69); null sin clave de servicio. */
+  photoSync?(env: Env): PhotoSync | null;
+}
+
+export interface PhotoSync {
+  run(): Promise<PhotoSyncResult>;
 }
 
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
@@ -142,11 +150,11 @@ export function createApp(deps: Deps) {
   let warnedLimiter = false;
   /** Las tres rutas juntas, por IP (`cf-connecting-ip` la pone Cloudflare; no se guarda). Sin limitador o si falla, se
    *  descarta: perder telemetría un rato cuesta menos que escrituras sin límite. */
-  async function beaconAllowed(c: Context<{ Bindings: Env }>): Promise<"ok" | "limited" | "discard"> {
+  async function beaconAllowed(c: Context<{ Bindings: Env }>, scope: "beacon" | "fotos" = "beacon"): Promise<"ok" | "limited" | "discard"> {
     const limiter = c.env.BEACON_LIMITER;
     try {
       if (!limiter) throw new Error("sin BEACON_LIMITER");
-      return (await limiter.limit({ key: `beacon:${c.req.header("cf-connecting-ip") ?? "sin-ip"}` })).success ? "ok" : "limited";
+      return (await limiter.limit({ key: `${scope}:${c.req.header("cf-connecting-ip") ?? "sin-ip"}` })).success ? "ok" : "limited";
     } catch (error) {
       if (!warnedLimiter) console.error(JSON.stringify({ event: "beacon_discarded", reason: "limitador", error: String(error) }));
       warnedLimiter = true;
@@ -179,6 +187,19 @@ export function createApp(deps: Deps) {
       return c.body(null, 204);
     });
   }
+
+  // Historia #69: la app lo llama tras aprobar, parar, reactivar o borrar (y el cron cada hora). No recibe nada: la base dice
+  // qué fotos están fuera de sitio. Mismo límite que las balizas (otra clave): llamarlo de más solo cuesta lecturas.
+  app.post("/api/fotos/sincronizar", async (c) => {
+    const origin = c.req.header("origin");
+    if (origin && origin !== new URL(c.req.url).origin) return c.body(null, 403);
+    const allowed = await beaconAllowed(c, "fotos");
+    if (allowed === "limited") return c.body(null, 429);
+    const sync = allowed === "ok" ? (deps.photoSync?.(c.env) ?? null) : null;
+    if (!sync) return c.body(null, 204);
+    await later(c, runPhotoSync(sync, "endpoint"));
+    return c.body(null, 202);
+  });
 
   app.post("/_pruebas/oferta/:publicId", (c) => testClock(c, deps.reminders));
 
@@ -261,7 +282,7 @@ export function createApp(deps: Deps) {
     return res.ok ? c.json({ purged: key }) : c.json({ error: "Cloudflare rechazó la purga." }, 502);
   });
 
-  if (deps.billing) registerBilling(app, deps.billing, deps.securityHeaders !== false);
+  if (deps.billing) registerBilling(app, deps.billing, deps.securityHeaders !== false, deps.photoSync);
   if (deps.airbnb) registerAirbnb(app, deps.airbnb);
   registerIcalExport(app, deps.icalExport);
 

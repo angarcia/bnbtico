@@ -8,6 +8,7 @@
 // demás ids no cambian (el precio sigue siendo el 8), así los enlaces y los borradores retomados no caen en otra pantalla.
 // Módulo de dominio: sin imports de framework.
 import type { LatLng } from "./geo";
+import type { VariantSize } from "./image";
 import type { ZoneSource } from "./zones";
 import type { ListingEdit } from "./edit";
 import type { AdminHold } from "./admin-hold";
@@ -113,6 +114,8 @@ export interface Photo {
   position: number;
   /** La variante de 800 (o el archivo de una foto anterior); otras con `variantUrl`. */
   url: string;
+  /** Las tres variantes; una foto sin aprobar las trae firmadas (historia #69). */
+  variants?: Readonly<Record<VariantSize, string>>;
 }
 
 export interface Listing extends ListingDraft {

@@ -1,5 +1,15 @@
 # Guía de pruebas manuales de 3bstays
 
+## Fotos privadas hasta su aprobación · 2026-11-20 (historia #69)
+
+Desde el teléfono en pruebas.3bstays.com, con un anfitrión y el admin (con el segundo factor). Las fotos sin aprobar están en un bucket privado y solo el dueño y el admin las ven; al aprobar, el worker las pasa al público en unos segundos.
+
+- [ ] Como anfitrión, publique una casa con 2 fotos y envíela. En Mis casas y en el detalle se ven las fotos. Mantenga pulsada una foto, «Copiar dirección de la imagen» y ábrala en una ventana privada (sin sesión): no carga (la dirección lleva `sign/listings-privadas` y caduca).
+- [ ] Como admin, abra la revisión de esa casa: se ven las fotos. Apruébela. En unos segundos la ficha pública de la casa (ventana privada) muestra las 2 fotos; si aún no salen, recargue a los 10 s.
+- [ ] Como anfitrión, en esa casa ya activa añada una foto nueva (va a revisión): en el detalle se ve con «En revisión»; la ficha pública sigue con 2. El admin la aprueba: la ficha pasa a 3 en unos segundos.
+- [ ] Como admin, pause la casa (Casas → Pausar) y copie antes la dirección de una de sus fotos desde la ficha pública: tras pausar, esa dirección deja de cargar en una ventana privada en unos segundos (puede tardar si el navegador la tiene en caché; pruebe en otra ventana privada). Reanúdela: las fotos vuelven a la ficha.
+- [ ] Una casa que se para sola (fin de la oferta, pg_cron) saca sus fotos del público en menos de una hora (cron del worker).
+
 ## Editar una casa en escritorio · 2026-11-20 (historia 06)
 
 En escritorio (1280 × 800 y 1440 × 900), como anfitrión, con una casa activa con fotos horizontales y verticales: las comprobaciones marcadas **(escritorio)** de 3.13 (cada dato en una ventana sobre el detalle, cerrar y descartar, errores, teclado, y el editor de fotos amplio con el visor y la franja de la ficha). En el teléfono no cambia nada: cada dato y Fotos siguen siendo su pantalla. Como admin en escritorio, `/admin/casas/<id>/editar/<dato>` también sigue siendo la pantalla del dato.

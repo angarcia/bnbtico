@@ -10,6 +10,7 @@ import { cronTasks, syncMinutesOf } from "../domain/airbnb-schedule";
 import { runAirbnbCycle } from "./airbnb-cycle";
 import { createApp, type CacheLike, type Env } from "./app";
 import { runHourly } from "./cron";
+import { createPhotoSync } from "./photo-sync";
 import { reminderBase, sendReminders, senderFromEnv, type ReminderRuntime } from "./reminders";
 
 export type { Env } from "./app";
@@ -32,6 +33,8 @@ const reminders = (env: Env): ReminderRuntime | null => {
 
 const telemetry = (env: Env) => (env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL ? createTelemetryWriter(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, (i, init) => fetch(i, init)) : null);
 
+const photoSync = (env: Env) => (env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL ? createPhotoSync({ supabaseUrl: env.SUPABASE_URL, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY, fetch: (i, init) => fetch(i, init) }) : null);
+
 const fxWriter = (env: Env) => (env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL ? createFxWriter(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, (i, init) => fetch(i, init)) : null);
 
 const app = createApp({
@@ -40,6 +43,7 @@ const app = createApp({
   purgeFetch: (input, init) => fetch(input, init),
   reminders,
   telemetry,
+  photoSync,
   icalExport: {
     read: (env, token) => {
       if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.SUPABASE_URL) throw new Error("Exportación no configurada.");
@@ -79,7 +83,7 @@ export default {
     }
     const rt = reminders(env);
     const send = rt ? () => sendReminders(rt, { base: reminderBase(env, null), log }) : null;
-    await runHourly(env, { fetch: (i, init) => fetch(i, init), log, now: () => Date.now(), telemetry: telemetry(env), fx: fxWriter(env), reminders: send }, controller.cron, controller.scheduledTime);
+    await runHourly(env, { fetch: (i, init) => fetch(i, init), log, now: () => Date.now(), telemetry: telemetry(env), fx: fxWriter(env), reminders: send, photoSync: photoSync(env) }, controller.cron, controller.scheduledTime);
     if (airbnbError) throw airbnbError;
   },
 };

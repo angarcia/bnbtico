@@ -77,7 +77,7 @@ describe("admin · pausar, bloquear y eliminar · en la base", () => {
     await rpc(admin, "admin_block_listing", blocked.id);
     await rpc(admin, "admin_pause_listing", paused.id);
     const name = (id: string) => `${id}/${crypto.randomUUID()}/800.jpg`;
-    const up = (id: string) => owner.storage.from("listings").upload(name(id), JPEG, { contentType: "image/jpeg" });
+    const up = (id: string) => owner.storage.from("listings-privadas").upload(name(id), JPEG, { contentType: "image/jpeg" });
     expect((await up(blocked.id)).error).not.toBeNull();
     expect((await up(paused.id)).error).toBeNull();
   });
