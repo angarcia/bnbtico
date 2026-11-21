@@ -1,5 +1,8 @@
 # Auditoría del acceso por código y del envío por WhatsApp (historia #72, segv1-auditoria-otp)
 
+Estado: **cerrada el 2026-11-20.** Matriz completa con lo que se puede comprobar hoy; lo de Twilio no aplica hasta
+configurarlo y pasa a #73 como requisito. Decisión de Ana sobre los códigos fijos de los admins en pruebas: B.
+
 Fecha: 2026-11-20. Solo lecturas: configuración de Auth de `bnbtico-pruebas` con la API de administración de Supabase
 (sesión de la CLI, salida filtrada: ningún secreto se imprimió ni se guarda aquí), el log del despliegue de develop (run
 44832047692) y el código en `50a35d1`. Sin mensajes reales, sin pruebas de fuerza bruta, sin cambiar nada.
@@ -75,5 +78,5 @@ paneles; los de Supabase Auth se pueden hacer con la API de administración si A
 - Twilio aún no está configurado (Ana, 2026-11-20): 9–12 no aplican todavía y pasan a #73 como requisito al configurarlo.
   En Supabase (Authentication → Sign In / Providers → Phone) esos campos son marcadores («pending»), confirmado por Ana
   con una captura el mismo día: hoy no hay envío real posible.
-- Cloudflare: si existe ya un widget de Turnstile y para qué dominios (3).
+- Cloudflare: **no existe aún ningún widget de Turnstile** (Ana, 2026-11-20). El paso 2 del plan empieza creándolo.
 - ~~Decisión sobre los códigos fijos de los admins en pruebas~~: **B**, decidido por Ana el 2026-11-20 (se mantienen en pruebas hasta tener Twilio de pago; en producción, ninguno).
