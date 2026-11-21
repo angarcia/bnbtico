@@ -1273,6 +1273,9 @@ isOneToOne: true
 "set_photo_bucket":
 { Args: { "p_bucket": string,"p_id": string,"p_kind": string }; Returns: undefined
                            },
+"set_photo_buckets":
+{ Args: { "p_items": Json }; Returns: undefined
+                           },
 "start_edit":
 { Args: { "p_listing": string }; Returns: {
               "bathroom_shared": boolean | null,

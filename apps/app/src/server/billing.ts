@@ -61,7 +61,8 @@ export function registerBilling(app: Hono<{ Bindings: Env }>, deps: BillingDeps,
   async function syncPhotos(c: Context<{ Bindings: Env }>, res: Response): Promise<Response> {
     const sync = res.ok ? (photoSync?.(c.env) ?? null) : null;
     if (!sync) return res;
-    const work = runPhotoSync(sync, "webhook", deps.log);
+    // El webhook ya gastó algunas subpeticiones (pasarela y base): la pasada se queda en 25.
+    const work = runPhotoSync(sync, "webhook", deps.log, 25);
     try {
       c.executionCtx.waitUntil(work);
     } catch {

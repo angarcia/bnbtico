@@ -74,7 +74,8 @@ export interface Deps {
 }
 
 export interface PhotoSync {
-  run(): Promise<PhotoSyncResult>;
+  /** `budget`: subpeticiones que puede gastar (el plan gratuito de Workers corta en 50 por invocación). */
+  run(budget?: number): Promise<PhotoSyncResult>;
 }
 
 const LISTING_CACHE = "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";

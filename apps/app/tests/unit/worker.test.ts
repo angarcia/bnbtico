@@ -829,7 +829,7 @@ describe("worker · sincronización de fotos (historia #69)", () => {
       listings: () => t.h.anon,
       cache: () => null,
       purgeFetch: fetch,
-      photoSync: () => (opts.sync === "none" ? null : { run: async () => (calls.push("run"), { moved: 1, failed: 0, errors: [] }) }),
+      photoSync: () => (opts.sync === "none" ? null : { run: async () => (calls.push("run"), { moved: 1, failed: 0, remaining: 0, errors: [] }) }),
     });
     const env = opts.limiter === null ? t.env : { ...t.env, BEACON_LIMITER: { limit: (o: { key: string }) => (keys.push(o.key), limiter.limit(o)) } };
     const post = (headers: Record<string, string> = {}) => app.request(`${ORIGIN}/api/fotos/sincronizar`, { method: "POST", headers: { "cf-connecting-ip": "203.0.113.5", ...headers } }, env);

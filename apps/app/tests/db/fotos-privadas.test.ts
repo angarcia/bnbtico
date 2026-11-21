@@ -148,6 +148,26 @@ describe("fotos sin aprobar en un bucket privado (#69)", () => {
     expect((await pending()).filter((r) => [active.id, paused.id, draft.id].includes(r.listing_id))).toEqual([]);
   });
 
+  it("una pasada cortada antes de borrar deja la foto anotada pero con objetos en el bucket que no toca: vuelve a salir pendiente", async () => {
+    const draft = await listing("draft");
+    const path = `${draft.id}/${crypto.randomUUID()}`;
+    await service.from("listing_photos").insert({ listing_id: draft.id, path, position: 0, bucket: "private" });
+    expect((await pending()).filter((r) => r.path === path)).toEqual([]);
+    // Como el 2026-11-21 en pruebas: copiada y anotada como privada, pero el borrado del público no llegó a hacerse.
+    for (const b of ["listings", PRIVATE]) expect((await service.storage.from(b).upload(`${path}/800.jpg`, JPEG, { contentType: "image/jpeg" })).error).toBeNull();
+    expect((await pending()).filter((r) => r.path === path).map((r) => `${r.from_bucket}→${r.to_bucket}`)).toEqual(["public→private"]);
+  });
+
+  it("se anotan varias de una vez (una sola llamada por pasada)", async () => {
+    const draft = await listing("draft");
+    const rows = [0, 1].map((position) => ({ listing_id: draft.id, path: `${draft.id}/${crypto.randomUUID()}`, position, bucket: "public" as const }));
+    const { data } = await service.from("listing_photos").insert(rows).select("id");
+    const items = data!.map((r) => ({ kind: "listing", id: r.id, bucket: "private" }));
+    expect((await service.rpc("set_photo_buckets", { p_items: items })).error).toBeNull();
+    expect(sql(`select string_agg(bucket, ',') from public.listing_photos where listing_id = '${uuid(draft.id)}'`)).toBe("private,private");
+    expect((await owner.rpc("set_photo_buckets", { p_items: items })).error).not.toBeNull();
+  });
+
   it("solo la service role pregunta qué mover o lo anota; nadie cambia el bucket de una foto por REST", async () => {
     for (const db of [anonClient(), owner, adminAal2]) {
       expect((await db.rpc("photo_sync_pending")).error).not.toBeNull();

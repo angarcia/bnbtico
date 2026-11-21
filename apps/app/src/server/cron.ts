@@ -78,9 +78,6 @@ export const DAILY_UTC_HOUR = 9;
  * nada más que lo que ya hace runDaily. Un fallo de los avisos se registra (una línea JSON) y nunca tumba el keep-alive.
  */
 export async function runHourly(env: Env, deps: CronDeps & { reminders?: (() => Promise<unknown>) | null; photoSync?: PhotoSync | null }, cron: string, scheduledTime: number): Promise<void> {
-  // Red de seguridad de la historia #69: lo que la app no avisó (p. ej. una casa que pg_cron paró al acabar la oferta) se
-  // mueve de bucket en menos de una hora.
-  if (!landingOnly(env) && deps.photoSync) await runPhotoSync(deps.photoSync, "cron", deps.log);
   if (!landingOnly(env) && deps.reminders && inSendingHours(scheduledTime)) {
     try {
       await deps.reminders();
@@ -89,4 +86,7 @@ export async function runHourly(env: Env, deps: CronDeps & { reminders?: (() => 
     }
   }
   if (new Date(scheduledTime).getUTCHours() === DAILY_UTC_HOUR) await runDaily(env, deps, cron);
+  // Red de seguridad de la historia #69: lo que la app no avisó (p. ej. una casa que pg_cron paró al acabar la oferta).
+  // Al final y con 20 subpeticiones: la invocación del cron comparte el tope de 50 con los avisos y lo diario.
+  if (!landingOnly(env) && deps.photoSync) await runPhotoSync(deps.photoSync, "cron", deps.log, 20);
 }

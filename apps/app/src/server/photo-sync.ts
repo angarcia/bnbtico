@@ -9,8 +9,14 @@ import { photoObjectPaths } from "../domain/image";
 export const PUBLIC_BUCKET = "listings";
 export const PRIVATE_BUCKET = "listings-privadas";
 const BUCKETS = { public: PUBLIC_BUCKET, private: PRIVATE_BUCKET } as const;
-/** Lotes de photo_sync_pending (500 filas) por pasada: acota una pasada larga; lo que quede, en la siguiente. */
-const MAX_BATCHES = 4;
+/**
+ * Subpeticiones por pasada. El plan gratuito de Workers corta en 50 por invocación (2026-11-21: la primera pasada en
+ * pruebas movió 10 de 30 fotos y dejó una a medias). Cada foto cuesta sus copias (3); el lote se anota en una llamada y se
+ * borra con una por bucket. Lo que no quepa, en la siguiente pasada.
+ */
+export const SUBREQUEST_BUDGET = 45;
+/** Lo que se guarda para cerrar la pasada: anotar (1) y borrar de los dos buckets (2), con margen para comprobaciones. */
+const CLOSING_COST = 5;
 
 const pendingRows = z.array(
   z.object({
@@ -33,15 +39,22 @@ export interface PhotoSyncDeps {
 export interface PhotoSyncResult {
   moved: number;
   failed: number;
+  /** Fuera de sitio que no cupieron en esta pasada. */
+  remaining: number;
   errors: string[];
 }
 
 export function createPhotoSync(deps: PhotoSyncDeps) {
   const base = deps.supabaseUrl.replace(/\/$/, "");
   const headers = { apikey: deps.serviceKey, authorization: `Bearer ${deps.serviceKey}`, "content-type": "application/json" };
+  let used = 0;
+  const fetch: typeof globalThis.fetch = (input, init) => {
+    used++;
+    return deps.fetch(input, init);
+  };
 
   async function rpc(name: string, body: Record<string, unknown>): Promise<unknown> {
-    const res = await deps.fetch(`${base}/rest/v1/rpc/${name}`, { method: "POST", headers, body: JSON.stringify(body) });
+    const res = await fetch(`${base}/rest/v1/rpc/${name}`, { method: "POST", headers, body: JSON.stringify(body) });
     if (!res.ok) throw new Error(`${name}: ${res.status} ${await res.text()}`);
     const text = await res.text();
     return text ? JSON.parse(text) : null;
@@ -49,7 +62,7 @@ export function createPhotoSync(deps: PhotoSyncDeps) {
 
   /** Copia un objeto. Ya en el destino, o sin origen (otra pasada lo movió), no es un fallo. */
   async function copy(key: string, from: string, to: string): Promise<void> {
-    const res = await deps.fetch(`${base}/storage/v1/object/copy`, {
+    const res = await fetch(`${base}/storage/v1/object/copy`, {
       method: "POST",
       headers,
       body: JSON.stringify({ bucketId: from, sourceKey: key, destinationBucket: to, destinationKey: key }),
@@ -65,45 +78,54 @@ export function createPhotoSync(deps: PhotoSyncDeps) {
   }
 
   async function exists(key: string, bucket: string): Promise<boolean> {
-    const res = await deps.fetch(`${base}/storage/v1/object/info/${bucket}/${key}`, { headers });
+    const res = await fetch(`${base}/storage/v1/object/info/${bucket}/${key}`, { headers });
     await res.body?.cancel();
     return res.ok;
   }
 
   async function remove(keys: string[], bucket: string): Promise<void> {
-    const res = await deps.fetch(`${base}/storage/v1/object/${bucket}`, { method: "DELETE", headers, body: JSON.stringify({ prefixes: keys }) });
+    const res = await fetch(`${base}/storage/v1/object/${bucket}`, { method: "DELETE", headers, body: JSON.stringify({ prefixes: keys }) });
     if (!res.ok) throw new Error(`borrar de ${bucket}: ${res.status} ${await res.text()}`);
     await res.body?.cancel();
   }
 
-  async function move(photo: PendingPhoto): Promise<void> {
-    const from = BUCKETS[photo.from_bucket];
-    const to = BUCKETS[photo.to_bucket];
-    const keys = photoObjectPaths(photo.path);
-    for (const key of keys) await copy(key, from, to);
-    await rpc("set_photo_bucket", { p_kind: photo.kind, p_id: photo.id, p_bucket: photo.to_bucket });
-    await remove(keys, from);
-  }
-
   return {
-    async run(): Promise<PhotoSyncResult> {
-      const result: PhotoSyncResult = { moved: 0, failed: 0, errors: [] };
-      const failedIds = new Set<string>();
-      for (let batch = 0; batch < MAX_BATCHES; batch++) {
-        const parsed = pendingRows.safeParse(await rpc("photo_sync_pending", {}));
-        if (!parsed.success) throw new Error("photo_sync_pending: respuesta inesperada");
-        const todo = parsed.data.filter((p) => !failedIds.has(p.id));
-        if (todo.length === 0) break;
-        for (const photo of todo) {
-          try {
-            await move(photo);
-            result.moved++;
-          } catch (e) {
-            failedIds.add(photo.id);
-            result.failed++;
-            if (result.errors.length < 5) result.errors.push(String(e));
-          }
+    /** Una pasada dentro de `budget` subpeticiones: copiar, anotar el lote y después borrar los originales. */
+    async run(budget = SUBREQUEST_BUDGET): Promise<PhotoSyncResult> {
+      used = 0;
+      const result: PhotoSyncResult = { moved: 0, failed: 0, remaining: 0, errors: [] };
+      const parsed = pendingRows.safeParse(await rpc("photo_sync_pending", {}));
+      if (!parsed.success) throw new Error("photo_sync_pending: respuesta inesperada");
+      const copied: PendingPhoto[] = [];
+      let next = 0;
+      for (; next < parsed.data.length; next++) {
+        const photo = parsed.data[next]!;
+        const keys = photoObjectPaths(photo.path);
+        if (used + keys.length + CLOSING_COST > budget) break;
+        try {
+          for (const key of keys) await copy(key, BUCKETS[photo.from_bucket], BUCKETS[photo.to_bucket]);
+          copied.push(photo);
+        } catch (e) {
+          result.failed++;
+          if (result.errors.length < 5) result.errors.push(String(e));
         }
+      }
+      result.remaining = parsed.data.length - next;
+      if (copied.length === 0) return result;
+      try {
+        await rpc("set_photo_buckets", { p_items: copied.map((p) => ({ kind: p.kind, id: p.id, bucket: p.to_bucket })) });
+      } catch (e) {
+        // Sin anotar no se borra nada: las copias quedan en los dos buckets y la siguiente pasada lo termina.
+        result.failed += copied.length;
+        result.errors.push(String(e));
+        return result;
+      }
+      result.moved = copied.length;
+      for (const from of ["public", "private"] as const) {
+        const keys = copied.filter((p) => p.from_bucket === from).flatMap((p) => photoObjectPaths(p.path));
+        if (keys.length === 0) continue;
+        // Si falla, la foto ya está anotada y photo_sync_pending la devuelve por los restos: se limpia en la siguiente.
+        await remove(keys, BUCKETS[from]).catch((e: unknown) => result.errors.push(String(e)));
       }
       return result;
     },
@@ -111,10 +133,10 @@ export function createPhotoSync(deps: PhotoSyncDeps) {
 }
 
 /** Una pasada con su línea de log (solo si movió o falló algo). Nunca lanza: la llaman el endpoint, el webhook y el cron. */
-export async function runPhotoSync(sync: { run(): Promise<PhotoSyncResult> }, source: string, log: (line: string) => void = (l) => console.log(l)): Promise<PhotoSyncResult | null> {
+export async function runPhotoSync(sync: { run(budget?: number): Promise<PhotoSyncResult> }, source: string, log: (line: string) => void = (l) => console.log(l), budget?: number): Promise<PhotoSyncResult | null> {
   try {
-    const result = await sync.run();
-    if (result.moved || result.failed) log(JSON.stringify({ event: "photo_sync", source, ...result }));
+    const result = await sync.run(budget);
+    if (result.moved || result.failed || result.remaining) log(JSON.stringify({ event: "photo_sync", source, ...result }));
     return result;
   } catch (e) {
     log(JSON.stringify({ event: "photo_sync", source, ok: false, error: String(e) }));
