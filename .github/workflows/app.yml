@@ -275,12 +275,24 @@ jobs:
         with:
           name: playwright-1-of-1-attempt-${{ github.run_attempt }}
           path: ci-artifacts/playwright-1-of-1-attempt-${{ github.run_attempt }}
+      # «Re-run failed jobs» no repite quality, que lo crea: el inventario de este intento no existe y vale el último anterior (mismo SHA,
+      # el informe lo comprueba). Aparte, para que un solo inventario no se extraiga encima de los demás.
+      - uses: actions/download-artifact@v8
+        if: always()
+        with:
+          pattern: e2e-inventory-attempt-*
+          path: ci-artifacts/inventarios/
       - name: Resumen combinado
         id: summary
         if: always()
         env:
           SHARD_COUNT: "1"
-        run: node apps/app/scripts/ci-artifacts.mjs report "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "ci-artifacts/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json" ci-artifacts "$SHARD_COUNT"
+        run: |
+          inventory="ci-artifacts/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json"
+          if [ ! -f "$inventory" ]; then
+            inventory=$(find ci-artifacts/inventarios -name inventory.json 2>/dev/null | sort -V | tail -n 1)
+          fi
+          node apps/app/scripts/ci-artifacts.mjs report "$RUNNER_TEMP/$CI_ARTIFACT_NAME" "${inventory:-ci-artifacts/sin-inventario.json}" ci-artifacts "$SHARD_COUNT"
       - name: Informe combinado
         if: always() && steps.summary.outputs.safe_to_upload == 'true'
         uses: actions/upload-artifact@v7

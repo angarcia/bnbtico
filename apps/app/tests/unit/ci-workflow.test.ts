@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
@@ -133,6 +135,31 @@ describe("CI aislada", () => {
     expect(jobs.report).toContain("name: playwright-1-of-1-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("path: ci-artifacts/playwright-1-of-1-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}");
+  });
+
+  it("el informe usa el inventario de su intento o, tras «Re-run failed jobs», el último anterior", () => {
+    const script = jobs.report!.match(/name: Resumen combinado[\s\S]*?run: \|\n([\s\S]*?)(?=\n      - )/)![1]!
+      .replace(/^ {10}/gm, "")
+      .replaceAll("${{ github.run_attempt }}", "12")
+      .replace(/node apps\/app\/scripts\/ci-artifacts\.mjs report "[^"]*" "([^"]*)".*/, 'echo "$1"');
+    const run = (files: string[]) => {
+      const dir = mkdtempSync(join(tmpdir(), "inventario-"));
+      for (const f of files) {
+        mkdirSync(join(dir, dirname(f)), { recursive: true });
+        writeFileSync(join(dir, f), "{}");
+      }
+      return spawnSync("bash", ["-e", "-c", script], { cwd: dir, encoding: "utf8", env: { PATH: process.env.PATH } }).stdout.trim();
+    };
+    expect(run(["ci-artifacts/e2e-inventory-attempt-12/inventory.json"])).toBe("ci-artifacts/e2e-inventory-attempt-12/inventory.json");
+    expect(run([
+      "ci-artifacts/inventarios/e2e-inventory-attempt-2/inventory.json",
+      "ci-artifacts/inventarios/e2e-inventory-attempt-10/inventory.json",
+    ])).toBe("ci-artifacts/inventarios/e2e-inventory-attempt-10/inventory.json");
+    // Con un solo artefacto, download-artifact lo extrae sin subcarpeta.
+    expect(run(["ci-artifacts/inventarios/inventory.json"])).toBe("ci-artifacts/inventarios/inventory.json");
+    // Sin ninguno, el informe recibe una ruta que no existe y lo dice («Falta inventario válido»).
+    expect(run([])).toBe("ci-artifacts/sin-inventario.json");
+    expect(jobs.report).toContain("pattern: e2e-inventory-attempt-*");
   });
 
   it("no entrega logs de texto libre al saneador ni a los artefactos", () => {
