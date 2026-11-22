@@ -260,7 +260,9 @@ function scan(ctx, text) {
   for (const match of text.matchAll(/\b(?:Proxy-)?Authorization[ \t]*:[ \t]*(Basic[ \t]+[A-Za-z0-9+/]+={0,2})/gi)) header(ctx, "Authorization", match[1]);
   for (const match of text.matchAll(/["'](?:access_token|refresh_token|id_token|client_secret|apikey)["']\s*:\s*["']([^"'\r\n]+)["']/gi)) learn(ctx, match[1]);
   for (const match of text.matchAll(/(?:^|[?&])(access_token|refresh_token|apikey|token)=([^&#\s"']+)/gi)) {
-    try { learn(ctx, decodeURIComponent(match[2].replaceAll("+", " "))); } catch { fail("query-encoding"); }
+    // Un valor recortado o con un `%` suelto (p. ej. URL firmadas de Storage en una traza) no se decodifica: se redacta tal
+    // cual en vez de bloquear la subida entera. Sigue sin publicarse, que es lo que importa.
+    try { learn(ctx, decodeURIComponent(match[2].replaceAll("+", " "))); } catch { learn(ctx, match[2]); }
   }
 }
 
