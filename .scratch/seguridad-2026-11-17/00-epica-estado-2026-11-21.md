@@ -9,7 +9,7 @@
 | #71 Telemetría | Hecha y desplegada (8192 bytes; 120/min por IP con la vinculación de Workers). Falta ver llegar balizas en pruebas tras una visita. |
 | #72 Auditoría OTP | Hecha (`06-auditoria-otp.md`). Hoy no se puede enviar ningún código real: las credenciales de Twilio en Supabase son marcadores. |
 | #73 Remediación OTP | Paso 1 hecho en pruebas: 60 s entre códigos al mismo número. Pasos 2 y 3, aplazados (abajo). |
-| #74 Validación | Informe en `.scratch/seguridad-2026-11-17/08-validacion.md`. Cerrable cuando la corrección de #69 deje `photo_sync_pending()` en 0 en pruebas. |
+| #74 Validación | Informe en `.scratch/seguridad-2026-11-17/08-validacion.md`. Cerrable: la corrección de #69 está desplegada (`24ab399`) y `photo_sync_pending()` está en 0 en pruebas, sin restos en ningún bucket (2026-11-22). |
 
 ## Aplazado
 
