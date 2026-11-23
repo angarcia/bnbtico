@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createUploadQueue, progressOf, UPLOAD_STEPS, type UploadDeps } from "../../src/client/publish/photo-queue";
+import { createUploadQueue, progressOf, UPLOAD_STEPS, type UploadDeps } from "../../src/client/propietario/publicar/photo-queue";
 import { MAX_PHOTOS_MESSAGE, UNSUPPORTED_MESSAGE } from "../../src/domain/image";
 import { DomainError } from "../../src/domain/errors";
 

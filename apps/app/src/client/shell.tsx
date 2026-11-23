@@ -28,14 +28,14 @@ import { RouterButtonLink } from "./comun/router-buttons";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
-const ownerScreens = () => import("./screens/propietario");
+const ownerScreens = () => import("./propietario/propietario");
 const cuentaScreens = () => import("./cuenta/cuenta");
 const favoritosScreen = () => import("./explorar/favoritos");
-const actividadScreen = () => import("./screens/actividad");
-const calendarioScreen = () => import("./screens/calendario");
-const casaEditable = () => import("./screens/casa-editable");
+const actividadScreen = () => import("./propietario/actividad");
+const calendarioScreen = () => import("./propietario/calendario/calendario");
+const casaEditable = () => import("./propietario/casa-editable");
 // Publicar sin cuenta (§E): el paso 1, la verificación y la vuelta tras el código, en su propio trozo.
-const publicarEntrada = () => import("./screens/publicar-entrada");
+const publicarEntrada = () => import("./propietario/publicar/publicar-entrada");
 type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 /** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica y la estancia del modo de este build
@@ -178,7 +178,7 @@ const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "reje
 const casasSearch = (params: Record<string, unknown>): { ver?: string } => (typeof params.ver === "string" ? { ver: params.ver } : {});
 // Editar casas (ronda de Ana del 2 nov, ticket 10): las pantallas del anfitrión con el puerto del admin, en su propio trozo.
 const asistir = (name: "AsistirCasaScreen" | "AsistirPasoScreen" | "AsistirCampoScreen" | "AsistirCalendarioScreen" | "BorradoresScreen") =>
-  lazyRouteComponent(() => import("./screens/asistir"), name);
+  lazyRouteComponent(() => import("./propietario/asistir"), name);
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
@@ -251,7 +251,7 @@ const routeTree = rootRoute.addChildren([
         if (step >= PHOTOS_STEP) throw redirect({ to: "/publicar/verificar", replace: true });
       },
       ...publicarLocalPending,
-      component: lazyRouteComponent(() => import("./screens/publicar"), "PasoLocalScreen"),
+      component: lazyRouteComponent(() => import("./propietario/publicar/publicar"), "PasoLocalScreen"),
     }),
     createRoute({
       getParentRoute: () => flow,
@@ -273,17 +273,17 @@ const routeTree = rootRoute.addChildren([
       component: lazyRouteComponent(() => import("./explorar/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", validateSearch: (p: Record<string, unknown>): { panel?: "suscripcion" } => p.panel === "suscripcion" ? { panel: "suscripcion" } : {}, component: ownerScreen("CasaPropietarioScreen") }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("./screens/airbnb"), "AirbnbScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("./propietario/calendario/airbnb"), "AirbnbScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/correo", component: lazyRouteComponent(publicarEntrada, "CorreoScreen") }),
       // Cada dato de una casa publicada, en su propio trozo (editar-*).
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("./screens/editar"), "EditarCampoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("./propietario/publicar/editar"), "EditarCampoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/suscripcion", validateSearch: suscripcionSearch, component: lazyRouteComponent(suscripcionScreen, "SuscripcionScreen") }),
       // Tras el código de /publicar/verificar: crea la casa con la respuesta del paso 1 guardada en el teléfono.
       createRoute({ getParentRoute: () => privateFlow, path: "/publicar/continuar", component: lazyRouteComponent(publicarEntrada, "ContinuarScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", ...publicarPending, component: lazyRouteComponent(() => import("./screens/publicar"), "PublicarScreen") }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, ...publicarPending, component: lazyRouteComponent(() => import("./screens/publicar"), "PasoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", ...publicarPending, component: lazyRouteComponent(() => import("./propietario/publicar/publicar"), "PublicarScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, ...publicarPending, component: lazyRouteComponent(() => import("./propietario/publicar/publicar"), "PasoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/admin/codigo", validateSearch: nextSearch, component: adminScreen("SegundoCodigoScreen") }),
     ]),
     adminFlow.addChildren([

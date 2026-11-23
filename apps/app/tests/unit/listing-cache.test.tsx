@@ -3,10 +3,10 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { persistQueryClientRestore, persistQueryClientSave } from "@tanstack/react-query-persist-client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { addOwnCached, ownListingQuery, ownListingsQuery, patchCached, refresh, useDeleteDraft, useSetAvailable } from "../../src/client/owner";
-import { useDiscardEditField, useSaveEdit, useUpdateLive } from "../../src/client/edit";
+import { addOwnCached, ownListingQuery, ownListingsQuery, patchCached, refresh, useDeleteDraft, useSetAvailable } from "../../src/client/propietario/owner";
+import { useDiscardEditField, useSaveEdit, useUpdateLive } from "../../src/client/propietario/edit";
 import { adminEditQuery, adminListingQuery, useEditsWithPending, useHouseAction, useQueueWithPending, useReview, useReviewEdit } from "../../src/client/admin/admin-queries";
-import { EditorContext, ownerPort, type EditorPort } from "../../src/client/editor-port";
+import { EditorContext, ownerPort, type EditorPort } from "../../src/client/propietario/editor-port";
 import { memoryStore } from "../../src/data/storage";
 import type { Listing } from "../../src/domain/listing";
 import { emptyQueue, type AdminQueue, type QueueItem } from "../../src/domain/review";

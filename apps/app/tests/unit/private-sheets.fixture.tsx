@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ConfirmSheet } from "../../src/client/comun/confirm-sheet";
-import { CloseSheet } from "../../src/client/close-sheet";
-import { MarkSheet } from "../../src/client/mark-sheet";
-import { HousePicker } from "../../src/client/house-picker";
+import { CloseSheet } from "../../src/client/propietario/calendario/close-sheet";
+import { MarkSheet } from "../../src/client/propietario/calendario/mark-sheet";
+import { HousePicker } from "../../src/client/propietario/house-picker";
 import "../../src/styles/global.css";
 
 function Fixture() {

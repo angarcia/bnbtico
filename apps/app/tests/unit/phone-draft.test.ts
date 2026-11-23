@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { localPort } from "../../src/client/publish/local-port";
-import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } from "../../src/client/publish/phone-draft";
+import { localPort } from "../../src/client/propietario/publicar/local-port";
+import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } from "../../src/client/propietario/publicar/phone-draft";
 import { memoryStore, type KeyValueStore } from "../../src/data/storage";
 import { emptyDraft } from "../../src/domain/listing";
 import { PUBLISH_DRAFT_KEY, PUBLISH_STEP1_KEY, PUBLISH_STEP1_TTL_MS, storeLocalDraft, storeStep1 } from "../../src/domain/publish-return";

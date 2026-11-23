@@ -159,7 +159,7 @@ const COMPONENTS: { name: string; use: string; owners: string[]; classes: RegExp
   { name: "botón", use: "Button, ButtonLink, TextButton o IconButton (shared/button.tsx)", owners: ["shared/ui/button.tsx"], classes: /^(?:btn(?:-[\w-]+)?|icon-btn)$/ },
   { name: "hoja o ventana", use: "Sheet, Dialog, FullScreen o ConfirmSheet (shared/overlay.tsx)", owners: ["shared/ui/overlay.tsx"], classes: /^(?:sheet|sheet-head|sheet-backdrop|dialog|dialog-head|dialog-body|dialog-foot)$/ },
   { name: "campo", use: "Field, TextInput, AffixInput, SearchInput, StickyActions (shared/field.tsx) o CodeInput", owners: ["shared/ui/field.tsx", "client/comun/code-input.tsx"], classes: /^(?:field|field-compact|input-money|cal-price|zone-input|search-field|sticky-actions|sticky-spacer|code-boxes|code-input)$/ },
-  { name: "chip o segmento", use: "ChoiceChips, Segmented (shared/choice.tsx) o ChoiceCards", owners: ["shared/ui/choice.tsx", "client/publish/wizard-parts.tsx"], classes: /^(?:chip|chip-sm|seg|seg-fill|choice)$/ },
+  { name: "chip o segmento", use: "ChoiceChips, Segmented (shared/choice.tsx) o ChoiceCards", owners: ["shared/ui/choice.tsx", "client/propietario/publicar/wizard-parts.tsx"], classes: /^(?:chip|chip-sm|seg|seg-fill|choice)$/ },
   { name: "contador −/+", use: "Stepper o CounterRow (shared/stepper.tsx)", owners: ["shared/ui/stepper.tsx"], classes: /^(?:stepper|counter|people-stepper|ctl)$/ },
   { name: "tarjeta o fila", use: "Card, List, ListRow… (shared/card.tsx)", owners: ["shared/ui/card.tsx", "shared/ui/structure.tsx"], classes: /^(?:card|card-solid|card-arena|card-sun|card-soft|list|list-item|list-item-sun|placeholder-card|fav-empty)$/ },
   { name: "aviso", use: "Notice o LoadError (shared/structure.tsx)", owners: ["shared/ui/structure.tsx"], classes: /^(?:note|note-[\w-]+)$/ },
@@ -174,13 +174,13 @@ const CLASS_EXCEPTIONS: Record<string, Record<string, string>> = {
   "client/explorar/explorar.tsx": { chip: "el botón Filtros flotante de Explorar (chip de navegación, no de elección)" },
   "client/admin/admin-casas.tsx": { chip: "chips de filtro de Casas: enlaces, no elección", "chip-sm": "chips de filtro de Casas, pequeños" },
   "client/admin/admin-anuncios.tsx": { chip: "pestañas de la cola en chip: enlaces, no elección", "chip-sm": "pestañas de la cola, pequeñas" },
-  "client/screens/actividad.tsx": { "btn-link": "«Abrir WhatsApp» de una consulta: texto propio (inquiry-wa)" },
+  "client/propietario/actividad.tsx": { "btn-link": "«Abrir WhatsApp» de una consulta: texto propio (inquiry-wa)" },
   "client/explorar/card-whatsapp.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto" },
-  "client/screens/calendario.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de «Pausar la casa» y «Marcar una reserva»" },
+  "client/propietario/calendario/calendario.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de «Pausar la casa» y «Marcar una reserva»" },
   "shared/listing-page.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto (ficha SSR)" },
   "shared/contact-sheet.tsx": { sheet: "la hoja de contacto en línea en la ficha de escritorio", "sheet-head": "cabecera de la hoja en línea" },
   "shared/status-pages.tsx": { "header-root": "páginas de estado de la ficha SSR: sin router, no pueden usar ScreenHeader" },
-  "client/publish/zone-select.tsx": { field: "caja del selector de zona del paso 2 (lleva un HousePicker, no un control de Field)" },
+  "client/propietario/publicar/zone-select.tsx": { field: "caja del selector de zona del paso 2 (lleva un HousePicker, no un control de Field)" },
 };
 
 /** Las clases de cada `className=…` (literales, plantillas y ramas de un ternario), con su línea. */

@@ -1,8 +1,8 @@
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
-import { LOCAL_USER, editorListingQuery, ownerPort, type EditorPort } from "../../src/client/editor-port";
-import { OWNER_STALE_MS, ownListingsQuery } from "../../src/client/owner";
-import { enqueueSave } from "../../src/client/save-queue";
+import { LOCAL_USER, editorListingQuery, ownerPort, type EditorPort } from "../../src/client/propietario/editor-port";
+import { OWNER_STALE_MS, ownListingsQuery } from "../../src/client/propietario/owner";
+import { enqueueSave } from "../../src/client/propietario/save-queue";
 import { activeListing } from "./fixtures";
 
 describe("consulta compartida de edición", () => {

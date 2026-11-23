@@ -12,7 +12,7 @@ export const OWNER_STALE_MS = 30_000;
 export const ownListingsQuery = (userId: string) =>
   queryOptions({
     queryKey: ownListingsKey(userId),
-    queryFn: async (): Promise<Listing[]> => (await import("../owner")).fetchOwnListings(),
+    queryFn: async (): Promise<Listing[]> => (await import("../propietario/owner")).fetchOwnListings(),
     staleTime: OWNER_STALE_MS,
   });
 

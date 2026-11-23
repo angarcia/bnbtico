@@ -35,7 +35,7 @@ describe("arquitectura", () => {
         else walk(target);
       }
     };
-    for (const entry of ["client/editor-query.ts", "client/editor-status.tsx", "client/owner-ui.tsx"]) walk(join(SRC, entry));
+    for (const entry of ["client/propietario/editor-query.ts", "client/propietario/editor-status.tsx", "client/propietario/owner-ui.tsx"]) walk(join(SRC, entry));
     expect(offenders).toEqual([]);
   });
 

@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
-import { ownListingsQuery } from "../../src/client/owner";
-import { updateLiveOptions } from "../../src/client/edit";
+import { ownListingsQuery } from "../../src/client/propietario/owner";
+import { updateLiveOptions } from "../../src/client/propietario/edit";
 import type { Listing } from "../../src/domain/listing";
 import { activeListing } from "./fixtures";
 
