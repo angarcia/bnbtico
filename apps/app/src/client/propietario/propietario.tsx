@@ -35,6 +35,7 @@ import { Button, TextButton } from "../../shared/ui/button";
 import { RouterButtonLink, RouterTextLink } from "../comun/router-buttons";
 import { CountBadge, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { Card, List, ListRowButton } from "../../shared/ui/card";
+import * as OWNER_COPY from "./copy/owner";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -47,9 +48,9 @@ function useDiscardSheet(go: () => void): [() => void, ReactNode] {
     () => setOpen(true),
     open ? (
       <ConfirmSheet
-        title="¿Descartar este borrador?"
-        body="No se puede deshacer."
-        confirmLabel="Descartar"
+        title={OWNER_COPY.discardTitle}
+        body={OWNER_COPY.discardBody}
+        confirmLabel={OWNER_COPY.discard}
         tone="destructive"
         onClose={close}
         onConfirm={() => {
@@ -91,14 +92,14 @@ function NewHouseLink({ userId }: { userId: string }) {
     <Link
       to="/propietario/publicar"
       className="new-house"
-      aria-label="Nueva casa"
+      aria-label={OWNER_COPY.newHouse}
       onPointerDown={() => {
         if (userId && !knownNoDraft(client, userId)) void client.prefetchQuery(resumableQuery(userId));
       }}
     >
       <I.plus size={22} />
       {/* El texto que se ve en escritorio (antes con `content:` en el CSS); el nombre accesible sigue siendo «Nueva casa». */}
-      <span className="desktop-label">Añadir casa</span>
+      <span className="desktop-label">{OWNER_COPY.addHouse}</span>
     </Link>
   );
 }
@@ -137,9 +138,9 @@ export function CasasScreen() {
   }
   return (
     <>
-      <ScreenHeader kind="root" title="Mis casas" />
+      <ScreenHeader kind="root" title={OWNER_COPY.title} />
       {listings.isError && !list ? <LoadError onRetry={() => void listings.refetch()}>{message(listings.error)}</LoadError> : null}
-      {!list && !listings.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
+      {!list && !listings.isError ? <Skeleton shape="row" label={OWNER_COPY.loading} /> : null}
       {view === "list" ? (
         <>
           <NoticeCard notice={notice} billing={billing} />
@@ -183,26 +184,26 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
   const billed = !!useBilling(userId)?.of(l.id);
   const shareable = can(l, "share");
   const tools = multiple && can(l, "available");
-  const inquiriesLabel = newInquiries > 0 ? `Consultas, ${newInquiries} ${newInquiries === 1 ? "nueva" : "nuevas"}` : "Consultas";
+  const inquiriesLabel = newInquiries > 0 ? OWNER_COPY.inquiriesFresh({ count: newInquiries }) : OWNER_COPY.inquiries;
   return (
     <Card as="article" placement={shareable || tools ? "house-card-compact" : "house-card"}>
       {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
       <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
-      {l.reviewNote && l.status === "changes" ? <Notice tone="solid" small>Nota de 3bstays: {l.reviewNote}</Notice> : null}
+      {l.reviewNote && l.status === "changes" ? <Notice tone="solid" small>{OWNER_COPY.reviewNote({ note: l.reviewNote })}</Notice> : null}
       <HoldNotice listing={l} card />
       {shareable || tools ? (
         <div className="house-actions">
           {shareable ? <ShareButtonInline listing={l} placement="house-share" /> : null}
           {tools ? (
             <div className="house-tools">
-              <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label="Calendario" title="Calendario">
+              <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label={OWNER_COPY.calendar} title={OWNER_COPY.calendar}>
                 <I.calendar size={28} />
-                <span className="desktop-label">Calendario</span>
+                <span className="desktop-label">{OWNER_COPY.calendar}</span>
               </Link>
               <Link to="/propietario/actividad" search={{ casa: l.id }} replace className="house-tool" aria-label={inquiriesLabel} title={inquiriesLabel}>
                 <I.chat size={28} />
                 <CountBadge n={newInquiries} placement="house" data-testid="house-inquiries-count" aria-hidden="true" />
-                <span className="desktop-label">Consultas</span>
+                <span className="desktop-label">{OWNER_COPY.inquiries}</span>
               </Link>
             </div>
           ) : null}
@@ -210,17 +211,17 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
       ) : null}
       {l.status === "changes" ? (
         <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} variant="primary" block>
-          Corregir y reenviar
+          {OWNER_COPY.fixAndResend}
         </RouterButtonLink>
       ) : null}
       {l.status === "draft" ? (
         <div className="row gap-8">
           <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} variant="secondary" placement="grow">
-            Seguir publicando
+            {OWNER_COPY.continuePublishing}
           </RouterButtonLink>
           {can(l, "discard") ? (
             <TextButton tone="quiet" disabled={discard.isPending} onClick={ask}>
-              Descartar
+              {OWNER_COPY.discard}
             </TextButton>
           ) : null}
         </div>
@@ -267,31 +268,31 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, n
   // En escritorio, «Ver ficha» va en la cabecera: flotando tapaba la fila que se edita (revisión 2026-11-13, A1).
   const viewListing = l && can(l, "share") ? (desktop ? (
     <RouterButtonLink to="/casa/$publicId" params={{ publicId: l.publicId }} variant="secondary" icon={<I.eye size={20} />}>
-      Ver ficha
+      {OWNER_COPY.viewListing}
     </RouterButtonLink>
   ) : (
     <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="float-btn">
       <I.eye size={20} />
-      Ver ficha
+      {OWNER_COPY.viewListing}
     </Link>)
   ) : null;
   return (
     <>
       {newHouse ? (
-        <ScreenHeader kind="root" title={l ? titleOf(l) : "Mi casa"} action={<>{desktop ? viewListing : null}{newHouse}</>} />
+        <ScreenHeader kind="root" title={l ? titleOf(l) : OWNER_COPY.myHouse} action={<>{desktop ? viewListing : null}{newHouse}</>} />
       ) : (
-        <ScreenHeader kind="flow" title={l ? titleOf(l) : "Mi casa"} back={{ to: "/propietario/casas" }} action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined} />
+        <ScreenHeader kind="flow" title={l ? titleOf(l) : OWNER_COPY.myHouse} back={{ to: "/propietario/casas" }} action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined} />
       )}
       {notice}
       {l && isPublished(l) ? (
-        <Suspense fallback={<Skeleton shape="row" label="Cargando sus casas" />}>
+        <Suspense fallback={<Skeleton shape="row" label={OWNER_COPY.loading} />}>
           <EditableFicha key={l.id} listing={l} userId={userId} rightPanel={showSubscription ? <HouseSubscription listing={l} /> : rightPanel} />
         </Suspense>
       ) : null}
       {l && !isPublished(l) ? <Detail listing={l} userId={userId} /> : null}
       {l === null ? <NotFoundCard /> : null}
       {l === undefined && query.isError ? <LoadError onRetry={() => void query.refetch()}>{message(query.error)}</LoadError> : null}
-      {l === undefined && !query.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
+      {l === undefined && !query.isError ? <Skeleton shape="row" label={OWNER_COPY.loading} /> : null}
       {viewListing && !desktop ? viewListing : null}
     </>
   );
@@ -318,7 +319,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             // Sin fotos: el hueco lleva directo al paso de las fotos (Ana, 2026-11-04).
             <Link to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "7" }} className="photo-empty">
               <I.camera size={28} />
-              Añadir fotos
+              {OWNER_COPY.addPhotos}
             </Link>
           )}
           <StatusTag placement="photo" label={label} />
@@ -336,7 +337,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
         {l.status === "draft" ? (
           <div className="stack gap-8">
             <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: String(resumeStep(l)) }} variant="primary" size="lg" block>
-              Seguir publicando
+              {OWNER_COPY.continuePublishing}
             </RouterButtonLink>
             {missingLine(missingParts(l)) ? (
               <span className="small muted center" data-testid="draft-missing">
@@ -345,13 +346,13 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
             ) : null}
           </div>
         ) : null}
-        {l.status === "review" ? <Notice as="div" tone="review">La estamos revisando, normalmente en menos de 24 horas. Le avisamos por WhatsApp. Mientras tanto no se puede editar.</Notice> : null}
+        {l.status === "review" ? <Notice as="div" tone="review">{OWNER_COPY.inReview}</Notice> : null}
         {l.reviewNote && l.status === "changes" ? (
           <Card tone="solid" layout="stack" gap={10}>
-            <b className="display offer-title">Le pedimos cambios</b>
+            <b className="display offer-title">{OWNER_COPY.changesAsked}</b>
             <span className="small ink">{l.reviewNote}</span>
             <Button variant="primary" block onClick={() => void toWizard()}>
-              Corregir y reenviar
+              {OWNER_COPY.fixAndResend}
             </Button>
           </Card>
         ) : null}
@@ -366,7 +367,7 @@ function Detail({ listing: l, userId }: { listing: Listing; userId: string }) {
 
         {can(l, "discard") ? (
           <Button variant="danger" onClick={ask} disabled={discard.isPending}>
-            Descartar borrador
+            {OWNER_COPY.discardDraft}
           </Button>
         ) : <DeleteHouse listing={l} userId={userId} />}
       </div>
@@ -385,10 +386,10 @@ function ShareListItem({ listing: l }: { listing: Listing }) {
         <I.share />
       </span>
       <span className="body">
-        Compartir ficha
+        {OWNER_COPY.share}
         {/* La referencia CT-#### va aquí, dentro del enlace, y no sobre la foto (revisión UX N7). */}
         {enabled && !copied ? <small className="num primary share-url">{target.url.replace(/^https?:\/\//, "")}</small> : null}
-        <small key={copied ? "copied" : "share"} className={swap}>{copied ? "Enlace copiado" : enabled ? "Envíe el enlace por WhatsApp o compártalo en sus redes" : "Disponible cuando la casa esté activa"}</small>
+        <small key={copied ? "copied" : "share"} className={swap}>{OWNER_COPY.shareState({ copied, enabled })}</small>
       </span>
       <span className="chev">
         <I.chevron />
@@ -418,42 +419,42 @@ export function EnviadaScreen() {
         </span>
       </div>
       <div className="stack gap-8">
-        <h1 className="sent-title">¡Listo! Su casa está en revisión</h1>
+        <h1 className="sent-title">{OWNER_COPY.sentTitle}</h1>
         <p className="muted">
-          Revisamos {l ? titleOf(l) : "su casa"} a mano, normalmente en menos de 24 horas. Le avisamos por WhatsApp cuando esté publicada.
+          {OWNER_COPY.sentText({ title: l ? titleOf(l) : null })}
         </p>
       </div>
       <div className="steps-list">
         <div>
           <span className="n done">1</span>
           <span>
-            <b>Enviada</b>
+            <b>{OWNER_COPY.sent}</b>
             <span className="block muted">
-              Hoy · referencia <span className="num">{l?.publicId ?? "…"}</span>
+              {OWNER_COPY.sentRef({ id: <span key="id" className="num">{l?.publicId ?? "…"}</span> })}
             </span>
           </span>
         </div>
         <div>
           <span className="n">2</span>
           <span>
-            <b>La revisamos</b>
-            <span className="block muted">Si falta algo se lo decimos por WhatsApp y lo corrige desde Mis casas</span>
+            <b>{OWNER_COPY.reviewing}</b>
+            <span className="block muted">{OWNER_COPY.reviewingNote}</span>
           </span>
         </div>
         <div>
           <span className="n">3</span>
           <span>
-            <b>{offer ? `Publicada y gratis ${offer.months} meses` : offer === null ? `Publicada · ${formatCRC(MONTHLY_FEE_CRC)} al mes` : "Publicada y con la oferta de lanzamiento"}</b>
-            <span className="block muted">Comparta el enlace y los clientes le escriben por WhatsApp</span>
+            <b>{OWNER_COPY.published({ months: offer ? offer.months : null, fee: offer === null ? formatCRC(MONTHLY_FEE_CRC) : null })}</b>
+            <span className="block muted">{OWNER_COPY.publishedNote}</span>
           </span>
         </div>
       </div>
       <div className="stack gap-10 sent-actions">
         <RouterButtonLink to="/propietario/calendario" search={{ casa: id }} variant="primary" size="lg">
-          Marcar las noches ocupadas
+          {OWNER_COPY.markNights}
         </RouterButtonLink>
         <RouterTextLink to="/propietario/casas" tone="link" placement="sent-link">
-          Ir a Mis casas
+          {OWNER_COPY.toMyHouses}
         </RouterTextLink>
       </div>
     </div>

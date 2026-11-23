@@ -32,6 +32,7 @@ import { RouterTextLink } from "../comun/router-buttons";
 import { Notice, StatusTag } from "../../shared/ui/structure";
 import { Card, List, ListRow } from "../../shared/ui/card";
 import { RouterListRow } from "../comun/router-rows";
+import * as EDITABLE_COPY from "./copy/casa-editable";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -65,7 +66,7 @@ function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["ki
 }
 
 const isReviewed = (field: FormField) => REVIEWED_FIELDS.includes(field);
-const pendingVisibility = "Los clientes ven lo de antes hasta que lo aprobemos.";
+const pendingVisibility = EDITABLE_COPY.pendingVisibility;
 
 /** Una fila: el título del dato con su etiqueta y, debajo, el valor (el pendiente si está en revisión). Un dato pendiente
  *  se puede volver a cambiar (cuenta el último) y lleva debajo su nota, si el admin pidió cambios, y «Descartar».
@@ -106,14 +107,14 @@ function FieldRow({ listing: l, field, userId, editLink }: { listing: Listing; f
         ) : null}
         {admin && state ? (
           <span className="block small muted" data-testid={`theirs-${field}`}>
-            Pendiente del anfitrión: {pendingValue}
+            {EDITABLE_COPY.pendingOwner({ value: pendingValue })}
           </span>
         ) : null}
       </span>
       {readOnly ? null : editLink ? (
         <RouterTextLink to={to} params={{ id: l.id, campo: field }} resetScroll={false} tone="link" placement="account-profile-toggle"
-          aria-label={`Editar: ${fieldTitle(field, l.kind)}`} aria-haspopup="dialog" data-edit-field={field}>
-          Editar
+          aria-label={EDITABLE_COPY.editField({ field: fieldTitle(field, l.kind) })} aria-haspopup="dialog" data-edit-field={field}>
+          {EDITABLE_COPY.edit}
         </RouterTextLink>
       ) : (
         <span className="chev">
@@ -159,20 +160,20 @@ function PendingFoot({ listing: l, field, note, userId, showVisibility, proposed
   return (
     <div className="pending-foot">
       {proposedName !== undefined ? <span className="strong house-pending-value">{proposedName}</span> : null}
-      {note ? <Notice tone="review" small inline>Le pedimos cambios: {note}</Notice> : showVisibility ? <span className="xs muted">{pendingVisibility}</span> : null}
+      {note ? <Notice tone="review" small inline>{EDITABLE_COPY.changesAsked({ note })}</Notice> : showVisibility ? <span className="xs muted">{pendingVisibility}</span> : null}
       <TextButton
         tone="quiet"
-        aria-label={`Descartar el cambio de ${fieldTitle(field, l.kind).toLowerCase()}`}
+        aria-label={EDITABLE_COPY.discardChange({ field: fieldTitle(field, l.kind).toLowerCase() })}
         disabled={discard.isPending}
         onClick={() => setAsking(true)}
       >
-        Descartar
+        {EDITABLE_COPY.discard}
       </TextButton>
       {asking ? (
         <ConfirmSheet
           title={EDIT_COPY.discardTitle}
           body={EDIT_COPY.discardBody}
-          confirmLabel="Descartar"
+          confirmLabel={EDITABLE_COPY.discard}
           tone="destructive"
           onClose={() => setAsking(false)}
           onConfirm={() => {
@@ -200,14 +201,14 @@ function StatsCard({ listing: l, userId }: { listing: Listing; userId: string })
   const inquiries = a?.inquiries ?? 0;
   return (
     <Card layout="stack" placement="listing-stats" data-testid="listing-stats" aria-busy={!data || undefined}>
-      <span className="small muted">Últimos 30 días</span>
+      <span className="small muted">{EDITABLE_COPY.last30}</span>
       {data ? (
         <div className="activity-figures">
           <p>
-            <b className="num">{views}</b> <span>{views === 1 ? "visita" : "visitas"}</span>
+            <b className="num">{views}</b> <span>{EDITABLE_COPY.visits({ count: views })}</span>
           </p>
           <p>
-            <b className="num">{inquiries}</b> <span>{inquiries === 1 ? "consulta" : "consultas"}</span>
+            <b className="num">{inquiries}</b> <span>{EDITABLE_COPY.inquiries({ count: inquiries })}</span>
           </p>
         </div>
       ) : (
@@ -228,12 +229,12 @@ function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listin
     <>
           <span className="body">
             <span className="row gap-8">
-              <b>{promo ? "Oferta de lanzamiento" : "Suscripción mensual"}</b>
-              <StatusTag tight small label={stopped ? { text: "Parada", tone: "off" } : { text: "Al día", tone: "ok" }} />
+              <b>{EDITABLE_COPY.plan({ promo: !!promo })}</b>
+              <StatusTag tight small label={stopped ? { text: EDITABLE_COPY.stopped, tone: "off" } : { text: EDITABLE_COPY.upToDate, tone: "ok" }} />
             </span>
             <small>
               <span data-testid="subscription-row">{line}</span>
-              {promo ? `. Después, ${formatCRC(sub.monthlyPriceCrc)} al mes, sin permanencia.` : null}
+              {promo ? EDITABLE_COPY.afterPromo({ fee: formatCRC(sub.monthlyPriceCrc) }) : null}
             </small>
           </span>
           <span className="chev">
@@ -243,7 +244,7 @@ function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listin
   );
   return (
     <section className="stack gap-8" data-testid="subscription-card">
-      <h2 className="display offer-title">Suscripción</h2>
+      <h2 className="display offer-title">{EDITABLE_COPY.subscription}</h2>
       <List>
         {inPanel ? (
           <RouterListRow to="/propietario/casas/$id" params={{ id: l.id }} search={{ panel: "suscripcion" }} resetScroll={false}>
@@ -259,10 +260,10 @@ function SubscriptionCard({ listing: l, sub, today, inPanel }: { listing: Listin
 function StoppedNotice({ listing: l }: { listing: Listing }) {
   return (
     <Card tone="sun" layout="stack" gap={10} data-testid="stopped-notice">
-      <h2 className="display offer-title">Suscripción parada</h2>
-      <span className="small ink">{l.title} no aparece en Explorar y el enlace de su ficha no funciona. Actívela para que vuelvan a escribirle.</span>
+      <h2 className="display offer-title">{EDITABLE_COPY.stoppedTitle}</h2>
+      <span className="small ink">{EDITABLE_COPY.stoppedText({ title: l.title })}</span>
       <ActivateButton publicId={l.publicId} />
-      <span className="small strong center num">{formatCRC(MONTHLY_FEE_CRC)} al mes, sin permanencia</span>
+      <span className="small strong center num">{EDITABLE_COPY.fee({ fee: formatCRC(MONTHLY_FEE_CRC) })}</span>
     </Card>
   );
 }
@@ -280,7 +281,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
   const shareUrl = shareOf(l).url.replace(/^https?:\/\//, "");
   const photoAction = photoPill(l.photos.length, l.edit?.photos.length ?? 0);
   const photosLabel = photoAction.replace(/ · Editar$/, "");
-  const photoEditLabel = `Editar fotos: ${photosLabel}`;
+  const photoEditLabel = EDITABLE_COPY.editPhotosLabel({ photos: photosLabel });
   const photoContent = <><I.camera size={20} /><span>{photosLabel}</span></>;
   const actionsOnLeft = desktop && !admin;
   // En el escritorio del anfitrión, «Editar» abre la ventana del dato sobre este detalle (historia 06).
@@ -310,13 +311,13 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
 
       <div className="owner-detail-summary">
         <div className="photo detail-photo">
-          {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">Sin fotos</span>}
+          {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">{EDITABLE_COPY.noPhotos}</span>}
           <StatusTag placement="photo" label={label} />
           {blocked ? (
             <span className="pill photo-pill num">{photoContent}</span>
           ) : (
             <Link to={field} params={{ id: l.id, campo: "fotos" }} resetScroll={editLinks ? false : undefined} className="pill photo-pill num"
-              aria-label={admin ? photoAction : photoEditLabel} aria-haspopup={editLinks ? "dialog" : undefined} data-edit-field="fotos" title="Editar fotos">
+              aria-label={admin ? photoAction : photoEditLabel} aria-haspopup={editLinks ? "dialog" : undefined} data-edit-field="fotos" title={EDITABLE_COPY.editPhotos}>
               {admin ? photoAction : photoContent}
             </Link>
           )}
@@ -329,9 +330,7 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
       <div className="owner-detail-fields">
         {rightPanel ? <div className="owner-detail-panel stack">{rightPanel}</div> : <>
         {blocked || actionsOnLeft ? null : (
-          <Notice tone="solid">{admin
-            ? "Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión."
-            : "Toque un dato para editarlo. Su ficha seguirá visible durante la revisión."}</Notice>
+          <Notice tone="solid">{EDITABLE_COPY.hint({ admin: !!admin })}</Notice>
         )}
 
         <List data-testid="field-rows">

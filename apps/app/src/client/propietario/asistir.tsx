@@ -26,6 +26,7 @@ import { PasoScreen } from "./publicar/publicar";
 import { EmptyState, LoadError, Skeleton } from "../../shared/ui/structure";
 import { List } from "../../shared/ui/card";
 import { RouterListRow } from "../comun/router-rows";
+import * as ASSIST_COPY from "./copy/asistir";
 
 let edit: AdminEditApi | null = null;
 const adminEdit = async (): Promise<AdminEditApi> => {
@@ -89,24 +90,24 @@ function AdminCasa() {
   if (l && !isPublished(l)) return <Navigate to="/admin/casas/$id/publicar/$paso" params={{ id, paso: String(resumeStep(l)) }} replace />;
   return (
     <>
-      <ScreenHeader kind="flow" title="Editar casa" back={{ to: "/admin/casas", historyBack: true }} action={
+      <ScreenHeader kind="flow" title={ASSIST_COPY.title} back={{ to: "/admin/casas", historyBack: true }} action={
           l && l.status === "active" && !l.adminHold ? (
             <Link to="/casa/$publicId" params={{ publicId: l.publicId }} className="link header-action">
-              Ver ficha
+              {ASSIST_COPY.viewListing}
             </Link>
           ) : undefined
         } />
       {l ? (
         <>
           <p className="small muted num" data-testid="admin-house-line">
-            {l.publicId} · {l.title || "Sin nombre"}
+            {ASSIST_COPY.houseLine({ id: l.publicId, title: l.title })}
           </p>
           <EditableFicha listing={l} userId={userId} />
           <List>
             <RouterListRow to="/admin/casas/$id/calendario" params={{ id }}>
               <span className="body">
-                <b>Calendario</b>
-                <small>Días ocupados y precios especiales</small>
+                <b>{ASSIST_COPY.calendar}</b>
+                <small>{ASSIST_COPY.calendarHint}</small>
               </span>
               <span className="chev">
                 <I.chevron />
@@ -117,7 +118,7 @@ function AdminCasa() {
       ) : null}
       {l === null ? <NotFoundCard /> : null}
       {l === undefined && query.isError ? <LoadError onRetry={() => void query.refetch()}>{message(query.error)}</LoadError> : null}
-      {l === undefined && !query.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
+      {l === undefined && !query.isError ? <Skeleton shape="row" label={ASSIST_COPY.loading} /> : null}
     </>
   );
 }
@@ -159,12 +160,12 @@ function AdminCalendar() {
   const l = query.data;
   return (
     <>
-      <ScreenHeader kind="flow" title="Calendario" back={{ to: `/admin/casas/${id}`, historyBack: true }} />
-      {l ? <p className="cal-house">{l.title || "Sin nombre"}</p> : null}
+      <ScreenHeader kind="flow" title={ASSIST_COPY.calendar} back={{ to: `/admin/casas/${id}`, historyBack: true }} />
+      {l ? <p className="cal-house">{l.title || ASSIST_COPY.noName}</p> : null}
       {l ? <Calendar listing={l} userId={userId} month={undefined} /> : null}
       {l === null ? <NotFoundCard /> : null}
       {l === undefined && query.isError ? <LoadError onRetry={() => void query.refetch()}>{message(query.error)}</LoadError> : null}
-      {l === undefined && !query.isError ? <Skeleton shape="row" label="Cargando sus casas" /> : null}
+      {l === undefined && !query.isError ? <Skeleton shape="row" label={ASSIST_COPY.loading} /> : null}
     </>
   );
 }
@@ -187,21 +188,21 @@ export function BorradoresScreen() {
   const data = drafts.data;
   return (
     <>
-      {desktop ? <ScreenHeader kind="flow" title="Borradores" back={{ to: "/admin/casas", historyBack: true }} /> : <ScreenHeader kind="root" title="Borradores" home="/admin/casas" />}
-      <p className="small muted">Casas que su anfitrión empezó y aún no envió. Toque una para completarla con él.</p>
+      {desktop ? <ScreenHeader kind="flow" title={ASSIST_COPY.drafts} back={{ to: "/admin/casas", historyBack: true }} /> : <ScreenHeader kind="root" title={ASSIST_COPY.drafts} home="/admin/casas" />}
+      <p className="small muted">{ASSIST_COPY.draftsText}</p>
       {drafts.isError && !data ? (
         <LoadError onRetry={() => void drafts.refetch()}>
           {message(drafts.error)}
         </LoadError>
       ) : null}
       {!data && !drafts.isError ? (
-        <Skeleton shape="line" label="Cargando los borradores" />
+        <Skeleton shape="line" label={ASSIST_COPY.loadingDrafts} />
       ) : null}
       {data && data.length === 0 ? (
-        <EmptyState text={<p className="muted">No hay borradores sin enviar.</p>} />
+        <EmptyState text={<p className="muted">{ASSIST_COPY.noDrafts}</p>} />
       ) : null}
       {data && data.length > 0 ? (
-        <List aria-label="Borradores">
+        <List aria-label={ASSIST_COPY.drafts}>
           {data.map(({ listing: l, ownerName }) => {
             const cover = l.photos[0];
             const missing = missingLine(missingParts(l));
@@ -209,9 +210,9 @@ export function BorradoresScreen() {
               <RouterListRow placement="house-row" key={l.id} to="/admin/casas/$id" params={{ id: l.id }}>
                 {cover ? <img src={variantUrl(cover, 480)} alt="" className="thumb house-thumb" width={56} height={56} loading="lazy" decoding="async" /> : <span className="thumb house-thumb" />}
                 <span className="body stack house-body">
-                  <b className="house-title">{l.title || "Sin nombre"}</b>
-                  <small className="num">{[l.publicId, ownerName, `empezado el ${new Date(l.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}`].join(" · ")}</small>
-                  {missing ? <small className="sun-ink">{missing}</small> : <small className="primary">Listo para enviar</small>}
+                  <b className="house-title">{l.title || ASSIST_COPY.noName}</b>
+                  <small className="num">{[l.publicId, ownerName, ASSIST_COPY.started({ date: new Date(l.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" }) })].join(" · ")}</small>
+                  {missing ? <small className="sun-ink">{missing}</small> : <small className="primary">{ASSIST_COPY.readyToSend}</small>}
                 </span>
                 <span className="chev">
                   <I.chevron />

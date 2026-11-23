@@ -18,6 +18,7 @@ import { useSession } from "../comun/session";
 import { Dialog } from "../../shared/ui/overlay";
 import { LoadError, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";
+import * as ACTIVITY_COPY from "./copy/actividad";
 
 const LATEST = 20;
 const SEEN_DELAY_MS = 800;
@@ -33,7 +34,7 @@ export function ActividadScreen() {
   }), [navigate]);
   return (
     <>
-      <ScreenHeader kind="root" title="Consultas" />
+      <ScreenHeader kind="root" title={ACTIVITY_COPY.title} />
       <InquiryList casa={search.casa} onPick={pickCasa} />
     </>
   );
@@ -42,7 +43,7 @@ export function ActividadScreen() {
 export function InquiriesDialog({ onClose }: { onClose: () => void }) {
   const [casa, setCasa] = useState<string | null>(null);
   return (
-    <Dialog layout="inquiries" title="Consultas" onClose={onClose}>
+    <Dialog layout="inquiries" title={ACTIVITY_COPY.title} onClose={onClose}>
       <InquiryList casa={casa} onPick={setCasa} inDialog />
     </Dialog>
   );
@@ -89,11 +90,11 @@ function InquiryList({ casa, onPick, inDialog = false }: {
       {error ? (
         <LoadError onRetry={() => { if (listings.isError) void listings.refetch(); if (inquiries.isError) void inquiries.refetch(); }}>{toDomainError(error).message}</LoadError>
       ) : waiting ? (
-        <Skeleton shape="avatar" label="Cargando su actividad" />
+        <Skeleton shape="avatar" label={ACTIVITY_COPY.loading} />
       ) : (
         <section className="stack gap-12">
           <p className="small muted" data-testid="inquiries-new">
-            {fresh === 0 ? "Sin consultas nuevas" : fresh === 1 ? "1 consulta nueva" : `${fresh} consultas nuevas`}
+            {ACTIVITY_COPY.fresh({ count: fresh })}
           </p>
           {choices ? (
             <HousePicker houses={choices} currentId={filterId} allowAll currentName={inquiries.data?.find((i) => i.listingId === filterId)?.listingTitle}
@@ -102,9 +103,9 @@ function InquiryList({ casa, onPick, inDialog = false }: {
           {!entries.length ? <p>{EMPTY}</p> : latest.length > 0 ? (
             latest.map((i) => <InquiryCard key={i.id} inquiry={i} userId={userId} house={houses.get(i.listingId)} showHouse={choices !== null && filterId === null} rememberSeen={rememberSeen} inDialog={inDialog} />)
           ) : (
-            <p className="small muted">Todavía no hay consultas de esta casa.</p>
+            <p className="small muted">{ACTIVITY_COPY.noneForHouse}</p>
           )}
-          {entries.length > 0 && <p className="xs muted inquiries-foot">La conversación está en su WhatsApp.</p>}
+          {entries.length > 0 && <p className="xs muted inquiries-foot">{ACTIVITY_COPY.foot}</p>}
         </section>
       )}
     </>
@@ -157,7 +158,7 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen, inDia
   }
   return (
     <Card as="article" layout="stack" gap={10} placement="inquiry-card" mark={isNew ? "new" : undefined} aria-labelledby={nameId}>
-      {showHouse ? <span className="inquiry-house small muted" data-testid="inquiry-house">{house?.title || i.listingTitle || "Casa sin título"}</span> : null}
+      {showHouse ? <span className="inquiry-house small muted" data-testid="inquiry-house">{house?.title || i.listingTitle || ACTIVITY_COPY.untitled}</span> : null}
       <div className="row gap-12 align-top">
         <span className={`avatar inquiry-avatar${isNew ? "" : " is-read"}`} aria-hidden="true">
           {initials(i.clientName)}
@@ -168,16 +169,16 @@ function InquiryCard({ inquiry: i, userId, house, showHouse, rememberSeen, inDia
               {i.clientName}
             </h3>
             <span className="row baseline gap-6 nowrap">
-              {isNew ? <StatusTag label={{ text: "Nueva", tone: "new" }} /> : null}
+              {isNew ? <StatusTag label={{ text: ACTIVITY_COPY.isNew, tone: "new" }} /> : null}
               <span className="xs muted">{relativeTime(i.updatedAt, Date.now())}</span>
             </span>
           </div>
           <span className="small muted">{inquirySummary(i)}</span>
-          {i.source === "support" ? <StatusTag tight label={{ text: "Creada por 3bstays", tone: "neutral" }} /> : null}
+          {i.source === "support" ? <StatusTag tight label={{ text: ACTIVITY_COPY.bySupport, tone: "neutral" }} /> : null}
         </div>
       </div>
       <button type="button" className="btn-link inquiry-wa" onClick={open}>
-        <I.wa size={18} /> Abrir WhatsApp
+        <I.wa size={18} /> {ACTIVITY_COPY.openWhatsapp}
       </button>
     </Card>
   );

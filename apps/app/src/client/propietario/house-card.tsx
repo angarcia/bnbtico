@@ -7,6 +7,7 @@ import type { ListingEdit } from "../../domain/edit";
 import { cardLabel } from "../../domain/navigation";
 import { I } from "../../shared/ui/icons";
 import { StatusTag } from "../../shared/ui/structure";
+import * as OWNER_COPY from "./copy/owner";
 
 export interface HouseCardTopProps {
   listing: Listing;
@@ -41,7 +42,7 @@ export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "
           // Sin fotos (un borrador): un hueco hecho a propósito, no una imagen rota (Ana, 2026-11-04).
           <span className="photo-empty">
             <I.camera size={28} />
-            Aún sin fotos
+            {OWNER_COPY.noPhotos}
           </span>
         )}
         <StatusTag placement="photo" label={label} data-testid="card-label" />
