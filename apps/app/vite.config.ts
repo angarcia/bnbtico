@@ -128,8 +128,30 @@ function supportNumbers(): Plugin {
   };
 }
 
+// Grupos de trozos con nombre (presupuestos de .size-limit.json). Cada grupo anota si casó con algún módulo, y el build
+// falla si alguno no casa: una ruta movida dejaría el grupo vacío y repartiría su código sin avisar (estructura por áreas,
+// 2026-11-22: los grupos aún nombraban client/screens/ y sumaban 6 KB al JS inicial medido).
+const groupHits = new Set<string>();
+const GROUP_NAMES: string[] = [];
+function group(name: string, test: RegExp, options: { includeDependenciesRecursively?: boolean } = {}) {
+  GROUP_NAMES.push(name);
+  return { name, ...options, test: (id: string) => { const hit = test.test(id); if (hit) groupHits.add(name); return hit; } };
+}
+
+function chunkGroupsMatch(): Plugin {
+  return {
+    name: "chunk-groups-match",
+    apply: "build",
+    applyToEnvironment: (env) => env.name === "client",
+    generateBundle() {
+      const empty = GROUP_NAMES.filter((name) => !groupHits.has(name));
+      if (empty.length) throw new Error(`Grupos de trozos sin ningún módulo (¿ruta movida?): ${empty.join(", ")}. Revise codeSplitting en vite.config.ts.`);
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers(), portadaOwnerCta()],
+  plugins: [react(), cloudflare(), serviceWorker(), securityHeadersFile(), supportNumbers(), portadaOwnerCta(), chunkGroupsMatch()],
   define: { __BUILD_ID__: JSON.stringify(buildId), __FLAGS__: JSON.stringify(flags) },
   // zod/mini en su propio trozo (zod-*): ya no va en el JS inicial (filters.ts se lee a mano) y lo comparten el asistente
   // de publicar y la edición; sin el grupo se pegaría a step-forms-* y las reglas de los formularios medirían 5 KB más.
@@ -139,17 +161,23 @@ export default defineConfig({
         ? "assets/edit-label-[hash].js"
         : "assets/[name]-[hash].js",
       codeSplitting: { groups: [
-      { name: "zod", test: /[\\/]node_modules[\\/]zod[\\/]/ },
+      // Lo común que pide el marco de la app y también las pantallas diferidas (cabecera, contador de consultas, claves de
+      // consultas): un solo trozo en vez de tres, que pesaban 0,6 KB más en el JS inicial (estructura por áreas, 2026-11-22).
+      group("marco", /[\\/]src[\\/]client[\\/](?:comun[\\/](?:screen-header\.tsx|listing-keys\.ts)|propietario[\\/]inquiries\.ts)$/, { includeDependenciesRecursively: false }),
+      // Los ganchos de estado del router en un trozo, como antes de repartir client/ por áreas: rolldown los partía en tres
+      // (useMatch, useSelector, useLocation) y el JS inicial pagaba 0,3 KB más (estructura por áreas, 2026-11-22).
+      group("useMatch", /[\\/]node_modules[\\/](?:use-sync-external-store[\\/]|@tanstack[\\/]react-store[\\/]dist[\\/]useSelector\.js$|@tanstack[\\/]react-router[\\/]dist[\\/]esm[\\/](?:useMatch|useLocation)\.js$)/, { includeDependenciesRecursively: false }),
+      group("zod", /[\\/]node_modules[\\/]zod[\\/]/),
       // El calendario de rango en su trozo (lo comparten la búsqueda, la hoja de contacto y «Marcar una reserva»; cuenta en
       // sus presupuestos): sin el grupo, se juntaba con el contador común (historia 07, paso 4).
-      { name: "range-calendar", test: /[\\/]src[\\/]shared[\\/]range-calendar\.tsx$/, includeDependenciesRecursively: false },
+      group("range-calendar", /[\\/]src[\\/]shared[\\/]range-calendar\.tsx$/, { includeDependenciesRecursively: false }),
       // Calendario carga API/fila. La gestión diferida carga también su tarjeta de exportación.
       // Ambos grupos cuentan en airbnb-*.js del presupuesto existente.
-      { name: "airbnb", test: /[\\/]src[\\/]client[\\/](?:airbnb\.ts|airbnb-calendar-row\.tsx)$/, includeDependenciesRecursively: false },
-      { name: "airbnb-management", test: /[\\/]src[\\/]client[\\/]screens[\\/](?:airbnb|ical-export-card)\.tsx$/, includeDependenciesRecursively: false },
-      { name: "cuenta", test: /[\\/]src[\\/](?:client[\\/](?:screens[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|sign-in)\.tsx|client[\\/](?:turnstile|token-gate|support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, includeDependenciesRecursively: false },
-      { name: "propietario", test: /[\\/]src[\\/](?:client[\\/](?:screens[\\/]propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx)|domain[\\/]navigation\.ts)$/, includeDependenciesRecursively: false },
-      { name: "admin", test: /(?:[\\/]src[\\/](?:client[\\/](?:screens[\\/]admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, includeDependenciesRecursively: false },
+      group("airbnb", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb-queries\.ts|airbnb-calendar-row\.tsx)$/, { includeDependenciesRecursively: false }),
+      group("airbnb-management", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb|ical-export-card)\.tsx$/, { includeDependenciesRecursively: false }),
+      group("cuenta", /[\\/]src[\\/](?:client[\\/](?:cuenta[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|comun[\\/]sign-in)\.tsx|client[\\/](?:comun[\\/](?:turnstile|token-gate)|cuenta[\\/]support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, { includeDependenciesRecursively: false }),
+      group("propietario", /[\\/]src[\\/](?:client[\\/]propietario[\\/](?:propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx)|domain[\\/]navigation\.ts)$/, { includeDependenciesRecursively: false }),
+      group("admin", /(?:[\\/]src[\\/](?:client[\\/]admin[\\/](?:admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin-queries\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, { includeDependenciesRecursively: false }),
     ] } } } } },
   },
   // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).
