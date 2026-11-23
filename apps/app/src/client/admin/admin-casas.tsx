@@ -19,6 +19,7 @@ import { RouterButtonLink } from "../comun/router-buttons";
 import { RouterListRow } from "../comun/router-rows";
 import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { List, ListRowButton } from "../../shared/ui/card";
+import * as ADMIN_COPY from "./copy/admin";
 
 // ---------- 23 · Casas ----------
 const casasRoute = getRouteApi("/_tabs/_admin/admin/casas");
@@ -35,7 +36,7 @@ export function CasasAdminScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <ScreenHeader kind="root" title="Casas" home="/explorar" />
+        <ScreenHeader kind="root" title={ADMIN_COPY.housesTitle} home="/explorar" />
         <NotAdmin />
       </>
     );
@@ -47,19 +48,19 @@ export function CasasAdminScreen() {
   const shown = data ? filterHouses(data.houses, chip, query) : [];
   return (
     <>
-      <ScreenHeader kind="root" title="Casas" home="/admin" action={<AdminBadge />} />
+      <ScreenHeader kind="root" title={ADMIN_COPY.housesTitle} home="/admin" action={<AdminBadge />} />
       <SearchInput
         variant="field"
         type="search"
         name="q"
-        aria-label="Buscar casas"
-        placeholder="Nombre, CT-#### o anfitrión"
+        aria-label={ADMIN_COPY.searchHouses}
+        placeholder={ADMIN_COPY.searchPlaceholder}
         autoComplete="off"
         enterKeyHint="search"
         value={query}
         onChange={(e) => setQuery(e.currentTarget.value)}
       />
-      <nav className="chiprow" aria-label="Filtrar casas">
+      <nav className="chiprow" aria-label={ADMIN_COPY.filterHouses}>
         {HOUSE_CHIPS.map((c) => (
           <Link key={c} to="/admin/casas" search={c === "todas" ? {} : { ver: c }} className="chip chip-sm" activeOptions={{ exact: true, includeSearch: true }}>
             {counts ? `${CHIP_LABELS[c]} · ${counts[c]}` : CHIP_LABELS[c]}
@@ -72,21 +73,21 @@ export function CasasAdminScreen() {
         </LoadError>
       ) : null}
       {!data && !houses.isError ? (
-        <Skeleton shape="line" label="Cargando las casas" />
+        <Skeleton shape="line" label={ADMIN_COPY.loadingHouses} />
       ) : null}
       {data && shown.length === 0 ? (
-        <EmptyState text={<p className="muted">{query.trim() ? "Ninguna casa coincide con la búsqueda." : chip === "todas" ? "Todavía no hay casas aprobadas." : "Nada por aquí."}</p>} />
+        <EmptyState text={<p className="muted">{query.trim() ? ADMIN_COPY.noMatch : chip === "todas" ? ADMIN_COPY.noApproved : ADMIN_COPY.nothingHere}</p>} />
       ) : null}
       {data && shown.length > 0 ? (
-        <List aria-label="Casas">
+        <List aria-label={ADMIN_COPY.housesList}>
           {shown.map((h) => (
             <HouseRow key={h.listingId} house={h} today={data.today} onOpen={() => setOpenId(h.listingId)} />
           ))}
         </List>
       ) : null}
-      <p className="xs muted queue-foot">Toque una casa para ver sus datos, editarla, pausarla, bloquearla o eliminarla.</p>
+      <p className="xs muted queue-foot">{ADMIN_COPY.housesFoot}</p>
       <RouterButtonLink to="/admin/borradores" variant="secondary" block>
-        Borradores sin enviar
+        {ADMIN_COPY.drafts}
       </RouterButtonLink>
       {/* La hoja sigue a la lista: al terminar una acción la casa cambia (o desaparece, y la hoja se cierra). */}
       {data && openId && data.houses.some((h) => h.listingId === openId) ? (
@@ -102,7 +103,7 @@ function HouseRow({ house: h, today, onOpen }: { house: AdminHouse; today: strin
     <ListRowButton placement="house-row" aria-haspopup="dialog" onClick={onOpen}>
       {h.cover ? <img src={variantUrl(h.cover, 480)} alt="" className="thumb house-thumb" width={56} height={56} loading="lazy" decoding="async" /> : <span className="thumb house-thumb" />}
       <span className="body stack house-body">
-        <b className="house-title">{h.title || "Sin nombre"}</b>
+        <b className="house-title">{h.title || ADMIN_COPY.noName}</b>
         <small className="num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</small>
         <small className="num">{adminHouseLine(h.subscription, today)}</small>
       </span>
@@ -185,7 +186,7 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
   const copy = mode === "detail" ? null : MODE_COPY[mode];
   // Mientras una acción se guarda no se cierra; con un motivo o la confirmación escritos, pregunta antes (D10).
   return (
-    <Sheet title={h.title || "Sin nombre"} subtitle={<span className="num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</span>}
+    <Sheet title={h.title || ADMIN_COPY.noName} subtitle={<span className="num">{[h.publicId, h.ownerName, h.zone].filter(Boolean).join(" · ")}</span>}
       busy={pending} onClose={onClose} confirmDiscard={() => mode !== "detail" && (reason.trim() !== "" || confirm.trim() !== "")}>
 
         {!copy ? (
@@ -209,27 +210,27 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
             <List>
               {visible ? (
                 <RouterListRow to="/casa/$publicId" params={{ publicId: h.publicId }} onClick={onClose}>
-                  <span className="body">Ver ficha pública</span>
+                  <span className="body">{ADMIN_COPY.publicPage}</span>
                   <span className="chev">
                     <I.chevron />
                   </span>
                 </RouterListRow>
               ) : null}
               <RouterListRow to="/admin/anuncios/$id" params={{ id: h.listingId }} onClick={onClose}>
-                <span className="body">Ver datos del anuncio</span>
+                <span className="body">{ADMIN_COPY.listingData}</span>
                 <span className="chev">
                   <I.chevron />
                 </span>
               </RouterListRow>
               {/* Editar (ticket 10 de la ronda de Ana): al momento, sin revisión, con las pantallas del anfitrión. */}
               <RouterListRow to="/admin/casas/$id" params={{ id: h.listingId }} onClick={onClose}>
-                <span className="body">Editar casa</span>
+                <span className="body">{ADMIN_COPY.editHouse}</span>
                 <span className="chev">
                   <I.chevron />
                 </span>
               </RouterListRow>
               <RouterListRow to="/admin/casas/$id/calendario" params={{ id: h.listingId }} onClick={onClose}>
-                <span className="body">Editar calendario</span>
+                <span className="body">{ADMIN_COPY.editCalendar}</span>
                 <span className="chev">
                   <I.chevron />
                 </span>
@@ -244,30 +245,30 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
               <div className="stack gap-8">
                 {h.hold?.kind === "paused" ? (
                   <Button variant="primary" block disabled={pending} onClick={() => run({ kind: "resume", id: h.listingId, publicId: h.publicId })}>
-                    Reanudar
+                    {ADMIN_COPY.resume}
                   </Button>
                 ) : null}
                 {h.hold?.kind === "blocked" ? (
                   <Button variant="primary" block disabled={pending} onClick={() => run({ kind: "unblock", id: h.listingId, publicId: h.publicId })}>
-                    Desbloquear
+                    {ADMIN_COPY.unblock}
                   </Button>
                 ) : null}
                 {!h.hold ? (
                   <Button variant="primary" block onClick={() => go("pause")}>
-                    Pausar
+                    {ADMIN_COPY.pause}
                   </Button>
                 ) : null}
                 {h.hold?.kind !== "blocked" ? (
                   <Button variant="primary" block onClick={() => go("block")}>
-                    Bloquear
+                    {ADMIN_COPY.block}
                   </Button>
                 ) : null}
               </div>
             ) : (
-              <p className="small muted">Solo se pausa o se bloquea una casa publicada.</p>
+              <p className="small muted">{ADMIN_COPY.onlyPublished}</p>
             )}
             <Button variant="danger" block onClick={() => go("delete")}>
-              Eliminar casa
+              {ADMIN_COPY.deleteHouse}
             </Button>
           </>
         ) : (
@@ -279,7 +280,7 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
               {(control) => <TextArea {...control} name="reason" rows={3} maxLength={HOLD_REASON_MAX} value={reason} onChange={(e) => setReason(e.currentTarget.value)} />}
             </Field>
             {mode === "delete" ? (
-              <Field id="delete-confirm" label={<>Para confirmar, escriba <b className="num">{h.publicId}</b></>} size="compact">
+              <Field id="delete-confirm" label={<>{ADMIN_COPY.deleteConfirm({ id: <b key="id" className="num">{h.publicId}</b> })}</>} size="compact">
                 {(control) => <TextInput {...control} name="confirm" autoComplete="off" autoCapitalize="characters" value={confirm} onChange={(e) => setConfirm(e.currentTarget.value)} />}
               </Field>
             ) : null}
@@ -292,7 +293,7 @@ function HouseSheet({ house: h, today, userId, onClose }: { house: AdminHouse; t
               {copy.confirm}
             </Button>
             <Button variant="secondary" block disabled={pending} onClick={() => go("detail")}>
-              Cancelar
+              {ADMIN_COPY.cancel}
             </Button>
           </form>
         )}

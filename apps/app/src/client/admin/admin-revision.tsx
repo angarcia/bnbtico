@@ -16,6 +16,7 @@ import { Field, StickyActions, TextArea } from "../../shared/ui/field";
 import { Button } from "../../shared/ui/button";
 import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";
+import * as ADMIN_COPY from "./copy/admin";
 
 // ---------- 22 · Revisar anuncio ----------
 const revisarRoute = getRouteApi("/_flow/_adminFlow/admin/anuncios/$id");
@@ -30,7 +31,7 @@ export function RevisarScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <ScreenHeader kind="flow" title="Revisar anuncio" back={{ to: "/explorar" }} />
+        <ScreenHeader kind="flow" title={ADMIN_COPY.reviewTitle} back={{ to: "/explorar" }} />
         <NotAdmin />
       </>
     );
@@ -39,14 +40,14 @@ export function RevisarScreen() {
   const data = item.data;
   return (
     <>
-      <ScreenHeader kind="flow" title="Revisar anuncio" back={{ to: "/admin" }} action={
+      <ScreenHeader kind="flow" title={ADMIN_COPY.reviewTitle} back={{ to: "/admin" }} action={
           data?.listing.status === "active" ? (
             <Link to="/casa/$publicId" params={{ publicId: data.listing.publicId }} className="link header-action">
-              Ver como cliente
+              {ADMIN_COPY.asGuest}
             </Link>
           ) : data ? (
             <Link to="/admin/casas/$id" params={{ id }} className="link header-action">
-              Editar
+              {ADMIN_COPY.edit}
             </Link>
           ) : undefined
         } />
@@ -56,10 +57,10 @@ export function RevisarScreen() {
         </LoadError>
       ) : null}
       {data === null ? (
-        <EmptyState text={<p className="muted">No encontramos ese anuncio.</p>} />
+        <EmptyState text={<p className="muted">{ADMIN_COPY.listingNotFound}</p>} />
       ) : null}
       {data === undefined && !item.isError ? (
-        <Skeleton shape="line" label="Cargando el anuncio" />
+        <Skeleton shape="line" label={ADMIN_COPY.loadingListing} />
       ) : null}
       {data ? <ReviewDetail item={data} userId={userId} /> : null}
     </>
@@ -80,16 +81,16 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
   const facts = factsLine(l);
   return (
     <>
-      <div className="photo-strip" aria-label={`${l.photos.length} fotos`}>
+      <div className="photo-strip" aria-label={ADMIN_COPY.photosCount({ count: l.photos.length })}>
         {l.photos.map((p, i) => (
           <div key={p.id} className={`photo ${i === 0 ? "review-photo" : "review-photo-sm"}`}>
-            <img src={variantUrl(p, 480)} alt={`Foto ${i + 1}`} loading={i < 3 ? "eager" : "lazy"} decoding="async" />
-            {i === 0 ? <span className="pill pill-sm pill-br">{l.photos.length} fotos</span> : null}
+            <img src={variantUrl(p, 480)} alt={ADMIN_COPY.photoAlt({ n: i + 1 })} loading={i < 3 ? "eager" : "lazy"} decoding="async" />
+            {i === 0 ? <span className="pill pill-sm pill-br">{ADMIN_COPY.photosCount({ count: l.photos.length })}</span> : null}
           </div>
         ))}
         {l.photos.length === 0 ? (
           <div className="photo review-photo">
-            <span className="small">Sin fotos</span>
+            <span className="small">{ADMIN_COPY.noPhotos}</span>
           </div>
         ) : null}
       </div>
@@ -99,7 +100,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
           <span className="xs muted num">{l.publicId}</span>
         </div>
         <span className="small muted">{facts}</span>
-        {isProposedZone(l) ? <StatusTag label={{ text: "Zona propuesta por el anfitrión", tone: "off" }} /> : null}
+        {isProposedZone(l) ? <StatusTag label={{ text: ADMIN_COPY.proposedZone, tone: "off" }} /> : null}
         <PriceLine l={l} />
       </div>
       <OwnerCard l={l} ownerName={ownerName} />
@@ -110,8 +111,8 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
         />
       ) : null}
       <Card layout="stack" gap={8} placement="review-owner">
-        <b className="small muted">Descripción</b>
-        {l.description.trim() ? <p className="small listing-description">{l.description}</p> : <p className="small muted">Sin descripción</p>}
+        <b className="small muted">{ADMIN_COPY.description}</b>
+        {l.description.trim() ? <p className="small listing-description">{l.description}</p> : <p className="small muted">{ADMIN_COPY.noDescription}</p>}
         <FeatureBadges l={l} />
       </Card>
       {l.status === "review" ? (
@@ -119,7 +120,7 @@ function ReviewDetail({ item, userId }: { item: QueueItem; userId: string }) {
       ) : (
         <Notice as="div" layout="stack" announce>
           <b>{statusLabel(l.status).text}</b>
-          <span className="listing-description">{l.reviewNote || "Sin nota adicional."}</span>
+          <span className="listing-description">{l.reviewNote || ADMIN_COPY.noNote}</span>
         </Notice>
       )}
     </>
@@ -148,15 +149,15 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
   return (
     <form className="stack gap-14" onSubmit={onSubmit} noValidate>
       <Checklist />
-      <NoteField note={note} onChange={setNote} hint="(obligatorio si pide cambios)" error={error} />
-      {noPhotos ? <Notice tone="solid" small>Sin fotos: solo puede pedir cambios.</Notice> : null}
+      <NoteField note={note} onChange={setNote} hint={ADMIN_COPY.noteRequired} error={error} />
+      {noPhotos ? <Notice tone="solid" small>{ADMIN_COPY.noPhotosNote}</Notice> : null}
       <StickyActions spacer="review" layout="column">
         <Button variant="primary" size="lg" block type="submit" icon={<I.check size={18} />} disabled={noPhotos || review.isPending}>
-          Aprobar y publicar
+          {ADMIN_COPY.approvePublish}
         </Button>
         {/* Sin «Rechazar» (historia 27): un anuncio que no debe publicarse se elimina desde Admin → Casas. */}
         <Button variant="secondary" size="lg" block disabled={review.isPending} onClick={() => void decide("changes")}>
-          Pedir cambios
+          {ADMIN_COPY.askChanges}
         </Button>
       </StickyActions>
     </form>
@@ -166,14 +167,14 @@ function ReviewForm({ item, userId }: { item: QueueItem; userId: string }) {
 function NoteField({ note, onChange, hint, error }: { note: string; onChange: (v: string) => void; hint: string; error: string | null }) {
   return (
     <>
-      <Field id="admin-review-note" label={<>Mensaje para el anfitrión <span className="label-plain">{hint}</span></>} error={error}>
+      <Field id="admin-review-note" label={<>{ADMIN_COPY.noteLabel({ hint: <span key="hint" className="label-plain">{hint}</span> })}</>} error={error}>
         {(control) => (
           <TextArea
             {...control}
             name="note"
             rows={3}
             maxLength={REVIEW_NOTE_MAX}
-            placeholder="Ej.: la foto 4 muestra un número de teléfono; súbala sin él."
+            placeholder={ADMIN_COPY.notePlaceholder}
             value={note}
             onChange={(e) => onChange(e.currentTarget.value)}
           />
