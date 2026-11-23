@@ -35,7 +35,7 @@ function afterHero(work: () => void) {
 if (embedded) {
   track("page_view");
   const data = JSON.parse(embedded) as SsrData;
-  afterHero(() => void import("./hydrate-listing").then((m) => m.hydrate(root, data)));
+  afterHero(() => void import("./explorar/hydrate-listing").then((m) => m.hydrate(root, data)));
 } else {
   import("./start-shell").then((m) => m.startShell(root));
 }

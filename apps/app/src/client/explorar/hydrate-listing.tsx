@@ -3,10 +3,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode, useEffect, type ReactNode } from "react";
 import { hydrateRoot } from "react-dom/client";
-import { ListingScreen } from "../shared/listing-page";
-import { seedListing } from "../shared/listing-query";
-import type { SsrData } from "../shared/ssr-data";
-import { BlockedPage, ErrorPage, MissingPage } from "../shared/status-pages";
+import { ListingScreen } from "../../shared/listing-page";
+import { seedListing } from "../../shared/listing-query";
+import type { SsrData } from "../../shared/ssr-data";
+import { BlockedPage, ErrorPage, MissingPage } from "../../shared/status-pages";
 
 function Hydrated({ children }: { children: ReactNode }) {
   useEffect(() => {

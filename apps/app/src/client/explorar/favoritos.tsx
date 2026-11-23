@@ -7,7 +7,7 @@ import { favoritesStore, useFavorites } from "../../shared/favorites-store";
 import { ScreenHeader } from "../comun/screen-header";
 import { useDesktop } from "../../shared/desktop";
 import { CurrencySwitch } from "../../shared/currency-switch";
-import { ListingCard } from "../listing-card";
+import { ListingCard } from "./listing-card";
 import { useSession } from "../comun/session";
 import { RouterButtonLink } from "../comun/router-buttons";
 import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";

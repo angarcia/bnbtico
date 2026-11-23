@@ -59,7 +59,7 @@ const CSS_EXCEPTIONS: CssException[] = [
   { file: "styles/09-calendario.css", selector: /^\.month-grid \.day-sub(?:\.is-long)?$/, rule: "font-size", why: "precio dentro de cada día del calendario (11 y 12 px)" },
   { file: "styles/09-calendario.css", selector: /^(?:\.header-root:has\(\.house-picker\) h1|\.sheet-picker \.sheet-head h2|\.cal-title|\.cal-month-title)$/, rule: "font-size", why: "títulos del Calendario y del selector de casa" },
   { file: "styles/10-ajustes.css", selector: /^\.how-it-works summary::after$/, rule: "font-size", why: "el signo +/− del desplegable «Cómo funciona»" },
-  { file: "client/screens/que-es-3bstays.css", selector: /^\.about-(?:guest|owner)/, rule: "font-size", why: "títulos de la pantalla «Qué es 3bstays»" },
+  { file: "client/explorar/que-es-3bstays.css", selector: /^\.about-(?:guest|owner)/, rule: "font-size", why: "títulos de la pantalla «Qué es 3bstays»" },
   // Blancos y sombras sobre las fotos y el mapa: tienen que verse igual en los dos temas.
   { file: "styles/03-casas.css", selector: /^\.photo-dots i(?:\.on)?$/, rule: "color", why: "puntitos blancos sobre la foto" },
   { file: "styles/03-casas.css", selector: /^\.photo-dots i$/, rule: "shadow", why: "sombra de los puntitos sobre la foto" },
@@ -171,11 +171,11 @@ const COMPONENTS: { name: string; use: string; owners: string[]; classes: RegExp
 
 /** archivo → clase → motivo. */
 const CLASS_EXCEPTIONS: Record<string, Record<string, string>> = {
-  "client/screens/explorar.tsx": { chip: "el botón Filtros flotante de Explorar (chip de navegación, no de elección)" },
+  "client/explorar/explorar.tsx": { chip: "el botón Filtros flotante de Explorar (chip de navegación, no de elección)" },
   "client/admin/admin-casas.tsx": { chip: "chips de filtro de Casas: enlaces, no elección", "chip-sm": "chips de filtro de Casas, pequeños" },
   "client/admin/admin-anuncios.tsx": { chip: "pestañas de la cola en chip: enlaces, no elección", "chip-sm": "pestañas de la cola, pequeñas" },
   "client/screens/actividad.tsx": { "btn-link": "«Abrir WhatsApp» de una consulta: texto propio (inquiry-wa)" },
-  "client/card-whatsapp.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto" },
+  "client/explorar/card-whatsapp.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto" },
   "client/screens/calendario.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de «Pausar la casa» y «Marcar una reserva»" },
   "shared/listing-page.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto (ficha SSR)" },
   "shared/contact-sheet.tsx": { sheet: "la hoja de contacto en línea en la ficha de escritorio", "sheet-head": "cabecera de la hoja en línea" },

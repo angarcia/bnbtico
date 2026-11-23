@@ -1,12 +1,12 @@
 // «¿No encuentra lo que busca?» en Explorar (fase 6, ticket 01; sustituto de «Buscan casa»): enlace al WhatsApp de atención a
 // clientes con la búsqueda ya redactada. Sin número en el build (VITE_WA_GUESTS vacío), no sale. Va en el JS inicial: corto.
-import type { Filters } from "../domain/filters";
-import { searchHelpMessage } from "../domain/search-help";
-import { waUrl } from "../domain/whatsapp";
-import { track } from "../shared/beacon";
-import { I } from "../shared/ui/icons";
-import { ButtonLink, TextButton } from "../shared/ui/button";
-import { EmptyState, Notice } from "../shared/ui/structure";
+import type { Filters } from "../../domain/filters";
+import { searchHelpMessage } from "../../domain/search-help";
+import { waUrl } from "../../domain/whatsapp";
+import { track } from "../../shared/beacon";
+import { I } from "../../shared/ui/icons";
+import { ButtonLink, TextButton } from "../../shared/ui/button";
+import { EmptyState, Notice } from "../../shared/ui/structure";
 
 /**
  * Sin resultados (`onClear`): tarjeta «No hay casas con esos filtros», la nota si hay número y «Quitar filtros» si hay

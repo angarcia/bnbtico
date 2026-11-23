@@ -12,7 +12,7 @@ import { NightsPicker } from "../../shared/nights-picker";
 import { nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
 import { trackSearch } from "../../shared/beacon";
 import { I } from "../../shared/ui/icons";
-import { provincesQuery, zonesQuery } from "../queries";
+import { provincesQuery, zonesQuery } from "./queries";
 import { RangeCalendar } from "../../shared/range-calendar";
 import { Button, IconButton, TextButton } from "../../shared/ui/button";
 import { useCombobox } from "../../shared/ui/combobox";

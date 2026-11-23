@@ -28,7 +28,7 @@ import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from ".
 import { fxQuery } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/ui/icons";
-import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
+import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "./queries";
 import { Button } from "../../shared/ui/button";
 import { RouterListRow } from "../comun/router-rows";
 import { ScreenHeader } from "../comun/screen-header";

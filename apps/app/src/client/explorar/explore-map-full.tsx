@@ -4,19 +4,19 @@
 // su casa. La lista sigue montada debajo: al volver conserva su posición.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
-import { accommodationLabel, cardPrice } from "../domain/describe";
-import type { LatLng } from "../domain/geo";
-import type { SearchListing } from "../domain/listing";
-import { housesCount } from "../domain/search";
-import { track } from "../shared/beacon";
-import { FavoriteButton } from "../shared/favorite-button";
-import { I } from "../shared/ui/icons";
-import { Picture } from "../shared/picture";
+import { accommodationLabel, cardPrice } from "../../domain/describe";
+import type { LatLng } from "../../domain/geo";
+import type { SearchListing } from "../../domain/listing";
+import { housesCount } from "../../domain/search";
+import { track } from "../../shared/beacon";
+import { FavoriteButton } from "../../shared/favorite-button";
+import { I } from "../../shared/ui/icons";
+import { Picture } from "../../shared/picture";
 import { useExploreMap, useMapMarkers } from "./explore-map";
-import { showChrome } from "./comun/hiding-chrome";
+import { showChrome } from "../comun/hiding-chrome";
 import { CardWhatsApp } from "./card-whatsapp";
 import { CardCapacity, CardFeatures, CardPriceText } from "./listing-card";
-import { IconButton } from "../shared/ui/button";
+import { IconButton } from "../../shared/ui/button";
 
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);

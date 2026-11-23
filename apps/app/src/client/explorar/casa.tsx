@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { shouldReopenContact } from "../../domain/contact-return";
 import { webStore } from "../../data/storage";
 import { ListingScreen } from "../../shared/listing-page";
-import { listingSeed } from "../queries";
+import { listingSeed } from "./queries";
 
 const route = getRouteApi("/casa/$publicId");
 

@@ -2,8 +2,8 @@
 // (leaflet-*.js) y este módulo en el suyo. Los marcadores son píldoras con el precio, hechas con textContent (nada de HTML).
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { EXPLORE_MAP, exploreMapView, type LatLng } from "../domain/geo";
-import { groupLabel, groupPins } from "../domain/map-pins";
+import { EXPLORE_MAP, exploreMapView, type LatLng } from "../../domain/geo";
+import { groupLabel, groupPins } from "../../domain/map-pins";
 
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';

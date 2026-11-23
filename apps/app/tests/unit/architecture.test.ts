@@ -127,7 +127,7 @@ describe("arquitectura", () => {
         }
       }
     };
-    for (const entry of ["client/main.tsx", "client/start-shell.tsx", "client/hydrate-listing.tsx"]) walk(join(SRC, entry));
+    for (const entry of ["client/main.tsx", "client/start-shell.tsx", "client/explorar/hydrate-listing.tsx"]) walk(join(SRC, entry));
     expect(seen.size).toBeGreaterThan(20);
     expect(offenders).toEqual([]);
   });
@@ -155,7 +155,7 @@ describe("arquitectura", () => {
     for (const path of ["domain/filters.ts", "domain/search.ts"].map((p) => join(SRC, p)).filter(existsSync)) {
       expect(imports(path).filter((i) => i === "./calendar" || i === "./inquiry"), path).toEqual([]);
     }
-    for (const path of ["client/explore-map.tsx", "client/screens/explorar.tsx"].map((p) => join(SRC, p)).filter(existsSync)) {
+    for (const path of ["client/explorar/explore-map.tsx", "client/explorar/explorar.tsx"].map((p) => join(SRC, p)).filter(existsSync)) {
       expect(imports(path).filter((i) => i.includes("leaflet") || /^\.\.?\/explore-map-leaflet$/.test(i)), path).toEqual([]);
     }
   });

@@ -1,7 +1,7 @@
 // Los precios del mapa de Explorar mientras llega Leaflet (revisión UX 2026-10-29, C2): en Safari la caja salía lisa y
 // vacía hasta 2,4 s. Trozo diferido pequeño, pedido al montar la caja (Leaflet pesa 43 KB).
-import { EXPLORE_MAP } from "../domain/geo";
-import { groupLabel, groupPins } from "../domain/map-pins";
+import { EXPLORE_MAP } from "../../domain/geo";
+import { groupLabel, groupPins } from "../../domain/map-pins";
 import type { MapMarker } from "./explore-map";
 
 /** Mientras llega Leaflet, los precios sobre el fondo de la caja, ya juntos si se pisan: una proyección lineal de los

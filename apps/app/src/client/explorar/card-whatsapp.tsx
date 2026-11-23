@@ -1,15 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useState } from "react";
-import type { PublicListing } from "../domain/listing";
-import { firstName } from "../domain/person";
-import { track } from "../shared/beacon";
-import { I } from "../shared/ui/icons";
-import { listingDaysQuery } from "../shared/listing-query";
-import { FLAGS } from "../shared/flags";
+import type { PublicListing } from "../../domain/listing";
+import { firstName } from "../../domain/person";
+import { track } from "../../shared/beacon";
+import { I } from "../../shared/ui/icons";
+import { listingDaysQuery } from "../../shared/listing-query";
+import { FLAGS } from "../../shared/flags";
 
 // La hoja de contacto es la de la ficha, en su trozo: se pide al apuntar o tocar el botón, nunca en el JS inicial.
-const loadSheet = () => import("../shared/contact-sheet");
+const loadSheet = () => import("../../shared/contact-sheet");
 const ContactSheet = lazy(() => loadSheet().then((m) => ({ default: m.ContactSheet })));
 
 /** Botón redondo de WhatsApp de la tarjeta de Explorar (ticket 09 de la ronda del 2 nov), fuera del enlace como el corazón.

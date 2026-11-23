@@ -11,7 +11,7 @@ import { ChoiceChips } from "../../shared/ui/choice";
 import { Stepper } from "../../shared/ui/stepper";
 import { SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/ui/icons";
-import { loadedListings, zoneListingsQuery } from "../queries";
+import { loadedListings, zoneListingsQuery } from "./queries";
 import { RangeCalendar } from "../../shared/range-calendar";
 import { Button, TextButton } from "../../shared/ui/button";
 import { useDismiss } from "../../shared/ui/dismiss";

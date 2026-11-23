@@ -19,8 +19,8 @@ import { cuentaSearch, nextSearch } from "./cuenta-search";
 import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "./owner-search";
 import { suscripcionScreen } from "./lazy-screens";
 import { useListingsCount } from "./comun/own-listings-query";
-import { CasaScreen } from "./screens/casa";
-import { ExplorarScreen } from "./screens/explorar";
+import { CasaScreen } from "./explorar/casa";
+import { ExplorarScreen } from "./explorar/explorar";
 import { currentSession, onSignedOut, useSession } from "./comun/session";
 import { UpdateBanner } from "./update-banner";
 import { FLAGS, SEARCH_MODE } from "../shared/flags";
@@ -30,7 +30,7 @@ import { RouterButtonLink } from "./comun/router-buttons";
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
 const ownerScreens = () => import("./screens/propietario");
 const cuentaScreens = () => import("./cuenta/cuenta");
-const favoritosScreen = () => import("./screens/favoritos");
+const favoritosScreen = () => import("./explorar/favoritos");
 const actividadScreen = () => import("./screens/actividad");
 const calendarioScreen = () => import("./screens/calendario");
 const casaEditable = () => import("./screens/casa-editable");
@@ -203,10 +203,10 @@ const routeTree = rootRoute.addChildren([
     createRoute({
       getParentRoute: () => tabs,
       path: "/que-es-3bstays",
-      component: lazyRouteComponent(() => import("./screens/que-es-3bstays"), "QueEs3bstaysScreen"),
+      component: lazyRouteComponent(() => import("./explorar/que-es-3bstays"), "QueEs3bstaysScreen"),
     }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: exploreSearch, component: ExplorarScreen }),
-    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: lazyRouteComponent(() => import("./screens/filtros"), "FiltrosScreen") }),
+    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: lazyRouteComponent(() => import("./explorar/filtros"), "FiltrosScreen") }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
       ownerRoutes.addChildren([
@@ -270,7 +270,7 @@ const routeTree = rootRoute.addChildren([
       beforeLoad: ({ search: { abrir: _abrir, ...search } }) => {
         if (isDesktop()) throw redirect({ to: "/explorar", search, replace: true });
       },
-      component: lazyRouteComponent(() => import("./screens/buscar"), "BuscarScreen") }),
+      component: lazyRouteComponent(() => import("./explorar/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", validateSearch: (p: Record<string, unknown>): { panel?: "suscripcion" } => p.panel === "suscripcion" ? { panel: "suscripcion" } : {}, component: ownerScreen("CasaPropietarioScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("./screens/airbnb"), "AirbnbScreen") }),

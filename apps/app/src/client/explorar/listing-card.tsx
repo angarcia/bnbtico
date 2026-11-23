@@ -1,16 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { accommodationLabel, cardFacts, cardPrice, type CardPrice } from "../domain/describe";
-import { FEATURE_SHORT, type PublicListing, type PublicPhoto, type SearchListing } from "../domain/listing";
-import { FEATURE_ICON, I } from "../shared/ui/icons";
-import { formatMoney } from "../domain/money";
-import { stayTotalLabel } from "../domain/search";
-import { useCurrency } from "../shared/currency";
-import { useFx } from "../shared/fx";
-import { FavoriteButton } from "../shared/favorite-button";
-import { Picture } from "../shared/picture";
+import { accommodationLabel, cardFacts, cardPrice, type CardPrice } from "../../domain/describe";
+import { FEATURE_SHORT, type PublicListing, type PublicPhoto, type SearchListing } from "../../domain/listing";
+import { FEATURE_ICON, I } from "../../shared/ui/icons";
+import { formatMoney } from "../../domain/money";
+import { stayTotalLabel } from "../../domain/search";
+import { useCurrency } from "../../shared/currency";
+import { useFx } from "../../shared/fx";
+import { FavoriteButton } from "../../shared/favorite-button";
+import { Picture } from "../../shared/picture";
 import { stripStep } from "./card-strip";
-import { PhotoDots } from "../shared/photo-dots";
+import { PhotoDots } from "../../shared/photo-dots";
 import { CardWhatsApp } from "./card-whatsapp";
 
 const SIZES = "(min-width: 900px) 33vw, 100vw";
