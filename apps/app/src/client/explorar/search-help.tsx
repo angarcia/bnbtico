@@ -7,6 +7,7 @@ import { track } from "../../shared/beacon";
 import { I } from "../../shared/ui/icons";
 import { ButtonLink, TextButton } from "../../shared/ui/button";
 import { EmptyState, Notice } from "../../shared/ui/structure";
+import * as EXPLORE_COPY from "./copy/explore";
 
 /**
  * Sin resultados (`onClear`): tarjeta «No hay casas con esos filtros», la nota si hay número y «Quitar filtros» si hay
@@ -15,10 +16,10 @@ import { EmptyState, Notice } from "../../shared/ui/structure";
 export function SearchHelp({ filters, zoneName = null, number, onClear }: { filters: Filters; zoneName?: string | null; number: string; onClear?: (() => void) | null }) {
   const help = number ? (
     <>
-      <p>¿No encuentra lo que busca? Cuéntenos qué necesita por WhatsApp y le ayudamos a encontrar casa.</p>
+      <p>{EXPLORE_COPY.helpText}</p>
       {/* Se abre como «Abrir WhatsApp» de Ayuda; la baliza no lleva el mensaje ni los filtros (solo ruta, build y país). */}
       <ButtonLink variant="primary" block icon={<I.wa size={20} />} href={waUrl(number, searchHelpMessage(filters, zoneName))} target="_blank" rel="noopener" onClick={() => track("search_help_tap")}>
-        Escribir a 3bstays por WhatsApp
+        {EXPLORE_COPY.helpButton}
       </ButtonLink>
     </>
   ) : null;
@@ -26,9 +27,9 @@ export function SearchHelp({ filters, zoneName = null, number, onClear }: { filt
   return (
     <EmptyState
       gap={14}
-      title="No hay casas con esos filtros"
+      title={EXPLORE_COPY.noResultsTitle}
       text={help}
-      action={onClear ? <TextButton tone="link" onClick={onClear}>Quitar filtros</TextButton> : null}
+      action={onClear ? <TextButton tone="link" onClick={onClear}>{EXPLORE_COPY.clearFilters}</TextButton> : null}
     />
   );
 }

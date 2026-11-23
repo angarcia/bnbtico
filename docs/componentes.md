@@ -209,8 +209,10 @@ Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y des
 5. un archivo de `TEXT_SCOPE` (los que ya tienen sus textos en el catálogo del área) escribe texto suelto en el JSX: texto
    entre etiquetas, `label`, `title`, `aria-label`, `placeholder`, `alt` o `text:` con palabras. El texto va en la carpeta `copy/` del área (`client/<área>/copy/`, la ficha en `shared/copy/`, los componentes comunes en
    `shared/ui/copy/`): un módulo por pantalla o pieza, un `export const` por mensaje, importado con `import * as X_COPY`.
-   Mensajes completos, los datos como parámetros con nombre y los plurales con `plural()` de `domain/plural.ts`. Los textos
-   de una pieza diferida van en su propio módulo, para que no entren en el JS inicial. Al pasar un área, su carpeta se añade a `TEXT_SCOPE`.
+   Mensajes completos, los datos como parámetros con nombre y los plurales con `plural()` de `domain/plural.ts`. Un módulo de
+   textos lo importan solo los archivos que viajan en el mismo trozo (la pantalla, o la tarjeta y sus piezas): si lo comparten
+   una pieza del JS inicial y otra diferida, Rolldown parte el código en un trozo más y el JS inicial pierde compresión (al
+   pasar Explorar, un solo catálogo para la lista y la tarjeta sacó la tarjeta a su propio trozo: +1,4 KB). Al pasar un área, su carpeta se añade a `TEXT_SCOPE`.
 
 **Añadir una excepción** (solo si de verdad no cabe en un token o un componente):
 

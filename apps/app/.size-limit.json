@@ -82,7 +82,8 @@
       "!dist/client/assets/status-label-*.js",
       "!dist/client/assets/explorar-escritorio-*.js",
       "!dist/client/assets/panel-dias-*.js",
-      "!dist/client/assets/photo-viewer-*.js"
+      "!dist/client/assets/photo-viewer-*.js",
+      "!dist/client/assets/calendar-copy-*.js"
     ],
     "limit": "161 KB",
     "gzip": true
@@ -446,6 +447,14 @@
       "dist/client/assets/month-grid-*.js"
     ],
     "limit": "4 KB",
+    "gzip": true
+  },
+  {
+    "name": "Textos del calendario · trozo compartido (calendar-copy-*: domain/calendar-copy.ts, los textos del calendario de la ficha, de la hoja de contacto, del número de noches y del calendario del propietario; solo lo piden trozos diferidos; estructura por áreas, paso 3)",
+    "path": [
+      "dist/client/assets/calendar-copy-*.js"
+    ],
+    "limit": "0.35 KB",
     "gzip": true
   },
   {

@@ -7,6 +7,7 @@ import { track } from "../../shared/beacon";
 import { I } from "../../shared/ui/icons";
 import { listingDaysQuery } from "../../shared/listing-query";
 import { FLAGS } from "../../shared/flags";
+import * as CARD_COPY from "./copy/listing-card";
 
 // La hoja de contacto es la de la ficha, en su trozo: se pide al apuntar o tocar el botón, nunca en el JS inicial.
 const loadSheet = () => import("../../shared/contact-sheet");
@@ -26,7 +27,7 @@ export function CardWhatsApp({ listing }: { listing: PublicListing }) {
       <button
         type="button"
         className="card-wa"
-        aria-label={`Contactar por WhatsApp a ${firstName(listing.ownerName)}`}
+        aria-label={CARD_COPY.contactHost({ name: firstName(listing.ownerName) })}
         aria-haspopup="dialog"
         aria-expanded={open}
         onPointerDown={() => {

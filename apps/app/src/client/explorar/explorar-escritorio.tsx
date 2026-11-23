@@ -15,6 +15,7 @@ import { loadedListings, zoneListingsQuery } from "./queries";
 import { RangeCalendar } from "../../shared/range-calendar";
 import { Button, TextButton } from "../../shared/ui/button";
 import { useDismiss } from "../../shared/ui/dismiss";
+import * as DESKTOP_COPY from "./copy/explore-desktop";
 
 const ZonePicker = lazy(() => import("./buscar").then((m) => ({ default: m.Donde })));
 // El contador de noches del panel (modo noches): diferido, como la zona; trozo nights-picker-*, que comparte con la búsqueda
@@ -79,17 +80,17 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
           {panel === key && (
             <section id={panelId} aria-label={label} className={`desktop-search-panel desktop-search-panel-${key === "cuando" && SEARCH_MODE === "nights" ? "noches" : key}`}>
               {key === "donde" ? (
-                <Suspense fallback={<p role="status">Cargando zonas…</p>}>
+                <Suspense fallback={<p role="status">{DESKTOP_COPY.loadingZones}</p>}>
                   <ZonePicker zone={draft.zone} onPick={(zone) => apply({ ...draft, zone })} onClear={() => apply({ ...draft, zone: null, prov: ALL_PROVINCES })} focusOnce={focusZone} />
                 </Suspense>
               ) : SEARCH_MODE === "nights" ? (
                 <>
-                  <Suspense fallback={<p role="status">Cargando…</p>}>
+                  <Suspense fallback={<p role="status">{DESKTOP_COPY.loading}</p>}>
                     <NightsPicker nights={draft.nights} onChange={(nights) => setDraft({ ...draft, nights })} />
                   </Suspense>
                   <div className="row between">
-                    <TextButton tone="quiet" onClick={() => apply({ ...draft, nights: 0 })}>Quitar noches</TextButton>
-                    <Button variant="primary" disabled={!draft.nights} onClick={() => apply(draft)}>Aplicar noches</Button>
+                    <TextButton tone="quiet" onClick={() => apply({ ...draft, nights: 0 })}>{DESKTOP_COPY.clearNights}</TextButton>
+                    <Button variant="primary" disabled={!draft.nights} onClick={() => apply(draft)}>{DESKTOP_COPY.applyNights}</Button>
                   </div>
                 </>
               ) : (
@@ -98,8 +99,8 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
                     <RangeCalendar weekdaysPerMonth today={today} value={draft} onChange={(range) => setDraft({ ...draft, ...range })} />
                   </div>
                   <div className="row between">
-                    <TextButton tone="quiet" onClick={() => apply({ ...draft, arrival: null, departure: null })}>Quitar fechas</TextButton>
-                    <Button variant="primary" disabled={!draft.arrival || !draft.departure} onClick={() => apply(draft)}>Aplicar fechas</Button>
+                    <TextButton tone="quiet" onClick={() => apply({ ...draft, arrival: null, departure: null })}>{DESKTOP_COPY.clearDates}</TextButton>
+                    <Button variant="primary" disabled={!draft.arrival || !draft.departure} onClick={() => apply(draft)}>{DESKTOP_COPY.applyDates}</Button>
                   </div>
                 </>
               )}
@@ -107,7 +108,7 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
           )}
         </div>
       ))}
-      <div className="desktop-search-people float-card" role="group" aria-label="Personas">
+      <div className="desktop-search-people float-card" role="group" aria-label={DESKTOP_COPY.people}>
         <I.user size={20} />
         <Stepper unit="Una persona" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? "Sin indicar"} onChange={changePeople} />
       </div>
@@ -128,7 +129,7 @@ export function DesktopFeatureFilters({ filters }: { filters: Filters }) {
       as="button"
       float
       placement="desktop-feature-filters"
-      label="Qué necesitan"
+      label={DESKTOP_COPY.needs}
       options={choices.map((feature) => ({ value: feature, name: FEATURE_CHOICE_NAME[feature], label: <FeatureChoiceLabel feature={feature} /> }))}
       selected={filters.features}
       onToggle={(feature) => {

@@ -21,6 +21,7 @@ import { Stepper } from "../../shared/ui/stepper";
 import { Notice } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";
 import { ClosedField } from "../../shared/ui/closed-field";
+import * as SEARCH_COPY from "./copy/search";
 
 const route = getRouteApi("/_flow/explorar/buscar");
 
@@ -123,8 +124,8 @@ export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | nul
         variant="combobox"
         ref={input}
         {...combo.inputProps}
-        aria-label="Busque una zona"
-        placeholder="Busque una zona"
+        aria-label={SEARCH_COPY.zoneSearch}
+        placeholder={SEARCH_COPY.zoneSearch}
         autoComplete="off"
         enterKeyHint="search"
         value={text}
@@ -146,12 +147,12 @@ export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | nul
         after={
           zone ? (
             <TextButton tone="quiet" onClick={onClear}>
-              Quitar
+              {SEARCH_COPY.clear}
             </TextButton>
           ) : null
         }
       />
-      <ul ref={listbox} className="suggestions" role="listbox" id={combo.listId} aria-label="Zonas con casas">
+      <ul ref={listbox} className="suggestions" role="listbox" id={combo.listId} aria-label={SEARCH_COPY.zonesList}>
         {list.map((z, i) => (
           <li key={z.id} id={combo.optionId(i)} role="option" aria-selected={z.id === zone} className={`suggestion${i === combo.active ? " is-active" : ""}${z.id === zone ? " is-chosen" : ""}`} onClick={() => onPick(z.id)}>
             <span className="suggestion-icon" aria-hidden="true">
@@ -164,10 +165,10 @@ export function Donde({ zone, onPick, onClear, focusOnce }: { zone: string | nul
           </li>
         ))}
       </ul>
-      {isPending ? <p className="small muted" role="status">Cargando zonas…</p> : isError && !zones.length ? (
-        <div className="row between gap-8"><p className="small" role="alert">No pudimos cargar las zonas.</p><TextButton tone="quiet" onClick={() => void refetch()}>Reintentar</TextButton></div>
-      ) : !list.length ? <p className="small" role="status">{text ? "Todavía no hay casas en esa zona." : "Todavía no hay zonas con casas."}</p> : null}
-      <p className="small muted">Le mostramos las casas de la zona y las que están a 5 km o menos.</p>
+      {isPending ? <p className="small muted" role="status">{SEARCH_COPY.loadingZones}</p> : isError && !zones.length ? (
+        <div className="row between gap-8"><p className="small" role="alert">{SEARCH_COPY.zonesError}</p><TextButton tone="quiet" onClick={() => void refetch()}>{SEARCH_COPY.retry}</TextButton></div>
+      ) : !list.length ? <p className="small" role="status">{SEARCH_COPY.noZones({ searched: !!text })}</p> : null}
+      <p className="small muted">{SEARCH_COPY.zoneNote}</p>
     </>
   );
 }
@@ -204,11 +205,11 @@ export function BuscarScreen() {
 
   return (
     <div className="search-screen">
-      <h1 className="sr-only">Buscar casas</h1>
-      <IconButton label="Cerrar la búsqueda" placement="search-close" onClick={close}>
+      <h1 className="sr-only">{SEARCH_COPY.heading}</h1>
+      <IconButton label={SEARCH_COPY.close} placement="search-close" onClick={close}>
         <I.x size={22} />
       </IconButton>
-      <Fold title="¿Dónde?" value={zoneName ?? "Añadir zona"} open={open === "donde"} onToggle={toggle("donde")}>
+      <Fold title={SEARCH_COPY.where} value={zoneName ?? SEARCH_COPY.addZone} open={open === "donde"} onToggle={toggle("donde")}>
         {/* Con otra zona (o sin ella, tras «Quitar» o «Borrar todo») el campo vuelve a empezar con su nombre. */}
         <Donde
           key={draft.zone ?? ""}
@@ -223,20 +224,20 @@ export function BuscarScreen() {
       </Fold>
       {/* Feature flags (#58): con fechas, «¿Cuándo?»; con número de noches, «¿Cuántas noches?» (diseño #59); sin estancia, ninguna. */}
       {SEARCH_MODE === "nights" ? (
-        <Fold title="¿Cuántas noches?" value={draft.nights ? nightsLabel(draft.nights) : "Añadir noches"} open={open === "cuando"} onToggle={toggle("cuando")}>
+        <Fold title={SEARCH_COPY.howManyNights} value={draft.nights ? nightsLabel(draft.nights) : SEARCH_COPY.addNights} open={open === "cuando"} onToggle={toggle("cuando")}>
           <NightsPicker nights={draft.nights} onChange={(nights) => set({ nights })} />
           <div className="row between">
-            <span className="xs muted">Le mostramos un precio orientativo para esas noches. La disponibilidad se la confirma el anfitrión por WhatsApp.</span>
+            <span className="xs muted">{SEARCH_COPY.nightsNote}</span>
             {draft.nights ? (
               <TextButton tone="quiet" onClick={() => set({ nights: 0 })}>
-                Quitar
+                {SEARCH_COPY.clear}
               </TextButton>
             ) : null}
           </div>
         </Fold>
       ) : null}
       {SEARCH_MODE === "dates" ? (
-      <Fold title="¿Cuándo?" value={datesValue ?? "Añadir fechas"} open={open === "cuando"} onToggle={toggle("cuando")}>
+      <Fold title={SEARCH_COPY.when} value={datesValue ?? SEARCH_COPY.addDates} open={open === "cuando"} onToggle={toggle("cuando")}>
         <FitAboveBar>
           <RangeCalendar today={today} value={{ arrival: draft.arrival, departure: draft.departure }} onChange={(r) => set(r)} />
         </FitAboveBar>
@@ -248,39 +249,39 @@ export function BuscarScreen() {
                 <span className="xs muted num">{nightsLabel(nightsBetween(draft.arrival!, draft.departure!))}</span>
               </>
             ) : (
-              <b>{draft.arrival ? "Elija la salida" : "Elija la llegada"}</b>
+              <b>{SEARCH_COPY.pick({ arrival: !!draft.arrival })}</b>
             )}
           </span>
           <Button variant="primary" onClick={() => setOpen("quienes")}>
-            Siguiente
+            {SEARCH_COPY.next}
           </Button>
         </div>
         <div className="row between">
-          <span className="xs muted">Le mostramos las casas libres esas noches.</span>
+          <span className="xs muted">{SEARCH_COPY.datesNote}</span>
           {draft.arrival ? (
             <TextButton tone="quiet" onClick={() => set({ arrival: null, departure: null })}>
-              Quitar fechas
+              {SEARCH_COPY.clearDates}
             </TextButton>
           ) : null}
         </div>
       </Fold>
       ) : null}
-      <Fold title="¿Quiénes?" value={peopleLabel(draft.ppl) ?? "Añadir personas"} open={open === "quienes"} onToggle={toggle("quienes")}>
+      <Fold title={SEARCH_COPY.who} value={peopleLabel(draft.ppl) ?? SEARCH_COPY.addPeople} open={open === "quienes"} onToggle={toggle("quienes")}>
         <div className="row between">
           <span className="stack gap-0">
-            <b>Personas</b>
-            <span className="small muted">Todas las que se van a quedar</span>
+            <b>{SEARCH_COPY.people}</b>
+            <span className="small muted">{SEARCH_COPY.peopleHint}</span>
           </span>
-          <Stepper unit="Una persona" value={draft.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!draft.ppl} onChange={(ppl) => set({ ppl })} />
+          <Stepper unit={SEARCH_COPY.onePerson} value={draft.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!draft.ppl} onChange={(ppl) => set({ ppl })} />
         </div>
-        <Notice small>{SEARCH_MODE === "nights" ? "Las noches" : SEARCH_MODE === "dates" ? "Las fechas" : "Las personas"}{SEARCH_MODE === "none" ? " van" : " y las personas van"} en el mensaje de WhatsApp que le preparamos para el anfitrión.</Notice>
+        <Notice small>{SEARCH_COPY.messageNote({ mode: SEARCH_MODE })}</Notice>
       </Fold>
       <StickyActions>
         <TextButton tone="quiet" onClick={() => setDraft(EMPTY)}>
-          Borrar todo
+          {SEARCH_COPY.clearAll}
         </TextButton>
         <Button variant="primary" size="lg" placement="grow" icon={<I.search size={20} />} onClick={() => void submit()}>
-          Buscar
+          {SEARCH_COPY.search}
         </Button>
       </StickyActions>
     </div>
