@@ -77,7 +77,9 @@ test("subir seis fotos con progreso, cambiar la portada, quitar una y seguir", a
   await expect(mover("Mover foto 2 antes")).toBeFocused();
   await expect(mover("Mover foto 2 antes")).not.toHaveAttribute("aria-disabled", "true");
   await page.keyboard.press("Enter");
-  await expect(page.locator(".photos-grid .photo.cover img")).toHaveAttribute("src", l.photos[2]!.url);
+  // La ruta de la variante, no el token: cada lectura firma de nuevo (historia #69) y, si la de después de mover cae en otro
+  // segundo, el token cambia aunque la foto sea la misma (fallaba de vez en cuando en CI, 2026-11-23).
+  await expect(page.locator(".photos-grid .photo.cover img")).toHaveAttribute("src", new RegExp(`/${l.photos[2]!.path}/800\\.jpg\\?token=`));
   await expect(page.locator(".photos-grid .photo.cover .tag")).toHaveText("Portada");
   await expect.poll(async () => (await own(id)).photos.map((p) => p.id)).toEqual([2, 0, 1, 3, 4, 5].map((i) => l.photos[i]!.id));
 
