@@ -16,6 +16,7 @@ import { useSession } from "../comun/session";
 import { Button } from "../../shared/ui/button";
 import { BrandLogo, NavBar, NavItemContent, type NavTab } from "../../shared/ui/structure";
 import { UnderTopBar } from "../comun/screen-header";
+import * as CHROME_COPY from "./copy/chrome";
 
 const WhatsAppDialog = lazy(() => import("../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const InquiriesDialog = lazy(() => import("../propietario/actividad").then((m) => ({ default: m.InquiriesDialog })));
@@ -69,7 +70,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
   const pending = useReviewCount(tabs.some((t) => t.badge === "review"));
   const fresh = useNewInquiries(tabs.some((t) => t.badge === "inquiries"));
   const desktopInquiries = desktop && tabs.some((t) => t.badge === "inquiries");
-  const inquiriesLabel = fresh ? `Consultas, ${fresh} ${fresh === 1 ? "nueva" : "nuevas"}` : "Consultas";
+  const inquiriesLabel = fresh ? CHROME_COPY.inquiriesFresh({ count: fresh }) : CHROME_COPY.inquiries;
   // «Ingresar» desde Favoritos vuelve a Favoritos (la lista pasa a la cuenta).
   const next = status === "signed-out" ? nextFor(pathname) : undefined;
   const shownTabs: (NavTab & { exact: boolean })[] = tabs.flatMap(({ to, label, icon, exact, badge }) => {
@@ -86,7 +87,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
         <Link
           className="desktop-brand"
           to={brandOpensAbout ? "/que-es-3bstays" : "/explorar"}
-          aria-label={brandOpensAbout ? "Qué es 3bstays" : "3bstays, inicio"}
+          aria-label={CHROME_COPY.brand({ about: brandOpensAbout })}
           activeOptions={{ exact: true, includeSearch: false }}
           activeProps={brandOpensAbout ? { "aria-current": "page" } : {}}
           replace
@@ -111,17 +112,17 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
           {adminZone ? <span className="desktop-currency" /> : <CurrencySwitch placement="desktop-currency" />}
           {desktopSignIn ? (
             <Button variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} aria-haspopup="dialog" onClick={() => setSignInOpen(true)}>
-              Ingresar
+              {CHROME_COPY.signIn}
             </Button>
           ) : null}
           {desktopInquiries && (
-            <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title="Consultas"
+            <button type="button" className="nav desktop-inquiries" aria-label={inquiriesLabel} title={CHROME_COPY.inquiries}
               aria-haspopup="dialog" aria-expanded={inquiriesOpen} onClick={() => setInquiriesOpen(true)}>
-              <NavItemContent icon="chat" label="Consultas" labelHidden count={fresh} countTestId="inquiries-badge" countHidden />
+              <NavItemContent icon="chat" label={CHROME_COPY.inquiries} labelHidden count={fresh} countTestId="inquiries-badge" countHidden />
             </button>
           )}
-          {adminZone ? null : <Link to="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" activeProps={{ "aria-current": "page" }}>
-            <NavItemContent icon="wa" label="Ayuda por WhatsApp" iconSize={24} />
+          {adminZone ? null : <Link to="/ayuda" className="nav desktop-help" aria-label={CHROME_COPY.help} title={CHROME_COPY.help} activeProps={{ "aria-current": "page" }}>
+            <NavItemContent icon="wa" label={CHROME_COPY.help} iconSize={24} />
           </Link>}
         </>
       ) : undefined}

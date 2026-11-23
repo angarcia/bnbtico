@@ -10,6 +10,7 @@ import { offerTakenQuery } from "./offer-query";
 import { RouterButtonLink } from "./router-buttons";
 import { RouterListRow } from "./router-rows";
 import { Card } from "../../shared/ui/card";
+import * as PROMO_COPY from "./copy/publish-promo";
 
 export function useOffer() {
   const taken = useQuery(offerTakenQuery);
@@ -27,22 +28,20 @@ export function PublishPromoCard() {
   const offer = useOffer();
   return (
     <Card layout="stack" gap={8} placement="publish-promo" data-testid="publish-promo">
-      <b className="display offer-title">¿Tiene una casa en el Caribe?</b>
+      <b className="display offer-title">{PROMO_COPY.title}</b>
       <span className="small ink">
         {offer ? (
-          <>
-            Publíquela gratis {offer.months} meses. <b>Quedan {offer.remaining} de {offer.size} plazas.</b>
-          </>
+          <>{PROMO_COPY.offer({ months: offer.months, places: <b key="places">{PROMO_COPY.places({ remaining: offer.remaining, size: offer.size })}</b> })}</>
         ) : offer === null ? (
-          <>Publíquela por {FEE} al mes.</>
+          <>{PROMO_COPY.paid({ fee: FEE })}</>
         ) : (
-          <>Publíquela gratis.</>
+          <>{PROMO_COPY.free}</>
         )}
       </span>
       <span className="xs">
-        {offer ? `Después, ${FEE} al mes por casa. ` : null}Sin comisiones; los clientes le escriben por WhatsApp.
+        {PROMO_COPY.note({ fee: offer ? FEE : null })}
       </span>
-      <PublishPromoButton label={offer === null ? "Publicar mi casa" : "Publicar mi casa gratis"} />
+      <PublishPromoButton label={PROMO_COPY.button({ free: offer !== null })} />
     </Card>
   );
 }
@@ -54,8 +53,8 @@ export function PublishPromoRow() {
     <RouterListRow tone="sun" placement="publish-promo-row" to="/publicar" data-testid="publish-promo-row">
       <I.house />
       <span className="body">
-        {offer === null ? "¿Quiere publicar su casa?" : "¿Quiere publicar su casa gratis?"}
-        <small className="num">{offer ? `Gratis ${offer.months} meses · quedan ${offer.remaining} de ${offer.size} plazas` : offer === null ? `${FEE} al mes por casa, sin comisiones` : "Sin comisiones por alquiler"}</small>
+        {PROMO_COPY.rowTitle({ free: offer !== null })}
+        <small className="num">{offer ? PROMO_COPY.rowOffer({ months: offer.months, remaining: offer.remaining, size: offer.size }) : offer === null ? PROMO_COPY.rowPaid({ fee: FEE }) : PROMO_COPY.rowFree}</small>
       </span>
       <span className="chev">
         <I.chevron />
