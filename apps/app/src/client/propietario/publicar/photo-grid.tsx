@@ -19,6 +19,7 @@ import { usePhotoDrag } from "./use-photo-drag";
 import { IconButton } from "../../../shared/ui/button";
 import { useDesktop } from "../../../shared/desktop";
 import * as GRID_COPY from "./copy/photo-grid";
+import { ownListingKey, ownListingsKey } from "../../comun/listing-keys";
 
 export interface PhotoSource {
   listingId: string;
@@ -49,8 +50,8 @@ const TONE: Record<PhotoSource["counter"]["tone"], string> = { ok: " primary", m
 
 /** La relectura de la casa tras subir, quitar u ordenar (lista de Mis casas y detalle). */
 export const rereadOwnListing = (client: QueryClient, userId: string, listingId: string) => async () => {
-  void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-  await client.invalidateQueries({ queryKey: ["own-listing", userId, listingId] });
+  void client.invalidateQueries({ queryKey: ownListingsKey(userId) });
+  await client.invalidateQueries({ queryKey: ownListingKey(userId, listingId) });
 };
 
 const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };

@@ -5,6 +5,7 @@ import { queryOptions } from "@tanstack/react-query";
 import type { OwnerCalendarApi } from "../../../domain/api";
 import type { CalendarChange } from "../../../domain/calendar";
 import { authApi } from "../../comun/session";
+import { calendarKey } from "../../comun/listing-keys";
 
 export const calendarApi = async (): Promise<OwnerCalendarApi> => {
   await authApi();
@@ -14,7 +15,7 @@ export const calendarApi = async (): Promise<OwnerCalendarApi> => {
 /** `cal`: el calendario del anfitrión o, en las rutas del admin, el de Ana (client/editor-port.ts). */
 export const calendarQuery = (userId: string, listingId: string, cal = calendarApi) =>
   queryOptions({
-    queryKey: ["calendar", userId, listingId] as const,
+    queryKey: calendarKey(userId, listingId),
     queryFn: async () => (await cal()).days(listingId),
     staleTime: 30_000,
   });

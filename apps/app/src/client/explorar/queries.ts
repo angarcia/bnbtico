@@ -3,6 +3,7 @@ import { infiniteQueryOptions, keepPreviousData, queryOptions, type InfiniteData
 import { parseFilters, type Filters } from "../../domain/filters";
 import type { PublicListing, SearchCursor, SearchListing, SearchPage } from "../../domain/listing";
 import { DomainError } from "../../domain/errors";
+import { listingsKey } from "../comun/listing-keys";
 
 const api = async () => (await import("../../shared/supabase-data")).publicListings();
 
@@ -12,7 +13,7 @@ export const listingsQuery = (f: Filters) => {
   const { open: _open, ...key } = f;
   // Por páginas de 60 («Ver más casas»): cada página trae el cursor de la siguiente (`next`, null si no quedan).
   return infiniteQueryOptions({
-    queryKey: ["listings", key] as const,
+    queryKey: [...listingsKey, key] as const,
     queryFn: async ({ pageParam }) => (await api()).searchPublic(f, pageParam),
     initialPageParam: null as SearchCursor | null,
     getNextPageParam: (page: SearchPage) => page.next,
@@ -50,7 +51,7 @@ export const zonesQuery = queryOptions({
 
 /** La casa tal como llegó en algún listado ya cargado, para pintar la ficha antes de su propia petición. */
 export function listingSeed(client: QueryClient, publicId: string): { listing: PublicListing; updatedAt: number } | undefined {
-  for (const query of client.getQueryCache().findAll({ queryKey: ["listings"] })) {
+  for (const query of client.getQueryCache().findAll({ queryKey: listingsKey })) {
     const listing = loadedListings(query.state.data as InfiniteData<SearchPage> | undefined)?.find((l) => l.publicId === publicId);
     if (listing) return { listing, updatedAt: query.state.dataUpdatedAt };
   }

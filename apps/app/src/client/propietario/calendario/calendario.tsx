@@ -59,6 +59,7 @@ import { RouterButtonLink } from "../../comun/router-buttons";
 import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
 import * as CAL_COPY from "./copy/calendar";
+import { listingDaysKey, publicListingKey } from "../../../shared/listing-query";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "3bstays-calendario-casa";
@@ -207,8 +208,8 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
       toast(toDomainError(error).message);
     },
     onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ["listing", l.publicId] });
-      void client.invalidateQueries({ queryKey: ["listing-days", l.publicId] });
+      void client.invalidateQueries({ queryKey: publicListingKey(l.publicId) });
+      void client.invalidateQueries({ queryKey: listingDaysKey(l.publicId) });
     },
     // Con otro guardado en vuelo, releer ahora pisaría su cambio optimista: lee el último.
     onSettled: () => {

@@ -17,6 +17,7 @@ import { Button } from "../../shared/ui/button";
 import { BrandLogo, NavBar, NavItemContent, type NavTab } from "../../shared/ui/structure";
 import { UnderTopBar } from "../comun/screen-header";
 import * as CHROME_COPY from "./copy/chrome";
+import { adminQueueKey } from "../comun/listing-keys";
 
 const WhatsAppDialog = lazy(() => import("../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const InquiriesDialog = lazy(() => import("../propietario/actividad").then((m) => ({ default: m.InquiriesDialog })));
@@ -25,7 +26,7 @@ const InquiriesDialog = lazy(() => import("../propietario/actividad").then((m) =
  *  de `enabled: false` sin `queryFn`, que TanStack anotaba como error en cada pantalla (revisión UX 2026-10-29, N8). */
 function useReviewCount(enabled: boolean): number {
   const userId = useSession().session?.userId ?? "";
-  const { data } = useQuery<{ review: unknown[] }, Error, number>({ queryKey: ["admin-queue", userId], queryFn: skipToken, select: (q) => q.review.length });
+  const { data } = useQuery<{ review: unknown[] }, Error, number>({ queryKey: adminQueueKey(userId), queryFn: skipToken, select: (q) => q.review.length });
   return enabled ? (data ?? 0) : 0;
 }
 

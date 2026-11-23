@@ -40,6 +40,7 @@ import { RouterButtonLink } from "../../comun/router-buttons";
 import { Dialog, DiscardConfirm } from "../../../shared/ui/overlay";
 import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
 import * as EDITAR_COPY from "./copy/editar";
+import { ownListingKey } from "../../comun/listing-keys";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (ScreenHeader con `back.historyBack`). */
@@ -295,7 +296,7 @@ function usePhotoSource(listing: Listing, userId: string): PhotoSource {
     // (la caché del teléfono, persistida, no lo pediría hasta que venza). Se espera al detalle, como en el asistente.
     reread: async () => {
       refresh(client, userId, listing);
-      await client.invalidateQueries({ queryKey: ["own-listing", userId, listing.id] }, { cancelRefetch: false });
+      await client.invalidateQueries({ queryKey: ownListingKey(userId, listing.id) }, { cancelRefetch: false });
     },
   };
 }

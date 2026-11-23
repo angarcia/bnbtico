@@ -16,7 +16,7 @@ import { ScreenHeader, type HeaderClose } from "../../comun/screen-header";
 import { useDesktop } from "../../../shared/desktop";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../../comun/motion";
-import { ownListingKey } from "../../comun/listing-keys";
+import { ownListingKey, ownListingsKey, ownResumableKey } from "../../comun/listing-keys";
 import { addOwnCached, api, resumableQuery } from "../owner";
 import { StepFields } from "./fields";
 import { ReadyList, WizardHeader } from "./wizard-parts";
@@ -79,8 +79,8 @@ export function PublicarScreen() {
       // createDraft trae el borrador entero: a la caché sin otro viaje a la base (antes se volvía a pedir aquí).
       client.setQueryData(ownListingKey(userId, id), listing);
       addOwnCached(client, userId, listing); // la barra crece al instante, antes de releer la lista
-      void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-      void client.invalidateQueries({ queryKey: ["own-resumable", userId] });
+      void client.invalidateQueries({ queryKey: ownListingsKey(userId) });
+      void client.invalidateQueries({ queryKey: ownResumableKey(userId) });
       // En lugar de la entrada: «Atrás» desde el paso 1 vuelve a donde se tocó «+».
       if (mounted.current) await navigate({ to: "/propietario/publicar/$id/$paso", params: { id, paso: "1" }, replace: true });
     },
@@ -217,7 +217,7 @@ export function PasoScreen() {
 
   // Fotos: siempre las del servidor al llegar a esa pantalla (la lectura espera a los guardados en curso).
   useEffect(() => {
-    if (step === 7) void client.invalidateQueries({ queryKey: ["own-listing", userId, id] });
+    if (step === 7) void client.invalidateQueries({ queryKey: ownListingKey(userId, id) });
   }, [step, client, userId, id]);
 
   // Un id de pantalla retirado (el 3, el mapa de antes) lleva a la que lo sustituye: los enlaces viejos siguen sirviendo.

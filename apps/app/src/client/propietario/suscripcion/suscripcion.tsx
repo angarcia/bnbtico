@@ -41,6 +41,7 @@ import { LoadError, Notice, Skeleton, StatusTag } from "../../../shared/ui/struc
 import { Card } from "../../../shared/ui/card";
 import { RouterListRow } from "../../comun/router-rows";
 import * as SUB_COPY from "./copy/subscription";
+import { listingsKey, ownListingsKey } from "../../comun/listing-keys";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
 const message = (e: unknown) => toDomainError(e).message;
@@ -271,8 +272,8 @@ function useSavingMethod(userId: string, pago: "ok" | undefined): [Saving, () =>
         if (stopped) return;
         if (o?.method) {
           setSaving("saved");
-          void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-          void client.invalidateQueries({ queryKey: ["listings"] });
+          void client.invalidateQueries({ queryKey: ownListingsKey(userId) });
+          void client.invalidateQueries({ queryKey: listingsKey });
           return;
         }
         if (Date.now() - started >= SAVE_WAIT_MS) return setSaving("late");

@@ -127,3 +127,9 @@ Hecho §3.4 con los ajustes anotados en `docs/decisiones.md` (2026-11-23): siete
 ## Paso 3 (2026-11-23, rama `textos-catalogos`): catálogos a mano
 
 Ana eligió catálogos a mano tras la prueba de Paraglide, que funcionaba pero dejaba el JS inicial en 161,36 KB, por encima del límite (decisión en `docs/decisiones.md`; la prueba queda en la rama local `prueba-paraglide`). Hechos Favoritos y todo `shared/`, con `plural()` en `domain/plural.ts` y la regla de `consistencia.test.ts`. Forma final: carpeta `copy/` por área, un módulo por pantalla con un export por mensaje e `import * as` (los objetos `as const` pesaban 0,5 KB más en el JS inicial). Después, todas las áreas, un commit por área; la regla vale ya para todos los TSX de `src/`. JS inicial: 159,95 → 160,71 KB.
+
+## Paso 4 (2026-11-23, rama `fabricas-consultas`): fábricas de consultas
+
+Las 38 llamadas a `useQuery` ya usaban fábricas de `queryOptions` (`{ ...xQuery(id), enabled }`); el hallazgo de «28 `useQuery` en línea» quedó resuelto al mover las carpetas. Faltaba que las claves no se copiaran a mano: diez nombres (`listing`, `listing-days`, `listings`, `calendar`, `airbnb`, `own-listing`, `own-listings`, `own-resumable`, `admin-queue` y `offer-taken`) estaban escritos en dos a siete sitios, sobre todo en las invalidaciones de publicar, calendario, Airbnb y suscripción. Ahora cada clave tiene una función (`publicListingKey` y `listingDaysKey` en `shared/listing-query.ts`; `calendarKey` y `airbnbKey` se suman a `client/comun/listing-keys.ts`) y `tests/unit/query-keys.test.ts` falla si un nombre de clave se escribe en más de un sitio. Único cambio de comportamiento: reordenar fotos cancela las lecturas del detalle de esa casa, no las de todas las casas. JS inicial: 160,31 KB.
+
+Los **hooks con propósito** (§3.3) siguen pendientes: se hacen al tocar cada pantalla grande (calendario, suscripción, propietario, editar, explorar), una por vez, sin reescritura de golpe.
