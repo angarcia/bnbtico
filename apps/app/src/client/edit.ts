@@ -9,8 +9,8 @@ import { toDomainError } from "../domain/errors";
 import { toast } from "../shared/toast";
 import { useEditor, type EditorListings } from "./editor-port";
 import { api } from "./owner";
-import { cachedOwnListing, invalidateOwn, patchCached, refresh } from "./listing-cache";
-import { ownListingKey, ownListingsKey } from "./listing-keys";
+import { cachedOwnListing, invalidateOwn, patchCached, refresh } from "./comun/listing-cache";
+import { ownListingKey, ownListingsKey } from "./comun/listing-keys";
 
 type Target = Pick<Listing, "id" | "publicId">;
 type LiveContext = { previous: Listing | null | undefined };

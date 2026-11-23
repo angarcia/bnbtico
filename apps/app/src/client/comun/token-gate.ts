@@ -1,6 +1,6 @@
 // Ventanilla del token de Turnstile: el widget lo deja cuando lo tiene y el formulario lo recoge al enviar. Cada token
 // sirve una sola vez (Supabase Auth lo comprueba con Cloudflare); si al enviar aún no llegó, se espera un rato.
-import { CAPTCHA_FAILED, DomainError } from "../domain/errors";
+import { CAPTCHA_FAILED, DomainError } from "../../domain/errors";
 
 export { CAPTCHA_FAILED };
 

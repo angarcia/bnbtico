@@ -10,13 +10,13 @@ import { I } from "../../shared/ui/icons";
 import { toast } from "../../shared/toast";
 import { firstName, ownerNoticeUrl } from "../../domain/owner-notice";
 import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { Sheet } from "../../shared/ui/overlay";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";
 import { Field, SearchInput, TextArea, TextInput } from "../../shared/ui/field";
 import { Button } from "../../shared/ui/button";
-import { RouterButtonLink } from "../router-buttons";
-import { RouterListRow } from "../router-rows";
+import { RouterButtonLink } from "../comun/router-buttons";
+import { RouterListRow } from "../comun/router-rows";
 import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { List, ListRowButton } from "../../shared/ui/card";
 

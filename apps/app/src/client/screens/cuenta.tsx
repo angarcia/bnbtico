@@ -2,9 +2,10 @@
 // propietario aparece con al menos una casa), cuenta lista, recuperar y ayuda. Todo contra AuthApi; supabase-js se carga
 // al enviar el primer formulario o si ya hay sesión.
 import { getRouteApi } from "@tanstack/react-router";
-import { FlowFrame, ScreenHeader, TabsFrame } from "../chrome";
-import { useSession } from "../session";
-import { SignInForm } from "../sign-in";
+import { FlowFrame, TabsFrame } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
+import { useSession } from "../comun/session";
+import { SignInForm } from "../comun/sign-in";
 import { backFrom, useContactMode } from "./cuenta-navigation";
 import { MyAccount } from "./cuenta-profile";
 

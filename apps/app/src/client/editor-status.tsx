@@ -1,4 +1,4 @@
-import { RouterButtonLink } from "./router-buttons";
+import { RouterButtonLink } from "./comun/router-buttons";
 import { EmptyState } from "../shared/ui/structure";
 
 export function NotFoundCard() {

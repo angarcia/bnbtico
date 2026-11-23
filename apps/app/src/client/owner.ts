@@ -5,15 +5,15 @@ import { queryOptions, useMutation, useQueryClient, type QueryClient } from "@ta
 import type { ListingActivity, OwnerListingsApi, PhotosApi, PlacesApi } from "../domain/api";
 import type { Listing } from "../domain/listing";
 import { rememberOwnListings } from "../shared/own-listings";
-import { patchCached, refresh, removeOwnCached } from "./listing-cache";
-import { ownActivityKey, ownListingKey, ownListingsKey, ownResumableKey, ownStatsKey } from "./listing-keys";
-import { OWNER_STALE_MS, ownListingsQuery } from "./own-listings-query";
+import { patchCached, refresh, removeOwnCached } from "./comun/listing-cache";
+import { ownActivityKey, ownListingKey, ownListingsKey, ownResumableKey, ownStatsKey } from "./comun/listing-keys";
+import { OWNER_STALE_MS, ownListingsQuery } from "./comun/own-listings-query";
 import { allSavesSettled, savesSettled } from "./save-queue";
-import { authApi } from "./session";
+import { authApi } from "./comun/session";
 
 // La consulta de la lista vive en el JS inicial (la barra de pestañas cuenta las casas); los importadores de siempre la toman de aquí.
-export { ownListingsQuery, OWNER_STALE_MS } from "./own-listings-query";
-export { patchCached, addOwnCached, refresh } from "./listing-cache";
+export { ownListingsQuery, OWNER_STALE_MS } from "./comun/own-listings-query";
+export { patchCached, addOwnCached, refresh } from "./comun/listing-cache";
 
 /** Carga supabase-js con la sesión ya leída antes de pedir datos del propietario. */
 let loaded: OwnerListingsApi | null = null;
@@ -78,7 +78,7 @@ export const ownListingQuery = (userId: string, id: string, client: QueryClient)
 
 /** Plazas asignadas de la oferta de lanzamiento (lectura pública, launch_offer_taken). Si la RPC falla (un despliegue
  *  antes de la migración de la fase 5, un error pasajero), las casas activas, como antes. */
-export { offerTakenQuery } from "./offer-query";
+export { offerTakenQuery } from "./comun/offer-query";
 
 /** El borrador pendiente para retomar (pantalla de entrada a publicar). Siempre se pide de nuevo: puede venir de otro dispositivo. */
 export const resumableQuery = (userId: string) =>

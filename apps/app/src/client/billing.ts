@@ -5,11 +5,12 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { BillingHouse, BillingOverview, HouseSubscription, PaymentMethodSummary } from "../domain/subscription";
 import { houseSubscription } from "../domain/subscription";
-import { authApi } from "./session";
+import { billingKey } from "./comun/listing-keys";
+import { authApi } from "./comun/session";
 
 export const billingQuery = (userId: string) =>
   queryOptions({
-    queryKey: ["billing", userId] as const,
+    queryKey: billingKey(userId),
     queryFn: async (): Promise<BillingOverview> => {
       await authApi();
       return (await import("../shared/supabase-data")).ownerBilling().overview();

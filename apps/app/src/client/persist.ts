@@ -1,8 +1,8 @@
 // Caché de Query en IndexedDB: una pantalla visitada se pinta sin red al volver a abrir la app.
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { Query } from "@tanstack/react-query";
-import { PERSISTED_PRIVATE_KEYS } from "./query-policy";
-import { sessionState } from "./session";
+import { PERSISTED_PRIVATE_KEYS } from "./comun/query-policy";
+import { sessionState } from "./comun/session";
 
 const DB = "3bstays";
 const STORE = "query-cache";

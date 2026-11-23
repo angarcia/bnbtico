@@ -4,7 +4,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { OwnerCalendarApi } from "../domain/api";
 import type { CalendarChange } from "../domain/calendar";
-import { authApi } from "./session";
+import { authApi } from "./comun/session";
 
 export const calendarApi = async (): Promise<OwnerCalendarApi> => {
   await authApi();

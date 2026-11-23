@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { formatCRC } from "../../domain/money";
 import { useDesktop } from "../../shared/desktop";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
-import { useListingsCount } from "../own-listings-query";
-import { PublishPromoButton, useOffer } from "../publish-promo";
-import { authApi, useSession } from "../session";
+import { useListingsCount } from "../comun/own-listings-query";
+import { PublishPromoButton, useOffer } from "../comun/publish-promo";
+import { authApi, useSession } from "../comun/session";
 import "./que-es-3bstays.css";
 import { Card } from "../../shared/ui/card";
 

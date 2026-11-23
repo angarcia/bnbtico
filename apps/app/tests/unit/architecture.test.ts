@@ -147,7 +147,7 @@ describe("arquitectura", () => {
     };
     walk(join(SRC, "client/start-shell.tsx"));
     expect(seen.size).toBeGreaterThan(20);
-    expect([...seen].map((p) => relative(SRC, p)).filter((p) => p === "client/listing-cache.ts")).toEqual([]);
+    expect([...seen].map((p) => relative(SRC, p)).filter((p) => p === "client/comun/listing-cache.ts")).toEqual([]);
   });
 
   it("el JS inicial de Explorar no arrastra trozos diferidos", () => {

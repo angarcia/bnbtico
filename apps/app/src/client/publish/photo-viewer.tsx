@@ -11,7 +11,7 @@ import { Button, TextButton } from "../../shared/ui/button";
 import { I } from "../../shared/ui/icons";
 import { Dialog } from "../../shared/ui/overlay";
 import { fadeIn } from "../../shared/picture";
-import { ConfirmSheet } from "../confirm-sheet";
+import { ConfirmSheet } from "../comun/confirm-sheet";
 import { UPLOAD_STEPS, progressOf } from "./photo-queue";
 import { PHOTOS_HELP_DESKTOP, PhotoCounter, usePhotoGrid, type PhotoSource } from "./photo-grid";
 

@@ -5,7 +5,7 @@ import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import type { InquiriesApi } from "../domain/api";
 import type { OwnerInquiry } from "../domain/inquiry";
 import { waUrl } from "../domain/whatsapp";
-import { authApi } from "./session";
+import { authApi } from "./comun/session";
 
 const api = async (): Promise<InquiriesApi> => {
   await authApi();

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { toDomainError } from "../../domain/errors";
 import type { Listing } from "../../domain/listing";
-import { accountQuery } from "../account";
-import { useSession } from "../session";
+import { accountQuery } from "../comun/account";
+import { useSession } from "../comun/session";
 import { ButtonLink, WaIcon } from "../../shared/ui/button";
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 import { EmptyState, StatusTag } from "../../shared/ui/structure";
 
 export const message = (e: unknown) => toDomainError(e).message;

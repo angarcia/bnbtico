@@ -7,23 +7,24 @@ import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, 
 import { track } from "../shared/beacon";
 import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
-import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./query-policy";
-import { FlowFrame, Placeholder, ScreenHeader, TabsFrame } from "./chrome";
+import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./comun/query-policy";
+import { FlowFrame, TabsFrame } from "./chrome";
+import { Placeholder, ScreenHeader } from "./comun/screen-header";
 import { Skeleton } from "../shared/ui/structure";
 import { isDesktop } from "../shared/desktop";
-import { afterRender, viewTransitions } from "./motion";
+import { afterRender, viewTransitions } from "./comun/motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
 import { whenIdle } from "../shared/idle";
 import { cuentaSearch, nextSearch } from "./cuenta-search";
 import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "./owner-search";
 import { suscripcionScreen } from "./lazy-screens";
-import { useListingsCount } from "./own-listings-query";
+import { useListingsCount } from "./comun/own-listings-query";
 import { CasaScreen } from "./screens/casa";
 import { ExplorarScreen } from "./screens/explorar";
-import { currentSession, onSignedOut, useSession } from "./session";
+import { currentSession, onSignedOut, useSession } from "./comun/session";
 import { UpdateBanner } from "./update-banner";
 import { FLAGS, SEARCH_MODE } from "../shared/flags";
-import { RouterButtonLink } from "./router-buttons";
+import { RouterButtonLink } from "./comun/router-buttons";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.

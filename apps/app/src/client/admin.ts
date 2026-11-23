@@ -10,9 +10,9 @@ import type { ReviewedField } from "../domain/edit-summary";
 import { toDomainError } from "../domain/errors";
 import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
 import { ownerNoticeUrl, firstName } from "../domain/owner-notice";
-import { authApi } from "./session";
-import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "./listing-cache";
-import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "./listing-keys";
+import { authApi } from "./comun/session";
+import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "./comun/listing-cache";
+import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "./comun/listing-keys";
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
   await authApi();

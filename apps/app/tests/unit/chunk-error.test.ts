@@ -1,7 +1,7 @@
 // Trozos diferidos (client/chunk-error.ts): distinguir «no llegó el trozo» (sin red o despliegue nuevo) de un fallo de
 // pintado, para avisar de la conexión solo cuando toca.
 import { describe, expect, it } from "vitest";
-import { isChunkLoadError } from "../../src/client/chunk-error";
+import { isChunkLoadError } from "../../src/client/comun/chunk-error";
 
 describe("isChunkLoadError", () => {
   it("reconoce los mensajes de Chrome, Firefox, Safari y la precarga de Vite", () => {

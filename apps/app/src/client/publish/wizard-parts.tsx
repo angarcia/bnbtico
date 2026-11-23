@@ -6,7 +6,7 @@ import { FLAGS } from "../../shared/flags";
 import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
 import { I } from "../../shared/ui/icons";
 import { IconButton } from "../../shared/ui/button";
-import { ScreenHeader, type HeaderClose } from "../chrome";
+import { ScreenHeader, type HeaderClose } from "../comun/screen-header";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
 export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: HeaderClose; actions?: ReactNode; missingSteps?: readonly Step[] }) {

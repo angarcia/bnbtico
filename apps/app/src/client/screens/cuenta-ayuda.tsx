@@ -1,9 +1,9 @@
-import { ScreenHeader } from "../chrome";
-import { useListingsCount } from "../own-listings-query";
+import { ScreenHeader } from "../comun/screen-header";
+import { useListingsCount } from "../comun/own-listings-query";
 import { SUPPORT, waLink } from "../support";
 import { Button, ButtonLink, WaIcon } from "../../shared/ui/button";
 import { Field, TextInput } from "../../shared/ui/field";
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 import { Card } from "../../shared/ui/card";
 
 // ---------- /cuenta/recuperar ----------

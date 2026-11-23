@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { PRIVATE_KEYS } from "../../src/client/account";
+import { PRIVATE_KEYS } from "../../src/client/comun/account";
 import { forgetOwnListings, ownListingsHint, rememberOwnListings } from "../../src/shared/own-listings";
 
 const g = globalThis as { window?: unknown; localStorage?: unknown };

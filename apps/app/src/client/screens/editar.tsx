@@ -23,7 +23,7 @@ import { toDomainError } from "../../domain/errors";
 import { KIND_HINTS, KIND_LABELS, MAX_PHOTOS, type Kind, type Listing, type ListingDraft } from "../../domain/listing";
 import { formInput } from "../../domain/step-forms";
 import { toast } from "../../shared/toast";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { useSaveEdit, useUpdateLive } from "../edit";
 import { useEditor } from "../editor-port";
 import { refresh } from "../owner";
@@ -36,7 +36,7 @@ import { NotFoundCard } from "../editor-status";
 import { useDesktop } from "../../shared/desktop";
 import { OwnerHouseDetail } from "./propietario";
 import { Button } from "../../shared/ui/button";
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 import { Dialog, DiscardConfirm } from "../../shared/ui/overlay";
 import { LoadError, Notice, Skeleton } from "../../shared/ui/structure";
 

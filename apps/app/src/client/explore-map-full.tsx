@@ -13,7 +13,7 @@ import { FavoriteButton } from "../shared/favorite-button";
 import { I } from "../shared/ui/icons";
 import { Picture } from "../shared/picture";
 import { useExploreMap, useMapMarkers } from "./explore-map";
-import { showChrome } from "./hiding-chrome";
+import { showChrome } from "./comun/hiding-chrome";
 import { CardWhatsApp } from "./card-whatsapp";
 import { CardCapacity, CardFeatures, CardPriceText } from "./listing-card";
 import { IconButton } from "../shared/ui/button";

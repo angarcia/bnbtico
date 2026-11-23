@@ -9,10 +9,10 @@ import { waUrl } from "../domain/whatsapp";
 import { I } from "../shared/ui/icons";
 import { useShare } from "../shared/share-button";
 import type { HouseBilling } from "./billing";
-import { SUPPORT_NUMBERS } from "./support-numbers";
+import { SUPPORT_NUMBERS } from "./comun/support-numbers";
 import { Button, ButtonLink, WaIcon } from "../shared/ui/button";
-import { RouterButtonLink } from "./router-buttons";
-import { RouterListRow } from "./router-rows";
+import { RouterButtonLink } from "./comun/router-buttons";
+import { RouterListRow } from "./comun/router-rows";
 import { Notice } from "../shared/ui/structure";
 import { Card, ListRow } from "../shared/ui/card";
 

@@ -27,8 +27,8 @@ import { enterToNext, useEnterKeyHints, useFormKeyboard } from "./form-keyboard"
 import { planStep, validateAll } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, shouldAskEmail } from "../../domain/publish-return";
 import { formInput, parseStep } from "../../domain/step-forms";
-import { accountQuery } from "../account";
-import { authApi } from "../session";
+import { accountQuery } from "../comun/account";
+import { authApi } from "../comun/session";
 import { useEditor, type EditorPort } from "../editor-port";
 import { useDesktop } from "../../shared/desktop";
 import { patchCached, refresh } from "../owner";
@@ -39,11 +39,11 @@ import { FieldErrorContext } from "./field-error";
 import { StickyActions } from "../../shared/ui/field";
 import { StepReadyContext } from "./step-ready";
 import { Button, ButtonPlaceholder } from "../../shared/ui/button";
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 import { Notice } from "../../shared/ui/structure";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
-const WhatsAppDialog = lazy(() => import("../whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
+const WhatsAppDialog = lazy(() => import("../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const messageOf = (e: unknown) => (e instanceof DomainError ? e.message : GENERIC);
 const detailKey = (userId: string, id: string) => ["own-listing", userId, id] as const;
 

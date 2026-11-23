@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { ConfirmSheet } from "../../src/client/confirm-sheet";
+import { ConfirmSheet } from "../../src/client/comun/confirm-sheet";
 import { CloseSheet } from "../../src/client/close-sheet";
 import { MarkSheet } from "../../src/client/mark-sheet";
 import { HousePicker } from "../../src/client/house-picker";

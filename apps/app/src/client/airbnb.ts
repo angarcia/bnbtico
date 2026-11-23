@@ -2,7 +2,7 @@ import { randomUuid } from "../shared/random-uuid";
 import { onlineManager, queryOptions, type QueryClient } from "@tanstack/react-query";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { airbnbManualHint, type AirbnbSummary } from "../domain/airbnb";
-import { authApi } from "./session";
+import { authApi } from "./comun/session";
 import { DomainError, toDomainError } from "../domain/errors";
 import { toast } from "../shared/toast";
 

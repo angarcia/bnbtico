@@ -16,7 +16,7 @@ const transport = vi.hoisted(() => ({
   updateLive: vi.fn(), setAvailable: vi.fn(), deleteDraft: vi.fn(), saveEdit: vi.fn(), discardEditField: vi.fn(),
   review: vi.fn(), pauseListing: vi.fn(), reviewEditField: vi.fn(), reviewEditPhoto: vi.fn(),
 }));
-vi.mock("../../src/client/session", () => ({
+vi.mock("../../src/client/comun/session", () => ({
   authApi: async () => ({}),
   sessionState: () => ({ status: "signed-in" }),
 }));

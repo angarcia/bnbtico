@@ -5,8 +5,8 @@
 // `keep` es la excepción de «Parar suscripción» en escritorio (Ana, 2026-11-19): quedarse es lo principal y parar es un
 // texto terracota, para no empujar a parar.
 import { useId, useRef, type ReactNode, type RefObject } from "react";
-import { Sheet } from "../shared/ui/overlay";
-import { Button, TextButton } from "../shared/ui/button";
+import { Sheet } from "../../shared/ui/overlay";
+import { Button, TextButton } from "../../shared/ui/button";
 
 export function ConfirmSheet({
   title,

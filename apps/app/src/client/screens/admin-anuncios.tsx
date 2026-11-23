@@ -12,10 +12,10 @@ import { formatCRC } from "../../domain/money";
 import { queueBadge, type QueueItem } from "../../domain/review";
 import { I } from "../../shared/ui/icons";
 import { adminEditsQuery, adminQueueQuery, clearReviewOutcome, useEditsWithPending, useQueueWithPending, useReviewOutcome } from "../admin";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { AdminBadge, NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
 import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
-import { RouterCardLink } from "../router-rows";
+import { RouterCardLink } from "../comun/router-rows";
 
 function priceText(l: Listing): string | null {
   const p = describe(l, { base: "" }).mainPrice;

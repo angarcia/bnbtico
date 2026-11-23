@@ -9,7 +9,7 @@ import { KIND_LABELS, type Listing } from "../../domain/listing";
 import { REVIEW_NOTE_MAX, editNoteRefusal, type EditDecision, type QueueItem } from "../../domain/review";
 import { I } from "../../shared/ui/icons";
 import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "../admin";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, bathText, factsLine } from "./admin-review-details";
 import { NotAdmin, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
 import { Field, TextArea } from "../../shared/ui/field";

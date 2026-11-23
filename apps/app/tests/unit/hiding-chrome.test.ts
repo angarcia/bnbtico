@@ -1,7 +1,7 @@
 // El escondido común de las tarjetas flotantes (tarjetas flotantes, tanda 1): `chromeAway` decide con el desplazamiento y
 // `html.chrome-away` (global.css) esconde todas las piezas `.chrome-hide` a la vez, salvo la que tiene el foco.
 import { describe, expect, it } from "vitest";
-import { CHROME_THRESHOLD, chromeAway } from "../../src/client/hiding-chrome";
+import { CHROME_THRESHOLD, chromeAway } from "../../src/client/comun/hiding-chrome";
 import { readCss } from "../read-css";
 
 const css = readCss();

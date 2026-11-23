@@ -1,7 +1,7 @@
 // Código de 6 dígitos (historia 07, paso 4): el de Ingresar (screens/cuenta-codigo.tsx) y el segundo código del admin
 // (screens/admin-codigo.tsx). Seis casillas que pintan lo escrito en un solo campo casi invisible encima, con el teclado
 // numérico y el autocompletado del código que llega por mensaje. El error va debajo y queda enlazado al campo.
-import { Field } from "../shared/ui/field";
+import { Field } from "../../shared/ui/field";
 
 export function CodeInput({ id, value, onChange, error }: { id: string; value: string; onChange(code: string): void; error: string | null }) {
   return (

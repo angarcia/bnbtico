@@ -2,8 +2,8 @@
 // hay. La lectura en sí (supabase-js y el resto de la zona del propietario) se carga al pedirla, desde ./owner; por eso
 // este módulo no lo importa de forma estática. Mientras la lista no llega, decide la pista guardada en el teléfono.
 import { queryOptions, useQuery, type QueryClient } from "@tanstack/react-query";
-import type { Listing } from "../domain/listing";
-import { ownListingsHint } from "../shared/own-listings";
+import type { Listing } from "../../domain/listing";
+import { ownListingsHint } from "../../shared/own-listings";
 import { useSession } from "./session";
 import { ownListingsKey } from "./listing-keys";
 
@@ -12,7 +12,7 @@ export const OWNER_STALE_MS = 30_000;
 export const ownListingsQuery = (userId: string) =>
   queryOptions({
     queryKey: ownListingsKey(userId),
-    queryFn: async (): Promise<Listing[]> => (await import("./owner")).fetchOwnListings(),
+    queryFn: async (): Promise<Listing[]> => (await import("../owner")).fetchOwnListings(),
     staleTime: OWNER_STALE_MS,
   });
 

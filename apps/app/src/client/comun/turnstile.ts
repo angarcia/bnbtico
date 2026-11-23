@@ -3,8 +3,8 @@
 // terceros de la CSP del shell (script-src y frame-src https://challenges.cloudflare.com; ver src/shared/security.ts).
 // Sin VITE_TURNSTILE_SITE_KEY no se carga nada y el código se pide sin token.
 import { useCallback, useEffect, useRef } from "react";
-import { CAPTCHA_FAILED, DomainError } from "../domain/errors";
-import { TURNSTILE_ORIGIN } from "../shared/security";
+import { CAPTCHA_FAILED, DomainError } from "../../domain/errors";
+import { TURNSTILE_ORIGIN } from "../../shared/security";
 import { createTokenGate } from "./token-gate";
 
 interface TurnstileApi {

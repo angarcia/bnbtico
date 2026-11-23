@@ -27,7 +27,7 @@ import {
   type Selection,
 } from "../../domain/calendar";
 import { can, isBlocked } from "../../domain/can";
-import { ignoreChromeScroll, showChrome } from "../hiding-chrome";
+import { ignoreChromeScroll, showChrome } from "../comun/hiding-chrome";
 import { shortDate } from "../../domain/dates";
 import { toDomainError } from "../../domain/errors";
 import { reportError } from "../../shared/beacon";
@@ -44,18 +44,18 @@ import { useFx } from "../../shared/fx";
 import { MonthGrid, WeekdayRow } from "../../shared/month-grid";
 import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
-import { isChunkLoadError } from "../chunk-error";
-import { ScreenHeader } from "../chrome";
+import { isChunkLoadError } from "../comun/chunk-error";
+import { ScreenHeader } from "../comun/screen-header";
 import { useDesktop } from "../../shared/desktop";
 import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
-import { useSession } from "../session";
+import { useSession } from "../comun/session";
 import { HousePicker } from "../house-picker";
 
 import { AirbnbRow, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
 import { Button } from "../../shared/ui/button";
 
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 import { LoadError, Notice, Skeleton } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";
 

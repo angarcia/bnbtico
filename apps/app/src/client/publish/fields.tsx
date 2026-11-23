@@ -10,7 +10,7 @@ import { charCount, monthlyError } from "../../domain/listing-rules";
 import { requiredProblems, warnings } from "../../domain/publish-rules";
 import { previewListing } from "../../domain/preview";
 import { ListingPage } from "../../shared/listing-page";
-import { accountQuery } from "../account";
+import { accountQuery } from "../comun/account";
 import { capacitySummary } from "../../domain/describe";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
@@ -22,7 +22,7 @@ import { AffixInput, Field, Select, TextArea, TextInput, type FieldCount } from 
 import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { useFieldError } from "./field-error";
 import { I } from "../../shared/ui/icons";
-import { isChunkLoadError } from "../chunk-error";
+import { isChunkLoadError } from "../comun/chunk-error";
 import { useEditor } from "../editor-port";
 import { offerTakenQuery } from "../owner";
 import { useFillHeight } from "./fill-height";

@@ -8,7 +8,7 @@ import type { OwnerCalendarApi, OwnerListingsApi, PhotosApi } from "../domain/ap
 import { calendarApi } from "./calendar-days";
 import { OWNER_STALE_MS, api, loadedApi, ownListingQuery, photosApi } from "./owner";
 import { savesSettled } from "./save-queue";
-import { ownListingKey } from "./listing-keys";
+import { ownListingKey } from "./comun/listing-keys";
 
 export type EditorListings = Pick<OwnerListingsApi, "getOwn" | "saveStep" | "submit" | "updateLive" | "saveEdit" | "discardEditField">;
 export type EditorPhotos = Pick<PhotosApi, "add" | "remove" | "reorder" | "addEditPhoto" | "removeEditPhoto" | "reorderEditPhotos">;

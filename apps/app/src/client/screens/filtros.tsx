@@ -30,8 +30,8 @@ import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/ui/icons";
 import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
 import { Button } from "../../shared/ui/button";
-import { RouterListRow } from "../router-rows";
-import { ScreenHeader } from "../chrome";
+import { RouterListRow } from "../comun/router-rows";
+import { ScreenHeader } from "../comun/screen-header";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;

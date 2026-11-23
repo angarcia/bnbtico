@@ -1,7 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { Listing } from "../domain/listing";
-import { billingQuery } from "./billing";
-import { adminEditKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, listingsKey, offerTakenKey, ownListingKey, ownListingsKey, publicListingKey } from "./listing-keys";
+import type { Listing } from "../../domain/listing";
+import { adminEditKey, billingKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, listingsKey, offerTakenKey, ownListingKey, ownListingsKey, publicListingKey } from "./listing-keys";
 
 type Target = Pick<Listing, "id" | "publicId">;
 
@@ -39,7 +38,7 @@ export function refresh(client: QueryClient, userId: string, l: Target) {
   invalidateOwn(client, userId, l.id);
   refreshPublic(client, l.publicId);
   void client.invalidateQueries({ queryKey: offerTakenKey });
-  void client.invalidateQueries({ queryKey: billingQuery(userId).queryKey });
+  void client.invalidateQueries({ queryKey: billingKey(userId) });
 }
 
 export function refreshAdminReview(client: QueryClient, userId: string, l: Target) {

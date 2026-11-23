@@ -16,12 +16,12 @@ import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/ui/icons";
-import { revealClass } from "../motion";
+import { revealClass } from "../comun/motion";
 import { useDesktop } from "../../shared/desktop";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
-import { useListingsCount } from "../own-listings-query";
-import { SUPPORT_NUMBERS } from "../support-numbers";
+import { useListingsCount } from "../comun/own-listings-query";
+import { SUPPORT_NUMBERS } from "../comun/support-numbers";
 import { isDatesError, listingsQuery, loadedListings, provincesQuery, zonesQuery } from "../queries";
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
@@ -31,7 +31,7 @@ import { CountBadge, EmptyState, LoadError, Notice, Skeleton } from "../../share
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
-const PublishPromoCard = lazy(() => import("../publish-promo").then((m) => ({ default: m.PublishPromoCard })));
+const PublishPromoCard = lazy(() => import("../comun/publish-promo").then((m) => ({ default: m.PublishPromoCard })));
 const MapScreen = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapScreen })));
 const MapCard = lazy(() => import("../explore-map-full").then((m) => ({ default: m.MapCard })));
 const DesktopFilters = lazy(() => import("./filtros").then((m) => ({ default: m.DesktopFilters })));

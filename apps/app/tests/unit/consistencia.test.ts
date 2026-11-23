@@ -158,7 +158,7 @@ describe("CSS: valores sueltos fuera de los tokens", () => {
 const COMPONENTS: { name: string; use: string; owners: string[]; classes: RegExp }[] = [
   { name: "botón", use: "Button, ButtonLink, TextButton o IconButton (shared/button.tsx)", owners: ["shared/ui/button.tsx"], classes: /^(?:btn(?:-[\w-]+)?|icon-btn)$/ },
   { name: "hoja o ventana", use: "Sheet, Dialog, FullScreen o ConfirmSheet (shared/overlay.tsx)", owners: ["shared/ui/overlay.tsx"], classes: /^(?:sheet|sheet-head|sheet-backdrop|dialog|dialog-head|dialog-body|dialog-foot)$/ },
-  { name: "campo", use: "Field, TextInput, AffixInput, SearchInput, StickyActions (shared/field.tsx) o CodeInput", owners: ["shared/ui/field.tsx", "client/code-input.tsx"], classes: /^(?:field|field-compact|input-money|cal-price|zone-input|search-field|sticky-actions|sticky-spacer|code-boxes|code-input)$/ },
+  { name: "campo", use: "Field, TextInput, AffixInput, SearchInput, StickyActions (shared/field.tsx) o CodeInput", owners: ["shared/ui/field.tsx", "client/comun/code-input.tsx"], classes: /^(?:field|field-compact|input-money|cal-price|zone-input|search-field|sticky-actions|sticky-spacer|code-boxes|code-input)$/ },
   { name: "chip o segmento", use: "ChoiceChips, Segmented (shared/choice.tsx) o ChoiceCards", owners: ["shared/ui/choice.tsx", "client/publish/wizard-parts.tsx"], classes: /^(?:chip|chip-sm|seg|seg-fill|choice)$/ },
   { name: "contador −/+", use: "Stepper o CounterRow (shared/stepper.tsx)", owners: ["shared/ui/stepper.tsx"], classes: /^(?:stepper|counter|people-stepper|ctl)$/ },
   { name: "tarjeta o fila", use: "Card, List, ListRow… (shared/card.tsx)", owners: ["shared/ui/card.tsx", "shared/ui/structure.tsx"], classes: /^(?:card|card-solid|card-arena|card-sun|card-soft|list|list-item|list-item-sun|placeholder-card|fav-empty)$/ },
@@ -166,7 +166,7 @@ const COMPONENTS: { name: string; use: string; owners: string[]; classes: RegExp
   { name: "etiqueta o contador", use: "StatusTag o CountBadge (shared/structure.tsx)", owners: ["shared/ui/structure.tsx"], classes: /^(?:badge|badge-[\w-]+|state|state-[\w-]+|tag-rev|count-badge|nav-count|house-inquiries-count)$/ },
   { name: "esqueleto", use: "Skeleton (shared/structure.tsx)", owners: ["shared/ui/structure.tsx"], classes: /^(?:skeleton|owner-skeleton|account-skeleton|sub-skeleton|cal-skeleton)$/ },
   { name: "campo cerrado", use: "ClosedField (shared/closed-field.tsx)", owners: ["shared/ui/closed-field.tsx"], classes: /^(?:search-fold|picker-pill|date-box)$/ },
-  { name: "cabecera", use: "ScreenHeader (client/chrome.tsx)", owners: ["client/chrome.tsx"], classes: /^(?:header-flow|header-root)$/ },
+  { name: "cabecera", use: "ScreenHeader (client/comun/screen-header.tsx)", owners: ["client/comun/screen-header.tsx"], classes: /^(?:header-flow|header-root)$/ },
 ];
 
 /** archivo → clase → motivo. */

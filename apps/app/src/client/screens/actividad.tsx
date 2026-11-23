@@ -10,11 +10,11 @@ import { initials, inquirySummary, relativeTime, type OwnerInquiry } from "../..
 import { filterInquiries, inquiryHouseOptions } from "../../domain/inquiry-filter";
 import type { Listing } from "../../domain/listing";
 import { I } from "../../shared/ui/icons";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { countNew, inquiriesQuery, markInquirySeen, openInquiry } from "../inquiries";
 import { HousePicker } from "../house-picker";
-import { ownListingsQuery } from "../own-listings-query";
-import { useSession } from "../session";
+import { ownListingsQuery } from "../comun/own-listings-query";
+import { useSession } from "../comun/session";
 import { Dialog } from "../../shared/ui/overlay";
 import { LoadError, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";

@@ -5,7 +5,7 @@ import { airbnbManualHint, type AirbnbSummary } from "../domain/airbnb";
 import { DomainError, toDomainError } from "../domain/errors";
 import { airbnbApi, airbnbQuery } from "./airbnb";
 import { calendarApi, calendarQuery } from "./calendar-days";
-import { sessionState } from "./session";
+import { sessionState } from "./comun/session";
 
 const RECENT_MS = 60_000;
 const WARNING = "No pudimos actualizar Airbnb. Puede continuar con el último calendario válido; confirme la disponibilidad antes de marcar la reserva.";

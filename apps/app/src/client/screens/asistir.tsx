@@ -12,10 +12,10 @@ import { DomainError, toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { I } from "../../shared/ui/icons";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { useDesktop } from "../../shared/desktop";
 import { EditorContext, type EditorListings, type EditorPhotos, type EditorPort } from "../editor-port";
-import { authApi, useSession } from "../session";
+import { authApi, useSession } from "../comun/session";
 import { EditableFicha } from "./casa-editable";
 import { Calendar } from "./calendario";
 import { calendarQuery } from "../calendar-days";
@@ -25,7 +25,7 @@ import { NotFoundCard } from "../editor-status";
 import { PasoScreen } from "./publicar";
 import { EmptyState, LoadError, Skeleton } from "../../shared/ui/structure";
 import { List } from "../../shared/ui/card";
-import { RouterListRow } from "../router-rows";
+import { RouterListRow } from "../comun/router-rows";
 
 let edit: AdminEditApi | null = null;
 const adminEdit = async (): Promise<AdminEditApi> => {

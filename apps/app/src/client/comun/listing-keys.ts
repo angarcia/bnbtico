@@ -13,3 +13,5 @@ export const adminEditReviewKey = (userId: string) => ["admin-review-edit", user
 export const publicListingKey = (publicId: string) => ["listing", publicId] as const;
 export const listingsKey = ["listings"] as const;
 export const offerTakenKey = ["offer-taken"] as const;
+/** La suscripción (billing.ts): aquí para que la caché de casas la invalide sin importar la consulta del área del propietario. */
+export const billingKey = (userId: string) => ["billing", userId] as const;

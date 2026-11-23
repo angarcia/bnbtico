@@ -31,15 +31,15 @@ import {
 } from "../../domain/subscription";
 import { I } from "../../shared/ui/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
-import { ScreenHeader } from "../chrome";
-import { ConfirmSheet } from "../confirm-sheet";
+import { ScreenHeader } from "../comun/screen-header";
+import { ConfirmSheet } from "../comun/confirm-sheet";
 import { useDesktop } from "../../shared/desktop";
 import { activityQuery, offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
-import { useSession } from "../session";
+import { useSession } from "../comun/session";
 import { Button, TextButton } from "../../shared/ui/button";
 import { LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";
-import { RouterListRow } from "../router-rows";
+import { RouterListRow } from "../comun/router-rows";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
 const message = (e: unknown) => toDomainError(e).message;

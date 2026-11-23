@@ -22,8 +22,8 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 
 - **Dónde vive cada pieza.** En `src/shared/` lo que no usa el router ni consultas (lo usa también la ficha SSR):
   `button.tsx`, `overlay.tsx`, `field.tsx`, `choice.tsx`, `stepper.tsx`, `structure.tsx`, `card.tsx`, `closed-field.tsx`.
-  Las variantes sobre `Link` de TanStack Router, en `client/router-buttons.tsx` (`RouterButtonLink`, `RouterTextLink`,
-  `RouterIconLink`) y `client/router-rows.tsx` (`RouterCardLink`, `RouterListRow`). `ScreenHeader` está en `client/chrome.tsx`.
+  Las variantes sobre `Link` de TanStack Router, en `client/comun/router-buttons.tsx` (`RouterButtonLink`, `RouterTextLink`,
+  `RouterIconLink`) y `client/comun/router-rows.tsx` (`RouterCardLink`, `RouterListRow`). `ScreenHeader` está en `client/comun/screen-header.tsx`.
 - **CSS** en `styles/01-base.css` (los tokens en `:root` y un bloque por familia); las hojas de cada pantalla solo colocan
   (rejillas, márgenes), nunca cambian el aspecto de un componente.
 - **`placement`** es la única puerta para clases: una lista cerrada de las clases de sitio que ya existían. Si falta una
@@ -42,7 +42,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 | `TextButton` / `TextButtonLink` / `RouterTextLink` | acción en texto, 44 px | `tone` `link` · `quiet` · `danger` |
 | `IconButton` / `IconButtonLink` / `RouterIconLink` | solo un icono, 44 × 44 | `label` obligatorio; `tone` `plain` · `overlay` · `float` |
 | `ButtonPlaceholder`, `IconButtonPlaceholder` | la caja antes de hidratar | las de aspecto |
-| `ConfirmSheet` (`client/confirm-sheet.tsx`) | confirmar | `tone` `default` · `destructive` · `keep`; `pending` |
+| `ConfirmSheet` (`client/comun/confirm-sheet.tsx`) | confirmar | `tone` `default` · `destructive` · `keep`; `pending` |
 
 - `primary`: la principal (verde tonal). `secondary`: «Cancelar», «Ahora no», siempre con contorno (D3). `danger`: todo lo
   destructivo, en terracota, también en el admin (D2). `pay`: **solo** dinero (lo vigila `tests/unit/ocre.test.ts`).
@@ -92,7 +92,7 @@ de escritorio.
 
 ## Campos
 
-`shared/ui/field.tsx` y `client/code-input.tsx`. CSS: «Campos» de `01-base.css` (52 px, borde `--line`, radio `--r-control`, letra
+`shared/ui/field.tsx` y `client/comun/code-input.tsx`. CSS: «Campos» de `01-base.css` (52 px, borde `--line`, radio `--r-control`, letra
 de 18 px; nunca menos de 16).
 
 - `Field label error hint count size describedBy grow`: envuelve un control y le da `id`, `aria-describedby` y `aria-invalid`.
@@ -128,7 +128,7 @@ de 18 px; nunca menos de 16).
 
 ## Estructura
 
-- **`ScreenHeader kind`** (`client/chrome.tsx`): `"root"` (pestañas y raíz: `title`, `home`, `action`, `aside`), `"flow"`
+- **`ScreenHeader kind`** (`client/comun/screen-header.tsx`): `"root"` (pestañas y raíz: `title`, `home`, `action`, `aside`), `"flow"`
   (flecha `back={{ to, search?, historyBack? }}` **o** `close`, título con elipsis, `action`) y `"wizard"` (título, `action` y
   la ✕ a la derecha; `below` para el progreso; lo usa `WizardHeader` y el esqueleto de carga de `shell.tsx`). `close` es
   `{ to, label, title? }` o `{ onClick, label, title?, disabled?, busy? }`. No entra en la ficha SSR (usa `Link`).

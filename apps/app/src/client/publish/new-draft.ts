@@ -6,7 +6,7 @@ import { randomUuid } from "../../shared/random-uuid";
 import type { QueryClient } from "@tanstack/react-query";
 import { DomainError } from "../../domain/errors";
 import { emptyDraft, type Listing } from "../../domain/listing";
-import { ownListingKey, ownListingsKey, ownResumableKey } from "../listing-keys";
+import { ownListingKey, ownListingsKey, ownResumableKey } from "../comun/listing-keys";
 import { addOwnCached, api, patchCached } from "../owner";
 import { enqueueSave } from "../save-queue";
 import { markLostDraft } from "./lost-drafts";

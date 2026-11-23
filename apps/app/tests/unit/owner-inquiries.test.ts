@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import type { OwnerInquiry } from "../../src/domain/inquiry";
-import { PRIVATE_KEYS } from "../../src/client/account";
+import { PRIVATE_KEYS } from "../../src/client/comun/account";
 import { countNew, inquiriesQuery, markInquirySeen, openInquiry } from "../../src/client/inquiries";
 
 const inquiry = (id: string, openedAt: string | null = null): OwnerInquiry => ({

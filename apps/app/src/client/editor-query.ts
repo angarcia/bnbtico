@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { LOCAL_USER, editorListingQuery, useEditor } from "./editor-port";
-import { useSession } from "./session";
+import { useSession } from "./comun/session";
 
 export function useUserId(): string {
   return useSession().session?.userId ?? "";

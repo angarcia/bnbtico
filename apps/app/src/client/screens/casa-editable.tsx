@@ -21,17 +21,17 @@ import { I } from "../../shared/ui/icons";
 import { DeleteHouse } from "../delete-house";
 import { useState, type ReactNode } from "react";
 import { useBilling } from "../billing";
-import { ConfirmSheet } from "../confirm-sheet";
+import { ConfirmSheet } from "../comun/confirm-sheet";
 import { useDesktop } from "../../shared/desktop";
 import { useDiscardEditField } from "../edit";
 import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";
 import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "../owner-ui";
 import { TextButton } from "../../shared/ui/button";
-import { RouterTextLink } from "../router-buttons";
+import { RouterTextLink } from "../comun/router-buttons";
 import { Notice, StatusTag } from "../../shared/ui/structure";
 import { Card, List, ListRow } from "../../shared/ui/card";
-import { RouterListRow } from "../router-rows";
+import { RouterListRow } from "../comun/router-rows";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 

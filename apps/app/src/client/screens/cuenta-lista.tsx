@@ -2,12 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useRouter } from "@tanstack/react-router";
 import { isContactNext, isPublishNext } from "../../domain/contact-return";
 import { I } from "../../shared/ui/icons";
-import { accountQuery } from "../account";
-import { ScreenHeader } from "../chrome";
-import { useSession } from "../session";
+import { accountQuery } from "../comun/account";
+import { ScreenHeader } from "../comun/screen-header";
+import { useSession } from "../comun/session";
 import { Replace } from "./cuenta-navigation";
 import { ButtonLink } from "../../shared/ui/button";
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 
 // ---------- /cuenta/lista ----------
 const listaRoute = getRouteApi("/_flow/cuenta/lista");

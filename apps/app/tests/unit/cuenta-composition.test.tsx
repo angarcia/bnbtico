@@ -33,30 +33,32 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("../../src/client/chrome", () => ({
   FlowFrame: ({ children }: { children: ReactNode }) => <main data-frame="flow">{children}</main>,
   TabsFrame: ({ children }: { children: ReactNode }) => <main data-frame="tabs">{children}</main>,
+}));
+vi.mock("../../src/client/comun/screen-header", () => ({
   ScreenHeader: ({ title, back }: { title: string; back?: { to: string; search?: unknown; historyBack?: boolean } }) =>
     <header data-back={back?.to} data-search={JSON.stringify(back?.search)} data-history={back?.historyBack}>{title}</header>,
 }));
-vi.mock("../../src/client/session", () => ({
+vi.mock("../../src/client/comun/session", () => ({
   useSession: () => ({ status: state.status, session: state.status === "signed-out" ? null : { userId: "u1" } }),
   pendingOtp: () => state.pending,
   authApi: vi.fn(),
 }));
-vi.mock("../../src/client/account", () => ({ accountQuery: (id: string) => ({ queryKey: ["account", id] }) }));
-vi.mock("../../src/client/own-listings-query", () => ({
+vi.mock("../../src/client/comun/account", () => ({ accountQuery: (id: string) => ({ queryKey: ["account", id] }) }));
+vi.mock("../../src/client/comun/own-listings-query", () => ({
   useListingsCount: () => ({ count: state.count }),
   ownListingsQuery: (id: string) => ({ queryKey: ["own-listings", id] }),
 }));
-vi.mock("../../src/client/sign-in", () => ({
+vi.mock("../../src/client/comun/sign-in", () => ({
   SignInForm: ({ mode, next }: { mode: string; next?: string }) => <form data-mode={mode} data-next={next} />,
   ContactCard: ({ next }: { next?: string }) => <aside data-contact={next} />,
   ReturnCard: ({ next }: { next?: string }) => <aside data-return={next} />,
   useReturnListing: () => state.listing,
 }));
-vi.mock("../../src/client/turnstile", () => ({ useTurnstile: () => ({ container: null, token: vi.fn() }) }));
+vi.mock("../../src/client/comun/turnstile", () => ({ useTurnstile: () => ({ container: null, token: vi.fn() }) }));
 vi.mock("../../src/shared/favorites-store", () => ({ useFavorites: () => state.favorites }));
-vi.mock("../../src/client/publish-promo", () => ({ PublishPromoRow: () => <a href="/publicar">Publicar mi casa</a> }));
+vi.mock("../../src/client/comun/publish-promo", () => ({ PublishPromoRow: () => <a href="/publicar">Publicar mi casa</a> }));
 vi.mock("../../src/client/lazy-screens", () => ({ suscripcionScreen: () => new Promise(() => {}) }));
-vi.mock("../../src/client/support-numbers", () => ({ SUPPORT_NUMBERS: { owner: "50680000001", guest: "50680000002" } }));
+vi.mock("../../src/client/comun/support-numbers", () => ({ SUPPORT_NUMBERS: { owner: "50680000001", guest: "50680000002" } }));
 
 beforeEach(() => {
   state.search = {};
