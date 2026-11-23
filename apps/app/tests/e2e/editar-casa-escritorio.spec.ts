@@ -19,7 +19,7 @@ const VERTICAL = readFileSync(new URL("../fixtures/foto-vertical.jpg", import.me
 const TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=", "base64");
 const SENT = "Enviado a revisión. Su ficha sigue como está hasta que lo aprobemos.";
 const SAVED = "Guardado. Ya se ve en su ficha.";
-/** La altura de la foto en la ficha de escritorio (10-ajustes.css: `.listing-view > .hero`, 480 px) y su ancho a 1280. */
+/** La altura de la foto en la ficha de escritorio (shared/ficha.css: `.listing-view > .hero`, 480 px) y su ancho a 1280. */
 const FICHA_H = 480, FICHA_W_1280 = 797;
 
 let h: Awaited<ReturnType<typeof postgrestHarness>>;

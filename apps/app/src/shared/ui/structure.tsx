@@ -2,7 +2,7 @@
 // carga, estados vacíos, esqueletos y contadores. Las tarjetas y filas están en ./card.tsx y el campo cerrado en
 // ./closed-field.tsx, aparte para que no entren en el JS inicial (solo las leen trozos diferidos). Sin estado, sin router y sin
 // consultas: la ficha SSR (shared/listing-page.tsx, shared/status-pages.tsx) los usa tal cual; las variantes sobre `Link`
-// están en client/router-buttons.tsx. El aspecto sale de props cerradas (CSS en styles/01-base.css, «Estructura»); las
+// están en client/router-buttons.tsx. El aspecto sale de props cerradas (CSS en shared/ui/componentes.css, «Estructura»); las
 // pantallas no escriben estas clases. `placement` solo admite las clases de colocación que ya existían.
 import { createElement, type HTMLAttributes, type ReactNode } from "react";
 import type { StatusLabel, StatusTone } from "../../domain/status-label";

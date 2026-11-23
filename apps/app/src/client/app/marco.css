@@ -1,0 +1,106 @@
+/* Marco de la app (client/app): .app, .view, barra de pestañas, barra superior de escritorio y el aviso de girar el teléfono. Capas areas, escritorio y encima. */
+
+@layer areas {
+  /* Pantalla de un dato en revisión (editar.tsx): los campos desactivados sin cambiar la maqueta. */
+  .edit-fieldset{display:contents;border:0;margin:0;padding:0;min-width:0}
+  .flow{gap:22px;padding:8px 4px 0}
+  @media (max-width:899px) {
+    :is(.sign-in-tab,.code-flow) > .flow{padding-inline:0}
+    :is(.code-flow,.owner-house-detail) > .header-flow{margin-inline:0}
+  }
+  /* Aviso de versión nueva (service worker): se apoya en la barra de abajo (--chrome-bottom) o, sin ella, a 12 px del borde. */
+  .update-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--chrome-bottom);width:calc(100% - 32px);max-width:528px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--float-r);background:var(--fg);color:var(--bg);font-size:var(--fs-note);font-weight:var(--w-medium);box-shadow:var(--shadow-float);z-index:var(--z-banner)}
+  @media (max-width:899px) {
+    .publish-flow{--gutter:var(--gutter-tight)}
+    .publish-flow .header-flow{margin-inline:0}
+    .publish-flow .flow{padding-inline:0}
+    .edit-photos-flow{--gutter:var(--gutter-tight)}
+    .edit-photos-flow .header-flow{margin-inline:0}
+    .owner-calendar{--gutter:var(--gutter-tight)}
+  }
+}
+
+@layer escritorio {
+  @media (min-width: 1024px) {
+    .dialog-field textarea { min-height: 280px; field-sizing: content; }
+    .desktop-app.publish-flow > .desktop-nav { display: flex; }
+    .desktop-app.publish-flow .publish-header .header-close { order: -1; }
+    .desktop-app .owner-house-detail .listing-stats.stack {
+      min-height: 88px;
+      gap: 6px;
+      padding-block: 8px;
+    }
+    .desktop-app > .desktop-nav {
+      position: sticky;
+      inset: 0 auto auto;
+      flex: none;
+      justify-content: flex-start;
+      gap: 8px;
+      height: var(--desktop-nav-height);
+      max-width: none;
+      padding: 0 var(--gutter);
+      border: 0;
+      border-bottom: 1px solid var(--line-nav);
+    }
+    .desktop-app > .desktop-nav::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      box-shadow: 0 0 0 100vmax var(--bg);
+      clip-path: inset(0 -100vmax);
+      pointer-events: none;
+    }
+    .desktop-app .account-actions:empty { display: none; }
+    .desktop-app .explore-results {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 16px;
+    }
+    .desktop-app .explore-results .listing-card .photo { flex-shrink: 0; }
+    .desktop-app .desktop-feature-filters {
+      grid-area: 2 / 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-self: start;
+      gap: 6px;
+    }
+    .desktop-search-panel-donde { left: 0; }
+    .desktop-search-panel-cuando { inset-inline: 0; width: auto; }
+    .desktop-search-panel-noches { width: 360px; }
+    html:has(.desktop-app > .desktop-nav) { --chrome-bottom: var(--float-bottom); }
+    .view-measure > * { max-width: var(--measure); }
+    .desktop-app .sub-stop { align-self: flex-start; padding-inline: 0; color: var(--brand-ink); text-decoration: none; }
+    .desktop-app:has(.review-actions) > .desktop-nav { display: flex; }
+    .desktop-app form .review-spacer { display: none; }
+    .desktop-app form .review-actions {
+      position: static;
+      inset: auto;
+      transform: none;
+      max-width: none;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+}
+
+@layer encima {
+  /* ---------- Solo en vertical en el teléfono (decisión 2026-11-03) ---------- */
+  /* El aviso de index.html (también en la ficha del worker): fuera de un teléfono en horizontal, display:none (ni se ve, ni lo
+  leen los lectores de pantalla, ni se pide el logo). En un teléfono en horizontal (poca altura y dedo: no tabletas ni
+  ordenador) tapa todo y lo demás queda en visibility:hidden: fuera del árbol de accesibilidad y sin toques ni foco, pero
+  montado (sin recargar ni perder estado). Sin animación: aparece y se va con el giro, también con movimiento reducido.
+  Con ancho mínimo: Chrome de iPhone encoge la página al abrir el teclado y en vertical queda más ancha que alta (390 × 300);
+  sin él, el aviso escondía el campo y el teclado se cerraba al momento. Un teléfono girado mide 568 px o más (Daniel, 2026-11-04). */
+  .rotate-notice{display:none}
+  @media (orientation:landscape) and (max-height:500px) and (min-width:560px) and (pointer:coarse) {
+    .rotate-notice{display:flex;position:fixed;inset:0;z-index:2147483647;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+      padding:max(16px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
+      background:var(--bg);color:var(--fg);text-align:center;touch-action:none}
+    .rotate-notice img{width:150px;height:auto}
+    .rotate-notice p{margin:0;font-family:var(--display);font-size:var(--fs-title);font-weight:var(--w-strong);color:var(--fg-title)}
+    body>:not(.rotate-notice){visibility:hidden}
+  }
+}

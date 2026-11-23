@@ -1,7 +1,7 @@
-// Botones comunes (historia 07, paso 2): cada variante sale de una sola regla de styles/01-base.css, `pending` avisa y
+// Botones comunes (historia 07, paso 2): cada variante sale de una sola regla de shared/ui/componentes.css, `pending` avisa y
 // bloquea, el botón de icono siempre tiene nombre y ninguna pantalla escribe las clases de botón a mano.
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Button, ButtonLink, ButtonPlaceholder, IconButton, TextButton, type ButtonVariant } from "../../src/shared/ui/button";
@@ -9,16 +9,18 @@ import { readCss } from "../read-css";
 
 const css = readCss();
 const SRC = new URL("../../src/", import.meta.url).pathname;
-const STYLES = join(SRC, "styles");
+const COMPONENTS_CSS = join(SRC, "shared/ui/componentes.css");
+const cssFiles = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? cssFiles(join(dir, e.name)) : e.name.endsWith(".css") ? [join(dir, e.name)] : []));
 
-/** Las declaraciones de la única regla propia de `selector` en 01-base.css (la que no lo agrupa con otros), o de la única que lo nombra. */
+/** Las declaraciones de la única regla propia de `selector` en componentes.css (la que no lo agrupa con otros), o de la única que lo nombra. */
 function rule(selector: string): string {
-  const base = readFileSync(join(STYLES, "01-base.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-  const rules = base.split("}").map((chunk) => chunk.split("{")).filter((p) => p.length === 2);
-  const own = rules.filter((p) => p[0]!.trim() === selector);
-  const found = own.length ? own : rules.filter((p) => p[0]!.split(",").map((s) => s.trim()).includes(selector));
-  expect(found, `una sola regla para ${selector} en 01-base.css`).toHaveLength(1);
-  return found[0]![1]!;
+  const base = readFileSync(COMPONENTS_CSS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...base.matchAll(/([^{};]+)\{([^{}]*)\}/g)].map((m) => [m[1]!, m[2]!] as const);
+  const own = rules.filter((p) => p[0].trim() === selector);
+  const found = own.length ? own : rules.filter((p) => p[0].split(",").map((s) => s.trim()).includes(selector));
+  expect(found, `una sola regla para ${selector} en componentes.css`).toHaveLength(1);
+  return found[0]![1];
 }
 
 const classOf = (html: string) => /class="([^"]*)"/.exec(html)?.[1]?.split(" ") ?? [];
@@ -60,8 +62,8 @@ describe("Button: el aspecto lo dan la variante y el tamaño", () => {
   });
 
   it("con ratón, en escritorio, primary, secondary y danger responden al pasar por encima", () => {
-    const desk = readFileSync(join(STYLES, "13-escritorio.css"), "utf8");
-    for (const cls of ["btn-primary", "btn-secondary", "btn-danger"]) expect(desk).toMatch(new RegExp(`@media \\(hover: hover\\)[\\s\\S]*\\.${cls}:hover`));
+    const desk = readFileSync(COMPONENTS_CSS, "utf8");
+    for (const cls of ["btn-primary", "btn-secondary", "btn-danger"]) expect(desk).toMatch(new RegExp(`@layer escritorio[\\s\\S]*@media \\(hover: hover\\)[\\s\\S]*\\.${cls}:hover`));
   });
 
   it("`pending` pone aria-busy y disabled; el texto lo pone quien lo usa", () => {
@@ -109,12 +111,12 @@ describe("TextButton e IconButton", () => {
 // Que ninguna pantalla escriba las clases de botón a mano lo vigila tests/unit/consistencia.test.ts (historia 07, paso 6).
 describe("las pantallas usan los componentes", () => {
   it("ninguna pantalla cambia la altura de un botón con su propio CSS", () => {
-    const offenders = readdirSync(STYLES)
-      .filter((f) => f !== "01-base.css" && f.endsWith(".css"))
+    const offenders = cssFiles(SRC)
+      .filter((f) => f !== COMPONENTS_CSS)
       .flatMap((f) =>
-        [...readFileSync(join(STYLES, f), "utf8").matchAll(/([^{}]*\.(?:btn|icon-btn)\b[^{}]*)\{([^}]*)\}/g)]
+        [...readFileSync(f, "utf8").matchAll(/([^{}]*\.(?:btn|icon-btn)\b[^{}]*)\{([^}]*)\}/g)]
           .filter((m) => /min-height|(?:^|;)\s*height/.test(m[2]!))
-          .map((m) => `${f}: ${m[1]!.trim()}`),
+          .map((m) => `${relative(SRC, f)}: ${m[1]!.trim()}`),
       );
     expect(offenders).toEqual([]);
   });

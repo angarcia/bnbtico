@@ -115,3 +115,11 @@ Recomendación: **Paraglide JS**, por claves tipadas y funciones que el empaquet
 2. ¿Se acepta añadir una dependencia de traducción (Paraglide) si la prueba cumple el presupuesto?
 3. ¿Hay un idioma y una fecha previstos para la primera traducción? Cambia la prisa del paso 3 y si hace falta el idioma en la URL de la ficha (buscadores).
 4. ¿Orden de §4, o primero los textos?
+
+## Resultado del paso 2 (2026-11-23, rama `css-por-areas`)
+
+Hecho §3.4 con los ajustes anotados en `docs/decisiones.md` (2026-11-23): siete capas (`tokens, base, componentes, areas, sin-movimiento, escritorio, encima`), todas las hojas cargadas al arrancar desde `styles/global.css` y los ajustes de Leaflet fuera de capa.
+
+- Hojas: `styles/tokens.css`, `styles/base.css`, `shared/ui/componentes.css`, `shared/ficha.css`, `client/app/marco.css`, `client/comun/comun.css` y una por área (`explorar`, `propietario`, `cuenta`, `admin`). «¿Qué es 3bstays?» sigue llegando con su trozo, ya en capas.
+- Reparto: cada regla va a la hoja del área que pone su contexto (la clase más específica de su selector, según qué archivos la usan); lo de `01-base.css` queda en base o componentes. Con un generador (fuera del repositorio) y comprobado con el estilo calculado de 630 estados de la e2e, viejo contra nuevo: cero diferencias tras siete vueltas.
+- Pruebas: `read-css.ts` sigue los `@import` con `../` y quita el espacio de alrededor de las llaves; `consistencia.test.ts` mira todo `src/` y solo exime `styles/tokens.css` (los valores propios que antes eximía `01-base.css` entero son excepciones con motivo); `botones.test.tsx` lee `shared/ui/componentes.css`.

@@ -81,7 +81,7 @@ El trigger de Airbnb del Worker, `17 */3 * * *` por defecto y configurable con l
 Las pantallas se componen con piezas comunes de props cerradas (historia 07, 2026-11-19/20; guía en `docs/componentes.md`): las
 que no usan el router ni consultas viven en `src/shared/ui/` y las usa también la ficha SSR; `ScreenHeader` y las variantes sobre
 `Link` viven en `src/client/comun/`. Los tokens salen de `design/tokens/tokens.json` y viven como variables en `:root` de
-`styles/01-base.css`. `tests/unit/consistencia.test.ts` falla si una pantalla escribe a mano la clase de un componente o usa un
+`styles/tokens.css`. `tests/unit/consistencia.test.ts` falla si una pantalla escribe a mano la clase de un componente o usa un
 color, radio, capa, tamaño de letra o sombra suelto (con su lista de excepciones).
 
 ## Carpetas del frontend
@@ -102,6 +102,15 @@ Por área, con dependencias en un solo sentido (decisión 2026-11-22; mapa en `.
 Un área importa su carpeta, `comun/`, `shared/`, `domain/` y `data/`, nunca otra área ni `app/`; `comun/` no importa áreas. Lo
 vigila `tests/unit/architecture.test.ts`, con una lista de excepciones con su motivo que falla si una deja de hacer falta. Sin
 archivos barril (`index.ts` que reexportan). Las URL y las rutas, definidas en código en `app/shell.tsx`, no dependen de las carpetas.
+
+**CSS por área y en capas** (paso 2, 2026-11-23). Cada área tiene su hoja junto a su carpeta (`client/<área>/<área>.css`,
+`client/app/marco.css`, `client/comun/comun.css`, `shared/ficha.css`, `shared/ui/componentes.css`), con su escritorio dentro,
+y `styles/tokens.css` y `styles/base.css` para lo común. `styles/global.css` declara el orden de las capas
+(`tokens, base, componentes, areas, sin-movimiento, escritorio, encima`) e importa todas las hojas: se siguen cargando todas
+al arrancar, en una sola hoja que recibe también la ficha del worker (sin parpadeo al cambiar de pantalla). Una capa
+posterior gana a una anterior sea cual sea el selector, así que el escritorio ya no necesita subir la especificidad para ganar
+al teléfono. Los ajustes de Leaflet quedan fuera de capa, como el CSS de Leaflet, que llega con su trozo; una regla en capa le
+perdería siempre. Las pocas reglas que viven en otra capa que la de su archivo llevan el motivo en un comentario.
 
 ## Módulo de dominio
 

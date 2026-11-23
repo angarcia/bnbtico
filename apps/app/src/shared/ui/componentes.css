@@ -1,0 +1,528 @@
+/* Componentes comunes de shared/ui (historia 07): botones, campos, estructura, chips, ventanas y hojas. Capa componentes; su aspecto en escritorio, en la capa escritorio. */
+
+@layer componentes {
+  /* Sin líneas en reposo (Daniel, 2026-10-29): el campo con el cursor se marca con el borde verde. */
+  input:not([type=checkbox]):not([type=file]):not([type=radio]):focus,select:focus,textarea:focus{border-color:var(--primary)}
+  input,select,textarea{font:inherit;color:inherit}
+  /* ---------- Estructura (historia 07, paso 5) ----------
+  Tarjetas, avisos, filas, etiquetas, contadores y esqueletos: los pinta `shared/structure.tsx` (Card, Notice, LoadError,
+  List/ListRow, StatusTag, CountBadge, Skeleton, ClosedField); las pantallas no escriben estas clases. */
+  .card{background:var(--surface-soft);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
+  .card-solid{background:var(--surface);box-shadow:var(--shadow);border-radius:var(--r);padding:16px}
+  .card-soft{background:var(--state-soft);color:var(--state-ink);border-radius:var(--r-tile);padding:14px 16px}
+  .card-sun{background:var(--sun-soft);color:var(--sun-ink);border-radius:var(--r);padding:14px 16px}
+  .note{background:var(--surface-soft);color:var(--fg);border:1px solid var(--line-soft);border-radius:var(--r-input);padding:12px 14px;font-size:var(--fs-note);display:flex;gap:12px}
+  .note-sun{background:var(--sun-soft);color:var(--sun-ink)}
+  .note-solid{background:var(--surface);color:var(--fg)}
+  .note[role="alert"]{background:var(--bad-soft);color:var(--bad)}
+  /* Con una acción al final («Reintentar» del error de carga, muestra 5 aprobada): el texto a la izquierda y la acción a la derecha. */
+  .note-action{align-items:center;justify-content:space-between}
+  .note[role="alert"] .btn-link{color:inherit;text-decoration:underline}
+  .tile{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:var(--r-tile)}
+  .tile b{font-family:var(--display);font-weight:var(--w-medium);font-size:var(--fs-h2);line-height:1}
+  .tile span{font-size:var(--fs-xs);font-weight:var(--w-medium)}
+  .tile-soft{background:var(--state-soft);color:var(--state-ink)}
+  .tile-sun{background:var(--sun-soft);color:var(--sun-ink)}
+  .tile-review{background:var(--review-soft);color:var(--muted)}
+  .tile-draft{background:var(--beige-soft);color:var(--fg);text-decoration:none}
+  .list{display:flex;flex-direction:column;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .list-item{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 16px;border-bottom:1px solid var(--line-soft);text-decoration:none;color:inherit;text-align:left;width:100%}
+  .list-item:last-child{border-bottom:0}
+  .list-item .body{flex:1;min-width:0}
+  .list-item .body small{display:block;font-size:var(--fs-xs);color:var(--muted)}
+  .list-item[aria-disabled="true"]{color:var(--disabled-fg)}
+  .list-item .chev{color:var(--muted);flex-shrink:0}
+  /* En ocre, como «Activar suscripción» (`btn-sun`): falta un método de pago o es la puerta para publicar (revisión UX 2026-10-29). */
+  .list-item-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg)}
+  .list-item-sun .body small,.list-item-sun .chev,.list-item-sun .primary{color:var(--fg)}
+  .list-item.list-item-sun{border-radius:var(--r-input)}
+  .sub-row-link{color:inherit;text-decoration:none}
+  .divider{border:0;border-top:1px solid var(--line-soft);margin:0}
+  /* ---------- Botones (historia 07, paso 2) ----------
+  Una sola definición por variante; las pinta `shared/button.tsx` (Button, ButtonLink, TextButton, IconButton). Las pantallas
+  no redefinen su aspecto: solo las colocan (clases de colocación de button.tsx). */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--hit);padding:0 18px;border:1px solid transparent;border-radius:var(--r-control);background:none;font-weight:var(--w-medium);font-size:var(--fs-base);text-decoration:none;white-space:nowrap;cursor:pointer}
+  /* Principal: verde B aprobado por Ana (2026-11-04), fondo tonal opaco, texto verde, sombra ligera. */
+  .btn-primary{background:var(--state-soft);color:var(--primary);box-shadow:var(--shadow-action);font-weight:var(--w-strong)}
+  /* Secundario («Cancelar», «Ahora no»): contorno fino verde en móvil y escritorio (D3). */
+  .btn-secondary{background:transparent;border-color:color-mix(in srgb,var(--primary) 45%,transparent);color:var(--primary-ink)}
+  /* Pago, en ocre: solo dinero y avisos de pago (tests/unit/ocre.test.ts). */
+  .btn-sun{background:color-mix(in srgb,var(--sun) 70%,transparent);color:var(--fg);font-weight:var(--w-strong)}
+  /* WhatsApp lleno: solo para hablar con el anfitrión (D4). */
+  .btn-wa{background:var(--wa);color:var(--wa-ink);font-weight:var(--w-strong)}
+  /* Un solo destructivo, terracota tonal, igual para propietario y admin (D2). */
+  .btn-danger{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
+  .btn-lg{min-height:52px;font-size:var(--fs-md);font-family:var(--display)}
+  .btn-xl{min-height:56px;font-size:var(--fs-md);font-family:var(--display);border-radius:var(--r-cta)}
+  .btn-block{width:100%}
+  /* Un solo desactivado, sin bajar la opacidad. */
+  .btn:disabled,.btn[aria-disabled="true"]{background:var(--disabled-bg);color:var(--disabled-fg);border-color:transparent;box-shadow:none;cursor:not-allowed}
+  .btn[aria-busy="true"]{cursor:progress}
+  .wa-tint{display:inline-flex;color:var(--wa-icon)}
+  /* Botón de texto: siempre 44 px de alto. */
+  .btn-link,.btn-text,.btn-text-danger{display:inline-flex;align-items:center;min-height:var(--hit);font-weight:var(--w-medium);text-decoration:none;text-align:left;text-underline-offset:3px}
+  .btn-link{color:var(--primary);padding:6px 0}
+  .btn-text{color:var(--muted);padding:0 8px;text-decoration:underline;white-space:nowrap}
+  .btn-text-danger{color:var(--brand-ink);padding:6px 0}
+  .btn-link:disabled,.btn-text:disabled,.btn-text-danger:disabled{color:var(--disabled-fg);cursor:not-allowed}
+  /* Botón de icono: 44 × 44. */
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:var(--hit);height:var(--hit);border-radius:var(--r-control);color:var(--fg)}
+  .icon-btn:disabled,.icon-btn[aria-disabled="true"]{background:var(--disabled-bg);color:var(--disabled-fg);cursor:not-allowed}
+  /* Botones sobre las fotos: crema al 70 %, sin desenfoque (Daniel, 2026-10-29; --overlay-btn). */
+  .icon-btn.overlay{background:var(--overlay-btn)}
+  /* ---------- Chips, píldoras, etiquetas ---------- */
+  .chip{display:inline-flex;align-items:center;gap:6px;min-height:var(--hit);padding:0 16px;border-radius:var(--r-control);background:var(--beige-soft);color:var(--fg);font-weight:var(--w-medium);font-size:var(--fs-note);text-decoration:none;white-space:nowrap}
+  /* Lo elegido, en verde tonal al 26 %, sin borde (D6; Daniel, 2026-10-29: sin líneas, fondos semitransparentes): el botón
+  con `aria-pressed`, la casilla o el radio marcados dentro del chip y el chip de navegación actual. El ✓ lo pone
+  `ChoiceChips` en su hueco fijo (`.feature-check`): marcar no mueve el texto. Los chips de navegación, sin ✓. */
+  .chip[aria-pressed="true"],.chip:has(input:checked),.chip[aria-current="true"],.chip[aria-current="page"]{background:var(--chosen);color:var(--primary-ink);font-weight:var(--w-medium)}
+  .chip:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
+  .chip-sm{padding:0 14px;font-size:var(--fs-sm)}
+  .chiprow{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter)}
+  .chiprow::-webkit-scrollbar{display:none}
+  .chiprow.fit{overflow-x:visible;margin:0;padding:0;flex-wrap:nowrap}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--r-tag);font-size:var(--fs-xs);font-weight:var(--w-medium);background:var(--surface-2);color:var(--fg);align-self:flex-start}
+  .badge-ok{background:var(--state-soft);color:var(--state-ink)}
+  .badge-sun{background:var(--sun-soft);color:var(--sun-ink)}
+  .badge-review,.badge-mute{background:var(--review-soft);color:var(--muted)}
+  .badge-bad{background:var(--busy);color:var(--busy-ink)}
+  .badge-admin{background:var(--state-soft);color:var(--state-ink);padding:6px 12px}
+  .pill{position:absolute;padding:6px 10px;border-radius:var(--r-tag);background:var(--overlay);color:var(--on-overlay);font-weight:var(--w-medium);font-size:var(--fs-sm);font-variant-numeric:tabular-nums}
+  .pill span{font-weight:500;opacity:.8}
+  .pill-sm{font-size:var(--fs-xs);padding:5px 10px}
+  /* Un solo contador (D5 del inventario): terracota de 18 px y letra de 13 en la pestaña y en «Consultas» de una casa; verde
+  redondo con borde en el botón Filtros. Solo cambia dónde se apoya. */
+  .count-badge{position:absolute;min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--brand);color:var(--bg);font-size:var(--fs-eyebrow);font-weight:var(--w-medium);line-height:1;display:flex;align-items:center;justify-content:center}
+  .count-tab{top:2px;right:16px}
+  .count-house{top:0;right:0;padding:0 4px}
+  .count-filters{top:-6px;right:-6px;min-width:20px;height:20px;border-radius:var(--r-tag);border:2px solid var(--bg);background:var(--primary);color:var(--primary-on)}
+  /* ---------- Campos (historia 07, paso 4) ----------
+  Una sola definición por componente (shared/field.tsx, choice.tsx, stepper.tsx; client/code-input.tsx). El campo base va
+  con `:where()` (sin peso): las piezas que llevan un campo dentro (`.bare-input`) lo vacían sin pelear con selectores. */
+  label{font-size:var(--fs-sm);font-weight:var(--w-medium);color:var(--muted);display:block}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field-hint{font-size:var(--fs-xs);color:var(--muted)}
+  .field-hint.is-warn{color:var(--sun-ink);font-weight:var(--w-medium)}
+  :where(input:not([type=checkbox],[type=file],[type=radio],[type=hidden]),select,textarea){width:100%;min-height:52px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-control);background:var(--surface);color:var(--fg);font-size:var(--fs-md)}
+  :where(textarea){padding:12px 16px;line-height:1.4;resize:vertical;min-height:96px}
+  /* El chevrón del select va dibujado en la imagen (no admite variables): el gris es --muted. */
+  :where(select){font-weight:var(--w-medium);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6B69' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+  /* Desactivado (el token común) y solo lectura (se puede seleccionar y copiar, sin el borde del campo editable). */
+  :where(input,select,textarea):disabled{background:var(--disabled-bg);color:var(--disabled-fg);border-color:transparent;cursor:not-allowed}
+  :where(input,textarea)[readonly]{background:var(--disabled-bg);border-color:transparent}
+  :where(input,select,textarea)[aria-invalid="true"],.affix[data-invalid="true"]{border-color:var(--bad)}
+  /* Compacto, para las hojas: 48 px y etiqueta de 14. */
+  .field-compact{gap:4px}
+  .field-compact > label,.field-compact > .row > label{font-size:var(--fs-xs)}
+  .field-compact :where(input:not([type=checkbox],[type=file],[type=radio],[type=hidden])){min-height:48px;padding:0 12px}
+  .field-compact :where(textarea){padding:12px 14px;resize:none;min-height:0}
+  /* El campo de dentro de un signo, un buscador o el código: sin caja propia (la pone su contenedor). */
+  .bare-input{flex:1;width:100%;min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;color:var(--fg);outline:none}
+  .bare-input:focus-visible{outline:none}
+  /* Con «₡» o «$» delante (AffixInput): lg 56 px con la cifra a 24 (publicar y editar), md 52 (Filtros), sm 44 (calendario). */
+  .affix{display:flex;align-items:center;gap:8px;min-height:52px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-control);background:var(--surface);font-size:var(--fs-md);font-weight:var(--w-regular);cursor:text}
+  .affix-sign{flex:none;color:var(--muted);font-weight:var(--w-medium)}
+  .affix .bare-input{font-size:var(--fs-md)}
+  .affix-lg{min-height:56px}
+  .affix-lg .affix-sign{font-size:var(--fs-title)}
+  .affix-lg .bare-input{font-size:var(--fs-h2);font-weight:var(--w-medium);font-family:var(--display)}
+  .affix-sm{min-height:var(--hit);gap:4px;padding:0 12px}
+  .affix-sm .affix-sign{font-size:var(--fs-sm)}
+  /* La cifra del calendario a 18 px y el texto de ayuda a 16: con menos, el iPhone amplía la página al tocar el campo. */
+  .affix-sm .bare-input{flex:none;width:104px;font-weight:var(--w-strong);font-variant-numeric:tabular-nums}
+  .affix-sm .bare-input::placeholder{font-size:var(--fs-note);font-weight:var(--w-medium);color:var(--muted)}
+  /* Buscador con la lupa (SearchInput): field (una lista), combobox (con sugerencias debajo), float (sobre el mapa). */
+  .search-input{display:flex;align-items:center;gap:10px;min-height:52px;padding:0 6px 0 14px;border:1px solid var(--line);border-radius:var(--r-control);background:var(--surface);color:var(--muted)}
+  .search-input svg{flex:none}
+  .search-input .bare-input{min-height:48px;font-size:var(--fs-md);-webkit-appearance:none;appearance:none}
+  .search-input .bare-input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+  .search-input-combobox .bare-input{font-weight:var(--w-medium)}
+  .search-input-float{border-radius:var(--float-r);border-color:var(--float-edge);box-shadow:var(--float-shadow)}
+  .affix:focus-within,.search-input:focus-within{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+  /* Lista de sugerencias de un combobox: filas de 52 px; la marcada con el teclado en --line-soft, la elegida en ocre con ✓. */
+  .suggestions{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .suggestions:empty{display:none}
+  .suggestion{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;gap:12px;flex:none;min-height:52px;padding:8px 12px;border-radius:var(--r-control);cursor:pointer}
+  .suggestion:has(.suggestion-icon){grid-template-columns:20px minmax(0,1fr) 20px}
+  .suggestion-icon,.suggestion-check{display:flex;align-items:center;justify-content:center}
+  .suggestion-text{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.3;overflow-wrap:anywhere}
+  .search-input:focus-within ~ .suggestions .suggestion.is-active,.search-input:focus-within ~ * .suggestion.is-active,.suggestion:hover{background:var(--line-soft)}
+  .suggestion.is-chosen{background:var(--sun-soft);color:var(--sun-ink)}
+  .input-prefix{display:flex;gap:8px}
+  .input-prefix .prefix{display:flex;align-items:center;min-height:52px;padding:0 14px;border:1px solid transparent;border-radius:var(--r-control);background:var(--surface-2);font-size:var(--fs-md);font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
+  /* Casilla con su texto (Checkbox): la fila mide 44 px. */
+  .check{display:flex;align-items:center;gap:10px;font-size:var(--fs-note);color:var(--fg);font-weight:var(--w-medium);min-height:var(--hit)}
+  .check input{width:20px;height:20px;accent-color:var(--primary);margin:0}
+  /* Tarjetas de elección (ChoiceCards): lo elegido y el foco salen del radio o la casilla de dentro. */
+  .choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:84px;padding:14px;border:2px solid transparent;border-radius:var(--r-tile);background:var(--surface-soft);text-align:left;color:var(--fg);cursor:pointer}
+  .choice b{font-weight:var(--w-medium);font-size:var(--fs-md)}
+  .choice span{font-size:var(--fs-sm);color:var(--muted)}
+  .choice:has(input:checked){background:var(--chosen)}
+  .choice:has(input:checked) span{color:var(--primary)}
+  .choice:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
+  /* Contador −/+ (Stepper) y su fila (CounterRow): botones de 44 × 44, uno solo para toda la app. */
+  .counter{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:56px;padding:0 10px 0 16px;border-bottom:1px solid var(--line-soft)}
+  .counter:last-child{border-bottom:0}
+  .stepper{display:inline-flex;align-items:center;gap:8px;flex:none}
+  .stepper button{display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--hit);height:var(--hit);border-radius:var(--r-control);background:var(--state-soft);color:var(--primary-ink);font-size:22px;line-height:1}
+  .stepper button:active:not(:disabled){background:var(--chosen)}
+  .stepper button:disabled{background:var(--disabled-bg);color:var(--disabled-fg);cursor:not-allowed}
+  .stepper b{min-width:28px;text-align:center;font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+  .stepper b.is-empty{color:var(--muted);font-family:var(--body);font-weight:var(--w-regular);font-size:var(--fs-md)}
+  .stepper-input{width:72px;text-align:center;font-variant-numeric:tabular-nums}
+  /* Segmento (Segmented): una sola elección en una pista; botones de 44 px. `seg-fill`: a todo el ancho. */
+  .seg{display:inline-flex;flex:none;padding:3px;gap:2px;border-radius:var(--r-control);background:var(--beige-soft)}
+  .seg-fill{display:flex;flex:1}
+  /* En una columna, el segmento mide lo que sus opciones (No | Sí); en una fila, se centra con lo de al lado. */
+  .stack > .seg:not(.seg-fill){align-self:flex-start}
+  .seg button{min-width:var(--hit);min-height:var(--hit);padding:0 12px;border-radius:calc(var(--r-control) - 2px);background:transparent;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--w-medium);font-variant-numeric:tabular-nums;transition:background-color 120ms ease,color 120ms ease}
+  .seg-fill button{flex:1}
+  .seg button[aria-pressed="true"]{background:var(--chosen);color:var(--primary-ink)}
+  .seg.currency-switch button{padding:0;font-size:var(--fs-md)}
+  /* Código de 6 dígitos (CodeInput): el campo real va encima de las seis casillas, casi invisible pero enfocable al tocarlas. */
+  .code-field{position:relative}
+  .code-boxes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+  .code-boxes span{display:flex;align-items:center;justify-content:center;height:60px;border:1px solid var(--line);border-radius:var(--r-control);background:var(--surface);font-family:var(--display);font-weight:var(--w-medium);font-size:26px;font-variant-numeric:tabular-nums}
+  .code-boxes span.filled{border-color:var(--primary)}
+  .code-boxes span.active{border:2px solid var(--primary);background:var(--state-soft)}
+  .code-field .code-input{position:absolute;inset:0;height:60px;opacity:.01;font-size:var(--fs-md);color:transparent;caret-color:transparent}
+  .sr-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  /* Chips de elección (ChoiceChips). grid: dos columnas con el ✓ en un hueco fijo; kind: tres con el icono encima. */
+  .feature-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .feature-choices .chip{position:relative;padding-inline:6px 26px;gap:4px;justify-content:flex-start;cursor:pointer}
+  .feature-choices .chip svg{flex:none}
+  .feature-choices .chip>svg{width:16px;height:16px}
+  .feature-check{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);display:flex;width:14px;height:14px}
+  .feature-check svg{stroke-width:3}
+  .kind-filter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .kind-filter .chip{position:relative;min-height:72px;padding:8px 4px;gap:4px;flex-direction:column;justify-content:center}
+  .kind-filter .feature-check{top:8px;transform:none}
+  /* Atajos del número de noches (modo noches, diseño #59): la rejilla de «Qué necesitan», sin icono delante. */
+  .nights-quick .chip{padding-inline-start:12px}
+  @media (max-width:360px) {
+    .feature-choices .chip{padding-inline:2px 24px;gap:2px}
+  }
+  /* Esqueleto de carga (app/(app)/loading.tsx): bloques arena con brillo suave. */
+  .skeleton .sk{display:block;border-radius:var(--r-input);background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+  .progress{display:flex;gap:4px}
+  .progress span{flex:1;height:6px;border-radius:2px;background:var(--line);position:relative;overflow:hidden}
+  /* El tramo se llena de izquierda a derecha al avanzar y se vacía al volver (la barra se conserva entre pantallas). */
+  .progress span::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--primary);transform:scaleX(0);transform-origin:left;transition:transform 320ms var(--ease-out)}
+  .progress span.on::after{transform:scaleX(1)}
+  /* La flecha de las páginas de estado de la ficha solo en escritorio (13-escritorio.css): en el teléfono, el logo. */
+  .status-back{display:none}
+  .header-close{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:var(--fs-base);font-weight:var(--w-medium);color:var(--fg);text-decoration:none}
+  .tabbar{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px;--away:translateY(100%);height:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-top:2px solid var(--line-nav);padding:10px 12px calc(22px + env(safe-area-inset-bottom));z-index:var(--z-bar)}
+  /* Barra de abajo plana, pegada al borde, a todo el ancho, con icono y etiqueta en cada pestaña (Daniel, 2026-11-04: vuelve
+  la de antes de la píldora); sale por abajo al bajar y vuelve al subir con el escondido común (.chrome-hide). */
+  .tabbar .nav{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;min-height:44px;font-size:var(--fs-eyebrow);font-weight:var(--w-medium);color:var(--muted);text-decoration:none;-webkit-tap-highlight-color:transparent}
+  /* Pestaña activa: el icono en el terracota del logo; la etiqueta en --brand-ink, que es texto pequeño y necesita 4,5:1. */
+  .tabbar .nav[aria-current="page"]{color:var(--brand-ink);font-weight:var(--w-medium)}
+  .tabbar .nav[aria-current="page"] svg{color:var(--brand)}
+  .tabbar .nav[aria-current="page"] svg{stroke-width:2.4}
+  .tabbar.three .nav{font-size:var(--fs-xs)}
+  .tabbar .nav-wordmark{display:block;width:auto;max-width:100%;height:20px;object-fit:contain}
+  .tabbar .nav:not([aria-current="page"]) .nav-wordmark{filter:grayscale(1)}
+  .tabbar .nav > span:not(.sr-only){font-family:"Coming Soon",var(--body);font-weight:400;line-height:20px}
+  .sticky-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;gap:10px;padding:10px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-nav);z-index:var(--z-bar)}
+  .sticky-actions .grow{flex:1}
+  .sticky-spacer{height:76px}
+  .grow-col{flex:1;min-height:0;display:flex;flex-direction:column}
+  /* ---------- Fotos y tarjetas de casa ---------- */
+  .photo{position:relative;background:var(--state-soft);overflow:hidden;display:grid;place-items:center;color:var(--state-ink)}
+  .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .thumb{width:92px;height:92px;border-radius:var(--r-thumb);object-fit:cover;flex-shrink:0;background:var(--state-soft)}
+  .return-card{align-items:center}
+  /* Ronda de Ana 2026-10-30: cada casa en su tarjeta (como Airbnb, con nuestras esquinas pequeñas): superficie y sombra de `.card`,
+  foto a sangre arriba (la tarjeta recorta con su radio) y el texto con relleno. */
+  .listing-card{display:flex;flex-direction:column;gap:0;text-decoration:none;color:inherit;background:var(--surface-soft);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .listing-card .photo{aspect-ratio:4/3;height:auto;border-radius:0}
+  .listing-card .sk-line{margin:12px 14px 14px}
+  .listing-card h2,.listing-card h3{font-family:var(--display);font-size:var(--fs-title);font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em}
+  .listing-grid{display:grid;grid-template-columns:1fr;gap:32px}
+  @media (max-width:899px) {
+    /* En el teléfono, cada casa de borde a borde, con la foto 3:2 y sus esquinas redondeadas; menos aire entre casas (2026-11-03). */
+    .listing-grid{gap:16px}
+    .listing-card .photo{aspect-ratio:3/2}
+  }
+  /* Corazón de favoritos (fase 3): blanco con sombra sobre la foto, crema en la ficha, terracota cuando está guardada. */
+  .heart{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;padding:0;background:transparent;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:transform 160ms var(--ease-out)}
+  .heart:active{transform:scale(0.9)}
+  .heart[aria-pressed="true"] svg{fill:var(--brand);stroke:var(--brand)}
+  .fav-empty{align-items:flex-start;gap:14px}
+  .note-col{flex-direction:column;gap:8px}
+  .note-col b{font-family:var(--display);font-weight:var(--w-medium)}
+  .avatar{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:999px;background:var(--state-soft);color:var(--state-ink);font-family:var(--display);font-weight:var(--w-medium);font-size:22px;flex-shrink:0}
+  /* ---------- Ficha pública (pantalla 03, renderizada en el worker) ---------- */
+  .gap-4{gap:4px}
+  .baseline{align-items:baseline}
+  /* La descripción entera, a pantalla completa por encima de la ficha. */
+  .description-screen{position:fixed;inset:0;z-index:calc(var(--z-overlay) + 1);overflow-y:auto;overscroll-behavior:contain;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:screen-in 280ms var(--ease-drawer) backwards}
+  .description-screen:focus{outline:none}
+  .description-screen h2{font-size:28px}
+  @media (min-width:760px) {
+    .description-screen{padding-left:max(32px,calc(50% - 320px));padding-right:max(32px,calc(50% - 320px))}
+  }
+  .status-title{font-size:var(--fs-h2)}
+  .search-close{align-self:flex-start;background:transparent;color:var(--fg)}
+  .search-fold{display:grid;grid-template-columns:auto minmax(0,1fr) 18px;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg);color:var(--fg);font-family:var(--body);font-size:var(--fs-note);font-weight:400;line-height:1.35;text-align:left}
+  .search-fold b{min-width:0;font-weight:var(--w-medium);text-align:right;overflow-wrap:anywhere}
+  .search-fold svg{color:var(--primary)}
+  .search-fold span{color:var(--muted);font-size:var(--fs-note);font-weight:var(--w-medium)}
+  .search-card-title{min-height:44px;font-size:26px;font-weight:var(--w-strong);text-align:left}
+  .chip{border:0;cursor:pointer}
+  .badge-tight{padding:2px 8px}
+  .sk-line{height:18px;width:70%}
+  .account-card{gap:14px}
+  .account-skeleton .sk-line{width:60%}
+  .logout-link{font-size:var(--fs-xs);text-align:center}
+  .account-card .grow-col{min-width:0}
+  .note svg{flex-shrink:0}
+  .card-solid .btn{align-self:flex-start}
+  .grow{flex:1}
+  .block{display:block}
+  .inquiry-card{padding:14px}
+  .inquiry-avatar{width:44px;height:44px;border-radius:999px;font-size:var(--fs-base)}
+  .offer-card{color:var(--sun-ink);padding:14px 16px}
+  /* Tarjeta de una casa (diseño v2, 07-mis-casas): foto cuadrada con la etiqueta de estado encima, nombre y zona. En Mis casas
+  toda la tarjeta abre el detalle (el título es un enlace estirado); sus botones quedan por encima y se pueden tocar. */
+  .house-card{position:relative;display:flex;flex-direction:column;gap:10px;padding:12px}
+  .house-card :is(.btn,.btn-link,.btn-text,.btn-text-danger){position:relative;z-index:1}
+  .house-share>svg{flex:none;width:24px;height:24px}
+  /* La etiqueta del estado, sobre la foto: una pastilla con su punto. */
+  .state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:var(--r-tag);font-size:var(--fs-sm);font-weight:var(--w-medium);line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
+  .sub-house{padding-top:12px;border-top:1px solid var(--line-soft);outline:none}
+  .sub-house:first-of-type{border-top:0;padding-top:0}
+  .sub-house.is-target{margin:0 -8px;padding:10px 8px;border-radius:var(--r-thumb);box-shadow:0 0 0 2px var(--primary)}
+  .owner-skeleton .sk-line{flex:1}
+  .tag-rev{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--r-tag);background:var(--review-soft);color:var(--muted);font-size:var(--fs-eyebrow);font-weight:var(--w-medium);line-height:1.5;white-space:nowrap}
+  .tag-rev.is-pending{background:var(--muted);color:var(--bg)}
+  .tag-rev.is-changes{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink)}
+  button.list-item{cursor:pointer}
+  button.list-item:disabled{color:var(--disabled-fg);cursor:not-allowed}
+  .sent-link{justify-content:center;width:100%}
+  .sub-house-inactive{background:color-mix(in srgb,var(--sun) 14%,var(--bg))}
+  .subscription-offer{background:var(--sun-soft)}
+  .sub-house .row>h3{min-width:0;overflow-wrap:anywhere}
+  .sub-house .badge{flex-shrink:0}
+  .listing-stats.stack{justify-content:center;gap:14px;min-height:138px;padding:14px;background:color-mix(in srgb,var(--sun) 14%,var(--bg));text-align:center}
+  /* «Eliminar casa» (historia 28): texto terracota (TextButton tone="danger") centrado al final del detalle; la hoja pone sus
+  líneas una debajo de otra. */
+  .delete-house{align-self:center;justify-content:center;width:100%}
+  .sheet-line{display:block}
+  .sheet-line + .sheet-line{margin-top:10px}
+  /* ---------- Asistente de publicar (ticket 07; decisión 2026-10-21) ---------- */
+  .strong{font-weight:var(--w-medium)}
+  .counters{padding:0;border-radius:var(--r-tile)}
+  .grow-col textarea{flex:1}
+  /* Con el teclado, el alto que le queda hasta la barra o el teclado (publish/fill-height.ts). */
+  .grow-col textarea:focus{flex:1 0 var(--fill,0%)}
+  .map-locate{position:absolute;right:10px;bottom:10px;z-index:500;box-shadow:var(--shadow);color:var(--primary)}
+  /* Admin (ticket 09): cola de anuncios (21) y revisar (22) */
+  .queue-card{padding:12px;align-items:flex-start;text-decoration:none;color:inherit}
+  .house-row{padding:12px 14px}
+  .house-row .badge{align-self:center;flex-shrink:0}
+  .review-owner{padding:12px 14px;border-radius:var(--r-control)}
+  .review-spacer{height:124px}
+  .review-actions{flex-direction:column;gap:8px}
+  .tabbar .nav{position:relative}
+  html.sheet-open,html.sheet-open body{overflow:hidden}
+  /* Fondo y hoja de todas las superficies (shared/overlay.tsx). `.is-stacked`: la que se abre encima de otra (p. ej. «¿Descartar
+  los cambios?»), con su propio fondo sobre la de abajo. */
+  .sheet-backdrop{position:fixed;inset:0;background:var(--scrim);z-index:var(--z-overlay);animation:fade-in 200ms ease-out backwards}
+  .sheet-backdrop.is-stacked{z-index:calc(var(--z-overlay) + 2)}
+  .is-stacked:is(.sheet,.dialog){z-index:calc(var(--z-overlay) + 3)}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:560px;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;z-index:calc(var(--z-overlay) + 1);
+    display:flex;flex-direction:column;gap:14px;padding:10px 20px calc(26px + env(safe-area-inset-bottom));border-radius:var(--r-sheet) var(--r-sheet) 0 0;background:var(--bg);
+    box-shadow:0 -12px 30px -16px rgba(28,43,42,.45);animation:sheet-in 280ms var(--ease-drawer) backwards}
+  .sheet:focus{outline:none}
+  @media (max-width:899px) {
+    .sheet-contact .sheet-head .icon-btn{margin-inline-end:0}
+  }
+  /* `.kb`: sitio extra mientras un campo con teclado tiene el foco (iPhone no encoge la vista): el campo sube por encima. */
+  .sheet.kb{padding-bottom:calc(26px + 320px + env(safe-area-inset-bottom))}
+  .sheet textarea,.sheet input{scroll-margin-top:16px}
+  .sheet .grabber{align-self:center;width:40px;height:5px;border-radius:2px;background:var(--line);flex-shrink:0}
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .sheet-head > div{display:flex;flex-direction:column;gap:2px}
+  .sheet-head .icon-btn{margin:-6px -8px 0 0;background:transparent;box-shadow:none}
+  .sheet form{display:flex;flex-direction:column;gap:14px}
+  /* Fechas de la hoja (revisión UX 2026-10-29, N2): casillas como un campo, que abren el calendario de «¿Cuándo?». */
+  .sheet .date-box{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;min-height:56px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--surface);text-align:left}
+  .sheet .date-box-label{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
+  .sheet .date-box b{font-size:var(--fs-base);font-weight:var(--w-medium)}
+  .sheet .date-box.is-empty b{color:var(--muted)}
+  .sheet .date-box[aria-expanded="true"]{border-color:var(--primary)}
+  .sheet .hint{font-size:var(--fs-xs);color:var(--muted);margin-top:-8px}
+  .sheet .date-box[aria-invalid="true"]{border-color:var(--bad)}
+  /* Ventana de escritorio (`Dialog`): normal (520) o ancha (hasta 960); cabecera y pie fijos, el cuerpo con su scroll. */
+  .dialog{position:fixed;inset:0;margin:auto;z-index:calc(var(--z-overlay) + 1);display:flex;flex-direction:column;width:min(var(--dialog-w),calc(100% - 32px));height:max-content;max-height:calc(100dvh - 32px);padding:16px 24px 24px;border:1px solid var(--line);border-radius:var(--r-sheet);background:var(--bg);color:var(--fg);box-shadow:var(--shadow-float);animation:fade-in 200ms ease-out backwards}
+  .dialog:focus{outline:none}
+  .dialog-head{flex:none}
+  .dialog-head > .icon-btn:last-child{margin-inline-start:auto}
+  .dialog-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;margin-inline:-24px;padding-inline:24px}
+  .dialog-foot{flex:none;display:flex;justify-content:flex-end;gap:12px;padding-top:16px}
+  .dialog-filters .dialog-body{margin:0;padding:0}
+  /* El mismo selector cerrado y la misma hoja en Consultas y Calendario. */
+  .picker-pill{display:grid;grid-template-columns:20px minmax(0,1fr) 18px;align-items:center;gap:10px;width:100%;height:52px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-input);background:var(--bg);color:var(--fg);font-family:inherit;font-weight:400;font-size:var(--fs-base);text-align:left}
+  .picker-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .picker-arrow{display:flex;transition:transform 140ms var(--ease-out);color:var(--primary)}
+  .picker-pill[aria-expanded="true"] .picker-arrow{transform:rotate(180deg)}
+  .sheet-picker .sheet-head{flex:none;align-items:center}
+  .sheet-picker .sheet-head h2{font-size:23px;line-height:1.2}
+  .sheet-picker .sheet-head .icon-btn{flex:none;margin:0;color:var(--muted)}
+  .cal-arrow{color:var(--muted)}
+  .cal-action-group,.cal-airbnb{padding:0}
+  .cal-action-group + .cal-airbnb.card{border-top:1px solid var(--line-soft);border-top-left-radius:0;border-top-right-radius:0}
+  .cal-action-group > * + *{border-top:1px solid var(--line-soft)}
+  .cal-airbnb > .note{margin:0 14px 10px}
+  .cal-airbnb > .hint{margin:0;padding:10px 14px;border-top:0}
+  /* A 12 px sobre la barra de abajo si está a la vista; si se escondió, a 12 px del borde. Con las barras de botones de abajo
+  (asistente, ficha, panel del calendario), por encima de ellas. */
+  html:has(.tabbar){--chrome-bottom:calc(var(--float-bottom) + var(--nav-h))}
+  .cal-base{padding:0;align-self:flex-start}
+  /* Paso 9 «Revisar y enviar» (revisión UX C4): filas compactas que llevan a su pantalla. */
+  .review-list{padding:0;display:flex;flex-direction:column}
+  @media (max-height:700px) {
+    .offer-line{padding-block:8px}
+  }
+  .offer-line b{white-space:nowrap}
+  .offer-line{padding:10px 14px;background:var(--surface);box-shadow:var(--shadow);color:var(--sun-ink)}
+  .offer-line *{color:inherit}
+  /* Vista previa de la ficha encima del asistente. */
+  .ficha-preview{position:fixed;inset:0;z-index:calc(var(--z-overlay) + 1);overflow-y:auto;overscroll-behavior:contain;background:var(--bg)}
+  .ficha-preview:focus{outline:none}
+  /* Descripción por debajo del mínimo (revisión UX N3). */
+  .description-short{color:var(--sun-ink);font-weight:var(--w-medium)}
+  @media (min-width:900px) {
+    .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+  }
+  /* Revisión UX 2026-10-29 (A8): la tarjeta para publicar al final de Explorar. */
+  .publish-promo .btn{margin-top:4px}
+  /* La nota «La estamos revisando…» con el beige grisáceo de «Revisión» (revisión UX 2026-10-29, A4). */
+  .note-review{background:var(--review-soft);color:var(--fg)}
+  /* Suscripción (revisión UX 2026-10-29, A2): «Parar suscripción» como texto centrado; «¿Cómo funciona el cobro?» plegado. */
+  .sub-stop{align-self:center}
+  .how-it-works summary{cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;list-style:none}
+  .how-it-works summary::-webkit-details-marker{display:none}
+  .how-it-works summary::after{content:"›";font-size:22px;color:var(--muted);transition:transform 160ms var(--ease-out)}
+  .how-it-works[open] summary::after{transform:rotate(90deg)}
+  .how-it-works[open]{display:flex;flex-direction:column;gap:4px}
+  /* Asistente (A9): «Atrás» cuadrado con la flecha; la fila obligatoria que falta, en terracota. */
+  .btn-back{flex:0 0 56px;width:56px;padding:0}
+  /* ---------- Tarjetas flotantes (tanda 1, 2026-11-04) ---------- */
+  /* Al final del archivo: gana al fondo y la sombra propios de cada pieza (chip, píldora, selector). Sin desenfoque
+  (navegadores viejos), opaca; con él, translúcida. Sin `transform` en reposo en las piezas con desenfoque
+  (Safari deja de desenfocar): se centran con left/right y margin:auto. */
+  .float-card{background:var(--float-bg-solid);border:1px solid var(--float-edge);box-shadow:var(--float-shadow)}
+  @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))) {
+    .float-card{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}
+  }
+  /* El escondido común (client/hiding-chrome.ts pone `html.chrome-away` al bajar y lo quita al subir): cada pieza `.chrome-hide`
+  dice hacia dónde sale con `--away`. La que tiene el foco del teclado se queda; con movimiento reducido, solo se funde. */
+  .chrome-hide{transition:var(--float-away)}
+}
+
+@layer sin-movimiento {
+  @media (prefers-reduced-motion:reduce) {
+    .skeleton .sk{animation:none}
+  }
+}
+
+@layer escritorio {
+  @media (min-width:1200px) {
+    .listing-grid:not(.explore-results){grid-template-columns:repeat(4,minmax(0,1fr))}
+  }
+  @media (min-width: 1024px) {
+    @media (hover: hover) {
+      /* Botones (historia 07): respuesta al pasar el ratón, solo con ratón. */
+      .btn-primary:hover:not(:disabled):not([aria-disabled="true"]) { background: color-mix(in srgb, var(--primary) 22%, var(--bg)); }
+      .btn-secondary:hover:not(:disabled):not([aria-disabled="true"]) { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+      .btn-danger:hover:not(:disabled):not([aria-disabled="true"]) { background: color-mix(in srgb, var(--brand) 18%, transparent); }
+    }
+    /* La hoja, en escritorio, es la ventana normal (shared/overlay.tsx): mismo ancho, sombra y entrada que `.dialog`. El
+    selector de zona del asistente sigue abajo (`.sheet-picker`). */
+    .sheet[aria-modal="true"]:not(.sheet-picker) {
+      inset: 0;
+      margin: auto;
+      transform: none;
+      width: min(var(--dialog-w), calc(100% - 32px));
+      height: max-content;
+      max-height: calc(100dvh - 32px);
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-sheet);
+      box-shadow: var(--shadow-float);
+      animation-name: fade-in;
+    }
+    .sheet[aria-modal="true"]:not(.sheet-picker) > .grabber { display: none; }
+    /* «Calendarios de Airbnb» desde la fila del Calendario: la ventana ancha. */
+    .sheet.sheet-airbnb[aria-modal="true"] {
+      width: min(var(--dialog-w-wide), calc(100% - 48px));
+      max-width: none;
+    }
+    /* El editor de fotos (photo-viewer.tsx): casi a pantalla completa y de alto fijo (el visor no salta al cambiar de foto). A
+    la izquierda la foto elegida entera, al menos al tamaño de la ficha; a la derecha las miniaturas, también enteras. */
+    .dialog.dialog-photos {
+      width: var(--dialog-w-photos);
+      height: calc(100dvh - 48px);
+      max-height: none;
+      --rail: 336px;
+    }
+    @media (min-width: 1400px) {
+      .dialog.dialog-photos { --rail: 360px; }
+    }
+    @media (min-width: 1700px) {
+      .dialog.dialog-photos { --rail: 440px; }
+    }
+    .dialog-photos .dialog-foot { align-items: center; justify-content: space-between; gap: 24px; margin-top: 12px; border-top: 1px solid var(--line-soft); }
+    .dialog-photos .dialog-body { display: flex; flex-direction: column; overflow: hidden; }
+    .account-profile-toggle { min-height: 44px; }
+    .desktop-nav .nav {
+      flex: none;
+      flex-direction: row;
+      gap: 8px;
+      padding: 0 12px;
+      border-radius: var(--r-input);
+    }
+    .desktop-nav .nav > span:not(.sr-only) {
+      font: var(--w-medium) 16px/1.25 var(--body);
+    }
+    .desktop-nav .nav[aria-current="page"] { background: var(--surface-2); }
+    .desktop-nav a:focus-visible { outline-color: var(--focus-ring); }
+    .desktop-nav .desktop-currency { margin-inline-start: auto; }
+    .desktop-nav .desktop-sign-in { flex: none; min-height: 44px; }
+    .dialog-inquiries .dialog-head { margin-bottom: 12px; }
+    .map-card-close { position: absolute; inset: 4px 4px auto auto; }
+    .desktop-feature-filters .chip {
+      min-width: 0;
+      min-height: 36px;
+      padding-inline: 8px;
+      font-size: var(--fs-xs);
+      pointer-events: auto;
+    }
+    .desktop-feature-filters .feature-check { position: static; transform: none; }
+    .desktop-feature-filters .chip[aria-pressed="true"] { background: var(--chosen); }
+    .desktop-nav .nav { color: var(--fg-title); }
+    .desktop-nav .nav:hover { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+    .desktop-nav .nav[aria-current="page"] { background: var(--surface-2); color: var(--brand-ink); }
+    .desktop-nav .currency-switch { background: color-mix(in srgb, var(--muted) 12%, var(--bg)); }
+    .desktop-nav .currency-switch button { color: var(--muted); }
+    .desktop-nav .currency-switch button[aria-pressed="true"] {
+      background: var(--surface);
+      color: var(--fg);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
+    }
+    /* El contador de una pestaña con texto va detrás del texto, no encima (Anuncios del admin, Consultas). */
+    .desktop-nav .nav .count-badge { position: static; margin-inline-start: 2px; }
+    /* Revisión de escritorio 2026-11-13, tanda 6 (A10): sin la oferta «publique gratis» en la ventana de Ingresar, donde
+    competía con «Recibir código». Las cifras de Anuncios del admin, en pastillas como en Mis casas. */
+    .dialog-sign-in .publish-promo-row { display: none; }
+  }
+  @media (min-width: 1024px) and (prefers-color-scheme: dark) {
+    /* En oscuro, la moneda elegida destaca con un gris más claro que el fondo del selector (la superficie casi no se distingue). */
+    :root:not([data-theme="light"]) .desktop-nav .currency-switch button[aria-pressed="true"] {
+      background: color-mix(in srgb, var(--fg) 22%, var(--bg));
+    }
+  }
+}

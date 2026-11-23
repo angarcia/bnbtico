@@ -1,3 +1,13 @@
+## 2026-11-23 · CSS por área: siete capas y todo cargado al arrancar (paso 2 de la estructura del frontend)
+
+Al construir el paso 2 se ajusta lo aprobado el 2026-11-22:
+
+- **Capas:** `tokens, base, componentes, areas, sin-movimiento, escritorio, encima` (la propuesta decía `tokens, base, componentes, areas, marco`). El escritorio de todas las hojas va en una capa propia, `escritorio`, que gana al teléfono como antes ganaba `13-escritorio.css` por ir el último; `sin-movimiento` reúne lo de «reducir movimiento», que iba detrás de las pantallas del teléfono; `encima`, el aviso de girar el teléfono. `13-escritorio.css` desaparece: el marco común de escritorio vive en `client/app/marco.css`.
+- **Carga:** cada área tiene su hoja junto a su carpeta, pero `styles/global.css` las importa todas y se cargan al arrancar, como antes. Cargar el CSS con el trozo de cada pantalla queda para cuando se mida el parpadeo y la ficha del worker, que necesita su CSS en la primera respuesta.
+- **Leaflet fuera de capa:** su CSS llega con el trozo del mapa y sin capa; una regla en capa le perdería siempre, así que los ajustes de Leaflet y de sus contenedores quedan fuera de capa, como estaban.
+
+Motivo: el resultado tenía que ser idéntico al de antes. Se comprobó comparando el estilo calculado de cada elemento en los 630 estados distintos que recorre la e2e (móvil y escritorio, con `:hover`, `:active` y `:focus` forzados, con y sin «reducir movimiento»): cero diferencias. Cuatro reglas van en otra capa que la de su archivo para conservar quién ganaba; cada una lleva el motivo en un comentario.
+
 ## 2026-11-22 · Estructura del frontend por áreas y textos fuera del código
 
 Ana aprobó la propuesta de `.scratch/estructura-frontend/propuesta.md`, contrastada con guías (Bulletproof React, colocación de Kent C. Dodds, TanStack Query y Router, React, MDN y W3C), con sus opciones por defecto:

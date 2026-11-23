@@ -1,0 +1,416 @@
+/* Ficha pública y lo que pinta shared/ (galería, calendario del mes, hoja de contacto, precios). La ficha la renderiza el worker: este CSS va en la hoja global. Capas areas y escritorio. */
+
+@layer areas {
+  /* ---------- App (móvil) ---------- */
+  .app{min-height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
+  .view{flex:1;padding:calc(12px + env(safe-area-inset-top)) var(--gutter) calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+  .view.no-nav{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .header-root{display:flex;flex-direction:column;gap:14px}
+  /* La barra superior de la ficha solo existe en escritorio (13-escritorio.css). */
+  .site-top-bar{display:none}
+  .header-root .top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
+  .header-root .logo{height:38px;width:auto}
+  /* En pantallas de flujo con botones fijos (publicar, filtros, revisar, ficha) no hay barra de pestañas. */
+  .app:has(.sticky-actions) .tabbar,.app:has(.cta-bar) .tabbar{display:none}
+  .cta-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px;padding:12px var(--gutter) calc(16px + env(safe-area-inset-bottom));background:var(--bg);border-top:2px solid var(--line-soft);z-index:var(--z-bar)}
+  .cta-bar .price{font-family:var(--display);font-weight:var(--w-strong);font-size:var(--fs-h2);letter-spacing:-0.01em;font-variant-numeric:tabular-nums}
+  .cta-bar .price small{font-family:var(--body);font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted);letter-spacing:0}
+  /* Alto de partida (antes de medir la barra): el de una casa solo por noches, 140 px de barra menos 16 px de margen. */
+  .cta-spacer{height:124px}
+  /* Colones a la izquierda (noche y mensual), dólares a la derecha (≈ noche, ≈ mes): las dos monedas siempre, sin selector. */
+  /* El mensual junto al precio solo en escritorio (13-escritorio.css). */
+  .cta-monthly{display:none}
+  .cta-prices{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:baseline}
+  .cta-prices > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cta-prices .price{line-height:1.1}
+  .listing-monthly-usd{display:none}
+  /* Con fechas (ronda de Ana 2 nov, ticket 08) la cifra es el total, «≈ ₡285 000 / 3 noches»: 20 px en un renglón, dentro de la
+  línea de 24 px (un span interno baja la letra), que no cambia: la barra mide lo mismo que sin fechas. */
+  .cta-bar .price.is-stay,.price-usd.is-stay{white-space:nowrap}
+  .cta-bar .price.is-stay .price-fig{font-size:var(--fs-title)}
+  @media (max-width:439px) {
+    /* En un teléfono de menos de 440 px los dólares del total van sin «/ N noches» (ya lo dicen los colones): si no, se pisan. */
+    .price-usd.is-stay small{display:none}
+  }
+  .cta-usd{text-align:right;align-items:flex-end}
+  .price-usd{font-weight:var(--w-strong);font-size:var(--fs-base);font-variant-numeric:tabular-nums}
+  .price-usd small{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
+  .price-disclaimer{text-align:center;line-height:1.3;margin-top:-4px;font-size:var(--fs-eyebrow)}
+  @media (max-width:399px) {
+    /* En pantallas de menos de 400 px (iPhone SE), la nota en una sola línea para que la barra no pase de 150 px (revisión UX C3). */
+    .price-disclaimer{font-size:12px}
+  }
+  /* Puntitos de las fotos (2026-11-03, en lugar del «1 / N»; tarjeta y ficha): abajo en el centro; la foto actual, blanca llena. */
+  .photo-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;align-items:center;gap:6px;pointer-events:none}
+  .photo-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 0 2px rgba(0,0,0,.35);transition:background-color 160ms ease,transform 160ms var(--ease-out)}
+  .photo-dots i.on{background:#FFFFFF}
+  .photo-dots i.small{transform:scale(.7)}
+  .pills-tl{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+  .heart-hero{border-radius:var(--r-control);background:var(--overlay-btn)}
+  /* Nota informativa en blanco con borde, como las tarjetas de características: sin verde (Favoritos; Daniel, 2026-10-29).
+  Las tarjetas y recuadros blancos fijos de la página van en `--surface-soft` (blanco al 70 %); los campos, las hojas
+  y lo que flota sobre mapas o fotos siguen en blanco opaco. */
+  .toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:var(--chrome-bottom);z-index:var(--z-toast);max-width:420px;padding:12px 16px;border-radius:var(--float-r);background:var(--overlay);color:var(--on-overlay);font-size:var(--fs-note);font-weight:var(--w-medium);box-shadow:var(--shadow);animation:fade-in 160ms var(--ease-out)}
+  /* La foto de la ficha es 5:4 (ronda de Ana 2026-11-02; antes cuadrada) y de borde a borde, pegada arriba (detrás del notch);
+  solo los botones se apartan del área segura (densidad y tarjetas, 2026-10-29). El tamaño sale del CSS antes de que llegue la imagen: sin CLS. */
+  .hero{position:relative;aspect-ratio:5/4;height:auto;border-radius:0;overflow:hidden;background:var(--selection);margin:0 calc(-1 * var(--gutter))}
+  .hero .top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;justify-content:space-between}
+  .hero .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+  .hero .strip::-webkit-scrollbar{display:none}
+  .hero .strip img,.hero .strip .slot{flex:0 0 100%;height:100%;object-fit:cover;scroll-snap-align:start}
+  .feature-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .feature-tiles div{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:var(--r-tile);background:var(--surface-soft);box-shadow:var(--shadow);font-size:var(--fs-xs);font-weight:var(--w-medium);text-align:center}
+  .feature-tiles svg{color:var(--primary)}
+  /* «Alquiler mensual»: dos columnas, la primera de la rejilla, con el precio debajo, en un renglón aparte y más pequeño. */
+  .feature-tiles .tile-wide{grid-column:span 2}
+  .feature-tiles .tile-wide small{margin-top:-4px;font-size:var(--fs-eyebrow);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .avatar-sm{width:40px;height:40px;font-size:var(--fs-note)}
+  .gap-6{gap:6px}
+  .gap-8{gap:8px}
+  .wrap{flex-wrap:wrap}
+  .listing-view{padding-top:0}
+  .listing-body{gap:16px;padding-top:4px}
+  /* 28 px como la maqueta v2 (06-ficha): con el tamaño anterior, 30 px, un nombre de ~19 letras pasaba a dos líneas a 320 px
+  con el render de fuentes de Linux (avances ~4 % más anchos) y la zona quedaba bajo la barra fija. */
+  .listing-title{font-size:28px}
+  .listing-title.is-long{font-size:var(--fs-h2)}
+  .listing-description{font-size:var(--fs-md);white-space:pre-wrap;overflow-wrap:anywhere}
+  /* Párrafos separados por una línea; larga, 8 líneas con la última difuminada y «Ver más» (como en Airbnb). */
+  .listing-description p+p{margin-top:1.45em}
+  .listing-description.is-clamped{max-height:calc(8 * 1.45em);overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 1.45em),transparent)}
+  .description-block{gap:14px}
+  .description-screen-head{margin-left:-10px}
+  .listing-capacity-icons{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px}
+  .listing-capacity-icons > span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .listing-capacity-icons svg{flex-shrink:0}
+  .accommodation-type{font-size:var(--fs-xs);line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+  /* ---------- Explorar y Filtros (pantallas 01 y 02, en el navegador) ---------- */
+  .gap-0{gap:0}
+  .range-scroll{max-height:min(52dvh,420px);overflow-y:auto;overscroll-behavior:contain}
+  .range-weekdays,.range-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+  .range-weekdays{position:sticky;top:0;z-index:1;padding:4px 0;background:var(--surface);font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted);text-align:center}
+  .range-month{content-visibility:auto;contain-intrinsic-size:auto 340px;padding-top:8px}
+  .range-title{padding:2px 6px 6px;font-size:19px;font-weight:var(--w-medium)}
+  .range-grid{row-gap:2px;font-variant-numeric:tabular-nums}
+  .range-day{display:flex;align-items:center;justify-content:center;height:44px;font-size:var(--fs-base);font-weight:var(--w-medium);-webkit-tap-highlight-color:transparent}
+  .range-day b{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:var(--r-control);font-weight:inherit;transition:transform 120ms var(--ease-out)}
+  .range-day:disabled{color:var(--muted);opacity:.45;cursor:default}
+  .range-day:active:not(:disabled) b{transform:scale(0.94)}
+  .range-day.in-range{background:var(--when-band);color:var(--when-pick-ink)}
+  .range-day.is-start{background:linear-gradient(90deg,transparent 50%,var(--when-band) 50%)}
+  .range-day.is-last{background:linear-gradient(90deg,var(--when-band) 50%,transparent 50%)}
+  .range-day.range-end b{background:var(--when-pick);color:var(--when-pick-ink);font-weight:var(--w-medium)}
+  /* ---------- Cuenta (pantallas 06, 07, 08 y 20, en el navegador) ---------- */
+  .gap-12{gap:12px}
+  @media (max-width:899px) {
+    .view:is(.sign-in-tab,.code-flow){padding-inline:var(--gutter-tight)}
+    .view:is(.view-narrow-gutter,.owner-house-detail){padding-inline:3px}
+    .view.owner-inquiries{padding-inline:var(--gutter-tight)}
+  }
+  .sent{gap:18px;align-items:center;padding-top:48px}
+  /* ---------- Hoja de contacto (pantalla 04): sobre la ficha atenuada, 28 px arriba ---------- */
+  .cta-note{text-align:center;margin-top:-4px}
+  @media (max-width:899px) {
+    .sheet-contact{padding-inline:var(--gutter-tight)}
+  }
+  .sheet .contact-calendar{display:flex;flex-direction:column;gap:6px;margin-top:-6px}
+  .sheet .contact-calendar .range-scroll{max-height:min(44dvh,340px)}
+  /* Todos los meses pintados: con su alto estimado (content-visibility), llevar el mes elegido arriba se quedaba corto. */
+  .sheet .contact-calendar .range-month{content-visibility:visible}
+  /* El mensaje, como vista previa: gris claro y sin caja de texto. */
+  .sheet .field-label{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
+  /* El total orientativo de las fechas, sobre la vista previa del mensaje (o el aviso de noches ocupadas). */
+  .sheet .stay-line{margin:0;font-size:var(--fs-note);font-weight:var(--w-medium);font-variant-numeric:tabular-nums}
+  .sheet .stay-line.is-busy{color:var(--busy-ink)}
+  .sheet .stay-line.is-pending{color:var(--muted)}
+  .sheet .message-preview + .hint{margin-top:0}
+  .sheet .message-preview{margin:0;padding:10px 12px;border-radius:var(--r-input);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--muted);font-size:var(--fs-note);white-space:pre-line}
+  .sheet .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .sheet .consent{text-align:center;font-size:var(--fs-xs);color:var(--muted);margin-top:-6px}
+  .sheet .safety{text-align:center;font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--ochre)}
+  .dialog-wide{width:var(--dialog-w-wide);max-height:calc(100dvh - 48px)}
+  .dialog-filters{padding:0}
+  /* ---------- Calendario (pantalla 17) y rejilla del mes, la misma en la ficha (revisión UX 2026-10-29, C4 y N4) ---------- */
+  /* Casillas de 47 × 92 px (a 390 px de ancho), 6 px entre ellas y 14 px de margen lateral; número arriba y precio completo
+  debajo, los dos centrados y con transparencia; fondo verde al 6 %. */
+  .month-grid{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+  .month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .month-grid,.month-head{margin-inline:calc(14px - var(--gutter))}
+  @media (max-width:899px) {
+    .owner-calendar :is(.month-grid,.month-head){margin-inline:0}
+  }
+  .month-head{font-size:var(--fs-eyebrow);font-weight:var(--w-medium);color:var(--muted);text-align:center}
+  .month-grid .day{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;height:92px;padding:14px 0 0;border:2px solid transparent;border-radius:var(--r);background:color-mix(in srgb,var(--primary) 6%,transparent);color:var(--fg);-webkit-tap-highlight-color:transparent;transition:transform 120ms var(--ease-out)}
+  .month-grid .day b{font-size:var(--fs-xs);font-weight:500;line-height:1.2;color:color-mix(in srgb,currentColor 70%,transparent)}
+  .month-grid .day-sub{font-size:12px;font-weight:400;line-height:1.2;white-space:nowrap;color:color-mix(in srgb,var(--fg) 75%,transparent)}
+  /* Seis cifras («120 000») en 11 px para que quepan en la casilla. */
+  .month-grid .day-sub.is-long{font-size:11px;letter-spacing:-0.02em}
+  .month-grid .day:has(.day-imported){position:relative}
+  .month-grid .day-imported{position:absolute;bottom:6px;display:flex;color:var(--cal-busy-ink);pointer-events:none}
+  /* Ocupado: terracota claro con rayas finas y solo el número, en terracota. */
+  .month-grid .day.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px);color:var(--cal-busy-ink)}
+  /* Seleccionado para editar: solo un marco terracota (2 px, al 60 %), sin relleno. */
+  .month-grid .day[aria-pressed="true"]{border-color:color-mix(in srgb,var(--brand-ink) 60%,transparent)}
+  /* Días pasados del mes: del mismo tamaño, con el número tachado y todo más claro. */
+  .month-grid .day.is-past{opacity:.5}
+  .month-grid .day.is-past b{text-decoration:line-through}
+  .month-grid button.day:disabled{cursor:default}
+  .month-grid button.day:active:not(:disabled){transform:scale(0.94)}
+  .month-grid.is-dimmed{opacity:.6}
+  /* La estancia elegida en la ficha (ronda de Ana 2 nov, ticket 08), como en «¿Cuándo?»: extremos en --when-pick y la banda
+  entre ellos, translúcida, encima del verde de los libres. La banda cruza los 6 px entre casillas (3 px de cada lado, con
+  sombras del color que da la banda sobre el verde, para que no se vea la junta) y los extremos la recogen por su lado de
+  dentro: media banda. Al principio y al final de cada semana, la casilla se redondea y no sale. */
+  .month-grid .day.in-range{border-radius:0;background-image:linear-gradient(var(--stay-band),var(--stay-band));box-shadow:-3px 0 0 var(--stay-band-solid),3px 0 0 var(--stay-band-solid)}
+  .month-grid .day.range-end,.month-grid .day.range-end[aria-pressed="true"]{border-color:transparent;background:var(--when-pick);color:var(--when-pick-ink)}
+  .month-grid .day.range-end b,.month-grid .day.range-end .day-sub{color:var(--when-pick-ink)}
+  .month-grid .day.range-end.is-start{border-radius:12px 0 0 12px;box-shadow:3px 0 0 var(--stay-band-solid)}
+  .month-grid .day.range-end.is-last{border-radius:0 12px 12px 0;box-shadow:-3px 0 0 var(--stay-band-solid)}
+  .month-week > .day.in-range:first-child{box-shadow:3px 0 0 var(--stay-band-solid)}
+  .month-week > .day.in-range:last-child{box-shadow:-3px 0 0 var(--stay-band-solid)}
+  .month-week > .day.range-end.is-start:last-child,.month-week > .day.range-end.is-last:first-child{border-radius:var(--r);box-shadow:none}
+  .month-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:var(--fs-xs);color:var(--muted);padding-top:4px}
+  .month-legend span{display:inline-flex;align-items:center;gap:6px}
+  .month-legend .swatch{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--primary) 6%,transparent)}
+  .month-legend .swatch:not(.is-busy){background:color-mix(in srgb,var(--primary) 12%,transparent)}
+  .month-legend .swatch.is-busy{background:repeating-linear-gradient(135deg,var(--cal-busy) 0 7px,color-mix(in srgb,var(--cal-busy-ink) 12%,var(--cal-busy)) 7px 9px)}
+  .month-legend .legend-price{color:var(--fg);font-weight:var(--w-medium)}
+  /* Ficha: «Disponibilidad», un mes a la vez con ‹ ›. Caja de alto fijo (título, fila de los días, 6 semanas y leyenda): mide
+  lo mismo vacía en el HTML del servidor que con la rejilla montada tras hidratar. */
+  .listing-calendar{display:flex;flex-direction:column;gap:8px;height:740px;overflow:hidden}
+  /* Bajo la rejilla: la leyenda con «Quitar fechas» a la derecha y la línea del total (o del aviso). Guardan su sitio con o sin
+  fechas: la caja no cambia de alto (ronda de Ana 2 nov, ticket 08). */
+  .listing-calendar .cal-legend-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+  .listing-calendar .month-legend{padding-top:0}
+  .listing-calendar .cal-legend-row .btn-text{padding-right:0;font-size:var(--fs-sm)}
+  .cal-stay{margin:0;min-height:22px;font-size:var(--fs-sm);font-weight:var(--w-medium);line-height:22px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cal-stay.is-busy{color:var(--busy-ink)}
+  .listing-calendar .cal-month{margin:-6px 0 0 -10px}
+  /* La caja corta lo que sale: en la ficha, la rejilla va dentro del margen de la página. */
+  .listing-calendar .month-grid,.listing-calendar .month-head{margin-inline:0}
+  .sheet-picker{overflow:hidden;gap:12px}
+  .cal-month{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 0 -10px}
+  .cal-title{font-weight:400;font-size:19px;white-space:nowrap}
+  .cal-skeleton{height:320px}
+  /* Mis casas: solo las casillas con algo (revisión UX N1); se reparten el ancho. */
+  .grid-3:has(> .tile){grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+  /* Cabecera de la ficha: nombre, zona y personas, y la persona que alquila en su fila entre dos líneas (revisión UX A10; tamaños como en Airbnb). */
+  .listing-head{gap:4px;align-items:center;text-align:center;line-height:1.25}
+  /* El pin, en línea justo antes de la primera palabra (centrado con las mayúsculas del primer renglón: -0,2em lo baja
+  desde la línea base lo justo); la línea va centrada como la cabecera. Medido a 375 y 412 px (ronda de Ana 2026-11-02). */
+  .listing-zone > svg{display:inline-block;vertical-align:-.2em;margin-right:4px}
+  .host-line{align-items:center;line-height:1.3}
+  .host-text{gap:2px}
+  .host-name{font-size:var(--fs-md)}
+  @media (min-width:900px) {
+    /* ---------- Escritorio: Explorar y la ficha (revisión UX N5) ----------
+    Solo CSS: lo que carga el móvil no cambia (presupuestos y Lighthouse). El resto de la app sigue en la columna de teléfono
+    hasta la pasada de escritorio (docs/plan-implementacion.md). */
+    .app:has(.listing-grid){max-width:1120px}
+    .app:has(.listing-grid) .tabbar:not(.desktop-nav){max-width:1120px}
+  }
+}
+
+@layer escritorio {
+  @media (min-width:1024px) {
+    .app:has(.listing-view){max-width:1120px}
+    .listing-view{display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:40px;align-items:start;padding-top:calc(8px + env(safe-area-inset-top))}
+    .listing-view > .hero{grid-column:1;grid-row:1;height:480px;aspect-ratio:auto;border-radius:var(--r-sheet);margin:0}
+    .listing-view > .listing-body{grid-column:1;grid-row:2}
+    .listing-view > .cta-spacer{display:none}
+    .listing-view > .cta-bar{grid-column:2;grid-row:1 / span 2;position:sticky;top:calc(16px + env(safe-area-inset-top));bottom:auto;left:auto;transform:none;width:auto;max-width:none;border:0;border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-float);padding:20px}
+  }
+  @media (min-width: 1024px) {
+    /* El mismo corte que desktop.ts. */
+    .listing-view > .cta-bar {
+      max-height: calc(100dvh - 32px);
+      overflow: auto;
+    }
+    .listing-contact-inline.sheet {
+      position: static;
+      transform: none;
+      max-height: none;
+      overflow: visible;
+      padding: 12px 0 4px;
+      border-top: 1px solid var(--line-soft);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      animation: none;
+    }
+    .app:has(> .view) {
+      --desktop-edge: clamp(16px, 2vw, 32px);
+      width: calc(100% - 2 * var(--desktop-edge));
+      max-width: none;
+    }
+    .app > .view {
+      padding-inline: var(--gutter);
+    }
+    .app > .code-flow > * {
+      width: min(100%, 840px);
+      margin-inline: auto;
+    }
+    .app.desktop-app {
+      --desktop-nav-height: 72px;
+    }
+    .desktop-app > .view {
+      min-width: 0;
+      padding-bottom: 24px;
+    }
+    .desktop-app.publish-flow > .view { padding-top: 4px; }
+    .desktop-nav .desktop-brand {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      min-height: 44px;
+      margin-right: 16px;
+    }
+    .desktop-nav .desktop-brand img { object-fit: contain; }
+    .desktop-nav .desktop-inquiries {
+      min-width: 44px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    .desktop-inquiries .count-badge { right: 0; }
+    .desktop-nav .desktop-help span { white-space: nowrap; }
+    @media (max-width: 1279px) {
+      .desktop-nav .desktop-help span,
+      .desktop-nav .desktop-inquiries > span { display: none; }
+    }
+    @media (max-width: 1365px) {
+      /* A 1280 px, con «Mis casas» y el texto de Ayuda, la barra iba llena: sobraban 2 px en el Mac y en el Linux de CI, con la
+      letra algo más ancha, se salía unos 20 px (2026-11-19). Hasta 1365 px, Ayuda queda en su icono, con nombre y title. */
+      .desktop-nav .desktop-help span { display: none; }
+    }
+    .cta-prices[data-currency]:has(.cta-usd) { grid-template-columns: 1fr; }
+    .cta-prices[data-currency="CRC"] .cta-usd,
+    .cta-prices[data-currency="USD"]:has(.cta-usd) > :first-child { display: none; }
+    .listing-monthly[data-currency="USD"] .listing-monthly-crc { display: none; }
+    .listing-monthly[data-currency="USD"] .listing-monthly-usd { display: inline; }
+    .app:has(> .site-top-bar) { --desktop-nav-height: 72px; }
+    :is(.desktop-app, .site-top-bar) > .desktop-nav {
+      padding-inline: max(var(--gutter), calc((100% - var(--page-max)) / 2));
+    }
+    /* Fondo propio y por encima de la ficha: sin él, al bajar se veía la foto a través de la barra (Ana, 2026-11-13). */
+    .site-top-bar {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-topbar);
+      background: var(--bg);
+      flex: none;
+      height: var(--desktop-nav-height);
+      border-bottom: 1px solid var(--line-nav);
+    }
+    .site-top-bar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      box-shadow: 0 0 0 100vmax var(--bg);
+      clip-path: inset(0 -100vmax);
+      pointer-events: none;
+    }
+    /* Más específico que «.app:has(.cta-bar) .tabbar», que oculta la barra inferior del teléfono en la ficha. */
+    .app > .site-top-bar > .tabbar.desktop-nav {
+      display: flex;
+      position: relative;
+      inset: auto;
+      justify-content: flex-start;
+      gap: 8px;
+      height: 100%;
+      max-width: none;
+      padding-block: 0;
+      border: 0;
+      background: transparent;
+      transform: none;
+    }
+    .status-header .top { display: none; }
+    /* Páginas de estado de la ficha: la flecha y el título en la misma fila, como las demás pantallas con flecha. */
+    .app > main.view:has(> .status-header) { display: grid; grid-template-columns: 44px minmax(0, var(--measure)); column-gap: 8px; align-content: start; padding-top: 24px; }
+    .status-header { display: contents; }
+    .status-header .status-back { display: inline-flex; margin-inline-start: -8px; }
+    .status-header ~ .card,
+    .desktop-app .placeholder-card { padding: 4px 0 0; border: 0; background: transparent; box-shadow: none; }
+    .app:has(> .site-top-bar) > main.view:not(.listing-view) > .card,
+    .desktop-app .placeholder-card { max-width: var(--measure); }
+    .header-root.page-header {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 12px;
+    }
+    /* Un solo tamaño de título en escritorio: el de las pestañas y el de las pantallas con flecha (Ana, 2026-11-13). */
+    .desktop-app .header-root.page-header h1,
+    .desktop-app > main.view > .header-flow h1,
+    .app:has(> .site-top-bar) .status-header ~ .card .status-title { font-size: var(--fs-h1-desktop); line-height: 1.15; }
+    .desktop-app > main.view > .header-flow { padding-top: 12px; }
+    /* Barra: un solo estado activo (arena y terracota), la moneda neutra y «Ingresar» como botón, no como pestaña elegida. */
+    .desktop-nav .desktop-brand img { width: auto; height: 34px; }
+    .desktop-nav .desktop-brand { margin-right: 24px; }
+    .desktop-nav .desktop-inquiries { gap: 8px; padding: 0 12px; }
+    .desktop-nav .desktop-inquiries > span { font: var(--w-medium) 16px/1.25 var(--body); white-space: nowrap; }
+    /* Revisión de escritorio 2026-11-13, tanda 3 (A3, M1): la ficha alineada a la izquierda, las características como lista
+    sin cajas, el mensual junto al precio, la descripción a medida de lectura y los avisos del contacto en tinta. La flecha
+    de volver de la foto se queda, como en el resto de pantallas que no son pestañas (Ana, 2026-11-13). */
+    .app:has(> .site-top-bar) .listing-view > .cta-bar { top: calc(var(--desktop-nav-height) + 16px); }
+    .listing-view .listing-head { align-items: flex-start; text-align: left; }
+    .listing-view .listing-capacity-icons { justify-content: flex-start; }
+    .listing-view .listing-description { max-width: var(--measure); }
+    .listing-view .feature-tiles { gap: 2px 24px; }
+    .listing-view .feature-tiles div {
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      background: transparent;
+      box-shadow: none;
+      font-size: var(--fs-note);
+      text-align: left;
+    }
+    .listing-view .feature-tiles .tile-wide { display: none; }
+    .listing-view .listing-calendar { max-width: 640px; }
+    .cta-monthly { display: block; margin-top: 4px; font-size: var(--fs-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+    .listing-contact-inline .stepper-input { width: 136px; }
+    .listing-contact-inline .safety { color: var(--fg); font-weight: var(--w-regular); }
+    /* Calendario: casillas más bajas para ver el mes entero, con el precio y su símbolo en cada día; los pasados sin fondo
+    y los de precio especial en terracota (Ana, 2026-11-13: el precio en todos los días). */
+    .desktop-app .owner-calendar .month-grid .day { height: 64px; gap: 4px; padding-top: 0; justify-content: center; }
+    .desktop-app .owner-calendar .month-grid .day.is-special .day-sub { color: var(--brand-ink); font-weight: var(--w-medium); }
+    .desktop-app .owner-calendar .month-grid .day.is-past { opacity: 1; background: transparent; color: var(--muted); }
+    .desktop-app .owner-calendar .month-legend .swatch { width: 16px; height: 16px; }
+    /* Revisión de escritorio 2026-11-13, tanda 5 (A5): Revisar anuncio y Revisar edición en dos columnas, con la decisión
+    fija a la derecha bajo la barra; ya no tapa el mensaje para el anfitrión. «Rechazar» como texto terracota. */
+    .desktop-app > main.view:has(> form .review-actions) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 400px;
+      column-gap: 32px;
+      align-content: start;
+      align-items: start;
+    }
+    .desktop-app > main.view:has(> form .review-actions) > * { grid-column: 1; }
+    .desktop-app > main.view:has(> form .review-actions) > .header-flow { grid-column: 1 / -1; }
+    .desktop-app > main.view:has(> form .review-actions) > form {
+      grid-column: 2;
+      grid-row: 2 / span 40;
+      position: sticky;
+      top: calc(var(--desktop-nav-height) + 16px);
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-sheet);
+      background: var(--surface);
+    }
+    .desktop-app main.view > .grid-3:has(> .tile-review) > .tile { flex-direction: row; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; }
+    .desktop-app main.view > .grid-3:has(> .tile-review) { display: flex; flex-wrap: wrap; gap: 8px; }
+    .desktop-app main.view > .grid-3:has(> .tile-review) > .tile b { font: var(--w-strong) 16px/1.2 var(--body); }
+    .desktop-app main.view > .grid-3:has(> .tile-review) > .tile span { font-size: var(--fs-sm); }
+  }
+}
+
+/* Fuera de capa, a propósito: ajustes de Leaflet. Su CSS llega con el trozo del mapa y fuera de capa; una regla en capa
+   le perdería siempre. Fuera de capa los dos, decide la especificidad, como antes del reparto. */
+.map-box{height:220px;border-radius:var(--r-tile);overflow:hidden;background:#E9EFE4;position:relative}
+.map-box-listing{height:180px}
+.map-box{isolation:isolate}

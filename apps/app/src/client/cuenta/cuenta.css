@@ -1,0 +1,36 @@
+/* Cuenta, Ingresar y Ayuda (client/cuenta). Capas areas y escritorio. */
+
+@layer areas {
+  .account-foot{align-items:center;gap:0;padding-top:8px}
+  /* Perfil: un único acceso junto a los datos, con objetivo táctil suficiente. */
+  .account-card>.account-edit{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;flex-shrink:0}
+}
+
+@layer escritorio {
+  @media (min-width: 1024px) {
+    .desktop-app .owner-account-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: 20px;
+    }
+    .desktop-app .owner-account-layout > div {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .desktop-app .owner-account-layout > div:first-child {
+      position: sticky;
+      top: calc(var(--desktop-nav-height) + 12px);
+      max-height: calc(100dvh - var(--desktop-nav-height) - 24px);
+      overflow: auto;
+    }
+    .desktop-app .owner-account-layout > div:first-child > * { flex-shrink: 0; }
+    .account-profile-values { margin: 0; overflow-wrap: anywhere; }
+    .account-profile-values dd { margin: 0; white-space: pre-wrap; }
+    /* Cuenta: títulos al mismo nivel, la cuota al tamaño del texto y «Parar suscripción» en terracota a la izquierda. */
+    .desktop-app .owner-account-layout :is(h2, .card-title) { font-size: var(--fs-title); }
+    .desktop-app .owner-account-layout .account-profile h3,
+    .desktop-app .owner-account-layout h3:not(.account-name, .sub-house-title) { font-size: var(--fs-title); }
+  }
+}

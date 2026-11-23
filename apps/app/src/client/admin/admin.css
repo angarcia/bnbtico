@@ -1,0 +1,30 @@
+/* Zona de administración (client/admin). Capas areas y escritorio. */
+
+@layer areas {
+  .photo-strip{display:flex;gap:8px;overflow-x:auto;margin:0 calc(-1 * var(--gutter));padding:0 var(--gutter);scrollbar-width:none}
+  .photo-strip::-webkit-scrollbar{display:none}
+  .photo-strip .photo{flex:0 0 auto;height:140px;border-radius:var(--r-tile)}
+  /* Alta de la app de autenticación del admin: el QR siempre sobre blanco (también en modo oscuro) y la clave copiable. */
+  .totp-enrol{align-items:center;background:var(--surface-2);border-radius:var(--r);padding:16px;text-align:center}
+  .totp-qr{display:block;width:184px;height:184px;background:#fff;border-radius:var(--r-control);padding:8px}
+  .totp-secret{font-size:var(--fs-base);letter-spacing:.06em;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
+  .diff-photo img{width:110px;height:110px;flex:none;object-fit:cover;border-radius:var(--r-input)}
+  .diff-photo .decide{flex:1;min-width:0}
+  .decide textarea{min-height:0;padding:8px 10px;font-size:var(--fs-note)}
+  .pill-br{right:12px;bottom:12px}
+  .queue-title{font-size:19px;line-height:1.1}
+  .queue-foot{padding:0 4px}
+  .review-photo{width:200px}
+  .review-photo-sm{width:110px}
+  .diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .diff-col{display:flex;flex-direction:column;gap:2px;margin:0;overflow-wrap:anywhere}
+  .diff-before span{color:var(--muted)}
+  .diff-old summary,.diff-fold summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+}
+
+@layer escritorio {
+  @media (min-width: 1024px) {
+    .desktop-app .photo-strip { margin-inline: 0; padding-inline: 0; }
+    .desktop-app .photo-strip .photo { height: 180px; }
+  }
+}
