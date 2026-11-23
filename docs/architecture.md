@@ -112,6 +112,13 @@ posterior gana a una anterior sea cual sea el selector, así que el escritorio y
 al teléfono. Los ajustes de Leaflet quedan fuera de capa, como el CSS de Leaflet, que llega con su trozo; una regla en capa le
 perdería siempre. Las pocas reglas que viven en otra capa que la de su archivo llevan el motivo en un comentario.
 
+**Textos en el catálogo de su área** (paso 3, 2026-11-23). Los textos de una pantalla viven en el `copy.ts` de su área
+(`client/<área>/copy.ts`; la ficha, en `shared/copy.ts`): un objeto `as const` por pantalla, sin dependencias, que importan
+igual la SPA y el worker. Mensajes completos con los datos como parámetros con nombre y plurales con `domain/plural.ts`
+(`Intl.PluralRules`). Se pasan área por área; `consistencia.test.ts` vigila que los archivos ya pasados no vuelvan a escribir
+texto suelto en el JSX. Sin librería de traducción: Paraglide se probó y su runtime no cabía en el límite del JS inicial
+(`docs/decisiones.md`).
+
 ## Módulo de dominio
 
 Un módulo TypeScript sin imports de framework: tipos generados de la base (`supabase gen types`, versionados y comprobados en CI), esquemas zod y validación por paso (los filtros de la URL se leen a mano para que zod no entre en el JS inicial, 2026-11-03), mapeo tipado de filas, `describe(listing)` (precio principal, unidad, situación, enlace para compartir) y `can(listing, acción)` que refleja las reglas SQL. Dos interfaces, `ListingsApi` y `AuthApi`, con dos adaptadores cada una: PostgREST (el único archivo que importa supabase-js y conoce las columnas) y un fake en memoria que aplica propiedad y estados. **Una sola suite de contrato** corre contra los dos, así el fake no puede desviarse de la RLS. Invariantes en SQL; flujos en TypeScript; sin nuevo plpgsql de flujo.

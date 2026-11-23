@@ -205,7 +205,11 @@ Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y des
 2. un TSX de `src/client` o `src/shared` escribe la clase de un componente común fuera de su archivo (botón, hoja, ventana,
    campo, chip, segmento, contador, tarjeta, fila, aviso, etiqueta, esqueleto, campo cerrado o cabecera);
 3. un `style={{…}}` lleva colores, fondos, bordes, radios o sombras;
-4. vuelven los textos de escritorio en `content:` o las variables y clases retiradas.
+4. vuelven los textos de escritorio en `content:` o las variables y clases retiradas;
+5. un archivo de `TEXT_FILES` (los que ya tienen sus textos en el catálogo del área) escribe texto suelto en el JSX: texto
+   entre etiquetas, `label`, `title`, `aria-label`, `placeholder`, `alt` o `text:` con palabras. El texto va en el `copy.ts`
+   del área (`client/<área>/copy.ts`, la ficha en `shared/copy.ts`): mensajes completos, los datos como parámetros con
+   nombre y los plurales con `plural()` de `domain/plural.ts`. Al pasar un área, sus archivos se añaden a `TEXT_FILES`.
 
 **Añadir una excepción** (solo si de verdad no cabe en un token o un componente):
 

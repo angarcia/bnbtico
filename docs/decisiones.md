@@ -1,3 +1,15 @@
+## 2026-11-23 · Textos en catálogos a mano, sin Paraglide (paso 3 de la estructura del frontend)
+
+Ana eligió **catálogos TypeScript a mano** tras la prueba de Paraglide JS 3.2.2 (rama local `prueba-paraglide`, resultado en `.scratch/estructura-frontend/propuesta.md`). Paraglide funcionó con Favoritos y con la ficha del worker en dos idiomas, pero su runtime suma unos 1,28 KB al JS inicial aunque solo haya español, y lo deja en 161,36 KB, por encima del límite de 161 KB; no se deja recortar.
+
+- **Forma:** un `copy.ts` por área (`client/<área>/copy.ts`; la ficha, en `shared/copy.ts`) con un objeto `as const` por pantalla, como los `*_MESSAGES` y `*_COPY` que ya había en `domain/`. Mensajes completos; lo que lleva datos es una función con parámetros con nombre (`count({ count, signedIn })`). Donde la frase lleva marcado en medio, la función recibe esa pieza y devuelve la frase entera en trozos, sin partirla en el componente.
+- **Plurales** con `domain/plural.ts` (`Intl.PluralRules("es")`; la forma «many» de los millones, si el mensaje la da).
+- **Regla:** `consistencia.test.ts` falla si un archivo ya pasado escribe texto suelto en el JSX (texto, atributos que se leen como `label`, `title`, `aria-label` o `placeholder`, y `text:` de las etiquetas). Cada área que se pasa se añade a su lista.
+- **Sin segundo idioma todavía:** cuando haya uno, cada catálogo tendrá su versión con el mismo tipo y se elegirá el idioma en la ficha del worker y en la SPA; la clave de caché de la ficha tendrá que llevarlo, y para buscadores, la URL.
+- Empiezan Favoritos y la ficha; las demás áreas, una por commit.
+
+Motivo: con catálogos a mano el JS inicial solo paga los textos, sin dependencia nueva ni paso de compilación. Con la misma forma de catálogo se puede pasar a Paraglide más adelante sin rehacer las pantallas.
+
 ## 2026-11-23 · CSS por área: siete capas y todo cargado al arrancar (paso 2 de la estructura del frontend)
 
 Al construir el paso 2 se ajusta lo aprobado el 2026-11-22:

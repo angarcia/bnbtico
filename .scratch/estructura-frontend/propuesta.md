@@ -123,3 +123,7 @@ Hecho §3.4 con los ajustes anotados en `docs/decisiones.md` (2026-11-23): siete
 - Hojas: `styles/tokens.css`, `styles/base.css`, `shared/ui/componentes.css`, `shared/ficha.css`, `client/app/marco.css`, `client/comun/comun.css` y una por área (`explorar`, `propietario`, `cuenta`, `admin`). «¿Qué es 3bstays?» sigue llegando con su trozo, ya en capas.
 - Reparto: cada regla va a la hoja del área que pone su contexto (la clase más específica de su selector, según qué archivos la usan); lo de `01-base.css` queda en base o componentes. Con un generador (fuera del repositorio) y comprobado con el estilo calculado de 630 estados de la e2e, viejo contra nuevo: cero diferencias tras siete vueltas.
 - Pruebas: `read-css.ts` sigue los `@import` con `../` y quita el espacio de alrededor de las llaves; `consistencia.test.ts` mira todo `src/` y solo exime `styles/tokens.css` (los valores propios que antes eximía `01-base.css` entero son excepciones con motivo); `botones.test.tsx` lee `shared/ui/componentes.css`.
+
+## Paso 3 (2026-11-23, rama `textos-catalogos`): catálogos a mano
+
+Ana eligió catálogos a mano tras la prueba de Paraglide, que funcionaba pero dejaba el JS inicial en 161,36 KB, por encima del límite (decisión en `docs/decisiones.md`; la prueba queda en la rama local `prueba-paraglide`). Hechos Favoritos (`client/explorar/copy.ts`) y la ficha (`shared/copy.ts`), con `plural()` en `domain/plural.ts` y la regla de `consistencia.test.ts` sobre `TEXT_FILES`. Quedan las demás áreas, una por commit.

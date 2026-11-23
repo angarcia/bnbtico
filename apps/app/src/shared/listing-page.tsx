@@ -28,6 +28,7 @@ import { ShareButton } from "./share-button";
 import { SiteTopBar } from "./site-top-bar";
 import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
+import { LISTING_COPY } from "./copy";
 import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 import { useDesktop } from "./desktop";
@@ -91,7 +92,7 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
     return (
       <>
         <Button variant="whatsapp" size="xl" block icon={<I.wa size={22} />} disabled>
-          No disponible por ahora
+          {LISTING_COPY.unavailable}
         </Button>
         {reopen ? <span className="xs muted cta-note">{reopen}</span> : null}
       </>
@@ -100,13 +101,13 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
   if (!hydrated) {
     return (
       <ButtonPlaceholder variant="whatsapp" size="xl" block icon={<I.wa size={22} />} aria-hidden="true">
-        Contactar por WhatsApp
+        {LISTING_COPY.contact}
       </ButtonPlaceholder>
     );
   }
   if (desktop) {
     return (
-      <Suspense fallback={<p className="small muted" role="status">Cargando contacto…</p>}>
+      <Suspense fallback={<p className="small muted" role="status">{LISTING_COPY.loadingContact}</p>}>
         <ContactSheet listing={listing} days={days} navigate={navigate} autoSend={autoSend} nightsChoice={FLAGS.exploreNights} inline
           onClose={() => { setAutoSend(false); setOpen(false); }} />
       </Suspense>
@@ -127,7 +128,7 @@ function ContactButton({ listing, days, hydrated, navigate, openOnMount }: { lis
           setOpen(true);
         }}
       >
-        Contactar por WhatsApp
+        {LISTING_COPY.contact}
       </Button>
       {open ? (
         // Mientras llega el trozo de la hoja, la página ya se atenúa: el toque responde al instante.
@@ -174,7 +175,7 @@ function Availability({ listing, missing, currency, fx, onStay }: { listing: Pub
   const reopen = listing.available ? null : reopenLabel(listing.reopenAt);
   return (
     <div className="stack gap-8">
-      <span className="eyebrow">Disponibilidad</span>
+      <span className="eyebrow">{LISTING_COPY.availability}</span>
       {listing.available ? (
         <div className="listing-calendar" ref={box} aria-hidden={load ? undefined : "true"}>
           {load ? (
@@ -185,7 +186,7 @@ function Availability({ listing, missing, currency, fx, onStay }: { listing: Pub
         </div>
       ) : (
         <Notice as="div" tone="solid" layout="column">
-          <b>Calendario no disponible</b>
+          <b>{LISTING_COPY.calendarUnavailable}</b>
           {reopen ? <span className="small">{reopen}</span> : null}
         </Notice>
       )}
@@ -200,7 +201,7 @@ function PriceColumns({ main, monthly, fx, stay, currency }: { main: Price | nul
   if (!main && !monthly) return null;
   const showMonthly = !!monthly && (!main || !!stay?.monthly);
   const monthlyAmount = showMonthly && monthly && !isNegotiable(monthly) ? monthly.amount : null;
-  const rate = `Orientativo: ≈ ${fxRateLabel(fx.crcPerUsd)} por US$1, tipo de referencia del ${fxDayLabel(fx.day)}`;
+  const rate = LISTING_COPY.fxHint({ rate: fxRateLabel(fx.crcPerUsd), day: fxDayLabel(fx.day) });
   // Con fechas, el total de la estancia en lugar del precio por noche.
   const price = main && (stay ? { amount: stay.totalCrc, unit: nightsLabel(stay.nights) } : main);
   const is = stay ? " is-stay" : "";
@@ -221,7 +222,7 @@ function PriceColumns({ main, monthly, fx, stay, currency }: { main: Price | nul
             móvil sigue en su casilla. Solo lo muestra el CSS: el servidor y la hidratación pintan lo mismo. */}
         {monthly && !showMonthly ? (
           <span className="cta-monthly" data-testid="cta-monthly">
-            {MONTHLY_LABEL}: {isNegotiable(monthly) ? "a negociar" : `${formatCRC(monthly.amount)} / mes`}
+            {MONTHLY_LABEL}: {isNegotiable(monthly) ? LISTING_COPY.negotiableInline : LISTING_COPY.perMonth({ amount: formatCRC(monthly.amount) })}
           </span>
         ) : null}
       </div>
@@ -235,12 +236,12 @@ function PriceColumns({ main, monthly, fx, stay, currency }: { main: Price | nul
           {/* El mensual del panel de escritorio, también con dólares elegidos. */}
           {monthly && !showMonthly ? (
             <span className="cta-monthly">
-              {MONTHLY_LABEL}: {isNegotiable(monthly) ? "a negociar" : `≈ ${formatUSD(monthly.amount, fx.crcPerUsd)} / mes`}
+              {MONTHLY_LABEL}: {isNegotiable(monthly) ? LISTING_COPY.negotiableInline : LISTING_COPY.perMonth({ amount: `≈ ${formatUSD(monthly.amount, fx.crcPerUsd)}` })}
             </span>
           ) : null}
           {monthlyAmount !== null ? (
             <span className="xs muted num" data-testid="monthly-usd" title={rate}>
-              ≈ <b className="ink num">{formatUSD(monthlyAmount, fx.crcPerUsd)}</b> / mes
+              ≈ <b className="ink num">{formatUSD(monthlyAmount, fx.crcPerUsd)}</b> {LISTING_COPY.perMonthSuffix}
             </span>
           ) : null}
         </div>
@@ -291,7 +292,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           {preview ? <span /> : (
           <IconButtonLink
             href="/explorar"
-            label="Volver a Explorar"
+            label={LISTING_COPY.back}
             tone="overlay"
             onClick={
               onBack
@@ -315,7 +316,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
         <div className="stack listing-body">
           {!l.available ? (
             <div className="row wrap gap-8">
-              {!l.available ? <StatusTag label={{ text: "No disponible por ahora", tone: "off" }} /> : null}
+              {!l.available ? <StatusTag label={{ text: LISTING_COPY.unavailable, tone: "off" }} /> : null}
             </div>
           ) : null}
           <div className="stack listing-head">
@@ -342,8 +343,8 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
             <span className="stack host-text">
               <b className="host-name">{firstName(l.ownerName)}</b>
               {/* Al pasar el cursor, qué se verificó: el número, no la identidad (revisión 2026-11-13, textos). */}
-              <span className="muted" title={l.ownerWhatsappVerified ? "Confirmamos que este número recibe mensajes de WhatsApp" : undefined}>
-                {l.ownerWhatsappVerified ? "Anfitrión · WhatsApp verificado" : "Anfitrión"}
+              <span className="muted" title={l.ownerWhatsappVerified ? LISTING_COPY.hostVerifiedHint : undefined}>
+                {LISTING_COPY.host({ verified: l.ownerWhatsappVerified })}
               </span>
             </span>
           </div>
@@ -358,10 +359,10 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                 <div className="tile-wide">
                   <I.calendar size={26} />
                   <span>{MONTHLY_LABEL}</span>
-                  {isNegotiable(d.monthly) ? <small>A negociar</small> : (
+                  {isNegotiable(d.monthly) ? <small>{LISTING_COPY.negotiable}</small> : (
                     <small className="listing-monthly" data-currency={currency}>
-                      <span className="listing-monthly-crc">{formatCRC(d.monthly.amount)} / mes</span>
-                      <span className="listing-monthly-usd">≈ {formatUSD(d.monthly.amount, fx.crcPerUsd)} / mes</span>
+                      <span className="listing-monthly-crc">{LISTING_COPY.perMonth({ amount: formatCRC(d.monthly.amount) })}</span>
+                      <span className="listing-monthly-usd">{LISTING_COPY.perMonth({ amount: `≈ ${formatUSD(d.monthly.amount, fx.crcPerUsd)}` })}</span>
                     </small>
                   )}
                 </div>
@@ -371,7 +372,7 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
                 return (
                   <div key={f}>
                     <Icon size={26} />
-                    {f === "parking" && l.parkingPaid !== null ? `Parqueo ${l.parkingPaid ? "de pago" : "gratis"}` : FEATURE_SHORT[f]}
+                    {f === "parking" && l.parkingPaid !== null ? LISTING_COPY.parking({ paid: l.parkingPaid }) : FEATURE_SHORT[f]}
                   </div>
                 );
               })}
@@ -382,14 +383,13 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
 
           {l.approx ? (
             <div className="stack gap-8">
-              <span className="eyebrow">Zona aproximada</span>
+              <span className="eyebrow">{LISTING_COPY.approxArea}</span>
               {hydrated ? <ApproxMap lat={l.approx.lat} lng={l.approx.lng} /> : <div className="map-box map-box-listing" aria-hidden="true" />}
             </div>
           ) : null}
 
           <p className="small muted">
-            Publicada por <b className="ink">{l.ownerName}</b>
-            {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}. Sin comisiones: fechas, precio y pago los acuerda directamente con el anfitrión. 3bstays no procesa pagos.
+            {LISTING_COPY.publishedBy({ owner: <b key="owner" className="ink">{l.ownerName}</b>, verified: l.ownerWhatsappVerified })}
           </p>
         </div>
 
@@ -398,13 +398,13 @@ export function ListingPage({ listing: l, base, onBack, navigate = fullNavigatio
           <PriceColumns main={main} monthly={d.monthly} fx={fx} stay={stay} currency={currency} />
           {preview ? (
             <ButtonPlaceholder variant="whatsapp" size="xl" block icon={<I.wa size={22} />} aria-disabled="true">
-              Contactar por WhatsApp
+              {LISTING_COPY.contact}
             </ButtonPlaceholder>
           ) : (
             <ContactButton listing={l} days={days} hydrated={hydrated} navigate={navigate} openOnMount={openSheet} />
           )}
           <p className="xs muted price-disclaimer" data-testid="price-note">
-            Precios orientativos: el precio final lo acuerda con el anfitrión.
+            {LISTING_COPY.priceNote}
           </p>
         </div>
       </main>
