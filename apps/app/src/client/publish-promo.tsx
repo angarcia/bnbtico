@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import { formatCRC } from "../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../domain/offer";
-import { I } from "../shared/icons";
+import { I } from "../shared/ui/icons";
 import { offerTakenQuery } from "./offer-query";
 import { RouterButtonLink } from "./router-buttons";
 import { RouterListRow } from "./router-rows";
-import { Card } from "../shared/card";
+import { Card } from "../shared/ui/card";
 
 export function useOffer() {
   const taken = useQuery(offerTakenQuery);

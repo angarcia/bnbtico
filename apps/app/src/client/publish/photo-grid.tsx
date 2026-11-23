@@ -10,13 +10,13 @@ import { useLayoutEffect, useRef, useState, useSyncExternalStore, type ChangeEve
 import { variantUrl } from "../../domain/image";
 import type { Photo } from "../../domain/listing";
 import { moveBy, moveTo } from "../../domain/photo-order";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { fadeIn } from "../../shared/picture";
 import { photosApi } from "../owner";
 import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type UploadQueue } from "./photo-queue";
 import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
 import { usePhotoDrag } from "./use-photo-drag";
-import { IconButton } from "../../shared/button";
+import { IconButton } from "../../shared/ui/button";
 import { useDesktop } from "../../shared/desktop";
 
 export interface PhotoSource {

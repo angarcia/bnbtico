@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { blockedReason, type BlockedReason } from "../domain/blocked";
-import { I } from "./icons";
+import { I } from "./ui/icons";
 import { SiteTopBar } from "./site-top-bar";
-import { ButtonLink, IconButtonLink } from "./button";
-import { EmptyState } from "./structure";
+import { ButtonLink, IconButtonLink } from "./ui/button";
+import { EmptyState } from "./ui/structure";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
  *  quien llega por un enlace compartido ve otras casas o puede reintentar (revisión UX N4). */

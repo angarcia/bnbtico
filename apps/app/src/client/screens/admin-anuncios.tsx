@@ -10,11 +10,11 @@ import { type Listing } from "../../domain/listing";
 import { statusLabel, type StatusLabel } from "../../domain/status-label";
 import { formatCRC } from "../../domain/money";
 import { queueBadge, type QueueItem } from "../../domain/review";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { adminEditsQuery, adminQueueQuery, clearReviewOutcome, useEditsWithPending, useQueueWithPending, useReviewOutcome } from "../admin";
 import { ScreenHeader } from "../chrome";
 import { AdminBadge, NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
-import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { RouterCardLink } from "../router-rows";
 
 function priceText(l: Listing): string | null {

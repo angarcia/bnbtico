@@ -36,7 +36,7 @@ import { type Listing } from "../../domain/listing";
 import { resumeStep } from "../../domain/publish-rules";
 import { formatMoney } from "../../domain/money";
 import { FLAGS } from "../../shared/flags";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { whenIdle } from "../../shared/idle";
 import { useCurrency } from "../../shared/currency";
 import { CurrencySwitch } from "../../shared/currency-switch";
@@ -53,11 +53,11 @@ import { useSession } from "../session";
 import { HousePicker } from "../house-picker";
 
 import { AirbnbRow, AirbnbLegend, countCalendarOrigins } from "../airbnb-calendar-row";
-import { Button } from "../../shared/button";
+import { Button } from "../../shared/ui/button";
 
 import { RouterButtonLink } from "../router-buttons";
-import { LoadError, Notice, Skeleton } from "../../shared/structure";
-import { Card } from "../../shared/card";
+import { LoadError, Notice, Skeleton } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "3bstays-calendario-casa";

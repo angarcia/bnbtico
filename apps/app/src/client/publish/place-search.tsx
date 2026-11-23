@@ -4,8 +4,8 @@
 // nunca envía el paso (sin nada marcado, elige el último elemento fijo; lo marcado se borra cuando llega Photon). Elegir
 // cierra la lista y el teclado. Si Photon no responde, lo local y el último elemento siguen.
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { useCombobox } from "../../shared/combobox";
-import { SearchInput } from "../../shared/field";
+import { useCombobox } from "../../shared/ui/combobox";
+import { SearchInput } from "../../shared/ui/field";
 import type { LatLng } from "../../domain/geo";
 import { parsePhotonNear, photonNearUrl, sameName, ZONE_DEBOUNCE_MS } from "../../domain/place-search";
 

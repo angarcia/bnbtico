@@ -12,7 +12,7 @@ import { validateStep } from "../../domain/listing-rules";
 import { resumeStep } from "../../domain/publish-rules";
 import { EMAIL_SKIPPED_KEY, type Step1Kind } from "../../domain/publish-return";
 import { track } from "../../shared/beacon";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { accountQuery } from "../account";
 import { ScreenHeader } from "../chrome";
 import { addOwnCached, api, resumableQuery } from "../owner";
@@ -20,12 +20,12 @@ import { clearPhoneDraft, readFullPhoneDraft, readPhoneDraft, writePhoneDraft } 
 import { KindChoice, ReadyList, WizardHeader } from "../publish/wizard-parts";
 import { authApi, useSession } from "../session";
 import { SignInForm } from "../sign-in";
-import { Button, ButtonPlaceholder } from "../../shared/button";
-import { Field, StickyActions, TextInput } from "../../shared/field";
+import { Button, ButtonPlaceholder } from "../../shared/ui/button";
+import { Field, StickyActions, TextInput } from "../../shared/ui/field";
 import { EMAIL_INVALID_ERROR } from "../../domain/account";
 import { RouterButtonLink } from "../router-buttons";
-import { Notice, Skeleton } from "../../shared/structure";
-import { Card } from "../../shared/card";
+import { Notice, Skeleton } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */

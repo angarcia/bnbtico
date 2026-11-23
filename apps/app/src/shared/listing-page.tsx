@@ -21,7 +21,7 @@ import { MonthlyLine } from "./monthly-line";
 import { firstName, initials } from "../domain/person";
 import { isOwnListing } from "./own-listings";
 import { useHydrated } from "./hydration";
-import { FEATURE_ICON, I } from "./icons";
+import { FEATURE_ICON, I } from "./ui/icons";
 import { whenIdle } from "./idle";
 import { listingDaysQuery, listingQuery } from "./listing-query";
 import { ShareButton } from "./share-button";
@@ -32,8 +32,8 @@ import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 import { useDesktop } from "./desktop";
 import { FLAGS } from "./flags";
-import { Button, ButtonPlaceholder, IconButtonLink, IconButtonPlaceholder } from "./button";
-import { Notice, StatusTag } from "./structure";
+import { Button, ButtonPlaceholder, IconButtonLink, IconButtonPlaceholder } from "./ui/button";
+import { Notice, StatusTag } from "./ui/structure";
 
 /** A partir de este largo el nombre no cabe en dos líneas a 30 px en un teléfono pequeño: va a 24 px. Por longitud (no
  *  midiendo en el navegador) para que el servidor y la hidratación pinten lo mismo (revisión UX C3). */

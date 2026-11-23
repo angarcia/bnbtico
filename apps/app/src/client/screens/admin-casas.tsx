@@ -6,19 +6,19 @@ import { CHIP_LABELS, HOUSE_CHIPS, adminHouseLine, countHouses, filterHouses, ho
 import { PUBLISHED_STATUSES } from "../../domain/can";
 import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { toast } from "../../shared/toast";
 import { firstName, ownerNoticeUrl } from "../../domain/owner-notice";
 import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
 import { ScreenHeader } from "../chrome";
-import { Sheet } from "../../shared/overlay";
+import { Sheet } from "../../shared/ui/overlay";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";
-import { Field, SearchInput, TextArea, TextInput } from "../../shared/field";
-import { Button } from "../../shared/button";
+import { Field, SearchInput, TextArea, TextInput } from "../../shared/ui/field";
+import { Button } from "../../shared/ui/button";
 import { RouterButtonLink } from "../router-buttons";
 import { RouterListRow } from "../router-rows";
-import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
-import { List, ListRowButton } from "../../shared/card";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
+import { List, ListRowButton } from "../../shared/ui/card";
 
 // ---------- 23 · Casas ----------
 const casasRoute = getRouteApi("/_tabs/_admin/admin/casas");

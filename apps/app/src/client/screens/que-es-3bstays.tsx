@@ -7,7 +7,7 @@ import { useListingsCount } from "../own-listings-query";
 import { PublishPromoButton, useOffer } from "../publish-promo";
 import { authApi, useSession } from "../session";
 import "./que-es-3bstays.css";
-import { Card } from "../../shared/card";
+import { Card } from "../../shared/ui/card";
 
 export function QueEs3bstaysScreen() {
   const { status } = useSession();

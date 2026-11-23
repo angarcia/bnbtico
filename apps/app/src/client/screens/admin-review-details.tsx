@@ -2,9 +2,9 @@ import { describe, isNegotiable } from "../../domain/describe";
 import { FEATURE_LABEL, KIND_LABELS, MONTHLY_LABEL, locationLine, type Listing } from "../../domain/listing";
 import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
-import { Checkbox } from "../../shared/field";
-import { StatusTag } from "../../shared/structure";
-import { Card } from "../../shared/card";
+import { Checkbox } from "../../shared/ui/field";
+import { StatusTag } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

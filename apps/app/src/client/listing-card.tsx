@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { accommodationLabel, cardFacts, cardPrice, type CardPrice } from "../domain/describe";
 import { FEATURE_SHORT, type PublicListing, type PublicPhoto, type SearchListing } from "../domain/listing";
-import { FEATURE_ICON, I } from "../shared/icons";
+import { FEATURE_ICON, I } from "../shared/ui/icons";
 import { formatMoney } from "../domain/money";
 import { stayTotalLabel } from "../domain/search";
 import { useCurrency } from "../shared/currency";

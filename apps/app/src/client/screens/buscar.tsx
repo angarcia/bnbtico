@@ -11,16 +11,16 @@ import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { NightsPicker } from "../../shared/nights-picker";
 import { nightsBetween, nightsLabel, peopleLabel, zonePlace, zoneSuggestions } from "../../domain/search";
 import { trackSearch } from "../../shared/beacon";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { provincesQuery, zonesQuery } from "../queries";
 import { RangeCalendar } from "../../shared/range-calendar";
-import { Button, IconButton, TextButton } from "../../shared/button";
-import { useCombobox } from "../../shared/combobox";
-import { SearchInput, StickyActions } from "../../shared/field";
-import { Stepper } from "../../shared/stepper";
-import { Notice } from "../../shared/structure";
-import { Card } from "../../shared/card";
-import { ClosedField } from "../../shared/closed-field";
+import { Button, IconButton, TextButton } from "../../shared/ui/button";
+import { useCombobox } from "../../shared/ui/combobox";
+import { SearchInput, StickyActions } from "../../shared/ui/field";
+import { Stepper } from "../../shared/ui/stepper";
+import { Notice } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
+import { ClosedField } from "../../shared/ui/closed-field";
 
 const route = getRouteApi("/_flow/explorar/buscar");
 

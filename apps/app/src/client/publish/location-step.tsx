@@ -15,7 +15,7 @@ import { createPlaceLookup, type LookupState, type PlaceLookup } from "./place-l
 import { PlaceSearch, type PlaceItem } from "./place-search";
 import { useStepReady } from "./step-ready";
 import { ZoneSelect } from "./zone-select";
-import { Button } from "../../shared/button";
+import { Button } from "../../shared/ui/button";
 
 const NOT_LAND = "Ponga el punto sobre tierra, dentro de Costa Rica";
 const same = (a: LatLng | null, b: LatLng | null) => a !== null && b !== null && a.lat === b.lat && a.lng === b.lng;

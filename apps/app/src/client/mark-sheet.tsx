@@ -10,9 +10,9 @@ import { reservationDays, reservationLabel } from "../domain/reservation";
 import { RANGE_BUSY_MESSAGE, type RangeState } from "../domain/range";
 import { toDomainError } from "../domain/errors";
 import { RangeCalendar } from "../shared/range-calendar";
-import { Sheet } from "../shared/overlay";
-import { Button } from "../shared/button";
-import { Notice } from "../shared/structure";
+import { Sheet } from "../shared/ui/overlay";
+import { Button } from "../shared/ui/button";
+import { Notice } from "../shared/ui/structure";
 
 const EMPTY_DAYS: readonly CalendarDay[] = [];
 

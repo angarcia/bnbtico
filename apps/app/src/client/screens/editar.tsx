@@ -15,7 +15,7 @@ import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, use
 import { enterToNext, useEnterKeyHints, useFormKeyboard } from "../publish/form-keyboard";
 import { FieldErrorContext, useFieldError } from "../publish/field-error";
 import { listingFieldError } from "../../domain/field-errors";
-import { StickyActions } from "../../shared/field";
+import { StickyActions } from "../../shared/ui/field";
 import { isBlocked, isPublished } from "../../domain/can";
 import { EDIT_COPY, FIELD_TITLES, REVIEWED_FIELDS, fieldTitle, editFieldFromParam, mergeEdit, parseField, reviewNotice, type FormField, type ReviewedField } from "../../domain/edit";
 import { planEdit } from "../../domain/edit-plan";
@@ -35,10 +35,10 @@ import { useOwnListing } from "../editor-query";
 import { NotFoundCard } from "../editor-status";
 import { useDesktop } from "../../shared/desktop";
 import { OwnerHouseDetail } from "./propietario";
-import { Button } from "../../shared/button";
+import { Button } from "../../shared/ui/button";
 import { RouterButtonLink } from "../router-buttons";
-import { Dialog, DiscardConfirm } from "../../shared/overlay";
-import { LoadError, Notice, Skeleton } from "../../shared/structure";
+import { Dialog, DiscardConfirm } from "../../shared/ui/overlay";
+import { LoadError, Notice, Skeleton } from "../../shared/ui/structure";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (ScreenHeader con `back.historyBack`). */

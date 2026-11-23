@@ -5,7 +5,7 @@
 // están en client/router-buttons.tsx. El aspecto sale de props cerradas (CSS en styles/01-base.css, «Estructura»); las
 // pantallas no escriben estas clases. `placement` solo admite las clases de colocación que ya existían.
 import { createElement, type HTMLAttributes, type ReactNode } from "react";
-import type { StatusLabel, StatusTone } from "../domain/status-label";
+import type { StatusLabel, StatusTone } from "../../domain/status-label";
 import { TextButton } from "./button";
 import { I, type IconName } from "./icons";
 

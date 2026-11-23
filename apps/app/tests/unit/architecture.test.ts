@@ -51,6 +51,17 @@ describe("arquitectura", () => {
     expect(offenders).toEqual([]);
   });
 
+  // Los componentes comunes (historia 07) no dependen de pantallas ni de datos: solo React, el dominio y ellos mismos.
+  it("src/shared/ui solo importa React, el dominio y otros componentes comunes", () => {
+    const offenders = files(join(SRC, "shared/ui")).flatMap((f) =>
+      imports(f)
+        .filter((spec) => !["react", "react-dom"].includes(spec))
+        .filter((spec) => !spec.startsWith(".") || !/^(?:shared\/ui|domain)\//.test(relative(SRC, join(f, "..", spec))))
+        .map((spec) => `${relative(SRC, f)} → ${spec}`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
   it("solo src/data/postgrest importa supabase-js", () => {
     const offenders = files(SRC)
       .filter((f) => !relative(SRC, f).startsWith("data/postgrest/"))

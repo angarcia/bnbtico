@@ -21,7 +21,7 @@ import { lazy, Suspense, useId, useLayoutEffect, useRef, useState, useSyncExtern
 import { PUBLISH_NEXT } from "../../domain/contact-return";
 import { track } from "../../shared/beacon";
 import { DomainError } from "../../domain/errors";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { LAST_STEP, STEPS, nextStep, normalize, previousStep, stepPosition, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { enterToNext, useEnterKeyHints, useFormKeyboard } from "./form-keyboard";
 import { planStep, validateAll } from "../../domain/publish-rules";
@@ -36,11 +36,11 @@ import { enqueueSave, savesSettled } from "../save-queue";
 import { isLostDraft } from "./lost-drafts";
 import { listingFieldError } from "../../domain/field-errors";
 import { FieldErrorContext } from "./field-error";
-import { StickyActions } from "../../shared/field";
+import { StickyActions } from "../../shared/ui/field";
 import { StepReadyContext } from "./step-ready";
-import { Button, ButtonPlaceholder } from "../../shared/button";
+import { Button, ButtonPlaceholder } from "../../shared/ui/button";
 import { RouterButtonLink } from "../router-buttons";
-import { Notice } from "../../shared/structure";
+import { Notice } from "../../shared/ui/structure";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
 const WhatsAppDialog = lazy(() => import("../whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));

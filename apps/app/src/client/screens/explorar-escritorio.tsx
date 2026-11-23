@@ -7,14 +7,14 @@ import { costaRicaToday } from "../../domain/dates";
 import { peopleLabel, stayLabel } from "../../domain/search";
 import { ALL_PROVINCES, SEARCH_MAX_PEOPLE, searchFor, type Filters } from "../../domain/filters";
 import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
-import { ChoiceChips } from "../../shared/choice";
-import { Stepper } from "../../shared/stepper";
+import { ChoiceChips } from "../../shared/ui/choice";
+import { Stepper } from "../../shared/ui/stepper";
 import { SEARCH_MODE } from "../../shared/flags";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { loadedListings, zoneListingsQuery } from "../queries";
 import { RangeCalendar } from "../../shared/range-calendar";
-import { Button, TextButton } from "../../shared/button";
-import { useDismiss } from "../../shared/dismiss";
+import { Button, TextButton } from "../../shared/ui/button";
+import { useDismiss } from "../../shared/ui/dismiss";
 
 const ZonePicker = lazy(() => import("./buscar").then((m) => ({ default: m.Donde })));
 // El contador de noches del panel (modo noches): diferido, como la zona; trozo nights-picker-*, que comparte con la búsqueda

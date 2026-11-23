@@ -29,16 +29,16 @@ import {
   type BillingOverview,
   type PaymentMethodSummary,
 } from "../../domain/subscription";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
 import { ScreenHeader } from "../chrome";
 import { ConfirmSheet } from "../confirm-sheet";
 import { useDesktop } from "../../shared/desktop";
 import { activityQuery, offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
 import { useSession } from "../session";
-import { Button, TextButton } from "../../shared/button";
-import { LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
-import { Card } from "../../shared/card";
+import { Button, TextButton } from "../../shared/ui/button";
+import { LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
 import { RouterListRow } from "../router-rows";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");

@@ -6,15 +6,15 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { Link, useCanGoBack, useLocation, useRouter } from "@tanstack/react-router";
 import { createContext, lazy, Suspense, useContext, useState, type MouseEvent, type ReactNode } from "react";
 import { tabsFor } from "../domain/tabs";
-import { I } from "../shared/icons";
+import { I } from "../shared/ui/icons";
 import { CurrencySwitch } from "../shared/currency-switch";
 import { useDesktop } from "../shared/desktop";
 import { useHidingChrome } from "./hiding-chrome";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";
 import { useSession } from "./session";
-import { Button, IconButton } from "../shared/button";
-import { BrandLogo, EmptyState, NavBar, NavItemContent, type NavTab } from "../shared/structure";
+import { Button, IconButton } from "../shared/ui/button";
+import { BrandLogo, EmptyState, NavBar, NavItemContent, type NavTab } from "../shared/ui/structure";
 import { RouterIconLink } from "./router-buttons";
 
 const WhatsAppDialog = lazy(() => import("./whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));

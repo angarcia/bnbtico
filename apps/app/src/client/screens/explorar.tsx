@@ -15,7 +15,7 @@ import { CurrencySwitch } from "../../shared/currency-switch";
 import { useCurrency } from "../../shared/currency";
 import { useFx } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { revealClass } from "../motion";
 import { useDesktop } from "../../shared/desktop";
 import { ListingCard } from "../listing-card";
@@ -26,8 +26,8 @@ import { isDatesError, listingsQuery, loadedListings, provincesQuery, zonesQuery
 import { ExploreMap, MapLabel } from "../explore-map";
 import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
-import { Button } from "../../shared/button";
-import { CountBadge, EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure";
+import { Button } from "../../shared/ui/button";
+import { CountBadge, EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).

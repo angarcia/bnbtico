@@ -9,10 +9,10 @@ import { tabsFor } from "../domain/tabs";
 import { useDesktop } from "./desktop";
 import { CurrencySwitch } from "./currency-switch";
 import { useHydrated } from "./hydration";
-import { I } from "./icons";
+import { I } from "./ui/icons";
 import { ownListingsHint } from "./own-listings";
-import { ButtonLink } from "./button";
-import { BrandLogo, NavBar, NavItemContent } from "./structure";
+import { ButtonLink } from "./ui/button";
+import { BrandLogo, NavBar, NavItemContent } from "./ui/structure";
 
 type Navigate = (href: string) => void;
 

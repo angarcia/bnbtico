@@ -1,7 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { applyUpdate, onUpdateChange, updateWaiting } from "./sw-register";
-import { Button } from "../shared/button";
+import { Button } from "../shared/ui/button";
 
 /** Rutas donde nunca se recarga: el asistente de publicar (se perdería lo que se está escribiendo). */
 export const isWizardPath = (pathname: string) => pathname === "/propietario/publicar" || pathname.startsWith("/propietario/publicar/") || pathname.startsWith("/publicar/nueva/");

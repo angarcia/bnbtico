@@ -8,9 +8,9 @@ import type { SearchListing } from "../domain/listing";
 import type { Currency } from "../domain/currency";
 import { useCurrency } from "../shared/currency";
 import { useFx } from "../shared/fx";
-import { I } from "../shared/icons";
+import { I } from "../shared/ui/icons";
 import { afterPaint, whenIdle } from "../shared/idle";
-import { IconButton } from "../shared/button";
+import { IconButton } from "../shared/ui/button";
 
 // Los tipos del trozo de Leaflet sin importarlo (ni siquiera como tipo: la prueba de arquitectura lo vigila).
 type ExploreMapHandle = ReturnType<typeof import("./explore-map-leaflet")["drawExploreMap"]>;

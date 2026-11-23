@@ -1,14 +1,14 @@
 import { Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import type { MfaFactor } from "../../domain/api";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { loadSecondFactor, verifySecondCode } from "../admin";
 import { ScreenHeader } from "../chrome";
 import { useSession } from "../session";
 import { NotAdmin, message, useIsAdmin } from "./admin-shared";
 import { CodeInput } from "../code-input";
-import { Button } from "../../shared/button";
-import { Skeleton } from "../../shared/structure";
+import { Button } from "../../shared/ui/button";
+import { Skeleton } from "../../shared/ui/structure";
 
 // ---------- Segundo código ----------
 const codigoRoute = getRouteApi("/_flow/_privateFlow/admin/codigo");

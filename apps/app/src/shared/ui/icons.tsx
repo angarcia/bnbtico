@@ -1,4 +1,4 @@
-import type { Feature } from "../domain/listing";
+import type { Feature } from "../../domain/listing";
 
 type P = { size?: number };
 const base = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", viewBox: "0 0 24 24", "aria-hidden": true } as const;

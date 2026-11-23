@@ -4,7 +4,7 @@ import { Suspense, lazy, useState } from "react";
 import type { PublicListing } from "../domain/listing";
 import { firstName } from "../domain/person";
 import { track } from "../shared/beacon";
-import { I } from "../shared/icons";
+import { I } from "../shared/ui/icons";
 import { listingDaysQuery } from "../shared/listing-query";
 import { FLAGS } from "../shared/flags";
 

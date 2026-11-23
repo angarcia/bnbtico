@@ -7,15 +7,15 @@ import { toDomainError } from "../../domain/errors";
 import { variantUrl } from "../../domain/image";
 import { KIND_LABELS, type Listing } from "../../domain/listing";
 import { REVIEW_NOTE_MAX, editNoteRefusal, type EditDecision, type QueueItem } from "../../domain/review";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "../admin";
 import { ScreenHeader } from "../chrome";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, bathText, factsLine } from "./admin-review-details";
 import { NotAdmin, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
-import { Field, TextArea } from "../../shared/field";
-import { Button } from "../../shared/button";
-import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure";
-import { Card, cardClass } from "../../shared/card";
+import { Field, TextArea } from "../../shared/ui/field";
+import { Button } from "../../shared/ui/button";
+import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";
+import { Card, cardClass } from "../../shared/ui/card";
 
 // ---------- Revisar edición (spec .scratch/editar-casa §4) ----------
 const revisarEdicionRoute = getRouteApi("/_flow/_adminFlow/admin/ediciones/$id");

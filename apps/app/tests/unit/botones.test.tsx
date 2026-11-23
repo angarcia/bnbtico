@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Button, ButtonLink, ButtonPlaceholder, IconButton, TextButton, type ButtonVariant } from "../../src/shared/button";
+import { Button, ButtonLink, ButtonPlaceholder, IconButton, TextButton, type ButtonVariant } from "../../src/shared/ui/button";
 import { readCss } from "../read-css";
 
 const css = readCss();

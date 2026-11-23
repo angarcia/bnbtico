@@ -13,8 +13,8 @@ import { ConfirmSheet } from "./confirm-sheet";
 import { refresh, removeOwnCached } from "./listing-cache";
 import { ownListingsKey } from "./listing-keys";
 import { api, ownListingsQuery } from "./owner";
-import { TextButton } from "../shared/button";
-import { Notice } from "../shared/structure";
+import { TextButton } from "../shared/ui/button";
+import { Notice } from "../shared/ui/structure";
 
 // Aquí y no en owner.ts: así solo lo descarga quien abre el detalle de una casa (presupuesto de las pestañas).
 /** «Eliminar casa» (historia 28). Sin escritura optimista: no tiene vuelta, la tarjeta sale cuando la base lo confirma. Una

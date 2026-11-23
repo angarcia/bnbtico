@@ -6,10 +6,10 @@ import { toast } from "../../shared/toast";
 import { airbnbQuery, icalExportApi, useCalendarOnline } from "../airbnb";
 import { sessionState } from "../session";
 import { ConfirmSheet } from "../confirm-sheet";
-import { Field, TextArea } from "../../shared/field";
-import { Button, TextButton } from "../../shared/button";
-import { Notice } from "../../shared/structure";
-import { Card } from "../../shared/card";
+import { Field, TextArea } from "../../shared/ui/field";
+import { Button, TextButton } from "../../shared/ui/button";
+import { Notice } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
 
 /** El token solo vive en este componente, nunca en Query, almacenamiento o telemetría. */
 export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id: string; userId: string; inlineConfirmation?: boolean }) {

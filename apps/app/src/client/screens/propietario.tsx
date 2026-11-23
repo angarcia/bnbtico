@@ -18,7 +18,7 @@ import { missingLine, missingParts, resumeStep } from "../../domain/publish-rule
 import { formatCRC } from "../../domain/money";
 import { byPendingAction, cardLabel, casasView, noticeFor, type Notice as PendingNotice } from "../../domain/navigation";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/subscription";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { DeleteHouse } from "../delete-house";
 import { MonthlyLine } from "../../shared/monthly-line";
 import { fadeIn } from "../../shared/picture";
@@ -31,10 +31,10 @@ import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDe
 import { knownNoDraft } from "../own-listings-query";
 import { ConfirmSheet } from "../confirm-sheet";
 import { useDesktop } from "../../shared/desktop";
-import { Button, TextButton } from "../../shared/button";
+import { Button, TextButton } from "../../shared/ui/button";
 import { RouterButtonLink, RouterTextLink } from "../router-buttons";
-import { CountBadge, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
-import { Card, List, ListRowButton } from "../../shared/card";
+import { CountBadge, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
+import { Card, List, ListRowButton } from "../../shared/ui/card";
 
 const message = (e: unknown) => toDomainError(e).message;
 

@@ -4,9 +4,9 @@ import { useEffect, useId, useRef, useState, type FocusEvent } from "react";
 import { selectionLabel, setAvailability, setPrice, type Selection } from "../domain/calendar";
 import { formatCRC } from "../domain/money";
 import { FLAGS } from "../shared/flags";
-import { Button, TextButton } from "../shared/button";
-import { Segmented } from "../shared/choice";
-import { AffixInput } from "../shared/field";
+import { Button, TextButton } from "../shared/ui/button";
+import { Segmented } from "../shared/ui/choice";
+import { AffixInput } from "../shared/ui/field";
 import { AirbnbAvailability } from "./airbnb-calendar-row";
 
 const AVAILABILITY = [

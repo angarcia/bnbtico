@@ -1,10 +1,10 @@
 import { ScreenHeader } from "../chrome";
 import { useListingsCount } from "../own-listings-query";
 import { SUPPORT, waLink } from "../support";
-import { Button, ButtonLink, WaIcon } from "../../shared/button";
-import { Field, TextInput } from "../../shared/field";
+import { Button, ButtonLink, WaIcon } from "../../shared/ui/button";
+import { Field, TextInput } from "../../shared/ui/field";
 import { RouterButtonLink } from "../router-buttons";
-import { Card } from "../../shared/card";
+import { Card } from "../../shared/ui/card";
 
 // ---------- /cuenta/recuperar ----------
 export function RecuperarScreen() {

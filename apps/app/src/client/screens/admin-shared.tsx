@@ -3,9 +3,9 @@ import { toDomainError } from "../../domain/errors";
 import type { Listing } from "../../domain/listing";
 import { accountQuery } from "../account";
 import { useSession } from "../session";
-import { ButtonLink, WaIcon } from "../../shared/button";
+import { ButtonLink, WaIcon } from "../../shared/ui/button";
 import { RouterButtonLink } from "../router-buttons";
-import { EmptyState, StatusTag } from "../../shared/structure";
+import { EmptyState, StatusTag } from "../../shared/ui/structure";
 
 export const message = (e: unknown) => toDomainError(e).message;
 export const titleOf = (l: Listing) => l.title || "Sin nombre";

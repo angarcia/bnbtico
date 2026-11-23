@@ -1,5 +1,5 @@
 import { favoritesStore, useIsFavorite } from "./favorites-store";
-import { I } from "./icons";
+import { I } from "./ui/icons";
 
 /** Corazón de favoritos: cambia al momento (teléfono primero) y nunca navega aunque esté sobre una tarjeta. */
 export function FavoriteButton({ publicId, className, size = 22 }: { publicId: string; className: string; size?: number }) {

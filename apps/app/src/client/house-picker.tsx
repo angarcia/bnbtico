@@ -1,9 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { I } from "../shared/icons";
-import { Sheet } from "../shared/overlay";
-import { useDismiss } from "../shared/dismiss";
+import { I } from "../shared/ui/icons";
+import { Sheet } from "../shared/ui/overlay";
+import { useDismiss } from "../shared/ui/dismiss";
 import { useDesktop } from "../shared/desktop";
-import { ClosedField } from "../shared/closed-field";
+import { ClosedField } from "../shared/ui/closed-field";
 
 export interface HouseOption {
   id: string;

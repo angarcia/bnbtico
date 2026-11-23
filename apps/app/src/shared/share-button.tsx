@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { I } from "./icons";
+import { I } from "./ui/icons";
 import { useChanged } from "./use-changed";
-import { IconButton } from "./button";
+import { IconButton } from "./ui/button";
 
 export interface ShareTarget {
   url: string;

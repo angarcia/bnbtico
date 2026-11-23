@@ -34,7 +34,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 
 ## Botones
 
-`shared/button.tsx`. CSS: «Botones» de `01-base.css`.
+`shared/ui/button.tsx`. CSS: «Botones» de `01-base.css`.
 
 | Pieza | Cuándo | Props clave |
 |---|---|---|
@@ -58,7 +58,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 
 ## Hojas y ventanas
 
-`shared/overlay.tsx` (con la pila de `shared/overlay-stack.ts`); `useDismiss` en `shared/dismiss.ts`. CSS en `07-contacto.css` y
+`shared/ui/overlay.tsx` (con la pila de `shared/ui/overlay-stack.ts`); `useDismiss` en `shared/ui/dismiss.ts`. CSS en `07-contacto.css` y
 `13-escritorio.css`.
 
 | Pieza | Cuándo | Cierra con el fondo | Atrás |
@@ -92,14 +92,14 @@ de escritorio.
 
 ## Campos
 
-`shared/field.tsx` y `client/code-input.tsx`. CSS: «Campos» de `01-base.css` (52 px, borde `--line`, radio `--r-control`, letra
+`shared/ui/field.tsx` y `client/code-input.tsx`. CSS: «Campos» de `01-base.css` (52 px, borde `--line`, radio `--r-control`, letra
 de 18 px; nunca menos de 16).
 
 - `Field label error hint count size describedBy grow`: envuelve un control y le da `id`, `aria-describedby` y `aria-invalid`.
   **El error va debajo del campo que falla**, con `role="alert"`. Errores de una casa: `listingFieldError`
   (`domain/field-errors.ts`) y `useFieldError(name)` (`client/publish/field-error.ts`).
 - `TextInput`, `TextArea`, `Select`: el control base. `AffixInput prefix size` (`lg`, `md`, `sm`): con «₡» o «$» delante.
-  `SearchInput variant` (`field`, `combobox`, `float`) con `useCombobox` (`shared/combobox.ts`). `Checkbox`: casilla de 44 px.
+  `SearchInput variant` (`field`, `combobox`, `float`) con `useCombobox` (`shared/ui/combobox.ts`). `Checkbox`: casilla de 44 px.
 - `StickyActions spacer layout`: la barra de pie fija. `CodeInput`: el código de 6 dígitos.
 
 ```tsx
@@ -112,7 +112,7 @@ de 18 px; nunca menos de 16).
 
 ## Elegir y contar
 
-`shared/choice.tsx`, `shared/stepper.tsx`, `ChoiceCards` en `client/publish/wizard-parts.tsx`.
+`shared/ui/choice.tsx`, `shared/ui/stepper.tsx`, `ChoiceCards` en `client/publish/wizard-parts.tsx`.
 
 - `ChoiceChips type="checkbox" | "radio" | as="button"`: chips de elección con el ✓ en un hueco fijo (`as="button"` con
   `aria-pressed` cuando el estado está en la URL). `ChoiceCards`: las tarjetas del paso 1.
@@ -132,13 +132,13 @@ de 18 px; nunca menos de 16).
   (flecha `back={{ to, search?, historyBack? }}` **o** `close`, título con elipsis, `action`) y `"wizard"` (título, `action` y
   la ✕ a la derecha; `below` para el progreso; lo usa `WizardHeader` y el esqueleto de carga de `shell.tsx`). `close` es
   `{ to, label, title? }` o `{ onClick, label, title?, disabled?, busy? }`. No entra en la ficha SSR (usa `Link`).
-- **`Card`** (`shared/card.tsx`): `tone` `plain` · `solid` · `soft` · `sun` (dinero), `layout` `stack` · `row`, `gap`, `as`,
+- **`Card`** (`shared/ui/card.tsx`): `tone` `plain` · `solid` · `soft` · `sun` (dinero), `layout` `stack` · `row`, `gap`, `as`,
   `mark` `new` · `target`, `placement`. `CardLink` / `RouterCardLink` para una tarjeta que es un enlace. `cardClass()` solo
   para una pieza que toma el fondo de una tarjeta (la caja de un mapa).
 - **`List` y `ListRow`, `ListRowButton`, `ListRowLink`, `RouterListRow`**: filas de 56 px; `tone="sun"` para la fila del pago.
-- **`ClosedField kind`** (`shared/closed-field.tsx`): `search` (la sección plegada de la búsqueda; `open` la convierte en su
+- **`ClosedField kind`** (`shared/ui/closed-field.tsx`): `search` (la sección plegada de la búsqueda; `open` la convierte en su
   título), `picker` (selector de casa o zona) y `date` (fechas de la hoja de contacto).
-- **`NavBar`** (`shared/structure.tsx`): la barra de pestañas de presentación que comparten `TabsFrame` y la ficha
+- **`NavBar`** (`shared/ui/structure.tsx`): la barra de pestañas de presentación que comparten `TabsFrame` y la ficha
   (`SiteTopBar`); cada lado pinta sus enlaces con `renderLink`. `NavItemContent` y `BrandLogo` para lo de alrededor.
 
 ```tsx
@@ -151,7 +151,7 @@ de 18 px; nunca menos de 16).
 
 ## Estados y avisos
 
-`shared/structure.tsx`; los textos de estado en `domain/status-label.ts`.
+`shared/ui/structure.tsx`; los textos de estado en `domain/status-label.ts`.
 
 - **`StatusTag label placement tight small`**: etiqueta redonda (D5). `label` sale de `statusLabel(status)` (un solo texto por
   estado en toda la app, también en «Casas» del admin), `holdLabel(kind, "photo" | "row")`, `editStatusLabel(status, "card" |
@@ -227,10 +227,10 @@ Una pantalla se compone con estas piezas y no lleva CSS propio. Ejemplo (una pan
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ScreenHeader } from "../chrome";
-import { Button } from "../../shared/button";
-import { Card } from "../../shared/card";
-import { Field, StickyActions, TextInput } from "../../shared/field";
-import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";
+import { Button } from "../../shared/ui/button";
+import { Card } from "../../shared/ui/card";
+import { Field, StickyActions, TextInput } from "../../shared/ui/field";
+import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { RouterButtonLink } from "../router-buttons";
 import { statusLabel } from "../../domain/status-label";
 

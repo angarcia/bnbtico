@@ -1,7 +1,7 @@
 // Banco de pruebas de shared/overlay.tsx (overlay.test.ts): una hoja con un campo, otra apilada encima, una ventana y el aviso.
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Dialog, Sheet } from "../../src/shared/overlay";
+import { Dialog, Sheet } from "../../src/shared/ui/overlay";
 import { toast } from "../../src/shared/toast";
 import "../../src/styles/global.css";
 

@@ -4,8 +4,8 @@
 import { useId, useState, type ReactNode } from "react";
 import { FLAGS } from "../../shared/flags";
 import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wizardStage, type Kind, type Step } from "../../domain/listing";
-import { I } from "../../shared/icons";
-import { IconButton } from "../../shared/button";
+import { I } from "../../shared/ui/icons";
+import { IconButton } from "../../shared/ui/button";
 import { ScreenHeader, type HeaderClose } from "../chrome";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */

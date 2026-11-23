@@ -2,7 +2,7 @@ import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { PROVINCE_CENTERS, roundPoint, type LatLng } from "../../domain/geo";
 import { DEFAULT_PROVINCE } from "../../domain/listing";
 import type { PickerMap } from "./location-leaflet";
-import { IconButton } from "../../shared/button";
+import { IconButton } from "../../shared/ui/button";
 
 const Locate = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

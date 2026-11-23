@@ -13,8 +13,8 @@ import { ContactCard, ReturnCard } from "../sign-in";
 import { useTurnstile } from "../turnstile";
 import { useContactMode, useGoTo } from "./cuenta-navigation";
 import { CodeInput } from "../code-input";
-import { Button, TextButton } from "../../shared/button";
-import { Notice } from "../../shared/structure";
+import { Button, TextButton } from "../../shared/ui/button";
+import { Notice } from "../../shared/ui/structure";
 
 const message = (e: unknown) => toDomainError(e).message;
 

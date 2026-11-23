@@ -25,10 +25,10 @@ import { useOwnListing, useUserId } from "../editor-query";
 import { NotFoundCard } from "../editor-status";
 import { knownNoDraft } from "../own-listings-query";
 import { clearCreateFailure, createFailure, startDraft } from "../publish/new-draft";
-import { Button } from "../../shared/button";
+import { Button } from "../../shared/ui/button";
 import { RouterButtonLink } from "../router-buttons";
-import { LoadError, Notice, Skeleton } from "../../shared/structure";
-import { Card } from "../../shared/card";
+import { LoadError, Notice, Skeleton } from "../../shared/ui/structure";
+import { Card } from "../../shared/ui/card";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 const DESKTOP_STEPS: readonly Step[] = [1, 7, 6, LAST_STEP];

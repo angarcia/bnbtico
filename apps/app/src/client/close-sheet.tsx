@@ -5,9 +5,9 @@
 import { useState, type FormEvent } from "react";
 import { addDays, CALENDAR_WINDOW_DAYS, validateReopenDate } from "../domain/calendar";
 import { costaRicaToday } from "../domain/inquiry";
-import { Sheet } from "../shared/overlay";
-import { Field, TextInput } from "../shared/field";
-import { Button } from "../shared/button";
+import { Sheet } from "../shared/ui/overlay";
+import { Field, TextInput } from "../shared/ui/field";
+import { Button } from "../shared/ui/button";
 
 export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: string | null) => void; onClose: () => void }) {
   const [date, setDate] = useState("");

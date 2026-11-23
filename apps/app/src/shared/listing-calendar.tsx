@@ -15,11 +15,11 @@ import { formatMoney } from "../domain/money";
 import { hasBusyNight, listingStay, MONTHLY_ESTIMATE_NIGHTS, stayLine } from "../domain/stay-price";
 import { useDesktop } from "./desktop";
 import { FLAGS } from "./flags";
-import { I } from "./icons";
+import { I } from "./ui/icons";
 import { listingDaysQuery } from "./listing-query";
 import { MonthGrid, MonthLegend, WeekdayRow } from "./month-grid";
 import { stayDates, useStayDates } from "./stay-dates";
-import { IconButton, TextButton } from "./button";
+import { IconButton, TextButton } from "./ui/button";
 
 /** Hoy en Costa Rica (UTC−6, sin horario de verano), igual que `costaRicaToday` de domain/inquiry: importarla desde allí
  *  ata este trozo al de la consulta y Rolldown vuelve a partir los de la hoja de contacto (medido: +0,07 KB en la zona

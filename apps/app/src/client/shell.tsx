@@ -9,7 +9,7 @@ import { ownerZoneRedirect } from "../domain/tabs";
 import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
 import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./query-policy";
 import { FlowFrame, Placeholder, ScreenHeader, TabsFrame } from "./chrome";
-import { Skeleton } from "../shared/structure";
+import { Skeleton } from "../shared/ui/structure";
 import { isDesktop } from "../shared/desktop";
 import { afterRender, viewTransitions } from "./motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";

@@ -3,7 +3,7 @@
 // casillas); el texto va sin controlar.
 import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useId, useRef, useState, type ReactNode } from "react";
-import { FullScreen } from "../../shared/overlay";
+import { FullScreen } from "../../shared/ui/overlay";
 import { Link } from "@tanstack/react-router";
 import { DESCRIPTION_MAX, DESCRIPTION_MIN, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../domain/listing";
 import { charCount, monthlyError } from "../../domain/listing-rules";
@@ -16,12 +16,12 @@ import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC, launchOffer } from "../../domain/offer";
 import { formatPhone } from "../../domain/phone";
 import { reportError } from "../../shared/beacon";
-import { CounterRow, type StepperUnit } from "../../shared/stepper";
-import { ChoiceChips, Segmented } from "../../shared/choice";
-import { AffixInput, Field, Select, TextArea, TextInput, type FieldCount } from "../../shared/field";
+import { CounterRow, type StepperUnit } from "../../shared/ui/stepper";
+import { ChoiceChips, Segmented } from "../../shared/ui/choice";
+import { AffixInput, Field, Select, TextArea, TextInput, type FieldCount } from "../../shared/ui/field";
 import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { useFieldError } from "./field-error";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { isChunkLoadError } from "../chunk-error";
 import { useEditor } from "../editor-port";
 import { offerTakenQuery } from "../owner";
@@ -29,8 +29,8 @@ import { useFillHeight } from "./fill-height";
 import { LocationStep } from "./location-step";
 import { useStepReady } from "./step-ready";
 import { KindChoice, ReadyList } from "./wizard-parts";
-import { Button } from "../../shared/button";
-import { Card } from "../../shared/card";
+import { Button } from "../../shared/ui/button";
+import { Card } from "../../shared/ui/card";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
  * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Un solo componente para

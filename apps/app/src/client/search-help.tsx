@@ -4,9 +4,9 @@ import type { Filters } from "../domain/filters";
 import { searchHelpMessage } from "../domain/search-help";
 import { waUrl } from "../domain/whatsapp";
 import { track } from "../shared/beacon";
-import { I } from "../shared/icons";
-import { ButtonLink, TextButton } from "../shared/button";
-import { EmptyState, Notice } from "../shared/structure";
+import { I } from "../shared/ui/icons";
+import { ButtonLink, TextButton } from "../shared/ui/button";
+import { EmptyState, Notice } from "../shared/ui/structure";
 
 /**
  * Sin resultados (`onClear`): tarjeta «No hay casas con esos filtros», la nota si hay número y «Quitar filtros» si hay

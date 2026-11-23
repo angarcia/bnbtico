@@ -5,8 +5,8 @@ import { isLegacyPhotoPath, variantUrl } from "../domain/image";
 import type { Listing } from "../domain/listing";
 import type { ListingEdit } from "../domain/edit";
 import { cardLabel } from "../domain/navigation";
-import { I } from "../shared/icons";
-import { StatusTag } from "../shared/structure";
+import { I } from "../shared/ui/icons";
+import { StatusTag } from "../shared/ui/structure";
 
 export interface HouseCardTopProps {
   listing: Listing;

@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useId, useState } from "react";
-import { Dialog } from "../../shared/overlay";
+import { Dialog } from "../../shared/ui/overlay";
 import {
   ALL_PROVINCES,
   BEDS_OPTIONS,
@@ -21,15 +21,15 @@ import { costaRicaToday } from "../../domain/dates";
 import { housesCount, stayLabel } from "../../domain/search";
 import { FX_INITIAL, type FxRate } from "../../domain/fx";
 import { useCurrency } from "../../shared/currency";
-import { CounterRow } from "../../shared/stepper";
-import { ChoiceChips } from "../../shared/choice";
-import { AffixInput, Field, StickyActions } from "../../shared/field";
+import { CounterRow } from "../../shared/ui/stepper";
+import { ChoiceChips } from "../../shared/ui/choice";
+import { AffixInput, Field, StickyActions } from "../../shared/ui/field";
 import { FeatureChoiceLabel, FEATURE_CHOICE_NAME, FEATURE_CHOICE_ORDER } from "../../shared/feature-choices";
 import { fxQuery } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zonesQuery } from "../queries";
-import { Button } from "../../shared/button";
+import { Button } from "../../shared/ui/button";
 import { RouterListRow } from "../router-rows";
 import { ScreenHeader } from "../chrome";
 

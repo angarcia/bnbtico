@@ -1,4 +1,4 @@
-import { Segmented } from "./choice";
+import { Segmented } from "./ui/choice";
 import type { Currency } from "../domain/currency";
 import { setCurrency, useCurrency } from "./currency";
 

@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, getRouteApi, useRouter } from "@tanstack/react-router";
 import { isContactNext, isPublishNext } from "../../domain/contact-return";
-import { I } from "../../shared/icons";
+import { I } from "../../shared/ui/icons";
 import { accountQuery } from "../account";
 import { ScreenHeader } from "../chrome";
 import { useSession } from "../session";
 import { Replace } from "./cuenta-navigation";
-import { ButtonLink } from "../../shared/button";
+import { ButtonLink } from "../../shared/ui/button";
 import { RouterButtonLink } from "../router-buttons";
 
 // ---------- /cuenta/lista ----------

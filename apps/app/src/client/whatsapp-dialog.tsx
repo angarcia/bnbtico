@@ -1,9 +1,9 @@
 import { lazy, Suspense, useState } from "react";
-import { I } from "../shared/icons";
+import { I } from "../shared/ui/icons";
 import { authApi } from "./session";
 import { SignInForm } from "./sign-in";
-import { IconButton } from "../shared/button";
-import { Dialog } from "../shared/overlay";
+import { IconButton } from "../shared/ui/button";
+import { Dialog } from "../shared/ui/overlay";
 
 const DialogCodeForm = lazy(() => import("./screens/cuenta-codigo").then((m) => ({ default: m.DialogCodeForm })));
 

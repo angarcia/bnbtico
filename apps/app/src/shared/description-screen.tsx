@@ -1,9 +1,9 @@
 // La descripción entera a pantalla completa (`FullScreen`, shared/overlay.tsx), desde «Ver más» de la ficha. Trozo diferido
 // (historia 07, paso 3): con él va la pila de superficies, que así no entra en el JS inicial; se pide en reposo tras hidratar
 // la ficha y al apuntar o tocar «Ver más».
-import { I } from "./icons";
-import { FullScreen } from "./overlay";
-import { IconButton } from "./button";
+import { I } from "./ui/icons";
+import { FullScreen } from "./ui/overlay";
+import { IconButton } from "./ui/button";
 
 export function DescriptionScreen({ paragraphs, onClose }: { paragraphs: string[]; onClose: () => void }) {
   return (

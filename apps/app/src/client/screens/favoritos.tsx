@@ -10,7 +10,7 @@ import { CurrencySwitch } from "../../shared/currency-switch";
 import { ListingCard } from "../listing-card";
 import { useSession } from "../session";
 import { RouterButtonLink } from "../router-buttons";
-import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure";
+import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,
